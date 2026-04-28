@@ -380,6 +380,11 @@ spdx3_anno!(c35_spdx3, "mikebom:pe-subsystem", component);
 // C36 (milestone 029 — cargo-auditable cross-link).
 spdx3_anno!(c36_spdx3, "mikebom:detected-cargo-auditable", component);
 
+// C37-C39 (milestone 030 — Mach-O codesign metadata).
+spdx3_anno!(c37_spdx3, "mikebom:macho-codesign-identifier", component);
+spdx3_anno!(c38_spdx3, "mikebom:macho-codesign-flags",      component);
+spdx3_anno!(c39_spdx3, "mikebom:macho-codesign-team-id",    component);
+
 // ============================================================
 // Sections D-G — custom SPDX 3 extractors
 // ============================================================

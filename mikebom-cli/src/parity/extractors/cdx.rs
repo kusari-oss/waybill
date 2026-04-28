@@ -411,6 +411,13 @@ cdx_anno!(c35_cdx, "mikebom:pe-subsystem", component);
 // on the file-level Rust binary component).
 cdx_anno!(c36_cdx, "mikebom:detected-cargo-auditable", component);
 
+// C37-C39 (milestone 030 — Mach-O codesign metadata, surfaced via
+// the extra_annotations bag in binary/entry.rs::build_macho_identity_annotations
+// on the file-level Mach-O component).
+cdx_anno!(c37_cdx, "mikebom:macho-codesign-identifier", component);
+cdx_anno!(c38_cdx, "mikebom:macho-codesign-flags",      component);
+cdx_anno!(c39_cdx, "mikebom:macho-codesign-team-id",    component);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================
