@@ -8,6 +8,30 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 ## [Unreleased]
 
 ### Added
+- **Milestone 030 — Mach-O codesign metadata.** Every Mach-O scan
+  now extracts three identity-flavored signals from the
+  `LC_CODE_SIGNATURE` (cmd `0x1D`) SuperBlob's CodeDirectory blob:
+  `mikebom:macho-codesign-identifier` (e.g. `com.apple.ls` —
+  universal across Apple-signed binaries),
+  `mikebom:macho-codesign-flags` (JSON array decoded from
+  `CodeDirectory.flags` — `hardened-runtime`, `library-validation`,
+  `adhoc`, etc.; unrecognized bits emit as `unknown-0x<hex>`), and
+  `mikebom:macho-codesign-team-id` (10-char Apple Team ID for
+  developer-signed binaries; absent for Apple-system signatures
+  whose `TeamIdentifier=not set` and for ad-hoc signatures). This
+  is what `codesign -dvv` reads. Fat / universal binaries report
+  from the first slice (matching milestone 024's convention).
+  **Sixth amortization-proof consumer of the milestone-023
+  `extra_annotations` bag** (after 023/024/025/028/029 — 026 was
+  a coverage-breadth milestone that didn't touch the bag). No new
+  crate dependencies. CMS PKCS#7 cert-chain decoding (which would
+  extract the leaf-cert subject CN, signing time, intermediate
+  cert hashes — requires ASN.1 DER parsing) and entitlements XML
+  extraction explicitly deferred to a follow-on milestone (likely
+  unified with PE Authenticode, which has the same DER-parsing
+  requirement). See `specs/030-macho-codesign-metadata/spec.md`
+  and catalog rows C37/C38/C39 in
+  `docs/reference/sbom-format-mapping.md`.
 - **Milestone 029 — cargo-auditable extraction.** Extracts the
   zlib-compressed JSON manifest from Rust binaries' `.dep-v0` linker
   section ([cargo-auditable](https://github.com/rust-secure-code/cargo-auditable)
