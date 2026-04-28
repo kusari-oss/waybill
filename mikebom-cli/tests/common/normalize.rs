@@ -268,6 +268,13 @@ pub fn normalize_spdx3_for_golden(raw: &str, workspace: &Path) -> String {
 /// don't need to exist; the goal is to point cache lookups at empty
 /// paths so the scanner sees no cached metadata regardless of host.
 ///
+/// Also pins `MIKEBOM_FIXED_TIMESTAMP` to a known RFC 3339 value so
+/// SBOM `creationInfo.created` / `metadata.timestamp` is deterministic
+/// across multiple subprocess invocations within the same test. This
+/// closes the latent byte-identity flake where two `mikebom sbom scan`
+/// runs could cross a second boundary on slow CI runners
+/// (`scan_cmd.rs::scan_created_timestamp` reads this env var).
+///
 /// Caller is responsible for ensuring `fake_home` outlives the
 /// Command's execution (typically by holding the source TempDir).
 pub fn apply_fake_home_env(cmd: &mut Command, fake_home: &Path) {
@@ -276,5 +283,6 @@ pub fn apply_fake_home_env(cmd: &mut Command, fake_home: &Path) {
         .env("MAVEN_HOME", fake_home.join("no-maven-home"))
         .env("GOPATH", fake_home.join("no-gopath"))
         .env("GOMODCACHE", fake_home.join("no-gomodcache"))
-        .env("CARGO_HOME", fake_home.join("no-cargo-home"));
+        .env("CARGO_HOME", fake_home.join("no-cargo-home"))
+        .env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
 }

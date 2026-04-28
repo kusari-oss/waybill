@@ -645,7 +645,7 @@ pub async fn execute(
     };
     let output_cfg = OutputConfig {
         mikebom_version: env!("CARGO_PKG_VERSION"),
-        created: chrono::Utc::now(),
+        created: scan_created_timestamp(),
         overrides: plan.overrides.clone(),
     };
 
@@ -744,6 +744,31 @@ pub async fn execute(
 /// Write `bytes` to `path`, creating any missing parent directories.
 ///
 /// Shared by every serializer artifact (CDX today; SPDX + OpenVEX in
+/// Resolve the `created` timestamp for the SBOM output config.
+///
+/// Defaults to `chrono::Utc::now()`. **Test-only override**: when the
+/// `MIKEBOM_FIXED_TIMESTAMP` env var is set to an RFC 3339 string,
+/// that value is used instead — required for tests that compare raw
+/// SBOM bytes across two `mikebom sbom scan` subprocesses (e.g.
+/// `format_dispatch::spdx_3_alias_bytes_are_byte_identical_to_stable_identifier`).
+/// Without the override, the two subprocesses' independent
+/// `Utc::now()` calls can cross a second boundary on slow runners
+/// and produce non-byte-identical output, surfacing as a CI flake
+/// even on docs-only PRs.
+///
+/// Production scans MUST NOT set this env var. An unparseable value
+/// is treated as "unset" — silently fall back to `Utc::now()` rather
+/// than panic, since this is a defensive belt-and-braces helper, not
+/// a hard contract.
+fn scan_created_timestamp() -> chrono::DateTime<chrono::Utc> {
+    if let Ok(s) = std::env::var("MIKEBOM_FIXED_TIMESTAMP") {
+        if let Ok(parsed) = chrono::DateTime::parse_from_rfc3339(&s) {
+            return parsed.with_timezone(&chrono::Utc);
+        }
+    }
+    chrono::Utc::now()
+}
+
 /// later phases). Kept local to this CLI module so the generator crate
 /// has no filesystem dependencies.
 fn write_bytes_to(path: &Path, bytes: &[u8]) -> anyhow::Result<()> {
