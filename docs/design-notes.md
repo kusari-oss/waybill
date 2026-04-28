@@ -297,7 +297,7 @@ bag amortizes that cost across all future per-binary-metadata
 milestones — a new key is one `entry.extra_annotations.insert(...)`
 call.
 
-**Consumers shipped (5 — pattern fully validated):**
+**Consumers shipped (6 — pattern fully validated):**
 - Milestone 023 — ELF identity (`mikebom:elf-build-id`,
   `mikebom:elf-runpath`, `mikebom:elf-debuglink`) populated in
   `binary/entry.rs::make_file_level_component` →
@@ -331,13 +331,27 @@ call.
   `mikebom:cargo-auditable-source` and `mikebom:cargo-auditable-kind`
   emit on the per-crate components when they carry non-default
   values (non-registry source / non-runtime kind).
+- Milestone 030 — Mach-O codesign metadata
+  (`mikebom:macho-codesign-identifier`,
+  `mikebom:macho-codesign-flags`, `mikebom:macho-codesign-team-id`)
+  added to the existing `build_macho_identity_annotations` helper.
+  Reads `LC_CODE_SIGNATURE` (cmd `0x1D`) → big-endian SuperBlob
+  (`0xfade0cc0`) → CodeDirectory blob (`0xfade0c02`) via byte-level
+  parsing. Identifier is universal; flags decoded from
+  `CodeDirectory.flags` u32 bitfield (sorted JSON array, unknown
+  bits emit as `unknown-0x<hex>`); team-id only present on
+  CodeDirectory v2.0.5+ for developer-signed binaries (system
+  binaries have `TeamIdentifier=not set`). Same first-slice
+  convention as 024 for fat binaries.
 
 The four binary-format / runtime helpers
 (`build_elf_identity_annotations`,
 `build_macho_identity_annotations`, `build_pe_identity_annotations`,
 `build_cargo_auditable_cross_link`) are merged by the unified
 `build_binary_identity_annotations` → each format's bag-emission
-contract stays co-located with its source struct fields.
+contract stays co-located with its source struct fields. The
+Mach-O helper now owns six fields (the original three identity
+signals from 024 + the three codesign signals from 030).
 
 **Spec discipline:** typed fields stay typed. The bag is for NEW
 per-binary metadata; existing fields like `binary_class`,
@@ -346,8 +360,8 @@ inserted (a typed field's `mikebom:*` name and a bag entry with the
 same name), the parity matrix' `holistic_parity` test catches the
 double-emit at PR time.
 
-**Bag amortization receipts:** five consecutive consumers (023, 024,
-025, 028, 029) shipped with **zero diff** in `package_db/`,
+**Bag amortization receipts:** six consecutive consumers (023, 024,
+025, 028, 029, 030) shipped with **zero diff** in `package_db/`,
 `mikebom-common/`, `cli/`, `resolve/`, `generate/`, and unrelated
 binary-format modules. The 30+ `PackageDbEntry`-init sites are
 untouched by per-binary-metadata work.
@@ -356,8 +370,12 @@ Future milestones inheriting the bag without schema churn: 027
 container layer attribution (`mikebom:layer-id`), the milestone-026.x
 hard-cohort version-string detectors (glibc / musl / V8 — when
 research clears the technical blockers documented in the deferred
-backlog), and follow-on work on signature data (Authenticode for PE,
-codesign for Mach-O — both deferred from their parent milestones).
+backlog), Mach-O entitlements XML extraction (CSMAGIC_EMBEDDED_ENTITLEMENTS,
+deferred from 030), CMS PKCS#7 cert-chain decoding (the leaf-cert
+subject CN, signing time — likely unified with PE Authenticode
+since both need ASN.1 DER parsing), PE DllCharacteristics security
+flags (deferred from 028), and PE Authenticode signing detection
+(deferred from 028 for the dep-cost reason mentioned above).
 
 ## Relevant specs
 
@@ -370,6 +388,7 @@ codesign for Mach-O — both deferred from their parent milestones).
 - `specs/025-go-vcs-metadata/` — Go BuildInfo VCS metadata via the bag (3rd consumer)
 - `specs/028-pe-binary-identity/` — PE CodeView pdb-id + machine + subsystem via the bag (4th consumer; binary trifecta complete)
 - `specs/029-cargo-auditable-extraction/` — cargo-auditable `.dep-v0` manifest extraction → per-crate `pkg:cargo` components + cross-link annotation via the bag (5th consumer)
+- `specs/030-macho-codesign-metadata/` — Mach-O codesign identifier + flags + team-ID via the bag (6th consumer)
 - `.specify/memory/constitution.md` — 12-principle constitution; notable constraints: no C dependencies, no `.unwrap()` in production, generation context always stamped, packageurl-python conformance
 
 ---

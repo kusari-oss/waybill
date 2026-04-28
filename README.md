@@ -72,6 +72,14 @@ build a proper CycloneDX with:
     `xcrun symbolicatecrash`, the macOS crash reporter, and every
     `*.dSYM` bundle key on for symbol matching. Fat / universal
     binaries report from the first slice.
+
+    Plus codesign metadata from the `LC_CODE_SIGNATURE` SuperBlob's
+    CodeDirectory: `mikebom:macho-codesign-identifier` (e.g.
+    `com.apple.ls`), `mikebom:macho-codesign-flags` (decoded names
+    from the flags bitfield — `hardened-runtime`,
+    `library-validation`, `adhoc`, etc.), and
+    `mikebom:macho-codesign-team-id` (10-char Apple Team ID for
+    developer-signed binaries). This is what `codesign -dvv` reads.
   - **PE (Windows):** CodeView pdb-id (`<guid>:<age>` from
     `IMAGE_DIRECTORY_ENTRY_DEBUG`), machine type
     (`IMAGE_FILE_HEADER.Machine`), and subsystem
@@ -80,9 +88,10 @@ build a proper CycloneDX with:
     what Microsoft Symbol Server, Mozilla / Chromium symbol stores,
     WinDbg, and drmingw use to locate matching `.pdb` files.
 
-  All nine annotations emit symmetrically across CDX, SPDX 2.3, and
-  SPDX 3, making cross-image binary dedup and debug-symbol
-  correlation a direct lookup regardless of OS.
+  All twelve annotations emit symmetrically across CDX, SPDX 2.3,
+  and SPDX 3, making cross-image binary dedup, debug-symbol
+  correlation, and signing-identity provenance a direct lookup
+  regardless of OS.
 - **Go VCS provenance** — extracts `vcs.revision` (commit SHA),
   `vcs.time` (RFC 3339 build timestamp), and `vcs.modified` (dirty-tree
   flag) from every Go binary's BuildInfo. Surfaced as
