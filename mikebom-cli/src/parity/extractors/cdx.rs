@@ -406,6 +406,11 @@ cdx_anno!(c33_cdx, "mikebom:pe-pdb-id", component);
 cdx_anno!(c34_cdx, "mikebom:pe-machine", component);
 cdx_anno!(c35_cdx, "mikebom:pe-subsystem", component);
 
+// C36 (milestone 029 — cargo-auditable cross-link, surfaced via the
+// extra_annotations bag in binary/entry.rs::build_cargo_auditable_cross_link
+// on the file-level Rust binary component).
+cdx_anno!(c36_cdx, "mikebom:detected-cargo-auditable", component);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================

@@ -329,6 +329,9 @@ spdx23_anno!(c33_spdx23, "mikebom:pe-pdb-id", component);
 spdx23_anno!(c34_spdx23, "mikebom:pe-machine", component);
 spdx23_anno!(c35_spdx23, "mikebom:pe-subsystem", component);
 
+// C36 (milestone 029 — cargo-auditable cross-link).
+spdx23_anno!(c36_spdx23, "mikebom:detected-cargo-auditable", component);
+
 // ============================================================
 // Sections D-G — custom SPDX 2.3 extractors
 // ============================================================

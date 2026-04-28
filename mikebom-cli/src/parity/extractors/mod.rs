@@ -27,8 +27,8 @@ pub use common::{
 use cdx::{
     c10_cdx, c11_cdx, c12_cdx, c13_cdx, c14_cdx, c15_cdx, c16_cdx, c17_cdx, c18_cdx, c19_cdx,
     c1_cdx, c20_cdx, c21_cdx, c22_cdx, c23_cdx, c24_cdx, c25_cdx, c26_cdx, c27_cdx, c28_cdx,
-    c29_cdx, c2_cdx, c30_cdx, c31_cdx, c32_cdx, c33_cdx, c34_cdx, c35_cdx, c3_cdx, c4_cdx,
-    c5_cdx, c6_cdx, c7_cdx, c8_cdx, c9_cdx, cdx_containment, cdx_cpe, cdx_dev_deps,
+    c29_cdx, c2_cdx, c30_cdx, c31_cdx, c32_cdx, c33_cdx, c34_cdx, c35_cdx, c36_cdx, c3_cdx,
+    c4_cdx, c5_cdx, c6_cdx, c7_cdx, c8_cdx, c9_cdx, cdx_containment, cdx_cpe, cdx_dev_deps,
     cdx_distribution, cdx_hashes, cdx_homepage, cdx_licenses_concluded, cdx_licenses_declared,
     cdx_name, cdx_purl, cdx_root, cdx_runtime_deps, cdx_supplier, cdx_vcs, cdx_version, d1_cdx,
     d2_cdx, e1_cdx, f1_cdx, g1_cdx,
@@ -38,19 +38,19 @@ use spdx2::{
     c10_spdx23, c11_spdx23, c12_spdx23, c13_spdx23, c14_spdx23, c15_spdx23, c16_spdx23,
     c17_spdx23, c18_spdx23, c19_spdx23, c1_spdx23, c20_spdx23, c21_spdx23, c22_spdx23,
     c23_spdx23, c24_spdx23, c25_spdx23, c26_spdx23, c27_spdx23, c28_spdx23, c29_spdx23, c2_spdx23,
-    c30_spdx23, c31_spdx23, c32_spdx23, c33_spdx23, c34_spdx23, c35_spdx23, c3_spdx23, c4_spdx23,
-    c5_spdx23, c6_spdx23, c7_spdx23, c8_spdx23, c9_spdx23, d1_spdx23, d2_spdx23, e1_spdx23,
-    f1_spdx23, g1_spdx23, spdx23_containment, spdx23_cpe, spdx23_dev_deps, spdx23_distribution,
-    spdx23_hashes, spdx23_homepage, spdx23_licenses_concluded, spdx23_licenses_declared,
-    spdx23_name, spdx23_purl, spdx23_root, spdx23_runtime_deps, spdx23_supplier, spdx23_vcs,
-    spdx23_version,
+    c30_spdx23, c31_spdx23, c32_spdx23, c33_spdx23, c34_spdx23, c35_spdx23, c36_spdx23, c3_spdx23,
+    c4_spdx23, c5_spdx23, c6_spdx23, c7_spdx23, c8_spdx23, c9_spdx23, d1_spdx23, d2_spdx23,
+    e1_spdx23, f1_spdx23, g1_spdx23, spdx23_containment, spdx23_cpe, spdx23_dev_deps,
+    spdx23_distribution, spdx23_hashes, spdx23_homepage, spdx23_licenses_concluded,
+    spdx23_licenses_declared, spdx23_name, spdx23_purl, spdx23_root, spdx23_runtime_deps,
+    spdx23_supplier, spdx23_vcs, spdx23_version,
 };
 use spdx3::{
     c10_spdx3, c11_spdx3, c12_spdx3, c13_spdx3, c14_spdx3, c15_spdx3, c16_spdx3, c17_spdx3,
     c18_spdx3, c19_spdx3, c1_spdx3, c20_spdx3, c21_spdx3, c22_spdx3, c23_spdx3, c24_spdx3,
     c25_spdx3, c26_spdx3, c27_spdx3, c28_spdx3, c29_spdx3, c2_spdx3, c30_spdx3, c31_spdx3,
-    c32_spdx3, c33_spdx3, c34_spdx3, c35_spdx3, c3_spdx3, c4_spdx3, c5_spdx3, c6_spdx3,
-    c7_spdx3, c8_spdx3, c9_spdx3, d1_spdx3, d2_spdx3, e1_spdx3, f1_spdx3, g1_spdx3,
+    c32_spdx3, c33_spdx3, c34_spdx3, c35_spdx3, c36_spdx3, c3_spdx3, c4_spdx3, c5_spdx3,
+    c6_spdx3, c7_spdx3, c8_spdx3, c9_spdx3, d1_spdx3, d2_spdx3, e1_spdx3, f1_spdx3, g1_spdx3,
     spdx3_containment, spdx3_cpe, spdx3_dev_deps, spdx3_distribution, spdx3_hashes,
     spdx3_homepage, spdx3_licenses_concluded, spdx3_licenses_declared, spdx3_name, spdx3_purl,
     spdx3_root, spdx3_runtime_deps, spdx3_supplier, spdx3_vcs, spdx3_version,
@@ -165,6 +165,13 @@ pub static EXTRACTORS: &[ParityExtractor] = &[
     ParityExtractor { row_id: "C33", label: "mikebom:pe-pdb-id",         cdx: c33_cdx, spdx23: c33_spdx23, spdx3: c33_spdx3, directional: Directionality::SymmetricEqual },
     ParityExtractor { row_id: "C34", label: "mikebom:pe-machine",        cdx: c34_cdx, spdx23: c34_spdx23, spdx3: c34_spdx3, directional: Directionality::SymmetricEqual },
     ParityExtractor { row_id: "C35", label: "mikebom:pe-subsystem",      cdx: c35_cdx, spdx23: c35_spdx23, spdx3: c35_spdx3, directional: Directionality::SymmetricEqual },
+    // C36 — cargo-auditable cross-link (milestone 029). Emitted via
+    // the extra_annotations bag in
+    // binary/entry.rs::build_cargo_auditable_cross_link on the
+    // file-level Rust binary component (5th amortization-proof
+    // consumer of the milestone-023 bag); catalog row in
+    // docs/reference/sbom-format-mapping.md C36.
+    ParityExtractor { row_id: "C36", label: "mikebom:detected-cargo-auditable", cdx: c36_cdx, spdx23: c36_spdx23, spdx3: c36_spdx3, directional: Directionality::SymmetricEqual },
     // Section D — Evidence
     // D1 evidence shape diverges — CDX `evidence.identity[].{field,
     // confidence, methods[]}` is the full CDX evidence model;
