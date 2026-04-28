@@ -8,6 +8,52 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 ## [Unreleased]
 
 ### Added
+- **Milestone 028 — PE binary identity.** Every Windows-binary scan
+  now surfaces three identity signals via `object` 0.36's typed PE
+  accessors: `mikebom:pe-pdb-id` (the `<guid-hex-lowercase>:<age>`
+  pair from the CodeView Type-2 record in `IMAGE_DIRECTORY_ENTRY_DEBUG`
+  — the canonical PE binary identity used by Microsoft Symbol Server,
+  Mozilla / Chromium symbol stores, WinDbg, drmingw; analog of
+  Linux's NT_GNU_BUILD_ID and macOS's LC_UUID), `mikebom:pe-machine`
+  (lowercase `IMAGE_FILE_HEADER.Machine` — `amd64` / `i386` /
+  `arm64` / `armnt` / `ia64` / `riscv32` / `riscv64` / `unknown`),
+  and `mikebom:pe-subsystem` (lowercase
+  `IMAGE_OPTIONAL_HEADER.Subsystem` — `console` / `windows-gui` /
+  `efi-application` / `native` / etc., with `WINDOWS_CUI` rendering
+  as `console` per Microsoft toolchain idiom). PE32 vs PE32+
+  bit-width is auto-dispatched by reading
+  `IMAGE_OPTIONAL_HEADER.Magic` (`0x10B` vs `0x20B`). With ELF (023)
+  and Mach-O (024) already shipping, this completes the binary-
+  identity trifecta — every compiled binary mikebom scans now
+  carries cross-platform identity in the SBOM. Surfaced via the
+  milestone-023 generic annotation bag — the **fourth** amortization-
+  proof consumer, with zero churn in `package_db/`, `mikebom-common/`,
+  `cli/`, `resolve/`, `generate/`, `elf.rs`, or `macho.rs`. See
+  `specs/028-pe-binary-identity/spec.md` and catalog rows
+  C33/C34/C35 in `docs/reference/sbom-format-mapping.md`.
+- **Milestone 024 — Mach-O binary identity.** Every macOS-binary
+  scan now surfaces three identity signals from byte-level Mach-O
+  load-command parsing: `mikebom:macho-uuid` (16-byte LC_UUID
+  hex-encoded lowercase — the macOS analog of NT_GNU_BUILD_ID; used
+  by `dwarfdump`, `xcrun symbolicatecrash`, the macOS crash reporter,
+  and every `*.dSYM` bundle for symbol matching),
+  `mikebom:macho-rpath` (LC_RPATH paths in declaration order, dedup'd
+  — `@executable_path` / `@loader_path` / `@rpath` recorded raw,
+  runtime-context-dependent expansion deferred to consumers), and
+  `mikebom:macho-min-os` (`<platform>:<version>` shape — e.g.
+  `macos:14.0`, `ios:17.5` — preferring `LC_BUILD_VERSION`, falling
+  back to `LC_VERSION_MIN_MACOSX` / `LC_VERSION_MIN_IPHONEOS` /
+  `LC_VERSION_MIN_TVOS` / `LC_VERSION_MIN_WATCHOS`). Fat / universal
+  Mach-O binaries report from the FIRST slice's bytes (per-slice
+  arch-divergence is uncommon in practice; consumers needing it can
+  fall back to `otool -l <slice>`). SC-002 verified on the macOS CI
+  lane: `/bin/ls` scan emits a non-empty 32-lowercase-hex
+  `mikebom:macho-uuid` and a non-empty `<platform>:<version>`
+  `mikebom:macho-min-os` — both universal on every supported macOS
+  version. Surfaced via the milestone-023 generic annotation bag,
+  with zero PackageDbEntry-init churn (the bag's amortization
+  payoff). 3 atomic commits; see `specs/024-macho-binary-identity/spec.md`
+  and catalog rows C30/C31/C32 in `docs/reference/sbom-format-mapping.md`.
 - **Milestone 025 — Go BuildInfo VCS metadata.** Every Go-binary scan
   now surfaces the source-tree VCS state recorded at build time. The
   main-module entry (`pkg:golang/<module>@<version>`) gains three new

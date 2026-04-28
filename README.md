@@ -57,14 +57,32 @@ build a proper CycloneDX with:
   `packageurl-python` reference implementation (including
   `+` → `%2B` encoding across every ecosystem; `epoch=0` omission
   on RPM; lexicographic qualifier sort).
-- **Compiled-binary identity** for ELF — extracts NT_GNU_BUILD_ID,
-  DT_RPATH/DT_RUNPATH, and `.gnu_debuglink` reference for every Linux
-  binary scanned. Surfaced as `mikebom:elf-build-id` /
-  `mikebom:elf-runpath` / `mikebom:elf-debuglink` annotations across
-  CDX, SPDX 2.3, and SPDX 3 outputs. The build-id is the canonical
-  binary-identity field used by `eu-unstrip`, `coredumpctl`,
-  `debuginfod`, and `*-dbgsym` packaging — making cross-image binary
-  dedup and debug-symbol correlation a direct lookup.
+- **Compiled-binary identity across Linux, macOS, and Windows** —
+  every binary mikebom scans carries a cross-platform identity in
+  the SBOM:
+  - **ELF (Linux):** `NT_GNU_BUILD_ID`, `DT_RPATH` / `DT_RUNPATH`,
+    `.gnu_debuglink` → `mikebom:elf-build-id` /
+    `mikebom:elf-runpath` / `mikebom:elf-debuglink`. The build-id is
+    the canonical Linux binary-identity field used by `eu-unstrip`,
+    `coredumpctl`, `debuginfod`, and `*-dbgsym` packaging.
+  - **Mach-O (macOS / iOS):** `LC_UUID`, `LC_RPATH`, and minimum-OS
+    version (`LC_BUILD_VERSION` or `LC_VERSION_MIN_*`) →
+    `mikebom:macho-uuid` / `mikebom:macho-rpath` /
+    `mikebom:macho-min-os`. The UUID is what `dwarfdump`,
+    `xcrun symbolicatecrash`, the macOS crash reporter, and every
+    `*.dSYM` bundle key on for symbol matching. Fat / universal
+    binaries report from the first slice.
+  - **PE (Windows):** CodeView pdb-id (`<guid>:<age>` from
+    `IMAGE_DIRECTORY_ENTRY_DEBUG`), machine type
+    (`IMAGE_FILE_HEADER.Machine`), and subsystem
+    (`IMAGE_OPTIONAL_HEADER.Subsystem`) → `mikebom:pe-pdb-id` /
+    `mikebom:pe-machine` / `mikebom:pe-subsystem`. The pdb-id is
+    what Microsoft Symbol Server, Mozilla / Chromium symbol stores,
+    WinDbg, and drmingw use to locate matching `.pdb` files.
+
+  All nine annotations emit symmetrically across CDX, SPDX 2.3, and
+  SPDX 3, making cross-image binary dedup and debug-symbol
+  correlation a direct lookup regardless of OS.
 - **Go VCS provenance** — extracts `vcs.revision` (commit SHA),
   `vcs.time` (RFC 3339 build timestamp), and `vcs.modified` (dirty-tree
   flag) from every Go binary's BuildInfo. Surfaced as

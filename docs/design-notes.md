@@ -285,15 +285,34 @@ bag amortizes that cost across all future per-binary-metadata
 milestones — a new key is one `entry.extra_annotations.insert(...)`
 call.
 
-**First two consumers:**
+**Consumers shipped (4 — pattern fully validated):**
 - Milestone 023 — ELF identity (`mikebom:elf-build-id`,
   `mikebom:elf-runpath`, `mikebom:elf-debuglink`) populated in
-  `binary/entry.rs::make_file_level_component`.
+  `binary/entry.rs::make_file_level_component` →
+  `build_elf_identity_annotations`.
+- Milestone 024 — Mach-O identity (`mikebom:macho-uuid`,
+  `mikebom:macho-rpath`, `mikebom:macho-min-os`) populated in
+  `binary/entry.rs::build_macho_identity_annotations`. Reads LC_UUID
+  / LC_RPATH / LC_BUILD_VERSION (or LC_VERSION_MIN_*) via byte-level
+  load-command parsing in `binary/macho.rs`. Fat / universal
+  binaries report from the first slice's bytes.
 - Milestone 025 — Go BuildInfo VCS metadata
   (`mikebom:go-vcs-revision`, `mikebom:go-vcs-time`,
   `mikebom:go-vcs-modified`) populated in
   `package_db/go_binary.rs::build_vcs_annotations` on the main-module
-  entry.
+  entry only (deps don't carry VCS info).
+- Milestone 028 — PE identity (`mikebom:pe-pdb-id`,
+  `mikebom:pe-machine`, `mikebom:pe-subsystem`) populated in
+  `binary/entry.rs::build_pe_identity_annotations`. Reads the
+  CodeView Type-2 record + IMAGE_FILE_HEADER + IMAGE_OPTIONAL_HEADER
+  via `object` 0.36's typed PE accessors in `binary/pe.rs`. PE32 vs
+  PE32+ auto-dispatched by `IMAGE_OPTIONAL_HEADER.Magic`.
+
+The three identity helpers (`build_elf_identity_annotations`,
+`build_macho_identity_annotations`, `build_pe_identity_annotations`)
+are merged by the unified `build_binary_identity_annotations` →
+each format's bag-emission contract stays co-located with its
+source struct fields.
 
 **Spec discipline:** typed fields stay typed. The bag is for NEW
 per-binary metadata; existing fields like `binary_class`,
@@ -302,11 +321,18 @@ inserted (a typed field's `mikebom:*` name and a bag entry with the
 same name), the parity matrix' `holistic_parity` test catches the
 double-emit at PR time.
 
-Future per-binary-metadata milestones inheriting the bag without
-schema churn: 024 Mach-O LC_UUID + codesign + min-OS, 026
+**Bag amortization receipts:** four consecutive consumers (023, 024,
+025, 028) shipped with **zero diff** in `package_db/`,
+`mikebom-common/`, `cli/`, `resolve/`, `generate/`, and unrelated
+binary-format modules. The 30+ `PackageDbEntry`-init sites are
+untouched by per-binary-metadata work.
+
+Future milestones inheriting the bag without schema churn: 026
 version-string library expansion (glibc, musl, GnuTLS, LibreSSL, V8,
 LLVM, OpenJDK), 027 container layer attribution
-(`mikebom:layer-id`), 028 PE Delay-Load + machine-type + subsystem.
+(`mikebom:layer-id`), and follow-on work on signature data
+(Authenticode for PE, codesign for Mach-O — both deferred from
+their parent milestones).
 
 ## Relevant specs
 
@@ -315,7 +341,9 @@ LLVM, OpenJDK), 027 container layer attribution
 - `specs/003-multi-ecosystem-expansion/` — Go / RPM / Maven / Cargo / Gem + foundational work
 - `specs/010-spdx-output-support/` — SPDX 2.3 + SPDX 3.0.1-experimental + OpenVEX sidecar + dual-format data-placement map
 - `specs/023-elf-binary-identity/` — ELF NT_GNU_BUILD_ID + RPATH/RUNPATH + .gnu_debuglink + per-component annotation bag
-- `specs/025-go-vcs-metadata/` — Go BuildInfo VCS metadata via the bag (first follow-on consumer)
+- `specs/024-macho-binary-identity/` — Mach-O LC_UUID + LC_RPATH + min-OS via the bag (2nd consumer)
+- `specs/025-go-vcs-metadata/` — Go BuildInfo VCS metadata via the bag (3rd consumer)
+- `specs/028-pe-binary-identity/` — PE CodeView pdb-id + machine + subsystem via the bag (4th consumer; binary trifecta complete)
 - `.specify/memory/constitution.md` — 12-principle constitution; notable constraints: no C dependencies, no `.unwrap()` in production, generation context always stamped, packageurl-python conformance
 
 ---
