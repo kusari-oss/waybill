@@ -40,6 +40,16 @@ const LC_VERSION_MIN_IPHONEOS: u32 = 0x25;
 const LC_VERSION_MIN_TVOS: u32 = 0x2f;
 const LC_VERSION_MIN_WATCHOS: u32 = 0x30;
 const LC_BUILD_VERSION: u32 = 0x32;
+#[allow(dead_code)] // wired in commit 2 (030/wire-up-bag)
+const LC_CODE_SIGNATURE: u32 = 0x1d;
+
+/// SuperBlob magic — embedded codesign signature container.
+#[allow(dead_code)] // wired in commit 2 (030/wire-up-bag)
+const CSMAGIC_EMBEDDED_SIGNATURE: u32 = 0xfade_0cc0;
+/// CodeDirectory blob magic — the entry inside the SuperBlob carrying
+/// identifier, flags, and team ID.
+#[allow(dead_code)] // wired in commit 2 (030/wire-up-bag)
+const CSMAGIC_CODEDIRECTORY: u32 = 0xfade_0c02;
 
 const PLATFORM_MACOS: u32 = 1;
 const PLATFORM_IOS: u32 = 2;
@@ -268,6 +278,176 @@ fn decode_packed_version(packed: u32) -> String {
     }
 }
 
+/// Parse a Mach-O byte slice's `LC_CODE_SIGNATURE` payload, walk the
+/// embedded SuperBlob (Apple's all-big-endian cs_blobs format), and
+/// return a slice into the binary's bytes covering the
+/// `CSMAGIC_CODEDIRECTORY` blob's content (NOT including the
+/// 8-byte SuperBlob index entry header). Returns `None` for binaries
+/// without LC_CODE_SIGNATURE, malformed SuperBlob magic, or absence
+/// of a CodeDirectory blob in the index.
+#[allow(dead_code)] // wired in commit 2 (030/wire-up-bag)
+fn parse_codesign_codedirectory(bytes: &[u8]) -> Option<&[u8]> {
+    let header = decode_header(bytes)?;
+    // Find LC_CODE_SIGNATURE; payload is a LinkeditDataCommand —
+    // 8-byte cmd/cmdsize header followed by 4-byte dataoff +
+    // 4-byte datasize (both little-endian per the load-command
+    // convention; the DATA they point at is BE).
+    let (dataoff, datasize) = for_each_load_command(bytes, &header, |cmd, cmd_bytes| {
+        if cmd != LC_CODE_SIGNATURE {
+            return None;
+        }
+        if cmd_bytes.len() < 16 {
+            return None;
+        }
+        let dataoff = read_u32(cmd_bytes, 8, header.little_endian)? as usize;
+        let datasize = read_u32(cmd_bytes, 12, header.little_endian)? as usize;
+        Some((dataoff, datasize))
+    })?;
+    if datasize < 12 {
+        return None;
+    }
+    let sb_end = dataoff.checked_add(datasize)?;
+    if sb_end > bytes.len() {
+        return None;
+    }
+    let sb = &bytes[dataoff..sb_end];
+
+    // SuperBlob preamble: BE u32 magic, BE u32 length, BE u32 count.
+    let magic = read_u32(sb, 0, false)?;
+    if magic != CSMAGIC_EMBEDDED_SIGNATURE {
+        return None;
+    }
+    let count = read_u32(sb, 8, false)? as usize;
+    // Each index entry: BE u32 type + BE u32 offset = 8 bytes.
+    if 12 + count.checked_mul(8)? > sb.len() {
+        return None;
+    }
+    for i in 0..count {
+        let entry_off = 12 + i * 8;
+        let blob_offset = read_u32(sb, entry_off + 4, false)? as usize;
+        if blob_offset + 8 > sb.len() {
+            continue;
+        }
+        let blob_magic = read_u32(sb, blob_offset, false)?;
+        if blob_magic == CSMAGIC_CODEDIRECTORY {
+            let blob_len = read_u32(sb, blob_offset + 4, false)? as usize;
+            let blob_end = blob_offset.checked_add(blob_len)?;
+            if blob_end > sb.len() || blob_len < 44 {
+                return None;
+            }
+            return Some(&sb[blob_offset..blob_end]);
+        }
+    }
+    None
+}
+
+/// Read a NUL-terminated UTF-8 string starting at `off` within a
+/// CodeDirectory blob. Returns `None` for out-of-range offsets,
+/// missing NUL terminator, or non-UTF-8 bytes.
+#[allow(dead_code)] // wired in commit 2 (030/wire-up-bag)
+fn read_cd_cstring(cd: &[u8], off: usize) -> Option<String> {
+    if off == 0 || off >= cd.len() {
+        return None;
+    }
+    let tail = &cd[off..];
+    let nul = tail.iter().position(|&b| b == 0)?;
+    if nul == 0 {
+        return None;
+    }
+    std::str::from_utf8(&tail[..nul]).ok().map(str::to_string)
+}
+
+/// Parse the codesign `CodeDirectory.identifier` — typically the
+/// bundle ID (`com.apple.bash`) for app-signed binaries or the
+/// basename for ad-hoc-signed binaries. Returns `None` when no
+/// LC_CODE_SIGNATURE is present, the SuperBlob is malformed, or
+/// the identifier offset doesn't resolve to a valid string.
+#[allow(dead_code)] // wired in commit 2 (030/wire-up-bag)
+pub fn parse_codesign_identifier(bytes: &[u8]) -> Option<String> {
+    let cd = parse_codesign_codedirectory(bytes)?;
+    // CodeDirectory.identOffset is at byte offset 20 (BE u32).
+    let ident_off = read_u32(cd, 20, false)? as usize;
+    read_cd_cstring(cd, ident_off)
+}
+
+/// Parse the codesign `CodeDirectory.flags` u32 bitfield into a
+/// human-readable JSON-array-of-names representation. Returns an
+/// empty Vec when no LC_CODE_SIGNATURE / malformed SuperBlob /
+/// flags == 0. Always alphabetically sorted for determinism.
+#[allow(dead_code)] // wired in commit 2 (030/wire-up-bag)
+pub fn parse_codesign_flags(bytes: &[u8]) -> Vec<String> {
+    let Some(cd) = parse_codesign_codedirectory(bytes) else {
+        return Vec::new();
+    };
+    let Some(flags) = read_u32(cd, 12, false) else {
+        return Vec::new();
+    };
+    if flags == 0 {
+        return Vec::new();
+    }
+    decode_codesign_flags(flags)
+}
+
+/// Parse the codesign `CodeDirectory.teamOffset` → team-identifier
+/// string (10-character alphanumeric Apple Team ID for cert-signed
+/// binaries; absent for ad-hoc signatures). The team-id field
+/// requires CodeDirectory version ≥ `0x20200`; older CDs return
+/// `None` here.
+#[allow(dead_code)] // wired in commit 2 (030/wire-up-bag)
+pub fn parse_codesign_team_id(bytes: &[u8]) -> Option<String> {
+    let cd = parse_codesign_codedirectory(bytes)?;
+    let cd_version = read_u32(cd, 8, false)?;
+    if cd_version < 0x0002_0200 {
+        return None;
+    }
+    // CodeDirectory.teamOffset is at byte offset 48 (BE u32).
+    let team_off = read_u32(cd, 48, false)? as usize;
+    read_cd_cstring(cd, team_off)
+}
+
+/// Decode the CodeDirectory.flags u32 bitfield into a sorted Vec
+/// of canonical Apple flag names. Unrecognized bits emit as
+/// `unknown-0x<hex>` to preserve information without committing
+/// to names that may shift across macOS versions.
+///
+/// Bit names sourced from Apple's Security project
+/// (`cs_blobs.h` / `cscdefs.h.auto.html`).
+#[allow(dead_code)] // wired in commit 2 (030/wire-up-bag)
+fn decode_codesign_flags(value: u32) -> Vec<String> {
+    let known: &[(u32, &str)] = &[
+        (0x0000_0001, "host"),
+        (0x0000_0002, "adhoc"),
+        (0x0000_0004, "get-task-allow"),
+        (0x0000_0008, "installer"),
+        (0x0000_0010, "force-hard"),
+        (0x0000_0020, "force-kill"),
+        (0x0000_0040, "force-expiration"),
+        (0x0000_0080, "restrict"),
+        (0x0000_0100, "enforcement"),
+        (0x0000_0200, "library-validation"),
+        (0x0001_0000, "hardened-runtime"),
+        (0x0002_0000, "linker-signed"),
+    ];
+    let mut out: Vec<String> = Vec::new();
+    let mut seen: u32 = 0;
+    for &(bit, name) in known {
+        if value & bit != 0 {
+            out.push(name.to_string());
+            seen |= bit;
+        }
+    }
+    let unknown = value & !seen;
+    let mut bit: u32 = 1;
+    while bit != 0 {
+        if unknown & bit != 0 {
+            out.push(format!("unknown-0x{bit:x}"));
+        }
+        bit = bit.checked_shl(1).unwrap_or(0);
+    }
+    out.sort();
+    out
+}
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
@@ -460,5 +640,282 @@ mod tests {
         // Magic OK, but header truncated below the 32-byte minimum.
         let bytes = &MH_MAGIC_64.to_le_bytes()[..];
         assert!(decode_header(bytes).is_none());
+    }
+
+    // ====================================================================
+    // Milestone 030 — LC_CODE_SIGNATURE / SuperBlob / CodeDirectory tests
+    // ====================================================================
+
+    /// Build a synthetic CodeDirectory blob (Apple's BE format).
+    /// `version` controls the layout (≥ 0x20200 includes teamOffset).
+    /// Returns the full blob: magic + length + content. Identifier
+    /// goes immediately after the fixed-size header; team_id (when
+    /// applicable) goes immediately after the identifier.
+    fn build_codedirectory_blob(
+        version: u32,
+        flags: u32,
+        identifier: &str,
+        team_id: Option<&str>,
+    ) -> Vec<u8> {
+        // CodeDirectory fixed header (we populate the fields we read):
+        //   0  magic        u32 BE  (0xfade0c02)
+        //   4  length       u32 BE  (total blob size)
+        //   8  version      u32 BE
+        //  12  flags        u32 BE
+        //  16  hashOffset   u32 BE  (we don't read; set to 0)
+        //  20  identOffset  u32 BE  → offset within blob to NUL-term identifier
+        //  24  nSpecialSlots u32 BE
+        //  28  nCodeSlots    u32 BE
+        //  32  codeLimit     u32 BE
+        //  36  hashSize      u8
+        //  37  hashType      u8
+        //  38  platform      u8
+        //  39  pageSize      u8
+        //  40  spare2        u32 BE
+        // (v ≥ 0x20100):
+        //  44  scatterOffset u32 BE
+        // (v ≥ 0x20200):
+        //  48  teamOffset    u32 BE  → offset within blob to NUL-term team-id
+        // (v ≥ 0x20300):
+        //  52  spare3        u32 BE
+        //  56  codeLimit64   u64 BE
+        // (v ≥ 0x20400):
+        //  64  execSegBase   u64 BE
+        //  72  execSegLimit  u64 BE
+        //  80  execSegFlags  u64 BE
+        let header_size: u32 = if version >= 0x0002_0400 {
+            88
+        } else if version >= 0x0002_0300 {
+            64
+        } else if version >= 0x0002_0200 {
+            52
+        } else if version >= 0x0002_0100 {
+            48
+        } else {
+            44
+        };
+
+        // Lay out strings after the header.
+        let ident_offset = header_size;
+        let mut strings: Vec<u8> = Vec::new();
+        strings.extend_from_slice(identifier.as_bytes());
+        strings.push(0);
+        let team_offset_value: u32 = if version >= 0x0002_0200 {
+            if let Some(team) = team_id {
+                let off = header_size + strings.len() as u32;
+                strings.extend_from_slice(team.as_bytes());
+                strings.push(0);
+                off
+            } else {
+                0 // CD has the field but team-id absent (ad-hoc-style)
+            }
+        } else {
+            0 // CD too old to carry teamOffset
+        };
+
+        let total_len = header_size + strings.len() as u32;
+
+        let mut blob: Vec<u8> = Vec::with_capacity(total_len as usize);
+        blob.extend_from_slice(&CSMAGIC_CODEDIRECTORY.to_be_bytes()); // 0
+        blob.extend_from_slice(&total_len.to_be_bytes()); // 4
+        blob.extend_from_slice(&version.to_be_bytes()); // 8
+        blob.extend_from_slice(&flags.to_be_bytes()); // 12
+        blob.extend_from_slice(&0u32.to_be_bytes()); // 16 hashOffset
+        blob.extend_from_slice(&ident_offset.to_be_bytes()); // 20 identOffset
+        blob.extend_from_slice(&0u32.to_be_bytes()); // 24 nSpecialSlots
+        blob.extend_from_slice(&0u32.to_be_bytes()); // 28 nCodeSlots
+        blob.extend_from_slice(&0u32.to_be_bytes()); // 32 codeLimit
+        blob.push(0); // 36 hashSize
+        blob.push(0); // 37 hashType
+        blob.push(0); // 38 platform
+        blob.push(0); // 39 pageSize
+        blob.extend_from_slice(&0u32.to_be_bytes()); // 40 spare2
+        if version >= 0x0002_0100 {
+            blob.extend_from_slice(&0u32.to_be_bytes()); // 44 scatterOffset
+        }
+        if version >= 0x0002_0200 {
+            blob.extend_from_slice(&team_offset_value.to_be_bytes()); // 48
+        }
+        if version >= 0x0002_0300 {
+            blob.extend_from_slice(&0u32.to_be_bytes()); // 52 spare3
+            blob.extend_from_slice(&0u64.to_be_bytes()); // 56 codeLimit64
+        }
+        if version >= 0x0002_0400 {
+            blob.extend_from_slice(&0u64.to_be_bytes()); // 64 execSegBase
+            blob.extend_from_slice(&0u64.to_be_bytes()); // 72 execSegLimit
+            blob.extend_from_slice(&0u64.to_be_bytes()); // 80 execSegFlags
+        }
+        blob.extend_from_slice(&strings);
+
+        debug_assert_eq!(blob.len() as u32, total_len);
+        blob
+    }
+
+    /// Build a SuperBlob containing a single CodeDirectory blob.
+    /// The 8-byte SuperBlob preamble + 8-byte index entry put the
+    /// CD blob at offset 20 within the SuperBlob.
+    fn build_codesign_superblob(cd_blob: &[u8]) -> Vec<u8> {
+        // SuperBlob layout (all BE):
+        //   0  magic   u32  (0xfade0cc0)
+        //   4  length  u32  (total SB size)
+        //   8  count   u32  (= 1 here)
+        //  12  type    u32  (per-index entry; we use 0 = CD)
+        //  16  offset  u32  (offset within SB to the blob)
+        //  20  <CD blob bytes>
+        let blob_offset: u32 = 20;
+        let total_len: u32 = blob_offset + cd_blob.len() as u32;
+        let mut sb: Vec<u8> = Vec::with_capacity(total_len as usize);
+        sb.extend_from_slice(&CSMAGIC_EMBEDDED_SIGNATURE.to_be_bytes());
+        sb.extend_from_slice(&total_len.to_be_bytes());
+        sb.extend_from_slice(&1u32.to_be_bytes()); // count
+        sb.extend_from_slice(&0u32.to_be_bytes()); // type 0 = CodeDirectory
+        sb.extend_from_slice(&blob_offset.to_be_bytes());
+        sb.extend_from_slice(cd_blob);
+        sb
+    }
+
+    /// Assemble a Mach-O 64-LE binary with an LC_CODE_SIGNATURE
+    /// load command pointing at a SuperBlob appended after the
+    /// load commands. Returns the full byte image.
+    fn build_macho_with_codesign(superblob: &[u8]) -> Vec<u8> {
+        // dataoff = mach_header (32) + LC_CODE_SIGNATURE (16) = 48.
+        let dataoff: u32 = 32 + 16;
+        let datasize: u32 = superblob.len() as u32;
+
+        // LinkeditDataCommand (16 bytes) — endianness matches the
+        // Mach-O header, so LE here.
+        let mut lc = Vec::with_capacity(16);
+        lc.extend_from_slice(&LC_CODE_SIGNATURE.to_le_bytes());
+        lc.extend_from_slice(&16u32.to_le_bytes()); // cmdsize
+        lc.extend_from_slice(&dataoff.to_le_bytes());
+        lc.extend_from_slice(&datasize.to_le_bytes());
+
+        let mut macho = build_macho_64_le(&[lc]);
+        macho.extend_from_slice(superblob);
+        macho
+    }
+
+    #[test]
+    fn parse_codesign_identifier_from_synthetic_superblob() {
+        let cd = build_codedirectory_blob(
+            0x0002_0400,
+            0x0001_0000, // hardened-runtime
+            "com.example.myapp",
+            Some("EQHXZ8M8AV"),
+        );
+        let sb = build_codesign_superblob(&cd);
+        let macho = build_macho_with_codesign(&sb);
+        assert_eq!(
+            parse_codesign_identifier(&macho).as_deref(),
+            Some("com.example.myapp"),
+        );
+    }
+
+    #[test]
+    fn parse_codesign_flags_decodes_hardened_runtime() {
+        let cd = build_codedirectory_blob(
+            0x0002_0400,
+            0x0001_0000,
+            "x",
+            None,
+        );
+        let macho = build_macho_with_codesign(&build_codesign_superblob(&cd));
+        assert_eq!(
+            parse_codesign_flags(&macho),
+            vec!["hardened-runtime".to_string()],
+        );
+    }
+
+    #[test]
+    fn parse_codesign_flags_handles_multi_flag_bitfield() {
+        let cd = build_codedirectory_blob(
+            0x0002_0400,
+            0x0001_0200, // hardened-runtime | library-validation
+            "x",
+            None,
+        );
+        let macho = build_macho_with_codesign(&build_codesign_superblob(&cd));
+        assert_eq!(
+            parse_codesign_flags(&macho),
+            vec!["hardened-runtime".to_string(), "library-validation".to_string()],
+        );
+    }
+
+    #[test]
+    fn parse_codesign_flags_emits_unknown_for_unrecognized_bits() {
+        let cd = build_codedirectory_blob(
+            0x0002_0400,
+            0x0040_0000, // unrecognized bit
+            "x",
+            None,
+        );
+        let macho = build_macho_with_codesign(&build_codesign_superblob(&cd));
+        let flags = parse_codesign_flags(&macho);
+        assert_eq!(flags, vec!["unknown-0x400000".to_string()]);
+    }
+
+    #[test]
+    fn parse_codesign_team_id_skips_when_cd_version_too_old() {
+        // CD v0x20100 doesn't carry teamOffset → returns None.
+        let cd = build_codedirectory_blob(
+            0x0002_0100,
+            0x0000_0002, // adhoc
+            "ad.hoc",
+            None,
+        );
+        let macho = build_macho_with_codesign(&build_codesign_superblob(&cd));
+        // Identifier still parses; team_id does not.
+        assert_eq!(
+            parse_codesign_identifier(&macho).as_deref(),
+            Some("ad.hoc"),
+        );
+        assert_eq!(parse_codesign_team_id(&macho), None);
+        assert_eq!(parse_codesign_flags(&macho), vec!["adhoc".to_string()]);
+    }
+
+    #[test]
+    fn parse_codesign_team_id_extracts_when_cd_version_supports_it() {
+        let cd = build_codedirectory_blob(
+            0x0002_0400,
+            0x0001_0000,
+            "com.example",
+            Some("ABC1234XYZ"),
+        );
+        let macho = build_macho_with_codesign(&build_codesign_superblob(&cd));
+        assert_eq!(
+            parse_codesign_team_id(&macho).as_deref(),
+            Some("ABC1234XYZ"),
+        );
+    }
+
+    #[test]
+    fn parse_codesign_returns_none_for_no_lc_code_signature() {
+        // Plain Mach-O with only LC_UUID — no LC_CODE_SIGNATURE.
+        let bytes = build_macho_64_le(&[build_lc_uuid([0u8; 16])]);
+        assert_eq!(parse_codesign_identifier(&bytes), None);
+        assert!(parse_codesign_flags(&bytes).is_empty());
+        assert_eq!(parse_codesign_team_id(&bytes), None);
+    }
+
+    #[test]
+    fn parse_codesign_returns_none_for_malformed_superblob_magic() {
+        // Build a Mach-O whose LC_CODE_SIGNATURE points at bytes
+        // that don't begin with CSMAGIC_EMBEDDED_SIGNATURE.
+        let dataoff: u32 = 32 + 16;
+        let bogus_payload = [0xDE, 0xAD, 0xBE, 0xEF, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8];
+        let datasize: u32 = bogus_payload.len() as u32;
+
+        let mut lc = Vec::with_capacity(16);
+        lc.extend_from_slice(&LC_CODE_SIGNATURE.to_le_bytes());
+        lc.extend_from_slice(&16u32.to_le_bytes());
+        lc.extend_from_slice(&dataoff.to_le_bytes());
+        lc.extend_from_slice(&datasize.to_le_bytes());
+
+        let mut macho = build_macho_64_le(&[lc]);
+        macho.extend_from_slice(&bogus_payload);
+
+        assert_eq!(parse_codesign_identifier(&macho), None);
+        assert!(parse_codesign_flags(&macho).is_empty());
+        assert_eq!(parse_codesign_team_id(&macho), None);
     }
 }
