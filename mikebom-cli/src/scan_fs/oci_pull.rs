@@ -32,7 +32,7 @@ use std::path::Path;
 
 use oci_client::client::{ClientConfig, ImageData};
 use oci_client::manifest::{
-    IMAGE_CONFIG_MEDIA_TYPE, IMAGE_DOCKER_CONFIG_MEDIA_TYPE,
+    ImageIndexEntry, IMAGE_CONFIG_MEDIA_TYPE, IMAGE_DOCKER_CONFIG_MEDIA_TYPE,
     IMAGE_DOCKER_LAYER_GZIP_MEDIA_TYPE, IMAGE_DOCKER_LAYER_TAR_MEDIA_TYPE,
     IMAGE_LAYER_GZIP_MEDIA_TYPE, IMAGE_LAYER_MEDIA_TYPE, IMAGE_MANIFEST_MEDIA_TYPE,
     OCI_IMAGE_MEDIA_TYPE,
@@ -46,10 +46,9 @@ use oci_client::{Client, Reference};
 /// `docker_image::extract` call. The tarball lives at
 /// `<tempdir>/image.tar`.
 ///
-/// `image_ref_label` is the original ref string (e.g.
-/// `alpine:3.19`); it gets recorded as the manifest's
-/// `RepoTags[0]` so the SBOM's subject name carries the
-/// human-readable reference.
+/// `image_ref` is the original ref string (e.g. `alpine:3.19`);
+/// it gets recorded as the manifest's `RepoTags[0]` so the SBOM's
+/// subject name carries the human-readable reference.
 ///
 /// Multi-arch image indexes resolve via oci-client's default
 /// `current_platform_resolver`, which picks the variant matching
@@ -58,18 +57,14 @@ use oci_client::{Client, Reference};
 ///
 /// Anonymous pulls only in milestone 031. Auth handling lives in
 /// the deferred 031.x follow-on.
-pub fn pull_to_tarball(image_ref: &str) -> Result<tempfile::TempDir> {
-    // Async-to-sync bridge: oci-client is tokio-native; mikebom's
-    // CLI scan path is synchronous. Build a current-thread runtime
-    // for the duration of this fn and drop it on exit.
-    let runtime = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .context("building tokio runtime for OCI registry pull")?;
-    runtime.block_on(async { pull_to_tarball_inner(image_ref).await })
-}
-
-async fn pull_to_tarball_inner(image_ref: &str) -> Result<tempfile::TempDir> {
+///
+/// Async by design — mikebom's CLI is already
+/// `#[tokio::main]`-bootstrapped, so callers can `.await` this
+/// directly without bridging. (An earlier draft constructed its
+/// own runtime and panicked with "Cannot start a runtime from
+/// within a runtime" under the existing async-main; making this
+/// async-native sidesteps that.)
+pub async fn pull_to_tarball(image_ref: &str) -> Result<tempfile::TempDir> {
     let reference: Reference = image_ref
         .parse()
         .with_context(|| format!("parsing OCI image reference `{image_ref}`"))?;
@@ -81,10 +76,25 @@ async fn pull_to_tarball_inner(image_ref: &str) -> Result<tempfile::TempDir> {
         "pulling OCI image"
     );
 
+    // Custom platform resolver: always pick `linux/<host-arch>`
+    // regardless of host OS. SBOM scanning of containers is
+    // Linux-bound — even on macOS / Windows hosts we scan Linux
+    // images. oci-client's default `current_platform_resolver`
+    // would look for `darwin/arm64` on macOS, which never matches
+    // a Linux-only image like distroless.
+    let host_arch = host_oci_arch()
+        .context("mapping host architecture to OCI platform name")?;
     let config = ClientConfig {
-        // The current-platform resolver is the default in
-        // ClientConfig::default(); construct via .. to keep
-        // forward-compat if oci-client adds more fields.
+        platform_resolver: Some(Box::new(move |entries: &[ImageIndexEntry]| {
+            entries
+                .iter()
+                .find(|e| {
+                    e.platform.as_ref().is_some_and(|p| {
+                        p.os == "linux" && p.architecture == host_arch
+                    })
+                })
+                .map(|e| e.digest.clone())
+        })),
         ..ClientConfig::default()
     };
     let client = Client::new(config);

@@ -453,7 +453,7 @@ pub async fn execute(
                         );
                     }
                     tracing::info!(image_ref = %arg_str, "pulling image from registry");
-                    let tempdir = scan_fs::oci_pull::pull_to_tarball(arg_str)?;
+                    let tempdir = scan_fs::oci_pull::pull_to_tarball(arg_str).await?;
                     let tarball = tempdir.path().join("image.tar");
                     _oci_pull_tempdir = Some(tempdir);
                     tarball
