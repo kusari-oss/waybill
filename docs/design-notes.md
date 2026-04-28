@@ -297,7 +297,7 @@ bag amortizes that cost across all future per-binary-metadata
 milestones — a new key is one `entry.extra_annotations.insert(...)`
 call.
 
-**Consumers shipped (4 — pattern fully validated):**
+**Consumers shipped (5 — pattern fully validated):**
 - Milestone 023 — ELF identity (`mikebom:elf-build-id`,
   `mikebom:elf-runpath`, `mikebom:elf-debuglink`) populated in
   `binary/entry.rs::make_file_level_component` →
@@ -319,12 +319,25 @@ call.
   CodeView Type-2 record + IMAGE_FILE_HEADER + IMAGE_OPTIONAL_HEADER
   via `object` 0.36's typed PE accessors in `binary/pe.rs`. PE32 vs
   PE32+ auto-dispatched by `IMAGE_OPTIONAL_HEADER.Magic`.
+- Milestone 029 — cargo-auditable cross-link
+  (`mikebom:detected-cargo-auditable = true`) populated in
+  `binary/entry.rs::build_cargo_auditable_cross_link` when the binary
+  carries a parsed `.dep-v0` manifest. Per-crate
+  `pkg:cargo/<name>@<version>` components flow through a separate
+  `cargo_auditable_packages_to_entries` helper (regular
+  `PackageDbEntry` channel, not the bag), with the cross-link
+  annotation letting consumers find them without scanning every
+  component. Optional bag annotations
+  `mikebom:cargo-auditable-source` and `mikebom:cargo-auditable-kind`
+  emit on the per-crate components when they carry non-default
+  values (non-registry source / non-runtime kind).
 
-The three identity helpers (`build_elf_identity_annotations`,
-`build_macho_identity_annotations`, `build_pe_identity_annotations`)
-are merged by the unified `build_binary_identity_annotations` →
-each format's bag-emission contract stays co-located with its
-source struct fields.
+The four binary-format / runtime helpers
+(`build_elf_identity_annotations`,
+`build_macho_identity_annotations`, `build_pe_identity_annotations`,
+`build_cargo_auditable_cross_link`) are merged by the unified
+`build_binary_identity_annotations` → each format's bag-emission
+contract stays co-located with its source struct fields.
 
 **Spec discipline:** typed fields stay typed. The bag is for NEW
 per-binary metadata; existing fields like `binary_class`,
@@ -333,18 +346,18 @@ inserted (a typed field's `mikebom:*` name and a bag entry with the
 same name), the parity matrix' `holistic_parity` test catches the
 double-emit at PR time.
 
-**Bag amortization receipts:** four consecutive consumers (023, 024,
-025, 028) shipped with **zero diff** in `package_db/`,
+**Bag amortization receipts:** five consecutive consumers (023, 024,
+025, 028, 029) shipped with **zero diff** in `package_db/`,
 `mikebom-common/`, `cli/`, `resolve/`, `generate/`, and unrelated
 binary-format modules. The 30+ `PackageDbEntry`-init sites are
 untouched by per-binary-metadata work.
 
-Future milestones inheriting the bag without schema churn: 026
-version-string library expansion (glibc, musl, GnuTLS, LibreSSL, V8,
-LLVM, OpenJDK), 027 container layer attribution
-(`mikebom:layer-id`), and follow-on work on signature data
-(Authenticode for PE, codesign for Mach-O — both deferred from
-their parent milestones).
+Future milestones inheriting the bag without schema churn: 027
+container layer attribution (`mikebom:layer-id`), the milestone-026.x
+hard-cohort version-string detectors (glibc / musl / V8 — when
+research clears the technical blockers documented in the deferred
+backlog), and follow-on work on signature data (Authenticode for PE,
+codesign for Mach-O — both deferred from their parent milestones).
 
 ## Relevant specs
 
@@ -356,6 +369,7 @@ their parent milestones).
 - `specs/024-macho-binary-identity/` — Mach-O LC_UUID + LC_RPATH + min-OS via the bag (2nd consumer)
 - `specs/025-go-vcs-metadata/` — Go BuildInfo VCS metadata via the bag (3rd consumer)
 - `specs/028-pe-binary-identity/` — PE CodeView pdb-id + machine + subsystem via the bag (4th consumer; binary trifecta complete)
+- `specs/029-cargo-auditable-extraction/` — cargo-auditable `.dep-v0` manifest extraction → per-crate `pkg:cargo` components + cross-link annotation via the bag (5th consumer)
 - `.specify/memory/constitution.md` — 12-principle constitution; notable constraints: no C dependencies, no `.unwrap()` in production, generation context always stamped, packageurl-python conformance
 
 ---
