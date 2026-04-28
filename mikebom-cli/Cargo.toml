@@ -42,6 +42,30 @@ ebpf-tracing = [
     "mikebom-common/aya-user",
 ]
 
+# Enable direct OCI-registry image scanning. When active, the `--image`
+# CLI flag accepts an OCI image reference (`alpine:3.19`,
+# `gcr.io/foo/bar@sha256:...`, etc.) in addition to the existing
+# docker-save tarball path. The reference is parsed via `oci-client`,
+# the manifest + layer blobs are pulled, gzipped layers are
+# decompressed, and a docker-save-format tarball is written to a
+# tempdir before being routed through the existing extraction path.
+#
+# Requirements when active:
+#   - Network access to the target registry.
+#   - rustls-tls (matches mikebom's existing TLS posture; native-tls
+#     is NOT enabled to keep the dep graph C-free per Principle I).
+#
+# Anonymous public registries only in milestone 031. Auth (Docker
+# keychain + cred helpers) deferred to 031.x; multi-platform flag
+# deferred to 031.y. See
+# `specs/031-oci-registry-image-scan/spec.md` for the full contract.
+#
+# Default builds remain unchanged — the `oci-client` dep and its
+# transitive deps live ONLY in the feature-gated graph.
+oci-registry = [
+    "dep:oci-client",
+]
+
 [dependencies]
 mikebom-common = { path = "../mikebom-common", features = ["std"] }
 
@@ -110,6 +134,14 @@ thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+
+# Milestone 031 — direct OCI-registry image scan. Activated by the
+# `oci-registry` feature only. Pinned with default-features = false +
+# rustls-tls to match mikebom's existing TLS posture (no native-tls,
+# no C deps surfaced via openssl-sys per Principle I). Audited at
+# PR time via `cargo tree -p mikebom --features oci-registry` to
+# verify no `*-sys` transitive deps surface.
+oci-client = { version = "0.12", default-features = false, features = ["rustls-tls"], optional = true }
 
 [dev-dependencies]
 serde_json.workspace = true

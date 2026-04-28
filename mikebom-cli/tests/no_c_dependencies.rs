@@ -40,38 +40,60 @@ const BLACKLIST: &[&str] = &[
     "libsqlite3-sys",
     "openssl-sys",
     "c-bindings",
+    // Milestone 031 — when adding the optional `oci-registry` feature
+    // we discovered that newer oci-client versions transitively bring
+    // in `aws-lc-sys` (a `*-sys` crate wrapping the AWS-LC C library)
+    // via newer rustls's switched-default crypto provider. We pinned
+    // `oci-client = "0.12"` to stay on rustls's older ring-based
+    // default. Adding `aws-lc-sys` to the blacklist locks in that
+    // decision: future oci-client version bumps that pull aws-lc
+    // back fail this test at PR time. See
+    // specs/031-oci-registry-image-scan/spec.md FR-005 / SC-005.
+    "aws-lc-sys",
 ];
 
-#[test]
-fn no_c_dependencies_in_tree() {
+fn assert_no_c_deps(extra_args: &[&str], profile_label: &str) {
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
-    let output = Command::new("cargo")
-        .arg("tree")
-        .arg("-p")
-        .arg("mikebom")
-        .arg("-e")
-        .arg("normal")
+    let mut cmd = Command::new("cargo");
+    cmd.arg("tree").arg("-p").arg("mikebom").arg("-e").arg("normal");
+    for a in extra_args {
+        cmd.arg(a);
+    }
+    let output = cmd
         .current_dir(manifest_dir)
         .output()
         .expect("cargo tree should run");
     assert!(
         output.status.success(),
-        "cargo tree failed: stderr={}",
+        "cargo tree {profile_label} failed: stderr={}",
         String::from_utf8_lossy(&output.stderr)
     );
     let tree = String::from_utf8_lossy(&output.stdout);
     let matches: Vec<&str> = tree
         .lines()
-        .filter(|line| {
-            BLACKLIST.iter().any(|needle| line.contains(needle))
-        })
+        .filter(|line| BLACKLIST.iter().any(|needle| line.contains(needle)))
         .collect();
     assert!(
         matches.is_empty(),
-        "Principle I violation: C-backed crate found in dep tree:\n{}\n\
+        "Principle I violation in {profile_label} tree: C-backed crate found:\n{}\n\
          Full blacklist: {:?}\n\
          See specs/003-multi-ecosystem-expansion/tasks.md T001 for the rationale.",
         matches.join("\n"),
         BLACKLIST,
     );
+}
+
+#[test]
+fn no_c_dependencies_in_tree() {
+    assert_no_c_deps(&[], "default-profile");
+}
+
+/// Milestone 031 — also audit the feature-on tree so future bumps of
+/// oci-client (or other gated deps) that re-introduce a C-backed
+/// crate fail this test at PR time. The default-profile audit above
+/// would not catch them since the feature-gated deps don't appear
+/// when `cargo tree` is invoked without `--features`.
+#[test]
+fn no_c_dependencies_in_oci_registry_feature_tree() {
+    assert_no_c_deps(&["--features", "oci-registry"], "oci-registry-feature");
 }
