@@ -21,16 +21,26 @@
 //!   * 031.y — `--image-platform linux/arch` flag.
 //!   * 031.z — layer caching.
 //!
-//! Substrate evolution:
-//!   * Milestone 031 used `oci-client = "0.12"` for the full pull
-//!     pipeline (manifest fetch, blob fetch, digest verification,
-//!     manifest-list resolution).
-//!   * Milestone 032 (this commit's parent module split) is the
-//!     **first phase** of replacing oci-client with `oci-spec`
-//!     (types-only) + a thin custom HTTP client. This commit
-//!     restructures the file into submodules; oci-client is still
-//!     the substrate. Subsequent commits in milestone 032 swap
-//!     in the new substrate and drop the oci-client dep.
+//! Substrate (post-milestone-032):
+//!   * `oci-spec = "0.9"` for OCI distribution-spec + image-spec
+//!     types (manifest, descriptor, image config, manifest list).
+//!     Pure-Rust, types-only.
+//!   * Workspace `reqwest 0.12 + rustls-tls (ring)` for HTTPS
+//!     transport. No new TLS / HTTP deps introduced.
+//!   * `registry.rs` provides a thin custom HTTP client (manifest
+//!     fetch + blob fetch + sha256 verification + bearer-token
+//!     retry flow for Docker Hub).
+//!   * `reference.rs` provides our own image-ref parser
+//!     (registry / repository / tag / digest grammar).
+//!
+//! Milestone 031 (#63) originally shipped this feature on
+//! `oci-client = "0.12"`, but that pin was version-locked to escape
+//! aws-lc-sys (a C library) that newer oci-client versions
+//! transitively pulled in via rustls 0.23+. Milestone 032 (#65)
+//! swapped to the durable substrate above, removing the version-
+//! pin trap. The `no_c_dependencies_in_oci_registry_feature_tree`
+//! regression test in `mikebom-cli/tests/no_c_dependencies.rs`
+//! locks the substrate decision in.
 
 mod platform;
 mod reference;

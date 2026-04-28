@@ -45,25 +45,31 @@ ebpf-tracing = [
 # Enable direct OCI-registry image scanning. When active, the `--image`
 # CLI flag accepts an OCI image reference (`alpine:3.19`,
 # `gcr.io/foo/bar@sha256:...`, etc.) in addition to the existing
-# docker-save tarball path. The reference is parsed via `oci-client`,
-# the manifest + layer blobs are pulled, gzipped layers are
-# decompressed, and a docker-save-format tarball is written to a
-# tempdir before being routed through the existing extraction path.
+# docker-save tarball path. The reference is parsed by mikebom's
+# own thin parser (scan_fs/oci_pull/reference.rs); the manifest +
+# layer blobs are pulled via mikebom's thin HTTP client
+# (scan_fs/oci_pull/registry.rs) on top of workspace reqwest 0.12;
+# manifest types come from oci-spec (pure-Rust types-only crate);
+# gzipped layers are decompressed and a docker-save-format
+# tarball is written to a tempdir before being routed through the
+# existing extraction path.
 #
 # Requirements when active:
 #   - Network access to the target registry.
-#   - rustls-tls (matches mikebom's existing TLS posture; native-tls
-#     is NOT enabled to keep the dep graph C-free per Principle I).
+#   - rustls-tls via reqwest's existing workspace pin (matches
+#     mikebom's TLS posture; native-tls is NOT enabled to keep
+#     the dep graph C-free per Principle I).
 #
 # Anonymous public registries only in milestone 031. Auth (Docker
-# keychain + cred helpers) deferred to 031.x; multi-platform flag
-# deferred to 031.y. See
-# `specs/031-oci-registry-image-scan/spec.md` for the full contract.
+# keychain + cred helpers) deferred to 031.x (#66); multi-platform
+# flag deferred to 031.y (#67). See
+# `specs/031-oci-registry-image-scan/spec.md` for the full contract
+# and `specs/032-oci-spec-migration/spec.md` for the substrate
+# rationale.
 #
-# Default builds remain unchanged — the `oci-client` dep and its
-# transitive deps live ONLY in the feature-gated graph.
+# Default builds remain unchanged — `oci-spec` and its transitive
+# deps live ONLY in the feature-gated graph.
 oci-registry = [
-    "dep:oci-client",
     "dep:oci-spec",
 ]
 
@@ -137,19 +143,18 @@ tracing.workspace = true
 tracing-subscriber.workspace = true
 
 # Milestone 031 — direct OCI-registry image scan. Activated by the
-# `oci-registry` feature only. Pinned with default-features = false +
-# rustls-tls to match mikebom's existing TLS posture (no native-tls,
-# no C deps surfaced via openssl-sys per Principle I). Audited at
-# PR time via `cargo tree -p mikebom --features oci-registry` to
-# verify no `*-sys` transitive deps surface.
-oci-client = { version = "0.12", default-features = false, features = ["rustls-tls"], optional = true }
-
-# Milestone 032 — OCI distribution-spec + image-spec types for the
-# milestone-031 registry pull path. Replaces oci-client's full-stack
-# (types + HTTP + auth + crypto) with: oci-spec (types-only,
+# `oci-registry` feature only. Built on oci-spec (types-only,
 # pure-Rust) + workspace reqwest 0.12 + a small thin HTTP client in
-# scan_fs/oci_pull/registry.rs. See specs/032-oci-spec-migration/
-# spec.md for the durability rationale.
+# scan_fs/oci_pull/registry.rs.
+#
+# Milestone 032 (#65) replaced milestone-031's `oci-client = "0.12"`
+# pin with this oci-spec substrate to escape the version-pin trap
+# that locked us out of future oci-client security updates
+# (newer oci-client transitively pulled aws-lc-sys via rustls 0.23+,
+# violating Constitution Principle I). The
+# `no_c_dependencies_in_oci_registry_feature_tree` regression test
+# remains as the durability guardrail (still includes aws-lc-sys
+# in the blacklist).
 oci-spec = { version = "0.9", default-features = false, features = ["distribution", "image"], optional = true }
 
 [dev-dependencies]
