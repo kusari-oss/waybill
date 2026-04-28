@@ -8,6 +8,29 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 ## [Unreleased]
 
 ### Added
+- **Milestone 029 — cargo-auditable extraction.** Extracts the
+  zlib-compressed JSON manifest from Rust binaries' `.dep-v0` linker
+  section ([cargo-auditable](https://github.com/rust-secure-code/cargo-auditable)
+  format) and surfaces the full build-time crate dependency closure as
+  per-crate `pkg:cargo/<name>@<version>` components with
+  `evidence-kind = "cargo-auditable"`, `confidence = "high"`,
+  `parent_purl` cross-linking back to the file-level binary, and
+  index-based `dependencies` resolved into `depends` edges. The binary
+  itself gains a `mikebom:detected-cargo-auditable = true` cross-link
+  annotation (Rust analog of milestone 005's `mikebom:detected-go =
+  true`). Cargo wrappers in Debian Trixie+, Fedora 40+, Alpine Edge,
+  and the official Rust container images auto-enable the embedding —
+  so most Rust binaries built in those environments now surface their
+  full statically-linked crate closure without source access. Cross-
+  format: ELF / Mach-O / PE. Optional bag annotations
+  `mikebom:cargo-auditable-source` (non-registry sources) and
+  `mikebom:cargo-auditable-kind` (non-runtime kinds) preserve
+  manifest detail. **Fifth amortization-proof consumer of the
+  milestone-023 `extra_annotations` bag** (after 023/024/025/028 —
+  026 was a coverage-breadth milestone that didn't touch the bag).
+  No new crate dependencies — `flate2` and `serde_json` were already
+  in the workspace. See `specs/029-cargo-auditable-extraction/spec.md`
+  and catalog row C36 in `docs/reference/sbom-format-mapping.md`.
 - **Milestone 026 — curated version-string scanner expansion (easy-4
   cohort).** Extends `version_strings.rs`'s curated scanner from 7 to
   **11 self-identifying native libraries**. Four new detectors with

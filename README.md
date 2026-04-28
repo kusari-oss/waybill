@@ -90,6 +90,20 @@ build a proper CycloneDX with:
   `mikebom:go-vcs-modified` on the main-module entry. Same data
   `go version -m` shows, baked into the SBOM so consumers don't have
   to shell out.
+- **Rust crate-closure provenance** — extracts the full build-time
+  crate dependency closure from the `.dep-v0` linker section that
+  [`cargo auditable build`](https://github.com/rust-secure-code/cargo-auditable)
+  embeds. Each crate becomes a `pkg:cargo/<name>@<version>` component
+  with `evidence-kind = "cargo-auditable"` and `confidence = "high"`
+  (build-time truth — distinct from `embedded-version-string`'s
+  heuristic tier), `parent_purl` cross-linking back to the file-level
+  binary. The binary itself gains a
+  `mikebom:detected-cargo-auditable = true` cross-link annotation
+  (the Rust analog of `mikebom:detected-go = true`). Cargo wrappers
+  shipped with **Debian Trixie+, Fedora 40+, Alpine Edge, and the
+  official Rust container images** auto-enable the embedding, so most
+  Rust binaries built in those environments surface their full crate
+  closure without source access. Cross-format: ELF / Mach-O / PE.
 - **Curated embedded-version-string detection** for **11
   high-CVE-volume native libraries** statically-linked into compiled
   binaries — the heuristic-tier counterpart to source-tree manifest
