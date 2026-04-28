@@ -63,27 +63,51 @@ use tarball::PulledLayer;
 /// `docker_image::extract` call. The tarball lives at
 /// `<tempdir>/image.tar`.
 ///
-/// Multi-arch image indexes resolve to `linux/<host-arch>`. mikebom
-/// only scans Linux containers regardless of the host OS.
+/// Multi-arch image indexes resolve to `linux/<host-arch>` by
+/// default. Pass `Some("linux/<arch>[/<variant>]")` via
+/// `image_platform` to override (milestone 035 / #67). mikebom only
+/// scans Linux containers regardless of the host OS, so non-linux
+/// platform requests are rejected upfront.
 ///
-/// Anonymous pulls only in milestone 031. Auth handling lives in
-/// the deferred 031.x follow-on (#66).
+/// Authenticated pulls (milestone 034 / #66): credentials are
+/// resolved from the Docker keychain inside `RegistryClient::new`.
 ///
 /// Async by design — mikebom's CLI is `#[tokio::main]`-bootstrapped,
 /// so callers `.await` this directly without bridging.
-pub async fn pull_to_tarball(image_ref: &str) -> Result<tempfile::TempDir> {
+pub async fn pull_to_tarball(
+    image_ref: &str,
+    image_platform: Option<&str>,
+) -> Result<tempfile::TempDir> {
     let mut reference = reference::parse_reference(image_ref)
         .with_context(|| format!("parsing OCI image reference `{image_ref}`"))?;
+    // Resolve the target platform: explicit `--image-platform`
+    // overrides the host default. `host_oci_arch` errors on
+    // unmapped host arches; the explicit-platform path bypasses
+    // that mapping entirely (a user on a host arch we don't
+    // recognize can still scan a recognized cross-arch image).
+    let (target_arch, target_variant): (String, Option<String>) = match image_platform {
+        Some(s) => {
+            let parsed = platform::parse_platform_string(s)
+                .with_context(|| format!("parsing --image-platform `{s}`"))?;
+            (parsed.architecture, parsed.variant)
+        }
+        None => (
+            host_oci_arch()
+                .context("mapping host architecture to OCI platform name")?
+                .to_string(),
+            None,
+        ),
+    };
     tracing::info!(
         registry = %reference.registry,
         repository = %reference.repository,
         tag = ?reference.tag,
         digest = ?reference.digest,
+        target_arch = %target_arch,
+        target_variant = ?target_variant,
         "pulling OCI image"
     );
 
-    let host_arch = host_oci_arch()
-        .context("mapping host architecture to OCI platform name")?;
     let client = RegistryClient::new(&reference)?;
 
     // Step 1: fetch the manifest. If it's an image index
@@ -94,10 +118,11 @@ pub async fn pull_to_tarball(image_ref: &str) -> Result<tempfile::TempDir> {
         ManifestOrIndex::Manifest(m) => m,
         ManifestOrIndex::Index(idx) => {
             // oci-spec's Descriptor exposes platform / digest /
-            // architecture / os via getset accessors. `Arch` and
-            // `Os` are enums; convert via `Display` to OCI string
-            // form (`amd64`, `linux`, etc.) before handing to
-            // platform.rs.
+            // architecture / os / variant via getset accessors.
+            // `Arch` and `Os` are enums; convert via `Display` to
+            // OCI string form (`amd64`, `linux`, etc.) before
+            // handing to platform.rs. Variant is already an
+            // `Option<String>`.
             let mapped: Vec<platform::ManifestListEntry> = idx
                 .manifests()
                 .iter()
@@ -107,10 +132,15 @@ pub async fn pull_to_tarball(image_ref: &str) -> Result<tempfile::TempDir> {
                         digest: d.digest().to_string(),
                         architecture: plat.architecture().to_string(),
                         os: plat.os().to_string(),
+                        variant: plat.variant().clone(),
                     })
                 })
                 .collect();
-            let chosen_digest = platform::resolve_manifest_list_to_linux(mapped, host_arch)?;
+            let chosen_digest = platform::resolve_manifest_list_to_linux(
+                mapped,
+                &target_arch,
+                target_variant.as_deref(),
+            )?;
             // Re-fetch with the platform-specific digest.
             reference.digest = Some(chosen_digest);
             reference.tag = None;

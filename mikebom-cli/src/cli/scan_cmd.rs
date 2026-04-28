@@ -55,6 +55,27 @@ pub struct ScanArgs {
     #[arg(long, conflicts_with = "path")]
     pub image: Option<PathBuf>,
 
+    /// Override the platform that's resolved from a multi-arch image
+    /// index. Only meaningful when `--image` points at a registry
+    /// reference (not a pre-extracted tarball) — for tarballs the
+    /// platform is fixed by whatever `docker save` already wrote.
+    ///
+    /// Format: `<os>/<arch>` or `<os>/<arch>/<variant>`. Only `linux`
+    /// is supported as the OS — mikebom's package-database readers
+    /// (dpkg / apk / rpm) are linux-rootfs-shaped, so non-Linux
+    /// container images aren't a meaningful scan target.
+    ///
+    /// Common values: `linux/amd64`, `linux/arm64`, `linux/arm/v7`,
+    /// `linux/arm/v6`, `linux/386`, `linux/ppc64le`, `linux/s390x`.
+    /// When omitted (default), mikebom auto-resolves to
+    /// `linux/<host-arch>` matching the machine running the scan.
+    ///
+    /// Use case: a macOS arm64 dev machine scanning a `linux/amd64`
+    /// container image deployed to AWS, or Linux x86_64 CI scanning
+    /// an `arm64` image deployed to Graviton.
+    #[arg(long, requires = "image", value_name = "linux/ARCH[/VARIANT]")]
+    pub image_platform: Option<String>,
+
     /// Output path override. Two forms are accepted:
     ///
     /// * Bare `--output <path>` — applies to the single requested
@@ -438,6 +459,18 @@ pub async fn execute(
             // (existing tarball-extract) or an OCI image reference
             // (new feature-gated registry pull).
             let archive_path: std::path::PathBuf = if archive.is_file() {
+                // `--image-platform` is registry-pull-only; for a
+                // pre-extracted tarball the platform is fixed by
+                // whatever `docker save` already wrote, so the flag
+                // is meaningless. Reject upfront so users don't get
+                // a silent ignore.
+                if args.image_platform.is_some() {
+                    anyhow::bail!(
+                        "--image-platform only applies to registry image references, \
+                         not pre-extracted tarballs (--image {} resolved to an existing file).",
+                        archive.display()
+                    );
+                }
                 archive.clone()
             } else {
                 #[cfg(feature = "oci-registry")]
@@ -453,7 +486,11 @@ pub async fn execute(
                         );
                     }
                     tracing::info!(image_ref = %arg_str, "pulling image from registry");
-                    let tempdir = scan_fs::oci_pull::pull_to_tarball(arg_str).await?;
+                    let tempdir = scan_fs::oci_pull::pull_to_tarball(
+                        arg_str,
+                        args.image_platform.as_deref(),
+                    )
+                    .await?;
                     let tarball = tempdir.path().join("image.tar");
                     _oci_pull_tempdir = Some(tempdir);
                     tarball
