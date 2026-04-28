@@ -221,7 +221,19 @@ Ordered rough priority (highest-value first):
 9. **Same-artifactId-different-groupId edge conflation** — pre-existing. Fix would require keying edges on `(ecosystem, namespace, name)` not just `(ecosystem, name)`.
 10. **Multiple cached versions of the same `(g, a)` in `~/.m2`** — the JAR walker's `coord_index` currently keeps the first-observed version. Good enough for most cases; a project-specific resolution would require reading the project's pom + running Maven's "nearest wins" algorithm.
 11. **Go source-tree scope** — investigate switching from go.sum-driven to `go.mod Require`-driven component enumeration for Go 1.17+ sources. Would align with trivy's default behavior (syft default uses `packages.Load` which is even more inclusive). Full context in `docs/research/go-binary-scope.md`.
-12. **Binary-scanner jq detection** — `version_strings.rs` has a curated 7-library scanner (OpenSSL/BoringSSL/zlib/SQLite/curl/PCRE/PCRE2). Unmanaged binaries like a curl'd `/usr/local/bin/jq` emit only as `pkg:generic/jq?file-sha256=...` (hash, no version). Options: (a) add jq-specific pattern to the curated list — doesn't scale; (b) generic version-string heuristic (`<name>-<ver>` / `<name> version <ver>`) — high FP surface; (c) investigate trivy's `binaries` analyzer and port the subset that has low FP risk.
+12. **Binary-scanner jq detection** — `version_strings.rs` has a curated 11-library scanner as of milestone 026 (OpenSSL/BoringSSL/zlib/SQLite/curl/PCRE/PCRE2/GnuTLS/LibreSSL/LLVM/OpenJDK). Unmanaged binaries like a curl'd `/usr/local/bin/jq` emit only as `pkg:generic/jq?file-sha256=...` (hash, no version). Options: (a) add jq-specific pattern to the curated list — doesn't scale; (b) generic version-string heuristic (`<name>-<ver>` / `<name> version <ver>`) — high FP surface; (c) investigate trivy's `binaries` analyzer and port the subset that has low FP risk.
+
+### Deferred: curated version-string scanner — hard cohort (milestone 026.x)
+
+Three libraries deferred from milestone 026 (which shipped the easy-4 cohort: GnuTLS, LibreSSL, LLVM, OpenJDK) because they don't have clean self-identifying strings in the read-only string region (`.rodata` / `__TEXT,__cstring` / `.rdata`). Each needs a different detection mechanism than the curated string scanner:
+
+- **glibc** — version markers (`GLIBC_X.Y`) live in the ELF `.gnu.version_r` section (symbol-version table), NOT in `.rodata`. Detection requires walking `.gnu.version_r` entries via `object::read::elf::*` primitives (similar to how milestone 023's `extract_runpath_entries` walks `.dynamic`) and aggregating the maximum GLIBC version across all symbol references. Different mechanism than the string scanner — would emit `mikebom:glibc-required-version` (or similar) on the file-level component, not a separate `pkg:generic/glibc@X.Y` component. ELF-only signal.
+
+- **musl** — typically doesn't self-identify in compiled output. Some bundled-musl binaries embed a `musl libc (x86_64)` banner via `__libc_get_version()` calls, but that path is rarely exercised in static binaries. Research milestone needed to find a reliable signature (control-set: try Alpine Linux's `/usr/bin/busybox`, `/usr/bin/curl`, etc.) or conclude there isn't one and document the gap.
+
+- **V8** — version strings live in stack-trace formatting code (e.g. `v8::internal::Version::GetString()` callers) and tend to be non-deterministic across builds + dependent on V8 build flags. Research milestone needed to find a reliable string-region signature; may end up needing an inline-data scan of V8's snapshot blob rather than a string scan. Control-set: try a Node.js binary, a Chromium content-shell, a `deno` binary — all embed V8 in different ways.
+
+Discoverable via `grep TODO\(milestone-026.x\) mikebom-cli/src/scan_fs/binary/version_strings.rs`.
 
 ### Deferred: sbomqs score lift
 

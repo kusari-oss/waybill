@@ -1,5 +1,5 @@
 //! Curated embedded-version-string scanner. Per research R6 / FR-025.
-//! Seven patterns for well-known self-identifying libraries:
+//! Eleven patterns for well-known self-identifying libraries:
 //!
 //! | Library   | Signature                                                    |
 //! |-----------|--------------------------------------------------------------|
@@ -10,8 +10,26 @@
 //! | curl      | `libcurl/X.Y.Z`                                              |
 //! | PCRE      | `PCRE X.Y YYYY-MM-DD`                                        |
 //! | PCRE2     | `PCRE2 X.Y YYYY-MM-DD`                                       |
+//! | GnuTLS    | `GnuTLS X.Y.Z`                                               |
+//! | LibreSSL  | `LibreSSL X.Y.Z`                                             |
+//! | LLVM      | `LLVM version X.Y.Z`                                         |
+//! | OpenJDK   | `OpenJDK X.Y.Z[+B]` (modern) or `OpenJDK 8uX[-bY]` (legacy)  |
 //!
 //! Scanning runs ONLY against format-appropriate read-only string sections (ELF `.rodata` + `.data.rel.ro`, Mach-O `__TEXT,__cstring` + `__TEXT,__const`, PE `.rdata`) — never against the full binary image (Q4 resolution / FR-025). This bounds the false-positive surface. Control-set validation per SC-005.
+//
+// TODO(milestone-026.x): three additional libraries deferred from
+// milestone 026 because they don't have clean self-identifying
+// strings in the read-only string region:
+//   - glibc:  `GLIBC_X.Y` lives in `.gnu.version_r` (symbol-version
+//             table), not `.rodata`. Needs a separate ELF-section
+//             reader rather than the curated string scanner.
+//   - musl:   typically doesn't self-identify in compiled output.
+//             Research milestone needed to find a reliable signature
+//             (or conclude there isn't one and document the gap).
+//   - V8:     version strings buried in stack-trace formatting code;
+//             tend to be non-deterministic across builds. May
+//             require an inline-data scan rather than a string scan.
+// Tracking: `docs/design-notes.md` "Deferred backlog" section.
 
 /// One match from the curated scanner. Converted to a
 /// `PackageDbEntry` with `pkg:generic/<library>@<version>` and
@@ -32,6 +50,11 @@ pub enum CuratedLibrary {
     Curl,
     Pcre,
     Pcre2,
+    // Milestone 026 — easy-4 cohort.
+    GnuTls,
+    LibreSsl,
+    Llvm,
+    OpenJdk,
 }
 
 impl CuratedLibrary {
@@ -44,6 +67,10 @@ impl CuratedLibrary {
             CuratedLibrary::Curl => "curl",
             CuratedLibrary::Pcre => "pcre",
             CuratedLibrary::Pcre2 => "pcre2",
+            CuratedLibrary::GnuTls => "gnutls",
+            CuratedLibrary::LibreSsl => "libressl",
+            CuratedLibrary::Llvm => "llvm",
+            CuratedLibrary::OpenJdk => "openjdk",
         }
     }
 }
@@ -148,6 +175,48 @@ fn match_prefix(
         if let Some(v) = parse_pcre_version(tail) {
             return Some(EmbeddedVersionMatch {
                 library: CuratedLibrary::Pcre,
+                version: v,
+            });
+        }
+    }
+    // GnuTLS — "GnuTLS " (milestone 026).
+    if window.starts_with(b"GnuTLS ") {
+        let tail = &region[pos + 7..];
+        if let Some(v) = parse_semver_triple(tail) {
+            return Some(EmbeddedVersionMatch {
+                library: CuratedLibrary::GnuTls,
+                version: v,
+            });
+        }
+    }
+    // LibreSSL — "LibreSSL " (milestone 026).
+    if window.starts_with(b"LibreSSL ") {
+        let tail = &region[pos + 9..];
+        if let Some(v) = parse_semver_triple(tail) {
+            return Some(EmbeddedVersionMatch {
+                library: CuratedLibrary::LibreSsl,
+                version: v,
+            });
+        }
+    }
+    // LLVM — "LLVM version " (milestone 026). Strict prefix; bare
+    // "LLVM " is too noisy (matches "LLVM ERROR:", "LLVM IR ...").
+    if window.starts_with(b"LLVM version ") {
+        let tail = &region[pos + 13..];
+        if let Some(v) = parse_semver_triple(tail) {
+            return Some(EmbeddedVersionMatch {
+                library: CuratedLibrary::Llvm,
+                version: v,
+            });
+        }
+    }
+    // OpenJDK — "OpenJDK " (milestone 026). Two-scheme parser handles
+    // both modern JEP 322 (X.Y.Z+B) and legacy Java-8 (8uXXX-bXX).
+    if window.starts_with(b"OpenJDK ") {
+        let tail = &region[pos + 8..];
+        if let Some(v) = parse_openjdk_version(tail) {
+            return Some(EmbeddedVersionMatch {
+                library: CuratedLibrary::OpenJdk,
                 version: v,
             });
         }
@@ -290,6 +359,100 @@ fn parse_pcre_version(tail: &[u8]) -> Option<String> {
         && date[7] == b'-'
         && date[8..10].iter().all(|b| b.is_ascii_digit());
     if !looks_like_date {
+        return None;
+    }
+    std::str::from_utf8(&tail[..end]).ok().map(str::to_string)
+}
+
+/// OpenJDK version (milestone 026). Two schemes:
+/// - **Modern (JEP 322)**: `<major>.<minor>.<security>(+<build>)?`
+///   e.g. `21.0.1+12`, `17.0.5`. Each segment is 1+ digits; `+build`
+///   is optional but commonly present in HotSpot banners.
+/// - **Legacy (Java 8)**: `8u<update>(-b<build>)?` e.g. `8u362-b09`,
+///   `8u362`. `-b<build>` is optional.
+///
+/// Returns the matched version string verbatim (preserving `+12` or
+/// `-b09` suffix) so consumers see what symbol-server / CVE
+/// databases key on. Terminates on whitespace / NUL / non-version-char.
+fn parse_openjdk_version(tail: &[u8]) -> Option<String> {
+    parse_openjdk_modern(tail).or_else(|| parse_openjdk_legacy(tail))
+}
+
+/// JEP 322 form: `<digits>.<digits>.<digits>(+<digits>)?`.
+fn parse_openjdk_modern(tail: &[u8]) -> Option<String> {
+    let mut end = 0;
+    let mut dots = 0;
+    while end < tail.len() {
+        let b = tail[end];
+        if b.is_ascii_digit() {
+            end += 1;
+        } else if b == b'.' {
+            dots += 1;
+            if dots > 2 {
+                break;
+            }
+            end += 1;
+        } else {
+            break;
+        }
+    }
+    if dots != 2 || end == 0 {
+        return None;
+    }
+    // Optional `+<digits>` build suffix.
+    if tail.get(end) == Some(&b'+') {
+        let mut e = end + 1;
+        let build_start = e;
+        while e < tail.len() && tail[e].is_ascii_digit() {
+            e += 1;
+        }
+        // Only accept if at least one digit followed the `+`.
+        if e > build_start {
+            end = e;
+        }
+    }
+    // Must terminate on a non-version char.
+    let terminator_ok = match tail.get(end) {
+        Some(&c) => !c.is_ascii_alphanumeric() && c != b'.' && c != b'+',
+        None => true,
+    };
+    if !terminator_ok {
+        return None;
+    }
+    std::str::from_utf8(&tail[..end]).ok().map(str::to_string)
+}
+
+/// Java-8 form: `8u<digits>(-b<digits>)?`.
+fn parse_openjdk_legacy(tail: &[u8]) -> Option<String> {
+    if tail.len() < 3 || &tail[..2] != b"8u" {
+        return None;
+    }
+    let mut end = 2;
+    let update_start = end;
+    while end < tail.len() && tail[end].is_ascii_digit() {
+        end += 1;
+    }
+    // Must have at least one digit after `8u`.
+    if end == update_start {
+        return None;
+    }
+    // Optional `-b<digits>` build suffix.
+    if tail.len() >= end + 2 && &tail[end..end + 2] == b"-b" {
+        let mut e = end + 2;
+        let build_start = e;
+        while e < tail.len() && tail[e].is_ascii_digit() {
+            e += 1;
+        }
+        if e > build_start {
+            end = e;
+        }
+    }
+    // Must terminate on a non-version char.
+    let terminator_ok = match tail.get(end) {
+        Some(&c) => !c.is_ascii_alphanumeric() && c != b'-',
+        None => true,
+    };
+    if !terminator_ok {
         return None;
     }
     std::str::from_utf8(&tail[..end]).ok().map(str::to_string)
@@ -448,5 +611,100 @@ mod tests {
         v.push(0);
         let hits = scan(&v);
         assert_eq!(hits.len(), 2);
+    }
+
+    // ====================================================================
+    // Milestone 026 — easy-4 cohort (GnuTLS / LibreSSL / LLVM / OpenJDK)
+    // ====================================================================
+
+    #[test]
+    fn gnutls_positive() {
+        let r = region(b"GnuTLS 3.7.10");
+        let hits = scan(&r);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].library, CuratedLibrary::GnuTls);
+        assert_eq!(hits[0].version, "3.7.10");
+    }
+
+    #[test]
+    fn gnutls_no_version_no_match() {
+        // Bare `GnuTLS` with no version should not match.
+        let r = region(b"GnuTLS");
+        assert!(scan(&r).is_empty());
+    }
+
+    #[test]
+    fn libressl_positive() {
+        let r = region(b"LibreSSL 3.8.2");
+        let hits = scan(&r);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].library, CuratedLibrary::LibreSsl);
+        assert_eq!(hits[0].version, "3.8.2");
+    }
+
+    #[test]
+    fn libressl_distinct_from_openssl() {
+        // Region with both signatures present at NUL boundaries
+        // → exactly two matches, no double-emit. Tests prefix
+        // anchoring: LibreSSL must NOT also fire the OpenSSL detector.
+        let mut v = vec![0u8];
+        v.extend_from_slice(b"LibreSSL 3.8.2");
+        v.push(0);
+        v.extend_from_slice(b"OpenSSL 3.0.11 19 Sep 2023");
+        v.push(0);
+        let hits = scan(&v);
+        assert_eq!(hits.len(), 2, "expected 2 matches (LibreSSL + OpenSSL); got {hits:?}");
+        let libs: std::collections::HashSet<CuratedLibrary> =
+            hits.iter().map(|h| h.library).collect();
+        assert!(libs.contains(&CuratedLibrary::LibreSsl));
+        assert!(libs.contains(&CuratedLibrary::OpenSsl));
+    }
+
+    #[test]
+    fn llvm_positive() {
+        let r = region(b"LLVM version 17.0.6");
+        let hits = scan(&r);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].library, CuratedLibrary::Llvm);
+        assert_eq!(hits[0].version, "17.0.6");
+    }
+
+    #[test]
+    fn llvm_bare_name_does_not_match() {
+        // `LLVM ERROR:` (clang/lld error string) must NOT match —
+        // strict prefix requires `LLVM version `.
+        let r1 = region(b"LLVM ERROR: bitcode is invalid");
+        assert!(scan(&r1).is_empty(), "got {:?}", scan(&r1));
+        // `LLVM 17.0.0` (without `version `) must NOT match — same
+        // strictness rule.
+        let r2 = region(b"LLVM 17.0.0");
+        assert!(scan(&r2).is_empty(), "got {:?}", scan(&r2));
+    }
+
+    #[test]
+    fn openjdk_modern_version_with_build() {
+        let r = region(b"OpenJDK 21.0.1+12");
+        let hits = scan(&r);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].library, CuratedLibrary::OpenJdk);
+        assert_eq!(hits[0].version, "21.0.1+12");
+    }
+
+    #[test]
+    fn openjdk_modern_no_build_suffix() {
+        let r = region(b"OpenJDK 17.0.5");
+        let hits = scan(&r);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].library, CuratedLibrary::OpenJdk);
+        assert_eq!(hits[0].version, "17.0.5");
+    }
+
+    #[test]
+    fn openjdk_legacy_8u_version() {
+        let r = region(b"OpenJDK 8u362-b09");
+        let hits = scan(&r);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].library, CuratedLibrary::OpenJdk);
+        assert_eq!(hits[0].version, "8u362-b09");
     }
 }
