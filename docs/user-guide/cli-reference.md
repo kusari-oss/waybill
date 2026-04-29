@@ -166,6 +166,16 @@ Behaviour notes:
   are dropped. Feature 009; see
   [`docs/ecosystems.md`](../ecosystems.md) and
   [`specs/009-maven-shade-deps/spec.md`](../../specs/009-maven-shade-deps/spec.md).
+- **Distro-installed Java JARs** resolve to maven PURLs across both
+  Fedora-shaped (`/usr/share/maven-poms/<artifact>.pom`, used by
+  `javapackages-tools` / `xmvn` during RPM build) and Debian-shaped
+  (`/usr/share/maven-repo/<group-path>/<artifact>/<version>/<artifact>-<version>.pom`,
+  populated by `maven-repo-helper` when `apt-get install lib*-java` runs)
+  layouts. JARs with no in-archive `META-INF/maven/` metadata fall
+  through to the matching layout's sidecar POM and emerge as
+  `pkg:maven/<group>/<artifact>@<version>` instead of
+  `pkg:generic/<filename>`. Alpine doesn't ship a system-wide maven
+  layout; apk-managed JARs surface as generic components today.
 - `sbom scan` inherits the top-level `--offline`, `--include-dev`,
   `--include-declared-deps`, and `--include-legacy-rpmdb` flags — they
   can be passed either before or after `scan`. See [global flags](#global-flags)

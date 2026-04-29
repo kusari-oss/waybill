@@ -8,6 +8,32 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 ## [Unreleased]
 
 ### Added
+- **Milestone 042 — Post-041 small follow-ons.** Two unrelated
+  legacy-deferral items closed:
+  - **US1 (housekeeping)**: dropped a stale comment in
+    `binary/predicates.rs:88` that named rpm file-list
+    extraction from HeaderBlob `BASENAMES` / `DIRNAMES` /
+    `DIRINDEXES` as "deferred to a follow-on milestone." That
+    work shipped in milestone 040 US3; the comment now
+    accurately credits 040 US3 as the authoritative claim
+    source and explains the directory-heuristic's role as a
+    defense-in-depth fallback for corrupt / partial rpmdb cases.
+  - **US2 (Maven sidecar Debian layout)**: extends
+    `maven_sidecar.rs` with a parallel `DebianSidecarIndex`
+    that walks `/usr/share/maven-repo/` (the GAV-tree layout
+    populated by Debian's `maven-repo-helper` during
+    `apt-get install lib*-java`). Debian-shaped Java images
+    that previously emerged as `pkg:generic/<filename>` PURLs
+    now resolve to `pkg:maven/<group>/<artifact>@<version>` —
+    matching the milestone-007 Fedora-side coverage.
+    Implementation introduces a small `SidecarIndex` trait so
+    `resolve_coords` works generically over either layout.
+    Fedora wins on basename collision (FR-005). Alpine
+    layouts remain out of scope (Alpine ships no documented
+    system-wide maven repo convention).
+  - 6 new inline tests for the Debian sidecar reader; 27
+    byte-identity goldens regen with zero diff (no fixture
+    contains `/usr/share/maven-repo/` content).
 - **Milestone 041 — Rpm FILEDIGESTS cross-reference.** Closes
   the milestone-040 Q1 deferral. Every populated rpm
   `evidence.occurrences[]` entry's `additionalContext` JSON-
