@@ -135,6 +135,8 @@ Exactly one of **`--path <DIR>`** or **`--image <TAR_OR_REF>`** is required.
 | `--path <dir>` | — | Directory to walk recursively. Stream-hashes files with recognised package-artifact suffixes (`.deb`, `.crate`, `.whl`, `.tar.gz`, `.jar`, `.gem`, `.apk`, …). |
 | `--image <tar-or-ref>` | — | Either (a) a `docker save` tarball path on disk, or (b) an OCI image reference like `alpine:3.19` or `gcr.io/foo/bar@sha256:...`. mikebom auto-detects which based on whether the path exists. Refs are pulled from the registry, layers decompressed, and the resulting tarball is extracted to a tempdir (OCI whiteouts honoured) before being scanned like `--path`. Multi-arch image indexes resolve to `linux/<host-arch>` by default — pass `--image-platform <linux/ARCH[/VARIANT]>` to pick a different platform from a multi-arch index. Both anonymous and authenticated pulls are supported — for private registries, configure `~/.docker/config.json` (the same keychain `docker pull` uses; see ["Authenticating to private registries"](#authenticating-to-private-registries) below). Disable the registry-pull capability with `cargo install mikebom --no-default-features` if you want a minimal-deps build for embedded use; tarball-extraction still works. |
 | `--image-platform <linux/ARCH[/VARIANT]>` | host-arch | Override the platform that's resolved from a multi-arch image index. Only meaningful with a registry `--image <ref>` — for tarballs the platform is fixed by what `docker save` already wrote (passed alongside a tarball, the flag errors). Only `linux` is supported as the OS — mikebom's package-database readers (dpkg / apk / rpm) are linux-rootfs-shaped, so non-Linux containers aren't a meaningful scan target. Common values: `linux/amd64`, `linux/arm64`, `linux/arm/v7`, `linux/386`, `linux/ppc64le`, `linux/s390x`. Use case: a macOS arm64 dev machine scanning a `linux/amd64` image deployed to AWS, or Linux x86_64 CI scanning an `arm64` image deployed to Graviton. When the index doesn't contain a matching entry, the error lists the available platforms. |
+| `--no-oci-cache` | off | Disable the on-disk OCI blob cache for registry pulls. Equivalent to `MIKEBOM_OCI_CACHE=0`. When set, every blob is fetched from the registry on every scan; existing cache files on disk are not touched. Use case: CI lanes that want pure one-shot semantics, or debugging a registry-side regression. See ["OCI layer caching"](#oci-layer-caching) below. |
+| `--oci-cache-size <BYTES>` | 10 GB | Cap (in bytes) for the on-disk OCI blob cache. When the cache exceeds this size after an insert, oldest-mtime entries are evicted until the total drops below the cap. Equivalent env var: `MIKEBOM_OCI_CACHE_SIZE=<bytes>`. See ["OCI layer caching"](#oci-layer-caching) below. |
 | `--output <[FMT=]PATH>` | per-format default (`mikebom.cdx.json`, `mikebom.spdx.json`, …) | Output path override. Two forms: bare `--output <path>` (applies to the single requested format — rejected with multiple formats) and per-format `--output <fmt>=<path>` (repeatable; each entry retargets one format). The special key `openvex` retargets the OpenVEX sidecar that SPDX emission co-produces when VEX is present — legal only alongside an SPDX format. |
 | `--format <fmt>` | `cyclonedx-json` | See [output formats](#output-formats). Comma-separated list + repeatable flag: `--format cyclonedx-json,spdx-2.3-json` produces both from a single scan. Duplicates dedupe silently. |
 | `--max-file-size <bytes>` | `268435456` (256 MB) | Skip hashing files larger than this |
@@ -249,6 +251,58 @@ What's not yet supported (deferred to follow-ons):
 - Native AWS SDK integration for ECR (`docker-credential-ecr-login`
   remains the supported path).
 - Registry mirror configs (`registries.conf`, `mirrors`).
+
+### OCI layer caching
+
+OCI distribution-spec blobs (image config + each layer) are
+content-addressed by SHA-256, so caching them on disk is correct by
+construction: a cache hit on a digest is identical-bytes to a fresh
+network fetch of that digest. mikebom caches every blob it pulls,
+keyed on digest; subsequent scans of the same image reuse the
+cached bytes and complete in seconds rather than tens of seconds.
+The image's manifest is intentionally NOT cached — a floating tag
+like `:latest` should re-fetch the manifest every time so updates
+are detected, after which any new layer digests will naturally
+cache-miss.
+
+**Cache location** (priority order):
+
+1. `$MIKEBOM_OCI_CACHE_DIR` (when set non-empty).
+2. `$XDG_CACHE_HOME/mikebom/oci-layers` (Linux convention).
+3. `$HOME/Library/Caches/mikebom/oci-layers` (macOS).
+4. `$HOME/.cache/mikebom/oci-layers` (fallback).
+
+**Layout**: `<cache-dir>/sha256/<64-hex>` per blob.
+
+**Eviction**: the cache enforces a default 10 GB cap. When an
+insert pushes the total over, oldest-mtime entries are removed
+until the total is back under the cap. Override the cap with
+`--oci-cache-size <bytes>` or `MIKEBOM_OCI_CACHE_SIZE=<bytes>`.
+
+**Disabling**: pass `--no-oci-cache` (or set
+`MIKEBOM_OCI_CACHE=0`) to skip the cache entirely for one
+invocation. Existing cache files on disk are untouched.
+
+**Clearing**: `rm -rf "$XDG_CACHE_HOME/mikebom/oci-layers"` (or
+the macOS / fallback equivalent). mikebom doesn't ship a
+`--clear-oci-cache` command; the directory is the canonical handle.
+
+**Safety properties**:
+
+- Every cache read re-verifies the on-disk SHA-256 against the
+  filename. Corrupted entries (truncated, bit-flipped) are
+  detected, deleted, and re-fetched from the network.
+- Cache writes go through `tempfile + atomic rename` (intra-fs
+  rename, atomic on every POSIX-ish filesystem). Concurrent scans
+  of the same image don't corrupt the final blob — both writers
+  produce identical bytes (same digest = same content) and the
+  rename atomically swaps in one of them.
+- A read-only cache directory or any other IO failure is
+  non-fatal: mikebom logs a warning and falls through to network-
+  only behavior. The scan completes either way.
+- Path-traversal is impossible: only `sha256:<64-hex>` digests
+  resolve to a path; anything else (including `sha256:..`)
+  fails the hex grammar check at lookup time.
 
 ---
 

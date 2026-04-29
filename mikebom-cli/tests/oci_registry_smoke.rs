@@ -154,6 +154,99 @@ fn pulls_distroless_static_and_emits_well_formed_sbom_with_zero_components() {
     );
 }
 
+/// Warm-cache speedup smoke test (milestone 036 / 031.z).
+///
+/// Pulls alpine:3.19 twice into a fresh tempdir-backed cache; the
+/// second pull reads every blob from disk and produces a
+/// byte-identical SBOM. Skipped silently unless
+/// `MIKEBOM_OCI_NETWORK_TESTS=1`.
+#[test]
+fn repeat_pull_uses_cache_for_warm_layers() {
+    if !network_tests_enabled() {
+        eprintln!(
+            "skipping: set MIKEBOM_OCI_NETWORK_TESTS=1 to run network-gated smoke tests"
+        );
+        return;
+    }
+
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let cache_dir = tmp.path().join("cache");
+    std::fs::create_dir_all(&cache_dir).expect("create cache_dir");
+    let out_path_1 = tmp.path().join("alpine1.cdx.json");
+    let out_path_2 = tmp.path().join("alpine2.cdx.json");
+
+    let invoke = |out: &std::path::Path| -> std::process::Output {
+        Command::new(env!("CARGO_BIN_EXE_mikebom"))
+            .arg("--offline")
+            .arg("sbom")
+            .arg("scan")
+            .arg("--image")
+            .arg("alpine:3.19")
+            .arg("--format")
+            .arg("cyclonedx-json")
+            .arg("--output")
+            .arg(out)
+            .env("MIKEBOM_OCI_CACHE_DIR", &cache_dir)
+            .output()
+            .expect("mikebom should run")
+    };
+
+    // First pull: cache is empty → network fetches, writes cache.
+    let out1 = invoke(&out_path_1);
+    assert!(
+        out1.status.success(),
+        "first mikebom pull failed:\nstdout={}\nstderr={}",
+        String::from_utf8_lossy(&out1.stdout),
+        String::from_utf8_lossy(&out1.stderr),
+    );
+
+    // After the first pull, the cache directory should contain
+    // some `sha256/<hex>` files. Verify by counting them — at
+    // least one (config + layers) must be present.
+    let blob_dir = cache_dir.join("sha256");
+    let blob_count = std::fs::read_dir(&blob_dir)
+        .map(|rd| rd.flatten().count())
+        .unwrap_or(0);
+    assert!(
+        blob_count >= 2,
+        "first pull should have populated the cache; got {blob_count} blobs in {}",
+        blob_dir.display()
+    );
+
+    // Second pull: same image, same cache → blobs read from disk.
+    let out2 = invoke(&out_path_2);
+    assert!(
+        out2.status.success(),
+        "second mikebom pull failed:\nstdout={}\nstderr={}",
+        String::from_utf8_lossy(&out2.stdout),
+        String::from_utf8_lossy(&out2.stderr),
+    );
+
+    // SBOMs from both runs should be byte-identical (same image,
+    // same scan logic; cache hit/miss doesn't change the output).
+    // Strip the timestamp + serialNumber + workspace path before
+    // comparing so we're robust to per-run wall-clock and uuid
+    // variation (the standard cross-host normalization the existing
+    // 27-fixture goldens use).
+    let canonical = |bytes: &[u8]| -> serde_json::Value {
+        let mut v: serde_json::Value =
+            serde_json::from_slice(bytes).expect("valid CDX JSON");
+        if let Some(metadata) = v.get_mut("metadata").and_then(|m| m.as_object_mut()) {
+            metadata.remove("timestamp");
+        }
+        if let Some(o) = v.as_object_mut() {
+            o.remove("serialNumber");
+        }
+        v
+    };
+    let v1 = canonical(&std::fs::read(&out_path_1).expect("read 1"));
+    let v2 = canonical(&std::fs::read(&out_path_2).expect("read 2"));
+    assert_eq!(
+        v1, v2,
+        "warm-cache pull should produce a canonical-identical SBOM to the cold-cache pull"
+    );
+}
+
 /// Cross-arch end-to-end smoke test (milestone 035 / 031.y).
 ///
 /// Pulls alpine:3.19 with `--image-platform` set to a non-host arch

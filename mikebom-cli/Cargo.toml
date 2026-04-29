@@ -76,12 +76,17 @@ ebpf-tracing = [
 # 031.x, #66). Both anonymous and credentialed flows go through the
 # same bearer-token retry path; credentials (when resolved from
 # ~/.docker/config.json / $DOCKER_CONFIG/config.json) are applied as
-# Basic auth on the realm token GET. Multi-platform flag deferred to
-# 031.y (#67); layer caching deferred to 031.z (#68). See
+# Basic auth on the realm token GET. Cross-arch image-index
+# resolution via `--image-platform <linux/arch[/variant]>`
+# (milestone 035 / 031.y, #67). On-disk SHA-256-content-addressed
+# blob cache with LRU eviction (milestone 036 / 031.z, #68) —
+# disable with `--no-oci-cache` / `MIKEBOM_OCI_CACHE=0`. See
 # `specs/031-oci-registry-image-scan/spec.md` for the original
 # contract, `specs/032-oci-spec-migration/spec.md` for the substrate
-# rationale, and `specs/034-authenticated-registry-pulls/spec.md` for
-# the auth design.
+# rationale, `specs/034-authenticated-registry-pulls/spec.md` for
+# the auth design, `specs/035-image-platform-flag/spec.md` for the
+# cross-arch design, and `specs/036-oci-layer-cache/spec.md` for the
+# cache design.
 oci-registry = [
     "dep:oci-spec",
 ]

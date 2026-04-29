@@ -8,6 +8,27 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 ## [Unreleased]
 
 ### Added
+- **Milestone 036 (031.z) — On-disk cache for pulled OCI image blobs.**
+  Repeat-scans of the same image now skip the network fetch and
+  read from a SHA-256-content-addressed cache on disk, completing
+  in seconds rather than tens of seconds for non-trivial images.
+  The cache lives at `$MIKEBOM_OCI_CACHE_DIR` →
+  `$XDG_CACHE_HOME/mikebom/oci-layers` →
+  `$HOME/Library/Caches/mikebom/oci-layers` (macOS) →
+  `$HOME/.cache/mikebom/oci-layers` (fallback). Default size cap
+  10 GB with mtime-based LRU eviction; configurable via
+  `--oci-cache-size <bytes>` or `MIKEBOM_OCI_CACHE_SIZE=<bytes>`.
+  Disable with `--no-oci-cache` or `MIKEBOM_OCI_CACHE=0`. Every
+  cache read re-verifies SHA-256 against the digest, so silent
+  corruption is detected and recovered (drop entry + re-fetch).
+  Atomic-rename writes (tempfile + persist) keep concurrent scans
+  safe. Best-effort posture: any IO failure (read-only fs, missing
+  $HOME) falls through to network-only behavior; scans complete
+  either way. Manifests are NOT cached (floating tags like
+  `:latest` need to re-fetch). No new dependencies. Closes #68.
+  See `specs/036-oci-layer-cache/spec.md` and the new
+  ["OCI layer caching"](docs/user-guide/cli-reference.md#oci-layer-caching)
+  section in the user guide.
 - **Milestone 035 (031.y) — `--image-platform` CLI flag for cross-arch
   image scans.** New `mikebom sbom scan --image <ref>
   --image-platform linux/<arch>[/<variant>]` selects a specific

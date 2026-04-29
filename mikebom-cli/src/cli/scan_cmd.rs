@@ -76,6 +76,28 @@ pub struct ScanArgs {
     #[arg(long, requires = "image", value_name = "linux/ARCH[/VARIANT]")]
     pub image_platform: Option<String>,
 
+    /// Disable the OCI blob cache for registry pulls. Equivalent to
+    /// `MIKEBOM_OCI_CACHE=0`. When set, every blob (config + layer)
+    /// is fetched from the registry on every scan, even if mikebom
+    /// has already cached the same digest from a previous pull.
+    /// Cache files on disk are untouched.
+    ///
+    /// Use case: CI lanes that want pure one-shot semantics, or
+    /// debugging a registry-side regression.
+    #[arg(long)]
+    pub no_oci_cache: bool,
+    /// Cap (in bytes) for the on-disk OCI blob cache. When the cache
+    /// exceeds this size, oldest-mtime entries are evicted until the
+    /// total drops below the cap. Default: 10 GB. Equivalent env
+    /// var: `MIKEBOM_OCI_CACHE_SIZE=<bytes>`.
+    ///
+    /// Cache location is resolved from (in priority order):
+    /// `$MIKEBOM_OCI_CACHE_DIR`, `$XDG_CACHE_HOME/mikebom/oci-layers`,
+    /// `$HOME/Library/Caches/mikebom/oci-layers` on macOS, otherwise
+    /// `$HOME/.cache/mikebom/oci-layers`.
+    #[arg(long, value_name = "BYTES")]
+    pub oci_cache_size: Option<u64>,
+
     /// Output path override. Two forms are accepted:
     ///
     /// * Bare `--output <path>` — applies to the single requested
@@ -486,9 +508,29 @@ pub async fn execute(
                         );
                     }
                     tracing::info!(image_ref = %arg_str, "pulling image from registry");
+                    // Resolve the layer-cache size cap. `--no-oci-cache`
+                    // (or `MIKEBOM_OCI_CACHE=0`) disables; otherwise
+                    // `--oci-cache-size` overrides
+                    // `MIKEBOM_OCI_CACHE_SIZE` overrides the 10-GB
+                    // default. None disables the cache entirely.
+                    let cache_disabled = args.no_oci_cache
+                        || std::env::var("MIKEBOM_OCI_CACHE").as_deref() == Ok("0");
+                    let cache_size_cap = if cache_disabled {
+                        None
+                    } else {
+                        let env_size = std::env::var("MIKEBOM_OCI_CACHE_SIZE")
+                            .ok()
+                            .and_then(|s| s.parse::<u64>().ok());
+                        Some(
+                            args.oci_cache_size
+                                .or(env_size)
+                                .unwrap_or(10 * 1024 * 1024 * 1024),
+                        )
+                    };
                     let tempdir = scan_fs::oci_pull::pull_to_tarball(
                         arg_str,
                         args.image_platform.as_deref(),
+                        cache_size_cap,
                     )
                     .await?;
                     let tarball = tempdir.path().join("image.tar");
