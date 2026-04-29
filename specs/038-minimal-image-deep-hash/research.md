@@ -57,28 +57,41 @@ both implement against the same shape.
 metadata layout (analogous to dpkg's `status.d/`), or does it use
 the standard `/lib/apk/db/installed`?
 
-**Decision**: **Defer to implementation-phase recon (US2 P2).**
-Per the spec's US2 contract, the milestone determines this
-empirically by extracting a chainguard image and inspecting its
-`/lib/apk/db/` layout. The spec is structured to accommodate
-either outcome:
+**Resolved (2026-04-28 recon)**: **Branch A — apko uses the
+standard apk DB layout.** The existing apk reader covers
+chainguard apko-built images for component metadata.
 
-- **If apko uses standard apk DB layout**: the existing apk
-  reader already covers it. US2 becomes a smoke-test verification
-  + docs entry. Zero production code.
-- **If apko uses a variant layout**: implement the variant
-  reader following the same shape as the dpkg status.d/ work.
-  Estimated ≤ 100 LOC.
+Empirical evidence:
+- `mikebom sbom scan --image cgr.dev/chainguard/static:latest
+  --image-platform linux/amd64` produced 3 valid apk components
+  (`ca-certificates-bundle`, `tzdata`, `wolfi-baselayout`) with
+  Wolfi-namespace PURLs and `distro=wolfi-20230201` qualifier.
+- The existing reader required no code changes to surface them.
 
-**Rationale**: ten minutes of recon at implementation time
-resolves a question that would take longer to answer
-authoritatively from existing documentation alone. Pre-recon
-speculation about apko's layout would risk over-scoping the spec.
+**However, a separate gap surfaced during the recon**: per-file
+evidence (`evidence.occurrences[]`) is **zero for every apk
+component**, on both chainguard apko AND full-fat
+`alpine:3.19`. mikebom's `file_hashes.rs` is dpkg-only — apk
+deep-hashing has never been implemented for any apk image.
 
-**Implementation guard**: the recon step is the FIRST task in
-the implementation tasks for US2 (T01x in tasks.md). Its outcome
-gates whether subsequent US2 tasks become "smoke test" or "code
-+ smoke test."
+This means US2's "confirm or extend" framing has resolved as:
+
+- **Confirmed**: existing apk reader handles apko's component
+  metadata.
+- **Discovered (out-of-scope for milestone 038)**: apk per-file
+  deep-hashing is missing across the board, not specific to apko.
+
+The discovered gap is a separate concern from the milestone-038
+US1 work (which covers deb status.d/ images only). It deserves
+its own milestone — call it 039 or similar — that mirrors the
+file_hashes.rs pattern for apk's own per-package metadata
+(`/lib/apk/db/installed` carries the file list inline). This
+milestone (038) explicitly excludes that work via FR-007's "if
+no new variant is required, FR-007 is a no-op" clause.
+
+**Action**: file a follow-on issue tracking apk per-file
+deep-hashing for both alpine and apko/wolfi. Document the
+finding here so a future maintainer doesn't re-derive it.
 
 ---
 
