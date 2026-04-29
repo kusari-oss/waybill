@@ -34,6 +34,11 @@ mikebom.spdx.json
 mikebom.spdx3-experimental.json
 mikebom.openvex.json
 
+# Goldens diff-debug scratch files written by regression tests on
+# failure (alongside the pinned golden). Never commit; the pinned
+# `.json` is the source of truth.
+mikebom-cli/tests/fixtures/golden/**/*.actual.json
+
 # Local release-test staging (downloaded tarballs, per-alpha extracts)
 .release-test/
 .claude/scheduled_tasks.lock

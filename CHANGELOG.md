@@ -7,6 +7,34 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+(Nothing yet. Land changes here, then cut a release per the
+`release.yml` workflow trigger documented in
+`docs/contributing/release.md`.)
+
+## [0.1.0-alpha.6] — 2026-04-29
+
+A small, focused release: makes `mikebom sbom scan --image <ref>`
+behave the way users coming from trivy and syft expect, and
+unblocks AWS ECR pulls that were previously failing on a Basic
+auth challenge.
+
+- **Docker daemon as a default image source.** When `--image
+  <ref>` is an OCI reference, mikebom now checks the local docker
+  daemon's cache first and falls back to a registry pull only on
+  miss. Matches trivy's `--image-src` and syft's auto-detection
+  convention. The new `--image-src docker,remote` flag (default
+  in that order) controls the resolution sequence; pass
+  `--image-src remote` to force a fresh registry fetch.
+- **AWS ECR support for the registry path.** The OCI-pull's
+  401-retry now handles `Basic` auth challenges in addition to
+  `Bearer`, applying cached `~/.docker/config.json` credentials
+  directly. ECR's `aws ecr get-login-password | docker login`
+  flow now works end-to-end with `--image-src remote`.
+
+Together these resolve the reported case where an ECR image was
+already cached locally and `docker login`'d, but mikebom errored
+out with `WWW-Authenticate is not a Bearer challenge: Basic ...`.
+
 ### Added
 
 - **`Basic` auth challenge support for the OCI registry pull** (044

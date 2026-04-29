@@ -4,56 +4,56 @@
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.5",
+      "annotator": "Tool: mikebom-0.1.0-alpha.6",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.5",
+      "annotator": "Tool: mikebom-0.1.0-alpha.6",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.5",
+      "annotator": "Tool: mikebom-0.1.0-alpha.6",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":0}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.5",
+      "annotator": "Tool: mikebom-0.1.0-alpha.6",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-events-dropped\",\"value\":0}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.5",
+      "annotator": "Tool: mikebom-0.1.0-alpha.6",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.5",
+      "annotator": "Tool: mikebom-0.1.0-alpha.6",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
     }
   ],
   "creationInfo": {
     "created": "1970-01-01T00:00:00Z",
     "creators": [
-      "Tool: mikebom-0.1.0-alpha.5",
+      "Tool: mikebom-0.1.0-alpha.6",
       "Organization: mikebom contributors"
     ]
   },
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-SAKT5EYJKSXJ2J3D"
+    "SPDXRef-DocumentRoot-OVRE47W7NWUXQWZY"
   ],
-  "documentNamespace": "https://mikebom.kusari.dev/spdx/OYYEAMF3QFGDEDT36ZRPUKPOAQDF4Q37",
+  "documentNamespace": "https://mikebom.kusari.dev/spdx/CULXKKYOCADTMOU7HGJY647S7PQMJF7D",
   "name": "bdb-only",
   "packages": [
     {
-      "SPDXID": "SPDXRef-DocumentRoot-SAKT5EYJKSXJ2J3D",
+      "SPDXID": "SPDXRef-DocumentRoot-OVRE47W7NWUXQWZY",
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
@@ -77,7 +77,7 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-SAKT5EYJKSXJ2J3D",
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-OVRE47W7NWUXQWZY",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     }
