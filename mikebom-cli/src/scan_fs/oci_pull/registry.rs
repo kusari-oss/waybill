@@ -22,6 +22,7 @@ use sha2::Digest as _;
 use oci_spec::image::{ImageIndex, ImageManifest};
 
 use super::auth::Credential;
+use super::cache::Cache;
 use super::reference::ImageReference;
 
 /// Manifest media types we accept (sent on the `Accept` header
@@ -55,6 +56,11 @@ pub(super) struct RegistryClient {
     /// construction time and applied as Basic auth on the bearer-
     /// token realm fetch in [`Self::fetch_bearer_token`].
     credentials: Option<Credential>,
+    /// Optional disk cache for blob fetches (milestone 036). `None`
+    /// means no caching: every blob is fetched from the network.
+    /// When set, [`Self::fetch_blob`] consults the cache first and
+    /// inserts on miss.
+    cache: Option<Cache>,
 }
 
 impl RegistryClient {
@@ -63,7 +69,10 @@ impl RegistryClient {
     /// `~/.docker/config.json` (or `$DOCKER_CONFIG/config.json`) at
     /// construction time. Missing config / no entry for this registry
     /// → anonymous mode.
-    pub(super) fn new(reference: &ImageReference) -> Result<Self> {
+    ///
+    /// `cache` is the optional disk cache for blob bodies; `None`
+    /// disables caching.
+    pub(super) fn new(reference: &ImageReference, cache: Option<Cache>) -> Result<Self> {
         let http = reqwest::Client::builder()
             .user_agent(concat!("mikebom/", env!("CARGO_PKG_VERSION")))
             .build()
@@ -76,7 +85,11 @@ impl RegistryClient {
                 "resolved registry credentials from Docker keychain"
             );
         }
-        Ok(Self { http, credentials })
+        Ok(Self {
+            http,
+            credentials,
+            cache,
+        })
     }
 
     /// Fetch the manifest for `reference`. Returns either a
@@ -106,16 +119,36 @@ impl RegistryClient {
     /// Fetch a blob (config or layer) and verify its SHA-256
     /// matches the declared `digest`. The digest is the
     /// `<algorithm>:<hex>` form straight from the descriptor.
+    ///
+    /// When [`Self::cache`] is `Some`, the cache is consulted before
+    /// any network call; on hit the cached bytes (already SHA-256
+    /// verified by [`Cache::get`]) are returned. On miss the
+    /// network bytes are verified, inserted into the cache (errors
+    /// logged but non-fatal), and returned.
     pub(super) async fn fetch_blob(
         &self,
         reference: &ImageReference,
         digest: &str,
     ) -> Result<Vec<u8>> {
+        if let Some(cache) = self.cache.as_ref() {
+            if let Some(bytes) = cache.get(digest) {
+                return Ok(bytes);
+            }
+        }
         let url = blob_url(reference, digest);
         // Blob endpoint accepts any media type; we send `*/*`.
         let body = self.fetch_with_bearer_retry(&url, &["*/*"]).await?;
         verify_sha256(&body.bytes, digest)
             .with_context(|| format!("verifying blob {digest} from {url}"))?;
+        if let Some(cache) = self.cache.as_ref() {
+            if let Err(e) = cache.insert(digest, &body.bytes) {
+                tracing::warn!(
+                    %digest,
+                    error = %e,
+                    "OCI blob cache insert failed; scan continues without caching this blob"
+                );
+            }
+        }
         Ok(body.bytes)
     }
 
@@ -594,6 +627,7 @@ mod tests {
                 username: "alice".to_string(),
                 secret: "hunter2".to_string(),
             }),
+            cache: None,
         };
         let challenge = BearerChallenge {
             realm: format!("http://{addr}/token"),
@@ -652,6 +686,7 @@ mod tests {
         let client = RegistryClient {
             http: reqwest::Client::new(),
             credentials: None,
+            cache: None,
         };
         let challenge = BearerChallenge {
             realm: format!("http://{addr}/token"),
@@ -669,6 +704,47 @@ mod tests {
         assert!(
             !has_auth,
             "anonymous realm GET must not carry Authorization header; got request:\n{request}"
+        );
+    }
+
+    /// End-to-end cache wire-up test (milestone 036 commit 2): when
+    /// a `RegistryClient` carries a populated `Cache`, a subsequent
+    /// `fetch_blob` for the same digest reads from disk without a
+    /// network call. We verify "no network call" by pointing the
+    /// reference at an unreachable host — if the cache misses, the
+    /// fetch errors out on connect.
+    #[tokio::test]
+    async fn fetch_blob_returns_cached_bytes_without_network() {
+        use sha2::Digest as _;
+
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(tmp.path().join("sha256")).unwrap();
+        let cache = super::super::cache::Cache::open_for_test(tmp.path(), 1 << 30);
+
+        let bytes = b"hello cached world".to_vec();
+        let mut hasher = sha2::Sha256::new();
+        hasher.update(&bytes);
+        let digest = format!("sha256:{:x}", hasher.finalize());
+        cache.insert(&digest, &bytes).unwrap();
+
+        // Reference points at a nonexistent host; if the cache misses
+        // the fetch will fail on connect.
+        let reference = super::super::reference::parse_reference(
+            "registry.invalid.mikebom-test.example/foo/bar:tag",
+        )
+        .unwrap();
+
+        let client = RegistryClient {
+            http: reqwest::Client::new(),
+            credentials: None,
+            cache: Some(cache),
+        };
+
+        let got = client.fetch_blob(&reference, &digest).await.unwrap();
+        assert_eq!(
+            got, bytes,
+            "cache hit should return the previously-inserted bytes \
+             without making a network call"
         );
     }
 }

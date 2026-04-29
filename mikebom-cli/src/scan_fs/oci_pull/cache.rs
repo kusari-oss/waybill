@@ -45,6 +45,20 @@ pub(super) struct Cache {
 }
 
 impl Cache {
+    /// Construct a Cache rooted at an explicit directory. Used by
+    /// tests in sibling modules (e.g. `registry::tests`) that need
+    /// to bypass the env-var resolution chain. Production code goes
+    /// through [`Self::open`].
+    #[cfg(test)]
+    pub(super) fn open_for_test(dir: &std::path::Path, size_cap: u64) -> Self {
+        std::fs::create_dir_all(dir.join("sha256"))
+            .expect("test cache dir should be creatable");
+        Self {
+            dir: dir.to_path_buf(),
+            size_cap,
+        }
+    }
+
     /// Build a cache rooted at the resolved cache directory. Returns
     /// `None` if the directory can't be located, created, or written
     /// to — in which case the caller falls through to no-cache mode.

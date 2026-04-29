@@ -77,11 +77,17 @@ use tarball::PulledLayer;
 /// Authenticated pulls (milestone 034 / #66): credentials are
 /// resolved from the Docker keychain inside `RegistryClient::new`.
 ///
+/// Layer caching (milestone 036 / #68): when
+/// `cache_size_cap` is `Some(bytes)`, blobs are cached on disk
+/// keyed on their SHA-256 digest. `None` disables caching for
+/// this pull (every blob is fetched from the network).
+///
 /// Async by design — mikebom's CLI is `#[tokio::main]`-bootstrapped,
 /// so callers `.await` this directly without bridging.
 pub async fn pull_to_tarball(
     image_ref: &str,
     image_platform: Option<&str>,
+    cache_size_cap: Option<u64>,
 ) -> Result<tempfile::TempDir> {
     let mut reference = reference::parse_reference(image_ref)
         .with_context(|| format!("parsing OCI image reference `{image_ref}`"))?;
@@ -113,7 +119,12 @@ pub async fn pull_to_tarball(
         "pulling OCI image"
     );
 
-    let client = RegistryClient::new(&reference)?;
+    // Open the layer cache when a cap is configured. Cache::open
+    // is best-effort: any IO failure (read-only fs, missing $HOME,
+    // etc.) returns None and we fall through to no-cache mode. The
+    // user's scan completes either way.
+    let cache_handle = cache_size_cap.and_then(cache::Cache::open);
+    let client = RegistryClient::new(&reference, cache_handle)?;
 
     // Step 1: fetch the manifest. If it's an image index
     // (manifest list), resolve the platform-specific manifest and
