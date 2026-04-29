@@ -2267,6 +2267,10 @@ pub fn read_with_claims(
     // isn't Fedora-shaped the index is empty and the sidecar path is
     // a full no-op.
     let sidecar_index = super::maven_sidecar::FedoraSidecarIndex::build(rootfs);
+    // Milestone 042 US2: Debian `/usr/share/maven-repo/` GAV-tree
+    // sidecar reader. Built once per scan; same shape as the
+    // Fedora index. Empty on non-Debian rootfs.
+    let debian_sidecar = super::maven_sidecar::DebianSidecarIndex::build(rootfs);
     let mut sidecar_resolved: usize = 0;
     let mut jar_meta: Vec<(String, Vec<EmbeddedMavenMeta>, Option<String>)> = Vec::new();
     // Feature 009: shade-relocation ancestors parsed from each JAR's
@@ -2328,37 +2332,47 @@ pub fn read_with_claims(
             // strips it during RPM build), try the sidecar index at
             // `/usr/share/maven-poms/`. On miss, the JAR falls
             // through to generic-binary emission per FR-005.
-            if let Some(sidecar_pom_path) = sidecar_index.lookup_for_jar(jar_path) {
-                if let Some((g, a, v)) =
-                    super::maven_sidecar::resolve_coords(sidecar_pom_path, &sidecar_index)
-                {
-                    tracing::debug!(
-                        jar = %jar_path.display(),
-                        sidecar_pom = %sidecar_pom_path.display(),
-                        group = %g,
-                        artifact = %a,
-                        version = %v,
-                        "maven sidecar resolved"
-                    );
-                    let synthetic = EmbeddedMavenMeta {
-                        coord: PomProperties {
-                            group_id: g,
-                            artifact_id: a,
-                            version: v,
-                        },
-                        declared_deps: Vec::new(),
-                        pom_xml_bytes: None,
-                        sidecar_hash: None,
-                        archive_sha256: None,
-                        is_primary: true,
-                    };
-                    jar_meta.push((
-                        jar_path.to_string_lossy().into_owned(),
-                        vec![synthetic],
-                        co_owned_by,
-                    ));
-                    sidecar_resolved += 1;
-                }
+            // Try the Fedora sidecar first (FR-005 winner-on-collision
+            // rule). Falls through to the Debian sidecar on miss.
+            // Milestone 042 US2: the Debian path covers Debian /
+            // Ubuntu Java images where `apt-get install lib*-java` has
+            // populated `/usr/share/maven-repo/` with GAV-tree POMs.
+            let resolved: Option<(&Path, (String, String, String))> = if let Some(p) =
+                sidecar_index.lookup_for_jar(jar_path)
+            {
+                super::maven_sidecar::resolve_coords(p, &sidecar_index).map(|gav| (p, gav))
+            } else if let Some(p) = debian_sidecar.lookup_for_jar(jar_path) {
+                super::maven_sidecar::resolve_coords(p, &debian_sidecar).map(|gav| (p, gav))
+            } else {
+                None
+            };
+            if let Some((sidecar_pom_path, (g, a, v))) = resolved {
+                tracing::debug!(
+                    jar = %jar_path.display(),
+                    sidecar_pom = %sidecar_pom_path.display(),
+                    group = %g,
+                    artifact = %a,
+                    version = %v,
+                    "maven sidecar resolved"
+                );
+                let synthetic = EmbeddedMavenMeta {
+                    coord: PomProperties {
+                        group_id: g,
+                        artifact_id: a,
+                        version: v,
+                    },
+                    declared_deps: Vec::new(),
+                    pom_xml_bytes: None,
+                    sidecar_hash: None,
+                    archive_sha256: None,
+                    is_primary: true,
+                };
+                jar_meta.push((
+                    jar_path.to_string_lossy().into_owned(),
+                    vec![synthetic],
+                    co_owned_by,
+                ));
+                sidecar_resolved += 1;
             }
             continue;
         }
@@ -2374,8 +2388,9 @@ pub fn read_with_claims(
         tracing::info!(
             rootfs = %rootfs.display(),
             resolved = sidecar_resolved,
-            indexed = sidecar_index.len(),
-            "maven sidecar scan: resolved N JARs via /usr/share/maven-poms/"
+            fedora_indexed = sidecar_index.len(),
+            debian_indexed = debian_sidecar.len(),
+            "maven sidecar scan: resolved N JARs via /usr/share/maven-poms/ + /usr/share/maven-repo/"
         );
     }
 
