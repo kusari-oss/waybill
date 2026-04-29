@@ -328,6 +328,14 @@ fn run_scan_with_format(
     let out_path = tmp.path().join("out.spdx3.json");
     let mut cmd = Command::new(env!("CARGO_BIN_EXE_mikebom"));
     apply_fake_home_env(&mut cmd, fake_home.path());
+    // Pin `OutputConfig.created` so two sequential subprocess
+    // invocations of this helper produce byte-identical SPDX 3
+    // output (Scenario 7's contract). Without this, the two
+    // invocations may straddle a second-boundary on slow runners,
+    // surfacing as a CI flake on docs-only PRs and on main. Set
+    // before `extra_env` so callers can still override via that
+    // mechanism if a test specifically needs a non-fixed timestamp.
+    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     for (k, v) in extra_env {
         cmd.env(k, v);
     }

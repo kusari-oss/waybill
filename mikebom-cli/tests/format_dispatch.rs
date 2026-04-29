@@ -41,6 +41,13 @@ fn run_scan_in(
     let mut cmd = Command::new(bin());
     cmd.current_dir(cwd);
     apply_fake_home_env(&mut cmd, fake_home.path());
+    // Pin `OutputConfig.created` so two sequential subprocess
+    // invocations get the same timestamp even when they straddle a
+    // second-boundary on slow runners. Without this, byte-identity
+    // assertions (e.g. `spdx_3_alias_bytes_are_byte_identical_to_
+    // stable_identifier`) fail intermittently. The env var contract
+    // is documented at `cli::scan_cmd::scan_created_timestamp`.
+    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd
         .arg("--offline")
         .arg("sbom")
