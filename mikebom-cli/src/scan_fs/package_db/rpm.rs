@@ -21,6 +21,19 @@ use super::rpmdb_sqlite::{RecordValue, SqliteFile};
 use super::{rpm_vendor_from_id, PackageDbEntry};
 use crate::scan_fs::os_release;
 
+/// One file owned by an rpm package — path on disk + optional
+/// upstream-provided cross-reference digest from the package's
+/// `FILEDIGESTS` tag. The digest is the algorithm-prefixed form
+/// (e.g. `"sha256:abc..."`, `"md5:def..."`); `None` for non-
+/// regular files (devices, fifos) whose FILEDIGESTS entry is
+/// empty by spec, or for entries whose digest length doesn't
+/// match the declared algorithm (defensive: damaged HeaderBlob).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RpmFileEntry {
+    pub path: PathBuf,
+    pub digest: Option<String>,
+}
+
 /// Hard cap on rpmdb.sqlite size — an honest RHEL rpmdb is ~5 MB;
 /// anything above 200 MB is refused as defense-in-depth.
 const MAX_RPMDB_BYTES: u64 = 200 * 1024 * 1024;
@@ -67,43 +80,54 @@ pub fn read(
     distro_version: Option<&str>,
 ) -> Vec<PackageDbEntry> {
     let mut out: Vec<PackageDbEntry> = Vec::new();
-    iter_rpmdb(rootfs, distro_version, |entry, _paths| out.push(entry));
+    iter_rpmdb(rootfs, distro_version, |entry, _files| out.push(entry));
     out
 }
 
+/// One rpm file-list entry as exposed to the deep-hash path:
+/// rootfs-absolute path string + optional algorithm-prefixed
+/// upstream digest. Mirrors the shape of `apk::ApkFileEntry`
+/// from milestone 039 / 040.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RpmFileListEntry {
+    pub path: String,
+    /// Algorithm-prefixed FILEDIGESTS value (e.g.
+    /// `"sha256:abc..."`, `"md5:def..."`), or `None` for files
+    /// whose stanza had no usable cross-ref (non-regular files,
+    /// missing FILEDIGESTS, unknown FILEDIGESTALGO).
+    pub digest: Option<String>,
+}
+
 /// Walk the rpmdb once and build a per-package file-list map for
-/// the milestone-040 deep-hash path. Mirrors
-/// `apk::read_file_lists` and the milestone-038-era
-/// dpkg-info-derived list — the consumer is the deep-hash
-/// dispatcher in `scan_fs::mod`.
+/// the deep-hash path. Mirrors `apk::read_file_lists`.
 ///
 /// Returns a map keyed on package name with each value being a
-/// `Vec<String>` of rootfs-relative paths the package's
-/// HeaderBlob `BASENAMES` / `DIRNAMES` / `DIRINDEXES` triple
-/// claims. Paths preserve the rpm-on-disk absolute form (e.g.
-/// `/usr/bin/bash`) — the consumer (`hash_rpm_package_files`)
-/// strips the leading `/` before joining onto the rootfs.
+/// `Vec<RpmFileListEntry>` carrying the rootfs-absolute path
+/// plus the optional algorithm-prefixed FILEDIGESTS cross-ref
+/// (milestone 041). Paths preserve the rpm-on-disk absolute
+/// form (e.g. `/usr/bin/bash`) — the consumer
+/// (`hash_rpm_package_files`) strips the leading `/` before
+/// joining onto the rootfs.
 ///
 /// Returns an empty map when the rpmdb is absent (typical for
 /// non-rpm rootfs) or unreadable; never errors.
-///
-/// `iter_rpmdb` already handles the SQLite-vs-BDB selection,
-/// the `WAL` / `-shm` diagnostics, and BASENAMES/DIRNAMES/
-/// DIRINDEXES decoding via mikebom's HeaderBlob reader.
 pub fn read_file_lists(
     rootfs: &Path,
-) -> std::collections::HashMap<String, Vec<String>> {
-    let mut out: std::collections::HashMap<String, Vec<String>> =
+) -> std::collections::HashMap<String, Vec<RpmFileListEntry>> {
+    let mut out: std::collections::HashMap<String, Vec<RpmFileListEntry>> =
         std::collections::HashMap::new();
-    iter_rpmdb(rootfs, None, |entry, paths| {
-        if paths.is_empty() {
+    iter_rpmdb(rootfs, None, |entry, files| {
+        if files.is_empty() {
             return;
         }
-        let strings: Vec<String> = paths
+        let mapped: Vec<RpmFileListEntry> = files
             .into_iter()
-            .map(|p| p.to_string_lossy().into_owned())
+            .map(|f| RpmFileListEntry {
+                path: f.path.to_string_lossy().into_owned(),
+                digest: f.digest,
+            })
             .collect();
-        out.insert(entry.name.clone(), strings);
+        out.insert(entry.name.clone(), mapped);
     });
     out
 }
@@ -124,8 +148,9 @@ pub fn collect_claimed_paths(
     // `distro_version` isn't needed here — we only care about file
     // paths, not PURLs. Pass None to keep the helper signature
     // uniform.
-    iter_rpmdb(rootfs, None, |_entry, paths| {
-        for rel in paths {
+    iter_rpmdb(rootfs, None, |_entry, files| {
+        for entry in files {
+            let rel = entry.path;
             // `rel` is absolute on the packaged system (e.g.
             // `/usr/bin/bash`). Strip the leading `/` and join onto the
             // rootfs to get the on-disk path.
@@ -143,11 +168,12 @@ pub fn collect_claimed_paths(
 
 /// Shared rpmdb iteration: opens the db, applies BDB / WAL diagnostics,
 /// iterates `Packages` via `iter_table_blobs`, and invokes `visitor`
-/// with the decoded `PackageDbEntry` and its file paths (paths are
-/// empty for fixture-shaped rows that carry no file list).
+/// with the decoded `PackageDbEntry` and its files (path + optional
+/// upstream FILEDIGESTS cross-ref). Files are empty for
+/// fixture-shaped rows that carry no file list.
 fn iter_rpmdb<F>(rootfs: &Path, distro_version: Option<&str>, mut visitor: F)
 where
-    F: FnMut(PackageDbEntry, Vec<PathBuf>),
+    F: FnMut(PackageDbEntry, Vec<RpmFileEntry>),
 {
     // v7 Phase H: try each candidate rpmdb location in order. Fedora ≥34
     // and RHEL ≥9.4 moved to `/usr/lib/sysimage/rpm/`; older distros
@@ -225,11 +251,11 @@ where
         if start.elapsed() > ITERATION_BUDGET {
             return;
         }
-        if let Some((entry, paths)) =
+        if let Some((entry, files)) =
             row_to_entry(values, blob, &vendor, &source_path, distro_version)
         {
             row_count += 1;
-            visitor(entry, paths);
+            visitor(entry, files);
         }
     });
     if start.elapsed() > ITERATION_BUDGET {
@@ -276,7 +302,7 @@ fn row_to_entry(
     vendor: &str,
     source_path: &str,
     distro_version: Option<&str>,
-) -> Option<(PackageDbEntry, Vec<PathBuf>)> {
+) -> Option<(PackageDbEntry, Vec<RpmFileEntry>)> {
     // Production path: attempt header-blob parse on any non-trivial
     // blob. Real rpmdb.sqlite stores headers in the **stripped
     // immutable-region form** (no magic prefix, 8-byte intro); `.rpm`
@@ -291,8 +317,8 @@ fn row_to_entry(
                 if let Some(entry) =
                     build_entry_from_header(&header, vendor, source_path, distro_version)
                 {
-                    let paths = header.file_paths();
-                    return Some((entry, paths));
+                    let files = build_rpm_file_entries(&header);
+                    return Some((entry, files));
                 }
                 // Header parsed but required fields missing — fall
                 // through to fixture-path attempt.
@@ -309,6 +335,56 @@ fn row_to_entry(
     let entry =
         build_entry_from_text_columns(values, vendor, source_path, distro_version)?;
     Some((entry, Vec::new()))
+}
+
+/// Combine an `RpmHeader`'s file paths (BASENAMES + DIRNAMES +
+/// DIRINDEXES) with the optional FILEDIGESTS / FILEDIGESTALGO
+/// cross-ref into a `Vec<RpmFileEntry>` aligned by basename
+/// index. When FILEDIGESTS is absent (older rpm packages built
+/// without it, metapackages, fixture rows), every entry's
+/// `digest` is `None`. When present, we emit
+/// `<algo>:<lowercase-hex>` for entries whose hex string matches
+/// the algorithm's expected length, and `None` otherwise (rpm
+/// records empty FILEDIGESTS strings for non-regular files like
+/// devices and fifos; we want those `None` rather than
+/// algorithm-prefixed-empty).
+fn build_rpm_file_entries(header: &RpmHeader) -> Vec<RpmFileEntry> {
+    let basenames = header
+        .string_array(rpm_header::TAG_BASENAMES)
+        .unwrap_or_default();
+    let dirnames = header
+        .string_array(rpm_header::TAG_DIRNAMES)
+        .unwrap_or_default();
+    let dirindexes = header
+        .int32_array(rpm_header::TAG_DIRINDEXES)
+        .unwrap_or_default();
+    let digests = header.file_digests();
+    let n = basenames.len().min(dirindexes.len());
+    let mut out = Vec::with_capacity(n);
+    for i in 0..n {
+        let idx = dirindexes[i] as usize;
+        if idx >= dirnames.len() {
+            continue;
+        }
+        let mut p = String::with_capacity(dirnames[idx].len() + basenames[i].len());
+        p.push_str(dirnames[idx]);
+        p.push_str(basenames[i]);
+        let digest = digests.as_ref().and_then(|d| {
+            let raw = d.values.get(i)?;
+            if raw.is_empty() || raw.len() != d.algo.hex_len() {
+                return None;
+            }
+            // rpm emits hex in lowercase already, but normalize
+            // defensively so the wire form is uniform across
+            // legacy / modern packages.
+            Some(format!("{}:{}", d.algo.name(), raw.to_ascii_lowercase()))
+        });
+        out.push(RpmFileEntry {
+            path: PathBuf::from(p),
+            digest,
+        });
+    }
+    out
 }
 
 /// Build a `PackageDbEntry` from a parsed RPM header (production blob
@@ -692,13 +768,19 @@ mod tests {
             "pkg:rpm/redhat/bash@5.2.15-1.fc40?arch=x86_64"
         );
         assert_eq!(entry.depends, vec!["glibc", "ncurses-libs"]);
+        let path_only: Vec<PathBuf> = paths.iter().map(|f| f.path.clone()).collect();
         assert_eq!(
-            paths,
+            path_only,
             vec![
                 PathBuf::from("/usr/bin/bash"),
                 PathBuf::from("/usr/share/man/man1/bash.1.gz"),
             ]
         );
+        // Milestone 041: this fixture has no FILEDIGESTS, so all
+        // file entries should have digest=None.
+        for f in &paths {
+            assert!(f.digest.is_none(), "no FILEDIGESTS → digest must be None");
+        }
     }
 
     /// VENDOR wins over PACKAGER when both are present — matches the

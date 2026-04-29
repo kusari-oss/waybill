@@ -128,6 +128,7 @@ pub fn hash_package_files(
             sha256,
             md5_legacy,
             apk_sha1: None,
+            rpm_file_digest: None,
         });
     }
 
@@ -286,6 +287,7 @@ pub fn hash_apk_package_files(
             sha256,
             md5_legacy: None,
             apk_sha1: entry.sha1.clone(),
+            rpm_file_digest: None,
         });
     }
 
@@ -297,17 +299,14 @@ pub fn hash_apk_package_files(
 
 /// Deep-hash every file the rpm package claims (via
 /// HeaderBlob `BASENAMES` / `DIRNAMES` / `DIRINDEXES`).
-/// Mirrors [`hash_apk_package_files`]; the resulting
-/// `FileOccurrence`s carry SHA-256 only — no MD5 cross-ref
-/// (rpm has no analog of dpkg's `.md5sums`) and no SHA-1
-/// cross-ref (rpm's FILEDIGESTS deferred to a follow-on
-/// milestone per the milestone-040 Q1 clarification).
+/// Mirrors [`hash_apk_package_files`].
 ///
-/// `files` is the rootfs-relative-or-absolute path list yielded
-/// by [`super::rpm::read_file_lists`]. rpm paths come in as
-/// absolute (`/usr/bin/bash`); we resolve to absolute form for
-/// `FileOccurrence.location` and strip the leading `/` before
-/// joining onto the rootfs.
+/// `files` is the path-and-digest list yielded by
+/// [`super::rpm::read_file_lists`]. Each entry's `path` is
+/// rpm-on-disk absolute (`/usr/bin/bash`); the optional `digest`
+/// is the upstream-provided cross-ref in algorithm-prefixed
+/// form (e.g. `"sha256:abc..."`) and threads through to the
+/// resulting `FileOccurrence.rpm_file_digest` (milestone 041).
 ///
 /// Files that disappear between install and scan time are
 /// silently skipped (rare; would typically indicate config files
@@ -315,11 +314,11 @@ pub fn hash_apk_package_files(
 /// are skipped with a debug log.
 pub fn hash_rpm_package_files(
     rootfs: &Path,
-    files: &[String],
+    files: &[super::rpm::RpmFileListEntry],
 ) -> (Vec<FileOccurrence>, Option<ContentHash>) {
     let mut occurrences: Vec<FileOccurrence> = Vec::new();
-    for raw in files {
-        let trimmed = raw.trim();
+    for entry in files {
+        let trimmed = entry.path.trim();
         if trimmed.is_empty() {
             continue;
         }
@@ -359,6 +358,7 @@ pub fn hash_rpm_package_files(
             sha256,
             md5_legacy: None,
             apk_sha1: None,
+            rpm_file_digest: entry.digest.clone(),
         });
     }
 
@@ -384,10 +384,10 @@ pub fn hash_rpm_db_only(rootfs: &Path, pkg_name: &str) -> Option<ContentHash> {
     if files.is_empty() {
         return None;
     }
-    let mut sorted = files.clone();
-    sorted.sort();
+    let mut paths: Vec<&str> = files.iter().map(|e| e.path.as_str()).collect();
+    paths.sort();
     let mut payload = String::new();
-    for p in &sorted {
+    for p in &paths {
         payload.push_str(p);
         payload.push('\n');
     }
@@ -1028,6 +1028,16 @@ mod tests {
 
     // ---- Milestone 040 US3: rpm per-file deep-hashing ---------------------
 
+    /// Helper: build an RpmFileListEntry with no cross-ref digest
+    /// (matches packages whose FILEDIGESTS isn't being exercised
+    /// by the test).
+    fn rpm_path(p: &str) -> super::super::rpm::RpmFileListEntry {
+        super::super::rpm::RpmFileListEntry {
+            path: p.to_string(),
+            digest: None,
+        }
+    }
+
     #[test]
     fn hash_rpm_package_files_round_trips_files() {
         let dir = tempfile::tempdir().unwrap();
@@ -1037,10 +1047,7 @@ mod tests {
         );
         // rpm path conventions: paths come in as absolute (with
         // leading /).
-        let files = vec![
-            "/usr/bin/bash".to_string(),
-            "/etc/bash.bashrc".to_string(),
-        ];
+        let files = vec![rpm_path("/usr/bin/bash"), rpm_path("/etc/bash.bashrc")];
         let (occs, root) = hash_rpm_package_files(dir.path(), &files);
         assert_eq!(occs.len(), 2);
         assert!(root.is_some(), "must produce a per-component Merkle root");
@@ -1059,17 +1066,38 @@ mod tests {
                 o.apk_sha1.is_none(),
                 "rpm path never carries the apk SHA-1 cross-ref"
             );
+            assert!(
+                o.rpm_file_digest.is_none(),
+                "no FILEDIGESTS data was passed in this test, so rpm_file_digest must be None"
+            );
         }
+    }
+
+    /// Milestone 041: rpm_file_digest threads from input
+    /// `RpmFileListEntry.digest` to output
+    /// `FileOccurrence.rpm_file_digest` unchanged.
+    #[test]
+    fn hash_rpm_package_files_threads_digest_when_provided() {
+        let dir = tempfile::tempdir().unwrap();
+        place_files(dir.path(), &[("usr/bin/bash", b"bash-bytes")]);
+        let files = vec![super::super::rpm::RpmFileListEntry {
+            path: "/usr/bin/bash".to_string(),
+            digest: Some("sha256:aabbccdd...".to_string()),
+        }];
+        let (occs, _root) = hash_rpm_package_files(dir.path(), &files);
+        assert_eq!(occs.len(), 1);
+        assert_eq!(
+            occs[0].rpm_file_digest.as_deref(),
+            Some("sha256:aabbccdd..."),
+            "rpm_file_digest must thread from input entry to output"
+        );
     }
 
     #[test]
     fn hash_rpm_package_files_skips_absent_files() {
         let dir = tempfile::tempdir().unwrap();
         place_files(dir.path(), &[("usr/bin/exists", b"on-disk")]);
-        let files = vec![
-            "/usr/bin/exists".to_string(),
-            "/usr/bin/missing".to_string(),
-        ];
+        let files = vec![rpm_path("/usr/bin/exists"), rpm_path("/usr/bin/missing")];
         let (occs, root) = hash_rpm_package_files(dir.path(), &files);
         assert_eq!(occs.len(), 1, "absent file must be skipped");
         assert_eq!(occs[0].location, "/usr/bin/exists");
@@ -1090,7 +1118,7 @@ mod tests {
         // without the leading `/`, the helper should normalize.
         let dir = tempfile::tempdir().unwrap();
         place_files(dir.path(), &[("usr/bin/foo", b"bytes")]);
-        let files = vec!["usr/bin/foo".to_string()]; // no leading /
+        let files = vec![rpm_path("usr/bin/foo")]; // no leading /
         let (occs, _root) = hash_rpm_package_files(dir.path(), &files);
         assert_eq!(occs.len(), 1);
         assert_eq!(

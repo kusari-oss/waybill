@@ -71,6 +71,15 @@ pub fn build_evidence(
                 if let Some(ref sha1) = o.apk_sha1 {
                     ctx.insert("sha1".to_string(), json!(sha1));
                 }
+                // Milestone 041: rpm-provided per-file digest
+                // from the package's FILEDIGESTS tag,
+                // algorithm-prefixed (e.g. "sha256:abc...",
+                // "md5:def..."). Carried alongside mikebom's own
+                // `sha256` so consumers can correlate observed
+                // bytes against the upstream-claimed digest.
+                if let Some(ref rpm_fd) = o.rpm_file_digest {
+                    ctx.insert("rpm_filedigest".to_string(), json!(rpm_fd));
+                }
                 json!({
                     "location": o.location,
                     "additionalContext": serde_json::to_string(&ctx)
@@ -287,12 +296,14 @@ mod tests {
                 sha256: "a".repeat(64),
                 md5_legacy: Some("b".repeat(32)),
                 apk_sha1: None,
+                rpm_file_digest: None,
             },
             FileOccurrence {
                 location: "/usr/share/doc/jq/copyright".to_string(),
                 sha256: "c".repeat(64),
                 md5_legacy: None,
                 apk_sha1: None,
+                rpm_file_digest: None,
             },
         ];
         let result = build_evidence(&ev, &occs);

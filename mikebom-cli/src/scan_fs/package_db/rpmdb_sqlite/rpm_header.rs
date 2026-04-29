@@ -56,6 +56,17 @@ pub const TAG_REQUIRENAME: u32 = 1049;
 pub const TAG_DIRINDEXES: u32 = 1116;
 pub const TAG_BASENAMES: u32 = 1117;
 pub const TAG_DIRNAMES: u32 = 1118;
+/// Per-file content digests, parallel-indexed with `BASENAMES`. Each
+/// entry is a hex-encoded digest string. The algorithm is named by
+/// [`TAG_FILEDIGESTALGO`]; when that tag is absent, MD5 is the
+/// rpm-spec-defined default. Populated by `rpmbuild` at package
+/// creation; mikebom uses it for the milestone-041 cross-ref on
+/// per-file evidence.
+pub const TAG_FILEDIGESTS: u32 = 1035;
+/// IANA hash-algorithm code for [`TAG_FILEDIGESTS`]. Common values:
+/// `1`=MD5, `2`=SHA-1, `8`=SHA-256, `9`=SHA-384, `10`=SHA-512. Absent
+/// or `0` defaults to MD5 per the rpm spec (legacy behavior).
+pub const TAG_FILEDIGESTALGO: u32 = 5011;
 
 // --- RPM type codes (subset we handle) ---
 
@@ -283,6 +294,43 @@ impl RpmHeader {
         Some(out)
     }
 
+    /// Read the per-file FILEDIGESTS values + their algorithm.
+    /// Returns `None` when FILEDIGESTS is absent, when the
+    /// FILEDIGESTALGO is set to a code mikebom doesn't recognize
+    /// (defensive — defer to a follow-on rather than emit a
+    /// mis-prefixed cross-ref), or when the digest array is empty.
+    ///
+    /// Per the rpm spec, FILEDIGESTALGO absent or `0` means MD5
+    /// (legacy default); we honor that. Algorithm codes other than
+    /// the standard `{1, 2, 8, 9, 10}` set return `None` with a
+    /// debug-log breadcrumb.
+    pub fn file_digests(&self) -> Option<RpmFileDigests<'_>> {
+        let values = self.string_array(TAG_FILEDIGESTS)?;
+        if values.is_empty() {
+            return None;
+        }
+        let algo_code: u32 = self
+            .int32_array(TAG_FILEDIGESTALGO)
+            .and_then(|v| v.first().copied())
+            .unwrap_or(0);
+        let algo = match algo_code {
+            0 | 1 => RpmDigestAlgo::Md5,
+            2 => RpmDigestAlgo::Sha1,
+            8 => RpmDigestAlgo::Sha256,
+            9 => RpmDigestAlgo::Sha384,
+            10 => RpmDigestAlgo::Sha512,
+            other => {
+                tracing::debug!(
+                    code = other,
+                    "rpm FILEDIGESTALGO is an unknown IANA hash code; \
+                     omitting rpm_filedigest cross-ref for this package"
+                );
+                return None;
+            }
+        };
+        Some(RpmFileDigests { algo, values })
+    }
+
     /// Reconstruct the owned file paths from the
     /// BASENAMES/DIRNAMES/DIRINDEXES triple. Returns an empty vec for
     /// metapackages (no files) or if any tag is missing; individual
@@ -311,6 +359,66 @@ impl RpmHeader {
             paths.push(PathBuf::from(p));
         }
         paths
+    }
+}
+
+/// Per-file digests + algorithm extracted from a HeaderBlob's
+/// FILEDIGESTS / FILEDIGESTALGO tags. Borrows the digest strings
+/// from the underlying `RpmHeader` to avoid cloning during the
+/// per-package walk; consumers that need owned data clone at
+/// emission time.
+pub struct RpmFileDigests<'a> {
+    /// Hash algorithm rpm used to compute the digests. Encoded as
+    /// the IANA hash-algorithm-name slug for emission (e.g.
+    /// `"sha256"`, `"md5"`).
+    pub algo: RpmDigestAlgo,
+    /// Hex-encoded per-file digest values, parallel-indexed with
+    /// `BASENAMES`. Each entry's length matches `algo.hex_len()`
+    /// when populated; empty entries (non-regular files) and
+    /// shorter-than-expected ones are filtered at emission time.
+    pub values: Vec<&'a str>,
+}
+
+/// Hash-algorithm name for the rpm FILEDIGESTS tag, decoded from
+/// the IANA hash-algorithm registry code carried in
+/// FILEDIGESTALGO. Set is restricted to the 5 algorithms rpm
+/// actually uses today; unknown codes fall through to `None` at
+/// the call site rather than getting a `RpmDigestAlgo::Other`
+/// variant (defensive against mis-prefixing the cross-ref).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RpmDigestAlgo {
+    Md5,
+    Sha1,
+    Sha256,
+    Sha384,
+    Sha512,
+}
+
+impl RpmDigestAlgo {
+    /// IANA-spec lowercase name. Used as the algorithm prefix in
+    /// the wire form `<algo>:<hex>`.
+    pub fn name(&self) -> &'static str {
+        match self {
+            RpmDigestAlgo::Md5 => "md5",
+            RpmDigestAlgo::Sha1 => "sha1",
+            RpmDigestAlgo::Sha256 => "sha256",
+            RpmDigestAlgo::Sha384 => "sha384",
+            RpmDigestAlgo::Sha512 => "sha512",
+        }
+    }
+
+    /// Expected hex-string length for this algorithm. Used to
+    /// filter out empty or truncated FILEDIGESTS entries (rpm
+    /// records empty strings for non-regular files like devices /
+    /// fifos).
+    pub fn hex_len(&self) -> usize {
+        match self {
+            RpmDigestAlgo::Md5 => 32,
+            RpmDigestAlgo::Sha1 => 40,
+            RpmDigestAlgo::Sha256 => 64,
+            RpmDigestAlgo::Sha384 => 96,
+            RpmDigestAlgo::Sha512 => 128,
+        }
     }
 }
 
@@ -559,5 +667,88 @@ mod tests {
         let h = RpmHeader::parse(&blob).unwrap();
         // "good" resolves, "bad" is skipped.
         assert_eq!(h.file_paths(), vec![PathBuf::from("/usr/bin/good")]);
+    }
+
+    // ---- Milestone 041: FILEDIGESTS / FILEDIGESTALGO --------------------
+
+    #[test]
+    fn file_digests_decodes_sha256_payload() {
+        let aaa = "a".repeat(64);
+        let bbb = "b".repeat(64);
+        let blob = build_test_header(&[
+            (TAG_FILEDIGESTS, TagValue::StrArray(&[&aaa, &bbb])),
+            (TAG_FILEDIGESTALGO, TagValue::Int32Array(&[8])),
+        ]);
+        let h = RpmHeader::parse(&blob).unwrap();
+        let fd = h.file_digests().expect("FILEDIGESTS present");
+        assert_eq!(fd.algo, RpmDigestAlgo::Sha256);
+        assert_eq!(fd.values.len(), 2);
+        assert_eq!(fd.values[0], aaa);
+        assert_eq!(fd.values[1], bbb);
+    }
+
+    #[test]
+    fn file_digests_defaults_to_md5_when_algo_absent() {
+        let md5 = "0".repeat(32);
+        let blob = build_test_header(&[
+            (TAG_FILEDIGESTS, TagValue::StrArray(&[&md5])),
+            // No FILEDIGESTALGO — must default to MD5.
+        ]);
+        let h = RpmHeader::parse(&blob).unwrap();
+        let fd = h.file_digests().expect("FILEDIGESTS present");
+        assert_eq!(fd.algo, RpmDigestAlgo::Md5);
+    }
+
+    #[test]
+    fn file_digests_defaults_to_md5_when_algo_zero() {
+        let md5 = "0".repeat(32);
+        let blob = build_test_header(&[
+            (TAG_FILEDIGESTS, TagValue::StrArray(&[&md5])),
+            (TAG_FILEDIGESTALGO, TagValue::Int32Array(&[0])),
+        ]);
+        let h = RpmHeader::parse(&blob).unwrap();
+        let fd = h.file_digests().expect("FILEDIGESTS present");
+        assert_eq!(fd.algo, RpmDigestAlgo::Md5);
+    }
+
+    #[test]
+    fn file_digests_returns_none_when_filedigests_absent() {
+        let blob = build_test_header(&[
+            (TAG_NAME, TagValue::Str("bash")),
+            // No FILEDIGESTS.
+        ]);
+        let h = RpmHeader::parse(&blob).unwrap();
+        assert!(h.file_digests().is_none());
+    }
+
+    #[test]
+    fn file_digests_returns_none_for_unknown_algo() {
+        let blob = build_test_header(&[
+            (TAG_FILEDIGESTS, TagValue::StrArray(&["abc"])),
+            (TAG_FILEDIGESTALGO, TagValue::Int32Array(&[99])), // unknown
+        ]);
+        let h = RpmHeader::parse(&blob).unwrap();
+        assert!(
+            h.file_digests().is_none(),
+            "unknown FILEDIGESTALGO must reject (defensive against mis-prefixing)"
+        );
+    }
+
+    #[test]
+    fn rpm_digest_algo_names_match_iana_lowercase() {
+        assert_eq!(RpmDigestAlgo::Md5.name(), "md5");
+        assert_eq!(RpmDigestAlgo::Sha1.name(), "sha1");
+        assert_eq!(RpmDigestAlgo::Sha256.name(), "sha256");
+        assert_eq!(RpmDigestAlgo::Sha384.name(), "sha384");
+        assert_eq!(RpmDigestAlgo::Sha512.name(), "sha512");
+    }
+
+    #[test]
+    fn rpm_digest_algo_hex_lengths_are_correct() {
+        assert_eq!(RpmDigestAlgo::Md5.hex_len(), 32);
+        assert_eq!(RpmDigestAlgo::Sha1.hex_len(), 40);
+        assert_eq!(RpmDigestAlgo::Sha256.hex_len(), 64);
+        assert_eq!(RpmDigestAlgo::Sha384.hex_len(), 96);
+        assert_eq!(RpmDigestAlgo::Sha512.hex_len(), 128);
     }
 }

@@ -194,9 +194,14 @@ Behaviour notes:
   / redhat/*): same shape as deb and apk. mikebom decodes each
   package's `BASENAMES` / `DIRNAMES` / `DIRINDEXES` triple from the
   rpmdb HeaderBlob, walks the rootfs, and emits SHA-256 per file.
-  rpm-side `additionalContext` carries SHA-256 only — the rpm-provided
-  FILEDIGESTS cross-ref is a future extension. As of milestone 040,
-  this brings rpm to feature parity with deb (037/038) and apk (039).
+  As of milestone 041, rpm-side `additionalContext` also carries the
+  rpm-provided per-file digest from the package's `FILEDIGESTS` tag
+  as `rpm_filedigest`, in algorithm-prefixed form
+  (e.g. `"sha256:abc..."` for modern packages, `"md5:def..."` for
+  legacy CentOS-7-era ones — the algorithm matches the package's
+  `FILEDIGESTALGO` value or defaults to MD5 when absent per the rpm
+  spec). This brings rpm to full cross-ref symmetry with deb (which
+  carries `md5`) and apk (which carries `sha1`).
 
 ### Authenticating to private registries
 

@@ -240,6 +240,14 @@ pub struct FileOccurrence {
     /// omitted the `Z:` line. Milestone 040 / #75 follow-on.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub apk_sha1: Option<String>,
+    /// rpm-provided per-file digest from the package's
+    /// `FILEDIGESTS` tag, in algorithm-prefixed form
+    /// (`"sha256:<hex>"`, `"md5:<hex>"`, etc.). `None` for non-rpm
+    /// occurrences (deb, apk) and for rpm files whose stanza had
+    /// no usable cross-ref (non-regular files, missing
+    /// FILEDIGESTS, unknown FILEDIGESTALGO). Milestone 041.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rpm_file_digest: Option<String>,
 }
 
 /// Evidence describing how a component was resolved from trace data.

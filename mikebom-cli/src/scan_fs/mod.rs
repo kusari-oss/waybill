@@ -442,7 +442,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 }
             } else if is_rpm {
                 if deep_hash {
-                    let files: &[String] = rpm_file_lists
+                    let files: &[package_db::rpm::RpmFileListEntry] = rpm_file_lists
                         .get(&entry.name)
                         .map(|v| v.as_slice())
                         .unwrap_or(&[]);

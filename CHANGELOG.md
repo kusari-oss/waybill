@@ -8,6 +8,29 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 ## [Unreleased]
 
 ### Added
+- **Milestone 041 — Rpm FILEDIGESTS cross-reference.** Closes
+  the milestone-040 Q1 deferral. Every populated rpm
+  `evidence.occurrences[]` entry's `additionalContext` JSON-
+  string now carries `rpm_filedigest` alongside the existing
+  `sha256`, in algorithm-prefixed form (e.g.
+  `"sha256:abc..."` for modern rpm packages,
+  `"md5:def..."` for legacy ones). The algorithm matches the
+  package's `FILEDIGESTALGO` value (or defaults to MD5 when
+  absent per the rpm spec). Brings rpm to full cross-ref
+  symmetry with deb (`md5`, since milestone 037) and apk
+  (`sha1`, since milestone 040 US2).
+  Verified end-to-end against `fedora:40`: 6938 of 6966
+  total file occurrences carry the cross-ref (99.6%; the
+  28 remainder are non-regular files whose `FILEDIGESTS`
+  entry is empty by rpm-spec convention). Sample value
+  `rpm_filedigest = "sha256:7544bd..."` matches the
+  mikebom-observed `sha256` for the same file — the
+  integrity-check arrow goes both ways. New
+  `rpm_file_digest: Option<String>` field on
+  `mikebom_common::resolution::FileOccurrence` (additive,
+  `#[serde(default, skip_serializing_if = "Option::is_none")]`).
+  No new top-level dependencies. 27-fixture goldens regen
+  with zero diff. See `specs/041-rpm-filedigests/spec.md`.
 - **Milestone 040 — Package-DB follow-ons (trifecta).** Three
   sequenced follow-on items closing coverage and hygiene gaps
   after milestones 037 / 038 / 039:
