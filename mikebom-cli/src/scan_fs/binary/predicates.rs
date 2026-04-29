@@ -84,12 +84,16 @@ pub(super) fn is_host_system_path(soname: &str) -> bool {
         || soname.starts_with("/System/iOSSupport/")
 }
 
-/// RPM directory heuristic per the milestone-004 post-ship plan. RPM
-/// file-list extraction from HeaderBlob BASENAMES/DIRNAMES/DIRINDEXES
-/// is deferred to a follow-on milestone; meanwhile, when we know a
-/// rootfs has an rpmdb (so rpm OWNS the package-install story), any
-/// binary under a well-known OS-managed directory is presumed owned
-/// even if we can't enumerate its specific claim.
+/// RPM directory heuristic per the milestone-004 post-ship plan.
+/// Authoritative file-list extraction from HeaderBlob
+/// BASENAMES/DIRNAMES/DIRINDEXES landed in milestone 040 US3 and is
+/// the primary claim source today; this heuristic remains as a
+/// defense-in-depth fallback for the rare case where a binary lives
+/// under a well-known OS-managed directory but its package's
+/// HeaderBlob is missing or malformed (corrupt rpmdb, partial
+/// install). When a rootfs carries an rpmdb, presuming ownership
+/// for those binaries keeps `pkg:generic/` noise out of the SBOM
+/// even if the precise enumeration falters.
 ///
 /// Well-known OS-managed directories chosen to match filesystem-
 /// hierarchy standards — `/bin`, `/sbin`, `/usr/{bin,sbin,lib,lib64,libexec}`,
