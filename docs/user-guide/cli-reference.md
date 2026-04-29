@@ -185,9 +185,18 @@ Behaviour notes:
   images like `cgr.dev/chainguard/*`. mikebom reads the per-package
   file list inline from each stanza's `F:` (directory) and `R:`
   (regular file) lines in `/lib/apk/db/installed`, walks the rootfs,
-  and emits SHA-256 per file. apk-side `additionalContext` carries
-  SHA-256 only (no MD5 cross-ref, as apk doesn't ship one; the
-  apk-provided SHA-1 from `Z:` lines is a future extension).
+  and emits SHA-256 per file. As of milestone 040, the apk-provided
+  per-file SHA-1 from each `Z:` line is also surfaced as a
+  cross-reference checksum in `additionalContext` alongside the
+  mikebom-computed SHA-256, mirroring the way deb's `additionalContext`
+  carries `md5` from dpkg's `.md5sums`.
+- **Rpm per-file evidence** (fedora / almalinux / rocky / centos:stream
+  / redhat/*): same shape as deb and apk. mikebom decodes each
+  package's `BASENAMES` / `DIRNAMES` / `DIRINDEXES` triple from the
+  rpmdb HeaderBlob, walks the rootfs, and emits SHA-256 per file.
+  rpm-side `additionalContext` carries SHA-256 only — the rpm-provided
+  FILEDIGESTS cross-ref is a future extension. As of milestone 040,
+  this brings rpm to feature parity with deb (037/038) and apk (039).
 
 ### Authenticating to private registries
 

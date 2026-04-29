@@ -8,6 +8,45 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 ## [Unreleased]
 
 ### Added
+- **Milestone 040 — Package-DB follow-ons (trifecta).** Three
+  sequenced follow-on items closing coverage and hygiene gaps
+  after milestones 037 / 038 / 039:
+  - **US1 (housekeeping)**: dropped a stale "deferred to
+    milestone 031.y" framing in `oci_pull/mod.rs::host_oci_arch`
+    that named `--image-platform` as deferred. The flag shipped
+    in milestone 035 (PR #72); the error message now positively
+    references it with an example invocation.
+  - **US2 (apk SHA-1 cross-ref)**: extends milestone 039's apk
+    per-file evidence with the apk-provided SHA-1 from each `Z:`
+    line in `/lib/apk/db/installed`. Surfaced as `sha1` in the
+    per-occurrence `additionalContext` JSON-string alongside the
+    mikebom-computed `sha256`. Mirrors deb's `md5` cross-ref
+    contract from milestone 037. New `ApkFileEntry` struct in
+    apk.rs, new optional `apk_sha1: Option<String>` field on
+    `mikebom_common::resolution::FileOccurrence` (additive,
+    `#[serde(default, skip_serializing_if = "Option::is_none")]`).
+    Verified end-to-end against `alpine:3.19`.
+  - **US3 (rpm per-file deep-hash)**: completes the OS-package
+    per-file-evidence trilogy. rpm-based images (fedora,
+    almalinux, rocky, centos:stream, redhat/*) now produce
+    populated `evidence.occurrences[]` blocks at parity with
+    deb (037/038) and apk (039). New
+    `rpm::read_file_lists(rootfs)` exposes the per-package
+    file-list map decoded from the rpmdb HeaderBlob's
+    `BASENAMES` / `DIRNAMES` / `DIRINDEXES` triple via the
+    existing `iter_rpmdb` helper; new `hash_rpm_package_files`
+    + `hash_rpm_db_only` mirror the apk pattern; new `is_rpm`
+    branch in `scan_fs/mod.rs::read_all`. Verified end-to-end:
+    `fedora:40` produces 147 components with 6966 total file
+    occurrences (was 0). Per the milestone-040 Q1
+    clarification, rpm FILEDIGESTS cross-ref is OUT of scope
+    and deferred to a separate follow-on milestone — rpm-side
+    `additionalContext` carries SHA-256 only.
+  - No new top-level Cargo dependencies. 27 byte-identity
+    goldens regen with zero diff (the goldens use
+    `--no-deep-hash` so they're insulated from the deep-hash
+    path by design).
+  - See `specs/040-pkg-db-followups/spec.md`.
 - **Milestone 039 — Per-file evidence for apk components
   (alpine + chainguard apko + Wolfi).** Closes the asymmetry
   surfaced during milestone 038's recon (#75): apk-based images
