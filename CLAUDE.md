@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-28
+Auto-generated from all feature plans. Last updated: 2026-04-29
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -27,6 +27,7 @@ Auto-generated from all feature plans. Last updated: 2026-04-28
 - N/A — purely source-tree edits. (016-remaining-clippy-cleanup)
 - Rust stable (workspace toolchain inherited + existing only — `sha2` (per-file SHA-256, (038-minimal-image-deep-hash)
 - N/A — all state in-process per scan; reuses milestone (038-minimal-image-deep-hash)
+- N/A — this milestone touches Markdown only. + None new. (046-docs-refresh)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -89,9 +90,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 046-docs-refresh: Added N/A — this milestone touches Markdown only. + None new.
 - 040-pkg-db-followups: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 038-minimal-image-deep-hash: Added Rust stable (workspace toolchain inherited + existing only — `sha2` (per-file SHA-256,
-- 016-remaining-clippy-cleanup: Added Rust stable (workspace toolchain inherited from milestones 001–015; no nightly required for this user-space-only work). + existing only — `cargo +stable clippy` (lint engine), `dtolnay/rust-toolchain@stable` (already used in CI), `Swatinem/rust-cache@v2` (already used). **No new crates.**
 
 
 <!-- MANUAL ADDITIONS START -->
