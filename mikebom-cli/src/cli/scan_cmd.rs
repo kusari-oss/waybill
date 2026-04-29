@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use anyhow::Context;
-use clap::Args;
+use clap::{Args, ValueEnum};
 
 use mikebom_common::attestation::integrity::TraceIntegrity;
 use mikebom_common::attestation::metadata::GenerationContext;
@@ -36,6 +36,18 @@ const OPENVEX_PSEUDO_FORMAT: &str = "openvex";
 /// may opt in in a future milestone, at which point this list grows.
 const OPENVEX_EMITTING_FORMATS: &[&str] = &["spdx-2.3-json"];
 
+/// Image source for `--image <ref>` resolution. Selected via
+/// `--image-src` (comma-separated, in order of preference).
+#[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ImageSource {
+    /// Local docker daemon: shell out to `docker image inspect` to
+    /// probe, then `docker save` to materialize a tarball.
+    Docker,
+    /// OCI distribution-spec registry pull (the milestone-031+
+    /// `oci_pull` path).
+    Remote,
+}
+
 #[derive(Args, Debug)]
 pub struct ScanArgs {
     /// Directory to walk for package artifacts.
@@ -54,6 +66,28 @@ pub struct ScanArgs {
     /// then the resulting rootfs is scanned exactly like `--path`.
     #[arg(long, conflicts_with = "path")]
     pub image: Option<PathBuf>,
+
+    /// Image source-resolution order for `--image <ref>` (when the
+    /// argument is an OCI reference, not a tarball path on disk).
+    ///
+    /// Comma-separated list; mikebom tries each source in order and
+    /// stops at the first one that has the image. Default
+    /// `docker,remote` matches trivy's `--image-src` and syft's
+    /// auto-detection: prefer the local docker daemon's cache, fall
+    /// back to a registry pull. Pass `--image-src remote` to force
+    /// a fresh registry fetch (skipping any locally-cached copy);
+    /// pass `--image-src docker` to fail rather than touch the
+    /// network.
+    ///
+    /// When `--image` resolves to an existing tarball file on disk,
+    /// this flag is ignored — the file is loaded directly.
+    #[arg(
+        long,
+        value_delimiter = ',',
+        default_value = "docker,remote",
+        value_name = "SRC[,SRC...]",
+    )]
+    pub image_src: Vec<ImageSource>,
 
     /// Override the platform that's resolved from a multi-arch image
     /// index. Only meaningful when `--image` points at a registry
@@ -420,6 +454,130 @@ fn canonicalize_for_collision(path: &Path) -> PathBuf {
     }
 }
 
+/// Resolve an `--image <ref>` OCI reference to a `docker save`-format
+/// tarball on disk by trying each source in `args.image_src` in order.
+/// First hit wins. The `tempdir` slot is populated with the holder
+/// dir so the caller's tarball path stays valid through extraction.
+///
+/// The OCI-ref parse check from milestone 031 still runs (rejects
+/// arguments that are neither tarballs nor parseable refs) so the
+/// error message remains the same as before.
+async fn resolve_image_ref(
+    arg_str: &str,
+    args: &ScanArgs,
+    tempdir: &mut Option<tempfile::TempDir>,
+) -> anyhow::Result<PathBuf> {
+    #[cfg(feature = "oci-registry")]
+    {
+        let archive_path = std::path::Path::new(arg_str);
+        let kind = scan_fs::oci_pull::detect_image_arg_kind(archive_path);
+        if kind != scan_fs::oci_pull::ImageArgKind::OciRef {
+            anyhow::bail!(
+                "--image argument is neither an existing tarball file nor a parseable OCI image reference: {arg_str}"
+            );
+        }
+    }
+
+    let mut tried: Vec<&'static str> = Vec::new();
+    for src in &args.image_src {
+        match src {
+            ImageSource::Docker => {
+                tried.push("docker");
+                // `--image-platform` asks for a specific arch/variant
+                // pulled from a multi-arch index; the local docker
+                // daemon only has whatever it was told to cache. Skip
+                // the docker source when a platform is requested.
+                if args.image_platform.is_some() {
+                    tracing::info!(
+                        image_ref = arg_str,
+                        "--image-platform set; skipping local docker source (only registry pulls honor platform)"
+                    );
+                    continue;
+                }
+                match scan_fs::docker_daemon::inspect(arg_str) {
+                    scan_fs::docker_daemon::InspectOutcome::Present => {
+                        tracing::info!(
+                            image_ref = arg_str,
+                            "found image in local docker daemon; exporting via `docker save`"
+                        );
+                        let td = tempfile::tempdir()
+                            .context("creating tempdir for docker-save tarball")?;
+                        let tarball = td.path().join("image.tar");
+                        scan_fs::docker_daemon::save(arg_str, &tarball)?;
+                        *tempdir = Some(td);
+                        return Ok(tarball);
+                    }
+                    scan_fs::docker_daemon::InspectOutcome::Absent => {
+                        tracing::info!(
+                            image_ref = arg_str,
+                            "image not present in local docker daemon"
+                        );
+                    }
+                    scan_fs::docker_daemon::InspectOutcome::DockerUnavailable => {
+                        tracing::info!(
+                            image_ref = arg_str,
+                            "local docker daemon not available; trying next source"
+                        );
+                    }
+                }
+            }
+            ImageSource::Remote => {
+                tried.push("remote");
+                #[cfg(feature = "oci-registry")]
+                {
+                    tracing::info!(image_ref = arg_str, "pulling image from registry");
+                    let cache_disabled = args.no_oci_cache
+                        || std::env::var("MIKEBOM_OCI_CACHE").as_deref() == Ok("0");
+                    let cache_size_cap = if cache_disabled {
+                        None
+                    } else {
+                        let env_size = std::env::var("MIKEBOM_OCI_CACHE_SIZE")
+                            .ok()
+                            .and_then(|s| s.parse::<u64>().ok());
+                        Some(
+                            args.oci_cache_size
+                                .or(env_size)
+                                .unwrap_or(10 * 1024 * 1024 * 1024),
+                        )
+                    };
+                    let td = scan_fs::oci_pull::pull_to_tarball(
+                        arg_str,
+                        args.image_platform.as_deref(),
+                        cache_size_cap,
+                    )
+                    .await?;
+                    let tarball = td.path().join("image.tar");
+                    *tempdir = Some(td);
+                    return Ok(tarball);
+                }
+                #[cfg(not(feature = "oci-registry"))]
+                {
+                    anyhow::bail!(
+                        "--image-src includes `remote`, but this build of \
+                         mikebom was compiled with `--no-default-features` \
+                         (the `oci-registry` Cargo feature is OFF), so OCI \
+                         image references like `alpine:3.19` cannot be \
+                         pulled from a registry. Either:\n\
+                         (a) reinstall with the default feature set: \
+                         `cargo install mikebom`, or\n\
+                         (b) pre-extract the image with \
+                         `docker save <ref> -o image.tar` and pass \
+                         `--image image.tar`, or\n\
+                         (c) pass `--image-src docker` and ensure the \
+                         image is in the local docker daemon."
+                    );
+                }
+            }
+        }
+    }
+
+    anyhow::bail!(
+        "image `{arg_str}` not found in any of the configured `--image-src` sources: [{}]. \
+         Pull or build it first, or change `--image-src`.",
+        tried.join(", ")
+    )
+}
+
 pub async fn execute(
     args: ScanArgs,
     offline: bool,
@@ -472,14 +630,20 @@ pub async fn execute(
     // Dropped immediately after `extract` finishes — the tarball
     // bytes have been read by then and the rootfs lives in its
     // own tempdir.
-    #[cfg(feature = "oci-registry")]
-    let mut _oci_pull_tempdir: Option<tempfile::TempDir> = None;
+    // OCI-pull tempdir holder; same lifetime as the docker-save
+    // tempdir below — both keep the on-disk tarball alive through the
+    // `extract` call further down. Held in an `Option` so the
+    // docker-save and remote-pull branches can both populate it
+    // without conflict.
+    let mut _image_tempdir: Option<tempfile::TempDir> = None;
 
     let (root_path, target_name, generation_context, auto_codename, _extracted) =
         if let Some(archive) = args.image.as_ref() {
-            // Milestone 031 — `--image` accepts either a file path
-            // (existing tarball-extract) or an OCI image reference
-            // (new feature-gated registry pull).
+            // `--image` accepts either an on-disk tarball OR an OCI
+            // image reference. Tarballs are loaded directly. References
+            // are resolved through one or more sources (`--image-src`)
+            // — local docker daemon first by default, then registry
+            // pull (milestone 044 commit 1).
             let archive_path: std::path::PathBuf = if archive.is_file() {
                 // `--image-platform` is registry-pull-only; for a
                 // pre-extracted tarball the platform is fixed by
@@ -495,64 +659,10 @@ pub async fn execute(
                 }
                 archive.clone()
             } else {
-                #[cfg(feature = "oci-registry")]
-                {
-                    let arg_str = archive.to_str().context(
-                        "--image argument is not valid UTF-8 — required for OCI ref parsing",
-                    )?;
-                    let kind = scan_fs::oci_pull::detect_image_arg_kind(archive);
-                    if kind != scan_fs::oci_pull::ImageArgKind::OciRef {
-                        anyhow::bail!(
-                            "--image argument is neither an existing tarball file nor a parseable OCI image reference: {}",
-                            archive.display()
-                        );
-                    }
-                    tracing::info!(image_ref = %arg_str, "pulling image from registry");
-                    // Resolve the layer-cache size cap. `--no-oci-cache`
-                    // (or `MIKEBOM_OCI_CACHE=0`) disables; otherwise
-                    // `--oci-cache-size` overrides
-                    // `MIKEBOM_OCI_CACHE_SIZE` overrides the 10-GB
-                    // default. None disables the cache entirely.
-                    let cache_disabled = args.no_oci_cache
-                        || std::env::var("MIKEBOM_OCI_CACHE").as_deref() == Ok("0");
-                    let cache_size_cap = if cache_disabled {
-                        None
-                    } else {
-                        let env_size = std::env::var("MIKEBOM_OCI_CACHE_SIZE")
-                            .ok()
-                            .and_then(|s| s.parse::<u64>().ok());
-                        Some(
-                            args.oci_cache_size
-                                .or(env_size)
-                                .unwrap_or(10 * 1024 * 1024 * 1024),
-                        )
-                    };
-                    let tempdir = scan_fs::oci_pull::pull_to_tarball(
-                        arg_str,
-                        args.image_platform.as_deref(),
-                        cache_size_cap,
-                    )
-                    .await?;
-                    let tarball = tempdir.path().join("image.tar");
-                    _oci_pull_tempdir = Some(tempdir);
-                    tarball
-                }
-                #[cfg(not(feature = "oci-registry"))]
-                {
-                    anyhow::bail!(
-                        "--image argument `{}` is not an existing file, and this \
-                         build of mikebom was compiled with `--no-default-features` \
-                         (the `oci-registry` Cargo feature is OFF), so OCI image \
-                         references like `alpine:3.19` cannot be pulled from a \
-                         registry. Either:\n\
-                         (a) reinstall with the default feature set: \
-                         `cargo install mikebom`, or\n\
-                         (b) pre-extract the image with \
-                         `docker save <ref> -o image.tar` and pass \
-                         `--image image.tar`.",
-                        archive.display()
-                    );
-                }
+                let arg_str = archive.to_str().context(
+                    "--image argument is not valid UTF-8 — required for OCI ref parsing",
+                )?;
+                resolve_image_ref(arg_str, &args, &mut _image_tempdir).await?
             };
             tracing::info!(archive = %archive_path.display(), "extracting docker image");
             let extracted = scan_fs::docker_image::extract(&archive_path)?;
@@ -1114,5 +1224,72 @@ mod tests {
         .unwrap_err()
         .to_string();
         assert!(err.contains("conflicts with --output"), "got: {err}");
+    }
+
+    /// Wrapper Parser for clap-parsing tests — `ScanArgs` derives
+    /// `Args`, not `Parser`, so we flatten it into a top-level Parser.
+    #[derive(clap::Parser, Debug)]
+    struct ScanArgsForTest {
+        #[command(flatten)]
+        inner: ScanArgs,
+    }
+
+    #[test]
+    fn image_src_defaults_to_docker_then_remote() {
+        let parsed = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan", "--path", ".",
+        ])
+        .unwrap();
+        assert_eq!(
+            parsed.inner.image_src,
+            vec![ImageSource::Docker, ImageSource::Remote]
+        );
+    }
+
+    #[test]
+    fn image_src_accepts_comma_separated_list() {
+        let parsed = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan",
+            "--path",
+            ".",
+            "--image-src",
+            "remote,docker",
+        ])
+        .unwrap();
+        assert_eq!(
+            parsed.inner.image_src,
+            vec![ImageSource::Remote, ImageSource::Docker]
+        );
+    }
+
+    #[test]
+    fn image_src_accepts_single_value() {
+        let parsed = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan",
+            "--path",
+            ".",
+            "--image-src",
+            "remote",
+        ])
+        .unwrap();
+        assert_eq!(parsed.inner.image_src, vec![ImageSource::Remote]);
+    }
+
+    #[test]
+    fn image_src_rejects_unknown_value() {
+        let err = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan",
+            "--path",
+            ".",
+            "--image-src",
+            "podman",
+        ])
+        .unwrap_err()
+        .to_string();
+        assert!(
+            err.to_lowercase().contains("invalid value")
+                || err.to_lowercase().contains("possible values"),
+            "expected clap to reject unknown image-src value, got: {err}"
+        );
     }
 }

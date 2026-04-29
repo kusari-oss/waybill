@@ -10,6 +10,7 @@
 //!   the standalone `mikebom sbom scan` subcommand.
 
 pub mod binary;
+pub mod docker_daemon;
 pub mod docker_image;
 #[cfg(feature = "oci-registry")]
 pub mod oci_pull;
