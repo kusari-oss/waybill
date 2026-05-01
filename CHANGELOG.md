@@ -7,6 +7,19 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+(Nothing yet. Land changes here, then cut a release per the
+`release.yml` workflow trigger documented in
+`docs/contributing/release.md`.)
+
+## [0.1.0-alpha.9] — 2026-05-01
+
+A small targeted release covering one user-facing fix shipped
+since alpha.8 (~1 day later): milestone 049's correction of the
+Go source-tree component scope. Resolves an audit-grounded gap
+where `mikebom sbom scan --path` on a Go project emitted only
+the project's directly-imported modules (collapsing legitimate
+transitive prod deps into the dropped-as-test-only bucket).
+
 ### Changed
 
 - **Go source-tree scans now emit the full go.sum closure by
