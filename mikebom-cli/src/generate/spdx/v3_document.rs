@@ -110,6 +110,14 @@ pub fn build_document(
     // Assessment` (the most specific match in SPDX 3.0.1's
     // `prop_ExternalRef_externalRefType` enum for an OpenVEX
     // payload).
+    // Document-level scope hint (milestone 047) — same prose the
+    // SPDX 2.3 path emits in `creationInfo.comment`. Per the
+    // SPDX 3.0.1 model docs, Element-level `comment` is "comments
+    // by the creator of the Element about the Element"; on the
+    // SpdxDocument that's exactly the document-level scope note.
+    // The shared `spdx-context.jsonld` already maps the
+    // unprefixed `comment` key, so no @context change needed.
+    let scope_comment = super::document::build_scope_comment(scan);
     let mut spdx_document = json!({
         "type": "SpdxDocument",
         "spdxId": doc_iri,
@@ -117,6 +125,7 @@ pub fn build_document(
         "name": scan.target_name,
         "dataLicense": "https://spdx.org/licenses/CC0-1.0",
         "rootElement": [root_iri.clone()],
+        "comment": scope_comment,
     });
     if let Some(locator) = openvex_locator {
         spdx_document["externalRef"] = json!([

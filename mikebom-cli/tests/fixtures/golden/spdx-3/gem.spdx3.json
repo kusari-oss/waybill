@@ -17,6 +17,7 @@
       "type": "Tool"
     },
     {
+      "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: pre-build. Per-component scope detail in mikebom:sbom-tier annotations.",
       "creationInfo": "_:creation-info",
       "dataLicense": "https://spdx.org/licenses/CC0-1.0",
       "name": "simple-bundle",
