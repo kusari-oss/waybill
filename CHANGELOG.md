@@ -7,6 +7,39 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+(Nothing yet. Land changes here, then cut a release per the
+`release.yml` workflow trigger documented in
+`docs/contributing/release.md`.)
+
+## [0.1.0-alpha.7] — 2026-04-30
+
+A small docs + SPDX-parity release. Two days after alpha.6, with
+a focus on closing user-facing gaps surfaced during alpha.6
+adoption: SPDX consumers' scope context, README staleness, and
+CI flake hardening so the next milestone lands cleanly.
+
+- **SPDX-side document-level scope hint** (047). SPDX 2.3 +
+  SPDX 3 outputs now self-describe scope at the document level,
+  closing the parity gap with CDX's `metadata.lifecycles[]`.
+  Closes the user-reported "is mikebom undercounting?"
+  conversational ambiguity by making scope explicit in every
+  format.
+- **README post-alpha.6 docs refresh** (046). Closes 10 audited
+  drift items in user-facing docs: stale version pin,
+  `--image-src` flag missing from CLI reference, registry-first
+  framing for `--image` (default is now docker-daemon-first),
+  internal-milestone-number jargon leaking into user docs,
+  `--include-legacy-rpmdb` "deferred" framing for shipped
+  behavior.
+- **CI test-suite flake hardening** (045 + 044-followon).
+  Diagnosed two genuine flake patterns from a 60-run audit:
+  macOS-runner perf-test variance (now median-of-5 sampling)
+  and a timestamp-race on byte-identity tests (now pinned via
+  `MIKEBOM_FIXED_TIMESTAMP` in subprocess-spawning helpers).
+  Plus a new gated end-to-end integration test for the
+  docker-daemon image source. Test-only — no production
+  behavior change.
+
 ### Added
 
 - **SPDX-side document-level scope hint** (047). SPDX 2.3
@@ -28,6 +61,49 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   operators comparing component counts to trivy / syft can see
   the question being asked rather than wonder whether mikebom
   is undercounting.
+- **End-to-end docker-daemon integration test** (044
+  follow-on). Gated on `docker --version` + `docker info`
+  succeeding; pulls `alpine:3.19`, runs `mikebom sbom scan
+  --image alpine:3.19 --image-src docker`, asserts the SBOM
+  was produced via the docker-daemon path and contains ≥5
+  components. Skips cleanly on CI lanes without docker
+  (macOS-latest).
+
+### Changed
+
+- **README + `docs/user-guide/cli-reference.md` reflect
+  post-alpha.6 reality** (046). Status pin updated to alpha.6;
+  `--image-src docker,remote` flag documented; `--image`
+  description updated to describe docker-daemon-first default;
+  `--include-legacy-rpmdb` description rewritten to drop
+  "deferred until that code lands" framing for long-shipped
+  BDB rpmdb reading; OCI-cache flag rows cross-link to the
+  `OCI layer caching` section. Also drops internal milestone
+  numbers from user-facing docs (CHANGELOG and design-notes
+  retain them as appropriate).
+
+### Fixed
+
+- **macOS perf-test flake** (045). `dual_format_perf` and
+  `triple_format_perf` failed intermittently on macos-latest
+  CI runners (observed 9.0% / 14.4% / 19.9% reduction vs the
+  25% gate, while local distribution sits around 50%). Bumped
+  median-of-3 → median-of-5 sampling — cuts the median's
+  variance by ≈40% so macOS CPU contention spikes don't push
+  the measurement below the gate. CI gate (25%) and spec
+  target (30%) unchanged.
+- **SPDX byte-identity test flake** (045). Three byte-identity
+  tests (`spdx_3_alias_bytes_are_byte_identical_to_stable_
+  identifier`, `scenario_7_alias_bytes_are_byte_identical`,
+  `scenario_8_mikebom_no_deprecation_notice_env_suppresses_
+  stderr_warning`) compared raw bytes across two sequential
+  subprocess invocations. When the two invocations straddled
+  a second-boundary, `creationInfo.created` diverged at
+  second precision, surfacing as a CI flake on unrelated
+  branches. Pinned `MIKEBOM_FIXED_TIMESTAMP` in the two
+  subprocess-spawning helpers (the env var was added in
+  milestone 011 specifically for this case but the helpers
+  weren't using it).
 
 ## [0.1.0-alpha.6] — 2026-04-29
 
