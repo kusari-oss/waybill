@@ -40,6 +40,46 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
   41 components pre-050 → 65 components post-050, with 24
   carrying `mikebom:not-linked`. README ecosystem section
   documents the workflow with audit numbers.
+- **Cargo dev/build deps now tagged via
+  `mikebom:dev-dependency`** (milestone 051 US1). Previously
+  `mikebom sbom scan --path <rust-project>` emitted every
+  `Cargo.lock` entry as a runtime dep — `[dev-dependencies]`
+  (criterion, proptest, etc.) and `[build-dependencies]` (cc,
+  bindgen, etc.) showed up unmarked. The cargo reader now
+  parses every `Cargo.toml` reachable from the lockfile
+  (workspace root + members, including `members =
+  ["crates/*"]` glob expansion) and BFS-walks the resolved dep
+  graph from the union of all `[dependencies]` entries to
+  identify the prod closure. Crates outside that closure are
+  tagged + dropped on `--include-dev=off`. Production-wins-
+  over-dev: a crate reachable via both prod and dev edges is
+  retained as production. Smoke on the mikebom workspace:
+  524 → 505 components default (19 dropped); `--include-dev`
+  recovers all 524 with the dev set carrying the annotation.
+- **Gem development/test groups now tagged via
+  `mikebom:dev-dependency`** (milestone 051 US2). The gem
+  reader now reads three sources of grouping metadata: the
+  `Gemfile.lock` `DEPENDENCIES` block, the project's `Gemfile`
+  (`group :name do ... end` blocks plus inline `gem "...",
+  group: :foo` syntax), and any project-root `*.gemspec` files
+  (`add_development_dependency` calls). Sources are unioned
+  with production-wins semantics. BFS through the lockfile's
+  transitive edges from prod-direct roots produces the prod
+  closure; gems outside it are tagged + dropped on
+  `--include-dev=off`.
+- **Maven test-scope tagging now has explicit regression
+  coverage** (milestone 051 US3). `maven.rs:1786-1823` already
+  drops `<scope>test</scope>` deps in default mode and tags
+  them under `--include-dev`; the new
+  `scan_maven_test_scope_is_tagged_with_include_dev`
+  integration test asserts the contract against future
+  refactors. Zero behavior change.
+
+After milestone 051, every ecosystem mikebom supports
+(cargo, gem, maven, npm, Poetry, Pipfile, Go) honors
+`--include-dev` consistently via the shared C6
+`mikebom:dev-dependency` parity wiring. No new flag, no new
+annotation, no new catalog row.
 
 ## [0.1.0-alpha.9] — 2026-05-01
 

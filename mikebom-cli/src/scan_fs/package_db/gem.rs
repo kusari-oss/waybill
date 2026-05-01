@@ -42,7 +42,7 @@
 //! we handle both via indent counting (≥2 for section body, ≥4 for
 //! specs) rather than fixed counts.
 
-use std::collections::HashSet;
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use mikebom_common::types::purl::{encode_purl_segment, Purl};
@@ -328,13 +328,278 @@ fn gemspec_to_entry(
     })
 }
 
+// ---------------------------------------------------------------------------
+// Milestone 051 — Gem dev/test group classification (T022-T026)
+// ---------------------------------------------------------------------------
+
+/// Parse a `Gemfile` for `group :name [, :name2] do ... end` blocks
+/// and inline `gem "name", group(s): ...` syntax. Returns a map from
+/// gem name to the set of groups it appears in. The default group
+/// (no enclosing block, no inline keyword) maps to an empty set —
+/// production semantic.
+///
+/// Best-effort line scanner per plan R2: warn-and-skip lines that
+/// don't fit the canonical idioms (interpolation, conditional
+/// loading, eval_gemfile). Bundler accepts a wider Ruby DSL surface
+/// than this matches; consumers wanting full coverage rely on the
+/// gemspec source as a fallback.
+pub(crate) fn parse_gemfile(path: &Path) -> HashMap<String, BTreeSet<String>> {
+    let mut out: HashMap<String, BTreeSet<String>> = HashMap::new();
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return out;
+    };
+    let mut block_stack: Vec<BTreeSet<String>> = Vec::new();
+    for raw_line in text.lines() {
+        let line = strip_ruby_comment(raw_line).trim();
+        if line.is_empty() {
+            continue;
+        }
+        // `end` closes the most recent block (group or otherwise).
+        if line == "end" {
+            block_stack.pop();
+            continue;
+        }
+        // Block opener: `group :foo[, :bar] do`. Other `do` blocks
+        // (source, platforms, ruby) push an empty set so `end`
+        // unwinds correctly.
+        if line.ends_with(" do") || line.ends_with("do") {
+            if let Some(rest) = line.strip_prefix("group ") {
+                let groups = parse_group_idents(rest);
+                block_stack.push(groups);
+                continue;
+            }
+            if line.starts_with("source ")
+                || line.starts_with("platforms ")
+                || line.starts_with("group ")
+                || line == "do"
+            {
+                block_stack.push(BTreeSet::new());
+                continue;
+            }
+            // Unknown block — push empty so the matching end pops.
+            block_stack.push(BTreeSet::new());
+            continue;
+        }
+        // `gem "name"[, options...]`
+        if let Some(rest) = line.strip_prefix("gem ") {
+            let Some((name, inline_groups)) = parse_gem_call(rest) else {
+                continue;
+            };
+            let mut groups = BTreeSet::new();
+            for g in block_stack.iter().flatten() {
+                groups.insert(g.clone());
+            }
+            for g in inline_groups {
+                groups.insert(g);
+            }
+            merge_groups(&mut out, name, groups);
+        }
+    }
+    out
+}
+
+fn strip_ruby_comment(line: &str) -> &str {
+    // Naive: `#` starts a comment unless inside a string. The
+    // canonical Gemfile rarely uses `#` inside strings, so this
+    // suffices for line-oriented scanning.
+    line.find('#').map(|i| &line[..i]).unwrap_or(line)
+}
+
+fn parse_group_idents(rest: &str) -> BTreeSet<String> {
+    // Input shape: `:test do` or `:development, :test do`.
+    let mut out = BTreeSet::new();
+    let payload = rest.trim_end_matches("do").trim().trim_end_matches(',');
+    for piece in payload.split(',') {
+        let s = piece.trim();
+        if let Some(name) = s.strip_prefix(':') {
+            let trimmed = name.trim().trim_end_matches('"').trim_end_matches('\'');
+            if !trimmed.is_empty() {
+                out.insert(trimmed.to_string());
+            }
+        }
+    }
+    out
+}
+
+fn parse_gem_call(rest: &str) -> Option<(String, BTreeSet<String>)> {
+    // `"rspec"` or `"rspec", "~> 3.0"` or
+    // `"pry", group: :development` or `"foo", groups: [:dev, :test]`.
+    let s = rest.trim();
+    let (name_quote, name) = if let Some(s) = s.strip_prefix('"') {
+        ('"', s)
+    } else if let Some(s) = s.strip_prefix('\'') {
+        ('\'', s)
+    } else {
+        return None;
+    };
+    let close = name.find(name_quote)?;
+    let gem_name = name[..close].to_string();
+    let after = &name[close + 1..];
+    let inline_groups = extract_inline_groups(after);
+    Some((gem_name, inline_groups))
+}
+
+fn extract_inline_groups(after: &str) -> BTreeSet<String> {
+    let mut out = BTreeSet::new();
+    // Look for `group: :foo` or `groups: [:foo, :bar]`.
+    if let Some(idx) = after.find("group:") {
+        let payload = &after[idx + "group:".len()..];
+        let payload = payload.trim_start();
+        if let Some(rest) = payload.strip_prefix(':') {
+            let name: String = rest
+                .chars()
+                .take_while(|c| c.is_alphanumeric() || *c == '_')
+                .collect();
+            if !name.is_empty() {
+                out.insert(name);
+            }
+        }
+    }
+    if let Some(idx) = after.find("groups:") {
+        let payload = &after[idx + "groups:".len()..];
+        // Match `[:foo, :bar]`.
+        if let Some(open) = payload.find('[') {
+            if let Some(close) = payload[open..].find(']') {
+                let inner = &payload[open + 1..open + close];
+                for piece in inner.split(',') {
+                    let s = piece.trim();
+                    if let Some(name) = s.strip_prefix(':') {
+                        let trimmed: String = name
+                            .chars()
+                            .take_while(|c| c.is_alphanumeric() || *c == '_')
+                            .collect();
+                        if !trimmed.is_empty() {
+                            out.insert(trimmed);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Parse a `*.gemspec` file for `s.add_dependency` (prod),
+/// `s.add_runtime_dependency` (prod), and
+/// `s.add_development_dependency` (dev) calls.
+/// Returns gem name → groups map (empty set for prod, single
+/// `"development"` for dev).
+pub(crate) fn parse_gemspec_groups(path: &Path) -> HashMap<String, BTreeSet<String>> {
+    let mut out: HashMap<String, BTreeSet<String>> = HashMap::new();
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return out;
+    };
+    for raw_line in text.lines() {
+        let line = strip_ruby_comment(raw_line).trim();
+        if line.is_empty() {
+            continue;
+        }
+        let (rest, groups): (&str, BTreeSet<String>) = if let Some(r) =
+            line.strip_prefix(".add_development_dependency")
+                .or_else(|| line.split('.').nth(1).and_then(|after_dot| {
+                    after_dot.strip_prefix("add_development_dependency")
+                }))
+        {
+            let mut g = BTreeSet::new();
+            g.insert("development".to_string());
+            (r, g)
+        } else if let Some(r) = line.strip_prefix(".add_dependency").or_else(|| {
+            line.split('.').nth(1).and_then(|after_dot| {
+                after_dot
+                    .strip_prefix("add_dependency")
+                    .or_else(|| after_dot.strip_prefix("add_runtime_dependency"))
+            })
+        }) {
+            (r, BTreeSet::new())
+        } else {
+            continue;
+        };
+        // Now `rest` looks like ` "rspec", "~> 3.0"`. Pull the first
+        // string literal.
+        let s = rest.trim_start_matches(|c: char| c == '(' || c.is_whitespace());
+        let Some((quote_char, body)) = s
+            .strip_prefix('"')
+            .map(|b| ('"', b))
+            .or_else(|| s.strip_prefix('\'').map(|b| ('\'', b)))
+        else {
+            continue;
+        };
+        let Some(close) = body.find(quote_char) else {
+            continue;
+        };
+        let name = body[..close].to_string();
+        if name.is_empty() {
+            continue;
+        }
+        out.entry(name).or_default().extend(groups);
+    }
+    out
+}
+
+/// Compute the prod-reachable gem name set by BFS-walking the lock's
+/// `specs:` indent-6 transitive edges starting from `direct_prod`.
+pub(crate) fn compute_gem_prod_set(
+    direct_prod: &HashSet<String>,
+    lock: &GemfileLockDocument,
+) -> HashSet<String> {
+    let mut by_name: HashMap<&str, &GemSpec> = HashMap::new();
+    for spec in &lock.specs {
+        by_name.insert(spec.name.as_str(), spec);
+    }
+    let mut visited: HashSet<String> = HashSet::new();
+    let mut frontier: Vec<String> = direct_prod.iter().cloned().collect();
+    while let Some(name) = frontier.pop() {
+        if !visited.insert(name.clone()) {
+            continue;
+        }
+        if let Some(spec) = by_name.get(name.as_str()) {
+            for dep in &spec.depends {
+                if !visited.contains(dep) {
+                    frontier.push(dep.clone());
+                }
+            }
+        }
+    }
+    visited
+}
+
+/// Find sibling Gemfile + `*.gemspec` files alongside a Gemfile.lock.
+fn find_grouping_sources(lock_path: &Path) -> (Option<PathBuf>, Vec<PathBuf>) {
+    let Some(project_root) = lock_path.parent() else {
+        return (None, Vec::new());
+    };
+    let gemfile = project_root.join("Gemfile");
+    let gemfile = if gemfile.is_file() { Some(gemfile) } else { None };
+    let mut gemspecs = Vec::new();
+    if let Ok(read_dir) = std::fs::read_dir(project_root) {
+        for entry in read_dir.flatten() {
+            let path = entry.path();
+            if !path.is_file() {
+                continue;
+            }
+            if path.extension().and_then(|s| s.to_str()) == Some("gemspec") {
+                gemspecs.push(path);
+            }
+        }
+    }
+    (gemfile, gemspecs)
+}
+
 /// Public entry point — walks `rootfs` for `Gemfile.lock` files AND
 /// for `specifications/*.gemspec` files (Ruby's stdlib/default gems +
 /// system-installed gems not pinned by a Gemfile). Dedupes on PURL so
 /// Gemfile.lock entries win if both sources see the same gem.
-pub fn read(rootfs: &Path, _include_dev: bool) -> Vec<PackageDbEntry> {
+///
+/// Milestone 051: per-Gemfile.lock, parse co-located Gemfile +
+/// `*.gemspec` files; build a union grouping map (per FR-006:
+/// production wins when sources disagree); compute prod-reachable
+/// closure; tag entries OUTSIDE the prod set with `is_dev = Some(true)`;
+/// drop tagged entries when `!include_dev`.
+pub fn read(rootfs: &Path, include_dev: bool) -> Vec<PackageDbEntry> {
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
+    let mut tagged_dev = 0usize;
+    let mut dropped = 0usize;
     for lock_path in find_gemfile_locks(rootfs) {
         let Ok(text) = std::fs::read_to_string(&lock_path) else {
             continue;
@@ -342,10 +607,50 @@ pub fn read(rootfs: &Path, _include_dev: bool) -> Vec<PackageDbEntry> {
         let doc = parse_gemfile_lock(&text);
         let direct: HashSet<String> = doc.dependencies.iter().cloned().collect();
         let source_path = lock_path.to_string_lossy().into_owned();
+
+        // Build the merged grouping signal from Gemfile + gemspec
+        // sources. Production-wins union (FR-006): a gem with empty
+        // group set in ANY source counts as prod.
+        let (gemfile_path, gemspec_paths) = find_grouping_sources(&lock_path);
+        let mut grouping: HashMap<String, BTreeSet<String>> = HashMap::new();
+        if let Some(p) = gemfile_path {
+            for (name, groups) in parse_gemfile(&p) {
+                merge_groups(&mut grouping, name, groups);
+            }
+        }
+        for p in &gemspec_paths {
+            for (name, groups) in parse_gemspec_groups(p) {
+                merge_groups(&mut grouping, name, groups);
+            }
+        }
+
+        // Direct prod-roots = direct deps that EITHER aren't in
+        // grouping OR carry an empty group set in grouping (default
+        // group = production).
+        let direct_prod: HashSet<String> = direct
+            .iter()
+            .filter(|name| {
+                grouping
+                    .get(name.as_str())
+                    .is_none_or(|groups| groups.is_empty())
+            })
+            .cloned()
+            .collect();
+        let prod_set = compute_gem_prod_set(&direct_prod, &doc);
+
         for spec in &doc.specs {
-            let Some(entry) = spec_to_entry(spec, &source_path, &direct) else {
+            let Some(mut entry) = spec_to_entry(spec, &source_path, &direct) else {
                 continue;
             };
+            // Tag dev: not in prod-reachable set.
+            if !prod_set.contains(&spec.name) {
+                entry.is_dev = Some(true);
+                tagged_dev += 1;
+                if !include_dev {
+                    dropped += 1;
+                    continue;
+                }
+            }
             let purl_key = entry.purl.as_str().to_string();
             if seen_purls.insert(purl_key) {
                 out.push(entry);
@@ -382,10 +687,38 @@ pub fn read(rootfs: &Path, _include_dev: bool) -> Vec<PackageDbEntry> {
         tracing::info!(
             rootfs = %rootfs.display(),
             entries = out.len(),
+            tagged_dev,
+            dropped_when_no_include_dev = dropped,
+            include_dev,
             "parsed Gemfile.lock + gemspec entries",
         );
     }
     out
+}
+
+/// Production-wins union: a gem with empty group set in ANY source
+/// counts as production (mirrors FR-006). When the existing entry
+/// already represents prod (empty groups), keep it; otherwise the
+/// union of groups is the new value.
+fn merge_groups(
+    out: &mut HashMap<String, BTreeSet<String>>,
+    name: String,
+    new_groups: BTreeSet<String>,
+) {
+    match out.get_mut(&name) {
+        Some(existing) if existing.is_empty() => {
+            // Already classified as prod by another source — keep.
+        }
+        Some(existing) if new_groups.is_empty() => {
+            existing.clear();
+        }
+        Some(existing) => {
+            existing.extend(new_groups);
+        }
+        None => {
+            out.insert(name, new_groups);
+        }
+    }
 }
 
 fn find_gemfile_locks(rootfs: &Path) -> Vec<PathBuf> {
@@ -1043,5 +1376,130 @@ end
         let json_entries: Vec<_> =
             entries.iter().filter(|e| e.name == "json").collect();
         assert_eq!(json_entries.len(), 2);
+    }
+
+    // ---- Milestone 051 — gem dev/test group classification ----
+
+    #[test]
+    fn parse_gemfile_extracts_group_block() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("Gemfile");
+        std::fs::write(
+            &path,
+            r#"
+source "https://rubygems.org"
+
+gem "rack"
+
+group :test do
+  gem "rspec"
+  gem "factory_bot"
+end
+
+group :development, :test do
+  gem "pry"
+end
+"#,
+        )
+        .unwrap();
+        let groups = parse_gemfile(&path);
+        assert!(groups.get("rack").map(|g| g.is_empty()).unwrap_or(false));
+        assert!(groups.get("rspec").unwrap().contains("test"));
+        assert!(groups.get("factory_bot").unwrap().contains("test"));
+        let pry_groups = groups.get("pry").unwrap();
+        assert!(pry_groups.contains("development"));
+        assert!(pry_groups.contains("test"));
+    }
+
+    #[test]
+    fn parse_gemfile_extracts_inline_group_keyword() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("Gemfile");
+        std::fs::write(
+            &path,
+            r#"
+gem "rack"
+gem "byebug", group: :development
+gem "minitest", groups: [:test, :ci]
+"#,
+        )
+        .unwrap();
+        let groups = parse_gemfile(&path);
+        assert!(groups.get("byebug").unwrap().contains("development"));
+        let minitest = groups.get("minitest").unwrap();
+        assert!(minitest.contains("test"));
+        assert!(minitest.contains("ci"));
+    }
+
+    #[test]
+    fn parse_gemspec_groups_extracts_dev_deps() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("foo.gemspec");
+        std::fs::write(
+            &path,
+            r#"
+Gem::Specification.new do |s|
+  s.name = "foo"
+  s.version = "0.1.0"
+  s.add_dependency "activesupport", "~> 7.0"
+  s.add_runtime_dependency "json"
+  s.add_development_dependency "rspec", "~> 3.0"
+  s.add_development_dependency("factory_bot")
+end
+"#,
+        )
+        .unwrap();
+        let groups = parse_gemspec_groups(&path);
+        assert!(groups.get("activesupport").map(|g| g.is_empty()).unwrap_or(false));
+        assert!(groups.get("json").map(|g| g.is_empty()).unwrap_or(false));
+        assert!(groups.get("rspec").unwrap().contains("development"));
+        assert!(groups.get("factory_bot").unwrap().contains("development"));
+    }
+
+    #[test]
+    fn parse_gemfile_returns_empty_for_missing_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let groups = parse_gemfile(&dir.path().join("NoSuchFile"));
+        assert!(groups.is_empty());
+    }
+
+    #[test]
+    fn parse_gemspec_groups_returns_empty_for_missing_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let groups = parse_gemspec_groups(&dir.path().join("nope.gemspec"));
+        assert!(groups.is_empty());
+    }
+
+    #[test]
+    fn compute_gem_prod_set_walks_three_level_chain() {
+        let lock = GemfileLockDocument {
+            specs: vec![
+                GemSpec {
+                    name: "a".to_string(),
+                    version: "1".to_string(),
+                    kind: GemSection::Gem,
+                    depends: vec!["b".to_string()],
+                },
+                GemSpec {
+                    name: "b".to_string(),
+                    version: "1".to_string(),
+                    kind: GemSection::Gem,
+                    depends: vec!["c".to_string()],
+                },
+                GemSpec {
+                    name: "c".to_string(),
+                    version: "1".to_string(),
+                    kind: GemSection::Gem,
+                    depends: vec![],
+                },
+            ],
+            dependencies: vec!["a".to_string()],
+        };
+        let mut direct = HashSet::new();
+        direct.insert("a".to_string());
+        let prod = compute_gem_prod_set(&direct, &lock);
+        assert!(prod.contains("a"));
+        assert!(prod.contains("b"));
+        assert!(prod.contains("c"));
     }
 }

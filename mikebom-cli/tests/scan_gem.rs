@@ -170,3 +170,232 @@ fn scan_gem_git_and_path_entries_tagged_with_source_type() {
     assert_eq!(rails_src, "git");
     assert_eq!(my_gem_src, "path");
 }
+
+// ---------------------------------------------------------------------------
+// Milestone 051 — gem dev/test group classification
+// ---------------------------------------------------------------------------
+
+fn scan_args(path: &Path, extra: &[&str]) -> serde_json::Value {
+    let bin = env!("CARGO_BIN_EXE_mikebom");
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let out_path = tmp.path().join("sbom.cdx.json");
+    let mut cmd = Command::new(bin);
+    cmd.arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(path)
+        .arg("--output")
+        .arg(&out_path)
+        .arg("--no-deep-hash");
+    for a in extra {
+        cmd.arg(a);
+    }
+    let output = cmd.output().expect("mikebom should run");
+    assert!(
+        output.status.success(),
+        "scan failed: stderr={}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+    let raw = std::fs::read_to_string(&out_path).expect("read sbom");
+    serde_json::from_str(&raw).expect("valid JSON")
+}
+
+fn gem_named<'a>(sbom: &'a serde_json::Value, name: &str) -> Option<&'a serde_json::Value> {
+    sbom["components"]
+        .as_array()?
+        .iter()
+        .find(|c| c["name"].as_str() == Some(name))
+}
+
+fn has_dev_property(component: &serde_json::Value) -> bool {
+    component["properties"]
+        .as_array()
+        .map(|props| {
+            props.iter().any(|p| {
+                p["name"].as_str() == Some("mikebom:dev-dependency")
+                    && (p["value"].as_str() == Some("true")
+                        || p["value"].as_bool() == Some(true))
+            })
+        })
+        .unwrap_or(false)
+}
+
+#[test]
+fn scan_gem_gemfile_groups_are_tagged() {
+    // FR-004 / FR-005: Gemfile groups drive dev classification when
+    // the lockfile has no group annotations (canonical Bundler).
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        dir.path().join("Gemfile"),
+        r#"
+source "https://rubygems.org"
+gem "rack", "~> 3.0"
+
+group :development do
+  gem "pry", "0.14.2"
+end
+"#,
+    )
+    .unwrap();
+    std::fs::write(
+        dir.path().join("Gemfile.lock"),
+        r#"GEM
+  remote: https://rubygems.org/
+  specs:
+    rack (3.0.8)
+    pry (0.14.2)
+
+DEPENDENCIES
+  rack (~> 3.0)
+  pry
+
+BUNDLED WITH
+   2.4.10
+"#,
+    )
+    .unwrap();
+    // Default: pry absent.
+    let sbom = scan_args(dir.path(), &[]);
+    assert!(
+        gem_named(&sbom, "pry").is_none(),
+        "pry (development group) must be dropped in default mode",
+    );
+    assert!(
+        gem_named(&sbom, "rack").is_some(),
+        "rack (default group) must be retained",
+    );
+    // --include-dev: pry tagged.
+    let sbom_dev = scan_args(dir.path(), &["--include-dev"]);
+    let pry = gem_named(&sbom_dev, "pry").expect("pry present with --include-dev");
+    assert!(
+        has_dev_property(pry),
+        "pry must carry mikebom:dev-dependency = true: {pry:?}",
+    );
+}
+
+#[test]
+fn scan_gem_gemspec_dev_deps_are_tagged() {
+    // FR-004 (gemspec source): library projects with `*.gemspec`
+    // declaring `add_development_dependency` get correct
+    // classification even when no Gemfile groups are present.
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        dir.path().join("foo.gemspec"),
+        r#"
+Gem::Specification.new do |s|
+  s.name = "foo"
+  s.version = "0.1.0"
+  s.add_dependency "activesupport", "~> 7.0"
+  s.add_development_dependency "rspec", "~> 3.0"
+end
+"#,
+    )
+    .unwrap();
+    std::fs::write(
+        dir.path().join("Gemfile"),
+        "source \"https://rubygems.org\"\ngemspec\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.path().join("Gemfile.lock"),
+        r#"GEM
+  remote: https://rubygems.org/
+  specs:
+    activesupport (7.1.3)
+    rspec (3.13.0)
+
+DEPENDENCIES
+  activesupport
+  rspec
+
+BUNDLED WITH
+   2.4.10
+"#,
+    )
+    .unwrap();
+    let sbom = scan_args(dir.path(), &[]);
+    assert!(
+        gem_named(&sbom, "rspec").is_none(),
+        "rspec (gemspec dev-dep) must be dropped in default mode",
+    );
+    assert!(
+        gem_named(&sbom, "activesupport").is_some(),
+        "activesupport (gemspec runtime-dep) must be retained",
+    );
+    let sbom_dev = scan_args(dir.path(), &["--include-dev"]);
+    let rspec = gem_named(&sbom_dev, "rspec").expect("rspec present with --include-dev");
+    assert!(has_dev_property(rspec), "rspec must be tagged dev");
+}
+
+#[test]
+fn scan_gem_production_wins_over_dev() {
+    // FR-006: a gem listed as prod by ANY source (Gemfile default
+    // group, gemspec add_dependency, or anywhere with empty groups)
+    // is treated as production, even if another source classifies
+    // it as dev.
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        dir.path().join("Gemfile"),
+        r#"
+source "https://rubygems.org"
+gem "json", "2.7.1"
+group :test do
+  gem "json"
+end
+"#,
+    )
+    .unwrap();
+    std::fs::write(
+        dir.path().join("Gemfile.lock"),
+        r#"GEM
+  remote: https://rubygems.org/
+  specs:
+    json (2.7.1)
+
+DEPENDENCIES
+  json
+
+BUNDLED WITH
+   2.4.10
+"#,
+    )
+    .unwrap();
+    let sbom = scan_args(dir.path(), &[]);
+    let json = gem_named(&sbom, "json").expect("json must be retained (prod wins)");
+    assert!(
+        !has_dev_property(json),
+        "json must NOT be tagged dev when present in default group: {json:?}",
+    );
+}
+
+#[test]
+fn scan_gem_default_group_is_production_unmarked() {
+    // No Gemfile groups, no gemspec — every gem in the lock is
+    // production by default. Default scan emits all of them
+    // unmarked.
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        dir.path().join("Gemfile"),
+        "source \"https://rubygems.org\"\ngem \"rack\"\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.path().join("Gemfile.lock"),
+        r#"GEM
+  remote: https://rubygems.org/
+  specs:
+    rack (3.0.8)
+
+DEPENDENCIES
+  rack
+
+BUNDLED WITH
+   2.4.10
+"#,
+    )
+    .unwrap();
+    let sbom = scan_args(dir.path(), &[]);
+    let rack = gem_named(&sbom, "rack").expect("rack must emit");
+    assert!(!has_dev_property(rack), "rack must not be tagged dev");
+}

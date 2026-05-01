@@ -704,3 +704,94 @@ fn scan_maven_placeholder_version_becomes_design_tier() {
     let range = prop_value(sibling, "mikebom:requirement-range").unwrap_or("");
     assert_eq!(range, "${sibling.version}");
 }
+
+// ---------------------------------------------------------------------------
+// Milestone 051 US3 — maven test-scope tagging regression guard
+// ---------------------------------------------------------------------------
+
+fn scan_path_args(path: &Path, extra: &[&str]) -> serde_json::Value {
+    let bin = env!("CARGO_BIN_EXE_mikebom");
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let out_path = tmp.path().join("sbom.cdx.json");
+    let mut cmd = Command::new(bin);
+    cmd.arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(path)
+        .arg("--output")
+        .arg(&out_path)
+        .arg("--no-deep-hash");
+    for a in extra {
+        cmd.arg(a);
+    }
+    let output = cmd.output().expect("mikebom should run");
+    assert!(
+        output.status.success(),
+        "scan failed: stderr={}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+    let raw = std::fs::read_to_string(&out_path).expect("read sbom");
+    serde_json::from_str(&raw).expect("valid JSON")
+}
+
+#[test]
+fn scan_maven_test_scope_is_tagged_with_include_dev() {
+    // Milestone 051 US3 / FR-007: maven.rs:1786-1823 already drops
+    // <scope>test</scope> deps in default mode and tags them with
+    // mikebom:dev-dependency = true under --include-dev. This test
+    // is a regression guard against future refactors.
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        dir.path().join("pom.xml"),
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>demo</artifactId>
+  <version>0.1.0</version>
+  <dependencies>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>2.0.13</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>
+"#,
+    )
+    .unwrap();
+
+    // Default: junit absent.
+    let sbom = scan_path_args(dir.path(), &[]);
+    let maven = maven_components(&sbom);
+    let junit = maven.iter().find(|c| c["name"].as_str() == Some("junit"));
+    assert!(
+        junit.is_none(),
+        "junit (test-scope) must be dropped in default mode. components: {maven:?}",
+    );
+    // slf4j-api stays.
+    assert!(
+        maven.iter().any(|c| c["name"].as_str() == Some("slf4j-api")),
+        "slf4j-api (compile-scope) must be retained",
+    );
+
+    // --include-dev: junit emits with mikebom:dev-dependency = true.
+    let sbom_dev = scan_path_args(dir.path(), &["--include-dev"]);
+    let maven_dev = maven_components(&sbom_dev);
+    let junit_dev = maven_dev
+        .iter()
+        .find(|c| c["name"].as_str() == Some("junit"))
+        .expect("junit must emit under --include-dev");
+    let is_dev = prop_value(junit_dev, "mikebom:dev-dependency").unwrap_or("");
+    assert_eq!(
+        is_dev, "true",
+        "junit must carry mikebom:dev-dependency = true under --include-dev: {junit_dev:?}",
+    );
+}

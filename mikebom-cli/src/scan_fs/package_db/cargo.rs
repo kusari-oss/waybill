@@ -26,7 +26,7 @@
 //!   "workspace"` (no component emitted at read time; left to the
 //!   caller to decide whether to publish).
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use mikebom_common::types::hash::ContentHash;
@@ -237,12 +237,258 @@ fn parse_authors_from_cargo_toml(text: &str) -> Option<String> {
 }
 
 // ---------------------------------------------------------------------------
+// Milestone 051 — Cargo.toml dev/build-dep classification (T004-T008)
+// ---------------------------------------------------------------------------
+
+/// Crate names declared in a single `Cargo.toml`'s three dependency
+/// sections (plus the `target.<cfg>.*` variants of each). Drives the
+/// milestone-051 dev-vs-prod classification: a crate appearing ONLY in
+/// `dev_deps` or `build_deps` (and not in `prod_deps`) is tagged
+/// `mikebom:dev-dependency = true` after BFS expansion through the
+/// resolved Cargo.lock graph.
+#[derive(Debug, Default, Clone)]
+pub(crate) struct CargoTomlSections {
+    pub prod_deps: HashSet<String>,
+    pub dev_deps: HashSet<String>,
+    pub build_deps: HashSet<String>,
+}
+
+impl CargoTomlSections {
+    /// Union with another sections set — used to merge the workspace
+    /// root + every member crate into a single workspace-wide
+    /// classification view.
+    fn union(&mut self, other: &CargoTomlSections) {
+        self.prod_deps.extend(other.prod_deps.iter().cloned());
+        self.dev_deps.extend(other.dev_deps.iter().cloned());
+        self.build_deps.extend(other.build_deps.iter().cloned());
+    }
+}
+
+/// Parse a `Cargo.toml` file and extract the three dependency sections
+/// (plus their `target.<cfg>.*` counterparts). Returns `None` on parse
+/// failure (warn-and-skip per plan R3 — a malformed Cargo.toml in some
+/// workspace member shouldn't abort the whole scan).
+pub(crate) fn parse_cargo_toml(path: &Path) -> Option<CargoTomlSections> {
+    let text = std::fs::read_to_string(path).ok()?;
+    let parsed: toml::Value = match toml::from_str(&text) {
+        Ok(v) => v,
+        Err(e) => {
+            tracing::warn!(
+                path = %path.display(),
+                error = %e,
+                "Cargo.toml parse failed — skipping dev/build classification \
+                 for this manifest",
+            );
+            return None;
+        }
+    };
+    let mut out = CargoTomlSections::default();
+    collect_section_keys(&parsed, "dependencies", &mut out.prod_deps);
+    collect_section_keys(&parsed, "dev-dependencies", &mut out.dev_deps);
+    collect_section_keys(&parsed, "build-dependencies", &mut out.build_deps);
+    // Walk every `target.<cfg>` table for its three section variants.
+    if let Some(target_table) = parsed.get("target").and_then(|v| v.as_table()) {
+        for (_cfg, target_value) in target_table {
+            collect_section_keys(target_value, "dependencies", &mut out.prod_deps);
+            collect_section_keys(target_value, "dev-dependencies", &mut out.dev_deps);
+            collect_section_keys(target_value, "build-dependencies", &mut out.build_deps);
+        }
+    }
+    Some(out)
+}
+
+fn collect_section_keys(parsed: &toml::Value, section: &str, out: &mut HashSet<String>) {
+    let Some(table) = parsed.get(section).and_then(|v| v.as_table()) else {
+        return;
+    };
+    for (key, value) in table {
+        // Cargo allows `foo = { package = "real-name", version = "1" }`.
+        // The renamed key in the TOML doesn't match the resolved
+        // `[[package]] name` in Cargo.lock; the inline `package = "..."`
+        // override does. Honor it when present.
+        let resolved_name = value
+            .as_table()
+            .and_then(|t| t.get("package"))
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| key.clone());
+        out.insert(resolved_name);
+    }
+}
+
+/// Discover every `Cargo.toml` reachable from the lockfile's project
+/// root: the immediate sibling, plus any workspace members declared
+/// via `[workspace] members = [...]` (with simple glob expansion for
+/// `crate-*` / `crates/*` patterns). Returns absolute paths in
+/// deterministic insertion order.
+///
+/// Per plan R1 fallback: if a glob escalates beyond simple star
+/// matching, we just include every directory under the matched parent
+/// — same effective semantic for typical layouts.
+pub(crate) fn discover_workspace_manifests(lockfile: &Path) -> Vec<PathBuf> {
+    let Some(project_root) = lockfile.parent() else {
+        return Vec::new();
+    };
+    let root_manifest = project_root.join("Cargo.toml");
+    if !root_manifest.is_file() {
+        return Vec::new();
+    }
+    let mut out = vec![root_manifest.clone()];
+    // Read the root manifest's `[workspace] members = [...]` array.
+    let Ok(text) = std::fs::read_to_string(&root_manifest) else {
+        return out;
+    };
+    let Ok(parsed) = toml::from_str::<toml::Value>(&text) else {
+        return out;
+    };
+    let Some(members) = parsed
+        .get("workspace")
+        .and_then(|w| w.get("members"))
+        .and_then(|m| m.as_array())
+    else {
+        return out;
+    };
+    for member in members {
+        let Some(pattern) = member.as_str() else {
+            continue;
+        };
+        expand_workspace_member(project_root, pattern, &mut out);
+    }
+    out
+}
+
+fn expand_workspace_member(project_root: &Path, pattern: &str, out: &mut Vec<PathBuf>) {
+    if let Some(prefix) = pattern.strip_suffix("/*") {
+        // Glob `<prefix>/*`: include every immediate subdirectory of
+        // `<project_root>/<prefix>` whose Cargo.toml exists.
+        let parent = project_root.join(prefix);
+        let Ok(read_dir) = std::fs::read_dir(&parent) else {
+            return;
+        };
+        for entry in read_dir.flatten() {
+            let dir = entry.path();
+            if dir.is_dir() {
+                let manifest = dir.join("Cargo.toml");
+                if manifest.is_file() {
+                    out.push(manifest);
+                }
+            }
+        }
+    } else if pattern.contains('*') {
+        // Plan R1 fallback: more complex glob → include every
+        // descendant Cargo.toml under the pattern's leading literal
+        // prefix. Conservative; over-includes but never misses.
+        let leading = pattern.split('*').next().unwrap_or("");
+        let parent = project_root.join(leading);
+        find_descendant_manifests(&parent, 0, out);
+    } else {
+        // Literal path.
+        let manifest = project_root.join(pattern).join("Cargo.toml");
+        if manifest.is_file() {
+            out.push(manifest);
+        }
+    }
+}
+
+fn find_descendant_manifests(dir: &Path, depth: usize, out: &mut Vec<PathBuf>) {
+    if depth >= MAX_PROJECT_ROOT_DEPTH {
+        return;
+    }
+    let manifest = dir.join("Cargo.toml");
+    if manifest.is_file() {
+        out.push(manifest);
+    }
+    let Ok(read_dir) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for entry in read_dir.flatten() {
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        let Some(name) = path.file_name().and_then(|s| s.to_str()) else {
+            continue;
+        };
+        if should_skip_descent(name) {
+            continue;
+        }
+        find_descendant_manifests(&path, depth + 1, out);
+    }
+}
+
+/// Compute the prod-reachable closure of `(name, version)` tuples by
+/// BFS-walking `Cargo.lock`'s resolved dep graph from the direct-prod
+/// crate names of the workspace.
+///
+/// Cargo.lock encodes per-package dep edges as
+/// `dependencies = ["bar 1.0.0 (registry+https://...)"]`. Each string
+/// is `<name> [<version>] [(<source>)]`; we extract the name +
+/// (when present) version to look up the next package node.
+///
+/// Production-wins-over-dev (FR-003): a crate reachable from BOTH a
+/// prod and a dev edge lands in this set, so the classifier correctly
+/// retains it as production. Same precedence rule as Go US2 / npm.
+fn compute_cargo_prod_set(
+    lock: &CargoLock,
+    direct_prod: &HashSet<String>,
+) -> HashSet<(String, String)> {
+    // Build a quick (name, version) → CargoPackage index for BFS
+    // traversal. When multiple `[[package]]` rows share a name (rare
+    // but legal — workspace members + transitive multi-version
+    // resolutions), keep them all.
+    let mut by_name: HashMap<&str, Vec<&CargoPackage>> = HashMap::new();
+    for pkg in &lock.package {
+        by_name.entry(pkg.name.as_str()).or_default().push(pkg);
+    }
+    let mut visited: HashSet<(String, String)> = HashSet::new();
+    let mut frontier: Vec<(&str, Option<&str>)> = direct_prod
+        .iter()
+        .map(|name| (name.as_str(), None::<&str>))
+        .collect();
+    while let Some((name, version)) = frontier.pop() {
+        // Resolve to one or more concrete package nodes.
+        let Some(candidates) = by_name.get(name) else {
+            continue;
+        };
+        for pkg in candidates {
+            if let Some(target_version) = version {
+                if pkg.version != target_version {
+                    continue;
+                }
+            }
+            let key = (pkg.name.clone(), pkg.version.clone());
+            if !visited.insert(key) {
+                continue;
+            }
+            for dep in &pkg.dependencies {
+                let mut parts = dep.split_whitespace();
+                let dep_name = match parts.next() {
+                    Some(n) => n,
+                    None => continue,
+                };
+                let dep_version = parts.next().filter(|p| !p.starts_with('('));
+                frontier.push((dep_name, dep_version));
+            }
+        }
+    }
+    visited
+}
+
+// ---------------------------------------------------------------------------
 // Reader
 // ---------------------------------------------------------------------------
 
 /// Parse one `Cargo.lock` file. Emits typed error for v1/v2; otherwise
-/// returns the flattened entry list for v3/v4.
-fn parse_lockfile(path: &Path) -> Result<Vec<PackageDbEntry>, CargoError> {
+/// returns the flattened entry list for v3/v4. When `prod_set` is
+/// non-empty (a Cargo.toml was found alongside the lockfile), entries
+/// whose `(name, version)` is NOT in the set are tagged
+/// `is_dev = Some(true)` per milestone 051. When `prod_set` is empty
+/// (lockfile-only, no Cargo.toml beside it) entries pass through with
+/// `is_dev = None` — we can't classify without dep-section info.
+fn parse_lockfile(
+    path: &Path,
+    prod_set: &HashSet<(String, String)>,
+) -> Result<Vec<PackageDbEntry>, CargoError> {
     let text = match std::fs::read_to_string(path) {
         Ok(t) => t,
         Err(_) => return Ok(Vec::new()),
@@ -311,6 +557,15 @@ fn parse_lockfile(path: &Path) -> Result<Vec<PackageDbEntry>, CargoError> {
                 }
             }
             entry.source_path = source_path.clone();
+            // Milestone 051: tag entries outside the prod-reachable
+            // set. When `prod_set` is empty (no Cargo.toml found
+            // alongside the lockfile) leave is_dev = None — we can't
+            // classify without dep-section info.
+            if !prod_set.is_empty()
+                && !prod_set.contains(&(pkg.name.clone(), pkg.version.clone()))
+            {
+                entry.is_dev = Some(true);
+            }
             out.push(entry);
         }
     }
@@ -320,13 +575,45 @@ fn parse_lockfile(path: &Path) -> Result<Vec<PackageDbEntry>, CargoError> {
 /// Public entry point — walks `rootfs` for `Cargo.lock` files, parses
 /// each, and returns the flattened entry list. v1/v2 at any root
 /// short-circuits with the typed error.
-pub fn read(rootfs: &Path, _include_dev: bool) -> Result<Vec<PackageDbEntry>, CargoError> {
+///
+/// Milestone 051: per-lockfile, parses sibling/workspace `Cargo.toml`
+/// files to identify dev/build deps, BFS-expands the prod closure
+/// against the lockfile, and tags entries outside that closure with
+/// `is_dev = Some(true)`. When `include_dev = false`, tagged entries
+/// are dropped (mirrors maven.rs:1786 + go-source-set filter).
+pub fn read(rootfs: &Path, include_dev: bool) -> Result<Vec<PackageDbEntry>, CargoError> {
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
+    let mut tagged_dev = 0usize;
+    let mut dropped = 0usize;
     for lock_path in find_cargo_lockfiles(rootfs) {
-        let entries = parse_lockfile(&lock_path)?;
+        // Per-lockfile: build the workspace-wide CargoTomlSections by
+        // unioning the root manifest + every workspace member.
+        let mut workspace_sections = CargoTomlSections::default();
+        for manifest_path in discover_workspace_manifests(&lock_path) {
+            if let Some(sections) = parse_cargo_toml(&manifest_path) {
+                workspace_sections.union(&sections);
+            }
+        }
+        // Re-read the lockfile structurally to drive the BFS prod-set
+        // computation. parse_lockfile_doc returns the typed CargoLock
+        // (lighter than re-running parse_lockfile, which already
+        // converts to PackageDbEntry).
+        let prod_set = match parse_lockfile_doc(&lock_path) {
+            Ok(Some(doc)) => compute_cargo_prod_set(&doc, &workspace_sections.prod_deps),
+            _ => HashSet::new(),
+        };
+        let entries = parse_lockfile(&lock_path, &prod_set)?;
         for entry in entries {
             let purl_key = entry.purl.as_str().to_string();
+            // Drop dev entries when --include-dev is off.
+            if entry.is_dev == Some(true) {
+                tagged_dev += 1;
+                if !include_dev {
+                    dropped += 1;
+                    continue;
+                }
+            }
             if seen_purls.insert(purl_key) {
                 out.push(entry);
             }
@@ -336,10 +623,45 @@ pub fn read(rootfs: &Path, _include_dev: bool) -> Result<Vec<PackageDbEntry>, Ca
         tracing::info!(
             rootfs = %rootfs.display(),
             entries = out.len(),
+            tagged_dev,
+            dropped_when_no_include_dev = dropped,
+            include_dev,
             "parsed Cargo lockfiles",
         );
     }
     Ok(out)
+}
+
+/// Parse a `Cargo.lock` file into the typed `CargoLock` document
+/// without converting to `PackageDbEntry`. Used by the milestone-051
+/// prod-set BFS — needs raw `[[package]] dependencies = [...]` edges
+/// before the per-entry classification + drop logic runs.
+///
+/// Returns `Ok(None)` on read/parse failure (warn-and-skip), `Err` on
+/// fatal v1/v2 lockfile-version refusal.
+fn parse_lockfile_doc(path: &Path) -> Result<Option<CargoLock>, CargoError> {
+    let text = match std::fs::read_to_string(path) {
+        Ok(t) => t,
+        Err(_) => return Ok(None),
+    };
+    let doc: CargoLock = match toml::from_str(&text) {
+        Ok(d) => d,
+        Err(_) => return Ok(None),
+    };
+    match doc.version {
+        None => {
+            let version_hint = if text.contains("[root]") { 1 } else { 2 };
+            Err(CargoError::LockfileUnsupportedVersion {
+                path: path.to_path_buf(),
+                version: version_hint,
+            })
+        }
+        Some(v) if v < 3 => Err(CargoError::LockfileUnsupportedVersion {
+            path: path.to_path_buf(),
+            version: v,
+        }),
+        _ => Ok(Some(doc)),
+    }
 }
 
 fn find_cargo_lockfiles(rootfs: &Path) -> Vec<PathBuf> {
@@ -481,7 +803,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0000000000000000000000000000000000000000000000000000000000000001"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 2);
         assert!(entries.iter().any(|e| e.name == "serde"));
         let serde = entries.iter().find(|e| e.name == "serde").unwrap();
@@ -503,7 +825,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ad32ce52e4161730f7098c077cd2ed6229b5804ccf99e5366be1ab72a98b4e1"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "anyhow");
     }
@@ -520,7 +842,7 @@ version = "0.1.0"
 source = "git+https://github.com/me/my-fork?branch=main#abc123"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].source_type.as_deref(), Some("git"));
     }
@@ -536,7 +858,7 @@ version = "0.1.0"
 dependencies = []
 "#;
         let path = write_lockfile(dir.path(), body);
-        match parse_lockfile(&path) {
+        match parse_lockfile(&path, &HashSet::new()) {
             Err(CargoError::LockfileUnsupportedVersion { version, .. }) => {
                 assert_eq!(version, 1);
             }
@@ -556,7 +878,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0000000000000000000000000000000000000000000000000000000000000000"
 "#;
         let path = write_lockfile(dir.path(), body);
-        match parse_lockfile(&path) {
+        match parse_lockfile(&path, &HashSet::new()) {
             Err(CargoError::LockfileUnsupportedVersion { version, .. }) => {
                 assert_eq!(version, 2);
             }
@@ -688,5 +1010,227 @@ checksum = "0a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393"
             read(dir.path(), false),
             Err(CargoError::LockfileUnsupportedVersion { version: 1, .. })
         ));
+    }
+
+    // ---- Milestone 051 — Cargo.toml dev/build classification ----
+
+    #[test]
+    fn parse_cargo_toml_extracts_three_sections() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("Cargo.toml");
+        std::fs::write(
+            &path,
+            r#"
+[package]
+name = "demo"
+version = "0.1.0"
+
+[dependencies]
+serde = "1"
+tokio = { version = "1", features = ["full"] }
+
+[dev-dependencies]
+criterion = "0.5"
+proptest = "1"
+
+[build-dependencies]
+cc = "1"
+"#,
+        )
+        .unwrap();
+        let sections = parse_cargo_toml(&path).expect("parsed");
+        assert!(sections.prod_deps.contains("serde"));
+        assert!(sections.prod_deps.contains("tokio"));
+        assert!(sections.dev_deps.contains("criterion"));
+        assert!(sections.dev_deps.contains("proptest"));
+        assert!(sections.build_deps.contains("cc"));
+        assert_eq!(sections.prod_deps.len(), 2);
+        assert_eq!(sections.dev_deps.len(), 2);
+        assert_eq!(sections.build_deps.len(), 1);
+    }
+
+    #[test]
+    fn parse_cargo_toml_walks_target_cfg_tables() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("Cargo.toml");
+        std::fs::write(
+            &path,
+            r#"
+[package]
+name = "demo"
+version = "0.1.0"
+
+[target."cfg(unix)".dev-dependencies]
+nix = "0.27"
+
+[target."cfg(windows)".build-dependencies]
+winres = "0.1"
+"#,
+        )
+        .unwrap();
+        let sections = parse_cargo_toml(&path).expect("parsed");
+        assert!(sections.dev_deps.contains("nix"));
+        assert!(sections.build_deps.contains("winres"));
+        assert!(sections.prod_deps.is_empty());
+    }
+
+    #[test]
+    fn parse_cargo_toml_returns_none_on_malformed() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("Cargo.toml");
+        std::fs::write(&path, "this is = not valid [[ toml\n").unwrap();
+        assert!(parse_cargo_toml(&path).is_none());
+    }
+
+    #[test]
+    fn parse_cargo_toml_absent_sections_yield_empty_sets() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("Cargo.toml");
+        std::fs::write(
+            &path,
+            "[package]\nname = \"x\"\nversion = \"0.1.0\"\n",
+        )
+        .unwrap();
+        let sections = parse_cargo_toml(&path).expect("parsed");
+        assert!(sections.prod_deps.is_empty());
+        assert!(sections.dev_deps.is_empty());
+        assert!(sections.build_deps.is_empty());
+    }
+
+    #[test]
+    fn parse_cargo_toml_honors_package_rename() {
+        // `foo = { package = "real-name", version = "1" }` resolves
+        // to crate `real-name` in Cargo.lock, not `foo`.
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("Cargo.toml");
+        std::fs::write(
+            &path,
+            r#"
+[package]
+name = "demo"
+version = "0.1.0"
+
+[dependencies]
+foo = { package = "real-name", version = "1" }
+"#,
+        )
+        .unwrap();
+        let sections = parse_cargo_toml(&path).expect("parsed");
+        assert!(sections.prod_deps.contains("real-name"));
+        assert!(!sections.prod_deps.contains("foo"));
+    }
+
+    fn lock_pkg(name: &str, version: &str, deps: &[&str]) -> CargoPackage {
+        CargoPackage {
+            name: name.to_string(),
+            version: version.to_string(),
+            source: Some("registry+https://github.com/rust-lang/crates.io-index".to_string()),
+            checksum: None,
+            dependencies: deps.iter().map(|s| s.to_string()).collect(),
+        }
+    }
+
+    #[test]
+    fn compute_prod_set_returns_just_direct_when_no_transitives() {
+        let lock = CargoLock {
+            version: Some(3),
+            package: vec![lock_pkg("foo", "1.0.0", &[])],
+        };
+        let mut direct = HashSet::new();
+        direct.insert("foo".to_string());
+        let prod = compute_cargo_prod_set(&lock, &direct);
+        assert_eq!(prod.len(), 1);
+        assert!(prod.contains(&("foo".to_string(), "1.0.0".to_string())));
+    }
+
+    #[test]
+    fn compute_prod_set_walks_three_level_chain() {
+        let lock = CargoLock {
+            version: Some(3),
+            package: vec![
+                lock_pkg("a", "1.0.0", &["b 2.0.0"]),
+                lock_pkg("b", "2.0.0", &["c 3.0.0"]),
+                lock_pkg("c", "3.0.0", &[]),
+            ],
+        };
+        let mut direct = HashSet::new();
+        direct.insert("a".to_string());
+        let prod = compute_cargo_prod_set(&lock, &direct);
+        assert_eq!(prod.len(), 3);
+        assert!(prod.contains(&("a".to_string(), "1.0.0".to_string())));
+        assert!(prod.contains(&("b".to_string(), "2.0.0".to_string())));
+        assert!(prod.contains(&("c".to_string(), "3.0.0".to_string())));
+    }
+
+    #[test]
+    fn compute_prod_set_production_wins_over_dev() {
+        // `shared` is reachable from BOTH the prod root `a` and (in
+        // a real workspace) a dev root. From the BFS perspective —
+        // which is seeded from prod-direct only — `shared` lands
+        // in the prod set when reachable through prod chain.
+        let lock = CargoLock {
+            version: Some(3),
+            package: vec![
+                lock_pkg("a", "1.0.0", &["shared 1.0.0"]),
+                lock_pkg("dev-only", "1.0.0", &["shared 1.0.0"]),
+                lock_pkg("shared", "1.0.0", &[]),
+            ],
+        };
+        let mut direct = HashSet::new();
+        direct.insert("a".to_string());
+        let prod = compute_cargo_prod_set(&lock, &direct);
+        assert!(prod.contains(&("shared".to_string(), "1.0.0".to_string())));
+        // dev-only is NOT in the prod set — exactly what we want.
+        assert!(!prod.contains(&("dev-only".to_string(), "1.0.0".to_string())));
+    }
+
+    #[test]
+    fn compute_prod_set_empty_seed_returns_empty() {
+        let lock = CargoLock {
+            version: Some(3),
+            package: vec![lock_pkg("foo", "1.0.0", &[])],
+        };
+        let prod = compute_cargo_prod_set(&lock, &HashSet::new());
+        assert!(prod.is_empty());
+    }
+
+    #[test]
+    fn discover_workspace_manifests_includes_root_only_when_no_workspace() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("Cargo.toml"),
+            "[package]\nname = \"solo\"\nversion = \"0.1.0\"\n",
+        )
+        .unwrap();
+        std::fs::write(dir.path().join("Cargo.lock"), "version = 3\n").unwrap();
+        let manifests = discover_workspace_manifests(&dir.path().join("Cargo.lock"));
+        assert_eq!(manifests.len(), 1);
+        assert!(manifests[0].ends_with("Cargo.toml"));
+    }
+
+    #[test]
+    fn discover_workspace_manifests_expands_glob_members() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("Cargo.toml"),
+            "[workspace]\nmembers = [\"crates/*\"]\n",
+        )
+        .unwrap();
+        std::fs::write(dir.path().join("Cargo.lock"), "version = 3\n").unwrap();
+        std::fs::create_dir_all(dir.path().join("crates/foo")).unwrap();
+        std::fs::create_dir_all(dir.path().join("crates/bar")).unwrap();
+        std::fs::write(
+            dir.path().join("crates/foo/Cargo.toml"),
+            "[package]\nname = \"foo\"\nversion = \"0.1.0\"\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("crates/bar/Cargo.toml"),
+            "[package]\nname = \"bar\"\nversion = \"0.1.0\"\n",
+        )
+        .unwrap();
+        let manifests = discover_workspace_manifests(&dir.path().join("Cargo.lock"));
+        // Root + 2 members.
+        assert_eq!(manifests.len(), 3);
     }
 }

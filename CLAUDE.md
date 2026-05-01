@@ -95,7 +95,6 @@ Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard
 ## Recent Changes
 - 049-go-source-scope: Added Rust stable. + existing only — `std::collections`,
 - 048-component-role: Added Rust stable. + existing only — `std::path`,
-- 047-scope-self-description: Added Rust stable (workspace toolchain inherited). + existing only — `serde`, `serde_json`,
 
 
 <!-- MANUAL ADDITIONS START -->
