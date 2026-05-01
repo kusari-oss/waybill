@@ -418,6 +418,11 @@ cdx_anno!(c37_cdx, "mikebom:macho-codesign-identifier", component);
 cdx_anno!(c38_cdx, "mikebom:macho-codesign-flags",      component);
 cdx_anno!(c39_cdx, "mikebom:macho-codesign-team-id",    component);
 
+// C40 — component-role classifier (milestone 048). Filesystem-
+// position-classified role: `build-tool`, `language-runtime`, or
+// (when no heuristic matches) absent.
+cdx_anno!(c40_cdx, "mikebom:component-role",            component);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================

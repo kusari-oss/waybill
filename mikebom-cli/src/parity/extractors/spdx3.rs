@@ -385,6 +385,9 @@ spdx3_anno!(c37_spdx3, "mikebom:macho-codesign-identifier", component);
 spdx3_anno!(c38_spdx3, "mikebom:macho-codesign-flags",      component);
 spdx3_anno!(c39_spdx3, "mikebom:macho-codesign-team-id",    component);
 
+// C40 (milestone 048 — component-role classifier).
+spdx3_anno!(c40_spdx3, "mikebom:component-role",            component);
+
 // ============================================================
 // Sections D-G — custom SPDX 3 extractors
 // ============================================================
