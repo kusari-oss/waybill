@@ -7,6 +7,32 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+(Nothing yet. Land changes here, then cut a release per the
+`release.yml` workflow trigger documented in
+`docs/contributing/release.md`.)
+
+## [0.1.0-alpha.8] — 2026-04-30
+
+A small targeted release covering one user-facing feature
+shipped since alpha.7 (~1 hour after alpha.7): the
+`mikebom:component-role` annotation surfacing
+filesystem-position-classified component roles in CDX + SPDX 2.3
++ SPDX 3 outputs. Audit-grounded — addresses 3 false-positive
+Maven build-tool JARs surfaced in the alpha.7 polyglot-builder-
+image conformance run.
+
+- **Build-tool and language-runtime components are now
+  explicitly tagged** in every output format. Maven's own
+  internals at `/usr/share/maven/lib/`, JDK system-installed
+  JARs at `/usr/lib/jvm/*/lib/`, system Python packages at
+  `/usr/lib/python*/site-packages/` and `dist-packages/`, and
+  comparable build-tool / language-runtime paths now carry
+  `mikebom:component-role = "build-tool"` or
+  `mikebom:component-role = "language-runtime"`. Downstream
+  consumers (vulnerability scanners, license auditors,
+  conformance ground-truths) can filter on the annotation
+  without re-implementing the path-heuristic.
+
 ### Added
 
 - **`mikebom:component-role` annotation** (048). Components
