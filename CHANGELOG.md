@@ -7,9 +7,26 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
-(Nothing yet. Land changes here, then cut a release per the
-`release.yml` workflow trigger documented in
-`docs/contributing/release.md`.)
+### Added
+
+- **`mikebom:component-role` annotation** (048). Components
+  whose `evidence.occurrences[]` paths match a curated
+  filesystem heuristic now carry a `mikebom:component-role`
+  annotation classifying them as `build-tool` (under
+  `/usr/share/maven/lib/`, `/usr/share/gradle/lib/`, `/opt/sbt/`)
+  or `language-runtime` (under `/usr/lib/jvm/*/lib/`,
+  `/usr/lib/node_modules/`, `/usr/lib/python*/site-packages/`,
+  `/usr/lib/python*/dist-packages/`). Three-state semantics:
+  components without a heuristic match get NO annotation —
+  absence does NOT mean "definitely application code", it
+  means the heuristic didn't classify. Emitted symmetrically
+  across CDX `properties[]`, SPDX 2.3 `packages[].annotations[]`,
+  and SPDX 3 top-level `annotations[]` (catalog row C40,
+  SymmetricEqual). Lets downstream consumers (vulnerability
+  scanners, license auditors, conformance suites) filter
+  build-tooling and platform runtime libraries from
+  application-deps reporting without mikebom dropping any
+  component from the SBOM.
 
 ## [0.1.0-alpha.7] — 2026-04-30
 
