@@ -63,6 +63,16 @@ pub struct ScanArtifacts<'a> {
     /// `creationInfo.comment` / `SpdxDocument.comment` (direct).
     /// Milestone 047.
     pub scope_mode: ScopeMode,
+    /// Milestone 061 (closes #119): doc-level Go graph-completeness
+    /// signal. `None` when no Go scan happened (annotation absent in
+    /// output). `Some(Complete)` / `Some(Partial)` per the per-scan
+    /// orphan classification done by `golang::legacy::read()`.
+    pub go_graph_completeness:
+        Option<crate::scan_fs::package_db::GraphCompleteness>,
+    /// Milestone 061 — comma-separated `<ecosystem>:<reason-class>`
+    /// list summarizing why `go_graph_completeness == Partial`.
+    /// Empty/None when completeness is `Complete` or `None`.
+    pub go_graph_completeness_reason: Option<&'a str>,
 }
 
 /// Document-level scope mode for a single mikebom scan. Surfaced

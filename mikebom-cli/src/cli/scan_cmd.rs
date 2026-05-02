@@ -757,6 +757,8 @@ pub async fn execute(
         mut relationships,
         complete_ecosystems,
         os_release_missing_fields,
+        go_graph_completeness,
+        go_graph_completeness_reason,
         scan_target_coord,
     } = scan_fs::scan_path(
         &root_path,
@@ -920,6 +922,12 @@ pub async fn execute(
         } else {
             crate::generate::ScopeMode::Artifact
         },
+        // Milestone 061 (closes #119): doc-level Go graph-completeness
+        // signal flows from the scan_fs::ScanResult into ScanArtifacts
+        // for the per-format emitters' metadata.properties[] /
+        // document-level annotations[] entries.
+        go_graph_completeness,
+        go_graph_completeness_reason: go_graph_completeness_reason.as_deref(),
     };
     let output_cfg = OutputConfig {
         mikebom_version: env!("CARGO_PKG_VERSION"),

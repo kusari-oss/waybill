@@ -37,6 +37,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:orphan-reason",
+          "value": "unresolved-indirect-require"
         }
       ],
       "purl": "pkg:golang/github.com/davecgh/go-spew@v1.1.1",
@@ -82,6 +86,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:orphan-reason",
+          "value": "unresolved-indirect-require"
         }
       ],
       "purl": "pkg:golang/github.com/inconshreveable/mousetrap@v1.1.0",
@@ -172,6 +180,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:orphan-reason",
+          "value": "unresolved-indirect-require"
         }
       ],
       "purl": "pkg:golang/github.com/pmezard/go-difflib@v1.0.0",
@@ -307,6 +319,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:orphan-reason",
+          "value": "unresolved-indirect-require"
         }
       ],
       "purl": "pkg:golang/github.com/spf13/pflag@v1.0.9",
@@ -391,6 +407,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:orphan-reason",
+          "value": "unresolved-indirect-require"
         }
       ],
       "purl": "pkg:golang/golang.org/x/sys@v0.28.0",
@@ -430,6 +450,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:orphan-reason",
+          "value": "unresolved-indirect-require"
         }
       ],
       "purl": "pkg:golang/gopkg.in/check.v1@v0.0.0-20161208181325-20d25e280405",
@@ -647,6 +671,14 @@
       {
         "name": "mikebom:os-release-missing-fields",
         "value": "ID,VERSION_ID"
+      },
+      {
+        "name": "mikebom:graph-completeness",
+        "value": "partial"
+      },
+      {
+        "name": "mikebom:graph-completeness-reason",
+        "value": "go:unresolved-indirect-require"
       },
       {
         "name": "mikebom:trace-integrity-ring-buffer-overflows",

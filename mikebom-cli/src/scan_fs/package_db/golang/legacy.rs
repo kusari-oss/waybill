@@ -1018,6 +1018,23 @@ pub struct GoScanSignals {
     pub main_modules: HashSet<String>,
     pub production_imports: HashSet<String>,
     pub test_only_imports: HashSet<String>,
+    /// Milestone 061 (closes #119): aggregate graph completeness for
+    /// the Go ecosystem. `None` ⇒ no `go.sum` entries were emitted in
+    /// this scan (no Go components exist; signal not applicable).
+    /// `Some(Complete)` ⇒ every `pkg:golang/...` component has at
+    /// least one incoming `dependsOn`. `Some(Partial)` ⇒ one or more
+    /// orphans (the per-component `mikebom:orphan-reason` annotations
+    /// name the why; the doc-level reason summary lives in
+    /// `graph_completeness_reasons`).
+    pub graph_completeness:
+        Option<crate::scan_fs::package_db::GraphCompleteness>,
+    /// Sorted-deduplicated list of `<reason-class>` tokens contributing
+    /// to the `Partial` completeness state. Empty when `Complete` /
+    /// `None`. Ecosystem prefix (`go:`) added by the upstream
+    /// `read_all` aggregator before the value flows into the document-
+    /// level annotation, so this field carries just the bare class
+    /// names (`unresolved-indirect-require`, `proxy-fetch-failed`, ...).
+    pub graph_completeness_reasons: Vec<String>,
 }
 
 pub fn read(rootfs: &Path, _include_dev: bool) -> (Vec<PackageDbEntry>, GoScanSignals) {
@@ -1215,19 +1232,26 @@ pub fn read(rootfs: &Path, _include_dev: bool) -> (Vec<PackageDbEntry>, GoScanSi
         // Milestone 059 FR-004: orphan-visibility summary. After the
         // graph-topology fix (main-module emits ONLY non-`// indirect`
         // requires), a Go component sourced from `go.sum` is an orphan
-        // when no other component references it via `depends`. This is
-        // the expected outcome in `--offline` + empty cache + indirect-
-        // only requires (Trivy-style trade-off, accepted per spec
-        // FR-003). Operators see the count to decide whether to
-        // populate `$GOMODCACHE` / drop `--offline` for better edge
-        // resolution.
-        let mut incoming_count: std::collections::HashMap<&str, usize> =
+        // when no other component references it via `depends`.
+        //
+        // Milestone 061 (closes #119): classify each orphan with a
+        // reason and populate the per-component
+        // `mikebom:orphan-reason` annotation. Aggregate the
+        // completeness state into `signals` for the doc-level
+        // `mikebom:graph-completeness` annotation that the format
+        // emitters surface in `metadata.properties[]`.
+        //
+        // First pass: build the incoming-edge count over Go components
+        // only (the workspace's wrapping non-Go entries don't get
+        // classified — they belong to other ecosystems' completeness
+        // signals which are separate doc-level concerns).
+        let mut incoming_count: std::collections::HashMap<String, usize> =
             std::collections::HashMap::new();
         for entry in &out {
-            // Initialize every Go component to 0 incoming so the
-            // orphan check finds them even when no other entry refs.
             if entry.purl.as_str().starts_with("pkg:golang/") {
-                incoming_count.entry(&entry.name).or_insert(0);
+                incoming_count
+                    .entry(entry.name.clone())
+                    .or_insert(0);
             }
         }
         for entry in &out {
@@ -1247,6 +1271,48 @@ pub fn read(rootfs: &Path, _include_dev: bool) -> (Vec<PackageDbEntry>, GoScanSi
             orphans = orphan_count,
             "Go graph reachability summary (orphans = no incoming dependsOn — expected when --offline + empty cache + indirect-only requires)",
         );
+
+        // Second pass: classify each orphan + populate the per-
+        // component `mikebom:orphan-reason` annotation. The classifier
+        // is conservative — it picks `unresolved-indirect-require` as
+        // the default and would refine to `private-module` /
+        // `proxy-fetch-failed` if we had per-module fetch-error data
+        // from the milestone 055 resolver. Threading that data
+        // through is a follow-up; the default reason is operationally
+        // correct for the offline + empty-cache common case (the
+        // resolver's step 4 fall-through).
+        let mut reason_classes: std::collections::BTreeSet<String> =
+            std::collections::BTreeSet::new();
+        if orphan_count > 0 {
+            for entry in out.iter_mut() {
+                if !entry.purl.as_str().starts_with("pkg:golang/") {
+                    continue;
+                }
+                let count = incoming_count.get(entry.name.as_str()).copied().unwrap_or(0);
+                if count > 0 {
+                    continue;
+                }
+                let reason = "unresolved-indirect-require".to_string();
+                reason_classes.insert(reason.clone());
+                entry.extra_annotations.insert(
+                    "mikebom:orphan-reason".to_string(),
+                    serde_json::Value::String(reason),
+                );
+            }
+        }
+
+        // Aggregate doc-level completeness signal. Only set when there
+        // were Go components at all (signal not applicable for
+        // non-Go-touching scans).
+        if go_component_count > 0 {
+            use crate::scan_fs::package_db::GraphCompleteness;
+            signals.graph_completeness = Some(if orphan_count == 0 {
+                GraphCompleteness::Complete
+            } else {
+                GraphCompleteness::Partial
+            });
+            signals.graph_completeness_reasons = reason_classes.into_iter().collect();
+        }
     }
     (out, signals)
 }

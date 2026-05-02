@@ -76,6 +76,15 @@ pub struct ScanResult {
     /// SBOM's `metadata.properties` as `mikebom:os-release-missing-fields`
     /// when non-empty. Empty vec means clean scan.
     pub os_release_missing_fields: Vec<String>,
+    /// Milestone 061 (closes #119): document-level Go graph-completeness
+    /// signal. Propagated from `package_db::ScanDiagnostics` per FR-003.
+    /// `None` means no Go scan happened (annotation absent in output).
+    pub go_graph_completeness:
+        Option<package_db::GraphCompleteness>,
+    /// Milestone 061 — comma-separated `<ecosystem>:<reason-class>` list
+    /// summarizing why `go_graph_completeness == Partial`. Empty when
+    /// completeness is `Complete` or `None`.
+    pub go_graph_completeness_reason: Option<String>,
     /// M3 — Maven scan-subject coord identified during the JAR walk,
     /// promoted from the `PackageDbEntry` layer to drive CDX
     /// `metadata.component`. `None` when no Maven fat-jar matched
@@ -204,10 +213,18 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // fields). Carried from DbScanResult into the ScanResult so the
     // CycloneDX metadata builder can surface them.
     let mut os_release_missing_fields: Vec<String> = Vec::new();
+    // Milestone 061 (closes #119): doc-level Go graph-completeness
+    // signal carried from package_db::ScanDiagnostics through this
+    // ScanResult into the format emitters per FR-005/FR-006/FR-007.
+    let mut go_graph_completeness:
+        Option<package_db::GraphCompleteness> = None;
+    let mut go_graph_completeness_reason: Option<String> = None;
     let mut scan_target_coord: Option<package_db::maven::ScanTargetCoord> = None;
     if read_package_db {
         let scan_result = package_db::read_all(root, deb_codename, include_dev, include_legacy_rpmdb, scan_mode, include_declared_deps, scan_target_name)?;
         os_release_missing_fields = scan_result.diagnostics.os_release_missing_fields.clone();
+        go_graph_completeness = scan_result.diagnostics.go_graph_completeness;
+        go_graph_completeness_reason = scan_result.diagnostics.go_graph_completeness_reason.clone();
         scan_target_coord = scan_result.scan_target_coord.clone();
         let mut db_entries = scan_result.entries;
         let claimed_paths = scan_result.claimed_paths;
@@ -592,6 +609,8 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         relationships,
         complete_ecosystems,
         os_release_missing_fields,
+        go_graph_completeness,
+        go_graph_completeness_reason,
         scan_target_coord,
     })
 }

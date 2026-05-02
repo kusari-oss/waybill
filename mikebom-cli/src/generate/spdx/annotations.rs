@@ -308,6 +308,29 @@ pub fn annotate_document(
         );
     }
 
+    // C44 (milestone 061, closes #119): doc-level Go graph-completeness
+    // signal. Per Constitution Principle X (Transparency): when mikebom
+    // can't supply every transitive edge for `go.sum` components, the
+    // SBOM MUST signal the limitation so consumers can distinguish
+    // "dead dep" from "couldn't resolve." Absent annotation ⇒ signal
+    // not applicable (no Go scan happened).
+    if let Some(gc) = artifacts.go_graph_completeness {
+        let value = serde_json::to_value(gc)
+            .ok()
+            .and_then(|v| v.as_str().map(|s| s.to_string()))
+            .unwrap_or_else(|| "unknown".to_string());
+        push(&mut out, "mikebom:graph-completeness", json!(value));
+        if let Some(reason) = artifacts.go_graph_completeness_reason {
+            if !reason.is_empty() {
+                push(
+                    &mut out,
+                    "mikebom:graph-completeness-reason",
+                    json!(reason),
+                );
+            }
+        }
+    }
+
     // C23 trace-integrity-* — four scalars, emitted unconditionally
     // so consumers can distinguish "no trace ran" (0/0/[]/[]) from
     // "we didn't record it". Matches CDX's metadata-level shape.

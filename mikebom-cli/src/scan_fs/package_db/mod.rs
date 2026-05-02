@@ -270,6 +270,49 @@ pub struct ScanDiagnostics {
     /// naming the missing field (e.g. `"ID"`, `"VERSION_ID"`).
     /// Deduplicated; insertion order preserved for determinism.
     pub os_release_missing_fields: Vec<String>,
+
+    /// Milestone 061 (closes #119): document-level graph-completeness
+    /// signal for the Go ecosystem. Aggregated from the milestone 058
+    /// orphan classification + milestone 055 resolver's `LadderSummary`
+    /// — populated by `golang::legacy::read()` on every Go-scan path
+    /// and propagated up through `read_all` into format emitters'
+    /// `metadata.properties[]` / document-level `annotations[]`.
+    ///
+    /// `None` ⇒ no Go scan happened, signal not applicable. `Complete`
+    /// ⇒ zero orphans across `pkg:golang/...` components. `Partial`
+    /// ⇒ one or more orphans (sibling `go_graph_completeness_reason`
+    /// names the why).
+    pub go_graph_completeness: Option<GraphCompleteness>,
+
+    /// Comma-separated list of `<ecosystem>:<reason-class>` tokens
+    /// explaining WHY `go_graph_completeness == Partial`. Empty when
+    /// completeness is `Complete` or `None`. Format follows the
+    /// milestone 061 FR-005 contract: tokens like
+    /// `"go:unresolved-indirect-require"`, `"go:proxy-fetch-failed"`,
+    /// joined with `,` when multiple classes contributed.
+    pub go_graph_completeness_reason: Option<String>,
+}
+
+/// Document-level completeness classification for the Go ecosystem
+/// graph. Per Constitution Principle X (Transparency): when mikebom
+/// can't supply every transitive edge for `go.sum` components (typical
+/// in `--offline` + empty cache + `// indirect` requires), the SBOM
+/// MUST signal that limitation so consumers can distinguish "dead dep"
+/// from "couldn't resolve."
+///
+/// Serializes as kebab-case for the document-level annotation values:
+/// `complete` / `partial`.
+#[derive(Debug, Clone, Copy, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum GraphCompleteness {
+    /// All Go components emitted from `go.sum` have at least one
+    /// incoming `dependsOn` edge. The graph is fully connected from
+    /// the workspace root through transitive components.
+    Complete,
+    /// One or more Go components are orphans (no incoming
+    /// `dependsOn`). Per-orphan reason carried via the milestone 061
+    /// per-component `mikebom:orphan-reason` annotation.
+    Partial,
 }
 
 impl ScanDiagnostics {
@@ -673,6 +716,25 @@ pub fn read_all(
     // known limitation.
     let (golang_entries, go_signals) = golang::read(rootfs, include_dev);
     out.extend(golang_entries);
+
+    // Milestone 061 (closes #119): propagate the Go ecosystem's
+    // graph-completeness aggregate from `golang::read()`'s GoScanSignals
+    // into the document-level `ScanDiagnostics` that flows up to the
+    // format emitters. Per spec FR-005/FR-006/FR-007, each format's
+    // metadata builder reads these fields and emits the doc-level
+    // `mikebom:graph-completeness` + `*-reason` annotations.
+    diagnostics.go_graph_completeness = go_signals.graph_completeness;
+    if !go_signals.graph_completeness_reasons.is_empty() {
+        // Tokens carry the bare reason class from legacy.rs; prefix
+        // with the ecosystem name here so the final annotation value
+        // disambiguates across multi-ecosystem scans (`go:<class>`).
+        let prefixed: Vec<String> = go_signals
+            .graph_completeness_reasons
+            .iter()
+            .map(|r| format!("go:{r}"))
+            .collect();
+        diagnostics.go_graph_completeness_reason = Some(prefixed.join(","));
+    }
     out.extend(rpm::read(rootfs, include_dev, distro_version.as_deref()));
     // v5 Phase B: rpm-owned file claim-skip — mirrors the dpkg / apk /
     // pip pattern. Real RHEL / Fedora rpmdbs store file paths inside

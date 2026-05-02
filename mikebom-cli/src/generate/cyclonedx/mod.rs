@@ -54,7 +54,11 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             include_dev: scan.include_dev,
         };
         let builder = CycloneDxBuilder::new(cdx_config)
-            .with_os_release_missing_fields(scan.os_release_missing_fields.to_vec());
+            .with_os_release_missing_fields(scan.os_release_missing_fields.to_vec())
+            .with_go_graph_completeness(
+                scan.go_graph_completeness,
+                scan.go_graph_completeness_reason.map(String::from),
+            );
         let bom = builder.build(
             scan.components,
             scan.relationships,

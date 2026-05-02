@@ -51,12 +51,24 @@ pub struct CycloneDxBuilder {
     /// `metadata.properties` as `mikebom:os-release-missing-fields`
     /// when non-empty.
     os_release_missing_fields: Vec<String>,
+    /// Milestone 061 (closes #119): doc-level Go graph-completeness
+    /// signal. `None` ⇒ no Go scan (annotation absent in output).
+    go_graph_completeness:
+        Option<crate::scan_fs::package_db::GraphCompleteness>,
+    /// Milestone 061 — comma-separated `<ecosystem>:<reason-class>`
+    /// list. `None`/empty when completeness is `Complete` or `None`.
+    go_graph_completeness_reason: Option<String>,
 }
 
 impl CycloneDxBuilder {
     /// Create a new builder with the given configuration.
     pub fn new(config: CycloneDxConfig) -> Self {
-        Self { config, os_release_missing_fields: Vec::new() }
+        Self {
+            config,
+            os_release_missing_fields: Vec::new(),
+            go_graph_completeness: None,
+            go_graph_completeness_reason: None,
+        }
     }
 
     /// Feature 005 — record diagnostic fields observed during the scan.
@@ -64,6 +76,20 @@ impl CycloneDxBuilder {
     /// CycloneDX metadata property.
     pub fn with_os_release_missing_fields(mut self, fields: Vec<String>) -> Self {
         self.os_release_missing_fields = fields;
+        self
+    }
+
+    /// Milestone 061 — record the doc-level Go graph-completeness
+    /// signal. Drives the `mikebom:graph-completeness` +
+    /// `mikebom:graph-completeness-reason` metadata properties per
+    /// spec FR-005. Pass `None` for both when no Go scan happened.
+    pub fn with_go_graph_completeness(
+        mut self,
+        completeness: Option<crate::scan_fs::package_db::GraphCompleteness>,
+        reason: Option<String>,
+    ) -> Self {
+        self.go_graph_completeness = completeness;
+        self.go_graph_completeness_reason = reason;
         self
     }
 
@@ -92,6 +118,8 @@ impl CycloneDxBuilder {
             &self.os_release_missing_fields,
             integrity,
             scan_target_coord,
+            self.go_graph_completeness,
+            self.go_graph_completeness_reason.as_deref(),
         );
         let cdx_components = self.build_components(components)?;
         let compositions =
