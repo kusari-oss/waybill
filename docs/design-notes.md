@@ -96,9 +96,32 @@ distinguishes how a coord was discovered:
 - **Compositions-level transparency** — currently the `maven` composition is marked `complete` whenever any source-tier Maven coord is seen. Should probably downgrade to `incomplete_first_party_only` when any BFS cache-miss or deps.dev failure occurred during the scan. Deferred.
 
 ### Go
-- **Binary scans have no edges.** `runtime/debug.BuildInfo` encodes module list but not module→module relationships. Source-tree scans get the graph via the module cache walker.
+- **Binary scans have no edges.** `runtime/debug.BuildInfo` encodes module list but not module→module relationships. Source-tree scans get the graph via the milestone 055 transitive-edges resolver (4-step ladder).
 - **Scratch / distroless images with a single Go binary** produce a flat component list. That's the accurate answer — the binary doesn't know the graph.
 - **Private module proxies / `vendor/` directory component extraction** out of scope.
+
+#### Go transitive-edge resolver (milestone 055)
+
+Source-tree scans use a 4-step ladder to obtain each `(module, version)` pair's `go.mod` (and thus the module's outgoing `dependsOn` edges). The ladder is invoked once per Go project root per scan, in `scan_fs::package_db::golang::graph_resolver::GraphResolver::resolve`.
+
+| Step | Source | Available when |
+|------|--------|----------------|
+| 1 | `go mod graph` subprocess | `go` is on PATH AND `--offline` not set |
+| 2 | `$GOMODCACHE` walk (`cache/download/<escaped-mod>/@v/<ver>.mod`) | mikebom finds at least one cache root via `$GOMODCACHE` / `$GOPATH/pkg/mod` / `$HOME/go/pkg/mod` / rootfs scan |
+| 3 | HTTP fetch from `$GOPROXY` (default `proxy.golang.org`) | `--offline` not set AND `$GOPROXY != off` AND module not matched by `$GOPRIVATE` |
+| 4 | Empty fallthrough | always — emits the component with empty `depends`, increments `LadderSummary::missing_count` |
+
+Edges are intersected with `go.sum` AFTER all steps complete. The intersection is path-keyed (not exact `(path, version)` keyed) — a `go.mod` may declare `require X v1.0.0` but `go.sum` has `X v2.0.0` because workspace MVS bumped it; the resolver rewrites the edge target to the installed version. This matches `go mod graph`'s output and avoids dropping edges purely because of declared-vs-installed version drift.
+
+Per-scan operational visibility: `tracing::info!` summary line at scan end lists the per-step counts: `go transitive edges: ladder=[graph:N1, cache:N2, proxy:N3, missing:N4]`. Useful in CI logs to see at a glance which step contributed which edges.
+
+Sync, not async: the resolver is invoked from a sync chain (`scan_path` → `read_all` → `golang::read`). `reqwest::blocking::Client` (workspace `blocking` feature) is constructed and dropped on a dedicated `std::thread::spawn`'d worker so it never crosses an async runtime boundary. Concurrency for proxy fetches uses a 16-way `std::thread` worker pool with bounded `mpsc` queue (`parallel_fetch` in `graph_resolver.rs`).
+
+`--offline` plumbing is currently bridged via the `MIKEBOM_OFFLINE` env var (set in `main.rs` based on `cli.offline`). Future cleanup: thread an `offline: bool` parameter through `scan_path` → `read_all` → `golang::read` to remove the env-var bridge.
+
+Out of scope for milestone 055: `go.work` workspaces (multi-module), `vendor/` directory resolution, deps.dev as a data source, source-VCS (`GOPROXY=direct`) fallback, per-fetched-`.mod` SHA-256 verification against `go.sum`'s h1 hashes.
+
+See `specs/055-go-transitive-edges/` for the full design + capability matrix.
 
 ### RPM
 - **Berkeley DB rpmdb** (`/var/lib/rpm/Packages` pre-RHEL 8) is detected but not parsed. Diagnostic logged, zero rpm components emitted.

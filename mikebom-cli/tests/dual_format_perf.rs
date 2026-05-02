@@ -326,3 +326,73 @@ fn dual_format_is_at_least_30_percent_faster_than_two_sequential_scans() {
         SC009_CI_MIN_REDUCTION * 100.0,
     );
 }
+
+// --- T043: Milestone 055 perf-regression smoke check (SC-004) -----------
+//
+// Goal: catch catastrophic regressions in scan time after the Go
+// transitive-edge resolver landed. Spec SC-004 mandates ≤ 15 % wall-
+// clock regression on the existing fixture suite. Doing a true
+// pre/post comparison would require committing baseline numbers; this
+// smoke check uses a generous absolute budget instead — if the
+// resolver gets stuck in a loop or each scan blocks on something
+// indefinitely, this test fails fast.
+//
+// Budgets are intentionally loose (10× headroom over typical runs)
+// because GitHub Actions runners exhibit wide timing variance and
+// the spec's 15 % envelope only makes sense relative to a recorded
+// baseline that's out of scope for this smoke check.
+#[test]
+fn go_resolver_no_catastrophic_regression() {
+    use std::time::{Duration, Instant};
+
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let fixture_root: PathBuf = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("workspace root")
+        .join("tests/fixtures/go");
+
+    let cases = [
+        ("simple-module", Duration::from_secs(30)),
+        ("argo-style-no-cache/argo-workflows", Duration::from_secs(30)),
+    ];
+
+    let mut total = Duration::from_secs(0);
+    for (sub, budget) in cases.iter() {
+        let path = fixture_root.join(sub);
+        if !path.is_dir() {
+            eprintln!("skipping (fixture missing): {}", path.display());
+            continue;
+        }
+
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let out_path = tmp.path().join("out.cdx.json");
+
+        let mut cmd = Command::new(bin());
+        apply_fake_home_env(&mut cmd, fake_home.path());
+        cmd.arg("--offline")
+            .arg("sbom")
+            .arg("scan")
+            .arg("--path")
+            .arg(&path)
+            .arg("--format")
+            .arg("cyclonedx-json")
+            .arg("--output")
+            .arg(format!("cyclonedx-json={}", out_path.display()))
+            .arg("--no-deep-hash");
+        let start = Instant::now();
+        let out = cmd.output().expect("mikebom runs");
+        let elapsed = start.elapsed();
+        assert!(
+            out.status.success(),
+            "perf smoke scan of {sub} failed: stderr={}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        eprintln!("go_resolver_no_catastrophic_regression: {sub} = {elapsed:?} (budget {budget:?})");
+        assert!(
+            elapsed <= *budget,
+            "T043/SC-004 smoke regression: {sub} took {elapsed:?}, exceeds {budget:?}"
+        );
+        total += elapsed;
+    }
+    eprintln!("go_resolver_no_catastrophic_regression: total {total:?}");
+}
