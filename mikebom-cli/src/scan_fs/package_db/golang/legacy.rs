@@ -533,6 +533,26 @@ where
     // also drags down sbomqs licensing because we have no license
     // source for the project itself.
 
+    // Milestone 058 (closes #113): build a path → indirect-flag map
+    // from the workspace `go.mod`'s require block. Drives the C43
+    // `mikebom:dependency-kind` annotation per spec FR-001:
+    //   - direct   = path is in the require block AND indirect == false
+    //   - indirect = path is in the require block AND indirect == true
+    //                OR path is absent from the require block (purely
+    //                transitive — only reached via another module's
+    //                requires)
+    // The classifier joins on PATH, not (path, version), because Go's
+    // workspace `go.mod` lists exactly one version per path (MVS-
+    // selected) and `go.sum` may carry the same one or — if a replace
+    // is in effect — the replacement target's path. The replace is
+    // already applied via `apply_replace_and_exclude` upstream; we
+    // classify on the resolved (post-replace) path.
+    let workspace_direct_paths: HashMap<&str, bool> = doc
+        .requires
+        .iter()
+        .map(|r| (r.path.as_str(), r.indirect))
+        .collect();
+
     // --- Transitive modules (from go.sum) -----------------------------------
     for entry in sums {
         if entry.kind != GoSumKind::Module {
@@ -560,6 +580,21 @@ where
         // targets so only modules actually observed in go.sum become
         // dependsOn edges.
         let depends = lookup_depends(&resolved_path, &resolved_version);
+
+        // Milestone 058 (closes #113, C43): classify direct vs
+        // indirect by joining on the resolved path. See FR-001.
+        let dependency_kind = match workspace_direct_paths.get(resolved_path.as_str()) {
+            Some(false) => "direct",
+            Some(true) => "indirect",
+            None => "indirect",
+        };
+        let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
+            Default::default();
+        extra_annotations.insert(
+            "mikebom:dependency-kind".to_string(),
+            serde_json::Value::String(dependency_kind.to_string()),
+        );
+
         // Attach the module's `h1:` dirhash as a SHA-256 component
         // hash. This isn't a tarball hash — it's SHA-256 over a
         // sorted manifest of per-file hashes (see
@@ -597,7 +632,7 @@ where
             hashes,
             sbom_tier: Some("source".to_string()),
             shade_relocation: None,
-            extra_annotations: Default::default(),
+            extra_annotations,
         });
     }
 
@@ -2451,5 +2486,79 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
         let entry = build_main_module_entry(&doc, dir.path(), "/p/go.mod")
             .expect("entry built");
         assert!(entry.licenses.is_empty());
+    }
+
+    // --- Milestone 058: direct-vs-indirect tagging (C43, closes #113) ----
+
+    #[test]
+    fn dependency_kind_classifies_direct_indirect_and_transitive() {
+        // SC-001: a workspace with one direct require + one explicit
+        // `// indirect` require + one purely-transitive go.sum entry
+        // produces components with the right C43 annotation.
+        let doc = make_doc(
+            "module example.com/test\n\
+             go 1.20\n\
+             require (\n\
+               \tgithub.com/spf13/cobra v1.0.0\n\
+               \tgolang.org/x/sys v0.1.0 // indirect\n\
+             )\n",
+        );
+        // go.sum carries all three: cobra (direct), x/sys (explicit
+        // indirect), davecgh/go-spew (purely transitive — not in the
+        // workspace require block at all).
+        let sums = vec![
+            GoSumEntry {
+                module: "github.com/spf13/cobra".to_string(),
+                version: "v1.0.0".to_string(),
+                hash: "h1:irrelevant".to_string(),
+                kind: GoSumKind::Module,
+            },
+            GoSumEntry {
+                module: "golang.org/x/sys".to_string(),
+                version: "v0.1.0".to_string(),
+                hash: "h1:irrelevant".to_string(),
+                kind: GoSumKind::Module,
+            },
+            GoSumEntry {
+                module: "github.com/davecgh/go-spew".to_string(),
+                version: "v1.1.1".to_string(),
+                hash: "h1:irrelevant".to_string(),
+                kind: GoSumKind::Module,
+            },
+        ];
+        let entries = build_entries_from_go_module_with_lookup(
+            &doc,
+            &sums,
+            "/p/go.sum",
+            |_, _| Vec::new(),
+        );
+
+        let kind_for = |path: &str| -> Option<&str> {
+            entries
+                .iter()
+                .find(|e| e.name == path)
+                .and_then(|e| e.extra_annotations.get("mikebom:dependency-kind"))
+                .and_then(|v| v.as_str())
+        };
+
+        assert_eq!(kind_for("github.com/spf13/cobra"), Some("direct"));
+        assert_eq!(kind_for("golang.org/x/sys"), Some("indirect"));
+        assert_eq!(kind_for("github.com/davecgh/go-spew"), Some("indirect"));
+    }
+
+    #[test]
+    fn dependency_kind_absent_on_main_module_entry() {
+        // FR-002: the synthetic main-module entry MUST NOT carry C43.
+        // The classifier lives only in the go.sum loop; main-module
+        // is built by build_main_module_entry which never visits it.
+        let doc = make_doc("module example.com/with-direct-req\nrequire github.com/foo/bar v1.0.0\n");
+        let dir = tempfile::tempdir().unwrap();
+        let entry = build_main_module_entry(&doc, dir.path(), "/p/go.mod")
+            .expect("entry built");
+        assert!(
+            !entry.extra_annotations.contains_key("mikebom:dependency-kind"),
+            "main-module entry MUST NOT carry mikebom:dependency-kind: {:?}",
+            entry.extra_annotations
+        );
     }
 }

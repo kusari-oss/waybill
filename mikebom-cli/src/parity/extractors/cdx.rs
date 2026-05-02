@@ -451,6 +451,11 @@ cdx_anno!(c40_cdx, "mikebom:component-role",            component);
 // binary's BuildInfo does NOT confirm the component as linked.
 cdx_anno!(c41_cdx, "mikebom:not-linked",                 component);
 
+// C43 — milestone 058 (closes #113). Open-enum string
+// `direct`/`indirect` on every Go (and future per-ecosystem)
+// component. SymmetricEqual directionality vs SPDX 2.3 + SPDX 3.
+cdx_anno!(c43_cdx, "mikebom:dependency-kind",            component);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================

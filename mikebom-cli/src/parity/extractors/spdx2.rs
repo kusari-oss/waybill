@@ -342,6 +342,9 @@ spdx23_anno!(c40_spdx23, "mikebom:component-role",            component);
 // C41 (milestone 050 — not-linked classifier).
 spdx23_anno!(c41_spdx23, "mikebom:not-linked",                component);
 
+// C43 (milestone 058 — direct/indirect dep tagging, closes #113).
+spdx23_anno!(c43_spdx23, "mikebom:dependency-kind",           component);
+
 // ============================================================
 // Sections D-G — custom SPDX 2.3 extractors
 // ============================================================

@@ -146,6 +146,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.10",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.10",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:dependency-kind\",\"value\":\"indirect\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -199,6 +205,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.10",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.10",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:dependency-kind\",\"value\":\"indirect\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -252,6 +264,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.10",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.10",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:dependency-kind\",\"value\":\"direct\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -305,6 +323,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.10",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.10",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:dependency-kind\",\"value\":\"indirect\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -358,6 +382,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.10",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.10",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:dependency-kind\",\"value\":\"direct\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -411,6 +441,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.10",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.10",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:dependency-kind\",\"value\":\"direct\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -464,6 +500,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.10",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.10",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:dependency-kind\",\"value\":\"indirect\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -517,6 +559,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.10",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.10",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:dependency-kind\",\"value\":\"direct\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -570,6 +618,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.10",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.10",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:dependency-kind\",\"value\":\"indirect\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -618,6 +672,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.10",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.10",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:dependency-kind\",\"value\":\"indirect\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -666,6 +726,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.10",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.10",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:dependency-kind\",\"value\":\"direct\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
