@@ -47,6 +47,10 @@ fn lifecycle_scope_from_maven(
     }
 }
 
+// Maven multi-module projects nest pom.xml + src/main/{java,resources}/
+// + nested-modules; 6 covers any realistic layout including spark-style
+// module hierarchies. Defense-in-depth backstop for the canonicalize-
+// keyed visited-set primary mechanism. Per milestone-054 FR-003.
 const MAX_PROJECT_ROOT_DEPTH: usize = 6;
 /// Per-entry size cap inside JARs; 64 MB is well beyond real pom.properties.
 const MAX_JAR_ENTRY_BYTES: u64 = 64 * 1024 * 1024;
@@ -1189,6 +1193,11 @@ pub(crate) fn jar_stem_matches_coord(jar_path: &Path, coord: &PomProperties) -> 
 /// [`MAX_PROJECT_ROOT_DEPTH`]. Needed so shade-relocated JARs
 /// inside `.m2` (e.g. `surefire-shared-utils-3.2.2.jar`) get their
 /// `META-INF/DEPENDENCIES` read.
+// SAFETY (milestone-054 walker audit): symlink-loop protection
+// comes from `entry.file_type()` (lstat-equivalent — does NOT
+// dereference symlinks). `ft.is_dir()` is false for any symlinked
+// directory, so the iterative stack-walker cannot follow a symlink
+// loop. No visited-set needed. Per FR-001 audit rubric option (b).
 fn walk_m2_jars(repo_cache: &MavenRepoCache) -> Vec<PathBuf> {
     let mut out: Vec<PathBuf> = Vec::new();
     for root in repo_cache.rootfs_roots() {
@@ -3023,14 +3032,32 @@ pub fn read_with_claims(
 fn find_maven_artifacts(rootfs: &Path) -> (Vec<PathBuf>, Vec<PathBuf>) {
     let mut poms = Vec::new();
     let mut jars = Vec::new();
-    walk_for_maven(rootfs, 0, &mut poms, &mut jars);
+    let mut visited: std::collections::HashSet<PathBuf> = std::collections::HashSet::new();
+    walk_for_maven(rootfs, 0, &mut visited, &mut poms, &mut jars);
     (poms, jars)
 }
 
-fn walk_for_maven(dir: &Path, depth: usize, poms: &mut Vec<PathBuf>, jars: &mut Vec<PathBuf>) {
+/// Milestone 054 FR-001/FR-002/FR-003: canonicalize-keyed visited
+/// set + max-depth backstop prevents unbounded recursion on symlink
+/// loops.
+fn walk_for_maven(
+    dir: &Path,
+    depth: usize,
+    visited: &mut std::collections::HashSet<PathBuf>,
+    poms: &mut Vec<PathBuf>,
+    jars: &mut Vec<PathBuf>,
+) {
     if depth >= MAX_PROJECT_ROOT_DEPTH {
         // Even past the depth cap, still scan for archives in the
         // current dir — JARs can be anywhere.
+    }
+    let key = std::fs::canonicalize(dir).unwrap_or_else(|_| dir.to_path_buf());
+    if !visited.insert(key) {
+        tracing::debug!(
+            path = %dir.display(),
+            "walker: cycle/visited skip",
+        );
+        return;
     }
     let Ok(read_dir) = std::fs::read_dir(dir) else {
         return;
@@ -3059,7 +3086,7 @@ fn walk_for_maven(dir: &Path, depth: usize, poms: &mut Vec<PathBuf>, jars: &mut 
                     }
                 }
                 if depth < MAX_PROJECT_ROOT_DEPTH {
-                    walk_for_maven(&path, depth + 1, poms, jars);
+                    walk_for_maven(&path, depth + 1, visited, poms, jars);
                 }
             }
         }
@@ -5743,5 +5770,18 @@ mod tests {
         assert!(!shares_group_namespace("org.apache.commons", "org.apache.maven.surefire"));
         // Lexical prefix without the dot boundary — should NOT share.
         assert!(!shares_group_namespace("org.example.foo", "org.example.foobar"));
+    }
+
+    /// Milestone 054 SC-002 + FR-009: walker terminates promptly on
+    /// a synthesized minimal symlink-loop fixture instead of hanging.
+    #[test]
+    fn walks_symlink_loop_without_hanging() {
+        let tmp = tempfile::tempdir().unwrap();
+        let loop_dir = tmp.path().join("loop");
+        std::fs::create_dir_all(&loop_dir).unwrap();
+        std::os::unix::fs::symlink(&loop_dir, loop_dir.join("link")).unwrap();
+        let (poms, jars) = find_maven_artifacts(tmp.path());
+        assert!(poms.is_empty());
+        assert!(jars.is_empty());
     }
 }

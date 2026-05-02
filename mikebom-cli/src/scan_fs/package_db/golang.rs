@@ -1156,6 +1156,12 @@ fn candidate_project_roots(rootfs: &Path) -> Vec<PathBuf> {
     out
 }
 
+/// Milestone 054 audit (verify-only — no patch needed):
+/// `walk_for_go_roots` already has the canonicalize-keyed visited
+/// set + depth bound (`MAX_PROJECT_ROOT_DEPTH`) per the contract's
+/// FR-001/FR-002/FR-003 invariants. This walker is the reference
+/// implementation that the per-walker hardening passes patterned
+/// after (rpm_file, binary, cargo, gem, go_binary, maven).
 fn walk_for_go_roots(
     dir: &Path,
     depth: usize,

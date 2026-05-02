@@ -16,6 +16,7 @@
 //! 2. `/etc/os-release::ID` via the milestone-003 `rpm_vendor_from_id`.
 //! 3. Hardcoded `"rpm"` fallback.
 
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 use mikebom_common::types::license::SpdxExpression;
@@ -23,6 +24,14 @@ use mikebom_common::types::purl::Purl;
 
 use super::{rpm_vendor_from_id, PackageDbEntry};
 use crate::scan_fs::os_release;
+
+/// Milestone 054 FR-003: max recursion depth for the `walk_dir`
+/// filesystem traversal. Default ceiling per the spec; not tightened
+/// because `.rpm` artifacts can sit anywhere in a rootfs (no
+/// shallow-by-convention structural constraint to justify a tighter
+/// bound). Defense-in-depth backstop for the canonicalize-keyed
+/// visited-set primary mechanism (FR-002).
+const MAX_WALK_DEPTH: usize = 16;
 
 /// Per-file size cap per FR-007. Real `.rpm` files are typically a few
 /// megabytes; anything above 200 MB is defense-in-depth rejected.
@@ -140,11 +149,42 @@ fn discover_rpm_files(root: &Path) -> Vec<PathBuf> {
     if !root.is_dir() {
         return found;
     }
-    walk_dir(root, &mut found);
+    let mut visited: HashSet<PathBuf> = HashSet::new();
+    walk_dir(root, 0, &mut visited, &mut found);
     found
 }
 
-fn walk_dir(dir: &Path, acc: &mut Vec<PathBuf>) {
+/// Milestone 054 FR-001/FR-002/FR-003: canonicalize-keyed visited
+/// set + max-depth backstop prevents unbounded recursion on symlink
+/// loops (e.g., the knative/func reproducer's
+/// `pkg/oci/testdata/test-links/linkToRoot -> .` shape).
+fn walk_dir(
+    dir: &Path,
+    depth: usize,
+    visited: &mut HashSet<PathBuf>,
+    acc: &mut Vec<PathBuf>,
+) {
+    if depth >= MAX_WALK_DEPTH {
+        tracing::debug!(
+            depth,
+            path = %dir.display(),
+            "walker: max-depth reached",
+        );
+        return;
+    }
+    // Canonicalize-keyed visited set: dedup by on-disk identity, so a
+    // directory reached via two symlinks is processed once. Fall back
+    // to lexical path on canonicalize failure (broken symlink, EACCES
+    // on a parent component) — preserves dedup correctness on the
+    // happy path without blocking the walker on transient failures.
+    let key = std::fs::canonicalize(dir).unwrap_or_else(|_| dir.to_path_buf());
+    if !visited.insert(key) {
+        tracing::debug!(
+            path = %dir.display(),
+            "walker: cycle/visited skip",
+        );
+        return;
+    }
     let Ok(entries) = std::fs::read_dir(dir) else {
         return;
     };
@@ -160,7 +200,7 @@ fn walk_dir(dir: &Path, acc: &mut Vec<PathBuf>) {
             ) {
                 continue;
             }
-            walk_dir(&path, acc);
+            walk_dir(&path, depth + 1, visited, acc);
         } else if path.is_file() && is_rpm_candidate(&path) {
             acc.push(path);
         }
@@ -636,5 +676,23 @@ mod tests {
         let entries = read(dir.path(), None);
         assert_eq!(entries.len(), 2);
         assert_eq!(entries[0].purl, entries[1].purl);
+    }
+
+    /// Milestone 054 SC-002 + FR-009: walker terminates promptly on
+    /// a synthesized minimal symlink-loop fixture instead of hanging
+    /// indefinitely. Pre-054 this would loop forever; post-054 the
+    /// canonicalize-keyed visited-set breaks the cycle.
+    #[test]
+    fn walks_symlink_loop_without_hanging() {
+        let tmp = tempfile::tempdir().unwrap();
+        let loop_dir = tmp.path().join("loop");
+        std::fs::create_dir_all(&loop_dir).unwrap();
+        // Self-loop: `loop/link` points back at `loop/`.
+        std::os::unix::fs::symlink(&loop_dir, loop_dir.join("link")).unwrap();
+        // Bounded recursion proves the loop-protection works.
+        let result = discover_rpm_files(tmp.path());
+        // No .rpm files in the synthesized fixture; the test only
+        // asserts the call returned (didn't hang).
+        assert!(result.is_empty());
     }
 }

@@ -1,0 +1,150 @@
+name: Realistic projects
+
+# Milestone 054 FR-006/FR-007/FR-010: regression-prevention CI
+# job that scans real-world OSS projects (clone-at-fixed-tag) to
+# catch the next class of "fairly basic issues" before merge.
+#
+# Separate workflow file (not folded into ci.yml) per FR-010 —
+# flake isolation. Network-dependent clone + per-platform
+# multipliers shouldn't couple to the main pre-PR gate's
+# flakiness budget. Re-runnable in isolation via
+# `gh run rerun --failed`.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: realistic-projects-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  scan-realistic-project:
+    name: Scan ${{ matrix.project.name }} on ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          # Initial milestone-054 entry: knative/func is the user's
+          # original repro for issue #102 (multi-module Go layout +
+          # 10+ intentional symlink-loop test fixtures in
+          # `pkg/oci/testdata/test-links/`). Per-ecosystem expansion
+          # to cargo/npm/maven/pip/gem/dpkg/apk/rpm tracked in #109.
+          - name: knative-func
+            url: https://github.com/knative/func.git
+            tag: knative-v1.22.0
+            expected_min_components: 200
+        platform:
+          - ubuntu-latest
+          - macos-latest
+    runs-on: ${{ matrix.platform }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false  # see ci.yml for rationale
+
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
+
+      - name: Cache cargo + build artifacts
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
+
+      # Per FR-007: live `git clone --depth 1 --branch <tag>` per CI run,
+      # cached by <project>:<tag>. Cache hit → skip clone; cache miss →
+      # clone fresh. Live network failure on github.com → CI rerun
+      # fixes; we do NOT silently skip the fixture (would mask
+      # regressions per FR-007).
+      - name: Cache realistic-project fixture
+        id: cache-fixture
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: /tmp/realistic-fixtures/${{ matrix.project.name }}-${{ matrix.project.tag }}
+          key: realistic-fixture-${{ matrix.project.name }}-${{ matrix.project.tag }}-v1
+
+      - name: Clone ${{ matrix.project.name }} @ ${{ matrix.project.tag }}
+        if: steps.cache-fixture.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p /tmp/realistic-fixtures
+          git clone --depth 1 --branch "${{ matrix.project.tag }}" \
+            "${{ matrix.project.url }}" \
+            "/tmp/realistic-fixtures/${{ matrix.project.name }}-${{ matrix.project.tag }}"
+
+      - name: Build mikebom
+        run: cargo +stable build -p mikebom
+
+      - name: Scan ${{ matrix.project.name }}
+        run: |
+          # `set -o pipefail` so the step exits non-zero when mikebom
+          # fails — the trailing `tee` would otherwise mask the
+          # mikebom exit code.
+          set -o pipefail
+          # Isolate HOME + GOMODCACHE so the scan doesn't pick up
+          # the runner's own Go module cache; mirrors the milestone
+          # 053 pattern + the user's original issue-#102 reproducer.
+          # Job-level `timeout-minutes: 15` provides the wall-clock
+          # bound (no `timeout` shell binary needed; macOS doesn't
+          # ship GNU coreutils' `timeout`).
+          HOME=$(mktemp -d) GOMODCACHE=$(mktemp -d)/empty \
+            ./target/debug/mikebom --offline sbom scan \
+              --path "/tmp/realistic-fixtures/${{ matrix.project.name }}-${{ matrix.project.tag }}" \
+              --format spdx-2.3-json,cyclonedx-json \
+              --output spdx-2.3-json=/tmp/${{ matrix.project.name }}.spdx.json \
+              --output cyclonedx-json=/tmp/${{ matrix.project.name }}.cdx.json \
+              --no-deep-hash 2>&1 | tee /tmp/scan.log
+
+      - name: Validate SBOM structure + component floor
+        run: |
+          # Ensure jq is available (it is on ubuntu-latest + macos-latest by default).
+          # Component-floor check: realistic-project SBOMs MUST emit
+          # at least N pkg:<ecosystem>/ components per matrix entry.
+          # Catches regressions that quietly drop large swaths of
+          # output without crashing.
+          SPDX_PKG_COUNT=$(jq '.packages | length' /tmp/${{ matrix.project.name }}.spdx.json)
+          CDX_COMP_COUNT=$(jq '.components | length' /tmp/${{ matrix.project.name }}.cdx.json)
+          echo "SPDX 2.3 packages: $SPDX_PKG_COUNT"
+          echo "CDX 1.6 components: $CDX_COMP_COUNT"
+          if [ "$SPDX_PKG_COUNT" -lt "${{ matrix.project.expected_min_components }}" ]; then
+            echo "::error::SPDX 2.3 component floor missed: got $SPDX_PKG_COUNT, expected >= ${{ matrix.project.expected_min_components }}"
+            exit 1
+          fi
+          # Loose CDX floor — CDX excludes the main-module from
+          # components[] per milestone 053 FR-001a, so its count is
+          # 1 lower than SPDX's. Pin floor at expected - 5 for
+          # safety vs. component-counting nits.
+          MIN_CDX=$(( ${{ matrix.project.expected_min_components }} - 5 ))
+          if [ "$CDX_COMP_COUNT" -lt "$MIN_CDX" ]; then
+            echo "::error::CDX 1.6 component floor missed: got $CDX_COMP_COUNT, expected >= $MIN_CDX"
+            exit 1
+          fi
+          # Each emitted SBOM must validate as JSON (basic structural
+          # gate — full schema validation against SPDX 3 schema is
+          # exercised separately in `tests/spdx3_schema_validation.rs`
+          # against in-tree fixtures; the realistic-project lane gets
+          # the cheaper structural check to keep wall-clock bounded).
+          jq -e 'has("spdxVersion") and has("packages") and has("relationships")' \
+            /tmp/${{ matrix.project.name }}.spdx.json > /dev/null
+          jq -e 'has("bomFormat") and has("components") and has("metadata")' \
+            /tmp/${{ matrix.project.name }}.cdx.json > /dev/null
+
+      - name: Report scan duration in summary
+        if: always()
+        run: |
+          # Already captured the exit code in the scan step; this
+          # block adds a job-summary line so reviewers see the
+          # per-project duration without scrolling logs.
+          echo "## ${{ matrix.project.name }} on ${{ matrix.platform }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f /tmp/scan.log ]; then
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            tail -3 /tmp/scan.log >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi

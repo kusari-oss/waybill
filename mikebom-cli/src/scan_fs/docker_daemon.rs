@@ -103,12 +103,20 @@ pub fn save(image_ref: &str, dest: &Path) -> Result<()> {
 mod tests {
     use super::*;
 
-    /// Whether the test host has `docker` available. Tests that need a
-    /// running daemon skip themselves when this is false so CI lanes
-    /// without docker (the default lane) don't fail.
+    /// Whether the test host has `docker` available AND the daemon
+    /// is responsive. Tests that need a running daemon skip
+    /// themselves when this is false so CI lanes without docker
+    /// (the default lane) don't fail.
+    ///
+    /// Uses `docker info` (not `docker --version`) so an installed-
+    /// CLI-but-dead-daemon configuration — observed on the
+    /// `--features ebpf-tracing` lane intermittently — is detected
+    /// and the dependent tests skip. `docker info` returns non-zero
+    /// when the daemon socket is unreachable; `docker --version`
+    /// only checks the CLI binary.
     fn docker_available() -> bool {
         Command::new("docker")
-            .arg("--version")
+            .arg("info")
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .status()

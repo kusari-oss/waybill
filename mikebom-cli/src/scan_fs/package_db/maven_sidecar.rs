@@ -155,6 +155,12 @@ impl DebianSidecarIndex {
         Self { by_basename }
     }
 
+    // SAFETY (milestone-054 walker audit): symlink-loop protection
+    // comes from `entry.file_type()` (lstat-equivalent — does NOT
+    // dereference symlinks; see line 171 below). Plus a depth-cap
+    // backstop at 8 (`MAX_DEPTH`). Per FR-001 audit rubric option
+    // (b): the lstat skip is the primary invariant, depth cap is
+    // defense-in-depth.
     /// Recursive walker. Caps depth at 8 to bound work in
     /// pathological cases (cycles, intentional deep nesting).
     fn walk(dir: &Path, depth: usize, out: &mut HashMap<String, PathBuf>) {

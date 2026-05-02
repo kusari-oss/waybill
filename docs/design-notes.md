@@ -460,3 +460,73 @@ NOT a general "every ecosystem needs a project-itself component"
 template. Per-ecosystem main-modules for project-identification /
 vuln-intersection / sbomqs-uniformity reasons are tracked separately
 in issue #104; not in scope for milestone 053.
+
+## Filesystem walking pattern (milestone 054)
+
+Every `fn walk*` (or `fn walk_dir`) function in
+`mikebom-cli/src/scan_fs/` MUST detect symlink loops and bound
+recursion. Two valid protection mechanisms; pick whichever fits the
+walker's structure:
+
+1. **Canonicalize-keyed visited set + max-depth backstop**
+   (mandatory for walkers that follow symlinks via `path.is_dir()`,
+   which dereferences). Reference implementations:
+   `package_db/golang.rs::walk_for_go_roots`,
+   `package_db/project_roots.rs::walk_for_project_roots`. Pattern:
+
+   ```rust
+   const MAX_WALK_DEPTH: usize = 16;  // or tighter with justification
+   let mut visited: HashSet<PathBuf> = HashSet::new();
+   walk(root, 0, &mut visited, &mut out);
+
+   fn walk(dir: &Path, depth: usize, visited: &mut HashSet<PathBuf>,
+           out: &mut Vec<...>) {
+       if depth >= MAX_WALK_DEPTH { return; }
+       let key = std::fs::canonicalize(dir).unwrap_or_else(|_| dir.to_path_buf());
+       if !visited.insert(key) {
+           tracing::debug!(path = %dir.display(), "walker: cycle/visited skip");
+           return;
+       }
+       // ... read_dir + recurse with `walk(&p, depth + 1, visited, out)` ...
+   }
+   ```
+
+2. **lstat-equivalent file-type check** (acceptable for walkers that
+   intentionally don't follow symlinks — `entry.file_type()` does
+   NOT dereference). Reference implementations:
+   `scan_fs/walker.rs::walk`, `package_db/maven.rs::walk_m2_jars`,
+   `package_db/maven_sidecar.rs::walk`,
+   `package_db/npm/walk.rs::walk_node_modules`. These walkers MUST
+   carry an inline `// SAFETY (milestone-054 walker audit):` comment
+   naming the lstat-skip mechanism so a future audit grep confirms
+   they're protected. Pattern:
+
+   ```rust
+   for entry in read_dir.flatten() {
+       let ft = entry.file_type().ok().filter(|ft| ft.is_dir());
+       // ft is None for symlinked-dirs (lstat doesn't deref) — loop
+       // physically can't follow symlinks. Continue with the file.
+   }
+   ```
+
+**Audit gate.** PR-review time check:
+`grep -rn "fn walk" mikebom-cli/src/scan_fs/` MUST find every match
+either using mechanism 1 (visible `HashSet<PathBuf>` parameter) OR
+mechanism 2 (inline `// SAFETY:` comment). Any walker matching
+neither is a blocking review finding. The milestone-054 audit
+seeded this rubric; future contributors keep it satisfied.
+
+**Per-walker depth limits**. Default ceiling is 16 (deeper than any
+realistic monorepo's natural nesting). Walkers MAY use tighter
+bounds (cargo: 6, gem: 6, go_binary: 10, maven: 6) when the
+ecosystem's structural conventions justify it — but MUST carry an
+inline justification comment naming the specific reason (e.g.,
+"Cargo workspaces are shallow by convention"). Per milestone-054
+FR-003.
+
+**Future migration**. Issue #108 tracks the migration from per-
+walker hand-rolled visited-set logic to a single shared `safe_walk`
+helper. Until then the pattern above is the canonical reference for
+new ecosystem readers — copy it from the closest existing walker,
+not from a `walkdir` crate dependency (mikebom's Cargo.toml has a
+deliberate minimal-dependency posture).

@@ -7,6 +7,41 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Fixed
+
+- **Filesystem-walker symlink-loop hang on real-world projects**
+  (milestone 054). `mikebom sbom scan --path <project>` would hang
+  at 100% CPU indefinitely on any repo containing intentional
+  symlink-loop test fixtures (e.g., knative/func @
+  `knative-v1.22.0` ships `pkg/oci/testdata/test-links/linkToRoot ->
+  .` plus parent-loop variants). Root cause: `rpm_file::walk_dir`
+  and `binary/discover::walk_dir` followed symlinks via
+  `path.is_dir()` (which dereferences) with no visited-set or
+  depth limit. Closes #102 (the second time — the first close was
+  the milestone 053 main-module-edge fix; this one closes the
+  walker-hang shape that the original repro also exhibited).
+
+  Per-walker hardening: every `fn walk*` in
+  `mikebom-cli/src/scan_fs/` now has either (a) a canonicalize-
+  keyed visited-set + max-depth backstop, or (b) an explicit
+  `// SAFETY:` comment naming an `entry.file_type()` lstat-skip
+  protection. Audit-gate via
+  `grep -rn "fn walk" mikebom-cli/src/scan_fs/`. New
+  `tests/scan_walker_loops.rs` integration test exercises a
+  knative/func-style fixture end-to-end (4 symlink loops in 4
+  different shapes).
+
+  Regression-prevention: new
+  `.github/workflows/realistic-projects.yml` clones knative/func
+  at the pinned tag per CI run (cached via `actions/cache@v4`)
+  and scans it on linux-x86_64 + macos-latest, asserting scan
+  duration is bounded AND the resulting SBOM has ≥ 200 components.
+  Future per-ecosystem expansion (cargo, npm, maven, pip, gem,
+  rpm, deb, apk) tracked in #109.
+
+  Migration to a single shared `safe_walk` helper (vs. the per-
+  walker patches landed here) deferred to #108.
+
 ### Changed (BREAKING — Go SBOM shape, milestone 053)
 
 - **Go source-tree scans now emit a synthetic main-module component**

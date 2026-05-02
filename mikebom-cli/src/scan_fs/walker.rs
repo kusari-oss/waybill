@@ -100,6 +100,12 @@ pub fn walk_and_hash(
     out
 }
 
+// SAFETY (milestone-054 walker audit): symlink-loop protection
+// comes from `entry.file_type()` (lstat-equivalent — does NOT
+// dereference symlinks). `ft.is_dir()` is false for any symlinked
+// directory, so the walker physically cannot follow a symlink loop.
+// No visited-set or depth-limit needed; the lstat skip is the
+// invariant. Per FR-001 audit rubric option (b).
 fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return;
