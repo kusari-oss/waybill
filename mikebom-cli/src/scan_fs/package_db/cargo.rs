@@ -42,6 +42,11 @@ pub enum CargoError {
     LockfileUnsupportedVersion { path: PathBuf, version: u64 },
 }
 
+// Cargo workspaces are shallow by convention: a top-level Cargo.toml
+// + per-member subdir + per-target subdir typically max-nests at 3-4
+// levels; 6 covers any realistic layout. Defense-in-depth backstop
+// for the canonicalize-keyed visited-set primary mechanism. Per
+// milestone-054 FR-003.
 const MAX_PROJECT_ROOT_DEPTH: usize = 6;
 
 // ---------------------------------------------------------------------------
@@ -707,16 +712,33 @@ fn parse_lockfile_doc(path: &Path) -> Result<Option<CargoLock>, CargoError> {
 
 fn find_cargo_lockfiles(rootfs: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
-    walk_for_cargo_lockfiles(rootfs, 0, &mut out);
+    let mut visited: std::collections::HashSet<PathBuf> = std::collections::HashSet::new();
+    walk_for_cargo_lockfiles(rootfs, 0, &mut visited, &mut out);
     out
 }
 
-fn walk_for_cargo_lockfiles(dir: &Path, depth: usize, out: &mut Vec<PathBuf>) {
+/// Milestone 054 FR-001/FR-002/FR-003: canonicalize-keyed visited
+/// set + max-depth backstop prevents unbounded recursion on symlink
+/// loops (e.g., `linkToRoot -> .` test fixtures).
+fn walk_for_cargo_lockfiles(
+    dir: &Path,
+    depth: usize,
+    visited: &mut std::collections::HashSet<PathBuf>,
+    out: &mut Vec<PathBuf>,
+) {
     let lock = dir.join("Cargo.lock");
     if lock.is_file() {
         out.push(lock);
     }
     if depth >= MAX_PROJECT_ROOT_DEPTH {
+        return;
+    }
+    let key = std::fs::canonicalize(dir).unwrap_or_else(|_| dir.to_path_buf());
+    if !visited.insert(key) {
+        tracing::debug!(
+            path = %dir.display(),
+            "walker: cycle/visited skip",
+        );
         return;
     }
     let Ok(read_dir) = std::fs::read_dir(dir) else {
@@ -733,7 +755,7 @@ fn walk_for_cargo_lockfiles(dir: &Path, depth: usize, out: &mut Vec<PathBuf>) {
         if should_skip_descent(name) {
             continue;
         }
-        walk_for_cargo_lockfiles(&path, depth + 1, out);
+        walk_for_cargo_lockfiles(&path, depth + 1, visited, out);
     }
 }
 
@@ -1273,5 +1295,19 @@ foo = { package = "real-name", version = "1" }
         let manifests = discover_workspace_manifests(&dir.path().join("Cargo.lock"));
         // Root + 2 members.
         assert_eq!(manifests.len(), 3);
+    }
+
+    /// Milestone 054 SC-002 + FR-009: walker terminates promptly on
+    /// a synthesized minimal symlink-loop fixture instead of hanging.
+    #[test]
+    fn walks_symlink_loop_without_hanging() {
+        let tmp = tempfile::tempdir().unwrap();
+        let loop_dir = tmp.path().join("loop");
+        std::fs::create_dir_all(&loop_dir).unwrap();
+        std::os::unix::fs::symlink(&loop_dir, loop_dir.join("link")).unwrap();
+        let result = find_cargo_lockfiles(tmp.path());
+        // No Cargo.lock in the synthesized fixture; the test only
+        // asserts the call returned (didn't hang).
+        assert!(result.is_empty());
     }
 }

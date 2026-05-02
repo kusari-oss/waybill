@@ -488,9 +488,12 @@ pub fn read(
     let mut seen_purls: std::collections::HashSet<String> = std::collections::HashSet::new();
     let mut main_modules: std::collections::HashSet<String> =
         std::collections::HashSet::new();
+    let mut visited: std::collections::HashSet<std::path::PathBuf> =
+        std::collections::HashSet::new();
     walk_for_binaries(
         rootfs,
         0,
+        &mut visited,
         &mut out,
         &mut seen_purls,
         &mut main_modules,
@@ -511,11 +514,21 @@ pub fn read(
     (out, main_modules)
 }
 
+// Go binaries land under bin/, /usr/local/bin/, ~/.local/bin/, or
+// container /app/-style paths; 10 levels covers nested-vendor +
+// Bazel-output-like trees. Defense-in-depth backstop for the
+// canonicalize-keyed visited-set primary mechanism. Per
+// milestone-054 FR-003.
 const MAX_BINARY_WALK_DEPTH: usize = 10;
 
+/// Milestone 054 FR-001/FR-002/FR-003: canonicalize-keyed visited
+/// set + max-depth backstop prevents unbounded recursion on symlink
+/// loops.
+#[allow(clippy::too_many_arguments)]
 fn walk_for_binaries(
     dir: &Path,
     depth: usize,
+    visited: &mut std::collections::HashSet<std::path::PathBuf>,
     out: &mut Vec<PackageDbEntry>,
     seen_purls: &mut std::collections::HashSet<String>,
     main_modules: &mut std::collections::HashSet<String>,
@@ -523,6 +536,14 @@ fn walk_for_binaries(
     #[cfg(unix)] claimed_inodes: &std::collections::HashSet<(u64, u64)>,
 ) {
     if depth >= MAX_BINARY_WALK_DEPTH {
+        return;
+    }
+    let key = std::fs::canonicalize(dir).unwrap_or_else(|_| dir.to_path_buf());
+    if !visited.insert(key) {
+        tracing::debug!(
+            path = %dir.display(),
+            "walker: cycle/visited skip",
+        );
         return;
     }
     let Ok(read_dir) = std::fs::read_dir(dir) else {
@@ -540,6 +561,7 @@ fn walk_for_binaries(
             walk_for_binaries(
                 &path,
                 depth + 1,
+                visited,
                 out,
                 seen_purls,
                 main_modules,
@@ -1154,5 +1176,30 @@ mod tests {
                 .any(|e| e.buildinfo_status.as_deref() == Some("unsupported")),
             "claimed binary must NOT emit a diagnostic"
         );
+    }
+
+    /// Milestone 054 SC-002 + FR-009: walker terminates promptly on
+    /// a synthesized minimal symlink-loop fixture instead of hanging.
+    #[test]
+    fn walks_symlink_loop_without_hanging() {
+        let tmp = tempfile::tempdir().unwrap();
+        let loop_dir = tmp.path().join("loop");
+        std::fs::create_dir_all(&loop_dir).unwrap();
+        std::os::unix::fs::symlink(&loop_dir, loop_dir.join("link")).unwrap();
+        let claimed_paths: std::collections::HashSet<std::path::PathBuf> =
+            std::collections::HashSet::new();
+        #[cfg(unix)]
+        let claimed_inodes: std::collections::HashSet<(u64, u64)> =
+            std::collections::HashSet::new();
+        let (entries, _main) = read(
+            tmp.path(),
+            false,
+            &claimed_paths,
+            #[cfg(unix)]
+            &claimed_inodes,
+        );
+        // No binaries in the synthesized fixture; the test only
+        // asserts the call returned (didn't hang).
+        assert!(entries.is_empty());
     }
 }

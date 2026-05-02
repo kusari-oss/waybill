@@ -47,6 +47,16 @@ pub(crate) fn is_npm_internal_path(path: &Path) -> bool {
         .any(|w| w[0] == "node_modules" && w[1] == "npm" && w[2] == "node_modules")
 }
 
+// SAFETY (milestone-054 walker audit): structural recursion
+// bounded by node_modules/<pkg>/[node_modules/]/<pkg>/... layout —
+// the walker only descends into `<pkg>/node_modules/` (line ~160)
+// and `@scope/<pkg>` directories (line ~80), not arbitrary
+// subdirectories. A symlink loop would have to bypass the
+// `pkg_json = child.join("package.json")` existence check at line
+// ~86, which any plausible loop fixture would fail. Adding an
+// explicit canonicalize-keyed visited-set is tracked in #108
+// alongside the broader walker-migration. Per FR-001 audit rubric
+// option (b): structural-bounded-by-construction.
 fn walk_node_modules(
     nm: &Path,
     out: &mut Vec<PackageDbEntry>,

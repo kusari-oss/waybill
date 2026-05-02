@@ -33,6 +33,8 @@ Auto-generated from all feature plans. Last updated: 2026-05-02
 - Rust stable. + existing only — `std::collections`, (049-go-source-scope)
 - Rust stable (workspace toolchain inherited from milestones 001–052; no nightly). + Existing only — `serde`/`serde_json`, `tracing`, `anyhow`, `tempfile`. **No new crates.** The version-resolution ladder shells out to `git describe`; `git` is already an implicit project assumption (workspace itself is a git repo, CI uses git). (053-go-main-module-edges)
 - N/A — all state in-process per scan; no persistence. (053-go-main-module-edges)
+- Rust stable (workspace toolchain inherited from milestones 001–053; no nightly required for this user-space-only work). + Existing only — `std::fs::canonicalize`, `std::collections::HashSet`, `PathBuf`. **No new crates.** Per spec assumption: not pulling `walkdir` or `ignore` crates — std-only is the design intent matching the existing minimal-dependency Cargo.toml posture. (054-fix-walker-symlink-hang)
+- N/A — visited-set is per-walker-invocation in-memory state, cleared between scans. (054-fix-walker-symlink-hang)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -95,9 +97,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 054-fix-walker-symlink-hang: Added Rust stable (workspace toolchain inherited from milestones 001–053; no nightly required for this user-space-only work). + Existing only — `std::fs::canonicalize`, `std::collections::HashSet`, `PathBuf`. **No new crates.** Per spec assumption: not pulling `walkdir` or `ignore` crates — std-only is the design intent matching the existing minimal-dependency Cargo.toml posture.
 - 053-go-main-module-edges: Added Rust stable (workspace toolchain inherited from milestones 001–052; no nightly). + Existing only — `serde`/`serde_json`, `tracing`, `anyhow`, `tempfile`. **No new crates.** The version-resolution ladder shells out to `git describe`; `git` is already an implicit project assumption (workspace itself is a git repo, CI uses git).
 - 049-go-source-scope: Added Rust stable. + existing only — `std::collections`,
-- 048-component-role: Added Rust stable. + existing only — `std::path`,
 
 
 <!-- MANUAL ADDITIONS START -->

@@ -49,6 +49,10 @@ use mikebom_common::types::purl::{encode_purl_segment, Purl};
 
 use super::PackageDbEntry;
 
+// Ruby gem projects are typically a flat or shallow Gemfile +
+// Gemfile.lock at root + lib/ + spec/; 6 covers any realistic
+// layout. Defense-in-depth backstop for the canonicalize-keyed
+// visited-set primary mechanism. Per milestone-054 FR-003.
 const MAX_PROJECT_ROOT_DEPTH: usize = 6;
 
 /// One spec line in GEM / GIT / PATH. `depends` holds the transitive
@@ -744,16 +748,33 @@ fn merge_groups(
 
 fn find_gemfile_locks(rootfs: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
-    walk_for_gemfile_locks(rootfs, 0, &mut out);
+    let mut visited: HashSet<PathBuf> = HashSet::new();
+    walk_for_gemfile_locks(rootfs, 0, &mut visited, &mut out);
     out
 }
 
-fn walk_for_gemfile_locks(dir: &Path, depth: usize, out: &mut Vec<PathBuf>) {
+/// Milestone 054 FR-001/FR-002/FR-003: canonicalize-keyed visited
+/// set + max-depth backstop prevents unbounded recursion on symlink
+/// loops.
+fn walk_for_gemfile_locks(
+    dir: &Path,
+    depth: usize,
+    visited: &mut HashSet<PathBuf>,
+    out: &mut Vec<PathBuf>,
+) {
     let lock = dir.join("Gemfile.lock");
     if lock.is_file() {
         out.push(lock);
     }
     if depth >= MAX_PROJECT_ROOT_DEPTH {
+        return;
+    }
+    let key = std::fs::canonicalize(dir).unwrap_or_else(|_| dir.to_path_buf());
+    if !visited.insert(key) {
+        tracing::debug!(
+            path = %dir.display(),
+            "walker: cycle/visited skip",
+        );
         return;
     }
     let Ok(read_dir) = std::fs::read_dir(dir) else {
@@ -770,7 +791,7 @@ fn walk_for_gemfile_locks(dir: &Path, depth: usize, out: &mut Vec<PathBuf>) {
         if should_skip_descent(name) {
             continue;
         }
-        walk_for_gemfile_locks(&path, depth + 1, out);
+        walk_for_gemfile_locks(&path, depth + 1, visited, out);
     }
 }
 
@@ -801,14 +822,35 @@ fn should_skip_descent(name: &str) -> bool {
 /// variables.
 fn find_gemspecs(rootfs: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
-    walk_for_gemspecs(rootfs, 0, &mut out);
+    let mut visited: HashSet<PathBuf> = HashSet::new();
+    walk_for_gemspecs(rootfs, 0, &mut visited, &mut out);
     out
 }
 
+// Gemspec scans walk install-tree paths like `/usr/lib/ruby/gems/
+// <ruby-ver>/specifications/`; 10 levels covers depth from any
+// realistic rootfs. Defense-in-depth backstop for the canonicalize-
+// keyed visited-set primary mechanism. Per milestone-054 FR-003.
 const MAX_GEMSPEC_WALK_DEPTH: usize = 10;
 
-fn walk_for_gemspecs(dir: &Path, depth: usize, out: &mut Vec<PathBuf>) {
+/// Milestone 054 FR-001/FR-002/FR-003: canonicalize-keyed visited
+/// set + max-depth backstop prevents unbounded recursion on symlink
+/// loops.
+fn walk_for_gemspecs(
+    dir: &Path,
+    depth: usize,
+    visited: &mut HashSet<PathBuf>,
+    out: &mut Vec<PathBuf>,
+) {
     if depth >= MAX_GEMSPEC_WALK_DEPTH {
+        return;
+    }
+    let key = std::fs::canonicalize(dir).unwrap_or_else(|_| dir.to_path_buf());
+    if !visited.insert(key) {
+        tracing::debug!(
+            path = %dir.display(),
+            "walker: cycle/visited skip",
+        );
         return;
     }
     let Ok(read_dir) = std::fs::read_dir(dir) else {
@@ -832,7 +874,7 @@ fn walk_for_gemspecs(dir: &Path, depth: usize, out: &mut Vec<PathBuf>) {
                 harvest_gemspecs_in_dir(&path, out);
                 continue;
             }
-            walk_for_gemspecs(&path, depth + 1, out);
+            walk_for_gemspecs(&path, depth + 1, visited, out);
         }
     }
 }
@@ -1522,5 +1564,20 @@ end
         assert!(prod.contains("a"));
         assert!(prod.contains("b"));
         assert!(prod.contains("c"));
+    }
+
+    /// Milestone 054 SC-002 + FR-009: walker terminates promptly on
+    /// a synthesized minimal symlink-loop fixture instead of hanging.
+    /// Covers both gem walkers (find_gemfile_locks + find_gemspecs).
+    #[test]
+    fn walks_symlink_loop_without_hanging() {
+        let tmp = tempfile::tempdir().unwrap();
+        let loop_dir = tmp.path().join("loop");
+        std::fs::create_dir_all(&loop_dir).unwrap();
+        std::os::unix::fs::symlink(&loop_dir, loop_dir.join("link")).unwrap();
+        let locks = find_gemfile_locks(tmp.path());
+        let specs = find_gemspecs(tmp.path());
+        assert!(locks.is_empty());
+        assert!(specs.is_empty());
     }
 }
