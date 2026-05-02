@@ -43,7 +43,6 @@ jobs:
             url: https://github.com/knative/func.git
             tag: knative-v1.22.0
             expected_min_components: 200
-            scan_path: knative-func
         platform:
           - ubuntu-latest
           - macos-latest
@@ -85,17 +84,23 @@ jobs:
 
       - name: Scan ${{ matrix.project.name }}
         run: |
+          # `set -o pipefail` so the step exits non-zero when mikebom
+          # fails — the trailing `tee` would otherwise mask the
+          # mikebom exit code.
+          set -o pipefail
           # Isolate HOME + GOMODCACHE so the scan doesn't pick up
           # the runner's own Go module cache; mirrors the milestone
           # 053 pattern + the user's original issue-#102 reproducer.
+          # Job-level `timeout-minutes: 15` provides the wall-clock
+          # bound (no `timeout` shell binary needed; macOS doesn't
+          # ship GNU coreutils' `timeout`).
           HOME=$(mktemp -d) GOMODCACHE=$(mktemp -d)/empty \
-            timeout 600 ./target/debug/mikebom --offline sbom scan \
-              --path "/tmp/realistic-fixtures/${{ matrix.project.name }}-${{ matrix.project.tag }}/${{ matrix.project.scan_path }}" \
+            ./target/debug/mikebom --offline sbom scan \
+              --path "/tmp/realistic-fixtures/${{ matrix.project.name }}-${{ matrix.project.tag }}" \
               --format spdx-2.3-json,cyclonedx-json \
               --output spdx-2.3-json=/tmp/${{ matrix.project.name }}.spdx.json \
               --output cyclonedx-json=/tmp/${{ matrix.project.name }}.cdx.json \
               --no-deep-hash 2>&1 | tee /tmp/scan.log
-          echo "scan exit code: $?"
 
       - name: Validate SBOM structure + component floor
         run: |
