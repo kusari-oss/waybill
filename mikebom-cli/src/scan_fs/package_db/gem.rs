@@ -642,14 +642,35 @@ pub fn read(rootfs: &Path, include_dev: bool) -> Vec<PackageDbEntry> {
             let Some(mut entry) = spec_to_entry(spec, &source_path, &direct) else {
                 continue;
             };
-            // Tag dev: not in prod-reachable set.
+            // Milestone 052/part-2: 4-way classifier per FR-006.
+            // Gems in `:test` group → Test; other non-default groups
+            // (`:development`, `:doc`, custom) → Development; default
+            // group → Runtime. Multi-group gems with `:test` plus
+            // anything else fall to Test only when test is the
+            // narrowest classification — but production-wins via the
+            // empty-group classification at the direct_prod filter
+            // above already handles default+anything-else cases.
+            use mikebom_common::resolution::LifecycleScope;
             if !prod_set.contains(&spec.name) {
-                entry.lifecycle_scope = Some(mikebom_common::resolution::LifecycleScope::Development);
+                let scope = match grouping.get(&spec.name) {
+                    Some(groups) if groups.contains("test") && groups.len() == 1 => {
+                        LifecycleScope::Test
+                    }
+                    Some(_) => LifecycleScope::Development,
+                    // Transitive gems reachable only from non-default
+                    // direct deps inherit Development (the most
+                    // common classification — Bundler `:development`
+                    // and `:test` groups dominate).
+                    None => LifecycleScope::Development,
+                };
+                entry.lifecycle_scope = Some(scope);
                 tagged_dev += 1;
                 if !include_dev {
                     dropped += 1;
                     continue;
                 }
+            } else {
+                entry.lifecycle_scope = Some(LifecycleScope::Runtime);
             }
             let purl_key = entry.purl.as_str().to_string();
             if seen_purls.insert(purl_key) {

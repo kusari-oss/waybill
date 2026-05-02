@@ -7,6 +7,52 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Changed (BREAKING — SBOM output shape, milestone 052)
+
+- **Native lifecycle-scope dependency tagging**
+  (milestone 052/part-2). The legacy `mikebom:dev-dependency`
+  annotation is REMOVED; the lifecycle-scope signal now
+  travels via each format's standards-defined construct per
+  Constitution Principle V (v1.4.0):
+  - **CycloneDX 1.6**: `components[].scope = "excluded"` plus
+    new `mikebom:lifecycle-scope` property carrying the
+    finer `development` / `build` / `test` distinction (C42
+    catalog row, finer-info carve-out per Principle V).
+  - **SPDX 2.3**: native `DEV_DEPENDENCY_OF` /
+    `BUILD_DEPENDENCY_OF` / `TEST_DEPENDENCY_OF` relationship
+    types (the mapper had the wiring since milestone 007 —
+    readers now emit the typed variants).
+  - **SPDX 3.0.1**: `scope` field on `dependsOn` relationships
+    carrying `LifecycleScopeType` (`development` / `build` /
+    `test`).
+  Per-ecosystem 4-way classifiers: cargo `[dev-dependencies]`
+  → Development, `[build-dependencies]` → Build; gem `:test`
+  group → Test, other non-default groups → Development;
+  maven `<scope>test</scope>` → Test, `<scope>provided</scope>`
+  → Build; Go test-only imports → Test;
+  npm/Poetry/Pipfile → Development. New
+  `apply_lifecycle_scope_to_edges` helper rewrites generic
+  `DependsOn` edges to typed variants based on target's
+  `lifecycle_scope`. C6 row deleted; new C42 row added; B2
+  updated; parity-extractor wiring swapped.
+
+  **Migration**: SBOM consumers filtering on
+  `mikebom:dev-dependency = true` migrate to:
+  CDX → `components[].scope = "excluded"` or
+  `mikebom:lifecycle-scope` property; SPDX 2.3 → native
+  `DEV/BUILD/TEST_DEPENDENCY_OF` relationship types; SPDX 3
+  → `relationships[].scope` field.
+
+- **LifecycleScope data model + behavior-preserving rename**
+  (milestone 052/part-1, prerequisite for part-2). Replaced
+  `is_dev: Option<bool>` everywhere with
+  `lifecycle_scope: Option<LifecycleScope>` (4-variant enum:
+  Runtime, Development, Build, Test). Added `TestDependsOn`
+  variant to `RelationshipType`. Cross-cutting field rename
+  across 44 files. Constitution v1.4.0 amendment bundled
+  (Principle V "standards-native fields take precedence"
+  clause).
+
 ### Added
 
 - **`mikebom:not-linked` annotation on Go source-tier entries

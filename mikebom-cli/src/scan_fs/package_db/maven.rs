@@ -29,6 +29,24 @@ use mikebom_common::types::purl::{encode_purl_segment, Purl};
 
 use super::PackageDbEntry;
 
+/// Milestone 052/part-2: map a Maven `<scope>` string to
+/// `LifecycleScope`. `test` → Test; `provided` → Build (compile-only,
+/// not bundled at runtime); `compile` / `runtime` / `system` / `import`
+/// / absent → Runtime. Unknown scope values fall through to None.
+fn lifecycle_scope_from_maven(
+    scope: Option<&str>,
+) -> Option<mikebom_common::resolution::LifecycleScope> {
+    use mikebom_common::resolution::LifecycleScope;
+    match scope {
+        Some("test") => Some(LifecycleScope::Test),
+        Some("provided") => Some(LifecycleScope::Build),
+        Some("compile") | Some("runtime") | Some("system") | Some("import") | None => {
+            Some(LifecycleScope::Runtime)
+        }
+        Some(_) => None,
+    }
+}
+
 const MAX_PROJECT_ROOT_DEPTH: usize = 6;
 /// Per-entry size cap inside JARs; 64 MB is well beyond real pom.properties.
 const MAX_JAR_ENTRY_BYTES: u64 = 64 * 1024 * 1024;
@@ -1820,14 +1838,14 @@ fn pom_dep_to_entry(
         depends: Vec::new(),
         maintainer: None,
         licenses: Vec::new(),
-        // Milestone 052: pre-052 set `is_dev: Some(true)` on test-
-        // scope. Behavior-preserving rename: map test → `Development`
-        // so the legacy `mikebom:dev-dependency` annotation continues
-        // firing identically. Commit 2 of milestone 052 reclassifies
-        // test → `Test` and provided → `Build` via SPDX 2.3 native
-        // `TEST/BUILD_DEPENDENCY_OF` + SPDX 3 `lifecycleScope`.
-        lifecycle_scope: matches!(dep.scope.as_deref(), Some("test"))
-            .then_some(mikebom_common::resolution::LifecycleScope::Development),
+        // Milestone 052/part-2: native lifecycle-scope mapping per
+        // FR-007. `<scope>test</scope>` → Test (SPDX 2.3
+        // TEST_DEPENDENCY_OF; SPDX 3 lifecycleScope:test);
+        // `<scope>provided</scope>` → Build (compile-time only, not
+        // bundled at runtime — SPDX 2.3 BUILD_DEPENDENCY_OF;
+        // SPDX 3 lifecycleScope:build); `compile`, `runtime`,
+        // `system`, `import`, or absent → Runtime.
+        lifecycle_scope: lifecycle_scope_from_maven(dep.scope.as_deref()),
         requirement_range,
         // Mark as workspace to distinguish from BFS-inferred transitive
         // coords (source_type = "transitive"). `app` (the scanned

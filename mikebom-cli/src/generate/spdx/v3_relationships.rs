@@ -49,19 +49,23 @@ pub fn build_relationship(
 ///
 /// SPDX 3.0.1's `relationshipType` enum does NOT carry over
 /// SPDX 2.3's `DEV_DEPENDENCY_OF` / `BUILD_DEPENDENCY_OF`
-/// distinction — all three mikebom relationship kinds
-/// (`DependsOn`, `DevDependsOn`, `BuildDependsOn`) collapse to
-/// `dependsOn` in SPDX 3.0.1. The dev/build subtype signal is
-/// preserved via the C6 `mikebom:dev-dependency` Annotation
-/// (added in US2). When SPDX 3 publishes dedicated
-/// dev/build-dependency types, the mapping can be refined
-/// without breaking the CDX ↔ SPDX 3 parity contract.
+/// distinction — all four mikebom relationship kinds
+/// (`DependsOn`, `DevDependsOn`, `BuildDependsOn`,
+/// `TestDependsOn`) emit as `dependsOn` in SPDX 3.0.1. The
+/// dev/build/test subtype signal is preserved via the
+/// **`scope`** field on each `Relationship` element — SPDX
+/// 3.0.1's native `LifecycleScopeType` enum (`development`,
+/// `build`, `test`, `runtime`, `design`). Milestone 052/part-2
+/// emits `scope` for `Dev`/`Build`/`TestDependsOn` variants and
+/// omits it for plain `DependsOn` (default = scope-unspecified
+/// per the spec).
 pub fn build_dependency_relationships(
     relationships: &[Relationship],
     package_iri_by_purl: &BTreeMap<String, String>,
     doc_iri: &str,
     creation_info_id: &str,
 ) -> Vec<Value> {
+    use mikebom_common::resolution::RelationshipType;
     let mut out: Vec<Value> = Vec::new();
     for rel in relationships {
         let Some(from_iri) = package_iri_by_purl.get(&rel.from) else {
@@ -70,16 +74,23 @@ pub fn build_dependency_relationships(
         let Some(to_iri) = package_iri_by_purl.get(&rel.to) else {
             continue;
         };
-        // All three variants → `dependsOn`. The mikebom:dev-dependency
-        // annotation preserves the dev/build distinction.
-        let _ = rel.relationship_type; // RelationshipType currently unused beyond this check
-        out.push(build_relationship(
+        let mut element = build_relationship(
             from_iri,
             "dependsOn",
             to_iri,
             doc_iri,
             creation_info_id,
-        ));
+        );
+        // Milestone 052/part-2: native LifecycleScopeType field.
+        if let Some(scope) = match rel.relationship_type {
+            RelationshipType::DevDependsOn => Some("development"),
+            RelationshipType::BuildDependsOn => Some("build"),
+            RelationshipType::TestDependsOn => Some("test"),
+            RelationshipType::DependsOn => None,
+        } {
+            element["scope"] = json!(scope);
+        }
+        out.push(element);
     }
     sort_by_spdx_id(&mut out);
     out

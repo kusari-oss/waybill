@@ -145,10 +145,18 @@ fn lockfile_v3_fixture_with_include_dev_surfaces_jest() {
         .iter()
         .find(|c| c["name"] == "jest")
         .expect("jest present under --include-dev");
+    // Milestone 052/part-2: native CDX `scope: "excluded"` plus
+    // new `mikebom:lifecycle-scope: "development"` property
+    // replace the pre-052 `mikebom:dev-dependency = true` annotation.
     assert_eq!(
-        prop_value(jest, "mikebom:dev-dependency"),
-        Some("true"),
-        "jest must carry dev-dependency property"
+        jest["scope"].as_str(),
+        Some("excluded"),
+        "jest must carry native CDX scope: \"excluded\" under --include-dev"
+    );
+    assert_eq!(
+        prop_value(jest, "mikebom:lifecycle-scope"),
+        Some("development"),
+        "jest must carry mikebom:lifecycle-scope = \"development\" under --include-dev"
     );
 }
 
@@ -182,7 +190,17 @@ fn pnpm_v8_fixture_parses_prod_and_filters_dev() {
         .iter()
         .find(|c| c["name"] == "mocha")
         .expect("mocha present with --include-dev");
-    assert_eq!(prop_value(mocha, "mikebom:dev-dependency"), Some("true"));
+    // Milestone 052/part-2: native fields replace legacy annotation.
+    assert_eq!(
+        mocha["scope"].as_str(),
+        Some("excluded"),
+        "mocha must carry native CDX scope: \"excluded\" under --include-dev"
+    );
+    assert_eq!(
+        prop_value(mocha, "mikebom:lifecycle-scope"),
+        Some("development"),
+        "mocha must carry mikebom:lifecycle-scope = \"development\""
+    );
 }
 
 #[test]

@@ -180,6 +180,23 @@ impl CycloneDxBuilder {
                 "evidence": build_evidence(&component.evidence, &component.occurrences)
             });
 
+            // Milestone 052/part-2: native CDX `scope` field. Per
+            // FR-010, components with non-Runtime lifecycle_scope
+            // emit `scope: "excluded"` (CDX 1.6 enum value meaning
+            // "not in deployment footprint"). Runtime + None omit
+            // the field (default = `required`). The dev-vs-build-
+            // vs-test distinction lives in the
+            // `mikebom:lifecycle-scope` property emitted later in
+            // the properties[] block — CDX's 3-value `scope` enum
+            // doesn't express that finer split.
+            if self.config.include_dev {
+                if let Some(scope) = component.lifecycle_scope {
+                    if scope.is_non_runtime() {
+                        entry["scope"] = json!("excluded");
+                    }
+                }
+            }
+
             // Include hashes if configured.
             if self.config.include_hashes && !component.hashes.is_empty() {
                 let hashes: Vec<serde_json::Value> = component
@@ -307,16 +324,22 @@ impl CycloneDxBuilder {
                 }));
             }
 
-            // Milestone 002 traceability + scoping properties.
-            // `mikebom:dev-dependency` only emits when the component was
-            // flagged dev-only AND the caller actually opted in — the
-            // absence of the property on a dev-capable-ecosystem component
-            // is a positive signal that it's a prod dep.
-            if self.config.include_dev && mikebom_common::resolution::lifecycle_scope_is_legacy_dev(&component.lifecycle_scope) {
-                properties.push(json!({
-                    "name": "mikebom:dev-dependency",
-                    "value": "true"
-                }));
+            // Milestone 052: `mikebom:lifecycle-scope` property carrying
+            // the finer-grained dev/build/test distinction that CDX 1.6's
+            // 3-value native `scope` enum cannot express. The native
+            // `scope: "excluded"` field is set on the component itself
+            // (in the component-builder block above the properties array
+            // — see the lifecycle_scope branch on `Component::scope`).
+            // Constitution Principle V (v1.4.0): native fields take
+            // precedence; this property carries the carve-out for
+            // information the standard doesn't natively express.
+            if self.config.include_dev {
+                if let Some(scope) = component.lifecycle_scope.filter(|s| s.is_non_runtime()) {
+                    properties.push(json!({
+                        "name": "mikebom:lifecycle-scope",
+                        "value": scope.as_str()
+                    }));
+                }
             }
             if let Some(ref range) = component.requirement_range {
                 properties.push(json!({

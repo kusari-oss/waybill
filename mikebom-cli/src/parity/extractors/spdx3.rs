@@ -337,7 +337,6 @@ spdx3_anno!(c2_spdx3, "mikebom:source-connection-ids", component);
 spdx3_anno!(c3_spdx3, "mikebom:deps-dev-match", component);
 spdx3_anno!(c4_spdx3, "mikebom:evidence-kind", component);
 spdx3_anno!(c5_spdx3, "mikebom:sbom-tier", component);
-spdx3_anno!(c6_spdx3, "mikebom:dev-dependency", component);
 spdx3_anno!(c7_spdx3, "mikebom:co-owned-by", component);
 spdx3_anno!(c8_spdx3, "mikebom:shade-relocation", component);
 spdx3_anno!(c9_spdx3, "mikebom:npm-role", component);

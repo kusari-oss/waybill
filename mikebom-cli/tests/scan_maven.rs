@@ -782,16 +782,27 @@ fn scan_maven_test_scope_is_tagged_with_include_dev() {
         "slf4j-api (compile-scope) must be retained",
     );
 
-    // --include-dev: junit emits with mikebom:dev-dependency = true.
+    // Milestone 052/part-2: junit emits with native CDX
+    // `scope: "excluded"` + new `mikebom:lifecycle-scope: "test"`
+    // property under --include-dev. Legacy `mikebom:dev-dependency`
+    // annotation removed per Constitution Principle V (v1.4.0) and
+    // milestone 052 Q1 → Option C — native fields are the sole
+    // signal post-052/part-2.
     let sbom_dev = scan_path_args(dir.path(), &["--include-dev"]);
     let maven_dev = maven_components(&sbom_dev);
     let junit_dev = maven_dev
         .iter()
         .find(|c| c["name"].as_str() == Some("junit"))
         .expect("junit must emit under --include-dev");
-    let is_dev = prop_value(junit_dev, "mikebom:dev-dependency").unwrap_or("");
     assert_eq!(
-        is_dev, "true",
-        "junit must carry mikebom:dev-dependency = true under --include-dev: {junit_dev:?}",
+        junit_dev["scope"].as_str(),
+        Some("excluded"),
+        "junit must carry native CDX scope: \"excluded\" under --include-dev: {junit_dev:?}",
+    );
+    let lifecycle_scope =
+        prop_value(junit_dev, "mikebom:lifecycle-scope").unwrap_or("");
+    assert_eq!(
+        lifecycle_scope, "test",
+        "junit must carry mikebom:lifecycle-scope = \"test\" under --include-dev: {junit_dev:?}",
     );
 }

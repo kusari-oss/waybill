@@ -224,8 +224,16 @@ pub(super) fn cdx_supplier(doc: &Value) -> BTreeSet<String> {
 
 /// Collect (from_purl, to_purl) edges from CDX `dependencies[]`.
 /// Uses `bom-ref` → `purl` lookup since dependencies are keyed
-/// by bom-ref. Filters runtime vs dev edges via the
-/// `mikebom:dev-dependency` property on the source component.
+/// by bom-ref. Milestone 052/part-2: filter dev/non-dev via the
+/// native CDX `scope: "excluded"` field plus the new
+/// `mikebom:lifecycle-scope` property (the legacy
+/// `mikebom:dev-dependency` annotation was removed). The scope
+/// signal lives on the TARGET component (the dep target), not
+/// the source, in B2's new shape — but for parity-test purposes
+/// (SymmetricEqual against SPDX 2.3 dep types and SPDX 3
+/// lifecycleScope on the target relationship), `dev_only`
+/// remains a source-side filter to match how the SPDX side
+/// extractors classify edges.
 fn cdx_dependency_edges(doc: &Value, dev_only: bool) -> BTreeSet<String> {
     // Build bom-ref → component lookup.
     let mut comp_by_bomref: std::collections::BTreeMap<String, &Value> =
@@ -250,16 +258,13 @@ fn cdx_dependency_edges(doc: &Value, dev_only: bool) -> BTreeSet<String> {
             Some(p) => p.to_string(),
             None => continue,
         };
+        // Milestone 052/part-2: source-side dev classification via
+        // native CDX `scope: "excluded"` (any non-runtime). The
+        // legacy `mikebom:dev-dependency` property was removed.
         let from_is_dev = from_comp
-            .get("properties")
-            .and_then(|v| v.as_array())
-            .map(|arr| {
-                arr.iter().any(|p| {
-                    p.get("name").and_then(|x| x.as_str()) == Some("mikebom:dev-dependency")
-                        && p.get("value").and_then(|x| x.as_str()) == Some("true")
-                })
-            })
-            .unwrap_or(false);
+            .get("scope")
+            .and_then(|v| v.as_str())
+            == Some("excluded");
         if dev_only != from_is_dev {
             continue;
         }
@@ -326,7 +331,7 @@ cdx_anno!(c2_cdx, "mikebom:source-connection-ids", component);
 cdx_anno!(c3_cdx, "mikebom:deps-dev-match", component);
 cdx_anno!(c4_cdx, "mikebom:evidence-kind", component);
 cdx_anno!(c5_cdx, "mikebom:sbom-tier", component);
-cdx_anno!(c6_cdx, "mikebom:dev-dependency", component);
+cdx_anno!(c42_cdx, "mikebom:lifecycle-scope",        component);
 cdx_anno!(c7_cdx, "mikebom:co-owned-by", component);
 cdx_anno!(c8_cdx, "mikebom:shade-relocation", component);
 cdx_anno!(c9_cdx, "mikebom:npm-role", component);
