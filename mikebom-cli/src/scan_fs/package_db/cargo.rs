@@ -432,6 +432,18 @@ fn compute_cargo_prod_set(
     lock: &CargoLock,
     direct_prod: &HashSet<String>,
 ) -> HashSet<(String, String)> {
+    cargo_bfs_closure(lock, direct_prod)
+}
+
+/// Milestone 052/part-2: BFS-walk Cargo.lock from a set of seed crate
+/// names through the resolved `[[package]] dependencies = [...]` graph.
+/// Same algorithm as `compute_cargo_prod_set` — extracted as a shared
+/// helper now that we walk multiple seed sets (prod-direct AND
+/// build-direct).
+fn cargo_bfs_closure(
+    lock: &CargoLock,
+    direct_seeds: &HashSet<String>,
+) -> HashSet<(String, String)> {
     // Build a quick (name, version) → CargoPackage index for BFS
     // traversal. When multiple `[[package]]` rows share a name (rare
     // but legal — workspace members + transitive multi-version
@@ -441,7 +453,7 @@ fn compute_cargo_prod_set(
         by_name.entry(pkg.name.as_str()).or_default().push(pkg);
     }
     let mut visited: HashSet<(String, String)> = HashSet::new();
-    let mut frontier: Vec<(&str, Option<&str>)> = direct_prod
+    let mut frontier: Vec<(&str, Option<&str>)> = direct_seeds
         .iter()
         .map(|name| (name.as_str(), None::<&str>))
         .collect();
@@ -474,6 +486,20 @@ fn compute_cargo_prod_set(
     visited
 }
 
+/// Milestone 052/part-2: BFS-walk from `[build-dependencies]` direct
+/// seeds. A crate reachable through the build-dep graph but NOT
+/// through the prod-dep graph is tagged `LifecycleScope::Build`
+/// (compile-time only, not in the runtime artifact). Production wins:
+/// a crate in BOTH graphs ends up in `prod_set` (computed first) and
+/// the build-set classification doesn't apply. Same call shape as
+/// `compute_cargo_prod_set` for consistency.
+fn compute_cargo_build_set(
+    lock: &CargoLock,
+    direct_build: &HashSet<String>,
+) -> HashSet<(String, String)> {
+    cargo_bfs_closure(lock, direct_build)
+}
+
 // ---------------------------------------------------------------------------
 // Reader
 // ---------------------------------------------------------------------------
@@ -488,6 +514,7 @@ fn compute_cargo_prod_set(
 fn parse_lockfile(
     path: &Path,
     prod_set: &HashSet<(String, String)>,
+    build_set: &HashSet<(String, String)>,
 ) -> Result<Vec<PackageDbEntry>, CargoError> {
     let text = match std::fs::read_to_string(path) {
         Ok(t) => t,
@@ -557,14 +584,24 @@ fn parse_lockfile(
                 }
             }
             entry.source_path = source_path.clone();
-            // Milestone 051: tag entries outside the prod-reachable
-            // set. When `prod_set` is empty (no Cargo.toml found
-            // alongside the lockfile) leave is_dev = None — we can't
-            // classify without dep-section info.
-            if !prod_set.is_empty()
-                && !prod_set.contains(&(pkg.name.clone(), pkg.version.clone()))
-            {
-                entry.lifecycle_scope = Some(mikebom_common::resolution::LifecycleScope::Development);
+            // Milestone 052/part-2: 4-way classifier. Production wins
+            // over Build wins over Development per FR-005's priority
+            // hierarchy. When prod_set is empty (no Cargo.toml found
+            // alongside the lockfile) leave lifecycle_scope = None —
+            // we can't classify without dep-section info.
+            if !prod_set.is_empty() {
+                use mikebom_common::resolution::LifecycleScope;
+                let key = (pkg.name.clone(), pkg.version.clone());
+                if prod_set.contains(&key) {
+                    entry.lifecycle_scope = Some(LifecycleScope::Runtime);
+                } else if build_set.contains(&key) {
+                    entry.lifecycle_scope = Some(LifecycleScope::Build);
+                } else {
+                    // Reachable from neither prod nor build closures —
+                    // it's in the lockfile because it's a dev-dep
+                    // (criterion, proptest, etc.).
+                    entry.lifecycle_scope = Some(LifecycleScope::Development);
+                }
             }
             out.push(entry);
         }
@@ -596,14 +633,18 @@ pub fn read(rootfs: &Path, include_dev: bool) -> Result<Vec<PackageDbEntry>, Car
             }
         }
         // Re-read the lockfile structurally to drive the BFS prod-set
-        // computation. parse_lockfile_doc returns the typed CargoLock
-        // (lighter than re-running parse_lockfile, which already
-        // converts to PackageDbEntry).
-        let prod_set = match parse_lockfile_doc(&lock_path) {
-            Ok(Some(doc)) => compute_cargo_prod_set(&doc, &workspace_sections.prod_deps),
-            _ => HashSet::new(),
+        // and build-set computations. parse_lockfile_doc returns the
+        // typed CargoLock (lighter than re-running parse_lockfile,
+        // which converts to PackageDbEntry).
+        let (prod_set, build_set) = match parse_lockfile_doc(&lock_path) {
+            Ok(Some(doc)) => {
+                let prod = compute_cargo_prod_set(&doc, &workspace_sections.prod_deps);
+                let build = compute_cargo_build_set(&doc, &workspace_sections.build_deps);
+                (prod, build)
+            }
+            _ => (HashSet::new(), HashSet::new()),
         };
-        let entries = parse_lockfile(&lock_path, &prod_set)?;
+        let entries = parse_lockfile(&lock_path, &prod_set, &build_set)?;
         for entry in entries {
             let purl_key = entry.purl.as_str().to_string();
             // Drop dev entries when --include-dev is off.
@@ -803,7 +844,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0000000000000000000000000000000000000000000000000000000000000001"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 2);
         assert!(entries.iter().any(|e| e.name == "serde"));
         let serde = entries.iter().find(|e| e.name == "serde").unwrap();
@@ -825,7 +866,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ad32ce52e4161730f7098c077cd2ed6229b5804ccf99e5366be1ab72a98b4e1"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "anyhow");
     }
@@ -842,7 +883,7 @@ version = "0.1.0"
 source = "git+https://github.com/me/my-fork?branch=main#abc123"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].source_type.as_deref(), Some("git"));
     }
@@ -858,7 +899,7 @@ version = "0.1.0"
 dependencies = []
 "#;
         let path = write_lockfile(dir.path(), body);
-        match parse_lockfile(&path, &HashSet::new()) {
+        match parse_lockfile(&path, &HashSet::new(), &HashSet::new()) {
             Err(CargoError::LockfileUnsupportedVersion { version, .. }) => {
                 assert_eq!(version, 1);
             }
@@ -878,7 +919,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0000000000000000000000000000000000000000000000000000000000000000"
 "#;
         let path = write_lockfile(dir.path(), body);
-        match parse_lockfile(&path, &HashSet::new()) {
+        match parse_lockfile(&path, &HashSet::new(), &HashSet::new()) {
             Err(CargoError::LockfileUnsupportedVersion { version, .. }) => {
                 assert_eq!(version, 2);
             }

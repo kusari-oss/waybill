@@ -193,10 +193,18 @@ fn poetry_project_surfaces_prod_default_dev_behind_flag() {
         .iter()
         .find(|c| c["name"] == "pytest")
         .expect("pytest present");
+    // Milestone 052/part-2: native CDX `scope: "excluded"` +
+    // `mikebom:lifecycle-scope: "development"` replace the pre-052
+    // `mikebom:dev-dependency = true` annotation.
     assert_eq!(
-        prop_value(pytest, "mikebom:dev-dependency"),
-        Some("true"),
-        "pytest must carry dev-dependency property under --include-dev"
+        pytest["scope"].as_str(),
+        Some("excluded"),
+        "pytest must carry native CDX scope: \"excluded\" under --include-dev"
+    );
+    assert_eq!(
+        prop_value(pytest, "mikebom:lifecycle-scope"),
+        Some("development"),
+        "pytest must carry mikebom:lifecycle-scope = \"development\" under --include-dev"
     );
 }
 
@@ -212,9 +220,11 @@ fn pipfile_project_splits_default_vs_develop() {
         .iter()
         .find(|c| c["name"] == "pytest")
         .expect("pytest in include-dev");
+    // Milestone 052/part-2: native fields replace legacy annotation.
+    assert_eq!(pytest["scope"].as_str(), Some("excluded"));
     assert_eq!(
-        prop_value(pytest, "mikebom:dev-dependency"),
-        Some("true")
+        prop_value(pytest, "mikebom:lifecycle-scope"),
+        Some("development")
     );
 }
 

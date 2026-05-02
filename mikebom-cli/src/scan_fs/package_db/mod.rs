@@ -394,7 +394,13 @@ fn apply_go_production_set_filter(
             continue;
         }
         if test_only_imports.contains(&e.name) {
-            e.lifecycle_scope = Some(mikebom_common::resolution::LifecycleScope::Development);
+            // Milestone 052/part-2: Go's test-only-import detection
+            // (per milestone 049's `_test.go` import-walk) maps to
+            // the standards-defined `Test` scope. SPDX 2.3 emits
+            // `TEST_DEPENDENCY_OF`; SPDX 3 emits
+            // `lifecycleScope: "test"`; CDX emits
+            // `scope: "excluded"` + `mikebom:lifecycle-scope: "test"`.
+            e.lifecycle_scope = Some(mikebom_common::resolution::LifecycleScope::Test);
             tagged_test_only += 1;
         }
     }

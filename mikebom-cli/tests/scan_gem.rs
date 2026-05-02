@@ -209,13 +209,18 @@ fn gem_named<'a>(sbom: &'a serde_json::Value, name: &str) -> Option<&'a serde_js
 }
 
 fn has_dev_property(component: &serde_json::Value) -> bool {
+    // Milestone 052/part-2: native CDX `scope: "excluded"` is the
+    // primary signal; the new `mikebom:lifecycle-scope` property
+    // carries the finer dev/build/test distinction. Either signal
+    // proves the component is non-Runtime-scoped.
+    if component["scope"].as_str() == Some("excluded") {
+        return true;
+    }
     component["properties"]
         .as_array()
         .map(|props| {
             props.iter().any(|p| {
-                p["name"].as_str() == Some("mikebom:dev-dependency")
-                    && (p["value"].as_str() == Some("true")
-                        || p["value"].as_bool() == Some(true))
+                p["name"].as_str() == Some("mikebom:lifecycle-scope")
             })
         })
         .unwrap_or(false)

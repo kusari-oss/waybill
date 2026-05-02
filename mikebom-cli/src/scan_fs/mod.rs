@@ -568,6 +568,17 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // available signal there.
     apply_go_cache_zip_filter(&mut components);
 
+    // Milestone 052/part-2: rewrite DependsOn relationship edges to
+    // the typed `RelationshipType::{DevDependsOn,BuildDependsOn,
+    // TestDependsOn}` variants based on the target component's
+    // `lifecycle_scope`. Each typed variant maps natively to SPDX 2.3
+    // `DEV/BUILD/TEST_DEPENDENCY_OF` (via `spdx/relationships.rs`'s
+    // existing mapper) and to SPDX 3 `lifecycleScope` parameter (via
+    // `spdx/v3_relationships.rs`'s emission). Runs after all other
+    // resolution + filtering steps so the target component's scope
+    // is final by the time edges are typed.
+    apply_lifecycle_scope_to_edges(&components, &mut relationships);
+
     let mut components = deduplicate(components);
     // Post-dedup CPE synthesis — runs on the merged set so a component
     // that exists in both the filename pass and the dpkg pass gets one
@@ -656,6 +667,54 @@ fn apply_go_cache_zip_filter(components: &mut Vec<mikebom_common::resolution::Re
             dropped,
             buildinfo_linked_count = buildinfo_linked.len(),
             "G6 filter: dropped cache-ZIP Go components not confirmed by BuildInfo",
+        );
+    }
+}
+
+/// Milestone 052/part-2: rewrite generic `DependsOn` relationship
+/// edges to typed `DevDependsOn` / `BuildDependsOn` / `TestDependsOn`
+/// variants based on the target component's `lifecycle_scope`. The
+/// SPDX 2.3 serializer (`spdx/relationships.rs`) maps each typed
+/// variant to its native `DEV/BUILD/TEST_DEPENDENCY_OF` SPDX
+/// relationship type; the SPDX 3 serializer
+/// (`spdx/v3_relationships.rs`) emits the `lifecycleScope` parameter
+/// on `dependsOn` relationships using the same source signal.
+///
+/// Runs after all component-resolution and filtering steps so each
+/// target's `lifecycle_scope` is final by the time we type the edges.
+/// `Runtime` and `None` leave edges as `DependsOn`.
+fn apply_lifecycle_scope_to_edges(
+    components: &[mikebom_common::resolution::ResolvedComponent],
+    relationships: &mut [mikebom_common::resolution::Relationship],
+) {
+    use mikebom_common::resolution::{LifecycleScope, RelationshipType};
+    let scope_by_purl: std::collections::HashMap<&str, LifecycleScope> = components
+        .iter()
+        .filter_map(|c| c.lifecycle_scope.map(|s| (c.purl.as_str(), s)))
+        .collect();
+    let mut rewrites = 0usize;
+    for rel in relationships.iter_mut() {
+        // Only rewrite edges that haven't already been typed by a
+        // reader (the existing readers all emit `DependsOn`; this is
+        // an invariant defense against future reader changes).
+        if !matches!(rel.relationship_type, RelationshipType::DependsOn) {
+            continue;
+        }
+        let Some(scope) = scope_by_purl.get(rel.to.as_str()) else {
+            continue;
+        };
+        rel.relationship_type = match scope {
+            LifecycleScope::Runtime => continue,
+            LifecycleScope::Development => RelationshipType::DevDependsOn,
+            LifecycleScope::Build => RelationshipType::BuildDependsOn,
+            LifecycleScope::Test => RelationshipType::TestDependsOn,
+        };
+        rewrites += 1;
+    }
+    if rewrites > 0 {
+        tracing::info!(
+            rewrites,
+            "rewrote DependsOn → typed (Dev|Build|Test)DependsOn edges based on target lifecycle_scope",
         );
     }
 }

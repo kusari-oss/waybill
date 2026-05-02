@@ -39,7 +39,7 @@ pub fn build_component_annotations(
     package_iri_by_purl: &std::collections::BTreeMap<String, String>,
     doc_iri: &str,
     creation_info_id: &str,
-    include_dev: bool,
+    _include_dev: bool,
     include_source_files: bool,
 ) -> Vec<Value> {
     let mut out: Vec<Value> = Vec::new();
@@ -53,7 +53,7 @@ pub fn build_component_annotations(
             doc_iri,
             creation_info_id,
             c,
-            include_dev,
+            _include_dev,
             include_source_files,
         );
     }
@@ -118,7 +118,7 @@ fn push_component_fields(
     doc_iri: &str,
     creation_info_id: &str,
     c: &ResolvedComponent,
-    include_dev: bool,
+    _include_dev: bool,
     include_source_files: bool,
 ) {
     let push = |out: &mut Vec<Value>, field: &str, value: serde_json::Value| {
@@ -159,10 +159,15 @@ fn push_component_fields(
     if let Some(ref v) = c.sbom_tier {
         push(out, "mikebom:sbom-tier", json!(v));
     }
-    // C6 dev-dependency — same gate as CDX / SPDX 2.3 path.
-    if include_dev && mikebom_common::resolution::lifecycle_scope_is_legacy_dev(&c.lifecycle_scope) {
-        push(out, "mikebom:dev-dependency", json!("true"));
-    }
+    // C6 (milestone 052/part-2): the legacy `mikebom:dev-dependency`
+    // annotation is REMOVED. Per Constitution Principle V (v1.4.0),
+    // SPDX 3.0.1 has a native `lifecycleScope` parameter on
+    // `dependsOn` relationships (LifecycleScopeType enum:
+    // `development`, `build`, `test`, `runtime`). The signal travels
+    // via the typed `RelationshipType::{Dev,Build,Test}DependsOn`
+    // variants set by `apply_lifecycle_scope_to_edges` in
+    // `scan_fs/mod.rs`, then emitted as `lifecycleScope` by
+    // `spdx/v3_relationships.rs`. No annotation needed.
     // C7 co-owned-by
     if let Some(ref v) = c.co_owned_by {
         push(out, "mikebom:co-owned-by", json!(v));

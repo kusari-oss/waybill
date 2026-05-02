@@ -102,7 +102,7 @@ pub fn annotate_component(
     annotator: &str,
     date: &str,
     c: &ResolvedComponent,
-    include_dev: bool,
+    _include_dev: bool,
     include_source_files: bool,
 ) -> Vec<SpdxAnnotation> {
     use serde_json::json;
@@ -141,12 +141,16 @@ pub fn annotate_component(
     if let Some(ref v) = c.sbom_tier {
         push(&mut out, "mikebom:sbom-tier", json!(v));
     }
-    // C6 dev-dependency — same gate as CDX: only when include_dev
-    // AND the component is dev-flagged. (Relationship direction is
-    // also handled by B2's DEV_DEPENDENCY_OF edge in relationships.rs.)
-    if include_dev && mikebom_common::resolution::lifecycle_scope_is_legacy_dev(&c.lifecycle_scope) {
-        push(&mut out, "mikebom:dev-dependency", json!("true"));
-    }
+    // C6 (milestone 052/part-2): the legacy `mikebom:dev-dependency`
+    // annotation is REMOVED. Per Constitution Principle V (v1.4.0),
+    // SPDX 2.3 has dedicated native relationship types
+    // (`DEV_DEPENDENCY_OF` / `BUILD_DEPENDENCY_OF` /
+    // `TEST_DEPENDENCY_OF`) that carry the lifecycle-scope signal
+    // directly. The signal travels via
+    // `mikebom_common::resolution::RelationshipType::{Dev,Build,Test}DependsOn`
+    // edges set by `apply_lifecycle_scope_to_edges` in
+    // `scan_fs/mod.rs`, then mapped to native SPDX relationship
+    // types by `spdx/relationships.rs`. No annotation needed.
     // C7 co-owned-by
     if let Some(ref v) = c.co_owned_by {
         push(&mut out, "mikebom:co-owned-by", json!(v));
