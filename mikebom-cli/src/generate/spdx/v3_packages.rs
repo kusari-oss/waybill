@@ -73,6 +73,24 @@ pub fn build_packages(
         }
         pkg.insert("software_packageUrl".to_string(), json!(purl_str));
 
+        // Milestone 053 FR-001a (SPDX 3.0.1): components carrying
+        // `mikebom:component-role: main-module` (catalog row C40) are
+        // the workspace's main-module — set the native SPDX 3.0.1
+        // `software_primaryPurpose: "application"` field per the
+        // schema's `prop_software_SoftwareArtifact_software_primaryPurpose`
+        // definition. All other components leave it absent so existing
+        // goldens stay byte-identical.
+        if c.extra_annotations
+            .get("mikebom:component-role")
+            .and_then(|v| v.as_str())
+            == Some("main-module")
+        {
+            pkg.insert(
+                "software_primaryPurpose".to_string(),
+                json!("application"),
+            );
+        }
+
         // verifiedUsing[] — Hash value-objects, one per integrity
         // checksum mikebom computed. SPDX 3's algorithm enum uses
         // lowercase-with-no-hyphen form (`sha256`, `sha1`, `md5`).

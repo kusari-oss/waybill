@@ -96,6 +96,27 @@ fn walk_cdx_components(doc: &serde_json::Value) -> Vec<&serde_json::Value> {
     }
     let mut out = Vec::new();
     recur(doc, &mut out);
+    // Milestone 053: also include `metadata.component` when it's the
+    // Go main-module (carries `mikebom:component-role: main-module`).
+    // Same rationale as `tests/spdx3_cdx_parity.rs` and the
+    // milestone-053 parity-extractor walk.
+    if let Some(metadata_component) = doc.get("metadata").and_then(|m| m.get("component")) {
+        let is_main_module = metadata_component
+            .get("properties")
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter().any(|p| {
+                    p.get("name").and_then(|v| v.as_str())
+                        == Some("mikebom:component-role")
+                        && p.get("value").and_then(|v| v.as_str())
+                            == Some("main-module")
+                })
+            })
+            .unwrap_or(false);
+        if is_main_module {
+            out.push(metadata_component);
+        }
+    }
     out
 }
 

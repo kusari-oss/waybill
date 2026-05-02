@@ -54,32 +54,71 @@
   },
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-UIN3FMWXHYU2WCOQ"
+    "SPDXRef-Package-4BC3TYO5L6QI7GXM"
   ],
-  "documentNamespace": "https://mikebom.kusari.dev/spdx/YJJ6EON27MUF5EFW3ND4DBKUWAVWSX4Y",
+  "documentNamespace": "https://mikebom.kusari.dev/spdx/3QAHEPWH4UJCAY4VZWMHR4G6VYNGYSTH",
   "name": "simple-module",
   "packages": [
     {
-      "SPDXID": "SPDXRef-DocumentRoot-UIN3FMWXHYU2WCOQ",
+      "SPDXID": "SPDXRef-Package-4BC3TYO5L6QI7GXM",
+      "annotations": [
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.9",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.9",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:detected-go\",\"value\":\"true\"}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.9",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/go/simple-module/go.mod\"]}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.9",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:example.com\\\\/simple:example.com\\\\/simple:v0.0.0-unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:example.com:example.com\\\\/simple:v0.0.0-unknown:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.9",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.9",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-role\",\"value\":\"main-module\"}"
+        }
+      ],
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:generic/simple-module@0.0.0",
+          "referenceLocator": "pkg:golang/example.com/simple@v0.0.0-unknown",
           "referenceType": "purl"
         },
         {
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:mikebom:simple-module:0.0.0:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:example.com\\/simple:example.com\\/simple:v0.0.0-unknown:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
-      "name": "simple-module",
-      "supplier": "Organization: mikebom contributors",
-      "versionInfo": "0.0.0"
+      "name": "example.com/simple",
+      "primaryPackagePurpose": "APPLICATION",
+      "supplier": "Organization: example.com",
+      "versionInfo": "v0.0.0-unknown"
     },
     {
       "SPDXID": "SPDXRef-Package-ZPQ6ND5QEI5V2QHC",
@@ -652,9 +691,59 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-UIN3FMWXHYU2WCOQ",
+      "relatedSpdxElement": "SPDXRef-Package-4BC3TYO5L6QI7GXM",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-UADJIBC3AU5U4VJC",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JBX4TYZ3HEXJNFYD",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZGOZVHQZC2RMR6GZ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-FQD3O6TFIGWWRCL5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-A3EJRWNXRJBCN4AR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZPQ6ND5QEI5V2QHC",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-DJ3ZIKWTNBYO26BT",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-6LPOVXNHYYPHFH7J",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JOU7AJL2C6XXTUFK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-XXDQJPHRGTN4ALYD",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
     }
   ],
   "spdxVersion": "SPDX-2.3"

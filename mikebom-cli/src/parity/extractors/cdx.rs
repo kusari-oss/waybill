@@ -14,7 +14,10 @@ use std::collections::BTreeSet;
 
 use serde_json::Value;
 
-use super::common::{canonicalize_atomic_values, walk_cdx_components};
+use super::common::{
+    canonicalize_atomic_values, walk_cdx_components,
+    walk_cdx_components_and_main_module,
+};
 
 // ============================================================
 // CDX-side property-name extractor — reused by the C-section
@@ -36,7 +39,16 @@ fn cdx_property_values(
             .into_iter()
             .collect()
     } else {
-        walk_cdx_components(doc)
+        // Milestone 053 FR-004 + C18 + C40: include
+        // `metadata.component`'s properties[] when the metadata-
+        // component is the Go main-module (per FR-001a). The main-
+        // module carries C40 (`mikebom:component-role`), C18
+        // (`mikebom:source-files`), and `mikebom:sbom-tier`
+        // promoted to metadata.component-level properties; without
+        // walking metadata.component the parity-extractor
+        // SymmetricEqual checks diverge from the SPDX side, where
+        // the main-module is a regular `packages[]` entry.
+        walk_cdx_components_and_main_module(doc)
             .into_iter()
             .filter_map(|c| c.get("properties"))
             .collect()
@@ -84,21 +96,25 @@ macro_rules! cdx_anno {
 // ============================================================
 
 pub(super) fn cdx_purl(doc: &Value) -> BTreeSet<String> {
-    walk_cdx_components(doc)
+    // Milestone 053: include metadata.component when it's the Go
+    // main-module (FR-001a). The main-module's PURL round-trips
+    // identically to a regular components[] entry's, so SymmetricEqual
+    // parity holds.
+    walk_cdx_components_and_main_module(doc)
         .iter()
         .filter_map(|c| c.get("purl").and_then(|v| v.as_str()).map(String::from))
         .collect()
 }
 
 pub(super) fn cdx_name(doc: &Value) -> BTreeSet<String> {
-    walk_cdx_components(doc)
+    walk_cdx_components_and_main_module(doc)
         .iter()
         .filter_map(|c| c.get("name").and_then(|v| v.as_str()).map(String::from))
         .collect()
 }
 
 pub(super) fn cdx_version(doc: &Value) -> BTreeSet<String> {
-    walk_cdx_components(doc)
+    walk_cdx_components_and_main_module(doc)
         .iter()
         .filter_map(|c| c.get("version").and_then(|v| v.as_str()).map(String::from))
         .collect()
@@ -150,7 +166,7 @@ pub(super) fn cdx_distribution(doc: &Value) -> BTreeSet<String> {
 }
 
 pub(super) fn cdx_cpe(doc: &Value) -> BTreeSet<String> {
-    walk_cdx_components(doc)
+    walk_cdx_components_and_main_module(doc)
         .iter()
         .filter_map(|c| c.get("cpe").and_then(|v| v.as_str()).map(String::from))
         .collect()
@@ -207,7 +223,7 @@ pub(super) fn cdx_licenses_concluded(doc: &Value) -> BTreeSet<String> {
 }
 
 pub(super) fn cdx_supplier(doc: &Value) -> BTreeSet<String> {
-    walk_cdx_components(doc)
+    walk_cdx_components_and_main_module(doc)
         .iter()
         .filter_map(|c| {
             c.get("supplier")
@@ -235,10 +251,12 @@ pub(super) fn cdx_supplier(doc: &Value) -> BTreeSet<String> {
 /// remains a source-side filter to match how the SPDX side
 /// extractors classify edges.
 fn cdx_dependency_edges(doc: &Value, dev_only: bool) -> BTreeSet<String> {
-    // Build bom-ref → component lookup.
+    // Build bom-ref → component lookup. Milestone 053: include
+    // metadata.component-when-main-module so its outgoing
+    // `dependencies[].ref` lookups resolve.
     let mut comp_by_bomref: std::collections::BTreeMap<String, &Value> =
         std::collections::BTreeMap::new();
-    for c in walk_cdx_components(doc) {
+    for c in walk_cdx_components_and_main_module(doc) {
         if let Some(bref) = c.get("bom-ref").and_then(|v| v.as_str()) {
             comp_by_bomref.insert(bref.to_string(), c);
         }

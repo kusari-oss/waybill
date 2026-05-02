@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-05-01
+Auto-generated from all feature plans. Last updated: 2026-05-02
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -31,6 +31,8 @@ Auto-generated from all feature plans. Last updated: 2026-05-01
 - Rust stable (workspace toolchain inherited). + existing only — `serde`, `serde_json`, (047-scope-self-description)
 - Rust stable. + existing only — `std::path`, (048-component-role)
 - Rust stable. + existing only — `std::collections`, (049-go-source-scope)
+- Rust stable (workspace toolchain inherited from milestones 001–052; no nightly). + Existing only — `serde`/`serde_json`, `tracing`, `anyhow`, `tempfile`. **No new crates.** The version-resolution ladder shells out to `git describe`; `git` is already an implicit project assumption (workspace itself is a git repo, CI uses git). (053-go-main-module-edges)
+- N/A — all state in-process per scan; no persistence. (053-go-main-module-edges)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -93,6 +95,7 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 053-go-main-module-edges: Added Rust stable (workspace toolchain inherited from milestones 001–052; no nightly). + Existing only — `serde`/`serde_json`, `tracing`, `anyhow`, `tempfile`. **No new crates.** The version-resolution ladder shells out to `git describe`; `git` is already an implicit project assumption (workspace itself is a git repo, CI uses git).
 - 049-go-source-scope: Added Rust stable. + existing only — `std::collections`,
 - 048-component-role: Added Rust stable. + existing only — `std::path`,
 

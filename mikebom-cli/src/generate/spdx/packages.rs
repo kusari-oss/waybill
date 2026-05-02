@@ -117,6 +117,53 @@ pub enum SpdxExternalRefCategory {
     Other,
 }
 
+/// SPDX 2.3 §7.24 — Primary Package Purpose.
+///
+/// Milestone 053 only constructs `Application` (set on the Go
+/// main-module per FR-001a). Other variants exist for future
+/// per-ecosystem main-modules (issue #104) and for any other case
+/// where the primary-purpose distinction adds signal. The full
+/// 12-value enum is included so downstream code matches exhaustively
+/// against SPDX 2.3 spec §7.24.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+pub enum SpdxPrimaryPackagePurpose {
+    #[serde(rename = "APPLICATION")]
+    Application,
+    #[serde(rename = "FRAMEWORK")]
+    #[allow(dead_code)]
+    Framework,
+    #[serde(rename = "LIBRARY")]
+    #[allow(dead_code)]
+    Library,
+    #[serde(rename = "CONTAINER")]
+    #[allow(dead_code)]
+    Container,
+    #[serde(rename = "OPERATING-SYSTEM")]
+    #[allow(dead_code)]
+    OperatingSystem,
+    #[serde(rename = "DEVICE")]
+    #[allow(dead_code)]
+    Device,
+    #[serde(rename = "FIRMWARE")]
+    #[allow(dead_code)]
+    Firmware,
+    #[serde(rename = "SOURCE")]
+    #[allow(dead_code)]
+    Source,
+    #[serde(rename = "ARCHIVE")]
+    #[allow(dead_code)]
+    Archive,
+    #[serde(rename = "FILE")]
+    #[allow(dead_code)]
+    File,
+    #[serde(rename = "INSTALL")]
+    #[allow(dead_code)]
+    Install,
+    #[serde(rename = "OTHER")]
+    #[allow(dead_code)]
+    Other,
+}
+
 /// SPDX 2.3 Package (spec §7).
 ///
 /// Field ordering follows the spec's §7.x section numbering so the
@@ -148,6 +195,15 @@ pub struct SpdxPackage {
     pub external_refs: Vec<SpdxExternalRef>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub annotations: Vec<SpdxAnnotation>,
+    /// SPDX 2.3 §7.24 — primary purpose of this package. Milestone
+    /// 053 sets this to `Application` on the Go main-module per
+    /// FR-001a; all other packages leave it as `None` so existing
+    /// goldens stay byte-identical.
+    #[serde(
+        rename = "primaryPackagePurpose",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub primary_package_purpose: Option<SpdxPrimaryPackagePurpose>,
 }
 
 /// Reduce a `Vec<SpdxExpression>` to an SPDX license field plus
@@ -343,6 +399,19 @@ fn component_to_package(
 
     let (license_declared, decl_extracted) = reduce_license_vec(&c.licenses);
     let (license_concluded, conc_extracted) = reduce_license_vec(&c.concluded_licenses);
+
+    // Milestone 053 FR-001a (SPDX 2.3 placement): components carrying
+    // `mikebom:component-role: main-module` (catalog row C40) are the
+    // workspace's main-module — set the native SPDX 2.3 §7.24
+    // `primaryPackagePurpose: APPLICATION` field. All other components
+    // leave the field as None so existing goldens stay byte-identical.
+    let primary_package_purpose = c
+        .extra_annotations
+        .get("mikebom:component-role")
+        .and_then(|v| v.as_str())
+        .filter(|s| *s == "main-module")
+        .map(|_| SpdxPrimaryPackagePurpose::Application);
+
     let pkg = SpdxPackage {
         spdx_id,
         name: c.name.clone(),
@@ -357,6 +426,7 @@ fn component_to_package(
         copyright_text: None,
         external_refs,
         annotations,
+        primary_package_purpose,
     };
     (pkg, decl_extracted, conc_extracted)
 }

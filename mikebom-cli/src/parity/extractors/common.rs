@@ -241,6 +241,42 @@ pub fn walk_cdx_components(doc: &Value) -> Vec<&Value> {
     out
 }
 
+/// Like `walk_cdx_components` but additionally includes
+/// `metadata.component` when it carries
+/// `mikebom:component-role: main-module` (milestone 053 — the Go
+/// workspace's main-module per FR-001a). Used by `mikebom:*`
+/// property extractors (C18 source-files, C40 component-role,
+/// sbom-tier, etc.) that need to see all components carrying the
+/// property regardless of where they live in the BOM tree.
+///
+/// Section A extractors (purl, name, version, supplier, cpe) MUST
+/// NOT use this — those fields on `metadata.component` are
+/// synthesized in a CDX-specific shape (e.g., `cpe:2.3:a:mikebom:…`
+/// for the synthetic placeholder; `cpe:2.3:a:<name>:<name>:…` for
+/// the main-module's promoted entry) and don't round-trip to the
+/// SPDX side identically.
+pub fn walk_cdx_components_and_main_module(doc: &Value) -> Vec<&Value> {
+    let mut out = walk_cdx_components(doc);
+    if let Some(metadata_component) = doc.get("metadata").and_then(|m| m.get("component")) {
+        let has_main_module_tag = metadata_component
+            .get("properties")
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter().any(|p| {
+                    p.get("name").and_then(|v| v.as_str())
+                        == Some("mikebom:component-role")
+                        && p.get("value").and_then(|v| v.as_str())
+                            == Some("main-module")
+                })
+            })
+            .unwrap_or(false);
+        if has_main_module_tag {
+            out.push(metadata_component);
+        }
+    }
+    out
+}
+
 /// Iterate SPDX 2.3 `packages[]`, skipping the synthetic root
 /// (SPDXID begins with `SPDXRef-DocumentRoot-`).
 pub fn walk_spdx23_packages(doc: &Value) -> Vec<&Value> {

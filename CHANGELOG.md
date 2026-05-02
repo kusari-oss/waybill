@@ -7,6 +7,64 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Changed (BREAKING — Go SBOM shape, milestone 053)
+
+- **Go source-tree scans now emit a synthetic main-module component**
+  representing the workspace root, with direct `dependsOn` edges to
+  every `require` in the project's `go.mod`. Closes issue #102: a
+  fresh-clone Go scan with empty GOMODCACHE, which pre-053 produced
+  an SBOM with **zero `DEPENDS_ON` edges**, now produces ≥ N edges
+  where N is the count of direct requires in `go.mod`. Matches
+  trivy + syft's pattern.
+
+  - **Native-field placement** per Constitution Principle V (v1.4.0):
+    - **CycloneDX 1.6**: the main-module is the `metadata.component`
+      with `type: "application"`, NOT a sibling in `components[]`.
+      Edges from the main-module to direct requires use
+      `dependencies[]` keyed by `metadata.component.bom-ref`.
+    - **SPDX 2.3**: the main-module is a regular `packages[]` entry
+      with `primaryPackagePurpose: "APPLICATION"`. The document's
+      `documentDescribes` array and `SPDXRef-DOCUMENT DESCRIBES`
+      relationship target the main-module's SPDXID.
+    - **SPDX 3.0.1**: the main-module element carries
+      `software_primaryPurpose: "application"`.
+  - **Supplementary `mikebom:component-role: main-module`** (catalog
+    row C40) attached to all three formats as backwards-compat /
+    finer-grained signal layered on top of the native fields.
+  - **Version-resolution ladder** (FR-001): main-module's PURL
+    version comes from `git describe --tags --exact-match HEAD`,
+    falling back to `git describe --tags --always`, falling back to
+    the literal placeholder `v0.0.0-unknown` when not in a git
+    repo, when no tags reach HEAD, or when a shallow clone elided
+    all tags. Tarball-style sources (no `.git`) deterministically
+    produce the placeholder, preserving cross-host byte-identity
+    for goldens. Better than trivy + syft, which both use the raw
+    (typically empty) `go.mod` `module` directive version.
+  - **Indirect requires** (`// indirect` in `go.mod`) get root edges
+    too — deliberate divergence from Trivy's tagging approach;
+    simpler implementation that benefits the offline-scan case.
+  - **FR-009 BuildInfo dedup**: when both source-tree + binary
+    readers run, the source-tree main-module wins; binary BuildInfo's
+    redundant main-module emission is dropped.
+  - **FR-010 not-linked exclusion**: the main-module is never tagged
+    `mikebom:not-linked` (it's the linker root by definition).
+
+  **Migration**: SBOM consumers reading CDX `metadata.component.purl`
+  now get the real Go module identifier (`pkg:golang/<module>@<ver>`)
+  instead of the synthetic `pkg:generic/<target>@0.0.0` placeholder
+  for Go-only scans. Consumers reading the project's own component
+  in `components[]` need to look at `metadata.component` instead —
+  it's no longer duplicated. `documentDescribes` (SPDX) targets the
+  Go main-module's SPDXID instead of a `SPDXRef-DocumentRoot-*`
+  placeholder.
+
+  **Out of scope** (tracked in follow-up issues):
+  - LICENSE-file detection on the main-module (issue #103). Today
+    main-module emits empty `licenses`; the C40 role tag preserves
+    sbomqs licensing-coverage parity.
+  - Per-ecosystem main-modules for npm / cargo / maven / pip / gem
+    (issue #104). Today only Go gets a synthetic main-module.
+
 ### Changed (BREAKING — default SBOM scope, milestone 052/part-3)
 
 - **Default scan now emits ALL lifecycle scopes, not just Runtime**

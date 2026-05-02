@@ -418,3 +418,45 @@ in version X", read the CHANGELOG first — specifically the
 `[0.1.0-alpha.3]` entries for feature-006 (SBOMit compliance suite),
 the trace-mode reclassification, the artifact-vs-manifest scope gate,
 and the dual-identity Maven coord emission.
+
+## Go vs other ecosystems: the main-module asymmetry (milestone 053)
+
+Milestone 053 introduced a **synthetic main-module component** for Go
+workspace roots. Other ecosystems (cargo, npm, maven, pip, gem) do
+NOT get an equivalent component. The asymmetry is deliberate.
+
+**The Go-specific problem.** A `go.mod`'s `require` block is the only
+on-disk authoritative source of direct-dependency edges from the
+project to its immediate deps. Transitive edges live in each upstream
+module's own `go.mod` inside the local `GOMODCACHE`. On a fresh-clone
+repo with empty cache, mikebom had no `from` node for `require`-based
+direct edges — they were silently dropped (issue #102). The fix:
+emit a synthetic main-module component, attach the direct-require
+edges to it.
+
+**Why other ecosystems don't need this.** Their lockfiles encode
+edges directly between named packages: cargo's `[[package]]
+dependencies = [...]`, npm's `package-lock.json::packages`, maven's
+`<dependencies>`, pip / poetry lockfile sections, gem's
+`Gemfile.lock` GEM blocks. All resolve against components already in
+the scan WITHOUT needing a synthetic root component. The project's
+own root identity is captured in CDX `metadata.component` (synthetic
+placeholder) and SPDX `documentDescribes`.
+
+**Native-field placement (Principle V).** Per Constitution v1.4.0
+the Go main-module is emitted via each format's standards-native
+"BOM subject" construct — CDX `metadata.component` with `type:
+"application"` (NOT a sibling in `components[]`); SPDX 2.3
+`primaryPackagePurpose: "APPLICATION"` plus `documentDescribes`;
+SPDX 3.0.1 `software_primaryPurpose: "application"`. The
+`mikebom:component-role: main-module` (C40) annotation is
+supplementary signal layered on top. Matches Trivy's pattern.
+
+**Constraint to maintain.** When adding a new ecosystem reader, DO
+NOT add a synthetic main-module component without going through the
+same design pass milestone 053 did. The Go synthetic-root pattern is
+a Go-specific solution to a Go-specific edge-encoding problem; it is
+NOT a general "every ecosystem needs a project-itself component"
+template. Per-ecosystem main-modules for project-identification /
+vuln-intersection / sbomqs-uniformity reasons are tracked separately
+in issue #104; not in scope for milestone 053.

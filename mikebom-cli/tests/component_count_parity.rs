@@ -82,8 +82,12 @@ fn triple_scan(case: &EcosystemCase) -> Scan {
 }
 
 /// Count CDX components recursively — top-level + everything nested
-/// under `components[].components[]`. Matches the total set of
-/// `ResolvedComponent` entries the scan produced.
+/// under `components[].components[]`, plus `metadata.component` when
+/// it's a real component (the milestone-053 Go main-module per
+/// FR-001a, identified by carrying `mikebom:component-role:
+/// main-module` in its properties[]). Pre-053 the metadata.component
+/// was a synthetic placeholder that didn't represent a real
+/// `ResolvedComponent` and was excluded from the count.
 fn cdx_flattened_count(doc: &serde_json::Value) -> usize {
     fn recur(node: &serde_json::Value, n: &mut usize) {
         if let Some(arr) = node.get("components").and_then(|v| v.as_array()) {
@@ -95,6 +99,24 @@ fn cdx_flattened_count(doc: &serde_json::Value) -> usize {
     }
     let mut n = 0;
     recur(doc, &mut n);
+    if let Some(metadata_component) = doc.get("metadata").and_then(|m| m.get("component")) {
+        let is_main_module = metadata_component
+            .get("properties")
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter().any(|p| {
+                    p.get("name").and_then(|v| v.as_str())
+                        == Some("mikebom:component-role")
+                        && p.get("value").and_then(|v| v.as_str())
+                            == Some("main-module")
+                })
+            })
+            .unwrap_or(false);
+        if is_main_module {
+            n += 1;
+            recur(metadata_component, &mut n);
+        }
+    }
     n
 }
 

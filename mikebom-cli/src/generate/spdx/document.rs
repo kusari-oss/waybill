@@ -243,6 +243,12 @@ pub fn build_document(
         super::packages::build_packages(artifacts, &annotator, &date);
 
     // Root selection: deterministic single-root algorithm.
+    //   0. Milestone 053 FR-008 + US3: if exactly one top-level
+    //      component carries `mikebom:component-role: main-module`,
+    //      use it as the document root (the Go workspace's main-
+    //      module is the BOM subject by design). Multiple main-
+    //      modules (go.work monorepo) → synthesize a super-root that
+    //      DESCRIBES each one (case 3 fall-through with synthesis).
     //   1. If a top-level component (no parent_purl) carries a PURL
     //      whose name matches `artifacts.target_name`, use that.
     //   2. Else if exactly one top-level component exists, use it.
@@ -255,27 +261,53 @@ pub fn build_document(
         .map(|(i, _)| i)
         .collect();
 
-    let (root_id, synthetic_root) = match top_level.len() {
-        0 => {
-            let (id, root) = synthesize_root(artifacts.target_name, &namespace);
-            (id, Some(root))
-        }
-        1 => {
-            let idx = top_level[0];
-            let purl = &artifacts.components[idx].purl;
-            (SpdxId::for_purl(purl), None)
-        }
-        _ => {
-            // Prefer a top-level component whose name matches the
-            // scan target exactly. Otherwise synthesize.
-            if let Some(idx) = top_level.iter().find(|&&i| {
-                artifacts.components[i].name == artifacts.target_name
-            }) {
-                let purl = &artifacts.components[*idx].purl;
-                (SpdxId::for_purl(purl), None)
-            } else {
+    let main_module_indices: Vec<usize> = top_level
+        .iter()
+        .filter(|&&i| {
+            artifacts.components[i]
+                .extra_annotations
+                .get("mikebom:component-role")
+                .and_then(|v| v.as_str())
+                == Some("main-module")
+        })
+        .copied()
+        .collect();
+
+    let (root_id, synthetic_root) = if main_module_indices.len() == 1 {
+        // Case 0a: single Go main-module → use it as root.
+        let idx = main_module_indices[0];
+        let purl = &artifacts.components[idx].purl;
+        (SpdxId::for_purl(purl), None)
+    } else if main_module_indices.len() > 1 {
+        // Case 0b: multiple main-modules (go.work monorepo) →
+        // synthesize a super-root. The relationships builder will
+        // emit one DESCRIBES per main-module via the multi-DESCRIBES
+        // path documented in FR-008.
+        let (id, root) = synthesize_root(artifacts.target_name, &namespace);
+        (id, Some(root))
+    } else {
+        match top_level.len() {
+            0 => {
                 let (id, root) = synthesize_root(artifacts.target_name, &namespace);
                 (id, Some(root))
+            }
+            1 => {
+                let idx = top_level[0];
+                let purl = &artifacts.components[idx].purl;
+                (SpdxId::for_purl(purl), None)
+            }
+            _ => {
+                // Prefer a top-level component whose name matches the
+                // scan target exactly. Otherwise synthesize.
+                if let Some(idx) = top_level.iter().find(|&&i| {
+                    artifacts.components[i].name == artifacts.target_name
+                }) {
+                    let purl = &artifacts.components[*idx].purl;
+                    (SpdxId::for_purl(purl), None)
+                } else {
+                    let (id, root) = synthesize_root(artifacts.target_name, &namespace);
+                    (id, Some(root))
+                }
             }
         }
     };
@@ -420,6 +452,7 @@ fn synthesize_root(
             },
         ],
         annotations: Vec::new(),
+        primary_package_purpose: None,
     };
     (id, root)
 }

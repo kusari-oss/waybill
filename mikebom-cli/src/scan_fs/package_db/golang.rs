@@ -579,6 +579,216 @@ fn cache_lookup_depends(cache: &GoModCache, module: &str, version: &str) -> Vec<
         .collect()
 }
 
+/// Build the synthetic Go main-module `PackageDbEntry` for a workspace
+/// root, per milestone 053 FR-001 + FR-001a + FR-002 + FR-004 + FR-005
+/// + FR-006.
+///
+/// Returns `None` when the project's `go.mod` lacks a `module`
+/// directive (malformed source). Returns `Some(entry)` with:
+///
+/// - `purl`: `pkg:golang/<module-path>@<resolve_workspace_version()>`
+///   per FR-001 — the workspace's Go module path plus the
+///   git-describe-resolved version (or `v0.0.0-unknown` placeholder).
+/// - `name`: bare module path (e.g., `github.com/argoproj/argo-workflows`).
+/// - `depends`: every direct require declared in `go.mod` (including
+///   `// indirect`), after applying `replace`/`exclude` directives via
+///   the existing `apply_replace_and_exclude` helper. FR-002 +
+///   deliberate Trivy-divergence note for indirect requires.
+/// - `parent_purl: None` — top-level qualification for SPDX
+///   root-selection (case 1 / case 3 of `build_document::root_id`).
+/// - `sbom_tier: Some("source")` — go.mod is the authoritative source
+///   of direct requires (FR-006).
+/// - `extra_annotations`: `mikebom:component-role: "main-module"`
+///   per FR-004 (catalog row C40 supplementary signal layered on top
+///   of the native-field placement that `metadata.rs` /
+///   `packages.rs` will read).
+/// - `licenses`: empty per FR-005 (LICENSE-file detection deferred to
+///   issue #103).
+///
+/// `project_root` is used for the `git describe` ladder; `source_path`
+/// is the project's `go.mod` location used for evidence/provenance.
+pub(crate) fn build_main_module_entry(
+    doc: &GoModDocument,
+    project_root: &Path,
+    source_path: &str,
+) -> Option<PackageDbEntry> {
+    let module_path = doc.module_path.as_ref()?.clone();
+    let version = resolve_workspace_version(project_root);
+    let purl = build_golang_purl(&module_path, &version)?;
+
+    // Direct requires (including `// indirect`), post `replace`/`exclude`.
+    // Deliberate Trivy-divergence per spec Edge Cases: every go.mod-line
+    // require gets a root edge regardless of indirect status. Offline
+    // scans (issue #102 case) benefit from the simpler emission.
+    let depends: Vec<String> = doc
+        .requires
+        .iter()
+        .filter_map(|req| {
+            apply_replace_and_exclude(
+                &req.path,
+                &req.version,
+                &doc.replaces,
+                &doc.excludes,
+            )
+            .map(|(resolved_path, _)| resolved_path)
+        })
+        .collect();
+
+    let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
+        Default::default();
+    extra_annotations.insert(
+        "mikebom:component-role".to_string(),
+        serde_json::Value::String("main-module".to_string()),
+    );
+
+    Some(PackageDbEntry {
+        purl,
+        name: module_path,
+        version,
+        arch: None,
+        source_path: source_path.to_string(),
+        depends,
+        maintainer: None,
+        licenses: Vec::new(),
+        lifecycle_scope: None,
+        requirement_range: None,
+        source_type: None,
+        buildinfo_status: None,
+        evidence_kind: None,
+        binary_class: None,
+        binary_stripped: None,
+        linkage_kind: None,
+        detected_go: Some(true),
+        confidence: None,
+        binary_packed: None,
+        raw_version: None,
+        parent_purl: None,
+        npm_role: None,
+        co_owned_by: None,
+        hashes: Vec::new(),
+        sbom_tier: Some("source".to_string()),
+        shade_relocation: None,
+        extra_annotations,
+    })
+}
+
+/// Resolve the synthetic main-module version per milestone 053 FR-001's
+/// 3-step ladder:
+/// 1. `git describe --tags --exact-match HEAD` — clean tagged release
+///    (yields `v3.3.9` etc.)
+/// 2. `git describe --tags --always` — tag-with-commits-since
+///    (yields `v3.3.9-2-gabc1234`); also handles "no tags but commit
+///    SHA known" by emitting the abbreviated SHA alone.
+/// 3. The literal placeholder `v0.0.0-unknown` when not in a git repo,
+///    when no tags or commits are reachable, when `git` is missing
+///    from `$PATH`, or when the subprocess takes longer than the
+///    configured timeout.
+///
+/// Test fixtures use tarball-style sources (no `.git` dir) so step 3
+/// fires deterministically — preserves cross-host byte identity per
+/// SC-007.
+pub(crate) fn resolve_workspace_version(project_root: &Path) -> String {
+    const PLACEHOLDER: &str = "v0.0.0-unknown";
+    const TIMEOUT: std::time::Duration = std::time::Duration::from_secs(2);
+
+    // Skip the subprocess entirely when there's no `.git` directory at
+    // the workspace root — saves the spawn cost on every tarball-style
+    // fixture scan and avoids touching parent-directory `.git` (which
+    // would yield a tag from the *host repo* rather than the scanned
+    // project, a cross-host identity bug).
+    if !project_root.join(".git").exists() {
+        return PLACEHOLDER.to_string();
+    }
+
+    if let Some(v) = run_git_describe_with_timeout(
+        project_root,
+        &["describe", "--tags", "--exact-match", "HEAD"],
+        TIMEOUT,
+    ) {
+        return v;
+    }
+    if let Some(v) = run_git_describe_with_timeout(
+        project_root,
+        &["describe", "--tags", "--always"],
+        TIMEOUT,
+    ) {
+        return v;
+    }
+    PLACEHOLDER.to_string()
+}
+
+/// Spawn `git -C <project_root> <args...>` and return Some(trimmed
+/// stdout) on success, None on any failure (binary missing, non-zero
+/// exit, timeout, malformed output). Stderr is silenced; stderr output
+/// from `git describe` is normal and non-actionable for our flow.
+fn run_git_describe_with_timeout(
+    project_root: &Path,
+    args: &[&str],
+    timeout: std::time::Duration,
+) -> Option<String> {
+    use std::process::{Command, Stdio};
+    use std::sync::mpsc;
+    use std::thread;
+
+    let mut cmd = Command::new("git");
+    cmd.arg("-C")
+        .arg(project_root)
+        .args(args)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .stdin(Stdio::null());
+
+    let mut child = match cmd.spawn() {
+        Ok(c) => c,
+        Err(_) => return None,
+    };
+
+    // Take stdout BEFORE moving the child into the worker thread, so
+    // we can both read stdout (worker) and kill the child (main) if
+    // the timeout elapses.
+    let stdout = child.stdout.take()?;
+
+    let (tx, rx) = mpsc::channel();
+    thread::spawn(move || {
+        use std::io::Read as _;
+        let mut buf = Vec::with_capacity(64);
+        let mut handle = stdout;
+        let _ = handle.read_to_end(&mut buf);
+        let _ = tx.send(buf);
+    });
+
+    // Wait up to `timeout` for the worker to finish reading stdout. If
+    // it doesn't, kill the child and bail. Reading stdout is the
+    // bottleneck for `git describe` (the actual git op is fast); a
+    // hung subprocess shows up as a stalled stdout-read.
+    let output_bytes = match rx.recv_timeout(timeout) {
+        Ok(bytes) => bytes,
+        Err(_) => {
+            let _ = child.kill();
+            let _ = child.wait();
+            return None;
+        }
+    };
+
+    // Reap the child so it doesn't become a zombie. Brief secondary
+    // wait — the worker has already finished reading stdout so this
+    // returns immediately on healthy children; on slow exits we accept
+    // a tiny extra wait to clean up.
+    let status = match child.wait() {
+        Ok(s) => s,
+        Err(_) => return None,
+    };
+    if !status.success() {
+        return None;
+    }
+
+    let trimmed = String::from_utf8_lossy(&output_bytes).trim().to_string();
+    if trimmed.is_empty() {
+        return None;
+    }
+    Some(trimmed)
+}
+
 // ---------------------------------------------------------------------------
 // Public reader
 // ---------------------------------------------------------------------------
@@ -672,6 +882,7 @@ pub fn read(rootfs: &Path, _include_dev: bool) -> (Vec<PackageDbEntry>, GoScanSi
     // Second pass: emit entries AND walk .go files for production +
     // test-only imports.
     let mut test_imports: HashSet<String> = HashSet::new();
+    let mut main_module_emitted = 0usize;
     for (project_root, doc, sums) in &parsed_roots {
         let go_sum_path = project_root.join("go.sum");
         let source_path = go_sum_path.to_string_lossy().into_owned();
@@ -680,6 +891,25 @@ pub fn read(rootfs: &Path, _include_dev: bool) -> (Vec<PackageDbEntry>, GoScanSi
             let purl_key = entry.purl.as_str().to_string();
             if seen_purls.insert(purl_key) {
                 out.push(entry);
+            }
+        }
+
+        // Milestone 053 FR-001 + FR-002 + FR-004: emit a synthetic
+        // main-module entry for this workspace root, with direct-
+        // require edges to every go.mod-declared dependency. The
+        // existing edge-emission loop in `scan_fs/mod.rs:526-547`
+        // converts this entry's `depends` into `DependsOn`
+        // relationships against components already present in the
+        // scan, with dangling targets silently dropped.
+        let go_mod_path = project_root.join("go.mod");
+        let go_mod_source = go_mod_path.to_string_lossy().into_owned();
+        if let Some(main_entry) =
+            build_main_module_entry(doc, project_root, &go_mod_source)
+        {
+            let purl_key = main_entry.purl.as_str().to_string();
+            if seen_purls.insert(purl_key) {
+                out.push(main_entry);
+                main_module_emitted += 1;
             }
         }
         // Feature 007 US2 / Milestone 049: walk .go source files for
@@ -727,6 +957,7 @@ pub fn read(rootfs: &Path, _include_dev: bool) -> (Vec<PackageDbEntry>, GoScanSi
             production_imports = signals.production_imports.len(),
             test_only_imports = signals.test_only_imports.len(),
             main_modules = signals.main_modules.len(),
+            main_module_components_emitted = main_module_emitted,
             "parsed Go source tree",
         );
     }
@@ -1379,9 +1610,21 @@ replace github.com/old/lib v1.0.0 => github.com/new/lib v2.0.0
         std::fs::write(svc.join("go.sum"), "github.com/x/y v1.0.0 h1:ok=\n")
             .unwrap();
         let (entries, _) = read(dir.path(), false);
-        // Workspace root (`example.com/api`) is NOT emitted; only the
-        // transitive dep surfaces as a component.
-        assert!(!entries.iter().any(|e| e.name == "example.com/api"));
+        // Milestone 053: the workspace root IS now emitted as a
+        // synthetic main-module component (per FR-001), tagged with
+        // `mikebom:component-role: main-module`. Pre-053 the
+        // workspace root was suppressed entirely.
+        let main = entries
+            .iter()
+            .find(|e| e.name == "example.com/api")
+            .expect("milestone 053: workspace root must be emitted as main-module");
+        assert_eq!(
+            main.extra_annotations
+                .get("mikebom:component-role")
+                .and_then(|v| v.as_str()),
+            Some("main-module"),
+            "main-module entry must carry the C40 supplementary tag",
+        );
         assert!(entries.iter().any(|e| e.name == "github.com/x/y"));
     }
 
@@ -1539,4 +1782,232 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
         assert!(test_only.is_empty());
     }
 
+    // --- Milestone 053 FR-001: workspace version-resolution ladder ---------
+
+    #[test]
+    fn resolve_workspace_version_no_git_dir_returns_placeholder() {
+        // No `.git` → step 3 fires deterministically. Locks the
+        // tarball-style fixture invariant for SC-007 (cross-host byte
+        // identity).
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let v = resolve_workspace_version(tmp.path());
+        assert_eq!(v, "v0.0.0-unknown");
+    }
+
+    #[test]
+    fn resolve_workspace_version_git_repo_no_tags_falls_through_steps_to_sha() {
+        // Step 1 (--exact-match) fails (no tag at HEAD). Step 2
+        // (--always) succeeds and returns the abbreviated commit
+        // SHA. Verifies the ladder progresses past step 1.
+        let tmp = tempfile::tempdir().expect("tempdir");
+        // Initialize a git repo with one commit; no tags.
+        if !run_git_init_with_commit(tmp.path()) {
+            // Skip if `git` isn't available on $PATH (unusual in CI).
+            return;
+        }
+        let v = resolve_workspace_version(tmp.path());
+        assert_ne!(v, "v0.0.0-unknown", "step 2 (--always) should win");
+        // `--always` returns 7-char abbreviated SHA when no tag is
+        // reachable. Hex chars only, length-7 (default).
+        assert!(
+            v.len() == 7 && v.chars().all(|c| c.is_ascii_hexdigit()),
+            "expected 7-char abbreviated SHA, got: {v:?}",
+        );
+    }
+
+    #[test]
+    fn resolve_workspace_version_git_repo_with_exact_tag_returns_tag() {
+        // Step 1 succeeds when HEAD points at an annotated tag. The
+        // ladder MUST stop at step 1 (don't fall through to --always).
+        let tmp = tempfile::tempdir().expect("tempdir");
+        if !run_git_init_with_commit(tmp.path()) {
+            return;
+        }
+        if !run_git_tag(tmp.path(), "v0.5.0-test") {
+            return;
+        }
+        let v = resolve_workspace_version(tmp.path());
+        assert_eq!(v, "v0.5.0-test");
+    }
+
+    /// Run `git init && git commit --allow-empty -m initial`. Returns
+    /// false when `git` isn't on PATH (test should noop on those hosts
+    /// rather than fail). Configures author + committer locally so the
+    /// commit succeeds even when the test runner has no global git
+    /// identity. Helper for the ladder tests above.
+    fn run_git_init_with_commit(dir: &std::path::Path) -> bool {
+        use std::process::{Command, Stdio};
+        let init_ok = Command::new("git")
+            .arg("init")
+            .arg("--initial-branch=main")
+            .arg("-q")
+            .current_dir(dir)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false);
+        if !init_ok {
+            return false;
+        }
+        let _ = Command::new("git")
+            .args(["config", "user.email", "test@example.com"])
+            .current_dir(dir)
+            .status();
+        let _ = Command::new("git")
+            .args(["config", "user.name", "Test Runner"])
+            .current_dir(dir)
+            .status();
+        Command::new("git")
+            .args(["commit", "--allow-empty", "-q", "-m", "initial"])
+            .current_dir(dir)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false)
+    }
+
+    fn run_git_tag(dir: &std::path::Path, name: &str) -> bool {
+        use std::process::{Command, Stdio};
+        Command::new("git")
+            .args(["tag", name])
+            .current_dir(dir)
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false)
+    }
+
+    // --- Milestone 053 FR-001/FR-002/FR-004: build_main_module_entry ------
+
+    fn make_doc(src: &str) -> GoModDocument {
+        parse_go_mod(src)
+    }
+
+    #[test]
+    fn build_main_module_entry_three_requires_produces_three_depends() {
+        let doc = make_doc(
+            "module example.com/x\n\
+             go 1.22\n\
+             require (\n\
+                 a.example.com/r1 v1.0.0\n\
+                 b.example.com/r2 v2.0.0\n\
+                 c.example.com/r3 v3.0.0\n\
+             )\n",
+        );
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let entry = build_main_module_entry(&doc, tmp.path(), "/p/go.mod")
+            .expect("main-module entry constructed");
+        assert_eq!(entry.name, "example.com/x");
+        assert_eq!(entry.depends.len(), 3);
+        assert!(entry.depends.contains(&"a.example.com/r1".to_string()));
+        assert!(entry.depends.contains(&"b.example.com/r2".to_string()));
+        assert!(entry.depends.contains(&"c.example.com/r3".to_string()));
+    }
+
+    #[test]
+    fn build_main_module_entry_includes_indirect_requires() {
+        // Deliberate Trivy-divergence per spec Edge Cases: every
+        // go.mod-declared require gets a root edge, indirect or not.
+        let doc = make_doc(
+            "module example.com/x\n\
+             go 1.22\n\
+             require (\n\
+                 a.example.com/direct v1.0.0\n\
+                 b.example.com/indirect v2.0.0 // indirect\n\
+             )\n",
+        );
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let entry = build_main_module_entry(&doc, tmp.path(), "/p/go.mod")
+            .expect("main-module entry constructed");
+        assert_eq!(entry.depends.len(), 2);
+        assert!(entry.depends.contains(&"a.example.com/direct".to_string()));
+        assert!(entry
+            .depends
+            .contains(&"b.example.com/indirect".to_string()));
+    }
+
+    #[test]
+    fn build_main_module_entry_applies_replace_directive() {
+        let doc = make_doc(
+            "module example.com/x\n\
+             go 1.22\n\
+             require y.example.com/orig v1.0.0\n\
+             replace y.example.com/orig => z.example.com/replaced v1.0.0\n",
+        );
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let entry = build_main_module_entry(&doc, tmp.path(), "/p/go.mod")
+            .expect("main-module entry constructed");
+        assert_eq!(entry.depends.len(), 1);
+        assert!(
+            entry.depends.contains(&"z.example.com/replaced".to_string()),
+            "replace should rewrite the target: {:?}",
+            entry.depends
+        );
+    }
+
+    #[test]
+    fn build_main_module_entry_applies_exclude_directive() {
+        let doc = make_doc(
+            "module example.com/x\n\
+             go 1.22\n\
+             require z.example.com/dropme v1.0.0\n\
+             exclude z.example.com/dropme v1.0.0\n",
+        );
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let entry = build_main_module_entry(&doc, tmp.path(), "/p/go.mod")
+            .expect("main-module entry constructed");
+        assert!(
+            entry.depends.is_empty(),
+            "exclude should drop the require: {:?}",
+            entry.depends
+        );
+    }
+
+    #[test]
+    fn build_main_module_entry_zero_requires_emits_with_empty_depends() {
+        let doc = make_doc("module example.com/empty\ngo 1.22\n");
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let entry = build_main_module_entry(&doc, tmp.path(), "/p/go.mod")
+            .expect("main-module entry constructed");
+        assert_eq!(entry.name, "example.com/empty");
+        assert!(entry.depends.is_empty());
+    }
+
+    #[test]
+    fn build_main_module_entry_has_top_level_shape_and_supplementary_c40_tag() {
+        let doc = make_doc("module example.com/x\ngo 1.22\n");
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let entry = build_main_module_entry(&doc, tmp.path(), "/p/go.mod")
+            .expect("main-module entry constructed");
+        // FR-001a precondition: parent_purl=None so SPDX root-selection
+        // picks this as a top-level component.
+        assert!(entry.parent_purl.is_none());
+        // FR-006: source-tier (go.mod is the authoritative source).
+        assert_eq!(entry.sbom_tier.as_deref(), Some("source"));
+        // FR-005: empty licenses (LICENSE detection deferred to #103).
+        assert!(entry.licenses.is_empty());
+        // FR-004: supplementary C40 annotation present with value
+        // "main-module".
+        let role = entry
+            .extra_annotations
+            .get("mikebom:component-role")
+            .and_then(|v| v.as_str());
+        assert_eq!(role, Some("main-module"));
+        // PURL shape per FR-001 + tarball-style fixture (no .git) →
+        // step-3 placeholder version.
+        assert_eq!(
+            entry.purl.as_str(),
+            "pkg:golang/example.com/x@v0.0.0-unknown"
+        );
+    }
+
+    #[test]
+    fn build_main_module_entry_returns_none_on_missing_module_directive() {
+        let doc = make_doc("// just a comment, no module directive\n");
+        let tmp = tempfile::tempdir().expect("tempdir");
+        assert!(build_main_module_entry(&doc, tmp.path(), "/p/go.mod").is_none());
+    }
 }

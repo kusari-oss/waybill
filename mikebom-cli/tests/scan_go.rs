@@ -870,3 +870,386 @@ fn scan_go_non_go_project_does_not_emit_buildinfo_hint() {
          {stderr}",
     );
 }
+
+// ===========================================================================
+// Milestone 053 — Go main-module synthetic component (closes #102)
+// ===========================================================================
+
+/// Two-format scan helper used by the milestone-053 tests. Forces an
+/// isolated `HOME` + empty `GOMODCACHE` so the resulting SBOM has the
+/// "fresh-clone, no module cache" shape that issue #102 reproduces,
+/// regardless of the developer's local Go cache state. Returns
+/// `(spdx_2_3, cdx_1_6)` parsed JSON values.
+fn scan_isolated_two_format(
+    fixture_sub: &str,
+    extra: &[&str],
+) -> (serde_json::Value, serde_json::Value) {
+    let bin = env!("CARGO_BIN_EXE_mikebom");
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let spdx_path = tmp.path().join("out.spdx.json");
+    let cdx_path = tmp.path().join("out.cdx.json");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let empty_cache = tempfile::tempdir().expect("empty-cache tempdir");
+    let mut cmd = Command::new(bin);
+    cmd.env("HOME", fake_home.path())
+        .env("GOMODCACHE", empty_cache.path().join("empty"))
+        .arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(fixture(fixture_sub))
+        .arg("--format")
+        .arg("spdx-2.3-json,cyclonedx-json")
+        .arg("--output")
+        .arg(format!(
+            "spdx-2.3-json={}",
+            spdx_path.to_string_lossy()
+        ))
+        .arg("--output")
+        .arg(format!(
+            "cyclonedx-json={}",
+            cdx_path.to_string_lossy()
+        ))
+        .arg("--no-deep-hash");
+    for a in extra {
+        cmd.arg(a);
+    }
+    let output = cmd.output().expect("mikebom should run");
+    assert!(
+        output.status.success(),
+        "scan failed: stderr={}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let spdx_raw = std::fs::read_to_string(&spdx_path).expect("read spdx");
+    let cdx_raw = std::fs::read_to_string(&cdx_path).expect("read cdx");
+    (
+        serde_json::from_str(&spdx_raw).expect("valid spdx JSON"),
+        serde_json::from_str(&cdx_raw).expect("valid cdx JSON"),
+    )
+}
+
+/// Find the SPDX 2.3 main-module package — the one carrying
+/// `primaryPackagePurpose: "APPLICATION"`. Panics if zero or more
+/// than one is present (milestone 053 invariant: exactly one
+/// main-module per Go-only scan).
+fn spdx_main_module_package(spdx: &serde_json::Value) -> &serde_json::Value {
+    let candidates: Vec<&serde_json::Value> = spdx["packages"]
+        .as_array()
+        .expect("packages array")
+        .iter()
+        .filter(|p| {
+            p.get("primaryPackagePurpose")
+                .and_then(|v| v.as_str())
+                == Some("APPLICATION")
+        })
+        .collect();
+    assert_eq!(
+        candidates.len(),
+        1,
+        "expected exactly one APPLICATION-purpose package; found {}",
+        candidates.len()
+    );
+    candidates[0]
+}
+
+#[test]
+fn scan_go_emits_main_module_direct_edges_with_empty_cache() {
+    // US1 AS#1 + AS#4 + SC-001: 14 direct requires in the fixture's
+    // go.mod must produce ≥14 DEPENDS_ON edges originating from the
+    // main-module's SPDXID, with empty GOMODCACHE.
+    let (spdx, _cdx) = scan_isolated_two_format(
+        "argo-style-no-cache/argo-workflows",
+        &[],
+    );
+    let main = spdx_main_module_package(&spdx);
+    let main_id = main["SPDXID"].as_str().expect("SPDXID");
+    let depends_on_count = spdx["relationships"]
+        .as_array()
+        .expect("relationships array")
+        .iter()
+        .filter(|r| {
+            r["relationshipType"].as_str() == Some("DEPENDS_ON")
+                && r["spdxElementId"].as_str() == Some(main_id)
+        })
+        .count();
+    assert!(
+        depends_on_count >= 14,
+        "SC-001 violated: expected ≥14 DEPENDS_ON from main-module \
+         (one per direct require in fixture's go.mod). Got: {depends_on_count}",
+    );
+}
+
+#[test]
+fn scan_go_main_module_carries_primary_package_purpose_application() {
+    // US2 AS#2 + FR-001a (SPDX 2.3 placement) +
+    // FR-005 (empty licenses) + FR-006 (sbom-tier: source).
+    // documentDescribes-targeting (US3 AS#1) is verified separately
+    // by `scan_go_documentdescribes_targets_main_module`.
+    let (spdx, _cdx) = scan_isolated_two_format(
+        "argo-style-no-cache/argo-workflows",
+        &[],
+    );
+    let main = spdx_main_module_package(&spdx);
+    // FR-001 + FR-001a: main-module name = the project's go.mod
+    // module path.
+    assert_eq!(
+        main["name"].as_str(),
+        Some("github.com/argoproj/argo-workflows/v3"),
+    );
+    // FR-005: empty licenses (no LICENSE detection in milestone 053).
+    assert_eq!(main["licenseDeclared"].as_str(), Some("NOASSERTION"));
+    assert_eq!(main["licenseConcluded"].as_str(), Some("NOASSERTION"));
+    // FR-006: sbom-tier annotation = "source" via C40-style envelope.
+    let tier_value: Option<String> = main["annotations"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|a| {
+            let comment = a.get("comment")?.as_str()?;
+            let env: serde_json::Value = serde_json::from_str(comment).ok()?;
+            if env.get("schema")?.as_str() != Some("mikebom-annotation/v1") {
+                return None;
+            }
+            if env.get("field")?.as_str()? == "mikebom:sbom-tier" {
+                env.get("value")?.as_str().map(String::from)
+            } else {
+                None
+            }
+        })
+        .next();
+    assert_eq!(
+        tier_value.as_deref(),
+        Some("source"),
+        "FR-006: main-module must carry mikebom:sbom-tier = \"source\"",
+    );
+}
+
+#[test]
+fn scan_go_main_module_emits_c40_annotation_in_spdx() {
+    // US2 AS#3: SPDX 2.3 main-module package must carry the
+    // `mikebom-annotation/v1` envelope with `field:
+    // "mikebom:component-role"` and `value: "main-module"`.
+    let (spdx, _cdx) = scan_isolated_two_format(
+        "argo-style-no-cache/argo-workflows",
+        &[],
+    );
+    let main = spdx_main_module_package(&spdx);
+    let role_value: Option<String> = main["annotations"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|a| {
+            let comment = a.get("comment")?.as_str()?;
+            let env: serde_json::Value = serde_json::from_str(comment).ok()?;
+            if env.get("schema")?.as_str() != Some("mikebom-annotation/v1") {
+                return None;
+            }
+            if env.get("field")?.as_str()? == "mikebom:component-role" {
+                env.get("value")?.as_str().map(String::from)
+            } else {
+                None
+            }
+        })
+        .next();
+    assert_eq!(
+        role_value.as_deref(),
+        Some("main-module"),
+        "US2 AS#3: SPDX main-module must carry mikebom:component-role = \"main-module\"",
+    );
+}
+
+#[test]
+fn scan_go_main_module_in_cdx_metadata_component() {
+    // US2 AS#1 + FR-001a (CDX placement): metadata.component is the
+    // Go main-module; it does NOT also appear in components[].
+    // FR-005 (empty licenses) + FR-006 (sbom-tier: source) verified
+    // via the supplementary CDX properties on metadata.component.
+    let (_spdx, cdx) = scan_isolated_two_format(
+        "argo-style-no-cache/argo-workflows",
+        &[],
+    );
+    let mc = &cdx["metadata"]["component"];
+    assert_eq!(mc["type"].as_str(), Some("application"));
+    let purl = mc["purl"].as_str().expect("metadata.component.purl");
+    assert!(
+        purl.starts_with("pkg:golang/"),
+        "FR-001a: metadata.component.purl must be the Go main-module PURL; got {purl}",
+    );
+    // Main-module MUST NOT also appear in components[] — Principle V
+    // standards-native placement supersedes flat sibling emission.
+    let main_in_components = cdx["components"]
+        .as_array()
+        .expect("components array")
+        .iter()
+        .filter(|c| c["purl"].as_str() == Some(purl))
+        .count();
+    assert_eq!(
+        main_in_components, 0,
+        "FR-001a CDX: main-module must NOT be duplicated in components[]",
+    );
+    // metadata.component.bom-ref MUST equal the PURL so existing
+    // dependencies[].ref entries resolve to it.
+    assert_eq!(
+        mc["bom-ref"].as_str(),
+        Some(purl),
+        "metadata.component.bom-ref must equal its PURL for edge resolution",
+    );
+    // Supplementary properties on metadata.component carry the C40
+    // role tag + sbom-tier (FR-004 + FR-006).
+    let props: Vec<(String, String)> = mc["properties"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|p| {
+            let name = p["name"].as_str()?.to_string();
+            let value = p["value"].as_str()?.to_string();
+            Some((name, value))
+        })
+        .collect();
+    assert!(
+        props.iter().any(|(n, v)| n == "mikebom:component-role"
+            && v == "main-module"),
+        "US2 AS#1: metadata.component.properties must contain \
+         mikebom:component-role = main-module. got: {props:?}",
+    );
+    assert!(
+        props.iter().any(|(n, v)| n == "mikebom:sbom-tier" && v == "source"),
+        "FR-006: metadata.component.properties must contain \
+         mikebom:sbom-tier = source. got: {props:?}",
+    );
+    // FR-005: metadata.component MUST NOT carry a non-empty licenses
+    // array (LICENSE-file detection deferred to issue #103).
+    let licenses_len = mc.get("licenses").and_then(|v| v.as_array()).map(|a| a.len()).unwrap_or(0);
+    assert_eq!(
+        licenses_len, 0,
+        "FR-005: main-module licenses must be absent or empty",
+    );
+}
+
+#[test]
+fn scan_go_main_module_in_cdx_dependencies_emits_direct_edges() {
+    // US1 AS#1 + AS#4 + FR-002 (CDX side): the dependencies[] block
+    // must contain an entry whose `ref` equals
+    // metadata.component.bom-ref AND whose dependsOn lists every
+    // direct require from the fixture's go.mod (≥14).
+    let (_spdx, cdx) = scan_isolated_two_format(
+        "argo-style-no-cache/argo-workflows",
+        &[],
+    );
+    let main_ref = cdx["metadata"]["component"]["bom-ref"]
+        .as_str()
+        .expect("bom-ref");
+    let depends_count: usize = cdx["dependencies"]
+        .as_array()
+        .expect("dependencies array")
+        .iter()
+        .filter(|d| d["ref"].as_str() == Some(main_ref))
+        .filter_map(|d| d["dependsOn"].as_array().map(|a| a.len()))
+        .sum();
+    assert!(
+        depends_count >= 14,
+        "FR-002 CDX: expected ≥14 dependsOn edges from main-module \
+         metadata.component (one per direct require). got: {depends_count}",
+    );
+}
+
+#[test]
+fn scan_go_documentdescribes_targets_main_module() {
+    // US3 AS#1 + SC-005: Go-only scan's SPDX `documentDescribes[]`
+    // contains exactly the main-module's SPDXID (not a synthetic
+    // `SPDXRef-DocumentRoot-*` placeholder), and the
+    // `SPDXRef-DOCUMENT DESCRIBES <main-module-spdxid>` relationship
+    // is present in `relationships[]`.
+    let (spdx, _cdx) = scan_isolated_two_format(
+        "argo-style-no-cache/argo-workflows",
+        &[],
+    );
+    let main = spdx_main_module_package(&spdx);
+    let main_id = main["SPDXID"].as_str().expect("SPDXID");
+    let document_describes: Vec<&str> = spdx["documentDescribes"]
+        .as_array()
+        .expect("documentDescribes array")
+        .iter()
+        .filter_map(|v| v.as_str())
+        .collect();
+    assert_eq!(
+        document_describes,
+        vec![main_id],
+        "US3 AS#1 / SC-005: documentDescribes must be exactly [main-module-spdxid]; \
+         got {document_describes:?}",
+    );
+    // Also verify the corresponding relationship.
+    let describes_rel_present = spdx["relationships"]
+        .as_array()
+        .expect("relationships array")
+        .iter()
+        .any(|r| {
+            r["spdxElementId"].as_str() == Some("SPDXRef-DOCUMENT")
+                && r["relatedSpdxElement"].as_str() == Some(main_id)
+                && r["relationshipType"].as_str() == Some("DESCRIBES")
+        });
+    assert!(
+        describes_rel_present,
+        "US3 AS#1: SPDXRef-DOCUMENT DESCRIBES <main-module> relationship must be present",
+    );
+}
+
+#[test]
+fn scan_go_zero_requires_emits_main_module_no_edges() {
+    // US1 AS#3: a Go fixture with `module x\ngo 1.22\n` and no
+    // requires emits the main-module component but no DEPENDS_ON
+    // edges. Verifies the zero-require case is handled cleanly.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let project = tmp.path().join("project");
+    std::fs::create_dir_all(&project).expect("mkdir");
+    std::fs::write(
+        project.join("go.mod"),
+        "module example.com/empty\ngo 1.22\n",
+    )
+    .expect("write go.mod");
+
+    let bin = env!("CARGO_BIN_EXE_mikebom");
+    let out_path = tmp.path().join("out.spdx.json");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let empty_cache = tempfile::tempdir().expect("empty-cache tempdir");
+    let output = Command::new(bin)
+        .env("HOME", fake_home.path())
+        .env("GOMODCACHE", empty_cache.path().join("empty"))
+        .arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(&project)
+        .arg("--format")
+        .arg("spdx-2.3-json")
+        .arg("--output")
+        .arg(format!("spdx-2.3-json={}", out_path.to_string_lossy()))
+        .arg("--no-deep-hash")
+        .output()
+        .expect("mikebom should run");
+    assert!(
+        output.status.success(),
+        "scan failed: stderr={}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+    let spdx: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&out_path).expect("read"))
+            .expect("valid JSON");
+    let main = spdx_main_module_package(&spdx);
+    assert_eq!(main["name"].as_str(), Some("example.com/empty"));
+    let main_id = main["SPDXID"].as_str().expect("SPDXID");
+    let depends_on_count = spdx["relationships"]
+        .as_array()
+        .expect("relationships array")
+        .iter()
+        .filter(|r| {
+            r["relationshipType"].as_str() == Some("DEPENDS_ON")
+                && r["spdxElementId"].as_str() == Some(main_id)
+        })
+        .count();
+    assert_eq!(
+        depends_on_count, 0,
+        "US1 AS#3: zero-require go.mod must produce zero DEPENDS_ON \
+         edges from main-module. got: {depends_on_count}",
+    );
+}

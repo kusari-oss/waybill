@@ -111,17 +111,37 @@ pub fn build_metadata(
     // one on application components, but the synthetic purl is cheap
     // and unambiguous (the scan-subject's identity is already the
     // `name@version` pair). Improves sbomqs's Structural score +2.0%.
-    // M3 — prefer the real Maven coord identified by the JAR walker
-    // (either target-name match or fat-jar heuristic) over the
-    // generic `pkg:generic/<target>@0.0.0` placeholder. When the
-    // scan subject is a fat JAR, its embedded pom.properties
-    // carries an authoritative PURL that's far more useful to
-    // downstream consumers (maps to Maven Central advisories, etc).
-    // Generic placeholder survives when no Maven subject was found
-    // (non-Java target, or plain-JAR layout without embedded
-    // metadata).
+    //
+    // Priority ladder for the metadata.component subject (most-
+    // precise wins):
+    //   1. Milestone 053: a Go main-module component is present (any
+    //      ResolvedComponent carrying `mikebom:component-role:
+    //      "main-module"` in its extra annotations) — use its real
+    //      `pkg:golang/<module>@<version>` PURL. Per FR-001a this is
+    //      the standards-native CDX placement (Trivy's pattern).
+    //   2. M3 — Maven scan-target-coord identified by the JAR walker
+    //      (either target-name match or fat-jar heuristic): use the
+    //      `pkg:maven/<g>/<a>@<v>` coord — far more useful than the
+    //      generic placeholder for Maven Central advisory mapping.
+    //   3. Default — `pkg:generic/<target>@<version>` placeholder for
+    //      non-Go-non-Maven scan subjects.
+    let go_main_module: Option<&ResolvedComponent> = components
+        .iter()
+        .find(|c| {
+            c.extra_annotations
+                .get("mikebom:component-role")
+                .and_then(|v| v.as_str())
+                == Some("main-module")
+        });
+
     let (subject_name, subject_version, synthetic_component_purl) =
-        if let Some(coord) = scan_target_coord {
+        if let Some(c) = go_main_module {
+            (
+                c.name.clone(),
+                c.version.clone(),
+                c.purl.as_str().to_string(),
+            )
+        } else if let Some(coord) = scan_target_coord {
             let purl = format!(
                 "pkg:maven/{}/{}@{}",
                 encode_purl_segment(&coord.group),
@@ -138,16 +158,40 @@ pub fn build_metadata(
             (target_name.to_string(), target_version.to_string(), purl)
         };
 
-    // Synthesize a minimal valid CPE 2.3 for the scan subject. Uses
-    // mikebom as the vendor (we're the SBOM producer). Name and
-    // version segments are CPE-sanitized (lowercase, non-alphanumerics
-    // → underscore). sbomqs's schema validator runs CPE validation on
-    // metadata.component and flags empty/absent fields as invalid.
-    let synthetic_component_cpe = format!(
-        "cpe:2.3:a:mikebom:{}:{}:*:*:*:*:*:*:*",
-        cpe_sanitize(&subject_name),
-        cpe_sanitize(&subject_version),
-    );
+    // Synthesize a minimal valid CPE 2.3 for the scan subject.
+    //
+    // Milestone 053: when the metadata.component is the Go main-module,
+    // reuse its primary CPE from `c.cpes[0]` (synthesized in
+    // `scan_fs/mod.rs::synthesize_cpes` from the PURL using the same
+    // shape as every other component) so the BOM-subject CPE
+    // round-trips identically to the SPDX 2.3 / SPDX 3 emission.
+    // Pre-053 the metadata.component used a `cpe:2.3:a:mikebom:…`
+    // synthetic shape that diverged from the SPDX side; post-053 the
+    // shapes are identical for the main-module case.
+    //
+    // Uses mikebom as the vendor for the placeholder fallback. Name
+    // and version segments are CPE-sanitized (lowercase, non-
+    // alphanumerics → underscore). sbomqs's schema validator runs CPE
+    // validation on metadata.component and flags empty/absent fields
+    // as invalid.
+    let synthetic_component_cpe = if let Some(c) = go_main_module {
+        c.cpes
+            .first()
+            .cloned()
+            .unwrap_or_else(|| {
+                format!(
+                    "cpe:2.3:a:mikebom:{}:{}:*:*:*:*:*:*:*",
+                    cpe_sanitize(&subject_name),
+                    cpe_sanitize(&subject_version),
+                )
+            })
+    } else {
+        format!(
+            "cpe:2.3:a:mikebom:{}:{}:*:*:*:*:*:*:*",
+            cpe_sanitize(&subject_name),
+            cpe_sanitize(&subject_version),
+        )
+    };
 
     let mut metadata = json!({
         "timestamp": timestamp,
@@ -186,12 +230,73 @@ pub fn build_metadata(
             "type": "application",
             "name": subject_name,
             "version": subject_version,
-            "bom-ref": format!("{}@{}", subject_name, subject_version),
+            "bom-ref": if go_main_module.is_some() {
+                // Milestone 053: when the metadata.component is the
+                // Go main-module, its bom-ref MUST equal the PURL so
+                // existing `dependencies[].ref` entries (which key
+                // off the main-module's PURL via `scan_fs/mod.rs`'s
+                // edge-emission loop) resolve to it. The default
+                // `name@version` shape works for synthetic
+                // placeholders but breaks edge resolution for real
+                // components.
+                synthetic_component_purl.clone()
+            } else {
+                format!("{}@{}", subject_name, subject_version)
+            },
             "purl": synthetic_component_purl,
             "cpe": synthetic_component_cpe,
         },
         "properties": properties,
     });
+
+    // Milestone 053 FR-004: when the metadata.component is the Go
+    // main-module (per the ladder above), surface the supplementary
+    // `mikebom:component-role: main-module` C40 annotation as a
+    // metadata.component-level property so consumers reading either
+    // the native field (`type: "application"`) OR the supplementary
+    // tag identify the main-module. Also surface
+    // `mikebom:sbom-tier: "source"` per FR-006.
+    if let Some(c) = go_main_module {
+        let mut comp_props = vec![json!({
+            "name": "mikebom:component-role",
+            "value": "main-module",
+        })];
+        if let Some(tier) = c.sbom_tier.as_ref() {
+            comp_props.push(json!({
+                "name": "mikebom:sbom-tier",
+                "value": tier,
+            }));
+        }
+        // Propagate `mikebom:source-files` (C18) from the main-module's
+        // evidence so the parity-extractor framework finds the go.mod
+        // path on the CDX side, matching the SPDX `packages[]`
+        // emission.
+        if !c.evidence.source_file_paths.is_empty() {
+            comp_props.push(json!({
+                "name": "mikebom:source-files",
+                "value": c.evidence.source_file_paths.join(", "),
+            }));
+        }
+        // Propagate `mikebom:detected-go` (C14) — true for any Go
+        // workspace's main-module per build_main_module_entry's
+        // `detected_go: Some(true)`.
+        if c.detected_go.unwrap_or(false) {
+            comp_props.push(json!({
+                "name": "mikebom:detected-go",
+                "value": "true",
+            }));
+        }
+        metadata["component"]["properties"] = json!(comp_props);
+
+        // Propagate the supplier so the parity Section A `cdx_supplier`
+        // extractor matches the SPDX 2.3 `Package.supplier` derivation
+        // (both come from the PURL namespace via `supplier_from_purl`).
+        if let Some(supplier_name) = c.supplier.as_ref() {
+            metadata["component"]["supplier"] = json!({
+                "name": supplier_name,
+            });
+        }
+    }
 
     if !lifecycles.is_empty() {
         metadata["lifecycles"] = json!(lifecycles);

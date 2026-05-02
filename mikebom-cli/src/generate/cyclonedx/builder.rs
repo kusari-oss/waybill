@@ -136,11 +136,27 @@ impl CycloneDxBuilder {
         &self,
         components: &[ResolvedComponent],
     ) -> anyhow::Result<serde_json::Value> {
+        // Milestone 053 FR-001a: the Go main-module is emitted via
+        // CDX `metadata.component` per Constitution Principle V (native
+        // BOM-subject construct). Skip it here so it does NOT also
+        // appear as a sibling in the top-level `components[]` array —
+        // sibling-emission is the pre-053 pattern this milestone
+        // replaces. Edges from the main-module to direct requires
+        // continue to emit via `dependencies[]` because the existing
+        // edge-emission loop reads relationships keyed by the main-
+        // module's PURL, which `metadata.component.bom-ref` matches.
+        let is_go_main_module = |c: &ResolvedComponent| {
+            c.extra_annotations
+                .get("mikebom:component-role")
+                .and_then(|v| v.as_str())
+                == Some("main-module")
+        };
+
         // First pass: identify top-level PURLs so we can route children
         // that reference valid parents. Orphans fall back to top-level.
         let top_level_purls: std::collections::HashSet<String> = components
             .iter()
-            .filter(|c| c.parent_purl.is_none())
+            .filter(|c| c.parent_purl.is_none() && !is_go_main_module(c))
             .map(|c| c.purl.as_str().to_string())
             .collect();
 
@@ -159,6 +175,11 @@ impl CycloneDxBuilder {
         > = std::collections::BTreeMap::new();
 
         for component in components {
+            // Milestone 053: skip the Go main-module — it lives in
+            // `metadata.component`, not `components[]`.
+            if is_go_main_module(component) {
+                continue;
+            }
             // Decide this entry's bom-ref: plain PURL when top-level,
             // `<child>#<parent>` composite when the parent exists in
             // the top-level set. Orphans (declared parent not in the

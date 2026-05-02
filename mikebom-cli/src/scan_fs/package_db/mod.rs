@@ -441,6 +441,17 @@ fn apply_go_production_set_filter(
 /// touch source-tier entries. BuildInfo emits the main module as an
 /// analyzed-tier entry; the project-self filter must strip it
 /// regardless of tier.
+///
+/// Milestone 053 FR-009: when an entry carries
+/// `mikebom:component-role: main-module` in its `extra_annotations`,
+/// PRESERVE it — that's the new synthetic main-module component
+/// emitted by `golang::build_main_module_entry()` per FR-001a, and
+/// the SBOM is supposed to have it. The filter still drops every
+/// OTHER entry whose name matches a main module — typically the
+/// binary BuildInfo's emission of the same module path, which is
+/// now redundant given the source-tree synthetic entry. Dedup
+/// precedence: source-tree synthetic wins, binary-derived main-
+/// module is dropped silently (FR-009).
 fn apply_go_main_module_filter(
     entries: &mut Vec<PackageDbEntry>,
     main_modules: &std::collections::HashSet<String>,
@@ -453,14 +464,24 @@ fn apply_go_main_module_filter(
         if e.purl.ecosystem() != "golang" {
             return true;
         }
-        !main_modules.contains(&e.name)
+        if !main_modules.contains(&e.name) {
+            return true;
+        }
+        // Match for the project's own main module. Preserve only the
+        // synthetic main-module entry (carries the C40 role tag);
+        // drop binary BuildInfo's redundant emission and any other
+        // self-reference per FR-009 dedup.
+        e.extra_annotations
+            .get("mikebom:component-role")
+            .and_then(|v| v.as_str())
+            == Some("main-module")
     });
     let dropped = before.saturating_sub(entries.len());
     if dropped > 0 {
         tracing::info!(
             dropped,
             main_modules = main_modules.len(),
-            "G5 filter: dropped main-module self-references",
+            "G5 filter: dropped main-module self-references (preserving synthetic main-module entries per milestone 053 FR-009)",
         );
     }
 }
@@ -500,6 +521,19 @@ fn apply_go_linked_filter(entries: &mut [PackageDbEntry]) {
             continue;
         }
         if e.sbom_tier.as_deref() != Some("source") {
+            continue;
+        }
+        // Milestone 053 FR-010: the synthetic main-module component
+        // (carrying `mikebom:component-role: main-module`) is the
+        // linker root by definition, never a non-linked dep. Skip it
+        // unconditionally — the binary's BuildInfo doesn't list the
+        // main module among its `Deps[]`, so without this guard the
+        // not-linked filter would falsely tag the project itself.
+        if e.extra_annotations
+            .get("mikebom:component-role")
+            .and_then(|v| v.as_str())
+            == Some("main-module")
+        {
             continue;
         }
         if !linked.contains(&(e.name.clone(), e.version.clone())) {
@@ -1136,6 +1170,89 @@ Architecture: arm64
             entries.len(),
             before,
             "non-Go ecosystems must be unaffected by G3 filter",
+        );
+    }
+
+    // --- Milestone 053 FR-009 + FR-010 ------------------------------------
+
+    /// FR-009: when a source-tree main-module entry (carrying
+    /// `mikebom:component-role: "main-module"`) AND a binary-derived
+    /// main-module entry (same module path, no role tag) both exist,
+    /// the G5 filter MUST drop the binary-derived one and preserve
+    /// the synthetic source-tree entry.
+    #[test]
+    fn fr_009_g5_filter_preserves_synthetic_main_module_drops_binary_dup() {
+        let mut synthetic = make_entry(
+            "pkg:golang/example.com/proj@v1.2.3",
+            "example.com/proj",
+            "v1.2.3",
+            Some("source"),
+        );
+        synthetic.extra_annotations.insert(
+            "mikebom:component-role".to_string(),
+            serde_json::Value::String("main-module".to_string()),
+        );
+        // Binary BuildInfo's redundant emission of the same main module.
+        let binary_dup = make_entry(
+            "pkg:golang/example.com/proj@v0.0.0",
+            "example.com/proj",
+            "v0.0.0",
+            Some("analyzed"),
+        );
+        let mut entries = vec![synthetic, binary_dup];
+        let main_modules: std::collections::HashSet<String> =
+            std::iter::once("example.com/proj".to_string()).collect();
+        apply_go_main_module_filter(&mut entries, &main_modules);
+        assert_eq!(entries.len(), 1, "binary dup must be dropped");
+        assert_eq!(
+            entries[0]
+                .extra_annotations
+                .get("mikebom:component-role")
+                .and_then(|v| v.as_str()),
+            Some("main-module"),
+            "the synthetic main-module entry must survive",
+        );
+    }
+
+    /// FR-010: the synthetic main-module entry MUST NOT receive the
+    /// `mikebom:not-linked` annotation, even when a Go binary's
+    /// BuildInfo lists no main-module among its Deps[]. The project
+    /// itself is the linker root, never a non-linked dep.
+    #[test]
+    fn fr_010_g3_filter_excludes_synthetic_main_module_from_not_linked_eligibility() {
+        // Linker-confirmed analyzed-tier entry (something else, not
+        // the project's own main-module).
+        let analyzed = make_entry(
+            "pkg:golang/something/linked@v1.0.0",
+            "something/linked",
+            "v1.0.0",
+            Some("analyzed"),
+        );
+        let mut main_module = make_entry(
+            "pkg:golang/example.com/proj@v0.0.0-unknown",
+            "example.com/proj",
+            "v0.0.0-unknown",
+            Some("source"),
+        );
+        main_module.extra_annotations.insert(
+            "mikebom:component-role".to_string(),
+            serde_json::Value::String("main-module".to_string()),
+        );
+        let mut entries = vec![analyzed, main_module];
+        apply_go_linked_filter(&mut entries);
+        // The main-module is NOT in the analyzed/linked set (the
+        // binary's BuildInfo never lists itself), so without the
+        // FR-010 guard it would be tagged not-linked. Verify the
+        // guard skips it.
+        let mm = entries
+            .iter()
+            .find(|e| e.name == "example.com/proj")
+            .expect("main-module entry preserved");
+        assert!(
+            !mm.extra_annotations.contains_key("mikebom:not-linked"),
+            "FR-010 violated: main-module was incorrectly tagged \
+             mikebom:not-linked. extra_annotations = {:?}",
+            mm.extra_annotations,
         );
     }
 }
