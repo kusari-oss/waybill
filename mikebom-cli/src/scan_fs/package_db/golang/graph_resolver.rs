@@ -326,11 +326,12 @@ impl GraphResolver {
     ) -> Result<ModuleGraphMap, GraphResolverError> {
         let mut map = ModuleGraphMap::new();
 
-        // Step 1 — `go mod graph`. Wired in T033 (US2). For now this
-        // is a no-op; the cache walk + proxy fetch handle every module
-        // the spec's MVP scope cares about.
-        // TODO(T033): if !ctx.offline, call run_go_mod_graph and
-        // populate `map` with ResolutionStep::GoModGraph entries.
+        // Step 1 — `go mod graph`. Preferred when `go` is on PATH and
+        // `--offline` is not set: one subprocess gives the entire
+        // resolved DAG with MVS + replace + exclude already applied.
+        if !ctx.offline {
+            self.step1_go_mod_graph(&mut map, ctx);
+        }
 
         // Step 2 — `$GOMODCACHE` walk. Reuses the existing
         // milestone 053 `cache_lookup_depends` codepath via
@@ -377,6 +378,49 @@ impl GraphResolver {
     }
 
     // -- private step bodies ---------------------------------------
+
+    fn step1_go_mod_graph(&self, map: &mut ModuleGraphMap, ctx: &WorkspaceContext) {
+        use crate::scan_fs::package_db::golang::go_mod_graph::run_go_mod_graph;
+        // run_go_mod_graph internally probes `go version`; if `go` is
+        // not on PATH, returns Unavailable and we fall through silently.
+        match run_go_mod_graph(&ctx.root_dir, self.config.go_mod_graph_timeout) {
+            StepResult::Ok(parsed_map) => {
+                // The parsed map is keyed by parent ModuleId. The
+                // workspace's main-module entry has an empty version
+                // and represents a project we never want to add as a
+                // component (it's the workspace itself); skip it.
+                for (parent, children) in parsed_map {
+                    if parent.version().is_empty() {
+                        continue;
+                    }
+                    if !ctx.go_sum_modules.contains(&parent) {
+                        // Ignore parents not in our go.sum scope —
+                        // could be a workspace member from a `go.work`
+                        // file (out of scope) or stale `go mod graph`
+                        // output.
+                        continue;
+                    }
+                    if map.contains(&parent) {
+                        continue;
+                    }
+                    map.insert(ModuleGraphEntry {
+                        module: parent.clone(),
+                        requires: children,
+                        source: ResolutionStep::GoModGraph,
+                    });
+                    map.summary_mut().graph_count += 1;
+                }
+            }
+            StepResult::Unavailable => {}
+            StepResult::Failed(err) => {
+                tracing::warn!(
+                    error_class = err.class.as_str(),
+                    detail = err.detail,
+                    "`go mod graph` failed; falling through to cache walk + proxy fetch"
+                );
+            }
+        }
+    }
 
     fn step2_cache_walk(
         &self,
@@ -1135,6 +1179,120 @@ mod wiremock_integration {
             "SC-005: expected zero HTTP requests when offline=true, got {}",
             received.len()
         );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn step1_real_go_mod_graph_parity_simple_module() {
+        // T035: when `go` is available, mikebom's edge set against the
+        // simple-module fixture matches `go mod graph` (intersected
+        // with go.sum). Skips cleanly when `go` is not on PATH so CI
+        // runners without the toolchain stay green.
+        let go_present = std::process::Command::new("go")
+            .arg("version")
+            .output()
+            .ok()
+            .filter(|o| o.status.success())
+            .is_some();
+        if !go_present {
+            eprintln!("skipping T035: `go` not on PATH");
+            return;
+        }
+
+        // Run `go mod graph` against the simple-module fixture.
+        let mut fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        fixture.push("../tests/fixtures/go/simple-module");
+        let output = std::process::Command::new("go")
+            .args(["mod", "graph"])
+            .current_dir(&fixture)
+            .output()
+            .expect("go mod graph runs");
+        if !output.status.success() {
+            eprintln!(
+                "skipping T035: `go mod graph` exited non-zero ({}): {}",
+                output.status,
+                String::from_utf8_lossy(&output.stderr)
+            );
+            return;
+        }
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let go_graph = crate::scan_fs::package_db::golang::go_mod_graph::parse_go_mod_graph(
+            &stdout,
+        );
+
+        // Run mikebom's resolver against the same fixture (no `--offline`,
+        // so step 1 is allowed). MIKEBOM_OFFLINE may be set by other
+        // tests in the same binary — ensure it's cleared for this test.
+        std::env::remove_var("MIKEBOM_OFFLINE");
+        let go_mod_text = std::fs::read_to_string(fixture.join("go.mod")).unwrap();
+        let go_sum_text = std::fs::read_to_string(fixture.join("go.sum")).unwrap();
+        let doc = crate::scan_fs::package_db::golang::legacy::parse_go_mod(&go_mod_text);
+        let sums = crate::scan_fs::package_db::golang::legacy::parse_go_sum(&go_sum_text);
+        let ctx = WorkspaceContext::from_parts(fixture.clone(), &doc, &sums, false);
+        let cache = crate::scan_fs::package_db::golang::legacy::GoModCache::default();
+        let resolver = GraphResolver::new(GraphResolverConfig::default());
+        let map = tokio::task::spawn_blocking(move || resolver.resolve(&ctx, &cache).unwrap())
+            .await
+            .unwrap();
+
+        // Build the comparison sets. Both are intersected with go.sum
+        // and indexed by parent path. The MVS rewrite means edge target
+        // versions in mikebom's output match go.sum's; `go mod graph`
+        // emits the declared (pre-MVS) versions, so we compare on path.
+        let go_sum_paths: HashSet<&str> = sums
+            .iter()
+            .filter(|s| s.kind == GoSumKind::Module)
+            .map(|s| s.module.as_str())
+            .collect();
+
+        // Exclude main-module edges from the comparison: milestone 053
+        // emits those via `build_main_module_entry`, not via the
+        // resolver. The resolver's step 1 explicitly skips parents
+        // with empty version (the main-module sentinel) per the
+        // implementation.
+        // Also exclude parents that aren't `Module`-kind entries in
+        // `go.sum` — they're "Mod"-kind entries that contribute to MVS
+        // resolution but aren't installed as components, so the
+        // resolver has no parent to attach edges to.
+        let main_module_path = doc.module_path.as_deref().unwrap_or("");
+        let mut go_graph_edges: HashSet<(String, String)> = HashSet::new();
+        for (parent, children) in go_graph.iter() {
+            if parent.path() == main_module_path {
+                continue;
+            }
+            if !go_sum_paths.contains(parent.path()) {
+                continue;
+            }
+            let parent_path = parent.path().to_string();
+            for child in children {
+                if go_sum_paths.contains(child.path()) {
+                    go_graph_edges.insert((parent_path.clone(), child.path().to_string()));
+                }
+            }
+        }
+
+        let mikebom_edges: HashSet<(String, String)> = map
+            .iter()
+            .flat_map(|(parent, entry)| {
+                let parent_path = parent.path().to_string();
+                entry
+                    .requires
+                    .iter()
+                    .map(move |child| (parent_path.clone(), child.path().to_string()))
+            })
+            .collect();
+
+        // Mikebom may emit edges from go.sum modules that go mod graph
+        // doesn't list (e.g., a module's go.mod requires that didn't
+        // make MVS — go mod graph would prune them). The other
+        // direction is the meaningful check: every go-mod-graph edge
+        // between go.sum modules SHOULD appear in mikebom's output.
+        for edge in &go_graph_edges {
+            assert!(
+                mikebom_edges.contains(edge),
+                "SC-002: missing edge in mikebom output: {} → {}",
+                edge.0, edge.1
+            );
+        }
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
