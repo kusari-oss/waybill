@@ -25,6 +25,7 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
+use mikebom_common::types::license::SpdxExpression;
 use mikebom_common::types::purl::{encode_purl_segment, Purl};
 
 // `super` is now `golang/` (not `package_db/`) post-milestone-055 T008
@@ -626,6 +627,132 @@ fn cache_lookup_depends(cache: &GoModCache, module: &str, version: &str) -> Vec<
         .collect()
 }
 
+// ---------------------------------------------------------------------------
+// Milestone 057 — main-module LICENSE detection (Layer 1: SPDX header)
+// ---------------------------------------------------------------------------
+
+/// Candidate license-file basenames, in priority order. First file
+/// found whose first 4 KB contains a parseable
+/// `SPDX-License-Identifier:` header wins. Case-INsensitive match
+/// against directory entries.
+const LICENSE_FILE_CANDIDATES: &[&str] = &[
+    "LICENSE",
+    "LICENSE.md",
+    "LICENSE.txt",
+    "LICENCE",
+    "LICENCE.md",
+    "LICENCE.txt",
+    "COPYING",
+];
+
+/// Cap on bytes read from each candidate license file. Per spec FR-001
+/// — sufficient for the SPDX header (conventionally on the first line),
+/// bounded against runaway reads on stray text files masquerading as
+/// LICENSE.md.
+const LICENSE_READ_LIMIT: usize = 4 * 1024;
+
+/// SPDX header marker per <https://spdx.dev/specifications/>.
+const SPDX_HEADER_MARKER: &str = "SPDX-License-Identifier:";
+
+/// Layer-1 license detection: scan candidate LICENSE-style files at
+/// `workspace_root` for an `SPDX-License-Identifier:` header and
+/// return the canonicalized expression if found and parseable.
+///
+/// Returns an empty `Vec` when:
+/// - no candidate file exists in the workspace root
+/// - candidate files exist but contain no SPDX header in their first
+///   4 KB (Layer 2 territory; deferred to follow-up)
+/// - a SPDX header exists but fails to canonicalize (a `tracing::warn`
+///   line is emitted with the path + raw expression for operator
+///   visibility)
+///
+/// Never panics; never fails the scan. See
+/// `specs/057-go-license-detection/spec.md` FR-001 / FR-002 / FR-003.
+pub(crate) fn detect_main_module_license(workspace_root: &Path) -> Vec<SpdxExpression> {
+    let entries = match std::fs::read_dir(workspace_root) {
+        Ok(e) => e,
+        Err(_) => return Vec::new(),
+    };
+
+    let mut found: HashMap<&'static str, PathBuf> = HashMap::new();
+    for entry in entries.flatten() {
+        let name = entry.file_name();
+        let Some(name_str) = name.to_str() else { continue };
+        for candidate in LICENSE_FILE_CANDIDATES {
+            if name_str.eq_ignore_ascii_case(candidate) {
+                found.entry(candidate).or_insert_with(|| entry.path());
+                break;
+            }
+        }
+    }
+
+    for candidate in LICENSE_FILE_CANDIDATES {
+        let Some(path) = found.get(candidate) else {
+            continue;
+        };
+        if !path.is_file() {
+            continue;
+        }
+        let text = match read_first_kb(path, LICENSE_READ_LIMIT) {
+            Some(t) => t,
+            None => continue,
+        };
+        let raw = match extract_spdx_header(&text) {
+            Some(r) => r,
+            None => continue,
+        };
+        match SpdxExpression::try_canonical(raw) {
+            Ok(expr) => return vec![expr],
+            Err(e) => {
+                tracing::warn!(
+                    license_path = %path.display(),
+                    raw_expression = raw,
+                    error = %e,
+                    "main-module LICENSE file's SPDX-License-Identifier header failed to canonicalize",
+                );
+                return Vec::new();
+            }
+        }
+    }
+    Vec::new()
+}
+
+fn read_first_kb(path: &Path, limit: usize) -> Option<String> {
+    use std::io::Read;
+    let mut file = std::fs::File::open(path).ok()?;
+    let mut buf = vec![0u8; limit];
+    let n = file.read(&mut buf).ok()?;
+    buf.truncate(n);
+    let text = String::from_utf8_lossy(&buf).into_owned();
+    Some(strip_bom(text))
+}
+
+fn strip_bom(s: String) -> String {
+    if let Some(stripped) = s.strip_prefix('\u{feff}') {
+        stripped.to_string()
+    } else {
+        s
+    }
+}
+
+fn extract_spdx_header(text: &str) -> Option<&str> {
+    let idx = text.find(SPDX_HEADER_MARKER)?;
+    let after = &text[idx + SPDX_HEADER_MARKER.len()..];
+    let line_end = after.find(['\n', '\r']).unwrap_or(after.len());
+    let mut s = after[..line_end].trim();
+    if let Some(stripped) = s.strip_suffix("-->") {
+        s = stripped.trim();
+    }
+    if let Some(stripped) = s.strip_suffix("*/") {
+        s = stripped.trim();
+    }
+    if s.is_empty() {
+        None
+    } else {
+        Some(s)
+    }
+}
+
 /// Build the synthetic Go main-module `PackageDbEntry` for a workspace
 /// root, per milestone 053 FR-001 + FR-001a + FR-002 + FR-004 + FR-005
 /// + FR-006.
@@ -649,8 +776,9 @@ fn cache_lookup_depends(cache: &GoModCache, module: &str, version: &str) -> Vec<
 ///   per FR-004 (catalog row C40 supplementary signal layered on top
 ///   of the native-field placement that `metadata.rs` /
 ///   `packages.rs` will read).
-/// - `licenses`: empty per FR-005 (LICENSE-file detection deferred to
-///   issue #103).
+/// - `licenses`: populated by `detect_main_module_license` (milestone
+///   057, closes #103). See that function's doc for the Layer-1
+///   detection contract.
 ///
 /// `project_root` is used for the `git describe` ladder; `source_path`
 /// is the project's `go.mod` location used for evidence/provenance.
@@ -688,6 +816,14 @@ pub(crate) fn build_main_module_entry(
         serde_json::Value::String("main-module".to_string()),
     );
 
+    // Milestone 057 Layer 1: detect the project's own license from a
+    // LICENSE-style file at the workspace root via SPDX header scan.
+    // Empty when no candidate file exists / no SPDX header found /
+    // header fails to canonicalize (in the last case, a tracing::warn
+    // line records the path + raw expression). Layer 2 (content-based
+    // matcher) is out of scope per spec FR-004.
+    let licenses = detect_main_module_license(project_root);
+
     Some(PackageDbEntry {
         purl,
         name: module_path,
@@ -696,7 +832,7 @@ pub(crate) fn build_main_module_entry(
         source_path: source_path.to_string(),
         depends,
         maintainer: None,
-        licenses: Vec::new(),
+        licenses,
         lifecycle_scope: None,
         requirement_range: None,
         source_type: None,
@@ -2116,5 +2252,204 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
         let doc = make_doc("// just a comment, no module directive\n");
         let tmp = tempfile::tempdir().expect("tempdir");
         assert!(build_main_module_entry(&doc, tmp.path(), "/p/go.mod").is_none());
+    }
+
+    // --- Milestone 057: main-module LICENSE detection (Layer 1) -----------
+
+    #[test]
+    fn detect_license_returns_empty_when_no_candidate_files() {
+        // SC-002 (regression-baseline): a workspace with no LICENSE-style
+        // files at the root produces empty `licenses`. Critically, this
+        // is the case for the existing `tests/fixtures/go/simple-module/`
+        // and `argo-style-no-cache/argo-workflows/` fixtures, so their
+        // goldens stay byte-identical post-057.
+        let dir = tempfile::tempdir().unwrap();
+        assert!(detect_main_module_license(dir.path()).is_empty());
+    }
+
+    #[test]
+    fn detect_license_extracts_apache_2_0_from_license_file() {
+        // SC-001: canonical Apache-2.0 SPDX header on the first line.
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("LICENSE"),
+            "SPDX-License-Identifier: Apache-2.0\n\nApache License, Version 2.0...\n",
+        )
+        .unwrap();
+        let licenses = detect_main_module_license(dir.path());
+        assert_eq!(licenses.len(), 1);
+        assert_eq!(licenses[0].as_str(), "Apache-2.0");
+    }
+
+    #[test]
+    fn detect_license_extracts_compound_expression() {
+        // AS#2: dual-licensed (`MIT OR Apache-2.0`) canonicalizes
+        // through `try_canonical`.
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("LICENSE.md"),
+            "# License\n\nSPDX-License-Identifier: MIT OR Apache-2.0\n",
+        )
+        .unwrap();
+        let licenses = detect_main_module_license(dir.path());
+        assert_eq!(licenses.len(), 1);
+        // Canonical form may insert spaces / re-order; assert on the
+        // round-trip rather than literal string equality.
+        let canonical = licenses[0].as_str();
+        assert!(
+            canonical.contains("MIT") && canonical.contains("Apache-2.0"),
+            "canonicalized expression should retain both license IDs: {canonical}",
+        );
+    }
+
+    #[test]
+    fn detect_license_priority_license_beats_license_md() {
+        // Multiple candidate files in same workspace — `LICENSE` wins
+        // over `LICENSE.md` per priority order in
+        // LICENSE_FILE_CANDIDATES.
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("LICENSE"),
+            "SPDX-License-Identifier: Apache-2.0\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("LICENSE.md"),
+            "SPDX-License-Identifier: MIT\n",
+        )
+        .unwrap();
+        let licenses = detect_main_module_license(dir.path());
+        assert_eq!(licenses.len(), 1);
+        assert_eq!(licenses[0].as_str(), "Apache-2.0");
+    }
+
+    #[test]
+    fn detect_license_case_insensitive_filename() {
+        // `license` (lowercase) matches `LICENSE` candidate via
+        // eq_ignore_ascii_case.
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("license"),
+            "SPDX-License-Identifier: BSD-3-Clause\n",
+        )
+        .unwrap();
+        let licenses = detect_main_module_license(dir.path());
+        assert_eq!(licenses.len(), 1);
+        assert_eq!(licenses[0].as_str(), "BSD-3-Clause");
+    }
+
+    #[test]
+    fn detect_license_returns_empty_when_no_spdx_header() {
+        // AS#4: Layer-1 miss when LICENSE has no SPDX header. Layer 2
+        // territory; we deliberately don't guess.
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("LICENSE"),
+            "Apache License\nVersion 2.0, January 2004\n",
+        )
+        .unwrap();
+        assert!(detect_main_module_license(dir.path()).is_empty());
+    }
+
+    #[test]
+    fn detect_license_returns_empty_for_unparseable_header() {
+        // AS#5 / SC-003: malformed SPDX expression. Tracing-warn
+        // visibility is not asserted here (would require a captured
+        // tracing subscriber); the empty-return contract is sufficient
+        // to verify the FR-002 behavior.
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("LICENSE"),
+            "SPDX-License-Identifier: NotARealLicenseExpression!!!\n",
+        )
+        .unwrap();
+        assert!(detect_main_module_license(dir.path()).is_empty());
+    }
+
+    #[test]
+    fn detect_license_strips_html_comment_trailer() {
+        // Edge case: SPDX header inside an HTML comment, common in
+        // README.md-style LICENSE files.
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("LICENSE.md"),
+            "<!-- SPDX-License-Identifier: MIT -->\n\nMIT License\n",
+        )
+        .unwrap();
+        let licenses = detect_main_module_license(dir.path());
+        assert_eq!(licenses.len(), 1);
+        assert_eq!(licenses[0].as_str(), "MIT");
+    }
+
+    #[test]
+    fn detect_license_strips_bom() {
+        // Edge case: UTF-8 BOM at file start. Some Windows-authored
+        // LICENSE.md files have one.
+        let dir = tempfile::tempdir().unwrap();
+        let mut bytes: Vec<u8> = vec![0xEF, 0xBB, 0xBF];
+        bytes.extend_from_slice(b"SPDX-License-Identifier: ISC\n");
+        std::fs::write(dir.path().join("LICENSE"), &bytes).unwrap();
+        let licenses = detect_main_module_license(dir.path());
+        assert_eq!(licenses.len(), 1);
+        assert_eq!(licenses[0].as_str(), "ISC");
+    }
+
+    #[test]
+    fn detect_license_skips_directory_named_license() {
+        // Edge case: some projects ship a `LICENSE/` directory of
+        // per-vendor license files. The detector should skip it via
+        // is_file() rather than panicking on the directory.
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir(dir.path().join("LICENSE")).unwrap();
+        // Add a sibling COPYING file so the priority list still has
+        // something to pick up.
+        std::fs::write(
+            dir.path().join("COPYING"),
+            "SPDX-License-Identifier: GPL-2.0-only\n",
+        )
+        .unwrap();
+        let licenses = detect_main_module_license(dir.path());
+        assert_eq!(licenses.len(), 1);
+        assert_eq!(licenses[0].as_str(), "GPL-2.0-only");
+    }
+
+    #[test]
+    fn detect_license_caps_read_at_4kb() {
+        // SPDX header buried >4 KB into the file → Layer 1 miss.
+        let dir = tempfile::tempdir().unwrap();
+        let mut content = "x".repeat(LICENSE_READ_LIMIT + 100);
+        content.push_str("\nSPDX-License-Identifier: MIT\n");
+        std::fs::write(dir.path().join("LICENSE"), content).unwrap();
+        assert!(detect_main_module_license(dir.path()).is_empty());
+    }
+
+    #[test]
+    fn build_main_module_entry_populates_license_when_license_file_has_spdx_header() {
+        // SC-001 end-to-end via build_main_module_entry: the entry's
+        // `licenses` field contains the canonical Apache-2.0 expression.
+        let doc = make_doc("module example.com/with-license\n");
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("LICENSE"),
+            "SPDX-License-Identifier: Apache-2.0\n",
+        )
+        .unwrap();
+        let entry = build_main_module_entry(&doc, dir.path(), "/p/go.mod")
+            .expect("entry built");
+        assert_eq!(entry.licenses.len(), 1);
+        assert_eq!(entry.licenses[0].as_str(), "Apache-2.0");
+    }
+
+    #[test]
+    fn build_main_module_entry_empty_licenses_when_no_license_file() {
+        // FR-005: pre-057 behavior preserved when no LICENSE file
+        // present. This is the regression-baseline that keeps the
+        // existing simple-module / argo-style-no-cache fixtures'
+        // goldens byte-identical.
+        let doc = make_doc("module example.com/no-license\n");
+        let dir = tempfile::tempdir().unwrap();
+        let entry = build_main_module_entry(&doc, dir.path(), "/p/go.mod")
+            .expect("entry built");
+        assert!(entry.licenses.is_empty());
     }
 }
