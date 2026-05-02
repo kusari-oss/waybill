@@ -169,11 +169,25 @@ fn spdx_annotation_fields(spdx: &serde_json::Value) -> BTreeSet<String> {
     out
 }
 
+/// Milestone 052/part-2 (Constitution Principle V): `mikebom:*`
+/// properties that have a dedicated NATIVE field on the SPDX side are
+/// excluded from the annotation-fidelity check — the CDX property is
+/// only a carve-out for CDX (which lacks the native field), and the
+/// SPDX side carries the same signal via a native relationship type
+/// or scalar (e.g. `mikebom:lifecycle-scope` ↔ SPDX 2.3
+/// `DEV/BUILD/TEST_DEPENDENCY_OF` relationships + SPDX 3
+/// `lifecycleScope` on `dependsOn`). Same pattern as the C42
+/// `Directionality::CdxOnly` carve-out in the parity-extractor table.
+const CDX_ONLY_PROPERTIES: &[&str] = &["mikebom:lifecycle-scope"];
+
 fn check_fidelity(case: &EcosystemCase) {
     let s = run_dual_scan(case);
     let cdx_props = cdx_mikebom_property_names(&s.cdx);
     let spdx_fields = spdx_annotation_fields(&s.spdx);
-    let missing: Vec<&String> = cdx_props.difference(&spdx_fields).collect();
+    let missing: Vec<&String> = cdx_props
+        .difference(&spdx_fields)
+        .filter(|p| !CDX_ONLY_PROPERTIES.contains(&p.as_str()))
+        .collect();
     assert!(
         missing.is_empty(),
         "{}: CDX emitted {} mikebom:* properties without matching SPDX \

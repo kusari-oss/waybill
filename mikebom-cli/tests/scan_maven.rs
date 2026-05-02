@@ -103,9 +103,11 @@ fn prop_value<'a>(component: &'a serde_json::Value, name: &str) -> Option<&'a st
 
 #[test]
 fn scan_maven_pom_emits_source_tier_components() {
+    // Milestone 052/part-3: default mode emits ALL lifecycle scopes
+    // (junit test-scope present + tagged); --exclude-scope dev,build,test
+    // restores the strict pre-052 prod-only view.
     let sbom = scan_subpath("pom-three-deps");
     let maven = maven_components(&sbom);
-    // Project itself + guava + commons-lang3 (junit is test-scope, dropped).
     let names: Vec<&str> = maven
         .iter()
         .filter_map(|c| c["name"].as_str())
@@ -116,8 +118,22 @@ fn scan_maven_pom_emits_source_tier_components() {
         "commons-lang3 missing: {names:?}"
     );
     assert!(
-        !names.contains(&"junit"),
-        "junit test-scope should be dropped without --include-dev: {names:?}"
+        names.contains(&"junit"),
+        "junit (test-scope) must emit in default mode (post-052): {names:?}"
+    );
+    let junit = maven
+        .iter()
+        .find(|c| c["name"].as_str() == Some("junit"))
+        .expect("junit present");
+    assert_eq!(
+        junit["scope"].as_str(),
+        Some("excluded"),
+        "junit must carry native CDX scope: \"excluded\" in default mode: {junit:?}"
+    );
+    let lifecycle_scope = prop_value(junit, "mikebom:lifecycle-scope").unwrap_or("");
+    assert_eq!(
+        lifecycle_scope, "test",
+        "junit must carry mikebom:lifecycle-scope = \"test\": {junit:?}"
     );
 }
 
@@ -736,11 +752,12 @@ fn scan_path_args(path: &Path, extra: &[&str]) -> serde_json::Value {
 }
 
 #[test]
-fn scan_maven_test_scope_is_tagged_with_include_dev() {
-    // Milestone 051 US3 / FR-007: maven.rs:1786-1823 already drops
-    // <scope>test</scope> deps in default mode and tags them with
-    // mikebom:dev-dependency = true under --include-dev. This test
-    // is a regression guard against future refactors.
+fn scan_maven_test_scope_is_tagged_in_default_mode() {
+    // Milestone 052/part-3 (FR-002): test-scope deps now emit by
+    // default with native CDX `scope: "excluded"` + new
+    // `mikebom:lifecycle-scope: "test"` property. The legacy "drop in
+    // default mode" behavior is gone; `--exclude-scope dev,build,test`
+    // restores the strict subset.
     let dir = tempfile::tempdir().expect("tempdir");
     std::fs::write(
         dir.path().join("pom.xml"),
@@ -768,41 +785,43 @@ fn scan_maven_test_scope_is_tagged_with_include_dev() {
     )
     .unwrap();
 
-    // Default: junit absent.
+    // Default (post-052/part-3): junit emits with native CDX
+    // `scope: "excluded"` + `mikebom:lifecycle-scope: "test"`.
     let sbom = scan_path_args(dir.path(), &[]);
     let maven = maven_components(&sbom);
-    let junit = maven.iter().find(|c| c["name"].as_str() == Some("junit"));
-    assert!(
-        junit.is_none(),
-        "junit (test-scope) must be dropped in default mode. components: {maven:?}",
+    let junit = maven
+        .iter()
+        .find(|c| c["name"].as_str() == Some("junit"))
+        .expect("junit must emit in default mode (post-052)");
+    assert_eq!(
+        junit["scope"].as_str(),
+        Some("excluded"),
+        "junit must carry native CDX scope: \"excluded\" in default mode: {junit:?}",
     );
-    // slf4j-api stays.
+    let lifecycle_scope = prop_value(junit, "mikebom:lifecycle-scope").unwrap_or("");
+    assert_eq!(
+        lifecycle_scope, "test",
+        "junit must carry mikebom:lifecycle-scope = \"test\" in default mode: {junit:?}",
+    );
+    // slf4j-api stays unmarked.
     assert!(
         maven.iter().any(|c| c["name"].as_str() == Some("slf4j-api")),
         "slf4j-api (compile-scope) must be retained",
     );
 
-    // Milestone 052/part-2: junit emits with native CDX
-    // `scope: "excluded"` + new `mikebom:lifecycle-scope: "test"`
-    // property under --include-dev. Legacy `mikebom:dev-dependency`
-    // annotation removed per Constitution Principle V (v1.4.0) and
-    // milestone 052 Q1 → Option C — native fields are the sole
-    // signal post-052/part-2.
-    let sbom_dev = scan_path_args(dir.path(), &["--include-dev"]);
-    let maven_dev = maven_components(&sbom_dev);
-    let junit_dev = maven_dev
-        .iter()
-        .find(|c| c["name"].as_str() == Some("junit"))
-        .expect("junit must emit under --include-dev");
-    assert_eq!(
-        junit_dev["scope"].as_str(),
-        Some("excluded"),
-        "junit must carry native CDX scope: \"excluded\" under --include-dev: {junit_dev:?}",
+    // --exclude-scope dev,build,test: junit absent.
+    let sbom_strict = scan_path_args(dir.path(), &["--exclude-scope", "dev,build,test"]);
+    let maven_strict = maven_components(&sbom_strict);
+    assert!(
+        !maven_strict
+            .iter()
+            .any(|c| c["name"].as_str() == Some("junit")),
+        "junit (test-scope) must be dropped under --exclude-scope dev,build,test. components: {maven_strict:?}",
     );
-    let lifecycle_scope =
-        prop_value(junit_dev, "mikebom:lifecycle-scope").unwrap_or("");
-    assert_eq!(
-        lifecycle_scope, "test",
-        "junit must carry mikebom:lifecycle-scope = \"test\" under --include-dev: {junit_dev:?}",
+    assert!(
+        maven_strict
+            .iter()
+            .any(|c| c["name"].as_str() == Some("slf4j-api")),
+        "slf4j-api must survive --exclude-scope",
     );
 }

@@ -7,6 +7,42 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Changed (BREAKING — default SBOM scope, milestone 052/part-3)
+
+- **Default scan now emits ALL lifecycle scopes, not just Runtime**
+  (milestone 052/part-3, FR-002). Pre-052 the default `mikebom sbom
+  scan` silently dropped Development / Build / Test components; now
+  it emits every component with native scope tagging (CDX
+  `scope: "excluded"` + `mikebom:lifecycle-scope`; SPDX 2.3
+  `*_DEPENDENCY_OF` relationship types; SPDX 3 `lifecycleScope` on
+  `dependsOn`). Consumers wanting the strict pre-052 prod-only view
+  use the new `--exclude-scope dev,build,test` flag.
+
+  - **New `--exclude-scope <list>` flag**: comma-separated subset of
+    `dev,build,test`. Drops components whose `lifecycle_scope` is in
+    the set after resolution + dedup, plus every relationship edge
+    referencing them. Centralized post-resolution filter — replaces
+    the per-reader drop logic across cargo/gem/maven/npm/pip/Go/
+    package_db.
+
+  - **`--include-dev` flag deprecated to a parse-and-warn no-op
+    shim**. Pre-052 it was the only way to surface dev/build/test
+    components; now they emit by default, so `--include-dev` does
+    nothing and logs a `tracing::warn!` deprecation notice. Will be
+    removed in a future release.
+
+  - **Migration**: Consumers expecting the pre-052 prod-only set
+    add `--exclude-scope dev,build,test` to their invocation.
+    Consumers reading `mikebom:lifecycle-scope` / native
+    relationship types directly need no changes.
+
+  - **Parity framework**: New `Directionality::CdxOnly` variant on
+    parity extractors lets C42 (`mikebom:lifecycle-scope`) bypass
+    the SPDX-side parity check — the SPDX formats carry the same
+    signal natively via B2 relationship types per Principle V's
+    finer-info carve-out clause. Mirrored in
+    `spdx_annotation_fidelity` test (CDX-only carve-out list).
+
 ### Changed (BREAKING — SBOM output shape, milestone 052)
 
 - **Native lifecycle-scope dependency tagging**

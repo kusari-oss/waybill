@@ -45,6 +45,50 @@
       "version": "32.1.3-jre"
     },
     {
+      "bom-ref": "pkg:maven/junit/junit@4.13.2",
+      "cpe": "cpe:2.3:a:junit:junit:4.13.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "junit",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "<WORKSPACE>/tests/fixtures/maven/pom-three-deps/pom.xml"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        }
+      ],
+      "purl": "pkg:maven/junit/junit@4.13.2",
+      "scope": "excluded",
+      "supplier": {
+        "name": "junit"
+      },
+      "type": "library",
+      "version": "4.13.2"
+    },
+    {
       "bom-ref": "pkg:maven/org.apache.commons/commons-lang3@3.14.0",
       "cpe": "cpe:2.3:a:org.apache.commons:commons-lang3:3.14.0:*:*:*:*:*:*:*",
       "evidence": {
@@ -93,10 +137,12 @@
       "aggregate": "complete",
       "assemblies": [
         "pkg:maven/com.google.guava/guava@32.1.3-jre",
+        "pkg:maven/junit/junit@4.13.2",
         "pkg:maven/org.apache.commons/commons-lang3@3.14.0"
       ],
       "dependencies": [
         "pkg:maven/com.google.guava/guava@32.1.3-jre",
+        "pkg:maven/junit/junit@4.13.2",
         "pkg:maven/org.apache.commons/commons-lang3@3.14.0"
       ]
     },
@@ -120,11 +166,16 @@
     },
     {
       "dependsOn": [],
+      "ref": "pkg:maven/junit/junit@4.13.2"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:maven/org.apache.commons/commons-lang3@3.14.0"
     },
     {
       "dependsOn": [
         "pkg:maven/com.google.guava/guava@32.1.3-jre",
+        "pkg:maven/junit/junit@4.13.2",
         "pkg:maven/org.apache.commons/commons-lang3@3.14.0"
       ],
       "ref": "pom-three-deps@0.0.0"

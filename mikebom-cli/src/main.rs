@@ -6,8 +6,31 @@
 // `scan_fs/package_db/npm.rs` and friends.
 #![deny(clippy::unwrap_used)]
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use tracing_subscriber::EnvFilter;
+
+/// Lifecycle-scope variants the `--exclude-scope` flag accepts.
+/// Maps to `mikebom_common::resolution::LifecycleScope` non-Runtime
+/// variants — `Runtime` is intentionally not exposed (excluding it
+/// would produce an empty SBOM). Milestone 052/part-3.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
+#[clap(rename_all = "lowercase")]
+pub enum ExcludeScopeArg {
+    Dev,
+    Build,
+    Test,
+}
+
+impl ExcludeScopeArg {
+    pub fn as_lifecycle_scope(self) -> mikebom_common::resolution::LifecycleScope {
+        use mikebom_common::resolution::LifecycleScope;
+        match self {
+            ExcludeScopeArg::Dev => LifecycleScope::Development,
+            ExcludeScopeArg::Build => LifecycleScope::Build,
+            ExcludeScopeArg::Test => LifecycleScope::Test,
+        }
+    }
+}
 
 mod attestation;
 mod cli;
@@ -46,16 +69,33 @@ struct Cli {
     #[arg(long, global = true)]
     offline: bool,
 
-    /// Include development / test / optional dependencies in the SBOM.
-    /// Off by default: the scanner emits only production components.
-    /// Affects ecosystems that carry a dev/prod distinction (npm,
-    /// Poetry, Pipfile). Venv dist-info scans and requirements.txt
-    /// scans are unaffected — they do not carry a dev/prod marker.
-    /// Components included via this flag carry a `mikebom:dev-dependency
-    /// = true` property so downstream consumers can filter them back
-    /// out after the fact.
+    /// **DEPRECATED** (milestone 052/part-3). Pre-052 this flag was
+    /// off-by-default and gated dev/test/build dep emission. Post-052
+    /// the default is to include ALL scopes natively tagged
+    /// (`scope: "excluded"` in CDX, `DEV/BUILD/TEST_DEPENDENCY_OF` in
+    /// SPDX 2.3, `lifecycleScope` in SPDX 3). To restore the
+    /// strict deployed-runtime view, use
+    /// `--exclude-scope dev,build,test`. This flag still parses
+    /// for back-compat but emits a deprecation warning to stderr
+    /// and otherwise has no effect.
     #[arg(long, global = true)]
     include_dev: bool,
+
+    /// Drop components whose lifecycle scope matches any of the
+    /// listed values. Comma-separated. Valid values: `dev`,
+    /// `build`, `test`. Runtime-scope is always retained
+    /// (excluding all runtime would produce an empty SBOM).
+    ///
+    /// Example: `--exclude-scope dev,build,test` produces the
+    /// strict "what shipped to production" view (alpha.9 default
+    /// behavior). `--exclude-scope test` drops only test deps;
+    /// `--exclude-scope dev,build` keeps test for security-audit
+    /// workflows.
+    ///
+    /// When omitted, mikebom emits all scopes (Runtime +
+    /// Development + Build + Test) — the milestone-052 default.
+    #[arg(long, global = true, value_delimiter = ',')]
+    exclude_scope: Vec<ExcludeScopeArg>,
 
     /// Include declared-but-not-on-disk dependencies (manifest SBOM).
     /// By default, mikebom emits only components physically present in
@@ -116,6 +156,23 @@ async fn main() -> anyhow::Result<std::process::ExitCode> {
 
     let cli = Cli::parse();
 
+    // Milestone 052/part-3: deprecation warning for --include-dev.
+    // The flag still parses (back-compat — automation that bakes it
+    // in continues to work) but has no effect post-052: the new
+    // default emits all scopes. Operators wanting the strict
+    // deployed-runtime view migrate to --exclude-scope.
+    if cli.include_dev {
+        tracing::warn!(
+            "--include-dev is deprecated and has no effect post-052; \
+             native lifecycle-scope emission is on by default. \
+             Use --exclude-scope dev,build,test for the strict \
+             deployed-runtime view (alpha.9-equivalent).",
+        );
+    }
+
+    let exclude_scope: Vec<mikebom_common::resolution::LifecycleScope> =
+        cli.exclude_scope.iter().map(|a| a.as_lifecycle_scope()).collect();
+
     match cli.command {
         Commands::Trace(cmd) => {
             cli::trace_cmd::execute(cmd).await?;
@@ -125,7 +182,7 @@ async fn main() -> anyhow::Result<std::process::ExitCode> {
             cli::sbom_cmd::execute(
                 cmd,
                 cli.offline,
-                cli.include_dev,
+                exclude_scope,
                 cli.include_legacy_rpmdb,
                 cli.include_declared_deps,
             )

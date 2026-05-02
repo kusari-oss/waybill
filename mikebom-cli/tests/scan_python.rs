@@ -24,7 +24,12 @@ fn fixture(sub: &str) -> PathBuf {
 
 /// Run `mikebom sbom scan --path <fixture>` (with `--offline` so we
 /// don't hit deps.dev from CI). Returns the parsed CycloneDX JSON.
-fn scan(fixture_sub: &str, include_dev: bool) -> serde_json::Value {
+///
+/// Milestone 052/part-3: `exclude_dev_test` adds
+/// `--exclude-scope dev,build,test` to restore the strict pre-052
+/// "runtime-only" subset. The default (`false`) emits all lifecycle
+/// scopes per FR-002.
+fn scan(fixture_sub: &str, exclude_dev_test: bool) -> serde_json::Value {
     let bin = env!("CARGO_BIN_EXE_mikebom");
     let out_path = tempfile::NamedTempFile::new()
         .expect("tempfile")
@@ -32,8 +37,8 @@ fn scan(fixture_sub: &str, include_dev: bool) -> serde_json::Value {
         .to_path_buf();
     let mut cmd = Command::new(bin);
     cmd.arg("--offline");
-    if include_dev {
-        cmd.arg("--include-dev");
+    if exclude_dev_test {
+        cmd.arg("--exclude-scope").arg("dev,build,test");
     }
     cmd.arg("sbom")
         .arg("scan")
@@ -173,59 +178,68 @@ fn python_dependency_tree_resolves_transitively() {
 
 #[test]
 fn poetry_project_surfaces_prod_default_dev_behind_flag() {
-    let prod = scan("poetry-project", false);
+    // Milestone 052/part-3: default emits all scopes (prod + dev),
+    // `--exclude-scope dev,build,test` restores the prod-only view.
+
+    // Default mode: both requests (prod) and pytest (dev) emit; pytest
+    // tagged with native CDX scope + mikebom:lifecycle-scope.
+    let all = scan("poetry-project", false);
+    let pypi_all = pypi_components(&all);
+    assert_eq!(
+        pypi_all.len(),
+        2,
+        "poetry default (post-052): expected 2 pypi components (prod + dev)"
+    );
+    let pytest = pypi_all
+        .iter()
+        .find(|c| c["name"] == "pytest")
+        .expect("pytest present in default mode (post-052)");
+    assert_eq!(
+        pytest["scope"].as_str(),
+        Some("excluded"),
+        "pytest must carry native CDX scope: \"excluded\" in default mode"
+    );
+    assert_eq!(
+        prop_value(pytest, "mikebom:lifecycle-scope"),
+        Some("development"),
+        "pytest must carry mikebom:lifecycle-scope = \"development\" in default mode"
+    );
+
+    // --exclude-scope dev,build,test: restores the strict prod-only view.
+    let prod = scan("poetry-project", true);
     let pypi_prod = pypi_components(&prod);
     assert_eq!(
         pypi_prod.len(),
         1,
-        "poetry prod-only: expected 1 pypi component"
+        "poetry --exclude-scope dev,build,test: expected 1 pypi component"
     );
     assert_eq!(pypi_prod[0]["name"], "requests");
     assert_eq!(
         prop_value(pypi_prod[0], "mikebom:sbom-tier"),
         Some("source")
     );
-
-    let all = scan("poetry-project", true);
-    let pypi_all = pypi_components(&all);
-    assert_eq!(pypi_all.len(), 2, "poetry --include-dev: expected 2");
-    let pytest = pypi_all
-        .iter()
-        .find(|c| c["name"] == "pytest")
-        .expect("pytest present");
-    // Milestone 052/part-2: native CDX `scope: "excluded"` +
-    // `mikebom:lifecycle-scope: "development"` replace the pre-052
-    // `mikebom:dev-dependency = true` annotation.
-    assert_eq!(
-        pytest["scope"].as_str(),
-        Some("excluded"),
-        "pytest must carry native CDX scope: \"excluded\" under --include-dev"
-    );
-    assert_eq!(
-        prop_value(pytest, "mikebom:lifecycle-scope"),
-        Some("development"),
-        "pytest must carry mikebom:lifecycle-scope = \"development\" under --include-dev"
-    );
 }
 
 #[test]
 fn pipfile_project_splits_default_vs_develop() {
-    let prod = scan("pipfile-project", false);
-    assert_eq!(pypi_components(&prod).len(), 1);
+    // Milestone 052/part-3: default emits all (post-052 FR-002);
+    // --exclude-scope dev,build,test restores the prod-only view.
 
-    let all = scan("pipfile-project", true);
+    let all = scan("pipfile-project", false);
     let pypi = pypi_components(&all);
     assert_eq!(pypi.len(), 2);
     let pytest = pypi
         .iter()
         .find(|c| c["name"] == "pytest")
-        .expect("pytest in include-dev");
-    // Milestone 052/part-2: native fields replace legacy annotation.
+        .expect("pytest present in default mode (post-052)");
     assert_eq!(pytest["scope"].as_str(), Some("excluded"));
     assert_eq!(
         prop_value(pytest, "mikebom:lifecycle-scope"),
         Some("development")
     );
+
+    let prod = scan("pipfile-project", true);
+    assert_eq!(pypi_components(&prod).len(), 1);
 }
 
 #[test]

@@ -200,14 +200,16 @@ pub static EXTRACTORS: &[ParityExtractor] = &[
     // generic extra_annotations serializer paths. See
     // docs/reference/sbom-format-mapping.md C41.
     ParityExtractor { row_id: "C41", label: "mikebom:not-linked",                cdx: c41_cdx, spdx23: c41_spdx23, spdx3: c41_spdx3, directional: Directionality::SymmetricEqual },
-    // C42 — mikebom:lifecycle-scope (milestone 052/part-2). CDX-only:
-    // SPDX 2.3 + SPDX 3 carry the same signal natively via dep-type
-    // relationships / lifecycleScope (B2). Per Constitution Principle V
-    // (v1.4.0) the property is the finer-info carve-out where the
-    // native CDX `scope` enum is too coarse (3 values, can't express
-    // dev/build/test split). PresenceOnly directionality because the
-    // SPDX sides intentionally have no equivalent.
-    ParityExtractor { row_id: "C42", label: "mikebom:lifecycle-scope",           cdx: c42_cdx, spdx23: empty,      spdx3: empty,      directional: Directionality::PresenceOnly },
+    // C42 — `mikebom:lifecycle-scope` (milestone 052/part-2). CDX-
+    // only finer-info carve-out per Constitution Principle V (v1.4.0):
+    // CDX's native `scope` enum has only 3 values
+    // (`required`/`optional`/`excluded`) and cannot express the
+    // dev/build/test split. SPDX 2.3 + SPDX 3 carry the same
+    // lifecycle signal natively via B2's typed dep-relationships /
+    // `lifecycleScope` parameter — checked there, not here.
+    // `CdxOnly` directionality skips the SPDX sides for this
+    // specific row.
+    ParityExtractor { row_id: "C42", label: "mikebom:lifecycle-scope",           cdx: c42_cdx, spdx23: empty,      spdx3: empty,      directional: Directionality::CdxOnly },
     // Section D — Evidence
     // D1 evidence shape diverges — CDX `evidence.identity[].{field,
     // confidence, methods[]}` is the full CDX evidence model;

@@ -328,6 +328,7 @@ fn build_report(
                     Directionality::SymmetricEqual => "symmetric_equal",
                     Directionality::CdxSubsetOfSpdx => "cdx_subset_of_spdx",
                     Directionality::PresenceOnly => "presence_only",
+                    Directionality::CdxOnly => "cdx_only",
                 })
                 .unwrap_or("unknown")
                 .to_string(),

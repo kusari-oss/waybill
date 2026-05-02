@@ -170,7 +170,7 @@ fn scan_cargo_v2_lockfile_refuses_with_actionable_error() {
 // ---------------------------------------------------------------------------
 
 /// Run mikebom against `path` with optional extra args (e.g.
-/// `--include-dev`). Returns the parsed SBOM JSON.
+/// `--exclude-scope dev,build,test`). Returns the parsed SBOM JSON.
 fn run_scan_args(path: &Path, extra_args: &[&str]) -> serde_json::Value {
     let bin = env!("CARGO_BIN_EXE_mikebom");
     let tmp = tempfile::tempdir().expect("tempdir");
@@ -224,9 +224,10 @@ fn has_dev_property(component: &serde_json::Value) -> bool {
 
 #[test]
 fn scan_cargo_dev_dependency_is_tagged_and_droppable() {
-    // FR-001 / FR-002: a crate declared in [dev-dependencies] is
-    // dropped from the default-mode SBOM and tagged with
-    // mikebom:dev-dependency = true under --include-dev.
+    // Milestone 052 FR-001 / FR-002: a crate declared in
+    // [dev-dependencies] emits in default mode tagged with native
+    // CDX scope: "excluded" + mikebom:lifecycle-scope: "development",
+    // and is dropped under --exclude-scope dev,build,test.
     let dir = tempfile::tempdir().expect("tempdir");
     std::fs::write(
         dir.path().join("Cargo.toml"),
@@ -268,24 +269,28 @@ checksum = "f2b12d09"
     )
     .unwrap();
 
-    // Default scan: criterion absent.
+    // Milestone 052/part-3: default scan now emits ALL scopes
+    // (criterion present + tagged with native CDX scope: "excluded"
+    // and mikebom:lifecycle-scope: "development"). Pre-052 default
+    // dropped criterion silently.
     let sbom = run_scan_args(dir.path(), &[]);
+    let criterion =
+        cargo_component_named(&sbom, "criterion").expect("criterion present in default scan");
     assert!(
-        cargo_component_named(&sbom, "criterion").is_none(),
-        "criterion (dev-dep) must be dropped in default mode",
+        has_dev_property(criterion),
+        "criterion must carry native CDX scope: \"excluded\" + mikebom:lifecycle-scope: {criterion:?}",
     );
     assert!(
         cargo_component_named(&sbom, "serde").is_some(),
         "serde (prod-dep) must be retained",
     );
 
-    // --include-dev: criterion present + tagged.
-    let sbom_dev = run_scan_args(dir.path(), &["--include-dev"]);
-    let criterion =
-        cargo_component_named(&sbom_dev, "criterion").expect("criterion present with --include-dev");
+    // --exclude-scope dev,build,test reproduces the alpha.9-equivalent
+    // strict deployed-runtime view: criterion dropped.
+    let sbom_strict = run_scan_args(dir.path(), &["--exclude-scope", "dev,build,test"]);
     assert!(
-        has_dev_property(criterion),
-        "criterion must carry mikebom:dev-dependency = true: {criterion:?}",
+        cargo_component_named(&sbom_strict, "criterion").is_none(),
+        "criterion (dev-dep) must be dropped under --exclude-scope dev,build,test",
     );
 }
 
@@ -335,14 +340,22 @@ checksum = "deadbeef"
     )
     .unwrap();
 
+    // Milestone 052/part-3: default scan emits cc with native
+    // CDX scope: "excluded" + mikebom:lifecycle-scope: "build".
     let sbom = run_scan_args(dir.path(), &[]);
+    let cc = cargo_component_named(&sbom, "cc").expect("cc present in default scan");
+    assert!(has_dev_property(cc), "cc must be tagged non-runtime: {cc:?}");
+    // --exclude-scope build drops cc; --exclude-scope dev does not.
+    let sbom_no_build = run_scan_args(dir.path(), &["--exclude-scope", "build"]);
     assert!(
-        cargo_component_named(&sbom, "cc").is_none(),
-        "cc (build-dep) must be dropped in default mode",
+        cargo_component_named(&sbom_no_build, "cc").is_none(),
+        "cc (build-dep) must be dropped under --exclude-scope build",
     );
-    let sbom_dev = run_scan_args(dir.path(), &["--include-dev"]);
-    let cc = cargo_component_named(&sbom_dev, "cc").expect("cc present with --include-dev");
-    assert!(has_dev_property(cc), "cc must be tagged dev: {cc:?}");
+    let sbom_no_dev = run_scan_args(dir.path(), &["--exclude-scope", "dev"]);
+    assert!(
+        cargo_component_named(&sbom_no_dev, "cc").is_some(),
+        "cc (build-dep) survives --exclude-scope dev — Build is distinct from Development",
+    );
 }
 
 #[test]
@@ -447,13 +460,16 @@ checksum = "abcd1234"
     )
     .unwrap();
 
+    // Milestone 052/part-3: default scan emits the workspace
+    // member's dev-dep with native scope: "excluded" + lifecycle-
+    // scope property; --exclude-scope dev,build,test drops it.
     let sbom = run_scan_args(dir.path(), &[]);
-    assert!(
-        cargo_component_named(&sbom, "proptest").is_none(),
-        "workspace member's dev-dep must be dropped",
-    );
-    let sbom_dev = run_scan_args(dir.path(), &["--include-dev"]);
     let proptest =
-        cargo_component_named(&sbom_dev, "proptest").expect("proptest present with --include-dev");
-    assert!(has_dev_property(proptest), "proptest must be tagged dev");
+        cargo_component_named(&sbom, "proptest").expect("proptest present in default scan");
+    assert!(has_dev_property(proptest), "proptest must be tagged non-runtime");
+    let sbom_strict = run_scan_args(dir.path(), &["--exclude-scope", "dev,build,test"]);
+    assert!(
+        cargo_component_named(&sbom_strict, "proptest").is_none(),
+        "workspace member's dev-dep dropped under --exclude-scope dev,build,test",
+    );
 }

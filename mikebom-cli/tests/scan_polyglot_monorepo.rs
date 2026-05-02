@@ -17,7 +17,7 @@ fn fixture() -> PathBuf {
         .join("tests/fixtures/polyglot-monorepo")
 }
 
-fn scan(include_dev: bool) -> serde_json::Value {
+fn scan(exclude_dev_test: bool) -> serde_json::Value {
     let bin = env!("CARGO_BIN_EXE_mikebom");
     let out_path = tempfile::NamedTempFile::new()
         .expect("tempfile")
@@ -25,8 +25,8 @@ fn scan(include_dev: bool) -> serde_json::Value {
         .to_path_buf();
     let mut cmd = Command::new(bin);
     cmd.arg("--offline");
-    if include_dev {
-        cmd.arg("--include-dev");
+    if exclude_dev_test {
+        cmd.arg("--exclude-scope").arg("dev,build,test");
     }
     cmd.arg("sbom")
         .arg("scan")
@@ -63,7 +63,9 @@ fn components_by_prefix<'a>(
 
 #[test]
 fn polyglot_monorepo_emits_both_python_and_npm_components() {
-    let sbom = scan(false);
+    // Milestone 052/part-3: --exclude-scope dev,build,test restores
+    // the strict pre-052 prod-only view (vite filtered out).
+    let sbom = scan(true);
 
     let pypi = components_by_prefix(&sbom, "pkg:pypi/");
     let npm = components_by_prefix(&sbom, "pkg:npm/");
@@ -80,12 +82,12 @@ fn polyglot_monorepo_emits_both_python_and_npm_components() {
     assert!(pypi_names.contains(&"uvicorn"));
     assert!(pypi_names.contains(&"httpx"));
 
-    // Frontend: 2 source-tier lockfile entries (prod-only default
-    // filters vite out).
+    // Frontend: 2 source-tier lockfile entries (vite filtered via
+    // --exclude-scope).
     assert_eq!(
         npm.len(),
         2,
-        "frontend: expected react + axios (prod only), got {:?}",
+        "frontend: expected react + axios (--exclude-scope prod-only), got {:?}",
         npm.iter().map(|c| c["name"].as_str()).collect::<Vec<_>>()
     );
     let npm_names: Vec<&str> = npm.iter().filter_map(|c| c["name"].as_str()).collect();
@@ -94,13 +96,14 @@ fn polyglot_monorepo_emits_both_python_and_npm_components() {
 }
 
 #[test]
-fn polyglot_monorepo_include_dev_surfaces_both_ecosystems_dev_deps() {
-    let sbom = scan(true);
+fn polyglot_monorepo_default_surfaces_both_ecosystems_dev_deps() {
+    // Milestone 052/part-3: default mode emits ALL lifecycle scopes.
+    let sbom = scan(false);
     let npm = components_by_prefix(&sbom, "pkg:npm/");
     let names: Vec<&str> = npm.iter().filter_map(|c| c["name"].as_str()).collect();
     assert!(
         names.contains(&"vite"),
-        "vite dev-dep must appear under --include-dev; got {names:?}"
+        "vite dev-dep must appear in default mode (post-052); got {names:?}"
     );
 }
 

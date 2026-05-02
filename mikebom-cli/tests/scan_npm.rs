@@ -19,8 +19,13 @@ fn fixture(sub: &str) -> PathBuf {
 /// Run `mikebom sbom scan --path <fixture>` and return the parsed
 /// CycloneDX JSON. Returns None if the binary exits non-zero so the
 /// caller can assert refusal cases.
-fn scan(fixture_sub: &str, include_dev: bool) -> serde_json::Value {
-    let output = scan_raw(fixture_sub, include_dev);
+///
+/// Milestone 052/part-3: `exclude_dev_test` adds
+/// `--exclude-scope dev,build,test` to restore the strict pre-052
+/// "runtime-only" subset. The default (`false`) emits all lifecycle
+/// scopes per FR-002.
+fn scan(fixture_sub: &str, exclude_dev_test: bool) -> serde_json::Value {
+    let output = scan_raw(fixture_sub, exclude_dev_test);
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -43,7 +48,7 @@ thread_local! {
         const { std::cell::RefCell::new(None) };
 }
 
-fn scan_raw(fixture_sub: &str, include_dev: bool) -> std::process::Output {
+fn scan_raw(fixture_sub: &str, exclude_dev_test: bool) -> std::process::Output {
     let bin = env!("CARGO_BIN_EXE_mikebom");
     let out_path = tempfile::NamedTempFile::new()
         .expect("tempfile")
@@ -52,8 +57,8 @@ fn scan_raw(fixture_sub: &str, include_dev: bool) -> std::process::Output {
     LAST_OUT_PATH.with(|c| *c.borrow_mut() = Some(out_path.clone()));
     let mut cmd = Command::new(bin);
     cmd.arg("--offline");
-    if include_dev {
-        cmd.arg("--include-dev");
+    if exclude_dev_test {
+        cmd.arg("--exclude-scope").arg("dev,build,test");
     }
     cmd.arg("sbom")
         .arg("scan")
@@ -88,23 +93,23 @@ fn prop_value<'a>(component: &'a serde_json::Value, name: &str) -> Option<&'a st
 }
 
 #[test]
-fn lockfile_v3_fixture_emits_source_tier_prod_only_by_default() {
-    let sbom = scan("lockfile-v3", false);
+fn lockfile_v3_fixture_emits_source_tier_prod_only_with_exclude_scope() {
+    // Milestone 052/part-3: --exclude-scope dev,build,test restores
+    // the prod-only view (was the pre-052 default).
+    let sbom = scan("lockfile-v3", true);
     let npm = npm_components(&sbom);
-    // Only prod deps surface at default — jest is dev-only.
     assert_eq!(
         npm.len(),
         2,
-        "lockfile-v3 prod-only: expected chalk + lodash only, got {:?}",
+        "lockfile-v3 --exclude-scope dev,build,test: expected chalk + lodash only, got {:?}",
         npm.iter().map(|c| c["name"].as_str()).collect::<Vec<_>>()
     );
     for c in &npm {
         assert_eq!(prop_value(c, "mikebom:sbom-tier"), Some("source"));
-        // Prod entries don't emit the dev-dependency property — only
-        // true values are surfaced to reduce noise. Absence ≡ prod.
+        // Prod entries don't emit lifecycle-scope (Runtime is implicit).
         assert!(
-            prop_value(c, "mikebom:dev-dependency").is_none(),
-            "{}: prod entries should not surface mikebom:dev-dependency",
+            prop_value(c, "mikebom:lifecycle-scope").is_none(),
+            "{}: prod entries should not surface mikebom:lifecycle-scope",
             c["name"]
         );
     }
@@ -137,26 +142,26 @@ fn lockfile_v3_marks_npm_ecosystem_complete() {
 }
 
 #[test]
-fn lockfile_v3_fixture_with_include_dev_surfaces_jest() {
-    let sbom = scan("lockfile-v3", true);
+fn lockfile_v3_default_emits_jest_with_native_scope() {
+    // Milestone 052/part-3: default mode emits ALL lifecycle scopes.
+    // jest (devDependency) shows up tagged with native CDX `scope:
+    // "excluded"` + `mikebom:lifecycle-scope: "development"`.
+    let sbom = scan("lockfile-v3", false);
     let npm = npm_components(&sbom);
-    assert_eq!(npm.len(), 3, "lockfile-v3 --include-dev: expected 3");
+    assert_eq!(npm.len(), 3, "lockfile-v3 default (post-052): expected 3");
     let jest = npm
         .iter()
         .find(|c| c["name"] == "jest")
-        .expect("jest present under --include-dev");
-    // Milestone 052/part-2: native CDX `scope: "excluded"` plus
-    // new `mikebom:lifecycle-scope: "development"` property
-    // replace the pre-052 `mikebom:dev-dependency = true` annotation.
+        .expect("jest present in default mode (post-052)");
     assert_eq!(
         jest["scope"].as_str(),
         Some("excluded"),
-        "jest must carry native CDX scope: \"excluded\" under --include-dev"
+        "jest must carry native CDX scope: \"excluded\" in default mode"
     );
     assert_eq!(
         prop_value(jest, "mikebom:lifecycle-scope"),
         Some("development"),
-        "jest must carry mikebom:lifecycle-scope = \"development\" under --include-dev"
+        "jest must carry mikebom:lifecycle-scope = \"development\" in default mode"
     );
 }
 
@@ -177,30 +182,36 @@ fn scoped_package_emits_encoded_purl() {
 
 #[test]
 fn pnpm_v8_fixture_parses_prod_and_filters_dev() {
-    let sbom = scan("pnpm-v8", false);
-    let npm = npm_components(&sbom);
-    assert_eq!(npm.len(), 1);
-    assert_eq!(npm[0]["name"], "is-odd");
-    assert_eq!(prop_value(npm[0], "mikebom:sbom-tier"), Some("source"));
+    // Milestone 052/part-3: default emits ALL scopes; --exclude-scope
+    // dev,build,test restores the prod-only view.
 
-    let sbom_all = scan("pnpm-v8", true);
+    let sbom_all = scan("pnpm-v8", false);
     let npm_all = npm_components(&sbom_all);
-    assert_eq!(npm_all.len(), 2);
+    assert_eq!(npm_all.len(), 2, "pnpm-v8 default (post-052): expected 2");
     let mocha = npm_all
         .iter()
         .find(|c| c["name"] == "mocha")
-        .expect("mocha present with --include-dev");
-    // Milestone 052/part-2: native fields replace legacy annotation.
+        .expect("mocha present in default mode (post-052)");
     assert_eq!(
         mocha["scope"].as_str(),
         Some("excluded"),
-        "mocha must carry native CDX scope: \"excluded\" under --include-dev"
+        "mocha must carry native CDX scope: \"excluded\" in default mode"
     );
     assert_eq!(
         prop_value(mocha, "mikebom:lifecycle-scope"),
         Some("development"),
         "mocha must carry mikebom:lifecycle-scope = \"development\""
     );
+
+    let sbom = scan("pnpm-v8", true);
+    let npm = npm_components(&sbom);
+    assert_eq!(
+        npm.len(),
+        1,
+        "pnpm-v8 --exclude-scope dev,build,test: expected 1"
+    );
+    assert_eq!(npm[0]["name"], "is-odd");
+    assert_eq!(prop_value(npm[0], "mikebom:sbom-tier"), Some("source"));
 }
 
 #[test]
@@ -220,11 +231,13 @@ fn node_modules_walk_emits_deployed_tier() {
 
 #[test]
 fn package_json_only_emits_design_tier_and_source_type() {
-    let sbom = scan("package-json-only", false);
+    // Milestone 052/part-3: --exclude-scope dev,build,test drops the
+    // devDependency (eslint), leaving only the 3 prod entries.
+    let sbom = scan("package-json-only", true);
     let npm = npm_components(&sbom);
     // dependencies has axios (registry) + local-helper (file:) +
-    // internal-tool (git+). devDependencies is filtered without
-    // --include-dev.
+    // internal-tool (git+). devDependencies (eslint) filtered via
+    // --exclude-scope.
     assert_eq!(npm.len(), 3);
     for c in &npm {
         assert_eq!(

@@ -36,7 +36,7 @@ pub enum SbomSubcommand {
 pub async fn execute(
     cmd: SbomCommand,
     offline: bool,
-    include_dev: bool,
+    exclude_scope: Vec<mikebom_common::resolution::LifecycleScope>,
     include_legacy_rpmdb: bool,
     include_declared_deps: bool,
 ) -> anyhow::Result<ExitCode> {
@@ -54,7 +54,7 @@ pub async fn execute(
             super::scan_cmd::execute(
                 args,
                 offline,
-                include_dev,
+                exclude_scope,
                 include_legacy_rpmdb,
                 include_declared_deps,
             )

@@ -177,6 +177,15 @@ fn assert_holistic_parity(label: &str, scan: &TripleScan) {
                     }
                 }
             }
+            extractors::Directionality::CdxOnly => {
+                // Milestone 052/part-2: CDX-only finer-info carve-outs
+                // (Principle V) — the SPDX sides intentionally do NOT
+                // mirror this property; they carry the same lifecycle
+                // signal natively via OTHER catalog rows (e.g., B2's
+                // typed dep-relationships / lifecycleScope). Only the
+                // CDX side is parity-checked under this row.
+                let _ = (&spdx23_set, &spdx3_set);
+            }
         }
     }
 

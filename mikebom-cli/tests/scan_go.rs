@@ -26,20 +26,26 @@ fn fixture(sub: &str) -> PathBuf {
 }
 
 fn scan_path(path: &std::path::Path) -> serde_json::Value {
+    scan_path_args(path, &[])
+}
+
+fn scan_path_args(path: &std::path::Path, extra: &[&str]) -> serde_json::Value {
     let bin = env!("CARGO_BIN_EXE_mikebom");
     let tmp = tempfile::NamedTempFile::new().expect("tempfile");
     let out_path = tmp.path().to_path_buf();
-    let output = Command::new(bin)
-        .arg("--offline")
+    let mut cmd = Command::new(bin);
+    cmd.arg("--offline")
         .arg("sbom")
         .arg("scan")
         .arg("--path")
         .arg(path)
         .arg("--output")
         .arg(&out_path)
-        .arg("--no-deep-hash")
-        .output()
-        .expect("mikebom should run");
+        .arg("--no-deep-hash");
+    for a in extra {
+        cmd.arg(a);
+    }
+    let output = cmd.output().expect("mikebom should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -518,10 +524,12 @@ fn scan_go_source_only_preserves_full_go_sum() {
 // --- 007 US2: Go test-scope intersection filter (G4) ------------------
 
 #[test]
-fn scan_go_source_test_only_import_is_dropped() {
-    // FR-006 / FR-007a: when a module is imported only from a
-    // `_test.go` file, the G4 filter drops its source-tier emission.
-    // Modules imported from production `.go` files are retained.
+fn scan_go_source_test_only_import_is_tagged_and_droppable() {
+    // Milestone 052/part-3: when a module is imported only from a
+    // `_test.go` file, default mode emits it tagged with native CDX
+    // scope: "excluded" + mikebom:lifecycle-scope: "test".
+    // --exclude-scope dev,build,test restores the strict pre-052
+    // "drop test-only" view (G4 filter behavior).
     let dir = tempfile::tempdir().expect("tempdir");
     let app = dir.path().join("app");
     std::fs::create_dir_all(&app).unwrap();
@@ -561,6 +569,7 @@ fn scan_go_source_test_only_import_is_dropped() {
     )
     .unwrap();
 
+    // Default mode (post-052): testify present + tagged.
     let sbom = scan_path(dir.path());
     let golang = golang_purls(&sbom);
     assert!(
@@ -568,8 +577,20 @@ fn scan_go_source_test_only_import_is_dropped() {
         "logrus (production import) must be retained: {golang:?}",
     );
     assert!(
-        !golang.iter().any(|p| p.contains("stretchr/testify")),
-        "testify (test-only import) must be dropped: {golang:?}",
+        golang.iter().any(|p| p.contains("stretchr/testify")),
+        "testify (test-only import) must emit in default mode (post-052): {golang:?}",
+    );
+
+    // --exclude-scope dev,build,test: testify dropped.
+    let sbom_strict = scan_path_args(dir.path(), &["--exclude-scope", "dev,build,test"]);
+    let golang_strict = golang_purls(&sbom_strict);
+    assert!(
+        golang_strict.iter().any(|p| p.contains("sirupsen/logrus")),
+        "logrus must survive --exclude-scope: {golang_strict:?}",
+    );
+    assert!(
+        !golang_strict.iter().any(|p| p.contains("stretchr/testify")),
+        "testify (test-only) must be dropped under --exclude-scope dev,build,test: {golang_strict:?}",
     );
 }
 

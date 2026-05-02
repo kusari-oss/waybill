@@ -581,10 +581,19 @@ async fn resolve_image_ref(
 pub async fn execute(
     args: ScanArgs,
     offline: bool,
-    include_dev: bool,
+    exclude_scope: Vec<mikebom_common::resolution::LifecycleScope>,
     include_legacy_rpmdb: bool,
     include_declared_deps: bool,
 ) -> anyhow::Result<()> {
+    // Milestone 052/part-3: the default is to include all lifecycle
+    // scopes natively tagged. Readers receive `include_dev = true`
+    // unconditionally; the centralized `exclude_scope` filter
+    // (applied post-resolution) drops components per the user's
+    // opt-out. Pre-052 code paths still reference `include_dev` —
+    // we pass `true` so they don't drop anything; the per-reader
+    // drop gates are dead code and slated for removal in a
+    // follow-on cleanup pass.
+    let include_dev = true;
     // Milestone 004 US4: the flag is threaded all the way to
     // `scan_path` so the (future) BDB rpmdb reader can consume it.
     // Until the BDB reader lands (T064), the parameter rides through
@@ -844,6 +853,39 @@ pub async fn execute(
             folded,
             "folded declared-not-cached entries into on-disk twins",
         );
+    }
+
+    // Milestone 052/part-3: apply the `--exclude-scope` opt-out
+    // filter as the final step before serialization. Drops
+    // components whose lifecycle_scope matches any element in the
+    // user's exclude list, plus any dependency edges referencing
+    // dropped components. `Runtime` is never excluded (clap rejects
+    // it at parse time via the ExcludeScopeArg enum). Default
+    // behavior (empty exclude_scope vec) is no-op: emit all scopes.
+    if !exclude_scope.is_empty() {
+        let exclude_set: std::collections::HashSet<mikebom_common::resolution::LifecycleScope> =
+            exclude_scope.iter().copied().collect();
+        let pre_filter_count = components.len();
+        let dropped_purls: std::collections::HashSet<String> = components
+            .iter()
+            .filter(|c| {
+                c.lifecycle_scope
+                    .is_some_and(|s| exclude_set.contains(&s))
+            })
+            .map(|c| c.purl.as_str().to_string())
+            .collect();
+        components.retain(|c| !dropped_purls.contains(c.purl.as_str()));
+        relationships.retain(|r| {
+            !dropped_purls.contains(&r.from) && !dropped_purls.contains(&r.to)
+        });
+        let dropped = pre_filter_count.saturating_sub(components.len());
+        if dropped > 0 {
+            tracing::info!(
+                dropped,
+                exclude_scope = ?exclude_scope,
+                "applied --exclude-scope filter",
+            );
+        }
     }
 
     // `trace_integrity` is a clean record: no eBPF ran, so there's nothing

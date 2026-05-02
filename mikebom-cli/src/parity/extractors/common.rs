@@ -55,6 +55,19 @@ pub enum Directionality {
     /// the user's clarification "data should be very similar,
     /// just formatting and structure should be different."
     PresenceOnly,
+    /// Milestone 052/part-2: CDX-only by design. Used for
+    /// finer-info carve-outs per Constitution Principle V where
+    /// CDX's native field is too coarse to express the signal
+    /// directly and the SPDX sides carry the same lifecycle
+    /// signal natively via OTHER catalog rows (e.g., C42's
+    /// `mikebom:lifecycle-scope` is a CDX-only finer split where
+    /// CDX `scope` cannot express dev/build/test; SPDX 2.3 + 3
+    /// carry the lifecycle scope via B2's typed dep-relationship
+    /// types / `lifecycleScope` parameter, asserted independently
+    /// by B2's extractor). The parity check asserts only that
+    /// the CDX side is non-empty; SPDX sides are intentionally
+    /// not parity-checked under this catalog row.
+    CdxOnly,
 }
 
 /// Decode the `MikebomAnnotationCommentV1` envelope from SPDX

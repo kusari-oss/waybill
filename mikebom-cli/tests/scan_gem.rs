@@ -260,22 +260,26 @@ BUNDLED WITH
 "#,
     )
     .unwrap();
-    // Default: pry absent.
+    // Default (post-052): pry present + tagged with non-Runtime scope.
     let sbom = scan_args(dir.path(), &[]);
+    let pry = gem_named(&sbom, "pry").expect("pry present in default mode (post-052)");
     assert!(
-        gem_named(&sbom, "pry").is_none(),
-        "pry (development group) must be dropped in default mode",
+        has_dev_property(pry),
+        "pry (development group) must carry lifecycle-scope tag: {pry:?}",
     );
     assert!(
         gem_named(&sbom, "rack").is_some(),
         "rack (default group) must be retained",
     );
-    // --include-dev: pry tagged.
-    let sbom_dev = scan_args(dir.path(), &["--include-dev"]);
-    let pry = gem_named(&sbom_dev, "pry").expect("pry present with --include-dev");
+    // --exclude-scope dev,build,test: pry absent.
+    let sbom_strict = scan_args(dir.path(), &["--exclude-scope", "dev,build,test"]);
     assert!(
-        has_dev_property(pry),
-        "pry must carry mikebom:dev-dependency = true: {pry:?}",
+        gem_named(&sbom_strict, "pry").is_none(),
+        "pry (development group) must be dropped under --exclude-scope dev,build,test",
+    );
+    assert!(
+        gem_named(&sbom_strict, "rack").is_some(),
+        "rack (default group) must survive --exclude-scope",
     );
 }
 
@@ -319,18 +323,27 @@ BUNDLED WITH
 "#,
     )
     .unwrap();
+    // Default (post-052): rspec present + tagged with non-Runtime scope.
     let sbom = scan_args(dir.path(), &[]);
+    let rspec = gem_named(&sbom, "rspec").expect("rspec present in default mode (post-052)");
     assert!(
-        gem_named(&sbom, "rspec").is_none(),
-        "rspec (gemspec dev-dep) must be dropped in default mode",
+        has_dev_property(rspec),
+        "rspec (gemspec dev-dep) must carry lifecycle-scope tag: {rspec:?}",
     );
     assert!(
         gem_named(&sbom, "activesupport").is_some(),
         "activesupport (gemspec runtime-dep) must be retained",
     );
-    let sbom_dev = scan_args(dir.path(), &["--include-dev"]);
-    let rspec = gem_named(&sbom_dev, "rspec").expect("rspec present with --include-dev");
-    assert!(has_dev_property(rspec), "rspec must be tagged dev");
+    // --exclude-scope dev,build,test: rspec absent.
+    let sbom_strict = scan_args(dir.path(), &["--exclude-scope", "dev,build,test"]);
+    assert!(
+        gem_named(&sbom_strict, "rspec").is_none(),
+        "rspec (gemspec dev-dep) must be dropped under --exclude-scope dev,build,test",
+    );
+    assert!(
+        gem_named(&sbom_strict, "activesupport").is_some(),
+        "activesupport must survive --exclude-scope",
+    );
 }
 
 #[test]
