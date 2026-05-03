@@ -587,6 +587,36 @@ fn scan_cargo_workspace_inherited_version_resolves() {
     );
 }
 
+/// FR-007 + FR-011 + #126: cargo workspace-root entries' lockfile
+/// `dependencies = [...]` declarations now emit as direct-dep edges
+/// from the milestone-064 main-module. For the cargo-workspace
+/// fixture, member `b`'s path-dep on `a` (via `[dependencies] a =
+/// { path = "../a" }`) MUST emit a `DependsOn` edge from `b`'s
+/// main-module to `a`'s main-module.
+#[test]
+fn scan_cargo_workspace_path_dep_emits_main_module_to_main_module_edge() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures/cargo-workspace");
+    let (_output, _tmp, sbom_path) = run_scan_with_output(&path);
+    let raw = std::fs::read_to_string(&sbom_path).expect("read sbom");
+    let sbom: serde_json::Value = serde_json::from_str(&raw).expect("valid JSON");
+    let deps = sbom["dependencies"].as_array().expect("deps array");
+    let b_to_a = deps.iter().find(|d| {
+        d["ref"].as_str() == Some("pkg:cargo/b@0.5.0")
+            && d["dependsOn"]
+                .as_array()
+                .map(|arr| {
+                    arr.iter().any(|x| x.as_str() == Some("pkg:cargo/a@0.5.0"))
+                })
+                .unwrap_or(false)
+    });
+    assert!(
+        b_to_a.is_some(),
+        "expected b → a workspace-member path-dep edge in cargo workspace SBOM. \
+         dependencies array: {deps:#?}"
+    );
+}
+
 /// FR-002: workspace-only `Cargo.toml` (no `[package]`) MUST NOT emit
 /// a main-module for the root. Only members emit.
 #[test]

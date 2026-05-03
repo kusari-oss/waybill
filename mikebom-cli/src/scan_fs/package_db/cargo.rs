@@ -885,6 +885,35 @@ pub fn read(rootfs: &Path, include_dev: bool) -> Result<Vec<PackageDbEntry>, Car
         }
     }
 
+    // Milestone 065 (#126): collect workspace-root `dependencies = [...]`
+    // declarations from every lockfile in scope. parse_lockfile skips
+    // workspace-root [[package]] entries (source = None) to prevent
+    // self-referential FPs, but their dep lists ARE the canonical
+    // direct-dep set for the project. We re-read the lockfiles here
+    // and harvest them for milestone-064 main-module population.
+    let mut workspace_root_deps: HashMap<(String, String), Vec<String>> =
+        HashMap::new();
+    for lock_path in find_cargo_lockfiles(rootfs) {
+        if let Ok(Some(doc)) = parse_lockfile_doc(&lock_path) {
+            for pkg in &doc.package {
+                if pkg.source.is_some() {
+                    continue;
+                }
+                let dep_names: Vec<String> = pkg
+                    .dependencies
+                    .iter()
+                    .map(|d| {
+                        d.split_whitespace().next().unwrap_or(d).to_string()
+                    })
+                    .collect();
+                workspace_root_deps
+                    .entry((pkg.name.clone(), pkg.version.clone()))
+                    .or_default()
+                    .extend(dep_names);
+            }
+        }
+    }
+
     // Milestone 064 — Phase A (deferred): main-module emission.
     // For each Cargo.toml with [package], either:
     //   (a) augment an existing same-PURL lockfile-derived entry with
@@ -894,10 +923,24 @@ pub fn read(rootfs: &Path, include_dev: bool) -> Result<Vec<PackageDbEntry>, Car
     //       Cargo.lock in scope — library crates, fixture mins).
     // This ordering avoids losing lockfile-derived dep lists for
     // workspace members.
+    //
+    // Milestone 065 (#126): also populate `depends` from
+    // `workspace_root_deps` — the lockfile's `[[package]]` block
+    // for the workspace-root entry carries the project's direct-dep
+    // set even though parse_lockfile skipped emitting that entry.
     for manifest_path in &all_manifests {
-        let Some(synthesized) = build_cargo_main_module_entry(manifest_path, &workspace_ctx) else {
+        let Some(mut synthesized) =
+            build_cargo_main_module_entry(manifest_path, &workspace_ctx)
+        else {
             continue;
         };
+        // Pull in workspace-root's dependency list from the lockfile
+        // (#126). Keyed by (name, version) — same shape as
+        // workspace_root_deps's entries.
+        let lookup_key = (synthesized.name.clone(), synthesized.version.clone());
+        if let Some(deps) = workspace_root_deps.get(&lookup_key) {
+            synthesized.depends.extend(deps.iter().cloned());
+        }
         let purl_key = synthesized.purl.as_str().to_string();
         if let Some(existing) = out.iter_mut().find(|e| e.purl.as_str() == purl_key) {
             // (a) augment in-place with C40 + sbom_tier:source
@@ -909,6 +952,16 @@ pub fn read(rootfs: &Path, include_dev: bool) -> Result<Vec<PackageDbEntry>, Car
             }
             if existing.sbom_tier.is_none() {
                 existing.sbom_tier = synthesized.sbom_tier.clone();
+            }
+            // Merge workspace-root deps into existing entry. Dedup
+            // against existing depends — lockfile-resolved transitive
+            // deps may already include some of these names.
+            let existing_deps: HashSet<String> =
+                existing.depends.iter().cloned().collect();
+            for d in &synthesized.depends {
+                if !existing_deps.contains(d) {
+                    existing.depends.push(d.clone());
+                }
             }
             // Mark as top-level (main-modules are linker roots, never
             // children of another component).
