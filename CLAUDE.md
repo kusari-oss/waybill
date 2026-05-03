@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-05-02
+Auto-generated from all feature plans. Last updated: 2026-05-03
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -39,6 +39,7 @@ Auto-generated from all feature plans. Last updated: 2026-05-02
 - N/A — all state in-process per scan; no persistence (matches milestones 002–053 posture, restated in spec Q3 clarification). (055-go-transitive-edges)
 - Rust stable (workspace toolchain inherited from milestones 001–063; no nightly required for this user-space-only work). + Existing only — `toml = "0.8"` (already used by `mikebom-cli/src/scan_fs/package_db/cargo.rs:305`), `serde`/`serde_json`, `tracing`, `anyhow`. **No new crates.** No subprocess calls (manifest-only resolution; the `git describe` ladder from milestone 053 is *not* needed because `[package].version` is always declared in cargo manifests). (064-cargo-main-module)
 - N/A — all state in-process per scan; no persistence (matches every milestone since 002). (064-cargo-main-module)
+- Rust stable (workspace toolchain inherited from milestones 001–065; no nightly required). + Existing only — `serde_json` (already used by `npm/walk.rs`), `tracing`, `anyhow`. **No new crates.** No subprocess calls. (066-npm-main-module)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -101,9 +102,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 066-npm-main-module: Added Rust stable (workspace toolchain inherited from milestones 001–065; no nightly required). + Existing only — `serde_json` (already used by `npm/walk.rs`), `tracing`, `anyhow`. **No new crates.** No subprocess calls.
 - 064-cargo-main-module: Added Rust stable (workspace toolchain inherited from milestones 001–063; no nightly required for this user-space-only work). + Existing only — `toml = "0.8"` (already used by `mikebom-cli/src/scan_fs/package_db/cargo.rs:305`), `serde`/`serde_json`, `tracing`, `anyhow`. **No new crates.** No subprocess calls (manifest-only resolution; the `git describe` ladder from milestone 053 is *not* needed because `[package].version` is always declared in cargo manifests).
 - 055-go-transitive-edges: Added Rust stable (workspace toolchain inherited from milestones 001–054; no nightly required for this user-space-only work). + Existing only — `reqwest` (workspace, `default-features = false, features = ["json", "rustls-tls"]`) for proxy `.mod` fetches; `tokio` (workspace) for async semaphore + concurrent fetches; `std::process::Command` for `go mod graph` subprocess (same pattern as `git describe` at `golang.rs:733`); `serde_json`/`tracing`/`anyhow` already pervasive. **One new dev-only dep**: `wiremock = "0.6"` for FR-011/FR-012 hermetic HTTP fixture (alternative: hand-rolled `tokio::net::TcpListener` stub if dev-dep addition is contested in review).
-- 054-fix-walker-symlink-hang: Added Rust stable (workspace toolchain inherited from milestones 001–053; no nightly required for this user-space-only work). + Existing only — `std::fs::canonicalize`, `std::collections::HashSet`, `PathBuf`. **No new crates.** Per spec assumption: not pulling `walkdir` or `ignore` crates — std-only is the design intent matching the existing minimal-dependency Cargo.toml posture.
 
 
 <!-- MANUAL ADDITIONS START -->
