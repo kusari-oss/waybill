@@ -7,7 +7,82 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
-_No unreleased changes since v0.1.0-alpha.12._
+### Changed (BREAKING — SBOM output shape, milestone 068)
+
+- **Python project SBOMs now identify the project itself** via a
+  synthetic main-module component for every `pyproject.toml`
+  containing PEP 621 `[project]` table. Pre-068: Python SBOMs had
+  no project-self component. Post-068: every Python project scan
+  emits a `pkg:pypi/<name>@<version>` component (with PEP 503
+  name normalization — lowercase + underscore→hyphen) placed in
+  standards-native "BOM subject" slots — CDX `metadata.component`,
+  SPDX `primaryPackagePurpose: APPLICATION` plus
+  `documentDescribes`, SPDX 3.0.1
+  `software_primaryPurpose: application`. Carries
+  `mikebom:component-role: main-module` (C40) supplementary
+  signal per Constitution Principle V.
+
+- **Skip rule for `[tool.poetry]`-only manifests.** Per issue
+  #104's explicit guidance, Python projects using the pre-PEP-621
+  Poetry schema (no `[project]` table) are skipped from main-
+  module emission. Existing Poetry lockfile-driven dep emission
+  is unaffected. `tracing::info!` notes the skip with a pointer
+  to a future Poetry-extension follow-up issue. Manifests with
+  BOTH `[project]` AND `[tool.poetry]` (Poetry 1.5+ shim case)
+  emit from `[project]` — the standards-native PEP 621 source
+  wins.
+
+- **Editable-install merge precedence (FR-011).** When a venv
+  `.dist-info` shares the same PURL as the milestone-068 main-
+  module emitted from the project's own `pyproject.toml`, the
+  augment-existing-entry logic preserves venv evidence
+  (`mikebom:sbom-tier: deployed`, hashes from METADATA) while
+  layering Phase A's C40 tag + `parent_purl: None` on top. The
+  resulting main-module has both signals: project identity
+  (Phase A) + installation evidence (venv). This is unique to
+  pip — no equivalent in cargo/npm because their installation
+  models differ.
+
+- **`dynamic = ["version"]` → `0.0.0-unknown` placeholder.**
+  When a PEP 621 manifest defers `version` resolution to
+  setuptools-scm or similar, mikebom emits the literal
+  `0.0.0-unknown` placeholder rather than shelling out to a
+  Python toolchain. Cross-host determinism + zero-dependency
+  posture preserved per the convention from milestones
+  053/064/066.
+
+- **PEP 508 dep-name extraction.** Direct deps from
+  `[project.dependencies]` and `[project.optional-dependencies]`
+  emit edges from the main-module via the same
+  `name_to_purl`-resolution + dangling-target-drop convention
+  as cargo + npm. PEP 508 markers, version specifiers, and
+  extras are stripped — only the package name is used for edge
+  resolution.
+
+- **Same-PURL collision dedup** with operator-visible
+  `tracing::warn!` per the cargo (064) / npm (066) Q1
+  convention. Rare given `__pycache__/`, `.venv/`, `site-packages/`
+  are excluded from manifest discovery.
+
+### Migration
+
+- Consumers reading `metadata.component.purl` for Python scans
+  now receive `pkg:pypi/<pep503-name>@<version>` instead of the
+  pre-068 `pkg:generic/...` placeholder.
+- Per-ecosystem main-module coverage matrix: Go ✅ (053),
+  cargo ✅ (064), npm ✅ (066), pip ✅ (068, PEP 621 only —
+  Poetry-only `[tool.poetry]` deferred), maven / gem tracked in
+  #104.
+
+### Known gaps (filed for follow-up)
+
+- **#104 Poetry coverage**: `[tool.poetry]`-only manifests
+  currently skipped per #104's explicit guidance. If demand
+  surfaces, a follow-up issue will extend the reader.
+- **#103** — LICENSE detection for the new pip main-module
+  (PEP 621 `[project].license` field, classifiers, LICENSE-file
+  matching).
+- **#125** — divergent-PURL detection extends to pip too.
 
 
 

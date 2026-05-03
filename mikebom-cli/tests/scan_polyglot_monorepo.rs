@@ -70,29 +70,35 @@ fn polyglot_monorepo_emits_both_python_and_npm_components() {
     let pypi = components_by_prefix(&sbom, "pkg:pypi/");
     let npm = components_by_prefix(&sbom, "pkg:npm/");
 
-    // Backend: 3 design-tier requirements.txt entries.
+    // Backend: 3 design-tier requirements.txt entries (fastapi,
+    // uvicorn, httpx) PLUS the milestone-068 main-module emitted
+    // from `backend/pyproject.toml` (`[project]` declares
+    // `name = "backend"`). Pre-068 expected 3; post-068 expects 4.
     assert_eq!(
         pypi.len(),
-        3,
-        "backend: expected fastapi + uvicorn + httpx, got {:?}",
+        4,
+        "backend: expected fastapi + uvicorn + httpx + backend (068 main-module), got {:?}",
         pypi.iter().map(|c| c["name"].as_str()).collect::<Vec<_>>()
     );
     let pypi_names: Vec<&str> = pypi.iter().filter_map(|c| c["name"].as_str()).collect();
     assert!(pypi_names.contains(&"fastapi"));
     assert!(pypi_names.contains(&"uvicorn"));
     assert!(pypi_names.contains(&"httpx"));
+    assert!(pypi_names.contains(&"backend"), "milestone 068: pyproject.toml [project] emits a main-module");
 
     // Frontend: 2 source-tier lockfile entries (vite filtered via
-    // --exclude-scope).
+    // --exclude-scope) + the milestone-066 main-module emitted from
+    // `frontend/package.json` (`name = "frontend"`).
     assert_eq!(
         npm.len(),
-        2,
-        "frontend: expected react + axios (--exclude-scope prod-only), got {:?}",
+        3,
+        "frontend: expected react + axios + frontend (066 main-module), got {:?}",
         npm.iter().map(|c| c["name"].as_str()).collect::<Vec<_>>()
     );
     let npm_names: Vec<&str> = npm.iter().filter_map(|c| c["name"].as_str()).collect();
     assert!(npm_names.contains(&"react"));
     assert!(npm_names.contains(&"axios"));
+    assert!(npm_names.contains(&"frontend"), "milestone 066: package.json `name` emits a main-module");
 }
 
 #[test]

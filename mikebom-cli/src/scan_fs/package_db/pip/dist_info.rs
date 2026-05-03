@@ -500,8 +500,13 @@ License: Ignored
     }
 
     #[test]
-    fn pyproject_only_project_skips_with_log() {
+    fn pyproject_only_project_emits_only_main_module() {
         // Bare pyproject.toml; no venv, no lockfile, no requirements.
+        // Pre-milestone-068 this emitted zero components; post-068 it
+        // emits exactly one main-module component for the project
+        // itself per FR-001 (PEP 621 [project] table). Phantom dep
+        // components from `[project.dependencies]` are still NOT
+        // emitted — those build specs aren't resolved versions.
         let dir = tempfile::tempdir().unwrap();
         fs::write(
             dir.path().join("pyproject.toml"),
@@ -509,7 +514,21 @@ License: Ignored
         )
         .unwrap();
         let out = read(dir.path(), false);
-        assert!(out.is_empty(), "pyproject-only project emits zero components");
+        assert_eq!(
+            out.len(),
+            1,
+            "pyproject-only project emits exactly one component (the main-module)"
+        );
+        assert_eq!(out[0].name, "myapp");
+        assert_eq!(out[0].purl.as_str(), "pkg:pypi/myapp@0.1.0");
+        assert_eq!(
+            out[0]
+                .extra_annotations
+                .get("mikebom:component-role")
+                .and_then(|v| v.as_str()),
+            Some("main-module"),
+            "milestone 068: pyproject-only emits a C40-tagged main-module"
+        );
     }
 
     #[test]

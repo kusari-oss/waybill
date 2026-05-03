@@ -1,0 +1,7 @@
+[project]
+name = "my_pkg"
+version = "1.0.0"
+dependencies = [
+    "requests>=2.0",
+    "click ~= 8.0",
+]

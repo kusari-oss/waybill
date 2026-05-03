@@ -153,6 +153,100 @@ pub fn read(rootfs: &Path, include_dev: bool) -> Vec<PackageDbEntry> {
         );
     }
 
+    // Milestone 068 — Phase A: emit one main-module per pyproject.toml
+    // with PEP 621 [project] table. Augment-existing-or-emit-new
+    // pattern mirrors cargo (064) / npm (066). Editable-install merge
+    // (FR-011): when a Tier-1 venv-derived entry from above shares the
+    // same PURL, augment in-place — venv evidence wins for sbom_tier /
+    // hashes, Phase A adds the C40 tag + parent_purl: None.
+    let mut main_modules_emitted = 0usize;
+    let mut poetry_skips = 0usize;
+    for project_root in candidate_python_project_roots(rootfs) {
+        let (synthesized, was_poetry_only) =
+            build_pip_main_module_entry(&project_root);
+        if was_poetry_only {
+            poetry_skips += 1;
+            tracing::info!(
+                manifest = %project_root.join("pyproject.toml").display(),
+                "pip: skipping main-module emission for [tool.poetry]-only pyproject.toml — Poetry schema deferred per #104",
+            );
+            continue;
+        }
+        let Some(synthesized) = synthesized else {
+            continue;
+        };
+        let purl_key = synthesized.purl.as_str().to_string();
+        if let Some(existing) = entries.iter_mut().find(|e| e.purl.as_str() == purl_key) {
+            // FR-011: augment-existing — when a same-PURL Tier-1 venv or
+            // lockfile-derived entry exists, layer C40 + parent_purl
+            // None on top while preserving the existing entry's
+            // sbom_tier / hashes / evidence_kind (venv evidence wins).
+            for (k, v) in synthesized.extra_annotations.iter() {
+                existing
+                    .extra_annotations
+                    .entry(k.clone())
+                    .or_insert_with(|| v.clone());
+            }
+            existing.parent_purl = None;
+            // Merge synthesized depends into existing depends, dedup —
+            // Phase A's PEP 621 dep set may be a superset of what the
+            // lockfile / requirements.txt resolved (extras not pinned
+            // there).
+            let existing_deps: std::collections::HashSet<String> =
+                existing.depends.iter().cloned().collect();
+            for d in &synthesized.depends {
+                if !existing_deps.contains(d) {
+                    existing.depends.push(d.clone());
+                }
+            }
+            // sbom_tier: preserve existing if set (venv "deployed" or
+            // lockfile "source" wins); only fall back to synthesized's
+            // "source" when existing is None.
+            if existing.sbom_tier.is_none() {
+                existing.sbom_tier = synthesized.sbom_tier.clone();
+            }
+            main_modules_emitted += 1;
+        } else {
+            entries.push(synthesized);
+            main_modules_emitted += 1;
+        }
+    }
+
+    // Milestone 068 same-PURL dedup. Rare given site-packages/__pycache__
+    // are excluded from manifest discovery, but defensive (mirrors the
+    // cargo / npm convention).
+    let dedup_drops = dedup_pip_main_modules_by_purl(&mut entries);
+    if !dedup_drops.is_empty() {
+        let dropped_paths: Vec<String> = dedup_drops
+            .iter()
+            .map(|d| d.dropped_path.clone())
+            .collect();
+        let kept_path = dedup_drops
+            .first()
+            .map(|d| d.kept_path.clone())
+            .unwrap_or_default();
+        let example_purl = dedup_drops
+            .first()
+            .map(|d| d.purl.clone())
+            .unwrap_or_default();
+        tracing::warn!(
+            count = dedup_drops.len(),
+            example_purl = %example_purl,
+            kept = %kept_path,
+            dropped = ?dropped_paths,
+            "pip: deduped same-PURL pyproject.toml files",
+        );
+    }
+    if main_modules_emitted > 0 || poetry_skips > 0 {
+        tracing::info!(
+            rootfs = %rootfs.display(),
+            main_modules_emitted,
+            poetry_only_skips = poetry_skips,
+            same_purl_duplicates_dropped = dedup_drops.len(),
+            "pip: emitted main-module components",
+        );
+    }
+
     entries
 }
 
@@ -227,6 +321,222 @@ fn merge_without_override(
             entries.push(a);
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// Milestone 068 — pip source-tree main-module component (PEP 621 pyproject.toml)
+// ---------------------------------------------------------------------------
+
+/// Record describing a duplicate main-module dropped during dedup,
+/// returned in batch from `dedup_pip_main_modules_by_purl` for
+/// caller-side `tracing::warn!` emission. Mirrors cargo (064) / npm (066).
+#[derive(Debug, Clone)]
+pub(crate) struct DroppedDuplicate {
+    pub purl: String,
+    pub kept_path: String,
+    pub dropped_path: String,
+}
+
+/// Build the pip main-module entry for a single `pyproject.toml`.
+///
+/// Returns `None` when:
+/// - `pyproject.toml` is absent, malformed, or unreadable.
+/// - `[project]` table is absent (Poetry-only schema or non-Python
+///   `pyproject.toml`). Per FR-002, a `tracing::info!` is emitted at
+///   the orchestration site (not here) when a `[tool.poetry]`-only
+///   schema is detected, so operators can see the deliberate skip.
+/// - `[project].name` is absent.
+///
+/// Otherwise emits a `PackageDbEntry` with:
+/// - PURL `pkg:pypi/<pep503-normalized-name>@<version>` via
+///   `build_pypi_purl_str`.
+/// - `version`: literal `[project].version` if present, else
+///   `"0.0.0-unknown"` placeholder per FR-001 + spec Q1 (matching
+///   the cross-host determinism convention from milestones 053/064/066).
+///   When `[project].dynamic` contains `"version"`, the placeholder
+///   is the documented deferral target — no setuptools-scm shellout.
+/// - `parent_purl: None` (top-level — FR-001a).
+/// - `sbom_tier: Some("source")` (FR-006); overridden to `"deployed"`
+///   downstream when augment-existing merges with a Tier-1 venv entry
+///   (FR-011, in `read()`).
+/// - `extra_annotations` carries `mikebom:component-role: "main-module"`
+///   (C40, FR-004).
+/// - `licenses: vec![]` (FR-005; license detection is #103 follow-up).
+/// - `depends`: direct-dep package names extracted from
+///   `[project.dependencies]` and each `[project.optional-dependencies].*`
+///   array. PEP 508 requirement strings are split on whitespace and
+///   the first token is taken as the package name (consistent with
+///   how `requirements_txt.rs` handles the same shape — markers and
+///   version specifiers are stripped).
+///
+/// Returns `(Option<PackageDbEntry>, bool)` where the bool flag is
+/// `true` if this manifest was Poetry-only (`[tool.poetry]` present
+/// AND `[project]` absent), so the caller can emit FR-002's
+/// info-level skip log without re-reading the manifest.
+pub(crate) fn build_pip_main_module_entry(
+    project_root: &Path,
+) -> (Option<PackageDbEntry>, bool) {
+    let manifest_path = project_root.join("pyproject.toml");
+    let Ok(text) = std::fs::read_to_string(&manifest_path) else {
+        return (None, false);
+    };
+    let Ok(parsed) = toml::from_str::<toml::Value>(&text) else {
+        return (None, false);
+    };
+    let project_table = parsed.get("project");
+    let has_poetry_table = parsed
+        .get("tool")
+        .and_then(|t| t.get("poetry"))
+        .is_some();
+    // FR-002: Poetry-only (no [project], yes [tool.poetry]) → skip
+    // emission and signal to caller for the info-level log.
+    if project_table.is_none() {
+        return (None, has_poetry_table);
+    }
+    let project = project_table.expect("checked above");
+    let Some(name) = project.get("name").and_then(|v| v.as_str()) else {
+        return (None, false);
+    };
+    // Resolve version per FR-001 + spec Q1:
+    //   1. literal `[project].version` string → use verbatim
+    //   2. otherwise → `"0.0.0-unknown"` placeholder
+    // The dynamic-version case (`[project].dynamic` contains "version")
+    // and the missing-field case both fall through to step 2; the
+    // missing-without-dynamic case additionally emits a warn-level log
+    // since that's a malformed PEP 621 manifest.
+    let version_field = project.get("version").and_then(|v| v.as_str());
+    let dynamic_has_version = project
+        .get("dynamic")
+        .and_then(|v| v.as_array())
+        .is_some_and(|arr| {
+            arr.iter().any(|x| x.as_str() == Some("version"))
+        });
+    let version = match (version_field, dynamic_has_version) {
+        (Some(v), _) => v.to_string(),
+        (None, true) => "0.0.0-unknown".to_string(),
+        (None, false) => {
+            tracing::warn!(
+                manifest = %manifest_path.display(),
+                name = %name,
+                "pip: pyproject.toml [project] has neither `version` nor `dynamic = [\"version\"]` — using 0.0.0-unknown placeholder",
+            );
+            "0.0.0-unknown".to_string()
+        }
+    };
+    let purl_str = build_pypi_purl_str(name, &version);
+    let Ok(purl) = mikebom_common::types::purl::Purl::new(&purl_str) else {
+        return (None, has_poetry_table);
+    };
+    // Direct deps from [project.dependencies] and
+    // [project.optional-dependencies].* per FR-007. PEP 508 strings:
+    // take the first whitespace-or-`[<>=;`-delimited token as the name.
+    let mut depends: Vec<String> = Vec::new();
+    let take_first_token = |s: &str| -> String {
+        s.chars()
+            .take_while(|c| {
+                !matches!(c, ' ' | '\t' | '[' | ']' | '<' | '>' | '=' | ';' | '~' | '!')
+            })
+            .collect::<String>()
+            .trim()
+            .to_string()
+    };
+    if let Some(deps) = project.get("dependencies").and_then(|v| v.as_array()) {
+        for d in deps.iter().filter_map(|v| v.as_str()) {
+            let token = take_first_token(d);
+            if !token.is_empty() {
+                depends.push(token);
+            }
+        }
+    }
+    if let Some(opt_table) = project
+        .get("optional-dependencies")
+        .and_then(|v| v.as_table())
+    {
+        for (_extra_name, deps) in opt_table {
+            if let Some(arr) = deps.as_array() {
+                for d in arr.iter().filter_map(|v| v.as_str()) {
+                    let token = take_first_token(d);
+                    if !token.is_empty() {
+                        depends.push(token);
+                    }
+                }
+            }
+        }
+    }
+    let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
+        Default::default();
+    extra_annotations.insert(
+        "mikebom:component-role".to_string(),
+        serde_json::Value::String("main-module".to_string()),
+    );
+    let source_path = format!("path+file://{}", project_root.display());
+    let entry = PackageDbEntry {
+        purl,
+        name: name.to_string(),
+        version,
+        arch: None,
+        source_path,
+        depends,
+        maintainer: None,
+        licenses: Vec::new(),
+        lifecycle_scope: None,
+        requirement_range: None,
+        source_type: None,
+        buildinfo_status: None,
+        evidence_kind: None,
+        binary_class: None,
+        binary_stripped: None,
+        linkage_kind: None,
+        detected_go: None,
+        confidence: None,
+        binary_packed: None,
+        raw_version: None,
+        parent_purl: None,
+        npm_role: None,
+        co_owned_by: None,
+        hashes: Vec::new(),
+        sbom_tier: Some("source".to_string()),
+        shade_relocation: None,
+        extra_annotations,
+    };
+    (Some(entry), false)
+}
+
+/// Dedup main-module entries by PURL, preserving the first occurrence.
+/// Mirrors cargo's `dedup_main_modules_by_purl` from milestone 064 T010.
+/// Predicate is C40-tag-driven; non-main-module pip entries are
+/// untouched even if their PURLs would collide.
+pub(crate) fn dedup_pip_main_modules_by_purl(
+    entries: &mut Vec<PackageDbEntry>,
+) -> Vec<DroppedDuplicate> {
+    let mut dropped: Vec<DroppedDuplicate> = Vec::new();
+    let mut seen: std::collections::HashMap<String, String> =
+        std::collections::HashMap::new();
+    let mut keep: Vec<PackageDbEntry> = Vec::with_capacity(entries.len());
+    for entry in std::mem::take(entries) {
+        let is_main = entry
+            .extra_annotations
+            .get("mikebom:component-role")
+            .and_then(|v| v.as_str())
+            == Some("main-module");
+        if !is_main {
+            keep.push(entry);
+            continue;
+        }
+        let purl = entry.purl.as_str().to_string();
+        if let Some(kept_path) = seen.get(&purl) {
+            dropped.push(DroppedDuplicate {
+                purl: purl.clone(),
+                kept_path: kept_path.clone(),
+                dropped_path: entry.source_path.clone(),
+            });
+        } else {
+            seen.insert(purl, entry.source_path.clone());
+            keep.push(entry);
+        }
+    }
+    *entries = keep;
+    dropped
 }
 
 
@@ -428,8 +738,14 @@ mod tests {
         .unwrap();
         std::fs::write(app.join("requirements.txt"), "httpx==0.25.0\n").unwrap();
         let out = read(dir.path(), false);
-        assert_eq!(out.len(), 1);
-        assert_eq!(out[0].name, "httpx");
+        // Pre-068: only `httpx` (the requirements.txt-derived dep).
+        // Post-068: `httpx` + the milestone-068 main-module component
+        // emitted from the same project's pyproject.toml [project] table.
+        assert_eq!(out.len(), 2);
+        let names: std::collections::HashSet<&str> =
+            out.iter().map(|e| e.name.as_str()).collect();
+        assert!(names.contains("httpx"));
+        assert!(names.contains("myapp"));
     }
 
     #[test]
@@ -452,5 +768,243 @@ mod tests {
             !out.iter().any(|e| e.name == "should-not-appear"),
             "walker must not descend into venv/ or node_modules/"
         );
+    }
+
+    // -------------------------------------------------------------------
+    // Milestone 068 — main-module emission helpers (T007)
+    // -------------------------------------------------------------------
+
+    fn write_pyproject(dir: &std::path::Path, contents: &str) {
+        std::fs::create_dir_all(dir).unwrap();
+        std::fs::write(dir.join("pyproject.toml"), contents).unwrap();
+    }
+
+    #[test]
+    fn build_pip_main_module_pep621_basic_emits_entry() {
+        let tmp = tempfile::tempdir().unwrap();
+        write_pyproject(
+            tmp.path(),
+            r#"
+[project]
+name = "my_pkg"
+version = "1.0.0"
+"#,
+        );
+        let (entry, was_poetry_only) = build_pip_main_module_entry(tmp.path());
+        assert!(!was_poetry_only);
+        let entry = entry.unwrap();
+        assert_eq!(entry.purl.as_str(), "pkg:pypi/my-pkg@1.0.0");
+        assert_eq!(entry.name, "my_pkg"); // verbatim manifest value
+        assert_eq!(entry.version, "1.0.0");
+        assert_eq!(entry.parent_purl, None);
+        assert_eq!(entry.sbom_tier.as_deref(), Some("source"));
+        assert_eq!(
+            entry
+                .extra_annotations
+                .get("mikebom:component-role")
+                .and_then(|v| v.as_str()),
+            Some("main-module")
+        );
+    }
+
+    #[test]
+    fn build_pip_main_module_pep503_normalizes_name_in_purl() {
+        let tmp = tempfile::tempdir().unwrap();
+        write_pyproject(
+            tmp.path(),
+            r#"
+[project]
+name = "Some_Package_Name"
+version = "0.5.0"
+"#,
+        );
+        let (entry, _) = build_pip_main_module_entry(tmp.path());
+        let entry = entry.unwrap();
+        // PEP 503 normalization (per existing
+        // `normalize_pypi_name_for_purl`): underscore → hyphen,
+        // lowercase. Dots are preserved (matches the existing
+        // `normalize_pypi_name_for_purl` helper which mirrors the
+        // packageurl-python reference impl, NOT strict PEP 503).
+        assert_eq!(entry.purl.as_str(), "pkg:pypi/some-package-name@0.5.0");
+        assert_eq!(entry.name, "Some_Package_Name");
+    }
+
+    #[test]
+    fn build_pip_main_module_dynamic_version_uses_placeholder() {
+        let tmp = tempfile::tempdir().unwrap();
+        write_pyproject(
+            tmp.path(),
+            r#"
+[project]
+name = "dyn-app"
+dynamic = ["version"]
+"#,
+        );
+        let (entry, _) = build_pip_main_module_entry(tmp.path());
+        let entry = entry.unwrap();
+        assert_eq!(entry.purl.as_str(), "pkg:pypi/dyn-app@0.0.0-unknown");
+        assert_eq!(entry.version, "0.0.0-unknown");
+    }
+
+    #[test]
+    fn build_pip_main_module_poetry_only_returns_none_with_flag() {
+        let tmp = tempfile::tempdir().unwrap();
+        write_pyproject(
+            tmp.path(),
+            r#"
+[tool.poetry]
+name = "poetry-only-app"
+version = "1.0.0"
+"#,
+        );
+        let (entry, was_poetry_only) = build_pip_main_module_entry(tmp.path());
+        assert!(entry.is_none());
+        assert!(was_poetry_only);
+    }
+
+    #[test]
+    fn build_pip_main_module_both_schemas_emits_from_project() {
+        // FR-003: when both [project] and [tool.poetry] are present,
+        // emit from [project] (the standards-native PEP 621 source).
+        let tmp = tempfile::tempdir().unwrap();
+        write_pyproject(
+            tmp.path(),
+            r#"
+[project]
+name = "shim-app"
+version = "2.0.0"
+
+[tool.poetry]
+name = "shim-app"
+version = "1.0.0"
+"#,
+        );
+        let (entry, was_poetry_only) = build_pip_main_module_entry(tmp.path());
+        assert!(!was_poetry_only);
+        let entry = entry.unwrap();
+        // [project].version wins (2.0.0), not [tool.poetry].version (1.0.0)
+        assert_eq!(entry.version, "2.0.0");
+    }
+
+    #[test]
+    fn build_pip_main_module_missing_version_no_dynamic_emits_placeholder() {
+        let tmp = tempfile::tempdir().unwrap();
+        write_pyproject(
+            tmp.path(),
+            r#"
+[project]
+name = "broken-pep621"
+"#,
+        );
+        let (entry, _) = build_pip_main_module_entry(tmp.path());
+        let entry = entry.unwrap();
+        // Lenient parse: emit with placeholder + warn (warn isn't
+        // captured here but the placeholder behavior is verified).
+        assert_eq!(entry.version, "0.0.0-unknown");
+    }
+
+    #[test]
+    fn build_pip_main_module_missing_project_returns_none() {
+        let tmp = tempfile::tempdir().unwrap();
+        write_pyproject(
+            tmp.path(),
+            r#"
+[build-system]
+requires = ["setuptools"]
+"#,
+        );
+        let (entry, was_poetry_only) = build_pip_main_module_entry(tmp.path());
+        assert!(entry.is_none());
+        assert!(!was_poetry_only); // no [tool.poetry] either, so flag is false
+    }
+
+    #[test]
+    fn build_pip_main_module_emits_direct_deps_from_dependencies() {
+        let tmp = tempfile::tempdir().unwrap();
+        write_pyproject(
+            tmp.path(),
+            r#"
+[project]
+name = "with-deps"
+version = "1.0.0"
+dependencies = [
+  "requests>=2.0",
+  "click ~= 8.0",
+  "rich; python_version >= '3.10'",
+]
+"#,
+        );
+        let (entry, _) = build_pip_main_module_entry(tmp.path());
+        let entry = entry.unwrap();
+        // PEP 508 first-token extraction: name only (no specs, no markers).
+        let names: std::collections::HashSet<String> =
+            entry.depends.iter().cloned().collect();
+        assert!(names.contains("requests"));
+        assert!(names.contains("click"));
+        assert!(names.contains("rich"));
+    }
+
+    fn make_main_module_entry(name: &str, version: &str, source_path: &str) -> PackageDbEntry {
+        let purl_str = build_pypi_purl_str(name, version);
+        let purl = mikebom_common::types::purl::Purl::new(&purl_str).unwrap();
+        let mut extra: std::collections::BTreeMap<String, serde_json::Value> =
+            Default::default();
+        extra.insert(
+            "mikebom:component-role".to_string(),
+            serde_json::Value::String("main-module".to_string()),
+        );
+        PackageDbEntry {
+            purl,
+            name: name.to_string(),
+            version: version.to_string(),
+            arch: None,
+            source_path: source_path.to_string(),
+            depends: Vec::new(),
+            maintainer: None,
+            licenses: Vec::new(),
+            lifecycle_scope: None,
+            requirement_range: None,
+            source_type: None,
+            buildinfo_status: None,
+            evidence_kind: None,
+            binary_class: None,
+            binary_stripped: None,
+            linkage_kind: None,
+            detected_go: None,
+            confidence: None,
+            binary_packed: None,
+            raw_version: None,
+            parent_purl: None,
+            npm_role: None,
+            co_owned_by: None,
+            hashes: Vec::new(),
+            sbom_tier: Some("source".to_string()),
+            shade_relocation: None,
+            extra_annotations: extra,
+        }
+    }
+
+    #[test]
+    fn dedup_pip_main_modules_no_collision_returns_empty() {
+        let mut entries = vec![
+            make_main_module_entry("a", "1.0.0", "/tmp/a"),
+            make_main_module_entry("b", "1.0.0", "/tmp/b"),
+        ];
+        let drops = dedup_pip_main_modules_by_purl(&mut entries);
+        assert_eq!(entries.len(), 2);
+        assert!(drops.is_empty());
+    }
+
+    #[test]
+    fn dedup_pip_main_modules_two_same_purl_keeps_first() {
+        let mut entries = vec![
+            make_main_module_entry("foo", "1.2.3", "/tmp/proj/pyproject.toml"),
+            make_main_module_entry("foo", "1.2.3", "/tmp/proj/vendor/pyproject.toml"),
+        ];
+        let drops = dedup_pip_main_modules_by_purl(&mut entries);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].source_path, "/tmp/proj/pyproject.toml");
+        assert_eq!(drops.len(), 1);
+        assert_eq!(drops[0].dropped_path, "/tmp/proj/vendor/pyproject.toml");
     }
 }
