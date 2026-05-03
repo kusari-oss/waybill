@@ -80,6 +80,7 @@ pub async fn enrich_dep_graph(
     // follow-up calls.
     let mut seed_coords: Vec<(String, String, String, String)> = Vec::new(); // (ecosystem, depsdev_system, name, version)
     let mut seen_seeds: HashSet<String> = HashSet::new();
+    let mut skipped_unknown_version = 0usize;
     for c in components.iter() {
         let eco = c.purl.ecosystem();
         if !SUPPORTED_ECOSYSTEMS.contains(&eco) {
@@ -88,12 +89,30 @@ pub async fn enrich_dep_graph(
         let Some(system) = deps_dev_system_for(eco) else {
             continue;
         };
+        // Skip components whose version is empty or the literal
+        // "unknown" placeholder — these can never produce a successful
+        // deps.dev lookup, only 404s + retry latency. Common for
+        // template-fixture POMs (e.g., knative-func's Quarkus / Spring
+        // Boot scaffolds with `<version>` unset) and any milestone-053-
+        // style `v0.0.0-unknown` Go placeholder. Wall-clock impact in
+        // CI: dozens of skipped 404s per scan saves multiple minutes
+        // on realistic-project scans.
+        if c.version.is_empty() || c.version == "unknown" {
+            skipped_unknown_version += 1;
+            continue;
+        }
         let name = deps_dev_package_name(eco, c.purl.namespace(), &c.name);
         let key = format!("{system}::{name}::{}", c.version);
         if !seen_seeds.insert(key) {
             continue;
         }
         seed_coords.push((eco.to_string(), system.to_string(), name, c.version.clone()));
+    }
+    if skipped_unknown_version > 0 {
+        debug!(
+            skipped = skipped_unknown_version,
+            "deps.dev: skipped seed components with empty/unknown version (would 404)",
+        );
     }
 
     if seed_coords.is_empty() {
