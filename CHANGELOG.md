@@ -7,6 +7,44 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+_No unreleased changes since v0.1.0-alpha.12._
+
+
+
+## [0.1.0-alpha.12] — 2026-05-03
+
+A focused per-ecosystem release expanding the main-module pattern
+shipped for Go in alpha.10/053 to two more ecosystems (cargo + npm),
+plus closing a pre-existing cargo workspace-root edge-emission gap
+and a deps.dev enrichment perf bug surfaced during 064 review.
+
+Three milestones since alpha.11 (~1 day later):
+
+- **064**: cargo source-tree main-module component (closes the
+  cargo slice of #104). Each `Cargo.toml` with `[package]` emits
+  a `pkg:cargo/<name>@<version>` component in standards-native
+  BOM-subject slots. Includes the multi-main-module super-root +
+  plural-DESCRIBES wiring (#127) shipped as a side-fix —
+  workspace scans correctly surface every member through
+  `documentDescribes`/`rootElement`.
+- **065**: cargo workspace-root direct-dep edges (closes #126).
+  Pre-065 cargo SBOMs had a project-self component but no
+  outgoing dep tree because `parse_lockfile` was skipping
+  workspace-root entries. Post-065, those entries' `dependencies
+  = [...]` declarations are harvested separately and merged into
+  the milestone-064 main-module's `depends` field. Completes
+  064's FR-007. Bundled with a deps.dev seed-skip for
+  empty/`unknown`-version components — surfaced when knative-func
+  realistic-project CI hit the 15-minute job timeout from dozens
+  of guaranteed-404 maven calls.
+- **066**: npm source-tree main-module component (closes the npm
+  slice of #104). Each `package.json` with `name` (and not
+  `private: true` + no version per #104's guidance) emits a
+  `pkg:npm/<name>@<version>` (or `%40scope/name` encoded)
+  component. Workspace handling extends the cargo pattern; no
+  generator-side changes needed thanks to the C40-tag-driven
+  hooks established in 053+064+#127.
+
 ### Changed (BREAKING — SBOM output shape, milestone 066)
 
 - **npm SBOMs now identify the project itself** via a synthetic
@@ -135,22 +173,37 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 - Per-ecosystem main-module coverage matrix: Go ✅ (053),
   cargo ✅ (064), npm/pip/maven/gem tracked in #104.
 
+### Resolved during alpha.12
+
+- **#127** — multi-main-module workspaces (cargo + polyglot):
+  closed by milestone 064 (#128). The synthetic super-root now
+  emits plural DESCRIBES via SPDX 2.3 `documentDescribes[]` and
+  SPDX 3 `rootElement[]`. Workspace scans correctly surface every
+  member.
+- **#126** — pre-existing cargo workspace-root edge-emission gap:
+  closed by milestone 065 (#129). Workspace-root `[[package]]`
+  entries' `dependencies = [...]` declarations are now harvested
+  separately and merged into the main-module's `depends`.
+
 ### Known gaps (filed for follow-up)
 
-- **#127** — multi-main-module workspaces (cargo + future polyglot):
-  the synthetic super-root currently lacks outgoing DESCRIBES to
-  the per-member main-modules. Single-main-module scans work
-  correctly. Workspace scans emit the main-modules but
-  `documentDescribes` doesn't surface them through the super-root.
-- **#126** — pre-existing cargo workspace-root edge-emission gap:
-  workspace-root `Cargo.lock` entries declare `dependencies =
-  [...]` but those edges are not emitted to the SBOM. Out of scope
-  for milestone 064; verified by stashing 064 changes and observing
-  the same 0 edges pre- and post-064.
-- **#125** — divergent-PURL detection: when two `Cargo.toml` files
-  claim the same PURL but have different content hashes (potential
-  typosquatting / supply-chain signal), surface a stronger SBOM
-  signal beyond the current `tracing::warn!`.
+- **#125** — divergent-PURL detection (cargo + npm): when two
+  manifests claim the same PURL but have different content hashes
+  (potential typosquatting / supply-chain signal), surface a
+  stronger SBOM signal beyond the current `tracing::warn!`.
+  Applies to the same-PURL dedup paths shipped in milestones 064
+  + 066.
+- **#103** — LICENSE detection for main-module components.
+  Currently the C40 carve-out keeps sbomqs licensing-coverage
+  scoring from regressing, but the main-module entries themselves
+  have empty `licenses` fields. Real `license`/`license-file`
+  reading + SPDX-License-Identifier header scanning + askalono
+  content matching tracked here. Applies to all three
+  main-module-bearing ecosystems.
+- **#104** — remaining ecosystems (pip, maven, gem). The
+  C40-tag-driven generator hooks are now ecosystem-agnostic, so
+  the per-ecosystem effort is mostly reader-side (a few hundred
+  LOC each, similar to milestones 064/066).
 
 
 
