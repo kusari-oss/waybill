@@ -1654,4 +1654,350 @@ foo = { package = "real-name", version = "1" }
         // asserts the call returned (didn't hang).
         assert!(result.is_empty());
     }
+
+    // -------------------------------------------------------------------
+    // Milestone 064 — main-module emission helpers (T013)
+    // -------------------------------------------------------------------
+
+    fn write_manifest(dir: &Path, contents: &str) -> PathBuf {
+        std::fs::create_dir_all(dir).unwrap();
+        let path = dir.join("Cargo.toml");
+        std::fs::write(&path, contents).unwrap();
+        path
+    }
+
+    #[test]
+    fn workspace_context_records_workspace_package_version() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root_path = write_manifest(
+            tmp.path(),
+            r#"
+[workspace]
+members = ["a"]
+
+[workspace.package]
+version = "1.0.0"
+"#,
+        );
+        let ctx = WorkspaceContext::build_from_manifests(&[root_path.clone()]);
+        assert_eq!(
+            ctx.lookup_for_member(tmp.path()).map(|s| s.to_string()),
+            Some("1.0.0".to_string()),
+        );
+    }
+
+    #[test]
+    fn workspace_context_walks_up_for_member() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root_manifest = write_manifest(
+            tmp.path(),
+            r#"
+[workspace]
+members = ["a"]
+
+[workspace.package]
+version = "2.5.0"
+"#,
+        );
+        let member_dir = tmp.path().join("a");
+        std::fs::create_dir_all(&member_dir).unwrap();
+        let ctx = WorkspaceContext::build_from_manifests(&[root_manifest]);
+        // Member crate dir walks up to the workspace root.
+        assert_eq!(
+            ctx.lookup_for_member(&member_dir).map(|s| s.to_string()),
+            Some("2.5.0".to_string()),
+        );
+    }
+
+    #[test]
+    fn workspace_context_returns_none_when_no_workspace_package_version() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = write_manifest(
+            tmp.path(),
+            r#"
+[workspace]
+members = ["a"]
+"#,
+        );
+        let ctx = WorkspaceContext::build_from_manifests(&[root]);
+        assert!(ctx.lookup_for_member(tmp.path()).is_none());
+    }
+
+    #[test]
+    fn resolve_version_uses_literal_string() {
+        let pkg: toml::Value = toml::from_str(r#"name = "x"
+version = "3.4.5"
+"#).unwrap();
+        let ctx = WorkspaceContext::default();
+        let resolved =
+            resolve_cargo_main_module_version(Path::new("/tmp/x"), &pkg, &ctx);
+        assert_eq!(resolved, "3.4.5");
+    }
+
+    #[test]
+    fn resolve_version_resolves_workspace_inheritance() {
+        let pkg: toml::Value = toml::from_str(r#"name = "x"
+version = { workspace = true }
+"#).unwrap();
+        let mut ctx = WorkspaceContext::default();
+        ctx.versions.insert(
+            PathBuf::from("/tmp/myproject"),
+            "0.7.2".to_string(),
+        );
+        let resolved = resolve_cargo_main_module_version(
+            Path::new("/tmp/myproject/crates/x"),
+            &pkg,
+            &ctx,
+        );
+        assert_eq!(resolved, "0.7.2");
+    }
+
+    #[test]
+    fn resolve_version_falls_back_to_placeholder_when_unresolvable() {
+        let pkg: toml::Value = toml::from_str(r#"name = "x"
+version = { workspace = true }
+"#).unwrap();
+        let ctx = WorkspaceContext::default();
+        let resolved =
+            resolve_cargo_main_module_version(Path::new("/tmp/x"), &pkg, &ctx);
+        assert_eq!(resolved, "0.0.0-unknown");
+    }
+
+    #[test]
+    fn build_cargo_main_module_entry_basic_package() {
+        let tmp = tempfile::tempdir().unwrap();
+        let manifest = write_manifest(
+            tmp.path(),
+            r#"
+[package]
+name = "foo"
+version = "1.2.3"
+edition = "2021"
+"#,
+        );
+        let ctx = WorkspaceContext::default();
+        let entry = build_cargo_main_module_entry(&manifest, &ctx).unwrap();
+        assert_eq!(entry.purl.as_str(), "pkg:cargo/foo@1.2.3");
+        assert_eq!(entry.name, "foo");
+        assert_eq!(entry.version, "1.2.3");
+        assert_eq!(entry.parent_purl, None);
+        assert_eq!(entry.sbom_tier.as_deref(), Some("source"));
+        assert!(entry.licenses.is_empty());
+        assert_eq!(
+            entry
+                .extra_annotations
+                .get("mikebom:component-role")
+                .and_then(|v| v.as_str()),
+            Some("main-module"),
+        );
+    }
+
+    #[test]
+    fn build_cargo_main_module_entry_workspace_only_returns_none() {
+        let tmp = tempfile::tempdir().unwrap();
+        let manifest = write_manifest(
+            tmp.path(),
+            r#"
+[workspace]
+members = ["a"]
+"#,
+        );
+        let ctx = WorkspaceContext::default();
+        assert!(build_cargo_main_module_entry(&manifest, &ctx).is_none());
+    }
+
+    #[test]
+    fn build_cargo_main_module_entry_resolves_workspace_version() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root_manifest = write_manifest(
+            tmp.path(),
+            r#"
+[workspace]
+members = ["a"]
+
+[workspace.package]
+version = "0.5.0"
+"#,
+        );
+        let member_dir = tmp.path().join("a");
+        let member_manifest = write_manifest(
+            &member_dir,
+            r#"
+[package]
+name = "a"
+version.workspace = true
+"#,
+        );
+        let ctx = WorkspaceContext::build_from_manifests(&[
+            root_manifest,
+            member_manifest.clone(),
+        ]);
+        let entry =
+            build_cargo_main_module_entry(&member_manifest, &ctx).unwrap();
+        assert_eq!(entry.purl.as_str(), "pkg:cargo/a@0.5.0");
+    }
+
+    #[test]
+    fn build_cargo_main_module_entry_preserves_hyphenated_name() {
+        let tmp = tempfile::tempdir().unwrap();
+        let manifest = write_manifest(
+            tmp.path(),
+            r#"
+[package]
+name = "foo-bar"
+version = "1.0.0"
+"#,
+        );
+        let ctx = WorkspaceContext::default();
+        let entry = build_cargo_main_module_entry(&manifest, &ctx).unwrap();
+        assert_eq!(entry.purl.as_str(), "pkg:cargo/foo-bar@1.0.0");
+        assert_eq!(entry.name, "foo-bar");
+    }
+
+    #[test]
+    fn build_cargo_main_module_entry_preserves_pre_release_version() {
+        let tmp = tempfile::tempdir().unwrap();
+        let manifest = write_manifest(
+            tmp.path(),
+            r#"
+[package]
+name = "x"
+version = "0.1.0-alpha.11"
+"#,
+        );
+        let ctx = WorkspaceContext::default();
+        let entry = build_cargo_main_module_entry(&manifest, &ctx).unwrap();
+        // Pre-release and build-metadata SemVer parts pass through PURL
+        // segment encoding intact (`-` and `.` are unreserved).
+        assert!(entry.purl.as_str().contains("0.1.0-alpha.11"));
+    }
+
+    fn make_main_module_entry(
+        name: &str,
+        version: &str,
+        source_path: &str,
+    ) -> PackageDbEntry {
+        let purl = build_cargo_purl(name, version).unwrap();
+        let mut extra: std::collections::BTreeMap<String, serde_json::Value> =
+            Default::default();
+        extra.insert(
+            "mikebom:component-role".to_string(),
+            serde_json::Value::String("main-module".to_string()),
+        );
+        PackageDbEntry {
+            purl,
+            name: name.to_string(),
+            version: version.to_string(),
+            arch: None,
+            source_path: source_path.to_string(),
+            depends: Vec::new(),
+            maintainer: None,
+            licenses: Vec::new(),
+            lifecycle_scope: None,
+            requirement_range: None,
+            source_type: None,
+            buildinfo_status: None,
+            evidence_kind: None,
+            binary_class: None,
+            binary_stripped: None,
+            linkage_kind: None,
+            detected_go: None,
+            confidence: None,
+            binary_packed: None,
+            raw_version: None,
+            parent_purl: None,
+            npm_role: None,
+            co_owned_by: None,
+            hashes: Vec::new(),
+            sbom_tier: Some("source".to_string()),
+            shade_relocation: None,
+            extra_annotations: extra,
+        }
+    }
+
+    fn make_regular_entry(name: &str, version: &str) -> PackageDbEntry {
+        let purl = build_cargo_purl(name, version).unwrap();
+        PackageDbEntry {
+            purl,
+            name: name.to_string(),
+            version: version.to_string(),
+            arch: None,
+            source_path: String::new(),
+            depends: Vec::new(),
+            maintainer: None,
+            licenses: Vec::new(),
+            lifecycle_scope: None,
+            requirement_range: None,
+            source_type: None,
+            buildinfo_status: None,
+            evidence_kind: None,
+            binary_class: None,
+            binary_stripped: None,
+            linkage_kind: None,
+            detected_go: None,
+            confidence: None,
+            binary_packed: None,
+            raw_version: None,
+            parent_purl: None,
+            npm_role: None,
+            co_owned_by: None,
+            hashes: Vec::new(),
+            sbom_tier: None,
+            shade_relocation: None,
+            extra_annotations: Default::default(),
+        }
+    }
+
+    #[test]
+    fn dedup_no_collisions_returns_empty() {
+        let mut entries = vec![
+            make_main_module_entry("a", "1.0.0", "/tmp/a"),
+            make_main_module_entry("b", "1.0.0", "/tmp/b"),
+        ];
+        let drops = dedup_main_modules_by_purl(&mut entries);
+        assert_eq!(entries.len(), 2);
+        assert!(drops.is_empty());
+    }
+
+    #[test]
+    fn dedup_two_same_purl_keeps_first() {
+        let mut entries = vec![
+            make_main_module_entry("foo", "1.2.3", "/tmp/crates/foo"),
+            make_main_module_entry("foo", "1.2.3", "/tmp/vendor/foo"),
+        ];
+        let drops = dedup_main_modules_by_purl(&mut entries);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].source_path, "/tmp/crates/foo");
+        assert_eq!(drops.len(), 1);
+        assert_eq!(drops[0].purl, "pkg:cargo/foo@1.2.3");
+        assert_eq!(drops[0].kept_path, "/tmp/crates/foo");
+        assert_eq!(drops[0].dropped_path, "/tmp/vendor/foo");
+    }
+
+    #[test]
+    fn dedup_three_same_purl_drops_two() {
+        let mut entries = vec![
+            make_main_module_entry("foo", "1.2.3", "/tmp/a/foo"),
+            make_main_module_entry("foo", "1.2.3", "/tmp/b/foo"),
+            make_main_module_entry("foo", "1.2.3", "/tmp/c/foo"),
+        ];
+        let drops = dedup_main_modules_by_purl(&mut entries);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].source_path, "/tmp/a/foo");
+        assert_eq!(drops.len(), 2);
+    }
+
+    #[test]
+    fn dedup_does_not_touch_non_main_module_entries() {
+        // Two regular entries with the same PURL — caller is responsible
+        // for that dedup, not us. Our predicate only fires on main-module
+        // tagged entries.
+        let mut entries = vec![
+            make_regular_entry("foo", "1.2.3"),
+            make_regular_entry("foo", "1.2.3"),
+        ];
+        let drops = dedup_main_modules_by_purl(&mut entries);
+        assert_eq!(entries.len(), 2);
+        assert!(drops.is_empty());
+    }
 }
