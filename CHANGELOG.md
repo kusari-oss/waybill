@@ -7,6 +7,56 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Changed (BREAKING — SBOM output shape, milestone 069)
+
+- **Ruby gem project SBOMs now identify the project itself** via a
+  synthetic main-module component for every project with a
+  top-level `*.gemspec`. Pre-069: gem SBOMs had no project-self
+  component. Post-069: every Ruby gem project emits a
+  `pkg:gem/<name>@<version>` component placed in standards-native
+  "BOM subject" slots — CDX `metadata.component`, SPDX
+  `primaryPackagePurpose: APPLICATION` plus `documentDescribes`,
+  SPDX 3.0.1 `software_primaryPurpose: application`. Carries
+  `mikebom:component-role: main-module` (C40) supplementary
+  signal per Constitution Principle V.
+
+- **Skip rule for application-style projects.** Per FR-002, Ruby
+  projects with only `Gemfile` + `Gemfile.lock` (no top-level
+  `*.gemspec`) emit NO main-module. Application-style projects
+  don't have a project-self identity in the gem ecosystem; the
+  existing `Gemfile.lock` dep emission is unaffected. This is
+  gem-specific because Ruby explicitly distinguishes publishable
+  gems (`*.gemspec` declares the gem) from applications
+  (Gemfile-based dep management only).
+
+- **Install-state path exclusion (FR-003).** `*.gemspec` files
+  inside `vendor/`, `gems/`, `specifications/`, `.bundle/` are
+  NOT discovered for main-module emission. Those paths are
+  handled by the existing dep-emission walker.
+
+- **Pure-Rust regex parsing.** Mikebom never executes the
+  `*.gemspec` as Ruby code (Constitution Principle I). Literal-
+  string assignments (`s.name = "foo"`, `s.version = "1.2.3"` —
+  with optional `.freeze` chaining) are extracted; constant
+  references (`s.version = Foo::VERSION`) and dynamic
+  computations fall through to the `0.0.0-unknown` placeholder
+  per the cross-host determinism convention from milestones
+  053/064/066/068.
+
+- **Same-PURL collision dedup** with operator-visible
+  `tracing::warn!` per the cargo (064) / npm (066) / pip (068)
+  Q1 convention.
+
+### Migration
+
+- Consumers reading `metadata.component.purl` for Ruby gem scans
+  now receive `pkg:gem/<name>@<version>` instead of the pre-069
+  `pkg:generic/...` placeholder.
+- Per-ecosystem main-module coverage matrix: Go ✅ (053),
+  cargo ✅ (064), npm ✅ (066), pip ✅ (068, PEP 621), gem ✅ (069,
+  top-level `*.gemspec`); maven tracked in #104 (last remaining
+  slice).
+
 ### Changed (BREAKING — SBOM output shape, milestone 068)
 
 - **Python project SBOMs now identify the project itself** via a
