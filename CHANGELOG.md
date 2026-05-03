@@ -7,6 +7,72 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Changed (BREAKING — SBOM output shape, milestone 066)
+
+- **npm SBOMs now identify the project itself** via a synthetic
+  main-module component for every `package.json` with `name`.
+  Pre-066: npm SBOMs had no project-self component. Post-066:
+  every Node.js project scan emits a `pkg:npm/<name>@<version>`
+  (or `pkg:npm/%40<scope>/<name>@<version>` for scoped names)
+  component placed in standards-native "BOM subject" slots —
+  CDX `metadata.component`, SPDX `primaryPackagePurpose:
+  APPLICATION` plus `documentDescribes`, SPDX 3.0.1
+  `software_primaryPurpose: application`. Carries
+  `mikebom:component-role: main-module` (C40) supplementary
+  signal per Constitution Principle V.
+
+- **Skip rule for `private: true` + no `version`.** Per issue
+  #104's explicit guidance, manifests with `private: true` AND
+  no declared `version` are skipped from main-module emission —
+  the author has signaled "not a publishable artifact." Common
+  pattern: monorepo workspace roots. `private: true` + a
+  declared `version` still emits (the flag is a publish guard,
+  not an SBOM-presence signal).
+
+- **Workspace handling.** npm 7+ `workspaces: ["packages/*"]`
+  arrays are honored: each member `package.json` emits its own
+  main-module. Workspace path-deps (`"<member>": "*"`) emit
+  member-to-member `dependsOn` edges. `documentDescribes` is
+  multi-target (one SPDXID per member, alphabetically sorted)
+  via the milestone-064-#127 infrastructure that ships
+  unchanged for npm.
+
+- **Scoped name encoding.** `@scope/name` PURLs URL-encode the
+  `@` to `%40` per PURL spec (`pkg:npm/%40scope/name@version`),
+  reusing the existing `build_npm_purl` helper.
+
+- **Same-PURL collision dedup.** When two-or-more `package.json`
+  files yield identical PURLs (rare given `node_modules/` is
+  excluded from manifest discovery, but defensive), exactly one
+  main-module emits and a `tracing::warn!` lists dropped
+  duplicate paths. Same convention as cargo (064) per spec
+  Clarifications Q1.
+
+- **No version-inheritance feature, no resolver ladder.** Unlike
+  cargo's `version.workspace = true`, npm has no
+  workspace-version-inheritance. The resolver collapses to two
+  steps: literal version → `0.0.0-unknown` placeholder. The
+  placeholder fires when `name` is declared but `version` is
+  missing AND `private` isn't `true` (matching cargo's permissive
+  behavior per spec Q1).
+
+- **`node_modules/` excluded from manifest discovery.** Deliberate
+  ecosystem-specific divergence from cargo's "emit excluded
+  crates" rule (064 FR-003). `node_modules/` contains upstream
+  dependencies, not project-internal artifacts; emitting
+  main-modules for every `node_modules/*/package.json` would
+  balloon SBOMs with thousands of FPs.
+
+### Migration
+
+- Consumers reading `metadata.component.purl` for npm scans now
+  receive `pkg:npm/<name>@<version>` instead of the pre-066
+  `pkg:generic/...` placeholder (or for the
+  `tests/fixtures/npm/node-modules-walk` golden, the
+  `package-json-only-fixture` synthetic identity).
+- Per-ecosystem main-module coverage matrix: Go ✅ (053),
+  cargo ✅ (064), npm ✅ (066), pip / maven / gem tracked in #104.
+
 ### Changed (BREAKING — SBOM output shape, milestone 064)
 
 - **Cargo SBOMs now identify the project itself** via a synthetic
