@@ -5,7 +5,7 @@
 //! scenarios + success criteria for the npm pathway documented in
 //! `specs/002-python-npm-ecosystem/spec.md`.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn fixture(sub: &str) -> PathBuf {
@@ -352,5 +352,205 @@ fn v1_lockfile_refuses_with_actionable_error() {
         stderr.contains("package-lock.json v1 not supported")
             && stderr.contains("regenerate with npm"),
         "stderr must match the actionable message; got: {stderr}"
+    );
+}
+
+// --- Milestone 066: npm main-module emission ------------------------
+
+/// Helper for milestone-066 fixtures that live under mikebom-cli/
+/// (not the workspace-root tests/fixtures/npm/ tree). Mirrors the
+/// pattern used for the cargo-workspace fixture in milestone 064.
+fn cli_local_fixture(sub: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures")
+        .join(sub)
+}
+
+/// Scan a fixture path directly (bypassing the workspace-root
+/// `npm/` prefix that `fixture()` adds) and return the parsed CDX
+/// JSON.
+fn scan_path(path: &Path) -> serde_json::Value {
+    let bin = env!("CARGO_BIN_EXE_mikebom");
+    let out_path = tempfile::NamedTempFile::new()
+        .expect("tempfile")
+        .path()
+        .to_path_buf();
+    let output = Command::new(bin)
+        .arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(path)
+        .arg("--output")
+        .arg(&out_path)
+        .arg("--no-deep-hash")
+        .output()
+        .expect("mikebom should run");
+    assert!(
+        output.status.success(),
+        "scan failed: stderr={}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let raw = std::fs::read_to_string(&out_path).expect("read sbom");
+    serde_json::from_str(&raw).expect("valid JSON")
+}
+
+/// US1 AS#1 + SC-001: a single-package npm project emits its
+/// main-module via CDX `metadata.component`.
+#[test]
+fn scan_npm_single_package_emits_main_module_in_metadata_component() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        dir.path().join("package.json"),
+        r#"{"name":"demo-app","version":"1.2.3","dependencies":{}}"#,
+    )
+    .unwrap();
+    let sbom = scan_path(dir.path());
+    let meta = &sbom["metadata"]["component"];
+    assert_eq!(meta["type"].as_str(), Some("application"));
+    assert_eq!(meta["purl"].as_str(), Some("pkg:npm/demo-app@1.2.3"));
+    assert_eq!(meta["name"].as_str(), Some("demo-app"));
+    let role = meta["properties"]
+        .as_array()
+        .expect("metadata.component.properties")
+        .iter()
+        .find(|p| p["name"].as_str() == Some("mikebom:component-role"));
+    assert_eq!(
+        role.and_then(|p| p["value"].as_str()),
+        Some("main-module")
+    );
+    let same_in_components = sbom["components"]
+        .as_array()
+        .map(|a| a.iter().any(|c| c["purl"].as_str() == Some("pkg:npm/demo-app@1.2.3")))
+        .unwrap_or(false);
+    assert!(
+        !same_in_components,
+        "main-module's PURL must not double-emit in components[]"
+    );
+}
+
+/// US1 AS#2: scoped package names URL-encode the `@` per PURL spec.
+#[test]
+fn scan_npm_scoped_name_encodes_at_sigil_in_purl() {
+    let path = cli_local_fixture("npm-scoped-package");
+    let sbom = scan_path(&path);
+    assert_eq!(
+        sbom["metadata"]["component"]["purl"].as_str(),
+        Some("pkg:npm/%40kusari/foo@1.0.0"),
+        "scoped name `@kusari/foo` must encode `@` to `%40` per PURL spec"
+    );
+    assert_eq!(
+        sbom["metadata"]["component"]["name"].as_str(),
+        Some("@kusari/foo"),
+        "name field stays verbatim (with `@` sigil) — only the PURL encodes"
+    );
+}
+
+/// US1 AS#3 + FR-002: workspace root with `private: true` + no
+/// version is skipped; each member emits its own main-module.
+#[test]
+fn scan_npm_workspace_emits_per_member_main_modules() {
+    let path = cli_local_fixture("npm-workspace");
+    let sbom = scan_path(&path);
+    let main_modules: Vec<&serde_json::Value> = sbom["components"]
+        .as_array()
+        .map(|a| a.as_slice())
+        .unwrap_or(&[])
+        .iter()
+        .filter(|c| {
+            c["properties"]
+                .as_array()
+                .map(|p| {
+                    p.iter().any(|prop| {
+                        prop["name"].as_str() == Some("mikebom:component-role")
+                            && prop["value"].as_str() == Some("main-module")
+                    })
+                })
+                .unwrap_or(false)
+        })
+        .collect();
+    assert_eq!(
+        main_modules.len(),
+        2,
+        "expected exactly 2 main-modules (members a + b); workspace root \
+         (private: true + no version) MUST be skipped per FR-002"
+    );
+    let purls: std::collections::BTreeSet<String> = main_modules
+        .iter()
+        .filter_map(|c| c["purl"].as_str().map(String::from))
+        .collect();
+    assert!(purls.contains("pkg:npm/a@0.5.0"));
+    assert!(purls.contains("pkg:npm/b@0.5.0"));
+}
+
+/// FR-011: workspace path-deps emit member-to-member edges.
+#[test]
+fn scan_npm_workspace_path_dep_emits_member_to_member_edge() {
+    let path = cli_local_fixture("npm-workspace");
+    let sbom = scan_path(&path);
+    let deps = sbom["dependencies"].as_array().expect("deps array");
+    let b_to_a = deps.iter().any(|d| {
+        d["ref"].as_str() == Some("pkg:npm/b@0.5.0")
+            && d["dependsOn"]
+                .as_array()
+                .map(|arr| {
+                    arr.iter()
+                        .any(|x| x.as_str() == Some("pkg:npm/a@0.5.0"))
+                })
+                .unwrap_or(false)
+    });
+    assert!(
+        b_to_a,
+        "expected b → a workspace-member path-dep edge in npm workspace SBOM. \
+         dependencies array: {deps:#?}"
+    );
+}
+
+/// FR-001 spec Q1: `name` declared but `version` missing (and not
+/// `private`) emits with the `0.0.0-unknown` placeholder.
+#[test]
+fn scan_npm_name_without_version_uses_placeholder() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        dir.path().join("package.json"),
+        r#"{"name":"versionless-app"}"#,
+    )
+    .unwrap();
+    let sbom = scan_path(dir.path());
+    assert_eq!(
+        sbom["metadata"]["component"]["purl"].as_str(),
+        Some("pkg:npm/versionless-app@0.0.0-unknown"),
+    );
+}
+
+/// FR-001 + #104: `private: true` AND no `version` skips emission.
+#[test]
+fn scan_npm_private_no_version_skips_main_module() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        dir.path().join("package.json"),
+        r#"{"name":"private-app","private":true}"#,
+    )
+    .unwrap();
+    let sbom = scan_path(dir.path());
+    let meta_purl = sbom["metadata"]["component"]["purl"].as_str();
+    // Falls through to the synthetic placeholder root (pkg:generic/...
+    // or similar). The KEY assertion: no `pkg:npm/private-app@...`
+    // should appear anywhere.
+    assert!(
+        meta_purl.is_some_and(|p| !p.starts_with("pkg:npm/")),
+        "private + no version MUST NOT emit a main-module; got metadata.component.purl = {meta_purl:?}"
+    );
+    let any_npm_main_module = sbom["components"]
+        .as_array()
+        .map(|a| {
+            a.iter().any(|c| {
+                c["purl"].as_str().is_some_and(|p| p.starts_with("pkg:npm/private-app"))
+            })
+        })
+        .unwrap_or(false);
+    assert!(
+        !any_npm_main_module,
+        "private + no version: no pkg:npm/private-app main-module should appear in components[]"
     );
 }
