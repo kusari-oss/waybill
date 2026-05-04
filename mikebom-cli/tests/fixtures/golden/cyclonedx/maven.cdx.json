@@ -136,11 +136,13 @@
     {
       "aggregate": "complete",
       "assemblies": [
+        "pkg:maven/com.example/demo-app@1.0.0",
         "pkg:maven/com.google.guava/guava@32.1.3-jre",
         "pkg:maven/junit/junit@4.13.2",
         "pkg:maven/org.apache.commons/commons-lang3@3.14.0"
       ],
       "dependencies": [
+        "pkg:maven/com.example/demo-app@1.0.0",
         "pkg:maven/com.google.guava/guava@32.1.3-jre",
         "pkg:maven/junit/junit@4.13.2",
         "pkg:maven/org.apache.commons/commons-lang3@3.14.0"
@@ -162,6 +164,10 @@
   "dependencies": [
     {
       "dependsOn": [],
+      "ref": "pkg:maven/com.example/demo-app@1.0.0"
+    },
+    {
+      "dependsOn": [],
       "ref": "pkg:maven/com.google.guava/guava@32.1.3-jre"
     },
     {
@@ -174,6 +180,7 @@
     },
     {
       "dependsOn": [
+        "pkg:maven/com.example/demo-app@1.0.0",
         "pkg:maven/com.google.guava/guava@32.1.3-jre",
         "pkg:maven/junit/junit@4.13.2",
         "pkg:maven/org.apache.commons/commons-lang3@3.14.0"
@@ -188,12 +195,29 @@
       }
     ],
     "component": {
-      "bom-ref": "pom-three-deps@0.0.0",
-      "cpe": "cpe:2.3:a:mikebom:pom-three-deps:0.0.0:*:*:*:*:*:*:*",
-      "name": "pom-three-deps",
-      "purl": "pkg:generic/pom-three-deps@0.0.0",
+      "bom-ref": "pkg:maven/com.example/demo-app@1.0.0",
+      "cpe": "cpe:2.3:a:com.example:demo-app:1.0.0:*:*:*:*:*:*:*",
+      "name": "demo-app",
+      "properties": [
+        {
+          "name": "mikebom:component-role",
+          "value": "main-module"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "path+file://<WORKSPACE>/tests/fixtures/maven/pom-three-deps"
+        }
+      ],
+      "purl": "pkg:maven/com.example/demo-app@1.0.0",
+      "supplier": {
+        "name": "com.example"
+      },
       "type": "application",
-      "version": "0.0.0"
+      "version": "1.0.0"
     },
     "licenses": [
       {

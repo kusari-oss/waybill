@@ -7,6 +7,56 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Changed (BREAKING — SBOM output shape, milestone 070 — closes #104 in full)
+
+- **Maven project SBOMs now identify the project itself** via a
+  synthetic main-module component for every project with a
+  top-level `pom.xml`. Pre-070: maven SBOMs had no project-self
+  component. Post-070: every Maven project emits a
+  `pkg:maven/<groupId>/<artifactId>@<version>` component placed
+  in standards-native "BOM subject" slots — CDX
+  `metadata.component`, SPDX `primaryPackagePurpose: APPLICATION`
+  plus `documentDescribes`, SPDX 3.0.1
+  `software_primaryPurpose: application`. Carries
+  `mikebom:component-role: main-module` (C40) supplementary
+  signal per Constitution Principle V.
+
+- **Multi-module reactor support (FR-002).** When the top-level
+  `pom.xml` declares `<modules>`, mikebom emits one main-module
+  component per submodule (and per the parent reactor POM
+  itself) — leveraging the multi-DESCRIBES super-root
+  infrastructure from milestone 064/#127. Each submodule POM is
+  resolved through POM inheritance: missing `<groupId>` and
+  `<version>` are filled from the `<parent>` block (FR-001
+  step 2).
+
+- **Property substitution (FR-012).** GAV coordinates containing
+  Maven property references (`${project.version}`, `${revision}`,
+  `${parent.groupId}`, custom keys defined in `<properties>`)
+  are resolved at parse time. Unresolvable properties fall
+  through verbatim with `tracing::warn!`, matching the
+  cross-host determinism convention.
+
+- **Install-state path exclusion (FR-003).** `pom.xml` files
+  inside `target/`, `.m2/`, `node_modules/`, `vendor/` are NOT
+  discovered for main-module emission. Those paths are handled
+  by the existing dep-emission walker.
+
+- **Same-PURL collision dedup** with operator-visible
+  `tracing::warn!` per the cargo (064) / npm (066) / pip (068) /
+  gem (069) Q1 convention.
+
+### Migration (070)
+
+- Consumers reading `metadata.component.purl` for Maven scans
+  now receive `pkg:maven/<g>/<a>@<v>` instead of the pre-070
+  `pkg:generic/...` placeholder.
+- **Per-ecosystem main-module coverage matrix is now COMPLETE**:
+  Go ✅ (053), cargo ✅ (064), npm ✅ (066), pip ✅ (068, PEP 621),
+  gem ✅ (069, top-level `*.gemspec`), maven ✅ (070, top-level
+  `pom.xml` + reactor + inheritance + property substitution).
+  **Issue #104 fully closed.**
+
 ### Changed (BREAKING — SBOM output shape, milestone 069)
 
 - **Ruby gem project SBOMs now identify the project itself** via a
