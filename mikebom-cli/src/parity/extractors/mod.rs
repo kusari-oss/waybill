@@ -71,24 +71,24 @@ use spdx3::{
 
 pub static EXTRACTORS: &[ParityExtractor] = &[
     // Section A — Core identity
-    ParityExtractor { row_id: "A1",  label: "PURL",                    cdx: cdx_purl,        spdx23: spdx23_purl,        spdx3: spdx3_purl,        directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "A2",  label: "name",                    cdx: cdx_name,        spdx23: spdx23_name,        spdx3: spdx3_name,        directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "A3",  label: "version",                 cdx: cdx_version,     spdx23: spdx23_version,     spdx3: spdx3_version,     directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "A4",  label: "supplier",                cdx: cdx_supplier,    spdx23: spdx23_supplier,    spdx3: spdx3_supplier,    directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "A1",  label: "PURL",                    cdx: cdx_purl,        spdx23: spdx23_purl,        spdx3: spdx3_purl,        directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "A2",  label: "name",                    cdx: cdx_name,        spdx23: spdx23_name,        spdx3: spdx3_name,        directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "A3",  label: "version",                 cdx: cdx_version,     spdx23: spdx23_version,     spdx3: spdx3_version,     directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "A4",  label: "supplier",                cdx: cdx_supplier,    spdx23: spdx23_supplier,    spdx3: spdx3_supplier,    directional: Directionality::SymmetricEqual, order_sensitive: false },
     // A5 author — format-restricted on all three (mikebom doesn't
     // surface originator yet); empty extractors.
-    ParityExtractor { row_id: "A5",  label: "author",                  cdx: empty,           spdx23: empty,              spdx3: empty,             directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "A6",  label: "hashes",                  cdx: cdx_hashes,      spdx23: spdx23_hashes,      spdx3: spdx3_hashes,      directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "A7",  label: "license — declared",      cdx: cdx_licenses_declared,  spdx23: spdx23_licenses_declared,  spdx3: spdx3_licenses_declared,  directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "A8",  label: "license — concluded",     cdx: cdx_licenses_concluded, spdx23: spdx23_licenses_concluded, spdx3: spdx3_licenses_concluded, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "A9",  label: "external ref — homepage", cdx: cdx_homepage,    spdx23: spdx23_homepage,    spdx3: spdx3_homepage,    directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "A10", label: "external ref — VCS",      cdx: cdx_vcs,         spdx23: spdx23_vcs,         spdx3: spdx3_vcs,         directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "A11", label: "external ref — distribution", cdx: cdx_distribution, spdx23: spdx23_distribution, spdx3: spdx3_distribution, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "A12", label: "CPE",                     cdx: cdx_cpe,         spdx23: spdx23_cpe,         spdx3: spdx3_cpe,         directional: Directionality::CdxSubsetOfSpdx },
+    ParityExtractor { row_id: "A5",  label: "author",                  cdx: empty,           spdx23: empty,              spdx3: empty,             directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "A6",  label: "hashes",                  cdx: cdx_hashes,      spdx23: spdx23_hashes,      spdx3: spdx3_hashes,      directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "A7",  label: "license — declared",      cdx: cdx_licenses_declared,  spdx23: spdx23_licenses_declared,  spdx3: spdx3_licenses_declared,  directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "A8",  label: "license — concluded",     cdx: cdx_licenses_concluded, spdx23: spdx23_licenses_concluded, spdx3: spdx3_licenses_concluded, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "A9",  label: "external ref — homepage", cdx: cdx_homepage,    spdx23: spdx23_homepage,    spdx3: spdx3_homepage,    directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "A10", label: "external ref — VCS",      cdx: cdx_vcs,         spdx23: spdx23_vcs,         spdx3: spdx3_vcs,         directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "A11", label: "external ref — distribution", cdx: cdx_distribution, spdx23: spdx23_distribution, spdx3: spdx3_distribution, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "A12", label: "CPE",                     cdx: cdx_cpe,         spdx23: spdx23_cpe,         spdx3: spdx3_cpe,         directional: Directionality::CdxSubsetOfSpdx, order_sensitive: false },
     // Section B — Graph structure
-    ParityExtractor { row_id: "B1",  label: "dependency edge (runtime)", cdx: cdx_runtime_deps, spdx23: spdx23_runtime_deps, spdx3: spdx3_runtime_deps, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "B2",  label: "dependency edge (dev)",   cdx: cdx_dev_deps,    spdx23: spdx23_dev_deps,    spdx3: spdx3_dev_deps,    directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "B3",  label: "nested containment",      cdx: cdx_containment, spdx23: spdx23_containment, spdx3: spdx3_containment, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "B1",  label: "dependency edge (runtime)", cdx: cdx_runtime_deps, spdx23: spdx23_runtime_deps, spdx3: spdx3_runtime_deps, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "B2",  label: "dependency edge (dev)",   cdx: cdx_dev_deps,    spdx23: spdx23_dev_deps,    spdx3: spdx3_dev_deps,    directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "B3",  label: "nested containment",      cdx: cdx_containment, spdx23: spdx23_containment, spdx3: spdx3_containment, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // B4 image/filesystem root: each format encodes the root
     // PURL with format-specific name-sanitization (CDX preserves
     // the raw image tag `mikebom-perf:latest@0.0.0`; SPDX 2.3
@@ -96,25 +96,25 @@ pub static EXTRACTORS: &[ParityExtractor] = &[
     // `:` → `-` per the stricter Element-name rules). The root
     // concept is the same datum across formats — presence-only
     // enforcement.
-    ParityExtractor { row_id: "B4",  label: "image / filesystem root", cdx: cdx_root,        spdx23: spdx23_root,        spdx3: spdx3_root,        directional: Directionality::PresenceOnly },
+    ParityExtractor { row_id: "B4",  label: "image / filesystem root", cdx: cdx_root,        spdx23: spdx23_root,        spdx3: spdx3_root,        directional: Directionality::PresenceOnly, order_sensitive: false },
     // Section C — mikebom-specific annotations
-    ParityExtractor { row_id: "C1",  label: "mikebom:source-type",     cdx: c1_cdx,  spdx23: c1_spdx23,  spdx3: c1_spdx3,  directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C2",  label: "mikebom:source-connection-ids", cdx: c2_cdx,  spdx23: c2_spdx23,  spdx3: c2_spdx3,  directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C3",  label: "mikebom:deps-dev-match",  cdx: c3_cdx,  spdx23: c3_spdx23,  spdx3: c3_spdx3,  directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C4",  label: "mikebom:evidence-kind",   cdx: c4_cdx,  spdx23: c4_spdx23,  spdx3: c4_spdx3,  directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C5",  label: "mikebom:sbom-tier",       cdx: c5_cdx,  spdx23: c5_spdx23,  spdx3: c5_spdx3,  directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C7",  label: "mikebom:co-owned-by",     cdx: c7_cdx,  spdx23: c7_spdx23,  spdx3: c7_spdx3,  directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C8",  label: "mikebom:shade-relocation", cdx: c8_cdx, spdx23: c8_spdx23, spdx3: c8_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C9",  label: "mikebom:npm-role",        cdx: c9_cdx,  spdx23: c9_spdx23,  spdx3: c9_spdx3,  directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C10", label: "mikebom:binary-class",    cdx: c10_cdx, spdx23: c10_spdx23, spdx3: c10_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C11", label: "mikebom:binary-stripped", cdx: c11_cdx, spdx23: c11_spdx23, spdx3: c11_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C12", label: "mikebom:linkage-kind",    cdx: c12_cdx, spdx23: c12_spdx23, spdx3: c12_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C13", label: "mikebom:buildinfo-status", cdx: c13_cdx, spdx23: c13_spdx23, spdx3: c13_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C14", label: "mikebom:detected-go",     cdx: c14_cdx, spdx23: c14_spdx23, spdx3: c14_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C15", label: "mikebom:binary-packed",   cdx: c15_cdx, spdx23: c15_spdx23, spdx3: c15_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C16", label: "mikebom:confidence",      cdx: c16_cdx, spdx23: c16_spdx23, spdx3: c16_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C17", label: "mikebom:raw-version",     cdx: c17_cdx, spdx23: c17_spdx23, spdx3: c17_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C18", label: "mikebom:source-files",    cdx: c18_cdx, spdx23: c18_spdx23, spdx3: c18_spdx3, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "C1",  label: "mikebom:source-type",     cdx: c1_cdx,  spdx23: c1_spdx23,  spdx3: c1_spdx3,  directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C2",  label: "mikebom:source-connection-ids", cdx: c2_cdx,  spdx23: c2_spdx23,  spdx3: c2_spdx3,  directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C3",  label: "mikebom:deps-dev-match",  cdx: c3_cdx,  spdx23: c3_spdx23,  spdx3: c3_spdx3,  directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C4",  label: "mikebom:evidence-kind",   cdx: c4_cdx,  spdx23: c4_spdx23,  spdx3: c4_spdx3,  directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C5",  label: "mikebom:sbom-tier",       cdx: c5_cdx,  spdx23: c5_spdx23,  spdx3: c5_spdx3,  directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C7",  label: "mikebom:co-owned-by",     cdx: c7_cdx,  spdx23: c7_spdx23,  spdx3: c7_spdx3,  directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C8",  label: "mikebom:shade-relocation", cdx: c8_cdx, spdx23: c8_spdx23, spdx3: c8_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C9",  label: "mikebom:npm-role",        cdx: c9_cdx,  spdx23: c9_spdx23,  spdx3: c9_spdx3,  directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C10", label: "mikebom:binary-class",    cdx: c10_cdx, spdx23: c10_spdx23, spdx3: c10_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C11", label: "mikebom:binary-stripped", cdx: c11_cdx, spdx23: c11_spdx23, spdx3: c11_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C12", label: "mikebom:linkage-kind",    cdx: c12_cdx, spdx23: c12_spdx23, spdx3: c12_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C13", label: "mikebom:buildinfo-status", cdx: c13_cdx, spdx23: c13_spdx23, spdx3: c13_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C14", label: "mikebom:detected-go",     cdx: c14_cdx, spdx23: c14_spdx23, spdx3: c14_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C15", label: "mikebom:binary-packed",   cdx: c15_cdx, spdx23: c15_spdx23, spdx3: c15_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C16", label: "mikebom:confidence",      cdx: c16_cdx, spdx23: c16_spdx23, spdx3: c16_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C17", label: "mikebom:raw-version",     cdx: c17_cdx, spdx23: c17_spdx23, spdx3: c17_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C18", label: "mikebom:source-files",    cdx: c18_cdx, spdx23: c18_spdx23, spdx3: c18_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // C19 cpe-candidates: CDX serializes the candidates as a
     // pipe-separated single-property string with single-backslash
     // PURL-escapes (`github.com\/foo`); SPDX serializes as an
@@ -124,9 +124,9 @@ pub static EXTRACTORS: &[ParityExtractor] = &[
     // differ; presence-only enforcement keeps the parity check
     // honest about the shared emission across formats without
     // tripping on the cosmetic escaping difference.
-    ParityExtractor { row_id: "C19", label: "mikebom:cpe-candidates",  cdx: c19_cdx, spdx23: c19_spdx23, spdx3: c19_spdx3, directional: Directionality::PresenceOnly },
-    ParityExtractor { row_id: "C20", label: "mikebom:requirement-range", cdx: c20_cdx, spdx23: c20_spdx23, spdx3: c20_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C21", label: "mikebom:generation-context", cdx: c21_cdx, spdx23: c21_spdx23, spdx3: c21_spdx3, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "C19", label: "mikebom:cpe-candidates",  cdx: c19_cdx, spdx23: c19_spdx23, spdx3: c19_spdx3, directional: Directionality::PresenceOnly, order_sensitive: false },
+    ParityExtractor { row_id: "C20", label: "mikebom:requirement-range", cdx: c20_cdx, spdx23: c20_spdx23, spdx3: c20_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C21", label: "mikebom:generation-context", cdx: c21_cdx, spdx23: c21_spdx23, spdx3: c21_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // C22: CDX serializes the missing-field set as a comma-joined
     // string property; SPDX serializes as an annotation with a
     // real JSON-array-valued envelope. The atomic atoms differ —
@@ -134,53 +134,53 @@ pub static EXTRACTORS: &[ParityExtractor] = &[
     // `value` (CDX 1.6 properties are stringly-typed). Both carry
     // the same datum; presence-only enforcement reflects the
     // shape gap.
-    ParityExtractor { row_id: "C22", label: "mikebom:os-release-missing-fields", cdx: c22_cdx, spdx23: c22_spdx23, spdx3: c22_spdx3, directional: Directionality::PresenceOnly },
-    ParityExtractor { row_id: "C23", label: "mikebom:trace-integrity-*", cdx: c23_cdx, spdx23: c23_spdx23, spdx3: c23_spdx3, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "C22", label: "mikebom:os-release-missing-fields", cdx: c22_cdx, spdx23: c22_spdx23, spdx3: c22_spdx3, directional: Directionality::PresenceOnly, order_sensitive: false },
+    ParityExtractor { row_id: "C23", label: "mikebom:trace-integrity-*", cdx: c23_cdx, spdx23: c23_spdx23, spdx3: c23_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // Section C continued — milestone 023 ELF identity (CDX/SPDX
     // emitted via the extra_annotations bag in entry.rs::make_file_level_component;
     // catalog rows defined in docs/reference/sbom-format-mapping.md C24-C26).
-    ParityExtractor { row_id: "C24", label: "mikebom:elf-build-id",      cdx: c24_cdx, spdx23: c24_spdx23, spdx3: c24_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C25", label: "mikebom:elf-runpath",       cdx: c25_cdx, spdx23: c25_spdx23, spdx3: c25_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C26", label: "mikebom:elf-debuglink",     cdx: c26_cdx, spdx23: c26_spdx23, spdx3: c26_spdx3, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "C24", label: "mikebom:elf-build-id",      cdx: c24_cdx, spdx23: c24_spdx23, spdx3: c24_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C25", label: "mikebom:elf-runpath",       cdx: c25_cdx, spdx23: c25_spdx23, spdx3: c25_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C26", label: "mikebom:elf-debuglink",     cdx: c26_cdx, spdx23: c26_spdx23, spdx3: c26_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // Section C continued — milestone 025 Go VCS metadata (CDX/SPDX
     // emitted via the extra_annotations bag in
     // go_binary.rs::build_vcs_annotations on the main-module entry
     // only; catalog rows in docs/reference/sbom-format-mapping.md C27-C29).
-    ParityExtractor { row_id: "C27", label: "mikebom:go-vcs-revision",   cdx: c27_cdx, spdx23: c27_spdx23, spdx3: c27_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C28", label: "mikebom:go-vcs-time",       cdx: c28_cdx, spdx23: c28_spdx23, spdx3: c28_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C29", label: "mikebom:go-vcs-modified",   cdx: c29_cdx, spdx23: c29_spdx23, spdx3: c29_spdx3, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "C27", label: "mikebom:go-vcs-revision",   cdx: c27_cdx, spdx23: c27_spdx23, spdx3: c27_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C28", label: "mikebom:go-vcs-time",       cdx: c28_cdx, spdx23: c28_spdx23, spdx3: c28_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C29", label: "mikebom:go-vcs-modified",   cdx: c29_cdx, spdx23: c29_spdx23, spdx3: c29_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // C30-C32 — Mach-O binary identity (milestone 024). Emitted via
     // the extra_annotations bag in
     // binary/entry.rs::build_macho_identity_annotations on the
     // file-level Mach-O component; catalog rows in
     // docs/reference/sbom-format-mapping.md C30-C32).
-    ParityExtractor { row_id: "C30", label: "mikebom:macho-uuid",        cdx: c30_cdx, spdx23: c30_spdx23, spdx3: c30_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C31", label: "mikebom:macho-rpath",       cdx: c31_cdx, spdx23: c31_spdx23, spdx3: c31_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C32", label: "mikebom:macho-min-os",      cdx: c32_cdx, spdx23: c32_spdx23, spdx3: c32_spdx3, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "C30", label: "mikebom:macho-uuid",        cdx: c30_cdx, spdx23: c30_spdx23, spdx3: c30_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C31", label: "mikebom:macho-rpath",       cdx: c31_cdx, spdx23: c31_spdx23, spdx3: c31_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C32", label: "mikebom:macho-min-os",      cdx: c32_cdx, spdx23: c32_spdx23, spdx3: c32_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // C33-C35 — PE binary identity (milestone 028). Emitted via the
     // extra_annotations bag in
     // binary/entry.rs::build_pe_identity_annotations on the file-level
     // PE component; catalog rows in
     // docs/reference/sbom-format-mapping.md C33-C35.
-    ParityExtractor { row_id: "C33", label: "mikebom:pe-pdb-id",         cdx: c33_cdx, spdx23: c33_spdx23, spdx3: c33_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C34", label: "mikebom:pe-machine",        cdx: c34_cdx, spdx23: c34_spdx23, spdx3: c34_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C35", label: "mikebom:pe-subsystem",      cdx: c35_cdx, spdx23: c35_spdx23, spdx3: c35_spdx3, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "C33", label: "mikebom:pe-pdb-id",         cdx: c33_cdx, spdx23: c33_spdx23, spdx3: c33_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C34", label: "mikebom:pe-machine",        cdx: c34_cdx, spdx23: c34_spdx23, spdx3: c34_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C35", label: "mikebom:pe-subsystem",      cdx: c35_cdx, spdx23: c35_spdx23, spdx3: c35_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // C36 — cargo-auditable cross-link (milestone 029). Emitted via
     // the extra_annotations bag in
     // binary/entry.rs::build_cargo_auditable_cross_link on the
     // file-level Rust binary component (5th amortization-proof
     // consumer of the milestone-023 bag); catalog row in
     // docs/reference/sbom-format-mapping.md C36.
-    ParityExtractor { row_id: "C36", label: "mikebom:detected-cargo-auditable", cdx: c36_cdx, spdx23: c36_spdx23, spdx3: c36_spdx3, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "C36", label: "mikebom:detected-cargo-auditable", cdx: c36_cdx, spdx23: c36_spdx23, spdx3: c36_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // C37-C39 — Mach-O codesign metadata (milestone 030). Emitted via
     // the extra_annotations bag in
     // binary/entry.rs::build_macho_identity_annotations on the
     // file-level Mach-O component (6th amortization-proof consumer
     // of the milestone-023 bag); catalog rows in
     // docs/reference/sbom-format-mapping.md C37-C39.
-    ParityExtractor { row_id: "C37", label: "mikebom:macho-codesign-identifier", cdx: c37_cdx, spdx23: c37_spdx23, spdx3: c37_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C38", label: "mikebom:macho-codesign-flags",      cdx: c38_cdx, spdx23: c38_spdx23, spdx3: c38_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "C39", label: "mikebom:macho-codesign-team-id",    cdx: c39_cdx, spdx23: c39_spdx23, spdx3: c39_spdx3, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "C37", label: "mikebom:macho-codesign-identifier", cdx: c37_cdx, spdx23: c37_spdx23, spdx3: c37_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C38", label: "mikebom:macho-codesign-flags",      cdx: c38_cdx, spdx23: c38_spdx23, spdx3: c38_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C39", label: "mikebom:macho-codesign-team-id",    cdx: c39_cdx, spdx23: c39_spdx23, spdx3: c39_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // C40 — component-role classifier (milestone 048). Filesystem-
     // position-classified role: `build-tool`, `language-runtime`, or
     // (when no heuristic matches) absent. Emitted via the
@@ -188,7 +188,7 @@ pub static EXTRACTORS: &[ParityExtractor] = &[
     // resolve/deduplicator.rs::classify_component_roles after
     // dedup; catalog row in
     // docs/reference/sbom-format-mapping.md C40.
-    ParityExtractor { row_id: "C40", label: "mikebom:component-role",            cdx: c40_cdx, spdx23: c40_spdx23, spdx3: c40_spdx3, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "C40", label: "mikebom:component-role",            cdx: c40_cdx, spdx23: c40_spdx23, spdx3: c40_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // C41 — not-linked classifier (milestone 050). Set on Go
     // source-tier components (from go.sum) when a Go binary is also
     // present in the rootfs AND the binary's BuildInfo does NOT
@@ -199,7 +199,7 @@ pub static EXTRACTORS: &[ParityExtractor] = &[
     // then surfaced identically across CDX/SPDX 2.3/SPDX 3 by the
     // generic extra_annotations serializer paths. See
     // docs/reference/sbom-format-mapping.md C41.
-    ParityExtractor { row_id: "C41", label: "mikebom:not-linked",                cdx: c41_cdx, spdx23: c41_spdx23, spdx3: c41_spdx3, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "C41", label: "mikebom:not-linked",                cdx: c41_cdx, spdx23: c41_spdx23, spdx3: c41_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // C42 — `mikebom:lifecycle-scope` (milestone 052/part-2). CDX-
     // only finer-info carve-out per Constitution Principle V (v1.4.0):
     // CDX's native `scope` enum has only 3 values
@@ -209,7 +209,7 @@ pub static EXTRACTORS: &[ParityExtractor] = &[
     // `lifecycleScope` parameter — checked there, not here.
     // `CdxOnly` directionality skips the SPDX sides for this
     // specific row.
-    ParityExtractor { row_id: "C42", label: "mikebom:lifecycle-scope",           cdx: c42_cdx, spdx23: empty,      spdx3: empty,      directional: Directionality::CdxOnly },
+    ParityExtractor { row_id: "C42", label: "mikebom:lifecycle-scope",           cdx: c42_cdx, spdx23: empty,      spdx3: empty,      directional: Directionality::CdxOnly, order_sensitive: false },
     // C44 — doc-level Go graph-completeness (milestone 061, closes
     // #119). SymmetricEqual: identical open-enum value (`complete` /
     // `partial`) + free-text reason MUST appear in CDX
@@ -217,11 +217,11 @@ pub static EXTRACTORS: &[ParityExtractor] = &[
     // SPDX 3 document-level annotations. Per Constitution Principle X
     // (Transparency): the SBOM signals the limitation when mikebom
     // can't supply every transitive edge.
-    ParityExtractor { row_id: "C44", label: "mikebom:graph-completeness",        cdx: c44_cdx, spdx23: c44_spdx23, spdx3: c44_spdx3, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "C44", label: "mikebom:graph-completeness",        cdx: c44_cdx, spdx23: c44_spdx23, spdx3: c44_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // C45 — per-component orphan-reason (milestone 061, closes #119).
     // SymmetricEqual: open-enum string on each orphan component;
     // absent on non-orphans (three-state semantics).
-    ParityExtractor { row_id: "C45", label: "mikebom:orphan-reason",             cdx: c45_cdx, spdx23: c45_spdx23, spdx3: c45_spdx3, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "C45", label: "mikebom:orphan-reason",             cdx: c45_cdx, spdx23: c45_spdx23, spdx3: c45_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // Section D — Evidence
     // D1 evidence shape diverges — CDX `evidence.identity[].{field,
     // confidence, methods[]}` is the full CDX evidence model;
@@ -229,23 +229,23 @@ pub static EXTRACTORS: &[ParityExtractor] = &[
     // `technique` strings can even differ (CDX names the concrete
     // method; SPDX uses the higher-level evidence type).
     // Presence-only.
-    ParityExtractor { row_id: "D1",  label: "evidence — identity",     cdx: d1_cdx, spdx23: d1_spdx23, spdx3: d1_spdx3, directional: Directionality::PresenceOnly },
-    ParityExtractor { row_id: "D2",  label: "evidence — occurrences",  cdx: d2_cdx, spdx23: d2_spdx23, spdx3: d2_spdx3, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "D1",  label: "evidence — identity",     cdx: d1_cdx, spdx23: d1_spdx23, spdx3: d1_spdx3, directional: Directionality::PresenceOnly, order_sensitive: false },
+    ParityExtractor { row_id: "D2",  label: "evidence — occurrences",  cdx: d2_cdx, spdx23: d2_spdx23, spdx3: d2_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // Section E — Compositions
     // E1 compositions: CDX preserves the full CDX-native
     // compositions[] array verbatim; SPDX uses a condensed
     // `{complete_ecosystems: [...]}` annotation per the catalog
     // doc. The shapes irreconcilably diverge; presence-only.
-    ParityExtractor { row_id: "E1",  label: "ecosystem completeness",  cdx: e1_cdx, spdx23: e1_spdx23, spdx3: e1_spdx3, directional: Directionality::PresenceOnly },
+    ParityExtractor { row_id: "E1",  label: "ecosystem completeness",  cdx: e1_cdx, spdx23: e1_spdx23, spdx3: e1_spdx3, directional: Directionality::PresenceOnly, order_sensitive: false },
     // Section F — VEX
-    ParityExtractor { row_id: "F1",  label: "vulnerabilities (VEX)",   cdx: f1_cdx, spdx23: f1_spdx23, spdx3: f1_spdx3, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "F1",  label: "vulnerabilities (VEX)",   cdx: f1_cdx, spdx23: f1_spdx23, spdx3: f1_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // Section G — Document envelope (mostly format-shape)
-    ParityExtractor { row_id: "G1",  label: "tool name + version",     cdx: g1_cdx, spdx23: g1_spdx23, spdx3: g1_spdx3, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "G2",  label: "created timestamp",       cdx: empty, spdx23: empty, spdx3: empty, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "G3",  label: "data license",            cdx: empty, spdx23: empty, spdx3: empty, directional: Directionality::SymmetricEqual },
-    ParityExtractor { row_id: "G4",  label: "document namespace",      cdx: empty, spdx23: empty, spdx3: empty, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "G1",  label: "tool name + version",     cdx: g1_cdx, spdx23: g1_spdx23, spdx3: g1_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "G2",  label: "created timestamp",       cdx: empty, spdx23: empty, spdx3: empty, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "G3",  label: "data license",            cdx: empty, spdx23: empty, spdx3: empty, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "G4",  label: "document namespace",      cdx: empty, spdx23: empty, spdx3: empty, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // Section H — Structural-difference meta-rows
-    ParityExtractor { row_id: "H1",  label: "nested vs. flat",         cdx: empty, spdx23: empty, spdx3: empty, directional: Directionality::SymmetricEqual },
+    ParityExtractor { row_id: "H1",  label: "nested vs. flat",         cdx: empty, spdx23: empty, spdx3: empty, directional: Directionality::SymmetricEqual, order_sensitive: false },
 ];
 
 #[cfg(test)]

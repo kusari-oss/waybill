@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-05-03
+Auto-generated from all feature plans. Last updated: 2026-05-04
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -43,6 +43,8 @@ Auto-generated from all feature plans. Last updated: 2026-05-03
 - Rust stable (workspace toolchain inherited; no nightly). + Existing only — `toml = "0.8"` (already used by `mikebom-cli/src/scan_fs/package_db/cargo.rs:305` and indirectly elsewhere), `serde`/`serde_json`, `tracing`, `anyhow`. **No new crates.** No subprocess calls. (068-pip-main-module)
 - Rust stable; no nightly. + Existing only — no new crates. Reuses `parse_gemspec_full` (regex-based pure-Rust gemspec parser at `gem.rs:947`), `build_gem_purl` (PURL helper), `parse_gemspec_groups` (dep-section extractor for FR-007 edge classification). (069-gem-main-module)
 - Rust stable; no nightly. + Existing only — `quick-xml` (already used by `parse_pom_xml`), `serde`, `tracing`, `anyhow`. No new crates. (070-maven-main-module)
+- Rust stable (workspace toolchain inherited from milestones 001–070; no nightly required for this user-space-only work). + Existing only — `serde_json` (JSON value walking + canonicalization), `quick-xml` n/a (SPDX 2.3 / SPDX 3 are JSON), `tracing`, `anyhow`. The existing `parity/extractors/` infrastructure (68 catalog rows, `Directionality` enum, `MikebomAnnotationCommentV1` envelope, `extract_mikebom_annotation_values` helper) IS the substrate. No new crates. (071-annotation-parity-spdx23)
+- N/A — all parity comparison happens in-memory at test/CI time over emitted JSON documents. (071-annotation-parity-spdx23)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -105,9 +107,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 071-annotation-parity-spdx23: Added Rust stable (workspace toolchain inherited from milestones 001–070; no nightly required for this user-space-only work). + Existing only — `serde_json` (JSON value walking + canonicalization), `quick-xml` n/a (SPDX 2.3 / SPDX 3 are JSON), `tracing`, `anyhow`. The existing `parity/extractors/` infrastructure (68 catalog rows, `Directionality` enum, `MikebomAnnotationCommentV1` envelope, `extract_mikebom_annotation_values` helper) IS the substrate. No new crates.
 - 070-maven-main-module: Added Rust stable; no nightly. + Existing only — `quick-xml` (already used by `parse_pom_xml`), `serde`, `tracing`, `anyhow`. No new crates.
 - 069-gem-main-module: Added Rust stable; no nightly. + Existing only — no new crates. Reuses `parse_gemspec_full` (regex-based pure-Rust gemspec parser at `gem.rs:947`), `build_gem_purl` (PURL helper), `parse_gemspec_groups` (dep-section extractor for FR-007 edge classification).
-- 068-pip-main-module: Added Rust stable (workspace toolchain inherited; no nightly). + Existing only — `toml = "0.8"` (already used by `mikebom-cli/src/scan_fs/package_db/cargo.rs:305` and indirectly elsewhere), `serde`/`serde_json`, `tracing`, `anyhow`. **No new crates.** No subprocess calls.
 
 
 <!-- MANUAL ADDITIONS START -->

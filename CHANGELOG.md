@@ -7,6 +7,24 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Added (milestone 071 — cross-format SBOM annotation parity)
+
+- **Conformance harness author guide** at `docs/reference/conformance-harness-guide.md` — a reference for external SBOM-conformance harness maintainers explaining how mikebom carries `mikebom:*` metadata in each of the three supported formats (CDX 1.6 / SPDX 2.3 / SPDX 3.0.1), the 7 inherent format-spec asymmetries that should NOT be flagged as cross-format-inequivalence findings, and how to wire a harness to read the `MikebomAnnotationCommentV1` envelope correctly. Authored against milestone 071's catalog state.
+- **Synthetic drift regression test** at `mikebom-cli/tests/parity_synthetic_drift.rs` — pins the post-071 value-equality semantics by constructing a synthesized SBOM triple where a `SymmetricEqual` row's set CONTENTS differ across formats. Asserts the post-071 logic catches the drift; demonstrates the pre-071 presence-only logic would have silently passed it.
+- `ParityExtractor` struct gains a `pub order_sensitive: bool` field at `mikebom-cli/src/parity/extractors/common.rs` for future order-sensitive annotation rows. Default `false` for all 68 currently-catalogued rows; rationale: every currently-named key is an unordered set under the existing `BTreeSet<String>` extractor model.
+- `canonicalize_for_compare(value: &Value, order_sensitive: bool) -> String` helper at the same path — sorts object keys lex, sorts arrays lex (default) or preserves order (override), normalizes whitespace via `serde_json::to_string`. Available for future per-row value-payload comparison work.
+
+### Changed (milestone 071 — `mikebom sbom parity-check` upgrade)
+
+- **`mikebom sbom parity-check` now does real value-equality checking** instead of presence-only checking. Pre-071 the subcommand reported `Parity gaps: 0` whenever all three formats had ≥1 entry per universal-parity row, regardless of whether the actual set CONTENTS matched across formats. Post-071 it applies the per-`Directionality` invariants: set equality for `SymmetricEqual`, `cdx_set ⊆ spdx23/3` for `CdxSubsetOfSpdx`, presence-parity for `PresenceOnly`, CDX-non-empty for `CdxOnly`. The same logic the canonical `tests/holistic_parity.rs` integration test uses; the CLI subcommand and the integration test now return the same verdict.
+- The presence-only undercounting of unexercised rows is also fixed — universal-parity rows where no format carries data are now correctly counted as "passing by default" rather than "neither passing nor failing." Typical output on a small-fixture cargo-workspace scan goes from `Universal-parity rows: 16 / 67 ✓` (pre-071) to `Universal-parity rows: 67 / 67 ✓` (post-071), reporting the same number of real gaps (zero) but with cleaner accounting.
+- **Harness implication**: external conformance harnesses that shell out to `mikebom sbom parity-check` to validate cross-format parity were missing real value-drift bugs pre-071. Upgrade to alpha.14 or later for the rigorous check.
+
+### Migration
+
+- No SBOM output shape change. CDX 1.6 / SPDX 2.3 / SPDX 3.0.1 emissions are byte-identical to alpha.13 (all 27 byte-identity goldens unchanged).
+- No new `mikebom:*` annotation keys; no removed keys; no directionality changes in the parity catalog. Milestone 071 is purely an internal-verification + documentation milestone.
+
 ## [0.1.0-alpha.13] — 2026-05-03
 
 The **issue #104 closure release.** Three milestones since alpha.12

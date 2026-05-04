@@ -297,7 +297,17 @@ canonical cross-format contract is
 `docs/reference/sbom-format-mapping.md`; CI guards it against drift
 (`sbom_format_mapping_coverage.rs`) so any new `mikebom:*` property
 added anywhere in the scan pipeline breaks the build until it's
-mapped.
+mapped. **External conformance harness authors** consuming mikebom
+SBOMs should read `docs/reference/conformance-harness-guide.md`
+(milestone 071) for the per-format envelope decode rules + the 7
+inherent format-spec asymmetries that should NOT be flagged as
+cross-format-inequivalence findings. The CLI subcommand `mikebom
+sbom parity-check` is post-071 the rigorous source of truth for
+in-process validation: it applies real `Directionality` invariants
+(set equality for `SymmetricEqual`, ⊆ for `CdxSubsetOfSpdx`,
+presence-parity for `PresenceOnly`, CDX-non-empty for `CdxOnly`)
+matching `tests/holistic_parity.rs`. Pre-071 it was presence-only
+and could miss real value-drift bugs.
 
 ## Per-component generic annotation bag (milestone 023)
 

@@ -272,26 +272,39 @@ fn build_report(
         let classification = row.classification();
         let extractor: Option<&ParityExtractor> =
             EXTRACTORS.iter().find(|e| e.row_id == row.id);
-        let (cdx_count, spdx23_count, spdx3_count) = match extractor {
+
+        // Milestone 071: pull the actual extracted sets (not just
+        // their counts) so we can apply per-Directionality invariant
+        // checks. Pre-071 this function only checked presence parity
+        // ("all 3 non-empty"), which silently missed real gaps where
+        // SymmetricEqual rows had different set contents across
+        // formats. The integration test `tests/holistic_parity.rs`
+        // already does the rigorous check; this CLI subcommand now
+        // matches its semantics so external consumers running
+        // `mikebom sbom parity-check` get the same answer.
+        let (cdx_set, spdx23_set, spdx3_set) = match extractor {
             Some(e) => (
                 if classification.is_checked(Format::Cdx) {
-                    (e.cdx)(cdx).len()
+                    (e.cdx)(cdx)
                 } else {
-                    0
+                    BTreeSet::new()
                 },
                 if classification.is_checked(Format::Spdx23) {
-                    (e.spdx23)(spdx23).len()
+                    (e.spdx23)(spdx23)
                 } else {
-                    0
+                    BTreeSet::new()
                 },
                 if classification.is_checked(Format::Spdx3) {
-                    (e.spdx3)(spdx3).len()
+                    (e.spdx3)(spdx3)
                 } else {
-                    0
+                    BTreeSet::new()
                 },
             ),
-            None => (0, 0, 0),
+            None => (BTreeSet::new(), BTreeSet::new(), BTreeSet::new()),
         };
+        let cdx_count = cdx_set.len();
+        let spdx23_count = spdx23_set.len();
+        let spdx3_count = spdx3_set.len();
 
         let cdx_status = coverage_to_status(&classification.cdx, cdx_count);
         let spdx23_status = coverage_to_status(&classification.spdx23, spdx23_count);
@@ -300,21 +313,44 @@ fn build_report(
         let universal_parity = classification.is_universal_parity();
         if universal_parity {
             universal_total += 1;
-            let any_present = matches!(cdx_status, CoverageStatus::Present { .. })
-                || matches!(spdx23_status, CoverageStatus::Present { .. })
-                || matches!(spdx3_status, CoverageStatus::Present { .. });
-            let all_present = matches!(cdx_status, CoverageStatus::Present { .. })
-                && matches!(spdx23_status, CoverageStatus::Present { .. })
-                && matches!(spdx3_status, CoverageStatus::Present { .. });
-            if all_present {
+            let any_present = !cdx_set.is_empty() || !spdx23_set.is_empty() || !spdx3_set.is_empty();
+            // Apply per-Directionality invariant. Mirrors the logic in
+            // tests/holistic_parity.rs so the CLI subcommand and the
+            // integration test return the same verdict.
+            let invariant_holds = match extractor.map(|e| e.directional) {
+                Some(Directionality::SymmetricEqual) => {
+                    // Skip rows where no format carries data — that's
+                    // an unexercised row, not a gap.
+                    if !any_present {
+                        true
+                    } else {
+                        cdx_set == spdx23_set && spdx23_set == spdx3_set
+                    }
+                }
+                Some(Directionality::CdxSubsetOfSpdx) => {
+                    // CDX may be empty if the scan has no CPEs at all.
+                    cdx_set.is_subset(&spdx23_set) && cdx_set.is_subset(&spdx3_set)
+                }
+                Some(Directionality::PresenceOnly) => {
+                    // Either all 3 carry data, or none do.
+                    if any_present {
+                        !cdx_set.is_empty() && !spdx23_set.is_empty() && !spdx3_set.is_empty()
+                    } else {
+                        true
+                    }
+                }
+                Some(Directionality::CdxOnly) => {
+                    // Only the CDX side is asserted. SPDX sides
+                    // intentionally not parity-checked.
+                    true
+                }
+                None => false,
+            };
+            if invariant_holds {
                 universal_pass += 1;
-            } else if any_present {
-                // Present in some, absent in others — a real
-                // parity gap that drives exit code 1.
+            } else {
                 gaps += 1;
             }
-            // else: the scan simply doesn't carry this datum;
-            // not a gap, just an unexercised row.
         } else {
             restricted += 1;
         }
@@ -338,11 +374,6 @@ fn build_report(
             universal_parity,
         });
     }
-
-    // Suppress unused warning while keeping `BTreeSet` import in
-    // sync with future expansions of this module (the helper-set
-    // approach is referenced by render_table's spec).
-    let _: Option<BTreeSet<String>> = None;
 
     CoverageReport {
         summary: CoverageSummary {
