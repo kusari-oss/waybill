@@ -825,3 +825,219 @@ fn scan_maven_test_scope_is_tagged_in_default_mode() {
         "slf4j-api must survive --exclude-scope",
     );
 }
+
+// --- Milestone 070: maven main-module emission ----------------------
+
+fn cli_local_fixture(sub: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures")
+        .join(sub)
+}
+
+fn scan_path_format(path: &Path, format: &str) -> serde_json::Value {
+    let bin = env!("CARGO_BIN_EXE_mikebom");
+    let out_path = tempfile::NamedTempFile::new()
+        .expect("tempfile")
+        .path()
+        .to_path_buf();
+    let output = Command::new(bin)
+        .arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(path)
+        .arg("--format")
+        .arg(format)
+        .arg("--output")
+        .arg(&out_path)
+        .arg("--no-deep-hash")
+        .output()
+        .expect("mikebom should run");
+    assert!(
+        output.status.success(),
+        "scan failed: stderr={}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let raw = std::fs::read_to_string(&out_path).expect("read sbom");
+    serde_json::from_str(&raw).expect("valid JSON")
+}
+
+/// US1 AS#1 + SC-001: single-module Maven project emits a main-module.
+#[test]
+fn scan_maven_single_module_emits_main_module() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        dir.path().join("pom.xml"),
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>my-app</artifactId>
+  <version>1.2.3</version>
+</project>"#,
+    )
+    .unwrap();
+    let cdx = scan_path_format(dir.path(), "cyclonedx-json");
+    let meta = &cdx["metadata"]["component"];
+    assert_eq!(meta["type"].as_str(), Some("application"));
+    assert_eq!(
+        meta["purl"].as_str(),
+        Some("pkg:maven/com.example/my-app@1.2.3")
+    );
+    let role = meta["properties"]
+        .as_array()
+        .expect("metadata.component.properties")
+        .iter()
+        .find(|p| p["name"].as_str() == Some("mikebom:component-role"));
+    assert_eq!(
+        role.and_then(|p| p["value"].as_str()),
+        Some("main-module")
+    );
+}
+
+/// US1 AS#2 + SC-002: multi-module reactor emits per-submodule
+/// main-modules; documentDescribes lists all of them.
+#[test]
+fn scan_maven_multi_module_reactor_emits_per_submodule_main_modules() {
+    let path = cli_local_fixture("maven-multi-module-reactor");
+    let spdx = scan_path_format(&path, "spdx-2.3-json");
+    let app_pkgs: Vec<&serde_json::Value> = spdx["packages"]
+        .as_array()
+        .map(|a| a.as_slice())
+        .unwrap_or(&[])
+        .iter()
+        .filter(|p| {
+            p["primaryPackagePurpose"].as_str() == Some("APPLICATION")
+        })
+        .collect();
+    assert_eq!(
+        app_pkgs.len(),
+        3,
+        "reactor must emit 3 main-modules (parent + module-a + module-b); got {} packages",
+        app_pkgs.len()
+    );
+    let purls: std::collections::BTreeSet<String> = app_pkgs
+        .iter()
+        .filter_map(|p| {
+            p["externalRefs"].as_array().and_then(|refs| {
+                refs.iter()
+                    .find(|r| r["referenceType"].as_str() == Some("purl"))
+                    .and_then(|r| r["referenceLocator"].as_str())
+                    .map(String::from)
+            })
+        })
+        .collect();
+    assert!(purls.contains("pkg:maven/com.example/parent@1.0.0"));
+    assert!(purls.contains("pkg:maven/com.example/module-a@1.0.0"));
+    assert!(purls.contains("pkg:maven/com.example/module-b@1.0.0"));
+    assert_eq!(
+        spdx["documentDescribes"]
+            .as_array()
+            .map(|a| a.len())
+            .unwrap_or(0),
+        3,
+        "documentDescribes must list all 3 main-modules"
+    );
+}
+
+/// US1 AS#3: parent inheritance — submodule inherits groupId+version
+/// from `<parent>` block when missing locally.
+#[test]
+fn scan_maven_parent_inheritance_resolves_groupid_and_version() {
+    let path = cli_local_fixture("maven-multi-module-reactor");
+    let spdx = scan_path_format(&path, "spdx-2.3-json");
+    let module_a_pkg = spdx["packages"].as_array().and_then(|a| {
+        a.iter().find(|p| {
+            p["externalRefs"]
+                .as_array()
+                .map(|refs| {
+                    refs.iter().any(|r| {
+                        r["referenceLocator"].as_str()
+                            == Some("pkg:maven/com.example/module-a@1.0.0")
+                    })
+                })
+                .unwrap_or(false)
+        })
+    });
+    assert!(
+        module_a_pkg.is_some(),
+        "module-a must inherit groupId+version from parent → pkg:maven/com.example/module-a@1.0.0"
+    );
+}
+
+/// US1 AS#4 + FR-012: `${revision}` property substitution.
+#[test]
+fn scan_maven_property_substitution_resolves_revision() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        dir.path().join("pom.xml"),
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>flat-app</artifactId>
+  <version>${revision}</version>
+  <properties>
+    <revision>2.0.0</revision>
+  </properties>
+</project>"#,
+    )
+    .unwrap();
+    let cdx = scan_path_format(dir.path(), "cyclonedx-json");
+    assert_eq!(
+        cdx["metadata"]["component"]["purl"].as_str(),
+        Some("pkg:maven/com.example/flat-app@2.0.0"),
+        "$ {{revision}} substitution from <properties> must resolve per FR-012"
+    );
+}
+
+/// FR-003: install-state paths (`target/`) MUST NOT be discovered
+/// for main-module emission.
+#[test]
+fn scan_maven_install_state_paths_skipped() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let root = dir.path();
+    std::fs::write(
+        root.join("pom.xml"),
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>real-app</artifactId>
+  <version>1.0.0</version>
+</project>"#,
+    )
+    .unwrap();
+    let target_dir = root.join("target/extracted");
+    std::fs::create_dir_all(&target_dir).unwrap();
+    std::fs::write(
+        target_dir.join("pom.xml"),
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.shadow</groupId>
+  <artifactId>shadow-app</artifactId>
+  <version>9.9.9</version>
+</project>"#,
+    )
+    .unwrap();
+    let cdx = scan_path_format(root, "cyclonedx-json");
+    assert_eq!(
+        cdx["metadata"]["component"]["purl"].as_str(),
+        Some("pkg:maven/com.example/real-app@1.0.0"),
+    );
+    let any_shadow = cdx["components"]
+        .as_array()
+        .map(|a| {
+            a.iter().any(|c| {
+                c["purl"]
+                    .as_str()
+                    .is_some_and(|p| p.starts_with("pkg:maven/com.shadow/"))
+            })
+        })
+        .unwrap_or(false);
+    assert!(
+        !any_shadow,
+        "shadow pom.xml inside target/ MUST NOT emit per FR-003"
+    );
+}

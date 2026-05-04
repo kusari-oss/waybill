@@ -54,32 +54,65 @@
   },
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-BWLLINUSZ4V5UTOT"
+    "SPDXRef-Package-Q7X32JLRPGCHW46Q"
   ],
-  "documentNamespace": "https://mikebom.kusari.dev/spdx/BUTSRRFTHXY7U6QYURRTH5SPPY6XCVQZ",
+  "documentNamespace": "https://mikebom.kusari.dev/spdx/MDBXAZHXZSV5ZMAI2XCVSPN5XGGCLD5E",
   "name": "pom-three-deps",
   "packages": [
     {
-      "SPDXID": "SPDXRef-DocumentRoot-BWLLINUSZ4V5UTOT",
+      "SPDXID": "SPDXRef-Package-Q7X32JLRPGCHW46Q",
+      "annotations": [
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.12",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.12",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"path+file://<WORKSPACE>/tests/fixtures/maven/pom-three-deps\"]}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.12",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.example:demo-app:1.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:example:demo-app:1.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:demo-app:demo-app:1.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.12",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.12",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-role\",\"value\":\"main-module\"}"
+        }
+      ],
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:generic/pom-three-deps@0.0.0",
+          "referenceLocator": "pkg:maven/com.example/demo-app@1.0.0",
           "referenceType": "purl"
         },
         {
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:mikebom:pom-three-deps:0.0.0:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:com.example:demo-app:1.0.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
-      "name": "pom-three-deps",
-      "supplier": "Organization: mikebom contributors",
-      "versionInfo": "0.0.0"
+      "name": "demo-app",
+      "primaryPackagePurpose": "APPLICATION",
+      "supplier": "Organization: com.example",
+      "versionInfo": "1.0.0"
     },
     {
       "SPDXID": "SPDXRef-Package-MVONQLC7NTCYCDSJ",
@@ -240,7 +273,7 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-BWLLINUSZ4V5UTOT",
+      "relatedSpdxElement": "SPDXRef-Package-Q7X32JLRPGCHW46Q",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     }

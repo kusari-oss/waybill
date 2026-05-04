@@ -442,47 +442,68 @@ in version X", read the CHANGELOG first — specifically the
 the trace-mode reclassification, the artifact-vs-manifest scope gate,
 and the dual-identity Maven coord emission.
 
-## Go vs other ecosystems: the main-module asymmetry (milestone 053)
+## Per-ecosystem main-module: full coverage (milestones 053 / 064 / 066 / 068 / 069 / 070 — issue #104 closed)
 
-Milestone 053 introduced a **synthetic main-module component** for Go
-workspace roots. Other ecosystems (cargo, npm, maven, pip, gem) do
-NOT get an equivalent component. The asymmetry is deliberate.
+Milestone 053 first introduced a **synthetic main-module component**
+for Go workspace roots. Issue #104 then tracked extending the same
+project-self-identity pattern to every other ecosystem. With
+milestone 070 (maven), every supported ecosystem now emits a
+project-self main-module component:
 
-**The Go-specific problem.** A `go.mod`'s `require` block is the only
-on-disk authoritative source of direct-dependency edges from the
-project to its immediate deps. Transitive edges live in each upstream
-module's own `go.mod` inside the local `GOMODCACHE`. On a fresh-clone
-repo with empty cache, mikebom had no `from` node for `require`-based
-direct edges — they were silently dropped (issue #102). The fix:
-emit a synthetic main-module component, attach the direct-require
-edges to it.
+| Ecosystem | Milestone | Trigger | PURL pattern |
+|-----------|-----------|---------|--------------|
+| Go        | 053       | `go.mod` | `pkg:golang/<module-path>@<version>` |
+| Cargo     | 064       | top-level `Cargo.toml` | `pkg:cargo/<name>@<version>` |
+| npm       | 066       | top-level `package.json` | `pkg:npm/<name>@<version>` (scoped names URL-escape `@` to `%40`) |
+| pip       | 068       | PEP 621 `[project]` in `pyproject.toml` | `pkg:pypi/<pep503-name>@<version>` |
+| gem       | 069       | top-level `*.gemspec` | `pkg:gem/<name>@<version>` |
+| maven     | 070       | top-level `pom.xml` (+ reactor `<modules>` + parent inheritance + property substitution) | `pkg:maven/<groupId>/<artifactId>@<version>` |
 
-**Why other ecosystems don't need this.** Their lockfiles encode
-edges directly between named packages: cargo's `[[package]]
-dependencies = [...]`, npm's `package-lock.json::packages`, maven's
-`<dependencies>`, pip / poetry lockfile sections, gem's
-`Gemfile.lock` GEM blocks. All resolve against components already in
-the scan WITHOUT needing a synthetic root component. The project's
-own root identity is captured in CDX `metadata.component` (synthetic
-placeholder) and SPDX `documentDescribes`.
+All six emit through identical standards-native slots: CDX
+`metadata.component` (or super-root for multi-main-module projects
+per #127), SPDX 2.3 `primaryPackagePurpose: APPLICATION` +
+`documentDescribes`, SPDX 3.0.1 `software_primaryPurpose:
+application`. Each carries the `mikebom:component-role:
+main-module` (C40) supplementary tag per Constitution Principle V.
+
+**The Go-specific origin of the pattern.** A `go.mod`'s `require`
+block is the only on-disk authoritative source of direct-dependency
+edges from the project to its immediate deps. Transitive edges live
+in each upstream module's own `go.mod` inside the local `GOMODCACHE`.
+On a fresh-clone repo with empty cache, mikebom had no `from` node
+for `require`-based direct edges — they were silently dropped
+(issue #102). The fix: emit a synthetic main-module component,
+attach the direct-require edges to it. Other ecosystems' lockfiles
+already encode named-to-named edges, so they did not _need_ a
+main-module to fix edge-emission — but issue #104 added one anyway
+for consistent project-self identity, vuln-intersection coverage,
+and sbomqs-uniformity. The augment-existing-or-emit-new pattern
+ensures we don't double-emit when a workspace member already
+appears via the lockfile pass.
 
 **Native-field placement (Principle V).** Per Constitution v1.4.0
-the Go main-module is emitted via each format's standards-native
+every main-module is emitted via each format's standards-native
 "BOM subject" construct — CDX `metadata.component` with `type:
-"application"` (NOT a sibling in `components[]`); SPDX 2.3
-`primaryPackagePurpose: "APPLICATION"` plus `documentDescribes`;
-SPDX 3.0.1 `software_primaryPurpose: "application"`. The
+"application"` (or super-root + `components[]` per #127 for
+multi-main-module projects); SPDX 2.3 `primaryPackagePurpose:
+"APPLICATION"` plus `documentDescribes`; SPDX 3.0.1
+`software_primaryPurpose: "application"`. The
 `mikebom:component-role: main-module` (C40) annotation is
 supplementary signal layered on top. Matches Trivy's pattern.
 
-**Constraint to maintain.** When adding a new ecosystem reader, DO
-NOT add a synthetic main-module component without going through the
-same design pass milestone 053 did. The Go synthetic-root pattern is
-a Go-specific solution to a Go-specific edge-encoding problem; it is
-NOT a general "every ecosystem needs a project-itself component"
-template. Per-ecosystem main-modules for project-identification /
-vuln-intersection / sbomqs-uniformity reasons are tracked separately
-in issue #104; not in scope for milestone 053.
+**Cross-host determinism convention.** When name is parseable but
+version is not (workspace inheritance unresolved, dynamic gemspec
+expressions, Maven `${...}` properties referencing undeclared keys),
+emit `<name>@0.0.0-unknown` with `tracing::warn!` rather than
+falling back to `pkg:generic/...` or skipping. Established in
+milestone 053, codified across 064/066/068/069/070.
+
+**Same-PURL collision dedup.** When multiple discovery paths
+synthesize the same PURL (e.g., a multi-module reactor where a
+submodule's POM is also walked by the lockfile pass), the C40-tagged
+main-module entry is the canonical one and duplicates are dropped
+with `tracing::warn!`. Issue #125 tracks behavior when the
+duplicates _differ_ in metadata.
 
 ## Filesystem walking pattern (milestone 054)
 

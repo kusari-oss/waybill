@@ -544,6 +544,13 @@ pub(crate) struct PomXmlDocument {
     /// populated whenever artifactId is present, so sidecar readers
     /// can apply parent-inheritance themselves. Feature 007 US1.
     pub self_artifact_id: Option<String>,
+    /// `<project>/<modules>/<module>` element values — relative
+    /// subdirectories pointing at child POMs in a multi-module
+    /// reactor build. Each `<module>` value is a directory path
+    /// (e.g., `module-a`, `submodules/foo`) that contains a child
+    /// `pom.xml`. Milestone 070 uses this for FR-002 reactor
+    /// traversal (per-submodule main-module emission).
+    pub modules: Vec<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -624,6 +631,14 @@ pub(crate) fn parse_pom_xml(bytes: &[u8]) -> PomXmlDocument {
                 if parent == "properties" && grand == "project" {
                     doc.properties
                         .insert(popped.clone(), current_text.clone());
+                }
+                // project/modules/module — relative path to a child
+                // POM in a multi-module reactor. Milestone 070 FR-002.
+                if popped == "module" && parent == "modules" && grand == "project" {
+                    let trimmed = current_text.trim();
+                    if !trimmed.is_empty() {
+                        doc.modules.push(trimmed.to_string());
+                    }
                 }
                 // project/dependencies/dependency/{groupId,artifactId,version,scope,type}
                 // ALSO fires for project/dependencyManagement/dependencies/dependency/...
@@ -2999,6 +3014,82 @@ pub fn read_with_claims(
         }
     }
 
+    // Milestone 070 — Phase A: maven main-module emission per FR-001.
+    // Walks top-level pom.xml files (skipping install-state paths
+    // like target/, .m2/), builds an inheritance context, resolves
+    // GAV via property substitution + parent inheritance, emits
+    // one main-module per resolved POM. Augment-existing-or-emit-
+    // new pattern mirrors cargo (064) / npm (066) / pip (068) /
+    // gem (069). Multi-module reactor builds emit per-submodule
+    // (FR-002) via the parent's <modules> traversal.
+    let mut main_modules_emitted = 0usize;
+    let pom_paths = find_top_level_poms(rootfs);
+    let inheritance_ctx = MavenInheritanceContext::build_from_poms(&pom_paths);
+    for pom_path in &pom_paths {
+        let Some(doc) = inheritance_ctx.doc_for_path(pom_path) else {
+            continue;
+        };
+        let Some(synthesized) =
+            build_maven_main_module_entry(pom_path, doc, &inheritance_ctx)
+        else {
+            continue;
+        };
+        let purl_key = synthesized.purl.as_str().to_string();
+        if let Some(existing) = out.iter_mut().find(|e| e.purl.as_str() == purl_key) {
+            for (k, v) in synthesized.extra_annotations.iter() {
+                existing
+                    .extra_annotations
+                    .entry(k.clone())
+                    .or_insert_with(|| v.clone());
+            }
+            existing.parent_purl = None;
+            let existing_deps: HashSet<String> =
+                existing.depends.iter().cloned().collect();
+            for d in &synthesized.depends {
+                if !existing_deps.contains(d) {
+                    existing.depends.push(d.clone());
+                }
+            }
+            if existing.sbom_tier.is_none() {
+                existing.sbom_tier = synthesized.sbom_tier.clone();
+            }
+            main_modules_emitted += 1;
+        } else {
+            out.push(synthesized);
+            main_modules_emitted += 1;
+        }
+    }
+    let dedup_drops = dedup_maven_main_modules_by_purl(&mut out);
+    if !dedup_drops.is_empty() {
+        let dropped_paths: Vec<String> = dedup_drops
+            .iter()
+            .map(|d| d.dropped_path.clone())
+            .collect();
+        let kept_path = dedup_drops
+            .first()
+            .map(|d| d.kept_path.clone())
+            .unwrap_or_default();
+        let example_purl = dedup_drops
+            .first()
+            .map(|d| d.purl.clone())
+            .unwrap_or_default();
+        tracing::warn!(
+            count = dedup_drops.len(),
+            example_purl = %example_purl,
+            kept = %kept_path,
+            dropped = ?dropped_paths,
+            "maven: deduped same-PURL pom.xml files",
+        );
+    }
+    if main_modules_emitted > 0 {
+        tracing::info!(
+            rootfs = %rootfs.display(),
+            main_modules_emitted,
+            same_purl_duplicates_dropped = dedup_drops.len(),
+            "maven: emitted main-module components",
+        );
+    }
+
     if !out.is_empty() {
         tracing::info!(
             rootfs = %rootfs.display(),
@@ -3101,6 +3192,330 @@ fn should_skip_descent(name: &str) -> bool {
         name,
         "node_modules" | "vendor" | "target/classes" | "dist" | "__pycache__"
     )
+}
+
+// ---------------------------------------------------------------------------
+// Milestone 070 — maven source-tree main-module component
+// ---------------------------------------------------------------------------
+
+/// Record describing a duplicate main-module dropped during dedup,
+/// returned in batch from `dedup_maven_main_modules_by_purl` for
+/// caller-side `tracing::warn!` emission.
+#[derive(Debug, Clone)]
+pub(crate) struct MavenDroppedDuplicate {
+    pub purl: String,
+    pub kept_path: String,
+    pub dropped_path: String,
+}
+
+/// Result of property substitution per FR-012.
+#[derive(Debug, Clone)]
+enum PropertyResolution {
+    /// No `${...}` markers — used as-is.
+    Literal(String),
+    /// `${...}` resolved to a real value.
+    Resolved(String),
+    /// `${...}` could not be resolved — emit verbatim + warn.
+    Unresolved(String),
+}
+
+/// Walk `rootfs` for top-level `pom.xml` files. Excludes
+/// install-state paths (`target/`, `.m2/`, `node_modules/`,
+/// `vendor/`) per FR-003. Output is alphabetically sorted for
+/// cross-host determinism.
+fn find_top_level_poms(rootfs: &Path) -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    let mut visited: HashSet<PathBuf> = HashSet::new();
+    walk_for_top_level_poms(rootfs, 0, &mut visited, &mut out);
+    out
+}
+
+fn walk_for_top_level_poms(
+    dir: &Path,
+    depth: usize,
+    visited: &mut HashSet<PathBuf>,
+    out: &mut Vec<PathBuf>,
+) {
+    if depth >= MAX_PROJECT_ROOT_DEPTH {
+        return;
+    }
+    let key = std::fs::canonicalize(dir).unwrap_or_else(|_| dir.to_path_buf());
+    if !visited.insert(key) {
+        return;
+    }
+    let Ok(read_dir) = std::fs::read_dir(dir) else {
+        return;
+    };
+    let mut entries: Vec<_> = read_dir.flatten().collect();
+    entries.sort_by_key(|e| e.file_name());
+    for entry in entries {
+        let path = entry.path();
+        if path.is_file() {
+            if path.file_name().and_then(|s| s.to_str()) == Some("pom.xml") {
+                out.push(path);
+            }
+        } else if path.is_dir() {
+            let Some(name) = path.file_name().and_then(|s| s.to_str()) else {
+                continue;
+            };
+            // Standard skip set + maven install-state paths per FR-003.
+            if should_skip_descent(name)
+                || matches!(
+                    name,
+                    "target" | ".m2" | "node_modules" | "vendor"
+                )
+            {
+                continue;
+            }
+            walk_for_top_level_poms(&path, depth + 1, visited, out);
+        }
+    }
+}
+
+/// Pre-parsed POMs keyed by absolute path (for `doc_for_path`
+/// lookup) AND by `(groupId, artifactId, version)` self_coord (for
+/// inheritance resolution when a child references its parent's
+/// GAV).
+pub(crate) struct MavenInheritanceContext {
+    by_path: HashMap<PathBuf, PomXmlDocument>,
+    by_coord: HashMap<(String, String, String), PomXmlDocument>,
+}
+
+impl MavenInheritanceContext {
+    fn build_from_poms(pom_paths: &[PathBuf]) -> Self {
+        let mut by_path = HashMap::new();
+        let mut by_coord = HashMap::new();
+        for path in pom_paths {
+            let Ok(bytes) = std::fs::read(path) else {
+                continue;
+            };
+            let doc = parse_pom_xml(&bytes);
+            if let Some(coord) = doc.self_coord.clone() {
+                by_coord.insert(coord, doc.clone());
+            }
+            by_path.insert(path.clone(), doc);
+        }
+        Self { by_path, by_coord }
+    }
+
+    fn doc_for_path(&self, path: &Path) -> Option<&PomXmlDocument> {
+        self.by_path.get(path)
+    }
+
+    /// Look up the parent POM document for a given child's
+    /// `<parent>` block. Used for property substitution when the
+    /// child references `${parent.version}` etc.
+    fn parent_doc(&self, child: &PomXmlDocument) -> Option<&PomXmlDocument> {
+        child
+            .parent_coord
+            .as_ref()
+            .and_then(|coord| self.by_coord.get(coord))
+    }
+}
+
+/// Resolve a single string value containing one or more `${...}`
+/// property references per FR-012.
+fn resolve_pom_property_value(
+    raw: &str,
+    self_doc: &PomXmlDocument,
+    parent_doc: Option<&PomXmlDocument>,
+) -> PropertyResolution {
+    if !raw.contains("${") {
+        return PropertyResolution::Literal(raw.to_string());
+    }
+    let mut result = String::with_capacity(raw.len());
+    let mut all_resolved = true;
+    let mut cursor = raw;
+    while let Some(start) = cursor.find("${") {
+        result.push_str(&cursor[..start]);
+        let after_start = &cursor[start + 2..];
+        let Some(end) = after_start.find('}') else {
+            // Malformed — leave as-is.
+            result.push_str(&cursor[start..]);
+            return PropertyResolution::Unresolved(result);
+        };
+        let key = &after_start[..end];
+        let resolved = match key {
+            "project.groupId" => self_doc
+                .self_coord
+                .as_ref()
+                .map(|c| c.0.clone())
+                .or_else(|| {
+                    self_doc.parent_coord.as_ref().map(|c| c.0.clone())
+                }),
+            "project.artifactId" => self_doc
+                .self_coord
+                .as_ref()
+                .map(|c| c.1.clone())
+                .or_else(|| self_doc.self_artifact_id.clone()),
+            "project.version" => self_doc
+                .self_coord
+                .as_ref()
+                .map(|c| c.2.clone())
+                .or_else(|| {
+                    self_doc.parent_coord.as_ref().map(|c| c.2.clone())
+                }),
+            "parent.groupId" => self_doc.parent_coord.as_ref().map(|c| c.0.clone()),
+            "parent.version" => self_doc.parent_coord.as_ref().map(|c| c.2.clone()),
+            other => self_doc
+                .properties
+                .get(other)
+                .cloned()
+                .or_else(|| {
+                    parent_doc
+                        .and_then(|p| p.properties.get(other))
+                        .cloned()
+                }),
+        };
+        if let Some(value) = resolved.filter(|s| !s.is_empty()) {
+            result.push_str(&value);
+        } else {
+            // Couldn't resolve — leave verbatim with the ${} markers.
+            result.push_str("${");
+            result.push_str(key);
+            result.push('}');
+            all_resolved = false;
+        }
+        cursor = &after_start[end + 1..];
+    }
+    result.push_str(cursor);
+    if all_resolved {
+        PropertyResolution::Resolved(result)
+    } else {
+        PropertyResolution::Unresolved(result)
+    }
+}
+
+/// Build the maven main-module entry for a single top-level
+/// `pom.xml`. Per FR-001:
+/// 1. Use `doc.self_coord` if all three GAV components are present.
+/// 2. Fall back to `<parent>` block for missing groupId / version.
+/// 3. Resolve `${...}` property substitution.
+/// 4. Skip emission silently if `<artifactId>` cannot be resolved.
+fn build_maven_main_module_entry(
+    pom_path: &Path,
+    doc: &PomXmlDocument,
+    ctx: &MavenInheritanceContext,
+) -> Option<PackageDbEntry> {
+    let parent_doc = ctx.parent_doc(doc);
+    // Resolve groupId: self → parent block.
+    let raw_group = doc
+        .self_coord
+        .as_ref()
+        .map(|c| c.0.clone())
+        .or_else(|| doc.parent_coord.as_ref().map(|c| c.0.clone()))?;
+    let raw_artifact = doc
+        .self_coord
+        .as_ref()
+        .map(|c| c.1.clone())
+        .or_else(|| doc.self_artifact_id.clone())?;
+    let raw_version = doc
+        .self_coord
+        .as_ref()
+        .map(|c| c.2.clone())
+        .or_else(|| doc.parent_coord.as_ref().map(|c| c.2.clone()))?;
+    let mut warned_unresolved = false;
+    let mut resolve = |raw: &str| -> String {
+        match resolve_pom_property_value(raw, doc, parent_doc) {
+            PropertyResolution::Literal(s) | PropertyResolution::Resolved(s) => s,
+            PropertyResolution::Unresolved(s) => {
+                warned_unresolved = true;
+                s
+            }
+        }
+    };
+    let group = resolve(&raw_group);
+    let artifact = resolve(&raw_artifact);
+    let version = resolve(&raw_version);
+    if warned_unresolved {
+        tracing::warn!(
+            pom = %pom_path.display(),
+            "maven: unresolved property in main-module GAV — emitting verbatim placeholder",
+        );
+    }
+    if group.is_empty() || artifact.is_empty() || version.is_empty() {
+        return None;
+    }
+    let purl = build_maven_purl(&group, &artifact, &version)?;
+    let manifest_dir = pom_path.parent()?;
+    let source_path = format!("path+file://{}", manifest_dir.display());
+    let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
+        Default::default();
+    extra_annotations.insert(
+        "mikebom:component-role".to_string(),
+        serde_json::Value::String("main-module".to_string()),
+    );
+    // Direct deps from <dependencies> block per FR-007. The dep's
+    // groupId:artifactId becomes the depend name; the existing
+    // edge-emission machinery resolves them via name_to_purl.
+    let depends: Vec<String> = doc
+        .dependencies
+        .iter()
+        .map(|d| format!("{}:{}", d.group_id, d.artifact_id))
+        .collect();
+    Some(PackageDbEntry {
+        purl,
+        name: artifact,
+        version,
+        arch: None,
+        source_path,
+        depends,
+        maintainer: None,
+        licenses: Vec::new(),
+        lifecycle_scope: None,
+        requirement_range: None,
+        source_type: None,
+        buildinfo_status: None,
+        evidence_kind: None,
+        binary_class: None,
+        binary_stripped: None,
+        linkage_kind: None,
+        detected_go: None,
+        confidence: None,
+        binary_packed: None,
+        raw_version: None,
+        parent_purl: None,
+        npm_role: None,
+        co_owned_by: None,
+        hashes: Vec::new(),
+        sbom_tier: Some("source".to_string()),
+        shade_relocation: None,
+        extra_annotations,
+    })
+}
+
+/// Dedup main-module entries by PURL (C40-tag-driven). Mirrors
+/// cargo (064 T010) / npm / pip / gem patterns.
+pub(crate) fn dedup_maven_main_modules_by_purl(
+    entries: &mut Vec<PackageDbEntry>,
+) -> Vec<MavenDroppedDuplicate> {
+    let mut dropped: Vec<MavenDroppedDuplicate> = Vec::new();
+    let mut seen: HashMap<String, String> = HashMap::new();
+    let mut keep: Vec<PackageDbEntry> = Vec::with_capacity(entries.len());
+    for entry in std::mem::take(entries) {
+        let is_main = entry
+            .extra_annotations
+            .get("mikebom:component-role")
+            .and_then(|v| v.as_str())
+            == Some("main-module");
+        if !is_main {
+            keep.push(entry);
+            continue;
+        }
+        let purl = entry.purl.as_str().to_string();
+        if let Some(kept_path) = seen.get(&purl) {
+            dropped.push(MavenDroppedDuplicate {
+                purl: purl.clone(),
+                kept_path: kept_path.clone(),
+                dropped_path: entry.source_path.clone(),
+            });
+        } else {
+            seen.insert(purl, entry.source_path.clone());
+            keep.push(entry);
+        }
+    }
+    *entries = keep;
+    dropped
 }
 
 #[cfg(test)]
@@ -3735,11 +4150,28 @@ mod tests {
         )
         .unwrap();
         let entries = read(dir.path(), false);
-        // Workspace root ("app") must NOT surface — same semantics as
-        // cargo + npm workspace roots. Only the declared dep ("guava")
-        // is emitted. See bug fix in `read_with_claims`: the project's
-        // own pom.xml coord is the scan target, not a dependency.
-        assert!(!entries.iter().any(|e| e.name == "app"));
+        // Pre-milestone-070: the workspace root ("app") was suppressed
+        // — the project's own pom.xml coord wasn't emitted as a
+        // dependency.
+        // Post-milestone-070: "app" IS emitted, but as the source-tree
+        // main-module per FR-001 (NOT as a dependency). The
+        // C40-tag-driven `mikebom:component-role: main-module`
+        // annotation distinguishes it from real deps. The declared
+        // dep "guava" is still emitted at source-tier.
+        let app_entry = entries.iter().find(|e| e.name == "app");
+        assert!(
+            app_entry.is_some(),
+            "post-070: project's own pom.xml emits a main-module entry; got {entries:?}"
+        );
+        assert_eq!(
+            app_entry
+                .unwrap()
+                .extra_annotations
+                .get("mikebom:component-role")
+                .and_then(|v| v.as_str()),
+            Some("main-module"),
+            "post-070: project-self entry MUST carry the C40 main-module tag"
+        );
         assert!(entries.iter().any(|e| e.name == "guava"));
         for e in &entries {
             assert_eq!(e.sbom_tier.as_deref(), Some("source"));
@@ -5016,10 +5448,26 @@ mod tests {
             &claimed_inodes,
             None,
         );
+        // Pre-milestone-070 expected `out.len() == 0` because the
+        // declared deps' bytes weren't on disk and the project itself
+        // wasn't emitted. Post-070 the project's pom.xml emits one
+        // main-module component for `ex.app:app:1.0.0` per FR-001;
+        // the declared deps still drop in artifact scope (no bytes
+        // on disk). Updated to expect the single main-module entry
+        // and verify the declared deps are NOT emitted.
         assert_eq!(
             out.len(),
-            0,
-            "artifact scope with no JARs and no cache must drop all declared deps; got {out:?}",
+            1,
+            "post-070: artifact scope with no JARs emits exactly the project's main-module (no declared deps); got {out:?}",
+        );
+        assert_eq!(out[0].name, "app");
+        assert_eq!(out[0].purl.as_str(), "pkg:maven/ex.app/app@1.0.0");
+        assert_eq!(
+            out[0]
+                .extra_annotations
+                .get("mikebom:component-role")
+                .and_then(|v| v.as_str()),
+            Some("main-module"),
         );
     }
 
