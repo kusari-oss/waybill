@@ -138,6 +138,44 @@ pub fn build_document(
             }
         ]);
     }
+    // Milestone 072 / T014 — when --bind-to-source was used, attach
+    // the standards-native `import[]` ExternalMap pointing at the
+    // source-tier SBOM. The `Relationship[built_from]` graph element
+    // is appended into `all_relationships` further below (so it
+    // sorts with the other relationship records).
+    let built_from_rel: Option<Value> = if let Some(source_id) =
+        scan.source_document_binding
+    {
+        let source_iri = source_id
+            .iri
+            .clone()
+            .unwrap_or_else(|| format!("urn:sha256:{}", source_id.sha256));
+        spdx_document["import"] = json!([
+            {
+                "type": "ExternalMap",
+                "externalSpdxId": source_iri.clone(),
+                "verifiedUsing": [
+                    {
+                        "type": "Hash",
+                        "algorithm": "sha256",
+                        "hashValue": source_id.sha256.clone(),
+                    }
+                ],
+            }
+        ]);
+        let rel_iri = format!("{}/relationship/built-from-source", doc_iri);
+        Some(json!({
+            "type": "Relationship",
+            "spdxId": rel_iri,
+            "creationInfo": CREATION_INFO_ID,
+            "from": doc_iri.clone(),
+            "to": [source_iri],
+            "relationshipType": "built_from",
+            "comment": "milestone-072 cross-tier binding: this build/deployment was produced from the source-tier SBOM referenced by the import[] ExternalMap above",
+        }))
+    } else {
+        None
+    };
     graph.push(spdx_document);
 
     // 4 (cont). Append the Package elements.
@@ -190,6 +228,12 @@ pub fn build_document(
             CREATION_INFO_ID,
         );
         all_relationships.extend(describes_rels);
+    }
+    // Milestone 072 / T014 — append the cross-tier binding's
+    // `built_from` Relationship into the sortable bucket so it
+    // sorts with peers.
+    if let Some(rel) = built_from_rel {
+        all_relationships.push(rel);
     }
     all_relationships.sort_by(|a, b| {
         let key = |v: &Value| v["spdxId"].as_str().unwrap_or("").to_string();

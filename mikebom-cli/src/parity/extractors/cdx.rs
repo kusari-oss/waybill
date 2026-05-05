@@ -465,6 +465,13 @@ pub(super) fn c44_cdx(doc: &serde_json::Value) -> std::collections::BTreeSet<Str
 // C45 — per-component orphan-reason (milestone 061, closes #119).
 cdx_anno!(c45_cdx, "mikebom:orphan-reason",              component);
 
+// C46 — per-component cross-tier source-document binding (milestone 072
+// PR-A T008). Emitted on every non-source-tier component (i.e.,
+// `mikebom:sbom-tier: build` or `deployed`) that binds back to a
+// source-tier SBOM. Carrier shape per
+// `contracts/source-document-binding-annotation.md` C-3 CDX 1.6.
+cdx_anno!(c46_cdx, "mikebom:source-document-binding",   component);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================

@@ -94,6 +94,17 @@ impl SpdxId {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+
+    /// Construct a cross-document SPDXID per SPDX 2.3 §7.2 — a target
+    /// reference of the form `<DocumentRefId>:<SPDXID>`. Used by
+    /// milestone 072 (T012) for `BUILT_FROM` cross-tier relationships
+    /// against an externally-referenced source-tier SBOM.
+    pub fn cross_document_ref(
+        external_doc_ref_id: &str,
+        target_spdxid: &str,
+    ) -> Self {
+        SpdxId(format!("{external_doc_ref_id}:{target_spdxid}"))
+    }
 }
 
 /// Deterministic base32 prefix of SHA-256(input) — the shared

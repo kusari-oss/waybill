@@ -61,6 +61,13 @@ pub fn serialize_openvex(
                 .or_default()
                 .push(OpenVexProduct {
                     id: c.purl.as_str().to_string(),
+                    // Milestone 072 / FR-008: pre-PR-A emission
+                    // path doesn't yet populate per-instance
+                    // identifiers (that ships with PR-B's
+                    // propagation engine, T020). Empty map is
+                    // skip-serialized so wire shape stays
+                    // byte-identical to alpha.14.
+                    identifiers: std::collections::BTreeMap::new(),
                 });
         }
     }
@@ -235,6 +242,7 @@ mod tests {
             include_hashes: true,
             include_source_files: false,
             scope_mode: crate::generate::ScopeMode::Artifact,
+            source_document_binding: None,
         }
     }
 

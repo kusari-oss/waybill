@@ -58,6 +58,11 @@ pub struct CycloneDxBuilder {
     /// Milestone 061 — comma-separated `<ecosystem>:<reason-class>`
     /// list. `None`/empty when completeness is `Complete` or `None`.
     go_graph_completeness_reason: Option<String>,
+    /// Milestone 072 / T010: source-tier SBOM identity for the
+    /// document-level cross-document reference
+    /// (`metadata.component.externalReferences[type:bom]`). `None`
+    /// when the scan was NOT invoked with `--bind-to-source`.
+    source_document_binding: Option<mikebom::binding::SourceDocumentId>,
 }
 
 impl CycloneDxBuilder {
@@ -68,7 +73,20 @@ impl CycloneDxBuilder {
             os_release_missing_fields: Vec::new(),
             go_graph_completeness: None,
             go_graph_completeness_reason: None,
+            source_document_binding: None,
         }
+    }
+
+    /// Milestone 072 / T010 — record the source-tier SBOM identifier
+    /// for the document-level
+    /// `metadata.component.externalReferences[type:bom]` cross-document
+    /// reference. Pass `None` when `--bind-to-source` was not supplied.
+    pub fn with_source_document_binding(
+        mut self,
+        id: Option<mikebom::binding::SourceDocumentId>,
+    ) -> Self {
+        self.source_document_binding = id;
+        self
     }
 
     /// Feature 005 — record diagnostic fields observed during the scan.
@@ -120,6 +138,7 @@ impl CycloneDxBuilder {
             scan_target_coord,
             self.go_graph_completeness,
             self.go_graph_completeness_reason.as_deref(),
+            self.source_document_binding.as_ref(),
         );
         let cdx_components = self.build_components(components)?;
         let compositions =

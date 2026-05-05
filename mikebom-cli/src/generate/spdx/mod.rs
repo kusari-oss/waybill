@@ -224,6 +224,47 @@ impl SbomSerializer for Spdx2_3JsonSerializer {
             );
         }
 
+        // Milestone 072 / T012 — when --bind-to-source was used,
+        // emit the standards-native cross-document reference per
+        // contracts/source-document-binding-annotation.md C-2 SPDX 2.3:
+        //   * externalDocumentRefs[] entry naming the source SBOM
+        //     by IRI + SHA-256 checksum.
+        //   * BUILT_FROM relationship from the document root to a
+        //     namespaced cross-doc SPDXID. We use the source-tier
+        //     element form `DocumentRef-source-sbom:SPDXRef-DOCUMENT`
+        //     since the SPDX 2.3 spec allows pointing at the
+        //     document's root via the document SPDXID.
+        if let Some(source_id) = scan.source_document_binding {
+            let source_iri = source_id
+                .iri
+                .clone()
+                .unwrap_or_else(|| format!("urn:sha256:{}", source_id.sha256));
+            let ext_ref_id = "DocumentRef-source-sbom".to_string();
+            doc.external_document_refs.push(
+                document::SpdxExternalDocumentRef {
+                    id: ext_ref_id.clone(),
+                    spdx_document: source_iri,
+                    checksum: packages::SpdxChecksum {
+                        algorithm: packages::SpdxChecksumAlgorithm::SHA256,
+                        value: source_id.sha256.clone(),
+                    },
+                },
+            );
+            // BUILT_FROM relationship: document root → cross-doc
+            // SPDXRef-DOCUMENT. Per SPDX 2.3 §7.2, the cross-doc
+            // SPDXID has the form `<DocumentRefId>:<SPDXID>`.
+            doc.relationships.push(relationships::SpdxRelationship {
+                source: doc.spdx_id.clone(),
+                target: ids::SpdxId::cross_document_ref(&ext_ref_id, "SPDXRef-DOCUMENT"),
+                kind: relationships::SpdxRelationshipType::BuiltFrom,
+                comment: Some(
+                    "milestone-072 cross-tier binding: this build/deployment was \
+                     produced from the source-tier SBOM referenced above"
+                        .to_string(),
+                ),
+            });
+        }
+
         let json_str = serde_json::to_string_pretty(&doc)
             .context("serializing SPDX 2.3 document to JSON")?;
         let mut out = vec![EmittedArtifact {
@@ -349,6 +390,7 @@ mod tests {
             include_hashes: true,
             include_source_files: false,
             scope_mode: crate::generate::ScopeMode::Artifact,
+            source_document_binding: None,
         }
     }
 

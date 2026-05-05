@@ -38,3 +38,13 @@
 //! `mikebom-cli/tests/go_transitive_edges.rs` for the pointer.
 
 pub mod parity;
+
+/// Milestone 072: cross-tier SBOM binding — pure-data + pure-function code
+/// for computing binding hashes, verifying bindings, and serializing the
+/// `mikebom:source-document-binding` annotation. Exposed at lib root so
+/// integration tests under `tests/` can call `compute_binding_hash` and
+/// `verify_binding` directly. Per Constitution Principle VI, only pure-
+/// data + pure-function code lives here; the CLI subcommand wiring
+/// (`verify-binding`, `--bind-to-source`) stays binary-internal in
+/// `cli/`.
+pub mod binding;

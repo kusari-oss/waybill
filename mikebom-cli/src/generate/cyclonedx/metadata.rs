@@ -49,6 +49,7 @@ pub fn build_metadata(
     scan_target_coord: Option<&crate::scan_fs::package_db::maven::ScanTargetCoord>,
     go_graph_completeness: Option<crate::scan_fs::package_db::GraphCompleteness>,
     go_graph_completeness_reason: Option<&str>,
+    source_document_binding: Option<&mikebom::binding::SourceDocumentId>,
 ) -> serde_json::Value {
     let version = env!("CARGO_PKG_VERSION");
     let timestamp = Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
@@ -361,6 +362,40 @@ pub fn build_metadata(
         metadata["lifecycles"] = json!(lifecycles);
     }
 
+    // Milestone 072 / T010 — standards-native cross-document reference
+    // to the source-tier SBOM per
+    // `contracts/source-document-binding-annotation.md` C-2 CDX 1.6.
+    // `type: "bom"` is the CDX 1.6 native cross-document semantic.
+    if let Some(id) = source_document_binding {
+        let mut ref_obj = json!({
+            "type": "bom",
+            "comment": "source-tier SBOM that produced this build/deployment",
+            "hashes": [{ "alg": "SHA-256", "content": id.sha256.clone() }],
+        });
+        // The URL field is mandatory in CDX 1.6's
+        // externalReferences[]. We use the IRI when available;
+        // otherwise fall back to a content-addressed `urn:sha256:`
+        // pseudo-IRI so consumers without the source SBOM file can
+        // still reference it by content hash.
+        let url = id
+            .iri
+            .clone()
+            .unwrap_or_else(|| format!("urn:sha256:{}", id.sha256));
+        ref_obj["url"] = json!(url);
+        let existing = metadata
+            .get_mut("component")
+            .and_then(|c| c.get_mut("externalReferences"))
+            .and_then(|v| v.as_array_mut());
+        match existing {
+            Some(arr) => arr.push(ref_obj),
+            None => {
+                if let Some(comp) = metadata.get_mut("component") {
+                    comp["externalReferences"] = json!([ref_obj]);
+                }
+            }
+        }
+    }
+
     metadata
 }
 
@@ -371,7 +406,7 @@ mod tests {
 
     #[test]
     fn metadata_has_required_fields() {
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None);
+        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None);
 
         assert!(meta["timestamp"].is_string());
         assert_eq!(meta["tools"]["components"][0]["name"], "mikebom");
@@ -392,7 +427,7 @@ mod tests {
     #[test]
     fn metadata_includes_authors_for_sbom_authors_score() {
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None);
         let authors = meta["authors"].as_array().expect("authors must be array");
         assert!(!authors.is_empty(), "authors must be non-empty");
         assert!(authors[0]["name"].is_string());
@@ -401,7 +436,7 @@ mod tests {
     #[test]
     fn metadata_includes_supplier_for_sbom_supplier_score() {
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None);
         assert!(
             meta["supplier"]["name"].is_string(),
             "supplier.name must be present as a string"
@@ -413,7 +448,7 @@ mod tests {
         // sbomqs sbom_data_license scores the SBOM's own license. SPDX
         // convention is CC0-1.0 so SBOM content is free to redistribute.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None);
         let licenses = meta["licenses"].as_array().expect("licenses must be array");
         assert!(!licenses.is_empty());
         assert_eq!(licenses[0]["license"]["id"], "CC0-1.0");
@@ -424,7 +459,7 @@ mod tests {
         // sbomqs flags metadata.component as invalid without a purl.
         // Mikebom synthesizes pkg:generic/<name>@<version>.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None);
         assert_eq!(meta["component"]["purl"], "pkg:generic/myapp@0.1.0");
     }
 
@@ -433,7 +468,7 @@ mod tests {
         // sbomqs flags empty/absent cpe on metadata.component as invalid.
         // Mikebom emits cpe:2.3:a:mikebom:<name>:<version>:*:*:*:*:*:*:*.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None);
         assert_eq!(
             meta["component"]["cpe"],
             "cpe:2.3:a:mikebom:myapp:0.1.0:*:*:*:*:*:*:*"
@@ -463,6 +498,7 @@ mod tests {
         None,
         None,
         None,
+        None,
         );
         let purl = meta["component"]["purl"].as_str().unwrap();
         assert!(
@@ -478,16 +514,16 @@ mod tests {
 
     #[test]
     fn metadata_bom_ref_format() {
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None);
+        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None);
         assert_eq!(meta["component"]["bom-ref"], "myapp@0.1.0");
     }
 
     #[test]
     fn metadata_context_varies_per_variant() {
-        let fs = build_metadata("myapp", "1.0", GenerationContext::FilesystemScan, &[], &[], &TraceIntegrity::default(), None, None, None);
+        let fs = build_metadata("myapp", "1.0", GenerationContext::FilesystemScan, &[], &[], &TraceIntegrity::default(), None, None, None, None);
         assert_eq!(fs["properties"][0]["value"], "filesystem-scan");
 
-        let img = build_metadata("myapp", "1.0", GenerationContext::ContainerImageScan, &[], &[], &TraceIntegrity::default(), None, None, None);
+        let img = build_metadata("myapp", "1.0", GenerationContext::ContainerImageScan, &[], &[], &TraceIntegrity::default(), None, None, None, None);
         assert_eq!(img["properties"][0]["value"], "container-image-scan");
     }
 
@@ -501,6 +537,7 @@ mod tests {
             &[],
             &[],
             &TraceIntegrity::default(),
+        None,
         None,
         None,
         None,
@@ -572,6 +609,7 @@ mod tests {
         None,
         None,
         None,
+        None,
         );
 
         let lifecycles = meta["lifecycles"]
@@ -639,6 +677,7 @@ mod tests {
             std::slice::from_ref(&c),
             &[],
             &TraceIntegrity::default(),
+        None,
         None,
         None,
         None,

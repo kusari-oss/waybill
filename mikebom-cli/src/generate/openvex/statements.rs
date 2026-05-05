@@ -75,6 +75,26 @@ pub struct OpenVexProduct {
     /// `externalRefs[PACKAGE-MANAGER/purl]` carries.
     #[serde(rename = "@id")]
     pub id: String,
+    /// Milestone 072 / FR-008: per-instance identifier map.
+    ///
+    /// Open-ended dictionary per the OpenVEX 0.2.0
+    /// `Product.identifiers` field. Standard keys mikebom emits:
+    ///
+    /// - `purl` — the component PURL string (always populated when
+    ///   set; equal to the legacy `@id` field).
+    /// - `cyclonedx-bom-ref` — the CDX `bom-ref` value when the
+    ///   OpenVEX sidecar accompanies a CDX SBOM.
+    /// - `spdx-spdxid` — the SPDX `SPDXID` value when paired with a
+    ///   SPDX 2.3 / SPDX 3 SBOM.
+    ///
+    /// Pre-072 emission produces an empty map (skipped via
+    /// `skip_serializing_if`), preserving the alpha.14 wire shape.
+    /// Post-072 propagation paths (milestone 072 PR-B `T020`)
+    /// populate this map with the target instance's per-format
+    /// identifier alongside the PURL so VEX consumers can apply
+    /// statements at instance granularity.
+    #[serde(skip_serializing_if = "std::collections::BTreeMap::is_empty", default)]
+    pub identifiers: std::collections::BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
@@ -105,3 +125,55 @@ pub enum OpenVexJustification {
 }
 
 pub const OPENVEX_CONTEXT_V0_2_0: &str = "https://openvex.dev/ns/v0.2.0";
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod tests {
+    use super::*;
+
+    /// Milestone 072 T004: empty `identifiers` map serializes to a
+    /// wire-identical pre-072 `OpenVexProduct` shape — the field is
+    /// skip-serialized. Pre-072 OpenVEX consumers see exactly the
+    /// alpha.14 byte layout.
+    #[test]
+    fn empty_identifiers_produces_pre_072_wire_shape() {
+        let product = OpenVexProduct {
+            id: "pkg:cargo/foo@1.2.3".to_string(),
+            identifiers: std::collections::BTreeMap::new(),
+        };
+        let serialized = serde_json::to_string(&product).unwrap();
+        assert_eq!(serialized, r#"{"@id":"pkg:cargo/foo@1.2.3"}"#);
+    }
+
+    /// Milestone 072 T004: a populated `identifiers` map serializes
+    /// per `contracts/openvex-instance-identifiers.md` C-1 — keys
+    /// `purl`, `cyclonedx-bom-ref`, `spdx-spdxid` appear in the
+    /// stable BTreeMap order.
+    #[test]
+    fn populated_identifiers_serializes_with_post_072_shape() {
+        let mut idents = std::collections::BTreeMap::new();
+        idents.insert(
+            "purl".to_string(),
+            "pkg:cargo/foo@1.2.3".to_string(),
+        );
+        idents.insert(
+            "cyclonedx-bom-ref".to_string(),
+            "pkg:cargo/foo@1.2.3?bomref=image-instance-3".to_string(),
+        );
+        idents.insert(
+            "spdx-spdxid".to_string(),
+            "SPDXRef-image-instance-3-foo".to_string(),
+        );
+        let product = OpenVexProduct {
+            id: "pkg:cargo/foo@1.2.3".to_string(),
+            identifiers: idents,
+        };
+        let serialized = serde_json::to_string(&product).unwrap();
+        // BTreeMap iteration is sorted; identifier-type keys appear
+        // alphabetically: cyclonedx-bom-ref, purl, spdx-spdxid.
+        assert_eq!(
+            serialized,
+            r#"{"@id":"pkg:cargo/foo@1.2.3","identifiers":{"cyclonedx-bom-ref":"pkg:cargo/foo@1.2.3?bomref=image-instance-3","purl":"pkg:cargo/foo@1.2.3","spdx-spdxid":"SPDXRef-image-instance-3-foo"}}"#,
+        );
+    }
+}

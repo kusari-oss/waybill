@@ -257,6 +257,26 @@ pub struct ScanArgs {
     /// license enrichment from both sources but skips dep-graph edges.
     #[arg(long, value_delimiter = ',', value_name = "SOURCE[,SOURCE...]")]
     pub enrich_sources: Vec<EnrichSource>,
+
+    /// Path to a source-tier SBOM document (CDX 1.6 / SPDX 2.3 / SPDX 3
+    /// JSON) that emitted components will be bound to per milestone 072
+    /// (FR-011). When set, mikebom emits a `mikebom:source-document-binding`
+    /// annotation on each first-party component whose PURL appears in
+    /// the source SBOM, plus a document-level cross-document reference
+    /// (CDX `externalReferences[type:bom]`, SPDX `externalDocumentRefs` +
+    /// `BUILT_FROM` relationship).
+    ///
+    /// FR-011 transparency: when the file cannot be loaded or parsed,
+    /// the scan exits non-zero rather than silently emitting components
+    /// without binding. Components whose PURL has no source-tier
+    /// counterpart get an explicit
+    /// `binding: unknown { reason: "source-not-found-in-bind-target" }`
+    /// marker per FR-003.
+    ///
+    /// Use `mikebom sbom verify-binding --image-sbom <out> --source-sbom <path>`
+    /// to verify the binding after emission.
+    #[arg(long, value_name = "PATH")]
+    pub bind_to_source: Option<PathBuf>,
 }
 
 /// Resolved enrichment-source enablement. Computed from the CLI flags
@@ -991,6 +1011,48 @@ pub async fn execute(
         }
     }
 
+    // Milestone 072 / T027: when `--bind-to-source <path>` is supplied,
+    // resolve the source-tier SBOM and attach per-component
+    // `mikebom:source-document-binding` annotations to image-tier
+    // components whose PURL has a counterpart in the source SBOM.
+    // Per FR-011, failure to load the source SBOM aborts the scan.
+    let bind_source_ctx: Option<mikebom::binding::SourceSbomContext> = if let Some(
+        ref source_sbom_path,
+    ) = args.bind_to_source
+    {
+        let ctx = mikebom::binding::SourceSbomContext::load(source_sbom_path).with_context(
+            || {
+                format!(
+                    "failed to load --bind-to-source SBOM at {}",
+                    source_sbom_path.display()
+                )
+            },
+        )?;
+        tracing::info!(
+            source_sbom = %source_sbom_path.display(),
+            source_purls = ctx.source_purls.len(),
+            sha256 = %ctx.source_doc_id.sha256,
+            "loaded --bind-to-source SBOM"
+        );
+        // Per the contract: only emit on non-source-tier SBOMs
+        // (i.e., this scan must be `build` or `deployed`). For
+        // `--image` scans the tier is `deployed`; for `--path` it's
+        // typically `source` and we should NOT emit.
+        let is_image_scan = args.image.is_some();
+        if is_image_scan {
+            attach_bindings_to_components(&mut components, &ctx);
+        } else {
+            tracing::warn!(
+                "--bind-to-source supplied with --path; binding annotations only \
+                 emit on image-tier (--image) scans per milestone 072. \
+                 Source-tier components stay unmodified."
+            );
+        }
+        Some(ctx)
+    } else {
+        None
+    };
+
     // `trace_integrity` is a clean record: no eBPF ran, so there's nothing
     // to have overflowed or dropped.
     let integrity = TraceIntegrity {
@@ -1029,6 +1091,14 @@ pub async fn execute(
         // document-level annotations[] entries.
         go_graph_completeness,
         go_graph_completeness_reason: go_graph_completeness_reason.as_deref(),
+        // Milestone 072 / T010-T014: when --bind-to-source was set
+        // AND the scan target is image-tier, expose the source-doc
+        // identifier so each format's metadata builder can emit the
+        // standards-native cross-document reference.
+        source_document_binding: bind_source_ctx
+            .as_ref()
+            .filter(|_| args.image.is_some())
+            .map(|ctx| &ctx.source_doc_id),
     };
     let output_cfg = OutputConfig {
         mikebom_version: env!("CARGO_PKG_VERSION"),
@@ -1154,6 +1224,43 @@ fn scan_created_timestamp() -> chrono::DateTime<chrono::Utc> {
         }
     }
     chrono::Utc::now()
+}
+
+/// Milestone 072 / T027 helper: walk the resolved component set and
+/// attach a `mikebom:source-document-binding` annotation to each
+/// component whose PURL appears in the source-tier SBOM.
+///
+/// Components matching by PURL get the source-tier's binding metadata
+/// (provenance-preserved). Components whose PURL has no source-tier
+/// counterpart get an explicit
+/// `binding: unknown { reason: "source-not-found-in-bind-target" }`
+/// per FR-003.
+///
+/// The annotation rides through `extra_annotations` (the milestone-023
+/// generic per-component bag). Existing CDX `properties[]`,
+/// SPDX 2.3 `Package.annotations[]` envelope, and SPDX 3
+/// `Annotation.statement` envelope serializers all consume that bag
+/// transparently — no per-format emission code change needed for
+/// per-component binding annotations.
+fn attach_bindings_to_components(
+    components: &mut [mikebom_common::resolution::ResolvedComponent],
+    ctx: &mikebom::binding::SourceSbomContext,
+) {
+    for c in components.iter_mut() {
+        let purl_str = c.purl.as_str().to_string();
+        let binding = ctx.binding_for_purl(&purl_str);
+        // Serialize via the canonical serde shape so emission is
+        // byte-stable across reruns. The CDX side will JSON-encode
+        // this Value to a string at emission time (the milestone-023
+        // bag does that automatically); the SPDX side wraps it in
+        // the MikebomAnnotationCommentV1 envelope.
+        if let Ok(value) = mikebom::binding::serialize_to_envelope_value(&binding) {
+            c.extra_annotations.insert(
+                mikebom::binding::BINDING_PROPERTY_NAME.to_string(),
+                value,
+            );
+        }
+    }
 }
 
 /// later phases). Kept local to this CLI module so the generator crate
@@ -1587,6 +1694,7 @@ mod tests {
             no_deps_dev,
             no_deps_dev_graph,
             enrich_sources,
+            bind_to_source: None,
         }
     }
 

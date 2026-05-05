@@ -58,7 +58,11 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             .with_go_graph_completeness(
                 scan.go_graph_completeness,
                 scan.go_graph_completeness_reason.map(String::from),
-            );
+            )
+            // Milestone 072 / T010 — propagate the source-tier SBOM
+            // identifier so the metadata builder can emit the
+            // standards-native `externalReferences[type:bom]` row.
+            .with_source_document_binding(scan.source_document_binding.cloned());
         let bom = builder.build(
             scan.components,
             scan.relationships,

@@ -7,6 +7,32 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Added (milestone 072 PR-A — cross-tier SBOM binding: foundation + US1)
+
+This is the first of three sequential PRs implementing milestone 072. PR-A delivers the **foundational binding contract + US1** (verify image's foo == source's foo). PR-B will add US2 (`mikebom sbom enrich --vex-propagation-mode` + per-instance OpenVEX). PR-C will add US3 (`mikebom sbom trace-binding`). User-visible scope this PR:
+
+- **`mikebom-cli/src/binding/`** — new module owning the layered binding-hash algorithm (FR-002), per-component `SourceDocumentBinding` annotation shape (FR-001), per-ecosystem source-input extraction (cargo / npm / pip / gem / maven / golang per research.md §1), and consumer-side verification logic (FR-005). Public re-exports include `compute_binding_hash`, `extract_source_inputs_for_component`, `verify_binding`, plus the data types (`BindingHashInputs`, `BindingHash`, `BindingStrength`, `SourceDocumentId`, `SourceDocumentBinding`, `VexPropagationMode`).
+- **`mikebom sbom scan --bind-to-source <path>`** flag (FR-011) — image-tier scans loaded with this option resolve the named source-tier SBOM and emit per-component `mikebom:source-document-binding` annotations carrying the layered-hash + `BindingStrength` (verified / weak / unknown) labels. Non-`verified` components carry a structured `reason` per FR-003. `--path` scans (source-tier) warn-and-skip emission to preserve alpha.14 source-tier byte-identity.
+- **`mikebom sbom verify-binding`** subcommand (FR-005) — given an image-tier SBOM and a source-tier SBOM, recomputes per-component binding hashes from the source-tier inputs and reports verification pass/fail. `--format {table,json}` (default `table`); exits non-zero on any verification failure per VR-005.
+- **Standards-native cross-document references** per Constitution Principle V (FR-004) — CDX `metadata.component.externalReferences[type:bom]`, SPDX 2.3 `externalDocumentRefs[]` + `BUILT_FROM` relationship, SPDX 3 `import[] ExternalMap` + `Relationship[built_from]` graph element. Every cross-tier reference rides through standards-native fields; only the per-component hash + strength label live in the `mikebom:source-document-binding` annotation.
+- **`OpenVexProduct.identifiers: BTreeMap<String, String>`** field added at `mikebom-cli/src/generate/openvex/statements.rs:71` per contracts/openvex-instance-identifiers.md C-1. The field is `skip_serializing_if_empty` — pre-072 wire shape preserved for callers that don't populate it. PR-B will populate `cyclonedx-bom-ref` / `spdx-spdxid` keys at propagation time when both source-VEX and target-SBOM are paired.
+- **Parity catalog row C46** registered for `mikebom:source-document-binding` with `Directionality::SymmetricEqual` per milestone-071's invariant. The cross-format-parity test suite passes against the new row across all 9 ecosystem fixtures × 3 formats — image-tier emission is symmetric across CDX / SPDX 2.3 / SPDX 3.
+- **Reference fixture set** at `docs/reference/binding-fixtures/` (SC-004) — three fixture pairs (`cargo-verified`, `golang-verified`, `maven-weak`) with pinned input triples + expected SHA-256 hex values. External verifiers writing their own implementations use these as the published reference set.
+- **Algo v1 contract pinned** by 3 unit-test pinned-vector cases per analyze-C2 / SC-007 — future canonicalization changes break these tests, surfacing version-drift before consumers see it.
+
+### Migration
+
+- No SBOM output shape change for source-tier scans. The 27 alpha.14 byte-identity goldens remain byte-identical.
+- Image-tier scans that don't pass `--bind-to-source` are byte-identical to alpha.14.
+- `--bind-to-source` is opt-in; absent the flag, image-tier scans emit no binding annotations.
+
+### Out of scope (deferred to PR-B / PR-C)
+
+- VEX propagation logic (FR-007 / `--vex-propagation-mode`) is **PR-B**. The `OpenVexProduct.identifiers` field exists in PR-A but is empty at every emit-site. Pre-072 OpenVEX consumers see byte-identical output.
+- Per-instance VEX emission carrier population (FR-008) is **PR-B**.
+- `mikebom sbom trace-binding` operator-triage subcommand (FR-006 / US3) is **PR-C**.
+- `docs/reference/cross-tier-binding.md` published verifier guide (FR-010) lands when the full contract surface is implemented (PR-C). The contract is fully specified in `specs/072-cross-tier-sbom-binding/contracts/` already and external implementers can follow those today.
+
 ## [0.1.0-alpha.14] — 2026-05-04
 
 The **conformance-tooling polish release.** Two user-visible

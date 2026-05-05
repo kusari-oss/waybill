@@ -352,6 +352,11 @@ pub(super) fn c44_spdx23(doc: &serde_json::Value) -> std::collections::BTreeSet<
 // C45 — per-component orphan-reason (milestone 061).
 spdx23_anno!(c45_spdx23, "mikebom:orphan-reason",             component);
 
+// C46 — per-component cross-tier source-document binding (milestone 072
+// PR-A T008). Carrier shape per
+// `contracts/source-document-binding-annotation.md` C-3 SPDX 2.3.
+spdx23_anno!(c46_spdx23, "mikebom:source-document-binding",  component);
+
 // ============================================================
 // Sections D-G — custom SPDX 2.3 extractors
 // ============================================================

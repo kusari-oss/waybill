@@ -36,6 +36,11 @@ pub enum SpdxRelationshipType {
     TestDependencyOf,
     Contains,
     ContainedBy,
+    /// Milestone 072 / T012 — SPDX 2.3 §11.1 native semantic for
+    /// "this component was built from that source-tier element".
+    /// Cross-document edge: target SPDXID is namespaced into a
+    /// `DocumentRef-source-sbom:SPDXRef-...` form (SPDX 2.3 §7.2).
+    BuiltFrom,
 }
 
 /// One SPDX 2.3 relationship edge.
@@ -286,6 +291,7 @@ mod tests {
             include_hashes: true,
             include_source_files: false,
             scope_mode: crate::generate::ScopeMode::Artifact,
+            source_document_binding: None,
         }
     }
 

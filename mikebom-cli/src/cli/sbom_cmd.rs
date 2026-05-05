@@ -7,6 +7,7 @@ use super::generate::GenerateArgs;
 use super::parity_cmd::ParityCheckArgs;
 use super::scan_cmd::ScanArgs;
 use super::verify::VerifyArgs;
+use super::verify_binding_cmd::VerifyBindingArgs;
 
 #[derive(Args)]
 pub struct SbomCommand {
@@ -31,6 +32,11 @@ pub enum SbomSubcommand {
     /// already-emitted format outputs and report any parity gaps.
     /// Drives the milestone-013 user-facing diagnostic.
     ParityCheck(ParityCheckArgs),
+    /// Verify that an image-tier SBOM's per-component
+    /// `mikebom:source-document-binding` annotations match the
+    /// recompute against a source-tier SBOM (milestone 072, FR-005).
+    /// Exits non-zero on any verification failure.
+    VerifyBinding(VerifyBindingArgs),
 }
 
 pub async fn execute(
@@ -62,5 +68,8 @@ pub async fn execute(
             Ok(ExitCode::from(0))
         }
         SbomSubcommand::ParityCheck(args) => super::parity_cmd::execute(args).await,
+        SbomSubcommand::VerifyBinding(args) => {
+            super::verify_binding_cmd::execute(args).await
+        }
     }
 }

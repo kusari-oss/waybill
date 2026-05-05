@@ -1,0 +1,43 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "metadata": {
+    "component": {
+      "type": "container",
+      "name": "demo-go-image",
+      "version": "v0.1.0",
+      "externalReferences": [
+        {
+          "type": "bom",
+          "url": "https://example.org/sbom/demo-go-source.cdx.json",
+          "comment": "source-tier SBOM that produced this build/deployment",
+          "hashes": [
+            {
+              "alg": "SHA-256",
+              "content": "0000000000000000000000000000000000000000000000000000000000000000"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "example.com/demo-go",
+      "version": "v0.1.0",
+      "purl": "pkg:golang/example.com/demo-go@v0.1.0",
+      "bom-ref": "pkg:golang/example.com/demo-go@v0.1.0?bomref=image-instance-1",
+      "properties": [
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "deployed"
+        },
+        {
+          "name": "mikebom:source-document-binding",
+          "value": "{\"algo\":\"v1\",\"hash\":\"745289decaf84d67e5cc9b333b435e8cc341ac19f7ab16673f05133d459a6111\",\"source_doc_id\":{\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\"},\"strength\":\"verified\"}"
+        }
+      ]
+    }
+  ]
+}

@@ -73,6 +73,18 @@ pub struct ScanArtifacts<'a> {
     /// list summarizing why `go_graph_completeness == Partial`.
     /// Empty/None when completeness is `Complete` or `None`.
     pub go_graph_completeness_reason: Option<&'a str>,
+    /// Milestone 072 / T010-T014: when the scan was invoked with
+    /// `--bind-to-source <path>` AND the source SBOM was loaded
+    /// successfully, this field carries the source SBOM's stable
+    /// identifier (SHA-256 + optional IRI). Each format's metadata
+    /// builder emits a standards-native cross-document reference
+    /// (CDX `metadata.component.externalReferences[type:bom]`,
+    /// SPDX 2.3 `externalDocumentRefs` + `BUILT_FROM` relationship,
+    /// SPDX 3 `import[]` ExternalMap + `Relationship[built_from]`)
+    /// when populated. Per `contracts/source-document-binding-annotation.md`
+    /// C-2; per Constitution Principle V (standards-native first).
+    /// `None` for every pre-072 / non-bind-to-source scan.
+    pub source_document_binding: Option<&'a mikebom::binding::SourceDocumentId>,
 }
 
 /// Document-level scope mode for a single mikebom scan. Surfaced

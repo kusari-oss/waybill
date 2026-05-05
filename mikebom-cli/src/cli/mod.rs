@@ -12,3 +12,4 @@ pub mod run;
 pub mod scan;
 pub mod scan_cmd;
 pub mod verify;
+pub mod verify_binding_cmd;
