@@ -37,6 +37,10 @@ comprehensive conformance-harness-author guide.
 - No SBOM output shape change. CDX 1.6 / SPDX 2.3 / SPDX 3.0.1 emissions are byte-identical to alpha.13 (all 27 byte-identity goldens unchanged).
 - No new `mikebom:*` annotation keys; no removed keys; no directionality changes in the parity catalog. Milestone 071 is purely an internal-verification + documentation milestone.
 
+### Fixed (CI hardening — realistic-projects lane)
+
+- The online knative-func scan step in the realistic-projects CI lane (`.github/workflows/realistic-projects.yml`) now skips ClearlyDefined + deps.dev-graph enrichment via `--no-clearly-defined --no-deps-dev-graph` (the new #136 flags). The step's purpose is exclusively the Go transitive-edge resolver gate (SC-003 from milestone 055); neither CD nor deps.dev-graph contributes to Go transitive edges. When CD's public API has a slow event (knative-func has 1000+ components and CD is ~87% of online wall-clock per #137), the lane was hitting the 15-minute job timeout. Skipping the irrelevant enrichment passes keeps the assertion focused and the job under budget. Fix-forward: #137 captures the underlying CD-perf work that would let the lane re-enable full enrichment without timing out.
+
 ## [0.1.0-alpha.13] — 2026-05-03
 
 The **issue #104 closure release.** Three milestones since alpha.12

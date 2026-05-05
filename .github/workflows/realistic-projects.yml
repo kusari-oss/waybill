@@ -134,10 +134,22 @@ jobs:
           # resolver's step 1 (`go mod graph`) and step 3 (proxy
           # fetch) work normally. Runners have `go` pre-installed
           # so step 1 covers most modules; step 3 fills any gaps.
+          #
+          # alpha.14: skip ClearlyDefined + deps.dev-graph enrichment
+          # via the milestone-#136 flags. This step's purpose is
+          # exclusively the Go transitive-edge resolver gate (SC-003) —
+          # neither CD nor deps.dev-graph contributes to Go transitive
+          # edges (the resolver uses `go mod graph` + GOMODCACHE walk +
+          # GOPROXY fetch). When CD's API has a slow event (knative-func
+          # has 1000+ components and CD is ~87% of online wall-clock per
+          # #137), this lane hits the 15-minute job timeout. Skipping
+          # them keeps the assertion focused and the job under budget.
           ./target/debug/mikebom sbom scan \
             --path "/tmp/realistic-fixtures/${{ matrix.project.name }}-${{ matrix.project.tag }}" \
             --format cyclonedx-json \
             --output cyclonedx-json=/tmp/${{ matrix.project.name }}.online.cdx.json \
+            --no-clearly-defined \
+            --no-deps-dev-graph \
             --no-deep-hash 2>&1 | tee /tmp/scan.online.log
 
       - name: Validate Go transitive-edge count (SC-003)
