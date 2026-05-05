@@ -694,3 +694,57 @@ the binding emission only fires on `mikebom:sbom-tier: build` or
 `deployed` SBOMs — source-tier SBOMs are unchanged. CI byte-
 identity guards confirm this in
 `mikebom-cli/tests/{cdx,spdx,spdx3}_regression.rs`.
+
+## Source identifiers (milestone 073)
+
+**Operator-visible behavior** — `mikebom sbom scan` and `mikebom
+trace` accept a repeatable `--with-source <scheme>:<value>` flag
+that attaches a stable identifier at document level to the emitted
+SBOM. `--path` scans on git checkouts auto-detect a `repo:`
+identifier from the `origin` / `upstream` / first-listed remote
+(3-step fallback per Q1 clarification); `--image` scans
+auto-detect an `image:<registry>/<name>:<tag>@sha256:<digest>`
+identifier from the resolved image reference. Manual flags override
+auto-detection on `(scheme, value)` match.
+
+**Built-in schemes** — four recognized schemes get value-validated
+and ride per-format standards-native carriers per Constitution
+Principle V's native-first directive:
+
+- `repo:` (URL or git-style ssh URL) → CDX `externalReferences[type:vcs]`,
+  SPDX 2.3 dual-carrier on main-module `Package.externalRefs[
+  PERSISTENT-ID]` + `creationInfo.creators` redundant text, SPDX 3
+  `Element.externalIdentifier[]`.
+- `git:` (URL with optional `#<commit-or-ref>` fragment) → same
+  carriers; semantically narrower (commit-anchored).
+- `image:` (`[registry/]name[:tag][@sha256:digest]`) → CDX
+  `externalReferences[type:distribution]`, SPDX 2.3 dual-carrier,
+  SPDX 3 native.
+- `attestation:` (URL/IRI) → CDX
+  `externalReferences[type:attestation]`, SPDX 2.3 dual-carrier,
+  SPDX 3 native.
+
+**User-defined passthrough** — schemes matching the FR-004 regex
+(`^[a-z][a-z0-9_-]*$`) but not in the built-in registry pass through
+verbatim under a `mikebom:source-identifiers` document-level
+annotation (parity-catalog row C47). SPDX 3 carries them natively
+in `externalIdentifier[]` — no annotation needed there.
+
+**Forward-looking handshake to milestone 074** — every emitted
+identifier is parseable, deterministic, and survives JSON
+canonicalization. Milestone 074's `--bind-to-source <identifier>`
+will resolve identifier-keyed lookups against local SBOM directories
+to find the source SBOM matching the identifier — no emission-side
+work needed at 074 land time.
+
+The 27 alpha.15 byte-identity goldens for non-git fixtures stay
+byte-identical (no auto-detection fires when no git remote
+present). The git-tracked fixtures (cargo-workspace, maven-multi-
+module-reactor) get one additive identifier slot per format — that's
+the FR-012 expected golden regen. CI byte-identity guards in
+`mikebom-cli/tests/{cdx,spdx,spdx3}_regression.rs` confirm this.
+
+See `docs/reference/source-identifiers.md` for the published
+external-consumer guide (FR-010): per-format carrier table, decode
+recipes per format, determinism contract, and the auto-detection
+algorithm.

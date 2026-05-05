@@ -405,6 +405,57 @@ spdx3_anno!(c45_spdx3, "mikebom:orphan-reason",             component);
 // `contracts/source-document-binding-annotation.md` C-3 SPDX 3.
 spdx3_anno!(c46_spdx3, "mikebom:source-document-binding",  component);
 
+// C47 — document-level user-defined source identifiers (milestone 073).
+// Per `contracts/source-identifiers-annotation.md` C-1 SPDX 3 and C-2
+// SPDX 3: user-defined identifiers ride `Element.externalIdentifier[]`
+// natively on the SpdxDocument element rather than a separate
+// `mikebom:source-identifiers` annotation. The C47 row must therefore
+// reach into the native carrier and emit the same canonical
+// `{scheme, value}` payload that the CDX/SPDX 2.3 sides produce from
+// their respective annotation envelopes — filtering OUT the built-in
+// schemes (which the CDX/SPDX 2.3 sides exclude from the C47 carrier
+// entirely; built-ins ride standards-native carriers per C46-style
+// pattern).
+pub(super) fn c47_spdx3(doc: &Value) -> BTreeSet<String> {
+    let mut out = BTreeSet::new();
+    let Some(graph) = doc.get("@graph").and_then(|v| v.as_array()) else {
+        return out;
+    };
+    for el in graph {
+        if el.get("type").and_then(|v| v.as_str()) != Some("SpdxDocument") {
+            continue;
+        }
+        let Some(idents) = el.get("externalIdentifier").and_then(|v| v.as_array()) else {
+            continue;
+        };
+        for ident in idents {
+            let scheme = ident
+                .get("externalIdentifierType")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            // Filter to user-defined namespace only (matches the CDX
+            // / SPDX 2.3 C47-annotation contents).
+            if matches!(scheme, "repo" | "git" | "image" | "attestation") {
+                continue;
+            }
+            let value = ident.get("identifier").and_then(|v| v.as_str()).unwrap_or("");
+            // Canonical payload shape: {"scheme":<name>,"value":<value>}.
+            // Match the CDX/SPDX 2.3 annotation envelope payload shape
+            // (no source_label — manual flags don't have one and
+            // user-defined entries today never have an auto-detected
+            // label).
+            let canonical = serde_json::json!({"scheme": scheme, "value": value});
+            // Use compact ordered form — same canonicalization the
+            // CDX/SPDX 2.3 annotation extractors produce via
+            // canonicalize_atomic_values.
+            if let Ok(s) = serde_json::to_string(&canonical) {
+                out.insert(s);
+            }
+        }
+    }
+    out
+}
+
 // ============================================================
 // Sections D-G — custom SPDX 3 extractors
 // ============================================================

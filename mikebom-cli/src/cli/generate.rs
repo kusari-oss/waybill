@@ -63,6 +63,13 @@ pub struct GenerateArgs {
     /// Output generation summary as JSON to stdout
     #[arg(long)]
     pub json: bool,
+
+    /// Milestone 073: source identifiers to attach to the emitted
+    /// build-tier SBOM. Forwarded from the `mikebom trace run`
+    /// `--with-source` flag (see `cli/run.rs::RunArgs::with_source`).
+    /// Default empty.
+    #[arg(skip)]
+    pub with_source: Vec<mikebom::binding::identifiers::Identifier>,
 }
 
 pub async fn execute(args: GenerateArgs, offline: bool) -> anyhow::Result<()> {
@@ -133,7 +140,10 @@ pub async fn execute(args: GenerateArgs, offline: bool) -> anyhow::Result<()> {
         // Trace-mode doesn't distinguish dev/prod at capture time.
         include_dev: false,
     };
-    let builder = CycloneDxBuilder::new(cdx_config);
+    let builder = CycloneDxBuilder::new(cdx_config)
+        // Milestone 073 — propagate manual --with-source flags to the
+        // builder. Build-tier scans don't auto-detect; manual only.
+        .with_source_identifiers(args.with_source.clone());
     let bom = builder.build(
         &components,
         &relationships,

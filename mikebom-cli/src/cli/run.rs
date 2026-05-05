@@ -5,6 +5,17 @@ use clap::Args;
 use super::generate::{GenerateArgs, SbomScope};
 use super::scan::ScanArgs;
 
+/// Parse a `--with-source <scheme>:<value>` flag. Used by clap as the
+/// `value_parser`. Errors at parse time on missing separator, empty
+/// scheme, empty value, or scheme failing the FR-004 regex (see
+/// `parse_with_source_flag` in `cli/scan_cmd.rs` for the equivalent
+/// path on `mikebom sbom scan`).
+fn parse_with_source_flag(
+    raw: &str,
+) -> Result<mikebom::binding::identifiers::Identifier, String> {
+    mikebom::binding::identifiers::Identifier::parse(raw).map_err(|e| e.to_string())
+}
+
 #[derive(Args)]
 pub struct RunArgs {
     /// SBOM output format
@@ -58,6 +69,19 @@ pub struct RunArgs {
     /// Output combined summary as JSON to stdout
     #[arg(long)]
     pub json: bool,
+
+    /// Milestone 073: attach a source identifier to the emitted SBOM.
+    /// Repeatable; `<scheme>:<value>` syntax (see
+    /// `mikebom sbom scan --help` for the full format spec). Build-tier
+    /// scans do NOT auto-detect a `repo:` identifier — manual flags only,
+    /// per FR-008.
+    #[arg(
+        long = "with-source",
+        action = clap::ArgAction::Append,
+        value_name = "SCHEME:VALUE",
+        value_parser = parse_with_source_flag,
+    )]
+    pub with_source: Vec<mikebom::binding::identifiers::Identifier>,
 
     /// Directories to scan for artifact files after the traced command
     /// exits. Forwarded verbatim to `mikebom trace capture`. See the
@@ -161,6 +185,7 @@ pub async fn execute(args: RunArgs) -> anyhow::Result<()> {
         skip_purl_validation: args.skip_purl_validation,
         vex_overrides: None,
         json: false,
+        with_source: args.with_source.clone(),
     };
     // Trace's one-shot `run` wrapper doesn't thread the global --offline
     // flag through (yet). Default to online — the enrichment doesn't

@@ -340,12 +340,33 @@ pub fn build_document(
     // — giving it an Organization entry mirrors what CDX emits in
     // `metadata.supplier` + `metadata.authors` and closes the
     // cross-format sbomqs Provenance gap.
+    //
+    // Milestone 073 — per Q2 clarification, redundant
+    // `Tool: mikebom-<version> source: <full-identifier>` text lines
+    // are appended for each built-in source identifier. This is the
+    // free-form fallback for SPDX 2.3 consumers that don't decode
+    // the typed `Package.externalRefs[PERSISTENT-ID]` rows on the
+    // main-module Package. Order: auto-detected first, then manual
+    // in supply order (per FR-009 / VR-008). Built-in identifiers
+    // only — user-defined identifiers ride the document-level
+    // `mikebom:source-identifiers` annotation per Constitution
+    // Principle V.
+    let mut creators = vec![
+        annotator.clone(),
+        "Organization: mikebom contributors".to_string(),
+    ];
+    for id in artifacts.source_identifiers {
+        if id.is_builtin() {
+            creators.push(format!(
+                "{annotator} source: {wire}",
+                annotator = annotator,
+                wire = id.as_wire()
+            ));
+        }
+    }
     let creation_info = CreationInfo {
         created: date.clone(),
-        creators: vec![
-            annotator.clone(),
-            "Organization: mikebom contributors".to_string(),
-        ],
+        creators,
         license_list_version: None,
         comment: Some(build_scope_comment(artifacts)),
     };
@@ -454,11 +475,13 @@ fn synthesize_root(
                 category: SpdxExternalRefCategory::PackageManager,
                 ref_type: "purl".to_string(),
                 locator: synth_purl,
+                comment: None,
             },
             SpdxExternalRef {
                 category: SpdxExternalRefCategory::Security,
                 ref_type: "cpe23Type".to_string(),
                 locator: synth_cpe,
+                comment: None,
             },
         ],
         annotations: Vec::new(),
@@ -574,6 +597,7 @@ mod tests {
             include_source_files: false,
             scope_mode: crate::generate::ScopeMode::Artifact,
             source_document_binding: None,
+            source_identifiers: &[],
         }
     }
 

@@ -85,6 +85,24 @@ pub struct ScanArtifacts<'a> {
     /// C-2; per Constitution Principle V (standards-native first).
     /// `None` for every pre-072 / non-bind-to-source scan.
     pub source_document_binding: Option<&'a mikebom::binding::SourceDocumentId>,
+    /// Milestone 073: identifiers attached at scan invocation
+    /// (auto-detected `repo:` / `image:` plus manual `--with-source`
+    /// flags). Auto-detected entries appear FIRST in the Vec; manual
+    /// entries follow in supply order, with the override-position rule
+    /// applied (manual entries that deduplicate against auto-detected
+    /// entries on `(scheme, value)` inherit the auto-detected entry's
+    /// position) per FR-009. Already deduplicated by `(scheme, value)`
+    /// pre-emit. Built-in identifiers ride per-format standards-native
+    /// carriers (CDX `metadata.component.externalReferences[]`, SPDX
+    /// 2.3 dual-carrier on main-module `Package.externalRefs[
+    /// PERSISTENT-ID]` + `creationInfo.creators` text, SPDX 3
+    /// `Element.externalIdentifier[]`). User-defined identifiers ride
+    /// the `mikebom:source-identifiers` annotation envelope
+    /// (parity-catalog row C47); SPDX 3 also carries them natively in
+    /// `Element.externalIdentifier[]` per
+    /// `contracts/source-identifiers-annotation.md` C-1.
+    pub source_identifiers:
+        &'a [mikebom::binding::identifiers::Identifier],
 }
 
 /// Document-level scope mode for a single mikebom scan. Surfaced

@@ -351,6 +351,49 @@ pub fn annotate_document(
         );
     }
 
+    // C47 (milestone 073) — user-defined source identifiers ride a
+    // single document-level `mikebom:source-identifiers` annotation
+    // wrapped in the `MikebomAnnotationCommentV1` envelope. Built-in
+    // identifiers ride the dual-carrier standards-native path
+    // (main-module `Package.externalRefs[PERSISTENT-ID]` + redundant
+    // `creationInfo.creators` text line). The annotation array is
+    // sorted lex by `(scheme, value)` for determinism (FR-009 /
+    // contract C-4). Emit ONLY when the user-defined entry set is
+    // non-empty per VR-007 — preserves cross-format byte-identity for
+    // non-user-defined-namespace scans.
+    let user_defined_payload: Vec<serde_json::Value> = {
+        let mut entries: Vec<&mikebom::binding::identifiers::Identifier> = artifacts
+            .source_identifiers
+            .iter()
+            .filter(|id| {
+                matches!(
+                    id.kind,
+                    mikebom::binding::identifiers::IdentifierKind::UserDefined
+                )
+            })
+            .collect();
+        entries.sort_by(|a, b| {
+            (a.scheme.as_str(), a.value.as_str())
+                .cmp(&(b.scheme.as_str(), b.value.as_str()))
+        });
+        entries
+            .into_iter()
+            .map(|id| {
+                json!({
+                    "scheme": id.scheme.as_str(),
+                    "value": id.value.as_str(),
+                })
+            })
+            .collect()
+    };
+    if !user_defined_payload.is_empty() {
+        push(
+            &mut out,
+            "mikebom:source-identifiers",
+            json!(user_defined_payload),
+        );
+    }
+
     out
 }
 

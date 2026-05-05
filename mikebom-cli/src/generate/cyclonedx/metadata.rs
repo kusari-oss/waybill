@@ -50,6 +50,7 @@ pub fn build_metadata(
     go_graph_completeness: Option<crate::scan_fs::package_db::GraphCompleteness>,
     go_graph_completeness_reason: Option<&str>,
     source_document_binding: Option<&mikebom::binding::SourceDocumentId>,
+    source_identifiers: &[mikebom::binding::identifiers::Identifier],
 ) -> serde_json::Value {
     let version = env!("CARGO_PKG_VERSION");
     let timestamp = Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
@@ -362,6 +363,93 @@ pub fn build_metadata(
         metadata["lifecycles"] = json!(lifecycles);
     }
 
+    // Milestone 073 — built-in source identifiers ride
+    // `metadata.component.externalReferences[]` per
+    // `contracts/source-identifiers-annotation.md` C-1 CDX 1.6. Per-
+    // scheme `type` mapping per research.md §2 (`vcs` for repo:/git:,
+    // `distribution` for image:, `attestation` for attestation:).
+    // Order: auto-detected first (per FR-009 / VR-008), then manual
+    // in supply order. The Vec is already deduplicated and ordered
+    // by `cli/scan_cmd.rs::resolve_source_identifiers`.
+    let builtin_id_refs: Vec<serde_json::Value> = source_identifiers
+        .iter()
+        .filter_map(|id| match id.kind {
+            mikebom::binding::identifiers::IdentifierKind::Builtin(b) => {
+                let comment = id
+                    .source_label
+                    .clone()
+                    .unwrap_or_else(|| "manual --with-source".to_string());
+                Some(json!({
+                    "type": b.cdx_external_reference_type(),
+                    "url": id.value.as_str(),
+                    "comment": comment,
+                }))
+            }
+            mikebom::binding::identifiers::IdentifierKind::UserDefined => None,
+        })
+        .collect();
+    if !builtin_id_refs.is_empty() {
+        let existing = metadata
+            .get_mut("component")
+            .and_then(|c| c.get_mut("externalReferences"))
+            .and_then(|v| v.as_array_mut());
+        match existing {
+            Some(arr) => {
+                for r in builtin_id_refs.iter() {
+                    arr.push(r.clone());
+                }
+            }
+            None => {
+                if let Some(comp) = metadata.get_mut("component") {
+                    comp["externalReferences"] = json!(builtin_id_refs);
+                }
+            }
+        }
+    }
+
+    // Milestone 073 — user-defined source identifiers ride a single
+    // `metadata.properties[]` entry under `mikebom:source-identifiers`
+    // per `contracts/source-identifiers-annotation.md` C-2 CDX 1.6.
+    // The value is a JSON-encoded array sorted lex by `(scheme, value)`
+    // for determinism (FR-009 / contract C-4). Emit ONLY when the
+    // user-defined entry set is non-empty per VR-007 — preserves
+    // cross-format byte-identity for non-user-defined-namespace scans.
+    let user_defined_payload: Vec<serde_json::Value> = {
+        let mut entries: Vec<&mikebom::binding::identifiers::Identifier> = source_identifiers
+            .iter()
+            .filter(|id| {
+                matches!(
+                    id.kind,
+                    mikebom::binding::identifiers::IdentifierKind::UserDefined
+                )
+            })
+            .collect();
+        entries.sort_by(|a, b| {
+            (a.scheme.as_str(), a.value.as_str())
+                .cmp(&(b.scheme.as_str(), b.value.as_str()))
+        });
+        entries
+            .into_iter()
+            .map(|id| {
+                json!({
+                    "scheme": id.scheme.as_str(),
+                    "value": id.value.as_str(),
+                })
+            })
+            .collect()
+    };
+    if !user_defined_payload.is_empty() {
+        let json_str = serde_json::to_string(&user_defined_payload)
+            .unwrap_or_else(|_| "[]".to_string());
+        if let Some(props) = metadata.get_mut("properties").and_then(|v| v.as_array_mut())
+        {
+            props.push(json!({
+                "name": "mikebom:source-identifiers",
+                "value": json_str,
+            }));
+        }
+    }
+
     // Milestone 072 / T010 — standards-native cross-document reference
     // to the source-tier SBOM per
     // `contracts/source-document-binding-annotation.md` C-2 CDX 1.6.
@@ -406,7 +494,7 @@ mod tests {
 
     #[test]
     fn metadata_has_required_fields() {
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None);
+        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
 
         assert!(meta["timestamp"].is_string());
         assert_eq!(meta["tools"]["components"][0]["name"], "mikebom");
@@ -427,7 +515,7 @@ mod tests {
     #[test]
     fn metadata_includes_authors_for_sbom_authors_score() {
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
         let authors = meta["authors"].as_array().expect("authors must be array");
         assert!(!authors.is_empty(), "authors must be non-empty");
         assert!(authors[0]["name"].is_string());
@@ -436,7 +524,7 @@ mod tests {
     #[test]
     fn metadata_includes_supplier_for_sbom_supplier_score() {
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
         assert!(
             meta["supplier"]["name"].is_string(),
             "supplier.name must be present as a string"
@@ -448,7 +536,7 @@ mod tests {
         // sbomqs sbom_data_license scores the SBOM's own license. SPDX
         // convention is CC0-1.0 so SBOM content is free to redistribute.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
         let licenses = meta["licenses"].as_array().expect("licenses must be array");
         assert!(!licenses.is_empty());
         assert_eq!(licenses[0]["license"]["id"], "CC0-1.0");
@@ -459,7 +547,7 @@ mod tests {
         // sbomqs flags metadata.component as invalid without a purl.
         // Mikebom synthesizes pkg:generic/<name>@<version>.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
         assert_eq!(meta["component"]["purl"], "pkg:generic/myapp@0.1.0");
     }
 
@@ -468,7 +556,7 @@ mod tests {
         // sbomqs flags empty/absent cpe on metadata.component as invalid.
         // Mikebom emits cpe:2.3:a:mikebom:<name>:<version>:*:*:*:*:*:*:*.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
         assert_eq!(
             meta["component"]["cpe"],
             "cpe:2.3:a:mikebom:myapp:0.1.0:*:*:*:*:*:*:*"
@@ -499,6 +587,7 @@ mod tests {
         None,
         None,
         None,
+        &[],
         );
         let purl = meta["component"]["purl"].as_str().unwrap();
         assert!(
@@ -514,16 +603,16 @@ mod tests {
 
     #[test]
     fn metadata_bom_ref_format() {
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None);
+        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
         assert_eq!(meta["component"]["bom-ref"], "myapp@0.1.0");
     }
 
     #[test]
     fn metadata_context_varies_per_variant() {
-        let fs = build_metadata("myapp", "1.0", GenerationContext::FilesystemScan, &[], &[], &TraceIntegrity::default(), None, None, None, None);
+        let fs = build_metadata("myapp", "1.0", GenerationContext::FilesystemScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
         assert_eq!(fs["properties"][0]["value"], "filesystem-scan");
 
-        let img = build_metadata("myapp", "1.0", GenerationContext::ContainerImageScan, &[], &[], &TraceIntegrity::default(), None, None, None, None);
+        let img = build_metadata("myapp", "1.0", GenerationContext::ContainerImageScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
         assert_eq!(img["properties"][0]["value"], "container-image-scan");
     }
 
@@ -541,6 +630,7 @@ mod tests {
         None,
         None,
         None,
+        &[],
         );
         assert!(meta.get("lifecycles").is_none());
     }
@@ -610,6 +700,7 @@ mod tests {
         None,
         None,
         None,
+        &[],
         );
 
         let lifecycles = meta["lifecycles"]
@@ -681,10 +772,107 @@ mod tests {
         None,
         None,
         None,
+        &[],
         );
         assert!(
             meta.get("lifecycles").is_none(),
             "unknown tier should not produce a lifecycle entry"
         );
+    }
+
+    // -------- Milestone 073 — source identifier emission --------
+
+    #[test]
+    fn metadata_emits_builtin_identifier_in_external_references() {
+        use mikebom::binding::identifiers::Identifier;
+        let auto = {
+            let mut id = Identifier::parse("repo:git@github.com:foo/bar.git").unwrap();
+            id.source_label = Some("auto-detected from git remote `origin`".to_string());
+            id
+        };
+        let meta = build_metadata(
+            "myapp",
+            "0.1.0",
+            GenerationContext::FilesystemScan,
+            &[],
+            &[],
+            &TraceIntegrity::default(),
+            None,
+            None,
+            None,
+            None,
+            std::slice::from_ref(&auto),
+        );
+        let refs = meta["component"]["externalReferences"]
+            .as_array()
+            .expect("externalReferences emitted");
+        let vcs_entry = refs
+            .iter()
+            .find(|r| r.get("type").and_then(|v| v.as_str()) == Some("vcs"))
+            .expect("vcs entry present");
+        assert_eq!(
+            vcs_entry["url"].as_str(),
+            Some("git@github.com:foo/bar.git")
+        );
+        assert_eq!(
+            vcs_entry["comment"].as_str(),
+            Some("auto-detected from git remote `origin`")
+        );
+    }
+
+    #[test]
+    fn metadata_emits_user_defined_identifier_in_properties() {
+        use mikebom::binding::identifiers::Identifier;
+        let m1 = Identifier::parse("acme_corp_id:abc123").unwrap();
+        let m2 = Identifier::parse("internal_ticket:PROJ-456").unwrap();
+        let ids = vec![m1, m2];
+        let meta = build_metadata(
+            "myapp",
+            "0.1.0",
+            GenerationContext::FilesystemScan,
+            &[],
+            &[],
+            &TraceIntegrity::default(),
+            None,
+            None,
+            None,
+            None,
+            &ids,
+        );
+        let props = meta["properties"].as_array().expect("properties");
+        let entry = props
+            .iter()
+            .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("mikebom:source-identifiers"))
+            .expect("mikebom:source-identifiers entry present");
+        let value_str = entry["value"].as_str().unwrap();
+        let parsed: serde_json::Value =
+            serde_json::from_str(value_str).expect("value is JSON-encoded array");
+        let arr = parsed.as_array().expect("array");
+        assert_eq!(arr.len(), 2);
+        // Sorted lex by (scheme, value): acme_corp_id < internal_ticket.
+        assert_eq!(arr[0]["scheme"].as_str(), Some("acme_corp_id"));
+        assert_eq!(arr[1]["scheme"].as_str(), Some("internal_ticket"));
+    }
+
+    #[test]
+    fn metadata_omits_user_defined_property_when_set_is_empty() {
+        let meta = build_metadata(
+            "myapp",
+            "0.1.0",
+            GenerationContext::FilesystemScan,
+            &[],
+            &[],
+            &TraceIntegrity::default(),
+            None,
+            None,
+            None,
+            None,
+            &[],
+        );
+        let props = meta["properties"].as_array().expect("properties");
+        let found = props
+            .iter()
+            .any(|p| p.get("name").and_then(|v| v.as_str()) == Some("mikebom:source-identifiers"));
+        assert!(!found, "annotation must be absent when no user-defined identifiers");
     }
 }

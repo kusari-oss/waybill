@@ -277,6 +277,283 @@ pub struct ScanArgs {
     /// to verify the binding after emission.
     #[arg(long, value_name = "PATH")]
     pub bind_to_source: Option<PathBuf>,
+
+    /// Attach a stable source identifier to the emitted SBOM. Repeatable
+    /// — pass the flag multiple times to attach multiple identifiers.
+    /// Format: `<scheme>:<value>` where `<scheme>` matches regex
+    /// `^[a-z][a-z0-9_-]*$` (FR-004) and `<value>` is everything after
+    /// the FIRST `:` (so values may contain additional `:` characters,
+    /// e.g., `repo:git@github.com:foo/bar.git`).
+    ///
+    /// Built-in schemes are recognized + value-validated:
+    ///
+    /// - `repo:` — source repository identity (URL or git-style ssh URL)
+    /// - `git:` — repo + commit/ref-anchored identity
+    ///   (URL with optional `#<commit-or-ref>` fragment)
+    /// - `image:` — image identity
+    ///   (`[registry/]name[:tag][@sha256:digest]`)
+    /// - `attestation:` — in-toto attestation IRI
+    ///
+    /// Built-in schemes ride per-format standards-native carriers
+    /// (CDX `metadata.component.externalReferences[]`, SPDX 2.3
+    /// dual-carrier on main-module Package + creationInfo, SPDX 3
+    /// `Element.externalIdentifier[]`). User-defined schemes
+    /// (e.g., `acme_corp_id:abc123`) ride the
+    /// `mikebom:source-identifiers` document-level annotation per
+    /// Constitution Principle V's documented-exception path.
+    ///
+    /// Identifiers also auto-detect when possible: scanning a git
+    /// checkout auto-detects `repo:<url>` from the `origin` /
+    /// `upstream` / first-listed remote (3-step fallback);
+    /// `--image` scans auto-detect `image:<registry>/<name>:<tag>@sha256:<digest>`
+    /// from the resolved image reference. Manual `--with-source`
+    /// flags override auto-detection on `(scheme, value)` match.
+    ///
+    /// See `docs/reference/source-identifiers.md` for the full
+    /// per-format carrier table and decode recipes.
+    #[arg(
+        long = "with-source",
+        action = clap::ArgAction::Append,
+        value_name = "SCHEME:VALUE",
+        value_parser = parse_with_source_flag,
+    )]
+    pub with_source: Vec<mikebom::binding::identifiers::Identifier>,
+}
+
+/// Parse a `--with-source <scheme>:<value>` flag value.
+///
+/// Errors at clap parse time on:
+/// - missing `:` separator (`MissingSeparator`)
+/// - empty scheme (`EmptyScheme`)
+/// - empty value (`EmptyValue`)
+/// - scheme failing the FR-004 regex (`InvalidSchemeName`)
+///
+/// Built-in scheme value validation runs and may emit a
+/// `tracing::warn!` + downgrade the identifier to `UserDefined`
+/// (research.md §1 soft-fail) — this does NOT fail parse; the
+/// resulting `Identifier` carries `kind = UserDefined` and emits
+/// under the `mikebom:source-identifiers` annotation.
+fn parse_with_source_flag(
+    raw: &str,
+) -> Result<mikebom::binding::identifiers::Identifier, String> {
+    mikebom::binding::identifiers::Identifier::parse(raw).map_err(|e| e.to_string())
+}
+
+/// Synthesize an `image:` identifier from the user-supplied `--image`
+/// reference and the extracted-image state. Per the Q3 clarification,
+/// the canonical shape is `image:<registry>/<name>:<tag>@sha256:<digest>`
+/// with documented omissions when components are missing.
+///
+/// This helper attempts:
+/// 1. If the user passed `--image <ref>` and `<ref>` is NOT a tarball
+///    file (i.e., an OCI ref like `docker.io/foo/bar:v1`), parse it
+///    and combine with the extracted manifest_digest to synthesize the
+///    full form.
+/// 2. If the user passed a tarball file, use the extracted `repo_tag`
+///    (typically `name:tag`) plus `manifest_digest`. The registry
+///    portion is omitted when not present in `repo_tag`.
+/// 3. If neither yields a usable shape, emit just the digest:
+///    `image:@sha256:<manifest_digest>` (rare — defensive fallback).
+///
+/// Returns `None` when neither field is populated — the scan still
+/// emits without the auto-detected `image:` identifier.
+fn image_auto_identifier(
+    extracted: Option<&scan_fs::docker_image::ExtractedImage>,
+    image_arg: Option<&Path>,
+) -> Option<mikebom::binding::identifiers::Identifier> {
+    let extracted = extracted?;
+    // Prefer the user-supplied reference when it's an OCI ref (not a
+    // tarball file). Even when a registry pull resolved the reference,
+    // the user-supplied form carries the human-readable
+    // `<registry>/<name>:<tag>` pieces we want in the identifier.
+    let arg_str: Option<&str> = match image_arg {
+        Some(p) => {
+            if p.is_file() {
+                None
+            } else {
+                p.to_str()
+            }
+        }
+        None => None,
+    };
+    let (registry, name, tag) = if let Some(s) = arg_str {
+        parse_image_ref_components(s)
+    } else if let Some(rt) = extracted.repo_tag.as_deref() {
+        // Tarball path: rely on the extracted RepoTags entry.
+        parse_image_ref_components(rt)
+    } else {
+        (None, String::new(), None)
+    };
+    // The manifest digest is the SHA-256 of the docker-save manifest.json.
+    // It's a stable identifier for THIS specific image artifact even if
+    // it differs from the upstream registry's content digest. Operators
+    // who need the registry-side digest can pass `--with-source
+    // image:<ref>@sha256:<their-digest>` manually; auto-detection's job
+    // is to emit a maximally-informative identifier from what mikebom
+    // can observe.
+    let digest = if extracted.manifest_digest.is_empty() {
+        None
+    } else {
+        Some(extracted.manifest_digest.as_str())
+    };
+    if name.is_empty() && digest.is_none() {
+        return None;
+    }
+    mikebom::binding::identifiers::auto_detect::image_reference_to_identifier(
+        registry.as_deref(),
+        if name.is_empty() {
+            // Fall back to a name pulled from `target_name` (which the
+            // scan has access to elsewhere) — but the safest defensive
+            // choice when we can't extract a name is to skip emission.
+            return None;
+        } else {
+            &name
+        },
+        tag.as_deref(),
+        digest,
+    )
+}
+
+/// Parse an OCI-ish image reference into `(registry, name, tag)`.
+///
+/// Heuristic: if the first `/`-separated segment contains a `.` or `:`,
+/// or is the literal `localhost`, it's a registry; otherwise the whole
+/// thing is the name. The tag is the LAST `:`-separated piece IF that
+/// piece contains no `/`. Digest portions (`@sha256:...`) are stripped
+/// before parsing — the digest is extracted from the docker-save
+/// manifest, not the user-supplied reference.
+fn parse_image_ref_components(raw: &str) -> (Option<String>, String, Option<String>) {
+    // Strip any trailing `@sha256:...` portion — digest is sourced
+    // from the extracted-image state, not the reference string.
+    let raw = match raw.find("@sha256:") {
+        Some(i) => &raw[..i],
+        None => raw,
+    };
+    if raw.is_empty() {
+        return (None, String::new(), None);
+    }
+    // Identify potential registry prefix.
+    let (registry, rest) = match raw.split_once('/') {
+        Some((first, rest)) => {
+            let looks_like_registry =
+                first.contains('.') || first.contains(':') || first == "localhost";
+            if looks_like_registry {
+                (Some(first.to_string()), rest)
+            } else {
+                (None, raw)
+            }
+        }
+        None => (None, raw),
+    };
+    // Now split off the tag — last `:` whose right-hand-side has no `/`.
+    let (name, tag) = if let Some(colon_idx) = rest.rfind(':') {
+        let after = &rest[colon_idx + 1..];
+        if after.contains('/') || after.is_empty() {
+            (rest.to_string(), None)
+        } else {
+            (rest[..colon_idx].to_string(), Some(after.to_string()))
+        }
+    } else {
+        (rest.to_string(), None)
+    };
+    (registry, name, tag)
+}
+
+/// Resolve the final list of source identifiers for emission per
+/// FR-006 + FR-009 override-position rule.
+///
+/// The algorithm in detail:
+///
+/// 1. Start with `[auto_detected]` if present, else `[]`.
+/// 2. For each manual entry in supply order, apply one of three
+///    cases:
+///    - **Exact dedup against auto-detected** — when manual matches
+///      the auto-detected entry on `(scheme, value)`, replace in
+///      place. Manual inherits auto-detected position; the
+///      auto-detected `source_label` is dropped; info-log notes the
+///      dedup.
+///    - **Exact dedup against earlier manual** — skip (first-
+///      supplied wins; FR-009 last-clause).
+///    - **Same-scheme-different-value override** — true FR-006
+///      override. Auto-detected entry is dropped (collapsed away);
+///      manual entry is appended in supply order, NOT promoted to
+///      front. Both values are logged at info level.
+///    - **No match** — append in supply order.
+fn resolve_source_identifiers(
+    auto_detected: Option<mikebom::binding::identifiers::Identifier>,
+    manual: &[mikebom::binding::identifiers::Identifier],
+) -> Vec<mikebom::binding::identifiers::Identifier> {
+    let mut out: Vec<mikebom::binding::identifiers::Identifier> = Vec::new();
+    // Track whether the auto-detected entry has already been supplanted
+    // (by a same-scheme-different-value override). Once supplanted, we
+    // don't re-trigger the override path for subsequent manual entries.
+    let mut auto_detected_active = auto_detected.is_some();
+    if let Some(ref ad) = auto_detected {
+        out.push(ad.clone());
+    }
+    for m in manual {
+        // Step 2a: exact (scheme, value) dedup against any existing
+        // entry. Manual inherits position when matching auto-detected;
+        // first-manual-wins when matching an earlier manual entry.
+        if let Some(idx) = out.iter().position(|e| {
+            e.scheme == m.scheme && e.value == m.value
+        }) {
+            let existing_is_auto_detected = auto_detected_active
+                && idx == 0
+                && auto_detected
+                    .as_ref()
+                    .is_some_and(|ad| ad.scheme == out[idx].scheme && ad.value == out[idx].value);
+            if existing_is_auto_detected {
+                tracing::info!(
+                    scheme = m.scheme.as_str(),
+                    value = m.value.as_str(),
+                    "manual --with-source matches auto-detected identifier; \
+                     emitting manual in auto-detected position (deduplicated)"
+                );
+                out[idx] = m.clone();
+                // Manual has supplanted the auto-detected entry. The
+                // FR-006 same-scheme-different-value override path
+                // shouldn't fire for later same-scheme manual entries
+                // because the auto-detected entry is no longer present.
+                auto_detected_active = false;
+            } else {
+                tracing::info!(
+                    scheme = m.scheme.as_str(),
+                    value = m.value.as_str(),
+                    "manual --with-source duplicates an earlier manual \
+                     identifier; first-supplied wins (skipping)"
+                );
+            }
+            continue;
+        }
+        // Step 2b: same-scheme-different-value override against
+        // auto-detected (FR-006).
+        if auto_detected_active {
+            if let Some(ref ad) = auto_detected {
+                if ad.scheme == m.scheme && ad.value != m.value {
+                    if let Some(pos) = out.iter().position(|e| {
+                        e.scheme == ad.scheme && e.value == ad.value
+                    }) {
+                        tracing::info!(
+                            scheme = m.scheme.as_str(),
+                            auto_detected_value = ad.value.as_str(),
+                            manual_value = m.value.as_str(),
+                            "manual --with-source overrides auto-detected \
+                             entry (same scheme, different value); dropping \
+                             auto-detected, appending manual in supply order"
+                        );
+                        out.remove(pos);
+                    }
+                    auto_detected_active = false;
+                    out.push(m.clone());
+                    continue;
+                }
+            }
+        }
+        // Step 2c: append in supply order.
+        out.push(m.clone());
+    }
+    out
 }
 
 /// Resolved enrichment-source enablement. Computed from the CLI flags
@@ -1065,6 +1342,28 @@ pub async fn execute(
         bloom_filter_false_positive_rate: 0.0,
     };
 
+    // Milestone 073: resolve source identifiers — auto-detected
+    // `repo:` (from git origin remote, 3-step fallback) on `--path`
+    // scans, auto-detected `image:<registry>/<name>:<tag>@sha256:<digest>`
+    // on `--image` scans, plus any manual `--with-source` flags.
+    // Manual entries dedup against auto-detected by `(scheme, value)`
+    // — manual wins, inheriting the auto-detected entry's position.
+    // Order: auto-detected first, then manual in supply order
+    // (per FR-009 / VR-008 / data-model.md).
+    let auto_detected_id: Option<mikebom::binding::identifiers::Identifier> =
+        if args.image.is_some() {
+            // Image-tier auto-detection — synthesize the canonical
+            // `image:` form from the resolved-image fields.
+            image_auto_identifier(_extracted.as_ref(), args.image.as_deref())
+        } else {
+            // Source-tier auto-detection — git-remote 3-step fallback.
+            mikebom::binding::identifiers::auto_detect::auto_detect_repo_identifier(&root_path)
+        };
+    let source_identifiers = resolve_source_identifiers(
+        auto_detected_id,
+        &args.with_source,
+    );
+
     // Build the neutral artifacts bundle once and hand it to every
     // serializer the user requested — the single-pass guarantee of
     // FR-004 / SC-009.
@@ -1099,6 +1398,9 @@ pub async fn execute(
             .as_ref()
             .filter(|_| args.image.is_some())
             .map(|ctx| &ctx.source_doc_id),
+        // Milestone 073: source identifiers — populated by T013's
+        // resolution pipeline before this struct is constructed.
+        source_identifiers: &source_identifiers,
     };
     let output_cfg = OutputConfig {
         mikebom_version: env!("CARGO_PKG_VERSION"),
@@ -1695,6 +1997,7 @@ mod tests {
             no_deps_dev_graph,
             enrich_sources,
             bind_to_source: None,
+            with_source: vec![],
         }
     }
 
@@ -1773,5 +2076,138 @@ mod tests {
         assert!(cfg.deps_dev);
         assert!(!cfg.clearly_defined); // not in allowlist
         assert!(cfg.deps_dev_graph);
+    }
+
+    // ----------------------------------------------------------------
+    // Milestone 073 — source-identifier resolution pipeline
+    // (T013 unit-test coverage). FR-006 + FR-009 override-position
+    // rule.
+    // ----------------------------------------------------------------
+
+    use mikebom::binding::identifiers::Identifier;
+
+    fn make_id(raw: &str, label: Option<&str>) -> Identifier {
+        let mut id = Identifier::parse(raw).unwrap();
+        id.source_label = label.map(|s| s.to_string());
+        id
+    }
+
+    #[test]
+    fn resolve_auto_detected_only_emits_one_entry() {
+        let auto = make_id("repo:git@github.com:foo/bar.git", Some("auto"));
+        let out = resolve_source_identifiers(Some(auto.clone()), &[]);
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].as_wire(), auto.as_wire());
+    }
+
+    #[test]
+    fn resolve_manual_only_emits_in_supply_order() {
+        let m1 = make_id("repo:git@example.com:a.git", None);
+        let m2 = make_id("acme_corp_id:abc123", None);
+        let out = resolve_source_identifiers(None, &[m1.clone(), m2.clone()]);
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0].as_wire(), m1.as_wire());
+        assert_eq!(out[1].as_wire(), m2.as_wire());
+    }
+
+    #[test]
+    fn resolve_manual_inherits_auto_detected_position_on_dedup() {
+        // (c) — manual entry with same (scheme, value) as auto-detected
+        // inherits the auto-detected entry's position (front of list).
+        let auto = make_id("repo:git@github.com:foo/bar.git", Some("auto-label"));
+        let manual_dup = make_id("repo:git@github.com:foo/bar.git", None);
+        let manual_other = make_id("acme_corp_id:abc", None);
+        let out = resolve_source_identifiers(
+            Some(auto.clone()),
+            &[manual_dup.clone(), manual_other.clone()],
+        );
+        assert_eq!(out.len(), 2);
+        // Position 0: manual entry inherits auto-detected slot.
+        assert_eq!(out[0].as_wire(), manual_dup.as_wire());
+        // The replacement carries the manual entry's source_label
+        // (None), not the auto-detected label.
+        assert_eq!(out[0].source_label, None);
+        // Position 1: the other manual entry follows in supply order.
+        assert_eq!(out[1].as_wire(), manual_other.as_wire());
+    }
+
+    #[test]
+    fn resolve_manual_different_value_drops_auto_detected() {
+        // (d) — true override: same scheme, different value. The
+        // auto-detected entry is dropped, manual follows in supply
+        // order (NOT promoted to front).
+        let auto = make_id("repo:git@github.com:o/foo.git", Some("auto"));
+        let manual_override = make_id("repo:git@github.com:m/foo.git", None);
+        let manual_other = make_id("acme_corp_id:abc", None);
+        // Supply order: other first, then override. Override should
+        // append after `other` (no front-of-list migration).
+        let out = resolve_source_identifiers(
+            Some(auto.clone()),
+            &[manual_other.clone(), manual_override.clone()],
+        );
+        assert_eq!(out.len(), 2);
+        // After auto-detected dropped, the supply order applies:
+        // [other, override].
+        assert_eq!(out[0].as_wire(), manual_other.as_wire());
+        assert_eq!(out[1].as_wire(), manual_override.as_wire());
+    }
+
+    #[test]
+    fn resolve_two_manual_with_same_scheme_value_first_wins() {
+        // (e) — manual-vs-manual collision on (scheme, value):
+        // first-supplied wins.
+        let m1 = make_id("acme_corp_id:abc123", None);
+        let m2 = make_id("acme_corp_id:abc123", None);
+        let out = resolve_source_identifiers(None, &[m1.clone(), m2.clone()]);
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].as_wire(), m1.as_wire());
+    }
+
+    // ----------------------------------------------------------------
+    // parse_image_ref_components — image-tier auto-detection helper
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn parse_image_ref_full_form() {
+        let (registry, name, tag) =
+            parse_image_ref_components("docker.io/acme/foo:v1");
+        assert_eq!(registry.as_deref(), Some("docker.io"));
+        assert_eq!(name, "acme/foo");
+        assert_eq!(tag.as_deref(), Some("v1"));
+    }
+
+    #[test]
+    fn parse_image_ref_no_registry() {
+        let (registry, name, tag) = parse_image_ref_components("acme/foo:v1");
+        assert_eq!(registry, None);
+        assert_eq!(name, "acme/foo");
+        assert_eq!(tag.as_deref(), Some("v1"));
+    }
+
+    #[test]
+    fn parse_image_ref_no_tag() {
+        let (registry, name, tag) = parse_image_ref_components("docker.io/acme/foo");
+        assert_eq!(registry.as_deref(), Some("docker.io"));
+        assert_eq!(name, "acme/foo");
+        assert_eq!(tag, None);
+    }
+
+    #[test]
+    fn parse_image_ref_localhost_registry() {
+        let (registry, name, tag) =
+            parse_image_ref_components("localhost:5000/foo:v1");
+        assert_eq!(registry.as_deref(), Some("localhost:5000"));
+        assert_eq!(name, "foo");
+        assert_eq!(tag.as_deref(), Some("v1"));
+    }
+
+    #[test]
+    fn parse_image_ref_strips_trailing_digest() {
+        let (registry, name, tag) = parse_image_ref_components(
+            "docker.io/acme/foo:v1@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        );
+        assert_eq!(registry.as_deref(), Some("docker.io"));
+        assert_eq!(name, "acme/foo");
+        assert_eq!(tag.as_deref(), Some("v1"));
     }
 }

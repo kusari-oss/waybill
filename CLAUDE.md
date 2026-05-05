@@ -47,6 +47,8 @@ Auto-generated from all feature plans. Last updated: 2026-05-05
 - N/A — all parity comparison happens in-memory at test/CI time over emitted JSON documents. (071-annotation-parity-spdx23)
 - Rust stable (workspace toolchain inherited from milestones 001–071; no nightly). + Existing only — `sha2` (workspace; SHA-256 over the canonical JSON envelope), `serde`/`serde_json` (canonicalization via the milestone-071 `canonicalize_for_compare` helper at `parity/extractors/common.rs`), `data-encoding` (already used for hex-encoding hashes), `tracing`, `anyhow`, `clap` (for the new flag + new subcommands). No new crates. (072-cross-tier-sbom-binding)
 - N/A — binding metadata lives in emitted SBOMs only; no caches, no registries. The `verify-binding` / `trace-binding` commands read SBOMs from operator-supplied paths. (072-cross-tier-sbom-binding)
+- Rust stable (workspace toolchain inherited from milestones 001–072; no nightly). + Existing only — `serde`/`serde_json` (envelope decode), `tracing` (info/warn logs), `anyhow` (CLI error propagation), `clap` (`ValueEnum` not needed — `Vec<String>` with manual validation is fine since the scheme syntax is regex-bounded; alternatively a custom `Identifier` newtype that implements `FromStr` and clap's `Args`-derive picks it up). `Command::new("git")` for the auto-detection shell-out (same pattern as milestone 053's `git describe`). No new `Cargo.toml` deps. (073-source-identifiers)
+- N/A — identifier metadata lives in emitted SBOMs only. (073-source-identifiers)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -109,9 +111,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 073-source-identifiers: Added Rust stable (workspace toolchain inherited from milestones 001–072; no nightly). + Existing only — `serde`/`serde_json` (envelope decode), `tracing` (info/warn logs), `anyhow` (CLI error propagation), `clap` (`ValueEnum` not needed — `Vec<String>` with manual validation is fine since the scheme syntax is regex-bounded; alternatively a custom `Identifier` newtype that implements `FromStr` and clap's `Args`-derive picks it up). `Command::new("git")` for the auto-detection shell-out (same pattern as milestone 053's `git describe`). No new `Cargo.toml` deps.
 - 072-cross-tier-sbom-binding: Added Rust stable (workspace toolchain inherited from milestones 001–071; no nightly). + Existing only — `sha2` (workspace; SHA-256 over the canonical JSON envelope), `serde`/`serde_json` (canonicalization via the milestone-071 `canonicalize_for_compare` helper at `parity/extractors/common.rs`), `data-encoding` (already used for hex-encoding hashes), `tracing`, `anyhow`, `clap` (for the new flag + new subcommands). No new crates.
 - 071-annotation-parity-spdx23: Added Rust stable (workspace toolchain inherited from milestones 001–070; no nightly required for this user-space-only work). + Existing only — `serde_json` (JSON value walking + canonicalization), `quick-xml` n/a (SPDX 2.3 / SPDX 3 are JSON), `tracing`, `anyhow`. The existing `parity/extractors/` infrastructure (68 catalog rows, `Directionality` enum, `MikebomAnnotationCommentV1` envelope, `extract_mikebom_annotation_values` helper) IS the substrate. No new crates.
-- 070-maven-main-module: Added Rust stable; no nightly. + Existing only — `quick-xml` (already used by `parse_pom_xml`), `serde`, `tracing`, `anyhow`. No new crates.
 
 
 <!-- MANUAL ADDITIONS START -->

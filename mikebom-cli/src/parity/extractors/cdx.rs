@@ -472,6 +472,19 @@ cdx_anno!(c45_cdx, "mikebom:orphan-reason",              component);
 // `contracts/source-document-binding-annotation.md` C-3 CDX 1.6.
 cdx_anno!(c46_cdx, "mikebom:source-document-binding",   component);
 
+// C47 — document-level user-defined source identifiers (milestone 073).
+// CDX carrier: `metadata.properties[]` entry whose `value` is a
+// JSON-encoded sorted-by-(scheme,value) array of {scheme, value,
+// source_label?} objects. Built-in identifiers do NOT appear here —
+// they ride standards-native carriers (CDX `externalReferences[]` with
+// per-scheme `type`). SPDX 2.3 carries the same payload via the
+// document-level annotation envelope. SPDX 3 carries every identifier
+// (built-in + user-defined) natively via `Element.externalIdentifier[]`,
+// so on the SPDX 3 side the annotation is intentionally absent and the
+// extractor reaches into the native carrier instead — see
+// c47_spdx3 below.
+cdx_anno!(c47_cdx, "mikebom:source-identifiers",        document);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================

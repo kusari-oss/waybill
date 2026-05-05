@@ -102,6 +102,13 @@ pub struct SpdxExternalRef {
     pub ref_type: String,
     #[serde(rename = "referenceLocator")]
     pub locator: String,
+    /// SPDX 2.3 §7.10.5 — optional human-readable comment on the
+    /// externalRef. Milestone 073 uses this to record the
+    /// `source_label` ("auto-detected from git remote `origin`" or
+    /// "manual --with-source") for `PERSISTENT-ID` rows that carry
+    /// source identifiers. Pre-073 emissions left this absent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
@@ -314,6 +321,7 @@ pub fn build_packages(
             artifacts.include_source_files,
             annotator,
             date,
+            artifacts.source_identifiers,
         );
         packages.push(pkg);
         if let Some(info) = decl_extracted {
@@ -337,6 +345,7 @@ fn component_to_package(
     include_source_files: bool,
     annotator: &str,
     date: &str,
+    source_identifiers: &[mikebom::binding::identifiers::Identifier],
 ) -> (
     SpdxPackage,
     Option<super::document::SpdxExtractedLicensingInfo>,
@@ -361,6 +370,7 @@ fn component_to_package(
         category: SpdxExternalRefCategory::PackageManager,
         ref_type: "purl".to_string(),
         locator: c.purl.as_str().to_string(),
+        comment: None,
     }];
 
     // A12: primary CPE. The first entry in `c.cpes` is the
@@ -371,6 +381,7 @@ fn component_to_package(
             category: SpdxExternalRefCategory::Security,
             ref_type: "cpe23Type".to_string(),
             locator: primary_cpe.clone(),
+            comment: None,
         });
     }
 
@@ -384,7 +395,34 @@ fn component_to_package(
             category: SpdxExternalRefCategory::Other,
             ref_type: r.ref_type.clone(),
             locator: r.url.clone(),
+            comment: None,
         });
+    }
+
+    // Milestone 073 — built-in source identifiers ride the main-module
+    // Package's `externalRefs[]` with `referenceCategory: PERSISTENT-ID`
+    // per Q2 clarification + `contracts/source-identifiers-annotation.md`
+    // C-1 SPDX 2.3 (typed primary). Only emit on the main-module
+    // (workspace's BOM-subject Package) — non-main-module packages
+    // stay byte-identical to alpha.15 emissions.
+    let is_main_module = c
+        .extra_annotations
+        .get("mikebom:component-role")
+        .and_then(|v| v.as_str())
+        == Some("main-module");
+    if is_main_module {
+        for id in source_identifiers {
+            if let mikebom::binding::identifiers::IdentifierKind::Builtin(_) = id.kind {
+                external_refs.push(SpdxExternalRef {
+                    category: SpdxExternalRefCategory::PersistentId,
+                    ref_type: id.scheme.as_str().to_string(),
+                    locator: id.value.as_str().to_string(),
+                    comment: id.source_label.clone().or_else(|| {
+                        Some("manual --with-source".to_string())
+                    }),
+                });
+            }
+        }
     }
 
     let supplier = c.supplier.as_deref().map(supplier_string);
@@ -525,6 +563,7 @@ mod tests {
             include_source_files: false,
             scope_mode: crate::generate::ScopeMode::Artifact,
             source_document_binding: None,
+            source_identifiers: &[],
         }
     }
 
