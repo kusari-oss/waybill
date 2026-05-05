@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.1.0-alpha.14] — 2026-05-04
+
+The **conformance-tooling polish release.** Two user-visible
+improvements since alpha.13: granular network-enrichment skip
+flags for large-scale users, and a real value-equality upgrade
+to the `mikebom sbom parity-check` subcommand backed by a
+comprehensive conformance-harness-author guide.
+
+### Added (PR #136 — granular enrichment control flags)
+
+- Three new flags on `mikebom sbom scan` give operators sub-`--offline` control over which post-scan enrichment sources fire: `--no-clearly-defined` (skip ClearlyDefined; deps.dev still active), `--no-deps-dev-graph` (skip deps.dev transitive dep-graph; license enrichment stays active), `--enrich-sources <list>` (allowlist mode overriding the `--no-*` flags). `--offline` retains its all-network-off semantics. Motivation: ClearlyDefined enrichment can dominate wall-clock on 1000+-component scans (~6+ minutes / ~87% of total scan time); these flags give large-scale users a finer-grained escape hatch than `--offline`. Underlying CD performance gap tracked separately as #137.
+
 ### Added (milestone 071 — cross-format SBOM annotation parity)
 
 - **Conformance harness author guide** at `docs/reference/conformance-harness-guide.md` — a reference for external SBOM-conformance harness maintainers explaining how mikebom carries `mikebom:*` metadata in each of the three supported formats (CDX 1.6 / SPDX 2.3 / SPDX 3.0.1), the 7 inherent format-spec asymmetries that should NOT be flagged as cross-format-inequivalence findings, and how to wire a harness to read the `MikebomAnnotationCommentV1` envelope correctly. Authored against milestone 071's catalog state.
