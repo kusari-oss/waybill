@@ -99,7 +99,7 @@ fn build_repo_identifier(
                     reason = %err,
                     "auto-detected repo URL failed `repo:` validation; \
                      emitting as user-defined under \
-                     mikebom:source-identifiers"
+                     mikebom:identifiers"
                 );
                 IdentifierKind::UserDefined
             }
@@ -225,7 +225,7 @@ pub fn image_reference_to_identifier(
                     reason = %err,
                     "auto-synthesized `image:` value failed validation; \
                      emitting as user-defined under \
-                     mikebom:source-identifiers"
+                     mikebom:identifiers"
                 );
                 IdentifierKind::UserDefined
             }

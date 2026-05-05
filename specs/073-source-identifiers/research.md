@@ -1,4 +1,6 @@
-# Research — milestone 073 source identifiers
+# Research — milestone 073 identifiers
+
+> **Rename note (2026-05-03)**: see spec.md's prepended note. The original draft used "source identifiers" / `--with-source <scheme>:<value>`; renamed pre-merge to "identifiers" with dedicated CLI flags. The research decisions D1–D7 below are unchanged; only the operator-facing surface (CLI flag names + the `mikebom:identifiers` annotation key) was relabeled.
 
 ## Decision summary
 

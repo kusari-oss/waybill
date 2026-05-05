@@ -1,6 +1,8 @@
 ---
-description: "Task list for milestone 073 — source identifiers (built-in + user-defined; auto-detect repo: from git origin; --with-source flag)"
+description: "Task list for milestone 073 — identifiers (built-in + user-defined; auto-detect repo: from git origin; dedicated --repo/--image-id/--attestation/--id flags)"
 ---
+
+> **Post-implementation rename note (2026-05-03, before merge)**: this milestone shipped under the renamed concept "identifiers" (not "source identifiers") with a dedicated-flag CLI (`--repo` / `--git-ref` / `--image-id` / `--attestation` / `--id <scheme>=<value>`) instead of the originally-drafted `--with-source <scheme>:<value>`. See spec.md's prepended note for the full rename scope. The task list below uses the original draft's terminology — treat references to `--with-source` and `source_identifiers` / `mikebom:source-identifiers` / `source_identifiers_*.rs` / `docs/reference/source-identifiers.md` as historical references to the equivalents renamed pre-merge: `--repo`/`--image-id`/`--id`, `identifiers` / `mikebom:identifiers` / `identifiers_*.rs` / `docs/reference/identifiers.md`.
 
 # Tasks: Source identifiers — built-in + user-defined
 

@@ -343,19 +343,19 @@ pub fn build_document(
     //
     // Milestone 073 — per Q2 clarification, redundant
     // `Tool: mikebom-<version> source: <full-identifier>` text lines
-    // are appended for each built-in source identifier. This is the
+    // are appended for each built-in identifier. This is the
     // free-form fallback for SPDX 2.3 consumers that don't decode
     // the typed `Package.externalRefs[PERSISTENT-ID]` rows on the
     // main-module Package. Order: auto-detected first, then manual
     // in supply order (per FR-009 / VR-008). Built-in identifiers
     // only — user-defined identifiers ride the document-level
-    // `mikebom:source-identifiers` annotation per Constitution
+    // `mikebom:identifiers` annotation per Constitution
     // Principle V.
     let mut creators = vec![
         annotator.clone(),
         "Organization: mikebom contributors".to_string(),
     ];
-    for id in artifacts.source_identifiers {
+    for id in artifacts.identifiers {
         if id.is_builtin() {
             creators.push(format!(
                 "{annotator} source: {wire}",
@@ -597,7 +597,7 @@ mod tests {
             include_source_files: false,
             scope_mode: crate::generate::ScopeMode::Artifact,
             source_document_binding: None,
-            source_identifiers: &[],
+            identifiers: &[],
         }
     }
 

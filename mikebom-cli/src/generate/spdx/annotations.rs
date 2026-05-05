@@ -351,8 +351,8 @@ pub fn annotate_document(
         );
     }
 
-    // C47 (milestone 073) — user-defined source identifiers ride a
-    // single document-level `mikebom:source-identifiers` annotation
+    // C47 (milestone 073) — user-defined identifiers ride a
+    // single document-level `mikebom:identifiers` annotation
     // wrapped in the `MikebomAnnotationCommentV1` envelope. Built-in
     // identifiers ride the dual-carrier standards-native path
     // (main-module `Package.externalRefs[PERSISTENT-ID]` + redundant
@@ -363,7 +363,7 @@ pub fn annotate_document(
     // non-user-defined-namespace scans.
     let user_defined_payload: Vec<serde_json::Value> = {
         let mut entries: Vec<&mikebom::binding::identifiers::Identifier> = artifacts
-            .source_identifiers
+            .identifiers
             .iter()
             .filter(|id| {
                 matches!(
@@ -389,7 +389,7 @@ pub fn annotate_document(
     if !user_defined_payload.is_empty() {
         push(
             &mut out,
-            "mikebom:source-identifiers",
+            "mikebom:identifiers",
             json!(user_defined_payload),
         );
     }

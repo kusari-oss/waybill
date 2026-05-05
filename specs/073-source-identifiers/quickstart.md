@@ -1,4 +1,6 @@
-# Quickstart — milestone 073 source identifiers
+# Quickstart — milestone 073 identifiers
+
+> **Rename note (2026-05-03)**: original drafts called this "source identifiers" with a `--with-source <scheme>:<value>` flag; renamed pre-merge to "identifiers" with dedicated flags (`--repo`, `--git-ref`, `--image-id`, `--attestation`, `--id <scheme>=<value>`). See `docs/reference/identifiers.md` for the operator-facing recipes in their post-rename form. The text below was the original-draft set of recipes; it is preserved as historical record but is OUT OF DATE — `--with-source` no longer exists.
 
 Five operator-facing recipes. Each runs end-to-end against a post-073 mikebom build with no special setup beyond a normal git checkout (Recipe 1) or a tempdir (Recipes 2-5).
 

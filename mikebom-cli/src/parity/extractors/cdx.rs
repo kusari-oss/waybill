@@ -483,7 +483,7 @@ cdx_anno!(c46_cdx, "mikebom:source-document-binding",   component);
 // so on the SPDX 3 side the annotation is intentionally absent and the
 // extractor reaches into the native carrier instead — see
 // c47_spdx3 below.
-cdx_anno!(c47_cdx, "mikebom:source-identifiers",        document);
+cdx_anno!(c47_cdx, "mikebom:identifiers",               document);
 
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)

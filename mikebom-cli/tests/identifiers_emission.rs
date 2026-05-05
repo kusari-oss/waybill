@@ -1,11 +1,11 @@
-//! Milestone 073 T011 — auto-detected `repo:` source-identifier
+//! Milestone 073 T011 — auto-detected `repo:` identifier
 //! emission test (US1 happy path + 3-step fallback).
 //!
 //! Synthesizes a tempdir + `git init` + `git remote add origin …`
 //! fixture, runs `mikebom sbom scan --path <tempdir>` for each of the
 //! three formats, and asserts the emitted SBOM carries the
 //! auto-detected `repo:` identifier in the per-format standards-native
-//! carrier per `contracts/source-identifiers-annotation.md` C-1.
+//! carrier per `contracts/identifiers-annotation.md` C-1.
 //!
 //! Coverage:
 //! - origin-only → `repo:<url>` with comment `auto-detected from git remote

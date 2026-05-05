@@ -63,14 +63,14 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // identifier so the metadata builder can emit the
             // standards-native `externalReferences[type:bom]` row.
             .with_source_document_binding(scan.source_document_binding.cloned())
-            // Milestone 073 — propagate source identifiers (built-in +
+            // Milestone 073 — propagate identifiers (built-in +
             // user-defined). Built-in identifiers ride
             // `metadata.component.externalReferences[]` per scheme;
             // user-defined identifiers ride a single
             // `metadata.properties[]` entry under
-            // `mikebom:source-identifiers`. The Vec is already
+            // `mikebom:identifiers`. The Vec is already
             // deduplicated and ordered by the resolution pipeline.
-            .with_source_identifiers(scan.source_identifiers.to_vec());
+            .with_identifiers(scan.identifiers.to_vec());
         let bom = builder.build(
             scan.components,
             scan.relationships,

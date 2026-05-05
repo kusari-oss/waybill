@@ -1,3 +1,17 @@
+# Feature Specification: Identifiers — built-in + user-defined
+
+> **Post-implementation rename note (2026-05-03, before merge)**: the original draft of this spec called the feature "source identifiers" and proposed a single repeatable `--with-source <scheme>:<value>` CLI flag. After implementation review, two changes were made:
+>
+> 1. **Naming**: "source" anchored on the most-common case (source repos) but the same mechanism handles image / attestation / user-defined identifiers. SPDX 3 already calls these `Element.externalIdentifier[]`. The name was generalized to "identifier" / `mikebom:identifiers` / `docs/reference/identifiers.md`. Milestone-072's `SourceDocumentBinding` is a DIFFERENT concept (binding back to a source-tier SBOM document) and intentionally retains its name.
+> 2. **CLI surface**: `--with-source <scheme>:<value>` was visually ambiguous when values contained colons (URL ssh forms, image `@sha256:` digests). Replaced with dedicated flags per built-in scheme + a generic `--id` for user-defined schemes:
+>    - `--repo <url>` → `repo:` identifier
+>    - `--git-ref <revision>` (with `--repo`) → `git:<repo>#<revision>` identifier (supersedes the bare `repo:`)
+>    - `--image-id <ref>` → `image:` identifier (named `--image-id` to avoid colliding with the existing `--image <PATH>` scan-input flag)
+>    - `--attestation <iri>` → `attestation:` identifier
+>    - `--id <scheme>=<value>` (repeatable) → user-defined-namespace identifier (built-in scheme names are clap-rejected here with a message pointing at the dedicated flag)
+>
+> All of `--with-source` is gone — there is no compatibility shim. The annotation key changed from `mikebom:source-identifiers` to `mikebom:identifiers`. The internal Rust field `ScanArtifacts::source_identifiers` was renamed to `ScanArtifacts::identifiers`. The doc was renamed from `docs/reference/source-identifiers.md` to `docs/reference/identifiers.md`. Test files in `mikebom-cli/tests/` were renamed from `source_identifiers_*.rs` to `identifiers_*.rs`. The directory `specs/073-source-identifiers/` retains its name (it's a milestone-tracking artifact). Throughout the rest of this spec, treat "source identifier" mentions as referring to "identifier"; references to `--with-source` are a historical artifact of the original draft and have been superseded by the dedicated-flag CLI surface.
+
 # Feature Specification: Source identifiers — built-in + user-defined
 
 **Feature Branch**: `073-source-identifiers`

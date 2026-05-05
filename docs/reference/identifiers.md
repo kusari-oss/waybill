@@ -1,4 +1,4 @@
-# Source identifiers — external SBOM consumer guide
+# Identifiers — external SBOM consumer guide
 
 **Audience**: maintainers of external SBOM consumer / verifier tools
 that read mikebom-emitted CycloneDX 1.6, SPDX 2.3, or SPDX 3.0.1
@@ -10,14 +10,24 @@ runnable `jq` decode recipes — everything an external implementer
 needs to write a working extractor from this document alone.
 
 **Status**: written 2026-05-05 against mikebom v0.1.0-alpha.16
-(milestone 073). Reflects the alpha.16 source-identifier emission
-contract.
+(milestone 073). Reflects the alpha.16 identifier-emission contract
+and the post-073 dedicated-flag CLI surface.
+
+**Naming note**: this document was originally drafted as
+"source-identifiers" — anchoring on the most common case (source
+repos). The same mechanism handles image / attestation /
+user-defined identifiers, so the name was generalized to "identifier"
+before the milestone shipped. SPDX 3 already uses
+`Element.externalIdentifier[]` for the same concept. Milestone-072's
+`SourceDocumentBinding` is a DIFFERENT, sibling concept (binding
+back to a source-tier SBOM document) and intentionally retains its
+name — see `cross-tier-binding.md`.
 
 **Companion documents**:
 
 - `docs/reference/cross-tier-binding.md` — milestone-072 cross-tier
   binding guide (binding hash, per-component verifier flow, VEX
-  propagation modes). Source identifiers and source-document
+  propagation modes). Identifiers and source-document
   bindings are sibling concerns: identifiers carry stable identity;
   bindings carry per-component cross-tier provenance. Milestone 074
   will resolve identifiers to source-SBOM file paths.
@@ -30,34 +40,73 @@ contract.
 
 ---
 
-## Section 1 — Wire format
+## Section 1 — Wire format & CLI surface
 
-A source identifier is a `(scheme, value)` pair encoded on the
-command line as:
+An identifier is a `(scheme, value)` pair. mikebom emits identifiers
+into per-format carriers (Section 2 / 3) where the canonical
+representation is structured (e.g., CDX `externalReferences[]` rows,
+SPDX 3 `externalIdentifier[]` entries) — there is no single
+on-the-wire string format. CLI input uses dedicated flags per
+built-in scheme + a generic `--id` flag for user-defined schemes.
 
-```text
-<scheme>:<value>
+### 1.1 CLI surface
+
+| Flag | Built-in scheme | Notes |
+|---|---|---|
+| `--repo <url>` | `repo:` | Source repository identity (URL or git-style ssh URL). Manual override; auto-detection from `.git/origin` runs by default on `--path` scans and is overridden by this flag per FR-006. |
+| `--git-ref <revision>` | `git:` (with `--repo`) | Pairs with `--repo`; emits `git:<repo>#<revision>` and supersedes the bare `repo:` identifier. Cannot be supplied without `--repo` (clap-enforced). |
+| `--image-id <ref>` | `image:` | Image identity in the form `[registry/]name[:tag][@sha256:digest]`. Manual override on `--image <PATH>` mode (where auto-detection from the resolved image reference also fires). Named `--image-id` to avoid colliding with the existing `--image <PATH>` scan-input flag. |
+| `--attestation <iri>` | `attestation:` | In-toto attestation IRI. Manual only; no auto-detection. |
+| `--id <scheme>=<value>` (repeatable) | n/a — user-defined namespaces ONLY | `<scheme>` matches regex `^[a-z][a-z0-9_-]*$` (FR-004); `<value>` is everything after the first `=`. Built-in scheme names (`repo`, `git`, `image`, `attestation`) are REJECTED here at clap parse time with a message pointing at the dedicated flag. |
+
+The same flag set applies to `mikebom sbom scan --path`,
+`mikebom sbom scan --image`, and `mikebom trace run`.
+
+### 1.2 Worked examples
+
+```bash
+# Source-tier scan with explicit repo override (auto-detect would
+# normally produce a repo: identifier from the .git/origin remote;
+# this flag wins per FR-006).
+mikebom sbom scan --path . --repo git@github.com:acme/foo.git
+
+# Source-tier with git-ref → git: identifier (NOT a repo: identifier).
+mikebom sbom scan --path . \
+    --repo https://github.com/acme/foo.git \
+    --git-ref abc1234567890
+
+# User-defined identifiers ride the mikebom:identifiers annotation.
+mikebom sbom scan --path . \
+    --id acme_corp_id=svc-alpha-123 \
+    --id internal_ticket=PROJ-456
+
+# Image-tier with manual override + user-defined identifier.
+mikebom sbom scan --image foo.tar \
+    --image-id docker.io/acme/foo:v1@sha256:abc... \
+    --id acme_corp_id=svc-alpha-123
+
+# Build-tier (trace) with manual identifier — trace doesn't auto-detect.
+mikebom trace run --repo git@github.com:acme/foo.git -- ./build.sh
 ```
 
-- `<scheme>` matches the regex `^[a-z][a-z0-9_-]*$` — lowercase ASCII
-  letter start, lowercase letters / digits / underscores / hyphens
-  thereafter. Empty schemes, leading digits, uppercase, dots, and
-  whitespace are rejected at clap parse time.
-- `<value>` is everything after the FIRST `:` character. Values may
-  contain additional `:` characters (e.g., `git@github.com:foo/bar.git`
-  carries an embedded `:`; `image:docker.io/foo:v1@sha256:abc...`
-  carries two). Empty values are rejected at parse time.
-- The split is on the FIRST `:` only. Consumers parsing identifiers
-  from carrier fields MUST use the same first-`:` split rule.
+### 1.3 Migration from the pre-073 `--with-source` flag
 
-### 1.1 Worked examples
+The original milestone-073 implementation shipped a single
+`--with-source <scheme>:<value>` flag. Before milestone 073 was
+merged, the CLI was refactored to dedicated flags per built-in scheme
++ a generic `--id` for user-defined schemes. The reasons:
 
-| Input | Scheme | Value |
-|---|---|---|
-| `repo:git@github.com:foo/bar.git` | `repo` | `git@github.com:foo/bar.git` |
-| `image:docker.io/foo/bar:v1@sha256:abc...` | `image` | `docker.io/foo/bar:v1@sha256:abc...` |
-| `acme_corp_id:abc123` | `acme_corp_id` | `abc123` |
-| `attestation:https://example.org/att/build-42` | `attestation` | `https://example.org/att/build-42` |
+1. **`<scheme>:<value>` was visually ambiguous when values contained
+   colons** — `repo:git@github.com:foo/bar.git`,
+   `image:foo:v1@sha256:abc...`. First-`:`-split was mechanically
+   correct but operator-hostile.
+2. **Dedicated flags are self-documenting** — `mikebom sbom scan
+   --help` shows the 4 built-in schemes by name without the operator
+   needing to read prose.
+
+There is no compatibility shim — `--with-source` is gone. Pipelines
+that used it must update to the dedicated flags before upgrading
+past alpha.15.
 
 ---
 
@@ -80,7 +129,7 @@ native-first directive.
 Validators are best-effort syntactic checks. A failure does NOT
 fail the scan — the identifier soft-fails to `IdentifierKind::User
 Defined` (research.md §1) and emits as opaque under the
-`mikebom:source-identifiers` annotation. A `tracing::warn!` log
+`mikebom:identifiers` annotation. A `tracing::warn!` log
 records the validation failure for operator audit.
 
 - **`repo:`** accepts `https://...`, `http://...`, `ssh://...`,
@@ -124,23 +173,23 @@ as `OTHER` — equivalent semantics, different `referenceCategory`.
 
 ---
 
-## Section 3 — User-defined schemes (`mikebom:source-identifiers`)
+## Section 3 — User-defined schemes (`mikebom:identifiers`)
 
 Schemes matching the FR-004 regex but NOT in the built-in registry
 (`acme_corp_id:`, `internal_ticket:`, etc.) are treated as
 user-defined. They have no native carrier on CDX or SPDX 2.3 — the
 specs don't accept arbitrary operator-defined opaque namespaces. Per
 Constitution Principle V's documented-exception path, user-defined
-identifiers ride a single document-level
-`mikebom:source-identifiers` annotation wrapped in milestone-071's
-`MikebomAnnotationCommentV1` envelope.
+identifiers ride a single document-level `mikebom:identifiers`
+annotation wrapped in milestone-071's `MikebomAnnotationCommentV1`
+envelope.
 
 ### 3.1 Justification clause (Principle V exception)
 
-The `mikebom:source-identifiers` annotation is the documented
-Principle V exception: no standards-native CDX or SPDX 2.3 carrier
-accepts arbitrary opaque-namespace identifiers, so user-defined
-schemes need a `mikebom:*` carve-out. SPDX 3's open-typed
+The `mikebom:identifiers` annotation is the documented Principle V
+exception: no standards-native CDX or SPDX 2.3 carrier accepts
+arbitrary opaque-namespace identifiers, so user-defined schemes need
+a `mikebom:*` carve-out. SPDX 3's open-typed
 `Element.externalIdentifier[]` model handles BOTH built-in and
 user-defined identifiers natively, so the annotation is intentionally
 omitted on the SPDX 3 side.
@@ -158,7 +207,7 @@ of SPDX 3 over SPDX 2.3 for opaque-namespace identifiers.
 ```json
 {
   "schema": "mikebom-annotation/v1",
-  "field": "mikebom:source-identifiers",
+  "field": "mikebom:identifiers",
   "value": [
     { "scheme": "acme_corp_id", "value": "abc123" },
     { "scheme": "internal_ticket", "value": "PROJ-456" }
@@ -181,7 +230,7 @@ envelope is JSON-encoded into a string:
   "metadata": {
     "properties": [
       {
-        "name": "mikebom:source-identifiers",
+        "name": "mikebom:identifiers",
         "value": "[{\"scheme\":\"acme_corp_id\",\"value\":\"abc123\"}]"
       }
     ]
@@ -205,7 +254,7 @@ JSON lives inside `comment` as a string:
       "annotator": "Tool: mikebom-0.1.0-alpha.16",
       "annotationDate": "2026-05-05T12:00:00Z",
       "annotationType": "OTHER",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-identifiers\",\"value\":[{\"scheme\":\"acme_corp_id\",\"value\":\"abc123\"}]}"
+      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:identifiers\",\"value\":[{\"scheme\":\"acme_corp_id\",\"value\":\"abc123\"}]}"
     }
   ]
 }
@@ -268,8 +317,8 @@ reference"`.
 
 ### 4.3 Manual override semantics (FR-006)
 
-When auto-detection AND a manual `--with-source <scheme>:<value>`
-flag both produce an identifier:
+When auto-detection AND a manual identifier flag both produce an
+identifier:
 
 - **Same `(scheme, value)`** → deduplicated. Manual entry inherits
   the auto-detected entry's position in the emitted Vec (front-of-
@@ -281,7 +330,12 @@ flag both produce an identifier:
   FR-006 override-position rule). Both URLs logged at info level.
 - **Different scheme** → no override. Both identifiers emit.
 
-Build-tier scans (`mikebom trace`) do NOT auto-detect — manual
+The dedicated `--repo` / `--image-id` flags participate in this
+logic the same way the old `--with-source` flag did — the
+resolution pipeline operates on `(scheme, value)` pairs after the
+flag-translation step.
+
+Build-tier scans (`mikebom trace run`) do NOT auto-detect — manual
 flags only per FR-008. The build-tier path is opaque to mikebom's
 eBPF observability so there's no analog of the `--path` git remote
 or `--image` resolved reference auto-detection.
@@ -294,8 +348,10 @@ Per FR-009: byte-identical scan inputs produce byte-identical
 identifier carrier output across runs. Implementation rules:
 
 1. **Built-in identifier order**: auto-detected entries first (in
-   detection order), then manual `--with-source` entries in supply
-   order. The CDX `externalReferences[]`, SPDX 2.3 main-module
+   detection order), then manual flag entries in supply order
+   (`--repo` / `--git-ref` first, then `--image-id`, then
+   `--attestation`, then each `--id` in invocation order). The CDX
+   `externalReferences[]`, SPDX 2.3 main-module
    `Package.externalRefs[]`, SPDX 2.3 `creationInfo.creators[]`,
    and SPDX 3 `Element.externalIdentifier[]` arrays all follow this
    order.
@@ -306,11 +362,11 @@ identifier carrier output across runs. Implementation rules:
    follows in supply order — NOT promoted.
 3. **Dedup**: by exact `(scheme, value)` match. Manual-vs-manual
    collisions resolve to first-supplied wins.
-4. **User-defined annotation order**: the `mikebom:source-identifiers`
+4. **User-defined annotation order**: the `mikebom:identifiers`
    `value` array is sorted lexicographically by `(scheme, value)`
    before serialization (annotations have unordered semantics; lex
    sort gives a stable serialization).
-5. **Empty user-defined set**: the `mikebom:source-identifiers`
+5. **Empty user-defined set**: the `mikebom:identifiers`
    annotation is OMITTED entirely when no user-defined identifiers
    are present (VR-007). Preserves cross-format byte-identity for
    non-user-defined-namespace scans.
@@ -335,7 +391,7 @@ jq '
                  value: .url,
                  comment}]),
   user_defined: ([.metadata.properties[]?
-                   | select(.name == "mikebom:source-identifiers")
+                   | select(.name == "mikebom:identifiers")
                    | .value | fromjson] | flatten)
 }
 ' /tmp/out.cdx.json
@@ -353,7 +409,7 @@ jq '
                  comment}]),
   user_defined: ([.annotations[]?
                    | .comment | fromjson?
-                   | select(.field == "mikebom:source-identifiers")
+                   | select(.field == "mikebom:identifiers")
                    | .value] | flatten)
 }
 ' /tmp/out.spdx.json
@@ -396,7 +452,7 @@ def extract_cdx(doc):
                             "comment": r.get("comment")})
     user_defined = []
     for p in doc.get("metadata", {}).get("properties", []):
-        if p.get("name") == "mikebom:source-identifiers":
+        if p.get("name") == "mikebom:identifiers":
             for entry in json.loads(p.get("value", "[]")):
                 user_defined.append(entry)
     return {"builtin": builtin, "user_defined": user_defined}
@@ -417,7 +473,7 @@ def extract_spdx23(doc):
             envelope = json.loads(a.get("comment", ""))
         except json.JSONDecodeError:
             continue
-        if envelope.get("field") == "mikebom:source-identifiers":
+        if envelope.get("field") == "mikebom:identifiers":
             user_defined.extend(envelope.get("value", []))
     return {"builtin": builtin, "user_defined": user_defined}
 
@@ -448,14 +504,16 @@ preserved.
 - The FR-004 scheme regex (`^[a-z][a-z0-9_-]*$`) is stable. Future
   schemes that don't match the regex (e.g., uppercase) require a
   contract-level change.
-- New built-in schemes MAY be added in future milestones without
-  breaking compat. User-defined schemes that collide with future
-  built-ins migrate at the registration milestone (operators are
-  warned).
+- The dedicated CLI flags (`--repo`, `--git-ref`, `--image-id`,
+  `--attestation`, `--id`) are stable. New built-in schemes added
+  in future milestones will receive their own dedicated flag and
+  WILL be added to the `--id` rejection list at the same time.
+  User-defined schemes that collide with future built-ins migrate
+  at the registration milestone (operators are warned).
 - The `image:` canonical Q3 shape is stable. Future image-reference
   conventions (e.g., OCI 1.x vs 2.x) accommodate via the validator's
   permissive regex; the emit-side keeps the documented shape.
-- The `mikebom:source-identifiers` envelope shape (JSON array of
+- The `mikebom:identifiers` envelope shape (JSON array of
   `{scheme, value}` objects) is stable for `schema: "mikebom-
   annotation/v1"`. Future fields are skip_serializing_if-gated; new
   envelope versions bump the `schema` value.
@@ -486,12 +544,12 @@ need to change emission-side code — it consumes what's already here.
 ## See also
 
 - [Cross-tier binding (milestone 072)](cross-tier-binding.md) — the
-  per-component cross-tier identity / verifier flow. Source
-  identifiers and source-document bindings are sibling concerns.
+  per-component cross-tier identity / verifier flow. Identifiers
+  and source-document bindings are sibling concerns.
 - [Conformance harness guide (milestone 071)](conformance-harness-guide.md)
   — per-format envelope-decode rules and the 7 inherent format-spec
   asymmetries. Background reading for new mikebom emission
   consumers.
 - [Cross-format SBOM mapping](sbom-format-mapping.md) — the
   authoritative catalog of every cross-format datum mikebom emits.
-  Search `C47` for the `mikebom:source-identifiers` row.
+  Search `C47` for the `mikebom:identifiers` row.

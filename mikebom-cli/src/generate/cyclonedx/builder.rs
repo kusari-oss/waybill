@@ -63,14 +63,15 @@ pub struct CycloneDxBuilder {
     /// (`metadata.component.externalReferences[type:bom]`). `None`
     /// when the scan was NOT invoked with `--bind-to-source`.
     source_document_binding: Option<mikebom::binding::SourceDocumentId>,
-    /// Milestone 073: source identifiers (auto-detected `repo:` /
-    /// `image:` plus manual `--with-source` flags). Built-in
+    /// Milestone 073: identifiers (auto-detected `repo:` /
+    /// `image:` plus manual `--repo` / `--git-ref` / `--image` /
+    /// `--attestation` / `--id <scheme>=<value>` flags). Built-in
     /// identifiers ride `metadata.component.externalReferences[]`;
     /// user-defined identifiers ride a `metadata.properties[]` entry
-    /// under `mikebom:source-identifiers`. The Vec is already
+    /// under `mikebom:identifiers`. The Vec is already
     /// deduplicated and ordered by the resolution pipeline in
-    /// `cli/scan_cmd.rs::resolve_source_identifiers`.
-    source_identifiers: Vec<mikebom::binding::identifiers::Identifier>,
+    /// `cli/scan_cmd.rs::resolve_identifiers`.
+    identifiers: Vec<mikebom::binding::identifiers::Identifier>,
 }
 
 impl CycloneDxBuilder {
@@ -82,7 +83,7 @@ impl CycloneDxBuilder {
             go_graph_completeness: None,
             go_graph_completeness_reason: None,
             source_document_binding: None,
-            source_identifiers: Vec::new(),
+            identifiers: Vec::new(),
         }
     }
 
@@ -98,16 +99,16 @@ impl CycloneDxBuilder {
         self
     }
 
-    /// Milestone 073 — record the source identifiers for the emitted
-    /// SBOM. Built-in schemes ride
+    /// Milestone 073 — record the identifiers for the emitted SBOM.
+    /// Built-in schemes ride
     /// `metadata.component.externalReferences[]` per scheme; user-
-    /// defined schemes ride a `mikebom:source-identifiers` property
+    /// defined schemes ride a `mikebom:identifiers` property
     /// at metadata level.
-    pub fn with_source_identifiers(
+    pub fn with_identifiers(
         mut self,
         ids: Vec<mikebom::binding::identifiers::Identifier>,
     ) -> Self {
-        self.source_identifiers = ids;
+        self.identifiers = ids;
         self
     }
 
@@ -161,7 +162,7 @@ impl CycloneDxBuilder {
             self.go_graph_completeness,
             self.go_graph_completeness_reason.as_deref(),
             self.source_document_binding.as_ref(),
-            &self.source_identifiers,
+            &self.identifiers,
         );
         let cdx_components = self.build_components(components)?;
         let compositions =

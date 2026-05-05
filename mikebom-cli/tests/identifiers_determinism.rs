@@ -100,10 +100,10 @@ fn extract_cdx_identifiers(doc: &serde_json::Value) -> BTreeSet<(String, String)
             out.insert((scheme.to_string(), url.to_string()));
         }
     }
-    // User-defined identifiers ride metadata.properties[mikebom:source-identifiers].
+    // User-defined identifiers ride metadata.properties[mikebom:identifiers].
     if let Some(props) = doc["metadata"].get("properties").and_then(|v| v.as_array()) {
         for p in props {
-            if p.get("name").and_then(|v| v.as_str()) != Some("mikebom:source-identifiers") {
+            if p.get("name").and_then(|v| v.as_str()) != Some("mikebom:identifiers") {
                 continue;
             }
             let raw = p["value"].as_str().unwrap_or("[]");
@@ -147,7 +147,7 @@ fn extract_spdx23_identifiers(doc: &serde_json::Value) -> BTreeSet<(String, Stri
             }
         }
     }
-    // User-defined: document-level annotations[mikebom:source-identifiers].
+    // User-defined: document-level annotations[mikebom:identifiers].
     if let Some(annos) = doc.get("annotations").and_then(|v| v.as_array()) {
         for a in annos {
             let Some(comment) = a.get("comment").and_then(|v| v.as_str()) else {
@@ -157,7 +157,7 @@ fn extract_spdx23_identifiers(doc: &serde_json::Value) -> BTreeSet<(String, Stri
                 Ok(v) => v,
                 Err(_) => continue,
             };
-            if parsed.get("field").and_then(|v| v.as_str()) != Some("mikebom:source-identifiers") {
+            if parsed.get("field").and_then(|v| v.as_str()) != Some("mikebom:identifiers") {
                 continue;
             }
             let Some(arr) = parsed.get("value").and_then(|v| v.as_array()) else {
@@ -213,10 +213,10 @@ fn deterministic_emission_byte_identical_across_runs() {
     write_minimal_cargo_project(td.path());
 
     let extra = [
-        "--with-source",
-        "repo:git@github.com:acme/foo.git",
-        "--with-source",
-        "acme_corp_id:abc123",
+        "--repo",
+        "git@github.com:acme/foo.git",
+        "--id",
+        "acme_corp_id=abc123",
     ];
     let (cdx_a, spdx23_a, spdx3_a) = scan_all_formats(td.path(), fake_home.path(), &extra);
     let (cdx_b, spdx23_b, spdx3_b) = scan_all_formats(td.path(), fake_home.path(), &extra);
@@ -250,12 +250,12 @@ fn cross_format_consistency_same_identifier_set() {
     write_minimal_cargo_project(td.path());
 
     let extra = [
-        "--with-source",
-        "repo:git@github.com:acme/foo.git",
-        "--with-source",
-        "acme_corp_id:abc123",
-        "--with-source",
-        "internal_ticket:PROJ-456",
+        "--repo",
+        "git@github.com:acme/foo.git",
+        "--id",
+        "acme_corp_id=abc123",
+        "--id",
+        "internal_ticket=PROJ-456",
     ];
     let (cdx, spdx23, spdx3) = scan_all_formats(td.path(), fake_home.path(), &extra);
 

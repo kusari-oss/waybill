@@ -1,23 +1,37 @@
-//! Milestone 073 T015 — manual `--with-source` flag emission test
+//! Milestone 073 T015 — manual identifier flag emission test
 //! (US2 happy paths + override + dedup + error semantics).
 //!
-//! Coverage per tasks.md T015 (a)-(f):
+//! Coverage per tasks.md T015 (a)-(f), updated for the post-073
+//! CLI refactor (dedicated `--repo` / `--git-ref` / `--image-id` /
+//! `--attestation` / `--id <scheme>=<value>` flags):
 //!
-//! - (a) manual `--with-source repo:...` on a non-git tempdir →
+//! - (a) manual `--repo <url>` on a non-git tempdir →
 //!   identifier appears in the standards-native VCS slot per format.
-//! - (b) two user-defined `--with-source` flags →
-//!   `mikebom:source-identifiers` annotation carries both, sorted lex.
-//! - (c) git checkout + `--with-source repo:<different>` →
+//! - (b) two user-defined `--id <scheme>=<value>` flags →
+//!   `mikebom:identifiers` annotation carries both, sorted lex.
+//! - (c) git checkout + `--repo <different>` →
 //!   manual override wins (auto-detected entry dropped).
-//! - (d) duplicate `--with-source repo:<same>` twice → deduplicated.
-//! - (e1) `--with-source repo:` (empty value) → clap parse error
-//!   citing `IdentifierError::EmptyValue`, exit non-zero.
-//! - (e2) `--with-source NOT_VALID:value` (uppercase scheme) → clap
+//! - (d) duplicate `--repo <same>` is *not* possible at the CLI
+//!   level (the flag is `Option<String>`, not repeatable). The
+//!   resolution-pipeline dedup against an auto-detected entry is
+//!   exercised by (c) + the unit-test coverage in
+//!   `cli/scan_cmd.rs::tests::resolve_*`.
+//! - (e1) `--id acme=` (empty value) → clap parse error
+//!   citing `IdentifierError::EmptyValue`, exit non-zero. (The
+//!   former `--with-source repo:` empty-value path applied to the
+//!   freeform `<scheme>:<value>` parser; the new `--id` parser
+//!   carries the same error case via the `=` split.)
+//! - (e2) `--id NOT_VALID=value` (uppercase scheme) → clap
 //!   parse error citing `IdentifierError::InvalidSchemeName`, exit
 //!   non-zero. Different message from (e1).
-//! - (f) `--with-source repo:obviously_invalid` → soft-fail to opaque,
-//!   identifier appears under `mikebom:source-identifiers` not the
-//!   VCS slot.
+//! - (e3) `--id repo=foo` (built-in scheme on `--id`) → clap parse
+//!   error pointing at the dedicated `--repo` flag. NEW post-073-refactor
+//!   case (the old `--with-source repo:foo` was a valid form; the
+//!   refactor splits it into `--repo foo`).
+//! - (f) `--repo obviously_invalid` → soft-fail to opaque,
+//!   identifier appears under `mikebom:identifiers` not the
+//!   VCS slot. (Built-in value validators behind dedicated flags
+//!   share the same soft-fail path.)
 
 #![cfg_attr(test, allow(clippy::unwrap_used))]
 
@@ -42,7 +56,8 @@ fn write_minimal_cargo_project(dir: &Path) {
 }
 
 /// Run a CDX scan, returning the parsed JSON output. `extra_args`
-/// can include `--with-source <id>` flags.
+/// can include any of the new identifier flags (`--repo`, `--git-ref`,
+/// `--image-id`, `--attestation`, `--id`).
 fn run_scan_cdx(path: &Path, fake_home: &Path, extra_args: &[&str]) -> serde_json::Value {
     let out_path = path.join("out.cdx.json");
     let mut cmd = Command::new(bin());
@@ -119,14 +134,14 @@ fn cdx_vcs_urls(doc: &serde_json::Value) -> Vec<String> {
 fn cdx_user_defined_payload(doc: &serde_json::Value) -> Option<Vec<serde_json::Value>> {
     let props = doc["metadata"].get("properties")?.as_array()?;
     let entry = props.iter().find(|p| {
-        p.get("name").and_then(|v| v.as_str()) == Some("mikebom:source-identifiers")
+        p.get("name").and_then(|v| v.as_str()) == Some("mikebom:identifiers")
     })?;
     let raw = entry["value"].as_str()?;
     serde_json::from_str(raw).ok()
 }
 
 #[test]
-fn manual_with_source_emits_in_vcs_slot_no_git() {
+fn manual_repo_emits_in_vcs_slot_no_git() {
     let td = tempfile::tempdir().unwrap();
     let fake_home = tempfile::tempdir().unwrap();
     write_minimal_cargo_project(td.path());
@@ -135,12 +150,13 @@ fn manual_with_source_emits_in_vcs_slot_no_git() {
     let cdx = run_scan_cdx(
         td.path(),
         fake_home.path(),
-        &["--with-source", "repo:git@github.com:acme/foo.git"],
+        &["--repo", "git@github.com:acme/foo.git"],
     );
     let urls = cdx_vcs_urls(&cdx);
     assert_eq!(urls, vec!["git@github.com:acme/foo.git".to_string()]);
 
-    // The comment field for a manual flag is "manual --with-source".
+    // The comment field for a manual flag is "manual identifier flag"
+    // (post-073-refactor wording).
     let refs = cdx["metadata"]["component"]["externalReferences"]
         .as_array()
         .unwrap();
@@ -148,7 +164,7 @@ fn manual_with_source_emits_in_vcs_slot_no_git() {
         .iter()
         .find(|r| r.get("type").and_then(|v| v.as_str()) == Some("vcs"))
         .unwrap();
-    assert_eq!(vcs_entry["comment"].as_str(), Some("manual --with-source"));
+    assert_eq!(vcs_entry["comment"].as_str(), Some("manual identifier flag"));
 }
 
 #[test]
@@ -161,10 +177,10 @@ fn user_defined_identifiers_ride_mikebom_annotation_sorted_lex() {
         td.path(),
         fake_home.path(),
         &[
-            "--with-source",
-            "internal_ticket:PROJ-456",
-            "--with-source",
-            "acme_corp_id:abc123",
+            "--id",
+            "internal_ticket=PROJ-456",
+            "--id",
+            "acme_corp_id=abc123",
         ],
     );
     let payload = cdx_user_defined_payload(&cdx).expect("user-defined payload present");
@@ -201,7 +217,7 @@ fn manual_override_drops_auto_detected_entry() {
     let cdx = run_scan_cdx(
         td.path(),
         fake_home.path(),
-        &["--with-source", "repo:git@github.com:manual/foo.git"],
+        &["--repo", "git@github.com:manual/foo.git"],
     );
     let urls = cdx_vcs_urls(&cdx);
     // Only the manual entry; the auto-detected one was dropped.
@@ -209,28 +225,7 @@ fn manual_override_drops_auto_detected_entry() {
 }
 
 #[test]
-fn duplicate_with_source_dedupes() {
-    let td = tempfile::tempdir().unwrap();
-    let fake_home = tempfile::tempdir().unwrap();
-    write_minimal_cargo_project(td.path());
-
-    let cdx = run_scan_cdx(
-        td.path(),
-        fake_home.path(),
-        &[
-            "--with-source",
-            "repo:git@example.com:dup/foo.git",
-            "--with-source",
-            "repo:git@example.com:dup/foo.git",
-        ],
-    );
-    let urls = cdx_vcs_urls(&cdx);
-    assert_eq!(urls.len(), 1);
-    assert_eq!(urls[0], "git@example.com:dup/foo.git");
-}
-
-#[test]
-fn empty_value_clap_parse_error() {
+fn empty_id_value_clap_parse_error() {
     let td = tempfile::tempdir().unwrap();
     let fake_home = tempfile::tempdir().unwrap();
     write_minimal_cargo_project(td.path());
@@ -238,7 +233,7 @@ fn empty_value_clap_parse_error() {
     let stderr = run_scan_cdx_expect_failure(
         td.path(),
         fake_home.path(),
-        &["--with-source", "repo:"],
+        &["--id", "acme_corp_id="],
     );
     // `IdentifierError::EmptyValue` formats as "identifier value is
     // empty" per data-model.md.
@@ -249,7 +244,7 @@ fn empty_value_clap_parse_error() {
 }
 
 #[test]
-fn malformed_scheme_clap_parse_error() {
+fn malformed_id_scheme_clap_parse_error() {
     let td = tempfile::tempdir().unwrap();
     let fake_home = tempfile::tempdir().unwrap();
     write_minimal_cargo_project(td.path());
@@ -257,7 +252,7 @@ fn malformed_scheme_clap_parse_error() {
     let stderr = run_scan_cdx_expect_failure(
         td.path(),
         fake_home.path(),
-        &["--with-source", "NOT_VALID:value"],
+        &["--id", "NOT_VALID=value"],
     );
     // `IdentifierError::InvalidSchemeName` formats as "scheme ...
     // fails regex `^[a-z][a-z0-9_-]*$`".
@@ -274,6 +269,31 @@ fn malformed_scheme_clap_parse_error() {
 }
 
 #[test]
+fn id_built_in_scheme_clap_parse_error_points_at_dedicated_flag() {
+    // NEW post-073-refactor case: `--id repo=foo` (and likewise for
+    // git/image/attestation) MUST clap-error with a message pointing
+    // at the dedicated flag (--repo / --git-ref / --image-id /
+    // --attestation).
+    let td = tempfile::tempdir().unwrap();
+    let fake_home = tempfile::tempdir().unwrap();
+    write_minimal_cargo_project(td.path());
+
+    let stderr = run_scan_cdx_expect_failure(
+        td.path(),
+        fake_home.path(),
+        &["--id", "repo=foo"],
+    );
+    assert!(
+        stderr.contains("--id rejects the built-in scheme `repo`"),
+        "expected built-in-rejection error citing scheme; got: {stderr}"
+    );
+    assert!(
+        stderr.contains("--repo"),
+        "error MUST point operator at the dedicated --repo flag; got: {stderr}"
+    );
+}
+
+#[test]
 fn malformed_builtin_value_softfails_to_user_defined() {
     let td = tempfile::tempdir().unwrap();
     let fake_home = tempfile::tempdir().unwrap();
@@ -282,7 +302,7 @@ fn malformed_builtin_value_softfails_to_user_defined() {
     let cdx = run_scan_cdx(
         td.path(),
         fake_home.path(),
-        &["--with-source", "repo:obviously_invalid_not_a_url"],
+        &["--repo", "obviously_invalid_not_a_url"],
     );
     // The identifier should NOT appear in the VCS slot.
     let urls = cdx_vcs_urls(&cdx);
@@ -290,7 +310,7 @@ fn malformed_builtin_value_softfails_to_user_defined() {
         urls.is_empty(),
         "soft-failed built-in identifier MUST NOT ride the VCS slot; got urls={urls:?}"
     );
-    // It should appear under `mikebom:source-identifiers` instead.
+    // It should appear under `mikebom:identifiers` instead.
     let payload = cdx_user_defined_payload(&cdx)
         .expect("payload present after soft-fail downgrade");
     let found = payload
@@ -298,6 +318,6 @@ fn malformed_builtin_value_softfails_to_user_defined() {
         .any(|e| e["scheme"].as_str() == Some("repo"));
     assert!(
         found,
-        "soft-failed built-in identifier must emit under mikebom:source-identifiers; got {payload:?}"
+        "soft-failed built-in identifier must emit under mikebom:identifiers; got {payload:?}"
     );
 }

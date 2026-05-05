@@ -1,11 +1,11 @@
-//! Milestone 073 T018 — per-tier source-identifier emission test.
+//! Milestone 073 T018 — per-tier identifier emission test.
 //!
 //! Confirms the same identifier mechanism applies on:
 //!
 //! - `mikebom sbom scan --image <tarball>` — image-tier auto-detects
 //!   an `image:` identifier per the canonical Q3 shape, plus accepts
-//!   manual `--with-source` flags.
-//! - Cross-tier consistency — manual `--with-source` flags ride the
+//!   manual `--repo` / `--id` flags.
+//! - Cross-tier consistency — manual identifier flags ride the
 //!   same per-format carriers regardless of tier (path / image).
 //!
 //! The `mikebom trace` (build-tier) path is exercised via the unit-test
@@ -148,7 +148,7 @@ fn image_scan_auto_detects_image_identifier_in_canonical_shape() {
 }
 
 #[test]
-fn image_scan_accepts_manual_with_source_alongside_auto_detection() {
+fn image_scan_accepts_manual_identifier_flags_alongside_auto_detection() {
     let (tarball, _td) = build_synthetic_image_tarball();
     let fake_home = tempfile::tempdir().unwrap();
 
@@ -156,10 +156,10 @@ fn image_scan_accepts_manual_with_source_alongside_auto_detection() {
         &tarball,
         fake_home.path(),
         &[
-            "--with-source",
-            "repo:git@github.com:test/foo.git",
-            "--with-source",
-            "acme_corp_id:svc-alpha",
+            "--repo",
+            "git@github.com:test/foo.git",
+            "--id",
+            "acme_corp_id=svc-alpha",
         ],
     );
     let refs = cdx["metadata"]["component"]["externalReferences"]
@@ -177,7 +177,7 @@ fn image_scan_accepts_manual_with_source_alongside_auto_detection() {
     );
     assert!(
         has_repo,
-        "image-tier scan must accept manual --with-source repo: (type:vcs)"
+        "image-tier scan must accept manual --repo (type:vcs)"
     );
 
     // The user-defined identifier rides the metadata.properties[]
@@ -189,7 +189,7 @@ fn image_scan_accepts_manual_with_source_alongside_auto_detection() {
     let entry = props
         .iter()
         .find(|p| {
-            p.get("name").and_then(|v| v.as_str()) == Some("mikebom:source-identifiers")
+            p.get("name").and_then(|v| v.as_str()) == Some("mikebom:identifiers")
         })
         .expect("user-defined annotation present");
     let raw = entry["value"].as_str().unwrap();
@@ -210,7 +210,7 @@ fn image_and_path_tiers_use_same_per_format_carriers() {
     let img_cdx = scan_image_cdx(
         &tarball,
         fake_home.path(),
-        &["--with-source", "repo:git@github.com:test/x.git"],
+        &["--repo", "git@github.com:test/x.git"],
     );
     let img_vcs_count = img_cdx["metadata"]["component"]["externalReferences"]
         .as_array()
@@ -222,7 +222,7 @@ fn image_and_path_tiers_use_same_per_format_carriers() {
         .unwrap_or(0);
     assert_eq!(
         img_vcs_count, 1,
-        "image-tier should emit exactly one vcs externalRef from --with-source repo:"
+        "image-tier should emit exactly one vcs externalRef from --repo"
     );
 
     // Path-tier with the SAME flag — confirm both tiers ride the same
@@ -252,8 +252,8 @@ fn image_and_path_tiers_use_same_per_format_carriers() {
         .arg("--output")
         .arg(format!("cyclonedx-json={}", out_path.to_string_lossy()))
         .arg("--no-deep-hash")
-        .arg("--with-source")
-        .arg("repo:git@github.com:test/x.git")
+        .arg("--repo")
+        .arg("git@github.com:test/x.git")
         .output()
         .expect("scan runs");
     assert!(
@@ -273,6 +273,6 @@ fn image_and_path_tiers_use_same_per_format_carriers() {
         .unwrap_or(0);
     assert_eq!(
         path_vcs_count, 1,
-        "path-tier should emit exactly one vcs externalRef from --with-source repo:"
+        "path-tier should emit exactly one vcs externalRef from --repo"
     );
 }

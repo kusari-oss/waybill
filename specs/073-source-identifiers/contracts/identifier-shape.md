@@ -1,8 +1,10 @@
 # Contract — Identifier wire format
 
-This contract specifies the wire-format of source identifiers as supplied via `--with-source` and as emitted in mikebom SBOMs. External tools (verifiers, harnesses, parsers) implement against this contract.
+> **Rename note (post-implementation, pre-merge)**: this milestone originally drafted the feature as "source identifiers" with a single `--with-source <scheme>:<value>` flag. The CLI was refactored to dedicated flags per built-in scheme (`--repo`, `--git-ref`, `--image-id`, `--attestation`) plus a generic `--id <scheme>=<value>` for user-defined namespaces — the `<scheme>:<value>` first-`:`-split syntax was operator-hostile when values contained colons (URL ssh forms, image `@sha256:` digests). The wire format described in C-1 below remains the canonical INTERNAL representation: it's how identifiers are stored in the `Identifier` struct (`<scheme>:<value>`) and how SBOM consumers reconstitute them from per-format carriers — but operators no longer enter identifiers at the CLI in this exact form.
 
-## C-1 — Wire format
+This contract specifies the canonical wire-format of identifiers as emitted in mikebom SBOMs and held in the in-process `Identifier` struct. External tools (verifiers, harnesses, parsers) implement against this contract.
+
+## C-1 — Wire format (internal/SBOM-side; not the operator-input syntax)
 
 ```text
 <scheme>:<value>
@@ -65,7 +67,7 @@ Permissive — any RFC 3986 URI shape accepted. No further structure enforced.
 Any scheme matching the FR-004 regex but NOT in the built-in registry is treated as user-defined:
 
 - No validation on the value side.
-- Emitted via the `mikebom:source-identifiers` document-level annotation (per `source-identifiers-annotation.md` C-1).
+- Emitted via the `mikebom:identifiers` document-level annotation (per `identifiers-annotation.md` C-1).
 - Operators are responsible for picking schemes that don't collide with future built-in schemes (forward-compat note in research.md §7).
 
 ## C-5 — Determinism
@@ -73,19 +75,20 @@ Any scheme matching the FR-004 regex but NOT in the built-in registry is treated
 Per FR-009: byte-identical inputs produce byte-identical identifier output. Implementation rules:
 
 - Auto-detected identifiers appear FIRST in the emitted carrier array.
-- Manual `--with-source` identifiers follow in supply order.
+- Manual identifier flags (`--repo` / `--git-ref` / `--image-id` / `--attestation` / `--id`) follow in supply order.
 - Duplicates by exact `(scheme, value)` are deduplicated; on dedup, the manual entry wins (FR-006), the auto-detected `source_label` is dropped.
-- The `mikebom:source-identifiers` annotation's `value` array is sorted lexicographically by `(scheme, value)` before serialization (independent of the carrier ordering — annotations are unordered semantics, sort gives determinism).
+- The `mikebom:identifiers` annotation's `value` array is sorted lexicographically by `(scheme, value)` before serialization (independent of the carrier ordering — annotations are unordered semantics, sort gives determinism).
 
 ## C-6 — Failure semantics
 
 | Failure | Behavior |
 |---|---|
 | Auto-detection unable to find git remote | `tracing::info!` log; emit no auto-detected identifier; scan continues |
-| Manual `--with-source` with malformed scheme prefix | clap parse error; scan exits non-zero before any work |
-| Manual `--with-source` with empty value | clap parse error; scan exits non-zero |
-| Built-in scheme value-validation fails | `tracing::warn!` log; identifier downgrades to `IdentifierKind::UserDefined` and emits via `mikebom:source-identifiers` annotation; scan continues |
-| Multiple `--with-source` flags with same `(scheme, value)` | Deduplicated to one entry; no error |
+| `--id <scheme>=<value>` with malformed scheme prefix | clap parse error; scan exits non-zero before any work |
+| `--id <scheme>=<value>` with empty value | clap parse error; scan exits non-zero |
+| `--id <scheme>=<value>` with built-in scheme name (`repo`/`git`/`image`/`attestation`) | clap parse error pointing at the dedicated flag; scan exits non-zero |
+| Built-in scheme value-validation fails (e.g., `--repo notaurl`) | `tracing::warn!` log; identifier downgrades to `IdentifierKind::UserDefined` and emits via `mikebom:identifiers` annotation; scan continues |
+| `--git-ref` supplied without `--repo` | clap parse error (clap-enforced via `requires = "repo"`) |
 
 ## C-7 — Stability commitment
 

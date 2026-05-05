@@ -1,17 +1,28 @@
-//! Milestone 073 — source identifiers.
+//! Milestone 073 — identifiers.
 //!
 //! `(scheme, value)` pairs attached at document level to emitted
 //! SBOMs. Built-in schemes (`repo:`, `git:`, `image:`, `attestation:`)
 //! ride standards-native carriers per format (Constitution Principle V);
-//! user-defined schemes ride a `mikebom:source-identifiers` annotation
+//! user-defined schemes ride a `mikebom:identifiers` annotation
 //! per Principle V's documented-exception path.
+//!
+//! Naming note: SPDX 3 already calls these "external identifiers"
+//! (`Element.externalIdentifier[]`). The earlier `source-identifier`
+//! naming anchored on the most-common case (source repos) but the
+//! same mechanism handles image / attestation / user-defined
+//! identifiers — so the term was generalized to "identifier" before
+//! the milestone shipped. Milestone-072's `SourceDocumentBinding` is
+//! a DIFFERENT, sibling concept (binding back to a source-tier SBOM
+//! document) and intentionally retains its name.
 //!
 //! Layout:
 //!
 //! - this file (`mod.rs`) — public types: `Identifier`, `SchemeName`,
 //!   `IdentifierValue`, `IdentifierKind`, `BuiltinScheme`, plus
-//!   `IdentifierError`. The CLI surface parses `--with-source` flag
-//!   values via `Identifier::parse`.
+//!   `IdentifierError`. The CLI surface parses dedicated flags
+//!   (`--repo`, `--git-ref`, `--image`, `--attestation`, `--id`)
+//!   into `Identifier` values via `Identifier::from_parts_with_label`
+//!   and the user-defined `--id <scheme>=<value>` parser.
 //! - `auto_detect.rs` — `auto_detect_repo_identifier(scan_root)` for
 //!   the 3-step git-remote fallback (FR-001), and
 //!   `image_reference_to_identifier(resolved)` for the image-tier
@@ -29,7 +40,7 @@ pub mod validators;
 // Errors
 // ---------------------------------------------------------------------
 
-/// Errors emitted by the source-identifier module.
+/// Errors emitted by the identifier module.
 ///
 /// Construction failures (`MissingSeparator`, `EmptyScheme`,
 /// `EmptyValue`, `InvalidSchemeName`) are reported to the CLI parse
@@ -184,7 +195,7 @@ impl BuiltinScheme {
 ///
 /// `UserDefined` is also the soft-fail destination for a built-in
 /// scheme whose value failed validation (research.md §1) — the
-/// identifier emits as opaque under `mikebom:source-identifiers`
+/// identifier emits as opaque under `mikebom:identifiers`
 /// rather than crashing the scan.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IdentifierKind {
@@ -246,7 +257,7 @@ impl Identifier {
                         reason = %err,
                         "built-in identifier scheme failed value validation; \
                          downgrading to user-defined and emitting via \
-                         mikebom:source-identifiers annotation"
+                         mikebom:identifiers annotation"
                     );
                     IdentifierKind::UserDefined
                 }

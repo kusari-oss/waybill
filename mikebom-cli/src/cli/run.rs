@@ -5,15 +5,43 @@ use clap::Args;
 use super::generate::{GenerateArgs, SbomScope};
 use super::scan::ScanArgs;
 
-/// Parse a `--with-source <scheme>:<value>` flag. Used by clap as the
-/// `value_parser`. Errors at parse time on missing separator, empty
-/// scheme, empty value, or scheme failing the FR-004 regex (see
-/// `parse_with_source_flag` in `cli/scan_cmd.rs` for the equivalent
-/// path on `mikebom sbom scan`).
-fn parse_with_source_flag(
+/// Parse a `--id <scheme>=<value>` flag for a user-defined identifier.
+/// Mirrors `parse_user_defined_id_flag` in `cli/scan_cmd.rs` —
+/// rejects built-in schemes at parse time so operators are directed
+/// to the dedicated `--repo` / `--git-ref` / `--image-id` /
+/// `--attestation` flag.
+fn parse_user_defined_id_flag(
     raw: &str,
 ) -> Result<mikebom::binding::identifiers::Identifier, String> {
-    mikebom::binding::identifiers::Identifier::parse(raw).map_err(|e| e.to_string())
+    use mikebom::binding::identifiers::{
+        BuiltinScheme, Identifier, IdentifierError, IdentifierKind, IdentifierValue, SchemeName,
+    };
+    let Some(idx) = raw.find('=') else {
+        return Err(format!(
+            "--id value missing `=` separator: {raw:?} \
+             (expected form: --id <scheme>=<value>)"
+        ));
+    };
+    let scheme_str = &raw[..idx];
+    let value_str = &raw[idx + 1..];
+    let scheme = SchemeName::new(scheme_str.to_string())
+        .map_err(|e: IdentifierError| e.to_string())?;
+    if let Some(b) = BuiltinScheme::from_scheme_name(&scheme) {
+        return Err(format!(
+            "--id rejects the built-in scheme `{}` — use the dedicated \
+             flag instead (--repo / --git-ref / --image-id / --attestation). \
+             --id is for user-defined schemes only.",
+            b.as_str()
+        ));
+    }
+    let value =
+        IdentifierValue::new(value_str.to_string()).map_err(|e: IdentifierError| e.to_string())?;
+    Ok(Identifier::from_parts_with_label(
+        scheme,
+        value,
+        IdentifierKind::UserDefined,
+        None,
+    ))
 }
 
 #[derive(Args)]
@@ -70,18 +98,39 @@ pub struct RunArgs {
     #[arg(long)]
     pub json: bool,
 
-    /// Milestone 073: attach a source identifier to the emitted SBOM.
-    /// Repeatable; `<scheme>:<value>` syntax (see
-    /// `mikebom sbom scan --help` for the full format spec). Build-tier
-    /// scans do NOT auto-detect a `repo:` identifier — manual flags only,
-    /// per FR-008.
+    /// Attach a `repo:` identifier — source repository identity.
+    /// Manual only on build-tier scans (no auto-detection per FR-008).
+    /// Pair with `--git-ref <revision>` to upgrade to a `git:`
+    /// identifier.
+    #[arg(long = "repo", value_name = "URL")]
+    pub repo: Option<String>,
+
+    /// Pair with `--repo <url>` to emit a `git:<repo>#<revision>`
+    /// identifier (commit/branch/tag-anchored).
+    #[arg(long = "git-ref", value_name = "REVISION", requires = "repo")]
+    pub git_ref: Option<String>,
+
+    /// Attach an `image:` identifier — image identity. Manual only.
+    /// Named `--image-id` to keep the flag-name semantics consistent
+    /// with `mikebom sbom scan --image-id`.
+    #[arg(long = "image-id", value_name = "REF")]
+    pub image_id: Option<String>,
+
+    /// Attach an `attestation:` identifier — in-toto attestation IRI.
+    #[arg(long = "attestation", value_name = "IRI")]
+    pub attestation: Option<String>,
+
+    /// Attach a user-defined identifier in `<scheme>=<value>` form.
+    /// Repeatable. Built-in schemes (`repo`, `git`, `image`,
+    /// `attestation`) are rejected — use the dedicated flag instead.
+    /// See `mikebom sbom scan --help` for the full identifier docs.
     #[arg(
-        long = "with-source",
+        long = "id",
         action = clap::ArgAction::Append,
-        value_name = "SCHEME:VALUE",
-        value_parser = parse_with_source_flag,
+        value_name = "SCHEME=VALUE",
+        value_parser = parse_user_defined_id_flag,
     )]
-    pub with_source: Vec<mikebom::binding::identifiers::Identifier>,
+    pub id: Vec<mikebom::binding::identifiers::Identifier>,
 
     /// Directories to scan for artifact files after the traced command
     /// exits. Forwarded verbatim to `mikebom trace capture`. See the
@@ -168,6 +217,54 @@ pub async fn execute(args: RunArgs) -> anyhow::Result<()> {
     };
     super::scan::execute(scan_args).await?;
 
+    // Milestone 073 — assemble manual identifiers from the dedicated
+    // flags. Build-tier scans don't auto-detect (per FR-008), so the
+    // resolution pipeline reduces to "manual entries in supply order"
+    // and we can produce the final list directly without invoking
+    // `resolve_identifiers`. Order: repo-or-git → image → attestation
+    // → user-defined --id flags.
+    let mut assembled_ids: Vec<mikebom::binding::identifiers::Identifier> = Vec::new();
+    if let Some(repo_url) = args.repo.as_deref() {
+        let raw = if let Some(rev) = args.git_ref.as_deref() {
+            format!("git:{repo_url}#{rev}")
+        } else {
+            format!("repo:{repo_url}")
+        };
+        match mikebom::binding::identifiers::Identifier::parse(&raw) {
+            Ok(id) => assembled_ids.push(id),
+            Err(e) => tracing::warn!(
+                error = %e,
+                raw = %raw,
+                "failed to parse manual --repo/--git-ref identifier on trace; skipping"
+            ),
+        }
+    }
+    if let Some(image) = args.image_id.as_deref() {
+        let raw = format!("image:{image}");
+        match mikebom::binding::identifiers::Identifier::parse(&raw) {
+            Ok(id) => assembled_ids.push(id),
+            Err(e) => tracing::warn!(
+                error = %e,
+                raw = %raw,
+                "failed to parse manual --image-id identifier on trace; skipping"
+            ),
+        }
+    }
+    if let Some(att) = args.attestation.as_deref() {
+        let raw = format!("attestation:{att}");
+        match mikebom::binding::identifiers::Identifier::parse(&raw) {
+            Ok(id) => assembled_ids.push(id),
+            Err(e) => tracing::warn!(
+                error = %e,
+                raw = %raw,
+                "failed to parse manual --attestation identifier on trace; skipping"
+            ),
+        }
+    }
+    for id in &args.id {
+        assembled_ids.push(id.clone());
+    }
+
     // Phase 2: derive the SBOM from the attestation.
     let generate_args = GenerateArgs {
         attestation_file: args.attestation_output.clone(),
@@ -185,7 +282,7 @@ pub async fn execute(args: RunArgs) -> anyhow::Result<()> {
         skip_purl_validation: args.skip_purl_validation,
         vex_overrides: None,
         json: false,
-        with_source: args.with_source.clone(),
+        identifiers: assembled_ids,
     };
     // Trace's one-shot `run` wrapper doesn't thread the global --offline
     // flag through (yet). Default to online — the enrichment doesn't

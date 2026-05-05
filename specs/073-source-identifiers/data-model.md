@@ -1,4 +1,6 @@
-# Data Model — milestone 073 source identifiers
+# Data Model — milestone 073 identifiers
+
+> **Rename note (2026-05-03)**: this doc was originally drafted as "source identifiers" / `ScanArtifacts.source_identifiers`. The field was renamed pre-merge to `ScanArtifacts.identifiers` and the doc concept was generalized to "identifiers". The CLI flag `--with-source <scheme>:<value>` was replaced with dedicated flags (`--repo` / `--git-ref` / `--image-id` / `--attestation` / `--id <scheme>=<value>`) — see spec.md's prepended note for the rename rationale and full scope. Treat references in this data-model doc to `--with-source` and `source_identifiers` as historical references to the renamed equivalents.
 
 The milestone introduces 4 new types in `mikebom-cli/src/binding/identifiers/` plus extends one existing struct in `mikebom-cli/src/generate/mod.rs`. Constitution Principle IV: every domain value is a newtype or enum; production code uses `anyhow::Result` / `IdentifierError`; test code uses `#[cfg_attr(test, allow(clippy::unwrap_used))]`.
 

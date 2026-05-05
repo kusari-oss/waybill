@@ -105,8 +105,8 @@ pub struct SpdxExternalRef {
     /// SPDX 2.3 §7.10.5 — optional human-readable comment on the
     /// externalRef. Milestone 073 uses this to record the
     /// `source_label` ("auto-detected from git remote `origin`" or
-    /// "manual --with-source") for `PERSISTENT-ID` rows that carry
-    /// source identifiers. Pre-073 emissions left this absent.
+    /// "manual identifier flag") for `PERSISTENT-ID` rows that carry
+    /// identifiers. Pre-073 emissions left this absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub comment: Option<String>,
 }
@@ -321,7 +321,7 @@ pub fn build_packages(
             artifacts.include_source_files,
             annotator,
             date,
-            artifacts.source_identifiers,
+            artifacts.identifiers,
         );
         packages.push(pkg);
         if let Some(info) = decl_extracted {
@@ -345,7 +345,7 @@ fn component_to_package(
     include_source_files: bool,
     annotator: &str,
     date: &str,
-    source_identifiers: &[mikebom::binding::identifiers::Identifier],
+    identifiers: &[mikebom::binding::identifiers::Identifier],
 ) -> (
     SpdxPackage,
     Option<super::document::SpdxExtractedLicensingInfo>,
@@ -399,9 +399,9 @@ fn component_to_package(
         });
     }
 
-    // Milestone 073 — built-in source identifiers ride the main-module
+    // Milestone 073 — built-in identifiers ride the main-module
     // Package's `externalRefs[]` with `referenceCategory: PERSISTENT-ID`
-    // per Q2 clarification + `contracts/source-identifiers-annotation.md`
+    // per Q2 clarification + `contracts/identifiers-annotation.md`
     // C-1 SPDX 2.3 (typed primary). Only emit on the main-module
     // (workspace's BOM-subject Package) — non-main-module packages
     // stay byte-identical to alpha.15 emissions.
@@ -411,14 +411,14 @@ fn component_to_package(
         .and_then(|v| v.as_str())
         == Some("main-module");
     if is_main_module {
-        for id in source_identifiers {
+        for id in identifiers {
             if let mikebom::binding::identifiers::IdentifierKind::Builtin(_) = id.kind {
                 external_refs.push(SpdxExternalRef {
                     category: SpdxExternalRefCategory::PersistentId,
                     ref_type: id.scheme.as_str().to_string(),
                     locator: id.value.as_str().to_string(),
                     comment: id.source_label.clone().or_else(|| {
-                        Some("manual --with-source".to_string())
+                        Some("manual identifier flag".to_string())
                     }),
                 });
             }
@@ -563,7 +563,7 @@ mod tests {
             include_source_files: false,
             scope_mode: crate::generate::ScopeMode::Artifact,
             source_document_binding: None,
-            source_identifiers: &[],
+            identifiers: &[],
         }
     }
 

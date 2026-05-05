@@ -405,11 +405,11 @@ spdx3_anno!(c45_spdx3, "mikebom:orphan-reason",             component);
 // `contracts/source-document-binding-annotation.md` C-3 SPDX 3.
 spdx3_anno!(c46_spdx3, "mikebom:source-document-binding",  component);
 
-// C47 — document-level user-defined source identifiers (milestone 073).
-// Per `contracts/source-identifiers-annotation.md` C-1 SPDX 3 and C-2
+// C47 — document-level user-defined identifiers (milestone 073).
+// Per `contracts/identifiers-annotation.md` C-1 SPDX 3 and C-2
 // SPDX 3: user-defined identifiers ride `Element.externalIdentifier[]`
 // natively on the SpdxDocument element rather than a separate
-// `mikebom:source-identifiers` annotation. The C47 row must therefore
+// `mikebom:identifiers` annotation. The C47 row must therefore
 // reach into the native carrier and emit the same canonical
 // `{scheme, value}` payload that the CDX/SPDX 2.3 sides produce from
 // their respective annotation envelopes — filtering OUT the built-in

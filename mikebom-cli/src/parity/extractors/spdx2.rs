@@ -357,14 +357,14 @@ spdx23_anno!(c45_spdx23, "mikebom:orphan-reason",             component);
 // `contracts/source-document-binding-annotation.md` C-3 SPDX 2.3.
 spdx23_anno!(c46_spdx23, "mikebom:source-document-binding",  component);
 
-// C47 — document-level user-defined source identifiers (milestone 073).
+// C47 — document-level user-defined identifiers (milestone 073).
 // SPDX 2.3 carrier: document-level `annotations[]` entry wrapped in the
 // `MikebomAnnotationCommentV1` envelope. Built-in identifiers ride the
 // dual-carrier standards-native path (main-module `Package.externalRefs[
 // PERSISTENT-ID]` + `creationInfo.creators` redundant text). The C47
 // row therefore carries ONLY user-defined-namespace identifiers on the
 // SPDX 2.3 side.
-spdx23_anno!(c47_spdx23, "mikebom:source-identifiers",       document);
+spdx23_anno!(c47_spdx23, "mikebom:identifiers",              document);
 
 // ============================================================
 // Sections D-G — custom SPDX 2.3 extractors

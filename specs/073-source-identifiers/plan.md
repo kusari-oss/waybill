@@ -1,3 +1,7 @@
+# Implementation Plan: Identifiers — built-in + user-defined
+
+> **Post-implementation rename note (2026-05-03, before merge)**: this milestone shipped under the renamed concept "identifiers" (not "source identifiers") with a dedicated-flag CLI (`--repo` / `--git-ref` / `--image-id` / `--attestation` / `--id <scheme>=<value>`) instead of the originally-drafted `--with-source <scheme>:<value>`. See spec.md's prepended note for the full rename scope. The plan below uses the original draft's terminology ("source identifiers", `--with-source`, `mikebom:source-identifiers`) — treat those as historical references to what was renamed pre-merge.
+
 # Implementation Plan: Source identifiers — built-in + user-defined
 
 **Branch**: `073-source-identifiers` | **Date**: 2026-05-05 | **Spec**: [spec.md](spec.md)

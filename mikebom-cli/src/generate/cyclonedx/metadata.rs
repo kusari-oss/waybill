@@ -50,7 +50,7 @@ pub fn build_metadata(
     go_graph_completeness: Option<crate::scan_fs::package_db::GraphCompleteness>,
     go_graph_completeness_reason: Option<&str>,
     source_document_binding: Option<&mikebom::binding::SourceDocumentId>,
-    source_identifiers: &[mikebom::binding::identifiers::Identifier],
+    identifiers: &[mikebom::binding::identifiers::Identifier],
 ) -> serde_json::Value {
     let version = env!("CARGO_PKG_VERSION");
     let timestamp = Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
@@ -363,22 +363,22 @@ pub fn build_metadata(
         metadata["lifecycles"] = json!(lifecycles);
     }
 
-    // Milestone 073 — built-in source identifiers ride
+    // Milestone 073 — built-in identifiers ride
     // `metadata.component.externalReferences[]` per
-    // `contracts/source-identifiers-annotation.md` C-1 CDX 1.6. Per-
+    // `contracts/identifiers-annotation.md` C-1 CDX 1.6. Per-
     // scheme `type` mapping per research.md §2 (`vcs` for repo:/git:,
     // `distribution` for image:, `attestation` for attestation:).
     // Order: auto-detected first (per FR-009 / VR-008), then manual
     // in supply order. The Vec is already deduplicated and ordered
-    // by `cli/scan_cmd.rs::resolve_source_identifiers`.
-    let builtin_id_refs: Vec<serde_json::Value> = source_identifiers
+    // by `cli/scan_cmd.rs::resolve_identifiers`.
+    let builtin_id_refs: Vec<serde_json::Value> = identifiers
         .iter()
         .filter_map(|id| match id.kind {
             mikebom::binding::identifiers::IdentifierKind::Builtin(b) => {
                 let comment = id
                     .source_label
                     .clone()
-                    .unwrap_or_else(|| "manual --with-source".to_string());
+                    .unwrap_or_else(|| "manual identifier flag".to_string());
                 Some(json!({
                     "type": b.cdx_external_reference_type(),
                     "url": id.value.as_str(),
@@ -407,15 +407,15 @@ pub fn build_metadata(
         }
     }
 
-    // Milestone 073 — user-defined source identifiers ride a single
-    // `metadata.properties[]` entry under `mikebom:source-identifiers`
-    // per `contracts/source-identifiers-annotation.md` C-2 CDX 1.6.
+    // Milestone 073 — user-defined identifiers ride a single
+    // `metadata.properties[]` entry under `mikebom:identifiers`
+    // per `contracts/identifiers-annotation.md` C-2 CDX 1.6.
     // The value is a JSON-encoded array sorted lex by `(scheme, value)`
     // for determinism (FR-009 / contract C-4). Emit ONLY when the
     // user-defined entry set is non-empty per VR-007 — preserves
     // cross-format byte-identity for non-user-defined-namespace scans.
     let user_defined_payload: Vec<serde_json::Value> = {
-        let mut entries: Vec<&mikebom::binding::identifiers::Identifier> = source_identifiers
+        let mut entries: Vec<&mikebom::binding::identifiers::Identifier> = identifiers
             .iter()
             .filter(|id| {
                 matches!(
@@ -444,7 +444,7 @@ pub fn build_metadata(
         if let Some(props) = metadata.get_mut("properties").and_then(|v| v.as_array_mut())
         {
             props.push(json!({
-                "name": "mikebom:source-identifiers",
+                "name": "mikebom:identifiers",
                 "value": json_str,
             }));
         }
@@ -842,8 +842,8 @@ mod tests {
         let props = meta["properties"].as_array().expect("properties");
         let entry = props
             .iter()
-            .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("mikebom:source-identifiers"))
-            .expect("mikebom:source-identifiers entry present");
+            .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("mikebom:identifiers"))
+            .expect("mikebom:identifiers entry present");
         let value_str = entry["value"].as_str().unwrap();
         let parsed: serde_json::Value =
             serde_json::from_str(value_str).expect("value is JSON-encoded array");
@@ -872,7 +872,7 @@ mod tests {
         let props = meta["properties"].as_array().expect("properties");
         let found = props
             .iter()
-            .any(|p| p.get("name").and_then(|v| v.as_str()) == Some("mikebom:source-identifiers"));
+            .any(|p| p.get("name").and_then(|v| v.as_str()) == Some("mikebom:identifiers"));
         assert!(!found, "annotation must be absent when no user-defined identifiers");
     }
 }

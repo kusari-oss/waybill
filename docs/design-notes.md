@@ -695,17 +695,35 @@ the binding emission only fires on `mikebom:sbom-tier: build` or
 identity guards confirm this in
 `mikebom-cli/tests/{cdx,spdx,spdx3}_regression.rs`.
 
-## Source identifiers (milestone 073)
+## Identifiers (milestone 073)
+
+**Naming**: originally drafted as "source identifiers" — the term
+anchored on the most-common case (source repos). The same mechanism
+handles image / attestation / user-defined identifiers, so the name
+was generalized to "identifier" before milestone 073 merged. SPDX 3
+already calls this `Element.externalIdentifier[]`. Milestone-072's
+`SourceDocumentBinding` is a DIFFERENT concept (binding back to a
+source-tier SBOM document) and intentionally retains its name.
 
 **Operator-visible behavior** — `mikebom sbom scan` and `mikebom
-trace` accept a repeatable `--with-source <scheme>:<value>` flag
-that attaches a stable identifier at document level to the emitted
-SBOM. `--path` scans on git checkouts auto-detect a `repo:`
-identifier from the `origin` / `upstream` / first-listed remote
-(3-step fallback per Q1 clarification); `--image` scans
-auto-detect an `image:<registry>/<name>:<tag>@sha256:<digest>`
-identifier from the resolved image reference. Manual flags override
-auto-detection on `(scheme, value)` match.
+trace run` accept dedicated flags per built-in scheme plus a generic
+`--id <scheme>=<value>` (repeatable) for user-defined schemes:
+
+- `--repo <url>` → `repo:` identifier
+- `--git-ref <revision>` (with `--repo`) → `git:<repo>#<revision>`
+- `--image-id <ref>` → `image:` identifier (named `--image-id` to
+  avoid colliding with the existing `--image <PATH>` scan-input flag)
+- `--attestation <iri>` → `attestation:` identifier
+- `--id <scheme>=<value>` → user-defined-namespace identifier
+  (built-in scheme names are rejected here; operator is directed
+  to the dedicated flag)
+
+`--path` scans on git checkouts auto-detect a `repo:` identifier
+from the `origin` / `upstream` / first-listed remote (3-step
+fallback per Q1 clarification); `--image` scans auto-detect an
+`image:<registry>/<name>:<tag>@sha256:<digest>` identifier from the
+resolved image reference. Manual flags override auto-detection on
+`(scheme, value)` match.
 
 **Built-in schemes** — four recognized schemes get value-validated
 and ride per-format standards-native carriers per Constitution
@@ -726,9 +744,9 @@ Principle V's native-first directive:
 
 **User-defined passthrough** — schemes matching the FR-004 regex
 (`^[a-z][a-z0-9_-]*$`) but not in the built-in registry pass through
-verbatim under a `mikebom:source-identifiers` document-level
-annotation (parity-catalog row C47). SPDX 3 carries them natively
-in `externalIdentifier[]` — no annotation needed there.
+verbatim under a `mikebom:identifiers` document-level annotation
+(parity-catalog row C47). SPDX 3 carries them natively in
+`externalIdentifier[]` — no annotation needed there.
 
 **Forward-looking handshake to milestone 074** — every emitted
 identifier is parseable, deterministic, and survives JSON
@@ -744,7 +762,7 @@ module-reactor) get one additive identifier slot per format — that's
 the FR-012 expected golden regen. CI byte-identity guards in
 `mikebom-cli/tests/{cdx,spdx,spdx3}_regression.rs` confirm this.
 
-See `docs/reference/source-identifiers.md` for the published
+See `docs/reference/identifiers.md` for the published
 external-consumer guide (FR-010): per-format carrier table, decode
 recipes per format, determinism contract, and the auto-detection
 algorithm.

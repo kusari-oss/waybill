@@ -235,19 +235,19 @@ pub static EXTRACTORS: &[ParityExtractor] = &[
     // SBOMs do NOT carry this row's signal (per
     // `contracts/source-document-binding-annotation.md` C-1).
     ParityExtractor { row_id: "C46", label: "mikebom:source-document-binding",   cdx: c46_cdx, spdx23: c46_spdx23, spdx3: c46_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
-    // C47 — `mikebom:source-identifiers` document-level user-defined
-    // source identifiers (milestone 073). On CDX + SPDX 2.3 the
+    // C47 — `mikebom:identifiers` document-level user-defined
+    // identifiers (milestone 073). On CDX + SPDX 2.3 the
     // annotation envelope's `value` is a sorted-by-(scheme,value) JSON
     // array of `{scheme, value, source_label?}` objects (user-defined
     // schemes only — built-in schemes ride standards-native carriers
     // per FR-005 and never appear under this row). On SPDX 3 the
     // user-defined identifiers ride `Element.externalIdentifier[]`
-    // natively per `contracts/source-identifiers-annotation.md` C-1
+    // natively per `contracts/identifiers-annotation.md` C-1
     // SPDX 3 — `c47_spdx3` reaches into the native carrier and
     // canonicalizes the same `{scheme, value}` payload shape, filtering
     // out the 4 built-in schemes so SymmetricEqual holds across
     // formats.
-    ParityExtractor { row_id: "C47", label: "mikebom:source-identifiers",        cdx: c47_cdx, spdx23: c47_spdx23, spdx3: c47_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C47", label: "mikebom:identifiers",               cdx: c47_cdx, spdx23: c47_spdx23, spdx3: c47_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // Section D — Evidence
     // D1 evidence shape diverges — CDX `evidence.identity[].{field,
     // confidence, methods[]}` is the full CDX evidence model;

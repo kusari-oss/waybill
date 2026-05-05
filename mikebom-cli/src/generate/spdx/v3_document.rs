@@ -138,16 +138,16 @@ pub fn build_document(
             }
         ]);
     }
-    // Milestone 073 — source identifiers ride
+    // Milestone 073 — identifiers ride
     // `Element.externalIdentifier[]` natively per
-    // `contracts/source-identifiers-annotation.md` C-1 SPDX 3 (the
+    // `contracts/identifiers-annotation.md` C-1 SPDX 3 (the
     // open-typed multi-identifier model handles BOTH built-in and
     // user-defined schemes uniformly — no separate annotation
     // envelope needed on the SPDX 3 side). Order: auto-detected
     // first, then manual in supply order (per FR-009 / VR-008).
-    if !scan.source_identifiers.is_empty() {
+    if !scan.identifiers.is_empty() {
         let id_entries: Vec<Value> = scan
-            .source_identifiers
+            .identifiers
             .iter()
             .map(|id| {
                 let mut entry = json!({
@@ -158,7 +158,7 @@ pub fn build_document(
                 if let Some(label) = id.source_label.as_deref() {
                     entry["comment"] = json!(label);
                 } else {
-                    entry["comment"] = json!("manual --with-source");
+                    entry["comment"] = json!("manual identifier flag");
                 }
                 entry
             })

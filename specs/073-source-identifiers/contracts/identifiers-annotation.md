@@ -1,6 +1,8 @@
-# Contract — `mikebom:source-identifiers` per-format carrier shapes
+# Contract — `mikebom:identifiers` per-format carrier shapes
 
-This contract specifies how source identifiers are carried in each of mikebom's three output formats. Per Constitution Principle V, **standards-native carriers take precedence**. The `mikebom:source-identifiers` annotation is the documented exception path for user-defined namespaces only.
+> **Rename note (post-implementation, pre-merge)**: this milestone originally drafted the feature as "source identifiers" with a `mikebom:source-identifiers` annotation key. Both names were generalized to "identifiers" / `mikebom:identifiers` before merge — same semantic, broader scope. The CLI flag was also refactored from `--with-source <scheme>:<value>` to dedicated flags (`--repo`, `--git-ref`, `--image-id`, `--attestation`, `--id <scheme>=<value>`). All references below have been updated.
+
+This contract specifies how identifiers are carried in each of mikebom's three output formats. Per Constitution Principle V, **standards-native carriers take precedence**. The `mikebom:identifiers` annotation is the documented exception path for user-defined namespaces only.
 
 ## C-1 — Built-in identifier carriers (standards-native)
 
@@ -28,7 +30,7 @@ For each emitted built-in identifier, the carrier per format:
         {
           "type": "attestation",
           "url": "https://example.org/att/build-42",
-          "comment": "manual --with-source"
+          "comment": "manual identifier flag"
         }
       ]
     }
@@ -113,7 +115,7 @@ SPDX 3's multi-identifier model handles every built-in scheme + arbitrary user-d
 
 ## C-2 — User-defined identifier carrier (the `mikebom:*` exception)
 
-Per Constitution Principle V's documented-exception path: user-defined identifier schemes (matching FR-004 regex but NOT in the built-in registry) have no native carrier on CDX or SPDX 2.3. They ride a single document-level `mikebom:source-identifiers` annotation, wrapped in milestone-071's `MikebomAnnotationCommentV1` envelope.
+Per Constitution Principle V's documented-exception path: user-defined identifier schemes (matching FR-004 regex but NOT in the built-in registry) have no native carrier on CDX or SPDX 2.3. They ride a single document-level `mikebom:identifiers` annotation, wrapped in milestone-071's `MikebomAnnotationCommentV1` envelope.
 
 ### CDX 1.6
 
@@ -124,7 +126,7 @@ Per Constitution Principle V's documented-exception path: user-defined identifie
   "metadata": {
     "properties": [
       {
-        "name": "mikebom:source-identifiers",
+        "name": "mikebom:identifiers",
         "value": "[{\"scheme\":\"acme_corp_id\",\"value\":\"abc123\"},{\"scheme\":\"internal_ticket\",\"value\":\"PROJ-456\"}]"
       }
     ]
@@ -145,7 +147,7 @@ Document-level `annotations[]` with the `MikebomAnnotationCommentV1` envelope:
       "annotator": "Tool: mikebom-0.1.0-alpha.16",
       "annotationDate": "2026-05-05T12:00:00Z",
       "annotationType": "OTHER",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-identifiers\",\"value\":[{\"scheme\":\"acme_corp_id\",\"value\":\"abc123\"}]}"
+      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:identifiers\",\"value\":[{\"scheme\":\"acme_corp_id\",\"value\":\"abc123\"}]}"
     }
   ]
 }
@@ -157,7 +159,7 @@ User-defined identifiers emit via the SPDX 3 native `Element.externalIdentifier[
 
 ## C-3 — Catalog row registration
 
-A new `ParityExtractor` row at `mikebom-cli/src/parity/extractors/mod.rs` for `mikebom:source-identifiers`:
+A new `ParityExtractor` row at `mikebom-cli/src/parity/extractors/mod.rs` for `mikebom:identifiers`:
 
 - **Row ID**: `C47` (next free C-section row after milestone-072's C46).
 - **Directionality**: `SymmetricEqual`. CDX `properties[].value` (string-encoded JSON array) and SPDX 2.3 envelope's `value` (real JSON array) and SPDX 3 native shape MUST canonicalize to the same `BTreeSet<String>` of canonical-JSON entries via the milestone-071 `canonicalize_for_compare` helper.
@@ -172,11 +174,11 @@ Per FR-009, the array order in each carrier is deterministic:
 - SPDX 2.3 main-module `Package.externalRefs[]`: same ordering.
 - SPDX 2.3 `creationInfo.creators[]`: same ordering.
 - SPDX 3 `Element.externalIdentifier[]`: same ordering.
-- `mikebom:source-identifiers` envelope's `value` array: sorted lex by `(scheme, value)` (annotations have unordered semantics; lex sort gives a stable serialization).
+- `mikebom:identifiers` envelope's `value` array: sorted lex by `(scheme, value)` (annotations have unordered semantics; lex sort gives a stable serialization).
 
 ## C-5 — Stability commitment
 
 - The per-format carrier choices are stable post-073.
-- The `mikebom:source-identifiers` envelope shape (JSON array of `{scheme, value, source_label}` objects) is stable for `algo: v1`-style schema. Future fields are skip_serializing_if-gated.
+- The `mikebom:identifiers` envelope shape (JSON array of `{scheme, value, source_label}` objects) is stable for `algo: v1`-style schema. Future fields are skip_serializing_if-gated.
 - The C47 catalog row directionality is stable; future user-defined schemes don't change the directionality.
 - SPDX 2.3 `Package.externalRefs[].referenceType` accepts the scheme name verbatim — if SPDX 2.3 ever registers a conflicting type name, mikebom adopts the registered name and emits a migration note (similar to the user-defined-scheme migration path).

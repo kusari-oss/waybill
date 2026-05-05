@@ -1,4 +1,6 @@
-# Specification Quality Checklist: Source identifiers — built-in + user-defined
+# Specification Quality Checklist: Identifiers — built-in + user-defined
+
+> **Rename note (2026-05-03)**: see spec.md's prepended note. Renamed pre-merge from "source identifiers" + `--with-source` to "identifiers" + dedicated CLI flags.
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-05-05
