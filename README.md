@@ -409,9 +409,9 @@ ships two complementary mechanisms.
 ### Stable identifiers (auto-detected)
 
 mikebom attaches scheme-prefixed identifiers to every SBOM it emits.
-The four built-in schemes (`repo:`, `git:`, `image:`, `attestation:`)
-are auto-detected when possible; any operator-defined scheme like
-`acme_corp_id:` rides through unchanged.
+The five built-in schemes (`repo:`, `git:`, `image:`, `attestation:`,
+`subject:`) are auto-detected when possible; any operator-defined
+scheme like `acme_corp_id:` rides through unchanged.
 
 **Source-tier and build-tier auto-detect from a git checkout.**
 No flags required. `repo:` comes from `git remote get-url` (origin
@@ -452,9 +452,65 @@ jq '.metadata.component.externalReferences[]
 
 Manual overrides (`--repo`, `--git-ref`, `--image-id`,
 `--attestation`, `--id <scheme>=<value>`) win over auto-detect on a
-per-scheme basis. See
-[`docs/reference/identifiers.md`](docs/reference/identifiers.md) for
-the full wire format and per-format extraction recipes.
+per-scheme basis.
+
+**Credentials in git remote URLs are stripped by default.** If your
+`origin` is configured with embedded credentials
+(`https://USER:TOKEN@github.com/...`, common in CI runners using
+GitHub App tokens or deploy tokens), the userinfo is stripped before
+the URL is embedded in the SBOM — no token leakage in published
+artifacts. Pass `--keep-credentials-in-identifiers` to opt out for
+non-sensitive credentials. Manual flag values are emitted verbatim;
+the operator typed them, the tool respects that.
+
+See [`docs/reference/identifiers.md`](docs/reference/identifiers.md)
+for the full wire format and per-format extraction recipes.
+
+### Cross-tier handshake via `subject:`
+
+The build-tier `subject:` identifier completes the content-addressable
+correlation chain. When `mikebom trace run` produces an output binary
+with hash `X`, the build SBOM body carries `subject:sha256:X` as a
+first-class identifier. When the resulting image is scanned with
+`mikebom sbom scan --image foo:v1`, the image SBOM carries
+`image:foo:v1@sha256:X` — the `X` portion matches by string.
+
+```bash
+# Build (auto-detects subject:sha256:X from in-toto attestation subjects)
+mikebom trace run --signing-key ./key \
+    --sbom-output build.cdx.json \
+    -- docker build -t my-app:v1 .
+
+# Image (auto-detects image:my-app:v1@sha256:X)
+mikebom sbom scan --image my-app:v1 --output image.cdx.json
+
+# External tool walks: image's image: digest matches build's subject: hex →
+# build SBOM is found by string match, no mikebom resolver needed.
+```
+
+External SBOM-store consumers walk `image-SBOM.components[].hashes[].sha256
+== X → SBOM whose subject:sha256:X matches → that build SBOM's git: commit
+→ matching source SBOM` purely by string match — no mikebom-side resolver.
+
+### Per-component user-defined identifiers
+
+Attach internal asset IDs (or any operator-scoped identifier) to
+specific components via `--component-id <PURL>=<scheme>:<value>`.
+Identifiers ride standards-native per-component carriers (CDX
+`components[].properties[]`, SPDX 2.3 `Package.externalRefs[PERSISTENT-ID]`,
+SPDX 3 `Element.externalIdentifier[]`) — any SBOM-aware tool reads
+them as ordinary first-class data.
+
+```bash
+mikebom sbom scan --path . \
+    --component-id "pkg:cargo/serde@1.0.0=kusari-id:asset-shared-lib-v2" \
+    --component-id "pkg:cargo/myapp@0.5.1=acme-asset:myapp-prod-001"
+```
+
+Built-in scheme names (`repo`, `git`, `image`, `attestation`, `subject`)
+are reserved for the document level and rejected at parse time on
+`--component-id`. The flag is repeatable; selectors that match zero
+components log a warning and the scan continues.
 
 ### Cross-tier SBOM binding (`--bind-to-source`)
 
@@ -535,7 +591,7 @@ witness-v0.1 attestation format (compatible with `sbomit generate`).
   decisions at the cross-cutting level.
 - **[Changelog](CHANGELOG.md)** — what shipped in which release.
 - **[Specs](specs/)** — per-milestone planning specs
-  (001 build-trace pipeline → 074 build-tier identifier auto-detect).
+  (001 build-trace pipeline → 076 subject + per-component identifiers).
 
 ## Workspace layout
 
