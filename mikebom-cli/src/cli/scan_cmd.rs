@@ -346,6 +346,47 @@ pub struct ScanArgs {
     /// values are emitted verbatim regardless of this flag.
     #[arg(long)]
     pub keep_credentials_in_identifiers: bool,
+
+    /// Attach a `subject:` identifier declaring "this SBOM describes
+    /// the artifact with the given content hash." Format:
+    /// `sha256:<64-lowercase-hex>` or `sha512:<128-lowercase-hex>`.
+    /// Repeatable for multi-subject SBOMs. On build-tier scans
+    /// (`mikebom trace run`), subject identifiers are auto-detected
+    /// from the in-toto attestation envelope's subject set; manual
+    /// flags augment auto-detected entries (deduplicated by exact
+    /// match per milestone 073). On source-tier and image-tier
+    /// scans, no auto-detect runs; manual flags are the only source
+    /// of `subject:` identifiers.
+    #[arg(
+        long = "subject-hash",
+        action = clap::ArgAction::Append,
+        value_name = "ALGO:HEX",
+    )]
+    pub subject_hash: Vec<String>,
+
+    /// Attach a user-defined identifier to a specific component in the
+    /// emitted SBOM. The PURL must byte-equal a component's `purl`
+    /// field in the emitted output; the SCHEME must be a non-built-in
+    /// scheme name (built-in schemes `repo`, `git`, `image`,
+    /// `attestation`, `subject` are reserved for document-level use).
+    /// Examples:
+    ///
+    /// `--component-id "pkg:cargo/serde@1.0.0=kusari-id:asset-shared-lib-v2"`
+    ///
+    /// `--component-id "pkg:cargo/myapp@0.5.1=acme-asset:myapp-prod-001"`
+    ///
+    /// Repeatable. If a selector PURL matches multiple components
+    /// (same PURL across different bom-ref values), the identifier is
+    /// attached to ALL matching components. If a selector matches
+    /// zero components, the scan logs a warning and continues.
+    #[arg(
+        long = "component-id",
+        action = clap::ArgAction::Append,
+        value_name = "PURL=SCHEME:VALUE",
+        value_parser = mikebom::binding::identifiers::component_id::parse_component_id_flag,
+    )]
+    pub component_id:
+        Vec<mikebom::binding::identifiers::component_id::ComponentIdentifierFlag>,
 }
 
 /// Parse a `--id <scheme>=<value>` flag for a user-defined identifier.
@@ -446,6 +487,22 @@ fn assemble_manual_identifiers(args: &ScanArgs) -> Vec<mikebom::binding::identif
                 error = %e,
                 raw = %raw,
                 "failed to parse manual --attestation identifier; skipping"
+            ),
+        }
+    }
+    // Milestone 076 — manual --subject-hash flags. Format: `algo:hex`.
+    // Wrap each value into a full `subject:<algo>:<hex>` shape and
+    // route through `Identifier::parse` so the soft-fail path
+    // (downgrade to UserDefined per FR-005) handles malformed input
+    // identically to other built-ins.
+    for sh in &args.subject_hash {
+        let raw = format!("subject:{sh}");
+        match mikebom::binding::identifiers::Identifier::parse(&raw) {
+            Ok(id) => out.push(id),
+            Err(e) => tracing::warn!(
+                error = %e,
+                raw = %raw,
+                "failed to parse manual --subject-hash identifier; skipping"
             ),
         }
     }
@@ -1439,6 +1496,10 @@ pub async fn execute(
         // Milestone 073: identifiers — populated by T013's
         // resolution pipeline before this struct is constructed.
         identifiers: &identifiers,
+        // Milestone 076: per-component user-defined identifiers from
+        // `--component-id <PURL>=<scheme>:<value>` flags. Threaded to
+        // per-format emitters which match against `components[].purl`.
+        component_identifiers: &args.component_id,
     };
     let output_cfg = OutputConfig {
         mikebom_version: env!("CARGO_PKG_VERSION"),
@@ -2041,6 +2102,8 @@ mod tests {
             attestation: None,
             id: vec![],
             keep_credentials_in_identifiers: false,
+            subject_hash: vec![],
+            component_id: vec![],
         }
     }
 

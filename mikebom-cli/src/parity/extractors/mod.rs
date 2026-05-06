@@ -13,6 +13,37 @@
 //! otherwise. Per spec FR-005a / clarification Q2: the catalog
 //! is the source of truth; the extractor table is the executable
 //! interpretation; mismatches surface at the pre-PR gate.
+//!
+//! ## Milestone 076 — `subject:` + per-component `--component-id`
+//!
+//! Both new identifier surfaces ride **standards-native carriers** per
+//! Constitution Principle V (native-precedence) and therefore do NOT
+//! introduce new catalog rows:
+//!
+//! - **`subject:` document-level identifier** (built-in scheme, fifth
+//!   in the registry): emits via the same CDX
+//!   `metadata.component.externalReferences[type:attestation]` carrier
+//!   as milestone 073's `attestation:` identifiers, plus SPDX 2.3
+//!   main-module `Package.externalRefs[PERSISTENT-ID]` (via existing
+//!   milestone-073 logic) + redundant `creationInfo.creators[]` text
+//!   line, plus SPDX 3 `SpdxDocument.externalIdentifier[]`. No
+//!   `mikebom:*` annotation introduced. The CDX externalReferences
+//!   union with milestone 073's `attestation:` IRI emissions is
+//!   distinguishable by `url` shape (digest vs IRI).
+//!
+//! - **Per-component user-defined identifiers** (via
+//!   `--component-id <PURL>=<scheme>:<value>`): emit via CDX
+//!   `components[].properties[]` (matching mikebom's existing
+//!   per-component property emission pattern), SPDX 2.3
+//!   `Package.externalRefs[PERSISTENT-ID]`, and SPDX 3
+//!   `Element.externalIdentifier[]`. These are NOT envelope-wrapped
+//!   under `mikebom:identifiers` (C47); they ride the native
+//!   per-component identifier carriers directly. No catalog row
+//!   needed — the surfaces are already type-checked at the format-
+//!   shape level by each format's existing schema-validation tests.
+//!
+//! See `specs/076-subject-component-ids/contracts/{subject-identifier,
+//! per-component-id}.md` for the per-format wire contracts.
 
 mod cdx;
 mod common;

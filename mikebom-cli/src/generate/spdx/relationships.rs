@@ -293,6 +293,7 @@ mod tests {
             scope_mode: crate::generate::ScopeMode::Artifact,
             source_document_binding: None,
             identifiers: &[],
+            component_identifiers: &[],
         }
     }
 

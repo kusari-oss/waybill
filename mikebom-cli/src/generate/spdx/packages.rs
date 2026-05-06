@@ -313,6 +313,12 @@ pub fn build_packages(
     // produce one document-level entry referenced many times.
     let mut extracted_by_id: BTreeMap<String, super::document::SpdxExtractedLicensingInfo> =
         BTreeMap::new();
+    // Milestone 076 — track per-component identifier matches so
+    // unmatched selectors warn after the loop completes (FR-010).
+    let mut match_counts: BTreeMap<usize, usize> = BTreeMap::new();
+    for i in 0..artifacts.component_identifiers.len() {
+        match_counts.insert(i, 0);
+    }
     for c in artifacts.components {
         let (pkg, decl_extracted, conc_extracted) = component_to_package(
             c,
@@ -322,6 +328,8 @@ pub fn build_packages(
             annotator,
             date,
             artifacts.identifiers,
+            artifacts.component_identifiers,
+            &mut match_counts,
         );
         packages.push(pkg);
         if let Some(info) = decl_extracted {
@@ -331,6 +339,22 @@ pub fn build_packages(
             extracted_by_id.entry(info.license_id.clone()).or_insert(info);
         }
     }
+    // Milestone 076 — warn for unmatched per-component selectors.
+    for (idx, count) in &match_counts {
+        if *count == 0 {
+            let flag = &artifacts.component_identifiers[*idx];
+            tracing::warn!(
+                selector = %flag.selector_purl,
+                scheme = flag.scheme.as_str(),
+                value = flag.value.as_str(),
+                "--component-id selector `{}` matched zero components; \
+                 identifier `{}:{}` not attached",
+                flag.selector_purl,
+                flag.scheme.as_str(),
+                flag.value.as_str(),
+            );
+        }
+    }
     // BTreeMap iterates in license_id-sorted order, which gives
     // deterministic document output (FR-009 / SC-007).
     let extracted: Vec<super::document::SpdxExtractedLicensingInfo> =
@@ -338,6 +362,7 @@ pub fn build_packages(
     (packages, extracted)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn component_to_package(
     c: &ResolvedComponent,
     include_hashes: bool,
@@ -346,6 +371,8 @@ fn component_to_package(
     annotator: &str,
     date: &str,
     identifiers: &[mikebom::binding::identifiers::Identifier],
+    component_identifiers: &[mikebom::binding::identifiers::component_id::ComponentIdentifierFlag],
+    match_counts: &mut std::collections::BTreeMap<usize, usize>,
 ) -> (
     SpdxPackage,
     Option<super::document::SpdxExtractedLicensingInfo>,
@@ -423,6 +450,35 @@ fn component_to_package(
                 });
             }
         }
+    }
+
+    // Milestone 076 — per-component user-defined identifiers from
+    // `--component-id <PURL>=<scheme>:<value>` flags. Append matching
+    // entries to this package's `externalRefs[]` as PERSISTENT-ID rows
+    // per FR-008 + research §2 + research §6 (lex-sort the new
+    // entries by `(scheme, value)`; pre-existing rows preserve their
+    // positions). Unlike the milestone-073 main-module-only block
+    // above, per-component identifiers attach to ANY package whose
+    // PURL matches a `--component-id` selector — no main-module gate.
+    let mut new_per_component_refs: Vec<(String, String)> = Vec::new();
+    for (idx, flag) in component_identifiers.iter().enumerate() {
+        if flag.selector_purl == c.purl.as_str() {
+            *match_counts.entry(idx).or_insert(0) += 1;
+            new_per_component_refs.push((
+                flag.scheme.as_str().to_string(),
+                flag.value.as_str().to_string(),
+            ));
+        }
+    }
+    new_per_component_refs.sort();
+    new_per_component_refs.dedup();
+    for (ref_type, locator) in new_per_component_refs {
+        external_refs.push(SpdxExternalRef {
+            category: SpdxExternalRefCategory::PersistentId,
+            ref_type,
+            locator,
+            comment: None,
+        });
     }
 
     let supplier = c.supplier.as_deref().map(supplier_string);
@@ -564,6 +620,7 @@ mod tests {
             scope_mode: crate::generate::ScopeMode::Artifact,
             source_document_binding: None,
             identifiers: &[],
+            component_identifiers: &[],
         }
     }
 

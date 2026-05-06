@@ -80,12 +80,37 @@ pub fn build_document(
         CREATION_INFO_ID,
     );
 
+    // Milestone 076 — track per-component identifier matches so
+    // unmatched selectors warn after build_packages completes
+    // (FR-010 / VR-076-004).
+    let mut match_counts: std::collections::BTreeMap<usize, usize> =
+        std::collections::BTreeMap::new();
+    for i in 0..scan.component_identifiers.len() {
+        match_counts.insert(i, 0);
+    }
     let (mut packages, _) = super::v3_packages::build_packages(
         scan.components,
         &doc_iri,
         CREATION_INFO_ID,
         &agent_build.attachments,
+        scan.component_identifiers,
+        &mut match_counts,
     );
+    for (idx, count) in &match_counts {
+        if *count == 0 {
+            let flag = &scan.component_identifiers[*idx];
+            tracing::warn!(
+                selector = %flag.selector_purl,
+                scheme = flag.scheme.as_str(),
+                value = flag.value.as_str(),
+                "--component-id selector `{}` matched zero components; \
+                 identifier `{}:{}` not attached",
+                flag.selector_purl,
+                flag.scheme.as_str(),
+                flag.value.as_str(),
+            );
+        }
+    }
 
     // Choose root element. If no Package matches the scan target
     // and the scan is non-empty, fall back to the first Package.

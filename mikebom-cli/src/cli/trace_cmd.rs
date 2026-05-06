@@ -26,6 +26,10 @@ pub struct TraceCommand {
     pub command: TraceSubcommand,
 }
 
+// Milestone 076 — `RunArgs` grows two new repeatable `Vec<...>` fields
+// (`subject_hash`, `component_id`); see `sbom_cmd.rs` for the same
+// rationale.
+#[allow(clippy::large_enum_variant)]
 #[derive(Subcommand)]
 pub enum TraceSubcommand {
     /// [EXPERIMENTAL, Linux-only] Capture a build trace via eBPF and produce an in-toto attestation

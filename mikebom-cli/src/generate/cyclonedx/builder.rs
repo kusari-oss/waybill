@@ -72,6 +72,12 @@ pub struct CycloneDxBuilder {
     /// deduplicated and ordered by the resolution pipeline in
     /// `cli/scan_cmd.rs::resolve_identifiers`.
     identifiers: Vec<mikebom::binding::identifiers::Identifier>,
+    /// Milestone 076 — per-component user-defined identifiers from
+    /// `--component-id <PURL>=<scheme>:<value>` flags. Threaded into
+    /// `build_components` so each per-component `properties[]` array
+    /// gains entries for matching PURLs.
+    component_identifiers:
+        Vec<mikebom::binding::identifiers::component_id::ComponentIdentifierFlag>,
 }
 
 impl CycloneDxBuilder {
@@ -84,6 +90,7 @@ impl CycloneDxBuilder {
             go_graph_completeness_reason: None,
             source_document_binding: None,
             identifiers: Vec::new(),
+            component_identifiers: Vec::new(),
         }
     }
 
@@ -109,6 +116,21 @@ impl CycloneDxBuilder {
         ids: Vec<mikebom::binding::identifiers::Identifier>,
     ) -> Self {
         self.identifiers = ids;
+        self
+    }
+
+    /// Milestone 076 — record per-component user-defined identifiers
+    /// from `--component-id <PURL>=<scheme>:<value>` flags. Each
+    /// matching component gets the identifier appended to its
+    /// `properties[]` array per research §2 + FR-008. Zero-match
+    /// selectors warn and the scan continues per FR-010.
+    pub fn with_component_identifiers(
+        mut self,
+        ids: Vec<
+            mikebom::binding::identifiers::component_id::ComponentIdentifierFlag,
+        >,
+    ) -> Self {
+        self.component_identifiers = ids;
         self
     }
 
@@ -164,7 +186,30 @@ impl CycloneDxBuilder {
             self.source_document_binding.as_ref(),
             &self.identifiers,
         );
-        let cdx_components = self.build_components(components)?;
+        // Milestone 076 — track per-component identifier matches so
+        // we can emit a warn for any selector that matched zero
+        // components (FR-010 / VR-076-004).
+        let mut match_counts: std::collections::BTreeMap<usize, usize> =
+            std::collections::BTreeMap::new();
+        for i in 0..self.component_identifiers.len() {
+            match_counts.insert(i, 0);
+        }
+        let cdx_components = self.build_components(components, &mut match_counts)?;
+        for (idx, count) in &match_counts {
+            if *count == 0 {
+                let flag = &self.component_identifiers[*idx];
+                tracing::warn!(
+                    selector = %flag.selector_purl,
+                    scheme = flag.scheme.as_str(),
+                    value = flag.value.as_str(),
+                    "--component-id selector `{}` matched zero components; \
+                     identifier `{}:{}` not attached",
+                    flag.selector_purl,
+                    flag.scheme.as_str(),
+                    flag.value.as_str(),
+                );
+            }
+        }
         let compositions =
             build_compositions(integrity, &target_ref, components, complete_ecosystems);
         let deps = build_dependencies(components, relationships, &target_ref);
@@ -206,6 +251,7 @@ impl CycloneDxBuilder {
     fn build_components(
         &self,
         components: &[ResolvedComponent],
+        match_counts: &mut std::collections::BTreeMap<usize, usize>,
     ) -> anyhow::Result<serde_json::Value> {
         // Milestones 053 (Go) + 064 (cargo) FR-001a: a main-module is
         // emitted via CDX `metadata.component` per Constitution
@@ -642,6 +688,31 @@ impl CycloneDxBuilder {
                 properties.push(json!({
                     "name": key,
                     "value": value_str,
+                }));
+            }
+
+            // Milestone 076: per-component user-defined identifiers
+            // from `--component-id <PURL>=<scheme>:<value>` flags.
+            // Match by byte-equality of `purl` per research §5; append
+            // matching entries AFTER pre-existing properties (research
+            // §6 — preserve original positions, lex-sort the new
+            // entries by `(scheme, value)`).
+            let mut new_per_component_props: Vec<(String, String)> = Vec::new();
+            for (idx, flag) in self.component_identifiers.iter().enumerate() {
+                if flag.selector_purl == component.purl.as_str() {
+                    *match_counts.entry(idx).or_insert(0) += 1;
+                    new_per_component_props.push((
+                        flag.scheme.as_str().to_string(),
+                        flag.value.as_str().to_string(),
+                    ));
+                }
+            }
+            new_per_component_props.sort();
+            new_per_component_props.dedup();
+            for (name, value) in new_per_component_props {
+                properties.push(json!({
+                    "name": name,
+                    "value": value,
                 }));
             }
 

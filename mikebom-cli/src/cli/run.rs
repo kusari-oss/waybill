@@ -145,6 +145,36 @@ pub struct RunArgs {
     #[arg(long)]
     pub keep_credentials_in_identifiers: bool,
 
+    /// Attach a `subject:` identifier declaring "this SBOM describes
+    /// the artifact with the given content hash." Format:
+    /// `sha256:<64-lowercase-hex>` or `sha512:<128-lowercase-hex>`.
+    /// Repeatable. On `mikebom trace run`, subject identifiers are
+    /// auto-detected from the in-toto attestation envelope's subject
+    /// set; manual flags augment auto-detected entries (deduplicated
+    /// by exact match per milestone 073).
+    #[arg(
+        long = "subject-hash",
+        action = clap::ArgAction::Append,
+        value_name = "ALGO:HEX",
+    )]
+    pub subject_hash: Vec<String>,
+
+    /// Attach a user-defined identifier to a specific component in the
+    /// emitted SBOM. The PURL must byte-equal a component's `purl`
+    /// field in the emitted output; the SCHEME must be a non-built-in
+    /// scheme name (built-in schemes `repo`, `git`, `image`,
+    /// `attestation`, `subject` are reserved for document-level use).
+    /// See `mikebom sbom scan --help` for full examples. Repeatable.
+    /// Zero-match selectors warn and the scan continues.
+    #[arg(
+        long = "component-id",
+        action = clap::ArgAction::Append,
+        value_name = "PURL=SCHEME:VALUE",
+        value_parser = mikebom::binding::identifiers::component_id::parse_component_id_flag,
+    )]
+    pub component_id:
+        Vec<mikebom::binding::identifiers::component_id::ComponentIdentifierFlag>,
+
     /// Directories to scan for artifact files after the traced command
     /// exits. Forwarded verbatim to `mikebom trace capture`. See the
     /// `--artifact-dir` flag there for details.
@@ -248,12 +278,40 @@ pub async fn execute(args: RunArgs) -> anyhow::Result<()> {
     };
     super::scan::execute(scan_args).await?;
 
+    // Milestone 076 — read the attestation file the trace pipeline
+    // just produced, extract its `subject[]` array (the in-toto
+    // ResourceDescriptor list), and synthesize `subject:` identifiers
+    // per FR-002. Subjects without sha256 digests skip with an
+    // info-log; subjects with sha256 emit `subject:sha256:<hex>`
+    // identifiers in input order. Append AFTER milestone-074's
+    // auto-detected `repo:` / `git:` entries per data-model.md
+    // "Updated `auto_detect_build_tier_identifiers` flow".
+    let mut auto_detected_ids = auto_detected_ids;
+    match crate::attestation::serializer::read_attestation(&args.attestation_output) {
+        Ok(statement) => {
+            let subject_ids =
+                mikebom::binding::identifiers::auto_detect::subject_identifiers_from_attestation_subjects(
+                    &statement.subject,
+                );
+            auto_detected_ids.extend(subject_ids);
+        }
+        Err(e) => {
+            tracing::info!(
+                error = %e,
+                attestation = %args.attestation_output.display(),
+                "could not re-read attestation for build-tier subject \
+                 auto-detect; skipping subject: identifier auto-emit"
+            );
+        }
+    }
+
     // Milestone 073/074 — assemble manual identifiers from dedicated
-    // flags. Order: repo-or-git → image → attestation → user-defined
-    // --id flags. Then route through the shared `resolve_identifiers`
-    // helper (milestone 074 T005 refactor) which applies the FR-006
-    // manual-wins precedence + dedup-by-(scheme, value) per scheme
-    // — supporting the build-tier two-auto-detected case.
+    // flags. Order: repo-or-git → image → attestation → --subject-hash
+    // → user-defined --id flags. Then route through the shared
+    // `resolve_identifiers` helper (milestone 074 T005 refactor) which
+    // applies the FR-006 manual-wins precedence + dedup-by-(scheme,
+    // value) per scheme — supporting the build-tier multi-auto-detected
+    // case (now including auto-detected `subject:` from milestone 076).
     let mut manual_ids: Vec<mikebom::binding::identifiers::Identifier> = Vec::new();
     if let Some(repo_url) = args.repo.as_deref() {
         let raw = if let Some(rev) = args.git_ref.as_deref() {
@@ -292,6 +350,21 @@ pub async fn execute(args: RunArgs) -> anyhow::Result<()> {
             ),
         }
     }
+    // Milestone 076 — manual --subject-hash flags. Wrap each
+    // `<algo>:<hex>` value into a full `subject:<algo>:<hex>` shape
+    // before parsing so the soft-fail-to-UserDefined path triggers
+    // identically to other built-ins on validation failure (FR-005).
+    for sh in &args.subject_hash {
+        let raw = format!("subject:{sh}");
+        match mikebom::binding::identifiers::Identifier::parse(&raw) {
+            Ok(id) => manual_ids.push(id),
+            Err(e) => tracing::warn!(
+                error = %e,
+                raw = %raw,
+                "failed to parse manual --subject-hash identifier on trace; skipping"
+            ),
+        }
+    }
     for id in &args.id {
         manual_ids.push(id.clone());
     }
@@ -316,6 +389,9 @@ pub async fn execute(args: RunArgs) -> anyhow::Result<()> {
         vex_overrides: None,
         json: false,
         identifiers: assembled_ids,
+        // Milestone 076 — forward per-component user-defined
+        // identifiers for the CDX build-tier emission path.
+        component_identifiers: args.component_id.clone(),
     };
     // Trace's one-shot `run` wrapper doesn't thread the global --offline
     // flag through (yet). Default to online — the enrichment doesn't

@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-05-05
+Auto-generated from all feature plans. Last updated: 2026-05-06
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -53,6 +53,8 @@ Auto-generated from all feature plans. Last updated: 2026-05-05
 - N/A — identifiers live in emitted SBOMs only; no caches, no persistence. (074-build-tier-id-autodetect)
 - Rust stable (workspace toolchain inherited from milestones 001–074; no nightly). + Existing only — the `url = "2.5.8"` crate is already in the dependency closure (transitive via `reqwest`); this milestone promotes it to a direct workspace dependency. No new transitive deps. Plus `tracing` (info-level logs), `anyhow` (error propagation), `clap` (the new boolean flag — `Args`-derive picks it up). **No additions to the dependency tree at the lockfile level.** (075-strip-id-credentials)
 - N/A — sanitization is a pure-function transformation; no caches, no persistence. (075-strip-id-credentials)
+- Rust stable (workspace toolchain inherited from milestones 001–075; no nightly). + Existing only — `serde`/`serde_json`, `tracing`, `anyhow`, `clap` (the two new flags via derive), `thiserror`. The build-tier subject extraction reuses the in-toto witness-v0.1 subject set the existing trace pipeline already collects in-process; no new subprocess calls, no new I/O, no new crates. **No additions to the dependency tree at the lockfile level.** (076-subject-component-ids)
+- N/A — identifier emission is a pure metadata transform; no caches, no persistence. (076-subject-component-ids)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -115,9 +117,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 076-subject-component-ids: Added Rust stable (workspace toolchain inherited from milestones 001–075; no nightly). + Existing only — `serde`/`serde_json`, `tracing`, `anyhow`, `clap` (the two new flags via derive), `thiserror`. The build-tier subject extraction reuses the in-toto witness-v0.1 subject set the existing trace pipeline already collects in-process; no new subprocess calls, no new I/O, no new crates. **No additions to the dependency tree at the lockfile level.**
 - 075-strip-id-credentials: Added Rust stable (workspace toolchain inherited from milestones 001–074; no nightly). + Existing only — the `url = "2.5.8"` crate is already in the dependency closure (transitive via `reqwest`); this milestone promotes it to a direct workspace dependency. No new transitive deps. Plus `tracing` (info-level logs), `anyhow` (error propagation), `clap` (the new boolean flag — `Args`-derive picks it up). **No additions to the dependency tree at the lockfile level.**
 - 074-build-tier-id-autodetect: Added Rust stable (workspace toolchain inherited from milestones 001–073; no nightly required for this user-space-only work). + Existing only — `std::process::Command` for the new `git rev-parse HEAD` shell-out (same pattern as the existing `git remote get-url` calls at `auto_detect.rs:32`+ and as milestone 053's `git describe` ladder), `tracing` for info/warn logs, `anyhow` for error propagation. **No new `Cargo.toml` deps.**
-- 073-source-identifiers: Added Rust stable (workspace toolchain inherited from milestones 001–072; no nightly). + Existing only — `serde`/`serde_json` (envelope decode), `tracing` (info/warn logs), `anyhow` (CLI error propagation), `clap` (`ValueEnum` not needed — `Vec<String>` with manual validation is fine since the scheme syntax is regex-bounded; alternatively a custom `Identifier` newtype that implements `FromStr` and clap's `Args`-derive picks it up). `Command::new("git")` for the auto-detection shell-out (same pattern as milestone 053's `git describe`). No new `Cargo.toml` deps.
 
 
 <!-- MANUAL ADDITIONS START -->

@@ -72,6 +72,15 @@ pub struct GenerateArgs {
     /// `generate::execute`. Default empty.
     #[arg(skip)]
     pub identifiers: Vec<mikebom::binding::identifiers::Identifier>,
+
+    /// Milestone 076: per-component user-defined identifiers from
+    /// `--component-id <PURL>=<scheme>:<value>` flags on
+    /// `mikebom trace run`. Threaded through to the CycloneDX builder
+    /// so per-component matching can fire on the emitted build-tier
+    /// SBOM.
+    #[arg(skip)]
+    pub component_identifiers:
+        Vec<mikebom::binding::identifiers::component_id::ComponentIdentifierFlag>,
 }
 
 pub async fn execute(args: GenerateArgs, offline: bool) -> anyhow::Result<()> {
@@ -145,7 +154,12 @@ pub async fn execute(args: GenerateArgs, offline: bool) -> anyhow::Result<()> {
     let builder = CycloneDxBuilder::new(cdx_config)
         // Milestone 073 — propagate manual identifier flags to the
         // builder. Build-tier scans don't auto-detect; manual only.
-        .with_identifiers(args.identifiers.clone());
+        .with_identifiers(args.identifiers.clone())
+        // Milestone 076 — propagate per-component user-defined
+        // identifiers so build-tier `mikebom trace run` honors
+        // `--component-id` matches against the emitted CDX
+        // `components[]`.
+        .with_component_identifiers(args.component_identifiers.clone());
     let bom = builder.build(
         &components,
         &relationships,

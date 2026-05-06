@@ -705,17 +705,150 @@ preserved.
 
 ## Section 8 — Milestone 074 status
 
-Milestone 074 (this milestone) closes the symmetry gap between
-source-tier, image-tier, and build-tier auto-detection. Build-tier
-scans now auto-detect `repo:` and `git:` identifiers from the
-invocation cwd's git state — see §4.4 above and §4.5's cross-tier
-correlation recipe.
+Milestone 074 closes the symmetry gap between source-tier, image-tier,
+and build-tier auto-detection. Build-tier scans now auto-detect
+`repo:` and `git:` identifiers from the invocation cwd's git state —
+see §4.4 above and §4.5's cross-tier correlation recipe.
 
 A future milestone will automate the cross-tier correlation itself
 (via a local SBOM index, OCI referrers, or external-registry
 resolvers — exact mechanism is yet to be scoped). The cross-tier
 identifier byte-equality this milestone guarantees is the deciding
 substrate that future milestone consumes.
+
+---
+
+## Section 9 — Milestone 076: subject identifier scheme + per-component identifiers
+
+Milestone 076 closes the cross-tier content-addressable correlation
+chain by adding two operator-visible features:
+
+1. **`subject:` document-level identifier scheme** (fifth built-in).
+2. **Per-component user-defined identifiers** via a new
+   `--component-id <PURL>=<scheme>:<value>` flag.
+
+### 9.1 `subject:` identifier scheme
+
+`subject:<algo>:<hex>` declares "this SBOM describes the artifact
+with the given content hash." Allowed algos: `sha256` (64 lowercase
+hex chars), `sha512` (128 lowercase hex chars). Other algos and
+mixed/uppercase hex soft-fail to `IdentifierKind::UserDefined` per
+FR-005.
+
+**Auto-detection** (build-tier only): on `mikebom trace run`, the
+trace's in-toto attestation envelope captures `subject[]` entries
+with digest maps. mikebom emits one `subject:sha256:<hex>` identifier
+per subject that has a sha256 digest in its map, in input order.
+Subjects without sha256 are skipped with `tracing::info!`. Multi-digest
+subjects (sha256 AND sha512) auto-emit sha256 only — the 2026-05-06
+clarification. Operators who need other algos pass
+`--subject-hash sha512:<hex>` manually.
+
+**Manual** (any tier): `--subject-hash <ALGO>:<HEX>` is repeatable on
+both `mikebom sbom scan` and `mikebom trace run`. Manual values
+augment auto-detected entries (deduplicated by `(scheme, value)` per
+milestone 073's resolution pipeline).
+
+**Per-format wire mapping**:
+
+| Format | Carrier | Shape |
+|---|---|---|
+| CDX 1.6 | `metadata.component.externalReferences[]` | `{type:"attestation", url:"sha256:<hex>", comment:"..."}` |
+| SPDX 2.3 | `Package.externalRefs[]` on main-module + `creationInfo.creators[]` redundant text | `{referenceCategory:"PERSISTENT-ID", referenceType:"subject", referenceLocator:"sha256:<hex>"}` |
+| SPDX 3 | `SpdxDocument.externalIdentifier[]` | `{type:"ExternalIdentifier", externalIdentifierType:"subject", identifier:"sha256:<hex>"}` |
+
+CDX reuses the `attestation` enum value — coexists with milestone-073
+attestation IRIs in the same array, distinguishable by `url` shape
+(digest vs IRI). The SPDX 2.3 main-module gate is the same one
+milestone 073 introduced; subject identifiers without a main-module
+package still appear in `creationInfo.creators[]` for fixture-agnostic
+discovery.
+
+### 9.2 Cross-tier digest handshake
+
+External SBOM-store consumers can correlate components across SBOMs
+purely by string match:
+
+```text
+image-SBOM.components[].hashes[].sha256 == X
+    →   build-SBOM with subject:sha256:X identifier
+        →   that build SBOM's git: identifier
+            →   matching source SBOM
+```
+
+No mikebom-side resolver. The `subject:` value's hex portion equals
+the digest portion of an `image:` value when they refer to the same
+artifact (FR-014).
+
+### 9.3 Per-component user-defined identifiers (`--component-id`)
+
+Attach an operator-defined identifier to a specific component:
+
+```bash
+mikebom sbom scan --path . \
+    --component-id "pkg:cargo/serde@1.0.0=kusari-id:asset-shared-lib-v2" \
+    --output out.cdx.json
+```
+
+The flag is repeatable. Built-in scheme names (`repo`, `git`,
+`image`, `attestation`, `subject`) are rejected at clap parse time
+per FR-009 — those slots are reserved for document-level use. PURL
+matching is byte-equality only (no glob, no version-range). Selectors
+matching multiple components attach the identifier to ALL matches
+(FR-011); selectors matching zero components emit a `tracing::warn!`
+and the scan continues (FR-010).
+
+**Per-format wire mapping**:
+
+| Format | Carrier | Shape |
+|---|---|---|
+| CDX 1.6 | `components[].properties[]` | `{name:"<scheme>", value:"<value>"}` |
+| SPDX 2.3 | `Package.externalRefs[]` | `{referenceCategory:"PERSISTENT-ID", referenceType:"<scheme>", referenceLocator:"<value>"}` |
+| SPDX 3 | `Element.externalIdentifier[]` | `{type:"ExternalIdentifier", externalIdentifierType:"<scheme>", identifier:"<value>"}` |
+
+Pre-existing per-component entries (`mikebom:not-linked`,
+`mikebom:shade-relocation`, the SPDX 2.3 `purl` externalRef, etc.)
+preserve their original positions; new `--component-id` entries
+append after, lex-sorted by `(scheme, value)` per research §6.
+
+### 9.4 jq decode recipes
+
+Extract `subject:` from a CDX build SBOM:
+
+```bash
+jq '.metadata.component.externalReferences[]
+    | select(.type == "attestation")
+    | select(.url | startswith("sha256:") or startswith("sha512:"))
+    | .url' out.cdx.json
+```
+
+Extract per-component user-defined identifiers from a CDX SBOM:
+
+```bash
+jq '.components[]
+    | {purl: .purl, ids: [.properties[]?
+        | select(.name | test("^[a-z][a-z0-9_-]*$"))
+        | select(.name | startswith("mikebom:") | not)
+        | {(.name): .value}]}' out.cdx.json
+```
+
+Same against SPDX 2.3:
+
+```bash
+jq '.packages[]
+    | {purl: (.externalRefs[] | select(.referenceType == "purl") | .referenceLocator),
+       ids: [.externalRefs[]
+        | select(.referenceCategory == "PERSISTENT-ID")
+        | {(.referenceType): .referenceLocator}]}' out.spdx.json
+```
+
+### 9.5 Backward compatibility
+
+All milestone-073/074/075 byte-identity goldens stay byte-identical:
+no fixture passes `--subject-hash` or `--component-id` today. New
+fixtures that exercise the new paths gain additive entries — the
+expected golden regen for this milestone. See quickstart.md for
+operator recipes covering all four user stories.
 
 ---
 

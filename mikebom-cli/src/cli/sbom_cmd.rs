@@ -16,6 +16,13 @@ pub struct SbomCommand {
     pub command: SbomSubcommand,
 }
 
+// Milestone 076 — `ScanArgs` grows two new repeatable `Vec<...>`
+// fields (`subject_hash`, `component_id`) and the variant size
+// diverges further from the smallest sibling. The enum stays the
+// natural way to model clap subcommands; boxing every variant is
+// invasive and would require pattern-match updates throughout the
+// dispatch layer.
+#[allow(clippy::large_enum_variant)]
 #[derive(Subcommand)]
 pub enum SbomSubcommand {
     /// Generate an SBOM from an attestation file
