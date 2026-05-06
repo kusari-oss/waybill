@@ -54,6 +54,8 @@ pub fn build_packages(
     doc_iri: &str,
     creation_info_id: &str,
     agent_attachments: &BTreeMap<String, PackageAgentAttachments>,
+    component_identifiers: &[mikebom::binding::identifiers::component_id::ComponentIdentifierFlag],
+    match_counts: &mut BTreeMap<usize, usize>,
 ) -> (Vec<Value>, BTreeMap<String, String>) {
     let mut package_iri_by_purl: BTreeMap<String, String> = BTreeMap::new();
     let mut packages: Vec<Value> = Vec::with_capacity(components.len());
@@ -146,7 +148,29 @@ pub fn build_packages(
         // fully-resolved CPE vectors. Delegated to
         // v3_external_ids::build_external_identifiers_for so the
         // shape is owned by one module.
-        let ext_ids = build_external_identifiers_for(c);
+        let mut ext_ids = build_external_identifiers_for(c);
+        // Milestone 076 — append per-component user-defined
+        // identifiers in lexical order by `(scheme, value)` after the
+        // pre-existing PURL/CPE entries (research §6).
+        let mut new_per_component_ids: Vec<(String, String)> = Vec::new();
+        for (idx, flag) in component_identifiers.iter().enumerate() {
+            if flag.selector_purl == c.purl.as_str() {
+                *match_counts.entry(idx).or_insert(0) += 1;
+                new_per_component_ids.push((
+                    flag.scheme.as_str().to_string(),
+                    flag.value.as_str().to_string(),
+                ));
+            }
+        }
+        new_per_component_ids.sort();
+        new_per_component_ids.dedup();
+        for (ext_type, identifier) in new_per_component_ids {
+            ext_ids.push(json!({
+                "type": "ExternalIdentifier",
+                "externalIdentifierType": ext_type,
+                "identifier": identifier,
+            }));
+        }
         if !ext_ids.is_empty() {
             pkg.insert("externalIdentifier".to_string(), json!(ext_ids));
         }

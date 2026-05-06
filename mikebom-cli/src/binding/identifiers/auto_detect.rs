@@ -23,6 +23,7 @@ use std::path::Path;
 use std::process::Command;
 
 use super::{Identifier, IdentifierKind, IdentifierValue, SchemeName};
+use mikebom_common::attestation::statement::ResourceDescriptor;
 
 /// Result of running `sanitize_userinfo` on a candidate URL string.
 ///
@@ -721,6 +722,110 @@ pub fn image_reference_to_identifier(
 }
 
 // ---------------------------------------------------------------------
+// Milestone 076 — build-tier `subject:` auto-detection
+// ---------------------------------------------------------------------
+
+/// Convert an in-toto attestation subject set into `subject:` identifiers
+/// per milestone 076 FR-002 + the 2026-05-06 sha256-only clarification.
+///
+/// Behavior:
+///
+/// 1. Iterate `subjects` in input order (witness-v0.1 already lex-sorts
+///    subjects by `(name, digest)` before serialization, so this loop
+///    inherits that ordering).
+/// 2. For each subject, look up the `"sha256"` key in its digest map.
+///    If absent, log `tracing::info!` listing the subject name and the
+///    available algos, then skip this subject (FR-002 + 2026-05-06
+///    clarification: sha256-only auto-emit; operators who need other
+///    algos pass `--subject-hash sha512:<hex>` manually).
+/// 3. If sha256 is present, construct an `Identifier` with scheme
+///    `subject`, value `sha256:<hex>`, kind `Builtin(Subject)` (after
+///    a defensive `validate_for_scheme` round-trip — well-formed
+///    digest-map values produced by the trace pipeline always pass,
+///    but the validator runs for defense in depth and the soft-fail
+///    path covers any future producer that emits a malformed value),
+///    and source_label `"auto-detected from build-tier in-toto subject
+///    \`<name>\`"`.
+///
+/// Multi-digest subjects (e.g., both sha256 AND sha512 in a single
+/// digest map) emit only the sha256 form per the 2026-05-06
+/// clarification. Synthetic subjects (digest map keyed by
+/// `"synthetic"` not `"sha256"`) skip emission per the same rule.
+///
+/// Never panics, never returns `Result`. All failure modes collapse
+/// to "skip this subject" with an `tracing::info!` info-log.
+pub fn subject_identifiers_from_attestation_subjects(
+    subjects: &[ResourceDescriptor],
+) -> Vec<Identifier> {
+    let mut out: Vec<Identifier> = Vec::with_capacity(subjects.len());
+    for subject in subjects {
+        let Some(sha256) = subject.digest.get("sha256") else {
+            // FR-002 + 2026-05-06 clarification: skip subjects without
+            // sha256 and surface the reason so operators can decide
+            // whether to backfill with `--subject-hash`.
+            let available: Vec<&str> =
+                subject.digest.keys().map(String::as_str).collect();
+            tracing::info!(
+                subject = %subject.name,
+                available_algos = ?available,
+                "subject `{}` has no sha256 digest (available algos: {:?}); \
+                 skipping subject: identifier auto-emit. Pass --subject-hash \
+                 sha512:<hex> manually if needed.",
+                subject.name,
+                available,
+            );
+            continue;
+        };
+        let value_str = format!("sha256:{sha256}");
+        let scheme = match SchemeName::new("subject".to_string()) {
+            Ok(s) => s,
+            Err(_) => continue,
+        };
+        let value = match IdentifierValue::new(value_str.clone()) {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        // Defense-in-depth validator round-trip — well-formed inputs
+        // always pass; soft-fail paths exist for future producer drift.
+        let kind = match super::BuiltinScheme::from_scheme_name(&scheme) {
+            Some(b) => match super::validators::validate_for_scheme(b, value.as_str()) {
+                Ok(()) => IdentifierKind::Builtin(b),
+                Err(err) => {
+                    tracing::warn!(
+                        subject = %subject.name,
+                        value = %value_str,
+                        reason = %err,
+                        "auto-detected `subject:` value failed validation; \
+                         emitting as user-defined under \
+                         mikebom:identifiers"
+                    );
+                    IdentifierKind::UserDefined
+                }
+            },
+            None => IdentifierKind::UserDefined,
+        };
+        let label = format!(
+            "auto-detected from build-tier in-toto subject `{}`",
+            subject.name
+        );
+        tracing::info!(
+            value = %value_str,
+            subject = %subject.name,
+            "build-tier auto-detected `subject:{}` from in-toto subject `{}`",
+            value_str,
+            subject.name,
+        );
+        out.push(Identifier::from_parts_with_label(
+            scheme,
+            value,
+            kind,
+            Some(label),
+        ));
+    }
+    out
+}
+
+// ---------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------
 
@@ -1230,5 +1335,108 @@ mod tests {
             r,
             "https://<userinfo redacted>@github.com:8443/foo/bar.git?a=1#frag"
         );
+    }
+
+    // ----------------------------------------------------------------
+    // Milestone 076 — subject_identifiers_from_attestation_subjects
+    // ----------------------------------------------------------------
+
+    fn rd(name: &str, digests: &[(&str, &str)]) -> ResourceDescriptor {
+        let mut digest = std::collections::BTreeMap::new();
+        for (k, v) in digests {
+            digest.insert((*k).to_string(), (*v).to_string());
+        }
+        ResourceDescriptor {
+            name: name.to_string(),
+            digest,
+        }
+    }
+
+    const SHA256_A: &str =
+        "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+    const SHA256_B: &str =
+        "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210";
+    const SHA512_A: &str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+    #[test]
+    fn subject_autodetect_single_subject_sha256_happy_path() {
+        let subjects = vec![rd("myapp", &[("sha256", SHA256_A)])];
+        let ids = subject_identifiers_from_attestation_subjects(&subjects);
+        assert_eq!(ids.len(), 1);
+        assert_eq!(ids[0].scheme.as_str(), "subject");
+        assert_eq!(ids[0].value.as_str(), format!("sha256:{SHA256_A}"));
+        assert!(ids[0].is_builtin());
+        let label = ids[0].source_label.as_deref().unwrap();
+        assert!(
+            label.contains("build-tier") && label.contains("myapp"),
+            "expected source_label to mention build-tier + subject name; got {label:?}"
+        );
+    }
+
+    #[test]
+    fn subject_autodetect_multi_subject_input_order() {
+        // The function preserves input order — witness-v0.1 already
+        // produces lex-sorted subjects upstream.
+        let subjects = vec![
+            rd("myapp-a", &[("sha256", SHA256_A)]),
+            rd("myapp-b", &[("sha256", SHA256_B)]),
+            rd("myapp-c", &[("sha256", SHA256_A)]),
+        ];
+        let ids = subject_identifiers_from_attestation_subjects(&subjects);
+        assert_eq!(ids.len(), 3);
+        assert_eq!(ids[0].value.as_str(), format!("sha256:{SHA256_A}"));
+        assert_eq!(ids[1].value.as_str(), format!("sha256:{SHA256_B}"));
+        assert_eq!(ids[2].value.as_str(), format!("sha256:{SHA256_A}"));
+        // Each carries a unique source_label naming its subject.
+        assert!(ids[0].source_label.as_deref().unwrap().contains("myapp-a"));
+        assert!(ids[1].source_label.as_deref().unwrap().contains("myapp-b"));
+        assert!(ids[2].source_label.as_deref().unwrap().contains("myapp-c"));
+    }
+
+    #[test]
+    fn subject_autodetect_skips_subject_without_sha256() {
+        // Only sha512 in the digest map — sha256 absent. Per the
+        // 2026-05-06 clarification + FR-002, this subject is skipped
+        // with an info-log; nothing emits.
+        let subjects = vec![rd("legacy", &[("sha512", SHA512_A)])];
+        let ids = subject_identifiers_from_attestation_subjects(&subjects);
+        assert!(
+            ids.is_empty(),
+            "subject without sha256 must not auto-emit; got {ids:?}"
+        );
+    }
+
+    #[test]
+    fn subject_autodetect_emits_sha256_only_when_multi_digest() {
+        // Both sha256 AND sha512 — auto-emit picks sha256 only per the
+        // 2026-05-06 clarification.
+        let subjects = vec![rd(
+            "myapp",
+            &[("sha256", SHA256_A), ("sha512", SHA512_A)],
+        )];
+        let ids = subject_identifiers_from_attestation_subjects(&subjects);
+        assert_eq!(ids.len(), 1);
+        assert_eq!(ids[0].value.as_str(), format!("sha256:{SHA256_A}"));
+        // No sha512 entry emitted from auto-detection.
+        assert!(!ids
+            .iter()
+            .any(|id| id.value.as_str().starts_with("sha512:")));
+    }
+
+    #[test]
+    fn subject_autodetect_empty_subject_set_returns_empty_vec() {
+        let ids = subject_identifiers_from_attestation_subjects(&[]);
+        assert!(ids.is_empty());
+    }
+
+    #[test]
+    fn subject_autodetect_skips_synthetic_subjects() {
+        // Synthetic-fallback subjects use a `synthetic` digest key, not
+        // `sha256`. Per FR-002 they don't auto-emit a `subject:`
+        // identifier — only the underlying real-content sha256 ever
+        // makes it into the SBOM body.
+        let subjects = vec![rd("synthetic:echo-hello", &[("synthetic", "abc123")])];
+        let ids = subject_identifiers_from_attestation_subjects(&subjects);
+        assert!(ids.is_empty());
     }
 }

@@ -105,6 +105,22 @@ pub struct ScanArtifacts<'a> {
     /// `contracts/identifiers-annotation.md` C-1.
     pub identifiers:
         &'a [mikebom::binding::identifiers::Identifier],
+    /// Milestone 076: per-component user-defined identifiers from
+    /// `--component-id <PURL>=<scheme>:<value>` flags. Threaded to
+    /// per-format emitters which match `selector_purl` byte-equally
+    /// against emitted `components[].purl` and append the identifier
+    /// to every match in the per-format native carrier (CDX
+    /// `components[].properties[]`, SPDX 2.3
+    /// `Package.externalRefs[PERSISTENT-ID]`, SPDX 3
+    /// `Element.externalIdentifier[]`). Emission is deterministic per
+    /// FR-012 — pre-existing entries preserve their original
+    /// positions; new per-component identifier entries append after
+    /// in lexical order by `(scheme, value)`. Built-in scheme names
+    /// (`repo`, `git`, `image`, `attestation`, `subject`) are rejected
+    /// at CLI parse time per FR-009. Default empty for callers not
+    /// using the flag — backwards-compatible.
+    pub component_identifiers:
+        &'a [mikebom::binding::identifiers::component_id::ComponentIdentifierFlag],
 }
 
 /// Document-level scope mode for a single mikebom scan. Surfaced

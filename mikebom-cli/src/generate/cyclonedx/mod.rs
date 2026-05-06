@@ -70,7 +70,13 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // `metadata.properties[]` entry under
             // `mikebom:identifiers`. The Vec is already
             // deduplicated and ordered by the resolution pipeline.
-            .with_identifiers(scan.identifiers.to_vec());
+            .with_identifiers(scan.identifiers.to_vec())
+            // Milestone 076 — propagate per-component user-defined
+            // identifiers from `--component-id <PURL>=<scheme>:<value>`
+            // flags. Matched against `components[].purl` byte-equally
+            // and appended as additional `properties[]` entries per
+            // research §2.
+            .with_component_identifiers(scan.component_identifiers.to_vec());
         let bom = builder.build(
             scan.components,
             scan.relationships,

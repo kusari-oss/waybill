@@ -34,6 +34,7 @@
 //!   identifier's `kind` to `IdentifierKind::UserDefined`.
 
 pub mod auto_detect;
+pub mod component_id;
 pub mod validators;
 
 // ---------------------------------------------------------------------
@@ -142,12 +143,21 @@ impl IdentifierValue {
 // ---------------------------------------------------------------------
 
 /// Closed registry of recognized built-in schemes (research.md §2).
+///
+/// Milestone 076 extends the registry with `Subject` — a fifth variant
+/// declaring "this SBOM describes the artifact with the given content
+/// hash" (`subject:<algo>:<hex>`). Build-tier scans auto-detect
+/// `subject:` from the in-toto attestation envelope's subject set;
+/// source-tier and image-tier scans accept manual `--subject-hash`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BuiltinScheme {
     Repo,
     Git,
     Image,
     Attestation,
+    /// Milestone 076: content-hash subject identifier
+    /// (`subject:sha256:<hex>` or `subject:sha512:<hex>`).
+    Subject,
 }
 
 impl BuiltinScheme {
@@ -159,6 +169,8 @@ impl BuiltinScheme {
             "git" => Some(Self::Git),
             "image" => Some(Self::Image),
             "attestation" => Some(Self::Attestation),
+            // Milestone 076.
+            "subject" => Some(Self::Subject),
             _ => None,
         }
     }
@@ -170,21 +182,30 @@ impl BuiltinScheme {
             Self::Git => "git",
             Self::Image => "image",
             Self::Attestation => "attestation",
+            Self::Subject => "subject",
         }
     }
 
     /// CDX 1.6 `externalReferences[].type` value for this scheme
     /// (research.md §2 mapping).
+    ///
+    /// Milestone 076 — `Subject` reuses the CDX 1.6 `attestation` enum
+    /// value per research §1: a `subject:` identifier IS attestation
+    /// metadata declaring the artifact-of-record's content hash, and
+    /// CDX 1.6 has no narrower native type for content-hash subjects.
+    /// The two co-exist in `metadata.component.externalReferences[]`
+    /// — distinguishable by the `url` shape (digest vs IRI).
     pub fn cdx_external_reference_type(self) -> &'static str {
         match self {
             Self::Repo | Self::Git => "vcs",
             Self::Image => "distribution",
-            Self::Attestation => "attestation",
+            Self::Attestation | Self::Subject => "attestation",
         }
     }
 
     /// SPDX 2.3 `Package.externalRefs[].referenceCategory`. Uniformly
-    /// `"PERSISTENT-ID"` for all built-in schemes per FR-005.
+    /// `"PERSISTENT-ID"` for all built-in schemes per FR-005 + FR-004
+    /// (milestone 076).
     pub fn spdx23_reference_category(self) -> &'static str {
         "PERSISTENT-ID"
     }
@@ -573,11 +594,18 @@ mod tests {
             BuiltinScheme::Attestation.cdx_external_reference_type(),
             "attestation"
         );
+        // Milestone 076 — `subject:` reuses the CDX `attestation` enum
+        // value per research §1.
+        assert_eq!(
+            BuiltinScheme::Subject.cdx_external_reference_type(),
+            "attestation"
+        );
     }
 
     #[test]
     fn builtin_scheme_spdx23_reference_category_uniform() {
-        // FR-005 — uniformly PERSISTENT-ID for all 4 built-ins.
+        // FR-005 — uniformly PERSISTENT-ID for all built-ins
+        // (extended in milestone 076 to include `subject:`).
         assert_eq!(BuiltinScheme::Repo.spdx23_reference_category(), "PERSISTENT-ID");
         assert_eq!(BuiltinScheme::Git.spdx23_reference_category(), "PERSISTENT-ID");
         assert_eq!(BuiltinScheme::Image.spdx23_reference_category(), "PERSISTENT-ID");
@@ -585,6 +613,21 @@ mod tests {
             BuiltinScheme::Attestation.spdx23_reference_category(),
             "PERSISTENT-ID"
         );
+        assert_eq!(
+            BuiltinScheme::Subject.spdx23_reference_category(),
+            "PERSISTENT-ID"
+        );
+    }
+
+    #[test]
+    fn builtin_scheme_from_scheme_name_recognizes_subject() {
+        // Milestone 076 — fifth built-in scheme.
+        let s = SchemeName::new("subject").unwrap();
+        assert_eq!(
+            BuiltinScheme::from_scheme_name(&s),
+            Some(BuiltinScheme::Subject)
+        );
+        assert_eq!(BuiltinScheme::Subject.as_str(), "subject");
     }
 
     #[test]

@@ -22,6 +22,8 @@ pub fn validate_for_scheme(scheme: BuiltinScheme, value: &str) -> Result<(), Ide
         BuiltinScheme::Git => validate_git(value),
         BuiltinScheme::Image => validate_image(value),
         BuiltinScheme::Attestation => validate_attestation(value),
+        // Milestone 076.
+        BuiltinScheme::Subject => validate_subject(value),
     }
 }
 
@@ -228,6 +230,68 @@ pub fn validate_attestation(value: &str) -> Result<(), IdentifierError> {
     ensure_no_whitespace("attestation", value)
 }
 
+/// Validate a `subject:` value (milestone 076).
+///
+/// Accepts exactly two shapes per research §4 + FR-001:
+///
+/// - `sha256:<64 lowercase hex chars>`
+/// - `sha512:<128 lowercase hex chars>`
+///
+/// Anything else (uppercase or mixed-case hex, missing algo prefix,
+/// prefix-only / no hex, wrong-length hex, other algos like `sha1:`,
+/// embedded whitespace) returns `Err(BuiltinValidation)` triggering
+/// soft-fail to `IdentifierKind::UserDefined` per FR-005.
+pub fn validate_subject(value: &str) -> Result<(), IdentifierError> {
+    if value.is_empty() {
+        return Err(err_subject(value, "value is empty"));
+    }
+    let Some(idx) = value.find(':') else {
+        return Err(err_subject(value, "missing `<algo>:` prefix"));
+    };
+    let (algo, hex) = (&value[..idx], &value[idx + 1..]);
+    let expected_len = match algo {
+        "sha256" => 64,
+        "sha512" => 128,
+        other => {
+            return Err(err_subject(
+                value,
+                &format!(
+                    "unsupported algo `{other}` (allowed: `sha256`, `sha512`)"
+                ),
+            ));
+        }
+    };
+    if hex.len() != expected_len {
+        return Err(err_subject(
+            value,
+            &format!(
+                "hex portion must be exactly {expected_len} chars for {algo} (got {})",
+                hex.len()
+            ),
+        ));
+    }
+    // Strict lowercase hex per FR-001 — uppercase and mixed-case are
+    // rejected so byte-identity correlation across SBOMs (the
+    // milestone's whole point) is unambiguous.
+    for c in hex.chars() {
+        let ok = c.is_ascii_digit() || ('a'..='f').contains(&c);
+        if !ok {
+            return Err(err_subject(
+                value,
+                "hex portion must be lowercase [0-9a-f] only",
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn err_subject(value: &str, reason: &str) -> IdentifierError {
+    IdentifierError::BuiltinValidation {
+        scheme: "subject".to_string(),
+        reason: format!("value {value:?}: {reason}"),
+    }
+}
+
 fn ensure_no_whitespace(scheme: &str, value: &str) -> Result<(), IdentifierError> {
     if value.chars().any(|c| c.is_whitespace()) {
         return Err(IdentifierError::BuiltinValidation {
@@ -377,10 +441,123 @@ mod tests {
         validate_for_scheme(BuiltinScheme::Git, "https://x/y#c").unwrap();
         validate_for_scheme(BuiltinScheme::Image, "foo/bar").unwrap();
         validate_for_scheme(BuiltinScheme::Attestation, "https://x").unwrap();
+        // Milestone 076.
+        validate_for_scheme(
+            BuiltinScheme::Subject,
+            "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        )
+        .unwrap();
 
         assert!(validate_for_scheme(BuiltinScheme::Repo, "garbage").is_err());
         assert!(validate_for_scheme(BuiltinScheme::Git, "garbage").is_err());
         assert!(validate_for_scheme(BuiltinScheme::Image, "").is_err());
         assert!(validate_for_scheme(BuiltinScheme::Attestation, "").is_err());
+        assert!(validate_for_scheme(BuiltinScheme::Subject, "garbage").is_err());
+    }
+
+    // ----------------------------------------------------------------
+    // Milestone 076 — validate_subject unit tests
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn validate_subject_accepts_sha256_64_lowercase_hex() {
+        validate_subject(
+            "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn validate_subject_accepts_sha512_128_lowercase_hex() {
+        validate_subject(
+            "sha512:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn validate_subject_rejects_uppercase_hex() {
+        // FR-001: hex MUST be lowercase. Uppercase and mixed-case are
+        // rejected so byte-identity correlation is unambiguous.
+        assert!(validate_subject(
+            "sha256:0123456789ABCDEF0123456789abcdef0123456789abcdef0123456789abcdef"
+        )
+        .is_err());
+        assert!(validate_subject(
+            "sha256:ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn validate_subject_rejects_missing_algo_prefix() {
+        // No `:` separator at all.
+        assert!(validate_subject(
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn validate_subject_rejects_wrong_length_sha256() {
+        // 63 chars after `sha256:` (one short).
+        assert!(validate_subject(
+            "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde"
+        )
+        .is_err());
+        // 65 chars after `sha256:` (one long).
+        assert!(validate_subject(
+            "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn validate_subject_rejects_wrong_length_sha512() {
+        // 127 chars after `sha512:` (one short).
+        assert!(validate_subject(
+            "sha512:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde"
+        )
+        .is_err());
+        // 129 chars after `sha512:` (one long).
+        assert!(validate_subject(
+            "sha512:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn validate_subject_rejects_unknown_algo() {
+        // sha1 is not allowed in milestone 076 (FR-001).
+        assert!(validate_subject("sha1:0123456789abcdef0123456789abcdef01234567").is_err());
+        // blake2b — explicitly out of scope.
+        assert!(validate_subject(
+            "blake2b:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn validate_subject_rejects_whitespace() {
+        // Embedded whitespace anywhere triggers rejection.
+        assert!(validate_subject(
+            "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde "
+        )
+        .is_err());
+        assert!(validate_subject(
+            "sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        )
+        .is_err());
+        // Algo with whitespace.
+        assert!(validate_subject(
+            "sha256 :0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn validate_subject_rejects_prefix_only_no_hex() {
+        assert!(validate_subject("sha256:").is_err());
+        assert!(validate_subject("sha512:").is_err());
     }
 }
