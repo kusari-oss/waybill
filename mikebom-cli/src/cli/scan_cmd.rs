@@ -335,6 +335,17 @@ pub struct ScanArgs {
         value_parser = parse_user_defined_id_flag,
     )]
     pub id: Vec<mikebom::binding::identifiers::Identifier>,
+
+    /// Preserve userinfo (e.g., `USER:TOKEN@host`) in auto-detected git
+    /// remote URLs when constructing `repo:` and `git:` identifiers.
+    /// By default, mikebom strips userinfo to prevent accidental
+    /// credential disclosure in published SBOMs. Use this flag only
+    /// when the credentials are deliberately non-sensitive (e.g., a
+    /// public read-only deploy token, internal-network-only
+    /// credentials). Manual `--repo` / `--git-ref` / `--id` flag
+    /// values are emitted verbatim regardless of this flag.
+    #[arg(long)]
+    pub keep_credentials_in_identifiers: bool,
 }
 
 /// Parse a `--id <scheme>=<value>` flag for a user-defined identifier.
@@ -1378,7 +1389,12 @@ pub async fn execute(
             image_auto_identifier(_extracted.as_ref(), args.image.as_deref())
         } else {
             // Source-tier auto-detection — git-remote 3-step fallback.
-            mikebom::binding::identifiers::auto_detect::auto_detect_repo_identifier(&root_path)
+            // Milestone 075 — `keep_credentials` boolean controls
+            // userinfo sanitization (default: strip for security).
+            mikebom::binding::identifiers::auto_detect::auto_detect_repo_identifier(
+                &root_path,
+                args.keep_credentials_in_identifiers,
+            )
         };
     let manual_identifiers = assemble_manual_identifiers(&args);
     let identifiers = mikebom::binding::identifiers::resolve_identifiers(
@@ -2024,6 +2040,7 @@ mod tests {
             image_id: None,
             attestation: None,
             id: vec![],
+            keep_credentials_in_identifiers: false,
         }
     }
 

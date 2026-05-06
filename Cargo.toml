@@ -20,6 +20,12 @@ thiserror = "2"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+# Milestone 075 — RFC 3986 URL parsing for stripping userinfo
+# credentials from auto-detected git remote URLs before they get
+# embedded in published SBOMs. Already pinned at 2.5.8 transitively
+# (via reqwest); promotion to a direct workspace dep changes nothing
+# in Cargo.lock.
+url = "2"
 
 # mikebom-ebpf is built separately via xtask (different target triple)
 # and is NOT a workspace member — it uses #![no_std] + nightly + bpf target

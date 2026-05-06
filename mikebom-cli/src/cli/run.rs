@@ -134,6 +134,17 @@ pub struct RunArgs {
     )]
     pub id: Vec<mikebom::binding::identifiers::Identifier>,
 
+    /// Preserve userinfo (e.g., `USER:TOKEN@host`) in auto-detected git
+    /// remote URLs when constructing `repo:` and `git:` identifiers.
+    /// By default, mikebom strips userinfo to prevent accidental
+    /// credential disclosure in published SBOMs. Use this flag only
+    /// when the credentials are deliberately non-sensitive (e.g., a
+    /// public read-only deploy token, internal-network-only
+    /// credentials). Manual `--repo` / `--git-ref` / `--id` flag
+    /// values are emitted verbatim regardless of this flag.
+    #[arg(long)]
+    pub keep_credentials_in_identifiers: bool,
+
     /// Directories to scan for artifact files after the traced command
     /// exits. Forwarded verbatim to `mikebom trace capture`. See the
     /// `--artifact-dir` flag there for details.
@@ -208,6 +219,7 @@ pub async fn execute(args: RunArgs) -> anyhow::Result<()> {
     let auto_detected_ids =
         mikebom::binding::identifiers::auto_detect::auto_detect_build_tier_identifiers(
             &invocation_cwd,
+            args.keep_credentials_in_identifiers,
         );
 
     // Phase 1: capture the trace → attestation.

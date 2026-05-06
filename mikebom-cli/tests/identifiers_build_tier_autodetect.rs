@@ -109,7 +109,7 @@ fn make_git_fixture(remotes: &[(&str, &str)], commit: bool) -> tempfile::TempDir
 #[test]
 fn build_tier_autodetect_repo_in_git_checkout() {
     let td = make_git_fixture(&[("origin", "git@github.com:acme/foo.git")], false);
-    let ids = auto_detect_build_tier_identifiers(td.path());
+    let ids = auto_detect_build_tier_identifiers(td.path(), false);
     assert!(!ids.is_empty(), "expected `repo:` auto-detected");
     assert_eq!(ids[0].scheme.as_str(), "repo");
     assert_eq!(ids[0].value.as_str(), "git@github.com:acme/foo.git");
@@ -125,7 +125,7 @@ fn build_tier_autodetect_repo_in_git_checkout() {
 #[test]
 fn build_tier_autodetect_upstream_fallback() {
     let td = make_git_fixture(&[("upstream", "git@github.com:acme/up.git")], false);
-    let ids = auto_detect_build_tier_identifiers(td.path());
+    let ids = auto_detect_build_tier_identifiers(td.path(), false);
     assert_eq!(ids.len(), 1);
     assert_eq!(ids[0].value.as_str(), "git@github.com:acme/up.git");
     assert_eq!(
@@ -146,7 +146,7 @@ fn build_tier_autodetect_first_listed_fallback() {
         ],
         false,
     );
-    let ids = auto_detect_build_tier_identifiers(td.path());
+    let ids = auto_detect_build_tier_identifiers(td.path(), false);
     assert_eq!(ids.len(), 1);
     assert_eq!(ids[0].value.as_str(), "git@example.com:a/foo.git");
     let label = ids[0].source_label.as_deref().unwrap();
@@ -160,7 +160,7 @@ fn build_tier_autodetect_first_listed_fallback() {
 #[test]
 fn build_tier_skips_outside_git() {
     let td = tempfile::tempdir().unwrap();
-    let ids = auto_detect_build_tier_identifiers(td.path());
+    let ids = auto_detect_build_tier_identifiers(td.path(), false);
     assert!(
         ids.is_empty(),
         "non-git dir must yield zero auto-detected identifiers; got {ids:?}"
@@ -176,7 +176,7 @@ fn build_tier_skips_outside_git() {
 #[test]
 fn build_tier_manual_repo_overrides_autodetect() {
     let td = make_git_fixture(&[("origin", "git@github.com:acme/foo.git")], false);
-    let auto = auto_detect_build_tier_identifiers(td.path());
+    let auto = auto_detect_build_tier_identifiers(td.path(), false);
     assert_eq!(auto.len(), 1);
     let manual = mikebom::binding::identifiers::Identifier::parse(
         "repo:git@github.com:acme/override.git",
@@ -203,7 +203,7 @@ fn build_tier_autodetect_git_with_full_sha() {
     let head = git_rev_parse_head_subprocess(td.path());
     assert_eq!(head.len(), 40);
 
-    let ids = auto_detect_build_tier_identifiers(td.path());
+    let ids = auto_detect_build_tier_identifiers(td.path(), false);
     assert_eq!(ids.len(), 2, "expected [repo:, git:] when both resolvable");
     assert_eq!(ids[1].scheme.as_str(), "git");
     let git_value = ids[1].value.as_str();
@@ -231,7 +231,7 @@ fn build_tier_autodetect_git_in_detached_head() {
     // Detach HEAD by checking out the commit by SHA.
     run_git(td.path(), &["checkout", "--detach", "-q", &head]);
 
-    let ids = auto_detect_build_tier_identifiers(td.path());
+    let ids = auto_detect_build_tier_identifiers(td.path(), false);
     assert_eq!(ids.len(), 2, "detached HEAD is not an error condition");
     assert_eq!(ids[1].scheme.as_str(), "git");
     assert_eq!(
@@ -246,7 +246,7 @@ fn build_tier_autodetect_git_in_detached_head() {
 #[test]
 fn build_tier_skips_git_in_empty_repo() {
     let td = make_git_fixture(&[("origin", "git@github.com:acme/foo.git")], false);
-    let ids = auto_detect_build_tier_identifiers(td.path());
+    let ids = auto_detect_build_tier_identifiers(td.path(), false);
     assert_eq!(
         ids.len(),
         1,
@@ -260,7 +260,7 @@ fn build_tier_skips_git_in_empty_repo() {
 #[test]
 fn build_tier_emits_zero_identifiers_in_non_git_dir() {
     let td = tempfile::tempdir().unwrap();
-    let ids = auto_detect_build_tier_identifiers(td.path());
+    let ids = auto_detect_build_tier_identifiers(td.path(), false);
     assert!(ids.is_empty());
 }
 
@@ -271,7 +271,7 @@ fn build_tier_emits_zero_identifiers_in_non_git_dir() {
 fn build_tier_autodetect_git_with_ssh_form_remote() {
     let td = make_git_fixture(&[("origin", "git@github.com:fake/repo.git")], true);
     let head = git_rev_parse_head_subprocess(td.path());
-    let ids = auto_detect_build_tier_identifiers(td.path());
+    let ids = auto_detect_build_tier_identifiers(td.path(), false);
     assert_eq!(ids.len(), 2);
     assert_eq!(ids[1].scheme.as_str(), "git");
     // Verbatim URL is preserved (no normalization to https).
@@ -319,7 +319,7 @@ fn build_tier_cross_tier_correlation_byte_identical_repo() {
     let head = git_rev_parse_head_subprocess(td.path());
 
     // Build-tier auto-detect via library API.
-    let build_ids = auto_detect_build_tier_identifiers(td.path());
+    let build_ids = auto_detect_build_tier_identifiers(td.path(), false);
     assert_eq!(build_ids.len(), 2, "expected [repo:, git:] for build-tier");
     assert_eq!(build_ids[0].scheme.as_str(), "repo");
     let build_repo_value = build_ids[0].value.as_str().to_string();
@@ -382,9 +382,9 @@ fn build_tier_cross_tier_correlation_byte_identical_repo() {
 #[test]
 fn build_tier_autodetect_deterministic_across_reruns() {
     let td = make_git_fixture(&[("origin", "git@github.com:acme/foo.git")], true);
-    let a = auto_detect_build_tier_identifiers(td.path());
-    let b = auto_detect_build_tier_identifiers(td.path());
-    let c = auto_detect_build_tier_identifiers(td.path());
+    let a = auto_detect_build_tier_identifiers(td.path(), false);
+    let b = auto_detect_build_tier_identifiers(td.path(), false);
+    let c = auto_detect_build_tier_identifiers(td.path(), false);
     assert_eq!(a.len(), b.len());
     assert_eq!(a.len(), c.len());
     for (idx, ((x, y), z)) in a.iter().zip(b.iter()).zip(c.iter()).enumerate() {

@@ -51,6 +51,8 @@ Auto-generated from all feature plans. Last updated: 2026-05-05
 - N/A — identifier metadata lives in emitted SBOMs only. (073-source-identifiers)
 - Rust stable (workspace toolchain inherited from milestones 001–073; no nightly required for this user-space-only work). + Existing only — `std::process::Command` for the new `git rev-parse HEAD` shell-out (same pattern as the existing `git remote get-url` calls at `auto_detect.rs:32`+ and as milestone 053's `git describe` ladder), `tracing` for info/warn logs, `anyhow` for error propagation. **No new `Cargo.toml` deps.** (074-build-tier-id-autodetect)
 - N/A — identifiers live in emitted SBOMs only; no caches, no persistence. (074-build-tier-id-autodetect)
+- Rust stable (workspace toolchain inherited from milestones 001–074; no nightly). + Existing only — the `url = "2.5.8"` crate is already in the dependency closure (transitive via `reqwest`); this milestone promotes it to a direct workspace dependency. No new transitive deps. Plus `tracing` (info-level logs), `anyhow` (error propagation), `clap` (the new boolean flag — `Args`-derive picks it up). **No additions to the dependency tree at the lockfile level.** (075-strip-id-credentials)
+- N/A — sanitization is a pure-function transformation; no caches, no persistence. (075-strip-id-credentials)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -113,9 +115,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 075-strip-id-credentials: Added Rust stable (workspace toolchain inherited from milestones 001–074; no nightly). + Existing only — the `url = "2.5.8"` crate is already in the dependency closure (transitive via `reqwest`); this milestone promotes it to a direct workspace dependency. No new transitive deps. Plus `tracing` (info-level logs), `anyhow` (error propagation), `clap` (the new boolean flag — `Args`-derive picks it up). **No additions to the dependency tree at the lockfile level.**
 - 074-build-tier-id-autodetect: Added Rust stable (workspace toolchain inherited from milestones 001–073; no nightly required for this user-space-only work). + Existing only — `std::process::Command` for the new `git rev-parse HEAD` shell-out (same pattern as the existing `git remote get-url` calls at `auto_detect.rs:32`+ and as milestone 053's `git describe` ladder), `tracing` for info/warn logs, `anyhow` for error propagation. **No new `Cargo.toml` deps.**
 - 073-source-identifiers: Added Rust stable (workspace toolchain inherited from milestones 001–072; no nightly). + Existing only — `serde`/`serde_json` (envelope decode), `tracing` (info/warn logs), `anyhow` (CLI error propagation), `clap` (`ValueEnum` not needed — `Vec<String>` with manual validation is fine since the scheme syntax is regex-bounded; alternatively a custom `Identifier` newtype that implements `FromStr` and clap's `Args`-derive picks it up). `Command::new("git")` for the auto-detection shell-out (same pattern as milestone 053's `git describe`). No new `Cargo.toml` deps.
-- 072-cross-tier-sbom-binding: Added Rust stable (workspace toolchain inherited from milestones 001–071; no nightly). + Existing only — `sha2` (workspace; SHA-256 over the canonical JSON envelope), `serde`/`serde_json` (canonicalization via the milestone-071 `canonicalize_for_compare` helper at `parity/extractors/common.rs`), `data-encoding` (already used for hex-encoding hashes), `tracing`, `anyhow`, `clap` (for the new flag + new subcommands). No new crates.
 
 
 <!-- MANUAL ADDITIONS START -->

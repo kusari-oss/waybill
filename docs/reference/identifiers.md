@@ -438,6 +438,89 @@ Future milestones may automate the correlation; this milestone lays
 the foundation by making every tier emit its identifiers
 automatically.
 
+### 4.6 Credential sanitization (milestone 075)
+
+When the discovered remote URL carries RFC 3986 userinfo
+(`<user>[:<password>]@host` — common in CI runners using GitHub App
+tokens or HTTPS deploy tokens, e.g., `https://x-access-token:ghs_AAA
+@github.com/foo.git`), mikebom strips the userinfo before the URL
+becomes an identifier value. SBOMs are typically published artifacts
+(release attachments, OCI registry referrers, signed attestations);
+the strip prevents accidental token disclosure.
+
+Sanitization fires on auto-detected URLs in BOTH tiers:
+
+- Source-tier `repo:` identifier (§4.1).
+- Build-tier `repo:` and `git:` identifiers (§4.4). For `git:`, the
+  URL portion is sanitized BEFORE the `#<sha>` is appended, so a
+  credentialed `https://USER:TOKEN@github.com/foo.git` at HEAD
+  `abc1234...` emits as `git:https://github.com/foo.git#abc1234...`.
+
+When sanitization fires, the `source_label` is augmented with the
+suffix ` (credentials stripped)`:
+
+```text
+"auto-detected from git remote `origin` (credentials stripped)"
+"auto-detected from build-tier git remote `origin` (credentials stripped)"
+"auto-detected from build-tier `git rev-parse HEAD` (credentials stripped)"
+```
+
+An info-level log line is emitted per sanitized identifier with the
+userinfo replaced by the literal `<userinfo redacted>` placeholder
+so operators can audit the action without the actual credential
+appearing in the log.
+
+#### What gets stripped vs not
+
+| Input URL | Auto-detect default | With `--keep-credentials-in-identifiers` |
+|---|---|---|
+| `https://USER:TOKEN@github.com/foo.git` | `https://github.com/foo.git` | unchanged (verbatim) |
+| `https://TOKEN@github.com/foo.git` | `https://github.com/foo.git` | unchanged (verbatim) |
+| `https://github.com/foo.git` (no userinfo) | unchanged | unchanged |
+| `git@github.com:foo/bar.git` (SSH form) | unchanged (no userinfo per RFC 3986) | unchanged |
+| `git://github.com/foo.git` | unchanged (no userinfo present) | unchanged |
+| `git://USER:TOKEN@github.com/foo.git` | `git://github.com/foo.git` | unchanged (verbatim) |
+
+SSH-form URLs (`git@host:path` — the SCP-like syntax) carry no
+userinfo by construction; the `git@` is a fixed SSH username, not a
+credential. mikebom passes them through unchanged in both modes.
+
+#### Manual flags emit verbatim
+
+Manual `--repo`, `--git-ref`, `--image-id`, `--attestation`, and
+`--id <scheme>=<value>` flag values are NOT sanitized — operators
+who explicitly type credentialed URLs are responsible for their
+choice (FR-004). The boundary is "auto-detected = sanitized;
+manual = verbatim", and it applies regardless of the
+`--keep-credentials-in-identifiers` flag value.
+
+#### Opt-out flag
+
+Operators on private/internal-network setups where the credentials
+are deliberately non-sensitive (e.g., a public read-only deploy
+token, an internal-network-only HTTPS token with no value outside
+the corporate VPN) can preserve userinfo via:
+
+```bash
+mikebom sbom scan --path . --keep-credentials-in-identifiers
+mikebom trace run --keep-credentials-in-identifiers -- ./build.sh
+```
+
+When set, the flag suppresses sanitization for all auto-detected
+identifiers in the scan. mikebom emits one info-level log line
+acknowledging the suppression so the audit trail records the
+operator's choice. The `(credentials stripped)` suffix does NOT
+appear on `source_label`s in this mode.
+
+#### Cross-tier picture
+
+The cross-tier correlation recipe in §4.5 stays valid post-075: the
+sanitized URL is the canonical correlation key. A downstream tool
+matching SBOMs by `repo:` value gets identical canonical forms
+across tiers regardless of which side originally observed
+credentials. See `specs/075-strip-id-credentials/quickstart.md`
+Recipe 5 for a worked end-to-end example.
+
 ---
 
 ## Section 5 — Determinism contract

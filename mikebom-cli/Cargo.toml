@@ -159,6 +159,7 @@ thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+url.workspace = true
 
 # Milestone 031 — direct OCI-registry image scan. Activated by the
 # `oci-registry` feature only. Built on oci-spec (types-only,
