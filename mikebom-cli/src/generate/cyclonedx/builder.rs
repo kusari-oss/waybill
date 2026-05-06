@@ -78,6 +78,13 @@ pub struct CycloneDxBuilder {
     /// gains entries for matching PURLs.
     component_identifiers:
         Vec<mikebom::binding::identifiers::component_id::ComponentIdentifierFlag>,
+    /// Milestone 077 — operator-supplied overrides for the root
+    /// component's name + version. When `is_active()`, the override
+    /// values replace the auto-derived ones in `metadata.component`
+    /// AND any manifest-derived main-module components are filtered
+    /// from the emitted `components[]` array (clean replacement per
+    /// the 2026-05-06 Q2 clarification).
+    root_override: crate::generate::RootComponentOverride,
 }
 
 impl CycloneDxBuilder {
@@ -91,7 +98,23 @@ impl CycloneDxBuilder {
             source_document_binding: None,
             identifiers: Vec::new(),
             component_identifiers: Vec::new(),
+            root_override: crate::generate::RootComponentOverride::default(),
         }
+    }
+
+    /// Milestone 077 — record the operator-supplied root-component
+    /// override. When the override `is_active()`, the per-format
+    /// build path uses the operator-supplied name/version verbatim
+    /// (with PURL percent-encoding applied at emission) and drops
+    /// manifest-derived main-module components from the emitted
+    /// `components[]` array per the 2026-05-06 clean-replacement
+    /// clarification.
+    pub fn with_root_override(
+        mut self,
+        ov: crate::generate::RootComponentOverride,
+    ) -> Self {
+        self.root_override = ov;
+        self
     }
 
     /// Milestone 072 / T010 — record the source-tier SBOM identifier
@@ -170,14 +193,75 @@ impl CycloneDxBuilder {
         scan_target_coord: Option<&crate::scan_fs::package_db::maven::ScanTargetCoord>,
     ) -> anyhow::Result<serde_json::Value> {
         let serial_number = format!("urn:uuid:{}", Uuid::new_v4());
-        let target_version = "0.0.0"; // Derived from build metadata when available
-        let target_ref = format!("{target_name}@{target_version}");
+
+        // Milestone 077 — when the operator supplied --root-name and/or
+        // --root-version, the override values become the BOM-subject
+        // identity AND any manifest-derived main-module components are
+        // dropped from the emitted components[] array (clean replacement
+        // per Q2 clarification). The unset half (when only one flag is
+        // passed) falls through to the existing auto-derivation.
+        let override_active = self.root_override.is_active();
+        let effective_target_name: String = self
+            .root_override
+            .name
+            .clone()
+            .unwrap_or_else(|| target_name.to_string());
+        let effective_target_version: String = self
+            .root_override
+            .version
+            .clone()
+            .unwrap_or_else(|| "0.0.0".to_string());
+        if override_active {
+            tracing::info!(
+                name = %effective_target_name,
+                version = %effective_target_version,
+                "root component override active: name='{}' (replacing '{}'), version='{}' (replacing '0.0.0')",
+                effective_target_name,
+                target_name,
+                effective_target_version,
+            );
+        }
+
+        // Milestone 077 — when override is active, filter manifest-
+        // derived main-module components OUT of the components slice
+        // BEFORE downstream emission (build_components, compositions,
+        // dependencies). This is the clean-replacement implementation
+        // per FR-008 / VR-077-003.
+        let filtered_components_owned: Option<Vec<ResolvedComponent>> = if override_active {
+            let mut keep: Vec<ResolvedComponent> = Vec::with_capacity(components.len());
+            for c in components.iter() {
+                let is_main_module = c
+                    .extra_annotations
+                    .get("mikebom:component-role")
+                    .and_then(|v| v.as_str())
+                    == Some("main-module");
+                if is_main_module {
+                    tracing::info!(
+                        purl = %c.purl,
+                        "override is set; dropping manifest-derived main-module component '{}' from emitted SBOM (per milestone 077 clean-replacement; see GitHub issue #151)",
+                        c.purl
+                    );
+                } else {
+                    keep.push(c.clone());
+                }
+            }
+            Some(keep)
+        } else {
+            None
+        };
+        let effective_components: &[ResolvedComponent] =
+            filtered_components_owned.as_deref().unwrap_or(components);
+
+        let target_ref = format!(
+            "{}@{}",
+            effective_target_name, effective_target_version
+        );
 
         let metadata = build_metadata(
             target_name,
-            target_version,
+            "0.0.0",
             self.config.generation_context.clone(),
-            components,
+            effective_components,
             &self.os_release_missing_fields,
             integrity,
             scan_target_coord,
@@ -185,6 +269,7 @@ impl CycloneDxBuilder {
             self.go_graph_completeness_reason.as_deref(),
             self.source_document_binding.as_ref(),
             &self.identifiers,
+            &self.root_override,
         );
         // Milestone 076 — track per-component identifier matches so
         // we can emit a warn for any selector that matched zero
@@ -194,7 +279,7 @@ impl CycloneDxBuilder {
         for i in 0..self.component_identifiers.len() {
             match_counts.insert(i, 0);
         }
-        let cdx_components = self.build_components(components, &mut match_counts)?;
+        let cdx_components = self.build_components(effective_components, &mut match_counts)?;
         for (idx, count) in &match_counts {
             if *count == 0 {
                 let flag = &self.component_identifiers[*idx];
@@ -210,10 +295,14 @@ impl CycloneDxBuilder {
                 );
             }
         }
-        let compositions =
-            build_compositions(integrity, &target_ref, components, complete_ecosystems);
-        let deps = build_dependencies(components, relationships, &target_ref);
-        let vulnerabilities = build_vulnerabilities(components);
+        let compositions = build_compositions(
+            integrity,
+            &target_ref,
+            effective_components,
+            complete_ecosystems,
+        );
+        let deps = build_dependencies(effective_components, relationships, &target_ref);
+        let vulnerabilities = build_vulnerabilities(effective_components);
 
         let bom = json!({
             "bomFormat": "CycloneDX",
@@ -1568,5 +1657,171 @@ mod tests {
         }
         assert!(seen.contains(&("MIT".to_string(), "declared".to_string())));
         assert!(seen.contains(&("Apache-2.0".to_string(), "concluded".to_string())));
+    }
+
+    // -------- Milestone 077 — root component override --------
+
+    fn make_main_module_component(
+        ecosystem: &str,
+        name: &str,
+        version: &str,
+    ) -> ResolvedComponent {
+        let mut c = make_component(name, version);
+        let purl_str = format!("pkg:{ecosystem}/{name}@{version}");
+        c.purl = Purl::new(&purl_str).expect("valid purl");
+        c.extra_annotations.insert(
+            "mikebom:component-role".to_string(),
+            serde_json::Value::String("main-module".to_string()),
+        );
+        c
+    }
+
+    #[test]
+    fn override_active_replaces_metadata_component_identity() {
+        // FR-001 + FR-002 + FR-004 — name/version override drives all
+        // derived fields verbatim through the percent-encode helper.
+        let builder = CycloneDxBuilder::new(CycloneDxConfig::default())
+            .with_root_override(crate::generate::RootComponentOverride {
+                name: Some("widget-svc".to_string()),
+                version: Some("1.2.3".to_string()),
+            });
+        let components = vec![make_component("serde", "1.0.0")];
+        let integrity = clean_integrity();
+        let bom = builder
+            .build(&components, &[], &integrity, "abc123-snapshot", &[], None)
+            .expect("build bom");
+        let comp = &bom["metadata"]["component"];
+        assert_eq!(comp["name"], "widget-svc");
+        assert_eq!(comp["version"], "1.2.3");
+        assert_eq!(comp["bom-ref"], "widget-svc@1.2.3");
+        assert_eq!(comp["purl"], "pkg:generic/widget-svc@1.2.3");
+        assert_eq!(
+            comp["cpe"],
+            "cpe:2.3:a:mikebom:widget-svc:1.2.3:*:*:*:*:*:*:*"
+        );
+    }
+
+    #[test]
+    fn override_drops_manifest_main_module_from_components_array() {
+        // SC-006 / FR-008 — manifest-derived main-module is filtered
+        // OUT of components[] when override is active.
+        let builder = CycloneDxBuilder::new(CycloneDxConfig::default())
+            .with_root_override(crate::generate::RootComponentOverride {
+                name: Some("widget-svc".to_string()),
+                version: Some("1.2.3".to_string()),
+            });
+        let components = vec![
+            make_main_module_component("cargo", "foo-internal", "0.5.1"),
+            make_component("serde", "1.0.0"),
+        ];
+        let integrity = clean_integrity();
+        let bom = builder
+            .build(&components, &[], &integrity, "myapp", &[], None)
+            .expect("build bom");
+        let cdx_components = bom["components"].as_array().expect("components[]");
+        // Main-module is dropped; only `serde` remains.
+        let purls: Vec<&str> = cdx_components
+            .iter()
+            .filter_map(|c| c["purl"].as_str())
+            .collect();
+        assert!(
+            !purls.contains(&"pkg:cargo/foo-internal@0.5.1"),
+            "main-module PURL must be dropped; got: {purls:?}"
+        );
+        assert!(
+            purls.contains(&"pkg:cargo/serde@1.0.0"),
+            "regular dep must be preserved; got: {purls:?}"
+        );
+    }
+
+    #[test]
+    fn no_override_preserves_main_module() {
+        // FR-009 — no-flag case preserves manifest-derived main-module
+        // (no regression).
+        let builder = CycloneDxBuilder::new(CycloneDxConfig::default());
+        let components = vec![
+            make_main_module_component("cargo", "foo-internal", "0.5.1"),
+            make_component("serde", "1.0.0"),
+        ];
+        let integrity = clean_integrity();
+        let bom = builder
+            .build(&components, &[], &integrity, "myapp", &[], None)
+            .expect("build bom");
+        // With one main-module + no override, it gets promoted to
+        // metadata.component (CDX 053-style placement) so it's NOT in
+        // components[]. The override-aware test above is about the
+        // override path. Here we verify the auto-derivation: the
+        // metadata.component MUST be the main-module (not a synthesized
+        // override identity).
+        assert_eq!(
+            bom["metadata"]["component"]["name"], "foo-internal",
+            "auto-derived metadata.component should be the main-module"
+        );
+        assert_eq!(
+            bom["metadata"]["component"]["version"], "0.5.1"
+        );
+    }
+
+    #[test]
+    fn override_on_build_tier_with_identifiers_orthogonal() {
+        // T011(b) US2 — synthetic build-tier scenario: override is
+        // active, build-tier identifiers (`repo:` + `subject:`) are
+        // also attached, and BOTH coexist independently in the emitted
+        // SBOM. Verifies FR-011 (orthogonality with milestones 073/076).
+        use mikebom::binding::identifiers::Identifier;
+        let repo_id = Identifier::parse("repo:git@github.com:acme/widget-svc.git")
+            .expect("parse repo");
+        let subject_id = Identifier::parse(
+            "subject:sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        )
+        .expect("parse subject");
+        let identifiers = vec![repo_id, subject_id];
+
+        let builder = CycloneDxBuilder::new(CycloneDxConfig {
+            include_hashes: true,
+            include_source_files: false,
+            generation_context: GenerationContext::BuildTimeTrace,
+            include_dev: false,
+        })
+        .with_identifiers(identifiers)
+        .with_root_override(crate::generate::RootComponentOverride {
+            name: Some("widget-svc".to_string()),
+            version: Some("1.2.3".to_string()),
+        });
+        let components = vec![make_component("serde", "1.0.0")];
+        let integrity = clean_integrity();
+        let bom = builder
+            .build(
+                &components,
+                &[],
+                &integrity,
+                "build-tier-target",
+                &[],
+                None,
+            )
+            .expect("build bom");
+
+        // Override identity drives metadata.component.
+        assert_eq!(bom["metadata"]["component"]["name"], "widget-svc");
+        assert_eq!(bom["metadata"]["component"]["version"], "1.2.3");
+
+        // Identifiers ride the orthogonal externalReferences[] slot —
+        // unaffected by the override.
+        let ext_refs = bom["metadata"]["component"]["externalReferences"]
+            .as_array()
+            .expect("externalReferences[]");
+        let urls: Vec<&str> = ext_refs
+            .iter()
+            .filter_map(|r| r["url"].as_str())
+            .collect();
+        assert!(
+            urls.contains(&"git@github.com:acme/widget-svc.git"),
+            "repo: identifier preserved; got: {urls:?}"
+        );
+        assert!(
+            urls.iter()
+                .any(|u| u.starts_with("sha256:0123456789")),
+            "subject: identifier preserved; got: {urls:?}"
+        );
     }
 }

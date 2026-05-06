@@ -852,6 +852,151 @@ operator recipes covering all four user stories.
 
 ---
 
+## Section 10 — Milestone 077: Root component override (`--root-name` / `--root-version`)
+
+Milestone 077 adds two new CLI flags that override the auto-derived
+root component identity in the emitted SBOM. Before 077, source-tier
+scans of arbitrary directories produced names like
+`filesystem-scan@0.0.0` (basename of `--path` + hardcoded `0.0.0`)
+that didn't reflect the operator-meaningful project identity. The
+new flags close that gap.
+
+### 10.1 The two flags
+
+```text
+--root-name <NAME>      Override metadata.component.name.
+--root-version <VERSION> Override metadata.component.version.
+```
+
+Both flags accept any non-empty UTF-8 except whitespace, control
+characters, `?`, and `#` (the URL-syntax-breaking subset). Both
+flags are independent — operators can override one without the
+other. When neither is passed, behavior is byte-identical to
+alpha.17. URL-encoding is applied automatically at PURL emission
+time per RFC 3986 §2.3, so npm-scoped names like `@acme/widget-svc`
+are accepted at parse and percent-encoded into the PURL `name`
+segment (`%40acme%2Fwidget-svc`).
+
+Operators can stack the override with milestone-072–076 identifier
+flags freely — they're orthogonal slots:
+
+```bash
+mikebom sbom scan --path . \
+    --root-name widget-svc --root-version 1.2.3 \
+    --repo git@github.com:acme/widget-svc.git \
+    --subject-hash sha256:abc1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab \
+    --component-id "pkg:cargo/serde@1.0.0=kusari-id:asset-foo" \
+    --output out.cdx.json
+```
+
+### 10.2 Operator recipes
+
+**Recipe A: source-tier override on an arbitrary directory.** The
+headline use case the milestone exists for.
+
+```bash
+mikebom sbom scan --path /opt/builds/abc123-snapshot \
+    --root-name widget-svc --root-version 1.2.3 \
+    --output widget-svc.cdx.json
+
+jq '.metadata.component | {name, version, "bom-ref", purl, cpe}' widget-svc.cdx.json
+# {
+#   "name": "widget-svc",
+#   "version": "1.2.3",
+#   "bom-ref": "widget-svc@1.2.3",
+#   "purl": "pkg:generic/widget-svc@1.2.3",
+#   "cpe": "cpe:2.3:a:mikebom:widget-svc:1.2.3:*:*:*:*:*:*:*"
+# }
+```
+
+**Recipe B: override on a manifest-driven Cargo project (clean
+replacement).** When the override is set on a Cargo project, the
+manifest-derived main-module identity is dropped entirely from the
+emitted SBOM (it doesn't appear in `metadata.component`, and it
+doesn't appear in `components[]` as a demoted library entry).
+
+```bash
+cd ~/projects/foo-internal-cargo  # has [package].name = "foo-internal"
+mikebom sbom scan --path . \
+    --root-name widget-svc --root-version 1.2.3 \
+    --output out.cdx.json
+
+# The manifest main-module is gone:
+jq '.components[] | select(.purl == "pkg:cargo/foo-internal@0.5.1")' out.cdx.json
+# (no output)
+
+# metadata.component carries the operator identity:
+jq '.metadata.component.name' out.cdx.json
+# "widget-svc"
+```
+
+To preserve the manifest-derived identity as a regular library
+entry alongside the override, track **GitHub issue #151** (the
+"demote to library" follow-up). Today's MVP uses clean replacement.
+
+**Recipe C: override on image-tier scan.** Useful when the image
+SBOM should identify as the deployed service name rather than the
+image basename. The auto-detected `image:` identifier (milestone
+073) is unaffected — it rides the orthogonal `externalReferences[]`
+slot.
+
+```bash
+mikebom sbom scan --image acme/internal-bld:v1 \
+    --root-name widget-svc-image --root-version 1.2.3 \
+    --output image.cdx.json
+```
+
+### 10.3 Per-format wire mapping
+
+| Field | CDX 1.6 | SPDX 2.3 | SPDX 3.0.1 |
+|-------|---------|----------|------------|
+| Name | `metadata.component.name` | Synthesized root `Package.name` | Synthesized root element `name` |
+| Version | `metadata.component.version` | Synthesized root `Package.versionInfo` | Synthesized root element `software_packageVersion` |
+| `bom-ref`/SPDXID | `metadata.component.bom-ref = <name>@<version>` | `Package.SPDXID` (hash-derived from override) | Element `spdxId` (hash-derived from override) |
+| PURL | `metadata.component.purl = pkg:generic/<percent-encoded(name)>@<percent-encoded(version)>` | `Package.externalRefs[purl]` | Element `software_packageUrl` |
+| CPE | `metadata.component.cpe` | `Package.externalRefs[cpe23Type]` | Element `externalIdentifier[cpe23]` |
+
+When the override is active, manifest-derived main-module components
+(identified by `properties[mikebom:component-role=main-module]`) are
+filtered OUT of:
+- CDX `components[]`
+- SPDX 2.3 `packages[]`
+- SPDX 3 `@graph[type=software_Package]` elements
+
+per the 2026-05-06 clean-replacement clarification. See GitHub
+issue #151 for the demote-to-library follow-up tracking.
+
+### 10.4 Validation rules
+
+`--root-name` and `--root-version` reject the following at CLI
+parse (before any scan work happens):
+- Empty strings
+- ASCII whitespace
+- ASCII control characters (`\x00`–`\x1F`, `\x7F`)
+- `?` and `#` (the URL-syntax-breaking subset)
+
+Error messages identify the offending character and its position so
+operators can pinpoint the violation:
+
+```bash
+mikebom sbom scan --path . --root-name "my widget svc"
+# error: invalid value 'my widget svc' for '--root-name <NAME>':
+# --root-name contains whitespace at position 2 (character: ' ');
+# whitespace is not allowed
+```
+
+### 10.5 Backward compatibility
+
+All milestone-073/074/075/076 byte-identity goldens stay
+byte-identical: no existing fixture passes `--root-name` or
+`--root-version`, and the no-flag emission path is unchanged.
+The new helper `percent_encode_purl_name` is invoked only on the
+override-active path; non-override PURL emission continues to use
+the existing `encode_purl_segment` (CDX) and `url_friendly` (SPDX 3)
+helpers verbatim per research §1.
+
+---
+
 ## See also
 
 - [Cross-tier binding (milestone 072)](cross-tier-binding.md) — the

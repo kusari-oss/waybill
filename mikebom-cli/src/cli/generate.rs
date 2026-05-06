@@ -81,6 +81,17 @@ pub struct GenerateArgs {
     #[arg(skip)]
     pub component_identifiers:
         Vec<mikebom::binding::identifiers::component_id::ComponentIdentifierFlag>,
+
+    /// Milestone 077: operator-supplied overrides for the root
+    /// component's name + version, threaded from `mikebom trace run`'s
+    /// `--root-name` / `--root-version` flags. Per research §6 this
+    /// field is `#[arg(skip)]` because the `mikebom sbom generate`
+    /// subcommand itself does NOT receive new flags — overriding the
+    /// root component on a re-emit-from-attestation flow has ambiguous
+    /// semantics. The override only takes effect when populated by
+    /// `cli/run.rs::execute` from the trace-run flags.
+    #[arg(skip)]
+    pub root_override: crate::generate::RootComponentOverride,
 }
 
 pub async fn execute(args: GenerateArgs, offline: bool) -> anyhow::Result<()> {
@@ -159,7 +170,13 @@ pub async fn execute(args: GenerateArgs, offline: bool) -> anyhow::Result<()> {
         // identifiers so build-tier `mikebom trace run` honors
         // `--component-id` matches against the emitted CDX
         // `components[]`.
-        .with_component_identifiers(args.component_identifiers.clone());
+        .with_component_identifiers(args.component_identifiers.clone())
+        // Milestone 077 — propagate the operator-supplied root-
+        // component override from the trace-run flags
+        // (`--root-name` / `--root-version`). Empty by default for
+        // the standalone `mikebom sbom generate` invocation per
+        // research §6.
+        .with_root_override(args.root_override.clone());
     let bom = builder.build(
         &components,
         &relationships,

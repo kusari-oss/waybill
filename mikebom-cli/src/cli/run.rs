@@ -175,6 +175,32 @@ pub struct RunArgs {
     pub component_id:
         Vec<mikebom::binding::identifiers::component_id::ComponentIdentifierFlag>,
 
+    /// Override the auto-derived `metadata.component.name` of the
+    /// emitted SBOM. Same shape and validation as
+    /// `mikebom sbom scan --root-name`: accepts any non-empty UTF-8
+    /// except whitespace, control characters, `?`, and `#`. URL-encoded
+    /// automatically when emitted into the PURL `name` segment. When
+    /// the trace produces a manifest-derived main-module component
+    /// (Cargo, npm, pip, gem, Maven, Go), setting this flag drops that
+    /// component from the emitted SBOM (clean replacement). See GitHub
+    /// issue #151 for the demote-to-library follow-up.
+    #[arg(
+        long = "root-name",
+        value_name = "NAME",
+        value_parser = super::scan_cmd::validate_root_name,
+    )]
+    pub root_name: Option<String>,
+
+    /// Override the auto-derived `metadata.component.version`. Same
+    /// validation rules as `--root-name`. Independent — can be set
+    /// without `--root-name` and vice versa.
+    #[arg(
+        long = "root-version",
+        value_name = "VERSION",
+        value_parser = super::scan_cmd::validate_root_version,
+    )]
+    pub root_version: Option<String>,
+
     /// Directories to scan for artifact files after the traced command
     /// exits. Forwarded verbatim to `mikebom trace capture`. See the
     /// `--artifact-dir` flag there for details.
@@ -392,6 +418,13 @@ pub async fn execute(args: RunArgs) -> anyhow::Result<()> {
         // Milestone 076 — forward per-component user-defined
         // identifiers for the CDX build-tier emission path.
         component_identifiers: args.component_id.clone(),
+        // Milestone 077 — forward operator-supplied root-component
+        // override from the trace-run flags. Empty default when
+        // neither flag was passed (back-compat).
+        root_override: crate::generate::RootComponentOverride {
+            name: args.root_name.clone(),
+            version: args.root_version.clone(),
+        },
     };
     // Trace's one-shot `run` wrapper doesn't thread the global --offline
     // flag through (yet). Default to online — the enrichment doesn't

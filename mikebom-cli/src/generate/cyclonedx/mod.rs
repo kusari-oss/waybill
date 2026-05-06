@@ -76,7 +76,13 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // flags. Matched against `components[].purl` byte-equally
             // and appended as additional `properties[]` entries per
             // research §2.
-            .with_component_identifiers(scan.component_identifiers.to_vec());
+            .with_component_identifiers(scan.component_identifiers.to_vec())
+            // Milestone 077 — propagate operator-supplied overrides
+            // for the root component's name + version. When active,
+            // replaces the auto-derived metadata.component identity
+            // and drops manifest-derived main-module components from
+            // the emitted components[] array (clean replacement).
+            .with_root_override(scan.root_override.clone());
         let bom = builder.build(
             scan.components,
             scan.relationships,

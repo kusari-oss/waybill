@@ -121,6 +121,81 @@ pub struct ScanArtifacts<'a> {
     /// using the flag — backwards-compatible.
     pub component_identifiers:
         &'a [mikebom::binding::identifiers::component_id::ComponentIdentifierFlag],
+    /// Milestone 077: operator-supplied overrides for the root
+    /// component's name + version. When `name` or `version` is
+    /// `Some(_)`, the override replaces the corresponding auto-derived
+    /// value in `metadata.component` (CDX) / main-module Package
+    /// (SPDX 2.3) / root element (SPDX 3). When both are `None`, the
+    /// existing auto-derivation flow runs unchanged (byte-identical to
+    /// alpha.17 per FR-009). Default `RootComponentOverride::default()`
+    /// keeps existing struct-literal call sites compiling.
+    pub root_override: RootComponentOverride,
+}
+
+/// Milestone 077 — operator-supplied overrides for the root component
+/// identity. See `ScanArtifacts::root_override`.
+///
+/// When `is_active()` returns true, per-format builders MUST:
+/// 1. Replace the auto-derived root component name/version with the
+///    override values (where each is `Some(_)`); the unset half falls
+///    through to the existing auto-derivation.
+/// 2. Filter manifest-derived main-module components (identified by
+///    `mikebom:component-role = main-module`) from the emitted
+///    `components[]` array per the 2026-05-06 clean-replacement
+///    clarification (Q2). The future demote-to-library follow-up is
+///    tracked as GitHub issue #151.
+#[derive(Debug, Clone, Default)]
+pub struct RootComponentOverride {
+    /// When `Some(name)`, replaces the auto-derived
+    /// `metadata.component.name` (CDX) / main-module `Package.name`
+    /// (SPDX 2.3) / root element name (SPDX 3) with `name`. Validated
+    /// at CLI parse per VR-077-001.
+    pub name: Option<String>,
+    /// When `Some(version)`, replaces the auto-derived version field
+    /// across all three formats. Validated at CLI parse per VR-077-001.
+    pub version: Option<String>,
+}
+
+impl RootComponentOverride {
+    /// Returns true iff at least one field is set. Used by per-format
+    /// builders to decide whether to filter manifest-derived main-
+    /// module components from the emitted `components[]` array per
+    /// the 2026-05-06 clean-replacement clarification.
+    pub fn is_active(&self) -> bool {
+        self.name.is_some() || self.version.is_some()
+    }
+}
+
+/// Milestone 077 — RFC 3986 percent-encoding for the PURL `name`
+/// segment when the operator-supplied `--root-name` / `--root-version`
+/// override is in play.
+///
+/// Per RFC 3986 §2.3 (Unreserved Characters), preserves
+/// `[A-Za-z0-9._~-]` verbatim and percent-encodes everything else
+/// (UTF-8-aware: non-ASCII characters expand to multi-byte
+/// percent-encoded runs of `%XX` per RFC 3986 §2.5).
+///
+/// This helper is **only** used on the override-active emission path.
+/// Non-override paths continue to use `encode_purl_segment` (CDX) or
+/// `url_friendly` (SPDX 3) to preserve byte-identical alpha.17 output
+/// per FR-009 / SC-002 / SC-010. Per research §1, the existing helpers
+/// are not refactored to use percent-encoding because consolidating
+/// would risk regressing existing fixture goldens.
+pub fn percent_encode_purl_name(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for byte in s.bytes() {
+        let is_unreserved = byte.is_ascii_alphanumeric()
+            || matches!(byte, b'-' | b'.' | b'_' | b'~');
+        if is_unreserved {
+            out.push(byte as char);
+        } else {
+            // Uppercase hex per RFC 3986 §2.1 ("uppercase letters
+            // SHOULD be used"); matches the CDX `encode_purl_segment`
+            // helper's case convention.
+            out.push_str(&format!("%{byte:02X}"));
+        }
+    }
+    out
 }
 
 /// Document-level scope mode for a single mikebom scan. Surfaced
@@ -290,5 +365,82 @@ mod tests {
         let a: Vec<&str> = SerializerRegistry::with_defaults().ids().collect();
         let b: Vec<&str> = SerializerRegistry::with_defaults().ids().collect();
         assert_eq!(a, b);
+    }
+
+    // -------- Milestone 077 — RootComponentOverride::is_active --------
+
+    #[test]
+    fn root_override_default_is_inactive() {
+        let o = RootComponentOverride::default();
+        assert!(!o.is_active());
+    }
+
+    #[test]
+    fn root_override_name_only_is_active() {
+        let o = RootComponentOverride {
+            name: Some("widget-svc".to_string()),
+            version: None,
+        };
+        assert!(o.is_active());
+    }
+
+    #[test]
+    fn root_override_version_only_is_active() {
+        let o = RootComponentOverride {
+            name: None,
+            version: Some("1.2.3".to_string()),
+        };
+        assert!(o.is_active());
+    }
+
+    #[test]
+    fn root_override_both_fields_is_active() {
+        let o = RootComponentOverride {
+            name: Some("widget-svc".to_string()),
+            version: Some("1.2.3".to_string()),
+        };
+        assert!(o.is_active());
+    }
+
+    // -------- Milestone 077 — percent_encode_purl_name --------
+
+    #[test]
+    fn percent_encode_purl_name_passthrough_for_unreserved() {
+        // RFC 3986 §2.3 unreserved set: ALPHA / DIGIT / "-" / "." / "_" / "~"
+        let s = "abc-123_xyz.foo~bar";
+        assert_eq!(percent_encode_purl_name(s), s);
+    }
+
+    #[test]
+    fn percent_encode_purl_name_encodes_ascii_reserved() {
+        // npm-scoped name shape: `@` and `/` percent-encoded.
+        assert_eq!(
+            percent_encode_purl_name("@acme/widget-svc"),
+            "%40acme%2Fwidget-svc"
+        );
+    }
+
+    #[test]
+    fn percent_encode_purl_name_encodes_utf8_multibyte() {
+        // UTF-8 multi-byte run for an emoji (4 bytes) → four `%XX`
+        // sequences.
+        let encoded = percent_encode_purl_name("foo🎉bar");
+        // The emoji 🎉 (U+1F389) encodes as 0xF0 0x9F 0x8E 0x89.
+        assert_eq!(encoded, "foo%F0%9F%8E%89bar");
+    }
+
+    #[test]
+    fn percent_encode_purl_name_empty_returns_empty() {
+        assert_eq!(percent_encode_purl_name(""), "");
+    }
+
+    #[test]
+    fn percent_encode_purl_name_all_url_syntax_chars() {
+        // `?` and `#` are rejected at parse, but other URL-reserved
+        // characters (e.g., `@`, `/`, `:`, `+`, ` `) MUST encode.
+        assert_eq!(
+            percent_encode_purl_name("a@b/c:d+e f"),
+            "a%40b%2Fc%3Ad%2Be%20f"
+        );
     }
 }

@@ -6,6 +6,8 @@ use mikebom_common::resolution::ResolvedComponent;
 use mikebom_common::types::purl::encode_purl_segment;
 use serde_json::json;
 
+use crate::generate::{percent_encode_purl_name, RootComponentOverride};
+
 /// Normalize a string for inclusion in a CPE 2.3 segment.
 ///
 /// CPE 2.3 well-formed name segments (per NIST) are lowercase and use
@@ -51,6 +53,7 @@ pub fn build_metadata(
     go_graph_completeness_reason: Option<&str>,
     source_document_binding: Option<&mikebom::binding::SourceDocumentId>,
     identifiers: &[mikebom::binding::identifiers::Identifier],
+    root_override: &RootComponentOverride,
 ) -> serde_json::Value {
     let version = env!("CARGO_PKG_VERSION");
     let timestamp = Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
@@ -195,8 +198,32 @@ pub fn build_metadata(
         None
     };
 
+    // Milestone 077 — when the operator-supplied override is active,
+    // short-circuit the priority ladder above. The override values
+    // become the BOM-subject identity verbatim, with PURL percent-
+    // encoding applied per RFC 3986 §2.3 (research §1). This also
+    // means the manifest-derived main-module is suppressed at the
+    // metadata.component slot here AND filtered out of the
+    // components[] array by the builder per FR-008 / Q2 clean-
+    // replacement clarification.
+    let override_active = root_override.is_active();
     let (subject_name, subject_version, synthetic_component_purl) =
-        if let Some(c) = main_module {
+        if override_active {
+            let name = root_override
+                .name
+                .clone()
+                .unwrap_or_else(|| target_name.to_string());
+            let version = root_override
+                .version
+                .clone()
+                .unwrap_or_else(|| target_version.to_string());
+            let purl = format!(
+                "pkg:generic/{}@{}",
+                percent_encode_purl_name(&name),
+                percent_encode_purl_name(&version),
+            );
+            (name, version, purl)
+        } else if let Some(c) = main_module {
             (
                 c.name.clone(),
                 c.version.clone(),
@@ -235,7 +262,17 @@ pub fn build_metadata(
     // alphanumerics → underscore). sbomqs's schema validator runs CPE
     // validation on metadata.component and flags empty/absent fields
     // as invalid.
-    let synthetic_component_cpe = if let Some(c) = main_module {
+    let synthetic_component_cpe = if override_active {
+        // Milestone 077 — operator-supplied identity drives the CPE
+        // verbatim through the existing `cpe_sanitize` helper. Vendor
+        // stays hardcoded `mikebom` per spec assumption (out of scope
+        // for this milestone).
+        format!(
+            "cpe:2.3:a:mikebom:{}:{}:*:*:*:*:*:*:*",
+            cpe_sanitize(&subject_name),
+            cpe_sanitize(&subject_version),
+        )
+    } else if let Some(c) = main_module {
         c.cpes
             .first()
             .cloned()
@@ -291,17 +328,23 @@ pub fn build_metadata(
             "type": "application",
             "name": subject_name,
             "version": subject_version,
-            "bom-ref": if main_module.is_some() {
+            "bom-ref": if main_module.is_some() && !override_active {
                 // Milestone 053: when the metadata.component is the
-                // Go main-module, its bom-ref MUST equal the PURL so
-                // existing `dependencies[].ref` entries (which key
-                // off the main-module's PURL via `scan_fs/mod.rs`'s
-                // edge-emission loop) resolve to it. The default
-                // `name@version` shape works for synthetic
-                // placeholders but breaks edge resolution for real
-                // components.
+                // Go main-module (and the operator has NOT overridden
+                // the root identity per milestone 077), its bom-ref
+                // MUST equal the PURL so existing `dependencies[].ref`
+                // entries (which key off the main-module's PURL via
+                // `scan_fs/mod.rs`'s edge-emission loop) resolve to
+                // it. The default `name@version` shape works for
+                // synthetic placeholders + override paths but breaks
+                // edge resolution for real main-module components.
                 synthetic_component_purl.clone()
             } else {
+                // Milestone 077: when override is active, bom-ref uses
+                // the operator-supplied identity verbatim — manifest-
+                // derived main-modules are dropped from components[]
+                // anyway (clean replacement), so there are no
+                // dependencies[].ref entries keyed off their PURL.
                 format!("{}@{}", subject_name, subject_version)
             },
             "purl": synthetic_component_purl,
@@ -317,7 +360,12 @@ pub fn build_metadata(
     // the native field (`type: "application"`) OR the supplementary
     // tag identify the main-module. Also surface
     // `mikebom:sbom-tier: "source"` per FR-006.
-    if let Some(c) = main_module {
+    //
+    // Milestone 077: when the override is active, the manifest main-
+    // module is no longer the BOM subject — skip these supplementary
+    // properties so the emitted root reflects only operator-supplied
+    // identity (clean replacement per Q2 clarification).
+    if let (Some(c), false) = (main_module, override_active) {
         let mut comp_props = vec![json!({
             "name": "mikebom:component-role",
             "value": "main-module",
@@ -494,7 +542,7 @@ mod tests {
 
     #[test]
     fn metadata_has_required_fields() {
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
+        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
 
         assert!(meta["timestamp"].is_string());
         assert_eq!(meta["tools"]["components"][0]["name"], "mikebom");
@@ -515,7 +563,7 @@ mod tests {
     #[test]
     fn metadata_includes_authors_for_sbom_authors_score() {
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
         let authors = meta["authors"].as_array().expect("authors must be array");
         assert!(!authors.is_empty(), "authors must be non-empty");
         assert!(authors[0]["name"].is_string());
@@ -524,7 +572,7 @@ mod tests {
     #[test]
     fn metadata_includes_supplier_for_sbom_supplier_score() {
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
         assert!(
             meta["supplier"]["name"].is_string(),
             "supplier.name must be present as a string"
@@ -536,7 +584,7 @@ mod tests {
         // sbomqs sbom_data_license scores the SBOM's own license. SPDX
         // convention is CC0-1.0 so SBOM content is free to redistribute.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
         let licenses = meta["licenses"].as_array().expect("licenses must be array");
         assert!(!licenses.is_empty());
         assert_eq!(licenses[0]["license"]["id"], "CC0-1.0");
@@ -547,7 +595,7 @@ mod tests {
         // sbomqs flags metadata.component as invalid without a purl.
         // Mikebom synthesizes pkg:generic/<name>@<version>.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
         assert_eq!(meta["component"]["purl"], "pkg:generic/myapp@0.1.0");
     }
 
@@ -556,7 +604,7 @@ mod tests {
         // sbomqs flags empty/absent cpe on metadata.component as invalid.
         // Mikebom emits cpe:2.3:a:mikebom:<name>:<version>:*:*:*:*:*:*:*.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
         assert_eq!(
             meta["component"]["cpe"],
             "cpe:2.3:a:mikebom:myapp:0.1.0:*:*:*:*:*:*:*"
@@ -588,6 +636,7 @@ mod tests {
         None,
         None,
         &[],
+        &RootComponentOverride::default(),
         );
         let purl = meta["component"]["purl"].as_str().unwrap();
         assert!(
@@ -603,16 +652,16 @@ mod tests {
 
     #[test]
     fn metadata_bom_ref_format() {
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
+        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
         assert_eq!(meta["component"]["bom-ref"], "myapp@0.1.0");
     }
 
     #[test]
     fn metadata_context_varies_per_variant() {
-        let fs = build_metadata("myapp", "1.0", GenerationContext::FilesystemScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
+        let fs = build_metadata("myapp", "1.0", GenerationContext::FilesystemScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
         assert_eq!(fs["properties"][0]["value"], "filesystem-scan");
 
-        let img = build_metadata("myapp", "1.0", GenerationContext::ContainerImageScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[]);
+        let img = build_metadata("myapp", "1.0", GenerationContext::ContainerImageScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
         assert_eq!(img["properties"][0]["value"], "container-image-scan");
     }
 
@@ -631,6 +680,7 @@ mod tests {
         None,
         None,
         &[],
+        &RootComponentOverride::default(),
         );
         assert!(meta.get("lifecycles").is_none());
     }
@@ -701,6 +751,7 @@ mod tests {
         None,
         None,
         &[],
+        &RootComponentOverride::default(),
         );
 
         let lifecycles = meta["lifecycles"]
@@ -773,6 +824,7 @@ mod tests {
         None,
         None,
         &[],
+        &RootComponentOverride::default(),
         );
         assert!(
             meta.get("lifecycles").is_none(),
@@ -802,6 +854,7 @@ mod tests {
             None,
             None,
             std::slice::from_ref(&auto),
+            &RootComponentOverride::default(),
         );
         let refs = meta["component"]["externalReferences"]
             .as_array()
@@ -838,6 +891,7 @@ mod tests {
             None,
             None,
             &ids,
+            &RootComponentOverride::default(),
         );
         let props = meta["properties"].as_array().expect("properties");
         let entry = props
@@ -868,6 +922,7 @@ mod tests {
             None,
             None,
             &[],
+            &RootComponentOverride::default(),
         );
         let props = meta["properties"].as_array().expect("properties");
         let found = props

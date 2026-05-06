@@ -222,6 +222,14 @@ pub struct SpdxExtractedLicensingInfo {
 /// The synthetic-root path is exercised by the pip + gem + deb +
 /// apk fixtures which each have multiple independent components but
 /// no single scan-target coord.
+///
+/// Milestone 077 — when `artifacts.root_override.is_active()`, the
+/// override flow:
+///   1. Filters manifest-derived main-module components OUT of the
+///      `packages[]` array (clean replacement per Q2 clarification).
+///   2. Synthesizes a root Package using the override values for
+///      name + version + PURL + CPE (instead of the auto-derived
+///      basename + `0.0.0` defaults).
 pub fn build_document(
     artifacts: &ScanArtifacts<'_>,
     cfg: &crate::generate::OutputConfig,
@@ -238,6 +246,92 @@ pub fn build_document(
     let date = cfg
         .created
         .to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+
+    // Milestone 077 — when override is active, build a filtered
+    // ScanArtifacts view that drops manifest-derived main-modules
+    // BEFORE per-package emission. The downstream root-selection
+    // logic then falls through to the synthesize_root path with
+    // the operator-supplied identity (clean replacement).
+    let override_active = artifacts.root_override.is_active();
+    let filtered_components_owned: Option<Vec<mikebom_common::resolution::ResolvedComponent>> =
+        if override_active {
+            let mut keep: Vec<mikebom_common::resolution::ResolvedComponent> =
+                Vec::with_capacity(artifacts.components.len());
+            for c in artifacts.components.iter() {
+                let is_main_module = c
+                    .extra_annotations
+                    .get("mikebom:component-role")
+                    .and_then(|v| v.as_str())
+                    == Some("main-module");
+                if is_main_module {
+                    tracing::info!(
+                        purl = %c.purl,
+                        "override is set; dropping manifest-derived main-module component '{}' from emitted SBOM (per milestone 077 clean-replacement; see GitHub issue #151)",
+                        c.purl
+                    );
+                } else {
+                    keep.push(c.clone());
+                }
+            }
+            tracing::info!(
+                name = artifacts.root_override.name.as_deref().unwrap_or(artifacts.target_name),
+                version = artifacts.root_override.version.as_deref().unwrap_or("0.0.0"),
+                "root component override active (SPDX 2.3): name='{}', version='{}'",
+                artifacts.root_override.name.as_deref().unwrap_or(artifacts.target_name),
+                artifacts.root_override.version.as_deref().unwrap_or("0.0.0"),
+            );
+            Some(keep)
+        } else {
+            None
+        };
+
+    // The package builder needs a borrow of ScanArtifacts pointing
+    // at the filtered components when override is active. We construct
+    // a local view that mirrors the input but with components swapped.
+    let view_artifacts: ScanArtifacts<'_> = if let Some(ref filtered) = filtered_components_owned {
+        ScanArtifacts {
+            target_name: artifacts.target_name,
+            components: filtered.as_slice(),
+            relationships: artifacts.relationships,
+            integrity: artifacts.integrity,
+            complete_ecosystems: artifacts.complete_ecosystems,
+            os_release_missing_fields: artifacts.os_release_missing_fields,
+            scan_target_coord: artifacts.scan_target_coord,
+            generation_context: artifacts.generation_context.clone(),
+            include_dev: artifacts.include_dev,
+            include_hashes: artifacts.include_hashes,
+            include_source_files: artifacts.include_source_files,
+            scope_mode: artifacts.scope_mode,
+            go_graph_completeness: artifacts.go_graph_completeness,
+            go_graph_completeness_reason: artifacts.go_graph_completeness_reason,
+            source_document_binding: artifacts.source_document_binding,
+            identifiers: artifacts.identifiers,
+            component_identifiers: artifacts.component_identifiers,
+            root_override: artifacts.root_override.clone(),
+        }
+    } else {
+        ScanArtifacts {
+            target_name: artifacts.target_name,
+            components: artifacts.components,
+            relationships: artifacts.relationships,
+            integrity: artifacts.integrity,
+            complete_ecosystems: artifacts.complete_ecosystems,
+            os_release_missing_fields: artifacts.os_release_missing_fields,
+            scan_target_coord: artifacts.scan_target_coord,
+            generation_context: artifacts.generation_context.clone(),
+            include_dev: artifacts.include_dev,
+            include_hashes: artifacts.include_hashes,
+            include_source_files: artifacts.include_source_files,
+            scope_mode: artifacts.scope_mode,
+            go_graph_completeness: artifacts.go_graph_completeness,
+            go_graph_completeness_reason: artifacts.go_graph_completeness_reason,
+            source_document_binding: artifacts.source_document_binding,
+            identifiers: artifacts.identifiers,
+            component_identifiers: artifacts.component_identifiers,
+            root_override: artifacts.root_override.clone(),
+        }
+    };
+    let artifacts: &ScanArtifacts<'_> = &view_artifacts;
 
     let (packages, has_extracted_licensing_infos) =
         super::packages::build_packages(artifacts, &annotator, &date);
@@ -273,7 +367,19 @@ pub fn build_document(
         .copied()
         .collect();
 
-    let (root_ids, synthetic_root) = if main_module_indices.len() == 1 {
+    // Milestone 077 — when override is active, ALWAYS synthesize a
+    // root using the override values, regardless of how many top-level
+    // components remain after the main-module filter. The override is
+    // a clean replacement at the BOM-subject slot per Q2 clarification.
+    let (root_ids, synthetic_root) = if artifacts.root_override.is_active() {
+        let (id, root) = synthesize_root_with_override(
+            artifacts.target_name,
+            &namespace,
+            artifacts.root_override.name.as_deref(),
+            artifacts.root_override.version.as_deref(),
+        );
+        (vec![id], Some(root))
+    } else if main_module_indices.len() == 1 {
         // Case 0a: single main-module → use it as root.
         let idx = main_module_indices[0];
         let purl = &artifacts.components[idx].purl;
@@ -490,6 +596,86 @@ fn synthesize_root(
     (id, root)
 }
 
+/// Milestone 077 — synthesize a root Package using operator-supplied
+/// override values for name and/or version. Mirrors `synthesize_root`
+/// but uses the new RFC 3986 percent-encoder for the PURL `name`
+/// segment so npm-scoped names like `@acme/widget-svc` round-trip
+/// correctly through the PURL field.
+fn synthesize_root_with_override(
+    target_name: &str,
+    namespace: &SpdxDocumentNamespace,
+    override_name: Option<&str>,
+    override_version: Option<&str>,
+) -> (SpdxId, super::packages::SpdxPackage) {
+    use super::packages::{
+        SpdxExternalRef, SpdxExternalRefCategory, SpdxLicenseField, SpdxPackage,
+    };
+
+    let name = override_name.unwrap_or(target_name);
+    let version = override_version.unwrap_or("0.0.0");
+
+    // Stable SPDXID — hash the namespace URI + the override values so
+    // re-runs with the same override produce the same SPDXID
+    // (determinism per FR-010 / VR-077-004). Distinct from the
+    // non-override `synthesize_root` SPDXID prefix because the input
+    // bytes differ.
+    let mut hasher = Sha256::new();
+    hasher.update(b"synthetic-root-077\n");
+    hasher.update(namespace.as_str().as_bytes());
+    hasher.update(b"\nname=");
+    hasher.update(name.as_bytes());
+    hasher.update(b"\nversion=");
+    hasher.update(version.as_bytes());
+    let digest = hasher.finalize();
+    let encoded = BASE32_NOPAD.encode(&digest);
+    let id = SpdxId::synthetic_root(&encoded[..16]);
+
+    // PURL uses RFC 3986 percent-encoding for the override path
+    // (research §1) so npm-scoped names round-trip.
+    let purl_name = crate::generate::percent_encode_purl_name(name);
+    let purl_version = crate::generate::percent_encode_purl_name(version);
+    let synth_purl = format!("pkg:generic/{purl_name}@{purl_version}");
+
+    // CPE uses `cpe_escape`-style sanitization for both segments; reuse
+    // the existing sanitize_for_coord helper which matches the CDX
+    // path's behavior for the override case.
+    let cpe_name = sanitize_for_coord(name);
+    let cpe_version = sanitize_for_coord(version);
+    let synth_cpe =
+        format!("cpe:2.3:a:mikebom:{cpe_name}:{cpe_version}:*:*:*:*:*:*:*");
+
+    let root = SpdxPackage {
+        spdx_id: id.clone(),
+        name: name.to_string(),
+        version_info: version.to_string(),
+        download_location: "NOASSERTION".to_string(),
+        supplier: Some("Organization: mikebom contributors".to_string()),
+        originator: None,
+        files_analyzed: false,
+        checksums: Vec::new(),
+        license_declared: SpdxLicenseField::NoAssertion,
+        license_concluded: SpdxLicenseField::NoAssertion,
+        copyright_text: None,
+        external_refs: vec![
+            SpdxExternalRef {
+                category: SpdxExternalRefCategory::PackageManager,
+                ref_type: "purl".to_string(),
+                locator: synth_purl,
+                comment: None,
+            },
+            SpdxExternalRef {
+                category: SpdxExternalRefCategory::Security,
+                ref_type: "cpe23Type".to_string(),
+                locator: synth_cpe,
+                comment: None,
+            },
+        ],
+        annotations: Vec::new(),
+        primary_package_purpose: None,
+    };
+    (id, root)
+}
+
 /// Normalize a target-name string for inclusion in a PURL/CPE
 /// coord. Matches the loose shape CDX uses for its synthesized
 /// scan-subject PURL (see `metadata.rs::cpe_sanitize`): lowercase
@@ -599,6 +785,7 @@ mod tests {
             source_document_binding: None,
             identifiers: &[],
             component_identifiers: &[],
+            root_override: crate::generate::RootComponentOverride::default(),
         }
     }
 

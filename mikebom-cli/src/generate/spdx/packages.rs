@@ -621,6 +621,7 @@ mod tests {
             source_document_binding: None,
             identifiers: &[],
             component_identifiers: &[],
+            root_override: crate::generate::RootComponentOverride::default(),
         }
     }
 

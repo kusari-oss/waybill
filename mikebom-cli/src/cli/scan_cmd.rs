@@ -387,6 +387,96 @@ pub struct ScanArgs {
     )]
     pub component_id:
         Vec<mikebom::binding::identifiers::component_id::ComponentIdentifierFlag>,
+
+    /// Override the auto-derived `metadata.component.name` of the
+    /// emitted SBOM. Useful when scanning an arbitrary directory whose
+    /// basename doesn't reflect the operator-meaningful project
+    /// identity. Accepts any non-empty UTF-8 except whitespace, control
+    /// characters, `?`, and `#`. URL-encoded automatically when emitted
+    /// into the PURL `name` segment.
+    ///
+    /// When this flag is set on a manifest-driven scan (Cargo, npm,
+    /// pip, gem, Maven, Go), the manifest-derived main-module
+    /// component is dropped entirely from the emitted SBOM (clean
+    /// replacement). To preserve the manifest-derived identity as a
+    /// regular library entry alongside the override, track GitHub
+    /// issue #151.
+    #[arg(
+        long = "root-name",
+        value_name = "NAME",
+        value_parser = validate_root_name,
+    )]
+    pub root_name: Option<String>,
+
+    /// Override the auto-derived `metadata.component.version`. Same
+    /// validation rules as `--root-name`. Independent — can be set
+    /// without `--root-name` and vice versa. When unset, falls through
+    /// to the auto-derived version (typically `0.0.0` for arbitrary
+    /// directories or the manifest-derived version for project scans).
+    #[arg(
+        long = "root-version",
+        value_name = "VERSION",
+        value_parser = validate_root_version,
+    )]
+    pub root_version: Option<String>,
+}
+
+/// Milestone 077 — validate `--root-name` / `--root-version` values
+/// at CLI parse time. Per FR-006 + Q1 clarification: rejects empty
+/// strings, ASCII whitespace, control characters (`\x00`–`\x1F`,
+/// `\x7F`), `?`, and `#`. Accepts any other UTF-8.
+///
+/// The error messages identify the offending character + position so
+/// operators understand which character violated which rule (operators
+/// with weird-but-legal names like `@acme/widget-svc` need to know it's
+/// the `@` or `/` that's allowed, vs `?`/`#` which are rejected).
+///
+/// Returns the validated string verbatim on success — the caller stores
+/// it in `RootComponentOverride.name` / `.version` for downstream
+/// per-format emission. The PURL emitter applies its own RFC 3986
+/// percent-encoding via `percent_encode_purl_name` at emission time.
+pub(crate) fn validate_root_field(
+    value: &str,
+    flag_name: &str,
+) -> Result<String, String> {
+    if value.is_empty() {
+        return Err(format!("{flag_name} must not be empty"));
+    }
+    for (i, c) in value.chars().enumerate() {
+        if c.is_whitespace() {
+            return Err(format!(
+                "{flag_name} contains whitespace at position {i} \
+                 (character: {c:?}); whitespace is not allowed"
+            ));
+        }
+        if c.is_control() {
+            return Err(format!(
+                "{flag_name} contains a control character at position {i} \
+                 (codepoint: U+{:04X}); control characters are not allowed",
+                c as u32
+            ));
+        }
+        if c == '?' || c == '#' {
+            return Err(format!(
+                "{flag_name} contains URL-syntax-breaking character '{c}' \
+                 at position {i}; '?' and '#' are not allowed"
+            ));
+        }
+    }
+    Ok(value.to_string())
+}
+
+/// Clap value_parser for `--root-name`. Wraps `validate_root_field`
+/// with the canonical flag-name string so error messages identify the
+/// flag.
+pub(crate) fn validate_root_name(value: &str) -> Result<String, String> {
+    validate_root_field(value, "--root-name")
+}
+
+/// Clap value_parser for `--root-version`. Wraps `validate_root_field`
+/// with the canonical flag-name string.
+pub(crate) fn validate_root_version(value: &str) -> Result<String, String> {
+    validate_root_field(value, "--root-version")
 }
 
 /// Parse a `--id <scheme>=<value>` flag for a user-defined identifier.
@@ -1500,6 +1590,14 @@ pub async fn execute(
         // `--component-id <PURL>=<scheme>:<value>` flags. Threaded to
         // per-format emitters which match against `components[].purl`.
         component_identifiers: &args.component_id,
+        // Milestone 077: operator-supplied overrides for the root
+        // component's name + version. Constructed from the new
+        // `--root-name` / `--root-version` CLI flags; defaults to
+        // both-None (back-compat) when neither flag is passed.
+        root_override: crate::generate::RootComponentOverride {
+            name: args.root_name.clone(),
+            version: args.root_version.clone(),
+        },
     };
     let output_cfg = OutputConfig {
         mikebom_version: env!("CARGO_PKG_VERSION"),
@@ -2104,6 +2202,8 @@ mod tests {
             keep_credentials_in_identifiers: false,
             subject_hash: vec![],
             component_id: vec![],
+            root_name: None,
+            root_version: None,
         }
     }
 
@@ -2479,5 +2579,68 @@ mod tests {
         assert_eq!(registry.as_deref(), Some("docker.io"));
         assert_eq!(name, "acme/foo");
         assert_eq!(tag.as_deref(), Some("v1"));
+    }
+
+    // ---------- Milestone 077 — validate_root_field ----------
+
+    #[test]
+    fn validate_root_field_accepts_simple_name() {
+        let r = validate_root_field("widget-svc", "--root-name");
+        assert_eq!(r.as_deref().ok(), Some("widget-svc"));
+    }
+
+    #[test]
+    fn validate_root_field_accepts_npm_scoped_name() {
+        // Per Q1 clarification: `@` and `/` are PURL-reserved but NOT
+        // rejected at parse — they're URL-encoded at PURL emission.
+        let r = validate_root_field("@acme/widget-svc", "--root-name");
+        assert_eq!(r.as_deref().ok(), Some("@acme/widget-svc"));
+    }
+
+    #[test]
+    fn validate_root_field_accepts_version_with_dots() {
+        let r = validate_root_field("1.2.3", "--root-version");
+        assert_eq!(r.as_deref().ok(), Some("1.2.3"));
+    }
+
+    #[test]
+    fn validate_root_field_rejects_empty() {
+        let r = validate_root_field("", "--root-name");
+        let err = r.unwrap_err();
+        assert!(err.contains("must not be empty"), "got: {err}");
+        assert!(err.contains("--root-name"), "got: {err}");
+    }
+
+    #[test]
+    fn validate_root_field_rejects_whitespace() {
+        let r = validate_root_field("my widget svc", "--root-name");
+        let err = r.unwrap_err();
+        assert!(err.contains("whitespace"), "got: {err}");
+        assert!(err.contains("position 2"), "got: {err}");
+    }
+
+    #[test]
+    fn validate_root_field_rejects_control_char() {
+        let r = validate_root_field("foo\x01bar", "--root-name");
+        let err = r.unwrap_err();
+        assert!(err.contains("control character"), "got: {err}");
+        assert!(err.contains("U+0001"), "got: {err}");
+    }
+
+    #[test]
+    fn validate_root_field_rejects_question_mark() {
+        let r = validate_root_field("foo?bar", "--root-name");
+        let err = r.unwrap_err();
+        assert!(err.contains("URL-syntax-breaking"), "got: {err}");
+        assert!(err.contains("'?'"), "got: {err}");
+        assert!(err.contains("position 3"), "got: {err}");
+    }
+
+    #[test]
+    fn validate_root_field_rejects_hash() {
+        let r = validate_root_field("foo#bar", "--root-name");
+        let err = r.unwrap_err();
+        assert!(err.contains("URL-syntax-breaking"), "got: {err}");
+        assert!(err.contains("'#'"), "got: {err}");
     }
 }

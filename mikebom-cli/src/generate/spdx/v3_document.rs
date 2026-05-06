@@ -41,6 +41,69 @@ pub fn build_document(
     cfg: &OutputConfig,
     openvex_locator: Option<&str>,
 ) -> anyhow::Result<Value> {
+    // Milestone 077 — when override is active, build a filtered view
+    // of `scan` that drops manifest-derived main-module components
+    // BEFORE per-package emission (clean replacement per Q2 / FR-008).
+    // The downstream pick_root_iri then synthesizes a root from the
+    // override values verbatim.
+    let override_active = scan.root_override.is_active();
+    let filtered_components_owned: Option<Vec<ResolvedComponent>> =
+        if override_active {
+            let mut keep: Vec<ResolvedComponent> = Vec::with_capacity(scan.components.len());
+            for c in scan.components.iter() {
+                let is_main_module = c
+                    .extra_annotations
+                    .get("mikebom:component-role")
+                    .and_then(|v| v.as_str())
+                    == Some("main-module");
+                if is_main_module {
+                    tracing::info!(
+                        purl = %c.purl,
+                        "override is set; dropping manifest-derived main-module component '{}' from emitted SBOM (per milestone 077 clean-replacement; see GitHub issue #151)",
+                        c.purl
+                    );
+                } else {
+                    keep.push(c.clone());
+                }
+            }
+            tracing::info!(
+                name = scan.root_override.name.as_deref().unwrap_or(scan.target_name),
+                version = scan.root_override.version.as_deref().unwrap_or("0.0.0"),
+                "root component override active (SPDX 3): name='{}', version='{}'",
+                scan.root_override.name.as_deref().unwrap_or(scan.target_name),
+                scan.root_override.version.as_deref().unwrap_or("0.0.0"),
+            );
+            Some(keep)
+        } else {
+            None
+        };
+    let view_scan_storage: ScanArtifacts<'_>;
+    let scan: &ScanArtifacts<'_> = if let Some(ref filtered) = filtered_components_owned {
+        view_scan_storage = ScanArtifacts {
+            target_name: scan.target_name,
+            components: filtered.as_slice(),
+            relationships: scan.relationships,
+            integrity: scan.integrity,
+            complete_ecosystems: scan.complete_ecosystems,
+            os_release_missing_fields: scan.os_release_missing_fields,
+            scan_target_coord: scan.scan_target_coord,
+            generation_context: scan.generation_context.clone(),
+            include_dev: scan.include_dev,
+            include_hashes: scan.include_hashes,
+            include_source_files: scan.include_source_files,
+            scope_mode: scan.scope_mode,
+            go_graph_completeness: scan.go_graph_completeness,
+            go_graph_completeness_reason: scan.go_graph_completeness_reason,
+            source_document_binding: scan.source_document_binding,
+            identifiers: scan.identifiers,
+            component_identifiers: scan.component_identifiers,
+            root_override: scan.root_override.clone(),
+        };
+        &view_scan_storage
+    } else {
+        scan
+    };
+
     let fingerprint = scan_fingerprint(scan, cfg);
     let doc_iri = format!("{IRI_BASE}doc-{fingerprint}");
     let tool_iri = format!("{doc_iri}/tool/mikebom");
@@ -143,11 +206,23 @@ pub fn build_document(
     // The shared `spdx-context.jsonld` already maps the
     // unprefixed `comment` key, so no @context change needed.
     let scope_comment = super::document::build_scope_comment(scan);
+    // Milestone 077 — when override is active, the document's `name`
+    // field reflects the operator-supplied identity (consistent with
+    // the root element's name). When inactive, the auto-derived
+    // `target_name` is preserved (alpha.17 byte-identity).
+    let document_name: &str = if scan.root_override.is_active() {
+        scan.root_override
+            .name
+            .as_deref()
+            .unwrap_or(scan.target_name)
+    } else {
+        scan.target_name
+    };
     let mut spdx_document = json!({
         "type": "SpdxDocument",
         "spdxId": doc_iri,
         "creationInfo": CREATION_INFO_ID,
-        "name": scan.target_name,
+        "name": document_name,
         "dataLicense": "https://spdx.org/licenses/CC0-1.0",
         "rootElement": root_iris.clone(),
         "comment": scope_comment,
@@ -327,6 +402,11 @@ pub fn build_document(
 }
 
 /// Pick the root Package IRI. Preference order:
+/// 0. **Milestone 077** — when `scan.root_override.is_active()`,
+///    ALWAYS synthesize a root using the override values. The
+///    manifest-derived main-modules have already been filtered out
+///    of the components slice by the time this runs (clean replacement
+///    per Q2 clarification).
 /// 1. A Package whose name matches `scan.target_name`.
 /// 2. The first Package in the (already sorted) packages list.
 /// 3. Synthesize a root Package and prepend it — used for the
@@ -342,6 +422,56 @@ fn pick_root_iri(
     packages: &mut Vec<Value>,
     components: &[ResolvedComponent],
 ) -> (Vec<String>, bool) {
+    // Milestone 077 — override path takes precedence over every
+    // auto-derivation step. The synthesized root carries the operator-
+    // supplied identity AND its PURL uses RFC 3986 percent-encoding
+    // (research §1) so npm-scoped names round-trip correctly.
+    if scan.root_override.is_active() {
+        let name = scan
+            .root_override
+            .name
+            .as_deref()
+            .unwrap_or(scan.target_name);
+        let version = scan.root_override.version.as_deref().unwrap_or("0.0.0");
+        let purl_name = crate::generate::percent_encode_purl_name(name);
+        let purl_version = crate::generate::percent_encode_purl_name(version);
+        let synth_purl = format!("pkg:generic/{purl_name}@{purl_version}");
+        let synth_iri = format!(
+            "{doc_iri}/pkg-root-{}",
+            hash_prefix(synth_purl.as_bytes(), 16)
+        );
+        // CPE: reuse `url_friendly` for sanitization parity with the
+        // existing non-override path. CPE has its own escape rules
+        // distinct from RFC 3986 percent-encoding.
+        let synth_cpe = format!(
+            "cpe:2.3:a:mikebom:{}:{}:*:*:*:*:*:*:*",
+            url_friendly(name),
+            url_friendly(version),
+        );
+        let synth_pkg = json!({
+            "type": "software_Package",
+            "spdxId": synth_iri,
+            "creationInfo": CREATION_INFO_ID,
+            "name": name,
+            "software_packageVersion": version,
+            "software_packageUrl": synth_purl,
+            "externalIdentifier": [
+                {
+                    "type": "ExternalIdentifier",
+                    "externalIdentifierType": "cpe23",
+                    "identifier": synth_cpe,
+                },
+                {
+                    "type": "ExternalIdentifier",
+                    "externalIdentifierType": "packageUrl",
+                    "identifier": synth_purl,
+                },
+            ],
+        });
+        packages.insert(0, synth_pkg);
+        return (vec![synth_iri], true);
+    }
+
     // Milestones 053 (Go) + 064 (cargo) FR-008 + #127: prefer
     // main-module-tagged components as root elements. SPDX 3.0.1's
     // `rootElement` is a plural array, so multi-main-module
