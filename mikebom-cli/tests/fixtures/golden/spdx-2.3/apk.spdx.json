@@ -4,37 +4,37 @@
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.18",
+      "annotator": "Tool: mikebom-0.1.0-alpha.19",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.18",
+      "annotator": "Tool: mikebom-0.1.0-alpha.19",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":0}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.18",
+      "annotator": "Tool: mikebom-0.1.0-alpha.19",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-events-dropped\",\"value\":0}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.18",
+      "annotator": "Tool: mikebom-0.1.0-alpha.19",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.18",
+      "annotator": "Tool: mikebom-0.1.0-alpha.19",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.18",
+      "annotator": "Tool: mikebom-0.1.0-alpha.19",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"apk\"]}}"
     }
   ],
@@ -42,19 +42,19 @@
     "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: operations. Per-component scope detail in mikebom:sbom-tier annotations.",
     "created": "1970-01-01T00:00:00Z",
     "creators": [
-      "Tool: mikebom-0.1.0-alpha.18",
+      "Tool: mikebom-0.1.0-alpha.19",
       "Organization: mikebom contributors"
     ]
   },
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-NMMZT3NB6LPXJCYC"
+    "SPDXRef-DocumentRoot-ZOT52EAZJMX4VFHH"
   ],
-  "documentNamespace": "https://mikebom.kusari.dev/spdx/MDY7MP3ADZO6Y7TOA7YGIJ65Z3FMANS3",
+  "documentNamespace": "https://mikebom.kusari.dev/spdx/FPIH44YITX3EF6TADTW22TSC5EA6QMIJ",
   "name": "synthetic",
   "packages": [
     {
-      "SPDXID": "SPDXRef-DocumentRoot-NMMZT3NB6LPXJCYC",
+      "SPDXID": "SPDXRef-DocumentRoot-ZOT52EAZJMX4VFHH",
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
@@ -81,25 +81,25 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.18",
+          "annotator": "Tool: mikebom-0.1.0-alpha.19",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.18",
+          "annotator": "Tool: mikebom-0.1.0-alpha.19",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/apk/synthetic/lib/apk/db/installed\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.18",
+          "annotator": "Tool: mikebom-0.1.0-alpha.19",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:alpinelinux:busybox:1.36.1-r15:*:*:*:*:*:*:*\",\"cpe:2.3:a:busybox:busybox:1.36.1-r15:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.18",
+          "annotator": "Tool: mikebom-0.1.0-alpha.19",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         }
       ],
@@ -128,25 +128,25 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.18",
+          "annotator": "Tool: mikebom-0.1.0-alpha.19",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.18",
+          "annotator": "Tool: mikebom-0.1.0-alpha.19",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/apk/synthetic/lib/apk/db/installed\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.18",
+          "annotator": "Tool: mikebom-0.1.0-alpha.19",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:alpinelinux:musl:1.2.4_git20230717-r4:*:*:*:*:*:*:*\",\"cpe:2.3:a:musl:musl:1.2.4_git20230717-r4:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.18",
+          "annotator": "Tool: mikebom-0.1.0-alpha.19",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         }
       ],
@@ -172,7 +172,7 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-NMMZT3NB6LPXJCYC",
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-ZOT52EAZJMX4VFHH",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     }
