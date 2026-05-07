@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-05-06
+Auto-generated from all feature plans. Last updated: 2026-05-07
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -61,6 +61,8 @@ Auto-generated from all feature plans. Last updated: 2026-05-06
 - N/A — purely a metadata transform on the SPDX 3 emission code path; no caches, no persistence. (078-spdx3-conformance)
 - Rust stable (workspace toolchain inherited from milestones 001–078; no nightly). + Existing only — `serde`/`serde_json` (JSON-LD round-tripping), `regex` (already in the dependency closure for the `gitoid` detection per Q2's regex `^[0-9a-f]{40}$`), `tracing`, `anyhow`. No new Cargo deps. Python 3.10+ in CI/test layer (already added in milestone 078 for `spdx3-validate==0.0.5`); reused as-is. (079-spdx3-id-vocab)
 - N/A — pure metadata transform on the SPDX 3 emission code path; no caches, no persistence. (079-spdx3-id-vocab)
+- Rust stable (workspace toolchain inherited from milestones 001–079; no nightly). + Existing only — `serde`/`serde_json` (JSON-LD round-tripping; the existing CDX emission path uses `serde_json::Value` directly, not structured types from the `cyclonedx-bom` crate, so adding new fields is purely additive JSON construction), `tracing`, `anyhow`, `clap` (the five new flags via derive — `--creator` repeatable via `ArgAction::Append`; `--annotator`/`--annotation-comment` via two parallel `Vec<String>` fields with post-validation per research §3), `chrono` (annotation timestamp deterministic per scan-emission time, same source as `creationInfo.created`), `thiserror` (parser error enum). Reuses milestone 078's `spdx3-validate==0.0.5` as the SPDX 3 conformance gate. **No new Cargo dependencies.** (080-user-sbom-metadata)
+- N/A — pure metadata transform on the SBOM emission code paths; no caches, no persistence. The `--metadata-file` JSON sidecar is a one-shot read; mikebom holds the parsed values in process for the duration of the scan. (080-user-sbom-metadata)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -123,9 +125,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 080-user-sbom-metadata: Added Rust stable (workspace toolchain inherited from milestones 001–079; no nightly). + Existing only — `serde`/`serde_json` (JSON-LD round-tripping; the existing CDX emission path uses `serde_json::Value` directly, not structured types from the `cyclonedx-bom` crate, so adding new fields is purely additive JSON construction), `tracing`, `anyhow`, `clap` (the five new flags via derive — `--creator` repeatable via `ArgAction::Append`; `--annotator`/`--annotation-comment` via two parallel `Vec<String>` fields with post-validation per research §3), `chrono` (annotation timestamp deterministic per scan-emission time, same source as `creationInfo.created`), `thiserror` (parser error enum). Reuses milestone 078's `spdx3-validate==0.0.5` as the SPDX 3 conformance gate. **No new Cargo dependencies.**
 - 079-spdx3-id-vocab: Added Rust stable (workspace toolchain inherited from milestones 001–078; no nightly). + Existing only — `serde`/`serde_json` (JSON-LD round-tripping), `regex` (already in the dependency closure for the `gitoid` detection per Q2's regex `^[0-9a-f]{40}$`), `tracing`, `anyhow`. No new Cargo deps. Python 3.10+ in CI/test layer (already added in milestone 078 for `spdx3-validate==0.0.5`); reused as-is.
 - 078-spdx3-conformance: Added Rust stable (workspace toolchain inherited from milestones 001–077; no nightly). **Plus Python 3.10+** in CI/test for the JPEWdev `spdx3-validate` tool — Python is NEW for this milestone but only at the CI/test layer; the mikebom production binary stays pure Rust per Constitution Principle I. + Existing only on the Rust side — `serde`/`serde_json` (existing JSON-LD round-tripping), `tracing`, `anyhow`, plus a small `Command::new("spdx3-validate")` shell-out helper for the integration tests. Dev/CI side adds the **JPEWdev `spdx3-validate`** Python package, version-pinned per FR-008. **No additions to the Rust `Cargo.toml` deps.**
-- 077-root-component-override: Added Rust stable (workspace toolchain inherited from milestones 001–076; no nightly). + Existing only — `serde`/`serde_json`, `tracing`, `anyhow`, `clap` (the two new flags via derive). The `url` crate is already a direct workspace dep (promoted in milestone 075) and reused for URL-encoding the override values into the PURL `name` segment per RFC 3986. **No additions to the dependency tree at the lockfile level.**
 
 
 <!-- MANUAL ADDITIONS START -->

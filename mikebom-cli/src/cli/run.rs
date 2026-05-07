@@ -201,6 +201,56 @@ pub struct RunArgs {
     )]
     pub root_version: Option<String>,
 
+    // ────────────────────────────────────────────────────────────
+    // Milestone 080 — user-provided SBOM metadata. Symmetric with
+    // `mikebom sbom scan`. See `specs/080-user-sbom-metadata/`.
+    // ────────────────────────────────────────────────────────────
+
+    /// Attach a creator entry to the emitted SBOM. Repeatable. Form:
+    /// `<Type>: <Name>` where `<Type>` is one of `Tool`, `Organization`,
+    /// `Person` (case-sensitive). See `mikebom sbom scan --help` for
+    /// per-format landing details.
+    #[arg(
+        long = "creator",
+        action = clap::ArgAction::Append,
+        value_name = "TYPE: NAME",
+    )]
+    pub creator: Vec<String>,
+
+    /// Attach a document-level annotator. Repeatable. MUST pair 1:1
+    /// with `--annotation-comment`.
+    #[arg(
+        long = "annotator",
+        action = clap::ArgAction::Append,
+        value_name = "TYPE: NAME",
+    )]
+    pub annotator: Vec<String>,
+
+    /// Free-text comment that pairs positionally with the preceding
+    /// `--annotator` flag. Repeatable.
+    #[arg(
+        long = "annotation-comment",
+        action = clap::ArgAction::Append,
+        value_name = "TEXT",
+    )]
+    pub annotation_comment: Vec<String>,
+
+    /// Free-text comment about the SBOM document as a whole.
+    /// Single-valued.
+    #[arg(long = "metadata-comment", value_name = "TEXT")]
+    pub metadata_comment: Option<String>,
+
+    /// Operator-supplied override for the document/Sbom-level name
+    /// field. See `mikebom sbom scan --help` for the per-format
+    /// precedence rules vs. `--root-name`.
+    #[arg(long = "scan-target-name", value_name = "NAME")]
+    pub scan_target_name: Option<String>,
+
+    /// Path to a JSON sidecar file containing user-supplied metadata.
+    /// See `mikebom sbom scan --help` for the schema.
+    #[arg(long = "metadata-file", value_name = "PATH")]
+    pub metadata_file: Option<std::path::PathBuf>,
+
     /// Directories to scan for artifact files after the traced command
     /// exits. Forwarded verbatim to `mikebom trace capture`. See the
     /// `--artifact-dir` flag there for details.
@@ -260,6 +310,15 @@ pub struct RunArgs {
 }
 
 pub async fn execute(args: RunArgs) -> anyhow::Result<()> {
+    // Milestone 080 — strict-interleaving check on raw argv before
+    // anything else (research §3 UX-friendly early diagnostic).
+    let argv: Vec<String> = std::env::args().collect();
+    if let Err(diag) =
+        mikebom::binding::user_metadata::validate_annotator_pair_interleaving(&argv)
+    {
+        anyhow::bail!(diag);
+    }
+
     // Milestone 074 — capture the invocation cwd ONCE, before any
     // subprocess work or trace capture. Wrapped-command later cwd
     // changes (e.g., the script does `cd build/`) have no effect on
@@ -397,6 +456,55 @@ pub async fn execute(args: RunArgs) -> anyhow::Result<()> {
     let assembled_ids =
         mikebom::binding::identifiers::resolve_identifiers(auto_detected_ids, &manual_ids);
 
+    // Milestone 080 — assemble user-supplied SBOM metadata from the
+    // trace-run flags. Same shape and merge rules as `mikebom sbom
+    // scan`. The emission timestamp is captured here so all
+    // annotations share a single deterministic value.
+    let metadata_file = match args.metadata_file.as_deref() {
+        Some(p) => Some(
+            mikebom::binding::user_metadata::load_metadata_file(p)
+                .map_err(|e| anyhow::anyhow!(e))?,
+        ),
+        None => None,
+    };
+    let trace_emission_ts = chrono::Utc::now();
+    let trace_user_metadata = mikebom::binding::user_metadata::merge_file_and_flags(
+        metadata_file,
+        args.creator.clone(),
+        args.annotator.clone(),
+        args.annotation_comment.clone(),
+        args.metadata_comment.clone(),
+        args.scan_target_name.clone(),
+        trace_emission_ts,
+    )
+    .map_err(|e| anyhow::anyhow!(e))?;
+    let trace_org_count = trace_user_metadata
+        .creators
+        .iter()
+        .filter(|c| {
+            matches!(
+                c.kind,
+                mikebom::binding::user_metadata::CreatorKind::Organization
+            )
+        })
+        .count();
+    if trace_org_count > 1 {
+        eprintln!(
+            "warning: {} `--creator \"Organization: ...\"` entries supplied; \
+             CDX 1.6 permits exactly one `metadata.manufacturer` so the first \
+             Organization creator populates that slot and the rest are routed \
+             to `bom.annotations[]`.",
+            trace_org_count
+        );
+    }
+    if trace_user_metadata.scan_target_name.is_some() && args.root_name.is_some() {
+        eprintln!(
+            "warning: --root-name overrides --scan-target-name for CDX \
+             metadata.component.name; SPDX 2.3 / SPDX 3 honor both \
+             independently."
+        );
+    }
+
     // Phase 2: derive the SBOM from the attestation.
     let generate_args = GenerateArgs {
         attestation_file: args.attestation_output.clone(),
@@ -425,6 +533,9 @@ pub async fn execute(args: RunArgs) -> anyhow::Result<()> {
             name: args.root_name.clone(),
             version: args.root_version.clone(),
         },
+        // Milestone 080 — forward aggregated user-supplied SBOM
+        // metadata from the trace-run flags.
+        user_metadata: trace_user_metadata,
     };
     // Trace's one-shot `run` wrapper doesn't thread the global --offline
     // flag through (yet). Default to online — the enrichment doesn't

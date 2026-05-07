@@ -54,6 +54,7 @@ pub fn build_metadata(
     source_document_binding: Option<&mikebom::binding::SourceDocumentId>,
     identifiers: &[mikebom::binding::identifiers::Identifier],
     root_override: &RootComponentOverride,
+    user_metadata: &mikebom::binding::user_metadata::UserMetadata,
 ) -> serde_json::Value {
     let version = env!("CARGO_PKG_VERSION");
     let timestamp = Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
@@ -291,23 +292,66 @@ pub fn build_metadata(
         )
     };
 
+    // Milestone 080 — user-supplied creators routed by Type per the
+    // research §2 routing matrix. `Tool` → metadata.tools.components[];
+    // `Person` → metadata.authors[]; first `Organization` →
+    // metadata.manufacturer (single-valued); subsequent Organization
+    // entries are emitted into bom.annotations[] by the builder layer
+    // (see `build_user_annotations`).
+    use mikebom::binding::user_metadata::CreatorKind;
+    let mut user_authors: Vec<serde_json::Value> = Vec::new();
+    let mut user_tool_components: Vec<serde_json::Value> = Vec::new();
+    let mut user_manufacturer: Option<serde_json::Value> = None;
+    for creator in &user_metadata.creators {
+        match creator.kind {
+            CreatorKind::Tool => {
+                user_tool_components.push(json!({
+                    "type": "application",
+                    "name": creator.name,
+                }));
+            }
+            CreatorKind::Organization => {
+                if user_manufacturer.is_none() {
+                    user_manufacturer = Some(json!({ "name": creator.name }));
+                }
+                // Subsequent Organization creators are routed to
+                // bom.annotations[] by `build_user_annotations`.
+            }
+            CreatorKind::Person => {
+                user_authors.push(json!({ "name": creator.name }));
+            }
+        }
+    }
+
+    let mut tools_components_arr = vec![json!({
+        "type": "application",
+        "name": "mikebom",
+        "version": version,
+        "publisher": "mikebom contributors"
+    })];
+    for c in user_tool_components {
+        tools_components_arr.push(c);
+    }
+    let mut authors_arr = vec![json!({ "name": "mikebom" })];
+    for a in user_authors {
+        authors_arr.push(a);
+    }
+    let supplier_obj = match &user_manufacturer {
+        Some(_) => json!({ "name": "mikebom contributors" }),
+        None => json!({ "name": "mikebom contributors" }),
+    };
     let mut metadata = json!({
         "timestamp": timestamp,
         // Top-level SBOM provenance: the list of individuals or
         // organizations responsible for creating THIS SBOM (not the
         // underlying project). Scored by sbomqs `sbom_authors` (2.9%
-        // in Provenance). Single-entry placeholder is sufficient;
-        // future work can extract from git config or accept
-        // --author=NAME via CLI.
-        "authors": [
-            { "name": "mikebom" }
-        ],
+        // in Provenance). Mikebom is always present; user-supplied
+        // `--creator "Person: ..."` entries append (milestone 080).
+        "authors": authors_arr,
         // SBOM supplier: the organization providing the SBOM. Scored
         // by sbomqs `sbom_supplier` (2.2%). Hardcoded to the mikebom
         // project identity.
-        "supplier": {
-            "name": "mikebom contributors"
-        },
+        "supplier": supplier_obj,
         // SBOM content license. SPDX-SBOM convention uses CC0-1.0 so
         // the SBOM itself can be distributed without restriction.
         // Scored by sbomqs `sbom_data_license` (1.8% in Licensing).
@@ -315,18 +359,25 @@ pub fn build_metadata(
             { "license": { "id": "CC0-1.0" } }
         ],
         "tools": {
-            "components": [
-                {
-                    "type": "application",
-                    "name": "mikebom",
-                    "version": version,
-                    "publisher": "mikebom contributors"
-                }
-            ]
+            "components": tools_components_arr
         },
         "component": {
             "type": "application",
-            "name": subject_name,
+            "name": if !override_active && user_metadata.scan_target_name.is_some() && main_module.is_none() && scan_target_coord.is_none() {
+                // Milestone 080 — `--scan-target-name` overrides the
+                // metadata.component.name when --root-name is not set
+                // AND no manifest-derived main-module / Maven coord
+                // claims the slot. Per research §5, --root-name takes
+                // precedence on CDX when both are set.
+                serde_json::Value::String(
+                    user_metadata
+                        .scan_target_name
+                        .clone()
+                        .unwrap_or_else(|| subject_name.clone()),
+                )
+            } else {
+                serde_json::Value::String(subject_name.clone())
+            },
             "version": subject_version,
             "bom-ref": if main_module.is_some() && !override_active {
                 // Milestone 053: when the metadata.component is the
@@ -352,6 +403,15 @@ pub fn build_metadata(
         },
         "properties": properties,
     });
+
+    // Milestone 080 — first user-supplied `Organization:` creator
+    // populates CDX 1.6 `metadata.manufacturer` (single-valued slot
+    // per research §1).
+    if let Some(m) = user_manufacturer {
+        if let Some(obj) = metadata.as_object_mut() {
+            obj.insert("manufacturer".to_string(), m);
+        }
+    }
 
     // Milestone 053 FR-004: when the metadata.component is the Go
     // main-module (per the ladder above), surface the supplementary
@@ -535,6 +595,84 @@ pub fn build_metadata(
     metadata
 }
 
+/// Milestone 080 — build CDX 1.6 `bom.annotations[]` entries for the
+/// user-supplied `--metadata-comment`, `--annotator` /
+/// `--annotation-comment` pairs, and any subsequent `Organization:`
+/// creators that don't fit in `metadata.manufacturer`. Returns an
+/// empty vec when `user_metadata.is_active()` would not produce any
+/// bom-level annotation entries.
+///
+/// Per research §1, CDX 1.6 `bom.annotations[]` is the
+/// standards-native landing slot. The `subjects[]` entry points at
+/// the root component's bom-ref to satisfy the CDX 1.6 schema's
+/// `subjects: required, uniqueItems` contract.
+///
+/// Each entry has shape `{subjects, annotator: <oneOf>, timestamp,
+/// text}` per research §1's audit; the `annotator` field's `oneOf`
+/// choice is selected by the creator's Type:
+/// - `Tool` → `annotator.component = { type: "application", name }`
+/// - `Organization` → `annotator.organization = { name }`
+/// - `Person` → `annotator.individual = { name }`
+pub fn build_user_annotations(
+    user_metadata: &mikebom::binding::user_metadata::UserMetadata,
+    root_bom_ref: &str,
+    timestamp: &str,
+) -> Vec<serde_json::Value> {
+    use mikebom::binding::user_metadata::CreatorKind;
+    let mut out: Vec<serde_json::Value> = Vec::new();
+
+    // 1) --metadata-comment: annotator.organization.name = "mikebom contributors"
+    if let Some(comment) = &user_metadata.metadata_comment {
+        out.push(json!({
+            "subjects": [root_bom_ref],
+            "annotator": { "organization": { "name": "mikebom contributors" } },
+            "timestamp": timestamp,
+            "text": comment,
+        }));
+    }
+
+    // 2) Multi-Organization edge case: 2nd+ Organization creators
+    //    route to bom.annotations[] per research §1 + §2.
+    let mut org_seen = false;
+    for creator in &user_metadata.creators {
+        if matches!(creator.kind, CreatorKind::Organization) {
+            if !org_seen {
+                org_seen = true;
+                continue;
+            }
+            out.push(json!({
+                "subjects": [root_bom_ref],
+                "annotator": { "organization": { "name": creator.name } },
+                "timestamp": timestamp,
+                "text": "creator",
+            }));
+        }
+    }
+
+    // 3) --annotator + --annotation-comment pairs.
+    for ann in &user_metadata.annotations {
+        let annotator_obj = match ann.annotator.kind {
+            CreatorKind::Tool => json!({
+                "component": { "type": "application", "name": ann.annotator.name }
+            }),
+            CreatorKind::Organization => json!({
+                "organization": { "name": ann.annotator.name }
+            }),
+            CreatorKind::Person => json!({
+                "individual": { "name": ann.annotator.name }
+            }),
+        };
+        out.push(json!({
+            "subjects": [root_bom_ref],
+            "annotator": annotator_obj,
+            "timestamp": timestamp,
+            "text": ann.comment,
+        }));
+    }
+
+    out
+}
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
@@ -542,7 +680,7 @@ mod tests {
 
     #[test]
     fn metadata_has_required_fields() {
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
+        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default());
 
         assert!(meta["timestamp"].is_string());
         assert_eq!(meta["tools"]["components"][0]["name"], "mikebom");
@@ -563,7 +701,7 @@ mod tests {
     #[test]
     fn metadata_includes_authors_for_sbom_authors_score() {
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default());
         let authors = meta["authors"].as_array().expect("authors must be array");
         assert!(!authors.is_empty(), "authors must be non-empty");
         assert!(authors[0]["name"].is_string());
@@ -572,7 +710,7 @@ mod tests {
     #[test]
     fn metadata_includes_supplier_for_sbom_supplier_score() {
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default());
         assert!(
             meta["supplier"]["name"].is_string(),
             "supplier.name must be present as a string"
@@ -584,7 +722,7 @@ mod tests {
         // sbomqs sbom_data_license scores the SBOM's own license. SPDX
         // convention is CC0-1.0 so SBOM content is free to redistribute.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default());
         let licenses = meta["licenses"].as_array().expect("licenses must be array");
         assert!(!licenses.is_empty());
         assert_eq!(licenses[0]["license"]["id"], "CC0-1.0");
@@ -595,7 +733,7 @@ mod tests {
         // sbomqs flags metadata.component as invalid without a purl.
         // Mikebom synthesizes pkg:generic/<name>@<version>.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default());
         assert_eq!(meta["component"]["purl"], "pkg:generic/myapp@0.1.0");
     }
 
@@ -604,7 +742,7 @@ mod tests {
         // sbomqs flags empty/absent cpe on metadata.component as invalid.
         // Mikebom emits cpe:2.3:a:mikebom:<name>:<version>:*:*:*:*:*:*:*.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default());
         assert_eq!(
             meta["component"]["cpe"],
             "cpe:2.3:a:mikebom:myapp:0.1.0:*:*:*:*:*:*:*"
@@ -637,6 +775,7 @@ mod tests {
         None,
         &[],
         &RootComponentOverride::default(),
+        &mikebom::binding::user_metadata::UserMetadata::default(),
         );
         let purl = meta["component"]["purl"].as_str().unwrap();
         assert!(
@@ -652,16 +791,16 @@ mod tests {
 
     #[test]
     fn metadata_bom_ref_format() {
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
+        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default());
         assert_eq!(meta["component"]["bom-ref"], "myapp@0.1.0");
     }
 
     #[test]
     fn metadata_context_varies_per_variant() {
-        let fs = build_metadata("myapp", "1.0", GenerationContext::FilesystemScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
+        let fs = build_metadata("myapp", "1.0", GenerationContext::FilesystemScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default());
         assert_eq!(fs["properties"][0]["value"], "filesystem-scan");
 
-        let img = build_metadata("myapp", "1.0", GenerationContext::ContainerImageScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default());
+        let img = build_metadata("myapp", "1.0", GenerationContext::ContainerImageScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default());
         assert_eq!(img["properties"][0]["value"], "container-image-scan");
     }
 
@@ -681,6 +820,7 @@ mod tests {
         None,
         &[],
         &RootComponentOverride::default(),
+        &mikebom::binding::user_metadata::UserMetadata::default(),
         );
         assert!(meta.get("lifecycles").is_none());
     }
@@ -752,6 +892,7 @@ mod tests {
         None,
         &[],
         &RootComponentOverride::default(),
+        &mikebom::binding::user_metadata::UserMetadata::default(),
         );
 
         let lifecycles = meta["lifecycles"]
@@ -825,6 +966,7 @@ mod tests {
         None,
         &[],
         &RootComponentOverride::default(),
+        &mikebom::binding::user_metadata::UserMetadata::default(),
         );
         assert!(
             meta.get("lifecycles").is_none(),
@@ -855,6 +997,7 @@ mod tests {
             None,
             std::slice::from_ref(&auto),
             &RootComponentOverride::default(),
+            &mikebom::binding::user_metadata::UserMetadata::default(),
         );
         let refs = meta["component"]["externalReferences"]
             .as_array()
@@ -892,6 +1035,7 @@ mod tests {
             None,
             &ids,
             &RootComponentOverride::default(),
+            &mikebom::binding::user_metadata::UserMetadata::default(),
         );
         let props = meta["properties"].as_array().expect("properties");
         let entry = props
@@ -923,6 +1067,7 @@ mod tests {
             None,
             &[],
             &RootComponentOverride::default(),
+            &mikebom::binding::user_metadata::UserMetadata::default(),
         );
         let props = meta["properties"].as_array().expect("properties");
         let found = props

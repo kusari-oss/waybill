@@ -85,6 +85,12 @@ pub struct CycloneDxBuilder {
     /// from the emitted `components[]` array (clean replacement per
     /// the 2026-05-06 Q2 clarification).
     root_override: crate::generate::RootComponentOverride,
+    /// Milestone 080 — user-provided SBOM metadata aggregated from the
+    /// `--creator` / `--annotator` / `--annotation-comment` /
+    /// `--metadata-comment` / `--scan-target-name` / `--metadata-file`
+    /// flags. Threaded into `build_metadata` so each entry lands at
+    /// the format's standards-native carrier.
+    user_metadata: mikebom::binding::user_metadata::UserMetadata,
 }
 
 impl CycloneDxBuilder {
@@ -99,7 +105,20 @@ impl CycloneDxBuilder {
             identifiers: Vec::new(),
             component_identifiers: Vec::new(),
             root_override: crate::generate::RootComponentOverride::default(),
+            user_metadata: mikebom::binding::user_metadata::UserMetadata::default(),
         }
+    }
+
+    /// Milestone 080 — record the user-supplied SBOM metadata. When
+    /// `user_metadata.is_active()`, `build_metadata` routes each
+    /// entry to the CDX 1.6 standards-native carrier per
+    /// `specs/080-user-sbom-metadata/contracts/`.
+    pub fn with_user_metadata(
+        mut self,
+        m: mikebom::binding::user_metadata::UserMetadata,
+    ) -> Self {
+        self.user_metadata = m;
+        self
     }
 
     /// Milestone 077 — record the operator-supplied root-component
@@ -270,6 +289,7 @@ impl CycloneDxBuilder {
             self.source_document_binding.as_ref(),
             &self.identifiers,
             &self.root_override,
+            &self.user_metadata,
         );
         // Milestone 076 — track per-component identifier matches so
         // we can emit a warn for any selector that matched zero
@@ -304,7 +324,35 @@ impl CycloneDxBuilder {
         let deps = build_dependencies(effective_components, relationships, &target_ref);
         let vulnerabilities = build_vulnerabilities(effective_components);
 
-        let bom = json!({
+        // Milestone 080 — build CDX 1.6 `bom.annotations[]` for the
+        // user-supplied --metadata-comment, --annotator + --annotation-
+        // comment pairs, and any 2nd+ Organization creators that don't
+        // fit in metadata.manufacturer. Empty when user_metadata is
+        // not active. Subjects[] points at the root component's bom-
+        // ref so the CDX 1.6 schema's `subjects: required, uniqueItems`
+        // contract is satisfied.
+        let user_annotations = if self.user_metadata.is_active() {
+            let root_bom_ref = metadata
+                .get("component")
+                .and_then(|c| c.get("bom-ref"))
+                .and_then(|v| v.as_str())
+                .unwrap_or(target_ref.as_str())
+                .to_string();
+            let timestamp = metadata
+                .get("timestamp")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            super::metadata::build_user_annotations(
+                &self.user_metadata,
+                &root_bom_ref,
+                &timestamp,
+            )
+        } else {
+            Vec::new()
+        };
+
+        let mut bom = json!({
             "bomFormat": "CycloneDX",
             "specVersion": "1.6",
             "serialNumber": serial_number,
@@ -315,6 +363,11 @@ impl CycloneDxBuilder {
             "dependencies": deps,
             "vulnerabilities": vulnerabilities
         });
+        if !user_annotations.is_empty() {
+            if let Some(obj) = bom.as_object_mut() {
+                obj.insert("annotations".to_string(), json!(user_annotations));
+            }
+        }
 
         Ok(bom)
     }

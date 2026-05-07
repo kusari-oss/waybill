@@ -1093,6 +1093,29 @@ override-active path; non-override PURL emission continues to use
 the existing `encode_purl_segment` (CDX) and `url_friendly` (SPDX 3)
 helpers verbatim per research §1.
 
+### 10.6 Interaction with milestone 080's `--scan-target-name`
+
+Milestone 080 adds a sibling flag, `--scan-target-name <name>`, that
+overrides the **document-level** name field — distinct from
+`--root-name` which targets the root component / Package's name.
+Per milestone 080 research §5, the precedence rules are
+**format-specific**:
+
+| Format | Field | Wins on conflict | Notes |
+|--------|-------|------------------|-------|
+| CDX 1.6 | `metadata.component.name` | `--root-name` (the root component IS the document subject in CDX) | A stderr warning fires when both flags are set; `--scan-target-name` is silently ignored on this slot. |
+| SPDX 2.3 | top-level `name` (document) AND root `Package.name` | Both honored independently | `--scan-target-name` sets the document-level `name`; `--root-name` sets the root Package's `name`. SPDX 2.3 is the only format with two distinct slots. |
+| SPDX 3 | `SpdxDocument.name` AND root `software_Package.name` | Both honored independently | Same independence as SPDX 2.3 — `--scan-target-name` targets the SBOM-level name; `--root-name` targets the root-element name. |
+
+Operators who want both an SBOM-document name AND a root-component
+name on SPDX 2.3 / SPDX 3 SBOMs should pass both flags. On CDX
+emissions, only `--root-name` is observable on the
+`metadata.component.name` slot — the audit trail of the conflict is
+recorded as a stderr warning at scan time.
+
+See `specs/080-user-sbom-metadata/quickstart.md` for the full set of
+milestone-080 flag recipes.
+
 ---
 
 ## See also

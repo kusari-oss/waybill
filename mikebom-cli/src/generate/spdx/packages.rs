@@ -622,6 +622,7 @@ mod tests {
             identifiers: &[],
             component_identifiers: &[],
             root_override: crate::generate::RootComponentOverride::default(),
+            user_metadata: mikebom::binding::user_metadata::UserMetadata::default(),
         }
     }
 

@@ -92,6 +92,16 @@ pub struct GenerateArgs {
     /// `cli/run.rs::execute` from the trace-run flags.
     #[arg(skip)]
     pub root_override: crate::generate::RootComponentOverride,
+
+    /// Milestone 080: user-provided SBOM metadata aggregated from
+    /// `mikebom trace run`'s new flags (`--creator` / `--annotator` /
+    /// `--annotation-comment` / `--metadata-comment` /
+    /// `--scan-target-name` / `--metadata-file`). `#[arg(skip)]` for
+    /// the same reason as `root_override`: `mikebom sbom generate`
+    /// itself does NOT receive these flags; the field is populated
+    /// only via `cli/run.rs::execute`.
+    #[arg(skip)]
+    pub user_metadata: mikebom::binding::user_metadata::UserMetadata,
 }
 
 pub async fn execute(args: GenerateArgs, offline: bool) -> anyhow::Result<()> {
@@ -176,7 +186,11 @@ pub async fn execute(args: GenerateArgs, offline: bool) -> anyhow::Result<()> {
         // (`--root-name` / `--root-version`). Empty by default for
         // the standalone `mikebom sbom generate` invocation per
         // research §6.
-        .with_root_override(args.root_override.clone());
+        .with_root_override(args.root_override.clone())
+        // Milestone 080 — propagate user-supplied SBOM metadata from
+        // the trace-run flags. Empty by default for the standalone
+        // `mikebom sbom generate` invocation.
+        .with_user_metadata(args.user_metadata.clone());
     let bom = builder.build(
         &components,
         &relationships,
