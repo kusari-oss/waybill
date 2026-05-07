@@ -323,13 +323,17 @@ fn subject_identifier_emits_in_all_three_formats() {
         "out.spdx3.json",
     );
     // SpdxDocument.externalIdentifier[] carries the subject entry.
+    // Per milestone 079, mikebom's `subject` scheme maps to the
+    // SPDX 3 controlled-vocab value `other` with the original
+    // scheme preserved on `comment` as `original-scheme: subject`.
     let graph = spdx3["@graph"].as_array().expect("@graph");
     let mut found_3 = false;
     for n in graph {
         if n["type"].as_str() == Some("SpdxDocument") {
             if let Some(eids) = n["externalIdentifier"].as_array() {
                 for e in eids {
-                    if e["externalIdentifierType"].as_str() == Some("subject")
+                    if e["externalIdentifierType"].as_str() == Some("other")
+                        && e["comment"].as_str() == Some("original-scheme: subject")
                         && e["identifier"].as_str() == Some(&value)
                     {
                         found_3 = true;
@@ -339,7 +343,7 @@ fn subject_identifier_emits_in_all_three_formats() {
             }
         }
     }
-    assert!(found_3, "SPDX 3 missing subject identifier");
+    assert!(found_3, "SPDX 3 missing subject identifier (post-079: type=other + comment=original-scheme: subject)");
 }
 
 #[test]
@@ -621,6 +625,10 @@ fn component_id_attaches_to_matching_component_spdx3() {
         "spdx-3-json",
         "out.spdx3.json",
     );
+    // Per milestone 079, the user-defined non-vocab scheme
+    // `kusari-id` maps to the SPDX 3 controlled-vocab value `other`
+    // with the original scheme preserved on `comment` as
+    // `original-scheme: kusari-id`.
     let graph = spdx3["@graph"].as_array().expect("@graph");
     let mut serde_found = false;
     for n in graph {
@@ -629,13 +637,17 @@ fn component_id_attaches_to_matching_component_spdx3() {
         {
             if let Some(eids) = n["externalIdentifier"].as_array() {
                 serde_found = eids.iter().any(|e| {
-                    e["externalIdentifierType"].as_str() == Some("kusari-id")
+                    e["externalIdentifierType"].as_str() == Some("other")
+                        && e["comment"].as_str() == Some("original-scheme: kusari-id")
                         && e["identifier"].as_str() == Some("asset-foo")
                 });
             }
         }
     }
-    assert!(serde_found, "expected SPDX 3 externalIdentifier on matching Package");
+    assert!(
+        serde_found,
+        "expected SPDX 3 externalIdentifier (post-079: type=other + comment=original-scheme: kusari-id) on matching Package"
+    );
 }
 
 #[test]

@@ -33,6 +33,7 @@ pub mod v3_agents;
 pub mod v3_annotations;
 pub mod v3_document;
 pub mod v3_external_ids;
+pub mod v3_id_type_map;
 pub mod v3_licenses;
 pub mod v3_packages;
 pub mod v3_relationships;

@@ -183,7 +183,10 @@ fn auto_detect_origin_emits_repo_identifier_in_all_three_formats() {
         "SPDX 2.3 creationInfo.creators must carry redundant `Tool: ... source: <id>` line for built-in identifier; got creators={creators:?}"
     );
 
-    // SPDX 3 — check Element.externalIdentifier[]
+    // SPDX 3 — check Element.externalIdentifier[]. Per milestone
+    // 079, the `repo:` mikebom scheme maps to the SPDX 3
+    // controlled-vocab value `other` with the original scheme name
+    // preserved on the `comment` field as `original-scheme: repo`.
     let spdx3 = run_scan_spdx3(td.path(), fake_home.path());
     let graph = spdx3["@graph"].as_array().expect("graph");
     let doc_el = graph
@@ -196,9 +199,11 @@ fn auto_detect_origin_emits_repo_identifier_in_all_three_formats() {
     let repo_entry = idents
         .iter()
         .find(|e| {
-            e.get("externalIdentifierType").and_then(|v| v.as_str()) == Some("repo")
+            e.get("externalIdentifierType").and_then(|v| v.as_str()) == Some("other")
+                && e.get("comment").and_then(|v| v.as_str())
+                    == Some("original-scheme: repo")
         })
-        .expect("repo entry");
+        .expect("repo entry mapped to (other, comment=original-scheme: repo)");
     assert_eq!(
         repo_entry["identifier"].as_str(),
         Some("git@github.com:test/foo.git")

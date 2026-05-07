@@ -624,3 +624,598 @@ fn validator_pinned_version_check() {
         "validator --version output should contain pinned version {PINNED_VALIDATOR_VERSION}; got: {combined}"
     );
 }
+
+// =====================================================================
+// Milestone 079 — externalIdentifierType controlled-vocabulary
+// conformance tests (T006-T010).
+//
+// These tests verify that mikebom's SPDX 3 emission path maps every
+// non-vocab mikebom scheme to one of the 11 SPDX 3 controlled-vocab
+// values (`Core/externalIdentifierType` SHACL constraint), preserving
+// the original scheme name on the `comment` field as
+// `original-scheme: <name>`. See:
+//   - specs/079-spdx3-id-vocab/spec.md
+//   - specs/079-spdx3-id-vocab/contracts/spdx3-id-vocab-mapping.md
+// =====================================================================
+
+/// Walk an SPDX 3 document's `@graph` and return all
+/// `ExternalIdentifier` value-objects across all containing
+/// elements (SpdxDocument and software_Package), flattened.
+fn collect_external_identifiers(json: &serde_json::Value) -> Vec<serde_json::Value> {
+    let graph = json
+        .get("@graph")
+        .and_then(|v| v.as_array())
+        .expect("emitted document must carry an @graph array");
+    let mut out = Vec::new();
+    for el in graph {
+        if let Some(eids) = el.get("externalIdentifier").and_then(|v| v.as_array()) {
+            for e in eids {
+                out.push(e.clone());
+            }
+        }
+    }
+    out
+}
+
+/// Construct a synthetic docker-save tarball at `tarball_path` with
+/// the given `repo_tags` value injected verbatim into the
+/// `manifest.json`'s `RepoTags` array. Identical layer payload to
+/// the milestone-078 `fresh_image_tier_emission_passes` helper —
+/// the only variable here is the RepoTags content (which is what
+/// triggers the milestone-074 image-identifier auto-detect, the
+/// key mikebom-079 codepath).
+fn build_image_tarball_with_repo_tags(
+    tarball_path: &Path,
+    repo_tags_json_array: &str,
+) {
+    use std::io::Write;
+    let mut layer_bytes = Vec::new();
+    {
+        let mut layer = tar::Builder::new(&mut layer_bytes);
+        let os_release = b"ID=debian\nVERSION_ID=12\nVERSION_CODENAME=bookworm\n";
+        let mut h = tar::Header::new_ustar();
+        h.set_path("etc/os-release").unwrap();
+        h.set_size(os_release.len() as u64);
+        h.set_mode(0o644);
+        h.set_cksum();
+        layer.append(&h, &os_release[..]).unwrap();
+        let status = b"Package: hello\nVersion: 2.10-3\nArchitecture: amd64\nStatus: install ok installed\n\n";
+        let mut h2 = tar::Header::new_ustar();
+        h2.set_path("var/lib/dpkg/status").unwrap();
+        h2.set_size(status.len() as u64);
+        h2.set_mode(0o644);
+        h2.set_cksum();
+        layer.append(&h2, &status[..]).unwrap();
+        layer.finish().unwrap();
+    }
+    let manifest = format!(
+        r#"[{{"Config":"config.json","RepoTags":{repo_tags_json_array},"Layers":["layer0/layer.tar"]}}]"#
+    );
+    let f = std::fs::File::create(tarball_path).unwrap();
+    {
+        let mut outer = tar::Builder::new(f);
+        let mut mh = tar::Header::new_ustar();
+        mh.set_path("manifest.json").unwrap();
+        mh.set_size(manifest.len() as u64);
+        mh.set_mode(0o644);
+        mh.set_cksum();
+        outer.append(&mh, manifest.as_bytes()).unwrap();
+        let mut lh = tar::Header::new_ustar();
+        lh.set_path("layer0/layer.tar").unwrap();
+        lh.set_size(layer_bytes.len() as u64);
+        lh.set_mode(0o644);
+        lh.set_cksum();
+        outer.append(&lh, layer_bytes.as_slice()).unwrap();
+        outer.into_inner().unwrap().flush().unwrap();
+    }
+}
+
+/// T006 / SC-001 — image-tier scan with non-empty RepoTags. Pre-079
+/// this emitted `externalIdentifierType: "image"` (a SHACL violation
+/// per the SPDX 3 controlled vocab). Post-079 it emits `(other,
+/// comment="original-scheme: image")`. The validator runs end-to-end
+/// against the fresh emission with zero `externalIdentifierType`
+/// violations expected.
+#[test]
+fn image_tier_with_repo_tags_passes_validator() {
+    let dir = tempfile::tempdir().expect("image tempdir");
+    let tar_path = dir.path().join("image.tar");
+    // Per T006: non-empty RepoTags. The exact tag string is the
+    // one the issue #154 reproduction recipe describes. Auto-detect
+    // produces `image:registry.example.com/img:tag` from this.
+    build_image_tarball_with_repo_tags(
+        &tar_path,
+        r#"["registry.example.com/img:tag"]"#,
+    );
+
+    let out_dir = tempfile::tempdir().expect("emit-output tempdir");
+    let out_path = out_dir.path().join("image.spdx3.json");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let mut cmd = Command::new(bin());
+    apply_fake_home_env(&mut cmd, fake_home.path());
+    cmd.arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--image")
+        .arg(&tar_path)
+        .arg("--format")
+        .arg("spdx-3-json")
+        .arg("--output")
+        .arg(format!("spdx-3-json={}", out_path.to_string_lossy()))
+        .arg("--no-deep-hash");
+    let output = cmd.output().expect("mikebom should run");
+    assert!(
+        output.status.success(),
+        "image-tier scan with RepoTags failed: stderr={}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    // (1) Validator gate: zero violations.
+    assert_validation_or_skip(&out_path, "image-tier-with-repo-tags");
+
+    // (2) Wire-format gate (independent of validator): the emitted
+    //     externalIdentifier[] must contain an entry with
+    //     externalIdentifierType=other AND
+    //     comment="original-scheme: image".
+    let json: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&out_path).unwrap())
+            .expect("emitted SPDX 3 should be valid JSON");
+    let eids = collect_external_identifiers(&json);
+    let has_image_id = eids.iter().any(|e| {
+        e.get("externalIdentifierType").and_then(|v| v.as_str()) == Some("other")
+            && e.get("comment").and_then(|v| v.as_str())
+                == Some("original-scheme: image")
+    });
+    assert!(
+        has_image_id,
+        "expected image-tier auto-detected identifier mapped to (other, comment=original-scheme: image); \
+         got externalIdentifier entries: {eids:#?}"
+    );
+}
+
+/// T007 / SC-002 — source-tier scan inside a git repository. Both
+/// the milestone-074 `repo:` (remote URL) and `git:` (HEAD SHA)
+/// auto-detected identifiers must map to the SPDX 3 vocab: `repo:` →
+/// `(other, comment="original-scheme: repo")` per FR-002, and
+/// `git:` → `gitoid` (no comment) per FR-004.
+#[test]
+fn source_tier_in_git_repo_passes_validator() {
+    let project = tempfile::tempdir().expect("project tempdir");
+    // Minimal cargo project so the scan emits something.
+    std::fs::write(
+        project.path().join("Cargo.toml"),
+        b"[package]\nname = \"m079-source-tier-fixture\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\n",
+    )
+    .unwrap();
+    std::fs::write(
+        project.path().join("Cargo.lock"),
+        b"version = 3\n\n[[package]]\nname = \"m079-source-tier-fixture\"\nversion = \"0.1.0\"\n",
+    )
+    .unwrap();
+
+    // git init + remote + commit so milestone-074's git_rev_parse_head
+    // produces a 40-char SHA.
+    let git = |args: &[&str]| {
+        let status = Command::new("git")
+            .current_dir(project.path())
+            .args(args)
+            // Suppress GPG / hooks / system-config influence.
+            .env("GIT_AUTHOR_NAME", "test")
+            .env("GIT_AUTHOR_EMAIL", "test@example.com")
+            .env("GIT_COMMITTER_NAME", "test")
+            .env("GIT_COMMITTER_EMAIL", "test@example.com")
+            .env("GIT_CONFIG_GLOBAL", "/dev/null")
+            .env("GIT_CONFIG_SYSTEM", "/dev/null")
+            .status()
+            .expect("git command should run");
+        assert!(status.success(), "git {args:?} failed");
+    };
+    git(&["init", "-q"]);
+    git(&[
+        "remote",
+        "add",
+        "origin",
+        "https://example.com/foo/bar.git",
+    ]);
+    git(&["add", "."]);
+    git(&[
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-q",
+        "-m",
+        "init",
+    ]);
+
+    let emitted = emit_spdx3_for_path(project.path());
+    drop(project);
+
+    // (1) Validator gate.
+    assert_validation_or_skip(&emitted.output_path, "source-tier-in-git-repo");
+
+    // (2) Wire-format gate: repo: → (other, comment="original-scheme: repo")
+    //
+    // Note re: FR-004 gitoid detection: mikebom's source-tier
+    // `auto_detect_repo_identifier` emits ONLY the `repo:` identifier;
+    // bare-SHA `git:` values are produced by milestone 074's
+    // build-tier path (`auto_detect_build_tier_identifiers`, called
+    // from `mikebom trace run`), which requires Linux + nightly +
+    // the `ebpf-tracing` feature flag and isn't reachable from
+    // `mikebom sbom scan`. Even the build-tier path emits
+    // `git:<url>#<sha>` values (not bare SHAs), so the gitoid regex
+    // only matches construct-time defensively. The unit test in
+    // `v3_id_type_map::tests::git_sha_detected_as_gitoid` exercises
+    // the gitoid mapping at the function level; this integration
+    // test gates the source-tier `repo:` mapping (FR-002) only.
+    let eids = collect_external_identifiers(&emitted.json);
+    let has_repo = eids.iter().any(|e| {
+        e.get("externalIdentifierType").and_then(|v| v.as_str()) == Some("other")
+            && e.get("comment").and_then(|v| v.as_str())
+                == Some("original-scheme: repo")
+    });
+    assert!(
+        has_repo,
+        "expected `repo:` auto-detected identifier mapped to (other, comment=original-scheme: repo); \
+         got externalIdentifier entries: {eids:#?}"
+    );
+}
+
+/// T008 / SC-003 — build-tier-flavored emission with manual
+/// `--subject-hash` and `--attestation` flags. These exercise the
+/// `subject:` and `attestation:` mikebom built-in schemes — the
+/// milestone-076 build-tier identifier surface — without requiring
+/// eBPF (which is feature-gated and out-of-scope for this test
+/// target). Both schemes must map to the SPDX 3 controlled-vocab
+/// value `other` with `comment="original-scheme: <subject|attestation>"`.
+#[test]
+fn build_tier_with_subjects_passes_validator() {
+    let project = tempfile::tempdir().expect("project tempdir");
+    std::fs::write(
+        project.path().join("Cargo.toml"),
+        b"[package]\nname = \"m079-build-tier-fixture\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\n",
+    )
+    .unwrap();
+    std::fs::write(
+        project.path().join("Cargo.lock"),
+        b"version = 3\n\n[[package]]\nname = \"m079-build-tier-fixture\"\nversion = \"0.1.0\"\n",
+    )
+    .unwrap();
+
+    let out_dir = tempfile::tempdir().expect("emit-output tempdir");
+    let out_path = out_dir.path().join("buildtier.spdx3.json");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let mut cmd = Command::new(bin());
+    apply_fake_home_env(&mut cmd, fake_home.path());
+    // Each scheme exercised once. The values are syntactically
+    // valid for both flags (sha256 hex for `subject`, IRI for
+    // `attestation`).
+    let subject_hex = "a".repeat(64);
+    cmd.arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(project.path())
+        .arg("--format")
+        .arg("spdx-3-json")
+        .arg("--output")
+        .arg(format!("spdx-3-json={}", out_path.to_string_lossy()))
+        .arg("--no-deep-hash")
+        .arg("--subject-hash")
+        .arg(format!("sha256:{subject_hex}"))
+        .arg("--attestation")
+        .arg("https://example.com/build/attestation.json");
+    let output = cmd.output().expect("mikebom should run");
+    assert!(
+        output.status.success(),
+        "build-tier-flavored scan failed: stderr={}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    drop(project);
+
+    // (1) Validator gate.
+    assert_validation_or_skip(&out_path, "build-tier-with-subjects");
+
+    // (2) Wire-format gates: both subject + attestation map to other.
+    let json: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&out_path).unwrap())
+            .expect("emitted SPDX 3 should be valid JSON");
+    let eids = collect_external_identifiers(&json);
+    let has_subject = eids.iter().any(|e| {
+        e.get("externalIdentifierType").and_then(|v| v.as_str()) == Some("other")
+            && e.get("comment").and_then(|v| v.as_str())
+                == Some("original-scheme: subject")
+    });
+    assert!(
+        has_subject,
+        "expected `subject:` identifier mapped to (other, comment=original-scheme: subject); \
+         got externalIdentifier entries: {eids:#?}"
+    );
+    let has_attestation = eids.iter().any(|e| {
+        e.get("externalIdentifierType").and_then(|v| v.as_str()) == Some("other")
+            && e.get("comment").and_then(|v| v.as_str())
+                == Some("original-scheme: attestation")
+    });
+    assert!(
+        has_attestation,
+        "expected `attestation:` identifier mapped to (other, comment=original-scheme: attestation); \
+         got externalIdentifier entries: {eids:#?}"
+    );
+}
+
+/// T009 / SC-004 — user-defined `--component-id` flag. Two
+/// invocations: one with a non-vocab scheme (`jira`) → must map to
+/// `(other, comment="original-scheme: jira")`; one with a vocab-named
+/// scheme (`cve`) → must pass through verbatim with NO comment per
+/// FR-003 second clause. Both attached to a component the scan
+/// actually emits (we plant a Cargo.toml so the cargo main-module
+/// path produces a matching component).
+#[test]
+fn user_defined_scheme_passes_validator() {
+    let project = tempfile::tempdir().expect("project tempdir");
+    // Crate name + version chosen to match the --component-id PURL.
+    std::fs::write(
+        project.path().join("Cargo.toml"),
+        b"[package]\nname = \"m079-user-scheme-fixture\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\n",
+    )
+    .unwrap();
+    std::fs::write(
+        project.path().join("Cargo.lock"),
+        b"version = 3\n\n[[package]]\nname = \"m079-user-scheme-fixture\"\nversion = \"0.1.0\"\n",
+    )
+    .unwrap();
+
+    let out_dir = tempfile::tempdir().expect("emit-output tempdir");
+    let out_path = out_dir.path().join("userscheme.spdx3.json");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let mut cmd = Command::new(bin());
+    apply_fake_home_env(&mut cmd, fake_home.path());
+    cmd.arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(project.path())
+        .arg("--format")
+        .arg("spdx-3-json")
+        .arg("--output")
+        .arg(format!("spdx-3-json={}", out_path.to_string_lossy()))
+        .arg("--no-deep-hash")
+        .arg("--component-id")
+        .arg("pkg:cargo/m079-user-scheme-fixture@0.1.0=jira:PROJ-1234")
+        .arg("--component-id")
+        .arg("pkg:cargo/m079-user-scheme-fixture@0.1.0=cve:CVE-2024-1234");
+    let output = cmd.output().expect("mikebom should run");
+    assert!(
+        output.status.success(),
+        "scan with user-defined --component-id flags failed: stderr={}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    drop(project);
+
+    // (1) Validator gate.
+    assert_validation_or_skip(&out_path, "user-defined-component-id");
+
+    // (2) Wire-format gates: jira → other+comment, cve → cve, no
+    //     comment.
+    let json: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&out_path).unwrap())
+            .expect("emitted SPDX 3 should be valid JSON");
+    let eids = collect_external_identifiers(&json);
+    let has_jira = eids.iter().any(|e| {
+        e.get("externalIdentifierType").and_then(|v| v.as_str()) == Some("other")
+            && e.get("identifier").and_then(|v| v.as_str()) == Some("PROJ-1234")
+            && e.get("comment").and_then(|v| v.as_str())
+                == Some("original-scheme: jira")
+    });
+    assert!(
+        has_jira,
+        "expected jira: identifier mapped to (other, identifier=PROJ-1234, comment=original-scheme: jira); \
+         got externalIdentifier entries: {eids:#?}"
+    );
+    let has_cve = eids.iter().any(|e| {
+        e.get("externalIdentifierType").and_then(|v| v.as_str()) == Some("cve")
+            && e.get("identifier").and_then(|v| v.as_str()) == Some("CVE-2024-1234")
+            && e.get("comment").is_none()
+    });
+    assert!(
+        has_cve,
+        "expected cve: identifier passed through verbatim as (cve, identifier=CVE-2024-1234, NO comment); \
+         got externalIdentifier entries: {eids:#?}"
+    );
+}
+
+/// T010 / SC-005 + VR-079-002 + VR-079-003 — for every non-vocab
+/// mikebom scheme (5 built-ins + 1 user-defined), the comment field
+/// MUST start with the literal prefix `"original-scheme: "` followed
+/// by the original scheme name verbatim. Vocab-named schemes (e.g.,
+/// `cve`) MUST NOT carry a comment field (no info loss).
+#[test]
+fn original_scheme_recoverable_from_comment() {
+    // Build a maximally-loaded fixture exercising every relevant
+    // identifier surface in one scan: image-tier RepoTags (image:),
+    // source-tier git remote (repo: + git:), build-tier subjects
+    // (subject: + attestation:), user-defined (jira:), and a
+    // vocab-named user scheme (cve:) for the negative case.
+    //
+    // We can't drive image-tier and source-tier in the same scan, so
+    // we emit two SBOMs and assert against both.
+
+    // ---- SBOM A: source-tier scan with --subject-hash + --attestation
+    //       + --component-id <jira> + --component-id <cve>. Covers
+    //       repo: + git: + subject: + attestation: + jira: + cve:.
+    let project = tempfile::tempdir().expect("project tempdir");
+    std::fs::write(
+        project.path().join("Cargo.toml"),
+        b"[package]\nname = \"m079-recoverability-fixture\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\n",
+    )
+    .unwrap();
+    std::fs::write(
+        project.path().join("Cargo.lock"),
+        b"version = 3\n\n[[package]]\nname = \"m079-recoverability-fixture\"\nversion = \"0.1.0\"\n",
+    )
+    .unwrap();
+
+    let git = |args: &[&str]| {
+        let status = Command::new("git")
+            .current_dir(project.path())
+            .args(args)
+            .env("GIT_AUTHOR_NAME", "test")
+            .env("GIT_AUTHOR_EMAIL", "test@example.com")
+            .env("GIT_COMMITTER_NAME", "test")
+            .env("GIT_COMMITTER_EMAIL", "test@example.com")
+            .env("GIT_CONFIG_GLOBAL", "/dev/null")
+            .env("GIT_CONFIG_SYSTEM", "/dev/null")
+            .status()
+            .expect("git command should run");
+        assert!(status.success(), "git {args:?} failed");
+    };
+    git(&["init", "-q"]);
+    git(&[
+        "remote",
+        "add",
+        "origin",
+        "https://example.com/foo/bar.git",
+    ]);
+    git(&["add", "."]);
+    git(&[
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-q",
+        "-m",
+        "init",
+    ]);
+
+    let out_dir = tempfile::tempdir().expect("emit-output tempdir");
+    let out_path = out_dir.path().join("recover.spdx3.json");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let mut cmd = Command::new(bin());
+    apply_fake_home_env(&mut cmd, fake_home.path());
+    let subject_hex = "b".repeat(64);
+    cmd.arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(project.path())
+        .arg("--format")
+        .arg("spdx-3-json")
+        .arg("--output")
+        .arg(format!("spdx-3-json={}", out_path.to_string_lossy()))
+        .arg("--no-deep-hash")
+        .arg("--subject-hash")
+        .arg(format!("sha256:{subject_hex}"))
+        .arg("--attestation")
+        .arg("https://example.com/build/attestation.json")
+        .arg("--component-id")
+        .arg("pkg:cargo/m079-recoverability-fixture@0.1.0=jira:PROJ-1234")
+        .arg("--component-id")
+        .arg("pkg:cargo/m079-recoverability-fixture@0.1.0=cve:CVE-2024-1234");
+    let output = cmd.output().expect("mikebom should run");
+    assert!(
+        output.status.success(),
+        "recoverability scan failed: stderr={}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    drop(project);
+
+    let json_a: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&out_path).unwrap())
+            .expect("emitted SPDX 3 should be valid JSON");
+    let eids_a = collect_external_identifiers(&json_a);
+
+    // ---- SBOM B: image-tier scan with non-empty RepoTags. Covers
+    //       image:.
+    let img_dir = tempfile::tempdir().expect("image tempdir");
+    let tar_path = img_dir.path().join("image.tar");
+    build_image_tarball_with_repo_tags(
+        &tar_path,
+        r#"["registry.example.com/img:tag"]"#,
+    );
+    let out_dir_b = tempfile::tempdir().expect("emit-output tempdir B");
+    let out_path_b = out_dir_b.path().join("img.spdx3.json");
+    let fake_home_b = tempfile::tempdir().expect("fake-home tempdir B");
+    let mut cmd_b = Command::new(bin());
+    apply_fake_home_env(&mut cmd_b, fake_home_b.path());
+    cmd_b
+        .arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--image")
+        .arg(&tar_path)
+        .arg("--format")
+        .arg("spdx-3-json")
+        .arg("--output")
+        .arg(format!("spdx-3-json={}", out_path_b.to_string_lossy()))
+        .arg("--no-deep-hash");
+    let output_b = cmd_b.output().expect("mikebom should run");
+    assert!(
+        output_b.status.success(),
+        "image-tier scan for recoverability failed: stderr={}",
+        String::from_utf8_lossy(&output_b.stderr)
+    );
+    let json_b: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&out_path_b).unwrap())
+            .expect("emitted SPDX 3 should be valid JSON");
+    let eids_b = collect_external_identifiers(&json_b);
+
+    // Helper: assert that some externalIdentifier entry across the
+    // pooled (a, b) set has comment exactly
+    // `"original-scheme: <expected>"`.
+    let assert_recoverable = |expected_scheme: &str, all: &[serde_json::Value]| {
+        let want = format!("original-scheme: {expected_scheme}");
+        let found = all.iter().any(|e| {
+            e.get("comment").and_then(|v| v.as_str()) == Some(&want)
+        });
+        assert!(
+            found,
+            "expected externalIdentifier with comment={want:?}; \
+             searched {} entries; got: {all:#?}",
+            all.len()
+        );
+    };
+    let mut all = eids_a.clone();
+    all.extend(eids_b.iter().cloned());
+
+    // (a) image (from SBOM B's image-tier scan).
+    assert_recoverable("image", &all);
+    // (b) repo (from SBOM A's git auto-detect).
+    assert_recoverable("repo", &all);
+    // (c) subject (from SBOM A's --subject-hash).
+    assert_recoverable("subject", &all);
+    // (d) attestation (from SBOM A's --attestation).
+    assert_recoverable("attestation", &all);
+    // (e) jira (from SBOM A's --component-id non-vocab).
+    assert_recoverable("jira", &all);
+
+    // (f) git: SHA → gitoid (FR-004): the SOURCE-TIER source-tree
+    //     scan path doesn't emit a bare-SHA `git:` identifier (only
+    //     the build-tier `mikebom trace run` path under nightly
+    //     eBPF does, and even that emits `git:<url>#<sha>` not
+    //     bare SHAs). So this integration test cannot exercise the
+    //     gitoid live-emission path; the unit test
+    //     `v3_id_type_map::tests::git_sha_detected_as_gitoid` covers
+    //     it at the function level instead. We retain the negative
+    //     check here: if a `gitoid`-typed entry ever appears in
+    //     this fixture's output (via a future code path), it MUST
+    //     NOT carry a `comment` field per VR-079-003.
+    for e in eids_a.iter() {
+        if e.get("externalIdentifierType").and_then(|v| v.as_str()) == Some("gitoid") {
+            assert!(
+                e.get("comment").is_none(),
+                "gitoid entry must not carry a comment (VR-079-003); got: {e:#?}"
+            );
+        }
+    }
+
+    // (g) cve: → cve, no comment (vocab passthrough; user named
+    //     vocab value directly, no info loss).
+    let has_cve_no_comment = eids_a.iter().any(|e| {
+        e.get("externalIdentifierType").and_then(|v| v.as_str()) == Some("cve")
+            && e.get("identifier").and_then(|v| v.as_str()) == Some("CVE-2024-1234")
+            && e.get("comment").is_none()
+    });
+    assert!(
+        has_cve_no_comment,
+        "expected user-defined cve scheme passed through verbatim with NO \
+         comment (FR-003 vocab short-circuit); got eids_a: {eids_a:#?}"
+    );
+}

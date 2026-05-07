@@ -19,7 +19,14 @@ use mikebom_common::resolution::ResolvedComponent;
 ///
 /// Always includes a `purl` entry. Includes one `cpe23` entry per
 /// fully-resolved CPE in `component.cpes`. Sorted by
-/// `(externalIdentifierType, identifier)` for determinism.
+/// `(externalIdentifierType, identifier, comment)` for determinism
+/// per milestone-079 research §4 + VR-079-006. The third sort
+/// component matters when callers append entries that carry
+/// `comment` strings (e.g., the milestone-079 `--component-id`
+/// path). For the entries this function emits today (packageUrl /
+/// cpe23 — both vocab values, no comment), the third component is
+/// always the empty string and the sort behavior is identical to
+/// pre-079.
 pub fn build_external_identifiers_for(component: &ResolvedComponent) -> Vec<Value> {
     let mut entries: Vec<Value> = Vec::new();
 
@@ -51,12 +58,18 @@ pub fn build_external_identifiers_for(component: &ResolvedComponent) -> Vec<Valu
         }
     }
 
-    // Deterministic order: by (type, identifier).
+    // Deterministic order: by (type, identifier, comment) per
+    // milestone-079 research §4 + VR-079-006. The `comment` slot is
+    // populated by the milestone-079 mapping at appended call sites
+    // (`v3_packages.rs::build_packages` + `v3_document.rs`); locally
+    // emitted PURL/CPE entries don't carry a comment, so they sort
+    // by `unwrap_or("")` exactly as pre-079.
     entries.sort_by(|a, b| {
-        let key = |v: &Value| -> (String, String) {
+        let key = |v: &Value| -> (String, String, String) {
             (
                 v["externalIdentifierType"].as_str().unwrap_or("").to_string(),
                 v["identifier"].as_str().unwrap_or("").to_string(),
+                v.get("comment").and_then(|s| s.as_str()).unwrap_or("").to_string(),
             )
         };
         key(a).cmp(&key(b))

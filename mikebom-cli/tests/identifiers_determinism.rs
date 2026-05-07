@@ -177,6 +177,15 @@ fn extract_spdx23_identifiers(doc: &serde_json::Value) -> BTreeSet<(String, Stri
 /// SpdxDocument element's externalIdentifier[] (which carries BOTH
 /// built-in and user-defined identifiers per SPDX 3's open-typed
 /// model).
+///
+/// Per milestone 079, mikebom's internal scheme names map to the
+/// SPDX 3 controlled vocab at emission time (`Core/externalIdentifierType`
+/// SHACL constraint). When the mapping returns `other`, the original
+/// scheme is preserved on the `comment` field as
+/// `original-scheme: <name>`. This extractor reconstructs the original
+/// `(scheme, value)` pair so cross-format consistency assertions
+/// continue to compare the same logical identifier set across CDX,
+/// SPDX 2.3, and SPDX 3.
 fn extract_spdx3_identifiers(doc: &serde_json::Value) -> BTreeSet<(String, String)> {
     let mut out = BTreeSet::new();
     let Some(graph) = doc["@graph"].as_array() else {
@@ -190,11 +199,23 @@ fn extract_spdx3_identifiers(doc: &serde_json::Value) -> BTreeSet<(String, Strin
             continue;
         };
         for i in idents {
-            let scheme = i
+            let vocab_type = i
                 .get("externalIdentifierType")
                 .and_then(|v| v.as_str())
-                .unwrap_or("")
-                .to_string();
+                .unwrap_or("");
+            // Recover the original mikebom scheme from the
+            // milestone-079 `comment` field when present (vocab
+            // value is `other` and comment carries
+            // `original-scheme: <name>`); otherwise pass through
+            // the vocab value verbatim (operator named a vocab
+            // value directly, e.g., `--id cve=CVE-1234`, or the
+            // `gitoid` short-circuit applied).
+            let scheme = i
+                .get("comment")
+                .and_then(|v| v.as_str())
+                .and_then(|c| c.strip_prefix("original-scheme: "))
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| vocab_type.to_string());
             let value = i
                 .get("identifier")
                 .and_then(|v| v.as_str())

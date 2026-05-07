@@ -14,6 +14,7 @@ use sha2::{Digest, Sha256};
 
 use mikebom_common::resolution::ResolvedComponent;
 
+use crate::generate::spdx::v3_id_type_map::map_scheme_to_vocab;
 use crate::generate::{OutputConfig, ScanArtifacts};
 
 const SPDX_3_CONTEXT: &str = "https://spdx.org/rdf/3.0.1/spdx-context.jsonld";
@@ -300,23 +301,80 @@ pub fn build_document(
     // envelope needed on the SPDX 3 side). Order: auto-detected
     // first, then manual in supply order (per FR-009 / VR-008).
     if !scan.identifiers.is_empty() {
-        let id_entries: Vec<Value> = scan
+        // Milestone 079 — the emitted `externalIdentifierType` value
+        // MUST come from the SPDX 3 controlled vocabulary
+        // (`Core/externalIdentifierType` SHACL enum). The mapping
+        // helper takes the internal mikebom scheme + identifier value
+        // and returns the conformant vocab string + an optional
+        // `comment` carrying the original scheme name (formatted as
+        // `"original-scheme: <name>"`) when the mapping would
+        // otherwise lose information. Pre-079 code wrote the
+        // `source_label` / "manual identifier flag" string into
+        // `comment`; per the milestone-079 wire-format contract that
+        // slot now carries the original-scheme info-preservation
+        // string. (The pre-079 source_label is still observable on
+        // CDX 1.6 + SPDX 2.3 emission paths — those use independent
+        // vocabularies and aren't touched by this milestone.)
+        let mut id_entries: Vec<Value> = scan
             .identifiers
             .iter()
             .map(|id| {
-                let mut entry = json!({
-                    "type": "ExternalIdentifier",
-                    "externalIdentifierType": id.scheme.as_str(),
-                    "identifier": id.value.as_str(),
-                });
-                if let Some(label) = id.source_label.as_deref() {
-                    entry["comment"] = json!(label);
-                } else {
-                    entry["comment"] = json!("manual identifier flag");
+                let mapping = map_scheme_to_vocab(&id.scheme, id.value.as_str());
+                let mut entry = serde_json::Map::new();
+                entry.insert("type".to_string(), json!("ExternalIdentifier"));
+                entry.insert(
+                    "externalIdentifierType".to_string(),
+                    json!(mapping.vocab_type.as_str()),
+                );
+                entry.insert("identifier".to_string(), json!(id.value.as_str()));
+                if let Some(comment) = mapping.comment {
+                    entry.insert("comment".to_string(), json!(comment));
                 }
-                entry
+                Value::Object(entry)
             })
             .collect();
+        // Determinism (research §4 / VR-079-006): sort by
+        // `(externalIdentifierType, identifier, comment)` so multi-
+        // source dedup is correct when two identifiers map to the
+        // same vocab+identifier but differ only in original-scheme.
+        id_entries.sort_by(|a, b| {
+            let key = |v: &Value| -> (String, String, String) {
+                (
+                    v.get("externalIdentifierType")
+                        .and_then(|s| s.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    v.get("identifier")
+                        .and_then(|s| s.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    v.get("comment")
+                        .and_then(|s| s.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                )
+            };
+            key(a).cmp(&key(b))
+        });
+        id_entries.dedup_by(|a, b| {
+            let key = |v: &Value| -> (String, String, String) {
+                (
+                    v.get("externalIdentifierType")
+                        .and_then(|s| s.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    v.get("identifier")
+                        .and_then(|s| s.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    v.get("comment")
+                        .and_then(|s| s.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                )
+            };
+            key(a) == key(b)
+        });
         spdx_document["externalIdentifier"] = json!(id_entries);
     }
 

@@ -128,10 +128,21 @@ native-first directive.
 
 | Scheme | Semantic | Value form | CDX `externalReferences[].type` | SPDX 2.3 `referenceCategory` | SPDX 3 `Element.externalIdentifier[].externalIdentifierType` |
 |---|---|---|---|---|---|
-| `repo:` | Source repository identity | URL or git-style ssh URL | `vcs` | `PERSISTENT-ID` | `repo` |
-| `git:` | Repo + commit/ref-anchored identity | URL with optional `#<commit-or-ref>` fragment | `vcs` | `PERSISTENT-ID` | `git` |
-| `image:` | Image identity | `[registry/]name[:tag][@sha256:digest]` | `distribution` | `PERSISTENT-ID` | `image` |
-| `attestation:` | In-toto attestation IRI | URL/IRI | `attestation` | `PERSISTENT-ID` | `attestation` |
+| `repo:` | Source repository identity | URL or git-style ssh URL | `vcs` | `PERSISTENT-ID` | `other` (with `comment: "original-scheme: repo"`) |
+| `git:` | Repo + commit/ref-anchored identity | URL with optional `#<commit-or-ref>` fragment | `vcs` | `PERSISTENT-ID` | `other` (with `comment: "original-scheme: git"`) — value matching `^[0-9a-f]{40}$` SHA-1 maps to `gitoid` instead, no `comment` |
+| `image:` | Image identity | `[registry/]name[:tag][@sha256:digest]` | `distribution` | `PERSISTENT-ID` | `other` (with `comment: "original-scheme: image"`) |
+| `attestation:` | In-toto attestation IRI | URL/IRI | `attestation` | `PERSISTENT-ID` | `other` (with `comment: "original-scheme: attestation"`) |
+| `subject:` | Build-tier content-hash subject | `<algo>:<hex>` | `attestation` | `PERSISTENT-ID` | `other` (with `comment: "original-scheme: subject"`) |
+
+The SPDX 3 column reflects the milestone-079 mapping. SPDX 3
+defines `Core/externalIdentifierType` as a controlled vocabulary
+(`[other, cve, swhid, securityOther, cpe23, packageUrl, gitoid,
+cpe22, urlScheme, email, swid]`) — none of mikebom's built-in
+scheme names are in that set, so they map to `other` with the
+original scheme preserved in the `comment` field. See §6.3.2 below
+for the wire-mapping reference and §6.3.1 for milestone-078's
+SPDX 3 CreationInfo fix that landed in the same conformance
+campaign.
 
 ### 2.1 Per-scheme validators
 
@@ -652,6 +663,56 @@ The underlying SHACL validation rules trace back to
 [the official SPDX 3 JSON-LD validation reference](https://github.com/spdx/spdx-3-model/blob/develop/serialization/jsonld/validation.md);
 operators with bespoke conformance harnesses should use those rules
 as the source of truth.
+
+### 6.3.2 SPDX 3.0.1 — externalIdentifierType wire-mapping (milestone 079)
+
+mikebom v0.1.0-alpha.16 through v0.1.0-alpha.19 (milestones 073/074/076/078)
+emitted internal scheme names (`image`, `repo`, `git`, `subject`,
+`attestation`) directly into SPDX 3's
+`Core/externalIdentifierType` field. SPDX 3 defines that field as a
+SHACL-enumerated controlled vocabulary with exactly 11 allowed
+values: `[other, cve, swhid, securityOther, cpe23, packageUrl,
+gitoid, cpe22, urlScheme, email, swid]`. None of mikebom's
+internal scheme names are in that set, so JPEWdev's
+`spdx3-validate` flagged every such SBOM as non-conformant
+(GitHub issue [#154](https://github.com/kusari-oss/mikebom/issues/154)).
+
+Milestone 079 corrects the emission per the table below. This
+corrects the alpha.16-alpha.19 emission shape (closes GitHub issue
+#154). Runs side-by-side with milestone 078's CreationInfo fix
+(§6.3.1) — both ship together as the SPDX 3 conformance pass.
+
+| Input scheme | Input value shape | Output `externalIdentifierType` | Output `comment` |
+|---|---|---|---|
+| `image` | any | `other` | `"original-scheme: image"` |
+| `repo` | any | `other` | `"original-scheme: repo"` |
+| `git` | matches `^[0-9a-f]{40}$` (SHA-1) | `gitoid` | (omitted) |
+| `git` | does NOT match the regex | `other` | `"original-scheme: git"` |
+| `subject` | any | `other` | `"original-scheme: subject"` |
+| `attestation` | any | `other` | `"original-scheme: attestation"` |
+| `<vocab>` (e.g., `cve`, `cpe23`, `gitoid`, etc.) | any | the vocab value verbatim | (omitted) |
+| `<non-vocab user-defined>` (e.g., `jira`, `internal-ticket`) | any | `other` | `"original-scheme: <name>"` |
+
+**Recovery**: operators wanting to filter by the original mikebom
+scheme can read the `comment` field's `original-scheme: ` prefix:
+
+```bash
+jq '
+[."@graph"[]?
+  | select(.type == "SpdxDocument")
+  | .externalIdentifier[]?
+  | select(.comment != null and (.comment | startswith("original-scheme: ")))
+  | {scheme: (.comment | sub("^original-scheme: "; "")),
+     value: .identifier,
+     vocab_type: .externalIdentifierType}]
+' out.spdx3.json
+```
+
+CDX 1.6 + SPDX 2.3 emission paths use independent vocabularies
+(CDX `externalReferences[].type`, SPDX 2.3 `externalRefs[].
+referenceCategory`/`referenceType`) and are not affected by this
+milestone — those formats continue to emit the internal scheme
+names as before.
 
 ### 6.4 Python equivalent
 

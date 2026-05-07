@@ -416,6 +416,16 @@ spdx3_anno!(c46_spdx3, "mikebom:source-document-binding",  component);
 // schemes (which the CDX/SPDX 2.3 sides exclude from the C47 carrier
 // entirely; built-ins ride standards-native carriers per C46-style
 // pattern).
+//
+// Milestone 079 — mikebom's internal scheme names (`image`, `repo`,
+// `git`, `subject`, `attestation`) no longer appear in the
+// `externalIdentifierType` field; that field now carries the SPDX 3
+// controlled-vocab value (`other` for non-vocab built-ins) with the
+// original scheme preserved on the `comment` field as
+// `original-scheme: <name>`. The C47 extractor reconstructs the
+// original mikebom scheme via the comment-prefix recovery and
+// continues to filter out built-ins so the cross-format C47 set
+// matches CDX / SPDX 2.3.
 pub(super) fn c47_spdx3(doc: &Value) -> BTreeSet<String> {
     let mut out = BTreeSet::new();
     let Some(graph) = doc.get("@graph").and_then(|v| v.as_array()) else {
@@ -429,13 +439,27 @@ pub(super) fn c47_spdx3(doc: &Value) -> BTreeSet<String> {
             continue;
         };
         for ident in idents {
-            let scheme = ident
+            // Per milestone 079: recover the original mikebom scheme
+            // from the `comment` field's `original-scheme: ` prefix
+            // when present, else fall through to the vocab value
+            // (operator-named-vocab case, e.g., `cve` passthrough).
+            let vocab_type = ident
                 .get("externalIdentifierType")
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
+            let recovered_scheme: String = ident
+                .get("comment")
+                .and_then(|v| v.as_str())
+                .and_then(|c| c.strip_prefix("original-scheme: "))
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| vocab_type.to_string());
             // Filter to user-defined namespace only (matches the CDX
-            // / SPDX 2.3 C47-annotation contents).
-            if matches!(scheme, "repo" | "git" | "image" | "attestation") {
+            // / SPDX 2.3 C47-annotation contents). Includes
+            // `subject` per milestone 076.
+            if matches!(
+                recovered_scheme.as_str(),
+                "repo" | "git" | "image" | "attestation" | "subject"
+            ) {
                 continue;
             }
             let value = ident.get("identifier").and_then(|v| v.as_str()).unwrap_or("");
@@ -444,7 +468,8 @@ pub(super) fn c47_spdx3(doc: &Value) -> BTreeSet<String> {
             // (no source_label — manual flags don't have one and
             // user-defined entries today never have an auto-detected
             // label).
-            let canonical = serde_json::json!({"scheme": scheme, "value": value});
+            let canonical =
+                serde_json::json!({"scheme": recovered_scheme, "value": value});
             // Use compact ordered form — same canonicalization the
             // CDX/SPDX 2.3 annotation extractors produce via
             // canonicalize_atomic_values.

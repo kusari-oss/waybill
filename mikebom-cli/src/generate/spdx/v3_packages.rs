@@ -22,6 +22,7 @@ use mikebom_common::resolution::ResolvedComponent;
 
 use super::v3_agents::PackageAgentAttachments;
 use super::v3_external_ids::build_external_identifiers_for;
+use super::v3_id_type_map::map_scheme_to_vocab;
 
 /// Build the PURL → Package-IRI lookup table. Used as a first
 /// pass by `v3_document::build_document` so Agent and License
@@ -150,27 +151,73 @@ pub fn build_packages(
         // shape is owned by one module.
         let mut ext_ids = build_external_identifiers_for(c);
         // Milestone 076 — append per-component user-defined
-        // identifiers in lexical order by `(scheme, value)` after the
-        // pre-existing PURL/CPE entries (research §6).
-        let mut new_per_component_ids: Vec<(String, String)> = Vec::new();
+        // identifiers after the pre-existing PURL/CPE entries.
+        // Milestone 079 — every appended entry's
+        // `externalIdentifierType` MUST come from the SPDX 3
+        // controlled vocabulary; vocab-named user schemes (e.g.,
+        // `cve`) pass through verbatim, non-vocab user schemes
+        // (e.g., `jira`) map to `other` with the original scheme
+        // preserved on the `comment` field per FR-003.
         for (idx, flag) in component_identifiers.iter().enumerate() {
             if flag.selector_purl == c.purl.as_str() {
                 *match_counts.entry(idx).or_insert(0) += 1;
-                new_per_component_ids.push((
-                    flag.scheme.as_str().to_string(),
-                    flag.value.as_str().to_string(),
-                ));
+                let mapping = map_scheme_to_vocab(&flag.scheme, flag.value.as_str());
+                let mut entry = serde_json::Map::new();
+                entry.insert("type".to_string(), json!("ExternalIdentifier"));
+                entry.insert(
+                    "externalIdentifierType".to_string(),
+                    json!(mapping.vocab_type.as_str()),
+                );
+                entry.insert("identifier".to_string(), json!(flag.value.as_str()));
+                if let Some(comment) = mapping.comment {
+                    entry.insert("comment".to_string(), json!(comment));
+                }
+                ext_ids.push(Value::Object(entry));
             }
         }
-        new_per_component_ids.sort();
-        new_per_component_ids.dedup();
-        for (ext_type, identifier) in new_per_component_ids {
-            ext_ids.push(json!({
-                "type": "ExternalIdentifier",
-                "externalIdentifierType": ext_type,
-                "identifier": identifier,
-            }));
-        }
+        // Milestone 079 / VR-079-006 — sort by
+        // `(externalIdentifierType, identifier, comment)` to keep
+        // determinism + dedup correct when two identifiers map to
+        // the same vocab+identifier but differ only in
+        // original-scheme provenance.
+        ext_ids.sort_by(|a, b| {
+            let key = |v: &Value| -> (String, String, String) {
+                (
+                    v.get("externalIdentifierType")
+                        .and_then(|s| s.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    v.get("identifier")
+                        .and_then(|s| s.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    v.get("comment")
+                        .and_then(|s| s.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                )
+            };
+            key(a).cmp(&key(b))
+        });
+        ext_ids.dedup_by(|a, b| {
+            let key = |v: &Value| -> (String, String, String) {
+                (
+                    v.get("externalIdentifierType")
+                        .and_then(|s| s.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    v.get("identifier")
+                        .and_then(|s| s.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                    v.get("comment")
+                        .and_then(|s| s.as_str())
+                        .unwrap_or("")
+                        .to_string(),
+                )
+            };
+            key(a) == key(b)
+        });
         if !ext_ids.is_empty() {
             pkg.insert("externalIdentifier".to_string(), json!(ext_ids));
         }
