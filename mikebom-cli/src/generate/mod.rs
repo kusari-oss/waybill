@@ -143,6 +143,21 @@ pub struct ScanArtifacts<'a> {
     /// false, builders short-circuit so pre-080 invocations stay
     /// byte-identical to alpha.20.
     pub user_metadata: mikebom::binding::user_metadata::UserMetadata,
+    /// Milestone 081: operator-asserted CISA SBOM Type from the
+    /// `--sbom-type <type>` flag. When `Some(_)`, all three formats'
+    /// document-level lifecycle aggregations collapse to a single-
+    /// element output corresponding to the asserted value (CDX
+    /// `metadata.lifecycles[{phase: "<cdx-phase>"}]`, SPDX 2.3
+    /// `creationInfo.comment` "Observed lifecycle phases:
+    /// <single-phase>", SPDX 3 `software_Sbom.software_sbomType:
+    /// ["<short-name>"]`). When `None`, the milestone-047
+    /// per-component aggregation continues unchanged. Per-component
+    /// `mikebom:sbom-tier` annotations are NEVER overridden — the
+    /// operator-assert is document-level only per research §4 +
+    /// FR-005 + VR-081-005. Default `None` keeps existing
+    /// struct-literal call sites compiling.
+    pub sbom_type_override:
+        Option<crate::generate::lifecycle_phases::SbomType>,
 }
 
 /// Milestone 077 — operator-supplied overrides for the root component

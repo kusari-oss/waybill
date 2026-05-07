@@ -91,6 +91,16 @@ pub struct CycloneDxBuilder {
     /// flags. Threaded into `build_metadata` so each entry lands at
     /// the format's standards-native carrier.
     user_metadata: mikebom::binding::user_metadata::UserMetadata,
+    /// Milestone 081 — operator-asserted CISA SBOM Type from the new
+    /// `--sbom-type <type>` flag. When `Some(_)`, the CDX
+    /// `metadata.lifecycles[]` aggregator returns a single-element
+    /// array with the asserted phase via the equivalence table; when
+    /// `None`, the milestone-047 per-component aggregation continues
+    /// unchanged. Per-component `mikebom:sbom-tier` annotations are
+    /// preserved in either case (operator override is document-level
+    /// only).
+    sbom_type_override:
+        Option<crate::generate::lifecycle_phases::SbomType>,
 }
 
 impl CycloneDxBuilder {
@@ -106,7 +116,20 @@ impl CycloneDxBuilder {
             component_identifiers: Vec::new(),
             root_override: crate::generate::RootComponentOverride::default(),
             user_metadata: mikebom::binding::user_metadata::UserMetadata::default(),
+            sbom_type_override: None,
         }
+    }
+
+    /// Milestone 081 — record the operator-supplied CISA SBOM Type
+    /// override from `--sbom-type <type>`. When present, all CDX
+    /// emission paths collapse `metadata.lifecycles[]` to a single-
+    /// element array via the equivalence table.
+    pub fn with_sbom_type_override(
+        mut self,
+        t: Option<crate::generate::lifecycle_phases::SbomType>,
+    ) -> Self {
+        self.sbom_type_override = t;
+        self
     }
 
     /// Milestone 080 — record the user-supplied SBOM metadata. When
@@ -290,6 +313,7 @@ impl CycloneDxBuilder {
             &self.identifiers,
             &self.root_override,
             &self.user_metadata,
+            self.sbom_type_override,
         );
         // Milestone 076 — track per-component identifier matches so
         // we can emit a warn for any selector that matched zero

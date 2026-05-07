@@ -44,6 +44,19 @@
     },
     {
       "creationInfo": "_:creation-info",
+      "name": "node-modules-walk",
+      "rootElement": [
+        "https://mikebom.kusari.dev/spdx3/doc-VFDOOTU2CCJL53WHODRSWW53/pkg-IZGDOM2QHWPWWLEX"
+      ],
+      "software_sbomType": [
+        "deployed",
+        "source"
+      ],
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-VFDOOTU2CCJL53WHODRSWW53/sbom",
+      "type": "software_Sbom"
+    },
+    {
+      "creationInfo": "_:creation-info",
       "externalIdentifier": [
         {
           "externalIdentifierType": "cpe23",

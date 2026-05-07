@@ -44,6 +44,18 @@
     },
     {
       "creationInfo": "_:creation-info",
+      "name": "synthetic",
+      "rootElement": [
+        "https://mikebom.kusari.dev/spdx3/doc-MVGELAIPWOT5KBBEPLAH45JE/pkg-root-PEPQMV5CGEDHQJI2"
+      ],
+      "software_sbomType": [
+        "deployed"
+      ],
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-MVGELAIPWOT5KBBEPLAH45JE/sbom",
+      "type": "software_Sbom"
+    },
+    {
+      "creationInfo": "_:creation-info",
       "externalIdentifier": [
         {
           "externalIdentifierType": "cpe23",

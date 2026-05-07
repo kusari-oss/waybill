@@ -188,7 +188,13 @@ spec-compliant SBOM reader picks it up:
 |---|---|---|
 | **CycloneDX 1.6** | `metadata.lifecycles[]` (aggregated from per-component tiers, deduplicated, sorted) + `compositions[].aggregate` | `properties[].name = "mikebom:sbom-tier"` |
 | **SPDX 2.3** | `creationInfo.comment` (free-text scope summary) | `packages[].annotations[]` with `mikebom:sbom-tier` |
-| **SPDX 3.0.1** | `SpdxDocument.comment` (free-text scope summary) | top-level `annotations[]` with `mikebom:sbom-tier` |
+| **SPDX 3.0.1** | `SpdxDocument.comment` (free-text scope summary) + `software_Sbom.software_sbomType[]` (native enum, milestone 081) | top-level `annotations[]` with `mikebom:sbom-tier` |
+
+For the operator-facing **SBOM type** classification (CISA Design /
+Source / Build / Analyzed / Deployed / Runtime), per-format `jq`
+recipes, the four-column equivalence table, and the
+`--sbom-type <type>` operator-assert flag, see
+[`docs/reference/sbom-types.md`](docs/reference/sbom-types.md).
 
 ### Industry / consumer terminology bridge
 

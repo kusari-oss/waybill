@@ -251,6 +251,19 @@ pub struct RunArgs {
     #[arg(long = "metadata-file", value_name = "PATH")]
     pub metadata_file: Option<std::path::PathBuf>,
 
+    /// Override the auto-detected SBOM type with an operator-asserted
+    /// CISA SBOM Type. Valid values: design, source, build, analyzed,
+    /// deployed, runtime. Document-level only — per-component
+    /// `mikebom:sbom-tier` annotations preserve auto-detected values.
+    /// See `mikebom sbom scan --help` for full per-format details.
+    #[arg(
+        long = "sbom-type",
+        value_name = "TYPE",
+        value_parser = super::scan_cmd::parse_sbom_type_flag,
+    )]
+    pub sbom_type:
+        Option<crate::generate::lifecycle_phases::SbomType>,
+
     /// Directories to scan for artifact files after the traced command
     /// exits. Forwarded verbatim to `mikebom trace capture`. See the
     /// `--artifact-dir` flag there for details.
@@ -536,6 +549,9 @@ pub async fn execute(args: RunArgs) -> anyhow::Result<()> {
         // Milestone 080 — forward aggregated user-supplied SBOM
         // metadata from the trace-run flags.
         user_metadata: trace_user_metadata,
+        // Milestone 081 — forward the operator-asserted CISA SBOM
+        // Type override from the trace-run `--sbom-type` flag.
+        sbom_type_override: args.sbom_type,
     };
     // Trace's one-shot `run` wrapper doesn't thread the global --offline
     // flag through (yet). Default to online — the enrichment doesn't

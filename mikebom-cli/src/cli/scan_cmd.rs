@@ -490,6 +490,38 @@ pub struct ScanArgs {
     /// fields fail with a conflict error if specified in both.
     #[arg(long = "metadata-file", value_name = "PATH")]
     pub metadata_file: Option<PathBuf>,
+
+    // ────────────────────────────────────────────────────────────
+    // Milestone 081 — operator-asserted CISA SBOM Type override.
+    // See `specs/081-sbom-type-clarity/` for the full design.
+    // ────────────────────────────────────────────────────────────
+
+    /// Override the auto-detected SBOM type with an operator-asserted
+    /// CISA SBOM Type. Valid values: design, source, build, analyzed,
+    /// deployed, runtime. Document-level only — per-component
+    /// `mikebom:sbom-tier` annotations preserve auto-detected values.
+    /// When set, CDX `metadata.lifecycles[]`, SPDX 2.3
+    /// `creationInfo.comment` "Observed lifecycle phases", and SPDX 3
+    /// `software_Sbom.software_sbomType[]` all collapse to a single-
+    /// element output reflecting the asserted type via the
+    /// equivalence table in `docs/reference/sbom-types.md`.
+    #[arg(
+        long = "sbom-type",
+        value_name = "TYPE",
+        value_parser = parse_sbom_type_flag,
+    )]
+    pub sbom_type:
+        Option<crate::generate::lifecycle_phases::SbomType>,
+}
+
+/// Clap value_parser for `--sbom-type`. Wraps
+/// `SbomType::parse_str` so the error type implements `Into<String>`
+/// (clap's required error shape).
+pub(crate) fn parse_sbom_type_flag(
+    value: &str,
+) -> Result<crate::generate::lifecycle_phases::SbomType, String> {
+    crate::generate::lifecycle_phases::SbomType::parse_str(value)
+        .map_err(|e| e.to_string())
 }
 
 /// Milestone 077 — validate `--root-name` / `--root-version` values
@@ -1734,6 +1766,13 @@ pub async fn execute(
         // the new flags (--creator / --annotator / --annotation-comment
         // / --metadata-comment / --scan-target-name / --metadata-file).
         user_metadata: user_metadata.clone(),
+        // Milestone 081: operator-asserted CISA SBOM Type from the
+        // new --sbom-type flag. When set, all three formats'
+        // document-level lifecycle aggregations collapse to a
+        // single-element output reflecting the asserted type;
+        // per-component `mikebom:sbom-tier` annotations preserve
+        // auto-detected values.
+        sbom_type_override: args.sbom_type,
     };
     let output_cfg = OutputConfig {
         mikebom_version: env!("CARGO_PKG_VERSION"),
@@ -2348,6 +2387,9 @@ mod tests {
             metadata_comment: None,
             scan_target_name: None,
             metadata_file: None,
+            // Milestone 081 — default the new operator-assert flag to
+            // None so the helper's "minimal flags" contract holds.
+            sbom_type: None,
         }
     }
 

@@ -44,6 +44,18 @@
     },
     {
       "creationInfo": "_:creation-info",
+      "name": "lockfile-v3",
+      "rootElement": [
+        "https://mikebom.kusari.dev/spdx3/doc-4OMQSEYCCOBWPKL7XCUZV4JU/pkg-root-H5VPHAIRCLACRQYQ"
+      ],
+      "software_sbomType": [
+        "source"
+      ],
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-4OMQSEYCCOBWPKL7XCUZV4JU/sbom",
+      "type": "software_Sbom"
+    },
+    {
+      "creationInfo": "_:creation-info",
       "externalIdentifier": [
         {
           "externalIdentifierType": "cpe23",

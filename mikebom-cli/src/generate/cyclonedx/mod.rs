@@ -99,7 +99,14 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // existing `build_metadata` / `build_user_annotations`
             // call sites (which were already wired to read
             // `self.user_metadata`) get populated values.
-            .with_user_metadata(scan.user_metadata.clone());
+            .with_user_metadata(scan.user_metadata.clone())
+            // Milestone 081 — propagate the operator-asserted CISA
+            // SBOM Type override from `--sbom-type <type>`. When set,
+            // CDX `metadata.lifecycles[]` collapses to a single-
+            // element array via the equivalence table; per-component
+            // `mikebom:sbom-tier` annotations preserve auto-detected
+            // values per research §4.
+            .with_sbom_type_override(scan.sbom_type_override);
         let bom = builder.build(
             scan.components,
             scan.relationships,

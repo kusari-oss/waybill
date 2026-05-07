@@ -100,6 +100,7 @@ pub fn build_document(
             component_identifiers: scan.component_identifiers,
             root_override: scan.root_override.clone(),
             user_metadata: scan.user_metadata.clone(),
+            sbom_type_override: scan.sbom_type_override,
         };
         &view_scan_storage
     } else {
@@ -347,6 +348,52 @@ pub fn build_document(
         "rootElement": root_iris.clone(),
         "comment": scope_comment,
     });
+    // Milestone 081 — SPDX 3 native `software_Sbom.software_sbomType[]`
+    // emission per Constitution Principle V (standards-native first).
+    // Aggregates from the same per-component `mikebom:sbom-tier`
+    // values that drive CDX `metadata.lifecycles[]`, via the new
+    // `aggregate_spdx3_sbom_types` helper. When the operator passes
+    // `--sbom-type <type>`, the aggregator returns a single-element
+    // Vec with the asserted value (overriding per-component
+    // aggregation per research §4); per-component
+    // `mikebom:sbom-tier` annotations preserve auto-detected values.
+    // Empty result (no components carry tiers, or tiers don't map to
+    // known IRIs) → no `software_Sbom` element is added (matches the
+    // milestone-047 `metadata_omits_lifecycles_when_no_tiers_present`
+    // pattern at `cyclonedx/metadata.rs`).
+    //
+    // Implementation note: the SPDX 3 schema places `software_sbomType`
+    // exclusively on the `software_Sbom` class (a sibling of
+    // `SpdxDocument` — both descend from `ElementCollection` via
+    // different inheritance paths). The schema's
+    // `unevaluatedProperties: false` constraint on @graph items
+    // rejects `software_sbomType` on a `SpdxDocument`-typed element
+    // AND rejects `dataLicense`/`import`/`namespaceMap` on a
+    // `software_Sbom`-typed element. mikebom emits BOTH elements:
+    // the existing `SpdxDocument` retains `dataLicense` (milestone
+    // 078) + `import` (milestone 072 binding) + `namespaceMap`; the
+    // new `software_Sbom` element carries `software_sbomType[]` and
+    // mirrors `rootElement` so consumers can find the SBOM type via
+    // either entry point. Both elements live in the same @graph
+    // and share the same `creationInfo`.
+    let sbom_type_values =
+        crate::generate::lifecycle_phases::aggregate_spdx3_sbom_types(
+            scan.components,
+            scan.sbom_type_override,
+        );
+    let software_sbom_element: Option<Value> = if sbom_type_values.is_empty() {
+        None
+    } else {
+        let sbom_iri = format!("{doc_iri}/sbom");
+        Some(json!({
+            "type": "software_Sbom",
+            "spdxId": sbom_iri,
+            "creationInfo": CREATION_INFO_ID,
+            "name": document_name,
+            "rootElement": root_iris.clone(),
+            "software_sbomType": sbom_type_values,
+        }))
+    };
     if let Some(locator) = openvex_locator {
         spdx_document["externalRef"] = json!([
             {
@@ -482,6 +529,18 @@ pub fn build_document(
         None
     };
     graph.push(spdx_document);
+
+    // 3b. Milestone 081 — emit the `software_Sbom` element when the
+    //     scan produced at least one mappable lifecycle tier. Lives
+    //     immediately after the SpdxDocument so a JSON-walker
+    //     reading top-down hits both document-class entry points
+    //     before per-package data. Sort: not part of the canonical
+    //     element catalog (this is a single optional element); its
+    //     position is fixed at "after SpdxDocument, before
+    //     packages" for byte-identity goldens determinism.
+    if let Some(sbom_el) = software_sbom_element {
+        graph.push(sbom_el);
+    }
 
     // 4 (cont). Append the Package elements.
     for pkg in packages {

@@ -1130,3 +1130,17 @@ milestone-080 flag recipes.
 - [Cross-format SBOM mapping](sbom-format-mapping.md) — the
   authoritative catalog of every cross-format datum mikebom emits.
   Search `C47` for the `mikebom:identifiers` row.
+
+### SBOM types and lifecycle phases
+
+mikebom signals the **SBOM type** (CISA Design / Source / Build /
+Analyzed / Deployed / Runtime) via three different format-native
+fields: CDX `metadata.lifecycles[].phase`, SPDX 2.3
+`creationInfo.comment` (parse-and-translate), and SPDX 3
+`software_Sbom.software_sbomType[]` (added in milestone 081). See
+[SBOM types — operator-facing reference](sbom-types.md) for the
+full per-format `jq` recipes, the four-column equivalence table
+(CISA ↔ mikebom tier ↔ CDX phase ↔ SPDX 3 SbomType), the
+mixed-type-SBOM presentation rule, and the `--sbom-type <type>`
+operator-assert flag for downstream pipelines that require a
+single-type document-level claim.

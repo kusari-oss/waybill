@@ -44,6 +44,18 @@
     },
     {
       "creationInfo": "_:creation-info",
+      "name": "pom-three-deps",
+      "rootElement": [
+        "https://mikebom.kusari.dev/spdx3/doc-A2T5K5K3QVW4UDBFK3GBGK2S/pkg-Q7X32JLRPGCHW46Q"
+      ],
+      "software_sbomType": [
+        "source"
+      ],
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-A2T5K5K3QVW4UDBFK3GBGK2S/sbom",
+      "type": "software_Sbom"
+    },
+    {
+      "creationInfo": "_:creation-info",
       "externalIdentifier": [
         {
           "externalIdentifierType": "cpe23",

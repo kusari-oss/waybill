@@ -44,6 +44,18 @@
     },
     {
       "creationInfo": "_:creation-info",
+      "name": "simple-venv",
+      "rootElement": [
+        "https://mikebom.kusari.dev/spdx3/doc-DGLRCZ4WV6HVUFR7AJPZQC74/pkg-root-O4XGGFIAI4WU3KZ2"
+      ],
+      "software_sbomType": [
+        "deployed"
+      ],
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-DGLRCZ4WV6HVUFR7AJPZQC74/sbom",
+      "type": "software_Sbom"
+    },
+    {
+      "creationInfo": "_:creation-info",
       "externalIdentifier": [
         {
           "externalIdentifierType": "cpe23",

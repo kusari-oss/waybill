@@ -102,6 +102,16 @@ pub struct GenerateArgs {
     /// only via `cli/run.rs::execute`.
     #[arg(skip)]
     pub user_metadata: mikebom::binding::user_metadata::UserMetadata,
+
+    /// Milestone 081: operator-asserted CISA SBOM Type override
+    /// threaded from `mikebom trace run`'s `--sbom-type <type>`
+    /// flag. Same `#[arg(skip)]` rationale as `root_override` and
+    /// `user_metadata` — the standalone `mikebom sbom generate`
+    /// subcommand does not receive new flags. Populated only by
+    /// `cli/run.rs::execute` from the trace-run flag.
+    #[arg(skip)]
+    pub sbom_type_override:
+        Option<crate::generate::lifecycle_phases::SbomType>,
 }
 
 pub async fn execute(args: GenerateArgs, offline: bool) -> anyhow::Result<()> {
@@ -190,7 +200,12 @@ pub async fn execute(args: GenerateArgs, offline: bool) -> anyhow::Result<()> {
         // Milestone 080 — propagate user-supplied SBOM metadata from
         // the trace-run flags. Empty by default for the standalone
         // `mikebom sbom generate` invocation.
-        .with_user_metadata(args.user_metadata.clone());
+        .with_user_metadata(args.user_metadata.clone())
+        // Milestone 081 — propagate the operator-asserted CISA
+        // SBOM Type override from `mikebom trace run --sbom-type
+        // <type>`. None by default for the standalone
+        // `mikebom sbom generate` invocation.
+        .with_sbom_type_override(args.sbom_type_override);
     let bom = builder.build(
         &components,
         &relationships,

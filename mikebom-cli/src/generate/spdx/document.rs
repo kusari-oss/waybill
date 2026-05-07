@@ -309,6 +309,7 @@ pub fn build_document(
             component_identifiers: artifacts.component_identifiers,
             root_override: artifacts.root_override.clone(),
             user_metadata: artifacts.user_metadata.clone(),
+            sbom_type_override: artifacts.sbom_type_override,
         }
     } else {
         ScanArtifacts {
@@ -331,6 +332,7 @@ pub fn build_document(
             component_identifiers: artifacts.component_identifiers,
             root_override: artifacts.root_override.clone(),
             user_metadata: artifacts.user_metadata.clone(),
+            sbom_type_override: artifacts.sbom_type_override,
         }
     };
     let artifacts: &ScanArtifacts<'_> = &view_artifacts;
@@ -563,7 +565,14 @@ pub(super) fn build_scope_comment(scan: &ScanArtifacts<'_>) -> String {
         ScopeMode::Artifact => "artifact (on-disk components only)",
         ScopeMode::Manifest => "manifest (declared transitives included)",
     };
-    let phases = crate::generate::lifecycle_phases::aggregate_phases(scan.components);
+    // Milestone 081: thread the operator-asserted `--sbom-type`
+    // override through to the comment aggregator so SPDX 2.3 +
+    // SPDX 3 `comment` strings reflect the override single-element
+    // when the flag is set, identical to CDX `metadata.lifecycles[]`.
+    let phases = crate::generate::lifecycle_phases::aggregate_phases(
+        scan.components,
+        scan.sbom_type_override,
+    );
     let phases_text = if phases.is_empty() {
         "no lifecycle phases observed".to_string()
     } else {
@@ -834,6 +843,7 @@ mod tests {
             component_identifiers: &[],
             root_override: crate::generate::RootComponentOverride::default(),
             user_metadata: mikebom::binding::user_metadata::UserMetadata::default(),
+            sbom_type_override: None,
         }
     }
 
