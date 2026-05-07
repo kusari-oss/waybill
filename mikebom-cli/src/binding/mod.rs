@@ -28,6 +28,7 @@ pub mod annotation;
 pub mod hash;
 pub mod identifiers;
 pub mod source_inputs;
+pub mod user_metadata;
 pub mod verify;
 
 // ---------------------------------------------------------------------

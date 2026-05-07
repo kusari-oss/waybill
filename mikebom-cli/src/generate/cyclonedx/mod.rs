@@ -82,7 +82,24 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // replaces the auto-derived metadata.component identity
             // and drops manifest-derived main-module components from
             // the emitted components[] array (clean replacement).
-            .with_root_override(scan.root_override.clone());
+            .with_root_override(scan.root_override.clone())
+            // Milestone 080 — propagate user-supplied SBOM metadata
+            // (`--creator`, `--annotator`/`--annotation-comment`,
+            // `--metadata-comment`, `--scan-target-name`,
+            // `--metadata-file`). The CDX builder routes each entry
+            // to its standards-native landing slot (research §2 +
+            // contracts/user-sbom-metadata.md) — `Tool` to
+            // `metadata.tools.components[]`, `Organization` to
+            // `metadata.manufacturer`, `Person` to `metadata.authors[]`,
+            // `--metadata-comment` and `--annotator`/`--annotation-comment`
+            // pairs to `bom.annotations[]`, `--scan-target-name` to
+            // `metadata.component.name`. SPDX 2.3 + SPDX 3 read
+            // `scan.user_metadata` directly off `ScanArtifacts`; the CDX
+            // builder mirrors that data into its own field so the
+            // existing `build_metadata` / `build_user_annotations`
+            // call sites (which were already wired to read
+            // `self.user_metadata`) get populated values.
+            .with_user_metadata(scan.user_metadata.clone());
         let bom = builder.build(
             scan.components,
             scan.relationships,

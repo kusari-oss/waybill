@@ -99,6 +99,7 @@ pub fn build_document(
             identifiers: scan.identifiers,
             component_identifiers: scan.component_identifiers,
             root_override: scan.root_override.clone(),
+            user_metadata: scan.user_metadata.clone(),
         };
         &view_scan_storage
     } else {
@@ -141,6 +142,44 @@ pub fn build_document(
 
     let mut graph: Vec<Value> = Vec::new();
 
+    // Milestone 080 — synthesize Agent / Tool elements for user-
+    // supplied `--creator <Type: Name>` flags. IRIs follow the
+    // milestone-078 path-style scheme: `<doc_iri>/<kind>/<slug>-
+    // <hash16>`. The hash is BASE32(SHA-256(`<kind>:<name>`))[..16]
+    // so two operators supplying the same `name` produce a single
+    // collision-free IRI; reuses the `hash_prefix` helper at
+    // line ~664 for consistency with the synthesized-component path.
+    use mikebom::binding::user_metadata::CreatorKind;
+    let mut user_tool_iris: Vec<String> = Vec::new();
+    let mut user_agent_iris: Vec<String> = Vec::new();
+    let mut user_creator_elements: Vec<Value> = Vec::new();
+    for creator in &scan.user_metadata.creators {
+        let (kind_segment, type_str) = match creator.kind {
+            CreatorKind::Tool => ("tool", "Tool"),
+            CreatorKind::Organization => ("org", "Organization"),
+            CreatorKind::Person => ("person", "Person"),
+        };
+        let slug = url_friendly(&creator.name);
+        let hash_input = format!(
+            "{}:{}",
+            kind_segment, creator.name
+        );
+        let hash = hash_prefix(hash_input.as_bytes(), 16);
+        let iri = format!("{doc_iri}/{kind_segment}/{slug}-{hash}");
+        user_creator_elements.push(json!({
+            "type": type_str,
+            "spdxId": iri.clone(),
+            "creationInfo": CREATION_INFO_ID,
+            "name": creator.name,
+        }));
+        match creator.kind {
+            CreatorKind::Tool => user_tool_iris.push(iri),
+            CreatorKind::Organization | CreatorKind::Person => {
+                user_agent_iris.push(iri);
+            }
+        }
+    }
+
     // 1a. Organization Agent — must be present in `@graph` BEFORE
     //     the CreationInfo references it. Determinism: same scan
     //     inputs → byte-identical Organization element across
@@ -152,16 +191,26 @@ pub fn build_document(
         "name": "mikebom contributors",
     }));
 
-    // 1b. CreationInfo. `createdBy` now references the Organization
-    //     IRI (Agent subclass — satisfies SHACL); the existing Tool
-    //     reference moves to the new `createdUsing` field.
+    // 1b. CreationInfo. `createdBy` references the mikebom
+    //     contributors Organization IRI (Agent subclass — satisfies
+    //     SHACL); the existing Tool reference lives in `createdUsing`.
+    //     Milestone 080 — append user-supplied Tool / Organization /
+    //     Person element IRIs to the appropriate slot.
+    let mut created_by_arr: Vec<Value> = vec![Value::String(org_iri.clone())];
+    for iri in &user_agent_iris {
+        created_by_arr.push(Value::String(iri.clone()));
+    }
+    let mut created_using_arr: Vec<Value> = vec![Value::String(tool_iri.clone())];
+    for iri in &user_tool_iris {
+        created_using_arr.push(Value::String(iri.clone()));
+    }
     graph.push(json!({
         "type": "CreationInfo",
         "@id": CREATION_INFO_ID,
         "specVersion": "3.0.1",
         "created": created,
-        "createdBy": [org_iri.clone()],
-        "createdUsing": [tool_iri.clone()],
+        "createdBy": created_by_arr,
+        "createdUsing": created_using_arr,
     }));
 
     // 2. Tool. Identity unchanged from pre-fix emission — only the
@@ -184,6 +233,15 @@ pub fn build_document(
         "creationInfo": CREATION_INFO_ID,
         "simplelicensing_licenseExpression": "CC0-1.0",
     }));
+
+    // 2c. Milestone 080 — user-supplied creator elements (Tool /
+    //     Organization / Person) referenced from CreationInfo.
+    //     Insertion order = file-creators-then-flag-creators per
+    //     research §6 (the upstream `merge_file_and_flags` enforces
+    //     this; we iterate verbatim).
+    for elem in user_creator_elements.iter().cloned() {
+        graph.push(elem);
+    }
 
     // Two-pass Package build: (a) precompute the PURL → IRI
     // lookup, (b) build agents against the lookup, (c) build
@@ -261,18 +319,25 @@ pub fn build_document(
     // The shared `spdx-context.jsonld` already maps the
     // unprefixed `comment` key, so no @context change needed.
     let scope_comment = super::document::build_scope_comment(scan);
-    // Milestone 077 — when override is active, the document's `name`
-    // field reflects the operator-supplied identity (consistent with
-    // the root element's name). When inactive, the auto-derived
-    // `target_name` is preserved (alpha.17 byte-identity).
-    let document_name: &str = if scan.root_override.is_active() {
+    // Milestone 080 — `--scan-target-name` overrides `software_Sbom.name`
+    // independently of milestone 077's `--root-name` (per research §5
+    // SPDX 3 honors both flags independently). Precedence:
+    //   1. `--scan-target-name` (milestone 080) — highest precedence
+    //      for SPDX 3 document-level name.
+    //   2. milestone 077 `--root-name` (when active).
+    //   3. auto-derived `target_name`.
+    let document_name_owned: String = if let Some(s) = scan.user_metadata.scan_target_name.as_deref() {
+        s.to_string()
+    } else if scan.root_override.is_active() {
         scan.root_override
             .name
             .as_deref()
             .unwrap_or(scan.target_name)
+            .to_string()
     } else {
-        scan.target_name
+        scan.target_name.to_string()
     };
+    let document_name: &str = document_name_owned.as_str();
     let mut spdx_document = json!({
         "type": "SpdxDocument",
         "spdxId": doc_iri,
@@ -499,6 +564,52 @@ pub fn build_document(
         &doc_iri,
         CREATION_INFO_ID,
     ));
+    // Milestone 080 — user-supplied --metadata-comment + --annotator/
+    // --annotation-comment pairs land as Annotation elements pointed
+    // at the SpdxDocument. Each annotator references the corresponding
+    // user-creator element (added above) when one matches by
+    // (kind, name); otherwise mikebom synthesizes a fresh agent IRI on
+    // the fly so the SHACL contract `Annotation.subject = Element` is
+    // satisfied.
+    if scan.user_metadata.metadata_comment.is_some()
+        || !scan.user_metadata.annotations.is_empty()
+    {
+        // (a) --metadata-comment → one Annotation referencing the
+        //     SpdxDocument as subject. annotationType: "other".
+        if let Some(comment) = &scan.user_metadata.metadata_comment {
+            let hash = hash_prefix(
+                format!("metadata-comment:{}", comment).as_bytes(),
+                16,
+            );
+            let anno_iri = format!("{doc_iri}/annotation/metadata-comment-{hash}");
+            annotations.push(json!({
+                "type": "Annotation",
+                "spdxId": anno_iri,
+                "creationInfo": CREATION_INFO_ID,
+                "subject": doc_iri.clone(),
+                "annotationType": "other",
+                "statement": comment,
+            }));
+        }
+        // (b) --annotator + --annotation-comment pairs.
+        for (i, ann) in scan.user_metadata.annotations.iter().enumerate() {
+            let hash = hash_prefix(
+                format!("anno:{}:{}:{}", i, ann.annotator.name, ann.comment)
+                    .as_bytes(),
+                16,
+            );
+            let slug = url_friendly(&ann.annotator.name);
+            let anno_iri = format!("{doc_iri}/annotation/{slug}-{hash}");
+            annotations.push(json!({
+                "type": "Annotation",
+                "spdxId": anno_iri,
+                "creationInfo": CREATION_INFO_ID,
+                "subject": doc_iri.clone(),
+                "annotationType": "other",
+                "statement": ann.comment,
+            }));
+        }
+    }
     annotations.sort_by(|a, b| {
         let key = |v: &Value| v["spdxId"].as_str().unwrap_or("").to_string();
         key(a).cmp(&key(b))

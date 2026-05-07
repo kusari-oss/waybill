@@ -130,6 +130,19 @@ pub struct ScanArtifacts<'a> {
     /// alpha.17 per FR-009). Default `RootComponentOverride::default()`
     /// keeps existing struct-literal call sites compiling.
     pub root_override: RootComponentOverride,
+    /// Milestone 080: user-provided SBOM metadata aggregated from the
+    /// `--creator` / `--annotator` / `--annotation-comment` /
+    /// `--metadata-comment` / `--scan-target-name` / `--metadata-file`
+    /// flags. Per-format builders consume `&UserMetadata` verbatim and
+    /// route each entry to the format's standards-native landing slot
+    /// (CDX 1.6 `bom.annotations[]` + `metadata.tools.components[]` +
+    /// `metadata.authors[]` + `metadata.manufacturer`; SPDX 2.3
+    /// `creationInfo.creators[]` + `creationInfo.comment` +
+    /// `annotations[]`; SPDX 3 new `Tool` / `Organization` / `Person`
+    /// / `Annotation` elements in `@graph`). When `is_active()` is
+    /// false, builders short-circuit so pre-080 invocations stay
+    /// byte-identical to alpha.20.
+    pub user_metadata: mikebom::binding::user_metadata::UserMetadata,
 }
 
 /// Milestone 077 — operator-supplied overrides for the root component

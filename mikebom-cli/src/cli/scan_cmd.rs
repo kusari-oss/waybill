@@ -419,6 +419,77 @@ pub struct ScanArgs {
         value_parser = validate_root_version,
     )]
     pub root_version: Option<String>,
+
+    // ────────────────────────────────────────────────────────────
+    // Milestone 080 — user-provided SBOM metadata. See
+    // `specs/080-user-sbom-metadata/` for the full design.
+    // ────────────────────────────────────────────────────────────
+
+    /// Attach a creator entry to the emitted SBOM. Repeatable. Form:
+    /// `<Type>: <Name>` where `<Type>` is one of `Tool`, `Organization`,
+    /// `Person` (case-sensitive). Each entry lands at the standards-
+    /// native creator/tools field of every emitted format: CDX 1.6
+    /// `metadata.tools.components[]` / `metadata.manufacturer` /
+    /// `metadata.authors[]` (per Type), SPDX 2.3
+    /// `creationInfo.creators[]` (verbatim), SPDX 3 new `Tool` /
+    /// `Organization` / `Person` element in `@graph`. mikebom's own
+    /// auto-populated tool/organization entries are preserved alongside.
+    #[arg(
+        long = "creator",
+        action = clap::ArgAction::Append,
+        value_name = "TYPE: NAME",
+    )]
+    pub creator: Vec<String>,
+
+    /// Attach a document-level annotator. Repeatable. MUST be paired
+    /// 1:1 with `--annotation-comment` — each `--annotator` MUST be
+    /// immediately followed by exactly one `--annotation-comment` per
+    /// the milestone-080 Q1 clarification. Form: same `<Type>: <Name>`
+    /// shape as `--creator`.
+    #[arg(
+        long = "annotator",
+        action = clap::ArgAction::Append,
+        value_name = "TYPE: NAME",
+    )]
+    pub annotator: Vec<String>,
+
+    /// Free-text comment that pairs positionally with the preceding
+    /// `--annotator` flag. Repeatable. Counts MUST match `--annotator`
+    /// exactly.
+    #[arg(
+        long = "annotation-comment",
+        action = clap::ArgAction::Append,
+        value_name = "TEXT",
+    )]
+    pub annotation_comment: Vec<String>,
+
+    /// Free-text comment about the SBOM document as a whole. Single-
+    /// valued. Lands at SPDX 2.3 `creationInfo.comment`, SPDX 3
+    /// `Annotation` element of type `OTHER`, CDX 1.6 `bom.annotations[]`
+    /// (per the milestone-080 native-fields audit; no `mikebom:`
+    /// parity bridge introduced).
+    #[arg(long = "metadata-comment", value_name = "TEXT")]
+    pub metadata_comment: Option<String>,
+
+    /// Operator-supplied override for the document/Sbom-level name
+    /// field. SPDX 2.3 document `name`, SPDX 3 `software_Sbom.name`,
+    /// CDX 1.6 `metadata.component.name`. **Note**: when both
+    /// `--scan-target-name` and milestone-077's `--root-name` are set
+    /// on a CDX emission, `--root-name` takes precedence on
+    /// `metadata.component.name` (a stderr warning is emitted). On
+    /// SPDX 2.3 / SPDX 3 the two flags target different fields and
+    /// both are honored independently.
+    #[arg(long = "scan-target-name", value_name = "NAME")]
+    pub scan_target_name: Option<String>,
+
+    /// Path to a JSON sidecar file containing user-supplied metadata.
+    /// Schema: `{creators?: [string], annotators?: [{type_name, comment}],
+    /// metadata_comment?: string, scan_target_name?: string}` with
+    /// `deny_unknown_fields`. Array fields merge additively with their
+    /// flag counterparts (file values come first); single-valued
+    /// fields fail with a conflict error if specified in both.
+    #[arg(long = "metadata-file", value_name = "PATH")]
+    pub metadata_file: Option<PathBuf>,
 }
 
 /// Milestone 077 — validate `--root-name` / `--root-version` values
@@ -1549,6 +1620,67 @@ pub async fn execute(
         &manual_identifiers,
     );
 
+    // Milestone 080 — assemble user-supplied SBOM metadata from
+    // `--creator` / `--annotator` / `--annotation-comment` /
+    // `--metadata-comment` / `--scan-target-name` / `--metadata-file`
+    // flags. Per research §3, do the early UX-friendly strict-
+    // interleaving check on the raw argv BEFORE the flat clap
+    // collection is consumed by `merge_file_and_flags`, so the
+    // operator gets a crisp pairing-mistake diagnostic rather than a
+    // count-mismatch one.
+    let argv: Vec<String> = std::env::args().collect();
+    if let Err(diag) =
+        mikebom::binding::user_metadata::validate_annotator_pair_interleaving(&argv)
+    {
+        anyhow::bail!(diag);
+    }
+    let metadata_file = match args.metadata_file.as_deref() {
+        Some(p) => Some(
+            mikebom::binding::user_metadata::load_metadata_file(p)
+                .map_err(|e| anyhow::anyhow!(e))?,
+        ),
+        None => None,
+    };
+    let user_metadata = mikebom::binding::user_metadata::merge_file_and_flags(
+        metadata_file,
+        args.creator.clone(),
+        args.annotator.clone(),
+        args.annotation_comment.clone(),
+        args.metadata_comment.clone(),
+        args.scan_target_name.clone(),
+        scan_created_timestamp(),
+    )
+    .map_err(|e| anyhow::anyhow!(e))?;
+    // Stderr warning on the multi-Organization edge case for CDX
+    // (research §1: CDX `metadata.manufacturer` is single-valued; 2nd+
+    // Organization creators route to bom.annotations[]).
+    let org_count = user_metadata
+        .creators
+        .iter()
+        .filter(|c| {
+            matches!(
+                c.kind,
+                mikebom::binding::user_metadata::CreatorKind::Organization
+            )
+        })
+        .count();
+    if org_count > 1 {
+        eprintln!(
+            "warning: {} `--creator \"Organization: ...\"` entries supplied; \
+             CDX 1.6 permits exactly one `metadata.manufacturer` so the \
+             first Organization creator populates that slot and the rest \
+             are routed to `bom.annotations[]`.",
+            org_count
+        );
+    }
+    if user_metadata.scan_target_name.is_some() && args.root_name.is_some() {
+        eprintln!(
+            "warning: --root-name overrides --scan-target-name for CDX \
+             metadata.component.name; SPDX 2.3 / SPDX 3 honor both \
+             independently."
+        );
+    }
+
     // Build the neutral artifacts bundle once and hand it to every
     // serializer the user requested — the single-pass guarantee of
     // FR-004 / SC-009.
@@ -1598,6 +1730,10 @@ pub async fn execute(
             name: args.root_name.clone(),
             version: args.root_version.clone(),
         },
+        // Milestone 080: user-provided SBOM metadata aggregated from
+        // the new flags (--creator / --annotator / --annotation-comment
+        // / --metadata-comment / --scan-target-name / --metadata-file).
+        user_metadata: user_metadata.clone(),
     };
     let output_cfg = OutputConfig {
         mikebom_version: env!("CARGO_PKG_VERSION"),
@@ -2204,6 +2340,14 @@ mod tests {
             component_id: vec![],
             root_name: None,
             root_version: None,
+            // Milestone 080 — defaults for new fields keep the test
+            // helper's "minimal flags" contract intact.
+            creator: vec![],
+            annotator: vec![],
+            annotation_comment: vec![],
+            metadata_comment: None,
+            scan_target_name: None,
+            metadata_file: None,
         }
     }
 

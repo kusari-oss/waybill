@@ -308,6 +308,7 @@ pub fn build_document(
             identifiers: artifacts.identifiers,
             component_identifiers: artifacts.component_identifiers,
             root_override: artifacts.root_override.clone(),
+            user_metadata: artifacts.user_metadata.clone(),
         }
     } else {
         ScanArtifacts {
@@ -329,6 +330,7 @@ pub fn build_document(
             identifiers: artifacts.identifiers,
             component_identifiers: artifacts.component_identifiers,
             root_override: artifacts.root_override.clone(),
+            user_metadata: artifacts.user_metadata.clone(),
         }
     };
     let artifacts: &ScanArtifacts<'_> = &view_artifacts;
@@ -470,22 +472,67 @@ pub fn build_document(
             ));
         }
     }
+    // Milestone 080 — append user-supplied `--creator <Type: Name>`
+    // entries verbatim per the SPDX 2.3 routing matrix (research §2).
+    // Insertion order is file-then-flag (already enforced upstream by
+    // `merge_file_and_flags`).
+    for creator in &artifacts.user_metadata.creators {
+        creators.push(format!("{} {}", creator.kind.spdx_prefix(), creator.name));
+    }
     let creation_info = CreationInfo {
         created: date.clone(),
         creators,
         license_list_version: None,
-        comment: Some(build_scope_comment(artifacts)),
+        // Milestone 080 — user-supplied `--metadata-comment` wins as
+        // the slot's primary value. The pre-080 scope-hint comment is
+        // appended as a 2nd line so SPDX 2.3 readers retain the
+        // milestone-047 scope diagnostic when an operator supplies a
+        // comment. When no user comment is supplied, the scope-hint
+        // value is the slot's value (alpha.20 byte-identity).
+        comment: Some(match artifacts.user_metadata.metadata_comment.as_deref() {
+            Some(user_text) => {
+                format!("{}\n\n{}", user_text, build_scope_comment(artifacts))
+            }
+            None => build_scope_comment(artifacts),
+        }),
     };
 
     // Document-level mikebom annotations (Sections C21–C23 + E1).
-    let annotations =
+    let mut annotations =
         super::annotations::annotate_document(&annotator, &date, artifacts);
+    // Milestone 080 — append user-supplied `--annotator` /
+    // `--annotation-comment` pairs per the SPDX 2.3 routing matrix
+    // (contracts/user-sbom-metadata.md). Each pair → SpdxAnnotation
+    // with shape `{annotator: "<Type>: <Name>", annotationDate, type:
+    // OTHER, comment}`.
+    for ann in &artifacts.user_metadata.annotations {
+        annotations.push(SpdxAnnotation {
+            annotator: format!(
+                "{} {}",
+                ann.annotator.kind.spdx_prefix(),
+                ann.annotator.name
+            ),
+            date: date.clone(),
+            kind: SpdxAnnotationType::Other,
+            comment: ann.comment.clone(),
+        });
+    }
+
+    // Milestone 080 — `--scan-target-name` overrides the SPDX 2.3
+    // top-level document `name` field (independent of milestone 077's
+    // `--root-name` which targets the root Package's name; per
+    // research §5 both flags are honored independently in SPDX 2.3).
+    let document_name = artifacts
+        .user_metadata
+        .scan_target_name
+        .clone()
+        .unwrap_or_else(|| artifacts.target_name.to_string());
 
     SpdxDocument {
         spdx_version: "SPDX-2.3",
         data_license: "CC0-1.0",
         spdx_id: SpdxId::document(),
-        name: artifacts.target_name.to_string(),
+        name: document_name,
         namespace,
         creation_info,
         packages,
@@ -786,6 +833,7 @@ mod tests {
             identifiers: &[],
             component_identifiers: &[],
             root_override: crate::generate::RootComponentOverride::default(),
+            user_metadata: mikebom::binding::user_metadata::UserMetadata::default(),
         }
     }
 
