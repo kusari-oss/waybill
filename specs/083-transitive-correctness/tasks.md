@@ -48,21 +48,21 @@ Each ecosystem is an independent unit of work. Per FR-002, each fixture must hav
 
 ### Phase 3b: npm
 
-- [ ] T015 [US1] Pick + extract npm fixture (candidate: `expressjs/express`). Vendor `package.json` + `package-lock.json`.
-- [ ] T016 [US1] Create `mikebom-cli/tests/transitive_parity_npm.rs`.
-- [ ] T017 [US1] Run audit + populate baseline + research.md row.
+- [X] T015 [US1] Pick + extract npm fixture (candidate: `expressjs/express`). Vendor `package.json` + `package-lock.json`.
+- [X] T016 [US1] Create `mikebom-cli/tests/transitive_parity_npm.rs`.
+- [X] T017 [US1] Run audit + populate baseline + research.md row.
 
 ### Phase 3c: Maven
 
-- [ ] T018 [US1] Pick + extract Maven fixture (candidate: `apache/commons-lang`). Vendor `pom.xml` + parent POMs needed for `<parent>` resolution.
-- [ ] T019 [US1] Create `mikebom-cli/tests/transitive_parity_maven.rs`.
-- [ ] T020 [US1] Run audit + populate baseline + research.md row.
+- [X] T018 [US1] Pick + extract Maven fixture (candidate: `apache/commons-lang`). Vendor `pom.xml` + parent POMs needed for `<parent>` resolution.
+- [X] T019 [US1] Create `mikebom-cli/tests/transitive_parity_maven.rs`.
+- [X] T020 [US1] Run audit + populate baseline + research.md row.
 
 ### Phase 3d: pip-poetry
 
-- [ ] T021 [US1] Pick + extract poetry fixture (candidate: `pypa/poetry` self-hosting). Vendor `pyproject.toml` + `poetry.lock`.
-- [ ] T022 [US1] Create `mikebom-cli/tests/transitive_parity_pip_poetry.rs`.
-- [ ] T023 [US1] Run audit + populate baseline + research.md row.
+- [X] T021 [US1] Pick + extract poetry fixture (candidate: `pypa/poetry` self-hosting). Vendor `pyproject.toml` + `poetry.lock`.
+- [X] T022 [US1] Create `mikebom-cli/tests/transitive_parity_pip_poetry.rs`.
+- [X] T023 [US1] Run audit + populate baseline + research.md row.
 
 ### Phase 3e: pip-pipfile
 
@@ -72,9 +72,9 @@ Each ecosystem is an independent unit of work. Per FR-002, each fixture must hav
 
 ### Phase 3f: pip-plain
 
-- [ ] T027 [US1] Pick + extract plain requirements.txt fixture (smaller — degenerate case per FR-008 — likely zero transitive edges).
-- [ ] T028 [US1] Create `mikebom-cli/tests/transitive_parity_pip_plain.rs`.
-- [ ] T029 [US1] Run audit + document the FR-008 upstream-limitation in the research.md row + populate baseline.
+- [X] T027 [US1] Pick + extract plain requirements.txt fixture (smaller — degenerate case per FR-008 — likely zero transitive edges).
+- [X] T028 [US1] Create `mikebom-cli/tests/transitive_parity_pip_plain.rs`.
+- [X] T029 [US1] Run audit + document the FR-008 upstream-limitation in the research.md row + populate baseline.
 
 ### Phase 3g: gem
 
@@ -84,9 +84,9 @@ Each ecosystem is an independent unit of work. Per FR-002, each fixture must hav
 
 ### Phase 3h: Go
 
-- [ ] T033 [US1] Pick + extract Go fixture (candidate: `kubernetes/cri-tools`). Vendor `go.mod` + `go.sum`.
-- [ ] T034 [US1] Create `mikebom-cli/tests/transitive_parity_go.rs`.
-- [ ] T035 [US1] Run audit + populate baseline + research.md row.
+- [X] T033 [US1] Pick + extract Go fixture (candidate: `kubernetes/cri-tools`). Vendor `go.mod` + `go.sum`.
+- [X] T034 [US1] Create `mikebom-cli/tests/transitive_parity_go.rs`.
+- [X] T035 [US1] Run audit + populate baseline + research.md row.
 
 ### Phase 3i: dpkg / rpm / apk (Linux-only)
 

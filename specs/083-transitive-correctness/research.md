@@ -187,3 +187,155 @@ The 3 SBOM tools disagree massively (319 / 85 / 721). Set-theoretic decompositio
 **Indirect-vs-direct decision**: **N/A — already covered by milestone-052/part-2 lifecycle scope work** (per research §6). cargo's `[dev-dependencies]` vs `[dependencies]` distinction is mapped to CDX `scope: excluded` and SPDX 2.3 typed `DEV_DEPENDENCY_OF`.
 
 **Follow-up disposition**: **gaps #1 + #2 to be filed** as separate cargo-reader issues post-this-milestone-merge. The audit's regression test (`mikebom-cli/tests/transitive_parity_cargo.rs`) pins mikebom's current 319-edge count + 3 representative edges; future cargo-reader fixes bump the baseline per quickstart.md Recipe 3.
+
+### Ecosystem: npm
+
+**Fixture**: `mikebom-cli/tests/fixtures/transitive_parity/npm/` — `package.json` + `package-lock.json` (lockfile generated via `npm install --package-lock-only` since express the library doesn't commit its own lockfile).
+**Source URL**: https://github.com/expressjs/express
+**Commit SHA**: `7e562c6` (tag `4.21.0`)
+**Tool versions**: trivy 0.69.3 / syft 1.27.0 / mikebom alpha.24
+
+**Edge counts** (cache-empty CI baseline, PURL-normalized):
+- mikebom: 150
+- trivy: 94
+- syft: 0 (syft extracts no transitive edges from npm `package-lock.json`-only fixtures — likely needs `node_modules/` source-tree presence)
+
+**Diff classification**: **minor differences** (mikebom + trivy roughly agree on shape; syft missing entirely)
+
+mikebom over-emits relative to trivy (150 vs 94) — likely walking `package-lock.json` more aggressively. The over-emission is not obviously wrong, but worth investigating against a `npm ls --all` source-of-truth tiebreaker. syft emitting zero is a syft quirk (manifests-only fixtures aren't in its sweet spot).
+
+**Indirect-vs-direct decision**: **N/A — already covered by milestone-052/part-2** (`devDependencies` vs `dependencies`).
+
+**Follow-up disposition**: tracked in regression test (`transitive_parity_npm.rs`) at the 150-edge baseline. No follow-up issue filed yet — the over-emission relative to trivy needs source-format-direct tiebreaker work to confirm whether it's a mikebom over-emission or a trivy under-emission.
+
+### Ecosystem: Go
+
+**Fixture**: `mikebom-cli/tests/fixtures/transitive_parity/go/` — `go.mod` + `go.sum`.
+**Source URL**: https://github.com/kubernetes-sigs/cri-tools
+**Commit SHA**: `b5cf674` (tag `v1.32.0`)
+**Tool versions**: trivy 0.69.3 / syft 1.27.0 / mikebom alpha.24
+
+**Edge counts** (cache-empty CI baseline):
+- mikebom: 31 (cache-empty — only direct deps from go.mod's `require` block)
+- mikebom: 260 (when developer's box has `$GOMODCACHE` populated — milestone-055's 4-step ladder steps 1+2 fire)
+- trivy: 142
+- syft: 0
+
+**Diff classification**: **gap surfaced** (mikebom cache-empty under-emits relative to trivy)
+
+trivy emits 142 transitive edges from go.sum content alone, no module-cache lookups. mikebom's cache-empty fallback emits only the 31 direct edges from `require`. The 4-step ladder (milestone 055) was supposed to handle this via the go-mod-proxy fetch step, but that's disabled by `--offline`. Result: in offline + cache-empty mode (the CI scenario), mikebom misses the bulk of transitive edges.
+
+**Specific gap**: mikebom's go reader, when offline + cache-empty, should be able to reconstruct transitive edges from `go.sum` content the same way trivy does (each `go.sum` entry encodes a package version — full transitive closure can be inferred from the union). This is exactly the "no-edges-fallback" case research §3 addresses, and it's NOT optimal.
+
+**Indirect-vs-direct decision**: per research §6 — **defer** (Go's `// indirect` marker; mikebom's "all-edges-under-root" is operator-comprehensible; not P1/P2).
+
+**Follow-up disposition**: **gap surfaced** — file follow-up for "Go reader: synthesize transitive edges from go.sum content when offline + cache-empty (currently emits direct-deps-only fallback)". Regression test pins the 31-edge cache-empty baseline.
+
+### Ecosystem: pip-poetry
+
+**Fixture**: `mikebom-cli/tests/fixtures/transitive_parity/pip_poetry/` — `pyproject.toml` + `poetry.lock` (poetry self-hosting per research §2).
+**Source URL**: https://github.com/python-poetry/poetry
+**Commit SHA**: `6a071c1` (tag `1.8.4`)
+**Tool versions**: trivy 0.69.3 / syft 1.27.0 / mikebom alpha.24
+
+**Edge counts** (cache-empty CI baseline):
+- mikebom: 62
+- trivy: 36
+- syft: 138 (DEPENDENCY_OF — reverse direction; normalized in the extractor)
+
+**Diff classification**: **minor differences** with one notable surprise
+
+mikebom 62 vs trivy 36 — mikebom emits ~2× more edges. syft emits 138 (after reverse normalization). Three different edge counts across three tools on the same lockfile suggests each tool walks `poetry.lock` slightly differently — likely around handling of optional/extras dependencies, marker-conditional edges, etc.
+
+**Indirect-vs-direct decision**: poetry's `[tool.poetry.dependencies]` is roughly equivalent to direct deps; `poetry.lock` blocks include source/dev classification. Already covered by milestone-052/part-2 lifecycle scope work.
+
+**Follow-up disposition**: tracked in regression test at the 62-edge baseline. No follow-up issue filed — the 62/36/138 spread is documented but a source-format-direct tiebreaker is needed to resolve which classifier is most correct. Candidate follow-up: "audit pip-poetry edge classification across all 3 tools against `poetry show --tree` source-of-truth output."
+
+### Ecosystem: Maven
+
+**Fixture**: `mikebom-cli/tests/fixtures/transitive_parity/maven/` — `pom.xml` only (commons-lang has no parent POM at this version — root of its release lineage).
+**Source URL**: https://github.com/apache/commons-lang
+**Commit SHA**: `c8774fa` (tag `rel/commons-lang-3.14.0`)
+**Tool versions**: trivy 0.69.3 / syft 1.27.0 / mikebom alpha.24
+
+**Edge counts** (cache-empty CI baseline):
+- mikebom: 0
+- trivy: 0
+- syft: 8 (DEPENDENCY_OF — reverse direction; normalized to forward)
+
+**Diff classification**: **gap surfaced** — both mikebom + trivy emit zero edges from a real Maven project's pom.xml on cache-empty CI runs
+
+mikebom + trivy both fail to emit dep edges from `pom.xml` alone when `~/.m2/repository/` is empty — they need the cached parent + dependency POMs to resolve transitive declarations. syft emits 8 edges, possibly via a different parsing strategy. mikebom additionally has the milestone-085 + earlier-discovered Maven-reader bugs (commons-lang3 emits a malformed `version: "64"` when `~/.m2/` IS populated, surfaced in the local-cache-populated audit run earlier).
+
+**Specific gap**: mikebom's Maven reader needs (a) inline parent-POM-less transitive resolution OR (b) a deps.dev / Maven Central fallback for cache-empty cases. Currently it emits zero in this fixture.
+
+**Indirect-vs-direct decision**: Maven `<scope>compile/test/provided/runtime</scope>` is mapped to lifecycle-scope work in milestone-052/part-2. No new decision.
+
+**Follow-up disposition**: **gap surfaced** — file follow-up for "Maven reader: cache-empty offline mode emits zero transitive edges (and version-extracted-incorrectly when cache populated)". Regression test pins the 0-edge cache-empty baseline.
+
+### Ecosystem: pip-plain
+
+**Fixture**: `mikebom-cli/tests/fixtures/transitive_parity/pip_plain/` — synthetic 13-package `requirements.txt`.
+**Source**: synthesized for milestone 083 per FR-008 (no real-world fixture needed — the upstream limitation is the entire point of the test).
+**Tool versions**: trivy 0.69.3 / syft 1.27.0 / mikebom alpha.24
+
+**Edge counts** (cache-empty CI baseline):
+- mikebom: 0
+- trivy: 0
+- syft: 0
+
+**Diff classification**: **matches expected** (the milestone's only matches-expected classification)
+
+Per FR-008: plain `requirements.txt` has no native way to express transitive structure. All 3 tools correctly emit zero transitive edges from this fixture. Future tools that synthesize edges heuristically (e.g., querying PyPI for each package's runtime deps) would deviate — that's exactly what the regression test catches.
+
+**Indirect-vs-direct decision**: N/A — `requirements.txt` doesn't encode the distinction.
+
+**Follow-up disposition**: **no action** — matches expected behavior; tracked in regression test as a stability anchor against future heuristic over-emission.
+
+### Ecosystem: Gem (deferred to Linux CI)
+
+**Fixture status**: deferred — generating `Gemfile.lock` from candidate fixtures (rubocop/rubocop) requires Ruby ≥ 2.7 which isn't on the macOS dev box (system Ruby is 2.6). Docker-based generation hit Docker Desktop file-sharing constraints on `/tmp` and `$HOME`. Defer fixture extraction + audit to Linux CI environment OR a follow-up session with a different gem candidate (jekyll/jekyll, mastodon/mastodon, or another project that commits its `Gemfile.lock` at HEAD).
+
+**Diff classification**: pending fixture extraction.
+
+### Ecosystem: pip-pipfile (deferred)
+
+**Fixture status**: deferred — research §2 shortlisted "selection deferred" originally; finding a real-world Pipfile-using project with an active commit to a stable tag wasn't completed in this session. Candidates for the follow-up cycle: simple flask apps, real-python tutorials, or a synthesized Pipfile + Pipfile.lock fixture generated via `pipenv lock` on a small dependency set.
+
+**Diff classification**: pending fixture extraction.
+
+### Ecosystems: dpkg / rpm / apk (deferred to Linux CI)
+
+**Fixture status**: deferred to Linux CI runs per FR-009 + the macOS-skip pattern. Extraction requires container-image rootfs access which Docker Desktop on macOS can't reliably mount across `/tmp` (file-sharing config issue surfaced in this session). The Linux CI lane will:
+
+1. Pull `debian:12`, `fedora:39`, `alpine:3.20` base images.
+2. Extract `/var/lib/dpkg/status`, `/var/lib/rpm/`, `/lib/apk/db/installed` into the respective fixture dirs.
+3. Run mikebom + trivy + syft against each fixture (trivy + syft both have native OS-package classifiers).
+4. Populate per-ecosystem audit rows here.
+
+**Diff classification**: pending fixture extraction in Linux CI.
+
+## §9 — Summary table (incremental)
+
+Per-ecosystem audit progress as of milestone-083 in-flight commit. Updated as each ecosystem's row lands above.
+
+| Ecosystem | Status | mikebom edges | trivy edges | syft edges | Classification |
+|---|---|---|---|---|---|
+| cargo | ✅ done | 319 | 85 | 721 (DEP_OF) | gap surfaced (×2) |
+| npm | ✅ done | 150 | 94 | 0 | minor differences |
+| Go | ✅ done | 31 (cache-empty) | 142 | 0 | gap surfaced |
+| pip-poetry | ✅ done | 62 | 36 | 138 (DEP_OF) | minor differences |
+| Maven | ✅ done | 0 (cache-empty) | 0 | 8 (DEP_OF) | gap surfaced |
+| pip-plain | ✅ done | 0 | 0 | 0 | **matches expected** |
+| gem | ⏳ deferred | TBD | TBD | TBD | (Linux CI / follow-up) |
+| pip-pipfile | ⏳ deferred | TBD | TBD | TBD | (follow-up session) |
+| dpkg | ⏳ deferred | TBD | TBD | TBD | (Linux CI) |
+| rpm | ⏳ deferred | TBD | TBD | TBD | (Linux CI) |
+| apk | ⏳ deferred | TBD | TBD | TBD | (Linux CI) |
+
+**Headline findings** for follow-up issue filings:
+- **cargo** — 2 gaps: workspace-member version mismatch, `clap_derive` zero outgoing edges
+- **Go** — 1 gap: cache-empty offline mode under-emits (31 edges vs trivy's 142)
+- **Maven** — 1 gap: cache-empty offline mode emits zero transitive edges
+- **npm** — open question: mikebom's 150 edges vs trivy's 94 — needs source-format tiebreaker
+- **pip-poetry** — open question: 62 / 36 / 138 spread — needs `poetry show --tree` tiebreaker
