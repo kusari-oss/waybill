@@ -292,11 +292,25 @@ Per FR-008: plain `requirements.txt` has no native way to express transitive str
 
 **Follow-up disposition**: **no action** — matches expected behavior; tracked in regression test as a stability anchor against future heuristic over-emission.
 
-### Ecosystem: Gem (deferred to Linux CI)
+### Ecosystem: Gem
 
-**Fixture status**: deferred — generating `Gemfile.lock` from candidate fixtures (rubocop/rubocop) requires Ruby ≥ 2.7 which isn't on the macOS dev box (system Ruby is 2.6). Docker-based generation hit Docker Desktop file-sharing constraints on `/tmp` and `$HOME`. Defer fixture extraction + audit to Linux CI environment OR a follow-up session with a different gem candidate (jekyll/jekyll, mastodon/mastodon, or another project that commits its `Gemfile.lock` at HEAD).
+**Fixture**: `mikebom-cli/tests/fixtures/transitive_parity/gem/` — `Gemfile` + `Gemfile.lock`. fastlane committed its lockfile at HEAD, sidestepping the rubocop bundle-lock-needs-Ruby-3+ issue (macOS dev box has system Ruby 2.6).
+**Source URL**: https://github.com/fastlane/fastlane
+**Commit SHA**: tag `2.224.0`
+**Tool versions**: trivy 0.69.3 / syft 1.27.0 / mikebom alpha.24
 
-**Diff classification**: pending fixture extraction.
+**Edge counts** (cache-empty CI baseline):
+- mikebom: 196
+- trivy: 196
+- syft: 0
+
+**Diff classification**: **minor differences** (mikebom + trivy in tight agreement; syft missing entirely)
+
+mikebom + trivy agree on 196 edges (tightest agreement we've seen across the audit). Off-by-one on package count (151 vs 152) — likely a single component classification difference, not a dep-graph issue. syft emits zero edges from `Gemfile.lock` alone — same pattern as npm and Go (manifests-only fixtures aren't syft's sweet spot).
+
+**Indirect-vs-direct decision**: Gemfile's `:development` / `:test` group classification is mapped to lifecycle-scope work in milestone-052/part-2. No new decision.
+
+**Follow-up disposition**: tracked in regression test at the 196-edge baseline. The mikebom/trivy agreement here is encouraging — gem is one of the better-audited ecosystems by mikebom's reader. No follow-up issue filed.
 
 ### Ecosystem: pip-pipfile (deferred)
 
@@ -327,7 +341,7 @@ Per-ecosystem audit progress as of milestone-083 in-flight commit. Updated as ea
 | pip-poetry | ✅ done | 62 | 36 | 138 (DEP_OF) | minor differences |
 | Maven | ✅ done | 0 (cache-empty) | 0 | 8 (DEP_OF) | gap surfaced |
 | pip-plain | ✅ done | 0 | 0 | 0 | **matches expected** |
-| gem | ⏳ deferred | TBD | TBD | TBD | (Linux CI / follow-up) |
+| gem | ✅ done | 196 | 196 | 0 | minor differences |
 | pip-pipfile | ⏳ deferred | TBD | TBD | TBD | (follow-up session) |
 | dpkg | ⏳ deferred | TBD | TBD | TBD | (Linux CI) |
 | rpm | ⏳ deferred | TBD | TBD | TBD | (Linux CI) |
@@ -339,3 +353,4 @@ Per-ecosystem audit progress as of milestone-083 in-flight commit. Updated as ea
 - **Maven** — 1 gap: cache-empty offline mode emits zero transitive edges
 - **npm** — open question: mikebom's 150 edges vs trivy's 94 — needs source-format tiebreaker
 - **pip-poetry** — open question: 62 / 36 / 138 spread — needs `poetry show --tree` tiebreaker
+- **gem** — ✅ tight mikebom/trivy agreement (196 vs 196) — no follow-up needed beyond the regression-test baseline pin

@@ -78,9 +78,9 @@ Each ecosystem is an independent unit of work. Per FR-002, each fixture must hav
 
 ### Phase 3g: gem
 
-- [ ] T030 [US1] Pick + extract gem fixture (candidate: `rubocop/rubocop`). Vendor `Gemfile` + `Gemfile.lock`.
-- [ ] T031 [US1] Create `mikebom-cli/tests/transitive_parity_gem.rs`.
-- [ ] T032 [US1] Run audit + populate baseline + research.md row.
+- [X] T030 [US1] Pick + extract gem fixture (candidate: `rubocop/rubocop`). Vendor `Gemfile` + `Gemfile.lock`.
+- [X] T031 [US1] Create `mikebom-cli/tests/transitive_parity_gem.rs`.
+- [X] T032 [US1] Run audit + populate baseline + research.md row.
 
 ### Phase 3h: Go
 
