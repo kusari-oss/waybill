@@ -538,13 +538,13 @@
     {
       "aggregate": "incomplete_first_party_only",
       "assemblies": [
-        "simple-module@0.0.0"
+        "pkg:golang/example.com/simple@v0.0.0-unknown"
       ]
     },
     {
       "aggregate": "complete",
       "dependencies": [
-        "simple-module@0.0.0"
+        "pkg:golang/example.com/simple@v0.0.0-unknown"
       ]
     }
   ],
@@ -602,18 +602,6 @@
     {
       "dependsOn": [],
       "ref": "pkg:golang/gopkg.in/yaml.v3@v3.0.1"
-    },
-    {
-      "dependsOn": [
-        "pkg:golang/example.com/simple@v0.0.0-unknown",
-        "pkg:golang/github.com/davecgh/go-spew@v1.1.1",
-        "pkg:golang/github.com/inconshreveable/mousetrap@v1.1.0",
-        "pkg:golang/github.com/pmezard/go-difflib@v1.0.0",
-        "pkg:golang/github.com/spf13/pflag@v1.0.9",
-        "pkg:golang/golang.org/x/sys@v0.28.0",
-        "pkg:golang/gopkg.in/check.v1@v0.0.0-20161208181325-20d25e280405"
-      ],
-      "ref": "simple-module@0.0.0"
     }
   ],
   "metadata": {

@@ -151,19 +151,23 @@
     {
       "aggregate": "incomplete_first_party_only",
       "assemblies": [
-        "pom-three-deps@0.0.0"
+        "pkg:maven/com.example/demo-app@1.0.0"
       ]
     },
     {
       "aggregate": "complete",
       "dependencies": [
-        "pom-three-deps@0.0.0"
+        "pkg:maven/com.example/demo-app@1.0.0"
       ]
     }
   ],
   "dependencies": [
     {
-      "dependsOn": [],
+      "dependsOn": [
+        "pkg:maven/com.google.guava/guava@32.1.3-jre",
+        "pkg:maven/junit/junit@4.13.2",
+        "pkg:maven/org.apache.commons/commons-lang3@3.14.0"
+      ],
       "ref": "pkg:maven/com.example/demo-app@1.0.0"
     },
     {
@@ -177,15 +181,6 @@
     {
       "dependsOn": [],
       "ref": "pkg:maven/org.apache.commons/commons-lang3@3.14.0"
-    },
-    {
-      "dependsOn": [
-        "pkg:maven/com.example/demo-app@1.0.0",
-        "pkg:maven/com.google.guava/guava@32.1.3-jre",
-        "pkg:maven/junit/junit@4.13.2",
-        "pkg:maven/org.apache.commons/commons-lang3@3.14.0"
-      ],
-      "ref": "pom-three-deps@0.0.0"
     }
   ],
   "metadata": {

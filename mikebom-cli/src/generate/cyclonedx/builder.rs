@@ -269,6 +269,13 @@ impl CycloneDxBuilder {
         // BEFORE downstream emission (build_components, compositions,
         // dependencies). This is the clean-replacement implementation
         // per FR-008 / VR-077-003.
+        // Milestone 084 — capture the dropped main-module PURLs alongside
+        // the existing component-filter so we can also filter relationships
+        // keyed off them (otherwise the override path leaves an orphan
+        // dependencies[].ref entry pointing at the now-dropped main-module
+        // PURL — same shape bug as the pre-fix main-module path, just with
+        // the orphan and the legitimate root swapped).
+        let mut dropped_main_module_purls: Vec<String> = Vec::new();
         let filtered_components_owned: Option<Vec<ResolvedComponent>> = if override_active {
             let mut keep: Vec<ResolvedComponent> = Vec::with_capacity(components.len());
             for c in components.iter() {
@@ -283,6 +290,7 @@ impl CycloneDxBuilder {
                         "override is set; dropping manifest-derived main-module component '{}' from emitted SBOM (per milestone 077 clean-replacement; see GitHub issue #151)",
                         c.purl
                     );
+                    dropped_main_module_purls.push(c.purl.as_str().to_string());
                 } else {
                     keep.push(c.clone());
                 }
@@ -294,10 +302,31 @@ impl CycloneDxBuilder {
         let effective_components: &[ResolvedComponent] =
             filtered_components_owned.as_deref().unwrap_or(components);
 
-        let target_ref = format!(
-            "{}@{}",
-            effective_target_name, effective_target_version
-        );
+        // Milestone 084 — when milestone-053's main-module promotion is in
+        // effect, target_ref MUST equal metadata.component.bom-ref (the
+        // main-module PURL). Pre-084 this was always `name@version`, which
+        // produced an orphan ref in dependencies[] and compositions[]
+        // because metadata.rs:391-409 already returns the PURL for the
+        // main-module case while builder.rs kept emitting the legacy
+        // short-form. Detection uses the same `mikebom:component-role:
+        // main-module` annotation as the override-filter at lines 272-293.
+        let main_module_purl: Option<String> = if !override_active {
+            effective_components
+                .iter()
+                .find(|c| {
+                    c.extra_annotations
+                        .get("mikebom:component-role")
+                        .and_then(|v| v.as_str())
+                        == Some("main-module")
+                })
+                .map(|c| c.purl.as_str().to_string())
+        } else {
+            None
+        };
+        let target_ref: String = match main_module_purl.as_deref() {
+            Some(purl) => purl.to_string(),
+            None => format!("{}@{}", effective_target_name, effective_target_version),
+        };
 
         let metadata = build_metadata(
             target_name,
@@ -345,7 +374,35 @@ impl CycloneDxBuilder {
             effective_components,
             complete_ecosystems,
         );
-        let deps = build_dependencies(effective_components, relationships, &target_ref);
+        // Milestone 084 — when override has dropped main-module components,
+        // filter out relationships whose `from` is one of the dropped PURLs.
+        // The `dependencies.rs` build_dependencies fallback (line 78-91)
+        // then synthesizes correct edges from the override-form target_ref
+        // to the components that have no incoming edges (the direct deps
+        // formerly attached to the dropped main-module). Without this
+        // filter, dependencies[] would contain an orphan entry whose `ref`
+        // is the dropped main-module PURL — same closure-violation shape
+        // as the pre-084 main-module path, just with the orphan and the
+        // legitimate root swapped.
+        let filtered_relationships_owned: Option<Vec<Relationship>> =
+            if !dropped_main_module_purls.is_empty() {
+                let dropped: std::collections::HashSet<&str> = dropped_main_module_purls
+                    .iter()
+                    .map(|s| s.as_str())
+                    .collect();
+                let kept: Vec<Relationship> = relationships
+                    .iter()
+                    .filter(|r| !dropped.contains(r.from.as_str()))
+                    .cloned()
+                    .collect();
+                Some(kept)
+            } else {
+                None
+            };
+        let effective_relationships: &[Relationship] = filtered_relationships_owned
+            .as_deref()
+            .unwrap_or(relationships);
+        let deps = build_dependencies(effective_components, effective_relationships, &target_ref);
         let vulnerabilities = build_vulnerabilities(effective_components);
 
         // Milestone 080 — build CDX 1.6 `bom.annotations[]` for the

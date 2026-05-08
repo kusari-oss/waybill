@@ -99,23 +99,17 @@
     {
       "aggregate": "incomplete_first_party_only",
       "assemblies": [
-        "node-modules-walk@0.0.0"
+        "pkg:npm/node-modules-walk-fixture@0.1.0"
       ]
     },
     {
       "aggregate": "complete",
       "dependencies": [
-        "node-modules-walk@0.0.0"
+        "pkg:npm/node-modules-walk-fixture@0.1.0"
       ]
     }
   ],
   "dependencies": [
-    {
-      "dependsOn": [
-        "pkg:npm/node-modules-walk-fixture@0.1.0"
-      ],
-      "ref": "node-modules-walk@0.0.0"
-    },
     {
       "dependsOn": [
         "pkg:npm/safe-buffer@5.2.1"

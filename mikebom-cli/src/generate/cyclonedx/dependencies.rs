@@ -80,10 +80,18 @@ pub fn build_dependencies(
         for set in dep_map.values() {
             depended_on.extend(set.iter().cloned());
         }
+        // Milestone 084 — also exclude target_ref itself so the
+        // primary-dep fallback doesn't synthesize a self-loop. Pre-084
+        // target_ref was always the legacy `<name>@0.0.0` short-form
+        // which never matched any component's PURL, so this filter
+        // was implicit. Post-084 target_ref equals the main-module
+        // PURL (when promotion is in effect), and that PURL is also
+        // in `components` — without this filter the fallback emits
+        // `<root> dependsOn [<root>, ...]`.
         let roots: BTreeSet<String> = components
             .iter()
             .map(|c| c.purl.as_str().to_string())
-            .filter(|r| !depended_on.contains(r))
+            .filter(|r| !depended_on.contains(r) && r != target_ref)
             .collect();
         if !roots.is_empty() {
             dep_map.insert(target_ref.to_string(), roots);

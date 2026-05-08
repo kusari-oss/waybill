@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-05-07
+Auto-generated from all feature plans. Last updated: 2026-05-08
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -66,6 +66,10 @@ Auto-generated from all feature plans. Last updated: 2026-05-07
 - Rust stable (workspace toolchain inherited from milestones 001–080; no nightly). + Existing only — `serde`/`serde_json` (JSON-LD round-tripping), `tracing`, `anyhow`, `clap` (the new `--sbom-type` flag via derive). Reuses milestone-047's `lifecycle_phases.rs::aggregate_phases` helper as the source of truth for tier aggregation. Reuses milestone-078's `spdx3-validate==0.0.5` conformance gate. **No new Cargo dependencies.** (081-sbom-type-clarity)
 - N/A — pure metadata-emission transform. No caches, no persistence. (081-sbom-type-clarity)
 - N/A — pure documentation work. No code paths touched. The Rust workspace continues to compile + test identically pre/post merge. + None new. The pre-PR gate uses the existing `cargo +stable clippy` + `cargo +stable test --workspace` pipeline; both remain stable across docs-only changes. (082-docs-refresh)
+- Rust stable (workspace toolchain inherited from milestones 001–082; no nightly). + Existing only — `serde`/`serde_json` (parsing emitted SBOM JSON), `tracing`, `anyhow`. The audit harness shells out to `trivy` and `syft` as external CLI tools (similar to milestone 078's `spdx3-validate` shell-out pattern). Source-format direct readers use existing per-ecosystem parsers in `mikebom-cli/src/scan_fs/package_db/` for tiebreaker comparisons (we don't re-implement; we re-invoke). For OS package managers, native tools (`dpkg-query`, `rpm`, `apk`) are shelled out. **No new Cargo dependencies.** (083-transitive-correctness)
+- N/A — purely test infrastructure. The 9 vendored fixtures (~500 KB total) live in `mikebom-cli/tests/fixtures/transitive_parity/<ecosystem>/`. No caches, no persistence beyond test fixtures. (083-transitive-correctness)
+- Rust stable (workspace toolchain inherited from milestones 001–083; no nightly). + existing only — `serde`/`serde_json` (CDX JSON construction), `tracing`, `anyhow`, `thiserror`. **No new Cargo dependencies.** The `cyclonedx-bom` workspace dep is already in use; this milestone does not change which crates participate in CDX construction. (084-cdx-mainmod-collapse)
+- N/A — purely emission-time identifier-string transformation. No caches, no persistence. (084-cdx-mainmod-collapse)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -128,9 +132,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 084-cdx-mainmod-collapse: Added Rust stable (workspace toolchain inherited from milestones 001–083; no nightly). + existing only — `serde`/`serde_json` (CDX JSON construction), `tracing`, `anyhow`, `thiserror`. **No new Cargo dependencies.** The `cyclonedx-bom` workspace dep is already in use; this milestone does not change which crates participate in CDX construction.
+- 083-transitive-correctness: Added Rust stable (workspace toolchain inherited from milestones 001–082; no nightly). + Existing only — `serde`/`serde_json` (parsing emitted SBOM JSON), `tracing`, `anyhow`. The audit harness shells out to `trivy` and `syft` as external CLI tools (similar to milestone 078's `spdx3-validate` shell-out pattern). Source-format direct readers use existing per-ecosystem parsers in `mikebom-cli/src/scan_fs/package_db/` for tiebreaker comparisons (we don't re-implement; we re-invoke). For OS package managers, native tools (`dpkg-query`, `rpm`, `apk`) are shelled out. **No new Cargo dependencies.**
 - 082-docs-refresh: Added N/A — pure documentation work. No code paths touched. The Rust workspace continues to compile + test identically pre/post merge. + None new. The pre-PR gate uses the existing `cargo +stable clippy` + `cargo +stable test --workspace` pipeline; both remain stable across docs-only changes.
-- 081-sbom-type-clarity: Added Rust stable (workspace toolchain inherited from milestones 001–080; no nightly). + Existing only — `serde`/`serde_json` (JSON-LD round-tripping), `tracing`, `anyhow`, `clap` (the new `--sbom-type` flag via derive). Reuses milestone-047's `lifecycle_phases.rs::aggregate_phases` helper as the source of truth for tier aggregation. Reuses milestone-078's `spdx3-validate==0.0.5` conformance gate. **No new Cargo dependencies.**
-- 080-user-sbom-metadata: Added Rust stable (workspace toolchain inherited from milestones 001–079; no nightly). + Existing only — `serde`/`serde_json` (JSON-LD round-tripping; the existing CDX emission path uses `serde_json::Value` directly, not structured types from the `cyclonedx-bom` crate, so adding new fields is purely additive JSON construction), `tracing`, `anyhow`, `clap` (the five new flags via derive — `--creator` repeatable via `ArgAction::Append`; `--annotator`/`--annotation-comment` via two parallel `Vec<String>` fields with post-validation per research §3), `chrono` (annotation timestamp deterministic per scan-emission time, same source as `creationInfo.created`), `thiserror` (parser error enum). Reuses milestone 078's `spdx3-validate==0.0.5` as the SPDX 3 conformance gate. **No new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->
