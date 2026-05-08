@@ -57,7 +57,15 @@ const FIXTURES: &[Fixture] = &[
 ];
 
 /// Run mikebom against a fixture and return the parsed CDX 1.6 JSON.
-fn run_mikebom_cdx(fixture_subpath: &str) -> serde_json::Value {
+/// Optionally pass override flags to exercise the milestone-077
+/// `--root-name` / `--root-version` path; when both are `None`, the
+/// scan runs without overrides (default milestone-053+ main-module
+/// emission).
+fn run_mikebom_cdx_with_override(
+    fixture_subpath: &str,
+    root_name: Option<&str>,
+    root_version: Option<&str>,
+) -> serde_json::Value {
     let fixture = workspace_root().join(fixture_subpath);
     assert!(
         fixture.exists(),
@@ -80,6 +88,12 @@ fn run_mikebom_cdx(fixture_subpath: &str) -> serde_json::Value {
         .arg("--no-deep-hash")
         .arg("--format")
         .arg("cyclonedx-json");
+    if let Some(name) = root_name {
+        cmd.arg("--root-name").arg(name);
+    }
+    if let Some(version) = root_version {
+        cmd.arg("--root-version").arg(version);
+    }
     let output = cmd.output().expect("failed to invoke mikebom");
     assert!(
         output.status.success(),
@@ -89,6 +103,10 @@ fn run_mikebom_cdx(fixture_subpath: &str) -> serde_json::Value {
     );
     let bytes = std::fs::read(&out_path).expect("read output");
     serde_json::from_slice(&bytes).expect("parse CDX JSON")
+}
+
+fn run_mikebom_cdx(fixture_subpath: &str) -> serde_json::Value {
+    run_mikebom_cdx_with_override(fixture_subpath, None, None)
 }
 
 /// Compute the closure set S = components[].bom-ref ∪ {metadata.component.bom-ref}.
@@ -342,6 +360,100 @@ fn cdx_ref_closure_invariant_holds_per_ecosystem() {
         failures.len(),
         failures.join("\n\n")
     );
+}
+
+/// Milestone 086 — assert that `--root-name` / `--root-version`
+/// override doesn't silently drop dep edges. Pre-086 (alpha.24) the
+/// override path's `target_ref` had no outgoing edges because
+/// milestone-084 filtered out main-module-PURL-keyed relationships;
+/// the `dependencies.rs:78-91` primary-dep fallback synthesized
+/// edges only for "components nothing else depends on", losing
+/// real direct deps that happened to be transitively depended on
+/// by other components. Post-086 the relationships are REWRITTEN
+/// (not filtered), preserving every edge under the override identity.
+///
+/// Test invariant: edge count from the project root MUST match
+/// between override and non-override scans of the same fixture.
+#[test]
+fn override_preserves_direct_edge_count() {
+    let mut failures: Vec<String> = Vec::new();
+
+    for fx in FIXTURES {
+        let label = fx.label;
+        let path = fx.fixture_subpath;
+        let result = std::panic::catch_unwind(|| {
+            let no_override = run_mikebom_cdx(path);
+            let with_override = run_mikebom_cdx_with_override(
+                path,
+                Some("test-override"),
+                Some("9.9.9"),
+            );
+
+            // Closure invariant must hold under override too.
+            assert_closure(&with_override, &format!("{label}/override"));
+
+            // Project root identity post-override.
+            let override_root = with_override["metadata"]["component"]["bom-ref"]
+                .as_str()
+                .expect("metadata.component.bom-ref under override")
+                .to_string();
+            assert_eq!(
+                override_root, "test-override@9.9.9",
+                "ecosystem {label}: override identity not propagated to metadata.component.bom-ref"
+            );
+
+            // Edge count from project root: invariant under override.
+            let no_override_root = no_override["metadata"]["component"]["bom-ref"]
+                .as_str()
+                .expect("metadata.component.bom-ref")
+                .to_string();
+            let no_override_edges = count_dep_edges_from(&no_override, &no_override_root);
+            let with_override_edges = count_dep_edges_from(&with_override, &override_root);
+
+            assert_eq!(
+                with_override_edges, no_override_edges,
+                "ecosystem {label}: override path lost {} edges \
+                 (no-override: {}, with-override: {}). \
+                 milestone-086 regression — relationships must be REWRITTEN, not filtered.",
+                no_override_edges - with_override_edges,
+                no_override_edges,
+                with_override_edges,
+            );
+        });
+        match result {
+            Ok(()) => eprintln!("ecosystem {label}: override-edge-preservation PASS"),
+            Err(payload) => {
+                let msg = payload
+                    .downcast_ref::<String>()
+                    .cloned()
+                    .or_else(|| {
+                        payload
+                            .downcast_ref::<&'static str>()
+                            .map(|s| (*s).to_string())
+                    })
+                    .unwrap_or_else(|| "<panic with no message>".to_string());
+                failures.push(format!("[{label}] {msg}"));
+            }
+        }
+    }
+
+    assert!(
+        failures.is_empty(),
+        "{} ecosystem(s) failed milestone-086 override-preservation invariant:\n\n{}",
+        failures.len(),
+        failures.join("\n\n")
+    );
+}
+
+fn count_dep_edges_from(cdx: &serde_json::Value, source_ref: &str) -> usize {
+    cdx["dependencies"]
+        .as_array()
+        .unwrap_or(&vec![])
+        .iter()
+        .find(|d| d["ref"].as_str() == Some(source_ref))
+        .and_then(|d| d["dependsOn"].as_array())
+        .map(|a| a.len())
+        .unwrap_or(0)
 }
 
 #[cfg(test)]

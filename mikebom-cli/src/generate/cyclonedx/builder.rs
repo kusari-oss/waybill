@@ -375,27 +375,46 @@ impl CycloneDxBuilder {
             complete_ecosystems,
         );
         // Milestone 084 — when override has dropped main-module components,
-        // filter out relationships whose `from` is one of the dropped PURLs.
-        // The `dependencies.rs` build_dependencies fallback (line 78-91)
-        // then synthesizes correct edges from the override-form target_ref
-        // to the components that have no incoming edges (the direct deps
-        // formerly attached to the dropped main-module). Without this
-        // filter, dependencies[] would contain an orphan entry whose `ref`
-        // is the dropped main-module PURL — same closure-violation shape
-        // as the pre-084 main-module path, just with the orphan and the
-        // legitimate root swapped.
+        // closure-invariant fix: relationships whose `from` is one of the
+        // dropped PURLs would otherwise leave a dangling `dependencies[].ref`
+        // entry (the dropped PURL isn't in `components[]` and isn't
+        // `metadata.component.bom-ref` under override).
+        //
+        // Milestone 086 — REWRITE rather than FILTER. The original
+        // milestone-084 fix dropped these relationships entirely (Option A
+        // in research §2), which left target_ref empty and triggered the
+        // `dependencies.rs:78-91` primary-dep fallback to synthesize
+        // edges from "components nothing else depends on". For projects
+        // whose direct deps form a non-tree DAG (some direct deps are
+        // also transitively depended on by other deps), the synthesis
+        // silently dropped legitimate edges. Real-world reproduction:
+        // hosted-guac-mgmt under `--root-name slack-notifier --root-
+        // version narsa` lost 3 of 15 direct edges. Option B (rewrite)
+        // re-anchors each dropped-main-module-keyed edge onto target_ref,
+        // preserving every edge with the override identity and still
+        // satisfying the closure invariant.
         let filtered_relationships_owned: Option<Vec<Relationship>> =
             if !dropped_main_module_purls.is_empty() {
                 let dropped: std::collections::HashSet<&str> = dropped_main_module_purls
                     .iter()
                     .map(|s| s.as_str())
                     .collect();
-                let kept: Vec<Relationship> = relationships
+                let rewritten: Vec<Relationship> = relationships
                     .iter()
-                    .filter(|r| !dropped.contains(r.from.as_str()))
-                    .cloned()
+                    .map(|r| {
+                        if dropped.contains(r.from.as_str()) {
+                            Relationship {
+                                from: target_ref.clone(),
+                                to: r.to.clone(),
+                                relationship_type: r.relationship_type.clone(),
+                                provenance: r.provenance.clone(),
+                            }
+                        } else {
+                            r.clone()
+                        }
+                    })
                     .collect();
-                Some(kept)
+                Some(rewritten)
             } else {
                 None
             };
