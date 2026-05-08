@@ -54,13 +54,13 @@
   },
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-ZUKBRCZGBRFPRITP"
+    "SPDXRef-DocumentRoot-YXPN6YOFXKQAIPLG"
   ],
-  "documentNamespace": "https://mikebom.kusari.dev/spdx/QGN7PHC5DWIGVFFBJGUPPFWIB4CGM2S3",
+  "documentNamespace": "https://mikebom.kusari.dev/spdx/4WAX5TX6Y3LKM5P2C7O5C4YLH54BISIG",
   "name": "lockfile-v3",
   "packages": [
     {
-      "SPDXID": "SPDXRef-DocumentRoot-ZUKBRCZGBRFPRITP",
+      "SPDXID": "SPDXRef-DocumentRoot-YXPN6YOFXKQAIPLG",
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
@@ -121,6 +121,53 @@
       "licenseDeclared": "NOASSERTION",
       "name": "anyhow",
       "versionInfo": "1.0.80"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-7I3OEASNAR5ZCRZY",
+      "annotations": [
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.25",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.25",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.25",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/cargo/lockfile-v3/Cargo.lock\"]}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.25",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/my-app@0.1.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:my-app:my-app:0.1.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "my-app",
+      "versionInfo": "0.1.0"
     },
     {
       "SPDXID": "SPDXRef-Package-AMQQ7AE3OQIQRIZH",
@@ -414,13 +461,85 @@
       "licenseDeclared": "NOASSERTION",
       "name": "unicode-ident",
       "versionInfo": "1.0.12"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-SADUYFXP4BC6PE4A",
+      "annotations": [
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.25",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.25",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.25",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/cargo/lockfile-v3/Cargo.lock\"]}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.25",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/workspace-local@0.1.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:workspace-local:workspace-local:0.1.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "workspace-local",
+      "versionInfo": "0.1.0"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-ZUKBRCZGBRFPRITP",
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-YXPN6YOFXKQAIPLG",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-IYTSKXZIE4RF3PSV",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-7I3OEASNAR5ZCRZY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-UFXHU3P5DZAY42HF",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-7I3OEASNAR5ZCRZY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CDE3XEXSDOGUXIZT",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-7I3OEASNAR5ZCRZY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-AMQQ7AE3OQIQRIZH",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-7I3OEASNAR5ZCRZY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-SADUYFXP4BC6PE4A",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-7I3OEASNAR5ZCRZY"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-E3KDPHV32PPHGGT4",

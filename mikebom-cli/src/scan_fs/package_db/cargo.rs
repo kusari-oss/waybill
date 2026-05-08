@@ -128,15 +128,21 @@ fn package_to_entry(pkg: &CargoPackage, source_path: &str) -> Option<PackageDbEn
     // entries do not — leave licenses/hashes empty for them.
     let licenses = Vec::new();
     // Dependencies are encoded as `<name>` or `<name> <version>` or
-    // `<name> <version> (registry+...)`. Take just the name.
+    // `<name> <version> (registry+...)` per the Cargo.lock format
+    // contract. Milestone 087 (issue #172): preserve the version when
+    // present so that downstream `name_to_purl` lookups in
+    // `scan_fs/mod.rs` can disambiguate same-name multi-version
+    // crates (e.g. `clap_builder@4.5.21` vs `clap_builder@4.5.9` in
+    // the same workspace). Cargo only emits the `<name> <version>`
+    // form when ambiguity exists in the lockfile; the bare `<name>`
+    // form is preserved for unambiguous deps. Strip only the
+    // ` (source)` suffix.
     let depends: Vec<String> = pkg
         .dependencies
         .iter()
-        .map(|d| {
-            d.split_whitespace()
-                .next()
-                .unwrap_or(d)
-                .to_string()
+        .map(|d| match d.find(" (") {
+            Some(idx) => d[..idx].to_string(),
+            None => d.clone(),
         })
         .collect();
     // Registry crates have an accessible `~/.cargo/registry/src/...`
@@ -757,25 +763,17 @@ fn parse_lockfile(
     let source_path = path.to_string_lossy().into_owned();
     let mut out: Vec<PackageDbEntry> = Vec::new();
     for pkg in &doc.package {
-        // Conformance bug 2 fix: skip workspace-root / path-only
-        // entries. A Cargo.lock `[[package]]` with no `source` field
-        // IS the scanned project (or a workspace member), not a
-        // dependency. Emitting it produces a self-referential FP like
-        // `pkg:cargo/my-app@0.1.0` in the SBOM. Mirrors npm.rs's
-        // path_key == "" skip at parse_package_lock.
-        //
-        // Trade-off: path dependencies (`path = "../foo"` in Cargo.toml)
-        // also have `source = None` and will be dropped. Same behavior
-        // as npm (which skips `link: true` workspace entries).
-        // Revisit via `--include-path-deps` if a real use case appears.
-        if pkg.source.is_none() {
-            tracing::debug!(
-                name = %pkg.name,
-                version = %pkg.version,
-                "skipping cargo workspace-root/path entry (source absent)",
-            );
-            continue;
-        }
+        // Milestone 087 (issue #172): emit source=None entries
+        // (workspace root + workspace members + path deps) as
+        // PackageDbEntry rows. The original conformance-bug-2 fix
+        // skipped them to avoid a self-referential FP for the
+        // workspace root, but milestone-064's main-module emission
+        // (Phase A below) now augments the workspace root in-place
+        // with the C40 supplementary tag, so the FP no longer
+        // exists. Emitting workspace MEMBERS is required so that
+        // multi-version-same-name lookups (e.g. `clap_builder
+        // 4.5.21` in clap-rs/clap's workspace) resolve correctly
+        // via the dual-key insert in `scan_fs/mod.rs`.
         if let Some(mut entry) = package_to_entry(pkg, &source_path) {
             // Attach SHA-256 ContentHash to registry crates only.
             // Git / path entries don't carry a checksum in the lockfile.
@@ -899,11 +897,17 @@ pub fn read(rootfs: &Path, include_dev: bool) -> Result<Vec<PackageDbEntry>, Car
                 if pkg.source.is_some() {
                     continue;
                 }
+                // Milestone 087 (issue #172): preserve `<name> <version>`
+                // form (strip only the ` (source)` suffix) so the
+                // `name_to_purl` lookup in `scan_fs/mod.rs` can
+                // disambiguate same-name multi-version crates. Same
+                // logic as `package_to_entry` above.
                 let dep_names: Vec<String> = pkg
                     .dependencies
                     .iter()
-                    .map(|d| {
-                        d.split_whitespace().next().unwrap_or(d).to_string()
+                    .map(|d| match d.find(" (") {
+                        Some(idx) => d[..idx].to_string(),
+                        None => d.clone(),
                     })
                     .collect();
                 workspace_root_deps
@@ -1366,10 +1370,12 @@ checksum = "0000000000000000000000000000000000000000000000000000000000000000"
     #[test]
     fn read_walks_nested_workspace() {
         // Verifies the walker descends into subdirectories to find
-        // Cargo.lock. Uses a registry dep alongside the workspace root
-        // so the registry dep's presence confirms the walk succeeded
-        // (the workspace root is filtered by design — see
-        // parse_lockfile_skips_workspace_root).
+        // Cargo.lock. Per milestone 087 (issue #172), source=None
+        // entries (workspace root + workspace members + path deps)
+        // are emitted as PackageDbEntry rows so that multi-version-
+        // same-name lookups in `scan_fs/mod.rs` can resolve to the
+        // correct PURL. Milestone-064's Phase A augment-in-place
+        // merge (cargo.rs::read) handles workspace-root labeling.
         let dir = tempfile::tempdir().unwrap();
         let sub = dir.path().join("services").join("api");
         std::fs::create_dir_all(&sub).unwrap();
@@ -1390,16 +1396,20 @@ checksum = "9e8eabd0c76a9f2678a5e1a5c0c7b8b8c99999999999999999999999999999999"
         let entries = read(dir.path(), false).unwrap();
         // Walk found the nested Cargo.lock and emitted the registry dep.
         assert!(entries.iter().any(|e| e.name == "serde"));
-        // Workspace root is filtered.
-        assert!(!entries.iter().any(|e| e.name == "api-crate"));
+        // Milestone 087: workspace root IS now emitted (was filtered
+        // pre-087); enables version-disambiguation lookups.
+        assert!(entries.iter().any(|e| e.name == "api-crate"));
     }
 
     #[test]
-    fn parse_lockfile_skips_workspace_root() {
-        // A Cargo.lock with a workspace root (no source) and one registry
-        // dep should yield only the registry dep. The root is the
-        // scanned project itself — emitting it as a component produces
-        // a self-referential FP. Matches npm.rs's path_key == "" skip.
+    fn parse_lockfile_emits_workspace_root() {
+        // A Cargo.lock with a workspace root (no source) and one
+        // registry dep yields BOTH entries. Milestone 087 (issue
+        // #172): the workspace root is emitted as a PackageDbEntry
+        // with source_type = "workspace". The original conformance-
+        // bug-2 self-referential FP is no longer produced because
+        // milestone-064's Phase A augment-in-place merge labels the
+        // workspace root with the C40 supplementary tag.
         let dir = tempfile::tempdir().unwrap();
         let body = r#"
 version = 3
@@ -1416,14 +1426,22 @@ checksum = "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20"
 "#;
         std::fs::write(dir.path().join("Cargo.lock"), body).unwrap();
         let entries = read(dir.path(), false).unwrap();
-        assert_eq!(entries.len(), 1, "expected 1 entry, got {entries:?}");
-        assert_eq!(entries[0].name, "serde");
+        assert_eq!(entries.len(), 2, "expected 2 entries, got {entries:?}");
+        let app = entries
+            .iter()
+            .find(|e| e.name == "my-app")
+            .expect("workspace root must be emitted");
+        assert_eq!(app.source_type.as_deref(), Some("workspace"));
+        assert!(entries.iter().any(|e| e.name == "serde"));
     }
 
     #[test]
-    fn parse_lockfile_skips_all_workspace_members() {
-        // Multi-crate workspace: all members have source = None and
-        // should all be filtered, leaving only registry deps.
+    fn parse_lockfile_emits_all_workspace_members() {
+        // Multi-crate workspace: per milestone 087 (issue #172), all
+        // source = None entries (workspace root + workspace members)
+        // are emitted so multi-version-same-name lookups can resolve
+        // to the correct PURL. Each member gets source_type =
+        // "workspace".
         let dir = tempfile::tempdir().unwrap();
         let body = r#"
 version = 3
@@ -1448,8 +1466,11 @@ checksum = "0a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393"
 "#;
         std::fs::write(dir.path().join("Cargo.lock"), body).unwrap();
         let entries = read(dir.path(), false).unwrap();
-        assert_eq!(entries.len(), 1, "only the registry dep should remain");
-        assert_eq!(entries[0].name, "anyhow");
+        assert_eq!(entries.len(), 4, "all four entries should be present");
+        assert!(entries.iter().any(|e| e.name == "my-app"));
+        assert!(entries.iter().any(|e| e.name == "my-lib"));
+        assert!(entries.iter().any(|e| e.name == "my-cli"));
+        assert!(entries.iter().any(|e| e.name == "anyhow"));
     }
 
     #[test]
@@ -2052,5 +2073,34 @@ version = "0.1.0-alpha.11"
         let drops = dedup_main_modules_by_purl(&mut entries);
         assert_eq!(entries.len(), 2);
         assert!(drops.is_empty());
+    }
+
+    // Milestone 087 (issue #172): regression for the multi-version
+    // disambiguation bug. `package_to_entry` MUST preserve the
+    // `<name> <version>` form when Cargo emits it (multi-version
+    // ambiguity); the bare `<name>` form is preserved for
+    // unambiguous deps. The ` (source)` suffix MUST be stripped.
+    #[test]
+    fn package_to_entry_preserves_version_disambiguation() {
+        let pkg = CargoPackage {
+            name: "demo".to_string(),
+            version: "1.0.0".to_string(),
+            source: Some("registry+https://github.com/rust-lang/crates.io-index".to_string()),
+            checksum: None,
+            dependencies: vec![
+                "foo".to_string(),
+                "bar 1.0.0".to_string(),
+                "baz 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)".to_string(),
+            ],
+        };
+        let entry = package_to_entry(&pkg, "/tmp/Cargo.lock").unwrap();
+        assert_eq!(
+            entry.depends,
+            vec![
+                "foo".to_string(),
+                "bar 1.0.0".to_string(),
+                "baz 2.0.0".to_string(),
+            ],
+        );
     }
 }

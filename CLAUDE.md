@@ -72,6 +72,8 @@ Auto-generated from all feature plans. Last updated: 2026-05-08
 - N/A — purely emission-time identifier-string transformation. No caches, no persistence. (084-cdx-mainmod-collapse)
 - Rust stable (workspace toolchain). + existing only — no new crates. (085-maven-spdx-dep-edges)
 - Rust stable (workspace toolchain inherited from milestones 001–082; no nightly). + Existing only — `serde`/`serde_json` (parsing emitted SBOM JSON), `tracing`, `anyhow`. The audit harness shells out to `trivy` and `syft` as external CLI tools (similar to milestone 078's `spdx3-validate` shell-out pattern). Source-format direct readers use existing per-ecosystem parsers in `mikebom-cli/src/scan_fs/package_db/` for tiebreaker comparisons (we don't re-implement; we re-invoke). For OS package managers, native tools (`dpkg-query`, `rpm`, `apk`) are shelled out. **No new Cargo dependencies.** (083-transitive-correctness)
+- Rust stable (workspace toolchain inherited from milestones 001–086; no nightly). + existing only — no new crates. The cargo dep-string parsing uses `str::split_whitespace` which we already have. The dual-key insert in `scan_fs/mod.rs` mirrors milestone 085's existing maven pattern. (087-fix-cargo-workspace-version)
+- N/A — purely emission-time identifier resolution. (087-fix-cargo-workspace-version)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -134,9 +136,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 087-fix-cargo-workspace-version: Added Rust stable (workspace toolchain inherited from milestones 001–086; no nightly). + existing only — no new crates. The cargo dep-string parsing uses `str::split_whitespace` which we already have. The dual-key insert in `scan_fs/mod.rs` mirrors milestone 085's existing maven pattern.
 - 083-transitive-correctness: Added Rust stable (workspace toolchain inherited from milestones 001–082; no nightly). + Existing only — `serde`/`serde_json` (parsing emitted SBOM JSON), `tracing`, `anyhow`. The audit harness shells out to `trivy` and `syft` as external CLI tools (similar to milestone 078's `spdx3-validate` shell-out pattern). Source-format direct readers use existing per-ecosystem parsers in `mikebom-cli/src/scan_fs/package_db/` for tiebreaker comparisons (we don't re-implement; we re-invoke). For OS package managers, native tools (`dpkg-query`, `rpm`, `apk`) are shelled out. **No new Cargo dependencies.**
 - 085-maven-spdx-dep-edges: Added Rust stable (workspace toolchain). + existing only — no new crates.
-- 084-cdx-mainmod-collapse: Added Rust stable (workspace toolchain inherited from milestones 001–083; no nightly). + existing only — `serde`/`serde_json` (CDX JSON construction), `tracing`, `anyhow`, `thiserror`. **No new Cargo dependencies.** The `cyclonedx-bom` workspace dep is already in use; this milestone does not change which crates participate in CDX construction.
 
 
 <!-- MANUAL ADDITIONS START -->

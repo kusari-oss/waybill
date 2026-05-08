@@ -389,10 +389,29 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 if let Some(group_id) = e.purl.namespace() {
                     let gav_key = format!("{}:{}", group_id, e.name);
                     name_to_purl.insert(
-                        (ecosystem, normalize_dep_name("maven", &gav_key)),
+                        (ecosystem.clone(), normalize_dep_name("maven", &gav_key)),
                         e.purl.as_str().to_string(),
                     );
                 }
+            }
+            // Milestone 087 (issue #172) — cargo entries get a
+            // "name version" disambiguation key so that
+            // dependencies = ["clap_builder 4.5.21"] -style lookups
+            // (used when Cargo.lock has multiple [[package]] blocks
+            // for the same crate name) resolve to the correct
+            // same-name same-version PURL. Without this, the
+            // name-only key would last-write-win between e.g.
+            // clap_builder@4.5.9 and clap_builder@4.5.21, producing
+            // wrong-version edges in the emitted dep graph.
+            // Cargo writes the `<name> <version>` form ONLY when
+            // ambiguity exists; single-version deps are still
+            // resolved via the existing name-only key above.
+            if ecosystem == "cargo" {
+                let nv_key = format!("{} {}", e.name, e.version);
+                name_to_purl.insert(
+                    (ecosystem, normalize_dep_name("cargo", &nv_key)),
+                    e.purl.as_str().to_string(),
+                );
             }
         }
 
@@ -1190,5 +1209,22 @@ Architecture: amd64
             result.components.is_empty(),
             "db should be ignored when flag is off"
         );
+    }
+
+    // Milestone 087 (issue #172): the cargo dual-key insert in
+    // `scan_path` builds a `(cargo, "<name> <version>")` lookup key
+    // by composing the entry's `name` + `version` fields and passing
+    // through `normalize_dep_name`. The same composition runs at
+    // edge-emit time on the cargo-emitted dep string. For
+    // disambiguation to work, the two paths MUST produce identical
+    // keys — i.e. `normalize_dep_name("cargo", "clap_builder 4.5.21")`
+    // must be idempotent under repeated application and must not
+    // mangle the embedded space.
+    #[test]
+    fn normalize_dep_name_cargo_preserves_name_version_form() {
+        let key = normalize_dep_name("cargo", "clap_builder 4.5.21");
+        assert_eq!(key, "clap_builder 4.5.21");
+        // Idempotent: applying again is a no-op.
+        assert_eq!(normalize_dep_name("cargo", &key), key);
     }
 }

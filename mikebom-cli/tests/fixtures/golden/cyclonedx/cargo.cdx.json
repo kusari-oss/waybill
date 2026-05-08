@@ -34,6 +34,42 @@
       "version": "1.0.80"
     },
     {
+      "bom-ref": "pkg:cargo/my-app@0.1.0",
+      "cpe": "cpe:2.3:a:my-app:my-app:0.1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "my-app",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "<WORKSPACE>/tests/fixtures/cargo/lockfile-v3/Cargo.lock"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        }
+      ],
+      "purl": "pkg:cargo/my-app@0.1.0",
+      "type": "library",
+      "version": "0.1.0"
+    },
+    {
       "bom-ref": "pkg:cargo/my-fork@0.1.0",
       "cpe": "cpe:2.3:a:my-fork:my-fork:0.1.0:*:*:*:*:*:*:*",
       "evidence": {
@@ -260,6 +296,42 @@
       "purl": "pkg:cargo/unicode-ident@1.0.12",
       "type": "library",
       "version": "1.0.12"
+    },
+    {
+      "bom-ref": "pkg:cargo/workspace-local@0.1.0",
+      "cpe": "cpe:2.3:a:workspace-local:workspace-local:0.1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "workspace-local",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "<WORKSPACE>/tests/fixtures/cargo/lockfile-v3/Cargo.lock"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        }
+      ],
+      "purl": "pkg:cargo/workspace-local@0.1.0",
+      "type": "library",
+      "version": "0.1.0"
     }
   ],
   "compositions": [
@@ -267,23 +339,27 @@
       "aggregate": "complete",
       "assemblies": [
         "pkg:cargo/anyhow@1.0.80",
+        "pkg:cargo/my-app@0.1.0",
         "pkg:cargo/my-fork@0.1.0",
         "pkg:cargo/proc-macro2@1.0.76",
         "pkg:cargo/quote@1.0.35",
         "pkg:cargo/serde@1.0.197",
         "pkg:cargo/serde_derive@1.0.197",
         "pkg:cargo/syn@2.0.48",
-        "pkg:cargo/unicode-ident@1.0.12"
+        "pkg:cargo/unicode-ident@1.0.12",
+        "pkg:cargo/workspace-local@0.1.0"
       ],
       "dependencies": [
         "pkg:cargo/anyhow@1.0.80",
+        "pkg:cargo/my-app@0.1.0",
         "pkg:cargo/my-fork@0.1.0",
         "pkg:cargo/proc-macro2@1.0.76",
         "pkg:cargo/quote@1.0.35",
         "pkg:cargo/serde@1.0.197",
         "pkg:cargo/serde_derive@1.0.197",
         "pkg:cargo/syn@2.0.48",
-        "pkg:cargo/unicode-ident@1.0.12"
+        "pkg:cargo/unicode-ident@1.0.12",
+        "pkg:cargo/workspace-local@0.1.0"
       ]
     },
     {
@@ -302,15 +378,23 @@
   "dependencies": [
     {
       "dependsOn": [
-        "pkg:cargo/anyhow@1.0.80",
-        "pkg:cargo/my-fork@0.1.0",
-        "pkg:cargo/serde@1.0.197"
+        "pkg:cargo/my-app@0.1.0"
       ],
       "ref": "lockfile-v3@0.0.0"
     },
     {
       "dependsOn": [],
       "ref": "pkg:cargo/anyhow@1.0.80"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/anyhow@1.0.80",
+        "pkg:cargo/my-fork@0.1.0",
+        "pkg:cargo/serde@1.0.197",
+        "pkg:cargo/serde_derive@1.0.197",
+        "pkg:cargo/workspace-local@0.1.0"
+      ],
+      "ref": "pkg:cargo/my-app@0.1.0"
     },
     {
       "dependsOn": [],
@@ -353,6 +437,10 @@
     {
       "dependsOn": [],
       "ref": "pkg:cargo/unicode-ident@1.0.12"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/workspace-local@0.1.0"
     }
   ],
   "metadata": {

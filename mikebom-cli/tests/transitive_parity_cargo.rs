@@ -15,10 +15,11 @@ use transitive_parity_common::*;
 
 const FIXTURE_SUBPATH: &str = "cargo";
 
-/// Pinned at the alpha.24 baseline (workspace post-milestone-085 release).
-/// Bump per quickstart.md Recipe 3 only when a deliberate per-ecosystem-
-/// reader change shifts the count.
-const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 319;
+/// Pinned at the alpha.26 baseline (post-milestone-087 release —
+/// the cargo workspace-member version-disambiguation fix landed in
+/// this baseline). Bump per quickstart.md Recipe 3 only when a
+/// deliberate per-ecosystem-reader change shifts the count.
+const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 317;
 
 /// Representative edges that mikebom **actually emits** today — pinning
 /// current behavior so future milestones can't silently regress.
@@ -29,13 +30,13 @@ const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 319;
 /// regressing AGAINST ITSELF.
 ///
 /// Known divergences (logged for follow-up per FR-005):
-/// - mikebom emits `clap@4.5.21 → clap_builder@4.5.9` (version
-///   mismatch — should be 4.5.21 per the workspace lockfile). Trivy +
-///   syft both emit the correct `→ 4.5.21` edge. mikebom-cargo-reader
-///   bug surfaced by this audit.
 /// - mikebom emits zero outgoing edges from `clap_derive` despite
-///   it having proc-macro deps in the lockfile. Another mikebom-cargo-
-///   reader gap surfaced by this audit.
+///   it having proc-macro deps in the lockfile (issue #173 — open).
+///
+/// Closed by milestone 087:
+/// - The `clap@4.5.21 → clap_builder@4.5.9` wrong-version edge is
+///   gone. mikebom now correctly emits `→ clap_builder@4.5.21`,
+///   pinned below as the post-087 invariant.
 const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
     // Confirmed in mikebom output — clap workspace root depends on automod.
     ("pkg:cargo/clap", "pkg:cargo/automod"),
@@ -43,6 +44,11 @@ const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
     ("pkg:cargo/anstream", "pkg:cargo/anstyle"),
     // Confirmed — terminal_size emits libc on unix.
     ("pkg:cargo/terminal_size", "pkg:cargo/rustix"),
+    // Milestone 087 invariant — workspace-member version disambiguation:
+    // clap@4.5.21 must depend on clap_builder@4.5.21 (NOT 4.5.9). The
+    // PURL-prefix matcher strips `@<version>` so the test still
+    // requires both endpoints to be present + correctly emitted.
+    ("pkg:cargo/clap", "pkg:cargo/clap_builder"),
 ];
 
 fn fixture() -> PathBuf {
