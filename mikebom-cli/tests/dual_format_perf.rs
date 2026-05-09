@@ -377,10 +377,7 @@ fn go_resolver_no_catastrophic_regression() {
     use std::time::{Duration, Instant};
 
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
-    let fixture_root: PathBuf = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("workspace root")
-        .join("tests/fixtures/go");
+    let fixture_root: PathBuf = PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("go");
 
     let cases = [
         ("simple-module", Duration::from_secs(30)),

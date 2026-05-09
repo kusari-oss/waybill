@@ -1,5 +1,0 @@
-{
-  "_meta": {"hash": "abc"},
-  "default": {"requests": {"version": "==2.31.0"}},
-  "develop": {"pytest": {"version": "==7.4.0"}}
-}

@@ -28,12 +28,12 @@ use std::process::Command;
 
 mod common;
 use common::normalize::apply_fake_home_env;
-use common::{bin, workspace_root};
+use common::{bin, fixture_path};
 
 /// `--bind-to-source` with a non-existent path MUST fail per FR-011.
 #[test]
 fn bind_to_source_missing_path_aborts_scan() {
-    let fixture = workspace_root().join("tests/fixtures/npm/node-modules-walk");
+    let fixture = fixture_path("npm/node-modules-walk");
     let dir = tempfile::tempdir().expect("tempdir");
     let fake_home = tempfile::tempdir().expect("fake-home");
     let nonexistent =
@@ -71,7 +71,7 @@ fn bind_to_source_missing_path_aborts_scan() {
 /// goldens are not regressed.
 #[test]
 fn bind_to_source_with_path_scan_does_not_emit_bindings() {
-    let fixture = workspace_root().join("tests/fixtures/npm/node-modules-walk");
+    let fixture = fixture_path("npm/node-modules-walk");
     let dir = tempfile::tempdir().expect("tempdir");
     let fake_home = tempfile::tempdir().expect("fake-home");
     let source_sbom = dir.path().join("source.cdx.json");

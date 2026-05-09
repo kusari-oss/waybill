@@ -11,10 +11,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn fixture() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("workspace root")
-        .join("tests/fixtures/polyglot-monorepo")
+    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("polyglot-monorepo")
 }
 
 fn scan(exclude_dev_test: bool) -> serde_json::Value {

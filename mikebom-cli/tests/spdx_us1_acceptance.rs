@@ -24,7 +24,7 @@ mod common;
 use common::normalize::{
     apply_fake_home_env, normalize_cdx_for_golden, normalize_spdx23_for_golden,
 };
-use common::{bin, workspace_root};
+use common::{bin, fixture_path, local_fixture_path, workspace_root};
 
 
 struct Scan {
@@ -102,7 +102,7 @@ fn scan(fixture: &Path, formats: &[&str], extra_args: &[&str]) -> Scan {
 
 #[test]
 fn scenario_1_npm_components_appear_as_spdx_packages() {
-    let fixture = workspace_root().join("tests/fixtures/npm/node-modules-walk");
+    let fixture = fixture_path("npm/node-modules-walk");
     let s = scan(&fixture, &["cyclonedx-json", "spdx-2.3-json"], &[]);
     let cdx = s.cdx.expect("cdx present");
     let spdx = s.spdx.expect("spdx present");
@@ -138,7 +138,7 @@ fn scenario_1_npm_components_appear_as_spdx_packages() {
 
 #[test]
 fn scenario_2_deb_components_match_and_describes_points_at_root() {
-    let fixture = workspace_root().join("tests/fixtures/deb/synthetic");
+    let fixture = local_fixture_path("deb/synthetic");
     let s = scan(
         &fixture,
         &["cyclonedx-json", "spdx-2.3-json"],
@@ -191,7 +191,7 @@ fn scenario_2_deb_components_match_and_describes_points_at_root() {
 
 #[test]
 fn scenario_3_declared_and_concluded_licenses_preserved() {
-    let fixture = workspace_root().join("tests/fixtures/cargo/lockfile-v3");
+    let fixture = fixture_path("cargo/lockfile-v3");
     let s = scan(&fixture, &["cyclonedx-json", "spdx-2.3-json"], &[]);
     let cdx = s.cdx.expect("cdx");
     let spdx = s.spdx.expect("spdx");
@@ -283,7 +283,7 @@ fn scenario_4_determinism_cross_reference() {
     // Narrow repeat of `spdx_determinism.rs` so the US1 acceptance
     // surface is self-contained; the broader matrix lives in the
     // determinism test file.
-    let fixture = workspace_root().join("tests/fixtures/cargo/lockfile-v3");
+    let fixture = fixture_path("cargo/lockfile-v3");
     let a = scan(&fixture, &["spdx-2.3-json"], &[]).spdx.unwrap();
     let b = scan(&fixture, &["spdx-2.3-json"], &[]).spdx.unwrap();
     assert_eq!(a["documentNamespace"], b["documentNamespace"]);
@@ -297,7 +297,7 @@ fn scenario_4_determinism_cross_reference() {
 
 #[test]
 fn scenario_5_single_invocation_produces_same_bytes_as_two_separate_invocations() {
-    let fixture = workspace_root().join("tests/fixtures/cargo/lockfile-v3");
+    let fixture = fixture_path("cargo/lockfile-v3");
     let workspace = workspace_root();
 
     // One invocation, both formats.

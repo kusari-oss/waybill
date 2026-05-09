@@ -15,10 +15,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("workspace root")
-        .join("tests/fixtures/python")
+    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("python")
         .join(sub)
 }
 

@@ -477,8 +477,11 @@ pub fn workspace_root() -> PathBuf {
 }
 
 pub fn fixture_path(eco_subpath: &str) -> PathBuf {
-    workspace_root()
-        .join("mikebom-cli/tests/fixtures/transitive_parity")
+    // Milestone 090: transitive_parity fixtures moved to the
+    // `mikebom-test-fixtures` repo. Resolve via build.rs's
+    // MIKEBOM_FIXTURES_DIR rather than against workspace_root.
+    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR"))
+        .join("transitive_parity")
         .join(eco_subpath)
 }
 

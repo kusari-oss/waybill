@@ -14,13 +14,13 @@ use std::process::Command;
 
 mod common;
 use common::normalize::apply_fake_home_env;
-use common::{bin, workspace_root};
+use common::{bin, fixture_path, workspace_root};
 
 /// Canonical cargo fixture — small, offline-friendly, and already
 /// pinned by `cdx_regression.rs`. Choosing one fixture keeps these
 /// tests fast (<2 s total on a warm cache).
 fn cargo_fixture() -> PathBuf {
-    workspace_root().join("tests/fixtures/cargo/lockfile-v3")
+    fixture_path("cargo/lockfile-v3")
 }
 
 
@@ -71,7 +71,14 @@ fn run_scan_in(
 fn normalize_cdx(raw: &str) -> String {
     let ws = workspace_root();
     let ws_str = ws.to_string_lossy().to_string();
-    let replaced = raw.replace(ws_str.as_str(), "<WORKSPACE>");
+    // Milestone 090: rewrite the MIKEBOM_FIXTURES_DIR cache prefix to
+    // `<WORKSPACE>/tests/fixtures` so pre-090 goldens continue to match.
+    let fixtures_cache = env!("MIKEBOM_FIXTURES_DIR");
+    let pre_replace = raw.replace(
+        fixtures_cache,
+        format!("{ws_str}/tests/fixtures").as_str(),
+    );
+    let replaced = pre_replace.replace(ws_str.as_str(), "<WORKSPACE>");
 
     let mut json: serde_json::Value =
         serde_json::from_str(&replaced).expect("produced SBOM is valid JSON");

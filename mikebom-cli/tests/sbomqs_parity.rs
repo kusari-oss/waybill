@@ -26,7 +26,7 @@ use std::process::Command;
 
 mod common;
 use common::normalize::apply_fake_home_env;
-use common::{workspace_root, EcosystemCase, CASES};
+use common::{case_fixture_path, EcosystemCase, CASES};
 
 /// Locate `sbomqs`. Env var overrides the `$PATH` lookup.
 fn sbomqs_bin() -> Option<PathBuf> {
@@ -78,7 +78,7 @@ fn produce_sboms(
     case: &EcosystemCase,
     tmp: &std::path::Path,
 ) -> (PathBuf, PathBuf, PathBuf) {
-    let fx = workspace_root().join("tests/fixtures").join(case.fixture_subpath);
+    let fx = case_fixture_path(case);
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
     let cdx = tmp.join("out.cdx.json");
     let spdx = tmp.join("out.spdx.json");

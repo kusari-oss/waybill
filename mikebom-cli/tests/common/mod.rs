@@ -93,3 +93,57 @@ pub fn workspace_root() -> PathBuf {
         .expect("workspace root")
         .to_path_buf()
 }
+
+// ---------------------------------------------------------------------
+// Milestone 090 — fixture-path helpers
+// ---------------------------------------------------------------------
+//
+// The manifest-bearing fixtures (cargo / gem / go / maven / npm /
+// polyglot-monorepo / python / transitive_parity / cargo-workspace /
+// maven-multi-module-reactor / npm-scoped-package / npm-workspace /
+// pip-pyproject-pep621 / pip-pyproject-poetry-only) live in the
+// separate `mikebom-test-fixtures` repo, fetched by `build.rs` into
+// `~/.cache/mikebom/fixtures/<sha>/`. The `MIKEBOM_FIXTURES_DIR`
+// compile-time env var (set by build.rs via cargo:rustc-env) holds
+// the absolute path.
+//
+// The stay-set fixtures (apk/synthetic, deb/synthetic, rpm/*,
+// binaries/*, bdb-rpmdb, gem-source-project, polyglot-rpm-binary,
+// polyglot-five, reference/, sample-attestation.json, go/binaries/)
+// live in mikebom main repo at `tests/fixtures/<subpath>`. They have
+// no source-language manifests and don't trigger SBOM scanners.
+//
+// See specs/090-split-test-fixtures-repo/contracts/fixture-path-helper.md.
+
+/// Path to a moved fixture relative to the cloned `mikebom-test-fixtures`
+/// repo root. Resolves against `MIKEBOM_FIXTURES_DIR` (set by build.rs).
+///
+/// Use this for: every manifest-bearing fixture per
+/// `specs/090-split-test-fixtures-repo/research.md` §4 move-set.
+pub fn fixture_path(rel: &str) -> PathBuf {
+    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join(rel)
+}
+
+/// Path to a stay-set fixture relative to mikebom main repo's
+/// `tests/fixtures/` directory. Resolves against `workspace_root()`.
+///
+/// Use this for: synthetic OS-package fixtures (apk/deb/rpm),
+/// opaque binaries, the `bdb-rpmdb` test data, `reference/`,
+/// `polyglot-rpm-binary/`, `polyglot-five/`, `gem-source-project/`,
+/// and `sample-attestation.json` — i.e., everything in the stay-set
+/// per research §4.
+pub fn local_fixture_path(rel: &str) -> PathBuf {
+    workspace_root().join("tests").join("fixtures").join(rel)
+}
+
+/// Resolve an `EcosystemCase`'s fixture path. Dispatches to
+/// `local_fixture_path` for OS-package-based ecosystems (apk, deb,
+/// rpm — their synthetic fixtures stay in mikebom main repo) and to
+/// `fixture_path` for everything else.
+pub fn case_fixture_path(case: &EcosystemCase) -> PathBuf {
+    if matches!(case.label, "apk" | "deb" | "rpm") {
+        local_fixture_path(case.fixture_subpath)
+    } else {
+        fixture_path(case.fixture_subpath)
+    }
+}

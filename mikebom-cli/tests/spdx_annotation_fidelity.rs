@@ -24,7 +24,7 @@ use std::process::Command;
 
 mod common;
 use common::normalize::apply_fake_home_env;
-use common::{workspace_root, EcosystemCase, CASES};
+use common::{case_fixture_path, EcosystemCase, CASES};
 
 struct DualScan {
     cdx: serde_json::Value,
@@ -32,7 +32,7 @@ struct DualScan {
 }
 
 fn run_dual_scan(case: &EcosystemCase) -> DualScan {
-    let fx = workspace_root().join("tests/fixtures").join(case.fixture_subpath);
+    let fx = case_fixture_path(case);
     assert!(
         fx.exists(),
         "fixture missing for {}: {}",

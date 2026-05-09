@@ -4,10 +4,10 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 fn fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("workspace root")
-        .join("tests/fixtures/cargo")
+    // Milestone 090: cargo fixtures moved to mikebom-test-fixtures repo,
+    // resolved via build.rs's MIKEBOM_FIXTURES_DIR env var.
+    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR"))
+        .join("cargo")
         .join(sub)
 }
 
@@ -539,8 +539,7 @@ edition = "2021"
 /// enclosing workspace root's `[workspace.package].version`.
 #[test]
 fn scan_cargo_workspace_inherited_version_resolves() {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures/cargo-workspace");
+    let path = PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("cargo-workspace");
     let (output, _tmp, sbom_path) = run_scan_with_output(&path);
     assert!(
         output.status.success(),
@@ -595,8 +594,7 @@ fn scan_cargo_workspace_inherited_version_resolves() {
 /// main-module to `a`'s main-module.
 #[test]
 fn scan_cargo_workspace_path_dep_emits_main_module_to_main_module_edge() {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures/cargo-workspace");
+    let path = PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("cargo-workspace");
     let (_output, _tmp, sbom_path) = run_scan_with_output(&path);
     let raw = std::fs::read_to_string(&sbom_path).expect("read sbom");
     let sbom: serde_json::Value = serde_json::from_str(&raw).expect("valid JSON");
@@ -621,8 +619,7 @@ fn scan_cargo_workspace_path_dep_emits_main_module_to_main_module_edge() {
 /// a main-module for the root. Only members emit.
 #[test]
 fn scan_cargo_workspace_only_root_emits_no_main_module_for_root() {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures/cargo-workspace");
+    let path = PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("cargo-workspace");
     let (_output, _tmp, sbom_path) = run_scan_with_output(&path);
     let raw = std::fs::read_to_string(&sbom_path).expect("read sbom");
     let sbom: serde_json::Value = serde_json::from_str(&raw).expect("valid JSON");

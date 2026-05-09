@@ -24,7 +24,7 @@ use mikebom::parity::{catalog, extractors};
 
 mod common;
 use common::normalize::apply_fake_home_env;
-use common::{workspace_root, EcosystemCase, CASES};
+use common::{case_fixture_path, workspace_root, EcosystemCase, CASES};
 
 fn mapping_doc_path() -> PathBuf {
     workspace_root().join("docs/reference/sbom-format-mapping.md")
@@ -241,9 +241,7 @@ fn assert_holistic_parity(label: &str, scan: &TripleScan) {
 }
 
 fn run_ecosystem(case: &EcosystemCase) {
-    let fixture = workspace_root()
-        .join("tests/fixtures")
-        .join(case.fixture_subpath);
+    let fixture = case_fixture_path(case);
     let scan = triple_scan_at_path(case.label, &fixture, case.deb_codename, InputKind::Path);
     assert_holistic_parity(case.label, &scan);
 }

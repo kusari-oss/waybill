@@ -65,10 +65,7 @@ fn spdx_3_json_is_a_first_class_format() {
         .arg("scan")
         .arg("--path")
         .arg(
-            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .parent()
-                .unwrap()
-                .join("tests/fixtures/npm/node-modules-walk"),
+            std::path::PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("npm/node-modules-walk"),
         )
         .arg("--format")
         .arg("spdx-3-json")
@@ -108,10 +105,7 @@ fn unknown_format_error_labels_alias_as_deprecated_in_known_list() {
         .arg("scan")
         .arg("--path")
         .arg(
-            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .parent()
-                .unwrap()
-                .join("tests/fixtures/npm/node-modules-walk"),
+            std::path::PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("npm/node-modules-walk"),
         )
         .arg("--format")
         .arg("not-a-format")

@@ -46,6 +46,7 @@ use common::normalize::{
     normalize_spdx3_for_golden,
 };
 use common::workspace_root;
+use common::fixture_path;
 
 // ---------------------------------------------------------------------
 // Common harness
@@ -55,7 +56,7 @@ use common::workspace_root;
 /// integration suite. Source-tier scans of this fixture exercise every
 /// emission code path mikebom 080 touched.
 fn fixture_root() -> PathBuf {
-    workspace_root().join("tests/fixtures/cargo/lockfile-v3")
+    fixture_path("cargo/lockfile-v3")
 }
 
 /// Run `mikebom sbom scan` against `fixture` with `extra_args`,

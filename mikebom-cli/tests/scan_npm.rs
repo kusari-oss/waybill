@@ -9,10 +9,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("workspace root")
-        .join("tests/fixtures/npm")
+    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("npm")
         .join(sub)
 }
 
@@ -361,9 +358,9 @@ fn v1_lockfile_refuses_with_actionable_error() {
 /// (not the workspace-root tests/fixtures/npm/ tree). Mirrors the
 /// pattern used for the cargo-workspace fixture in milestone 064.
 fn cli_local_fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures")
-        .join(sub)
+    // Milestone 090: mikebom-cli/tests/fixtures/<sub> dirs moved to
+    // mikebom-test-fixtures repo; resolve via MIKEBOM_FIXTURES_DIR.
+    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join(sub)
 }
 
 /// Scan a fixture path directly (bypassing the workspace-root

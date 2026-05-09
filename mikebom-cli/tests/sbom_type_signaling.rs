@@ -31,6 +31,7 @@ mod common;
 use common::bin;
 use common::normalize::apply_fake_home_env;
 use common::workspace_root;
+use common::fixture_path;
 
 // ---------------------------------------------------------------------
 // Common harness
@@ -40,7 +41,7 @@ use common::workspace_root;
 /// the integration suite. Source-tier scans of this fixture
 /// exercise the milestone-047 + milestone-081 emission code paths.
 fn fixture_root() -> PathBuf {
-    workspace_root().join("tests/fixtures/cargo/lockfile-v3")
+    fixture_path("cargo/lockfile-v3")
 }
 
 /// Run `mikebom sbom scan` against `fixture` with `extra_args`,

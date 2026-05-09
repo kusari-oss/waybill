@@ -1,4 +1,0 @@
-[tool.poetry]
-name = "poetry-only-app"
-version = "1.0.0"
-description = "Pre-PEP-621 Poetry schema — no [project] table."

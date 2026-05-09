@@ -28,7 +28,7 @@ use std::process::Command;
 
 mod common;
 use common::normalize::apply_fake_home_env;
-use common::{workspace_root, EcosystemCase, CASES};
+use common::{case_fixture_path, EcosystemCase, CASES};
 
 struct Scan {
     spdx23: serde_json::Value,
@@ -36,7 +36,7 @@ struct Scan {
 }
 
 fn dual_scan(case: &EcosystemCase) -> Scan {
-    let fixture = workspace_root().join("tests/fixtures").join(case.fixture_subpath);
+    let fixture = case_fixture_path(case);
     let tmp = tempfile::tempdir().expect("tempdir");
     let fake_home = tempfile::tempdir().expect("fake-home");
     let spdx23_path = tmp.path().join("out.spdx.json");

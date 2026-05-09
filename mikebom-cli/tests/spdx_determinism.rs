@@ -11,7 +11,7 @@ use std::process::Command;
 
 mod common;
 use common::normalize::{apply_fake_home_env, normalize_spdx23_for_golden};
-use common::workspace_root;
+use common::{fixture_path, local_fixture_path, workspace_root};
 
 /// Run `mikebom sbom scan --format spdx-2.3-json` against `fixture`
 /// in an isolated fake-HOME and return the produced raw JSON string.
@@ -51,16 +51,15 @@ fn scan_to_spdx_json(fixture: &std::path::Path) -> serde_json::Value {
     serde_json::from_str(&raw).expect("SPDX output parses")
 }
 
-fn run_twice(subpath: &str) {
-    let fixture = workspace_root().join("tests/fixtures").join(subpath);
+fn run_twice(fixture: &std::path::Path) {
     assert!(
         fixture.exists(),
         "fixture missing: {}",
         fixture.display()
     );
     let workspace = workspace_root();
-    let a = normalize_spdx23_for_golden(&scan_to_spdx_raw(&fixture), &workspace);
-    let b = normalize_spdx23_for_golden(&scan_to_spdx_raw(&fixture), &workspace);
+    let a = normalize_spdx23_for_golden(&scan_to_spdx_raw(fixture), &workspace);
+    let b = normalize_spdx23_for_golden(&scan_to_spdx_raw(fixture), &workspace);
     assert_eq!(
         a, b,
         "SPDX output differs between two identical scans (after the \
@@ -71,17 +70,17 @@ fn run_twice(subpath: &str) {
 
 #[test]
 fn cargo_scan_is_deterministic() {
-    run_twice("cargo/lockfile-v3");
+    run_twice(&fixture_path("cargo/lockfile-v3"));
 }
 
 #[test]
 fn npm_scan_is_deterministic() {
-    run_twice("npm/node-modules-walk");
+    run_twice(&fixture_path("npm/node-modules-walk"));
 }
 
 #[test]
 fn deb_scan_is_deterministic() {
-    run_twice("deb/synthetic");
+    run_twice(&local_fixture_path("deb/synthetic"));
 }
 
 #[test]
@@ -90,7 +89,7 @@ fn document_namespace_is_stable_across_runs() {
     // must match byte-for-byte between runs. This is the single
     // most-important determinism signal — if it drifts, every SBOM
     // consumer indexing by namespace is broken.
-    let fixture = workspace_root().join("tests/fixtures/cargo/lockfile-v3");
+    let fixture = fixture_path("cargo/lockfile-v3");
     let a = scan_to_spdx_json(&fixture);
     let b = scan_to_spdx_json(&fixture);
     assert_eq!(a["documentNamespace"], b["documentNamespace"]);
@@ -100,7 +99,7 @@ fn document_namespace_is_stable_across_runs() {
 fn spdxids_are_stable_across_runs() {
     // Related determinism signal: the SPDXID set must match exactly.
     // Any drift here would break cross-run relationship references.
-    let fixture = workspace_root().join("tests/fixtures/cargo/lockfile-v3");
+    let fixture = fixture_path("cargo/lockfile-v3");
     let a = scan_to_spdx_json(&fixture);
     let b = scan_to_spdx_json(&fixture);
     let ids_a: Vec<&str> = a["packages"]

@@ -127,7 +127,7 @@ fn build_tier_autodetect_empty_subject_set() {
 // ---------------------------------------------------------------------
 
 fn fixture_root() -> PathBuf {
-    common::workspace_root().join("tests/fixtures/cargo/lockfile-v3")
+    common::fixture_path("cargo/lockfile-v3")
 }
 
 fn run_scan(

@@ -17,7 +17,7 @@ use std::sync::OnceLock;
 
 
 mod common;
-use common::{workspace_root, EcosystemCase, CASES};
+use common::{case_fixture_path, EcosystemCase, CASES};
 
 fn schema_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -71,7 +71,7 @@ fn reference_baseline_categories() -> &'static std::collections::BTreeSet<String
 }/// Scan a fixture requesting SPDX 2.3 output, parse the result, and
 /// return the parsed JSON for validation.
 fn scan_to_spdx(case: &EcosystemCase) -> serde_json::Value {
-    let fixture = workspace_root().join("tests/fixtures").join(case.fixture_subpath);
+    let fixture = case_fixture_path(case);
     assert!(
         fixture.exists(),
         "fixture missing for {}: {}",

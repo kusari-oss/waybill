@@ -17,10 +17,10 @@ use std::process::Command;
 
 mod common;
 use common::normalize::apply_fake_home_env;
-use common::workspace_root;
+use common::{fixture_path, local_fixture_path};
 
 fn run_scan(fixture_rel: &str) -> serde_json::Value {
-    let fixture = workspace_root().join("tests/fixtures").join(fixture_rel);
+    let fixture = fixture_path(fixture_rel);
     let tmp = tempfile::tempdir().expect("tempdir");
     let fake_home = tempfile::tempdir().expect("fake-home");
     let out_path = tmp.path().join("out.spdx3.json");
@@ -96,7 +96,7 @@ fn two_runs_against_deb_fixture_are_byte_identical() {
     // Multi-ecosystem case — deb scans with --deb-codename
     // exercise the deb dpkg-status reader path, which is the
     // highest-churn parser in the scan pipeline.
-    let fixture = workspace_root().join("tests/fixtures/deb/synthetic");
+    let fixture = local_fixture_path("deb/synthetic");
     let tmp = tempfile::tempdir().expect("tempdir");
     let fake_home = tempfile::tempdir().expect("fake-home");
     let out_a = tmp.path().join("a.spdx3.json");

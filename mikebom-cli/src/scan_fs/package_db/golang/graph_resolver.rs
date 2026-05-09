@@ -908,8 +908,9 @@ mod wiremock_integration {
     use wiremock::matchers::{any, method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
-    const ARGO_FIXTURE_REL: &str =
-        "../tests/fixtures/go/argo-style-no-cache/argo-workflows";
+    // Milestone 090: fixture moved to `mikebom-test-fixtures` repo;
+    // resolved via build.rs's MIKEBOM_FIXTURES_DIR env var.
+    const ARGO_FIXTURE_SUBPATH: &str = "go/argo-style-no-cache/argo-workflows";
 
     /// Synthesized minimal `go.mod` bodies for every module in the
     /// argo-style-no-cache fixture's `go.sum`. Transitive requires
@@ -1022,9 +1023,7 @@ mod wiremock_integration {
     }
 
     fn argo_fixture_dir() -> PathBuf {
-        let mut p = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        p.push(ARGO_FIXTURE_REL);
-        p
+        PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join(ARGO_FIXTURE_SUBPATH)
     }
 
     async fn start_mock_proxy() -> MockServer {
@@ -1199,8 +1198,8 @@ mod wiremock_integration {
         }
 
         // Run `go mod graph` against the simple-module fixture.
-        let mut fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        fixture.push("../tests/fixtures/go/simple-module");
+        // Milestone 090: fixture moved to `mikebom-test-fixtures` repo.
+        let fixture = PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("go/simple-module");
         let output = std::process::Command::new("go")
             .args(["mod", "graph"])
             .current_dir(&fixture)

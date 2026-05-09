@@ -33,7 +33,7 @@ use std::process::Command;
 
 mod common;
 use common::normalize::apply_fake_home_env;
-use common::workspace_root;
+use common::fixture_path;
 
 /// Per-ecosystem fixture row. Reuses the canonical fixture paths from
 /// `common::CASES` in spirit, restricted to the post-053 ecosystems
@@ -47,13 +47,16 @@ struct Fixture {
     fixture_subpath: &'static str,
 }
 
+// Milestone 090: paths are now relative to MIKEBOM_FIXTURES_DIR (the
+// cloned `mikebom-test-fixtures` repo); resolved at the call site via
+// `common::fixture_path()`.
 const FIXTURES: &[Fixture] = &[
-    Fixture { label: "golang", fixture_subpath: "tests/fixtures/go/simple-module" },
-    Fixture { label: "cargo",  fixture_subpath: "tests/fixtures/cargo/lockfile-v3" },
-    Fixture { label: "npm",    fixture_subpath: "tests/fixtures/npm/node-modules-walk" },
-    Fixture { label: "pip",    fixture_subpath: "tests/fixtures/python/simple-venv" },
-    Fixture { label: "gem",    fixture_subpath: "tests/fixtures/gem/simple-bundle" },
-    Fixture { label: "maven",  fixture_subpath: "tests/fixtures/maven/pom-three-deps" },
+    Fixture { label: "golang", fixture_subpath: "go/simple-module" },
+    Fixture { label: "cargo",  fixture_subpath: "cargo/lockfile-v3" },
+    Fixture { label: "npm",    fixture_subpath: "npm/node-modules-walk" },
+    Fixture { label: "pip",    fixture_subpath: "python/simple-venv" },
+    Fixture { label: "gem",    fixture_subpath: "gem/simple-bundle" },
+    Fixture { label: "maven",  fixture_subpath: "maven/pom-three-deps" },
 ];
 
 /// Run mikebom against a fixture and return the parsed CDX 1.6 JSON.
@@ -66,7 +69,7 @@ fn run_mikebom_cdx_with_override(
     root_name: Option<&str>,
     root_version: Option<&str>,
 ) -> serde_json::Value {
-    let fixture = workspace_root().join(fixture_subpath);
+    let fixture = fixture_path(fixture_subpath);
     assert!(
         fixture.exists(),
         "fixture path missing: {}",

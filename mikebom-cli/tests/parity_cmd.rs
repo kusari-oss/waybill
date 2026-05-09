@@ -13,13 +13,13 @@ use std::process::Command;
 
 mod common;
 use common::normalize::apply_fake_home_env;
-use common::{bin, workspace_root};
+use common::{bin, fixture_path, workspace_root};
 
 
 /// Produce the three format outputs for the npm fixture into
 /// `<dir>/mikebom.cdx.json` etc.
 fn scan_into(dir: &std::path::Path) {
-    let fixture = workspace_root().join("tests/fixtures/npm/node-modules-walk");
+    let fixture = fixture_path("npm/node-modules-walk");
     let fake_home = tempfile::tempdir().expect("fake-home");
     let cdx = dir.join("mikebom.cdx.json");
     let spdx23 = dir.join("mikebom.spdx.json");

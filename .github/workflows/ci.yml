@@ -58,6 +58,18 @@ jobs:
       - name: Cache cargo + build artifacts
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
 
+      # Milestone 090 — fixture-repo cache. mikebom-cli/build.rs
+      # clones https://github.com/kusari-sandbox/mikebom-test-fixtures
+      # at the SHA pinned by tests/fixtures.rev into
+      # ~/.cache/mikebom/fixtures/<sha>/. Cache key = SHA, so a pin
+      # bump cleanly invalidates. See specs/090-split-test-fixtures-repo/
+      # contracts/fixture-path-helper.md for the full contract.
+      - name: Cache fixture repo
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mikebom/fixtures
+          key: mikebom-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
+
       # sbomqs is the cross-format SBOM-quality scorer that
       # enforces spec SC-001: mikebom's SPDX output must meet or
       # beat its CDX output on NTIA-minimum native features.
@@ -217,6 +229,13 @@ jobs:
       - name: Cache cargo + build artifacts
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
 
+      # Milestone 090 — fixture-repo cache (see Linux lane above).
+      - name: Cache fixture repo
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mikebom/fixtures
+          key: mikebom-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
+
       # No eBPF / nightly / bpf-linker / sbomqs steps here — those are
       # all Linux-only. Cargo's target-metadata exclusion skips
       # `mikebom-ebpf` automatically on non-Linux, and `sbomqs_parity`
@@ -264,6 +283,13 @@ jobs:
 
       - name: Cache cargo + build artifacts
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
+
+      # Milestone 090 — fixture-repo cache (see Linux lane above).
+      - name: Cache fixture repo
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mikebom/fixtures
+          key: mikebom-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
 
       - name: Install bpf-linker
         run: |

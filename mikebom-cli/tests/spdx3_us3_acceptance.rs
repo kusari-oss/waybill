@@ -43,6 +43,7 @@ use std::process::Command;
 mod common;
 use common::normalize::apply_fake_home_env;
 use common::workspace_root;
+use common::fixture_path;
 
 // ---------- scenario 1: format-neutral internal types -------------
 
@@ -197,7 +198,7 @@ fn scenario_3_stub_touches_only_expected_files() {
 
 #[test]
 fn scenario_4_npm_fixture_has_purl_parity_between_cdx_and_spdx3() {
-    let fx = workspace_root().join("tests/fixtures/npm/node-modules-walk");
+    let fx = fixture_path("npm/node-modules-walk");
     let tmp = tempfile::tempdir().expect("tempdir");
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
     let cdx_path = tmp.path().join("out.cdx.json");
@@ -289,7 +290,7 @@ fn scenario_4_npm_fixture_has_purl_parity_between_cdx_and_spdx3() {
 fn scenario_5_opt_in_not_selected_produces_no_spdx3_artifact() {
     // Narrower restatement of cdx_only_scan_produces_no_spdx3_file
     // for US3-surface completeness.
-    let fx = workspace_root().join("tests/fixtures/cargo/lockfile-v3");
+    let fx = fixture_path("cargo/lockfile-v3");
     let tmp = tempfile::tempdir().expect("tempdir");
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
     let mut cmd = Command::new(env!("CARGO_BIN_EXE_mikebom"));
@@ -334,7 +335,7 @@ fn run_scan_with_format(
     format: &str,
     extra_env: &[(&str, &str)],
 ) -> (Vec<u8>, String) {
-    let fx = workspace_root().join("tests/fixtures/npm/node-modules-walk");
+    let fx = fixture_path("npm/node-modules-walk");
     let tmp = tempfile::tempdir().expect("tempdir");
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
     let out_path = tmp.path().join("out.spdx3.json");

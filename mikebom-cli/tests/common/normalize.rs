@@ -123,7 +123,16 @@ pub const WORKSPACE_PLACEHOLDER: &str = "<WORKSPACE>";
 /// existing committed golden was written with).
 pub fn normalize_cdx_for_golden(raw: &str, workspace: &Path) -> String {
     let ws_str = workspace.to_string_lossy().to_string();
-    let replaced = raw.replace(ws_str.as_str(), WORKSPACE_PLACEHOLDER);
+    // Milestone 090: when fixtures resolve through MIKEBOM_FIXTURES_DIR
+    // (`~/.cache/mikebom/fixtures/<sha>/`), rewrite that prefix to
+    // `<WORKSPACE>/tests/fixtures` so existing pre-090 goldens (which
+    // recorded the in-repo fixture paths) match without regen.
+    let fixtures_cache = env!("MIKEBOM_FIXTURES_DIR");
+    let pre_replace = raw.replace(
+        fixtures_cache,
+        format!("{ws_str}/tests/fixtures").as_str(),
+    );
+    let replaced = pre_replace.replace(ws_str.as_str(), WORKSPACE_PLACEHOLDER);
 
     let mut json: serde_json::Value = serde_json::from_str(&replaced)
         .expect("produced SBOM is valid JSON after workspace-path rewrite");
@@ -172,7 +181,16 @@ fn strip_cdx_component_hashes(c: &mut serde_json::Value) {
 /// pretty-printed serialized string returned (no trailing newline).
 pub fn normalize_spdx23_for_golden(raw: &str, workspace: &Path) -> String {
     let ws_str = workspace.to_string_lossy().to_string();
-    let replaced = raw.replace(ws_str.as_str(), WORKSPACE_PLACEHOLDER);
+    // Milestone 090: when fixtures resolve through MIKEBOM_FIXTURES_DIR
+    // (`~/.cache/mikebom/fixtures/<sha>/`), rewrite that prefix to
+    // `<WORKSPACE>/tests/fixtures` so existing pre-090 goldens (which
+    // recorded the in-repo fixture paths) match without regen.
+    let fixtures_cache = env!("MIKEBOM_FIXTURES_DIR");
+    let pre_replace = raw.replace(
+        fixtures_cache,
+        format!("{ws_str}/tests/fixtures").as_str(),
+    );
+    let replaced = pre_replace.replace(ws_str.as_str(), WORKSPACE_PLACEHOLDER);
 
     let mut json: serde_json::Value = serde_json::from_str(&replaced)
         .expect("produced SPDX 2.3 is valid JSON after workspace-path rewrite");
@@ -234,7 +252,16 @@ fn mask_spdx23_annotation_dates(annotations: &mut [serde_json::Value]) {
 /// per `spdx3_determinism.rs:11-13`) so left alone.
 pub fn normalize_spdx3_for_golden(raw: &str, workspace: &Path) -> String {
     let ws_str = workspace.to_string_lossy().to_string();
-    let replaced = raw.replace(ws_str.as_str(), WORKSPACE_PLACEHOLDER);
+    // Milestone 090: when fixtures resolve through MIKEBOM_FIXTURES_DIR
+    // (`~/.cache/mikebom/fixtures/<sha>/`), rewrite that prefix to
+    // `<WORKSPACE>/tests/fixtures` so existing pre-090 goldens (which
+    // recorded the in-repo fixture paths) match without regen.
+    let fixtures_cache = env!("MIKEBOM_FIXTURES_DIR");
+    let pre_replace = raw.replace(
+        fixtures_cache,
+        format!("{ws_str}/tests/fixtures").as_str(),
+    );
+    let replaced = pre_replace.replace(ws_str.as_str(), WORKSPACE_PLACEHOLDER);
 
     let mut json: serde_json::Value = serde_json::from_str(&replaced)
         .expect("produced SPDX 3 is valid JSON after workspace-path rewrite");

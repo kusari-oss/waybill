@@ -19,10 +19,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn fixture_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("workspace root")
-        .join("tests/fixtures/maven/executable_jar")
+    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("maven/executable_jar")
 }
 
 fn scan_path(path: &std::path::Path) -> serde_json::Value {

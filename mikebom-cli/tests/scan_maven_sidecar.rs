@@ -9,10 +9,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn fedora_fixture_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("workspace root")
-        .join("tests/fixtures/maven/fedora_sidecar")
+    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("maven/fedora_sidecar")
 }
 
 fn scan_path(path: &Path) -> serde_json::Value {

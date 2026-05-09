@@ -20,7 +20,7 @@ use std::sync::OnceLock;
 
 mod common;
 use common::normalize::apply_fake_home_env;
-use common::{workspace_root, EcosystemCase, CASES};
+use common::{case_fixture_path, EcosystemCase, CASES};
 
 fn schema_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -45,7 +45,7 @@ fn validator() -> &'static jsonschema::Validator {
 /// leak into the document (cross-host byte-identity rules from
 /// `feedback_cross_host_goldens.md`).
 fn scan_to_spdx3(case: &EcosystemCase) -> serde_json::Value {
-    let fixture = workspace_root().join("tests/fixtures").join(case.fixture_subpath);
+    let fixture = case_fixture_path(case);
     assert!(
         fixture.exists(),
         "fixture missing for {}: {}",

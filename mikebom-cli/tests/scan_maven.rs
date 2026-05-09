@@ -43,10 +43,7 @@ fn write_cached_jar(cache_root: &Path, g: &str, a: &str, v: &str) {
 }
 
 fn fixture_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("workspace root")
-        .join("tests/fixtures/maven")
+    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("maven")
 }
 
 fn scan_subpath(sub: &str) -> serde_json::Value {
@@ -829,9 +826,9 @@ fn scan_maven_test_scope_is_tagged_in_default_mode() {
 // --- Milestone 070: maven main-module emission ----------------------
 
 fn cli_local_fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures")
-        .join(sub)
+    // Milestone 090: mikebom-cli/tests/fixtures/<sub> dirs moved to
+    // mikebom-test-fixtures repo; resolve via MIKEBOM_FIXTURES_DIR.
+    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join(sub)
 }
 
 fn scan_path_format(path: &Path, format: &str) -> serde_json::Value {

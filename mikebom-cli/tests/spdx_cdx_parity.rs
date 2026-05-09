@@ -29,7 +29,7 @@ use std::path::Path;
 use std::process::Command;
 
 mod common;
-use common::{workspace_root, EcosystemCase, CASES};
+use common::{case_fixture_path, EcosystemCase, CASES};
 
 struct Scan {
     cdx: serde_json::Value,
@@ -39,7 +39,7 @@ struct Scan {
 /// Run `mikebom sbom scan --format cyclonedx-json,spdx-2.3-json`
 /// against a fixture (single invocation) and return both parsed docs.
 fn dual_scan(case: &EcosystemCase) -> Scan {
-    let fixture = workspace_root().join("tests/fixtures").join(case.fixture_subpath);
+    let fixture = case_fixture_path(case);
     assert!(
         fixture.exists(),
         "fixture missing for {}: {}",

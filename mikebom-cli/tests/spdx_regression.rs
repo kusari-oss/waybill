@@ -26,11 +26,7 @@ use std::process::Command;
 
 mod common;
 use common::normalize::{apply_fake_home_env, normalize_spdx23_for_golden};
-use common::{workspace_root, EcosystemCase, CASES};
-
-fn fixture_path(subpath: &str) -> PathBuf {
-    workspace_root().join("tests/fixtures").join(subpath)
-}
+use common::{case_fixture_path, workspace_root, EcosystemCase, CASES};
 
 fn golden_path(label: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -41,7 +37,7 @@ fn golden_path(label: &str) -> PathBuf {
 /// Run `mikebom sbom scan --format spdx-2.3-json` against a fixture
 /// under fake-HOME isolation; return the raw SPDX 2.3 JSON text.
 fn run_scan(case: &EcosystemCase) -> String {
-    let fx = fixture_path(case.fixture_subpath);
+    let fx = case_fixture_path(case);
     assert!(
         fx.exists(),
         "fixture path missing for {}: {}",

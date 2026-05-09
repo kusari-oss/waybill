@@ -5,9 +5,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn cli_local_fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures")
-        .join(sub)
+    // Milestone 090: mikebom-cli/tests/fixtures/<sub> dirs moved to
+    // mikebom-test-fixtures repo; resolve via MIKEBOM_FIXTURES_DIR.
+    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join(sub)
 }
 
 fn scan_path(path: &Path, format: &str) -> serde_json::Value {
