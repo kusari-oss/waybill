@@ -453,6 +453,9 @@ spdx3_anno!(c45_spdx3, "mikebom:orphan-reason",             component);
 // `contracts/source-document-binding-annotation.md` C-3 SPDX 3.
 spdx3_anno!(c46_spdx3, "mikebom:source-document-binding",  component);
 
+// C48 — per-component go-resolver-step provenance (milestone 091).
+spdx3_anno!(c48_spdx3, "mikebom:resolver-step",            component);
+
 // C47 — document-level user-defined identifiers (milestone 073).
 // Per `contracts/identifiers-annotation.md` C-1 SPDX 3 and C-2
 // SPDX 3: user-defined identifiers ride `Element.externalIdentifier[]`

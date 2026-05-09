@@ -39,8 +39,8 @@
           "value": "source"
         },
         {
-          "name": "mikebom:orphan-reason",
-          "value": "unresolved-indirect-require"
+          "name": "mikebom:resolver-step",
+          "value": "go-sum-fallback"
         }
       ],
       "purl": "pkg:golang/github.com/davecgh/go-spew@v1.1.1",
@@ -88,8 +88,8 @@
           "value": "source"
         },
         {
-          "name": "mikebom:orphan-reason",
-          "value": "unresolved-indirect-require"
+          "name": "mikebom:resolver-step",
+          "value": "go-sum-fallback"
         }
       ],
       "purl": "pkg:golang/github.com/inconshreveable/mousetrap@v1.1.0",
@@ -135,6 +135,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:resolver-step",
+          "value": "go-sum-fallback"
         }
       ],
       "purl": "pkg:golang/github.com/mattn/go-isatty@v0.0.21",
@@ -182,8 +186,8 @@
           "value": "source"
         },
         {
-          "name": "mikebom:orphan-reason",
-          "value": "unresolved-indirect-require"
+          "name": "mikebom:resolver-step",
+          "value": "go-sum-fallback"
         }
       ],
       "purl": "pkg:golang/github.com/pmezard/go-difflib@v1.0.0",
@@ -229,6 +233,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:resolver-step",
+          "value": "go-sum-fallback"
         }
       ],
       "purl": "pkg:golang/github.com/sirupsen/logrus@v1.9.4",
@@ -274,6 +282,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:resolver-step",
+          "value": "go-sum-fallback"
         }
       ],
       "purl": "pkg:golang/github.com/spf13/cobra@v1.10.2",
@@ -321,8 +333,8 @@
           "value": "source"
         },
         {
-          "name": "mikebom:orphan-reason",
-          "value": "unresolved-indirect-require"
+          "name": "mikebom:resolver-step",
+          "value": "go-sum-fallback"
         }
       ],
       "purl": "pkg:golang/github.com/spf13/pflag@v1.0.9",
@@ -368,6 +380,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:resolver-step",
+          "value": "go-sum-fallback"
         }
       ],
       "purl": "pkg:golang/github.com/stretchr/testify@v1.11.1",
@@ -409,8 +425,8 @@
           "value": "source"
         },
         {
-          "name": "mikebom:orphan-reason",
-          "value": "unresolved-indirect-require"
+          "name": "mikebom:resolver-step",
+          "value": "go-sum-fallback"
         }
       ],
       "purl": "pkg:golang/golang.org/x/sys@v0.28.0",
@@ -452,8 +468,8 @@
           "value": "source"
         },
         {
-          "name": "mikebom:orphan-reason",
-          "value": "unresolved-indirect-require"
+          "name": "mikebom:resolver-step",
+          "value": "go-sum-fallback"
         }
       ],
       "purl": "pkg:golang/gopkg.in/check.v1@v0.0.0-20161208181325-20d25e280405",
@@ -493,6 +509,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:resolver-step",
+          "value": "go-sum-fallback"
         }
       ],
       "purl": "pkg:golang/gopkg.in/yaml.v3@v3.0.1",
@@ -551,10 +571,16 @@
   "dependencies": [
     {
       "dependsOn": [
+        "pkg:golang/github.com/davecgh/go-spew@v1.1.1",
+        "pkg:golang/github.com/inconshreveable/mousetrap@v1.1.0",
         "pkg:golang/github.com/mattn/go-isatty@v0.0.21",
+        "pkg:golang/github.com/pmezard/go-difflib@v1.0.0",
         "pkg:golang/github.com/sirupsen/logrus@v1.9.4",
         "pkg:golang/github.com/spf13/cobra@v1.10.2",
+        "pkg:golang/github.com/spf13/pflag@v1.0.9",
         "pkg:golang/github.com/stretchr/testify@v1.11.1",
+        "pkg:golang/golang.org/x/sys@v0.28.0",
+        "pkg:golang/gopkg.in/check.v1@v0.0.0-20161208181325-20d25e280405",
         "pkg:golang/gopkg.in/yaml.v3@v3.0.1"
       ],
       "ref": "pkg:golang/example.com/simple@v0.0.0-unknown"
@@ -663,10 +689,6 @@
       {
         "name": "mikebom:graph-completeness",
         "value": "partial"
-      },
-      {
-        "name": "mikebom:graph-completeness-reason",
-        "value": "go:unresolved-indirect-require"
       },
       {
         "name": "mikebom:trace-integrity-ring-buffer-overflows",

@@ -68,7 +68,16 @@ pub enum ResolutionStep {
     GoModCache,
     /// Step 3: HTTP fetch from `$GOPROXY`.
     Proxy,
-    /// Step 4: graceful fallthrough — no edges produced for this module.
+    /// Step 5: go.sum-driven flat fallback (milestone 091). When steps
+    /// 1–3 fail (offline + cache-empty CI configuration), this step
+    /// parses go.sum directly and emits flat root → transitive edges
+    /// covering the deduped (module, version) closure. No parent-child
+    /// topology between transitives — go.sum doesn't encode that.
+    GoSumFallback,
+    /// Step 6 (formerly step 4): graceful fallthrough — no edges
+    /// produced for this module. Reached when even step 5's go.sum
+    /// closure didn't claim the module (typically because the module
+    /// has no go.sum line, e.g., a path-replace target).
     None,
 }
 
@@ -126,6 +135,29 @@ impl ModuleGraphMap {
         self.entries.is_empty()
     }
 
+    /// Milestone 091: returns module paths whose entries were claimed
+    /// via step 5 (go.sum flat fallback). `legacy.rs::read` consumes
+    /// this list to augment `build_main_module_entry`'s `depends`
+    /// field with flat root → transitive edges, recovering the ~110
+    /// transitive edges trivy captures from go.sum in the offline +
+    /// cache-empty CI configuration.
+    ///
+    /// Returned in lex-sorted order so downstream consumers (e.g.,
+    /// `legacy.rs::build_main_module_entry`'s depends-augment loop)
+    /// emit deterministic output across runs. Sort is mandatory —
+    /// HashMap iteration is non-deterministic and would surface as
+    /// SPDX SPDXID drift in golden tests.
+    pub fn gosum_fallback_paths(&self) -> Vec<String> {
+        let mut paths: Vec<String> = self
+            .entries
+            .values()
+            .filter(|e| e.source == ResolutionStep::GoSumFallback)
+            .map(|e| e.module.path().to_string())
+            .collect();
+        paths.sort();
+        paths
+    }
+
     // --- mutating API used internally by GraphResolver ---
 
     pub(crate) fn insert(&mut self, entry: ModuleGraphEntry) {
@@ -155,6 +187,8 @@ pub struct LadderSummary {
     pub graph_count: usize,
     pub cache_count: usize,
     pub proxy_count: usize,
+    /// Milestone 091: modules claimed by step 5 (go.sum flat fallback).
+    pub gosum_fallback_count: usize,
     pub missing_count: usize,
     pub fetch_errors: HashMap<String, usize>,
 }
@@ -163,8 +197,12 @@ impl fmt::Display for LadderSummary {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "go transitive edges: ladder=[graph:{}, cache:{}, proxy:{}, missing:{}]",
-            self.graph_count, self.cache_count, self.proxy_count, self.missing_count
+            "go transitive edges: ladder=[graph:{}, cache:{}, proxy:{}, gosum:{}, missing:{}]",
+            self.graph_count,
+            self.cache_count,
+            self.proxy_count,
+            self.gosum_fallback_count,
+            self.missing_count,
         )
     }
 }
@@ -347,10 +385,20 @@ impl GraphResolver {
             self.step3_proxy_fetch(&mut map, ctx);
         }
 
-        // Step 4 — graceful empty fallthrough. Every go.sum module
-        // that didn't pick up edges from steps 1–3 still emits a
-        // record (with empty requires) so downstream code can iterate
-        // uniformly.
+        // Step 5 — go.sum-driven flat fallback (milestone 091). Claims
+        // every go.sum module not already in the map and tags it with
+        // `source = GoSumFallback`. Downstream, `build_main_module_entry`
+        // queries `map.gosum_fallback_paths()` to augment the
+        // main-module's `depends` list with flat root → transitive
+        // edges. This recovers the ~110 transitive edges trivy
+        // captures from go.sum content alone in the offline +
+        // cache-empty CI configuration.
+        self.step5_go_sum_fallback(&mut map, ctx);
+
+        // Step 6 (formerly step 4) — graceful empty fallthrough. Any
+        // go.sum module that step 5 didn't claim (none in practice;
+        // step 5 covers the same enumeration) still emits an empty
+        // record so downstream code iterates uniformly.
         self.step4_empty_fallthrough(&mut map, ctx);
 
         // Apply workspace-level `replace` directives to every edge
@@ -369,6 +417,7 @@ impl GraphResolver {
             graph_count = s.graph_count,
             cache_count = s.cache_count,
             proxy_count = s.proxy_count,
+            gosum_fallback_count = s.gosum_fallback_count,
             missing_count = s.missing_count,
             "{}",
             s
@@ -548,6 +597,35 @@ impl GraphResolver {
                 source: ResolutionStep::None,
             });
             map.summary_mut().missing_count += 1;
+        }
+    }
+
+    /// Step 5 (milestone 091): go.sum-driven flat fallback.
+    ///
+    /// When steps 1–3 fail (offline + cache-empty CI configuration —
+    /// the typical case where mikebom would otherwise lose ~110
+    /// transitive edges trivy gets from go.sum content alone), this
+    /// step claims every go.sum module not yet in the map. Each
+    /// claimed module gets `source = GoSumFallback` + empty
+    /// `requires` (go.sum doesn't encode parent-child topology); the
+    /// flat root → transitive edges are added downstream by
+    /// `legacy.rs::build_main_module_entry` when it queries
+    /// `gosum_fallback_paths()` to augment the main-module's
+    /// `depends` list.
+    ///
+    /// Cache-populated runs hit the `if map.contains(module)`
+    /// short-circuit and produce no step-5 entries; FR-005 invariant.
+    fn step5_go_sum_fallback(&self, map: &mut ModuleGraphMap, ctx: &WorkspaceContext) {
+        for module in &ctx.go_sum_modules {
+            if map.contains(module) {
+                continue;
+            }
+            map.insert(ModuleGraphEntry {
+                module: module.clone(),
+                requires: Vec::new(),
+                source: ResolutionStep::GoSumFallback,
+            });
+            map.summary_mut().gosum_fallback_count += 1;
         }
     }
 }
@@ -792,16 +870,18 @@ mod tests {
     #[test]
     fn ladder_summary_renders_canonical_format() {
         // FR-009: exact tracing line format.
+        // Milestone 091: gosum counter inserted between proxy and missing.
         let s = LadderSummary {
             graph_count: 12,
             cache_count: 3,
             proxy_count: 27,
+            gosum_fallback_count: 5,
             missing_count: 1,
             ..Default::default()
         };
         assert_eq!(
             s.to_string(),
-            "go transitive edges: ladder=[graph:12, cache:3, proxy:27, missing:1]"
+            "go transitive edges: ladder=[graph:12, cache:3, proxy:27, gosum:5, missing:1]"
         );
     }
 
@@ -1322,10 +1402,15 @@ mod wiremock_integration {
         .unwrap();
 
         let summary = map.summary();
+        // Milestone 091: post-step-5 introduction, modules that proxy
+        // 404s on now land in gosum_fallback_count (step 5 claims them
+        // before step 4's empty-fallthrough runs). Pre-091 the same
+        // modules ended up in missing_count.
         assert!(
-            summary.missing_count > 0,
-            "FR-009: expected missing_count > 0 when every proxy fetch 404s",
+            summary.gosum_fallback_count > 0,
+            "FR-009: expected gosum_fallback_count > 0 when every proxy fetch 404s (post-milestone-091); got summary={summary:?}",
         );
+        assert_eq!(summary.missing_count, 0, "step 5 claims everything; step 6 finds nothing left");
         assert_eq!(summary.proxy_count, 0);
         assert!(
             summary.fetch_errors.contains_key("http_404"),

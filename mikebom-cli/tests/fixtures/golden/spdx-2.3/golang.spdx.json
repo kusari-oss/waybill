@@ -23,12 +23,6 @@
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
       "annotator": "Tool: mikebom-0.1.0-alpha.27",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness-reason\",\"value\":\"go:unresolved-indirect-require\"}"
-    },
-    {
-      "annotationDate": "1970-01-01T00:00:00Z",
-      "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.27",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":0}"
     },
     {
@@ -109,12 +103,6 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.27",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-role\",\"value\":\"main-module\"}"
-        },
-        {
-          "annotationDate": "1970-01-01T00:00:00Z",
-          "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.27",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:orphan-reason\",\"value\":\"unresolved-indirect-require\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -169,7 +157,7 @@
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.27",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:orphan-reason\",\"value\":\"unresolved-indirect-require\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:resolver-step\",\"value\":\"go-sum-fallback\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -228,7 +216,7 @@
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.27",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:orphan-reason\",\"value\":\"unresolved-indirect-require\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:resolver-step\",\"value\":\"go-sum-fallback\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -282,6 +270,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.27",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.27",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:resolver-step\",\"value\":\"go-sum-fallback\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -340,7 +334,7 @@
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.27",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:orphan-reason\",\"value\":\"unresolved-indirect-require\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:resolver-step\",\"value\":\"go-sum-fallback\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -394,6 +388,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.27",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.27",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:resolver-step\",\"value\":\"go-sum-fallback\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -447,6 +447,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.27",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.27",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:resolver-step\",\"value\":\"go-sum-fallback\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -505,7 +511,7 @@
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.27",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:orphan-reason\",\"value\":\"unresolved-indirect-require\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:resolver-step\",\"value\":\"go-sum-fallback\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -559,6 +565,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.27",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.27",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:resolver-step\",\"value\":\"go-sum-fallback\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -617,7 +629,7 @@
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.27",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:orphan-reason\",\"value\":\"unresolved-indirect-require\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:resolver-step\",\"value\":\"go-sum-fallback\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -671,7 +683,7 @@
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.27",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:orphan-reason\",\"value\":\"unresolved-indirect-require\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:resolver-step\",\"value\":\"go-sum-fallback\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -720,6 +732,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.27",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.27",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:resolver-step\",\"value\":\"go-sum-fallback\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -771,6 +789,36 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-A3EJRWNXRJBCN4AR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZPQ6ND5QEI5V2QHC",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-DJ3ZIKWTNBYO26BT",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-6LPOVXNHYYPHFH7J",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JOU7AJL2C6XXTUFK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-XXDQJPHRGTN4ALYD",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OPPLTPJ24FIGRUY2",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
     }

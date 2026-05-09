@@ -12,20 +12,32 @@ use transitive_parity_common::*;
 const FIXTURE_SUBPATH: &str = "go";
 
 /// **Cache-empty baseline** — pinned at the CI-reproducible state where
-/// `$GOMODCACHE` is empty. Mikebom's go reader has a 4-step ladder per
-/// milestone-055 research §3 (`go mod graph` / `$GOMODCACHE` / proxy /
-/// no-edges fallback); with `--offline` and an empty cache, only the
-/// no-edges-fallback step (synthesized direct edges from go.mod
-/// `require` block) fires. Real-world output on a developer's box with
-/// a populated module cache will be 260+ edges; we pin the 31-edge
-/// cache-empty count because that's what CI sees and what `MIKEBOM_REQUIRE_TRANSITIVE_PARITY=1`
+/// `$GOMODCACHE` is empty. Mikebom's go reader has a 5-step ladder per
+/// milestones 055 + 091 (`go mod graph` / `$GOMODCACHE` / proxy /
+/// **go.sum flat fallback** / no-edges-fallback). With `--offline` and
+/// an empty cache, step 5 (the milestone-091 go.sum-driven flat
+/// fallback) claims every go.sum module steps 1–3 missed and augments
+/// the main-module's `depends` list with flat root → transitive edges.
+/// This recovers ~78 transitive edges that were dropped pre-091 (count
+/// rose from 31 → 109 on the cri-tools fixture).
+///
+/// Real-world output on a developer's box with a populated module
+/// cache will be 260+ edges (full per-transitive parent-child topology
+/// from step 2); we pin the 109-edge offline-cache-empty count because
+/// that's what CI sees and what `MIKEBOM_REQUIRE_TRANSITIVE_PARITY=1`
 /// must reproduce.
-const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 31;
+///
+/// Closed by milestone 091 (go.sum-fallback step 5):
+/// - Pre-091: 31 edges (direct-deps only — main-module → ~24 direct
+///   deps from go.mod's non-`// indirect` require lines + ~7
+///   inter-transitive cache hits).
+/// - Post-091: 109 edges (~24 direct deps + ~85 root → transitive
+///   edges synthesized from go.sum's flat closure via step 5).
+const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 109;
 
 const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
-    // Direct deps from go.mod `require` block — synthesized by the
-    // ladder's no-edges-fallback step into edges from the main-module
-    // PURL to each direct dep.
+    // Direct deps from go.mod `require` block — synthesized into edges
+    // from the main-module PURL by `build_main_module_entry`.
     (
         "pkg:golang/sigs.k8s.io/cri-tools",
         "pkg:golang/github.com/distribution/reference",
@@ -37,6 +49,17 @@ const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
     (
         "pkg:golang/sigs.k8s.io/cri-tools",
         "pkg:golang/github.com/onsi/ginkgo/v2",
+    ),
+    // Milestone 091 invariant — step-5 go.sum-fallback edge: a
+    // transitive dep that was NOT a direct dep in cri-tools' go.mod
+    // and was previously dropped in offline+cache-empty mode.
+    // beorn7/perks is a transitive of prometheus libraries, not a
+    // direct cri-tools dep — it's only reachable via go.sum.
+    // Pre-091 mikebom emitted no edge to this component; post-091
+    // step 5 augments main-module's depends list.
+    (
+        "pkg:golang/sigs.k8s.io/cri-tools",
+        "pkg:golang/github.com/beorn7/perks",
     ),
 ];
 

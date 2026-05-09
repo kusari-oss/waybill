@@ -229,7 +229,7 @@ trivy emits 142 transitive edges from go.sum content alone, no module-cache look
 
 **Indirect-vs-direct decision**: per research §6 — **defer** (Go's `// indirect` marker; mikebom's "all-edges-under-root" is operator-comprehensible; not P1/P2).
 
-**Follow-up disposition**: **gap surfaced** — file follow-up for "Go reader: synthesize transitive edges from go.sum content when offline + cache-empty (currently emits direct-deps-only fallback)". Regression test pins the 31-edge cache-empty baseline.
+**Follow-up disposition**: ~~**gap surfaced** — file follow-up for "Go reader: synthesize transitive edges from go.sum content when offline + cache-empty (currently emits direct-deps-only fallback)". Regression test pins the 31-edge cache-empty baseline.~~ **Closed by milestone 091** (issue #174). Resolution: added step 5 to milestone-055's resolver ladder — `step5_go_sum_fallback` claims every go.sum module not yet in the resolver map and tags it with `ResolutionStep::GoSumFallback`. `legacy.rs::build_main_module_entry` consumes `ModuleGraphMap::gosum_fallback_paths()` to augment the main-module's `depends` list, which raises the cache-empty edge count from 31 to 109 (3.5×) on the cri-tools fixture. Per-component `mikebom:resolver-step = go-sum-fallback` annotation flags the lower-fidelity discovery (Constitution X). Pinned in `transitive_parity_go.rs::EXPECTED_REPRESENTATIVE_EDGES`.
 
 ### Ecosystem: pip-poetry
 
@@ -350,7 +350,7 @@ Per-ecosystem audit progress as of milestone-083 in-flight commit. Updated as ea
 **Filed follow-up issues** (post-audit):
 - **#172** — cargo: workspace-member version mismatch (clap@4.5.21 → clap_builder@4.5.9). **Closed by milestone 087.**
 - **#173** — cargo: proc-macro crates emit zero outgoing edges (clap_derive case). **Closed by milestone 087.**
-- **#174** — Go: cache-empty offline mode emits direct-only fallback (31 vs trivy's 142)
+- **#174** — Go: cache-empty offline mode emits direct-only fallback (31 vs trivy's 142). **Closed by milestone 091.**
 - **#175** — Maven: cache-empty offline mode emits zero transitive edges + version-extraction bug
 
 **Open questions deferred to follow-up source-format-tiebreaker work**:

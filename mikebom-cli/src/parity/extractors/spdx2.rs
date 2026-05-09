@@ -373,6 +373,9 @@ spdx23_anno!(c46_spdx23, "mikebom:source-document-binding",  component);
 // SPDX 2.3 side.
 spdx23_anno!(c47_spdx23, "mikebom:identifiers",              document);
 
+// C48 — per-component go-resolver-step provenance (milestone 091).
+spdx23_anno!(c48_spdx23, "mikebom:resolver-step",            component);
+
 // ============================================================
 // Sections D-G — custom SPDX 2.3 extractors
 // ============================================================

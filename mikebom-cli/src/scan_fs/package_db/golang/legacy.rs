@@ -498,9 +498,13 @@ pub(crate) fn build_entries_from_go_module(
     source_path: &str,
     cache: &GoModCache,
 ) -> Vec<PackageDbEntry> {
-    build_entries_from_go_module_with_lookup(doc, sums, source_path, |p, v| {
-        cache_lookup_depends(cache, p, v)
-    })
+    build_entries_from_go_module_with_lookup(
+        doc,
+        sums,
+        source_path,
+        |p, v| cache_lookup_depends(cache, p, v),
+        &HashSet::new(),
+    )
 }
 
 /// Like `build_entries_from_go_module`, but lets the caller supply the
@@ -516,6 +520,7 @@ pub(crate) fn build_entries_from_go_module_with_lookup<F>(
     sums: &[GoSumEntry],
     source_path: &str,
     lookup_depends: F,
+    gosum_fallback_paths: &HashSet<String>,
 ) -> Vec<PackageDbEntry>
 where
     F: Fn(&str, &str) -> Vec<String>,
@@ -570,6 +575,18 @@ where
         // semantic (tarball vs dirhash) see the disambiguating tier
         // marker (`mikebom:sbom-tier = source`).
         let hashes = h1_to_content_hash(&entry.hash).into_iter().collect();
+        // Milestone 091: components reached only via step 5 (the
+        // go.sum flat fallback) carry a per-component provenance
+        // discriminator so operators can distinguish the lower-fidelity
+        // discovery path from steps 1–3. Constitution Principle X.
+        let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
+            Default::default();
+        if gosum_fallback_paths.contains(&resolved_path) {
+            extra_annotations.insert(
+                "mikebom:resolver-step".to_string(),
+                serde_json::Value::String("go-sum-fallback".to_string()),
+            );
+        }
         out.push(PackageDbEntry {
             purl,
             name: resolved_path,
@@ -597,7 +614,7 @@ where
             hashes,
             sbom_tier: Some("source".to_string()),
             shade_relocation: None,
-            extra_annotations: Default::default(),
+            extra_annotations,
         });
     }
 
@@ -1139,6 +1156,12 @@ pub fn read(rootfs: &Path, _include_dev: bool) -> (Vec<PackageDbEntry>, GoScanSi
             }
         };
 
+        // Milestone 091: collect set of paths whose entries were
+        // claimed via step 5 so build_entries_from_go_module_with_lookup
+        // can attach the per-component provenance discriminator.
+        let gosum_fallback_set: HashSet<String> =
+            graph_map.gosum_fallback_paths().into_iter().collect();
+
         let entries = build_entries_from_go_module_with_lookup(
             doc,
             sums,
@@ -1154,6 +1177,7 @@ pub fn read(rootfs: &Path, _include_dev: bool) -> (Vec<PackageDbEntry>, GoScanSi
                     .map(|m| m.path().to_string())
                     .collect()
             },
+            &gosum_fallback_set,
         );
         for entry in entries {
             let purl_key = entry.purl.as_str().to_string();
@@ -1171,9 +1195,28 @@ pub fn read(rootfs: &Path, _include_dev: bool) -> (Vec<PackageDbEntry>, GoScanSi
         // scan, with dangling targets silently dropped.
         let go_mod_path = project_root.join("go.mod");
         let go_mod_source = go_mod_path.to_string_lossy().into_owned();
-        if let Some(main_entry) =
+        if let Some(mut main_entry) =
             build_main_module_entry(doc, project_root, &go_mod_source)
         {
+            // Milestone 091: in offline + cache-empty mode, the
+            // resolver's step 5 claims every go.sum module steps 1–3
+            // didn't reach, tagging them with source = GoSumFallback.
+            // Augment main-module's `depends` with those module paths
+            // so the SBOM includes flat root → transitive edges
+            // recovering the ~110 transitive edges trivy captures from
+            // go.sum content alone. Existing `// indirect`-filtered
+            // direct-deps already in `main_entry.depends` are deduped
+            // via the HashSet pass.
+            let fallback_paths = graph_map.gosum_fallback_paths();
+            if !fallback_paths.is_empty() {
+                let existing: std::collections::HashSet<String> =
+                    main_entry.depends.iter().cloned().collect();
+                for path in fallback_paths {
+                    if !existing.contains(&path) {
+                        main_entry.depends.push(path);
+                    }
+                }
+            }
             let purl_key = main_entry.purl.as_str().to_string();
             if seen_purls.insert(purl_key) {
                 out.push(main_entry);
@@ -1286,6 +1329,24 @@ pub fn read(rootfs: &Path, _include_dev: bool) -> (Vec<PackageDbEntry>, GoScanSi
         if orphan_count > 0 {
             for entry in out.iter_mut() {
                 if !entry.purl.as_str().starts_with("pkg:golang/") {
+                    continue;
+                }
+                // Milestone 091: skip the main-module (the project root
+                // itself) — it has 0 incoming edges by construction
+                // (nothing depends on the thing we're scanning), but
+                // it's not a transitive orphan. Pre-091 the holistic-
+                // parity asymmetry was masked because step-4 also left
+                // most transitives orphaned (so CDX + SPDX both had
+                // populated orphan-reason sets via components[]); post-
+                // step-5, only main-module would still be tagged, and
+                // CDX's main-module-via-metadata.component path doesn't
+                // serialize extra_annotations — surfacing the gap.
+                let is_main_module = entry
+                    .extra_annotations
+                    .get("mikebom:component-role")
+                    .and_then(|v| v.as_str())
+                    == Some("main-module");
+                if is_main_module {
                     continue;
                 }
                 let count = incoming_count.get(entry.name.as_str()).copied().unwrap_or(0);

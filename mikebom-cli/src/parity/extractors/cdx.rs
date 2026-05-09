@@ -500,6 +500,12 @@ cdx_anno!(c46_cdx, "mikebom:source-document-binding",   component);
 // c47_spdx3 below.
 cdx_anno!(c47_cdx, "mikebom:identifiers",               document);
 
+// C48 — per-component go-resolver-step provenance discriminator
+// (milestone 091, closes #174). Tags Go transitive components reached
+// via step 5 (go.sum flat fallback) so consumers can distinguish the
+// lower-fidelity discovery path from steps 1–3.
+cdx_anno!(c48_cdx, "mikebom:resolver-step",             component);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================
