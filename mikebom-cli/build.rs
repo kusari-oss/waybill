@@ -54,17 +54,7 @@ fn fetch_fixtures() {
         panic!("\ntests/fixtures.rev MUST be a 40-char lowercase hex SHA; got {sha:?}\n");
     }
 
-    let cache_parent = std::env::var("MIKEBOM_FIXTURE_CACHE")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| {
-            let home = std::env::var("HOME").unwrap_or_else(|_| {
-                std::env::var("USERPROFILE").expect("HOME or USERPROFILE must be set")
-            });
-            PathBuf::from(home)
-                .join(".cache")
-                .join("mikebom")
-                .join("fixtures")
-        });
+    let cache_parent = resolve_cache_parent();
     let cache_target = cache_parent.join(&sha);
 
     if cache_target.exists()
@@ -81,14 +71,8 @@ fn fetch_fixtures() {
         return;
     }
 
-    // Cache miss — clone + pin to exact SHA.
-    std::fs::create_dir_all(&cache_parent).unwrap_or_else(|e| {
-        panic!(
-            "\nfailed to create cache parent {}: {}\n",
-            cache_parent.display(),
-            e,
-        )
-    });
+    // Cache miss — clone + pin to exact SHA. `resolve_cache_parent`
+    // already guarantees the parent directory exists.
 
     println!("cargo:warning=fetching mikebom-test-fixtures @ {sha} (one-time per pin)");
 
@@ -127,4 +111,56 @@ fn fetch_fixtures() {
         "cargo:rustc-env=MIKEBOM_FIXTURES_DIR={}",
         cache_target.display()
     );
+}
+
+/// Resolve a writable directory to host the fixture-repo cache.
+///
+/// Resolution order:
+/// 1. `MIKEBOM_FIXTURE_CACHE` env var (explicit operator override).
+/// 2. `$HOME/.cache/mikebom/fixtures/` on Unix /
+///    `$USERPROFILE/.cache/mikebom/fixtures/` on Windows.
+/// 3. `$OUT_DIR/mikebom-fixtures/` as a defensive fallback when (2)
+///    isn't writable — cargo always sets `OUT_DIR` and guarantees it
+///    is writable. Triggered in `cross` Docker containers where
+///    `HOME=""` produces an unusable path like `/.cache/mikebom/...`
+///    that the container's root filesystem rejects.
+///
+/// Returns a path whose parent directory already exists and is
+/// writable, so callers can `clone`/`reset` into a subdirectory of it
+/// without panicking on permission errors.
+fn resolve_cache_parent() -> PathBuf {
+    let preferred = std::env::var("MIKEBOM_FIXTURE_CACHE")
+        .ok()
+        .filter(|s| !s.is_empty())
+        .map(PathBuf::from)
+        .or_else(|| {
+            let home = std::env::var("HOME")
+                .ok()
+                .or_else(|| std::env::var("USERPROFILE").ok())
+                .filter(|s| !s.is_empty())?;
+            Some(
+                PathBuf::from(home)
+                    .join(".cache")
+                    .join("mikebom")
+                    .join("fixtures"),
+            )
+        });
+
+    if let Some(path) = preferred {
+        if std::fs::create_dir_all(&path).is_ok() {
+            return path;
+        }
+        println!(
+            "cargo:warning=fixture cache parent {} not writable; falling back to $OUT_DIR/mikebom-fixtures/",
+            path.display()
+        );
+    }
+
+    // Fallback: $OUT_DIR is always set by cargo and is writable.
+    let out_dir = std::env::var("OUT_DIR")
+        .expect("cargo must set OUT_DIR in build.rs");
+    let fallback = PathBuf::from(out_dir).join("mikebom-fixtures");
+    std::fs::create_dir_all(&fallback)
+        .expect("OUT_DIR-based fixture cache fallback must be writable");
+    fallback
 }
