@@ -1,0 +1,15 @@
+# .project/project.yaml - CNCF Project Configuration
+# https://github.com/cncf/automation/tree/main/utilities/dot-project
+# 
+# This file contains standard CNCF .project fields.
+# Extension fields are in separate files (darnit.yaml, etc.)
+
+name: mikebom
+description: ''
+schema_version: '1.0'
+type: software
+maturity_log: []
+repositories: []
+social: {}
+mailing_lists: []
+audits: []
