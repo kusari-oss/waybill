@@ -1,0 +1,48 @@
+# Governance
+
+## Overview
+
+This document describes the governance model for mikebom.
+
+
+## Roles
+
+### Maintainers
+
+Maintainers are responsible for the overall direction and health of the project.
+See [MAINTAINERS.md](MAINTAINERS.md) for the current list and [CODEOWNERS](CODEOWNERS)
+for code review assignments.
+
+### Contributors
+
+Anyone who contributes code, documentation, or other improvements to the project.
+
+## Decision Making
+
+- **Minor changes**: Can be merged by any maintainer after review
+- **Major changes**: Require discussion and consensus among maintainers
+- **Breaking changes**: Require announcement and community feedback period
+
+## Becoming a Maintainer
+
+Contributors who have made significant contributions may be invited to become
+maintainers. Criteria include:
+
+- Sustained contributions over time
+- Quality of contributions
+- Constructive participation in discussions
+- Alignment with project goals
+
+## Code of Conduct
+
+All participants are expected to follow our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Related Documents
+
+- [Security Policy](SECURITY.md)
+- [Contributing Guide](CONTRIBUTING.md)
+
+## Changes to Governance
+
+Significant changes to governance require consensus among maintainers and should
+be discussed openly before implementation.

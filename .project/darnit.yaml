@@ -21,3 +21,11 @@ context:
   - '@mlieberman85'
   security_contact: See SECURITY.md
   governance_model: corporate
+dependencies:
+  manifest: Cargo.toml
+ci:
+  workflows: []
+  security_scanning: []
+  testing: []
+  code_quality: []
+  gitignore: .gitignore
