@@ -269,7 +269,7 @@ jobs:
       # for unpinned `cargo` invocations. dtolnay/rust-toolchain sets the
       # default to whichever it installed last.
       - name: Install nightly Rust with rust-src
-        uses: dtolnay/rust-toolchain@5b842231ba77f5c045dba54ac5560fed2db780e2 # nightly (2026-04-25)
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # nightly (2026-04-25)
         with:
           components: rust-src
 
