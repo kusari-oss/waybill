@@ -21,7 +21,7 @@ jobs:
     name: Build eBPF object
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install eBPF build deps
         run: |
@@ -29,12 +29,12 @@ jobs:
           sudo apt-get install -y clang llvm libelf-dev pkg-config
 
       - name: Install nightly Rust with rust-src
-        uses: dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@5b842231ba77f5c045dba54ac5560fed2db780e2 # nightly (2026-04-25)
         with:
           components: rust-src
 
       - name: Cache cargo + nightly build artifacts
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
         with:
           key: ebpf-nightly
           workspaces: |
@@ -48,7 +48,7 @@ jobs:
         run: cargo run --package xtask -- ebpf
 
       - name: Upload eBPF artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: mikebom-ebpf-object
           path: mikebom-ebpf/target/bpfel-unknown-none/release/mikebom-ebpf
@@ -62,15 +62,15 @@ jobs:
     env:
       TARGET: x86_64-unknown-linux-gnu
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install stable Rust (x86_64 target)
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
         with:
           targets: x86_64-unknown-linux-gnu
 
       - name: Cache cargo + cross-compiled build
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
         with:
           key: ${{ env.TARGET }}
 
@@ -83,7 +83,7 @@ jobs:
         run: cargo install cross --locked
 
       - name: Download eBPF artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: mikebom-ebpf-object
           path: ebpf-download
@@ -133,7 +133,7 @@ jobs:
           ls -la "${stage}.tar.gz"
 
       - name: Upload tarball artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: mikebom-${{ github.ref_name }}-x86_64-unknown-linux-gnu
           path: mikebom-${{ github.ref_name }}-${{ env.TARGET }}.tar.gz
@@ -146,15 +146,15 @@ jobs:
     env:
       TARGET: aarch64-unknown-linux-gnu
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install stable Rust (aarch64 target)
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
         with:
           targets: aarch64-unknown-linux-gnu
 
       - name: Cache cargo + cross-compiled build
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
         with:
           key: ${{ env.TARGET }}
 
@@ -162,7 +162,7 @@ jobs:
         run: cargo install cross --locked
 
       - name: Download eBPF artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: mikebom-ebpf-object
           path: ebpf-download
@@ -199,7 +199,7 @@ jobs:
           ls -la "${stage}.tar.gz"
 
       - name: Upload tarball artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: mikebom-${{ github.ref_name }}-aarch64-unknown-linux-gnu
           path: mikebom-${{ github.ref_name }}-${{ env.TARGET }}.tar.gz
@@ -211,15 +211,15 @@ jobs:
     env:
       TARGET: aarch64-apple-darwin
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install stable Rust (aarch64-apple-darwin)
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
         with:
           targets: aarch64-apple-darwin
 
       - name: Cache cargo + build
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
         with:
           key: ${{ env.TARGET }}
 
@@ -238,7 +238,7 @@ jobs:
           ls -la "${stage}.tar.gz"
 
       - name: Upload tarball artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: mikebom-${{ github.ref_name }}-aarch64-apple-darwin
           path: mikebom-${{ github.ref_name }}-${{ env.TARGET }}.tar.gz
@@ -252,7 +252,7 @@ jobs:
       contents: write
     steps:
       - name: Download all tarball artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: mikebom-${{ github.ref_name }}-*
           merge-multiple: true
@@ -264,7 +264,7 @@ jobs:
           cat SHA256SUMS
 
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           prerelease: true
           generate_release_notes: true
