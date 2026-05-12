@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-05-11
+Auto-generated from all feature plans. Last updated: 2026-05-12
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -87,6 +87,8 @@ Auto-generated from all feature plans. Last updated: 2026-05-11
 - N/A — this milestone touches Markdown + (potentially) Cargo.toml metadata only. + None new. The existing `release.yml` artifact-naming convention is the only behavioral input that informs the cargo-binstall integration choice. (093-repo-polish-quickwins)
 - Rust stable (workspace toolchain inherited; no nightly required for this user-space test-infrastructure work). + existing only — `std::process::Command` for subprocess invocation, `tempfile`, `tar` (already used by current perf tests), `serde_json` (for byte-equivalence comparisons). The new GitHub Action `nick-fields/retry@v3` is permitted under FR-010 because it's a workflow YAML reference, not a Cargo dependency. (094-deflake-perf-tests)
 - N/A — test infrastructure only; no caches, no persistence. (094-deflake-perf-tests)
+- Rust stable (workspace toolchain inherited; no nightly required). + existing only — `object` crate (already in workspace, handles ELF/Mach-O/PE section iteration), `serde`/`serde_json`, `tracing`, `anyhow`. NO new crates. (096-binary-id-enrich)
+- N/A — pure read-only inference from the binary file itself. (096-binary-id-enrich)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -149,9 +151,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 096-binary-id-enrich: Added Rust stable (workspace toolchain inherited; no nightly required). + existing only — `object` crate (already in workspace, handles ELF/Mach-O/PE section iteration), `serde`/`serde_json`, `tracing`, `anyhow`. NO new crates.
 - 094-deflake-perf-tests: Added Rust stable (workspace toolchain inherited; no nightly required for this user-space test-infrastructure work). + existing only — `std::process::Command` for subprocess invocation, `tempfile`, `tar` (already used by current perf tests), `serde_json` (for byte-equivalence comparisons). The new GitHub Action `nick-fields/retry@v3` is permitted under FR-010 because it's a workflow YAML reference, not a Cargo dependency.
 - 093-repo-polish-quickwins: Added N/A — this milestone touches Markdown + (potentially) Cargo.toml metadata only. + None new. The existing `release.yml` artifact-naming convention is the only behavioral input that informs the cargo-binstall integration choice.
-- 092-fix-maven-version-extract: Added Rust stable (workspace toolchain inherited from milestones 001–091; no nightly required for this user-space-only bug fix). + existing only — `quick-xml = "0.31"` (already used by `parse_pom_xml`), `serde`/`serde_json`, `tracing`, `anyhow`. **No new crates.**
 
 
 <!-- MANUAL ADDITIONS START -->

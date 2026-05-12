@@ -220,6 +220,20 @@ pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
     // names `UPX0`/`UPX1` also match.
     let packer_kind = packer::detect(bytes);
 
+    // Milestone 096 FR-004 — dynamic-symbol names for ELF binaries.
+    // Fed to the symbol-fingerprint scanner. Empty for non-ELF or
+    // ELF binaries with `.dynsym` fully stripped.
+    let symbol_names = if class == "elf" {
+        use object::Object;
+        use object::ObjectSymbol;
+        file.dynamic_symbols()
+            .filter_map(|s| s.name().ok().map(str::to_string))
+            .filter(|s| !s.is_empty())
+            .collect()
+    } else {
+        Vec::new()
+    };
+
     Some(BinaryScan {
         binary_class: class,
         imports,
@@ -241,6 +255,7 @@ pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
         cargo_auditable,
         string_region,
         packer: packer_kind,
+        symbol_names,
     })
 }
 
@@ -398,6 +413,8 @@ fn scan_fat_macho(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
         cargo_auditable,
         string_region,
         packer: packer::detect(bytes),
+        // Fat Mach-O has no `.dynsym`; symbol fingerprinting is ELF-only in v1.
+        symbol_names: Vec::new(),
     })
 }
 

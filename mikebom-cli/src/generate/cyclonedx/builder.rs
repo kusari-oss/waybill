@@ -840,14 +840,15 @@ impl CycloneDxBuilder {
                             | "dynamic-linkage"
                             | "elf-note-package"
                             | "embedded-version-string"
+                            | "symbol-fingerprint"
                             | "python-stdlib-collapsed"
                             | "jdk-runtime-collapsed"
                     ),
                     "mikebom:evidence-kind value '{kind}' is not in the canonical \
                      enum (rpm-file | rpmdb-sqlite | rpmdb-bdb | \
                      dynamic-linkage | elf-note-package | \
-                     embedded-version-string | python-stdlib-collapsed | \
-                     jdk-runtime-collapsed)"
+                     embedded-version-string | symbol-fingerprint | \
+                     python-stdlib-collapsed | jdk-runtime-collapsed)"
                 );
                 properties.push(json!({
                     "name": "mikebom:evidence-kind",
@@ -907,9 +908,11 @@ impl CycloneDxBuilder {
                 }));
             }
             if let Some(ref packed) = component.binary_packed {
-                debug_assert_eq!(
-                    packed, "upx",
-                    "mikebom:binary-packed currently only valid as 'upx'"
+                debug_assert!(
+                    matches!(packed.as_str(), "upx" | "none"),
+                    "mikebom:binary-packed value '{packed}' is not in the canonical \
+                     enum (upx | none); milestone-096 Q2 always-emits 'none' on \
+                     file-level components when no packer is detected"
                 );
                 properties.push(json!({
                     "name": "mikebom:binary-packed",

@@ -15,8 +15,64 @@ use sha2::{Digest, Sha256};
 use super::cargo_auditable;
 use super::elf;
 use super::packer;
+use super::symbol_fingerprint;
 use super::version_strings;
 use super::super::package_db::{rpm_vendor_from_id, PackageDbEntry};
+
+/// Convert a symbol-fingerprint match into a `PackageDbEntry`. Milestone
+/// 096 FR-004 / US3. PURL has no `@<version>` segment — symbol presence
+/// alone can't pin a release. Confidence is intentionally lower than
+/// `embedded-version-string` (0.4 vs 0.6 conceptually; both map to the
+/// `heuristic` value in `mikebom:confidence` since the CDX evidence
+/// pipeline currently maps ALL package-db-derived entries to
+/// `manifest-analysis` / 0.85 — see milestone-097 follow-up for a real
+/// confidence-tier split). The `mikebom:fingerprint-symbols-matched`
+/// annotation carries the X/Y ratio for transparency per Constitution X.
+pub(super) fn symbol_match_to_entry(
+    m: &symbol_fingerprint::SymbolFingerprintMatch,
+    path: &Path,
+) -> Option<PackageDbEntry> {
+    let purl_str = format!(
+        "pkg:generic/{}",
+        mikebom_common::types::purl::encode_purl_segment(m.library),
+    );
+    let purl = mikebom_common::types::purl::Purl::new(&purl_str).ok()?;
+    let mut extra: std::collections::BTreeMap<String, serde_json::Value> =
+        Default::default();
+    extra.insert(
+        "mikebom:fingerprint-symbols-matched".to_string(),
+        serde_json::Value::String(format!("{}/{}", m.matched_count, m.total_count)),
+    );
+    Some(PackageDbEntry {
+        purl,
+        name: m.library.to_string(),
+        version: String::new(),
+        arch: None,
+        source_path: path.to_string_lossy().into_owned(),
+        depends: Vec::new(),
+        maintainer: None,
+        licenses: vec![],
+        lifecycle_scope: None,
+        requirement_range: None,
+        source_type: None,
+        sbom_tier: Some("analyzed".to_string()),
+        shade_relocation: None,
+        buildinfo_status: None,
+        evidence_kind: Some("symbol-fingerprint".to_string()),
+        binary_class: None,
+        binary_stripped: None,
+        linkage_kind: None,
+        detected_go: None,
+        confidence: Some("heuristic".to_string()),
+        binary_packed: None,
+        raw_version: None,
+        parent_purl: None,
+        npm_role: None,
+        co_owned_by: None,
+        hashes: Vec::new(),
+        extra_annotations: extra,
+    })
+}
 
 /// Convert a curated-scanner match into a `PackageDbEntry`.
 pub(super) fn version_match_to_entry(
@@ -281,6 +337,11 @@ pub(crate) struct BinaryScan {
     /// UPX or similar packer signature if detected (R7). `None`
     /// means no packer recognised; the linkage list is complete.
     pub packer: Option<packer::PackerKind>,
+    /// Exported dynamic-symbol names from ELF `.dynsym` — fed to the
+    /// symbol-fingerprint scanner (milestone 096 FR-004). Empty for
+    /// non-ELF binaries, ELF binaries with no `.dynsym`, and ELF
+    /// binaries whose dynamic-symbol set is fully stripped.
+    pub symbol_names: Vec<String>,
 }
 
 pub(super) fn make_file_level_component(
@@ -351,7 +412,18 @@ pub(super) fn make_file_level_component(
         // siblings from `go_binary.rs`.
         detected_go: if detected_go { Some(true) } else { None },
         confidence: None,
-        binary_packed: scan.packer.map(|p| p.as_str().to_string()),
+        // Milestone 096 Clarification Q2: always-emit
+        // `mikebom:binary-packed` on every file-level binary
+        // component. Value is the lowercase packer name when one is
+        // detected (currently `"upx"` only), `"none"` otherwise.
+        // Matches the existing `mikebom:binary-stripped` always-emit
+        // convention so downstream filters can use value-equality
+        // without presence checks.
+        binary_packed: Some(
+            scan.packer
+                .map(|p| p.as_str().to_string())
+                .unwrap_or_else(|| "none".to_string()),
+        ),
         raw_version: None,
         parent_purl: None,
         npm_role: None,
@@ -912,6 +984,7 @@ mod tests {
             cargo_auditable: None,
             string_region: Vec::new(),
             packer: None,
+            symbol_names: Vec::new(),
         }
     }
 

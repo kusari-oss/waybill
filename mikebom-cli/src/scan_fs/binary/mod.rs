@@ -24,6 +24,7 @@ pub mod macho;
 pub mod packer; // stub
 pub mod pe;
 pub mod python_collapse;
+pub mod symbol_fingerprint;
 pub mod version_strings;
 
 use std::path::Path;
@@ -39,7 +40,7 @@ mod scan;
 use discover::discover_binaries;
 use entry::{
     cargo_auditable_packages_to_entries, make_file_level_component, note_package_to_entry,
-    version_match_to_entry,
+    symbol_match_to_entry, version_match_to_entry,
 };
 use predicates::{
     detect_rootfs_kind, has_rpmdb_at, is_host_system_path, is_os_managed_directory, RootfsKind,
@@ -419,21 +420,64 @@ pub fn read(
             }
         }
 
-        // Curated embedded-version-string scanner per FR-025 / R6.
-        // Confined to read-only string sections per Q4 resolution.
-        // Every match emits `pkg:generic/<library>@<version>` tagged
-        // confidence=heuristic + sbom-tier=analyzed.
+        // Curated embedded-version-string scanner per FR-025 / R6
+        // PLUS milestone-096 FR-004 symbol-fingerprint scanner.
+        // Confined to read-only string sections (versions) and ELF
+        // `.dynsym` (symbols) — both attempt to identify libraries
+        // statically linked into unknown binaries.
+        //
+        // Per milestone-096 Clarification Q1: when BOTH techniques fire
+        // for the same library on the same binary, merge into ONE
+        // `PackageDbEntry` with both evidence trails. The version-string
+        // entry's PURL (with `@<version>`) wins because it carries
+        // higher-confidence identity; the symbol-fingerprint signal is
+        // recorded as a corroborating annotation
+        // (`mikebom:fingerprint-symbols-matched`) on the same component.
         //
         // v6: gated on `skip_file_level_and_linkage` so claimed
         // binaries (dpkg/rpm-owned, collapsed-by-python/jdk, go
         // binaries on Linux) don't double-emit `pkg:generic/curl`
         // alongside the package-db scanner's authoritative entry.
         if !skip_secondary_evidence {
+            // Per-binary, per-library composite-evidence collector.
+            // Key: lowercase library name (matches both `version_strings`
+            // `CuratedLibrary::slug()` and `symbol_fingerprint`'s
+            // `library` field — both already lowercase).
+            let mut by_library: std::collections::HashMap<
+                String,
+                PackageDbEntry,
+            > = std::collections::HashMap::new();
+
             for m in version_strings::scan(&scan.string_region) {
                 if let Some(entry) = version_match_to_entry(&m, &path) {
-                    out.push(entry);
+                    by_library.insert(m.library.slug().to_string(), entry);
                 }
             }
+            for m in symbol_fingerprint::scan(&scan.symbol_names) {
+                // Q1: if the version-string scanner already produced an
+                // entry for this library on this binary, just record the
+                // symbol-fingerprint corroboration on that entry. The
+                // higher-confidence version-string PURL pins identity.
+                if let Some(existing) = by_library.get_mut(m.library) {
+                    existing.extra_annotations.insert(
+                        "mikebom:fingerprint-symbols-matched".to_string(),
+                        serde_json::Value::String(format!(
+                            "{}/{}",
+                            m.matched_count, m.total_count
+                        )),
+                    );
+                    continue;
+                }
+                if let Some(entry) = symbol_match_to_entry(&m, &path) {
+                    by_library.insert(m.library.to_string(), entry);
+                }
+            }
+            // Deterministic order: sort by PURL string so cross-run
+            // golden bytes stay stable.
+            let mut new_entries: Vec<PackageDbEntry> =
+                by_library.into_values().collect();
+            new_entries.sort_by(|a, b| a.purl.as_str().cmp(b.purl.as_str()));
+            out.extend(new_entries);
         }
 
         // Milestone 029 — cargo-auditable per-crate components.
