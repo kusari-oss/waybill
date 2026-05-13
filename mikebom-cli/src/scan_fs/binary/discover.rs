@@ -123,7 +123,14 @@ pub(crate) fn detect_format(magic: &[u8]) -> Option<&'static str> {
     None
 }
 
-#[cfg(test)]
+// Milestone 100: the `tests` module is gated `#[cfg(unix)]` because
+// its only test (`walks_symlink_loop_without_hanging`) uses
+// `std::os::unix::fs::symlink`, which is POSIX-only. Without the
+// module-level gate, `use super::*;` would be unused on Windows and
+// trip `-D unused-imports`. If future Windows-portable tests are
+// added here, drop the module gate and reapply `#[cfg(unix)]` to
+// individual POSIX-only test functions instead.
+#[cfg(all(test, unix))]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;

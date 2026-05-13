@@ -249,7 +249,10 @@ pub fn annotate_component(
             .iter()
             .map(|o| {
                 let mut obj = serde_json::Map::new();
-                obj.insert("location".into(), json!(o.location));
+                obj.insert(
+                    "location".into(),
+                    json!(crate::scan_fs::sbom_path::normalize_sbom_path_str(&o.location)),
+                );
                 obj.insert("sha256".into(), json!(o.sha256));
                 if let Some(ref md5) = o.md5_legacy {
                     obj.insert("md5".into(), json!(md5));

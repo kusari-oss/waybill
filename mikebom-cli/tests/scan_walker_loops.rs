@@ -9,6 +9,14 @@
 //! invokes the actual `mikebom` binary subprocess (matching the
 //! existing `tests/scan_*.rs` integration-test pattern) so the
 //! coverage is end-to-end.
+//!
+//! Milestone 100: gated `#[cfg(unix)]` because the fixture builder
+//! uses `std::os::unix::fs::symlink` unconditionally. Windows symlink
+//! creation requires admin/developer-mode privileges that CI runners
+//! don't have, and the milestone-054 hang it regresses against is a
+//! POSIX-walker problem regardless. The walker still runs on Windows;
+//! the file-based loop topology this fixture relies on cannot.
+#![cfg(unix)]
 
 use std::path::Path;
 use std::process::Command;

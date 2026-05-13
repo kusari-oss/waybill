@@ -70,12 +70,13 @@ fn run_scan_in(
 /// See `cdx_regression.rs::normalize` for the full story.
 fn normalize_cdx(raw: &str) -> String {
     let ws = workspace_root();
-    let ws_str = ws.to_string_lossy().to_string();
-    // Milestone 090: rewrite the MIKEBOM_FIXTURES_DIR cache prefix to
-    // `<WORKSPACE>/tests/fixtures` so pre-090 goldens continue to match.
-    let fixtures_cache = env!("MIKEBOM_FIXTURES_DIR");
-    let pre_replace = raw.replace(
-        fixtures_cache,
+    // Milestone 100: use the shared cross-host helper so Windows
+    // hosts strip the `//?/` extended-length-path prefix that
+    // `canonicalize` prepends. Same rationale as the cdx_regression /
+    // spdx_regression / spdx3_regression helpers.
+    let (raw_aligned, ws_str, fixtures_cache) = common::normalize::cross_host_align(raw, &ws);
+    let pre_replace = raw_aligned.replace(
+        fixtures_cache.as_str(),
         format!("{ws_str}/tests/fixtures").as_str(),
     );
     let replaced = pre_replace.replace(ws_str.as_str(), "<WORKSPACE>");
@@ -124,7 +125,10 @@ fn strip_hashes(c: &mut serde_json::Value) {
 fn pinned_cargo_golden() -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/golden/cyclonedx/cargo.cdx.json");
-    std::fs::read_to_string(path).expect("read pinned cargo golden")
+    // Milestone 100: strip CR on read (Windows autocrlf safety).
+    std::fs::read_to_string(path)
+        .expect("read pinned cargo golden")
+        .replace("\r\n", "\n")
 }
 
 // ---- (a) default path + byte-identity ------------------------------------

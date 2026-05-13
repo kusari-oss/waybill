@@ -124,6 +124,11 @@ mod tests {
             .unwrap_or(false)
     }
 
+    // Milestone 100: `#[cfg(unix)]` — the PATH-override mechanism is
+    // POSIX-flavored (`/this/path/does/not/exist` doesn't behave the
+    // same on Windows; the daemon `inspect` flow itself is Linux-only
+    // anyway since Docker on Windows uses Windows-named-pipes / WSL2).
+    #[cfg(unix)]
     #[test]
     fn inspect_returns_unavailable_when_docker_not_on_path() {
         // We can't easily simulate "docker missing" because the

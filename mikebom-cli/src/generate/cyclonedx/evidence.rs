@@ -81,7 +81,7 @@ pub fn build_evidence(
                     ctx.insert("rpm_filedigest".to_string(), json!(rpm_fd));
                 }
                 json!({
-                    "location": o.location,
+                    "location": crate::scan_fs::sbom_path::normalize_sbom_path_str(&o.location),
                     "additionalContext": serde_json::to_string(&ctx)
                         .unwrap_or_default(),
                 })

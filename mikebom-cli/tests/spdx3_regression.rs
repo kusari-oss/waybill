@@ -90,7 +90,10 @@ fn assert_or_update_golden(label: &str, normalized: &str) {
         );
         return;
     }
-    let golden = std::fs::read_to_string(&path).expect("read pinned golden");
+    // Milestone 100: strip CR on read (Windows autocrlf safety).
+    let golden = std::fs::read_to_string(&path)
+        .expect("read pinned golden")
+        .replace("\r\n", "\n");
     if golden != normalized {
         let actual = path.with_extension("actual.json");
         std::fs::write(&actual, normalized.as_bytes()).expect("write actual.json for diff");
@@ -162,7 +165,11 @@ fn run_case(case: &EcosystemCase) {
 }
 
 // One test per ecosystem so a failure names the offender directly.
+//
+// Milestone 100: apk + deb + rpm readers are `#[cfg(unix)]`-gated;
+// see cdx_regression.rs for the rationale. Same gating here.
 
+#[cfg(unix)]
 #[test]
 fn apk_byte_identity() {
     run_case(&CASES[0]);
@@ -173,6 +180,7 @@ fn cargo_byte_identity() {
     run_case(&CASES[1]);
 }
 
+#[cfg(unix)]
 #[test]
 fn deb_byte_identity() {
     run_case(&CASES[2]);
@@ -203,6 +211,7 @@ fn pip_byte_identity() {
     run_case(&CASES[7]);
 }
 
+#[cfg(unix)]
 #[test]
 fn rpm_byte_identity() {
     run_case(&CASES[8]);

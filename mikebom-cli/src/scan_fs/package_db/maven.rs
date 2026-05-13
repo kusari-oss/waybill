@@ -5410,6 +5410,10 @@ mod tests {
         );
     }
 
+    // Milestone 100: `#[cfg(unix)]` — exercises Maven + RPM co-ownership
+    // (Fedora `/usr/share/java` layout). RPM is Linux-only, so the
+    // `co_owned_by=rpm` annotation assertion doesn't fire on Windows.
+    #[cfg(unix)]
     #[test]
     fn read_with_claims_emits_claimed_jars_with_co_ownership_tag() {
         // Simulate Fedora's `dnf install maven` layout: a JAR in
@@ -5497,6 +5501,9 @@ mod tests {
         );
     }
 
+    // Milestone 100: `#[cfg(unix)]` — same RPM co-ownership coupling
+    // as `read_with_claims_emits_claimed_jars_with_co_ownership_tag`.
+    #[cfg(unix)]
     #[test]
     fn read_with_claims_placeholder_version_filtered_even_when_claimed() {
         // A JAR with two embedded pom.properties: one with a concrete
@@ -5916,6 +5923,8 @@ mod tests {
         );
     }
 
+    // Milestone 100: `#[cfg(unix)]` — RPM co-ownership coupling.
+    #[cfg(unix)]
     #[test]
     fn fat_jar_primary_claimed_by_rpm_emits_normally() {
         // Post-PR-#2 regression guard (M3 refinement): a fat JAR
@@ -6363,6 +6372,9 @@ mod tests {
 
     /// Milestone 054 SC-002 + FR-009: walker terminates promptly on
     /// a synthesized minimal symlink-loop fixture instead of hanging.
+    ///
+    /// Milestone 100: `#[cfg(unix)]` — POSIX-only symlink API.
+    #[cfg(unix)]
     #[test]
     fn walks_symlink_loop_without_hanging() {
         let tmp = tempfile::tempdir().unwrap();

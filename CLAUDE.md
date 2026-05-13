@@ -94,6 +94,8 @@ Auto-generated from all feature plans. Last updated: 2026-05-13
 - Rust stable (workspace toolchain inherited from milestones 001–097; no nightly required). + Existing only — `object` crate's `section_by_name_bytes` (ELF), the existing `for_each_load_command` helper at `macho.rs:178` (Mach-O), the existing `PeFile32`/`PeFile64::optional_header()` accessor exposed by `object` 0.36 (PE). `serde`/`serde_json` for `Value` construction in the `extra_annotations` bag. **No new Cargo deps.** (098-compiler-version-extract)
 - N/A — pure read-only inference per scan; no caches, no persistence. (098-compiler-version-extract)
 - Rust stable (workspace toolchain inherited from milestones 001–098; no nightly required). + Existing only — `std::collections::HashSet` (already imported in milestone-096's `symbol_fingerprint.rs`). **No new Cargo deps.** (099-symbol-fingerprint-expand)
+- Rust stable (workspace toolchain inherited from milestones 001–099; no nightly required for Windows-host work). + Existing only. Workspace deps (`object`, `serde`, `clap`, `tokio`, `reqwest` with `rustls-tls`, `chrono`, `regex`, `sha2`, `git2`-free since we shell out to git) all support Windows. Verified at planning-time via `cargo tree --target x86_64-pc-windows-msvc -p mikebom` (run during T002). (100-windows-host-build)
+- N/A — pure host-portability work; no state additions. (100-windows-host-build)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -156,9 +158,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 100-windows-host-build: Added Rust stable (workspace toolchain inherited from milestones 001–099; no nightly required for Windows-host work). + Existing only. Workspace deps (`object`, `serde`, `clap`, `tokio`, `reqwest` with `rustls-tls`, `chrono`, `regex`, `sha2`, `git2`-free since we shell out to git) all support Windows. Verified at planning-time via `cargo tree --target x86_64-pc-windows-msvc -p mikebom` (run during T002).
 - 099-symbol-fingerprint-expand: Added Rust stable (workspace toolchain inherited from milestones 001–098; no nightly required). + Existing only — `std::collections::HashSet` (already imported in milestone-096's `symbol_fingerprint.rs`). **No new Cargo deps.**
 - 098-compiler-version-extract: Added Rust stable (workspace toolchain inherited from milestones 001–097; no nightly required). + Existing only — `object` crate's `section_by_name_bytes` (ELF), the existing `for_each_load_command` helper at `macho.rs:178` (Mach-O), the existing `PeFile32`/`PeFile64::optional_header()` accessor exposed by `object` 0.36 (PE). `serde`/`serde_json` for `Value` construction in the `extra_annotations` bag. **No new Cargo deps.**
-- 097-cpe-candidates: Added Rust stable (workspace toolchain inherited from milestones 001–096; no nightly required). + Existing only — `serde`/`serde_json` (CDX/SPDX JSON output), `tracing`, `anyhow`. No new Cargo deps.
 
 
 <!-- MANUAL ADDITIONS START -->

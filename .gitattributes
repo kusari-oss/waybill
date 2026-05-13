@@ -1,0 +1,16 @@
+# Milestone 100: keep byte-identity test fixtures + canonical-output
+# artifacts on LF regardless of the operator's git autocrlf setting.
+# On Windows, git's default `core.autocrlf=true` would convert LF →
+# CRLF on checkout, which breaks `cdx_regression` / `spdx_regression` /
+# `spdx3_regression` byte-equality assertions (the goldens were minted
+# on Linux with LF; the SBOM emitter writes LF on every host).
+
+# All SBOM goldens — pin to LF.
+mikebom-cli/tests/fixtures/golden/**/*.json text eol=lf
+
+# JSON files in general default to LF; safer than relying on host
+# autocrlf semantics for any committed JSON fixture.
+*.json text eol=lf
+
+# Rust source files — LF everywhere. cargo + rustfmt assume LF.
+*.rs text eol=lf

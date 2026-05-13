@@ -682,6 +682,9 @@ mod tests {
     /// a synthesized minimal symlink-loop fixture instead of hanging
     /// indefinitely. Pre-054 this would loop forever; post-054 the
     /// canonicalize-keyed visited-set breaks the cycle.
+    ///
+    /// Milestone 100: `#[cfg(unix)]` — POSIX-only symlink API.
+    #[cfg(unix)]
     #[test]
     fn walks_symlink_loop_without_hanging() {
         let tmp = tempfile::tempdir().unwrap();

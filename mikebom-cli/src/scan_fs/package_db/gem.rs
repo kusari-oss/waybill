@@ -1834,6 +1834,9 @@ end
     /// Milestone 054 SC-002 + FR-009: walker terminates promptly on
     /// a synthesized minimal symlink-loop fixture instead of hanging.
     /// Covers both gem walkers (find_gemfile_locks + find_gemspecs).
+    ///
+    /// Milestone 100: `#[cfg(unix)]` — POSIX-only symlink API.
+    #[cfg(unix)]
     #[test]
     fn walks_symlink_loop_without_hanging() {
         let tmp = tempfile::tempdir().unwrap();

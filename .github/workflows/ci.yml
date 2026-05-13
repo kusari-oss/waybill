@@ -248,6 +248,57 @@ jobs:
       - name: Tests
         run: cargo +stable test --workspace
 
+  # Milestone 100 — Windows-host build + test lane. Validates that the
+  # user-space readers (cargo / npm / pip / gem / maven / golang) +
+  # binary scanner compile and run cleanly on Windows. Linux-only
+  # readers (dpkg/rpm/apk), Docker daemon scanning, OCI pull, and
+  # eBPF are all `#[cfg(unix)]`-gated or feature-gated; cargo's
+  # target-metadata exclusion drops `mikebom-ebpf` on non-Linux.
+  # See specs/100-windows-host-build/.
+  lint-and-test-windows:
+    name: Lint + test (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false  # see lint-and-test job for rationale
+
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
+        with:
+          components: clippy
+
+      - name: Cache cargo + build artifacts
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
+
+      # Milestone 090 — fixture-repo cache. Windows uses the same
+      # ~/.cache/mikebom/fixtures path; the build.rs shells out to
+      # `git` which is preinstalled on `windows-latest` runners.
+      - name: Cache fixture repo
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ~/.cache/mikebom/fixtures
+          key: mikebom-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
+
+      - name: Clippy
+        run: cargo +stable clippy --workspace --all-targets -- -D warnings
+
+      # Milestone 100 ships build correctness (clippy `-D warnings`
+      # above is the gate) + SBOM emission with forward-slash paths
+      # + a Windows release artifact. Full `cargo test --workspace`
+      # parity on Windows is tracked in follow-up issue #210: the
+      # Linux-first test suite has hundreds of tests baking POSIX
+      # assumptions (HOME env var, /var/lib/dpkg paths, forward-
+      # slash substring matchers in production code, OCI cache
+      # atomic-rename) that need either #[cfg(unix)] gates or
+      # Windows-portable rewrites. The test step here runs but is
+      # marked `continue-on-error: true` so the per-test backlog
+      # surfaces in CI logs without blocking the MVP. When #210
+      # closes, drop the `continue-on-error` line.
+      - name: Tests (non-blocking, see issue #210)
+        continue-on-error: true
+        run: cargo +stable test --workspace
+
   # Opt-in eBPF lane. Pays the nightly + bpf-linker + xtask ebpf cost
   # so the user-space eBPF integration (mikebom-cli/src/trace/* +
   # `mikebom trace` subcommand) keeps working. Default lanes above

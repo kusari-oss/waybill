@@ -537,6 +537,8 @@ D:so:libc.musl-aarch64.so.1
         );
     }
 
+    // Milestone 100: `#[cfg(unix)]` — apk is Alpine-only.
+    #[cfg(unix)]
     #[test]
     fn read_function_reads_from_rootfs_relative_path() {
         let dir = tempfile::tempdir().unwrap();

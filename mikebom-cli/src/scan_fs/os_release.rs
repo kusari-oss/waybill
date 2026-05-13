@@ -587,6 +587,12 @@ mod tests {
         assert_eq!(read_version_id_from_rootfs(dir.path()), None);
     }
 
+    // Milestone 100: `#[cfg(unix)]` — the symlink/read flow being
+    // exercised is POSIX-only; os-release lives at well-known paths
+    // that don't exist on Windows anyway. Prior body used a
+    // `#[cfg(not(unix))]; return;` shim which clippy `-D warnings`
+    // rejected as `unreachable_code` on Windows.
+    #[cfg(unix)]
     #[test]
     fn rootfs_reader_follows_symlink_when_target_present() {
         // Happy-path: symlink is intact, target is present. The OS
@@ -596,10 +602,7 @@ mod tests {
         std::fs::create_dir_all(rootfs.join("etc")).unwrap();
         std::fs::create_dir_all(rootfs.join("usr/lib")).unwrap();
         std::fs::write(rootfs.join("usr/lib/os-release"), "ID=ubuntu\nVERSION_ID=24.04\n").unwrap();
-        #[cfg(unix)]
         std::os::unix::fs::symlink("../usr/lib/os-release", rootfs.join("etc/os-release")).unwrap();
-        #[cfg(not(unix))]
-        return;
         assert_eq!(read_id_from_rootfs(rootfs), Some("ubuntu".to_string()));
     }
 }

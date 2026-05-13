@@ -106,9 +106,56 @@ pub const TIMESTAMP_PLACEHOLDER: &str = "1970-01-01T00:00:00Z";
 
 /// Stand-in for the absolute path of the workspace root. Macs emit
 /// `/Users/<user>/Projects/mikebom/...`; CI Linux emits
-/// `/home/runner/work/mikebom/mikebom/...`; both rewrite to this
-/// literal so a golden pinned on one host matches on the other.
+/// `/home/runner/work/mikebom/mikebom/...`; CI Windows emits
+/// `//?/D:/a/mikebom/mikebom/...` (extended-length-path form,
+/// forward-slashed via milestone-100 normalization); all three
+/// rewrite to this literal so a golden pinned on one host matches
+/// on the others.
 pub const WORKSPACE_PLACEHOLDER: &str = "<WORKSPACE>";
+
+/// Milestone 100: rewrite host-scoped path prefixes in `raw` so the
+/// CDX/SPDX-2.3/SPDX-3 normalizers can string-replace `workspace` and
+/// `MIKEBOM_FIXTURES_DIR` against forward-slash, extended-prefix-free
+/// space regardless of host OS.
+///
+/// On Unix this is essentially a no-op (the input strings already use
+/// forward-slash and don't carry the Windows `\\?\` extended-length-
+/// path prefix). On Windows the SBOM emitter (per milestone 100)
+/// emits forward-slash paths but `std::fs::canonicalize` returns
+/// `\\?\C:\...` form which milestone 100 then forward-slashes to
+/// `//?/C:/...`. We strip that prefix here so the replace target
+/// matches the emitted strings.
+pub fn cross_host_align(raw: &str, workspace: &Path) -> (String, String, String) {
+    let ws_str = workspace.to_string_lossy().to_string();
+    let fixtures_cache: String = env!("MIKEBOM_FIXTURES_DIR").into();
+    if cfg!(windows) {
+        // Milestone 100 already forward-slashes path strings in the
+        // emitted SBOM via `normalize_sbom_path_str`. The remaining
+        // Windows-specific drift is the `\\?\` extended-length-path
+        // prefix that `std::fs::canonicalize` prepends; milestone-100
+        // normalization converts `\\?\` → `//?/`. Strip that from raw
+        // so the prefix-less workspace + fixtures-cache strings (which
+        // we forward-slash-normalize below) match it.
+        //
+        // DO NOT replace every `\` in raw with `/` — JSON content can
+        // contain legitimate backslash escapes (CPE 2.3 strings use
+        // `\/` as the literal `/`-escape per the CPE spec, which
+        // serializes as `\\/` in JSON; rewriting those would corrupt
+        // them, e.g. `cpe:2.3:a:github.com\/foo` → `github.com///foo`).
+        let raw_aligned = raw.replace("//?/", "");
+        let ws_fs = ws_str
+            .replace('\\', "/")
+            .trim_start_matches("//?/")
+            .to_string();
+        let fc_fs = fixtures_cache
+            .replace('\\', "/")
+            .trim_start_matches("//?/")
+            .to_string();
+        (raw_aligned, ws_fs, fc_fs)
+    } else {
+        (raw.to_string(), ws_str, fixtures_cache)
+    }
+}
 
 /// Normalize a raw CycloneDX scan output for golden comparison.
 ///
@@ -122,14 +169,16 @@ pub const WORKSPACE_PLACEHOLDER: &str = "<WORKSPACE>";
 /// produced by `serde_json::to_string_pretty`, which is what every
 /// existing committed golden was written with).
 pub fn normalize_cdx_for_golden(raw: &str, workspace: &Path) -> String {
-    let ws_str = workspace.to_string_lossy().to_string();
     // Milestone 090: when fixtures resolve through MIKEBOM_FIXTURES_DIR
     // (`~/.cache/mikebom/fixtures/<sha>/`), rewrite that prefix to
     // `<WORKSPACE>/tests/fixtures` so existing pre-090 goldens (which
     // recorded the in-repo fixture paths) match without regen.
-    let fixtures_cache = env!("MIKEBOM_FIXTURES_DIR");
-    let pre_replace = raw.replace(
-        fixtures_cache,
+    //
+    // Milestone 100: forward-slash + extended-prefix-strip applied by
+    // `cross_host_align` so Windows runners can match the same goldens.
+    let (raw_aligned, ws_str, fixtures_cache) = cross_host_align(raw, workspace);
+    let pre_replace = raw_aligned.replace(
+        fixtures_cache.as_str(),
         format!("{ws_str}/tests/fixtures").as_str(),
     );
     let replaced = pre_replace.replace(ws_str.as_str(), WORKSPACE_PLACEHOLDER);
@@ -180,14 +229,11 @@ fn strip_cdx_component_hashes(c: &mut serde_json::Value) {
 /// masking + `packages[].checksums[]` strip run on the parsed JSON;
 /// pretty-printed serialized string returned (no trailing newline).
 pub fn normalize_spdx23_for_golden(raw: &str, workspace: &Path) -> String {
-    let ws_str = workspace.to_string_lossy().to_string();
-    // Milestone 090: when fixtures resolve through MIKEBOM_FIXTURES_DIR
-    // (`~/.cache/mikebom/fixtures/<sha>/`), rewrite that prefix to
-    // `<WORKSPACE>/tests/fixtures` so existing pre-090 goldens (which
-    // recorded the in-repo fixture paths) match without regen.
-    let fixtures_cache = env!("MIKEBOM_FIXTURES_DIR");
-    let pre_replace = raw.replace(
-        fixtures_cache,
+    // Milestone 090 + 100: see normalize_cdx_for_golden for the
+    // host-path-alignment rationale.
+    let (raw_aligned, ws_str, fixtures_cache) = cross_host_align(raw, workspace);
+    let pre_replace = raw_aligned.replace(
+        fixtures_cache.as_str(),
         format!("{ws_str}/tests/fixtures").as_str(),
     );
     let replaced = pre_replace.replace(ws_str.as_str(), WORKSPACE_PLACEHOLDER);
@@ -251,14 +297,11 @@ fn mask_spdx23_annotation_dates(annotations: &mut [serde_json::Value]) {
 /// `verifiedUsing[]`). Document IRI is content-derived (host-stable
 /// per `spdx3_determinism.rs:11-13`) so left alone.
 pub fn normalize_spdx3_for_golden(raw: &str, workspace: &Path) -> String {
-    let ws_str = workspace.to_string_lossy().to_string();
-    // Milestone 090: when fixtures resolve through MIKEBOM_FIXTURES_DIR
-    // (`~/.cache/mikebom/fixtures/<sha>/`), rewrite that prefix to
-    // `<WORKSPACE>/tests/fixtures` so existing pre-090 goldens (which
-    // recorded the in-repo fixture paths) match without regen.
-    let fixtures_cache = env!("MIKEBOM_FIXTURES_DIR");
-    let pre_replace = raw.replace(
-        fixtures_cache,
+    // Milestone 090 + 100: see normalize_cdx_for_golden for the
+    // host-path-alignment rationale.
+    let (raw_aligned, ws_str, fixtures_cache) = cross_host_align(raw, workspace);
+    let pre_replace = raw_aligned.replace(
+        fixtures_cache.as_str(),
         format!("{ws_str}/tests/fixtures").as_str(),
     );
     let replaced = pre_replace.replace(ws_str.as_str(), WORKSPACE_PLACEHOLDER);
