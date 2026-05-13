@@ -123,7 +123,14 @@ pub(crate) fn detect_format(magic: &[u8]) -> Option<&'static str> {
     None
 }
 
-#[cfg(test)]
+// Milestone 100: the `tests` module is gated `#[cfg(unix)]` because
+// its only test (`walks_symlink_loop_without_hanging`) uses
+// `std::os::unix::fs::symlink`, which is POSIX-only. Without the
+// module-level gate, `use super::*;` would be unused on Windows and
+// trip `-D unused-imports`. If future Windows-portable tests are
+// added here, drop the module gate and reapply `#[cfg(unix)]` to
+// individual POSIX-only test functions instead.
+#[cfg(all(test, unix))]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
@@ -131,11 +138,6 @@ mod tests {
     /// Milestone 054 SC-002 + FR-009: walker terminates promptly on
     /// a synthesized minimal symlink-loop fixture instead of hanging
     /// indefinitely. Same shape as rpm_file's regression guard.
-    ///
-    /// Milestone 100: `#[cfg(unix)]` — `std::os::unix::fs::symlink`
-    /// is POSIX-only; Windows symlink creation needs admin/developer-
-    /// mode privileges that CI runners lack.
-    #[cfg(unix)]
     #[test]
     fn walks_symlink_loop_without_hanging() {
         let tmp = tempfile::tempdir().unwrap();
