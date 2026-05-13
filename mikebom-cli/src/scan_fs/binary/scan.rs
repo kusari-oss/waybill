@@ -194,10 +194,14 @@ pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
     // Mach-O leave all three at default. Bit-width (PE32 vs PE32+)
     // is auto-dispatched inside `parse_pe_identity` by reading
     // IMAGE_OPTIONAL_HEADER.Magic.
-    let (pe_pdb_id, pe_machine, pe_subsystem) = if class == "pe" {
+    //
+    // Milestone 098 — `pe_linker_version` is the 4th tuple element.
+    // Always-emit on parseable PEs (zero-zero → "0.0"); `None` only
+    // when the PE parser itself failed.
+    let (pe_pdb_id, pe_machine, pe_subsystem, pe_linker_version) = if class == "pe" {
         super::pe::parse_pe_identity(bytes)
     } else {
-        (None, None, None)
+        (None, None, None, None)
     };
 
     // Milestone 029 — cargo-auditable manifest extraction. The
@@ -234,6 +238,29 @@ pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
         Vec::new()
     };
 
+    // Milestone 098 FR-001 — ELF `.comment` compiler stamps.
+    // Empty for non-ELF or ELF binaries lacking the section
+    // (`cc -fno-ident` or `objcopy --remove-section=.comment`).
+    let comment_stamps = if class == "elf" {
+        file.section_by_name_bytes(b".comment")
+            .and_then(|s| s.data().ok())
+            .map(elf::parse_comment_section)
+            .unwrap_or_default()
+    } else {
+        Vec::new()
+    };
+
+    // Milestone 098 FR-002 — Mach-O `LC_BUILD_VERSION` full record.
+    // `None` for non-Mach-O or for Mach-O binaries built only with
+    // legacy `LC_VERSION_MIN_*` commands (`min_os` extraction from
+    // those is handled separately by milestone-024's
+    // `parse_min_os_version`).
+    let macho_build_version = if class == "macho" {
+        super::macho::parse_build_version_full(bytes)
+    } else {
+        None
+    };
+
     Some(BinaryScan {
         binary_class: class,
         imports,
@@ -256,6 +283,9 @@ pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
         string_region,
         packer: packer_kind,
         symbol_names,
+        comment_stamps,
+        macho_build_version,
+        pe_linker_version,
     })
 }
 
@@ -415,6 +445,14 @@ fn scan_fat_macho(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
         packer: packer::detect(bytes),
         // Fat Mach-O has no `.dynsym`; symbol fingerprinting is ELF-only in v1.
         symbol_names: Vec::new(),
+        // Milestone 098: `.comment` is ELF-only.
+        comment_stamps: Vec::new(),
+        // Milestone 098 FR-002: extract LC_BUILD_VERSION from the FIRST
+        // slice of a fat Mach-O — same first-slice convention as
+        // LC_UUID / LC_RPATH / min-OS above per milestone-024 precedent.
+        macho_build_version: super::macho::parse_build_version_full(first_slice),
+        // Milestone 098: PE linker-version is PE-only.
+        pe_linker_version: None,
     })
 }
 

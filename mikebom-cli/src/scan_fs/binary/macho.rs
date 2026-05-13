@@ -60,6 +60,37 @@ const PLATFORM_WATCHOSSIMULATOR: u32 = 9;
 const PLATFORM_DRIVERKIT: u32 = 10;
 const PLATFORM_XROS: u32 = 11;
 
+/// Tool IDs from `<mach-o/loader.h>::struct build_tool_version`. Used by
+/// `parse_build_version_full` (milestone 098 FR-002).
+const TOOL_CLANG: u32 = 1;
+const TOOL_SWIFT: u32 = 2;
+const TOOL_LD: u32 = 3;
+const TOOL_LLD: u32 = 4;
+const TOOL_METAL: u32 = 1024;
+const TOOL_AIRLLD: u32 = 1025;
+
+/// Full `LC_BUILD_VERSION` record per milestone-098 FR-002. Filled in by
+/// `parse_build_version_full`; consumed by
+/// `entry.rs::build_macho_identity_annotations` to emit the
+/// `mikebom:macho-build-version` and `mikebom:macho-build-tools`
+/// annotation properties on the file-level binary component.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct MachoBuildVersion {
+    /// Apple platform name (`macos`, `ios`, `tvos`, `watchos`, `xros`,
+    /// etc.) or `unknown-<numeric-id>` for IDs not in the v1 lookup
+    /// table per FR-002.
+    pub platform: String,
+    /// Minimum-OS version as `<major>.<minor>[.<patch>]` per the same
+    /// nibble-packing convention `parse_min_os_version` uses.
+    pub min_os: String,
+    /// SDK version (same packing as `min_os`).
+    pub sdk: String,
+    /// Build-tool list in declaration order. Each entry is
+    /// `(tool_name, version)` where `tool_name` falls back to
+    /// `unknown-<numeric-id>` for IDs not in the v1 lookup table.
+    pub tools: Vec<(String, String)>,
+}
+
 /// Detected Mach-O wire format. Returned by `decode_header`.
 struct MachoHeader {
     /// True for little-endian encoding.
@@ -238,6 +269,90 @@ pub fn parse_min_os_version(bytes: &[u8]) -> Option<String> {
         // VersionMinCommand layout: cmd(4) + cmdsize(4) + version(4) + sdk(4).
         let version_packed = read_u32(cmd_bytes, 8, header.little_endian)?;
         Some(format!("{platform}:{}", decode_packed_version(version_packed)))
+    })
+}
+
+/// Parse a Mach-O byte slice's `LC_BUILD_VERSION` load command in full
+/// per milestone-098 FR-002 — platform + min_os + sdk + tools-array.
+/// Returns `None` for non-Mach-O bytes, malformed headers, or binaries
+/// lacking `LC_BUILD_VERSION` (e.g. legacy builds carrying only
+/// `LC_VERSION_MIN_*` — `parse_min_os_version` continues to extract
+/// `min_os` from those independently).
+///
+/// **Layout** (`<mach-o/loader.h>::struct build_version_command`):
+/// `cmd(4) + cmdsize(4) + platform(4) + minos(4) + sdk(4) + ntools(4)`
+/// followed by `ntools` × `struct build_tool_version { tool(4) + version(4) }`.
+///
+/// **Defensive parsing** per FR-008 + Edge Case: if `ntools` claims
+/// more records than fit in `cmdsize`, stop at the first record that
+/// runs off the end. The function returns a partial result with the
+/// successfully-parsed tools; never panics. Unknown platform IDs and
+/// unknown tool IDs are stringified as `unknown-<numeric-id>` (per
+/// FR-002 wording fix from analyze I1).
+pub fn parse_build_version_full(bytes: &[u8]) -> Option<MachoBuildVersion> {
+    let header = decode_header(bytes)?;
+    for_each_load_command(bytes, &header, |cmd, cmd_bytes| {
+        if cmd != LC_BUILD_VERSION {
+            return None;
+        }
+        let platform_id = read_u32(cmd_bytes, 8, header.little_endian)?;
+        let minos_packed = read_u32(cmd_bytes, 12, header.little_endian)?;
+        let sdk_packed = read_u32(cmd_bytes, 16, header.little_endian)?;
+        let ntools = read_u32(cmd_bytes, 20, header.little_endian)? as usize;
+
+        let platform = platform_name(platform_id)
+            .map(str::to_string)
+            .unwrap_or_else(|| format!("unknown-{platform_id}"));
+
+        let mut tools: Vec<(String, String)> = Vec::new();
+        for i in 0..ntools {
+            let base = 24 + i * 8;
+            // Defensive: stop at first record that runs off cmdsize.
+            // The for_each_load_command helper guarantees cmd_bytes.len()
+            // == cmdsize, so this check is the meaningful bound.
+            let Some(tool_id) = read_u32(cmd_bytes, base, header.little_endian) else {
+                tracing::warn!(
+                    "LC_BUILD_VERSION ntools={} exceeds cmdsize; stopping at record {}",
+                    ntools,
+                    i
+                );
+                break;
+            };
+            let Some(version_packed) = read_u32(cmd_bytes, base + 4, header.little_endian)
+            else {
+                tracing::warn!(
+                    "LC_BUILD_VERSION tool record {} has truncated version field",
+                    i
+                );
+                break;
+            };
+            let tool_str = tool_name(tool_id)
+                .map(str::to_string)
+                .unwrap_or_else(|| format!("unknown-{tool_id}"));
+            tools.push((tool_str, decode_packed_version(version_packed)));
+        }
+
+        Some(MachoBuildVersion {
+            platform,
+            min_os: decode_packed_version(minos_packed),
+            sdk: decode_packed_version(sdk_packed),
+            tools,
+        })
+    })
+}
+
+/// Map an LC_BUILD_VERSION tool enum value to a lowercase string per
+/// `<mach-o/loader.h>`. Unknown tool IDs return `None`; the caller in
+/// `parse_build_version_full` synthesizes `unknown-<id>` for those.
+fn tool_name(id: u32) -> Option<&'static str> {
+    Some(match id {
+        TOOL_CLANG => "clang",
+        TOOL_SWIFT => "swift",
+        TOOL_LD => "ld",
+        TOOL_LLD => "lld",
+        TOOL_METAL => "metal",
+        TOOL_AIRLLD => "airlld",
+        _ => return None,
     })
 }
 
@@ -908,5 +1023,147 @@ mod tests {
         assert_eq!(parse_codesign_identifier(&macho), None);
         assert!(parse_codesign_flags(&macho).is_empty());
         assert_eq!(parse_codesign_team_id(&macho), None);
+    }
+
+    // ====================================================================
+    // Milestone 098 — LC_BUILD_VERSION full record parser (FR-002)
+    // ====================================================================
+
+    /// Build an LC_BUILD_VERSION load command WITH tools, per
+    /// milestone-098 T019-T021 fixtures. Layout:
+    /// cmd(4) + cmdsize(4) + platform(4) + minos(4) + sdk(4) + ntools(4)
+    /// + ntools × { tool(4) + version(4) }.
+    fn build_lc_build_version_full(
+        platform: u32,
+        packed_minos: u32,
+        packed_sdk: u32,
+        tools: &[(u32, u32)],
+    ) -> Vec<u8> {
+        let ntools = tools.len() as u32;
+        let cmdsize: u32 = 24 + 8 * ntools;
+        let mut cmd = Vec::with_capacity(cmdsize as usize);
+        cmd.extend_from_slice(&LC_BUILD_VERSION.to_le_bytes());
+        cmd.extend_from_slice(&cmdsize.to_le_bytes());
+        cmd.extend_from_slice(&platform.to_le_bytes());
+        cmd.extend_from_slice(&packed_minos.to_le_bytes());
+        cmd.extend_from_slice(&packed_sdk.to_le_bytes());
+        cmd.extend_from_slice(&ntools.to_le_bytes());
+        for (tool, version) in tools {
+            cmd.extend_from_slice(&tool.to_le_bytes());
+            cmd.extend_from_slice(&version.to_le_bytes());
+        }
+        cmd
+    }
+
+    /// Build an LC_BUILD_VERSION load command with a deliberately
+    /// inflated `ntools` field — `cmdsize` says we have 2 tools but
+    /// the ntools count claims 5. Used by T021 defensive-parse test.
+    fn build_lc_build_version_mismatched_ntools(
+        platform: u32,
+        packed_minos: u32,
+        packed_sdk: u32,
+        actual_tools: &[(u32, u32)],
+        claimed_ntools: u32,
+    ) -> Vec<u8> {
+        let actual_ntools = actual_tools.len() as u32;
+        // cmdsize reflects ACTUAL number of tools (so the load-command
+        // framework accepts the cmd), but ntools field claims more.
+        let cmdsize: u32 = 24 + 8 * actual_ntools;
+        let mut cmd = Vec::with_capacity(cmdsize as usize);
+        cmd.extend_from_slice(&LC_BUILD_VERSION.to_le_bytes());
+        cmd.extend_from_slice(&cmdsize.to_le_bytes());
+        cmd.extend_from_slice(&platform.to_le_bytes());
+        cmd.extend_from_slice(&packed_minos.to_le_bytes());
+        cmd.extend_from_slice(&packed_sdk.to_le_bytes());
+        cmd.extend_from_slice(&claimed_ntools.to_le_bytes());
+        for (tool, version) in actual_tools {
+            cmd.extend_from_slice(&tool.to_le_bytes());
+            cmd.extend_from_slice(&version.to_le_bytes());
+        }
+        cmd
+    }
+
+    /// T019 — happy path: platform=macos, minos=14.0, sdk=14.4,
+    /// 2 tools (clang + ld).
+    #[test]
+    fn parse_build_version_full_happy_path() {
+        // 14.0 → packed: major=14, minor=0, patch=0.
+        let minos = 14u32 << 16;
+        // 14.4 → packed: major=14, minor=4, patch=0.
+        let sdk = (14u32 << 16) | (4u32 << 8);
+        // clang 1500.0.40 → major=1500, minor=0, patch=40.
+        let clang_version = (1500u32 << 16) | 40u32;
+        // ld 1015.0.0 → major=1015, rest zero.
+        let ld_version = 1015u32 << 16;
+        let cmd = build_lc_build_version_full(
+            PLATFORM_MACOS,
+            minos,
+            sdk,
+            &[(TOOL_CLANG, clang_version), (TOOL_LD, ld_version)],
+        );
+        let macho = build_macho_64_le(&[cmd]);
+
+        let bv = parse_build_version_full(&macho).expect("LC_BUILD_VERSION present");
+        assert_eq!(bv.platform, "macos");
+        assert_eq!(bv.min_os, "14.0");
+        assert_eq!(bv.sdk, "14.4");
+        assert_eq!(bv.tools.len(), 2);
+        assert_eq!(bv.tools[0].0, "clang");
+        assert_eq!(bv.tools[0].1, "1500.0.40");
+        assert_eq!(bv.tools[1].0, "ld");
+        assert_eq!(bv.tools[1].1, "1015.0");
+    }
+
+    /// T020 — unknown platform ID stringified as `unknown-<id>`
+    /// per FR-002 (wording fix from analyze I1).
+    #[test]
+    fn parse_build_version_full_unknown_platform() {
+        let cmd = build_lc_build_version_full(9999, 0, 0, &[]);
+        let macho = build_macho_64_le(&[cmd]);
+
+        let bv = parse_build_version_full(&macho).expect("LC_BUILD_VERSION present");
+        assert_eq!(bv.platform, "unknown-9999");
+    }
+
+    /// T021 — defensive parse: `ntools` claims 5 records but cmdsize
+    /// only fits 2. Parser stops at first record that runs off, emits
+    /// `tracing::warn!`, returns partial result with 2 successfully
+    /// parsed tools. FR-008 + Edge Case.
+    #[test]
+    fn parse_build_version_full_malformed_ntools() {
+        let cmd = build_lc_build_version_mismatched_ntools(
+            PLATFORM_MACOS,
+            0,
+            0,
+            &[(TOOL_CLANG, 0), (TOOL_LD, 0)],
+            5, // claimed
+        );
+        let macho = build_macho_64_le(&[cmd]);
+
+        let bv = parse_build_version_full(&macho).expect("LC_BUILD_VERSION present");
+        // Despite ntools=5, only 2 successfully-parsed tools.
+        assert_eq!(bv.tools.len(), 2);
+    }
+
+    /// T022 — missing LC_BUILD_VERSION returns None. Mach-O carrying
+    /// only an LC_VERSION_MIN_MACOSX (legacy) trips this case.
+    #[test]
+    fn parse_build_version_full_missing_command() {
+        let cmd = build_lc_version_min(LC_VERSION_MIN_MACOSX, (10u32 << 16) | (15u32 << 8));
+        let macho = build_macho_64_le(&[cmd]);
+
+        assert_eq!(parse_build_version_full(&macho), None);
+    }
+
+    /// T022a — analyze C2 fix: the `platform_name` lookup table
+    /// covers all 5 SC-002-documented platform IDs. Guards against a
+    /// future maintainer dropping a row.
+    #[test]
+    fn platform_name_covers_all_documented_platforms() {
+        assert_eq!(platform_name(PLATFORM_MACOS), Some("macos"));
+        assert_eq!(platform_name(PLATFORM_IOS), Some("ios"));
+        assert_eq!(platform_name(PLATFORM_TVOS), Some("tvos"));
+        assert_eq!(platform_name(PLATFORM_WATCHOS), Some("watchos"));
+        assert_eq!(platform_name(PLATFORM_XROS), Some("xros"));
     }
 }

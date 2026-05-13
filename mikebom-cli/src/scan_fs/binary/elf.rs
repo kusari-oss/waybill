@@ -242,6 +242,60 @@ pub fn extract_runpath_entries(
     paths
 }
 
+/// Parse the ELF `.comment` section's NUL-delimited compiler stamps
+/// per milestone-098 FR-001. Returns a `Vec<String>` of unique entries
+/// in first-occurrence order. Each entry is lossy-UTF-8-decoded
+/// (`String::from_utf8_lossy`) so non-UTF-8 bytes produce the
+/// replacement character `\u{FFFD}` rather than failing.
+///
+/// Caps:
+/// - **Per-entry**: 4 KiB. Entries longer than 4 KiB are truncated
+///   with a trailing ` ... (truncated)` suffix.
+/// - **Total**: 64 KiB. When the running total exceeds the cap, no
+///   further entries are appended and a final `"... (truncated)"`
+///   marker entry replaces the overflow.
+///
+/// The within-binary dedup is necessary because `ld` concatenates
+/// `.comment` from input objects without deduplicating identical
+/// entries — a static-library-heavy build can emit hundreds of
+/// identical GCC stamps that would otherwise inflate the property.
+pub fn parse_comment_section(data: &[u8]) -> Vec<String> {
+    const PER_ENTRY_CAP: usize = 4096;
+    const TOTAL_CAP: usize = 64 * 1024;
+    const TRUNCATION_MARKER: &str = "... (truncated)";
+
+    let mut seen: std::collections::HashSet<Vec<u8>> = std::collections::HashSet::new();
+    let mut out: Vec<String> = Vec::new();
+    let mut total_bytes: usize = 0;
+
+    for entry in data.split(|&b| b == 0) {
+        if entry.is_empty() {
+            continue;
+        }
+        if !seen.insert(entry.to_vec()) {
+            continue;
+        }
+        let entry_str: String = if entry.len() <= PER_ENTRY_CAP {
+            String::from_utf8_lossy(entry).into_owned()
+        } else {
+            let mut s = String::from_utf8_lossy(&entry[..PER_ENTRY_CAP]).into_owned();
+            s.push_str(" ... (truncated)");
+            s
+        };
+        // Strict total-cap check BEFORE push: would adding this entry
+        // exceed the cap? If yes, append the truncation marker and
+        // stop. Guarantees the emitted Vec's combined byte length stays
+        // ≤ TOTAL_CAP + len(TRUNCATION_MARKER).
+        if total_bytes.saturating_add(entry_str.len()) > TOTAL_CAP {
+            out.push(TRUNCATION_MARKER.to_string());
+            return out;
+        }
+        total_bytes = total_bytes.saturating_add(entry_str.len());
+        out.push(entry_str);
+    }
+    out
+}
+
 /// Produce the parent-binary path for `evidence.occurrences[]` —
 /// purposely absolute so cross-scan diffs are stable.
 #[allow(dead_code)]
@@ -549,5 +603,96 @@ mod tests {
 
         let paths = extract_runpath_entries(&dynamic, &dynstr, false, false);
         assert_eq!(paths, vec!["/be/path".to_string()]);
+    }
+
+    // ====================================================================
+    // Milestone 098 — ELF `.comment` parser (FR-001)
+    // ====================================================================
+
+    /// T008 — single GCC stamp. Typical default `gcc` output.
+    #[test]
+    fn parse_comment_section_single_stamp() {
+        let data = b"GCC: (Debian 12.2.0-14) 12.2.0\0";
+        let stamps = parse_comment_section(data);
+        assert_eq!(stamps, vec!["GCC: (Debian 12.2.0-14) 12.2.0".to_string()]);
+    }
+
+    /// T009 — multi-toolchain dedup. `ld` concatenated `.comment`
+    /// from input objects can include duplicate entries; dedup
+    /// preserves first-occurrence order.
+    #[test]
+    fn parse_comment_section_multi_toolchain_dedup() {
+        // GCC + clang + duplicate GCC, all NUL-separated.
+        let data = b"GCC: 12.2.0\0clang version 14.0.6\0GCC: 12.2.0\0";
+        let stamps = parse_comment_section(data);
+        assert_eq!(
+            stamps,
+            vec![
+                "GCC: 12.2.0".to_string(),
+                "clang version 14.0.6".to_string(),
+            ]
+        );
+    }
+
+    /// T010 — per-entry 4 KiB cap. An oversized entry truncates to
+    /// 4 KiB plus a ` ... (truncated)` suffix.
+    #[test]
+    fn parse_comment_section_oversize_truncation() {
+        let huge = vec![b'A'; 5000]; // 5000 bytes of 'A'
+        let mut data = huge.clone();
+        data.push(0);
+        let stamps = parse_comment_section(&data);
+        assert_eq!(stamps.len(), 1);
+        // Truncation marker present.
+        assert!(stamps[0].ends_with(" ... (truncated)"));
+        // Content matches the first 4 KiB.
+        assert!(stamps[0].starts_with(&"A".repeat(4096)));
+        // Total length = 4096 + len(" ... (truncated)").
+        assert_eq!(stamps[0].len(), 4096 + " ... (truncated)".len());
+    }
+
+    /// T011 — total 64 KiB cap. When the accumulated property size
+    /// exceeds the cap, subsequent entries are replaced by a single
+    /// `"... (truncated)"` marker entry.
+    #[test]
+    fn parse_comment_section_total_cap() {
+        // 200 entries of 500 bytes each ≈ 100 KiB — exceeds 64 KiB.
+        let mut data = Vec::new();
+        for i in 0..200 {
+            let entry = format!("compiler-stamp-{i:03}-{}", "X".repeat(480));
+            data.extend_from_slice(entry.as_bytes());
+            data.push(0);
+        }
+        let stamps = parse_comment_section(&data);
+        // Last entry must be the truncation marker.
+        assert_eq!(stamps.last().map(String::as_str), Some("... (truncated)"));
+        // Should NOT have all 200 entries.
+        assert!(stamps.len() < 201);
+        // Total emitted bytes (entries + marker) ≤ 64 KiB + marker.
+        let total_bytes: usize = stamps.iter().map(String::len).sum();
+        assert!(
+            total_bytes <= 64 * 1024 + "... (truncated)".len(),
+            "total_bytes={total_bytes} should be ≤ 64 KiB + marker",
+        );
+    }
+
+    /// T012 — empty section. Bytes are all NULs (placeholder section
+    /// with no actual stamp). No emission.
+    #[test]
+    fn parse_comment_section_empty_section() {
+        assert!(parse_comment_section(b"\0\0\0\0\0").is_empty());
+        assert!(parse_comment_section(b"").is_empty());
+    }
+
+    /// T013 — non-UTF-8 bytes. Lossy decode emits the replacement
+    /// character `\u{FFFD}` rather than failing. Edge Case US1#4.
+    #[test]
+    fn parse_comment_section_non_utf8() {
+        // `0xFF` is not valid UTF-8.
+        let data = b"GCC \xff broken\0";
+        let stamps = parse_comment_section(data);
+        assert_eq!(stamps.len(), 1);
+        // U+FFFD is the Unicode replacement character.
+        assert!(stamps[0].contains('\u{FFFD}'), "got {:?}", stamps[0]);
     }
 }

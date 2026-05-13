@@ -59,7 +59,7 @@ use cdx::{
     c10_cdx, c11_cdx, c12_cdx, c13_cdx, c14_cdx, c15_cdx, c16_cdx, c17_cdx, c18_cdx, c19_cdx,
     c1_cdx, c20_cdx, c21_cdx, c22_cdx, c23_cdx, c24_cdx, c25_cdx, c26_cdx, c27_cdx, c28_cdx,
     c29_cdx, c2_cdx, c30_cdx, c31_cdx, c32_cdx, c33_cdx, c34_cdx, c35_cdx, c36_cdx, c37_cdx,
-    c38_cdx, c39_cdx, c3_cdx, c40_cdx, c41_cdx, c42_cdx, c44_cdx, c45_cdx, c46_cdx, c47_cdx, c48_cdx, c4_cdx, c5_cdx, c7_cdx, c8_cdx, c9_cdx, cdx_containment,
+    c38_cdx, c39_cdx, c3_cdx, c40_cdx, c41_cdx, c42_cdx, c44_cdx, c45_cdx, c46_cdx, c47_cdx, c48_cdx, c49_cdx, c4_cdx, c50_cdx, c51_cdx, c52_cdx, c5_cdx, c7_cdx, c8_cdx, c9_cdx, cdx_containment,
     cdx_cpe, cdx_dev_deps, cdx_distribution, cdx_hashes, cdx_homepage, cdx_licenses_concluded,
     cdx_licenses_declared, cdx_name, cdx_purl, cdx_root, cdx_runtime_deps, cdx_supplier, cdx_vcs,
     cdx_version, d1_cdx, d2_cdx, e1_cdx, f1_cdx, g1_cdx,
@@ -70,7 +70,7 @@ use spdx2::{
     c17_spdx23, c18_spdx23, c19_spdx23, c1_spdx23, c20_spdx23, c21_spdx23, c22_spdx23,
     c23_spdx23, c24_spdx23, c25_spdx23, c26_spdx23, c27_spdx23, c28_spdx23, c29_spdx23, c2_spdx23,
     c30_spdx23, c31_spdx23, c32_spdx23, c33_spdx23, c34_spdx23, c35_spdx23, c36_spdx23, c37_spdx23,
-    c38_spdx23, c39_spdx23, c3_spdx23, c40_spdx23, c41_spdx23, c44_spdx23, c45_spdx23, c46_spdx23, c47_spdx23, c48_spdx23, c4_spdx23, c5_spdx23, c7_spdx23, c8_spdx23,
+    c38_spdx23, c39_spdx23, c3_spdx23, c40_spdx23, c41_spdx23, c44_spdx23, c45_spdx23, c46_spdx23, c47_spdx23, c48_spdx23, c49_spdx23, c4_spdx23, c50_spdx23, c51_spdx23, c52_spdx23, c5_spdx23, c7_spdx23, c8_spdx23,
     c9_spdx23, d1_spdx23, d2_spdx23, e1_spdx23, f1_spdx23, g1_spdx23, spdx23_containment,
     spdx23_cpe, spdx23_dev_deps, spdx23_distribution, spdx23_hashes, spdx23_homepage,
     spdx23_licenses_concluded, spdx23_licenses_declared, spdx23_name, spdx23_purl, spdx23_root,
@@ -81,7 +81,7 @@ use spdx3::{
     c18_spdx3, c19_spdx3, c1_spdx3, c20_spdx3, c21_spdx3, c22_spdx3, c23_spdx3, c24_spdx3,
     c25_spdx3, c26_spdx3, c27_spdx3, c28_spdx3, c29_spdx3, c2_spdx3, c30_spdx3, c31_spdx3,
     c32_spdx3, c33_spdx3, c34_spdx3, c35_spdx3, c36_spdx3, c37_spdx3, c38_spdx3, c39_spdx3, c40_spdx3,
-    c41_spdx3, c44_spdx3, c45_spdx3, c46_spdx3, c47_spdx3, c48_spdx3, c3_spdx3, c4_spdx3, c5_spdx3, c7_spdx3, c8_spdx3, c9_spdx3, d1_spdx3, d2_spdx3,
+    c41_spdx3, c44_spdx3, c45_spdx3, c46_spdx3, c47_spdx3, c48_spdx3, c49_spdx3, c3_spdx3, c4_spdx3, c50_spdx3, c51_spdx3, c52_spdx3, c5_spdx3, c7_spdx3, c8_spdx3, c9_spdx3, d1_spdx3, d2_spdx3,
     e1_spdx3, f1_spdx3, g1_spdx3, spdx3_containment, spdx3_cpe, spdx3_dev_deps,
     spdx3_distribution, spdx3_hashes, spdx3_homepage, spdx3_licenses_concluded,
     spdx3_licenses_declared, spdx3_name, spdx3_purl, spdx3_root, spdx3_runtime_deps,
@@ -287,6 +287,16 @@ pub static EXTRACTORS: &[ParityExtractor] = &[
     // formats — every Go component carrying the annotation appears in
     // all three carriers; the absent set is the same across formats too.
     ParityExtractor { row_id: "C48", label: "mikebom:resolver-step",             cdx: c48_cdx, spdx23: c48_spdx23, spdx3: c48_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    // Milestone 098 — Build-tier provenance signals (compiler/linker
+    // stamps from ELF `.comment`, Mach-O `LC_BUILD_VERSION`, PE
+    // `IMAGE_OPTIONAL_HEADER.MajorLinkerVersion`/`MinorLinkerVersion`).
+    // No native equivalent in CDX 1.6 / SPDX 2.3 / SPDX 3 (Constitution V
+    // audit per milestone-098 research §1); `mikebom:*` namespace
+    // justified, mirroring the milestone-023/024/028 identity helpers.
+    ParityExtractor { row_id: "C49", label: "mikebom:elf-compiler-stamps",       cdx: c49_cdx, spdx23: c49_spdx23, spdx3: c49_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: true },
+    ParityExtractor { row_id: "C50", label: "mikebom:macho-build-version",       cdx: c50_cdx, spdx23: c50_spdx23, spdx3: c50_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C51", label: "mikebom:macho-build-tools",         cdx: c51_cdx, spdx23: c51_spdx23, spdx3: c51_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: true },
+    ParityExtractor { row_id: "C52", label: "mikebom:pe-linker-version",         cdx: c52_cdx, spdx23: c52_spdx23, spdx3: c52_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // Section D — Evidence
     // D1 evidence shape diverges — CDX `evidence.identity[].{field,
     // confidence, methods[]}` is the full CDX evidence model;

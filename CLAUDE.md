@@ -91,6 +91,8 @@ Auto-generated from all feature plans. Last updated: 2026-05-12
 - N/A — pure read-only inference from the binary file itself. (096-binary-id-enrich)
 - Rust stable (workspace toolchain inherited from milestones 001–096; no nightly required). + Existing only — `serde`/`serde_json` (CDX/SPDX JSON output), `tracing`, `anyhow`. No new Cargo deps. (097-cpe-candidates)
 - N/A — pure metadata transform on SBOM emission code path; no caches, no persistence. (097-cpe-candidates)
+- Rust stable (workspace toolchain inherited from milestones 001–097; no nightly required). + Existing only — `object` crate's `section_by_name_bytes` (ELF), the existing `for_each_load_command` helper at `macho.rs:178` (Mach-O), the existing `PeFile32`/`PeFile64::optional_header()` accessor exposed by `object` 0.36 (PE). `serde`/`serde_json` for `Value` construction in the `extra_annotations` bag. **No new Cargo deps.** (098-compiler-version-extract)
+- N/A — pure read-only inference per scan; no caches, no persistence. (098-compiler-version-extract)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -153,9 +155,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 098-compiler-version-extract: Added Rust stable (workspace toolchain inherited from milestones 001–097; no nightly required). + Existing only — `object` crate's `section_by_name_bytes` (ELF), the existing `for_each_load_command` helper at `macho.rs:178` (Mach-O), the existing `PeFile32`/`PeFile64::optional_header()` accessor exposed by `object` 0.36 (PE). `serde`/`serde_json` for `Value` construction in the `extra_annotations` bag. **No new Cargo deps.**
 - 097-cpe-candidates: Added Rust stable (workspace toolchain inherited from milestones 001–096; no nightly required). + Existing only — `serde`/`serde_json` (CDX/SPDX JSON output), `tracing`, `anyhow`. No new Cargo deps.
 - 096-binary-id-enrich: Added Rust stable (workspace toolchain inherited; no nightly required). + existing only — `object` crate (already in workspace, handles ELF/Mach-O/PE section iteration), `serde`/`serde_json`, `tracing`, `anyhow`. NO new crates.
-- 094-deflake-perf-tests: Added Rust stable (workspace toolchain inherited; no nightly required for this user-space test-infrastructure work). + existing only — `std::process::Command` for subprocess invocation, `tempfile`, `tar` (already used by current perf tests), `serde_json` (for byte-equivalence comparisons). The new GitHub Action `nick-fields/retry@v3` is permitted under FR-010 because it's a workflow YAML reference, not a Cargo dependency.
 
 
 <!-- MANUAL ADDITIONS START -->

@@ -506,6 +506,16 @@ cdx_anno!(c47_cdx, "mikebom:identifiers",               document);
 // lower-fidelity discovery path from steps 1–3.
 cdx_anno!(c48_cdx, "mikebom:resolver-step",             component);
 
+// C49-C52 — milestone-098 build-tier provenance signals
+// (compiler/linker stamps). All four properties are emitted as
+// `component.properties[].value` entries on file-level binary
+// components. Symmetric-equal directionality, mixed array/scalar
+// order-sensitivity per the catalog rows in mod.rs.
+cdx_anno!(c49_cdx, "mikebom:elf-compiler-stamps",       component);
+cdx_anno!(c50_cdx, "mikebom:macho-build-version",       component);
+cdx_anno!(c51_cdx, "mikebom:macho-build-tools",         component);
+cdx_anno!(c52_cdx, "mikebom:pe-linker-version",         component);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================

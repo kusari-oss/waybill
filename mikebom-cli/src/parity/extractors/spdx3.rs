@@ -456,6 +456,14 @@ spdx3_anno!(c46_spdx3, "mikebom:source-document-binding",  component);
 // C48 — per-component go-resolver-step provenance (milestone 091).
 spdx3_anno!(c48_spdx3, "mikebom:resolver-step",            component);
 
+// C49-C52 — milestone-098 build-tier provenance signals
+// (compiler/linker stamps). Emitted as `Annotation` elements with
+// `statement = "mikebom:<key>=<value>"` per SPDX 3 conventions.
+spdx3_anno!(c49_spdx3, "mikebom:elf-compiler-stamps",      component);
+spdx3_anno!(c50_spdx3, "mikebom:macho-build-version",      component);
+spdx3_anno!(c51_spdx3, "mikebom:macho-build-tools",        component);
+spdx3_anno!(c52_spdx3, "mikebom:pe-linker-version",        component);
+
 // C47 — document-level user-defined identifiers (milestone 073).
 // Per `contracts/identifiers-annotation.md` C-1 SPDX 3 and C-2
 // SPDX 3: user-defined identifiers ride `Element.externalIdentifier[]`

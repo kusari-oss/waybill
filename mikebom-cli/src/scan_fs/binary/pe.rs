@@ -39,7 +39,14 @@ const PE32_PLUS_MAGIC: u16 = 0x20B;
 
 /// Result tuple from the unified entry point: pdb-id / machine /
 /// subsystem, in struct-field order matching `BinaryScan`.
-pub type PeIdentity = (Option<String>, Option<String>, Option<String>);
+pub type PeIdentity = (
+    Option<String>, // pdb_id (CodeView record)
+    Option<String>, // machine type
+    Option<String>, // subsystem
+    Option<String>, // linker_version `<major>.<minor>` — milestone-098 FR-003
+                    // always-emit on parseable PEs; `None` only when the
+                    // PE parser itself failed (corrupt optional header).
+);
 
 /// Parse PE bytes and return all three identity signals. Returns
 /// `(None, None, None)` for malformed bytes; individual fields may be
@@ -58,18 +65,20 @@ pub fn parse_pe_identity(bytes: &[u8]) -> PeIdentity {
                 parse_pdb_id(&file),
                 parse_machine_type(&file),
                 parse_subsystem(&file),
+                Some(parse_linker_version(&file)),
             ),
-            Err(_) => (None, None, None),
+            Err(_) => (None, None, None, None),
         },
         Some(PE32_PLUS_MAGIC) => match PeFile64::parse(bytes) {
             Ok(file) => (
                 parse_pdb_id(&file),
                 parse_machine_type(&file),
                 parse_subsystem(&file),
+                Some(parse_linker_version(&file)),
             ),
-            Err(_) => (None, None, None),
+            Err(_) => (None, None, None, None),
         },
-        _ => (None, None, None),
+        _ => (None, None, None, None),
     }
 }
 
@@ -130,6 +139,19 @@ pub fn parse_subsystem<'a, Pe: ImageNtHeaders>(
 ) -> Option<String> {
     let value = file.nt_headers().optional_header().subsystem();
     Some(subsystem_to_str(value).to_string())
+}
+
+/// Decode `IMAGE_OPTIONAL_HEADER.MajorLinkerVersion` /
+/// `MinorLinkerVersion` into the `<major>.<minor>` string per
+/// milestone-098 FR-003. Always-emit: even packed/obfuscated PEs with
+/// zeroed optional-header bytes get a meaningful `"0.0"` value
+/// (informative — correlates with `mikebom:binary-packed` for the
+/// "linker version was redacted" signal).
+pub fn parse_linker_version<'a, Pe: ImageNtHeaders>(
+    file: &PeFile<'a, Pe, &'a [u8]>,
+) -> String {
+    let opt = file.nt_headers().optional_header();
+    format!("{}.{}", opt.major_linker_version(), opt.minor_linker_version())
 }
 
 fn machine_to_str(value: u16) -> &'static str {
@@ -408,7 +430,7 @@ mod tests {
             pe::IMAGE_SUBSYSTEM_WINDOWS_CUI,
             Some((&guid, 7, "C:\\src\\foo.pdb")),
         );
-        let (pdb, machine, subsys) = parse_pe_identity(&img);
+        let (pdb, machine, subsys, linker) = parse_pe_identity(&img);
         assert_eq!(
             pdb.as_deref(),
             Some("0123456789abcdeffedcba9876543210:7"),
@@ -416,6 +438,15 @@ mod tests {
         );
         assert_eq!(machine.as_deref(), Some("amd64"));
         assert_eq!(subsys.as_deref(), Some("console"));
+        // Milestone 098 T028: also assert linker-version is present
+        // (always-emit on parseable PEs). The `build_minimal_pe` helper
+        // doesn't populate the linker-version bytes, so the optional
+        // header carries zero — expect "0.0" per FR-003 always-emit.
+        assert_eq!(
+            linker.as_deref(),
+            Some("0.0"),
+            "milestone-098 FR-003: linker-version always emits, '0.0' for zeroed bytes"
+        );
     }
 
     #[test]
@@ -426,10 +457,11 @@ mod tests {
             pe::IMAGE_SUBSYSTEM_WINDOWS_GUI,
             None,
         );
-        let (pdb, machine, subsys) = parse_pe_identity(&img);
+        let (pdb, machine, subsys, linker) = parse_pe_identity(&img);
         assert_eq!(pdb, None, "no CodeView record → no pdb-id annotation");
         assert_eq!(machine.as_deref(), Some("i386"));
         assert_eq!(subsys.as_deref(), Some("windows-gui"));
+        assert!(linker.is_some(), "always-emit linker-version per FR-003");
     }
 
     #[test]
@@ -440,7 +472,7 @@ mod tests {
             pe::IMAGE_SUBSYSTEM_EFI_APPLICATION,
             None,
         );
-        let (_, machine, subsys) = parse_pe_identity(&img);
+        let (_, machine, subsys, _) = parse_pe_identity(&img);
         assert_eq!(machine.as_deref(), Some("arm64"));
         assert_eq!(subsys.as_deref(), Some("efi-application"));
     }
@@ -453,13 +485,35 @@ mod tests {
             pe::IMAGE_SUBSYSTEM_WINDOWS_CUI,
             None,
         );
-        let (_, machine, _) = parse_pe_identity(&img);
+        let (_, machine, _, _) = parse_pe_identity(&img);
         assert_eq!(machine.as_deref(), Some("unknown"));
     }
 
     #[test]
     fn parse_pe_identity_returns_all_none_for_garbage_bytes() {
         let result = parse_pe_identity(b"this is not a PE binary at all");
-        assert_eq!(result, (None, None, None));
+        assert_eq!(result, (None, None, None, None));
+    }
+
+    /// Milestone 098 T029 — FR-003 always-emit guarantee on zeroed
+    /// linker-version bytes. The synthetic `build_minimal_pe` already
+    /// zeros the MajorLinkerVersion / MinorLinkerVersion fields, so
+    /// every PE we hand-craft in tests trips this case. Explicit
+    /// regression guard: even when other identity fields are absent,
+    /// linker-version emits `"0.0"`.
+    #[test]
+    fn parse_pe_identity_zeroed_linker_version() {
+        let img = build_minimal_pe(
+            true,
+            pe::IMAGE_FILE_MACHINE_AMD64,
+            pe::IMAGE_SUBSYSTEM_WINDOWS_CUI,
+            None,
+        );
+        let (_, _, _, linker) = parse_pe_identity(&img);
+        assert_eq!(
+            linker.as_deref(),
+            Some("0.0"),
+            "FR-003: always-emit, '0.0' on zeroed optional-header bytes"
+        );
     }
 }

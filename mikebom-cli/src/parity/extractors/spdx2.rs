@@ -376,6 +376,14 @@ spdx23_anno!(c47_spdx23, "mikebom:identifiers",              document);
 // C48 — per-component go-resolver-step provenance (milestone 091).
 spdx23_anno!(c48_spdx23, "mikebom:resolver-step",            component);
 
+// C49-C52 — milestone-098 build-tier provenance signals
+// (compiler/linker stamps). Emitted as `Package.annotations[].comment`
+// entries with the `mikebom:<key>=<value>` prefix convention.
+spdx23_anno!(c49_spdx23, "mikebom:elf-compiler-stamps",      component);
+spdx23_anno!(c50_spdx23, "mikebom:macho-build-version",      component);
+spdx23_anno!(c51_spdx23, "mikebom:macho-build-tools",        component);
+spdx23_anno!(c52_spdx23, "mikebom:pe-linker-version",        component);
+
 // ============================================================
 // Sections D-G — custom SPDX 2.3 extractors
 // ============================================================

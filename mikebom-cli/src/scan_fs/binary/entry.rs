@@ -14,6 +14,7 @@ use sha2::{Digest, Sha256};
 
 use super::cargo_auditable;
 use super::elf;
+use super::macho;
 use super::packer;
 use super::symbol_fingerprint;
 use super::version_strings;
@@ -342,6 +343,25 @@ pub(crate) struct BinaryScan {
     /// non-ELF binaries, ELF binaries with no `.dynsym`, and ELF
     /// binaries whose dynamic-symbol set is fully stripped.
     pub symbol_names: Vec<String>,
+    /// ELF `.comment` section's NUL-delimited compiler stamps per
+    /// milestone-098 FR-001. Within-binary deduped; per-entry length
+    /// capped at 4 KiB; total length capped at 64 KiB with a final
+    /// `"... (truncated)"` marker entry if the cap is hit. Empty for
+    /// non-ELF binaries or ELF binaries lacking the section
+    /// (`strip --remove-section=.comment` or `cc -fno-ident`).
+    pub comment_stamps: Vec<String>,
+    /// Full `LC_BUILD_VERSION` record per milestone-098 FR-002. `None`
+    /// for non-Mach-O or for Mach-O binaries lacking the command
+    /// (legacy `LC_VERSION_MIN_*`-only builds). When present, drives
+    /// the `mikebom:macho-build-version` + `mikebom:macho-build-tools`
+    /// annotation emission on the file-level binary component.
+    pub macho_build_version: Option<macho::MachoBuildVersion>,
+    /// PE linker-version `<major>.<minor>` string per milestone-098
+    /// FR-003. Always emitted (`Some(...)`) for any PE binary that
+    /// reaches the file-level emission path — packed/obfuscated PEs
+    /// with zeroed optional-header bytes emit `"0.0"` (informative,
+    /// correlates with `mikebom:binary-packed`). `None` for non-PE.
+    pub pe_linker_version: Option<String>,
 }
 
 pub(super) fn make_file_level_component(
@@ -502,6 +522,16 @@ fn build_elf_identity_annotations(
             }),
         );
     }
+    // Milestone 098 FR-001 — ELF `.comment` compiler stamps.
+    // Omit when empty (FR-007); presence of the property signals
+    // "we extracted ≥1 stamp", absence is the explicit
+    // "we don't know who built it" signal.
+    if !scan.comment_stamps.is_empty() {
+        bag.insert(
+            "mikebom:elf-compiler-stamps".to_string(),
+            serde_json::json!(scan.comment_stamps),
+        );
+    }
     bag
 }
 
@@ -556,6 +586,36 @@ fn build_macho_identity_annotations(
             serde_json::Value::String(team.clone()),
         );
     }
+    // Milestone 098 FR-002 — LC_BUILD_VERSION full record. Emits two
+    // properties when the load command is present:
+    //   - `mikebom:macho-build-version`: structured object with
+    //     platform/min_os/sdk
+    //   - `mikebom:macho-build-tools`: array of {tool, version} pairs
+    //     (only when the tools list is non-empty)
+    // Omitted entirely (FR-007) when LC_BUILD_VERSION is absent — the
+    // milestone-024 `mikebom:macho-min-os` flat property continues to
+    // emit independently for legacy LC_VERSION_MIN_* binaries.
+    if let Some(ref bv) = scan.macho_build_version {
+        bag.insert(
+            "mikebom:macho-build-version".to_string(),
+            serde_json::json!({
+                "platform": bv.platform,
+                "min_os": bv.min_os,
+                "sdk": bv.sdk,
+            }),
+        );
+        if !bv.tools.is_empty() {
+            let tools_json: Vec<serde_json::Value> = bv
+                .tools
+                .iter()
+                .map(|(tool, version)| serde_json::json!({"tool": tool, "version": version}))
+                .collect();
+            bag.insert(
+                "mikebom:macho-build-tools".to_string(),
+                serde_json::Value::Array(tools_json),
+            );
+        }
+    }
     bag
 }
 
@@ -586,6 +646,17 @@ fn build_pe_identity_annotations(
         bag.insert(
             "mikebom:pe-subsystem".to_string(),
             serde_json::Value::String(subsystem.clone()),
+        );
+    }
+    // Milestone 098 FR-003 — PE linker-version always-emit on
+    // parseable PEs. `pe_linker_version` is `Some(...)` whenever
+    // the PE parser succeeded (zero-zero → "0.0"); `None` only when
+    // parse_pe_identity itself failed, in which case mikebom already
+    // dropped the binary upstream.
+    if let Some(ref lv) = scan.pe_linker_version {
+        bag.insert(
+            "mikebom:pe-linker-version".to_string(),
+            serde_json::Value::String(lv.clone()),
         );
     }
     bag
@@ -985,6 +1056,9 @@ mod tests {
             string_region: Vec::new(),
             packer: None,
             symbol_names: Vec::new(),
+            comment_stamps: Vec::new(),
+            macho_build_version: None,
+            pe_linker_version: None,
         }
     }
 
