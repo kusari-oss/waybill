@@ -201,7 +201,14 @@ fn run_case(case: &EcosystemCase) {
 }
 
 // One test per ecosystem so a failure names the offender directly.
+//
+// Milestone 100: apk + deb + rpm production readers are
+// `#[cfg(unix)]`-gated (Linux-only OS package managers); on Windows
+// they don't compile and the emitted SBOM has no `pkg:{apk,deb,rpm}`
+// components, so the goldens (minted on Linux with those components)
+// can never match. Gate the corresponding regression tests to match.
 
+#[cfg(unix)]
 #[test]
 fn cdx_regression_apk() {
     run_case(&CASES[0]);
@@ -212,6 +219,7 @@ fn cdx_regression_cargo() {
     run_case(&CASES[1]);
 }
 
+#[cfg(unix)]
 #[test]
 fn cdx_regression_deb() {
     run_case(&CASES[2]);
@@ -242,6 +250,7 @@ fn cdx_regression_pip() {
     run_case(&CASES[7]);
 }
 
+#[cfg(unix)]
 #[test]
 fn cdx_regression_rpm() {
     run_case(&CASES[8]);

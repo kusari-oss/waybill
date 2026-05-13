@@ -129,15 +129,29 @@ fn cross_host_align(raw: &str, workspace: &Path) -> (String, String, String) {
     let ws_str = workspace.to_string_lossy().to_string();
     let fixtures_cache: String = env!("MIKEBOM_FIXTURES_DIR").into();
     if cfg!(windows) {
-        let raw_fs = raw.replace('\\', "/");
-        // Strip the Windows extended-length-path prefix in either
-        // raw or already-forward-slashed form.
-        let raw_fs = raw_fs.replace("//?/", "");
-        let ws_fs = ws_str.replace('\\', "/");
-        let ws_fs = ws_fs.trim_start_matches("//?/").to_string();
-        let fc_fs = fixtures_cache.replace('\\', "/");
-        let fc_fs = fc_fs.trim_start_matches("//?/").to_string();
-        (raw_fs, ws_fs, fc_fs)
+        // Milestone 100 already forward-slashes path strings in the
+        // emitted SBOM via `normalize_sbom_path_str`. The remaining
+        // Windows-specific drift is the `\\?\` extended-length-path
+        // prefix that `std::fs::canonicalize` prepends; milestone-100
+        // normalization converts `\\?\` → `//?/`. Strip that from raw
+        // so the prefix-less workspace + fixtures-cache strings (which
+        // we forward-slash-normalize below) match it.
+        //
+        // DO NOT replace every `\` in raw with `/` — JSON content can
+        // contain legitimate backslash escapes (CPE 2.3 strings use
+        // `\/` as the literal `/`-escape per the CPE spec, which
+        // serializes as `\\/` in JSON; rewriting those would corrupt
+        // them, e.g. `cpe:2.3:a:github.com\/foo` → `github.com///foo`).
+        let raw_aligned = raw.replace("//?/", "");
+        let ws_fs = ws_str
+            .replace('\\', "/")
+            .trim_start_matches("//?/")
+            .to_string();
+        let fc_fs = fixtures_cache
+            .replace('\\', "/")
+            .trim_start_matches("//?/")
+            .to_string();
+        (raw_aligned, ws_fs, fc_fs)
     } else {
         (raw.to_string(), ws_str, fixtures_cache)
     }

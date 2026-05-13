@@ -161,7 +161,11 @@ fn run_case(case: &EcosystemCase) {
 }
 
 // One test per ecosystem so a failure names the offender directly.
+//
+// Milestone 100: apk + deb + rpm readers are `#[cfg(unix)]`-gated;
+// see cdx_regression.rs for the rationale. Same gating here.
 
+#[cfg(unix)]
 #[test]
 fn apk_byte_identity() {
     run_case(&CASES[0]);
@@ -172,6 +176,7 @@ fn cargo_byte_identity() {
     run_case(&CASES[1]);
 }
 
+#[cfg(unix)]
 #[test]
 fn deb_byte_identity() {
     run_case(&CASES[2]);
@@ -202,6 +207,7 @@ fn pip_byte_identity() {
     run_case(&CASES[7]);
 }
 
+#[cfg(unix)]
 #[test]
 fn rpm_byte_identity() {
     run_case(&CASES[8]);
