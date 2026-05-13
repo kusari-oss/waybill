@@ -90,7 +90,10 @@ fn assert_or_update_golden(label: &str, normalized: &str) {
         );
         return;
     }
-    let golden = std::fs::read_to_string(&path).expect("read pinned golden");
+    // Milestone 100: strip CR on read (Windows autocrlf safety).
+    let golden = std::fs::read_to_string(&path)
+        .expect("read pinned golden")
+        .replace("\r\n", "\n");
     if golden != normalized {
         let actual = path.with_extension("actual.json");
         std::fs::write(&actual, normalized.as_bytes()).expect("write actual.json for diff");

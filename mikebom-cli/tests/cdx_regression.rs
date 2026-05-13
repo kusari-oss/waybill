@@ -105,8 +105,14 @@ fn assert_or_update_golden(label: &str, normalized: &str) {
         );
         return;
     }
-    let golden =
-        std::fs::read_to_string(&path).expect("read pinned golden");
+    // Milestone 100: strip CR on read so Windows runners (where git's
+    // default `core.autocrlf=true` may rewrite checked-out goldens to
+    // CRLF) compare apples-to-apples against the LF-emitted SBOM.
+    // The committed .gitattributes pins `eol=lf` for future checkouts
+    // but doesn't retroactively fix already-checked-out files.
+    let golden = std::fs::read_to_string(&path)
+        .expect("read pinned golden")
+        .replace("\r\n", "\n");
     if golden != normalized {
         // Write the actual produced output alongside the golden so a
         // maintainer can diff them with their own tooling — cleaner
