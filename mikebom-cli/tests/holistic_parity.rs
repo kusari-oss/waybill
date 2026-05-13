@@ -246,14 +246,22 @@ fn run_ecosystem(case: &EcosystemCase) {
     assert_holistic_parity(case.label, &scan);
 }
 
+// Milestone 100: apk + deb + rpm production readers are
+// `#[cfg(unix)]`-gated (Linux-only OS package managers); on Windows
+// the emitted SBOM has no `pkg:{apk,deb,rpm}` components, so the
+// parity assertions can't hold. Same gating rationale as the
+// {cdx,spdx,spdx3}_regression tests.
+#[cfg(unix)]
 #[test] fn parity_apk()    { run_ecosystem(&CASES[0]); }
 #[test] fn parity_cargo()  { run_ecosystem(&CASES[1]); }
+#[cfg(unix)]
 #[test] fn parity_deb()    { run_ecosystem(&CASES[2]); }
 #[test] fn parity_gem()    { run_ecosystem(&CASES[3]); }
 #[test] fn parity_golang() { run_ecosystem(&CASES[4]); }
 #[test] fn parity_maven()  { run_ecosystem(&CASES[5]); }
 #[test] fn parity_npm()    { run_ecosystem(&CASES[6]); }
 #[test] fn parity_pip()    { run_ecosystem(&CASES[7]); }
+#[cfg(unix)]
 #[test] fn parity_rpm()    { run_ecosystem(&CASES[8]); }
 
 #[test]
