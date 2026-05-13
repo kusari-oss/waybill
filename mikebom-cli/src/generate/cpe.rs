@@ -15,6 +15,52 @@
 
 use mikebom_common::resolution::ResolvedComponent;
 
+/// v1 mapping table for `pkg:generic/<library>@<version>` components per
+/// milestone-097 FR-001. Each row maps a library slug (the lowercase
+/// value emitted by `version_strings::CuratedLibrary::slug()` and
+/// `symbol_fingerprint::SymbolFingerprintMatch::library`) to one or more
+/// `(NVD vendor, NVD product)` pairs.
+///
+/// Sorted alphabetically by library_slug for diff-friendliness per FR-002.
+/// Adding a library is a one-line PR; new entries must keep the sort.
+///
+/// BoringSSL (the 11th library identified by the version-string scanner)
+/// is intentionally omitted — Google's BoringSSL has no NVD-tracked CPE
+/// namespace. BoringSSL-rooted vulnerabilities flow through
+/// `openssl:openssl` records when the issue exists upstream, but
+/// BoringSSL-specific issues lack a usable CPE. Components for the
+/// `boringssl` slug emit a PURL with no CPE field — an explicit
+/// "we don't know" per Constitution X transparency.
+const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
+    // libcurl: historical `haxx:curl` dominates pre-2023 NVD records;
+    // modern `curl:curl` also appears. Both emitted — primary goes to
+    // `component.cpe`, secondary to `mikebom:cpe-candidates` property.
+    ("curl", &[("haxx", "curl"), ("curl", "curl")]),
+    // GnuTLS — NVD canonical.
+    ("gnutls", &[("gnu", "gnutls")]),
+    // LibreSSL: most CVEs filed under `openbsd:libressl` (LibreSSL is an
+    // OpenBSD project). Secondary `libressl:libressl` for records that
+    // use the project namespace directly.
+    ("libressl", &[("openbsd", "libressl"), ("libressl", "libressl")]),
+    // LLVM umbrella project. Sub-projects (clang, lld) are out of scope
+    // for v1 — the version-string scanner doesn't distinguish them.
+    ("llvm", &[("llvm", "llvm")]),
+    // OpenJDK — `oracle:openjdk` dominates Java vuln records. Build
+    // suffix (e.g. `+12`) is stripped before CPE emission per NVD-shape
+    // inconsistency; the PURL preserves the full version verbatim.
+    ("openjdk", &[("oracle", "openjdk")]),
+    // OpenSSL — every CVE since 2014 uses `openssl:openssl`.
+    ("openssl", &[("openssl", "openssl")]),
+    // PCRE 8.x — `pcre:pcre`.
+    ("pcre", &[("pcre", "pcre")]),
+    // PCRE 10.x — same vendor, different product.
+    ("pcre2", &[("pcre", "pcre2")]),
+    // SQLite — NVD canonical.
+    ("sqlite", &[("sqlite", "sqlite")]),
+    // zlib — NVD canonical.
+    ("zlib", &[("zlib", "zlib")]),
+];
+
 /// Build the set of CPE 2.3 candidate strings for a resolved component.
 /// Returns empty when the component is in an ecosystem the synthesizer
 /// has no opinion on (generic/unknown PURLs).
@@ -97,6 +143,43 @@ pub fn synthesize_cpes(component: &ResolvedComponent) -> Vec<String> {
         }
         "nuget" => {
             push_unique(&mut vendors, name);
+        }
+        "generic" => {
+            // Milestone 097 — CPE candidates for binary-extracted
+            // `pkg:generic/<lib>@<version>` components from the
+            // milestone-096 version-string + symbol-fingerprint
+            // scanners. Lookup the lowercase library slug in the
+            // hand-curated mapping table; libraries with no row emit
+            // no CPE (FR-003 silent-skip) so non-tracked generic PURLs
+            // (e.g. `pkg:generic/weird@1.0.0`) continue to produce an
+            // empty Vec just as they did before milestone 097.
+            let mapping = GENERIC_LIBRARY_CPES
+                .iter()
+                .find(|(slug, _)| *slug == name.as_str())
+                .map(|(_, pairs)| *pairs);
+            let Some(pairs) = mapping else {
+                return Vec::new();
+            };
+            // OpenJDK build-suffix special-case: NVD records for Java
+            // vulns inconsistently encode the `+<build>` suffix —
+            // some use `update_<n>`, some omit it entirely. Stripping
+            // the suffix matches the most-common NVD shape and avoids
+            // false-negative CPE-matching against scanners that key
+            // on the canonical-version form. The full version stays
+            // verbatim on the component's PURL.
+            let cpe_version: String = if name == "openjdk" {
+                version
+                    .split(|c: char| !c.is_ascii_digit() && c != '.')
+                    .next()
+                    .unwrap_or(version)
+                    .to_string()
+            } else {
+                version.clone()
+            };
+            return pairs
+                .iter()
+                .map(|(vendor, product)| format_cpe(vendor, product, &cpe_version))
+                .collect();
         }
         _ => {
             // Unknown ecosystem — no opinion.
@@ -263,7 +346,13 @@ mod tests {
     }
 
     #[test]
-    fn unknown_ecosystem_returns_empty() {
+    fn generic_unknown_library_returns_empty() {
+        // Milestone 097 FR-003: a `pkg:generic/<slug>@<version>` PURL
+        // whose slug is NOT in `GENERIC_LIBRARY_CPES` (here, `weird`)
+        // emits an empty Vec — silent skip, no error. Same assertion
+        // as the pre-097 `unknown_ecosystem_returns_empty` test;
+        // renamed because the failure mode changed from "ecosystem
+        // not handled" to "library not in table".
         let c = make_component("pkg:generic/weird@1.0.0");
         let cpes = synthesize_cpes(&c);
         assert!(cpes.is_empty());
@@ -299,5 +388,203 @@ mod tests {
         assert_eq!(cpe_escape("1+2"), "1\\+2");
         assert_eq!(cpe_escape("a:b"), "a\\:b");
         assert_eq!(cpe_escape("a/b"), "a\\/b");
+    }
+
+    // ====================================================================
+    // Milestone 097 — CPE candidate emission for binary-identified
+    // `pkg:generic/<lib>@<version>` components.
+    // ====================================================================
+
+    /// T006 — Contract 1: canonical OpenSSL emission for the headline
+    /// US1 case. A binary-extracted `pkg:generic/openssl@3.0.13`
+    /// component receives the NVD-canonical `openssl:openssl` CPE
+    /// candidate as its primary (and only) CPE.
+    #[test]
+    fn generic_openssl_emits_canonical_cpe() {
+        let c = make_component("pkg:generic/openssl@3.0.13");
+        let cpes = synthesize_cpes(&c);
+        assert_eq!(cpes.len(), 1);
+        assert_eq!(cpes[0], "cpe:2.3:a:openssl:openssl:3.0.13:*:*:*:*:*:*:*");
+    }
+
+    /// T007 — Contract 1 (multi-vendor): libcurl gets two NVD-cited
+    /// vendor:product pairs. The first (`haxx:curl`) populates the
+    /// CDX `component.cpe`; the second (`curl:curl`) flows through
+    /// the existing `mikebom:cpe-candidates` overflow property.
+    #[test]
+    fn generic_curl_emits_dual_candidates() {
+        let c = make_component("pkg:generic/curl@8.4.0");
+        let cpes = synthesize_cpes(&c);
+        assert_eq!(cpes.len(), 2);
+        assert_eq!(cpes[0], "cpe:2.3:a:haxx:curl:8.4.0:*:*:*:*:*:*:*");
+        assert_eq!(cpes[1], "cpe:2.3:a:curl:curl:8.4.0:*:*:*:*:*:*:*");
+    }
+
+    /// T008 — Contract 4: OpenJDK build-suffix is stripped before CPE
+    /// emission (`21.0.1+12` → `21.0.1`). The PURL on the component
+    /// stays intact; only the CPE version segment is normalized to
+    /// the most-common NVD shape.
+    #[test]
+    fn generic_openjdk_strips_build_suffix() {
+        let c = make_component("pkg:generic/openjdk@21.0.1+12");
+        let cpes = synthesize_cpes(&c);
+        assert_eq!(cpes.len(), 1);
+        assert_eq!(cpes[0], "cpe:2.3:a:oracle:openjdk:21.0.1:*:*:*:*:*:*:*");
+    }
+
+    /// T009 — FR-005 / SC-004 / Contract from US1#4: composite-evidence
+    /// merge per milestone-096 Q1 produces ONE PackageDbEntry with a
+    /// version-string PURL; that single component receives ONE CPE
+    /// field — no duplicate emission for the symbol-fingerprint half
+    /// of the evidence trail. The CPE pipeline naturally satisfies
+    /// this because synthesize_cpes is per-component, not per-evidence.
+    #[test]
+    fn composite_evidence_emits_single_cpe() {
+        let c = make_component("pkg:generic/openssl@3.0.13");
+        let cpes = synthesize_cpes(&c);
+        assert_eq!(
+            cpes.len(),
+            1,
+            "milestone-096 Q1 composite-merge → ONE component → ONE CPE; got {cpes:?}"
+        );
+        assert_eq!(cpes[0], "cpe:2.3:a:openssl:openssl:3.0.13:*:*:*:*:*:*:*");
+    }
+
+    /// T011 — FR-002 maintainability: the v1 mapping table is sorted
+    /// alphabetically by library_slug for diff-friendliness. New rows
+    /// must keep the sort; this test fails the build when they don't.
+    #[test]
+    fn mappings_alphabetically_sorted() {
+        let unsorted: Vec<&str> = GENERIC_LIBRARY_CPES
+            .windows(2)
+            .filter(|w| w[0].0 >= w[1].0)
+            .map(|w| w[0].0)
+            .collect();
+        assert!(
+            unsorted.is_empty(),
+            "GENERIC_LIBRARY_CPES is not alphabetically sorted by library_slug. \
+             Offending row(s): {unsorted:?}. Reorder the table."
+        );
+    }
+
+    /// T012 — SC-002: every row in the mapping table emits a
+    /// syntactically valid CPE 2.3 string. Loop guard against a future
+    /// maintainer adding a row whose vendor or product slug breaks the
+    /// `format_cpe` template. CPE 2.3 has 13 colon-separated segments
+    /// (`cpe:2.3:a:vendor:product:version:update:edition:lang:sw_edition:target_sw:target_hw:other`).
+    #[test]
+    fn mappings_all_emit_valid_cpe23() {
+        for (slug, pairs) in GENERIC_LIBRARY_CPES {
+            let c = make_component(&format!("pkg:generic/{slug}@1.2.3"));
+            let cpes = synthesize_cpes(&c);
+            assert!(
+                !cpes.is_empty(),
+                "row {slug:?} produced no CPE candidates"
+            );
+            assert_eq!(
+                cpes.len(),
+                pairs.len(),
+                "row {slug:?}: expected {} candidates, got {}",
+                pairs.len(),
+                cpes.len(),
+            );
+            for cpe in &cpes {
+                assert!(
+                    cpe.starts_with("cpe:2.3:a:"),
+                    "row {slug:?} produced non-cpe23 string: {cpe}"
+                );
+                // CPE 2.3 formatted-string binding: 13 segments total,
+                // separated by 12 unescaped colons. Escaped colons
+                // (`\:`) inside an attribute don't count as separators.
+                let mut separator_count = 0usize;
+                let bytes = cpe.as_bytes();
+                let mut i = 0;
+                while i < bytes.len() {
+                    if bytes[i] == b'\\' && i + 1 < bytes.len() {
+                        // Skip escaped char.
+                        i += 2;
+                        continue;
+                    }
+                    if bytes[i] == b':' {
+                        separator_count += 1;
+                    }
+                    i += 1;
+                }
+                assert_eq!(
+                    separator_count, 12,
+                    "row {slug:?}: CPE 2.3 must have 13 segments (12 unescaped colons), \
+                     got {separator_count} in {cpe}"
+                );
+            }
+        }
+    }
+
+    /// T013 — FR-002 / A1: the v1 mapping table must cover every
+    /// curated-library slug emitted by the milestone-096 / earlier
+    /// version-string scanner, EXCEPT for the documented-omission
+    /// allowlist (currently just `boringssl` — no NVD-tracked CPE
+    /// namespace). Future milestones extending the scanner must
+    /// either add a row here or extend the allowlist with a
+    /// documented rationale.
+    ///
+    /// The cross-module dependency on `version_strings::CuratedLibrary`
+    /// is permitted because the latter is `pub` and lives in the same
+    /// crate; the test reaches it via `crate::scan_fs::binary::version_strings`.
+    #[test]
+    fn mappings_cover_all_curated_libraries() {
+        use crate::scan_fs::binary::version_strings::CuratedLibrary;
+
+        // Documented-omission allowlist per spec Edge Cases.
+        const OMITTED: &[&str] = &["boringssl"];
+
+        // Walk every variant of CuratedLibrary and assert each slug
+        // is either in the mapping table OR on the omission allowlist.
+        // Update this list when adding library variants.
+        let all_curated: &[CuratedLibrary] = &[
+            CuratedLibrary::OpenSsl,
+            CuratedLibrary::BoringSsl,
+            CuratedLibrary::Zlib,
+            CuratedLibrary::Sqlite,
+            CuratedLibrary::Curl,
+            CuratedLibrary::Pcre,
+            CuratedLibrary::Pcre2,
+            CuratedLibrary::GnuTls,
+            CuratedLibrary::LibreSsl,
+            CuratedLibrary::Llvm,
+            CuratedLibrary::OpenJdk,
+        ];
+
+        for lib in all_curated {
+            let slug = lib.slug();
+            let in_table = GENERIC_LIBRARY_CPES.iter().any(|(s, _)| *s == slug);
+            let omitted = OMITTED.contains(&slug);
+            assert!(
+                in_table || omitted,
+                "curated library slug {slug:?} is missing from \
+                 GENERIC_LIBRARY_CPES AND not on the OMITTED allowlist. \
+                 Add a mapping row OR extend the allowlist with a documented rationale."
+            );
+        }
+    }
+
+    /// T015 — FR-004 / SC-003: a component with `pkg:generic/<lib>`
+    /// shape and empty version (the milestone-096 symbol-fingerprint-
+    /// only case + the SQLite source-id-only edge case) emits NO CPE.
+    /// Wildcard-version CPEs are explicitly out of scope — they would
+    /// match every CVE in the library's history and drown downstream
+    /// scanners in unactionable false positives.
+    ///
+    /// Implementation note: this is satisfied for free by the existing
+    /// `cpe.rs:25-28` empty-version fast-return, ahead of the
+    /// `match ecosystem` dispatch. The test guards against regression.
+    #[test]
+    fn generic_symbol_fingerprint_only_emits_no_cpe() {
+        let mut c = make_component("pkg:generic/openssl@dummy");
+        c.version = String::new();
+        let cpes = synthesize_cpes(&c);
+        assert!(
+            cpes.is_empty(),
+            "FR-004: versionless generic component must not emit a CPE; got {cpes:?}"
+        );
     }
 }
