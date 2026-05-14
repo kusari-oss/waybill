@@ -268,6 +268,22 @@ jobs:
         with:
           components: clippy
 
+      # Windows-only workaround for an intermittent `rustup-init:
+      # unexpected argument '+stable' found` failure observed on
+      # `windows-latest` runners. Symptom: `cargo +stable ...` is
+      # routed to `rustup-init.exe` (the initial installer) instead
+      # of `cargo.exe`/`rustup.exe`, because of a PATH-ordering race
+      # in the dtolnay/rust-toolchain action's pre-install step.
+      # Explicitly invoking `rustup default stable` + `rustup show`
+      # here forces the real `rustup.exe` to resolve, pins stable
+      # as the default toolchain, and ensures subsequent `cargo
+      # +stable` invocations route through the right binary. No-op
+      # on a clean Windows runner; cheap insurance everywhere else.
+      - name: Pin stable toolchain (Windows PATH-race workaround)
+        run: |
+          rustup default stable
+          rustup show
+
       - name: Cache cargo + build artifacts
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
 
