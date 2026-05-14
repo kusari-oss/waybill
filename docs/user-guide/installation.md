@@ -8,7 +8,7 @@ mikebom has two modes with different runtime requirements.
 | **Tracing** | `mikebom trace capture`, `mikebom trace run` | Linux kernel ≥ 5.8, eBPF privilege (`--privileged` container, root, or CAP_BPF + CAP_PERFMON) |
 
 If you only need the scanning surface, mikebom runs natively on macOS,
-Windows (WSL2), or Linux. `trace` requires Linux with eBPF.
+Linux, or Windows (the Windows binary is 🧪 [experimental](https://github.com/kusari-sandbox/mikebom/issues/210); WSL2 also works for both scanning and tracing). `trace` requires Linux with eBPF.
 
 ## Pre-built binaries (recommended)
 
@@ -33,6 +33,21 @@ mikebom --version
 Or browse releases manually at
 <https://github.com/kusari-sandbox/mikebom/releases> and pick the asset
 that matches your platform.
+
+## Windows install (experimental)
+
+> 🧪 **Experimental.** Windows builds are available as of milestone
+> 100, but are not feature-equivalent to Linux/macOS yet. Known gaps:
+> Linux-only OS package readers (dpkg/rpm/apk), HOME-env-var-derived
+> cache paths, OCI image cache atomic-rename, path-resolver pattern
+> matcher, and Python stdlib collapse. Full Windows runtime test
+> parity + production-code fixes are tracked in
+> [#210](https://github.com/kusari-sandbox/mikebom/issues/210).
+> Do not rely on the Windows binary for production SBOM workflows
+> until #210 closes.
+
+For the latest Windows x86_64 binary, follow the [Windows install
+instructions in the README](../../README.md#windows-install).
 
 ## Build from source
 

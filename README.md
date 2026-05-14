@@ -269,13 +269,23 @@ eBPF target — see
 | Linux x86_64      | ✅ supported                         | ✅ kernel ≥ 5.8, CAP_BPF    |
 | Linux aarch64     | ✅ supported                         | ✅ kernel ≥ 5.8, CAP_BPF    |
 | macOS (Apple/Intel)| ✅ supported                        | ❌ use Lima/Docker (below)  |
-| Windows x86_64    | ✅ supported (milestone 100)         | ❌                          |
+| Windows x86_64    | 🧪 experimental (milestone 100, [#210](https://github.com/kusari-sandbox/mikebom/issues/210)) | ❌ |
 
 On macOS, run tracing inside the `mikebom-dev` container
 ([`Dockerfile.dev`](Dockerfile.dev)) or a Lima VM
 ([`lima.yaml`](lima.yaml)). Everything else runs natively.
 
 ### Windows install
+
+> 🧪 **Experimental.** Windows builds are available as of milestone
+> 100, but are not feature-equivalent to Linux/macOS yet. Known gaps:
+> Linux-only OS package readers (dpkg/rpm/apk), HOME-env-var-derived
+> cache paths, OCI image cache atomic-rename, path-resolver pattern
+> matcher, and Python stdlib collapse. Full Windows runtime test
+> parity + production-code fixes are tracked in
+> [#210](https://github.com/kusari-sandbox/mikebom/issues/210).
+> Do not rely on the Windows binary for production SBOM workflows
+> until #210 closes.
 
 Download `mikebom-v<version>-x86_64-pc-windows-msvc.zip` from the
 [latest release](https://github.com/kusari-sandbox/mikebom/releases),

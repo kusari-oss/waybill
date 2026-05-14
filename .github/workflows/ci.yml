@@ -283,16 +283,28 @@ jobs:
       - name: Clippy
         run: cargo +stable clippy --workspace --all-targets -- -D warnings
 
+      # Milestone 101 — Windows smoke test (blocking gate). Runs the
+      # `scan_windows_smoke.rs` integration test which invokes
+      # `mikebom.exe sbom scan` against the cargo + polyglot fixtures
+      # and asserts CDX 1.6 envelope conformance, per-ecosystem PURL
+      # coverage, forward-slash normalization, and a 60-second
+      # per-scan timeout. Runs BEFORE the broader workspace test
+      # step so it benefits from cargo-cache warmth from the clippy
+      # step. NO `continue-on-error:` — failures block the merge.
+      # See specs/101-windows-smoke-experimental/.
+      - name: Smoke test (blocking — milestone 101)
+        run: cargo +stable test --test scan_windows_smoke
+
       # Milestone 100 ships build correctness (clippy `-D warnings`
-      # above is the gate) + SBOM emission with forward-slash paths
-      # + a Windows release artifact. Full `cargo test --workspace`
-      # parity on Windows is tracked in follow-up issue #210: the
-      # Linux-first test suite has hundreds of tests baking POSIX
-      # assumptions (HOME env var, /var/lib/dpkg paths, forward-
-      # slash substring matchers in production code, OCI cache
-      # atomic-rename) that need either #[cfg(unix)] gates or
-      # Windows-portable rewrites. The test step here runs but is
-      # marked `continue-on-error: true` so the per-test backlog
+      # above) + SBOM emission with forward-slash paths + a Windows
+      # release artifact. The milestone-101 smoke step (above) gates
+      # the headline runtime-regression class. Full `cargo test
+      # --workspace` parity on Windows is tracked in follow-up issue
+      # #210: the Linux-first test suite has hundreds of tests baking
+      # POSIX assumptions (HOME env var, /var/lib/dpkg paths,
+      # forward-slash substring matchers in production code, OCI
+      # cache atomic-rename) that need either #[cfg(unix)] gates or
+      # Windows-portable rewrites. This step's per-test backlog
       # surfaces in CI logs without blocking the MVP. When #210
       # closes, drop the `continue-on-error` line.
       - name: Tests (non-blocking, see issue #210)

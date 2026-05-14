@@ -96,6 +96,8 @@ Auto-generated from all feature plans. Last updated: 2026-05-13
 - Rust stable (workspace toolchain inherited from milestones 001–098; no nightly required). + Existing only — `std::collections::HashSet` (already imported in milestone-096's `symbol_fingerprint.rs`). **No new Cargo deps.** (099-symbol-fingerprint-expand)
 - Rust stable (workspace toolchain inherited from milestones 001–099; no nightly required for Windows-host work). + Existing only. Workspace deps (`object`, `serde`, `clap`, `tokio`, `reqwest` with `rustls-tls`, `chrono`, `regex`, `sha2`, `git2`-free since we shell out to git) all support Windows. Verified at planning-time via `cargo tree --target x86_64-pc-windows-msvc -p mikebom` (run during T002). (100-windows-host-build)
 - N/A — pure host-portability work; no state additions. (100-windows-host-build)
+- Rust stable (workspace toolchain inherited from milestones 001–100; no nightly required for this user-space test-and-docs work). + Existing only — `std::process::Command` (binary invocation), `std::time::Instant` + `std::thread` (60-second timeout via spawn-and-kill), `tempfile` (already in dev-deps), `serde_json::Value` (JSON parsing), `env!("CARGO_BIN_EXE_mikebom")` (cargo's integration-test binary-path mechanism), `env!("MIKEBOM_FIXTURES_DIR")` (milestone-090's fixture cache). **No new crates.** (101-windows-smoke-experimental)
+- N/A — per-test in-memory; `actual.cdx.json` written to a per-test tempdir on failure for diagnostic purposes only. (101-windows-smoke-experimental)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -158,9 +160,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 101-windows-smoke-experimental: Added Rust stable (workspace toolchain inherited from milestones 001–100; no nightly required for this user-space test-and-docs work). + Existing only — `std::process::Command` (binary invocation), `std::time::Instant` + `std::thread` (60-second timeout via spawn-and-kill), `tempfile` (already in dev-deps), `serde_json::Value` (JSON parsing), `env!("CARGO_BIN_EXE_mikebom")` (cargo's integration-test binary-path mechanism), `env!("MIKEBOM_FIXTURES_DIR")` (milestone-090's fixture cache). **No new crates.**
 - 100-windows-host-build: Added Rust stable (workspace toolchain inherited from milestones 001–099; no nightly required for Windows-host work). + Existing only. Workspace deps (`object`, `serde`, `clap`, `tokio`, `reqwest` with `rustls-tls`, `chrono`, `regex`, `sha2`, `git2`-free since we shell out to git) all support Windows. Verified at planning-time via `cargo tree --target x86_64-pc-windows-msvc -p mikebom` (run during T002).
 - 099-symbol-fingerprint-expand: Added Rust stable (workspace toolchain inherited from milestones 001–098; no nightly required). + Existing only — `std::collections::HashSet` (already imported in milestone-096's `symbol_fingerprint.rs`). **No new Cargo deps.**
-- 098-compiler-version-extract: Added Rust stable (workspace toolchain inherited from milestones 001–097; no nightly required). + Existing only — `object` crate's `section_by_name_bytes` (ELF), the existing `for_each_load_command` helper at `macho.rs:178` (Mach-O), the existing `PeFile32`/`PeFile64::optional_header()` accessor exposed by `object` 0.36 (PE). `serde`/`serde_json` for `Value` construction in the `extra_annotations` bag. **No new Cargo deps.**
 
 
 <!-- MANUAL ADDITIONS START -->
