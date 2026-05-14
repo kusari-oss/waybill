@@ -55,6 +55,24 @@ jobs:
         with:
           components: clippy
 
+      # dtolnay/rust-toolchain leaves the bootstrap installer
+      # (`rustup-init`) sitting at `~/.cargo/bin/rustup-init` alongside
+      # the real `rustup`/`cargo`/`rustc` binaries. Cargo's `+stable`
+      # toolchain-dispatch sometimes routes to `rustup-init` instead
+      # of `rustup` (the resolution order is non-deterministic — same
+      # directory, same prefix), producing:
+      #
+      #   error: unexpected argument '+stable' found
+      #   Usage: rustup-init[EXE] [OPTIONS]
+      #
+      # …because `rustup-init` is an installer, not a dispatcher.
+      # Removing it forces `cargo +<channel>` to dispatch to the real
+      # `rustup`, which exists, is on PATH, and understands the
+      # `+<channel>` syntax correctly. No-op if not present.
+      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+        shell: bash
+        run: rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
+
       - name: Cache cargo + build artifacts
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
 
@@ -226,6 +244,11 @@ jobs:
         with:
           components: clippy
 
+      # See lint-and-test job for the rationale.
+      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+        shell: bash
+        run: rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
+
       - name: Cache cargo + build artifacts
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
 
@@ -268,21 +291,14 @@ jobs:
         with:
           components: clippy
 
-      # Windows-only workaround for an intermittent `rustup-init:
-      # unexpected argument '+stable' found` failure observed on
-      # `windows-latest` runners. Symptom: `cargo +stable ...` is
-      # routed to `rustup-init.exe` (the initial installer) instead
-      # of `cargo.exe`/`rustup.exe`, because of a PATH-ordering race
-      # in the dtolnay/rust-toolchain action's pre-install step.
-      # Explicitly invoking `rustup default stable` + `rustup show`
-      # here forces the real `rustup.exe` to resolve, pins stable
-      # as the default toolchain, and ensures subsequent `cargo
-      # +stable` invocations route through the right binary. No-op
-      # on a clean Windows runner; cheap insurance everywhere else.
-      - name: Pin stable toolchain (Windows PATH-race workaround)
-        run: |
-          rustup default stable
-          rustup show
+      # See lint-and-test job for the rationale. This supersedes the
+      # milestone-101 Windows-only `rustup default stable` workaround
+      # — that one papered over the symptom on one lane; this one
+      # fixes the root cause (rustup-init left on PATH alongside
+      # rustup) on every lane.
+      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+        shell: bash
+        run: rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
 
       - name: Cache cargo + build artifacts
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
@@ -359,6 +375,15 @@ jobs:
 
       - name: Make stable the default toolchain
         run: rustup default stable
+
+      # See lint-and-test job for the rationale. The eBPF lane
+      # installs nightly + stable in sequence; rm runs once after
+      # both installs are complete so any `rustup-init` left by
+      # either invocation is cleaned up before the first
+      # `cargo +stable` call.
+      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+        shell: bash
+        run: rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
 
       - name: Cache cargo + build artifacts
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1

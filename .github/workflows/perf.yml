@@ -42,6 +42,11 @@ jobs:
       - name: Install stable Rust
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
 
+      # See ci.yml::lint-and-test for the rationale.
+      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+        shell: bash
+        run: rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
+
       - name: Cache cargo + build
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
         with:

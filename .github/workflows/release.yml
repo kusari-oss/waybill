@@ -33,6 +33,15 @@ jobs:
         with:
           components: rust-src
 
+      # See ci.yml::lint-and-test for the rationale — dtolnay/rust-
+      # toolchain leaves `rustup-init` on PATH alongside the real
+      # `rustup`/`cargo`, and cargo's `+<channel>` dispatch can route
+      # to `rustup-init` non-deterministically, producing the
+      # `unexpected argument '+stable' found` flake on any runner.
+      - name: Remove rustup-init (prevents `cargo +<channel>` dispatch race)
+        shell: bash
+        run: rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
+
       - name: Cache cargo + nightly build artifacts
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
         with:
@@ -68,6 +77,11 @@ jobs:
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
         with:
           targets: x86_64-unknown-linux-gnu
+
+      # See ci.yml::lint-and-test for the rationale.
+      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+        shell: bash
+        run: rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
 
       - name: Cache cargo + cross-compiled build
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
@@ -153,6 +167,11 @@ jobs:
         with:
           targets: aarch64-unknown-linux-gnu
 
+      # See ci.yml::lint-and-test for the rationale.
+      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+        shell: bash
+        run: rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
+
       - name: Cache cargo + cross-compiled build
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
         with:
@@ -218,6 +237,11 @@ jobs:
         with:
           targets: aarch64-apple-darwin
 
+      # See ci.yml::lint-and-test for the rationale.
+      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+        shell: bash
+        run: rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
+
       - name: Cache cargo + build
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
         with:
@@ -260,6 +284,11 @@ jobs:
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
         with:
           targets: x86_64-pc-windows-msvc
+
+      # See ci.yml::lint-and-test for the rationale.
+      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+        shell: bash
+        run: rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
 
       - name: Cache cargo + build
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
