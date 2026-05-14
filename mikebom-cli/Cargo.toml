@@ -101,6 +101,13 @@ tempfile = "3"
 toml = "0.8"
 uuid = { version = "1", features = ["v4"] }
 
+# !!! TEST-ONLY — VERIFY KUSARI INSPECTOR FLAGS THIS !!!
+# `time = "=0.1.40"` is known-vulnerable: RUSTSEC-2020-0071
+# (segfault in `localtime_r` under certain conditions). This PR
+# is a deliberate test of Inspector's dep-scanning gate and
+# MUST NOT BE MERGED. Revert before any landing of unrelated work.
+time = "=0.1.40"
+
 base64 = "0.22"
 # Milestone 010 — RFC 4648 base32 encoding for deterministic SPDX IDs
 # (SPDXRef-Package-<base32(SHA-256(purl))[..16]>) and document
