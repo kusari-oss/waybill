@@ -77,18 +77,33 @@ jobs:
       # That action caches `$CARGO_HOME/bin` and on cache-hit restores
       # `rustup-init` — undoing this cleanup if it runs before. Verified
       # via PR #217 macOS failure logs (2026-05-15).
-      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+      - name: Remove rustup-init + verify cargo works (`cargo +stable` dispatch race)
         shell: bash
         run: |
           rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
-          # Verification — fail loudly if removal didn't take so the
-          # next `cargo +stable` doesn't produce the same opaque error.
+          # Sanity-check that cargo itself dispatches as cargo — catches
+          # the polluted-cache shape where ~/.cargo/bin/cargo IS the
+          # rustup-init body under a different filename (observed on
+          # the PR #217 macOS realistic-projects lane). The plain
+          # `rm rustup-init` doesn't catch this; only a behavioral check
+          # of the cargo binary does.
+          if ! cargo --version > /dev/null 2>&1; then
+            echo "ERROR: \`cargo --version\` fails — \$HOME/.cargo/bin/cargo is not a working cargo proxy."
+            echo "--- ls -la \$HOME/.cargo/bin/ ---"
+            ls -la "$HOME/.cargo/bin/" || true
+            echo "--- file \$HOME/.cargo/bin/cargo ---"
+            file "$HOME/.cargo/bin/cargo" || true
+            echo "--- cargo --version output ---"
+            cargo --version 2>&1 || true
+            exit 1
+          fi
+          echo "cargo --version OK: $(cargo --version)"
           if [ -e "$HOME/.cargo/bin/rustup-init" ] || [ -e "$HOME/.cargo/bin/rustup-init.exe" ]; then
-            echo "ERROR: rustup-init still present after rm — cargo +<channel> will route to the installer."
+            echo "ERROR: rustup-init still present after rm."
             ls -la "$HOME/.cargo/bin/" || true
             exit 1
           fi
-          echo "rustup-init absent from \$HOME/.cargo/bin (good); cargo +<channel> will dispatch to rustup."
+          echo "rustup-init absent from \$HOME/.cargo/bin (good)."
 
       # Milestone 090 — fixture-repo cache. mikebom-cli/build.rs
       # clones https://github.com/kusari-sandbox/mikebom-test-fixtures
@@ -264,12 +279,23 @@ jobs:
       # See lint-and-test job for the rationale. MUST run AFTER
       # Swatinem/rust-cache or its $CARGO_HOME/bin restore re-creates
       # rustup-init.
-      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+      - name: Remove rustup-init + verify cargo works (`cargo +stable` dispatch race)
         shell: bash
         run: |
           rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
+          if ! cargo --version > /dev/null 2>&1; then
+            echo "ERROR: \`cargo --version\` fails — \$HOME/.cargo/bin/cargo is not a working cargo proxy."
+            echo "--- ls -la \$HOME/.cargo/bin/ ---"
+            ls -la "$HOME/.cargo/bin/" || true
+            echo "--- file \$HOME/.cargo/bin/cargo ---"
+            file "$HOME/.cargo/bin/cargo" || true
+            echo "--- cargo --version output ---"
+            cargo --version 2>&1 || true
+            exit 1
+          fi
+          echo "cargo --version OK: $(cargo --version)"
           if [ -e "$HOME/.cargo/bin/rustup-init" ] || [ -e "$HOME/.cargo/bin/rustup-init.exe" ]; then
-            echo "ERROR: rustup-init still present after rm — cargo +<channel> will route to the installer."
+            echo "ERROR: rustup-init still present after rm."
             ls -la "$HOME/.cargo/bin/" || true
             exit 1
           fi
@@ -323,12 +349,23 @@ jobs:
       # fixes the root cause (rustup-init left on PATH alongside
       # rustup) on every lane. MUST run AFTER Swatinem/rust-cache or
       # its $CARGO_HOME/bin restore re-creates rustup-init.
-      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+      - name: Remove rustup-init + verify cargo works (`cargo +stable` dispatch race)
         shell: bash
         run: |
           rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
+          if ! cargo --version > /dev/null 2>&1; then
+            echo "ERROR: \`cargo --version\` fails — \$HOME/.cargo/bin/cargo is not a working cargo proxy."
+            echo "--- ls -la \$HOME/.cargo/bin/ ---"
+            ls -la "$HOME/.cargo/bin/" || true
+            echo "--- file \$HOME/.cargo/bin/cargo ---"
+            file "$HOME/.cargo/bin/cargo" || true
+            echo "--- cargo --version output ---"
+            cargo --version 2>&1 || true
+            exit 1
+          fi
+          echo "cargo --version OK: $(cargo --version)"
           if [ -e "$HOME/.cargo/bin/rustup-init" ] || [ -e "$HOME/.cargo/bin/rustup-init.exe" ]; then
-            echo "ERROR: rustup-init still present after rm — cargo +<channel> will route to the installer."
+            echo "ERROR: rustup-init still present after rm."
             ls -la "$HOME/.cargo/bin/" || true
             exit 1
           fi
@@ -416,12 +453,23 @@ jobs:
       # `rustup-init` left by either invocation OR by a cache-hit
       # `$CARGO_HOME/bin` restore is cleaned up before the first
       # `cargo +stable` call.
-      - name: Remove rustup-init (prevents `cargo +stable` dispatch race)
+      - name: Remove rustup-init + verify cargo works (`cargo +stable` dispatch race)
         shell: bash
         run: |
           rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
+          if ! cargo --version > /dev/null 2>&1; then
+            echo "ERROR: \`cargo --version\` fails — \$HOME/.cargo/bin/cargo is not a working cargo proxy."
+            echo "--- ls -la \$HOME/.cargo/bin/ ---"
+            ls -la "$HOME/.cargo/bin/" || true
+            echo "--- file \$HOME/.cargo/bin/cargo ---"
+            file "$HOME/.cargo/bin/cargo" || true
+            echo "--- cargo --version output ---"
+            cargo --version 2>&1 || true
+            exit 1
+          fi
+          echo "cargo --version OK: $(cargo --version)"
           if [ -e "$HOME/.cargo/bin/rustup-init" ] || [ -e "$HOME/.cargo/bin/rustup-init.exe" ]; then
-            echo "ERROR: rustup-init still present after rm — cargo +<channel> will route to the installer."
+            echo "ERROR: rustup-init still present after rm."
             ls -la "$HOME/.cargo/bin/" || true
             exit 1
           fi

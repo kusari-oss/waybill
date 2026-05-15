@@ -54,8 +54,19 @@ jobs:
         shell: bash
         run: |
           rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
+          if ! cargo --version > /dev/null 2>&1; then
+            echo "ERROR: \`cargo --version\` fails — \$HOME/.cargo/bin/cargo is not a working cargo proxy."
+            echo "--- ls -la \$HOME/.cargo/bin/ ---"
+            ls -la "$HOME/.cargo/bin/" || true
+            echo "--- file \$HOME/.cargo/bin/cargo ---"
+            file "$HOME/.cargo/bin/cargo" || true
+            echo "--- cargo --version output ---"
+            cargo --version 2>&1 || true
+            exit 1
+          fi
+          echo "cargo --version OK: $(cargo --version)"
           if [ -e "$HOME/.cargo/bin/rustup-init" ] || [ -e "$HOME/.cargo/bin/rustup-init.exe" ]; then
-            echo "ERROR: rustup-init still present after rm — cargo +<channel> will route to the installer."
+            echo "ERROR: rustup-init still present after rm."
             ls -la "$HOME/.cargo/bin/" || true
             exit 1
           fi
