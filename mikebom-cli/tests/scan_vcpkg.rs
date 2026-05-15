@@ -6,9 +6,11 @@
 use std::path::PathBuf;
 use std::process::Command;
 
+mod common;
+use common::fixture_path;
+
 fn fixture() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures/vcpkg")
+    fixture_path("vcpkg")
 }
 
 fn scan_fixture() -> serde_json::Value {

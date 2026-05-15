@@ -3,12 +3,11 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+mod common;
+use common::fixture_path;
+
 fn fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("workspace root")
-        .join("tests/fixtures/rpm")
-        .join(sub)
+    fixture_path(&format!("rpm/{sub}"))
 }
 
 fn scan_path(path: &Path) -> (String, serde_json::Value) {

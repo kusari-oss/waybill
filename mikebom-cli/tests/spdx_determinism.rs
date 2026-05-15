@@ -11,7 +11,7 @@ use std::process::Command;
 
 mod common;
 use common::normalize::{apply_fake_home_env, normalize_spdx23_for_golden};
-use common::{fixture_path, local_fixture_path, workspace_root};
+use common::{fixture_path, workspace_root};
 
 /// Run `mikebom sbom scan --format spdx-2.3-json` against `fixture`
 /// in an isolated fake-HOME and return the produced raw JSON string.
@@ -80,7 +80,7 @@ fn npm_scan_is_deterministic() {
 
 #[test]
 fn deb_scan_is_deterministic() {
-    run_twice(&local_fixture_path("deb/synthetic"));
+    run_twice(&fixture_path("deb/synthetic"));
 }
 
 #[test]

@@ -3,6 +3,9 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+mod common;
+use common::fixture_path;
+
 fn fixture(sub: &str) -> PathBuf {
     PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("gem")
         .join(sub)
@@ -418,12 +421,9 @@ BUNDLED WITH
 // --- Milestone 069: gem main-module emission ------------------------
 
 fn cli_local_fixture(sub: &str) -> PathBuf {
-    // Stay-set: gem-source-project lives in mikebom main repo at
-    // `mikebom-cli/tests/fixtures/<sub>` (no Gemfile.lock — not a
-    // scanner trigger surface, kept locally for milestone 069 tests).
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures")
-        .join(sub)
+    // Post-103 migration: gem-source-project moved to the sibling
+    // fixtures repo alongside the other build-manifest test projects.
+    fixture_path(sub)
 }
 
 fn scan_path_format(path: &Path, format: &str) -> serde_json::Value {

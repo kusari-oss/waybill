@@ -8,9 +8,11 @@
 use std::path::PathBuf;
 use std::process::Command;
 
+mod common;
+use common::fixture_path;
+
 fn fixture() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures/conan_vcpkg_cross")
+    fixture_path("conan_vcpkg_cross")
 }
 
 fn scan_fixture() -> serde_json::Value {

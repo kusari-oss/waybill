@@ -21,7 +21,7 @@
       "properties": [
         {
           "name": "mikebom:source-files",
-          "value": "<WORKSPACE>/mikebom-cli/tests/fixtures/bazel/MODULE.bazel"
+          "value": "<WORKSPACE>/tests/fixtures/bazel/MODULE.bazel"
         },
         {
           "name": "mikebom:sbom-tier",
@@ -52,7 +52,7 @@
       "properties": [
         {
           "name": "mikebom:source-files",
-          "value": "<WORKSPACE>/mikebom-cli/tests/fixtures/bazel/MODULE.bazel"
+          "value": "<WORKSPACE>/tests/fixtures/bazel/MODULE.bazel"
         },
         {
           "name": "mikebom:lifecycle-scope",
@@ -88,7 +88,7 @@
       "properties": [
         {
           "name": "mikebom:source-files",
-          "value": "<WORKSPACE>/mikebom-cli/tests/fixtures/bazel/WORKSPACE.bazel"
+          "value": "<WORKSPACE>/tests/fixtures/bazel/WORKSPACE.bazel"
         },
         {
           "name": "mikebom:sbom-tier",
@@ -127,7 +127,7 @@
       "properties": [
         {
           "name": "mikebom:source-files",
-          "value": "<WORKSPACE>/mikebom-cli/tests/fixtures/bazel/WORKSPACE.bazel"
+          "value": "<WORKSPACE>/tests/fixtures/bazel/WORKSPACE.bazel"
         },
         {
           "name": "mikebom:sbom-tier",

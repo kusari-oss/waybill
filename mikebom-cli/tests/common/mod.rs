@@ -140,44 +140,26 @@ pub fn fixture_path(rel: &str) -> PathBuf {
 /// Path to a stay-set fixture relative to mikebom main repo's
 /// `tests/fixtures/` directory. Resolves against `workspace_root()`.
 ///
-/// Use this for: synthetic OS-package fixtures (apk/deb/rpm),
-/// opaque binaries, the `bdb-rpmdb` test data, `reference/`,
-/// `polyglot-rpm-binary/`, `polyglot-five/`, `gem-source-project/`,
-/// and `sample-attestation.json` — i.e., everything in the stay-set
-/// per research §4.
+/// As of the post-103 migration the stay-set is narrow:
+/// `sample-attestation.json`, plus the README-only placeholder dirs
+/// (`binaries/`, `bdb-rpmdb/`, `polyglot-*/`, `rpm-files/`) that
+/// will get real fixture bodies in future milestones. The
+/// synthetic apk/deb/rpm trees + gem-source-project + the
+/// build-manifest projects (conan/vcpkg/bazel/cmake) moved to the
+/// sibling fixtures repo — use `fixture_path` for those.
 pub fn local_fixture_path(rel: &str) -> PathBuf {
     workspace_root().join("tests").join("fixtures").join(rel)
 }
 
-/// Path to a crate-local fixture under `mikebom-cli/tests/fixtures/`.
-/// Resolves against the test crate's `CARGO_MANIFEST_DIR`.
-///
-/// Use this for: fixtures introduced by milestones 102 (vcpkg, conan)
-/// and 103 (bazel, cmake) which live alongside the test crate rather
-/// than at the workspace root. Their dedicated integration tests
-/// already use `CARGO_MANIFEST_DIR.join("tests/fixtures/<name>")`
-/// directly; this helper exposes the same path for CASES-driven
-/// regression suites that share the lookup logic.
-pub fn crate_fixture_path(rel: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests")
-        .join("fixtures")
-        .join(rel)
-}
-
-/// Resolve an `EcosystemCase`'s fixture path. Dispatches to:
-///   * `local_fixture_path` (workspace-root `tests/fixtures/`) for
-///     legacy OS-package-based ecosystems (apk/deb/rpm) whose
-///     synthetic fixtures predate the milestone-090 split;
-///   * `crate_fixture_path` (`mikebom-cli/tests/fixtures/`) for the
-///     milestone-103 source-tree-build ecosystems (bazel/cmake) which
-///     live alongside the test crate consistent with milestone 102
-///     PR-A's vcpkg/conan precedent;
-///   * `fixture_path` (sibling fixtures repo) for everything else.
+/// Resolve an `EcosystemCase`'s fixture path. As of the post-103
+/// fixture-migration PR, every CASES entry's fixture lives in the
+/// sibling `mikebom-test-fixtures` repo and resolves via
+/// `fixture_path`. Earlier history had apk/deb/rpm at workspace-root
+/// `tests/fixtures/` (milestone-090 stay-set) and bazel/cmake at
+/// crate-local `mikebom-cli/tests/fixtures/` (milestone-103
+/// quick-implementation); both have been migrated out to keep the
+/// main repo free of synthetic OS-image rpmdb data and full
+/// build-manifest test projects.
 pub fn case_fixture_path(case: &EcosystemCase) -> PathBuf {
-    match case.label {
-        "apk" | "deb" | "rpm" => local_fixture_path(case.fixture_subpath),
-        "bazel" | "cmake" => crate_fixture_path(case.fixture_subpath),
-        _ => fixture_path(case.fixture_subpath),
-    }
+    fixture_path(case.fixture_subpath)
 }

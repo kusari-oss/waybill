@@ -88,7 +88,7 @@
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.33",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/mikebom-cli/tests/fixtures/bazel/MODULE.bazel\"]}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/bazel/MODULE.bazel\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
@@ -124,7 +124,7 @@
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.33",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/mikebom-cli/tests/fixtures/bazel/MODULE.bazel\"]}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/bazel/MODULE.bazel\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
@@ -160,7 +160,7 @@
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.33",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/mikebom-cli/tests/fixtures/bazel/WORKSPACE.bazel\"]}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/bazel/WORKSPACE.bazel\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
@@ -208,7 +208,7 @@
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.33",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/mikebom-cli/tests/fixtures/bazel/WORKSPACE.bazel\"]}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/bazel/WORKSPACE.bazel\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",

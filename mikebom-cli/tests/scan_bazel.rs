@@ -1,14 +1,17 @@
 //! End-to-end integration test for the Bazel source-tree reader
 //! (milestone 102 US1 / milestone 103 / Contracts 1+2+3). Scans the
-//! in-repo `tests/fixtures/bazel/` directory and asserts the emitted
-//! CDX SBOM contains the expected `pkg:bazel/...` components with
-//! correct PURLs, annotations, and standards-native scope mapping.
+//! sibling-repo `bazel/` fixture and asserts the emitted CDX SBOM
+//! contains the expected `pkg:bazel/...` components with correct
+//! PURLs, annotations, and standards-native scope mapping.
 
 use std::path::PathBuf;
 use std::process::Command;
 
+mod common;
+use common::fixture_path;
+
 fn fixture() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/bazel")
+    fixture_path("bazel")
 }
 
 fn scan_fixture() -> serde_json::Value {

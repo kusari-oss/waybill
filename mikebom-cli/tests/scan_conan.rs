@@ -7,9 +7,11 @@
 use std::path::PathBuf;
 use std::process::Command;
 
+mod common;
+use common::fixture_path;
+
 fn fixture() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures/conan")
+    fixture_path("conan")
 }
 
 fn scan_fixture(exclude_dev_test_build: bool) -> serde_json::Value {

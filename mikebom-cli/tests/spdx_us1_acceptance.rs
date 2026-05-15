@@ -24,7 +24,7 @@ mod common;
 use common::normalize::{
     apply_fake_home_env, normalize_cdx_for_golden, normalize_spdx23_for_golden,
 };
-use common::{bin, fixture_path, local_fixture_path, workspace_root};
+use common::{bin, fixture_path, workspace_root};
 
 
 struct Scan {
@@ -138,7 +138,7 @@ fn scenario_1_npm_components_appear_as_spdx_packages() {
 
 #[test]
 fn scenario_2_deb_components_match_and_describes_points_at_root() {
-    let fixture = local_fixture_path("deb/synthetic");
+    let fixture = fixture_path("deb/synthetic");
     let s = scan(
         &fixture,
         &["cyclonedx-json", "spdx-2.3-json"],

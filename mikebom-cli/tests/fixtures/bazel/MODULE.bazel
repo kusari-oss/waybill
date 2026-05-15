@@ -1,4 +1,0 @@
-module(name = "test-bazel-project", version = "0.1.0")
-
-bazel_dep(name = "abseil-cpp", version = "20240722.0")
-bazel_dep(name = "googletest", version = "1.14.0", dev_dependency = True)

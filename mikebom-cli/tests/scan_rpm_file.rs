@@ -15,6 +15,9 @@ use std::process::Command;
 use serde_json::Value;
 use tempfile::TempDir;
 
+mod common;
+use common::fixture_path;
+
 fn binary_path() -> &'static str {
     env!("CARGO_BIN_EXE_mikebom")
 }
@@ -269,10 +272,7 @@ fn scan_rpm_file_dedup_with_rpmdb_sqlite() {
     // Reuse milestone-003's rhel-image rootfs fixture which carries a
     // populated rpmdb.sqlite. We drop a synthetic `.rpm` into it that
     // matches one of the installed packages' PURL shape.
-    let src_rhel = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .unwrap()
-        .join("tests/fixtures/rpm/rhel-image");
+    let src_rhel = fixture_path("rpm/rhel-image");
     if !src_rhel.exists() {
         // Milestone-003 fixture may not be present in every checkout;
         // skip with a visible log rather than false-fail.
