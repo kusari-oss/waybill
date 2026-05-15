@@ -305,7 +305,7 @@ on Linux, macOS, and Windows.
 
 ## Supported ecosystems
 
-Nine production ecosystem readers plus a generic binary scanner.
+Eleven production ecosystem readers plus a generic binary scanner.
 [`docs/ecosystems.md`](docs/ecosystems.md) holds the full matrix;
 summary below.
 
@@ -321,7 +321,14 @@ summary below.
 | **maven**         | Fedora sidecar POMs                 | `pom.xml`, embedded `META-INF/maven/`, `~/.m2/`, deps.dev fallback          | Full, 5-layer resolver              |
 | **npm**           | —                                   | `package-lock.json` v2/v3, `pnpm-lock.yaml`, `node_modules/`                | Full. v1 locks refused.             |
 | **pip**           | venv `dist-info/METADATA`           | `poetry.lock`, `Pipfile.lock`, `requirements.txt`                           | Flat venv; tree in locks            |
+| **vcpkg** *(102)* | —                                   | `vcpkg.json` (manifest mode, `dependencies[]` + `overrides[]`)              | Direct only                          |
+| **conan** *(102)* | —                                   | `conanfile.txt` (`[requires]`/`[tool_requires]`) + `conanfile.py` (literal `requires=[...]`) | Direct only                          |
 | *generic binary*  | —                                   | ELF / Mach-O / PE headers (`DT_NEEDED`, `LC_LOAD_DYLIB`, PE IMPORT)         | Linkage only                        |
+
+C/C++ build-system manifests (Bazel `MODULE.bazel` / `WORKSPACE.bazel`,
+CMake `FetchContent_Declare` / `ExternalProject_Add`) ship in
+milestone 102's second PR — alpha-status spec at
+[`specs/102-cpp-bazel-cmake-readers/`](specs/102-cpp-bazel-cmake-readers/).
 
 Maven fat-jars built with the shade-plugin are emitted as nested
 `components[].components[]` with a `mikebom:shade-relocation = true`

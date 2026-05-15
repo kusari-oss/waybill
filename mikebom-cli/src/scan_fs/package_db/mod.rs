@@ -11,7 +11,10 @@
 //! that scenario's output is still well-formed.
 
 pub mod apk;
+pub mod bazel;
 pub mod cargo;
+pub mod cmake;
+pub mod conan;
 pub mod copyright;
 pub mod dpkg;
 pub mod file_hashes;
@@ -27,6 +30,7 @@ pub mod rpm;
 pub mod rpm_file;
 pub mod rpmdb_bdb;
 pub mod rpmdb_sqlite;
+pub mod vcpkg;
 
 use std::path::Path;
 
@@ -614,6 +618,14 @@ pub fn read_all(
     include_declared_deps: bool,
     scan_target_name: Option<&str>,
 ) -> Result<DbScanResult, PackageDbError> {
+    // Milestone 102 FR-016: opt-in vendored-dep emission for CMake
+    // `add_subdirectory(third_party/...)`. Read via env var so the
+    // CLI flag in scan_cmd can set it without plumbing through the
+    // 75-callsite `scan_path` -> `read_all` signature chain. Default
+    // off; `--include-vendored` CLI flag sets `MIKEBOM_INCLUDE_VENDORED=1`.
+    let include_vendored = std::env::var("MIKEBOM_INCLUDE_VENDORED")
+        .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+        .unwrap_or(false);
     let mut out = Vec::new();
     let mut claimed: std::collections::HashSet<std::path::PathBuf> =
         std::collections::HashSet::new();
@@ -787,6 +799,15 @@ pub fn read_all(
     // npm v1 refusal pattern.
     out.extend(cargo::read(rootfs, include_dev)?);
     out.extend(gem::read(rootfs, include_dev));
+
+    // Milestone 102: C/C++ source-tree readers (Bazel + CMake +
+    // vcpkg + Conan). Skip-with-warn on parse errors per FR-015;
+    // cross-platform (no `#[cfg(unix)]` per FR-013); zero new
+    // Cargo deps (workspace `regex` + `serde_json` reused).
+    out.extend(bazel::read(rootfs));
+    out.extend(cmake::read(rootfs, include_vendored));
+    out.extend(vcpkg::read(rootfs));
+    out.extend(conan::read(rootfs));
 
     // G3: when a scan produced BOTH `pkg:golang` source-tier entries
     // (from `golang.rs`'s go.sum parsing) AND `pkg:golang` analyzed-

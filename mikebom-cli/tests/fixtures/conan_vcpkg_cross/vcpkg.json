@@ -1,0 +1,10 @@
+{
+  "name": "cross-test",
+  "version": "0.1.0",
+  "dependencies": [
+    {
+      "name": "openssl",
+      "version>=": "3.0.0"
+    }
+  ]
+}

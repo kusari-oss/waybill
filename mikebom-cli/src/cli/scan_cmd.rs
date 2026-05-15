@@ -240,6 +240,20 @@ pub struct ScanArgs {
     #[arg(long)]
     pub no_deps_dev: bool,
 
+    /// Milestone 102 (FR-016/FR-017): include vendored C/C++
+    /// dependencies declared via CMake `add_subdirectory(third_party/...)`
+    /// or `add_subdirectory(vendor/...)`. Default OFF — these are
+    /// frequently false positives (CMake's `add_subdirectory` is also
+    /// used for first-party `src/` and `tests/` sub-modules) so we
+    /// require explicit opt-in. When enabled, version is backfilled
+    /// from a co-located `version.txt` or `.version` file when present;
+    /// otherwise the PURL has no version segment. Also accepts
+    /// `MIKEBOM_INCLUDE_VENDORED=1` env var (the milestone-102 readers
+    /// read the env var directly to avoid plumbing through the 75-call
+    /// `scan_path` chain).
+    #[arg(long, env = "MIKEBOM_INCLUDE_VENDORED")]
+    pub include_vendored: bool,
+
     /// Skip the deps.dev transitive dep-graph enrichment step.
     /// Keeps deps.dev license enrichment and ClearlyDefined active.
     /// Useful when the graph response is large or unneeded. Has no
@@ -1244,6 +1258,21 @@ pub async fn execute(
     include_legacy_rpmdb: bool,
     include_declared_deps: bool,
 ) -> anyhow::Result<()> {
+    // Milestone 102 FR-016: propagate the `--include-vendored` flag to
+    // the env var that the C/C++ readers read directly. This avoids
+    // plumbing through `scan_path`'s 75-callsite chain. The clap derive
+    // already populates `args.include_vendored` from either the CLI
+    // flag or `MIKEBOM_INCLUDE_VENDORED=1` env (whichever was set first);
+    // we re-export to the env so `read_all`-internal readers see the
+    // unified signal regardless of which input set it.
+    // SAFETY: single-threaded at this point in the scan-cmd lifecycle.
+    if args.include_vendored {
+        // SAFETY: see comment above — single-threaded.
+        unsafe {
+            std::env::set_var("MIKEBOM_INCLUDE_VENDORED", "1");
+        }
+    }
+
     // Milestone 052/part-3: the default is to include all lifecycle
     // scopes natively tagged. Readers receive `include_dev = true`
     // unconditionally; the centralized `exclude_scope` filter
@@ -2390,6 +2419,8 @@ mod tests {
             // Milestone 081 — default the new operator-assert flag to
             // None so the helper's "minimal flags" contract holds.
             sbom_type: None,
+            // Milestone 102 — default vendored-deps emission OFF.
+            include_vendored: false,
         }
     }
 

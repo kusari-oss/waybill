@@ -1,0 +1,11 @@
+{
+  "name": "test-project",
+  "version": "0.1.0",
+  "dependencies": [
+    "zlib",
+    {
+      "name": "openssl",
+      "version>=": "3.0.0"
+    }
+  ]
+}
