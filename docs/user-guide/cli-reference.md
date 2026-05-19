@@ -61,6 +61,16 @@ CI lanes that can't reach the internet.
 mikebom --offline sbom scan --path . --output offline.cdx.json
 ```
 
+Accepts three equivalent forms:
+
+- `--offline` — alone, equivalent to `--offline=true`
+- `--offline=true` — explicit on (handy for scripts toggled by a boolean variable)
+- `--offline=false` — explicit off (overrides a `MIKEBOM_OFFLINE=1` environment
+  default for a single invocation)
+
+The `=` is required when a value is supplied; `--offline true` (with a space)
+is rejected so the next positional argument is never silently consumed.
+
 See also: [Configuration](configuration.md) for the full offline-mode contract.
 
 ### `--exclude-scope <SCOPE[,SCOPE...]>`

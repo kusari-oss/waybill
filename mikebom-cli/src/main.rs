@@ -66,7 +66,19 @@ struct Cli {
     /// can be derived from the local filesystem and package databases
     /// alone. Useful for air-gapped scanners, reproducible-build
     /// environments, and CI runs that can't reach the internet.
-    #[arg(long, global = true)]
+    ///
+    /// Accepted forms: `--offline` (alone, equivalent to `--offline=true`),
+    /// `--offline=true`, `--offline=false`. The `=` is required when a
+    /// value is supplied (e.g. `--offline true` is rejected); this keeps
+    /// the next positional argument from being silently consumed.
+    #[arg(
+        long,
+        global = true,
+        require_equals = true,
+        num_args = 0..=1,
+        default_value_t = false,
+        default_missing_value = "true",
+    )]
     offline: bool,
 
     /// **DEPRECATED** (milestone 052/part-3). Pre-052 this flag was
