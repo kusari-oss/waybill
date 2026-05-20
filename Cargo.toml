@@ -7,6 +7,7 @@ resolver = "2"
 version = "0.1.0-alpha.34"
 edition = "2021"
 license = "Apache-2.0"
+repository = "https://github.com/kusari-sandbox/mikebom"
 
 [workspace.dependencies]
 anyhow = "1"
