@@ -88,6 +88,7 @@ pub async fn pull_to_tarball(
     image_ref: &str,
     image_platform: Option<&str>,
     cache_size_cap: Option<u64>,
+    creds_dir: Option<&Path>,
 ) -> Result<tempfile::TempDir> {
     let mut reference = reference::parse_reference(image_ref)
         .with_context(|| format!("parsing OCI image reference `{image_ref}`"))?;
@@ -124,7 +125,7 @@ pub async fn pull_to_tarball(
     // etc.) returns None and we fall through to no-cache mode. The
     // user's scan completes either way.
     let cache_handle = cache_size_cap.and_then(cache::Cache::open);
-    let client = RegistryClient::new(&reference, cache_handle)?;
+    let client = RegistryClient::new(&reference, cache_handle, creds_dir)?;
 
     // Step 1: fetch the manifest. If it's an image index
     // (manifest list), resolve the platform-specific manifest and

@@ -150,6 +150,7 @@ Exactly one of `--path` or `--image` is required.
 | `--image-platform <linux/ARCH[/VARIANT]>` | string | host arch | Multi-arch image platform pick. |
 | `--no-oci-cache` | bool | off | Disable the OCI blob cache for registry pulls. |
 | `--oci-cache-size <BYTES>` | u64 | `10737418240` (10 GB) | Cap for the on-disk OCI blob cache. |
+| `--registry-credentials-dir <PATH>` | path | (unset) | Directory containing Docker-format registry credentials (issue #235; for in-cluster operation). |
 | `--output <[FMT=]PATH>` | string (repeatable) | per-format default | Output path override. |
 | `--format <FORMAT>` | enum (repeatable, comma-separated) | `cyclonedx-json` | Output format(s). |
 | `--max-file-size <BYTES>` | u64 | `268435456` (256 MB) | Skip files larger than this. |
@@ -264,6 +265,46 @@ registry-side regression.
 Cap (in bytes) for the on-disk OCI blob cache. When the cache exceeds this
 size, oldest-mtime entries are evicted until the total drops below the cap.
 Default 10 GB. Equivalent env var `MIKEBOM_OCI_CACHE_SIZE`.
+
+### `--registry-credentials-dir <PATH>`
+
+Directory containing Docker-format registry credentials. Probes the K8s
+secret-mount filenames in order: `config.json` (plain Docker convention),
+`.dockerconfigjson` (K8s `kubernetes.io/dockerconfigjson` secret type),
+`.dockercfg` (legacy K8s `kubernetes.io/dockercfg` secret type). First
+readable + parseable file wins. The file format is the standard Docker
+`config.json` shape (`auths`, `credsStore`, `credHelpers`); the existing
+credential-resolution precedence applies inside the loaded config.
+
+Use this when running mikebom in a container that mounts a K8s
+`imagePullSecrets`-derived volume (typically at
+`/var/run/secrets/registry/`). For local/CI use with the standard Docker
+keychain, leave this unset — mikebom falls back to
+`$DOCKER_CONFIG/config.json` or `$HOME/.docker/config.json` (issue #235).
+
+**Full credential-resolution priority chain** (highest to lowest):
+
+1. Per-registry env vars `MIKEBOM_REGISTRY_<HOST>_USERNAME` +
+   `MIKEBOM_REGISTRY_<HOST>_PASSWORD`, where `<HOST>` is the registry
+   hostname normalized to uppercase with `[^A-Z0-9]` replaced by `_`
+   (e.g. `ghcr.io` → `MIKEBOM_REGISTRY_GHCR_IO_USERNAME`).
+2. Generic env vars `MIKEBOM_REGISTRY_USERNAME` + `MIKEBOM_REGISTRY_PASSWORD`
+   (applies to every registry).
+3. The `--registry-credentials-dir` path described above.
+4. `$DOCKER_CONFIG/config.json` or `$HOME/.docker/config.json`
+   (legacy/default behavior, unchanged).
+
+If every source fails, mikebom falls through to anonymous registry access
+— which works for public registries hosting public images.
+
+```bash
+# In-cluster CronJob pattern: K8s mounts an imagePullSecret-derived
+# volume; mikebom reads creds from there.
+mikebom sbom scan \
+  --image my-ecr.amazonaws.com/app:v1 \
+  --image-src remote \
+  --registry-credentials-dir /var/run/secrets/registry
+```
 
 ### `--output <[FMT=]PATH>`
 

@@ -65,24 +65,34 @@ pub(super) struct RegistryClient {
 
 impl RegistryClient {
     /// Build a client for `reference`, resolving Docker-keychain
-    /// credentials for the target registry from
-    /// `~/.docker/config.json` (or `$DOCKER_CONFIG/config.json`) at
-    /// construction time. Missing config / no entry for this registry
-    /// → anonymous mode.
+    /// credentials for the target registry via the layered resolver
+    /// (issue #235): per-registry env vars, generic env vars,
+    /// optional `--registry-credentials-dir` mount, then default
+    /// `~/.docker/config.json` (or `$DOCKER_CONFIG/config.json`).
+    /// Missing config across all sources → anonymous mode.
     ///
     /// `cache` is the optional disk cache for blob bodies; `None`
     /// disables caching.
-    pub(super) fn new(reference: &ImageReference, cache: Option<Cache>) -> Result<Self> {
+    /// `creds_dir` is the optional path supplied via
+    /// `--registry-credentials-dir`; `None` skips the K8s
+    /// secret-mount probe layer.
+    pub(super) fn new(
+        reference: &ImageReference,
+        cache: Option<Cache>,
+        creds_dir: Option<&std::path::Path>,
+    ) -> Result<Self> {
         let http = reqwest::Client::builder()
             .user_agent(concat!("mikebom/", env!("CARGO_PKG_VERSION")))
             .build()
             .context("building reqwest::Client for OCI registry")?;
-        let credentials = super::auth::load_default_docker_config()
-            .and_then(|cfg| super::auth::resolve_credentials(&cfg, &reference.registry));
+        let credentials = super::auth::resolve_credentials_layered(
+            &reference.registry,
+            creds_dir,
+        );
         if credentials.is_some() {
             tracing::debug!(
                 registry = %reference.registry,
-                "resolved registry credentials from Docker keychain"
+                "resolved registry credentials (layered resolver)"
             );
         }
         Ok(Self {

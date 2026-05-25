@@ -145,6 +145,32 @@ pub struct ScanArgs {
     #[arg(long, value_name = "BYTES")]
     pub oci_cache_size: Option<u64>,
 
+    /// Issue #235 — directory containing Docker-format registry
+    /// credentials. mikebom probes `<DIR>/config.json`,
+    /// `<DIR>/.dockerconfigjson` (K8s `kubernetes.io/dockerconfigjson`
+    /// secret type), and `<DIR>/.dockercfg` (legacy K8s
+    /// `kubernetes.io/dockercfg` secret type) in that order; the
+    /// first readable+parseable file wins. The file format is the
+    /// standard Docker `config.json` shape (`auths`, `credsStore`,
+    /// `credHelpers`), so the existing credential-resolution
+    /// precedence applies inside the loaded config.
+    ///
+    /// Use this when running mikebom in a container that mounts a
+    /// K8s `imagePullSecrets`-derived volume (typically at
+    /// `/var/run/secrets/registry/`). For local/CI use with the
+    /// standard Docker keychain, leave this unset — mikebom falls
+    /// back to `$DOCKER_CONFIG/config.json` or
+    /// `$HOME/.docker/config.json`.
+    ///
+    /// Composes with `MIKEBOM_REGISTRY_<HOST>_USERNAME/_PASSWORD`
+    /// env vars (per-registry, higher priority than the directory
+    /// probe) and `MIKEBOM_REGISTRY_USERNAME/_PASSWORD` (generic
+    /// fallback, also higher priority than the directory probe).
+    /// See `docs/reference/identifiers.md` for the full credential
+    /// resolution priority chain.
+    #[arg(long = "registry-credentials-dir", value_name = "PATH")]
+    pub registry_credentials_dir: Option<std::path::PathBuf>,
+
     /// Output path override. Two forms are accepted:
     ///
     /// * Bare `--output <path>` — applies to the single requested
@@ -1273,6 +1299,7 @@ async fn resolve_image_ref(
                         arg_str,
                         args.image_platform.as_deref(),
                         cache_size_cap,
+                        args.registry_credentials_dir.as_deref(),
                     )
                     .await?;
                     let tarball = td.path().join("image.tar");
@@ -2445,6 +2472,7 @@ mod tests {
             image_platform: None,
             no_oci_cache: false,
             oci_cache_size: None,
+            registry_credentials_dir: None,
             output: vec![],
             format: vec![],
             max_file_size: 256 * 1024 * 1024,

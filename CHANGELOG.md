@@ -7,6 +7,28 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Issue #235 — Registry credential extension for in-cluster operation
+
+Extends the OCI registry credential resolution at `scan_fs/oci_pull/auth.rs` so mikebom can pull from private registries when running in environments without a Docker config file at the conventional `~/.docker/config.json` path — e.g. inside a Kubernetes CronJob pod where credentials arrive via `imagePullSecrets`-derived volume mounts or environment variables.
+
+#### Added
+
+- **`--registry-credentials-dir <PATH>` CLI flag** on `mikebom sbom scan`. Probes K8s secret-mount filenames in order: `config.json` (plain Docker), `.dockerconfigjson` (K8s `kubernetes.io/dockerconfigjson` secret type), `.dockercfg` (legacy K8s `kubernetes.io/dockercfg` secret type). First readable + parseable file wins; standard Docker config shape applies.
+- **Env-var credential sources**:
+  - **Per-registry**: `MIKEBOM_REGISTRY_<HOST>_USERNAME` + `MIKEBOM_REGISTRY_<HOST>_PASSWORD`, where `<HOST>` is the registry hostname uppercased with `[^A-Z0-9]` replaced by `_` (e.g. `ghcr.io` → `MIKEBOM_REGISTRY_GHCR_IO_USERNAME`; `my-ecr.amazonaws.com` → `MIKEBOM_REGISTRY_MY_ECR_AMAZONAWS_COM_USERNAME`).
+  - **Generic**: `MIKEBOM_REGISTRY_USERNAME` + `MIKEBOM_REGISTRY_PASSWORD` — applies to every registry as a catch-all (useful when a cluster scan only ever hits one registry).
+- **`resolve_credentials_layered`** entry point in `scan_fs/oci_pull/auth.rs` with documented precedence: env vars → `--registry-credentials-dir` → default Docker config. Existing `resolve_credentials` is unchanged — the new function wraps it.
+- **8 new unit tests** in `auth.rs::tests` covering env-var resolution (per-registry, generic, partial-pair fallback, precedence), credentials-directory probing (config.json first, `.dockerconfigjson` fallback, malformed-skip-and-retry, empty-dir-returns-None). Environment-mutating tests serialize on a `Mutex<()>` matching the convention from `cache.rs` and `attestation/signer.rs`.
+- **`docs/user-guide/cli-reference.md`** documents the new flag inline + the full 4-layer credential-resolution priority chain.
+
+#### Security
+
+- The `Credential` type's redacting `Debug` impl (`username` / `secret` → `<redacted>`) is preserved; the new env-var path doesn't introduce any logging that could leak credentials. Partial env-var configurations (USERNAME without PASSWORD or vice versa) are treated as no-credentials rather than synthesizing half-complete credentials. The `--registry-auth <registry>=<user>:<password>` CLI flag from Mario's spec is **deliberately not implemented** in this PR because credentials on the command line are visible to other processes via `/proc/<pid>/cmdline` and end up in shell history; env vars + secret-mount cover production cases cleanly.
+
+#### Compatibility
+
+- No behavior change for existing users. When neither `--registry-credentials-dir` nor any `MIKEBOM_REGISTRY_*` env var is set, the resolver falls through to the default Docker config path with the existing precedence (`credHelpers` > `credsStore` > `auths.<reg>.auth` > `auths.<reg>.identitytoken`).
+
 ## [0.1.0-alpha.35] — 2026-05-25
 
 This release closes the C/C++ binary-SBOM defect cluster the reporter surfaced after alpha.34. Four PRs ship together: three bug fixes addressing edge-orphan and root-identity defects in the synthesized-root code paths (#237 / #239) and the cross-format scope-edge parity (#238); plus milestone 104 fixing the binary-role typing inversion that was the root of the reporter's "feels off" observation about `/bin/ls`.
