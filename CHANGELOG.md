@@ -7,6 +7,10 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.1.0-alpha.35] — 2026-05-25
+
+This release closes the C/C++ binary-SBOM defect cluster the reporter surfaced after alpha.34. Four PRs ship together: three bug fixes addressing edge-orphan and root-identity defects in the synthesized-root code paths (#237 / #239) and the cross-format scope-edge parity (#238); plus milestone 104 fixing the binary-role typing inversion that was the root of the reporter's "feels off" observation about `/bin/ls`.
+
 ### Milestone 104 — Binary role classification (Application vs Library)
 
 Every binary discovered by the file-level binary reader (`mikebom-cli/src/scan_fs/binary/`) was historically emitted with CycloneDX `type: "library"` regardless of whether the file was an executable or a shared library. SBOM consumers reading the `type` field on `/bin/ls` saw `library` — the inverse of reality: `ls` is an application, not something other components link into. This milestone classifies every binary-reader-discovered component into one of four roles (`Application`, `SharedLibrary`, `Object`, `Other`) by reading the file's format header and maps the role to the format-native component-type field in each of CycloneDX, SPDX 2.3, and SPDX 3.
