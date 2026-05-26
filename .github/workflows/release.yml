@@ -467,8 +467,12 @@ jobs:
             tarball=$(ls mikebom-*.tar.gz)
             tar -xzf "$tarball"
             # The tarball contains one directory named mikebom-<tag>-<target>;
-            # rename it to `staging` for the Dockerfile COPY.
-            mv mikebom-* staging
+            # rename it to `staging` for the Dockerfile COPY. The glob
+            # `mikebom-*/` (trailing slash) restricts the match to the
+            # extracted directory only, excluding the tarball file itself —
+            # without the trailing slash, `mv` sees both as sources and
+            # errors because the `staging` destination doesn't exist yet.
+            mv mikebom-*/ staging
             ls -la staging/
             cd ../..
           done
