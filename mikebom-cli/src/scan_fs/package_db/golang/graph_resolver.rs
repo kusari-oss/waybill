@@ -135,6 +135,43 @@ impl ModuleGraphMap {
         self.entries.is_empty()
     }
 
+    /// Issue #255: BFS through the resolver map starting from `seeds`,
+    /// returning the set of reachable `ModuleId`s. Used by
+    /// `legacy.rs::read` to filter go.sum residue out of the emitted
+    /// component set: modules that are in go.sum but no longer
+    /// reachable from any `require` line in go.mod (e.g., legacy
+    /// `+incompatible` integrity entries left behind when the project
+    /// upgraded to a `/vN`-suffixed module) drop out of the closure
+    /// and aren't emitted as components.
+    ///
+    /// Each seed is included in the result whether or not it has an
+    /// entry in the map; downstream filtering handles the "missing
+    /// from map" case (typically means the module was filtered earlier
+    /// in the resolver pipeline).
+    ///
+    /// Follows the `requires` edges of each visited entry. Modules
+    /// claimed only by step 5 (`source = GoSumFallback`) have empty
+    /// `requires`, so they're terminal nodes in this traversal — but
+    /// they're still included in the closure when reached transitively
+    /// from a seed.
+    pub fn reachable_from(&self, seeds: &[ModuleId]) -> HashSet<ModuleId> {
+        let mut visited: HashSet<ModuleId> = HashSet::new();
+        let mut queue: Vec<ModuleId> = seeds.to_vec();
+        while let Some(id) = queue.pop() {
+            if !visited.insert(id.clone()) {
+                continue;
+            }
+            if let Some(entry) = self.entries.get(&id) {
+                for child in &entry.requires {
+                    if !visited.contains(child) {
+                        queue.push(child.clone());
+                    }
+                }
+            }
+        }
+        visited
+    }
+
     /// Milestone 091: returns module paths whose entries were claimed
     /// via step 5 (go.sum flat fallback). `legacy.rs::read` consumes
     /// this list to augment `build_main_module_entry`'s `depends`
@@ -963,6 +1000,119 @@ mod tests {
         replaces.insert(original, replacement.clone());
         apply_replaces(&mut map, &replaces);
         assert_eq!(map.entry(&parent).unwrap().requires, vec![replacement]);
+    }
+
+    // --- issue #255: reachable_from BFS -------------------------------------
+
+    #[test]
+    fn reachable_from_empty_seeds_empty_closure() {
+        let map = ModuleGraphMap::new();
+        let closure = map.reachable_from(&[]);
+        assert!(closure.is_empty());
+    }
+
+    #[test]
+    fn reachable_from_single_seed_no_edges() {
+        // A seed with no entry in the map (or empty requires) is itself
+        // in the closure but produces no further reachability.
+        let mut map = ModuleGraphMap::new();
+        let a = ModuleId::new("example.com/a", "v1.0.0");
+        map.insert(ModuleGraphEntry {
+            module: a.clone(),
+            requires: Vec::new(),
+            source: ResolutionStep::GoSumFallback,
+        });
+        let closure = map.reachable_from(std::slice::from_ref(&a));
+        assert_eq!(closure.len(), 1);
+        assert!(closure.contains(&a));
+    }
+
+    #[test]
+    fn reachable_from_follows_transitive_chain() {
+        // main → A → B → C; seeds = {A}. Closure = {A, B, C}.
+        let mut map = ModuleGraphMap::new();
+        let a = ModuleId::new("example.com/a", "v1.0.0");
+        let b = ModuleId::new("example.com/b", "v1.0.0");
+        let c = ModuleId::new("example.com/c", "v1.0.0");
+        map.insert(ModuleGraphEntry {
+            module: a.clone(),
+            requires: vec![b.clone()],
+            source: ResolutionStep::GoModGraph,
+        });
+        map.insert(ModuleGraphEntry {
+            module: b.clone(),
+            requires: vec![c.clone()],
+            source: ResolutionStep::GoModGraph,
+        });
+        map.insert(ModuleGraphEntry {
+            module: c.clone(),
+            requires: Vec::new(),
+            source: ResolutionStep::GoModGraph,
+        });
+        let closure = map.reachable_from(std::slice::from_ref(&a));
+        assert_eq!(closure.len(), 3);
+        assert!(closure.contains(&a));
+        assert!(closure.contains(&b));
+        assert!(closure.contains(&c));
+    }
+
+    #[test]
+    fn reachable_from_excludes_residue_modules() {
+        // Issue #255 shape: main → /v3 (active), separate +incompatible
+        // entry (residue, no parent in map). Seeds = {/v3}.
+        // Closure = {/v3}; residue excluded.
+        let mut map = ModuleGraphMap::new();
+        let v3 = ModuleId::new("example.com/foo/v3", "v3.3.3");
+        let residue = ModuleId::new("example.com/foo", "v2.1.0+incompatible");
+        map.insert(ModuleGraphEntry {
+            module: v3.clone(),
+            requires: Vec::new(),
+            source: ResolutionStep::GoModGraph,
+        });
+        map.insert(ModuleGraphEntry {
+            module: residue.clone(),
+            requires: Vec::new(),
+            source: ResolutionStep::GoSumFallback,
+        });
+        let closure = map.reachable_from(std::slice::from_ref(&v3));
+        assert!(closure.contains(&v3));
+        assert!(
+            !closure.contains(&residue),
+            "+incompatible residue must be excluded from closure when not seeded"
+        );
+    }
+
+    #[test]
+    fn reachable_from_handles_cycle() {
+        // A → B → A; seeds = {A}. Closure = {A, B}; BFS terminates.
+        let mut map = ModuleGraphMap::new();
+        let a = ModuleId::new("example.com/a", "v1.0.0");
+        let b = ModuleId::new("example.com/b", "v1.0.0");
+        map.insert(ModuleGraphEntry {
+            module: a.clone(),
+            requires: vec![b.clone()],
+            source: ResolutionStep::GoModGraph,
+        });
+        map.insert(ModuleGraphEntry {
+            module: b.clone(),
+            requires: vec![a.clone()],
+            source: ResolutionStep::GoModGraph,
+        });
+        let closure = map.reachable_from(std::slice::from_ref(&a));
+        assert_eq!(closure.len(), 2);
+    }
+
+    #[test]
+    fn reachable_from_seeds_unknown_to_map_still_included() {
+        // A seed not in the map is still part of the closure (it's
+        // self-reachable), but contributes no children. Mirrors the
+        // case where main-module's go.mod requires reference a module
+        // that the resolver pipeline filtered earlier.
+        let map = ModuleGraphMap::new();
+        let ghost = ModuleId::new("example.com/never-resolved", "v0.1.0");
+        let closure = map.reachable_from(std::slice::from_ref(&ghost));
+        assert_eq!(closure.len(), 1);
+        assert!(closure.contains(&ghost));
     }
 }
 

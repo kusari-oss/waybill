@@ -374,6 +374,37 @@ fn parse_tool_line(rest: &str) -> Option<String> {
     }
 }
 
+/// Issue #255: returns `true` when `candidate` is `<base>/vN` for some
+/// integer N >= 2 — i.e., `candidate` is the `/vN`-suffixed major-
+/// version variant of the same Go module as `base`. Used to detect
+/// the `+incompatible` legacy-residue pattern: when both
+/// `github.com/google/martian` (legacy `+incompatible` form) AND
+/// `github.com/google/martian/v3` (modern `/vN` form) exist as Go
+/// components in the same scan, the legacy form is residue and gets
+/// filtered out.
+///
+/// Conservative: only matches the exact `<base>/vN` shape (one trailing
+/// `/vN` segment, N a decimal integer >= 2). Doesn't match
+/// `<base>/v2/sub/...` or `<base>/v1` (v1 isn't path-suffixed by
+/// convention).
+fn is_vn_sibling_of(candidate: &str, base: &str) -> bool {
+    let Some(suffix) = candidate.strip_prefix(base) else {
+        return false;
+    };
+    let Some(rest) = suffix.strip_prefix("/v") else {
+        return false;
+    };
+    if rest.is_empty() {
+        return false;
+    }
+    if !rest.chars().all(|c| c.is_ascii_digit()) {
+        return false;
+    }
+    // Parse as int; reject v0 / v1 (those aren't `/vN`-suffixed
+    // modules by Go convention — v0 / v1 use the un-suffixed path).
+    rest.parse::<u32>().map(|n| n >= 2).unwrap_or(false)
+}
+
 /// Map a Go 1.24+ `tool` directive package path to the module path that
 /// contains it. Module paths emitted by mikebom are e.g.
 /// `github.com/golangci/golangci-lint`; tool paths in `go.mod` are e.g.
@@ -1319,11 +1350,68 @@ pub fn read(rootfs: &Path, _include_dev: bool) -> (Vec<PackageDbEntry>, GoScanSi
             },
             &gosum_fallback_set,
         );
+
+        // Issue #255: filter `+incompatible` legacy-version residue
+        // when a same-base-path `/vN` module is present.
+        //
+        // Background: Go modules pre-dating module-awareness used
+        // versioning without the `/vN` path suffix. Importing them at
+        // v2+ produces a `+incompatible` version (Go's signal that
+        // the import skipped the major-version path convention). When
+        // a project upgrades from the legacy form to a properly-
+        // suffixed `/vN` module, `go mod tidy` conservatively leaves
+        // the `+incompatible` go.sum integrity hash behind — it's
+        // load-bearing for downstream users still on the legacy form,
+        // even though THIS project no longer references it.
+        //
+        // Naive emission produces a same-module duplicate (e.g.
+        // `martian@v2.1.0+incompatible` AND `martian/v3@v3.3.3`) where
+        // the legacy entry has no incoming dep edge. After PR #253's
+        // residual-orphan backfill, the legacy entry gets flat-
+        // attached to root with `mikebom:orphan-reason:
+        // flat-attached-fallback` — a false positive.
+        //
+        // NARROW FILTER: drop a Go component if BOTH:
+        //   - Its version contains `+incompatible`.
+        //   - A same-base-path component exists at `<path>/vN` for
+        //     some N >= 2.
+        //
+        // We deliberately do NOT drop all go.sum-but-not-go.mod-
+        // reachable modules. Legitimate test-transitives (e.g.
+        // `gopkg.in/check.v1`, pulled by `yaml.v3`'s test deps) live
+        // in go.sum without being in go.mod, but the user expects to
+        // see them in the SBOM for vulnerability scanning. The user's
+        // filing described this bug as narrow; this filter matches
+        // that scope.
+        let entry_paths: std::collections::HashSet<String> = entries
+            .iter()
+            .filter(|e| e.purl.as_str().starts_with("pkg:golang/"))
+            .map(|e| e.name.clone())
+            .collect();
+        let mut filtered_count = 0usize;
         for entry in entries {
+            if entry.purl.as_str().starts_with("pkg:golang/")
+                && entry.version.contains("+incompatible")
+                && entry_paths.iter().any(|p| is_vn_sibling_of(p, &entry.name))
+            {
+                filtered_count += 1;
+                tracing::debug!(
+                    purl = %entry.purl.as_str(),
+                    "Issue #255: dropping +incompatible residue (same-base-path /vN sibling present in entries)"
+                );
+                continue;
+            }
             let purl_key = entry.purl.as_str().to_string();
             if seen_purls.insert(purl_key) {
                 out.push(entry);
             }
+        }
+        if filtered_count > 0 {
+            tracing::info!(
+                project_root = %project_root.display(),
+                filtered = filtered_count,
+                "Issue #255: filtered +incompatible legacy-version residue (same-base-path /vN module is present)"
+            );
         }
 
         // Milestone 053 FR-001 + FR-002 + FR-004: emit a synthetic
@@ -2166,6 +2254,67 @@ tool (
             resolve_tool_to_module("nowhere.example.org/cmd/tool", &modules),
             None,
         );
+    }
+
+    // --- issue #255: +incompatible residue filter --------------------------
+
+    #[test]
+    fn is_vn_sibling_recognises_v2_through_v9() {
+        let base = "github.com/google/martian";
+        for n in 2..=9 {
+            let candidate = format!("{base}/v{n}");
+            assert!(
+                is_vn_sibling_of(&candidate, base),
+                "v{n} should be recognised as a /vN sibling of {base}",
+            );
+        }
+    }
+
+    #[test]
+    fn is_vn_sibling_rejects_v0_and_v1() {
+        // Go convention: v0 and v1 use the un-suffixed path; only
+        // v2+ requires the `/vN` suffix. The +incompatible filter
+        // should NOT match v0/v1.
+        let base = "github.com/foo/bar";
+        assert!(!is_vn_sibling_of(&format!("{base}/v0"), base));
+        assert!(!is_vn_sibling_of(&format!("{base}/v1"), base));
+    }
+
+    #[test]
+    fn is_vn_sibling_rejects_non_numeric_suffix() {
+        let base = "github.com/foo/bar";
+        assert!(!is_vn_sibling_of("github.com/foo/bar/version2", base));
+        assert!(!is_vn_sibling_of("github.com/foo/bar/v2-beta", base));
+        assert!(!is_vn_sibling_of("github.com/foo/bar/vlatest", base));
+    }
+
+    #[test]
+    fn is_vn_sibling_rejects_deeper_paths() {
+        // `<base>/v2/sub/pkg` is NOT a /vN sibling — it's a subpath
+        // inside a /vN module, which has its own go.mod typically.
+        let base = "github.com/foo/bar";
+        assert!(!is_vn_sibling_of("github.com/foo/bar/v2/sub/pkg", base));
+    }
+
+    #[test]
+    fn is_vn_sibling_rejects_unrelated_paths() {
+        let base = "github.com/foo/bar";
+        assert!(!is_vn_sibling_of("github.com/other/thing/v2", base));
+        assert!(!is_vn_sibling_of("github.com/foo/barbaz/v2", base));
+    }
+
+    #[test]
+    fn is_vn_sibling_handles_self_match() {
+        // A module name equal to itself isn't a /vN sibling.
+        let p = "github.com/foo/bar/v3";
+        assert!(!is_vn_sibling_of(p, p));
+    }
+
+    #[test]
+    fn is_vn_sibling_multi_digit_versions() {
+        let base = "github.com/foo/bar";
+        assert!(is_vn_sibling_of("github.com/foo/bar/v10", base));
+        assert!(is_vn_sibling_of("github.com/foo/bar/v42", base));
     }
 
     #[test]
