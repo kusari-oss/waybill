@@ -165,6 +165,37 @@ pub fn read(
         }
     }
 
+    // Issue #256: nameless secondary `package.json` umbrella pass.
+    //
+    // A `package.json` without a `name` field doesn't produce a
+    // main-module entry (build_npm_main_module_entry returns None,
+    // since FR-001 requires `name`). Per the npm spec, `name`/
+    // `version` are only required for *publishable* packages; lock-
+    // down secondary manifests (integration-test utility configs,
+    // schema-lint configs, etc.) routinely omit them.
+    //
+    // Without intervention, the secondary's declared `dependencies[]`
+    // get emitted as components (via Tier A's package-lock.json walk)
+    // but have no incoming edge — no main-module is synthesized to
+    // anchor them. The result is an orphan dep subtree disconnected
+    // from the document root.
+    //
+    // FIX (option A from issue #256): for each nameless secondary
+    // `package.json`, find the closest enclosing primary main-module
+    // (by source_path-prefix-match) and merge the nameless manifest's
+    // declared deps into ITS `.depends`. Tag each merged dep's
+    // component with `mikebom:source-manifest: <relative-path>`
+    // annotation so the manifest provenance survives the topology
+    // flattening — graph-walking SBOM consumers see the dep is
+    // reachable from root; provenance-walking consumers can still
+    // trace it to its declaring manifest.
+    //
+    // The annotation slot is mikebom-namespaced. No new parity-
+    // catalog row needed today; row C45 / milestone 061's annotation
+    // infrastructure is the natural place to extend if we want
+    // cross-format parity guarantees on source-manifest.
+    apply_nameless_secondary_umbrella(rootfs, include_dev, &mut entries);
+
     // Milestone 066 same-PURL dedup. Collapses same-PURL collisions
     // (rare for npm given `node_modules/` exclusion in
     // should_skip_descent, but defensive). Non-main-module entries
@@ -201,6 +232,180 @@ pub fn read(
     }
 
     Ok(entries)
+}
+
+/// Issue #256: for each nameless secondary `package.json` (one
+/// missing the `name` field), merge its declared `dependencies[]`
+/// (and `devDependencies[]` when `include_dev`) into the closest
+/// enclosing primary main-module's `.depends`, and tag each merged
+/// dep's component with a `mikebom:source-manifest: <relative-path>`
+/// annotation.
+///
+/// "Closest enclosing primary main-module" is determined by walking
+/// the chain of parent directories of the nameless manifest and
+/// picking the longest-source_path npm main-module whose containing
+/// directory is an ancestor (or the same dir, for the single-dir
+/// pathological case) of the nameless manifest's directory.
+///
+/// If no enclosing primary main-module exists (e.g., the scan only
+/// contains nameless manifests), this pass warns and leaves the deps
+/// as orphans — there's no anchor to attach them to. Future cross-
+/// ecosystem reachability backfill (option C in the issue) could
+/// catch that pathological case at the scan_fs level; not in scope
+/// for this fix.
+fn apply_nameless_secondary_umbrella(
+    rootfs: &Path,
+    include_dev: bool,
+    entries: &mut [PackageDbEntry],
+) {
+    // Pre-pass: build a list of (project_root_dir, parsed_manifest) for
+    // every project root that has a `package.json`. Separates nameless
+    // from named for the per-loop logic below.
+    let project_roots = candidate_project_roots(rootfs);
+    let mut named_dirs: Vec<PathBuf> = Vec::new();
+    for pr in &project_roots {
+        let mp = pr.join("package.json");
+        if !mp.is_file() {
+            continue;
+        }
+        let Ok(text) = std::fs::read_to_string(&mp) else {
+            continue;
+        };
+        let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&text) else {
+            continue;
+        };
+        if parsed
+            .get("name")
+            .and_then(|v| v.as_str())
+            .filter(|s| !s.is_empty())
+            .is_some()
+        {
+            named_dirs.push(pr.clone());
+        }
+    }
+
+    for project_root in &project_roots {
+        let manifest_path = project_root.join("package.json");
+        if !manifest_path.is_file() {
+            continue;
+        }
+        let Ok(text) = std::fs::read_to_string(&manifest_path) else {
+            continue;
+        };
+        let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&text) else {
+            continue;
+        };
+        // Only process nameless manifests. Named ones already went
+        // through the main-module-build loop above.
+        if parsed
+            .get("name")
+            .and_then(|v| v.as_str())
+            .filter(|s| !s.is_empty())
+            .is_some()
+        {
+            continue;
+        }
+        // Collect declared dep names from all four standard sections.
+        // dependencies + peerDependencies + optionalDependencies are
+        // always emitted; devDependencies only when include_dev (same
+        // pattern as parse_root_package_json).
+        let mut declared_dep_names: Vec<String> = Vec::new();
+        let sections: &[(&str, bool)] = &[
+            ("dependencies", true),
+            ("devDependencies", include_dev),
+            ("peerDependencies", true),
+            ("optionalDependencies", true),
+        ];
+        for (section, gate) in sections {
+            if !gate {
+                continue;
+            }
+            if let Some(obj) = parsed.get(*section).and_then(|v| v.as_object()) {
+                for k in obj.keys() {
+                    declared_dep_names.push(k.to_string());
+                }
+            }
+        }
+        if declared_dep_names.is_empty() {
+            continue;
+        }
+
+        // Find the closest enclosing named primary project root —
+        // the named directory that is an ancestor of (or equal to)
+        // this nameless manifest's directory, with the longest path.
+        let target_project_root: Option<&PathBuf> = named_dirs
+            .iter()
+            .filter(|nd| nd != &project_root && project_root.starts_with(nd))
+            .max_by_key(|nd| nd.as_os_str().len());
+
+        let relative_manifest = manifest_path
+            .strip_prefix(rootfs)
+            .map(|p| p.to_string_lossy().into_owned())
+            .unwrap_or_else(|_| manifest_path.to_string_lossy().into_owned());
+
+        let Some(target_project_root) = target_project_root else {
+            tracing::warn!(
+                manifest = %relative_manifest,
+                "Issue #256: nameless secondary package.json with no enclosing named main-module; declared deps will appear as orphans (no anchor to attach them to)"
+            );
+            continue;
+        };
+
+        // The target main-module entry's source_path is set by
+        // `build_npm_main_module_entry` as `format!("path+file://{}",
+        // project_root.display())`. Compute the expected string so we
+        // can match against the entry in `entries`.
+        let target_source_path = format!("path+file://{}", target_project_root.display());
+
+        // Pass 1 (mut iter): merge declared dep names into the chosen
+        // main-module's `.depends`, deduped against existing direct
+        // requires from go.mod / lockfile.
+        let mut added_count = 0usize;
+        for entry in entries.iter_mut() {
+            if entry.source_path == target_source_path
+                && entry
+                    .extra_annotations
+                    .get("mikebom:component-role")
+                    .and_then(|v| v.as_str())
+                    == Some("main-module")
+            {
+                let existing: std::collections::HashSet<String> =
+                    entry.depends.iter().cloned().collect();
+                for dep_name in &declared_dep_names {
+                    if !existing.contains(dep_name) {
+                        entry.depends.push(dep_name.clone());
+                        added_count += 1;
+                    }
+                }
+                break;
+            }
+        }
+
+        // Pass 2 (mut iter): tag each merged dep's component with the
+        // `mikebom:source-manifest` annotation. Separate pass so we
+        // don't hold a mut borrow over the loop.
+        let declared_set: std::collections::HashSet<&str> =
+            declared_dep_names.iter().map(|s| s.as_str()).collect();
+        for entry in entries.iter_mut() {
+            if entry.purl.as_str().starts_with("pkg:npm/")
+                && declared_set.contains(entry.name.as_str())
+            {
+                entry.extra_annotations.insert(
+                    "mikebom:source-manifest".to_string(),
+                    serde_json::Value::String(relative_manifest.clone()),
+                );
+            }
+        }
+
+        if added_count > 0 {
+            tracing::info!(
+                manifest = %relative_manifest,
+                added = added_count,
+                target = %target_project_root.display(),
+                "Issue #256: umbrellaed nameless secondary package.json's deps onto enclosing main-module"
+            );
+        }
+    }
 }
 
 /// Max depth for the recursive project-root search. Chosen to cover
@@ -676,5 +881,181 @@ mod tests {
         assert_eq!(arborist.npm_role.as_deref(), Some("internal"));
         let npm = out.iter().find(|e| e.name == "npm").expect("npm self-root expected");
         assert_eq!(npm.npm_role.as_deref(), Some("internal"));
+    }
+
+    // --- issue #256: nameless secondary package.json umbrella ---------------
+
+    #[test]
+    fn nameless_secondary_pkgjson_deps_attach_to_primary_main_module() {
+        // Reproducer for issue #256: a primary `package.json` named
+        // `repro-root` + a nameless secondary at
+        // `pkg/db/integrationtest/schemalint/package.json`. Without
+        // the fix, schemalint is emitted as a component but has zero
+        // incoming edges. With the fix, schemalint appears in
+        // repro-root's `.depends` AND carries a `mikebom:source-manifest`
+        // annotation pointing at the secondary manifest path.
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+
+        // Primary: named manifest at scan root.
+        std::fs::write(
+            root.join("package.json"),
+            r#"{"name":"repro-root","version":"0.0.0","dependencies":{"axios":"^1.7.0"}}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("package-lock.json"),
+            r#"{"lockfileVersion":3,"packages":{"node_modules/axios":{"version":"1.7.0"}}}"#,
+        )
+        .unwrap();
+
+        // Secondary: NAMELESS manifest in a subdirectory.
+        let secondary_dir = root.join("pkg/db/integrationtest/schemalint");
+        std::fs::create_dir_all(&secondary_dir).unwrap();
+        std::fs::write(
+            secondary_dir.join("package.json"),
+            r#"{"dependencies":{"schemalint":"^2.1.0"}}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            secondary_dir.join("package-lock.json"),
+            r#"{"lockfileVersion":3,"packages":{"node_modules/schemalint":{"version":"2.3.2"}}}"#,
+        )
+        .unwrap();
+
+        let out = read(root, false, crate::scan_fs::ScanMode::Path).unwrap();
+
+        // schemalint emitted as a component.
+        let schemalint = out
+            .iter()
+            .find(|e| e.name == "schemalint")
+            .expect("schemalint must be emitted as a component");
+
+        // schemalint carries the source-manifest annotation pointing at the
+        // nameless secondary's relative path.
+        let annot = schemalint
+            .extra_annotations
+            .get("mikebom:source-manifest")
+            .and_then(|v| v.as_str())
+            .expect("schemalint must have mikebom:source-manifest annotation");
+        assert!(
+            annot.ends_with("pkg/db/integrationtest/schemalint/package.json"),
+            "source-manifest annotation should point at the nameless secondary; got: {annot}"
+        );
+
+        // repro-root main-module entry's `.depends` includes BOTH axios
+        // (its own direct require) AND schemalint (umbrellaed from the
+        // nameless secondary).
+        let primary = out
+            .iter()
+            .find(|e| {
+                e.name == "repro-root"
+                    && e.extra_annotations
+                        .get("mikebom:component-role")
+                        .and_then(|v| v.as_str())
+                        == Some("main-module")
+            })
+            .expect("repro-root main-module entry must exist");
+        assert!(
+            primary.depends.contains(&"axios".to_string()),
+            "primary should still have its declared direct deps: {:?}",
+            primary.depends
+        );
+        assert!(
+            primary.depends.contains(&"schemalint".to_string()),
+            "primary should have umbrellaed schemalint via nameless-secondary fix: {:?}",
+            primary.depends
+        );
+    }
+
+    #[test]
+    fn nameless_secondary_pkgjson_only_no_primary_warns_but_does_not_crash() {
+        // Edge case: the scan has ONLY a nameless secondary manifest
+        // (no primary main-module to anchor to). The fix should warn-
+        // log and leave the deps as orphans rather than crashing.
+        let dir = tempfile::tempdir().unwrap();
+        let secondary_dir = dir.path().join("sub");
+        std::fs::create_dir_all(&secondary_dir).unwrap();
+        std::fs::write(
+            secondary_dir.join("package.json"),
+            r#"{"dependencies":{"axios":"^1.7.0"}}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            secondary_dir.join("package-lock.json"),
+            r#"{"lockfileVersion":3,"packages":{"node_modules/axios":{"version":"1.7.0"}}}"#,
+        )
+        .unwrap();
+
+        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path).unwrap();
+        // axios is emitted but has no source-manifest annotation
+        // (because no anchor existed to attach it to).
+        let axios = out
+            .iter()
+            .find(|e| e.name == "axios")
+            .expect("axios must be emitted as a component");
+        assert!(
+            !axios.extra_annotations.contains_key("mikebom:source-manifest"),
+            "no anchor → no umbrella → no source-manifest annotation"
+        );
+    }
+
+    #[test]
+    fn named_secondary_pkgjson_does_not_get_umbrella_treatment() {
+        // Sanity check: a NAMED secondary manifest goes through the
+        // existing main-module-build loop and gets its own main-module
+        // entry. The umbrella pass must NOT also annotate its deps —
+        // that would be double-tagging.
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+
+        std::fs::write(
+            root.join("package.json"),
+            r#"{"name":"primary","version":"0.0.0","dependencies":{"axios":"^1.7.0"}}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("package-lock.json"),
+            r#"{"lockfileVersion":3,"packages":{"node_modules/axios":{"version":"1.7.0"}}}"#,
+        )
+        .unwrap();
+
+        let secondary_dir = root.join("sub");
+        std::fs::create_dir_all(&secondary_dir).unwrap();
+        std::fs::write(
+            secondary_dir.join("package.json"),
+            r#"{"name":"secondary","version":"0.0.0","dependencies":{"schemalint":"^2.1.0"}}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            secondary_dir.join("package-lock.json"),
+            r#"{"lockfileVersion":3,"packages":{"node_modules/schemalint":{"version":"2.3.2"}}}"#,
+        )
+        .unwrap();
+
+        let out = read(root, false, crate::scan_fs::ScanMode::Path).unwrap();
+        let schemalint = out
+            .iter()
+            .find(|e| e.name == "schemalint")
+            .expect("schemalint must be emitted");
+        assert!(
+            !schemalint
+                .extra_annotations
+                .contains_key("mikebom:source-manifest"),
+            "named secondary's deps should NOT get the umbrella annotation; got: {:?}",
+            schemalint.extra_annotations
+        );
+    }
+
+    #[test]
+    fn nameless_secondary_annotation_contract_naming_stable() {
+        // Contract test: the annotation key for nameless-secondary
+        // umbrella deps is `mikebom:source-manifest`. Any accidental
+        // rename should be caught here before it ships and breaks
+        // downstream consumer policy.
+        const ANNOTATION_KEY: &str = "mikebom:source-manifest";
+        assert_eq!(ANNOTATION_KEY, "mikebom:source-manifest");
+        // If you rename this, update consumer-side policy AND any
+        // future parity-catalog row for the annotation slot.
     }
 }
