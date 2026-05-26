@@ -7,6 +7,46 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.1.0-alpha.37] — 2026-05-26
+
+This release bundles two Go-orphan fixes (#252 / #253) and two release-pipeline fixes (#248 / #249) that surfaced during the alpha.36 publishing of the multi-arch container image.
+
+### Go 1.24+ `tool` directive support (#252, closes #250)
+
+`parse_go_mod` previously fell into its "unknown directive — skip" branch for `tool` lines, leaving Go 1.24+ tool deps as orphans tagged `mikebom:orphan-reason: unresolved-indirect-require`. This release adds:
+
+- **Parser**: recognises the `tool` directive (single-line + block form), with a new `tools: Vec<String>` field on `GoModDocument`.
+- **Edge emission**: each tool's enclosing module is resolved via longest-path-segment-prefix-match against the discovered Go module set and flat-attached to main-module's `.depends`.
+- **Annotation**: matched components get `mikebom:component-role: build-tool` (a new closed-enum value on the existing milestone-061 annotation slot — `main-module` was the only prior value). SBOM consumers can now distinguish Go build-time tool deps from regular runtime/library deps.
+- **Standards-first follow-ups deferred**: CDX `Component.scope: optional`, SPDX 2.3 `BUILD_TOOL_OF` relationship type, and SPDX 3.0.1 `usesTool` relationship type would be deeper emitter changes; the mikebom-namespaced annotation carries the diagnostic signal across all three formats today.
+
+#### Added
+
+- 9 new unit tests covering the parser (single-line / block / empty-path-skip / comment-stripping), the resolver (longest-prefix wins / segment-boundary required / exact match / no match), and the annotation-contract naming stability.
+
+### Go indirect-require orphan backfill (#253, closes #251)
+
+Real-world Go workspaces (e.g. `guacsec/guac@ebb808e`) saw 70 `// indirect` requires emitted as orphans on alpha.36 even though each was reachable per `go mod why -m` through a module mikebom DID include in the SBOM. With 161 of 660 components (24%) unreachable from the document root, graph-walking SBOM consumers were missing a quarter of the dep tree. This release adds:
+
+- **Backfill**: after milestone-091's `gosum_fallback_paths()` flat-attach step, a second pass identifies any Go component in `out` with zero incoming edges from non-main entries and flat-attaches it to `main_entry.depends`. Establishes the reachability invariant "every emitted Go component is reachable from main-module" while preserving the milestone-059 hierarchical graph topology where the resolver's attribution succeeded — the flat edge is a FALLBACK, AFTER the resolver's 3-step ladder gets first chance.
+- **Annotation**: backfilled components get `mikebom:orphan-reason: flat-attached-fallback` (a new closed-enum value on the milestone-061 annotation slot). The annotation's meaning widens slightly: from strictly "no incoming edge" to "incoming edge attribution unknown / synthesized." Existing `unresolved-indirect-require` continues to mean "no incoming edge AND backfill couldn't pick it up" (rare).
+- **Trade-off**: the flat-backfilled edge says "main-module depends on `<orphan>`" rather than the strictly-accurate per-transitive-parent attribution. This matches trivy/syft's behavior and is operationally more valuable for graph-walking SBOM consumers than honest-but-unreachable orphans.
+
+#### Added
+
+- 8 new unit tests in `compute_orphan_backfill` covering empty input, well-connected graphs (no backfill fires), single-orphan attribution, dedup against existing direct requires, cross-ecosystem incoming-edge counting, deterministic sort order, the real-world guac shape, and annotation-contract naming stability.
+
+### CI: container-image release publishing fixes
+
+Two latent bugs in PR #243's container-image plumbing surfaced when alpha.36's tag fired `release.yml` for the first time. Both are now fixed:
+
+- **#248** — `mv mikebom-* staging` globbed both the tarball file AND the extracted directory, requiring `staging/` to pre-exist. Trailing slash on the glob (`mikebom-*/`) restricts to directories only.
+- **#249** — pre-FROM `ARG TARGETARCH` in `Dockerfile` shadowed buildx's auto-populated per-platform value, expanding `${TARGETARCH}` to empty in the COPY step. Removed the redundant pre-FROM declaration (post-FROM ARG correctly picks up buildx's auto-value).
+
+#### Notes on alpha.36
+
+The alpha.36 retag chain left a stale empty GitHub Release at the `v0.1.0-alpha.36` tag (binaries are in a draft release 329550674 that couldn't be promoted due to softprops/action-gh-release's duplicate-release behavior). This is independent of the alpha.37 release pipeline — alpha.37's fresh tag will create a clean release page. The alpha.36 container image at `ghcr.io/kusari-sandbox/mikebom:v0.1.0-alpha.36` is published, signed, and working.
+
 ## [0.1.0-alpha.36] — 2026-05-26
 
 This release bundles three PRs merged since alpha.35: the orphan-fix SPDX synth-root fallback gate (#244) plus two CI/feature deliveries — the multi-arch production container image (#243 / issue #234) and the registry credential extension for in-cluster operation (#242 / issue #235).
