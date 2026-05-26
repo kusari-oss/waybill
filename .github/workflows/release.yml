@@ -435,6 +435,12 @@ jobs:
       id-token: write # Required for cosign keyless OIDC token exchange.
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # Kusari Inspector requirement: prevent token-in-.git/config
+          # exposure to subsequent steps / artifacts. This workflow
+          # doesn't push back to the repo, so persisting creds is
+          # never needed.
+          persist-credentials: false
 
       - name: Download linux-x86_64 tarball
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -483,17 +489,24 @@ jobs:
       - name: Compute image tags
         id: tags
         shell: bash
+        # Kusari Inspector requirement: NEVER interpolate ${{ ... }}
+        # context expressions directly into `run:` shell blocks —
+        # bind them to env: variables first to neutralize shell-
+        # injection via attacker-controllable refs/branch names.
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          REPO_OWNER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
-          ref="${{ github.ref_name }}"
+          ref="$REF_NAME"
           # Strip leading 'v' for the version-only tag — both forms are
           # common in the ecosystem, ship both.
           ver="${ref#v}"
           {
             echo "tags<<EOF"
-            echo "ghcr.io/${{ github.repository_owner }}/mikebom:${ref}"
-            echo "ghcr.io/${{ github.repository_owner }}/mikebom:${ver}"
-            echo "ghcr.io/${{ github.repository_owner }}/mikebom:latest"
+            echo "ghcr.io/${REPO_OWNER}/mikebom:${ref}"
+            echo "ghcr.io/${REPO_OWNER}/mikebom:${ver}"
+            echo "ghcr.io/${REPO_OWNER}/mikebom:latest"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
