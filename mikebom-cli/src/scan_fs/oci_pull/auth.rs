@@ -26,7 +26,7 @@
 
 use std::collections::HashMap;
 use std::fmt;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 use base64::engine::general_purpose::STANDARD as B64_STANDARD;
@@ -116,6 +116,138 @@ fn docker_config_path() -> Option<PathBuf> {
         return None;
     }
     Some(PathBuf::from(home).join(".docker").join("config.json"))
+}
+
+/// Issue #235 — layered credential resolver for in-cluster
+/// operation. Tries each source in order, falling through to the
+/// next if it returns `None`:
+///
+/// 1. **Per-registry env vars**:
+///    `MIKEBOM_REGISTRY_<HOST>_USERNAME` + `_PASSWORD`, where
+///    `<HOST>` is the registry hostname normalized to uppercase
+///    with `[^A-Z0-9]` replaced by `_` (e.g. `ghcr.io` →
+///    `MIKEBOM_REGISTRY_GHCR_IO_USERNAME`,
+///    `my-ecr.amazonaws.com` →
+///    `MIKEBOM_REGISTRY_MY_ECR_AMAZONAWS_COM_USERNAME`).
+/// 2. **Generic env vars**: `MIKEBOM_REGISTRY_USERNAME` +
+///    `_PASSWORD`. Applies to every registry — useful when a
+///    cluster scan only ever hits one registry.
+/// 3. **Credentials directory** (`--registry-credentials-dir`):
+///    when supplied, reads a Docker-format config file from the
+///    directory. Filename probe order: `config.json` (plain
+///    Docker), `.dockerconfigjson` (K8s
+///    `kubernetes.io/dockerconfigjson` secret), `.dockercfg`
+///    (legacy K8s `kubernetes.io/dockercfg` secret). First hit
+///    wins; same `resolve_credentials` logic applies to the
+///    loaded config.
+/// 4. **Default Docker config**: `$DOCKER_CONFIG/config.json`
+///    or `$HOME/.docker/config.json`. Existing pre-fix behavior.
+///
+/// Returns `None` when every source fails — caller falls through
+/// to anonymous registry access (which works for public registries
+/// hosting public images).
+pub(super) fn resolve_credentials_layered(
+    registry: &str,
+    creds_dir: Option<&Path>,
+) -> Option<Credential> {
+    // 1 + 2. Env-var sources.
+    if let Some(c) = env_credential(registry) {
+        return Some(c);
+    }
+    // 3. K8s-style credentials directory.
+    if let Some(dir) = creds_dir {
+        if let Some(cfg) = load_docker_config_from_dir(dir) {
+            if let Some(c) = resolve_credentials(&cfg, registry) {
+                return Some(c);
+            }
+        }
+    }
+    // 4. Default Docker config.
+    if let Some(cfg) = load_default_docker_config() {
+        if let Some(c) = resolve_credentials(&cfg, registry) {
+            return Some(c);
+        }
+    }
+    None
+}
+
+/// Issue #235 — env-var credential lookup. Tries per-registry
+/// `MIKEBOM_REGISTRY_<HOST>_USERNAME` + `_PASSWORD` first, then
+/// generic `MIKEBOM_REGISTRY_USERNAME` + `_PASSWORD`. Returns
+/// `None` when either USERNAME or PASSWORD is missing for the
+/// chosen source (partial config is treated as no config — we
+/// don't synthesize a half-complete `Credential`).
+fn env_credential(registry: &str) -> Option<Credential> {
+    let normalized = normalize_registry_key(registry);
+    let env_host = normalized
+        .chars()
+        .map(|c| {
+            let up = c.to_ascii_uppercase();
+            if up.is_ascii_alphanumeric() {
+                up
+            } else {
+                '_'
+            }
+        })
+        .collect::<String>();
+    let per_user = format!("MIKEBOM_REGISTRY_{env_host}_USERNAME");
+    let per_pass = format!("MIKEBOM_REGISTRY_{env_host}_PASSWORD");
+    if let (Ok(u), Ok(p)) = (std::env::var(&per_user), std::env::var(&per_pass)) {
+        if !u.is_empty() && !p.is_empty() {
+            return Some(Credential {
+                username: u,
+                secret: p,
+            });
+        }
+    }
+    if let (Ok(u), Ok(p)) = (
+        std::env::var("MIKEBOM_REGISTRY_USERNAME"),
+        std::env::var("MIKEBOM_REGISTRY_PASSWORD"),
+    ) {
+        if !u.is_empty() && !p.is_empty() {
+            return Some(Credential {
+                username: u,
+                secret: p,
+            });
+        }
+    }
+    None
+}
+
+/// Issue #235 — load a Docker-format config from a credentials
+/// directory. Probes the K8s secret-mount filenames in order:
+/// `config.json` (plain Docker), `.dockerconfigjson` (K8s
+/// `kubernetes.io/dockerconfigjson` secret type), `.dockercfg`
+/// (legacy K8s `kubernetes.io/dockercfg` secret type). First
+/// readable + parseable file wins. Parse failures are logged
+/// at warn-level and the next filename is tried.
+fn load_docker_config_from_dir(dir: &Path) -> Option<DockerConfig> {
+    for filename in ["config.json", ".dockerconfigjson", ".dockercfg"] {
+        let path = dir.join(filename);
+        let bytes = match std::fs::read(&path) {
+            Ok(b) => b,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(e) => {
+                tracing::warn!(
+                    path = %path.display(),
+                    error = %e,
+                    "could not read credentials file from --registry-credentials-dir; trying next filename"
+                );
+                continue;
+            }
+        };
+        match serde_json::from_slice::<DockerConfig>(&bytes) {
+            Ok(cfg) => return Some(cfg),
+            Err(e) => {
+                tracing::warn!(
+                    path = %path.display(),
+                    error = %e,
+                    "could not parse credentials file from --registry-credentials-dir; trying next filename"
+                );
+            }
+        }
+    }
+    None
 }
 
 /// Resolve credentials for `registry`, applying the precedence:
@@ -543,5 +675,148 @@ exit 2
             )
             .is_none()
         );
+    }
+
+    // -------- Issue #235 — env-var + credentials-dir resolution --------
+
+    /// `std::env::var` reads process-wide state — tests that mutate
+    /// the environment serialize on this lock to avoid cross-test
+    /// races. Matches the convention from `cache.rs` and
+    /// `attestation/signer.rs`.
+    static ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    /// Wipe every env var this module's resolvers consult so each
+    /// test starts from a clean slate. The per-registry env var
+    /// names are constructed dynamically; the caller passes any
+    /// per-host names that need clearing too.
+    fn clear_creds_env(extra_host_names: &[&str]) {
+        std::env::remove_var("MIKEBOM_REGISTRY_USERNAME");
+        std::env::remove_var("MIKEBOM_REGISTRY_PASSWORD");
+        for host in extra_host_names {
+            std::env::remove_var(format!("MIKEBOM_REGISTRY_{host}_USERNAME"));
+            std::env::remove_var(format!("MIKEBOM_REGISTRY_{host}_PASSWORD"));
+        }
+    }
+
+    #[test]
+    fn env_credential_returns_per_registry_pair_when_set() {
+        let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        clear_creds_env(&["GHCR_IO"]);
+        std::env::set_var("MIKEBOM_REGISTRY_GHCR_IO_USERNAME", "alice");
+        std::env::set_var("MIKEBOM_REGISTRY_GHCR_IO_PASSWORD", "shh");
+        let cred = env_credential("ghcr.io").expect("per-registry pair returned");
+        assert_eq!(cred.username, "alice");
+        assert_eq!(cred.secret, "shh");
+        clear_creds_env(&["GHCR_IO"]);
+    }
+
+    #[test]
+    fn env_credential_normalizes_hostname_to_uppercase_underscores() {
+        let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        clear_creds_env(&["MY_ECR_AMAZONAWS_COM"]);
+        std::env::set_var(
+            "MIKEBOM_REGISTRY_MY_ECR_AMAZONAWS_COM_USERNAME",
+            "aws-id",
+        );
+        std::env::set_var(
+            "MIKEBOM_REGISTRY_MY_ECR_AMAZONAWS_COM_PASSWORD",
+            "aws-secret",
+        );
+        let cred = env_credential("my-ecr.amazonaws.com")
+            .expect("dotted/dashed hostname mapped to env-safe form");
+        assert_eq!(cred.username, "aws-id");
+        clear_creds_env(&["MY_ECR_AMAZONAWS_COM"]);
+    }
+
+    #[test]
+    fn env_credential_falls_back_to_generic_pair_when_per_registry_missing() {
+        let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        clear_creds_env(&["GHCR_IO"]);
+        std::env::set_var("MIKEBOM_REGISTRY_USERNAME", "generic");
+        std::env::set_var("MIKEBOM_REGISTRY_PASSWORD", "generic-secret");
+        let cred = env_credential("ghcr.io").expect("generic pair returned as fallback");
+        assert_eq!(cred.username, "generic");
+        clear_creds_env(&["GHCR_IO"]);
+    }
+
+    #[test]
+    fn env_credential_returns_none_when_only_one_half_set() {
+        let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        clear_creds_env(&["GHCR_IO"]);
+        std::env::set_var("MIKEBOM_REGISTRY_GHCR_IO_USERNAME", "alice");
+        // PASSWORD intentionally not set.
+        assert!(
+            env_credential("ghcr.io").is_none(),
+            "partial credential (USERNAME without PASSWORD) treated as no-cred"
+        );
+        clear_creds_env(&["GHCR_IO"]);
+    }
+
+    #[test]
+    fn env_credential_per_registry_wins_over_generic() {
+        let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        clear_creds_env(&["GHCR_IO"]);
+        std::env::set_var("MIKEBOM_REGISTRY_USERNAME", "generic");
+        std::env::set_var("MIKEBOM_REGISTRY_PASSWORD", "generic-secret");
+        std::env::set_var("MIKEBOM_REGISTRY_GHCR_IO_USERNAME", "per-host");
+        std::env::set_var("MIKEBOM_REGISTRY_GHCR_IO_PASSWORD", "per-host-secret");
+        let cred = env_credential("ghcr.io").expect("per-registry wins precedence");
+        assert_eq!(cred.username, "per-host");
+        clear_creds_env(&["GHCR_IO"]);
+    }
+
+    #[test]
+    fn load_docker_config_from_dir_probes_config_json_first() {
+        let dir = tempfile::tempdir().unwrap();
+        // Write a valid auths entry. We just need to confirm the
+        // returned DockerConfig parses correctly from the right
+        // file — credential decoding is exercised by other tests.
+        let auth_b64 = B64_STANDARD.encode("bob:bobpw");
+        let body = format!(
+            r#"{{ "auths": {{ "ghcr.io": {{ "auth": "{auth_b64}" }} }} }}"#
+        );
+        std::fs::write(dir.path().join("config.json"), &body).unwrap();
+        let cfg = load_docker_config_from_dir(dir.path()).expect("config.json found");
+        assert!(cfg.auths.contains_key("ghcr.io"));
+    }
+
+    #[test]
+    fn load_docker_config_from_dir_falls_back_to_dockerconfigjson() {
+        let dir = tempfile::tempdir().unwrap();
+        let auth_b64 = B64_STANDARD.encode("bob:bobpw");
+        let body = format!(
+            r#"{{ "auths": {{ "private.example.com": {{ "auth": "{auth_b64}" }} }} }}"#
+        );
+        // Only the K8s `.dockerconfigjson` filename present —
+        // `config.json` deliberately absent so we exercise the
+        // fallback branch.
+        std::fs::write(dir.path().join(".dockerconfigjson"), &body).unwrap();
+        let cfg = load_docker_config_from_dir(dir.path())
+            .expect(".dockerconfigjson found via filename fallback");
+        assert!(cfg.auths.contains_key("private.example.com"));
+    }
+
+    #[test]
+    fn load_docker_config_from_dir_returns_none_when_no_filename_matches() {
+        let dir = tempfile::tempdir().unwrap();
+        assert!(
+            load_docker_config_from_dir(dir.path()).is_none(),
+            "empty directory should return None (caller falls through to default config)"
+        );
+    }
+
+    #[test]
+    fn load_docker_config_from_dir_skips_malformed_and_tries_next() {
+        let dir = tempfile::tempdir().unwrap();
+        // First-probe file is garbage; second-probe file is valid.
+        std::fs::write(dir.path().join("config.json"), b"not-json").unwrap();
+        let auth_b64 = B64_STANDARD.encode("bob:bobpw");
+        let body = format!(
+            r#"{{ "auths": {{ "ghcr.io": {{ "auth": "{auth_b64}" }} }} }}"#
+        );
+        std::fs::write(dir.path().join(".dockerconfigjson"), &body).unwrap();
+        let cfg = load_docker_config_from_dir(dir.path())
+            .expect("malformed config.json skipped; .dockerconfigjson used");
+        assert!(cfg.auths.contains_key("ghcr.io"));
     }
 }
