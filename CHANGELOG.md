@@ -7,6 +7,10 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.1.0-alpha.36] — 2026-05-26
+
+This release bundles three PRs merged since alpha.35: the orphan-fix SPDX synth-root fallback gate (#244) plus two CI/feature deliveries — the multi-arch production container image (#243 / issue #234) and the registry credential extension for in-cluster operation (#242 / issue #235).
+
 ### SPDX synth-root fallback over-attached graph-roots under `--root-name`
 
 Fixes a cross-format divergence the alpha.35 regen surfaced. When `--root-name` is active, the milestone-#229 alias rewrite at `generate/spdx/document.rs:458-465` already populates outgoing edges from the synthetic root SPDXID for every relationship originally sourced at the dropped manifest main-module's PURL. The #236 graph-root fallback (lines 483+) was firing on top of that — gated on `synthetic_root_added` alone — and adding extra `DEPENDS_ON` edges from synth-root to components mikebom couldn't link into the rest of the dep graph (Go `// indirect` entries the milestone-091 go.sum fallback couldn't inter-link under `--offline`; orphan npm packages from secondary `node_modules/` trees that lost their parent linkage during npm resolution). CDX's primary-dep fallback at `cyclonedx/dependencies.rs:74-78` is gated on `target_has_no_edges` symmetrically — it correctly skipped under `--root-name`, so CDX never had this problem.

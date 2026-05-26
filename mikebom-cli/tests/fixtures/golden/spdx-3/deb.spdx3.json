@@ -4,25 +4,25 @@
     {
       "creationInfo": "_:creation-info",
       "name": "mikebom contributors",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/agent/mikebom-contributors",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/agent/mikebom-contributors",
       "type": "Organization"
     },
     {
       "@id": "_:creation-info",
       "created": "1970-01-01T00:00:00Z",
       "createdBy": [
-        "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/agent/mikebom-contributors"
+        "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/agent/mikebom-contributors"
       ],
       "createdUsing": [
-        "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/tool/mikebom"
+        "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/tool/mikebom"
       ],
       "specVersion": "3.0.1",
       "type": "CreationInfo"
     },
     {
       "creationInfo": "_:creation-info",
-      "name": "mikebom-0.1.0-alpha.35",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/tool/mikebom",
+      "name": "mikebom-0.1.0-alpha.36",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/tool/mikebom",
       "type": "Tool"
     },
     {
@@ -37,21 +37,21 @@
       "dataLicense": "https://spdx.org/licenses/CC0-1.0",
       "name": "synthetic",
       "rootElement": [
-        "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-root-PEPQMV5CGEDHQJI2"
+        "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-root-PEPQMV5CGEDHQJI2"
       ],
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W",
       "type": "SpdxDocument"
     },
     {
       "creationInfo": "_:creation-info",
       "name": "synthetic",
       "rootElement": [
-        "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-root-PEPQMV5CGEDHQJI2"
+        "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-root-PEPQMV5CGEDHQJI2"
       ],
       "software_sbomType": [
         "deployed"
       ],
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/sbom",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/sbom",
       "type": "software_Sbom"
     },
     {
@@ -71,7 +71,7 @@
       "name": "synthetic",
       "software_packageUrl": "pkg:generic/synthetic@0.0.0",
       "software_packageVersion": "0.0.0",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-root-PEPQMV5CGEDHQJI2",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-root-PEPQMV5CGEDHQJI2",
       "type": "software_Package"
     },
     {
@@ -96,8 +96,8 @@
       "name": "zlib1g",
       "software_packageUrl": "pkg:deb/debian/zlib1g@1:1.2.13.dfsg-1?arch=amd64&distro=debian-12",
       "software_packageVersion": "1:1.2.13.dfsg-1",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-FBZUYFQKGJMH6COB",
-      "suppliedBy": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/agent-org-DICFDSQT5TPIZIGM",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-FBZUYFQKGJMH6COB",
+      "suppliedBy": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/agent-org-DICFDSQT5TPIZIGM",
       "type": "software_Package"
     },
     {
@@ -122,146 +122,146 @@
       "name": "libc6",
       "software_packageUrl": "pkg:deb/debian/libc6@2.36-9?arch=amd64&distro=debian-12",
       "software_packageVersion": "2.36-9",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-ZKB4GX3JBL66K2UG",
-      "suppliedBy": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/agent-org-DICFDSQT5TPIZIGM",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-ZKB4GX3JBL66K2UG",
+      "suppliedBy": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/agent-org-DICFDSQT5TPIZIGM",
       "type": "software_Package"
     },
     {
       "creationInfo": "_:creation-info",
       "name": "Debian <debian@example.org>",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/agent-org-DICFDSQT5TPIZIGM",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/agent-org-DICFDSQT5TPIZIGM",
       "type": "Organization"
     },
     {
       "creationInfo": "_:creation-info",
-      "from": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-root-PEPQMV5CGEDHQJI2",
+      "from": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-root-PEPQMV5CGEDHQJI2",
       "relationshipType": "dependsOn",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/rel-6E6IYEDUELBLJFDG",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/rel-GN5VLZYASZDU5IOL",
       "to": [
-        "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-ZKB4GX3JBL66K2UG"
+        "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-ZKB4GX3JBL66K2UG"
       ],
       "type": "Relationship"
     },
     {
       "creationInfo": "_:creation-info",
-      "from": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-root-PEPQMV5CGEDHQJI2",
+      "from": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-root-PEPQMV5CGEDHQJI2",
       "relationshipType": "dependsOn",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/rel-P7B3SFZ33M7OSCIH",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/rel-LV6X4ODA6UPZCFGD",
       "to": [
-        "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-FBZUYFQKGJMH6COB"
+        "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-FBZUYFQKGJMH6COB"
       ],
       "type": "Relationship"
     },
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/anno-44ZVDUQFZDAAHBLU",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:debian:zlib1g:1\\\\:1.2.13.dfsg-1:*:*:*:*:*:*:*\",\"cpe:2.3:a:zlib1g:zlib1g:1\\\\:1.2.13.dfsg-1:*:*:*:*:*:*:*\"]}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-FBZUYFQKGJMH6COB",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/anno-3GJCCJATK5QXJNAQ",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/deb/synthetic/var/lib/dpkg/status\"]}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-FBZUYFQKGJMH6COB",
       "type": "Annotation"
     },
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/anno-DYKWFFZK45HT42ID",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-kprobe-attach-failures\",\"value\":[]}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/anno-EHTIFWZNDCUHT5IA",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/anno-5GIES35DJOJSOWO3",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-FBZUYFQKGJMH6COB",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-FBZUYFQKGJMH6COB",
       "type": "Annotation"
     },
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/anno-ESWUXA2QKNGTSFFV",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":0}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/anno-F5EIU4GJZVO7AIRZ",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:generation-context\",\"value\":\"filesystem-scan\"}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/anno-FXBQPEHBD65A6BHK",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-ZKB4GX3JBL66K2UG",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/anno-H2ZGCMZLSBRIARE7",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/anno-CKGMGXMERR33LZS3",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-uprobe-attach-failures\",\"value\":[]}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W",
       "type": "Annotation"
     },
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/anno-H7YIH554VWSYFJ2U",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-FBZUYFQKGJMH6COB",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/anno-DDM5CAHQKSUEKPT6",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-kprobe-attach-failures\",\"value\":[]}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W",
       "type": "Annotation"
     },
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/anno-HR6RBZH3FCJZDU3B",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"deb\"]}}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/anno-O76SXAAQ7Y4M2VNU",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/deb/synthetic/var/lib/dpkg/status\"]}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-FBZUYFQKGJMH6COB",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/anno-TVDIHAPXN7BDMKQO",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-ZKB4GX3JBL66K2UG",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/anno-TXANCH3M3DEELB2G",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:debian:libc6:2.36-9:*:*:*:*:*:*:*\",\"cpe:2.3:a:libc6:libc6:2.36-9:*:*:*:*:*:*:*\"]}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-ZKB4GX3JBL66K2UG",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/anno-VPADGLMZZUJ3YGBE",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/deb/synthetic/var/lib/dpkg/status\"]}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/pkg-ZKB4GX3JBL66K2UG",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU/anno-Z3CLDNW6MJKVJIGP",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/anno-DSTJYTDWPCXZYM4R",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-events-dropped\",\"value\":0}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-2MFL4IKMT7W4N27RR4MQWCCU",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/anno-GBHKXUG2MZ2EDN7Q",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/deb/synthetic/var/lib/dpkg/status\"]}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-ZKB4GX3JBL66K2UG",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/anno-HEVOM5JVHY6FV5U6",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:debian:zlib1g:1\\\\:1.2.13.dfsg-1:*:*:*:*:*:*:*\",\"cpe:2.3:a:zlib1g:zlib1g:1\\\\:1.2.13.dfsg-1:*:*:*:*:*:*:*\"]}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-FBZUYFQKGJMH6COB",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/anno-JV356S7H7P5IBNTP",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"deb\"]}}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/anno-NEAQQKT6PPJYBILS",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-FBZUYFQKGJMH6COB",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/anno-OO7XLR54YMYUOH3E",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-ZKB4GX3JBL66K2UG",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/anno-PQJDXNYWT5WUBPXO",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-ZKB4GX3JBL66K2UG",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/anno-TOIRFA2FENAHRQWT",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:generation-context\",\"value\":\"filesystem-scan\"}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/anno-UCQSM7PUCLVLSDJ3",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":0}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/anno-W27KK32QFHN2PBA2",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:debian:libc6:2.36-9:*:*:*:*:*:*:*\",\"cpe:2.3:a:libc6:libc6:2.36-9:*:*:*:*:*:*:*\"]}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-G52HUOYL5L47LPDDSHM3RX2W/pkg-ZKB4GX3JBL66K2UG",
       "type": "Annotation"
     }
   ]
