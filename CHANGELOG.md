@@ -7,6 +7,28 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### SPDX synth-root fallback over-attached graph-roots under `--root-name`
+
+Fixes a cross-format divergence the alpha.35 regen surfaced. When `--root-name` is active, the milestone-#229 alias rewrite at `generate/spdx/document.rs:458-465` already populates outgoing edges from the synthetic root SPDXID for every relationship originally sourced at the dropped manifest main-module's PURL. The #236 graph-root fallback (lines 483+) was firing on top of that — gated on `synthetic_root_added` alone — and adding extra `DEPENDS_ON` edges from synth-root to components mikebom couldn't link into the rest of the dep graph (Go `// indirect` entries the milestone-091 go.sum fallback couldn't inter-link under `--offline`; orphan npm packages from secondary `node_modules/` trees that lost their parent linkage during npm resolution). CDX's primary-dep fallback at `cyclonedx/dependencies.rs:74-78` is gated on `target_has_no_edges` symmetrically — it correctly skipped under `--root-name`, so CDX never had this problem.
+
+**Behavior change:** the SPDX fallback now mirrors CDX's gate. It checks whether `synth_id` has any outgoing edges in the post-alias-rewrite `relationships` vec and only fires when there are none. Image scans, OS-package-only scans, and any other shape where `artifacts.relationships` contains no main-module-sourced edges → synth-id stays with zero outgoing edges → fallback still fires (image-scan synth root remains connected to its top-level packages, per #236's original intent). Override-active scans where the alias rewrite already populated outgoing edges → fallback skips → SPDX root edges now match CDX root edges component-for-component.
+
+**Concrete impact on the alpha.35 regen results:**
+
+- **guac** (`--root-name guac --root-version ebb808e`): SPDX root went from 441 DEPENDS_ON edges to 372 — drops the 70 Go `// indirect` entries that were over-attached. Now matches CDX (372 dependsOn). The 1 remaining diff vs CDX is the testify `TEST_DEPENDENCY_OF`-typed edge, which is the milestone-#228 by-design behavior.
+- **Multi-`package.json` orphan-npm reproducer**: SPDX root went from 11 DEPENDS_ON edges to 4. The 7 orphan npm packages from `sub/node_modules/` are no longer over-attached. Now matches CDX (4 dependsOn).
+- **kusari-cli**: unchanged (no over-attachment was happening; the alpha.35 regen showed 12/12 already).
+- **`postgres:16` image scan**: unchanged (no override → alias map empty → synth-id has zero outgoing edges before fallback → fallback fires as before → 31 dependsOn / DEPENDS_ON in both formats, as alpha.35 already had).
+
+#### Added
+
+- **Two regression tests** in `generate/spdx/document.rs::tests` mirroring the alpha.35 reproducer shapes — one for the Go `// indirect` over-attachment scenario (synth root with main-module-aliased direct + orphan indirect → asserts only the direct gets attached), one for the orphan-npm scenario (same shape, different ecosystem). New test helpers `mk_main_module` (constructs a component carrying the `mikebom:component-role: main-module` annotation that the emitter drops under `--root-name`) and `mk_artifacts_with_override` (constructs `ScanArtifacts` with `root_override` populated) for use by these and future override-related tests.
+- The pre-existing 3 #236 unit tests (`synthesized_root_has_outgoing_depends_on_to_graph_roots`, `synthesized_root_purl_preserves_colon_like_cdx`, `synthesized_root_excludes_already_depended_on_components_from_fallback`) continue to pass — the gate is purely additive on top of the existing logic; the image-scan-shaped scenarios these tests cover have empty alias maps and so satisfy the new `synth_has_outgoing == false` condition.
+
+#### Known issue (separately tracked)
+
+The orphan-npm-resolution gap that creates the "lost parent linkage" for `sub/node_modules/X` in the first place is a real and separate bug — the npm reader should re-parent secondary-tree dependencies to their actual graph parents rather than leaving them as top-level orphans. That fix is orthogonal to this PR (which only ensures the two formats agree on what to do with the already-orphan components). Filed as a follow-up issue.
+
 ### Issue #234 — Multi-arch production container image
 
 Adds an official multi-arch (linux/amd64 + linux/arm64) container image published to `ghcr.io/kusari-sandbox/mikebom` per release. Image is signed with cosign keyless via Sigstore.

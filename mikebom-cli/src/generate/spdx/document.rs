@@ -480,35 +480,61 @@ pub fn build_document(
     // 31 (in the postgres:16 case) top-level Packages have no
     // incoming edges, producing N disconnected graph-tops where
     // CDX has a single root.
+    //
+    // Post-#236 gating rule (added after the alpha.35 regen
+    // surfaced over-attachment under `--root-name`): only fire
+    // the fallback when synth_id has no outgoing edges in the
+    // already-built `relationships` vec. This mirrors CDX's
+    // `target_has_no_edges` gate at
+    // `cyclonedx/dependencies.rs:74-78` symmetrically. When
+    // `--root-name` is active, the milestone-#229 alias rewrite
+    // at lines 458-465 has already populated outgoing edges from
+    // synth_id for every relationship that was originally sourced
+    // at the dropped main-module's PURL. Firing the fallback
+    // on top of those would over-attach graph-root components
+    // (Go `// indirect` entries, orphan npm packages from
+    // secondary `node_modules/` trees, etc.) as direct deps of
+    // the override root — a divergence vs CDX which the alpha.35
+    // bug reports caught. The fallback still fires correctly for
+    // image scans, OS-package-only scans, and any other case
+    // where `artifacts.relationships` has no main-module-sourced
+    // edges to rewrite (synth_id stays with zero outgoing edges
+    // after `build_relationships`, so the gate is satisfied).
     if synthetic_root_added {
         if let Some(synth_id) = root_ids.first() {
-            // Mirror CDX's "graph roots" definition: components no
-            // other component or relationship points to as a `to`
-            // target. For a flat OS-package scan that's every
-            // component; for a transitive scan it's just the top-
-            // level deps.
-            let depended_on: std::collections::BTreeSet<&str> = artifacts
-                .relationships
+            let synth_has_outgoing = relationships
                 .iter()
-                .map(|r| r.to.as_str())
-                .collect();
-            let mut graph_roots: Vec<&mikebom_common::resolution::ResolvedComponent> =
-                artifacts
-                    .components
+                .any(|r| r.source == *synth_id);
+            if !synth_has_outgoing {
+                // Mirror CDX's "graph roots" definition: components no
+                // other component or relationship points to as a `to`
+                // target. For a flat OS-package scan that's every
+                // component; for a transitive scan it's just the top-
+                // level deps.
+                let depended_on: std::collections::BTreeSet<&str> = artifacts
+                    .relationships
                     .iter()
-                    .filter(|c| {
-                        c.parent_purl.is_none() && !depended_on.contains(c.purl.as_str())
-                    })
+                    .map(|r| r.to.as_str())
                     .collect();
-            // Deterministic emission order: lex by PURL.
-            graph_roots.sort_by(|a, b| a.purl.as_str().cmp(b.purl.as_str()));
-            for c in graph_roots {
-                relationships.push(super::relationships::SpdxRelationship {
-                    source: synth_id.clone(),
-                    target: SpdxId::for_purl(&c.purl),
-                    kind: super::relationships::SpdxRelationshipType::DependsOn,
-                    comment: None,
-                });
+                let mut graph_roots: Vec<&mikebom_common::resolution::ResolvedComponent> =
+                    artifacts
+                        .components
+                        .iter()
+                        .filter(|c| {
+                            c.parent_purl.is_none()
+                                && !depended_on.contains(c.purl.as_str())
+                        })
+                        .collect();
+                // Deterministic emission order: lex by PURL.
+                graph_roots.sort_by(|a, b| a.purl.as_str().cmp(b.purl.as_str()));
+                for c in graph_roots {
+                    relationships.push(super::relationships::SpdxRelationship {
+                        source: synth_id.clone(),
+                        target: SpdxId::for_purl(&c.purl),
+                        kind: super::relationships::SpdxRelationshipType::DependsOn,
+                        comment: None,
+                    });
+                }
             }
         }
     }
@@ -1169,6 +1195,181 @@ mod tests {
             outgoing.len(),
             3,
             "expected 3 outgoing DEPENDS_ON edges to the 3 graph-root components, got {outgoing:#?}"
+        );
+    }
+
+    /// Build a main-module-tagged ResolvedComponent (carries the
+    /// `mikebom:component-role = "main-module"` annotation that the
+    /// emitter drops under `--root-name`). Used by the alpha.35
+    /// fallback-gating regression tests below.
+    fn mk_main_module(purl: &str, name: &str, version: &str) -> ResolvedComponent {
+        let mut c = mk_component(purl, name, version);
+        c.extra_annotations.insert(
+            "mikebom:component-role".to_string(),
+            serde_json::Value::String("main-module".to_string()),
+        );
+        c
+    }
+
+    /// Build a ScanArtifacts under `--root-name <name> --root-version
+    /// <version>`. Mirrors the production CLI path that sets
+    /// `root_override` from the override flags.
+    fn mk_artifacts_with_override<'a>(
+        target_name: &'a str,
+        components: &'a [ResolvedComponent],
+        relationships: &'a [mikebom_common::resolution::Relationship],
+        integrity: &'a TraceIntegrity,
+        root_name: &str,
+        root_version: &str,
+    ) -> ScanArtifacts<'a> {
+        let mut arts = mk_artifacts(target_name, components, relationships, integrity);
+        arts.root_override = crate::generate::RootComponentOverride {
+            name: Some(root_name.to_string()),
+            version: Some(root_version.to_string()),
+        };
+        arts
+    }
+
+    #[test]
+    fn synth_root_fallback_skipped_when_alias_rewrite_already_populated_edges() {
+        // Regression for the alpha.35 cross-format divergence
+        // surfaced after #229 + #236 both shipped. When `--root-name`
+        // is active, the milestone-#229 alias rewrite at
+        // `document.rs:458-465` maps the dropped main-module's
+        // PURL → synth-root SPDXID, so relations originally sourced
+        // at the manifest main module become outgoing edges from
+        // synth-root. The #236 graph-root fallback (lines 483+)
+        // must NOT fire on top of that — otherwise it over-attaches
+        // graph-root components (e.g., Go `// indirect` entries the
+        // milestone-091 go.sum fallback couldn't inter-link) as
+        // direct deps of the override root, diverging from CDX
+        // which gates its primary-dep fallback on
+        // `target_has_no_edges` symmetrically.
+        //
+        // Shape: 1 main module (dropped under override) + 1 direct
+        // dep the main module points at + 1 orphan indirect (no
+        // parent_purl, not in any relationship's `to`). After the
+        // fix, synth-root has exactly 1 outgoing DEPENDS_ON (to
+        // the direct dep — the aliased relationship). Without the
+        // gate, synth-root would also pick up the orphan indirect.
+        let integ = empty_integrity();
+        let main_module = mk_main_module(
+            "pkg:golang/github.com/guacsec/guac@v0.0.0-20260101-abcdef",
+            "guac",
+            "v0.0.0-20260101-abcdef",
+        );
+        let direct_dep = mk_component(
+            "pkg:golang/github.com/spf13/cobra@v1.10.2",
+            "cobra",
+            "v1.10.2",
+        );
+        let orphan_indirect = mk_component(
+            "pkg:golang/github.com/golang-jwt/jwt/v4@v4.5.2",
+            "jwt",
+            "v4.5.2",
+        );
+        let comps = vec![main_module.clone(), direct_dep.clone(), orphan_indirect];
+        let rels = vec![mikebom_common::resolution::Relationship {
+            from: main_module.purl.as_str().to_string(),
+            to: direct_dep.purl.as_str().to_string(),
+            relationship_type: mikebom_common::resolution::RelationshipType::DependsOn,
+            provenance: mikebom_common::resolution::EnrichmentProvenance {
+                source: "test".to_string(),
+                data_type: "runtime".to_string(),
+            },
+        }];
+        let arts = mk_artifacts_with_override(
+            "guac",
+            &comps,
+            &rels,
+            &integ,
+            "guac",
+            "v0.0.0-20260101-abcdef",
+        );
+        let doc = build_doc_value(&arts);
+        let rels = doc["relationships"].as_array().expect("relationships[]");
+        let root_id = rels
+            .iter()
+            .find(|r| r["relationshipType"].as_str() == Some("DESCRIBES"))
+            .and_then(|r| r["relatedSpdxElement"].as_str())
+            .expect("DESCRIBES edge present");
+        let outgoing_targets: Vec<&str> = rels
+            .iter()
+            .filter(|r| {
+                r["spdxElementId"].as_str() == Some(root_id)
+                    && r["relationshipType"].as_str() == Some("DEPENDS_ON")
+            })
+            .filter_map(|r| r["relatedSpdxElement"].as_str())
+            .collect();
+        assert_eq!(
+            outgoing_targets.len(),
+            1,
+            "synth root should have exactly 1 outgoing DEPENDS_ON \
+             (aliased from main-module → cobra); the orphan jwt indirect \
+             must NOT be attached. Got: {outgoing_targets:?}"
+        );
+    }
+
+    #[test]
+    fn synth_root_fallback_skipped_when_orphan_components_exist_under_root_name() {
+        // Bug-B mirror of the test above: orphan npm packages from
+        // a secondary `node_modules/` tree (parent_purl unset by
+        // the npm reader because the in-tree link wasn't resolved)
+        // must NOT get attached to the synth root under `--root-name`
+        // either. Same gate-behavior assertion as above; different
+        // PURL ecosystem to lock in the cross-ecosystem coverage.
+        let integ = empty_integrity();
+        let main_module = mk_main_module(
+            "pkg:npm/repro-root@0.0.0",
+            "repro-root",
+            "0.0.0",
+        );
+        let direct_dep = mk_component("pkg:npm/axios@1.16.1", "axios", "1.16.1");
+        let orphan_a = mk_component("pkg:npm/pg@8.17.2", "pg", "8.17.2");
+        let orphan_b = mk_component(
+            "pkg:npm/pg-connection-string@2.13.0",
+            "pg-connection-string",
+            "2.13.0",
+        );
+        let comps = vec![main_module.clone(), direct_dep.clone(), orphan_a, orphan_b];
+        let rels = vec![mikebom_common::resolution::Relationship {
+            from: main_module.purl.as_str().to_string(),
+            to: direct_dep.purl.as_str().to_string(),
+            relationship_type: mikebom_common::resolution::RelationshipType::DependsOn,
+            provenance: mikebom_common::resolution::EnrichmentProvenance {
+                source: "test".to_string(),
+                data_type: "runtime".to_string(),
+            },
+        }];
+        let arts = mk_artifacts_with_override(
+            "repro",
+            &comps,
+            &rels,
+            &integ,
+            "repro",
+            "0.0.0",
+        );
+        let doc = build_doc_value(&arts);
+        let rels = doc["relationships"].as_array().expect("relationships[]");
+        let root_id = rels
+            .iter()
+            .find(|r| r["relationshipType"].as_str() == Some("DESCRIBES"))
+            .and_then(|r| r["relatedSpdxElement"].as_str())
+            .expect("DESCRIBES edge present");
+        let outgoing_targets: Vec<&str> = rels
+            .iter()
+            .filter(|r| {
+                r["spdxElementId"].as_str() == Some(root_id)
+                    && r["relationshipType"].as_str() == Some("DEPENDS_ON")
+            })
+            .filter_map(|r| r["relatedSpdxElement"].as_str())
+            .collect();
+        assert_eq!(
+            outgoing_targets.len(),
+            1,
+            "synth root should have exactly 1 outgoing DEPENDS_ON \
+             (aliased main-module → axios); orphan pg + pg-connection-string \
+             must NOT be attached to root. Got: {outgoing_targets:?}"
         );
     }
 
