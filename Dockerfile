@@ -42,9 +42,18 @@
 # `sbom generate` paths, no special privileges are needed and the
 # nonroot user is sufficient.
 
-ARG TARGETARCH
 FROM gcr.io/distroless/cc-debian12:nonroot
 
+# TARGETARCH is auto-populated by buildx with the per-platform value
+# (`amd64` / `arm64`) when building multi-arch with
+# `--platform linux/amd64,linux/arm64`. Declaring it AFTER FROM lets
+# buildx populate it for this stage.
+#
+# DO NOT also declare it BEFORE FROM. A pre-FROM ARG creates a global
+# scope with no value (we never pass --build-arg TARGETARCH), and the
+# post-FROM `ARG TARGETARCH` would inherit that empty value rather
+# than buildx's auto-set platform value, leaving `${TARGETARCH}`
+# empty in the COPY below.
 ARG TARGETARCH
 
 # Copy the per-arch tarball staging directory into /mikebom. The
