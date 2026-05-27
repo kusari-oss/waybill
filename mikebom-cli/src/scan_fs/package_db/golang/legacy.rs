@@ -2766,6 +2766,87 @@ tool (
     }
 
     #[test]
+    fn read_links_tool_directive_to_main_module_end_to_end() {
+        // Issue #250 end-to-end regression: the user's reproducer
+        // shape — a Go 1.24+ module with a `tool` directive — should
+        // result in the tool's enclosing module appearing in the
+        // synthesized main-module's `.depends` AND the tool's
+        // component carrying `mikebom:component-role: build-tool`.
+        //
+        // The fix landed in PR #252 (alpha.37); this test pins the
+        // end-to-end behavior so it can't silently regress.
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("go.mod"),
+            "module example.com/repro\n\
+             go 1.24\n\
+             require github.com/spf13/cobra v1.10.2\n\
+             tool github.com/golangci/golangci-lint/cmd/golangci-lint\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("go.sum"),
+            "github.com/spf13/cobra v1.10.2 h1:fake=\n\
+             github.com/golangci/golangci-lint v1.64.8 h1:fake=\n",
+        )
+        .unwrap();
+
+        let (entries, _) = read(dir.path(), false);
+
+        // The tool's enclosing module is emitted as a component
+        // (from go.sum).
+        let golangci = entries
+            .iter()
+            .find(|e| e.name == "github.com/golangci/golangci-lint")
+            .expect("golangci-lint component should be emitted from go.sum");
+
+        // Issue #250 (PR #252) tagged: the tool-directive entry's
+        // enclosing module carries `mikebom:component-role:
+        // build-tool` so SBOM consumers can distinguish it from
+        // regular runtime/library deps.
+        assert_eq!(
+            golangci
+                .extra_annotations
+                .get("mikebom:component-role")
+                .and_then(|v| v.as_str()),
+            Some("build-tool"),
+            "tool-directive entry should be tagged build-tool; got: {:?}",
+            golangci.extra_annotations,
+        );
+
+        // The synthesized main-module entry's `.depends` contains
+        // BOTH the runtime direct (cobra) AND the tool's enclosing
+        // module path (golangci-lint).
+        let main = entries
+            .iter()
+            .find(|e| e.name == "example.com/repro")
+            .expect("main-module entry must be emitted");
+        assert!(
+            main.depends
+                .contains(&"github.com/spf13/cobra".to_string()),
+            "main.depends should include cobra (direct require); got: {:?}",
+            main.depends,
+        );
+        assert!(
+            main.depends
+                .contains(&"github.com/golangci/golangci-lint".to_string()),
+            "main.depends should include golangci-lint (tool-directive resolved to its enclosing module); got: {:?}",
+            main.depends,
+        );
+
+        // The tool's component should NOT carry an orphan-reason
+        // annotation (the linkage is established via main's
+        // depends; it's not an orphan).
+        assert!(
+            !golangci
+                .extra_annotations
+                .contains_key("mikebom:orphan-reason"),
+            "tool-directive entry should not be flagged as orphan after #252 fix; got: {:?}",
+            golangci.extra_annotations,
+        );
+    }
+
+    #[test]
     fn read_finds_nested_go_project() {
         let dir = tempfile::tempdir().unwrap();
         let svc = dir.path().join("services").join("api");
