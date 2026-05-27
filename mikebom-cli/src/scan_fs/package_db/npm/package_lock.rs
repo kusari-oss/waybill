@@ -165,10 +165,18 @@ pub(crate) fn parse_package_lock(
         // (name → version-pinned-string) pairs.
         let mut depends_set: std::collections::BTreeMap<String, String> =
             std::collections::BTreeMap::new();
+        // Skip `peerDependencies` — semantically declarative ("the
+        // consumer should have X installed"), not an install
+        // relationship. npm v7+ auto-installs peers as a convenience,
+        // but the SBOM `dependsOn` / `DEPENDS_ON` slot means "X
+        // depends on Y" not "X expects Y to be present." Trivy and
+        // syft also skip peer-edges. If a peer-installed package is
+        // genuinely orphan in the dep graph, the orphan signal is
+        // the correct one — the consumer (root or a direct
+        // requirer) should declare the dep explicitly.
         for section in &[
             "dependencies",
             "devDependencies",
-            "peerDependencies",
             "optionalDependencies",
         ] {
             if let Some(deps) = tbl.get(*section).and_then(|v| v.as_object()) {
@@ -668,10 +676,19 @@ mod tests {
     // --- post-#263 follow-up: peer/optional sections + deeper nesting -----
 
     #[test]
-    fn peer_dependencies_get_version_pinned_too() {
-        // A package declares `pathe` via `peerDependencies` and has
-        // a nested install at `<parent>/node_modules/pathe`. The
-        // version pin should fire just like for regular dependencies.
+    fn peer_dependencies_are_skipped_declarative_not_install() {
+        // peerDependencies are declarative — they express "the
+        // consumer should have X" not "this package depends on X."
+        // npm v7+ auto-installs peers as a convenience, but the
+        // SBOM `dependsOn` slot means "X depends on Y" not "X
+        // expects Y to be present." Trivy and syft also skip
+        // peer-edges; mikebom matches.
+        //
+        // Reproducer: mlly declares `pathe` ONLY via
+        // peerDependencies (no regular dependency). Even though
+        // pathe is installed at multiple paths, mlly should NOT
+        // emit any edge to pathe — let the package that ACTUALLY
+        // requires pathe declare the edge instead.
         let lockfile = serde_json::json!({
             "lockfileVersion": 3,
             "packages": {
@@ -686,8 +703,8 @@ mod tests {
         let entries = parse_package_lock(&lockfile, "/tmp/lock.json", false);
         let mlly = entries.iter().find(|e| e.name == "mlly").expect("mlly");
         assert!(
-            mlly.depends.contains(&"pathe 2.0.3".to_string()),
-            "mlly's peerDependencies pathe should pin to the nested install; got: {:?}",
+            mlly.depends.is_empty(),
+            "`mlly` only declares `pathe` via peerDependencies — no edge should emit; got: {:?}",
             mlly.depends
         );
     }
@@ -744,16 +761,18 @@ mod tests {
     #[test]
     fn deps_in_multiple_sections_get_deduped_with_version_pin_preferred() {
         // Some packages legitimately list the same dep in multiple
-        // sections (e.g., peer + optional, or peer + dep). When
-        // both forms resolve, the version-pinned form should win
-        // over the bare-name form in the deduplicated output.
+        // sections (e.g., dep + optional). When both forms resolve,
+        // the version-pinned form should win over the bare-name
+        // form in the deduplicated output. peerDependencies is
+        // skipped entirely (declarative-not-install) so the dedup
+        // case is now restricted to dep / dev / optional.
         let lockfile = serde_json::json!({
             "lockfileVersion": 3,
             "packages": {
                 "node_modules/foo": {
                     "version": "1.0.0",
                     "dependencies": { "bar": "^1.0.0" },
-                    "peerDependencies": { "bar": "^1.0.0" }
+                    "optionalDependencies": { "bar": "^1.0.0" }
                 },
                 "node_modules/foo/node_modules/bar": { "version": "1.5.0" }
             }

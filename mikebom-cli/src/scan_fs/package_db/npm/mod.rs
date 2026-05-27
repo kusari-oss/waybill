@@ -307,15 +307,17 @@ fn apply_nameless_secondary_umbrella(
         if main_module_dirs.iter().any(|d| d == project_root) {
             continue;
         }
-        // Collect declared dep names from all four standard sections.
-        // dependencies + peerDependencies + optionalDependencies are
-        // always emitted; devDependencies only when include_dev (same
-        // pattern as parse_root_package_json).
+        // Collect declared dep names. dependencies +
+        // optionalDependencies are always emitted; devDependencies
+        // only when include_dev (same pattern as
+        // parse_root_package_json). `peerDependencies` is
+        // intentionally skipped — declarative-not-install
+        // relationship (matches Tier A / Tier B walkers + trivy/
+        // syft).
         let mut declared_dep_names: Vec<String> = Vec::new();
         let sections: &[(&str, bool)] = &[
             ("dependencies", true),
             ("devDependencies", include_dev),
-            ("peerDependencies", true),
             ("optionalDependencies", true),
         ];
         for (section, gate) in sections {

@@ -121,10 +121,11 @@ fn walk_node_modules(
         // deterministic ordering.
         let mut depends_set: std::collections::BTreeSet<String> =
             std::collections::BTreeSet::new();
+        // Skip `peerDependencies` — declarative, not an install
+        // relationship. See package_lock.rs for the full rationale.
         for section in &[
             "dependencies",
             "devDependencies",
-            "peerDependencies",
             "optionalDependencies",
         ] {
             if let Some(obj) = parsed.get(*section).and_then(|v| v.as_object()) {
@@ -345,11 +346,14 @@ pub(crate) fn build_npm_main_module_entry(
     // prefix (representing the project root), so the first
     // successful lookup is the hoisted `node_modules/<dep>` —
     // which IS what the root sees per npm's resolver algorithm.
+    // Skip `peerDependencies` — declarative, not install-relational.
+    // Even for the root project, peer deps express an EXPECTATION
+    // about the consumer (which is the user themselves at this
+    // level — meaningless to express as an install edge).
     let mut dep_names: Vec<String> = Vec::new();
     for section in [
         "dependencies",
         "devDependencies",
-        "peerDependencies",
         "optionalDependencies",
     ] {
         if let Some(obj) = parsed.get(section).and_then(|v| v.as_object()) {
