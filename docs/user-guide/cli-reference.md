@@ -47,6 +47,7 @@ noun on every subcommand (clap's flag-position-tolerant parser).
 | `--exclude-scope <SCOPE>` | enum (repeatable, comma-separated) | (none) | Drop components whose lifecycle scope matches any listed value. Valid: `dev`, `build`, `test`. Runtime scope is always retained. |
 | `--include-declared-deps` | bool | off (`--image`) / on (`--path`) | Include declared-but-not-on-disk dependencies (manifest SBOM mode). |
 | `--include-legacy-rpmdb` | bool | off | Read legacy Berkeley-DB rpmdb on pre-RHEL-8 / CentOS-7 / Amazon-Linux-2 images. Also enabled via `MIKEBOM_INCLUDE_LEGACY_RPMDB=1`. |
+| `--timeout <SECONDS>` | u64 | disabled | Wall-clock time limit for the entire mikebom invocation. Exits with status 124 (POSIX `timeout(1)` convention) when exceeded. Set to `0` (or omit) to disable. |
 | `--include-dev` | bool | off | **Deprecated.** See the deprecated flags section. |
 
 ### `--offline`
