@@ -113,11 +113,27 @@ fn walk_node_modules(
             })
             .into_iter()
             .collect();
-        let depends = parsed
-            .get("dependencies")
-            .and_then(|v| v.as_object())
-            .map(|obj| obj.keys().cloned().collect())
-            .unwrap_or_default();
+        // Walk all four standard npm dep sections — Tier B's
+        // installed-tree walker uses the dep's OWN package.json as
+        // the source of truth, and packages declared via
+        // peer/optional sections must contribute incoming edges
+        // just like regular dependencies. BTreeSet for dedup +
+        // deterministic ordering.
+        let mut depends_set: std::collections::BTreeSet<String> =
+            std::collections::BTreeSet::new();
+        for section in &[
+            "dependencies",
+            "devDependencies",
+            "peerDependencies",
+            "optionalDependencies",
+        ] {
+            if let Some(obj) = parsed.get(*section).and_then(|v| v.as_object()) {
+                for key in obj.keys() {
+                    depends_set.insert(key.clone());
+                }
+            }
+        }
+        let depends: Vec<String> = depends_set.into_iter().collect();
         let maintainer = extract_author_string(&parsed);
         // Feature 005 US1: tag entries emitted from inside npm's own
         // bundled tree with `npm_role=internal`. `in_npm_internals` is
@@ -318,12 +334,18 @@ pub(crate) fn build_npm_main_module_entry(
     );
     let source_path = format!("path+file://{}", project_root.display());
     // Collect direct-dep names from the four npm dep sections per
-    // FR-007. The existing edge-emission loop in scan_fs/mod.rs
-    // resolves these to PURLs via name_to_purl; dangling-target deps
-    // (e.g., workspace `*` ranges that resolve to in-tree members
-    // but the names happen to differ) are silently dropped per the
-    // existing convention.
-    let mut depends: Vec<String> = Vec::new();
+    // FR-007. If a `package-lock.json` is present alongside the
+    // manifest, version-pin each dep via the same walk-up
+    // resolution `parse_package_lock` uses — this ensures the
+    // root's bare-name dep strings like "@eslint/js" don't fall
+    // through to the edge resolver's last-write-wins lookup (which
+    // produces the wrong version when multiple installs of the
+    // same package exist, e.g. a hoisted v9.21.0 alongside a
+    // nested v8.57.1 under eslint@8). The walk-up starts at empty
+    // prefix (representing the project root), so the first
+    // successful lookup is the hoisted `node_modules/<dep>` —
+    // which IS what the root sees per npm's resolver algorithm.
+    let mut dep_names: Vec<String> = Vec::new();
     for section in [
         "dependencies",
         "devDependencies",
@@ -332,10 +354,69 @@ pub(crate) fn build_npm_main_module_entry(
     ] {
         if let Some(obj) = parsed.get(section).and_then(|v| v.as_object()) {
             for key in obj.keys() {
-                depends.push(key.clone());
+                dep_names.push(key.clone());
             }
         }
     }
+    // Pre-build the lockfile path_versions index (cheap: parses the
+    // lockfile once; only fires when a lockfile is present
+    // alongside the manifest, which is the typical npm project
+    // layout). Falls back to bare-name emission when no lockfile
+    // exists (library packages without committed lockfiles).
+    let path_versions: std::collections::HashMap<String, String> = project_root
+        .join("package-lock.json")
+        .canonicalize()
+        .ok()
+        .and_then(|p| std::fs::read_to_string(&p).ok())
+        .and_then(|t| serde_json::from_str::<serde_json::Value>(&t).ok())
+        .and_then(|root| {
+            root.get("packages")
+                .and_then(|v| v.as_object())
+                .map(|packages| {
+                    let mut out: std::collections::HashMap<String, String> =
+                        std::collections::HashMap::with_capacity(packages.len());
+                    for (k, v) in packages {
+                        if k.is_empty() {
+                            continue;
+                        }
+                        if let Some(tbl) = v.as_object() {
+                            if tbl.get("link").and_then(|v| v.as_bool()) == Some(true) {
+                                continue;
+                            }
+                            if let Some(version) =
+                                tbl.get("version").and_then(|v| v.as_str())
+                            {
+                                if !version.is_empty() {
+                                    out.insert(k.clone(), version.to_string());
+                                }
+                            }
+                        }
+                    }
+                    out
+                })
+        })
+        .unwrap_or_default();
+    let depends: Vec<String> = dep_names
+        .into_iter()
+        .map(|dep_name| {
+            // Walk up from the empty prefix (root). The first
+            // successful lookup is the hoisted `node_modules/<dep>`.
+            let mut prefix: &str = "";
+            loop {
+                let candidate = format!("{prefix}/node_modules/{dep_name}");
+                let candidate = candidate.trim_start_matches('/');
+                if let Some(version) = path_versions.get(candidate) {
+                    return format!("{dep_name} {version}");
+                }
+                if let Some(idx) = prefix.rfind("/node_modules/") {
+                    prefix = &prefix[..idx];
+                } else {
+                    // Reached the top — no install found anywhere.
+                    return dep_name;
+                }
+            }
+        })
+        .collect();
     Some(PackageDbEntry {
         purl,
         name: name.to_string(),

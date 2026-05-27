@@ -12,17 +12,27 @@ use transitive_parity_common::*;
 
 const FIXTURE_SUBPATH: &str = "npm";
 
-// Baseline was 150 at alpha.24. After issue #262's nested-version-
-// pinning fix (alpha.38+), three edges from dev-scope parents
-// (morgan, basic-auth, mocha's nested debug) that previously
-// resolved via bare-name last-write-wins to hoisted runtime targets
-// now correctly resolve to their nested dev-scope targets. The
-// new edges are emitted as `DEV_DEPENDENCY_OF` (reversed direction)
-// rather than `DEPENDS_ON`, so they're not counted by
-// `extract_edges_spdx_2_3`. The 3-edge shift is a wire-format
-// reclassification, not a real edge loss — the underlying dep
-// relationships are still present.
-const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 147;
+// Baseline was 150 at alpha.24.
+//
+// Shift 150 → 147 (issue #262 / PR #263, alpha.38): 3 edges from
+// dev-scope parents that previously resolved via bare-name
+// last-write-wins to hoisted runtime targets now correctly resolve
+// to their nested dev-scope targets and emit as `DEV_DEPENDENCY_OF`
+// (not counted by `extract_edges_spdx_2_3`).
+//
+// Shift 147 → 155 (npm walk-up resolution follow-up, alpha.40):
+// the lockfile parser + main-module builder now do FULL walk-up
+// node_modules resolution (mirroring npm's resolver algorithm).
+// Bare-name fallback effectively never fires, so every dep with
+// an actual install in node_modules emits a version-pinned PURL
+// reference. Recovers 8 edges that were previously routed via
+// last-write-wins to wrong-version targets (dev-scope nested ones,
+// which then routed as `DEV_DEPENDENCY_OF` rather than
+// `DEPENDS_ON`). Net effect: more edges land in `DEPENDS_ON`
+// (counted) because their now-correctly-pinned targets are Runtime
+// instead of the wrong Dev version. Confirms reachability invariant
+// on the molcajete corpus (66 orphans → 0 post-fix).
+const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 155;
 
 const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
     // Confirmed in mikebom output — accepts pulls in mime-types.

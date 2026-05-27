@@ -959,9 +959,16 @@ mod tests {
                         == Some("main-module")
             })
             .expect("repro-root main-module entry must exist");
+        // Post walk-up resolution: axios is version-pinned via the
+        // lockfile (build_npm_main_module_entry walks up
+        // node_modules). schemalint comes from the nameless-secondary
+        // umbrella pass which still emits bare-name strings.
         assert!(
-            primary.depends.contains(&"axios".to_string()),
-            "primary should still have its declared direct deps: {:?}",
+            primary
+                .depends
+                .iter()
+                .any(|d| d == "axios" || d == "axios 1.7.0"),
+            "primary should still have its declared direct dep axios (bare or version-pinned): {:?}",
             primary.depends
         );
         assert!(
