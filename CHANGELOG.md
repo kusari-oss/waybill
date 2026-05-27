@@ -7,6 +7,29 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.1.0-alpha.38] — 2026-05-26
+
+This release bundles two orphan-attribution improvements that surfaced in user-supplied reproducers after alpha.37: the nameless secondary `package.json` umbrella (#257 / closes #256) and the Go `+incompatible` legacy-residue filter (#258 / closes #255). Both refine the orphan-handling work from PR #253 (alpha.37): #257 closes a real linkage gap that #253 didn't cover (orphan dep subtree from a non-npm-publishable secondary manifest); #258 reduces a false-positive (`+incompatible` residue getting flat-attached to root via #253's backfill).
+
+### npm nameless secondary `package.json` umbrella (#257, closes #256)
+
+A secondary `package.json` in a scan tree that omits the `name` field previously produced an entire orphan dependency subtree in BOTH CycloneDX and SPDX outputs. In the user's repro, 57 of 88 components (65% of the dep tree) were unreachable from the document root. Per the npm spec, `name`/`version` are only required for *publishable* packages; lock-down secondary manifests (integration-test utility configs, schema-lint configs, CI tooling configs) routinely omit them — a real and common shape.
+
+- **Fix**: new `apply_nameless_secondary_umbrella` pass in the npm reader. For each nameless secondary, find the closest enclosing PRIMARY project root and merge the nameless manifest's declared `dependencies[]` (and `peer-`/`optional-`, plus `dev-` when `--include-dev`) into that primary main-module's `.depends`.
+- **Annotation**: each merged dep's component gets a `mikebom:source-manifest: <relative-path>` annotation so the manifest provenance survives the topology flattening. Graph-walking SBOM consumers see the dep is reachable from root; provenance-walking consumers can still trace it to its declaring manifest.
+- **Edge case**: scans with ONLY nameless secondaries (no primary main-module to anchor to) warn-log and leave the deps as orphans — there's no anchor to attach to.
+
+### Go `+incompatible` legacy-residue filter (#258, closes #255)
+
+A real-world `guacsec/guac@ebb808e` scan emitted both `pkg:golang/github.com/google/martian@v2.1.0+incompatible` AND `pkg:golang/github.com/google/martian/v3@v3.3.3` as components, with `martian@v2` flat-attached to root via PR #253's residual-orphan backfill. `go mod why -m github.com/google/martian` confirmed the main module doesn't actually need `martian` v2 — it's residue left in go.sum after the project upgraded to the `/v3`-suffixed module form.
+
+- **Fix**: drop a Go component if BOTH its version contains `+incompatible` AND a same-base-path `<path>/vN` (N ≥ 2) sibling exists in the emitted entries. The narrow filter matches the user's "narrow bug" framing.
+- **Intentionally NOT filtered**: general go.sum-but-not-go.mod-reachable modules (e.g. `gopkg.in/check.v1`, pulled via `yaml.v3`'s test deps). A broader filter caught these too and was walked back to preserve test-transitives that operators expect to see in the SBOM for vulnerability scanning.
+
+### Added utility
+
+- `ModuleGraphMap::reachable_from(seeds: &[ModuleId]) -> HashSet<ModuleId>` — BFS through the resolver map. Added as documented public API for future work on reachability-based filtering or external resolver-inspection tooling. Not consumed by the alpha.38 narrow `+incompatible` filter; reserved for future use.
+
 ## [0.1.0-alpha.37] — 2026-05-26
 
 This release bundles two Go-orphan fixes (#252 / #253) and two release-pipeline fixes (#248 / #249) that surfaced during the alpha.36 publishing of the multi-arch container image.

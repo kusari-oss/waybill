@@ -2017,7 +2017,7 @@ checksum = "c2a86d3146ed3995b5913c414f6664344b9617457320782e64f0bb44afd49d74"
 
 [[package]]
 name = "mikebom"
-version = "0.1.0-alpha.37"
+version = "0.1.0-alpha.38"
 dependencies = [
  "anyhow",
  "aya",
@@ -2059,7 +2059,7 @@ dependencies = [
 
 [[package]]
 name = "mikebom-common"
-version = "0.1.0-alpha.37"
+version = "0.1.0-alpha.38"
 dependencies = [
  "aya",
  "base64 0.22.1",
