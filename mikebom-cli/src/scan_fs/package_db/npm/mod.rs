@@ -258,31 +258,35 @@ fn apply_nameless_secondary_umbrella(
     include_dev: bool,
     entries: &mut [PackageDbEntry],
 ) {
-    // Pre-pass: build a list of (project_root_dir, parsed_manifest) for
-    // every project root that has a `package.json`. Separates nameless
-    // from named for the per-loop logic below.
+    // Pre-pass: enumerate project_root directories whose `package.json`
+    // produced an actual main-module entry in `entries`. This is the
+    // pool of "umbrella targets" — manifests an orphan-source manifest
+    // can attach its deps to.
+    //
+    // Issue #245 refinement: switched from "manifest has a name" to
+    // "main-module entry exists in entries". The former missed
+    // `private: true` + no `version` manifests (which have a name but
+    // get skipped by build_npm_main_module_entry per FR-001 / #104),
+    // leaving their declared deps as orphans. The new criterion is
+    // the strictly correct condition — it captures every manifest the
+    // main-module-build loop above DIDN'T handle (whether due to
+    // nameless OR private+no-version).
     let project_roots = candidate_project_roots(rootfs);
-    let mut named_dirs: Vec<PathBuf> = Vec::new();
-    for pr in &project_roots {
-        let mp = pr.join("package.json");
-        if !mp.is_file() {
-            continue;
-        }
-        let Ok(text) = std::fs::read_to_string(&mp) else {
-            continue;
-        };
-        let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&text) else {
-            continue;
-        };
-        if parsed
-            .get("name")
-            .and_then(|v| v.as_str())
-            .filter(|s| !s.is_empty())
-            .is_some()
-        {
-            named_dirs.push(pr.clone());
-        }
-    }
+    let main_module_dirs: Vec<PathBuf> = entries
+        .iter()
+        .filter(|e| {
+            e.purl.as_str().starts_with("pkg:npm/")
+                && e.extra_annotations
+                    .get("mikebom:component-role")
+                    .and_then(|v| v.as_str())
+                    == Some("main-module")
+        })
+        .filter_map(|e| {
+            e.source_path
+                .strip_prefix("path+file://")
+                .map(PathBuf::from)
+        })
+        .collect();
 
     for project_root in &project_roots {
         let manifest_path = project_root.join("package.json");
@@ -295,14 +299,12 @@ fn apply_nameless_secondary_umbrella(
         let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&text) else {
             continue;
         };
-        // Only process nameless manifests. Named ones already went
-        // through the main-module-build loop above.
-        if parsed
-            .get("name")
-            .and_then(|v| v.as_str())
-            .filter(|s| !s.is_empty())
-            .is_some()
-        {
+        // Skip project_roots that already have a main-module entry —
+        // they were handled by the main-module-build loop above. The
+        // umbrella ONLY fires for "orphan-source" manifests: those
+        // whose main-module emission was skipped (nameless, or
+        // private+no-version, or any future skip condition).
+        if main_module_dirs.iter().any(|d| d == project_root) {
             continue;
         }
         // Collect declared dep names from all four standard sections.
@@ -330,10 +332,11 @@ fn apply_nameless_secondary_umbrella(
             continue;
         }
 
-        // Find the closest enclosing named primary project root —
-        // the named directory that is an ancestor of (or equal to)
-        // this nameless manifest's directory, with the longest path.
-        let target_project_root: Option<&PathBuf> = named_dirs
+        // Find the closest enclosing primary project root with an
+        // emitted main-module entry — the directory that is an
+        // ancestor of (or equal to) this orphan-source manifest's
+        // directory, with the longest path.
+        let target_project_root: Option<&PathBuf> = main_module_dirs
             .iter()
             .filter(|nd| nd != &project_root && project_root.starts_with(nd))
             .max_by_key(|nd| nd.as_os_str().len());
@@ -1044,6 +1047,174 @@ mod tests {
                 .contains_key("mikebom:source-manifest"),
             "named secondary's deps should NOT get the umbrella annotation; got: {:?}",
             schemalint.extra_annotations
+        );
+    }
+
+    // --- issue #245: secondary node_modules re-parenting --------------------
+
+    #[test]
+    fn secondary_named_pkgjson_with_node_modules_links_deps_to_sub_main_module() {
+        // Issue #245 reproducer: primary at root (named "repro-root",
+        // depends on axios via lockfile), secondary at sub/ (named
+        // "sub-pkg", depends on pg, with sub/node_modules/ but NO
+        // sub/package-lock.json). pg + pg-connection-string get
+        // discovered via Tier B's node_modules walk on the secondary.
+        //
+        // Expected: pg has an incoming edge from sub-pkg's main-module
+        // entry (sub-pkg.depends contains "pg", populated from
+        // sub/package.json's dependencies section by
+        // build_npm_main_module_entry).
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+
+        // Primary: package.json + package-lock.json + node_modules/axios.
+        std::fs::write(
+            root.join("package.json"),
+            r#"{"name":"repro-root","version":"0.0.0","dependencies":{"axios":"^1.7.0"}}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("package-lock.json"),
+            r#"{"lockfileVersion":3,"packages":{"node_modules/axios":{"version":"1.7.0"}}}"#,
+        )
+        .unwrap();
+        std::fs::create_dir_all(root.join("node_modules/axios")).unwrap();
+        std::fs::write(
+            root.join("node_modules/axios/package.json"),
+            r#"{"name":"axios","version":"1.7.0"}"#,
+        )
+        .unwrap();
+
+        // Secondary: NAMED package.json + node_modules/ but NO
+        // package-lock.json. Tier B (flat node_modules walk) should
+        // emit pg + pg-connection-string; main-module-build should
+        // emit sub-pkg with depends=[pg].
+        let sub = root.join("sub");
+        std::fs::create_dir_all(&sub).unwrap();
+        std::fs::write(
+            sub.join("package.json"),
+            r#"{"name":"sub-pkg","version":"0.0.0","dependencies":{"pg":"^8.0.0"}}"#,
+        )
+        .unwrap();
+        std::fs::create_dir_all(sub.join("node_modules/pg")).unwrap();
+        std::fs::write(
+            sub.join("node_modules/pg/package.json"),
+            r#"{"name":"pg","version":"8.11.3","dependencies":{"pg-connection-string":"^2.6.0"}}"#,
+        )
+        .unwrap();
+        std::fs::create_dir_all(sub.join("node_modules/pg-connection-string")).unwrap();
+        std::fs::write(
+            sub.join("node_modules/pg-connection-string/package.json"),
+            r#"{"name":"pg-connection-string","version":"2.6.0"}"#,
+        )
+        .unwrap();
+
+        let out = read(root, false, crate::scan_fs::ScanMode::Path).unwrap();
+
+        // Verify all four components emitted.
+        let names: Vec<&str> = out.iter().map(|e| e.name.as_str()).collect();
+        assert!(names.contains(&"axios"), "axios component should be emitted: {:?}", names);
+        assert!(names.contains(&"pg"), "pg component should be emitted: {:?}", names);
+        assert!(
+            names.contains(&"pg-connection-string"),
+            "pg-connection-string component should be emitted: {:?}",
+            names
+        );
+
+        // Find sub-pkg main-module entry.
+        let sub_pkg = out.iter().find(|e| {
+            e.name == "sub-pkg"
+                && e.extra_annotations
+                    .get("mikebom:component-role")
+                    .and_then(|v| v.as_str())
+                    == Some("main-module")
+        });
+        assert!(
+            sub_pkg.is_some(),
+            "sub-pkg main-module entry should exist (issue #245). All entries: {:?}",
+            names
+        );
+
+        // The issue's claim: sub-pkg.depends should include "pg" so
+        // that pg has an incoming edge from sub-pkg. Without this,
+        // pg appears as an orphan in the dep graph.
+        let sub_pkg = sub_pkg.unwrap();
+        assert!(
+            sub_pkg.depends.contains(&"pg".to_string()),
+            "sub-pkg.depends should include 'pg' (issue #245 expected behavior); got: {:?}",
+            sub_pkg.depends
+        );
+    }
+
+    #[test]
+    fn secondary_private_pkgjson_without_version_skips_main_module() {
+        // Per build_npm_main_module_entry's FR-001 + issue #104
+        // guidance: a `private: true` package.json with no `version`
+        // field is treated as "not a publishable artifact" and the
+        // main-module entry is NOT emitted. This is a documented
+        // skip — but it leaves the secondary's declared deps without
+        // an anchor in the graph. Verify: this is the failure mode
+        // that issue #245 actually describes (when the user's
+        // secondary manifest has private:true).
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+
+        std::fs::write(
+            root.join("package.json"),
+            r#"{"name":"repro-root","version":"0.0.0","dependencies":{"axios":"^1.7.0"}}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            root.join("package-lock.json"),
+            r#"{"lockfileVersion":3,"packages":{"node_modules/axios":{"version":"1.7.0"}}}"#,
+        )
+        .unwrap();
+
+        let sub = root.join("sub");
+        std::fs::create_dir_all(&sub).unwrap();
+        // private: true + NO version → main-module entry skipped.
+        std::fs::write(
+            sub.join("package.json"),
+            r#"{"name":"sub-pkg","private":true,"dependencies":{"pg":"^8.0.0"}}"#,
+        )
+        .unwrap();
+        std::fs::create_dir_all(sub.join("node_modules/pg")).unwrap();
+        std::fs::write(
+            sub.join("node_modules/pg/package.json"),
+            r#"{"name":"pg","version":"8.11.3"}"#,
+        )
+        .unwrap();
+
+        let out = read(root, false, crate::scan_fs::ScanMode::Path).unwrap();
+
+        // pg gets emitted via Tier B walk.
+        assert!(
+            out.iter().any(|e| e.name == "pg"),
+            "pg should be emitted: {:?}",
+            out.iter().map(|e| e.name.as_str()).collect::<Vec<_>>()
+        );
+
+        // sub-pkg main-module is NOT emitted (private:true + no
+        // version). So pg has no incoming edge from sub-pkg.
+        //
+        // This documents the failure mode. The fix should mirror
+        // issue #257's nameless-secondary umbrella: when a secondary
+        // package.json's main-module is skipped (whether due to
+        // nameless OR private+no-version), umbrella its declared
+        // deps onto the primary main-module.
+        let sub_pkg_emitted = out.iter().any(|e| e.name == "sub-pkg");
+        assert!(
+            !sub_pkg_emitted,
+            "sub-pkg main-module SHOULD be skipped per FR-001 (private:true+no-version), preserving the existing skip behavior. The fix should umbrella the deps elsewhere, not emit sub-pkg as a publishable component."
+        );
+
+        // After fix: pg should be reachable from primary main-module
+        // via the umbrella mechanism.
+        let primary = out.iter().find(|e| e.name == "repro-root").expect("primary main-module");
+        assert!(
+            primary.depends.contains(&"pg".to_string()),
+            "After fix: primary main-module 'repro-root' should umbrella pg from sub/. Got depends: {:?}",
+            primary.depends
         );
     }
 
