@@ -27,9 +27,9 @@ Single-project workspace (the mikebom Rust workspace). All source under `mikebom
 
 **Purpose**: Verify baseline state and resolve the in-flight prerequisite (PR #272).
 
-- [ ] T001 Verify branch checkout: confirm `git branch --show-current` returns `105-cpp-ecosystem-expansion` (the script-created branch).
-- [ ] T002 Confirm PR #272 (alpha.41 source-mechanism annotation) has merged to `main`, then rebase the 105 branch on the post-merge `main` head. **If #272 is still open, complete its review/merge first** — milestone 105 builds directly on the C55 parity row + 7 existing closed-enum values that #272 introduces.
-- [ ] T003 [P] Run baseline pre-PR gate: `./scripts/pre-pr.sh` MUST pass clean on the rebased branch before any work begins. Document the baseline scan-time for the existing golden fixtures (used as the SC-009 ≤5% comparator).
+- [X] T001 Verify branch checkout: confirm `git branch --show-current` returns `105-cpp-ecosystem-expansion` (the script-created branch).
+- [X] T002 Confirm PR #272 (alpha.41 source-mechanism annotation) has merged to `main`, then rebase the 105 branch on the post-merge `main` head. **If #272 is still open, complete its review/merge first** — milestone 105 builds directly on the C55 parity row + 7 existing closed-enum values that #272 introduces. ✅ #272 merged 2026-05-28T00:43:39Z; rebased clean onto origin/main (615cebc); planning artifacts committed as 2e113e3.
+- [X] T003 [P] Run baseline pre-PR gate: `./scripts/pre-pr.sh` MUST pass clean on the rebased branch before any work begins. Document the baseline scan-time for the existing golden fixtures (used as the SC-009 ≤5% comparator). ✅ Baseline = **2:36.64 wall-clock** for full clippy + workspace tests.
 
 **Checkpoint**: Baseline confirmed clean. Phase 2 can begin.
 
@@ -43,10 +43,10 @@ Single-project workspace (the mikebom Rust workspace). All source under `mikebom
 
 ### 2A — URL sanitization helper refactor (FR-016)
 
-- [ ] T004 Move `sanitize_userinfo` and its private `SanitizedUrl` struct from `mikebom-cli/src/binding/identifiers/auto_detect.rs` to a new public module `mikebom-cli/src/identifiers/sanitize.rs`. Collapse the struct into a `pub fn sanitize_userinfo(url: &str) -> Cow<'_, str>` return signature. Module-private helpers like `redact_userinfo_for_log` move with it.
-- [ ] T005 [P] Bump the redaction-event log from `tracing::info!` to `tracing::warn!` in `mikebom-cli/src/identifiers/sanitize.rs` per FR-016. Update the log message structured fields per `contracts/credential-redaction.md`.
-- [ ] T006 Update the 2 existing production call sites in `mikebom-cli/src/binding/identifiers/auto_detect.rs` (`auto_detect_repo_identifier`, `auto_detect_build_tier_identifiers`) to import from the new path and consume the `Cow<'_, str>` return type. Behavior MUST be byte-identical to the pre-refactor version (apart from log level).
-- [ ] T007 [P] Update the 9 existing unit tests in `mikebom-cli/src/binding/identifiers/auto_detect.rs` (lines 1214, 1225, 1241, 1248, 1256, 1264, 1274, 1291, 1293) to test the new public helper. Move them to a fresh test module in `mikebom-cli/src/identifiers/sanitize.rs`.
+- [X] T004 Move `sanitize_userinfo` and its private `SanitizedUrl` struct from `mikebom-cli/src/binding/identifiers/auto_detect.rs` to a new public module `mikebom-cli/src/identifiers/sanitize.rs`. Collapse the struct into a `pub fn sanitize_userinfo(url: &str) -> Cow<'_, str>` return signature. Module-private helpers like `redact_userinfo_for_log` move with it. ✅ New module at `mikebom-cli/src/identifiers/sanitize.rs`; declared as `pub mod identifiers;` in `lib.rs` (NOT main.rs — auto_detect.rs lives in the lib tree). Behavioral refinement: empty-userinfo inputs (`https://@host/...`) now return `Cow::Borrowed` since there's no real credential to strip — preserves FR-016 log-gating semantics.
+- [X] T005 [P] Bump the redaction-event log from `tracing::info!` to `tracing::warn!` in `mikebom-cli/src/identifiers/sanitize.rs` per FR-016. Update the log message structured fields per `contracts/credential-redaction.md`. ✅ Bumped at the 3 call sites in `auto_detect.rs` (the helper itself stays log-free; per-callsite logging preserves the `scheme=repo`/`scheme=git` context fields).
+- [X] T006 Update the 2 existing production call sites in `mikebom-cli/src/binding/identifiers/auto_detect.rs` (`auto_detect_repo_identifier`, `auto_detect_build_tier_identifiers`) to import from the new path and consume the `Cow<'_, str>` return type. Behavior MUST be byte-identical to the pre-refactor version (apart from log level). ✅ Both functions updated; pre-PR gate passes clean.
+- [X] T007 [P] Update the 9 existing unit tests in `mikebom-cli/src/binding/identifiers/auto_detect.rs` (lines 1214, 1225, 1241, 1248, 1256, 1264, 1274, 1291, 1293) to test the new public helper. Move them to a fresh test module in `mikebom-cli/src/identifiers/sanitize.rs`. ✅ 12 tests moved (8 sanitize_userinfo + 4 redact_userinfo_for_log); old test block in `auto_detect.rs` removed with a forwarding comment.
 
 ### 2B — `find_package` target collector (used by FR-008a)
 
