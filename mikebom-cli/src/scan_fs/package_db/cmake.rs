@@ -22,7 +22,9 @@
 //! Cross-platform; no `#[cfg(unix)]` gates. Zero new Cargo deps —
 //! uses workspace `regex` + std.
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 use mikebom_common::types::hash::ContentHash;
 use mikebom_common::types::purl::{encode_purl_segment, Purl};
@@ -61,6 +63,130 @@ pub fn read(scan_root: &Path, include_vendored: bool) -> Vec<PackageDbEntry> {
         }
     }
     entries
+}
+
+/// Collect the set of `find_package(<target> ...)` target names AND
+/// `add_library(... ALIAS ...)` alias/target names declared anywhere
+/// under the scan root's CMake files. Used by the milestone-105
+/// `git-submodule` reader (FR-008a) to classify each `.gitmodules`
+/// entry as `mikebom:build-reference: "declared-and-used"` (the
+/// submodule's path basename appears in this set) or
+/// `"declared-only"` (it doesn't).
+///
+/// Names are case-folded to lowercase for case-insensitive matching
+/// per FR-008a. The returned set is order-independent
+/// (`BTreeSet<String>`) so submodule classification is deterministic
+/// regardless of filesystem walk order (SC-010).
+///
+/// IMPORTANT: this fn does NOT emit components. It only collects
+/// target names. Milestone 102's FR-007 (`find_package_does_not_emit_components`
+/// regression test) remains green — the collector is a parallel pass
+/// that reads the same files but only populates a name set.
+///
+/// Dynamic aliases set inside CMake macros / functions are not
+/// chased (per spec edge case "target aliases"). Only statically
+/// visible `add_library(... ALIAS ...)` declarations contribute.
+///
+/// `#[allow(dead_code)]`: the consumer is the milestone-105 US6
+/// `git_submodule` reader (T089), which lands in a later commit of
+/// this milestone. Tests in this module exercise the collector now,
+/// but no production call site exists yet — clippy's `dead_code` lint
+/// would otherwise reject the public fn.
+#[allow(dead_code)]
+pub fn collect_find_package_targets(scan_root: &Path) -> BTreeSet<String> {
+    let cmake_files = discover_cmake_files(scan_root);
+    let mut out: BTreeSet<String> = BTreeSet::new();
+    for path in &cmake_files {
+        let content = match std::fs::read_to_string(path) {
+            Ok(s) => s,
+            Err(e) => {
+                tracing::warn!(
+                    path = %path.display(),
+                    error = %e,
+                    "failed to read CMake file for find_package collection (FR-013)"
+                );
+                continue;
+            }
+        };
+        collect_into(&content, &mut out);
+    }
+    out
+}
+
+/// Internal helper: extract `find_package(...)` + `add_library(...
+/// ALIAS ...)` names from a single CMake file body and insert them
+/// into the accumulator. Pure function — used by the public collector
+/// and by unit tests. `#[allow(dead_code)]` per the public fn's note
+/// (consumer lands in US6 / T089).
+#[allow(dead_code)]
+fn collect_into(content: &str, out: &mut BTreeSet<String>) {
+    // `find_package(<target> ...)` — target is the first token after
+    // `(`. CMake target names per the language reference are letters
+    // / digits / `_`, plus the namespace separator `::`. Trailing
+    // characters (whitespace, keywords like REQUIRED, CONFIG, version
+    // numbers) are not captured.
+    static FIND_PACKAGE: OnceLock<Regex> = OnceLock::new();
+    let find_package_re = FIND_PACKAGE.get_or_init(|| {
+        Regex::new(r"(?i)\bfind_package\s*\(\s*([A-Za-z0-9_:.+-]+)")
+            .expect("find_package regex compiles")
+    });
+    for cap in find_package_re.captures_iter(content) {
+        if let Some(name) = cap.get(1) {
+            insert_name(name.as_str(), out);
+        }
+    }
+
+    // `add_library(<alias-name> ALIAS <target>)`. Both the alias
+    // name AND the target name go into the set so downstream
+    // submodule classification matches either form a `find_package`
+    // call might use.
+    //
+    // Recognized shapes (whitespace + comment tolerant):
+    //   add_library(Foo::Foo ALIAS foo)
+    //   add_library(Foo ALIAS foo)
+    //   add_library(SomeLib::SomeLib ALIAS someimpl)
+    static ALIAS: OnceLock<Regex> = OnceLock::new();
+    let alias_re = ALIAS.get_or_init(|| {
+        Regex::new(
+            r"(?i)\badd_library\s*\(\s*([A-Za-z0-9_:.+-]+)\s+ALIAS\s+([A-Za-z0-9_:.+-]+)",
+        )
+        .expect("add_library ALIAS regex compiles")
+    });
+    for cap in alias_re.captures_iter(content) {
+        if let Some(alias_name) = cap.get(1) {
+            insert_name(alias_name.as_str(), out);
+        }
+        if let Some(target_name) = cap.get(2) {
+            insert_name(target_name.as_str(), out);
+        }
+    }
+}
+
+/// Normalize a CMake target name for the find_package_targets set:
+/// case-fold to lowercase, strip a leading namespace if present
+/// (`Foo::Bar` → `bar`; also insert `foo` separately so submodule
+/// paths matching either part are recognized). `#[allow(dead_code)]`
+/// per the public fn's note (consumer lands in US6 / T089).
+#[allow(dead_code)]
+fn insert_name(raw: &str, out: &mut BTreeSet<String>) {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return;
+    }
+    // Insert the full name (case-folded). Useful when the name has
+    // no `::` namespace separator at all.
+    out.insert(trimmed.to_lowercase());
+    // If the name has a `Foo::Bar` form, ALSO insert each segment
+    // separately so a submodule named after either Foo or Bar is
+    // recognized.
+    if trimmed.contains("::") {
+        for segment in trimmed.split("::") {
+            let s = segment.trim();
+            if !s.is_empty() {
+                out.insert(s.to_lowercase());
+            }
+        }
+    }
 }
 
 /// Discover CMake files: top-level `CMakeLists.txt` + any `*.cmake`
@@ -550,5 +676,127 @@ add_subdirectory(tests)"#,
                 .and_then(|v| v.as_str()),
             Some("cmake-vendored"),
         );
+    }
+
+    // ----------------------------------------------------------------
+    // Milestone 105 phase 2B — find_package + add_library ALIAS
+    // collector (FR-008a). Component emission MUST stay disabled
+    // (preserves milestone 102's FR-007); the collector only
+    // populates a name set consumed by the git_submodule reader.
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn collect_find_package_basic() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            r#"
+                find_package(zlib REQUIRED)
+                find_package(OpenSSL 1.1 REQUIRED COMPONENTS SSL Crypto)
+                find_package(Boost CONFIG)
+            "#,
+        )
+        .unwrap();
+        let names = collect_find_package_targets(tmp.path());
+        assert!(names.contains("zlib"), "got: {names:?}");
+        assert!(names.contains("openssl"), "got: {names:?}");
+        assert!(names.contains("boost"), "got: {names:?}");
+    }
+
+    #[test]
+    fn collect_find_package_case_folded() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            r#"find_package(ZLib REQUIRED)"#,
+        )
+        .unwrap();
+        let names = collect_find_package_targets(tmp.path());
+        // Per FR-008a, names are case-folded for case-insensitive
+        // matching against submodule path basenames.
+        assert!(names.contains("zlib"), "got: {names:?}");
+        assert!(!names.contains("ZLib"), "should be case-folded; got: {names:?}");
+    }
+
+    #[test]
+    fn collect_add_library_alias_namespaced() {
+        // `add_library(SomeLib::SomeLib ALIAS someimpl)` should
+        // contribute BOTH `somelib` (the namespace prefix) AND
+        // `someimpl` (the underlying target) to the set so a
+        // submodule named `third_party/someimpl/` matches.
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            r#"add_library(SomeLib::SomeLib ALIAS someimpl)"#,
+        )
+        .unwrap();
+        let names = collect_find_package_targets(tmp.path());
+        assert!(names.contains("somelib"), "namespace; got: {names:?}");
+        assert!(names.contains("someimpl"), "alias target; got: {names:?}");
+    }
+
+    #[test]
+    fn collect_add_library_alias_unnamespaced() {
+        // Plain form: `add_library(Foo ALIAS foo)` — both `foo`
+        // (from the alias name case-folded) and `foo` (the target)
+        // collapse to one entry.
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            r#"add_library(Foo ALIAS foo)"#,
+        )
+        .unwrap();
+        let names = collect_find_package_targets(tmp.path());
+        assert!(names.contains("foo"), "got: {names:?}");
+    }
+
+    #[test]
+    fn collect_combined_find_package_and_alias() {
+        // Realistic gRPC-like case: find_package(SomeLib) + an
+        // add_library alias that maps SomeLib to a differently-named
+        // implementation target. Both names go into the set so a
+        // submodule named either way is recognized as declared-and-used.
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            r#"
+                find_package(SomeLib REQUIRED CONFIG)
+                add_library(SomeLib::SomeLib ALIAS someimpl)
+            "#,
+        )
+        .unwrap();
+        let names = collect_find_package_targets(tmp.path());
+        assert!(names.contains("somelib"), "got: {names:?}");
+        assert!(names.contains("someimpl"), "got: {names:?}");
+    }
+
+    #[test]
+    fn collect_returns_empty_when_no_cmake() {
+        // No CMakeLists.txt → empty set, no panic.
+        let tmp = tempfile::tempdir().unwrap();
+        let names = collect_find_package_targets(tmp.path());
+        assert!(names.is_empty(), "got: {names:?}");
+    }
+
+    #[test]
+    fn collect_does_not_emit_components_invariant() {
+        // FR-008a guarantee: the collector populates a name set but
+        // does NOT contribute to PackageDbEntry emission. Calling
+        // both `read()` AND `collect_find_package_targets()` against
+        // the same input MUST behave identically: `read()` ignores
+        // find_package per milestone 102's FR-007.
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            r#"
+                find_package(zlib REQUIRED)
+                add_library(MyAlias::MyAlias ALIAS myimpl)
+            "#,
+        )
+        .unwrap();
+        let entries = read(tmp.path(), false);
+        let names = collect_find_package_targets(tmp.path());
+        assert!(entries.is_empty(), "read() MUST emit zero components for find_package + ALIAS input");
+        assert!(!names.is_empty(), "collector MUST populate the set");
     }
 }

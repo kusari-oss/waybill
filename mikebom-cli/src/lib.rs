@@ -48,3 +48,14 @@ pub mod parity;
 /// (`verify-binding`, `--bind-to-source`) stays binary-internal in
 /// `cli/`.
 pub mod binding;
+
+/// Milestone 105 (originally milestone 075): shared identifier-handling
+/// utilities. Currently exposes `sanitize::sanitize_userinfo` and
+/// `sanitize::redact_userinfo_for_log` — pure-function helpers that
+/// strip RFC 3986 userinfo from candidate URLs before they appear in
+/// any emitted SBOM. Exposed at lib root because both `binding/identifiers/`
+/// (the source-tier/build-tier identifier auto-detection from milestone 075)
+/// AND the milestone-105 C/C++ readers (`scan_fs/package_db/{west,
+/// git_submodule, ...}`) call into it. Per Constitution Principle VI, only
+/// pure-function code lives here; no I/O, no state.
+pub mod identifiers;

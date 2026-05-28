@@ -19,168 +19,13 @@
 //!   <name>:<tag>@sha256:<digest>` shape per spec Q3 from the
 //!   resolved-image fields, omitting components that aren't present.
 
+use std::borrow::Cow;
 use std::path::Path;
 use std::process::Command;
 
 use super::{Identifier, IdentifierKind, IdentifierValue, SchemeName};
+use crate::identifiers::sanitize::{redact_userinfo_for_log, sanitize_userinfo};
 use mikebom_common::attestation::statement::ResourceDescriptor;
-
-/// Result of running `sanitize_userinfo` on a candidate URL string.
-///
-/// Private to this module; not part of the public surface. Lifetime
-/// is ephemeral — the helper returns one of these, the caller
-/// inspects the fields once and emits its identifier, and the
-/// struct is dropped.
-///
-/// Field semantics per data-model.md (milestone 075):
-/// - `original`: the URL string exactly as it came back from
-///   `git remote get-url`. Preserved so callers can still reference
-///   the host/path for operator-debuggability log output via
-///   `redact_userinfo_for_log`.
-/// - `sanitized`: the URL with RFC 3986 userinfo removed when the
-///   parser saw any. Equal to `original` when the URL had no
-///   userinfo, when the URL fails to parse (SSH-form, malformed),
-///   or when one of the setter calls rejects the URL (cannot-be-base
-///   path).
-/// - `was_sanitized`: `true` iff this run actually stripped userinfo.
-///   Drives FR-006 log-line emission and FR-008 `(credentials
-///   stripped)` source_label suffix.
-struct SanitizedUrl {
-    original: String,
-    sanitized: String,
-    was_sanitized: bool,
-}
-
-/// Strip RFC 3986 userinfo from a candidate git remote URL before
-/// it gets embedded as an identifier value in a published SBOM.
-///
-/// Behavior (data-model.md §`sanitize_userinfo`, research §1, §6):
-///
-/// 1. `url::Url::parse(url)` — on `Err`, return passthrough
-///    (`sanitized == original`, `was_sanitized == false`). Covers
-///    SSH-form URLs (`git@host:foo/bar.git`) and any other
-///    non-RFC-3986 input.
-/// 2. On parse success, check whether the parsed URL carries
-///    userinfo (`username().is_empty() == false ||
-///    password().is_some()`). If neither is present, return
-///    passthrough.
-/// 3. On userinfo present, call `set_username("")` followed by
-///    `set_password(None)`. Either setter returning `Err` (the
-///    "cannot-be-base" path) collapses to passthrough — preserves
-///    the FR-009 soft-fail rule.
-/// 4. On both setters succeeding, return `SanitizedUrl { original,
-///    sanitized: parsed.to_string(), was_sanitized: true }`.
-///
-/// Never panics, never returns `Result`. All failure modes (parse
-/// error, setter rejection, missing authority) collapse to a
-/// passthrough — the original string emits verbatim, milestone
-/// 073's existing soft-fail-to-`UserDefined` rule (FR-009) handles
-/// downstream classification.
-fn sanitize_userinfo(url: &str) -> SanitizedUrl {
-    let original = url.to_string();
-    let mut parsed = match url::Url::parse(url) {
-        Ok(p) => p,
-        Err(_) => {
-            // Parse failure: SSH-form URLs and other non-RFC-3986
-            // inputs. Pass through unchanged; downstream validators
-            // soft-fail to `UserDefined` per FR-009.
-            return SanitizedUrl {
-                original: original.clone(),
-                sanitized: original,
-                was_sanitized: false,
-            };
-        }
-    };
-    // `set_username("")` and `set_password(None)` reject cannot-be-
-    // base URLs (e.g., `mailto:`). Vanishingly rare for the
-    // git-remote input domain, but the safe fallback is still
-    // passthrough. Always call them — that way even the
-    // `https://@host/...` empty-userinfo edge case (where
-    // `username().is_empty()` already and `password()` is `None` but
-    // the literal `@` survives the parse) gets cleaned up: the
-    // setters re-canonicalize the URL through the `url` crate's
-    // serializer, which writes neither `user`, nor `:password`, nor
-    // a stray `@` when both are empty/None.
-    if parsed.set_username("").is_err() {
-        return SanitizedUrl {
-            original: original.clone(),
-            sanitized: original,
-            was_sanitized: false,
-        };
-    }
-    if parsed.set_password(None).is_err() {
-        return SanitizedUrl {
-            original: original.clone(),
-            sanitized: original,
-            was_sanitized: false,
-        };
-    }
-    let sanitized = parsed.to_string();
-    // Compare against the parser's round-trip of the original URL
-    // (NOT the raw input) so URL canonicalization (default-port
-    // stripping, percent-encoding normalization, trailing-slash
-    // additions) doesn't falsely register as "userinfo stripped".
-    // Only userinfo presence/absence drives `was_sanitized`.
-    let original_round_trip = match url::Url::parse(&original) {
-        Ok(p) => p.to_string(),
-        Err(_) => original.clone(),
-    };
-    let was_sanitized = sanitized != original_round_trip;
-    SanitizedUrl {
-        original,
-        sanitized,
-        was_sanitized,
-    }
-}
-
-/// Build a redacted form of a URL for log output. Replaces userinfo
-/// with the literal string `<userinfo redacted>` while preserving
-/// scheme/host/port/path/query/fragment so operators can identify
-/// which remote was sanitized without leaking the credential value.
-///
-/// Behavior:
-/// - Parse-success with userinfo present: emit
-///   `<scheme>://<userinfo redacted>@<host>[:<port>]<path>...`.
-/// - Parse-success without userinfo: pass the input through
-///   unchanged (no redaction marker).
-/// - Parse-failure (SSH-form, malformed): pass the input through
-///   unchanged. Used in code paths gated on `was_sanitized == true`,
-///   so SSH-form never reaches this helper in production.
-///
-/// The literal credential value MUST NOT appear in the output
-/// (FR-006). Callers route the result through `tracing::info!` as a
-/// `Display` field.
-fn redact_userinfo_for_log(url_str: &str) -> String {
-    let parsed = match url::Url::parse(url_str) {
-        Ok(p) => p,
-        Err(_) => return url_str.to_string(),
-    };
-    let has_userinfo = !parsed.username().is_empty() || parsed.password().is_some();
-    if !has_userinfo {
-        return url_str.to_string();
-    }
-    // Reconstruct: <scheme>://<userinfo redacted>@<host>[:<port>]<path>?<query>#<fragment>
-    let mut out = String::new();
-    out.push_str(parsed.scheme());
-    out.push_str("://<userinfo redacted>@");
-    if let Some(host) = parsed.host_str() {
-        out.push_str(host);
-    }
-    if let Some(port) = parsed.port() {
-        out.push(':');
-        out.push_str(&port.to_string());
-    }
-    out.push_str(parsed.path());
-    if let Some(q) = parsed.query() {
-        out.push('?');
-        out.push_str(q);
-    }
-    if let Some(f) = parsed.fragment() {
-        out.push('#');
-        out.push_str(f);
-    }
-    out
-}
 
 /// Auto-detect a `repo:` identifier from a git checkout. Returns `None`
 /// when the scan root isn't a git checkout, has no remotes, or any git
@@ -213,24 +58,21 @@ pub fn auto_detect_repo_identifier(
         );
     }
     let (url, remote_name, fallback_used) = discover_repo_url(scan_root)?;
-    let sanitized = if keep_credentials {
-        SanitizedUrl {
-            original: url.clone(),
-            sanitized: url,
-            was_sanitized: false,
-        }
+    let sanitized_cow: Cow<'_, str> = if keep_credentials {
+        Cow::Borrowed(&url)
     } else {
         sanitize_userinfo(&url)
     };
-    if sanitized.was_sanitized {
-        tracing::info!(
+    let was_sanitized = matches!(sanitized_cow, Cow::Owned(_));
+    if was_sanitized {
+        tracing::warn!(
             scheme = "repo",
-            url_safe = %redact_userinfo_for_log(&sanitized.original),
+            url_safe = %redact_userinfo_for_log(&url),
             "sanitized userinfo from auto-detected identifier"
         );
     }
-    let label = source_tier_repo_label(&remote_name, fallback_used, sanitized.was_sanitized);
-    build_repo_identifier_with_label(sanitized.sanitized, &remote_name, label)
+    let label = source_tier_repo_label(&remote_name, fallback_used, was_sanitized);
+    build_repo_identifier_with_label(sanitized_cow.into_owned(), &remote_name, label)
 }
 
 /// Source-tier `source_label` formatter. Kept stable across milestones
@@ -457,25 +299,23 @@ pub fn auto_detect_build_tier_identifiers(
     // Milestone 075 — sanitize the URL ONCE up front; both the
     // `repo:` value and the `git:` value reuse the sanitized form
     // (VR-075-005: URL portion sanitized BEFORE `#<sha>` append).
-    let sanitized = if keep_credentials {
-        SanitizedUrl {
-            original: url.clone(),
-            sanitized: url.clone(),
-            was_sanitized: false,
-        }
+    let sanitized_cow: Cow<'_, str> = if keep_credentials {
+        Cow::Borrowed(&url)
     } else {
         sanitize_userinfo(&url)
     };
-    if sanitized.was_sanitized {
-        tracing::info!(
+    let was_sanitized = matches!(sanitized_cow, Cow::Owned(_));
+    let sanitized_str: String = sanitized_cow.into_owned();
+    if was_sanitized {
+        tracing::warn!(
             scheme = "repo",
-            url_safe = %redact_userinfo_for_log(&sanitized.original),
+            url_safe = %redact_userinfo_for_log(&url),
             "sanitized userinfo from auto-detected identifier"
         );
     }
-    let label = build_tier_repo_label(&remote_name, fallback_used, sanitized.was_sanitized);
+    let label = build_tier_repo_label(&remote_name, fallback_used, was_sanitized);
     let repo_id =
-        match build_repo_identifier_with_label(sanitized.sanitized.clone(), &remote_name, label) {
+        match build_repo_identifier_with_label(sanitized_str.clone(), &remote_name, label) {
             Some(id) => id,
             None => {
                 // Construction failure (empty URL, etc.); without a
@@ -508,14 +348,14 @@ pub fn auto_detect_build_tier_identifiers(
         }
     };
     // VR-075-005: sanitize the URL portion BEFORE appending `#<sha>`.
-    let git_value_str = format!("{}#{sha}", sanitized.sanitized);
-    if sanitized.was_sanitized {
+    let git_value_str = format!("{}#{sha}", sanitized_str);
+    if was_sanitized {
         // Per-identifier log line for the `git:` slot — separate
         // from the `repo:` log so operators can see both
         // sanitizations in the audit trail (FR-006 per-identifier).
-        tracing::info!(
+        tracing::warn!(
             scheme = "git",
-            url_safe = %format!("{}#{sha}", redact_userinfo_for_log(&sanitized.original)),
+            url_safe = %format!("{}#{sha}", redact_userinfo_for_log(&url)),
             "sanitized userinfo from auto-detected identifier"
         );
     }
@@ -543,7 +383,7 @@ pub fn auto_detect_build_tier_identifiers(
         },
         None => IdentifierKind::UserDefined,
     };
-    let git_label = if sanitized.was_sanitized {
+    let git_label = if was_sanitized {
         BUILD_TIER_GIT_LABEL_SANITIZED
     } else {
         BUILD_TIER_GIT_LABEL
@@ -1205,137 +1045,10 @@ mod tests {
         assert_eq!(ids[0].value.as_str(), "git@github.com:o/foo.git");
     }
 
-    // ----------------------------------------------------------------
-    // Milestone 075 — sanitize_userinfo unit tests
-    // ----------------------------------------------------------------
-
-    #[test]
-    fn sanitize_strips_user_password_https() {
-        let s = sanitize_userinfo("https://USER:TOKEN@github.com/foo/bar.git");
-        assert!(s.was_sanitized);
-        assert_eq!(s.original, "https://USER:TOKEN@github.com/foo/bar.git");
-        assert_eq!(s.sanitized, "https://github.com/foo/bar.git");
-        assert!(!s.sanitized.contains("USER"));
-        assert!(!s.sanitized.contains("TOKEN"));
-    }
-
-    #[test]
-    fn sanitize_strips_user_only_no_password() {
-        // GitHub App pattern: bare `<token>@host` without a colon.
-        let s = sanitize_userinfo("https://ghp_AAA123@github.com/foo/bar.git");
-        assert!(s.was_sanitized);
-        assert_eq!(s.sanitized, "https://github.com/foo/bar.git");
-        assert!(!s.sanitized.contains("ghp_AAA123"));
-    }
-
-    #[test]
-    fn sanitize_handles_empty_userinfo() {
-        // Edge case: `https://@host/...` — empty userinfo is still
-        // userinfo per RFC 3986.
-        //
-        // Note: `url::Url::parse` may normalize `https://@github.com/foo.git`
-        // to `https://github.com/foo.git` even before the setters run.
-        // Either way, the result is "no userinfo present in the
-        // sanitized output". Don't assert on `was_sanitized` since
-        // the parser may already have stripped it.
-        let s = sanitize_userinfo("https://@github.com/foo.git");
-        assert!(!s.sanitized.contains('@'));
-        assert!(s.sanitized.starts_with("https://github.com/foo.git"));
-    }
-
-    #[test]
-    fn sanitize_preserves_port_when_stripping() {
-        let s = sanitize_userinfo("https://USER:TOKEN@github.com:8443/foo.git");
-        assert!(s.was_sanitized);
-        assert_eq!(s.sanitized, "https://github.com:8443/foo.git");
-    }
-
-    #[test]
-    fn sanitize_passthrough_on_parse_failure() {
-        // Bare token with no scheme — url::Url::parse rejects.
-        let s = sanitize_userinfo("not a url at all");
-        assert!(!s.was_sanitized);
-        assert_eq!(s.original, "not a url at all");
-        assert_eq!(s.sanitized, "not a url at all");
-    }
-
-    #[test]
-    fn sanitize_passthrough_on_no_userinfo() {
-        let s = sanitize_userinfo("https://github.com/foo/bar.git");
-        assert!(!s.was_sanitized);
-        assert_eq!(s.original, "https://github.com/foo/bar.git");
-        assert_eq!(s.sanitized, "https://github.com/foo/bar.git");
-    }
-
-    #[test]
-    fn sanitize_passthrough_on_ssh_form() {
-        // SCP-like syntax — url::Url::parse rejects it (research §6).
-        // Treated identically to no-userinfo for downstream emission.
-        let s = sanitize_userinfo("git@github.com:foo/bar.git");
-        assert!(!s.was_sanitized);
-        assert_eq!(s.original, "git@github.com:foo/bar.git");
-        assert_eq!(s.sanitized, "git@github.com:foo/bar.git");
-    }
-
-    #[test]
-    fn sanitize_is_deterministic() {
-        // VR-075-002: same input → byte-identical sanitized output
-        // across runs.
-        let inputs = [
-            "https://USER:TOKEN@github.com/foo.git",
-            "https://github.com/foo.git",
-            "git@github.com:foo/bar.git",
-            "https://USER@github.com:443/foo.git",
-        ];
-        for input in &inputs {
-            let a = sanitize_userinfo(input);
-            for _ in 0..10 {
-                let b = sanitize_userinfo(input);
-                assert_eq!(a.original, b.original);
-                assert_eq!(a.sanitized, b.sanitized);
-                assert_eq!(a.was_sanitized, b.was_sanitized);
-            }
-        }
-    }
-
-    // ----------------------------------------------------------------
-    // Milestone 075 — redact_userinfo_for_log unit tests
-    // ----------------------------------------------------------------
-
-    #[test]
-    fn redact_substitutes_userinfo_marker() {
-        let r = redact_userinfo_for_log("https://USER:TOKEN@github.com/foo.git");
-        assert_eq!(r, "https://<userinfo redacted>@github.com/foo.git");
-        assert!(!r.contains("USER"));
-        assert!(!r.contains("TOKEN"));
-    }
-
-    #[test]
-    fn redact_passes_through_no_userinfo() {
-        let r = redact_userinfo_for_log("https://github.com/foo.git");
-        assert_eq!(r, "https://github.com/foo.git");
-    }
-
-    #[test]
-    fn redact_passes_through_parse_failure() {
-        let r = redact_userinfo_for_log("git@github.com:foo/bar.git");
-        assert_eq!(r, "git@github.com:foo/bar.git");
-    }
-
-    #[test]
-    fn redact_preserves_port_path_query_fragment() {
-        // Use port 8443 — `url::Url` normalizes away default scheme
-        // ports (`:443` for `https://`) at parse time, which is
-        // expected URL-canonicalization behavior, not a redaction
-        // bug. A non-default port survives intact.
-        let r = redact_userinfo_for_log(
-            "https://USER:TOKEN@github.com:8443/foo/bar.git?a=1#frag",
-        );
-        assert_eq!(
-            r,
-            "https://<userinfo redacted>@github.com:8443/foo/bar.git?a=1#frag"
-        );
-    }
+    // Milestone 075's `sanitize_userinfo` and `redact_userinfo_for_log`
+    // unit tests were moved to `mikebom-cli/src/identifiers/sanitize.rs`
+    // by milestone 105 (research R4) when the helpers were promoted to
+    // a public shared utility.
 
     // ----------------------------------------------------------------
     // Milestone 076 — subject_identifiers_from_attestation_subjects

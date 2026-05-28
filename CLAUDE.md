@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-05-24
+Auto-generated from all feature plans. Last updated: 2026-05-28
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -104,6 +104,8 @@ Auto-generated from all feature plans. Last updated: 2026-05-24
 - N/A — all parsing is in-process; reader returns `Vec<PackageDbEntry>` to the existing `read_all` dispatcher. (103-bazel-cmake-impl)
 - Rust stable (workspace toolchain inherited from milestones 001–103; no nightly required). + Existing only — `object = "0.36"` (workspace; already used pervasively by `scan_fs/binary/`), `serde`/`serde_json`, `tracing`, `anyhow`. **Zero new Cargo dependencies.** (104-binary-role-classification)
 - N/A — classification is a pure function of the binary's first 1KB of header bytes; no persistence, no cache. (104-binary-role-classification)
+- Rust stable (workspace toolchain inherited from milestones 001–104; no nightly required for this user-space-only work). + Existing only — `serde`/`serde_json` (manifest parsing for `idf_component.yml`, JSON-LD construction for the parity layer), `serde_yaml = "0.9"` (already a direct dep at `mikebom-cli/Cargo.toml:99` per research R2; used by the new `west.yml` and `idf_component.yml` readers), `regex = "1"` (already a direct dep; CPM.cmake call-site extraction + find_package correlation), `quick-xml` (already used by maven; no role here), `tracing`, `anyhow`, `thiserror`, `clap`. **No new Cargo dependencies.** No subprocesses, no network. (105-cpp-ecosystem-expansion)
+- N/A — all state in-process per scan; mirrors every milestone since 002. (105-cpp-ecosystem-expansion)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -166,9 +168,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 105-cpp-ecosystem-expansion: Added Rust stable (workspace toolchain inherited from milestones 001–104; no nightly required for this user-space-only work). + Existing only — `serde`/`serde_json` (manifest parsing for `idf_component.yml`, JSON-LD construction for the parity layer), `serde_yaml = "0.9"` (already a direct dep at `mikebom-cli/Cargo.toml:99` per research R2; used by the new `west.yml` and `idf_component.yml` readers), `regex = "1"` (already a direct dep; CPM.cmake call-site extraction + find_package correlation), `quick-xml` (already used by maven; no role here), `tracing`, `anyhow`, `thiserror`, `clap`. **No new Cargo dependencies.** No subprocesses, no network.
 - 104-binary-role-classification: Added Rust stable (workspace toolchain inherited from milestones 001–103; no nightly required). + Existing only — `object = "0.36"` (workspace; already used pervasively by `scan_fs/binary/`), `serde`/`serde_json`, `tracing`, `anyhow`. **Zero new Cargo dependencies.**
 - 103-bazel-cmake-impl: Added Rust stable (workspace toolchain inherited from milestones 001–102; no nightly required). + Existing only — `regex = "1"` (workspace; already used by vcpkg/conan in PR-A), `tracing`, `anyhow`, std. **Zero new Cargo dependencies.**
-- 102-cpp-bazel-cmake-readers: Added Rust stable (workspace toolchain inherited from milestones 001–101; no nightly required). + Existing only — `regex = "1"` (CMakeLists.txt pattern extraction; already a direct dep per milestone 013), `toml = "0.8"` (conanfile.txt INI-shaped parsing; already direct dep), `serde_json` (vcpkg.json parsing; workspace), `tracing` (parse-error warnings per FR-015), `anyhow`/`thiserror` (error propagation). **No new crates.** No subprocess calls. No network access.
 
 
 <!-- MANUAL ADDITIONS START -->
