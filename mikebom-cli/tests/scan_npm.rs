@@ -338,17 +338,35 @@ fn npm_dependency_tree_reflects_lockfile() {
 }
 
 #[test]
-fn v1_lockfile_refuses_with_actionable_error() {
+fn v1_lockfile_warns_but_does_not_abort_scan() {
+    // Milestone 105 phase 2G (T026, SC-008): the pre-105 behavior
+    // was a fatal abort with a non-zero exit code on any v1
+    // lockfile anywhere in the scan tree. That behavior caused the
+    // gRPC-discovered polyglot regression where a stray legacy v1
+    // package-lock.json in an unrelated Node example sub-tree
+    // blocked the WHOLE scan (including the C/C++ readers the
+    // operator actually cared about).
+    //
+    // Post-105 behavior: the npm reader's `Err(LockfileV1Unsupported)`
+    // is caught at the dispatcher and converted to a warn-and-skip.
+    // The scan succeeds; the npm reader contributes zero components
+    // for this project; stderr carries an actionable warn message
+    // naming the offending lockfile path.
+    //
+    // The npm reader's own `NpmError::LockfileV1Unsupported` variant
+    // and its unit tests are unchanged — only the dispatcher's
+    // response to that error changed.
     let output = scan_raw("lockfile-v1-refused", false);
     assert!(
-        !output.status.success(),
-        "v1 lockfile must cause non-zero exit"
+        output.status.success(),
+        "v1 lockfile MUST warn-and-skip rather than abort the scan (milestone 105 SC-008); got status={:?}\nstderr={}",
+        output.status,
+        String::from_utf8_lossy(&output.stderr)
     );
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("package-lock.json v1 not supported")
-            && stderr.contains("regenerate with npm"),
-        "stderr must match the actionable message; got: {stderr}"
+        stderr.contains("package-lock.json v1 unsupported"),
+        "stderr must carry the actionable warn message; got: {stderr}"
     );
 }
 

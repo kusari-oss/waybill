@@ -711,10 +711,29 @@ pub fn read_all(
         &mut claimed_inodes,
     );
 
-    // Node.js: fail-closed only on v1 lockfiles; everything else is
-    // soft. The reader dispatches lockfile > node_modules > root
+    // Node.js: the reader dispatches lockfile > node_modules > root
     // package.json internally.
-    out.extend(npm::read(rootfs, include_dev, scan_mode)?);
+    //
+    // Milestone 105 phase 2G (SC-008, T026): unsupported v1 lockfiles
+    // are now warn-and-skip at the dispatcher level rather than fatal.
+    // The change preserves polyglot-safety per FR-014: a stray legacy
+    // v1 lockfile sitting in `third_party/<deep>/package-lock.json` of
+    // a C/C++ project (the gRPC scenario that motivated this) MUST
+    // NOT abort the whole scan and prevent the C/C++ readers from
+    // emitting their components. The npm reader's `NpmError` type and
+    // its direct `read()` API still expose the v1-unsupported case as
+    // `Err` for callers that want to handle it explicitly; the
+    // dispatcher just chooses warn-and-continue for the polyglot
+    // safety case.
+    match npm::read(rootfs, include_dev, scan_mode) {
+        Ok(entries) => out.extend(entries),
+        Err(npm::NpmError::LockfileV1Unsupported { path }) => {
+            tracing::warn!(
+                path = %path.display(),
+                "npm package-lock.json v1 unsupported; skipping npm reader for this scan. Regenerate with npm >= 7 to include this project's npm dependencies (FR-014 + SC-008)"
+            );
+        }
+    }
 
     // Milestone 003 ecosystem readers. Concrete implementations land in
     // the per-story tasks (US1 Go, US2 RPM, US3 Maven, US4 Cargo, US5
