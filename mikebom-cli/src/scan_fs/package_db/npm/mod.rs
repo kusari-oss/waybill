@@ -545,6 +545,7 @@ fn base64_decode(input: &str) -> Option<Vec<u8>> {
 // (NpmError), project-root walker, integrity-string parser, base64 helper,
 // and the cross-section build_npm_purl helper (used by every parser).
 mod enrich;
+mod jsonc;
 mod package_lock;
 mod pnpm_lock;
 mod walk;

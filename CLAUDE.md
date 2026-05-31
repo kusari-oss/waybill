@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-05-28
+Auto-generated from all feature plans. Last updated: 2026-05-31
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -106,6 +106,7 @@ Auto-generated from all feature plans. Last updated: 2026-05-28
 - N/A — classification is a pure function of the binary's first 1KB of header bytes; no persistence, no cache. (104-binary-role-classification)
 - Rust stable (workspace toolchain inherited from milestones 001–104; no nightly required for this user-space-only work). + Existing only — `serde`/`serde_json` (manifest parsing for `idf_component.yml`, JSON-LD construction for the parity layer), `serde_yaml = "0.9"` (already a direct dep at `mikebom-cli/Cargo.toml:99` per research R2; used by the new `west.yml` and `idf_component.yml` readers), `regex = "1"` (already a direct dep; CPM.cmake call-site extraction + find_package correlation), `quick-xml` (already used by maven; no role here), `tracing`, `anyhow`, `thiserror`, `clap`. **No new Cargo dependencies.** No subprocesses, no network. (105-cpp-ecosystem-expansion)
 - N/A — all state in-process per scan; mirrors every milestone since 002. (105-cpp-ecosystem-expansion)
+- Rust stable (workspace toolchain inherited from milestones 001–105; no nightly required for this user-space-only work). + Existing only — `toml = "0.8"` (uv.lock TOML parsing — already used by `cargo.rs`), `quick-xml = "0.31"` (NuGet `.csproj`/`.vbproj`/`.fsproj`/`Directory.Packages.props` XML parsing — already used by `maven.rs`), `serde_json` (bun.lock JSONC + `packages.lock.json` — pervasive in the workspace), `std::str::Lines` (Gradle line-format parsing), `tracing`, `anyhow`, `thiserror`, `clap`. **No new Cargo dependencies.** (106-ecosystem-coverage-expansion)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -168,9 +169,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 106-ecosystem-coverage-expansion: Added Rust stable (workspace toolchain inherited from milestones 001–105; no nightly required for this user-space-only work). + Existing only — `toml = "0.8"` (uv.lock TOML parsing — already used by `cargo.rs`), `quick-xml = "0.31"` (NuGet `.csproj`/`.vbproj`/`.fsproj`/`Directory.Packages.props` XML parsing — already used by `maven.rs`), `serde_json` (bun.lock JSONC + `packages.lock.json` — pervasive in the workspace), `std::str::Lines` (Gradle line-format parsing), `tracing`, `anyhow`, `thiserror`, `clap`. **No new Cargo dependencies.**
 - 105-cpp-ecosystem-expansion: Added Rust stable (workspace toolchain inherited from milestones 001–104; no nightly required for this user-space-only work). + Existing only — `serde`/`serde_json` (manifest parsing for `idf_component.yml`, JSON-LD construction for the parity layer), `serde_yaml = "0.9"` (already a direct dep at `mikebom-cli/Cargo.toml:99` per research R2; used by the new `west.yml` and `idf_component.yml` readers), `regex = "1"` (already a direct dep; CPM.cmake call-site extraction + find_package correlation), `quick-xml` (already used by maven; no role here), `tracing`, `anyhow`, `thiserror`, `clap`. **No new Cargo dependencies.** No subprocesses, no network.
 - 104-binary-role-classification: Added Rust stable (workspace toolchain inherited from milestones 001–103; no nightly required). + Existing only — `object = "0.36"` (workspace; already used pervasively by `scan_fs/binary/`), `serde`/`serde_json`, `tracing`, `anyhow`. **Zero new Cargo dependencies.**
-- 103-bazel-cmake-impl: Added Rust stable (workspace toolchain inherited from milestones 001–102; no nightly required). + Existing only — `regex = "1"` (workspace; already used by vcpkg/conan in PR-A), `tracing`, `anyhow`, std. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

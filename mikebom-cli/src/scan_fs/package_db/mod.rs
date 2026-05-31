@@ -31,6 +31,7 @@ pub mod rpm_file;
 pub mod rpmdb_bdb;
 pub mod rpmdb_sqlite;
 pub mod vcpkg;
+mod workspace;
 
 use std::path::Path;
 
