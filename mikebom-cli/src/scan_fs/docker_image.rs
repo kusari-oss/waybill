@@ -248,10 +248,21 @@ fn extract_layer_over_rootfs(layer_bytes: &[u8], rootfs: &Path) -> Result<()> {
             continue;
         }
         // `tar` unpacks relative to a target directory. Reject entries
-        // with `..` or absolute paths to avoid rootfs escapes; the tar
-        // crate catches this in `unpack_in` but belt-and-suspenders.
-        if path.is_absolute() || path.components().any(|c| matches!(c, std::path::Component::ParentDir)) {
-            tracing::debug!(path = %path.display(), "skipping unsafe tar entry");
+        // with `..` components — those CAN escape the rootfs and write
+        // to e.g. `../../etc/passwd`. Leading `/` is NOT an escape risk:
+        // it's the OCI/Docker tar convention for "relative to the rootfs
+        // root" (and the underlying `tar::Entry::unpack_in` strips it
+        // anyway). ko-built images write entries with absolute paths
+        // (`/ko-app/<binary>`, `/var/run/ko`); the previous reject-
+        // everything-absolute behavior silently dropped the entire ko
+        // app layer. See #281.
+        let path = if path.is_absolute() {
+            path.strip_prefix("/").unwrap_or(&path).to_path_buf()
+        } else {
+            path
+        };
+        if path.components().any(|c| matches!(c, std::path::Component::ParentDir)) {
+            tracing::debug!(path = %path.display(), "skipping unsafe tar entry (parent-dir escape)");
             continue;
         }
 
@@ -260,15 +271,24 @@ fn extract_layer_over_rootfs(layer_bytes: &[u8], rootfs: &Path) -> Result<()> {
         if e.header().entry_type() == tar::EntryType::Link {
             if let Ok(Some(target)) = e.link_name() {
                 let target = target.into_owned();
-                if target.is_absolute()
-                    || target
-                        .components()
-                        .any(|c| matches!(c, std::path::Component::ParentDir))
+                // Same treatment as entry paths: strip leading `/`,
+                // reject only `..` components.
+                let target = if target.is_absolute() {
+                    target
+                        .strip_prefix("/")
+                        .unwrap_or(&target)
+                        .to_path_buf()
+                } else {
+                    target
+                };
+                if target
+                    .components()
+                    .any(|c| matches!(c, std::path::Component::ParentDir))
                 {
                     tracing::debug!(
                         link = %path.display(),
                         target = %target.display(),
-                        "skipping hardlink with unsafe target",
+                        "skipping hardlink with parent-dir escape in target",
                     );
                     continue;
                 }
@@ -753,6 +773,180 @@ mod tests {
                 p.symlink_metadata().is_ok(),
                 "symlink {} must extract even under a 0555 parent dir",
                 p.display()
+            );
+        }
+    }
+
+    // ----------------------------------------------------------------
+    // Issue #281 — ko-built images: layer entries with absolute paths
+    // (`/ko-app/<binary>`) MUST be extracted under the rootfs, NOT
+    // silently dropped. The pre-fix behavior rejected anything where
+    // `path.is_absolute() == true`, which dropped the entire ko app
+    // layer and produced an SBOM missing the Go binary + all its
+    // BuildInfo-embedded Go modules. The fix strips the leading `/`
+    // and unpacks; `..` components remain rejected (real escape risk).
+    // ----------------------------------------------------------------
+    //
+    // The `tar` crate's `Header::set_path` validates and rejects
+    // absolute paths + `..` components at the WRITE side, so we
+    // can't synthesize these tarball shapes with the standard
+    // `build_fake_image` helper (which uses `set_path` under the
+    // hood). Real ko / docker save tarballs are built by other tools
+    // whose writers don't have this defense — that's how the absolute
+    // paths get into real-world tar streams that mikebom READS. Below
+    // we write the raw 512-byte ustar header bytes directly to mimic
+    // those real tarballs.
+
+    /// Encode a ustar-format tar header for a regular file entry at
+    /// `name` with the given byte payload. Returns the 512-byte
+    /// header bytes. Bypasses `tar::Header::set_path`'s validation
+    /// so we can put absolute paths and `..` paths through the
+    /// reader — exactly the inputs that real ko / docker save
+    /// tarballs produce.
+    fn raw_ustar_header(name: &str, content_len: usize) -> [u8; 512] {
+        let mut header = [0u8; 512];
+        // Name field: bytes 0-99 (NUL-padded). ustar allows up to 100
+        // bytes here; the prefix field at byte 345 can hold an
+        // additional 155, but for our test names this is plenty.
+        let name_bytes = name.as_bytes();
+        let n = name_bytes.len().min(100);
+        header[..n].copy_from_slice(&name_bytes[..n]);
+        // Mode: bytes 100-107, octal NUL-terminated. "0000644 ".
+        header[100..108].copy_from_slice(b"0000644\0");
+        // UID/GID: bytes 108-123, octal "0000000 ".
+        header[108..116].copy_from_slice(b"0000000\0");
+        header[116..124].copy_from_slice(b"0000000\0");
+        // Size: bytes 124-135, 11 octal digits + NUL.
+        let size_str = format!("{content_len:011o}\0");
+        header[124..136].copy_from_slice(size_str.as_bytes());
+        // Mtime: bytes 136-147, octal NUL.
+        header[136..148].copy_from_slice(b"00000000000\0");
+        // Checksum field is bytes 148-155; per spec, compute as the
+        // sum of all bytes treating this field as 8 spaces.
+        header[148..156].copy_from_slice(b"        ");
+        // Type flag (byte 156): '0' for regular file.
+        header[156] = b'0';
+        // ustar magic: bytes 257-263 = "ustar\0", then 264-265 = "00".
+        header[257..263].copy_from_slice(b"ustar\0");
+        header[263..265].copy_from_slice(b"00");
+        // Compute checksum.
+        let sum: u32 = header.iter().map(|&b| b as u32).sum();
+        let cksum_str = format!("{sum:06o}\0 ");
+        header[148..156].copy_from_slice(cksum_str.as_bytes());
+        header
+    }
+
+    /// Build a layer.tar with one regular-file entry per (name,
+    /// content) tuple. Names may be absolute (start with `/`) or
+    /// contain `..` — useful for exercising the entry-path
+    /// liberalization fix from #281.
+    fn build_raw_layer_tar(entries: &[(&str, &[u8])]) -> Vec<u8> {
+        let mut out = Vec::new();
+        for (name, content) in entries {
+            let hdr = raw_ustar_header(name, content.len());
+            out.extend_from_slice(&hdr);
+            out.extend_from_slice(content);
+            // Pad content to 512-byte block boundary.
+            let pad = (512 - (content.len() % 512)) % 512;
+            out.extend(std::iter::repeat_n(0u8, pad));
+        }
+        // Two 512-byte zero blocks mark end-of-archive.
+        out.extend(std::iter::repeat_n(0u8, 1024));
+        out
+    }
+
+    #[test]
+    fn absolute_path_entry_extracts_at_rootfs_root() {
+        // Regression test for issue #281. Real ko-built layers carry
+        // entries like `/ko-app/<binary>` with leading slash; before
+        // the fix these were silently dropped. After the fix, the
+        // leading `/` is stripped and the entry extracts at
+        // `<rootfs>/ko-app/<binary>`.
+        let layer = build_raw_layer_tar(&[("/ko-app/myapp", b"go-binary-bytes")]);
+        let dir = tempfile::tempdir().unwrap();
+        extract_layer_over_rootfs(&layer, dir.path()).expect("extract layer");
+        let app = dir.path().join("ko-app/myapp");
+        assert!(
+            app.is_file(),
+            "absolute-path entry must extract relative to rootfs root: expected {app:?}"
+        );
+        assert_eq!(fs::read(&app).unwrap(), b"go-binary-bytes");
+    }
+
+    #[test]
+    fn relative_and_absolute_path_entries_extract_together() {
+        // Mixed layer: one relative-path entry (Docker convention)
+        // plus one absolute-path entry (ko convention). Both MUST
+        // land in the rootfs.
+        let layer = build_raw_layer_tar(&[
+            ("usr/bin/regular", b"docker-style"),
+            ("/ko-app/koapp", b"ko-style"),
+        ]);
+        let dir = tempfile::tempdir().unwrap();
+        extract_layer_over_rootfs(&layer, dir.path()).expect("extract layer");
+        let regular = dir.path().join("usr/bin/regular");
+        let koapp = dir.path().join("ko-app/koapp");
+        assert!(regular.is_file(), "relative-path entry should extract at {regular:?}");
+        assert!(koapp.is_file(), "absolute-path entry should extract at {koapp:?}");
+        assert_eq!(fs::read(&regular).unwrap(), b"docker-style");
+        assert_eq!(fs::read(&koapp).unwrap(), b"ko-style");
+    }
+
+    #[test]
+    fn parent_dir_escape_still_rejected() {
+        // Regression guard for the security property the original
+        // check was reaching for: `..` components MUST still be
+        // dropped, even after the absolute-path liberalization. If
+        // this test fails, the fix went too far and reintroduced a
+        // rootfs-escape vulnerability.
+        let layer = build_raw_layer_tar(&[
+            ("../escaped", b"should-be-dropped"),
+            ("safe/file", b"should-extract"),
+        ]);
+        let dir = tempfile::tempdir().unwrap();
+        // The extract may return an error or succeed silently (the
+        // current code uses `tracing::debug!` + continue per entry);
+        // either way, the assertions below check the on-disk result.
+        let _ = extract_layer_over_rootfs(&layer, dir.path());
+
+        assert!(
+            dir.path().join("safe/file").is_file(),
+            "safe path should extract"
+        );
+        // `../escaped` would land at `<rootfs>/../escaped` if it
+        // weren't rejected — i.e. as a sibling of the rootfs tempdir.
+        // The fix's `..`-check MUST prevent this.
+        let escape_target = dir.path().parent().unwrap().join("escaped");
+        assert!(
+            !escape_target.exists(),
+            "parent-dir escape MUST be rejected; found leaked file at {escape_target:?}"
+        );
+    }
+
+    #[test]
+    fn absolute_path_with_parent_dir_inside_still_rejected() {
+        // Hostile input: `/../../escaped` looks like a leading-slash
+        // entry but, after our strip, becomes `../../escaped` —
+        // which the `..`-check then catches. Belt-and-suspenders
+        // verification that the fix can't be bypassed by adding a
+        // leading slash.
+        let layer = build_raw_layer_tar(&[("/../../escaped", b"should-be-dropped")]);
+        let dir = tempfile::tempdir().unwrap();
+        let _ = extract_layer_over_rootfs(&layer, dir.path());
+        // Check several candidate escape targets.
+        let parent = dir.path().parent().unwrap();
+        let candidates = [
+            parent.join("escaped"),
+            parent.parent().map(|p| p.join("escaped")).unwrap_or_default(),
+            dir.path().join("escaped"),
+        ];
+        for c in &candidates {
+            if c.as_os_str().is_empty() {
+                continue;
+            }
+            assert!(
+                !c.exists() || c.starts_with(dir.path()),
+                "/../../<name> must not escape rootfs; found {c:?}"
             );
         }
     }
