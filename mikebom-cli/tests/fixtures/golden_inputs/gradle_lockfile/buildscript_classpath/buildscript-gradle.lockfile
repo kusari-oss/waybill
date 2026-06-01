@@ -1,0 +1,6 @@
+# This is a Gradle generated file for dependency locking.
+# Manual edits can break the build and are not advised.
+# This file is expected to be part of source control.
+org.springframework.boot:org.springframework.boot.gradle.plugin:3.2.0=classpath
+io.spring.dependency-management:io.spring.dependency-management.gradle.plugin:1.1.4=classpath
+empty=

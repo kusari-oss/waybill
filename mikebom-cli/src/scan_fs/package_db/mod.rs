@@ -21,6 +21,7 @@ pub mod file_hashes;
 pub mod gem;
 pub mod go_binary;
 pub mod golang;
+pub mod gradle;
 pub mod maven;
 pub mod maven_sidecar;
 pub mod npm;
@@ -822,6 +823,14 @@ pub fn read_all(
         scan_target_name,
     );
     out.extend(maven_entries);
+    // Milestone 106 US3 (closes #277): Gradle source-tree readers
+    // (`gradle.lockfile` + `buildscript-gradle.lockfile`). Emits
+    // `pkg:maven/<g>/<a>@<v>` PURLs so it shares deps.dev enrichment
+    // with the existing Maven path. Buildscript entries carry
+    // `LifecycleScope::Build` so the existing milestone-052 emission
+    // path tags them `scope: "excluded"` (CDX) /
+    // `BUILD_DEPENDENCY_OF` (SPDX 2.3) automatically.
+    out.extend(gradle::read(rootfs));
     // Cargo is fail-closed on v1/v2 lockfiles (FR-040), mirroring the
     // npm v1 refusal pattern.
     out.extend(cargo::read(rootfs, include_dev)?);

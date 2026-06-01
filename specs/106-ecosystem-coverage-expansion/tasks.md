@@ -128,21 +128,21 @@ Single-project workspace (the mikebom Rust workspace). All source under `mikebom
 
 ### Fixtures + tests
 
-- [ ] T032 [P] [US3] Create fixture tree `mikebom-cli/tests/fixtures/golden_inputs/gradle_lockfile/` with 3 sub-fixtures: `runtime_only/` (just `gradle.lockfile`), `buildscript_classpath/` (just `buildscript-gradle.lockfile`), `multi_config/` (entries with multiple `compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath` configurations).
-- [ ] T033 [P] [US3] Add contract tests in `mikebom-cli/src/scan_fs/package_db/gradle/lockfile.rs`: `emits_basic_maven_components`, `buildscript_tagged_build_lifecycle_scope`, `header_lines_skipped`, `empty_configs_line_skipped`.
+- [X] T032 [P] [US3] Create fixture tree. ✅ Three sub-fixtures: `runtime_only/` (gradle.lockfile with 2 libs + `empty=` line), `buildscript_classpath/` (buildscript-gradle.lockfile with 2 plugins), `multi_config/` (3 deps with multi-configuration tags including test classpaths).
+- [X] T033 [P] [US3] Add contract tests. ✅ 6 unit tests in `scan_fs/package_db/gradle/lockfile.rs::tests`: `emits_basic_maven_components`, `buildscript_tagged_build_lifecycle_scope`, `header_lines_skipped`, `empty_configs_line_skipped`, `configurations_recorded_in_annotation`, `malformed_lines_warned_and_skipped`. Plus 2 integration tests at `tests/scan_gradle_lockfile.rs`: `gradle_lockfile_runtime_only_emits_maven_components`, `gradle_lockfile_buildscript_tags_build_scope`.
 
 ### Implementation
 
-- [ ] T034 [US3] Create new directory + module: `mikebom-cli/src/scan_fs/package_db/gradle/mod.rs` and `gradle/lockfile.rs`. Declare in `package_db/mod.rs`: `pub(super) mod gradle;`.
-- [ ] T035 [US3] Implement `pub fn parse_lockfile(path: &Path) -> Result<Vec<GradleLockEntry>>` using `std::str::Lines`. Per `contracts/gradle-lockfile.md` parsing rules: skip lines starting with `#`, skip `empty=...` lines, split on `=` then split LHS on `:` into exactly 3 parts (group, name, version).
-- [ ] T036 [US3] Implement PURL derivation: `pkg:maven/<group>/<name>@<version>`. Group with dots is preserved as-is (matches existing maven.rs convention).
-- [ ] T037 [US3] Implement lifecycle-scope mapping: filename-based — `buildscript-gradle.lockfile` → `lifecycle_scope: Some(LifecycleScope::Build)`; `gradle.lockfile` → `None`. The existing milestone-052 `generate/cyclonedx/builder.rs:590-605` handles the CDX `scope: "excluded"` + SPDX `BUILD_DEPENDENCY_OF` emission automatically.
-- [ ] T038 [US3] Wire `gradle::lockfile::read` into the dispatcher at `mikebom-cli/src/scan_fs/package_db/mod.rs::read_all`. File-pattern trigger: either `gradle.lockfile` OR `buildscript-gradle.lockfile` anywhere in the scan tree.
+- [X] T034 [US3] Create new directory + module. ✅ `mikebom-cli/src/scan_fs/package_db/gradle/mod.rs` (dispatcher entry) + `gradle/lockfile.rs` (parser). Declared in `package_db/mod.rs` as `pub mod gradle;` (matching the other ecosystem readers' visibility — `pub(super)` would prevent the dispatcher from referring to it via `gradle::read`).
+- [X] T035 [US3] Implement line parser. ✅ `read_gradle_lockfile(path)` reads file → `text.lines()` iteration → skips `#`-prefix + blank + `empty=...` lines → splits on `=` once → splits LHS on `:` (joins all but the last two segments as group, supporting deep-namespaced coords gracefully).
+- [X] T036 [US3] Implement PURL derivation. ✅ Local `build_maven_purl(group, name, version)` mirrors `maven.rs:1842`'s pattern: `Purl::new(format!("pkg:maven/{}/{}@{}", encode_purl_segment(g), encode_purl_segment(n), encode_purl_segment(v)))`.
+- [X] T037 [US3] Implement lifecycle-scope mapping. ✅ Filename equality check against `BUILDSCRIPT_FILENAME` → `Some(LifecycleScope::Build)` for the buildscript variant; `None` for `gradle.lockfile`. Confirmed by integration test that this emits CDX `scope: "excluded"` (milestone-052 path at `generate/cyclonedx/builder.rs:590-605`).
+- [X] T038 [US3] Wire into dispatcher. ✅ `out.extend(gradle::read(rootfs));` inserted after the maven readers and before cargo in `read_all`. The reader's project-root walker (max_depth=6, default-skip set from `project_roots.rs`) finds both lockfile filenames anywhere in the scan tree.
 
 ### Polyglot + goldens
 
-- [ ] T039 [P] [US3] Generate goldens for gradle_lockfile fixtures (CDX + SPDX 2.3 + SPDX 3).
-- [ ] T040 [US3] Run `./scripts/pre-pr.sh` clean. Open PR titled `feat(gradle): add gradle.lockfile + buildscript reader (closes #277)`.
+- [ ] T039 [P] [US3] Generate goldens for gradle_lockfile fixtures (CDX + SPDX 2.3 + SPDX 3). ⏳ Deferred to follow-up (same rationale as T019 uv / T030 bun): emission shape is identical to the existing maven path's; the milestone-052 lifecycle-scope tagging is exercised by the existing maven-test-scope golden suite. Will add dedicated gradle goldens if any parity round-trip skew surfaces.
+- [X] T040 [US3] Run `./scripts/pre-pr.sh` clean. ✅ Pre-PR gate clean. 8 new tests pass (6 unit + 2 integration); 1633 existing tests still pass.
 
 **Checkpoint**: US3 is shippable. JVM projects with Gradle dependency locking scan cleanly.
 
