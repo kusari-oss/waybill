@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.SampleLib" Version="1.2.3" />
+    <PackageReference Include="MikebomFixture.OtherLib" Version="2.3.4" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net8.0": {
+      "MikebomFixture.SampleLib": {
+        "type": "Direct",
+        "requested": "[1.2.3, )",
+        "resolved": "1.2.4",
+        "contentHash": "synthetic-aaa",
+        "dependencies": {
+          "MikebomFixture.SubDep": "0.5.0"
+        }
+      },
+      "MikebomFixture.SubDep": {
+        "type": "Transitive",
+        "resolved": "0.5.0",
+        "contentHash": "synthetic-bbb"
+      }
+    }
+  }
+}

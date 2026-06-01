@@ -25,6 +25,7 @@ pub mod gradle;
 pub mod maven;
 pub mod maven_sidecar;
 pub mod npm;
+pub mod nuget;
 pub mod pip;
 mod project_roots;
 pub mod rpm;
@@ -831,6 +832,13 @@ pub fn read_all(
     // path tags them `scope: "excluded"` (CDX) /
     // `BUILD_DEPENDENCY_OF` (SPDX 2.3) automatically.
     out.extend(gradle::read(rootfs));
+    // Milestone 106 US4 (closes #275): NuGet source-tree reader for
+    // `.csproj` / `.vbproj` / `.fsproj` with packages.lock.json
+    // precedence, Directory.Packages.props (CPM) fallback, and
+    // PrivateAssets-driven lifecycle-scope mapping. Emits
+    // `pkg:nuget/<name>@<version>` PURLs feeding the existing
+    // deps.dev enrichment path.
+    out.extend(nuget::read(rootfs));
     // Cargo is fail-closed on v1/v2 lockfiles (FR-040), mirroring the
     // npm v1 refusal pattern.
     out.extend(cargo::read(rootfs, include_dev)?);

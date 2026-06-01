@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="MikebomFixture.CpmLib" Version="9.0.1" />
+    <PackageVersion Include="MikebomFixture.CpmOther" Version="2.0.0" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.RuntimeLib" Version="1.0.0" />
+    <PackageReference Include="MikebomFixture.SourceLink" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="MikebomFixture.Analyzer" Version="1.0.0">
+      <IncludeAssets>build;buildMultitargeting</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>
