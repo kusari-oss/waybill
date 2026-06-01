@@ -738,6 +738,16 @@ pub fn read_all(
         #[cfg(unix)]
         &mut claimed_inodes,
     );
+    // Milestone 107 US2: Yocto image-manifest reader. Walks
+    // `build/tmp/deploy/images/<machine>/<image>.manifest` files and
+    // emits one `pkg:opkg/<name>@<version>?arch=<arch>` per line —
+    // same PURL ecosystem as opkg-installed, so cross-source dedup
+    // collapses identical coords via the milestone-105 pipeline.
+    // Per FR-010 precedence: `OpkgInstalled` outranks
+    // `YoctoImageManifest`, so when a scan contains both an opkg DB
+    // AND a manifest for the same image, the installed-DB wins and
+    // the manifest's source-mechanism appears in `also-detected-via`.
+    out.extend(yocto::manifest::read(rootfs));
 
     // Python: venv dist-info + lockfiles + requirements.txt per R13 tiers.
     // No fail-closed: an empty Python section is fine if the scan root

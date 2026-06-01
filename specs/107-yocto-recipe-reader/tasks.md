@@ -100,24 +100,24 @@ Single-project workspace (the mikebom Rust workspace). All source under `mikebom
 
 ### Fixtures + tests
 
-- [ ] T028 [P] [US2] Create fixture tree `mikebom-cli/tests/fixtures/golden_inputs/yocto_manifest_basic/build/tmp/deploy/images/qemux86-64/mikebom-fixture-image.manifest` with 5 lines (4 target packages + 1 nativesdk).
-- [ ] T029 [P] [US2] Add contract tests in `mikebom-cli/src/scan_fs/package_db/yocto/manifest.rs::tests`: `emits_one_component_per_line`, `nativesdk_lines_tagged_build`, `wrong_token_count_warns_and_skips`, `empty_lines_ignored`.
+- [X] T028 [P] [US2] Manifest fixture. ✅ `yocto_manifest_basic/build/tmp/deploy/images/mikebom-fixture-machine/mikebom-fixture-image.manifest` — 5 lines, 4 target packages + 1 `nativesdk-` host-side.
+- [X] T029 [P] [US2] Unit tests. ✅ 7 tests in `yocto/manifest.rs::tests`: `emits_one_component_per_line`, `nativesdk_lines_tagged_build`, `host_arch_lines_tagged_build`, `target_arch_lines_have_no_lifecycle_scope`, `wrong_token_count_warns_and_skips`, `empty_and_comment_lines_ignored`, `image_name_annotation_derived_from_filename_stem`.
 
 ### Implementation
 
-- [ ] T030 [US2] Create `mikebom-cli/src/scan_fs/package_db/yocto/manifest.rs` per `contracts/yocto-image-manifest.md`: implement `pub(super) fn read(rootfs: &Path) -> Vec<PackageDbEntry>` walking `build/tmp/deploy/images/*/*.manifest` via `walkdir`. For each `.manifest`, line-iterate; split each non-empty non-`#` line on whitespace; emit one entry per 3-token line; skip + warn on wrong token count.
-- [ ] T031 [US2] Implement PURL derivation: `pkg:opkg/<name>@<version>?arch=<arch>` — same shape as opkg-installed reader (the dedup pipeline collapses cross-source emissions on canonical PURL).
-- [ ] T032 [US2] Implement FR-006 per-line lifecycle-scope override: lines where `name` starts with `nativesdk-` tag with `LifecycleScope::Build`. Other lines carry no lifecycle scope (default runtime per FR-005's manifest interpretation).
-- [ ] T033 [US2] Wire `yocto::manifest::read` into the dispatcher at `mikebom-cli/src/scan_fs/package_db/mod.rs::read_all`: call from `yocto::read` (or inline in `read_all` after the opkg call). Order matters for the milestone-105 dedup precedence — opkg-installed (Phase 3) must precede yocto-manifest in the dispatch order.
-- [ ] T034 [US2] Add `SourceMechanism::YoctoImageManifest` variant with `canonical_str` returning `"yocto-image-manifest"`. Precedence: BELOW `OpkgInstalled`, ABOVE `BitbakeRecipe`.
+- [X] T030 [US2] `yocto/manifest.rs`. ✅ `pub fn read(rootfs: &Path) -> Vec<PackageDbEntry>` walks `build/tmp/deploy/images/<machine>/*.manifest` (one level under `images/`, non-recursive); per-file line iterator parses 3-token `<name> <arch> <version>` lines; wrong-token-count lines warn-and-skip.
+- [X] T031 [US2] PURL derivation. ✅ `pkg:opkg/<name>@<version>?arch=<arch>` — same shape as opkg-installed; segments percent-encoded via `encode_purl_segment`.
+- [X] T032 [US2] FR-006 per-line override. ✅ Same host-arch literal list as opkg.rs (`x86_64`/`i686`/`aarch64`/`arm64`) + `nativesdk-` prefix check → `LifecycleScope::Build`. Target-arch lines carry no scope (default runtime per FR-005's manifest semantics).
+- [X] T033 [US2] Wire into dispatcher. ✅ `out.extend(yocto::manifest::read(rootfs))` inserted in `read_all` after the opkg-installed block, preserving FR-010 precedence (`OpkgInstalled` declared before `YoctoImageManifest` in the enum gives the tie-break to opkg-installed).
+- [X] T034 [US2] `SourceMechanism::YoctoImageManifest`. ✅ Already added in PR #294's enum extension (along with `OpkgInstalled` and `BitbakeRecipe`). `canonical_str` returns `"yocto-image-manifest"`.
 
 ### Integration test
 
-- [ ] T035 [P] [US2] Add integration test `mikebom-cli/tests/scan_yocto_manifest.rs`: end-to-end binary scan of `yocto_manifest_basic/` fixture; assert 5 components emerge; assert the nativesdk-prefixed line has CDX `scope: "excluded"`.
+- [X] T035 [P] [US2] `tests/scan_yocto_manifest.rs`. ✅ End-to-end scan of `yocto_manifest_basic/` fixture; asserts all 5 `pkg:opkg/...` PURLs present (including the URL-encoded arch qualifier on the nativesdk line); asserts the `nativesdk-mikebom-fixture-cmake@3.27.0?arch=x86_64` component carries CDX `scope: "excluded"`.
 
 ### Polyglot + PR
 
-- [ ] T036 [US2] Run `./scripts/pre-pr.sh` clean. Open PR titled `feat(yocto): add Yocto image manifest reader (closes #NEW2)`.
+- [X] T036 [US2] Pre-PR gate. ✅ `./scripts/pre-pr.sh` clean. 7 new unit + 1 new integration test pass; all 1715+ existing tests still pass.
 
 **Checkpoint**: US2 shippable. CI/CD pipelines that scan `build/` produce real per-image SBOMs.
 
