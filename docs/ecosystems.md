@@ -18,6 +18,7 @@ diving into the [architecture docs](architecture/overview.md).
 | [nuget](#nuget) | `*.csproj` / `*.vbproj` / `*.fsproj` + `packages.lock.json` + `Directory.Packages.props` | Lockfile (full tree) when present; otherwise direct-deps only | — | ✓ / — | Implemented |
 | [pip](#pip) | venv `dist-info/METADATA` + Poetry/Pipfile + `uv.lock` + `requirements.txt` | Lockfile (Poetry / Pipfile / uv), flat (venv) | `--hash=alg:hex` flags | ✓ / ✓ | Implemented |
 | [rpm](#rpm) | `/var/lib/rpm/rpmdb.sqlite` (pure-Rust reader) | DB (`REQUIRES`) | — (rpmdb has none) | — / — | Implemented (BDB format detected, not parsed) |
+| [yocto](#yocto) | opkg `/var/lib/opkg/status` + `build/tmp/deploy/images/*/*.manifest` + `meta-*/recipes-*/<name>/<name>_<version>.bb` | Flat (per-stanza / per-line / per-recipe) | — | — / — | Implemented |
 
 "Enrichment" columns mark whether deps.dev version info and ClearlyDefined
 concluded licenses apply to the ecosystem. Both honour the global
@@ -622,6 +623,134 @@ mikebom can use. This is why rpm scans score 6.1/10 on sbomqs (Integrity
 - **Pure-Rust SQLite reader** handles leaf-table + interior-table pages
   only. Overflow pages are refused. RHEL rpmdbs don't use overflow pages
   in practice.
+
+---
+
+## yocto
+
+**Module:** `mikebom-cli/src/scan_fs/package_db/opkg.rs`
++ `mikebom-cli/src/scan_fs/package_db/yocto/{context,manifest,recipe}.rs`
+
+Yocto / OpenEmbedded coverage (milestone 107). Three complementary
+readers cover the embedded-Linux scan shapes that mikebom previously
+emitted empty SBOMs for: device rootfs scans, build-directory scans,
+SDK sysroot scans, and layer-tree scans. Together they close the
+largest C/C++ source coverage gap that was deferred from milestone 105
+(US7).
+
+### Reader 1: opkg installed-DB (`opkg.rs`)
+
+**Detection:** stanza parser over `/var/lib/opkg/status` (byte-identical
+RFC-822 control-file syntax to dpkg; shares the
+`package_db/control_file.rs` helper). Plus per-package
+`/usr/lib/opkg/info/<pkg>.list` files for binary-walker claim
+collection (prevents duplicate `pkg:generic/<basename>` emissions for
+files already owned by an opkg package).
+
+**Triggers on:** Yocto-built device rootfs, OpenSTLinux SDK sysroots,
+Poky reference images, Wolfi-/Chainguard-derived images, every
+OE-based distribution that doesn't explicitly opt into rpm or dpkg.
+
+**PURL:** `pkg:opkg/<name>@<version>?arch=<arch>` — segments
+percent-encoded per the package-url spec. Architecture passes through
+verbatim from the stanza (`cortexa7t2hf-neon-vfpv4` survives intact).
+
+**Lifecycle scope (FR-005a two-signal sysroot detection):** the reader
+calls `yocto::context::detect_scan_context(rootfs)` once per scan and
+tags every emitted entry accordingly:
+
+- **Primary signal**: an `environment-setup-*` file anywhere from the
+  scan target up to 2 ancestors above (Yocto's SDK installer always
+  writes one alongside the sysroot).
+- **Secondary signal**: `/usr/include/` present AND `/etc/init.d/`
+  absent within the scan target.
+- Sysroot context (either signal fires) → every entry tagged
+  `LifecycleScope::Build` → emits CDX `scope: "excluded"` / SPDX
+  `BUILD_DEPENDENCY_OF`. Ambiguity (primary fires AND `/etc/init.d/`
+  is actively present) records a `mikebom:scan-ambiguity` annotation
+  on the SBOM metadata but still applies build-scope (primary wins).
+
+**Per-stanza FR-006 override:** `nativesdk-` prefixed packages OR
+packages whose `Architecture:` field matches a known host-arch
+literal (`x86_64` / `i686` / `aarch64` / `arm64`) are ALWAYS tagged
+build, regardless of the context-level result. Catches nativesdk
+packages that ship inside an otherwise-runtime rootfs.
+
+### Reader 2: Yocto image manifest (`yocto/manifest.rs`)
+
+**Detection:** walks `build/tmp/deploy/images/<machine>/*.manifest`
+(one level under `images/`, non-recursive). Each line: `<name> <arch>
+<version>` whitespace-separated. Format is stable since Yocto 2.0
+(2015) and produced by every BitBake image build.
+
+**PURL:** `pkg:opkg/<name>@<version>?arch=<arch>` — same ecosystem
+as the installed-DB reader. Cross-source dedup collapses identical
+coords via the milestone-105 pipeline (FR-010 precedence:
+`OpkgInstalled` > `YoctoImageManifest`, so when both readers fire on
+the same scan, installed-DB wins and the manifest's source-mechanism
+appears in `mikebom:also-detected-via`).
+
+**Lifecycle scope:** runtime by default. Per-line FR-006 override
+applies the same nativesdk/host-arch checks as the opkg reader.
+
+**Annotation:** `mikebom:image-name = <manifest-filename-stem>` so
+downstream consumers can group components by image variant when
+multiple manifests exist alongside each other.
+
+### Reader 3: BitBake recipe walker (`yocto/recipe.rs`)
+
+**Detection:** walks the scan tree (max_depth=8) for `.bb` files.
+`.bbappend` and `.bbclass` files are silently ignored. Filename-only
+parse via the regex
+`^(?P<name>[a-zA-Z0-9_\-\+\.]+)_(?P<version>[a-zA-Z0-9_\-\+\.\~]+)\.bb$`.
+Recipe BODY is NOT parsed in this milestone (FR-007 explicit scope
+boundary — BitBake variable expansion is out of scope).
+
+**Triggers on:** Yocto layer repositories (`meta-<vendor>/` directory
+trees) checked out in isolation, BEFORE any build runs. Useful for
+supply-chain pre-screening of vendor layers before adoption.
+
+**PURL:** `pkg:bitbake/<name>@<version>?layer=<layer-name>` — distinct
+ecosystem from `pkg:opkg/` because recipes are declarations, not
+installed packages. Cross-tier emissions (installed-DB + recipe-tier
+naming the same logical package) keep BOTH components because the
+PURL ecosystem differs; consumers can filter by ecosystem.
+
+**Layer-root detection:** walks UP from each recipe's directory
+looking for the enclosing `meta-<name>/` directory. Fallback when no
+`meta-*/` ancestor exists: returns the path component immediately
+above the first `recipes-*/` directory.
+
+**Skip-with-warn cases:**
+
+- Filenames containing unexpanded `${` (e.g., `${PN}_${PV}.bb`) →
+  silently skipped (FR-008). Downstream consumers who care about
+  which recipes were skipped can grep the scan logs.
+- `.bb` files with no `_<version>` segment → emitted with
+  `version: "unknown"` + `mikebom:version-status: "missing"`
+  annotation.
+
+### Out of scope (this milestone)
+
+- BitBake variable expansion in `.bb` recipe bodies. Recipe-tier
+  emission is filename-only.
+- `bitbake -e` introspection / `bitbake-layers` subprocess calls.
+  Filesystem-only per FR-011.
+- Dependency edges between recipes (`DEPENDS`, `RDEPENDS_${PN}`).
+  Recipe-tier emission is identity-only.
+- `Directory.Build.props`-style overlay handling.
+- Yocto-specific license-name translation. License fields flow
+  verbatim through the existing SPDX-expression pipeline.
+
+### Enrichment
+
+- deps.dev: skipped (not in deps.dev's supported ecosystems).
+- ClearlyDefined: skipped (not curated).
+
+Licenses on opkg-installed components come from the `License:`
+stanza field directly when present. The Yocto image-manifest
+format doesn't carry licenses, so those entries ship with empty
+`licenses[]`.
 
 ---
 
