@@ -13,9 +13,10 @@ diving into the [architecture docs](architecture/overview.md).
 | [deb](#deb) | `/var/lib/dpkg/status` + `.list` files | DB (`Depends:`) | Per-file SHA-256 (deep hash) or `.md5sums` fallback | — / Planned | Implemented |
 | [gem](#gem) | `Gemfile.lock` + `specifications/*.gemspec` | Lockfile indent-6 | — | — / ✓ | Implemented |
 | [golang](#golang) | `go.mod` / `go.sum` + module cache; `runtime/debug.BuildInfo` for binaries | Cache walker (source); **none** (binaries) | `go.sum` H1 (Merkle trie, not CDX) | ✓ / ✓ | Implemented |
-| [maven](#maven) | Project `pom.xml` + JAR `META-INF/maven` + `~/.m2` + deps.dev fallback | Layered: local → JAR → `~/.m2` BFS → parent POM chain → deps.dev | JAR sidecar `.sha512` > `.sha256` > `.sha1` | ✓ / ✓ | Implemented |
-| [npm](#npm) | `package-lock.json` v2/v3, `pnpm-lock.yaml`, `node_modules/` | Lockfile (full tree) | Lockfile `integrity` | ✓ / ✓ | Implemented |
-| [pip](#pip) | venv `dist-info/METADATA` + Poetry/Pipfile + `requirements.txt` | Lockfile (Poetry/Pipfile), flat (venv) | `--hash=alg:hex` flags | ✓ / ✓ | Implemented |
+| [maven](#maven) | Project `pom.xml` + JAR `META-INF/maven` + `~/.m2` + deps.dev fallback + Gradle `gradle.lockfile` / `buildscript-gradle.lockfile` | Layered: local → JAR → `~/.m2` BFS → parent POM chain → deps.dev. Gradle lockfile = flat | JAR sidecar `.sha512` > `.sha256` > `.sha1` | ✓ / ✓ | Implemented |
+| [npm](#npm) | `package-lock.json` v2/v3, `pnpm-lock.yaml`, `bun.lock`, `node_modules/` | Lockfile (full tree) | Lockfile `integrity` | ✓ / ✓ | Implemented |
+| [nuget](#nuget) | `*.csproj` / `*.vbproj` / `*.fsproj` + `packages.lock.json` + `Directory.Packages.props` | Lockfile (full tree) when present; otherwise direct-deps only | — | ✓ / — | Implemented |
+| [pip](#pip) | venv `dist-info/METADATA` + Poetry/Pipfile + `uv.lock` + `requirements.txt` | Lockfile (Poetry / Pipfile / uv), flat (venv) | `--hash=alg:hex` flags | ✓ / ✓ | Implemented |
 | [rpm](#rpm) | `/var/lib/rpm/rpmdb.sqlite` (pure-Rust reader) | DB (`REQUIRES`) | — (rpmdb has none) | — / — | Implemented (BDB format detected, not parsed) |
 
 "Enrichment" columns mark whether deps.dev version info and ClearlyDefined
@@ -323,6 +324,34 @@ FR-002b.
 - POM-less JARs (older Gradle outputs, OSGi bundles) can't be inspected
   via `META-INF/maven/` — coord + deps invisible.
 
+### Gradle dependency-locking (milestone 106)
+
+**Module:** `mikebom-cli/src/scan_fs/package_db/gradle/`
+
+**Detection:** either `gradle.lockfile` (runtime classpath) or
+`buildscript-gradle.lockfile` (build-script / plugin classpath) found
+anywhere in the scan tree (max_depth=6 walker). Both files share a
+line-format parser.
+
+**Format:** `<group>:<name>:<version>=<configuration1>,<configuration2>,...`.
+Header lines (`#`-prefixed) and the `empty=<configs>` marker are
+skipped. Malformed entries warn-and-continue (FR-015).
+
+**PURL format:** `pkg:maven/<group>/<name>@<version>` — same scheme as
+Maven, so downstream deps.dev enrichment applies without changes.
+
+**Lifecycle scope:** filename-driven. `buildscript-gradle.lockfile`
+emits `LifecycleScope::Build` (→ CDX `scope: "excluded"`, SPDX 2.3
+`BUILD_DEPENDENCY_OF`, SPDX 3 `lifecycleScope: "build"`).
+`gradle.lockfile` carries no scope (runtime default).
+
+**Annotations:** `mikebom:gradle-configurations` carries the raw
+comma-joined configuration list (informational; downstream filterable
+by `compileClasspath` / `testRuntimeClasspath` / etc.).
+
+**Dep graph:** flat. Gradle lockfiles don't encode parent → child
+edges; each row is an already-resolved coord.
+
 ---
 
 ## npm
@@ -361,6 +390,33 @@ sha256, sha384, sha512; flows through to CycloneDX `components[].hashes[]`.
 - This is not user-gated — there is no flag to toggle it. See
   feature 005 (`specs/005-purl-and-scope-alignment/`) for rationale.
 
+### Bun lockfile (milestone 106)
+
+**Module:** `mikebom-cli/src/scan_fs/package_db/npm/bun_lock.rs`
+
+**Detection:** `bun.lock` (Bun's JSONC lockfile format) at any
+project root in the scan tree. Bun-only projects (no
+`package-lock.json` / `pnpm-lock.yaml`) are picked up via the
+`has_npm_signal` marker.
+
+**Format:** JSONC (JSON with comments) — the `// bun: lockfileVersion: 1`
+header comment is stripped before `serde_json::from_str` via the shared
+`npm/jsonc.rs` helper. Parses `lockfileVersion`, `workspaces`,
+`packages`, and `overrides` keys; unknown keys are silently ignored.
+
+**Workspace support:** when `workspaces` declares members, mikebom
+emits a synthetic workspace-root component (PURL: `pkg:generic/<name>`,
+`mikebom:component-role: "workspace-root"`) plus a `main-module`
+component per member. Intra-workspace edges are harvested when a
+member's `dependencies` declares `workspace:*` source-specs.
+
+**Overrides:** when `overrides` is present, the overridden version
+wins at registry-emission time; the un-overridden version is NOT
+emitted as a separate component.
+
+**PURL format:** `pkg:npm/<name>@<version>` — scoped names
+URL-encode the `@` (`@scope/name` → `pkg:npm/%40scope/name@version`).
+
 ---
 
 ## pip
@@ -394,6 +450,89 @@ don't carry per-component hashes yet.
 **Enrichment:**
 - deps.dev: licenses + VCS.
 - ClearlyDefined: concluded licenses via CD's `pypi` provider.
+
+### uv lockfile (milestone 106)
+
+**Module:** `mikebom-cli/src/scan_fs/package_db/pip/uv_lock.rs`
+
+**Detection:** `uv.lock` (TOML) at any project root in the scan tree.
+Sibling to the existing Poetry / Pipfile readers; uv-only projects
+are picked up via the `has_python_project_marker` walker.
+
+**Format:** TOML `[[package]]` array. Each entry carries `name`,
+`version`, and an optional `[[package.dependencies]]` sub-array
+giving the resolved dep graph. Workspace projects additionally
+declare members under `[tool.uv.workspace]` in the root
+`pyproject.toml`.
+
+**Workspace support:** mikebom emits a synthetic workspace-root
+component (PURL: `pkg:generic/<name>`,
+`mikebom:component-role: "workspace-root"`) plus a `main-module`
+per member. Intra-workspace dep edges are surfaced automatically
+when a member's `[[package.dependencies]]` names a sibling member.
+
+**PURL format:** `pkg:pypi/<name>@<version>` — PEP 503-normalized
+name (lowercase, runs of non-alphanum collapsed to `-`).
+
+**Dep graph:** full tree from `[[package.dependencies]]`.
+
+---
+
+## nuget
+
+**Module:** `mikebom-cli/src/scan_fs/package_db/nuget/`
+
+**Detection:** walks the scan tree for `.csproj` / `.vbproj` /
+`.fsproj` files (max_depth=8). For each project file, applies a
+four-step version-resolution ladder.
+
+**Version-resolution ladder (FR-007 + FR-008):**
+1. `packages.lock.json` adjacent to the project (`dependencies.<framework>.<name>.resolved`
+   across all frameworks). Pinned version wins over a `.csproj` range
+   like `[1.2.3, )`.
+2. Inline `Version=` attribute on the `<PackageReference>`.
+3. CPM (`<PackageVersion Include="..." Version="..."/>` in the
+   closest ancestor `Directory.Packages.props`, walking up bounded
+   by `scan_root`).
+4. `unresolved` sentinel + `tracing::warn!` if nothing resolves.
+
+**PURL format:** `pkg:nuget/<name>@<version>` — names case-preserved
+from the source (NuGet is case-insensitive on the registry but
+mikebom records what the source says; dedup handles cross-source
+collation).
+
+**Lifecycle scope:** driven by `PrivateAssets`, `IncludeAssets`,
+`ExcludeAssets` attributes. `PrivateAssets="All"`, a positive
+`IncludeAssets` list lacking `runtime`, and `ExcludeAssets=runtime`
+all map to `LifecycleScope::Build` → CDX `scope: "excluded"`,
+SPDX 2.3 `BUILD_DEPENDENCY_OF`, SPDX 3 `lifecycleScope: "build"`.
+Matching is case-insensitive; both `,` and `;` separators are
+recognized per MSBuild conventions.
+
+**Transitive emission:** packages.lock.json entries tagged
+`"type": "Transitive"` that don't appear in any `.csproj` are
+emitted with `mikebom:source-type: "transitive"`.
+
+**Dependency edges:** each lockfile entry's `dependencies` map
+populates `PackageDbEntry.depends`. The standard scan orchestrator
+drops edges whose target isn't present in the same scan.
+
+**Source-files merging:** when multiple files contribute to the
+same canonical PURL (e.g. `.csproj` + `Directory.Packages.props`
+for CPM, or `.csproj` + `packages.lock.json` for direct deps), the
+file paths merge into a single comma-joined `mikebom:source-files`
+annotation. `BTreeSet<PathBuf>` keeps ordering deterministic.
+
+**Enrichment:**
+- deps.dev: licenses + VCS via deps.dev's nuget system.
+- ClearlyDefined: not yet wired.
+
+**Out of scope (milestone 106):**
+- Project references (`"type": "Project"` in
+  `packages.lock.json`) — intra-solution links. Future milestone
+  can promote these to workspace-member style.
+- `Directory.Build.props` `<PackageVersion>` entries (some repos
+  use this file for the same purpose).
 
 ---
 
