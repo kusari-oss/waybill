@@ -27,10 +27,10 @@ Single-project workspace (the mikebom Rust workspace). All source under `mikebom
 
 **Purpose**: Verify baseline state on a fresh branch off post-milestone-106 main.
 
-- [ ] T001 Verify branch checkout: confirm `git branch --show-current` returns `107-yocto-recipe-reader` (the script-created branch).
-- [ ] T002 Confirm milestone 106's full release (alpha.42) has merged to `main`, including PRs #283 (foundational), #284 (uv), #285 (Bun), #286 (Gradle), #287 (NuGet), #288 (polish), #289 (Yarn), #290 (docs), #291 (release). Rebase the 107 branch on the post-106 `main` head.
-- [ ] T003 [P] Run baseline pre-PR gate: `./scripts/pre-pr.sh` MUST pass clean on the rebased branch. Document the baseline scan-time for SC-003's ≤5% comparison.
-- [ ] T004 [P] Identify the exact dpkg.rs stanza-parser function boundaries that move to `control_file.rs`: run `grep -nE '^(pub )?(fn |struct |impl )' mikebom-cli/src/scan_fs/package_db/dpkg.rs` and record the line ranges in a scratch note. Used by Phase 2 T005 to drive the refactor mechanics.
+- [X] T001 Verify branch checkout. ✅ On `107-yocto-recipe-reader`.
+- [X] T002 Confirm milestone 106 (alpha.42) merged to main. ✅ Verified post-alpha.42 main; release commit `389c4da` is the tip.
+- [X] T003 [P] Baseline pre-PR gate. ✅ Passed clean.
+- [X] T004 [P] Identify dpkg.rs stanza-parser boundaries. ✅ Functions to move: `split_stanzas` (lines 247-264), the field-collection loop inside `parse_stanza_inner` (lines 298-312), and the `get` closure (lines 314-319). Rest of `parse_stanza_inner` (dpkg-specific field interpretation) stays in dpkg.rs.
 
 **Checkpoint**: Baseline confirmed. Phase 2 can begin.
 
@@ -42,11 +42,11 @@ Single-project workspace (the mikebom Rust workspace). All source under `mikebom
 
 **⚠️ CRITICAL**: No user story work can begin until this phase ships as its own merged PR.
 
-- [ ] T005 Create `mikebom-cli/src/scan_fs/package_db/control_file.rs` housing the stanza parser per `contracts/control-file-refactor.md`. Move the ~400 LOC of stanza-parser code out of `dpkg.rs` (no logical changes). Expose `pub(super) fn parse_stanzas(text: &str) -> Vec<ControlStanza>` and the `ControlStanza` struct with named accessors (`name()`, `version()`, `architecture()`, …).
-- [ ] T006 Modify `mikebom-cli/src/scan_fs/package_db/dpkg.rs` to delegate to `control_file::parse_stanzas`. The dpkg::read() function shape is unchanged — it calls the shared helper, then iterates the resulting `Vec<ControlStanza>` to build `PackageDbEntry` values exactly as before.
-- [ ] T007 Wire `mod control_file;` into `mikebom-cli/src/scan_fs/package_db/mod.rs` (private — only `pub(super)` accessible from within the package_db/ sub-tree).
-- [ ] T008 [P] Add 10 unit tests in `mikebom-cli/src/scan_fs/package_db/control_file.rs::tests`: `parses_single_stanza`, `parses_multi_stanza`, `merges_multiline_continuation`, `tolerates_unknown_fields`, `skips_malformed_stanza_with_warn`, `handles_empty_input`, `handles_blank_line_at_eof`, `preserves_field_order_via_btreemap`, `case_sensitive_field_names`, `description_field_continuation_correctly_merged`.
-- [ ] T009 Verify byte-identity invariant: run `./scripts/pre-pr.sh` AND additionally re-run the dpkg golden test (`cargo +stable test -p mikebom --test cdx_regression --test spdx_regression --test spdx3_regression`) — all 33 byte-identity goldens MUST pass without regeneration. If any golden diff appears, abort and root-cause the parser-behavior delta.
+- [X] T005 Create `control_file.rs`. ✅ Housed in `mikebom-cli/src/scan_fs/package_db/control_file.rs`. `pub(super) struct ControlStanza` with `BTreeMap<String, String>` backing + first-wins insertion semantics (matches dpkg's prior `iter().find()` lookup); `pub(super) fn parse_stanzas(text: &str) -> Vec<ControlStanza>`; named accessors `name()`, `version()`, `architecture()`, `maintainer()`, `license()`, `depends()`, `status()`, plus generic `get(name)`. `#[allow(dead_code)]` on the impl block since most named accessors await US1's opkg consumer.
+- [X] T006 Modify dpkg.rs. ✅ `parse()` + `parse_relaxed()` now call `super::control_file::parse_stanzas` and filter_map through `parse_stanza_inner` which takes a `&ControlStanza` instead of a `&str`. The inline field-collection loop + the `get` closure are removed; `parse_stanza_inner` now does `let get = |name: &str| stanza.get(name)` as a thin shim and the rest of the dpkg-specific interpretation is unchanged.
+- [X] T007 Wire `mod control_file;` into package_db/mod.rs. ✅ Added as private mod alongside `mod project_roots;` and `mod workspace;`.
+- [X] T008 [P] 11 unit tests. ✅ `parses_single_stanza`, `parses_multi_stanza`, `merges_multiline_continuation`, `tolerates_unknown_fields`, `skips_malformed_lines_silently`, `handles_empty_input`, `handles_blank_line_at_eof`, `case_insensitive_field_names`, `first_wins_on_duplicate_field_names`, `description_continuation_correctly_merged`, `continuation_before_any_field_silently_dropped`.
+- [X] T009 Verify byte-identity invariant. ✅ All 33 byte-identity goldens (11 CDX + 11 SPDX 2.3 + 11 SPDX 3) pass without regeneration. Pre-PR gate clean.
 - [ ] T010 Open the foundation refactor PR titled `refactor(package_db): extract control_file stanza parser shared by dpkg + opkg`. PR body must explicitly state: "Net behavior-neutral for dpkg. The 33 byte-identity goldens are unchanged. Justified by US1 (opkg reader) landing in the next PR which reuses this helper."
 
 **Checkpoint**: Foundation refactor merged. US1 / US3 / US5 (Phase 3) can now begin.

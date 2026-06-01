@@ -15,6 +15,7 @@ pub mod bazel;
 pub mod cargo;
 pub mod cmake;
 pub mod conan;
+mod control_file;
 pub mod copyright;
 pub mod dpkg;
 pub mod file_hashes;

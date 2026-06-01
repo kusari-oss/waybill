@@ -212,111 +212,43 @@ fn parse(
     namespace: &str,
     distro_version: Option<&str>,
 ) -> Vec<PackageDbEntry> {
-    let mut out = Vec::new();
-    for stanza in split_stanzas(text) {
-        if let Some(entry) = parse_stanza(&stanza, source_path, namespace, distro_version) {
-            out.push(entry);
-        }
-    }
-    out
+    super::control_file::parse_stanzas(text)
+        .into_iter()
+        .filter_map(|stanza| {
+            parse_stanza_inner(&stanza, source_path, namespace, distro_version, true)
+        })
+        .collect()
 }
 
-/// Like [`parse`] but uses [`parse_stanza_no_status_required`].
-/// Per-package layout (status.d/) entries legitimately omit the
-/// `Status:` field — see that function's docs for rationale.
+/// Like [`parse`] but does NOT require the `Status:` field. Used by
+/// [`read_status_d_dir`] for the per-package layout (distroless /
+/// chainguard / Bazel-built minimal images): those files legitimately
+/// omit `Status:` because the image has no dpkg daemon to maintain
+/// install state — the file's existence IS the installation marker.
+/// When `Status:` IS present (rare in status.d/), a non-installed
+/// value still filters the entry out.
 fn parse_relaxed(
     text: &str,
     source_path: &str,
     namespace: &str,
     distro_version: Option<&str>,
 ) -> Vec<PackageDbEntry> {
-    let mut out = Vec::new();
-    for stanza in split_stanzas(text) {
-        if let Some(entry) =
-            parse_stanza_no_status_required(&stanza, source_path, namespace, distro_version)
-        {
-            out.push(entry);
-        }
-    }
-    out
-}
-
-/// Split on blank lines. Honours RFC-822 continuation: a line starting
-/// with a space is part of the preceding field. Continuation is handled
-/// inside `parse_stanza`, not here — this just yields stanza strings.
-fn split_stanzas(text: &str) -> Vec<String> {
-    let mut stanzas = Vec::new();
-    let mut cur = String::new();
-    for line in text.lines() {
-        if line.trim().is_empty() {
-            if !cur.is_empty() {
-                stanzas.push(std::mem::take(&mut cur));
-            }
-        } else {
-            cur.push_str(line);
-            cur.push('\n');
-        }
-    }
-    if !cur.is_empty() {
-        stanzas.push(cur);
-    }
-    stanzas
-}
-
-fn parse_stanza(
-    stanza: &str,
-    source_path: &str,
-    namespace: &str,
-    distro_version: Option<&str>,
-) -> Option<PackageDbEntry> {
-    parse_stanza_inner(stanza, source_path, namespace, distro_version, true)
-}
-
-/// Variant of [`parse_stanza`] that does NOT require the `Status`
-/// field. Used by [`read_status_d_dir`] for the per-package layout
-/// (distroless / chainguard / Bazel-built minimal images): those
-/// files legitimately omit `Status:` because the image has no dpkg
-/// daemon to maintain install state — the file's existence IS the
-/// installation marker. When `Status:` IS present (rare in
-/// status.d/), a non-installed value still filters the entry out.
-fn parse_stanza_no_status_required(
-    stanza: &str,
-    source_path: &str,
-    namespace: &str,
-    distro_version: Option<&str>,
-) -> Option<PackageDbEntry> {
-    parse_stanza_inner(stanza, source_path, namespace, distro_version, false)
+    super::control_file::parse_stanzas(text)
+        .into_iter()
+        .filter_map(|stanza| {
+            parse_stanza_inner(&stanza, source_path, namespace, distro_version, false)
+        })
+        .collect()
 }
 
 fn parse_stanza_inner(
-    stanza: &str,
+    stanza: &super::control_file::ControlStanza,
     source_path: &str,
     namespace: &str,
     distro_version: Option<&str>,
     require_status: bool,
 ) -> Option<PackageDbEntry> {
-    // Collect fields. Continuation lines (start with space) extend the
-    // last field. Keys are compared case-insensitively.
-    let mut fields: Vec<(String, String)> = Vec::new();
-    for line in stanza.lines() {
-        if line.starts_with(' ') || line.starts_with('\t') {
-            if let Some(last) = fields.last_mut() {
-                last.1.push('\n');
-                last.1.push_str(line.trim_start());
-            }
-            continue;
-        }
-        if let Some((k, v)) = line.split_once(':') {
-            fields.push((k.trim().to_ascii_lowercase(), v.trim().to_string()));
-        }
-    }
-
-    let get = |name: &str| -> Option<&str> {
-        fields
-            .iter()
-            .find(|(k, _)| k == name)
-            .map(|(_, v)| v.as_str())
-    };
+    let get = |name: &str| -> Option<&str> { stanza.get(name) };
 
     // Only count entries whose status is fully installed. dpkg's Status
     // is three space-separated tokens; we want the exact phrase
