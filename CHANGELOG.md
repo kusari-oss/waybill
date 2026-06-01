@@ -7,6 +7,42 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.1.0-alpha.42] — 2026-05-31
+
+Ecosystem coverage expansion (milestone 106). Five new lockfile readers landed across six PRs, covering every modern JS / Python / Java / .NET package manager mikebom didn't previously see on source-tree scans. Filesystem-only, zero new Cargo dependencies, zero new network calls (FR-012 build-time audited).
+
+### uv (#284, closes #276)
+
+New reader at `mikebom-cli/src/scan_fs/package_db/pip/uv_lock.rs`. Modern Python projects using `uv.lock` (TOML) now emit `pkg:pypi/<name>@<version>` components with `[[package.dependencies]]`-derived dep-graph edges. Workspace support: `[tool.uv.workspace]` member detection emits a synthetic `pkg:generic/<workspace-name>` root + `mikebom:component-role: "main-module"` member components with intra-workspace edges preserved.
+
+### Bun (#285, closes #278)
+
+New reader at `mikebom-cli/src/scan_fs/package_db/npm/bun_lock.rs`. Parses Bun's JSONC `bun.lock` format via the shared `npm/jsonc.rs` comment-stripper (also new). Emits `pkg:npm/<name>@<version>` PURLs with URL-encoded `@` on scoped names; workspace support mirrors uv's shape; `overrides` map applied at registry-emission time. The legacy binary `bun.lockb` format is out of scope.
+
+### Gradle (#286, closes #277)
+
+New reader at `mikebom-cli/src/scan_fs/package_db/gradle/`. Handles both `gradle.lockfile` (runtime classpath) and `buildscript-gradle.lockfile` (build-script / plugin classpath) via one line-oriented parser. Emits `pkg:maven/<group>/<name>@<version>` PURLs so existing deps.dev enrichment applies without changes. Filename selects lifecycle scope: `buildscript-gradle.lockfile` → `LifecycleScope::Build` → CDX `scope: "excluded"` + SPDX `BUILD_DEPENDENCY_OF` via the existing milestone-052 emission path.
+
+### NuGet (#287, closes #275)
+
+New reader at `mikebom-cli/src/scan_fs/package_db/nuget/` (5 files: `mod.rs` orchestration, `csproj.rs` XML parser, `directory_packages_props.rs` CPM lookup + walk-up, `private_assets.rs` LifecycleScope classifier, `packages_lock.rs` JSON lockfile parser). Walks `.csproj`/`.vbproj`/`.fsproj` files and applies a four-step version-resolution ladder: `packages.lock.json` → inline `Version=` → CPM (`Directory.Packages.props` walked up bounded by `scan_root`) → `unresolved` sentinel. `PrivateAssets="All"` / `IncludeAssets`-without-`runtime` / `ExcludeAssets=runtime` map to `LifecycleScope::Build`. Lockfile transitives that don't appear in any `.csproj` emit as `mikebom:source-type: "transitive"`. Dep-graph edges from the lockfile populate `PackageDbEntry.depends`.
+
+### Yarn (#289, closes #274)
+
+New reader at `mikebom-cli/src/scan_fs/package_db/npm/yarn_lock.rs`. Handles **both** Yarn lockfile formats — v1 (Classic, line-oriented text) and Berry (Yarn 2+, YAML-shaped) — with content-sniffed auto-detection via the `__metadata:` block sentinel. Both formats emit the same `pkg:npm/<name>@<version>` PURL shape (scoped names URL-encoded) and populate dep-graph edges from each entry's `dependencies:` map.
+
+### Polish (#288, #290)
+
+- `docs/ecosystems.md` updated: new `nuget` matrix row; existing `pip` / `npm` / `maven` rows amended with the new lockfile sources; per-lockfile subsections (uv / Bun / Gradle / Yarn) under their parent ecosystems; full `## nuget` section covering the resolution ladder + lifecycle-scope + source-files merging.
+- `tests/offline_mode_audit_ecosystem_106.rs` — FR-012 build-time test grep-fails the build if any of the 11 new reader source files contains `reqwest::`, `tokio::net::`, `hyper::`, `Command::new("curl"|"wget"|"http"`, `TcpStream`/`TcpListener`. Locks the readers as filesystem-only against regression.
+- `tests/polyglot_robustness_ecosystem_106.rs` — SC-006 regression test builds a fixture with well-formed + deliberately-malformed manifests from all 5 ecosystems; asserts each well-formed manifest still emits its representative component despite sibling malformed files. Mirrors milestone-105's `polyglot_legacy_lockfile_robustness.rs`.
+
+### Validation across the milestone
+
+- Workspace-wide unit + integration tests: 1700+ tests pass on `./scripts/pre-pr.sh`.
+- All five fixture sets use synthetic `mikebom-fixture-*` / `MikebomFixture.*` package names (lesson from PR #285's lodash flagging) — the fixtures never collide with real-world CVE advisories.
+- No new Cargo dependencies (uses existing `quick-xml`, `serde_json`, `serde_yaml`, `toml`).
+
 ## [0.1.0-alpha.41] — 2026-05-27
 
 Quick follow-up to alpha.40. Single change.
