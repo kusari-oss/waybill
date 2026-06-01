@@ -83,6 +83,11 @@ pub fn read(
             project_entries.extend(lockfile_entries);
         } else if let Some(pnpm_entries) = pnpm_lock::read_pnpm_lock(&project_root, include_dev) {
             project_entries.extend(pnpm_entries);
+        } else if let Some(bun_entries) = bun_lock::read_bun_lock(&project_root, include_dev) {
+            // Milestone 106 US2 (issue #278): Bun support. Same
+            // tier-A authority as package-lock / pnpm-lock. The
+            // legacy binary `bun.lockb` format is out of scope.
+            project_entries.extend(bun_entries);
         }
 
         // Post-Tier-A author enrichment: lockfiles (v2/v3 and
@@ -457,6 +462,7 @@ fn candidate_project_roots(rootfs: &Path) -> Vec<PathBuf> {
 fn has_npm_signal(dir: &Path) -> bool {
     dir.join("package-lock.json").is_file()
         || dir.join("pnpm-lock.yaml").is_file()
+        || dir.join("bun.lock").is_file()
         || dir.join("node_modules").is_dir()
         || dir.join("package.json").is_file()
 }
@@ -544,6 +550,7 @@ fn base64_decode(input: &str) -> Option<Vec<u8>> {
 // This file (mod.rs) hosts the orchestrator (pub fn read), error type
 // (NpmError), project-root walker, integrity-string parser, base64 helper,
 // and the cross-section build_npm_purl helper (used by every parser).
+mod bun_lock;
 mod enrich;
 mod jsonc;
 mod package_lock;

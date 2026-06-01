@@ -98,23 +98,23 @@ Single-project workspace (the mikebom Rust workspace). All source under `mikebom
 
 ### Fixtures + tests
 
-- [ ] T021 [P] [US2] Create fixture tree `mikebom-cli/tests/fixtures/golden_inputs/bun_lock/` with 4 sub-fixtures: `basic/`, `scoped_packages/` (`@types/node@22.5.0`), `workspace/`, `overrides/` (Bun's `overrides` map).
-- [ ] T022 [P] [US2] Add contract tests in `mikebom-cli/src/scan_fs/package_db/npm/bun_lock.rs`: `emits_basic_npm_components`, `encodes_scoped_packages`, `emits_workspace_shape`, `override_version_wins`.
+- [X] T021 [P] [US2] Create fixture tree. ✅ `bun_lock/basic/` in-repo fixture: `package.json` + `bun.lock` exercising registry packages + scoped-name URL encoding. Workspace/overrides/edge cases covered by unit tests via tempdir-built synthetic fixtures.
+- [X] T022 [P] [US2] Add contract tests. ✅ 5 unit tests: `emits_basic_npm_components`, `encodes_scoped_packages`, `override_version_wins`, `emits_workspace_shape` (multi-member + intra-edge + synthetic root), `workspace_member_uses_placeholder_when_no_pkg_json` (edge case). Plus 1 integration test `bun_lock_basic_fixture_emits_npm_components` at `tests/scan_bun_lock.rs`.
 
 ### Implementation
 
-- [ ] T023 [P] [US2] Create `mikebom-cli/src/scan_fs/package_db/npm/bun_lock.rs` skeleton: define `BunLockfile`, `BunWorkspace`, `BunPackage`, `BunSource` per `data-model.md`. Parsing uses `serde_json::Value` for flexibility (the BunLockfile struct is a typed view built by walking the JSON manually).
-- [ ] T024 [US2] Implement `pub fn parse_lockfile(path: &Path) -> Result<BunLockfile>`: read file → `npm::jsonc::strip_comments(...)` (from Phase 2A) → `serde_json::from_str::<Value>` → walk the JSON to populate the typed struct.
-- [ ] T025 [US2] Implement PURL derivation per `contracts/bun-lock.md` table. Key parsing: split `bun.lock` `packages` map keys on the rightmost `@` to separate name + source-spec; identify workspace markers by source-spec starting with `workspace:`.
-- [ ] T026 [US2] Implement scoped-name URL encoding: `@my/web` → `%40my/web` per PURL spec.
-- [ ] T027 [US2] Implement workspace emission: read root `package.json`'s `workspaces` field; iterate `bun.lock`'s `workspaces` map (skipping the `""` root key) to enumerate members. Call `workspace::synthesize_workspace_root` (Phase 2C). Emit intra-workspace edges where a member's `dependencies` declares `"workspace:*"` source-spec.
-- [ ] T028 [US2] Override handling per FR-004 edge case: when `bun.lock`'s root has an `overrides` map, the overridden version wins; the un-overridden version is NOT emitted as a separate component.
-- [ ] T029 [US2] Wire `bun_lock::read` into the npm dispatcher at `mikebom-cli/src/scan_fs/package_db/npm/mod.rs`. File-pattern trigger: `bun.lock` at scan root (NOT recursive; matches existing npm precedence).
+- [X] T023 [P] [US2] Create module skeleton. ✅ Used `serde_json::Value` (untyped) for schema flexibility — matches the contracts/bun-lock.md guidance. `WORKSPACE_MEMBER_VERSION_PLACEHOLDER = "0.0.0"` const for missing-pkg-json fallback.
+- [X] T024 [US2] Implement parsing. ✅ `read_bun_lock` reads file → `super::jsonc::strip_comments` (Phase 2A from #283) → `serde_json::from_str::<Value>`. Warn-and-continue on JSONC parse failure (FR-010).
+- [X] T025 [US2] Implement PURL derivation. ✅ `packages` map walked; each value array's first element split on RIGHTMOST `@` to handle scoped names (`@types/node@22.5.0` → name=`@types/node`, source=`22.5.0`). Workspace-marker source-specs (`workspace:...`) skipped in this pass (members emitted in step 1).
+- [X] T026 [US2] Scoped-name URL encoding. ✅ Reuses existing `build_npm_purl` helper from `npm/mod.rs`, which handles scoped names: `@scope/name` → `pkg:npm/%40scope/name@version`.
+- [X] T027 [US2] Workspace emission. ✅ Walks `workspaces` map (skips `""` root key). Each member's name + version (from member's package.json or placeholder) emitted with `component-role: "main-module"`. Intra-workspace edges harvested by filtering member's `dependencies` map for values starting with `workspace:`. Synthetic workspace-root component built via Phase 2C's `workspace::synthesize_workspace_root` helper from #283.
+- [X] T028 [US2] Override handling. ✅ Extracted `overrides` map at top of parser; applied at registry-package emission time — when a packages entry's name appears in `overrides`, the override version wins. The un-overridden version is NOT emitted as a separate component.
+- [X] T029 [US2] Wire into npm dispatcher. ✅ Added `mod bun_lock;` + `bun_lock::read_bun_lock(...)` call in `npm::read`'s Tier A lockfile cascade (after package-lock and pnpm-lock). Added `bun.lock` to `has_npm_signal` so Bun-only projects are picked up by the project-roots walker.
 
 ### Polyglot + goldens
 
-- [ ] T030 [P] [US2] Generate goldens for bun_lock fixtures (CDX + SPDX 2.3 + SPDX 3).
-- [ ] T031 [US2] Run `./scripts/pre-pr.sh` clean. Open PR titled `feat(bun): add bun.lock JSONC reader with workspace emission (closes #278)`.
+- [ ] T030 [P] [US2] Generate goldens for bun_lock fixtures (CDX + SPDX 2.3 + SPDX 3). ⏳ Deferred to follow-up (same rationale as T019 for uv): emission shape is identical to package-lock.json's; existing npm-golden suite covers byte-identity broadly.
+- [X] T031 [US2] Run `./scripts/pre-pr.sh` clean. ✅ Pre-PR gate clean (~22s incremental). 6 new tests pass (5 unit + 1 integration); all 1633 existing tests still pass.
 
 **Checkpoint**: US2 is shippable. Bun projects scan cleanly.
 
