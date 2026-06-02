@@ -639,6 +639,14 @@ pub(super) fn c56_cdx(doc: &Value) -> BTreeSet<String> {
 // with a single query. Simple property — uses the standard macro.
 cdx_anno!(c57_cdx, "mikebom:build-reference",           component);
 
+// C58 — `mikebom:fingerprint-corpus-sha` (milestone 108 FR-005).
+// 12-hex SHA prefix OR literal `bundled` sentinel attached to
+// components identified via the symbol-fingerprint matcher.
+// Emitted only when the operator opted in via `--fingerprints-corpus`
+// (preserves SC-003 byte-identity for non-opt-in scans). Simple
+// property — uses the standard macro.
+cdx_anno!(c58_cdx, "mikebom:fingerprint-corpus-sha",    component);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================

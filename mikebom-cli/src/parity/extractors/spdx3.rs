@@ -535,6 +535,10 @@ pub(super) fn c56_spdx3(doc: &Value) -> BTreeSet<String> {
 // C57 — `mikebom:build-reference` (FR-008a). Closed enum.
 spdx3_anno!(c57_spdx3, "mikebom:build-reference",          component);
 
+// C58 — `mikebom:fingerprint-corpus-sha` (milestone 108 FR-005).
+// 12-hex SHA prefix OR literal `bundled` sentinel.
+spdx3_anno!(c58_spdx3, "mikebom:fingerprint-corpus-sha",   component);
+
 // C47 — document-level user-defined identifiers (milestone 073).
 // Per `contracts/identifiers-annotation.md` C-1 SPDX 3 and C-2
 // SPDX 3: user-defined identifiers ride `Element.externalIdentifier[]`

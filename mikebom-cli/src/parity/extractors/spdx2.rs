@@ -464,6 +464,10 @@ pub(super) fn c56_spdx23(doc: &Value) -> BTreeSet<String> {
 // `declared-and-used` / `declared-only` — simple property.
 spdx23_anno!(c57_spdx23, "mikebom:build-reference",          component);
 
+// C58 — `mikebom:fingerprint-corpus-sha` (milestone 108 FR-005).
+// 12-hex SHA prefix OR literal `bundled` sentinel — simple property.
+spdx23_anno!(c58_spdx23, "mikebom:fingerprint-corpus-sha",   component);
+
 // ============================================================
 // Sections D-G — custom SPDX 2.3 extractors
 // ============================================================

@@ -798,4 +798,34 @@ mod tests {
             );
         }
     }
+
+    /// T060a — SC-001 const-growth guard.
+    ///
+    /// **DO NOT BUMP THIS NUMBER unless you've actually intended to
+    /// add to the BUNDLED fallback.** Post-milestone-108, the source-
+    /// of-truth fingerprint corpus lives at
+    /// `kusari-sandbox/mikebom-fingerprints`. New libraries go in the
+    /// sibling repo (via a PR there), not in this const. The bundled
+    /// const stays at 7 entries as the offline-only fallback that
+    /// every mikebom-cli release ships with, regardless of cache
+    /// state.
+    ///
+    /// If a release intentionally raises the floor (e.g., milestone
+    /// 200 adds 3 ubiquitous libraries to the bundled set so they're
+    /// identified even without `--fingerprints-corpus`), update both
+    /// the assertion AND the doc-comment at the top of `FINGERPRINTS`
+    /// to keep the intent visible. The lift is the doc update — the
+    /// number bump itself is one character.
+    #[test]
+    fn bundled_fingerprint_const_size_locked() {
+        assert_eq!(
+            FINGERPRINTS.len(),
+            7,
+            "FINGERPRINTS grew beyond the 7-library bundled-fallback floor. \
+             New fingerprints belong in `kusari-sandbox/mikebom-fingerprints`, \
+             not in this const. See the doc comment on FINGERPRINTS + this \
+             test's docstring for the lift required to legitimately raise \
+             the floor."
+        );
+    }
 }

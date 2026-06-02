@@ -765,3 +765,34 @@ format doesn't carry licenses, so those entries ship with empty
 - [design-notes.md](design-notes.md) — dated changelog, sharp edges, the
   deferred backlog including per-ecosystem ClearlyDefined expansions and
   sbomqs score-lift items.
+
+## Binary analysis — symbol-fingerprint corpus (milestone 099 + 108)
+
+mikebom's binary scanner identifies statically-linked C libraries from
+their exported-symbol fingerprints (ELF `.dynsym` + Mach-O `LC_SYMTAB`
+externals — PE deferred). The bundled fallback corpus ships 7 libraries
+(openssl, zlib, libcurl, sqlite, pcre, pcre2, gnutls) and stays at
+that size as a stability floor; the source-of-truth corpus lives in
+the sibling repo
+[`kusari-sandbox/mikebom-fingerprints`](https://github.com/kusari-sandbox/mikebom-fingerprints)
+and grows independently of mikebom releases.
+
+Operators opt into the external corpus per scan via
+`--fingerprints-corpus` (or `MIKEBOM_FINGERPRINTS_CORPUS=1`):
+
+```bash
+mikebom sbom scan --image ghcr.io/myorg/my-app:v1 --fingerprints-corpus
+```
+
+The cache-first / fetch-on-miss flow, the
+`mikebom:fingerprint-corpus-sha` provenance annotation, the
+`mikebom fingerprints fetch/cache-clear/list` subcommands, and the
+4-step consumer lookup recipe are documented end-to-end in:
+
+- [`docs/reference/identifiers.md` §11](reference/identifiers.md#section-11--milestone-108-external-corpus-provenance-mikebomfingerprint-corpus-sha)
+  — annotation value space + per-format carriers + lookup recipe.
+- [`specs/108-fingerprint-corpus/quickstart.md`](../specs/108-fingerprint-corpus/quickstart.md)
+  — operator + air-gapped + hermetic-build scenarios.
+- [`kusari-sandbox/mikebom-cmake-demo`](https://github.com/kusari-sandbox/mikebom-cmake-demo)
+  — runnable cmake + ninja demo that exercises both the source-tree
+  reader AND the fingerprint matcher end-to-end.
