@@ -1118,6 +1118,114 @@ milestone 080 flag recipes.
 
 ---
 
+## Section 11 — Milestone 108: External corpus provenance (`mikebom:fingerprint-corpus-sha`)
+
+Milestone 108 ships a per-component annotation that lets SBOM
+consumers trace a symbol-fingerprint identification back to the
+EXACT corpus snapshot that produced it. Unlike the document-level
+identifiers in sections 1–10 (which carry stable identity for the
+SBOM as a whole), `mikebom:fingerprint-corpus-sha` is a
+per-component provenance marker — useful only on components whose
+identification came from the symbol-fingerprint matcher.
+
+### 11.1 When the annotation appears
+
+Only on components carrying `mikebom:source-mechanism =
+"symbol-fingerprint"` AND only when the operator passed
+`--fingerprints-corpus` (or `MIKEBOM_FINGERPRINTS_CORPUS=1`).
+Without the opt-in, NO annotation is emitted (preserves
+byte-identity with pre-108 SBOMs — the SC-003 contract).
+
+### 11.2 Value space
+
+| Value          | Meaning                                                                 |
+|----------------|-------------------------------------------------------------------------|
+| 12-hex string  | `git rev-parse --short` of the corpus commit at scan time               |
+| `bundled`      | Opt-in operator hit a cache miss + network failure / `--offline`; the in-source bundled corpus produced the match |
+
+The 12-hex truncation matches `git rev-parse --short` default
+(GitHub's API resolves it). The full 40-hex SHA lives in the
+operator's per-host cache directory name (`~/.cache/mikebom/fingerprints/<full-sha>/`)
+— consumers don't need it for the lookup recipe in 11.4.
+
+### 11.3 Per-format carriers
+
+Rides the existing parity-bridging annotation envelopes (per
+Constitution Principle V's documented-exception path):
+
+| Format       | Container                                                                |
+|--------------|--------------------------------------------------------------------------|
+| CDX 1.6      | `components[].properties[]` (name=`mikebom:fingerprint-corpus-sha`)       |
+| SPDX 2.3     | `packages[].annotations[]` (`annotator: "Tool: mikebom"`, comment carries the envelope) |
+| SPDX 3.0.1   | Annotation graph element targeting the component, `statement.value`      |
+
+### 11.4 Consumer lookup recipe (CDX 1.6 example)
+
+```bash
+# Step 1 — pull the SHA prefix off the component
+SHA=$(jq -r '.components[]
+        | select((.properties // [])[] | (.name == "mikebom:fingerprint-corpus-sha"))
+        | .properties[]
+        | select(.name == "mikebom:fingerprint-corpus-sha")
+        | .value' sbom.cdx.json | head -1)
+echo "annotation prefix: $SHA"
+
+# Step 2 — resolve to full SHA via GitHub's git-API
+FULL=$(curl -fsSL "https://api.github.com/repos/kusari-sandbox/mikebom-fingerprints/commits/$SHA" \
+       | jq -r '.sha')
+echo "full SHA: $FULL"
+
+# Step 3 — download the corpus snapshot at that SHA
+curl -fsSL "https://github.com/kusari-sandbox/mikebom-fingerprints/archive/$FULL.tar.gz" \
+    | tar -xz -C /tmp
+
+# Step 4 — read the matching corpus record (one per identified library)
+jq '.' "/tmp/mikebom-fingerprints-$FULL/corpus/openssl.json"
+```
+
+If `$SHA` is the literal `bundled`, skip steps 2-4 — the matching
+rules live in `mikebom-cli/src/scan_fs/binary/symbol_fingerprint.rs::FINGERPRINTS`
+at the same `mikebom-cli` version that emitted the SBOM (visible in
+the SBOM's `creationInfo.creators` / `metadata.tools`).
+
+### 11.5 FR-013 collision: `mikebom:also-detected-via`
+
+When a binary's symbol set satisfies ≥2 corpus records with
+OVERLAPPING matched-symbol sets (e.g., LibreSSL + OpenSSL both
+match via shared `SSL_*` symbols), mikebom emits one component
+per record AND adds a `mikebom:also-detected-via` annotation
+listing the OTHER matching records' library names. Independent
+co-resident libraries (disjoint matched sets — e.g., OpenSSL +
+zlib in one binary) do NOT trigger this annotation.
+
+Decode recipe:
+
+```bash
+jq '.components[]
+    | select((.properties // [])[] | (.name == "mikebom:also-detected-via"))
+    | {library: .name,
+       also_detected_via: (.properties[] | select(.name == "mikebom:also-detected-via").value)}' \
+   sbom.cdx.json
+```
+
+A consumer triaging a CVE against `openssl` should check whether
+the same component carries `mikebom:also-detected-via:
+["libressl"]` — that's the signal to widen the triage to LibreSSL
+advisories too.
+
+### 11.6 Why prefix, not full SHA?
+
+Operator-visible SBOMs occasionally grow to hundreds of components,
+and the annotation appears once per fingerprint-identified
+component. The 12-hex prefix is the smallest collision-resistant
+representation that's still copy-pasteable into a browser address
+bar. Full SHA in the cache directory key resolves the prefix-
+ambiguity edge case at lookup time (GitHub's API resolves the
+prefix to the canonical full SHA before the consumer fetches the
+tarball).
+
+---
+
 ## See also
 
 - [Cross-tier binding](cross-tier-binding.md) — per-component cross-tier
@@ -1129,3 +1237,6 @@ milestone 080 flag recipes.
   catalog of every cross-format datum (search `C47` for `mikebom:identifiers`).
 - [Conformance harness guide](conformance-harness-guide.md) — per-format
   envelope-decode rules and the 7 inherent format-spec asymmetries.
+- [External fingerprint corpus quickstart](../../specs/108-fingerprint-corpus/quickstart.md) —
+  end-to-end operator + consumer recipes for the milestone-108
+  `mikebom:fingerprint-corpus-sha` annotation documented in §11.

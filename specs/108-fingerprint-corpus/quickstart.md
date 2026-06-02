@@ -31,6 +31,69 @@ Annotation value: 12-hex truncation of the corpus repo's commit SHA (matches `gi
 
 ---
 
+## Scenario 1.5 — Consumer verifies an annotation SHA against the corpus
+
+A vulnerability-triage analyst receives an SBOM and wants to confirm WHICH corpus version produced a fingerprint-based identification. The annotation alone is just a 12-hex string; resolving it back to a real fingerprint record is a four-step recipe.
+
+### Step 1 — Pull the annotation off the component
+
+```bash
+$ jq -r '.components[]
+        | select((.properties // [])[] | (.name == "mikebom:fingerprint-corpus-sha"))
+        | .properties[]
+        | select(.name == "mikebom:fingerprint-corpus-sha")
+        | .value' sbom.cdx.json | head -1
+fff39c6ad22c
+```
+
+If the value is the literal `bundled`, mikebom fell back to its in-source corpus (either the operator didn't pass `--fingerprints-corpus`, or the opt-in path hit a cache miss + network failure / `--offline`). In that case the matching rules come from `mikebom-cli/src/scan_fs/binary/symbol_fingerprint.rs::FINGERPRINTS` at the same `mikebom-cli` version that emitted the SBOM — no sibling-repo lookup needed.
+
+### Step 2 — Look up the full SHA on the sibling repo
+
+The annotation is a 12-hex prefix (matches `git rev-parse --short` default). GitHub's git-API resolves prefixes:
+
+```bash
+$ curl -fsSL https://api.github.com/repos/kusari-sandbox/mikebom-fingerprints/commits/fff39c6ad22c \
+    | jq -r '.sha'
+fff39c6ad22ce8420b506323ce1d5cce4b628d5c
+```
+
+If the prefix has multiple matches GitHub returns a 422 — bump to more hex characters from the SBOM annotation. (This is rare in practice; 12 hex chars = 48 bits collision space.)
+
+### Step 3 — Download the corpus snapshot at that SHA
+
+```bash
+$ curl -fsSL https://github.com/kusari-sandbox/mikebom-fingerprints/archive/fff39c6ad22ce8420b506323ce1d5cce4b628d5c.tar.gz \
+    | tar -xz -C /tmp
+$ ls /tmp/mikebom-fingerprints-fff39c6ad22ce8420b506323ce1d5cce4b628d5c/corpus/
+gnutls.json  libcurl.json  openssl.json  pcre.json  pcre2.json  sqlite.json  zlib.json  index.json
+```
+
+### Step 4 — Find the record that produced the match
+
+Pick the component's `library` name (the unqualified part of its PURL) and read the matching corpus record:
+
+```bash
+$ jq '.' /tmp/mikebom-fingerprints-fff39c6ad22ce8420b506323ce1d5cce4b628d5c/corpus/openssl.json
+{
+  "library": "openssl",
+  "target_purl": "pkg:generic/openssl",
+  "symbols": ["SSL_CTX_new", "SSL_library_init", "OPENSSL_init_ssl", ...],
+  "min_symbols": 8
+}
+```
+
+The `symbols` list + `min_symbols` threshold tell you exactly what evidence drove the identification. To confirm the binary in question carries enough of those symbols, dump its dynamic symbol table:
+
+```bash
+$ readelf -W --dyn-syms /path/to/binary | awk '{print $NF}' | grep -Fxf <(jq -r '.symbols[]' /tmp/.../openssl.json) | wc -l
+8
+```
+
+≥ `min_symbols` matched → the SBOM's identification is reproducible.
+
+---
+
 ## Scenario 2 — Air-gapped operator pre-fetches the corpus
 
 Air-gapped operators run `mikebom fingerprints fetch` on an internet-connected machine, then ship the cache directory to the air-gapped network.
