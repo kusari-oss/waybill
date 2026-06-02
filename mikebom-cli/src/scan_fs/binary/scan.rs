@@ -227,15 +227,43 @@ pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
     // names `UPX0`/`UPX1` also match.
     let packer_kind = packer::detect(bytes);
 
-    // Milestone 096 FR-004 — dynamic-symbol names for ELF binaries.
-    // Fed to the symbol-fingerprint scanner. Empty for non-ELF or
-    // ELF binaries with `.dynsym` fully stripped.
+    // Milestone 096 FR-004 — dynamic-symbol names for the symbol-
+    // fingerprint scanner. Empty for binaries whose symbol table is
+    // fully stripped.
+    //
+    // - ELF: read `.dynsym` directly. Names match the C convention
+    //   (`crc32`, `OPENSSL_init_ssl`, …) so the fingerprint records
+    //   match verbatim.
+    //
+    // - Mach-O: read the dynamic symbol table the same way (the
+    //   `object` crate maps both to `dynamic_symbols()`). Mach-O
+    //   prefixes every C symbol with `_` in its symbol table; strip
+    //   exactly one leading underscore so `_crc32` matches the
+    //   `crc32` entry in the fingerprint corpus.
+    //
+    // - PE: deferred. PE's export table is a separate
+    //   `IMAGE_EXPORT_DIRECTORY` shape, not the standard symbol
+    //   table — needs distinct extraction. Tracked separately.
     let symbol_names = if class == "elf" {
         use object::Object;
         use object::ObjectSymbol;
         file.dynamic_symbols()
             .filter_map(|s| s.name().ok().map(str::to_string))
             .filter(|s| !s.is_empty())
+            .collect()
+    } else if class == "macho" {
+        use object::Object;
+        use object::ObjectSymbol;
+        // Mach-O has no ELF-style `.dynsym`; its `LC_SYMTAB` holds
+        // local AND external symbols, distinguished by `N_EXT`
+        // (which `object` exposes as `is_global()`). Iterate the
+        // full symbol table and filter to externals — those are the
+        // analog of ELF's `.dynsym` entries.
+        file.symbols()
+            .filter(|s| s.is_global())
+            .filter_map(|s| s.name().ok().map(str::to_string))
+            .filter(|s| !s.is_empty())
+            .map(|s| strip_macho_underscore_prefix(&s).to_string())
             .collect()
     } else {
         Vec::new()
@@ -291,6 +319,21 @@ pub(super) fn scan_binary(path: &Path, bytes: &[u8]) -> Option<BinaryScan> {
         pe_linker_version,
         binary_role,
     })
+}
+
+/// Strip exactly one leading underscore from a Mach-O symbol name so
+/// it matches the fingerprint-corpus convention (records list
+/// `crc32`, `deflate`, … without the prefix). Mach-O's ABI prefixes
+/// EVERY C symbol with `_` at link time; stripping one underscore is
+/// always safe and roundtrips back to the C name.
+///
+/// Symbols that legitimately start with two underscores
+/// (`__libc_start_main`, `__cxa_atexit`) lose one of them and become
+/// `_libc_start_main` / `_cxa_atexit` — those don't appear in the
+/// fingerprint corpus (no fingerprint record lists symbols with
+/// leading underscores) so the false-negative cost is zero.
+fn strip_macho_underscore_prefix(name: &str) -> &str {
+    name.strip_prefix('_').unwrap_or(name)
 }
 
 /// Collect bytes from the read-only string sections appropriate to
@@ -509,6 +552,47 @@ mod tests {
         bytes[68 * 1024 * 1024..68 * 1024 * 1024 + 14]
             .copy_from_slice(b"\xff Go buildinf:");
         assert!(!is_go_binary(&bytes));
+    }
+
+    // ----------------------------------------------------------------
+    // strip_macho_underscore_prefix — milestone-109 Mach-O fingerprint
+    // symbol extraction. The Mach-O C ABI prefixes every C symbol with
+    // `_`; the fingerprint corpus lists bare C names. Strip one
+    // underscore on the way into the matcher.
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn strip_macho_underscore_prefix_strips_single_leading_underscore() {
+        assert_eq!(strip_macho_underscore_prefix("_crc32"), "crc32");
+        assert_eq!(
+            strip_macho_underscore_prefix("_OPENSSL_init_ssl"),
+            "OPENSSL_init_ssl"
+        );
+    }
+
+    #[test]
+    fn strip_macho_underscore_prefix_leaves_unprefixed_names_alone() {
+        // ELF symbols don't carry the `_` prefix; the strip should
+        // be a no-op if called on them.
+        assert_eq!(strip_macho_underscore_prefix("crc32"), "crc32");
+    }
+
+    #[test]
+    fn strip_macho_underscore_prefix_strips_only_one_underscore() {
+        // Double-underscore symbols (e.g. `__libc_start_main`) lose
+        // exactly one underscore. The resulting `_libc_start_main` is
+        // documented as a false-negative-safe case: no fingerprint
+        // record lists symbols with leading underscores, so the
+        // resulting symbol won't spuriously match anything.
+        assert_eq!(
+            strip_macho_underscore_prefix("__libc_start_main"),
+            "_libc_start_main"
+        );
+    }
+
+    #[test]
+    fn strip_macho_underscore_prefix_handles_empty() {
+        assert_eq!(strip_macho_underscore_prefix(""), "");
     }
 }
 
