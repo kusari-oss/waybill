@@ -7,6 +7,71 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.1.0-alpha.44] — 2026-06-02
+
+External symbol-fingerprint corpus (milestone 108) — the first milestone since 091 to add a NEW network call to mikebom, deliberately and bounded. mikebom can now identify statically-linked C libraries beyond the bundled 7 (openssl, zlib, libcurl, sqlite, pcre, pcre2, gnutls) by consulting an external corpus pinned at a SHA in the sibling repo [`kusari-sandbox/mikebom-fingerprints`](https://github.com/kusari-sandbox/mikebom-fingerprints). Every component identified via the external path carries a `mikebom:fingerprint-corpus-sha` provenance annotation that consumers can resolve back to the exact fingerprint record. Plus a Mach-O extension to the symbol matcher that closes the macOS gap on the fingerprint path.
+
+**Default behavior unchanged.** Operators who don't opt into the external corpus (no `--fingerprints-corpus` flag, no `MIKEBOM_FINGERPRINTS_CORPUS=1` env) see zero behavioral change — bundled `FINGERPRINTS` const is still the matcher's source, no new annotations stamped, all 33 byte-identity goldens pass byte-identically. SC-003 byte-identity contract is the milestone's primary no-regression guarantor.
+
+### Sibling repo seeded: `kusari-sandbox/mikebom-fingerprints`
+
+New public Apache-2.0 repo that holds the source-of-truth corpus. Day-1 content mirrors the bundled 7 libraries (same symbol lists, same `min_symbols=8` thresholds). `schema/fingerprint-record.v1.json` + `schema/index.v1.json` formalize the record shape; `scripts/validate.sh` runs the same checks the CI workflow runs so contributors can pre-flight before pushing. Branch protection requires 1 approving review + a green `schema + invariants` check (deliberate-failure PR `#2` proved the gate during bootstrap). `CONTRIBUTING.md` walks through the libxml2 worked example, the `min_symbols` rule-of-thumb table, symbol-selection do/don'ts, and the PR template.
+
+### Foundation: loader + cache + bundled fallback (#299)
+
+`mikebom-cli/src/scan_fs/binary/fingerprints/` lands as a new sub-module:
+
+- `source_sha.rs` — `CorpusSha([u8;20])` newtype with full / short hex display widths.
+- `record.rs` — `FingerprintRecord` serde shape + `validate()` covering FR-010 defensive rules.
+- `cache.rs` — `cache_root()` resolution (`MIKEBOM_FINGERPRINTS_CACHE_DIR` env > XDG > HOME), `cache_dir_for_sha`, `cache_hit`, `cache_clear(KeepRev)` per FR-009.
+- `loader.rs` — `load_corpus_from_cache(sha)` reads `<cache>/<sha>/corpus/index.json` + per-library JSONs; malformed records warn-and-skip per FR-010.
+- `mod.rs` — `FingerprintCorpus` container, `CorpusSource` enum, `LoadOptions`, `load_bundled()` memoized via `OnceLock`.
+
+Build-time SHA pin lives at `tests/fingerprints.rev` (one line); `build.rs::emit_fingerprints_corpus_sha()` reads it, validates 40-char lowercase hex, emits `cargo:rustc-env=MIKEBOM_FINGERPRINTS_CORPUS_SHA=<sha>`. No network at build time.
+
+### US1 — Maintainer contribution flow (#300)
+
+Tracking-only PR. Marks T030 verified end-to-end via the deliberate-failure PR on the sibling repo (CI rejected the malformed record in 10s on `missingProperty: 'min_symbols'`); T031/T032 already shipped in the sibling-repo bootstrap.
+
+### US2 — Operator opt-in + cache-first fetch + annotation stamping (#301)
+
+`--fingerprints-corpus` flag (also `MIKEBOM_FINGERPRINTS_CORPUS=1`) opts the binary scanner into the external corpus. `fingerprints/fetch.rs` ships the GitHub-archive fetch path: 30s timeout, 5-redirect cap, retry 3x on 5xx with 1/2/4s exponential backoff, `Retry-After`-on-429 (60s cap), 404 → typed `NotFound`. Atomic-write protocol stages to `.tmp-<uuid>/corpus/` then renames to `<full-sha>/`; concurrent-writer race handled. Blocking HTTP wrapped in `std::thread::scope` to escape mikebom's tokio runtime — same posture as `golang::graph_resolver`'s blocking workers.
+
+`load_corpus(opts)` implements the FR-004 decision tree (`!external_enabled` → bundled; cache hit → `Cached`; cache miss + `!offline` → fetch → `Fetched`; cache miss + offline → bundled with warn). `symbol_fingerprint::scan_with_corpus` stamps `mikebom:fingerprint-corpus-sha` (12-hex of the corpus revision OR literal `bundled` sentinel) on every emitted match. FR-013 multi-record collision: when matched-symbol sets overlap (e.g., LibreSSL + OpenSSL share `SSL_*` symbols), each match emits + carries `mikebom:also-detected-via` listing the other; independent co-resident libraries (openssl + zlib, disjoint matched sets) don't trigger.
+
+### US3 — Consumer verification recipe + CI gate (#302)
+
+`docs/reference/identifiers.md` §11 documents the consumer-side 4-step lookup recipe (`jq` annotation → GitHub git-API resolve 12-hex → tarball download → record read → `readelf` symbol-table confirmation). The milestone-108 quickstart Scenario 1.5 mirrors the recipe with operator-friendly framing. New CI gate `embedded_sha_resolves_to_real_commit_on_sibling_repo` (network-gated) catches the maintainer-typo failure mode at CI time (bumping `tests/fingerprints.rev` to a SHA that doesn't exist on the sibling repo).
+
+### US4 — Air-gapped operator subcommands (#303)
+
+`mikebom fingerprints` top-level subcommand with `fetch [--corpus-rev <SHA>]` (the only mikebom subcommand REQUIRED to perform a network call per FR-008), `cache-clear [--keep-rev <SHA>]` (purely local; idempotent), `list` (purely local introspection, alphabetically sorted). Categorized exit codes (0/1/2/3/4/10) per `contracts/cli-surface.md`. 11 new tests including a full 5-stage air-gapped roundtrip (fetch on tempdir A → tar → untar to tempdir B → offline scan against B → assert valid CDX SBOM).
+
+### US5 — `--fingerprints-rev` runtime override (#304)
+
+Operators can pin a specific corpus version regardless of the mikebom binary's build-time-embedded SHA. Clap value parser validates 40-char lowercase hex; implicit-dep warn when supplied without `--fingerprints-corpus` (override ignored, bundled fallback used). `LoadOptions.sha_override` plumbs through to the cache key AND the fetch URL; the SBOM annotation reflects the override. 4 new tests in `hermetic_build_pin.rs` cover byte-identity (modulo `serialNumber`), distinct-SHA cache routing, and the implicit-dep warn.
+
+### Mach-O symbol extraction (#305)
+
+Extends the milestone-099 symbol-fingerprint scanner from ELF-only to ELF + Mach-O so `--fingerprints-corpus` works directly on macOS without a Linux container. New `strip_macho_underscore_prefix` helper handles Mach-O's C ABI symbol prefix; `scan_binary` filters `Object::symbols()` to globals (`N_EXT`) for Mach-O. PE export-table extraction deferred (different shape — `IMAGE_EXPORT_DIRECTORY`). Verified end-to-end against the cmake-demo macOS binary: 10/10 zlib symbols matched + `mikebom:fingerprint-corpus-sha: fff39c6ad22c` stamped.
+
+### Polish (#306)
+
+- New catalog row C58 in `docs/reference/sbom-format-mapping.md` for `mikebom:fingerprint-corpus-sha` with the full native-field audit per Constitution Principle V. Matching parity extractors registered in all three formats so the `every_catalog_row_has_an_extractor` invariant holds.
+- `tests/offline_mode_audit_ecosystem_108.rs` enforces that `fingerprints/fetch.rs` is the ONLY file in the sub-module allowed to contain network primitives. Different shape than milestone-106/107 audits because milestone 108 DOES make ONE legitimate network call (the corpus fetch); the audit's allowlist-of-one isolates the blast radius.
+- `bundled_fingerprint_const_size_locked` asserts `FINGERPRINTS.len() == 7` so future contributors can't accidentally grow the bundled const — the source-of-truth lives at the sibling repo now.
+- `docs/ecosystems.md` gains a cross-link section pointing at identifiers.md §11, the milestone-108 quickstart, and the cmake-demo.
+
+### Companion demo: `kusari-sandbox/mikebom-cmake-demo`
+
+New runnable cmake + ninja C project that exercises both the source-tree reader AND the fingerprint matcher end-to-end. `FetchContent_Declare(zlib v1.3.1)` + static-link + `ENABLE_EXPORTS TRUE`; main.c uses 10 zlib API entry points so the static linker pulls them all in. README walks the source scan (cmake reader → `pkg:github/madler/zlib@v1.3.1`) and the binary scan with `--fingerprints-corpus` (fingerprint match → corpus-sha annotation) on both macOS (post-#305) and Linux.
+
+### Validation across the milestone
+
+- Workspace-wide unit + integration tests: 1770+ tests pass on `./scripts/pre-pr.sh`.
+- 33 byte-identity goldens unchanged across all 7 PRs — SC-003 contract honored.
+- 1 new Cargo dep (none) — `wiremock` was already a dev-dep; `reqwest`, `tar`, `flate2`, `tempfile`, `uuid` all already in the tree.
+
 ## [0.1.0-alpha.43] — 2026-06-01
 
 Yocto / OpenEmbedded coverage (milestone 107) — the explicit follow-on to milestone 105's US7 split-off, and the largest remaining C/C++ source coverage gap. Three new filesystem readers landed across five PRs, plus a foundational refactor that opkg shares with dpkg. Filesystem-only, zero new Cargo dependencies, zero new network calls (FR-011 build-time audited).

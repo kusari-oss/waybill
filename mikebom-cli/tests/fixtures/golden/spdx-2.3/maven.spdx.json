@@ -4,43 +4,43 @@
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.43",
+      "annotator": "Tool: mikebom-0.1.0-alpha.44",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.43",
+      "annotator": "Tool: mikebom-0.1.0-alpha.44",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.43",
+      "annotator": "Tool: mikebom-0.1.0-alpha.44",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":0}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.43",
+      "annotator": "Tool: mikebom-0.1.0-alpha.44",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-events-dropped\",\"value\":0}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.43",
+      "annotator": "Tool: mikebom-0.1.0-alpha.44",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.43",
+      "annotator": "Tool: mikebom-0.1.0-alpha.44",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.43",
+      "annotator": "Tool: mikebom-0.1.0-alpha.44",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"maven\"]}}"
     }
   ],
@@ -48,7 +48,7 @@
     "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: pre-build. Per-component scope detail in mikebom:sbom-tier annotations.",
     "created": "1970-01-01T00:00:00Z",
     "creators": [
-      "Tool: mikebom-0.1.0-alpha.43",
+      "Tool: mikebom-0.1.0-alpha.44",
       "Organization: mikebom contributors"
     ]
   },
@@ -56,7 +56,7 @@
   "documentDescribes": [
     "SPDXRef-Package-Q7X32JLRPGCHW46Q"
   ],
-  "documentNamespace": "https://mikebom.kusari.dev/spdx/BEOQLGBN7FLZ3E3WWZWWEKWYR5JYKDBV",
+  "documentNamespace": "https://mikebom.kusari.dev/spdx/OC3QUHBHSFBZQY3ZFJTNXYBH3AONMBOZ",
   "name": "pom-three-deps",
   "packages": [
     {
@@ -65,31 +65,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"path+file://<WORKSPACE>/tests/fixtures/maven/pom-three-deps\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.example:demo-app:1.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:example:demo-app:1.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:demo-app:demo-app:1.0.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-role\",\"value\":\"main-module\"}"
         }
       ],
@@ -120,31 +120,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/maven/pom-three-deps/pom.xml\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.guava:guava:32.1.3-jre:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:guava:32.1.3-jre:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         }
       ],
@@ -174,31 +174,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/maven/pom-three-deps/pom.xml\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         }
       ],
@@ -228,31 +228,31 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/maven/pom-three-deps/pom.xml\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.apache.commons:commons-lang3:3.14.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:commons:commons-lang3:3.14.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:commons-lang3:commons-lang3:3.14.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.43",
+          "annotator": "Tool: mikebom-0.1.0-alpha.44",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         }
       ],
