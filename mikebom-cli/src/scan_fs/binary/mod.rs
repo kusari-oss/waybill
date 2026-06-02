@@ -129,6 +129,22 @@ pub fn read(
     // workflow on real fixtures). Gated to zero cost when unset.
     let walker_debug = std::env::var_os("MIKEBOM_WALKER_DEBUG").is_some();
 
+    // Milestone 108 — load the external fingerprint corpus exactly
+    // once per scan when the operator opted in via `--fingerprints-corpus`
+    // (the clap derive sets `MIKEBOM_FINGERPRINTS_CORPUS=1`; the offline
+    // signal rides the existing `MIKEBOM_OFFLINE` env var set in
+    // main.rs). The bundled fallback path is the no-op default and
+    // costs nothing — the per-binary loop calls the legacy `scan()`
+    // wrapper which preserves SC-003 byte-identity. Hoisted out of the
+    // loop so cache I/O (or the one-shot fetch) doesn't repeat per
+    // binary.
+    let fingerprints_opts = fingerprints::LoadOptions::from_env();
+    let external_corpus = if fingerprints_opts.external_enabled {
+        Some(fingerprints::load_corpus(fingerprints_opts))
+    } else {
+        None
+    };
+
     for path in discover_binaries(rootfs) {
         let Ok(bytes) = std::fs::read(&path) else {
             if walker_debug {
@@ -455,12 +471,25 @@ pub fn read(
                     by_library.insert(m.library.slug().to_string(), entry);
                 }
             }
-            for m in symbol_fingerprint::scan(&scan.symbol_names) {
+            // Milestone 108 — when the operator opted in to the
+            // external corpus, run the matcher against it (stamping
+            // `mikebom:fingerprint-corpus-sha` on every emitted match
+            // per FR-005). Otherwise stick with the bundled path
+            // through the legacy `scan()` wrapper — preserves the
+            // SC-003 byte-identity contract for the 33 byte-identity
+            // goldens.
+            let symbol_matches = match &external_corpus {
+                Some(corpus) => {
+                    symbol_fingerprint::scan_with_corpus(&scan.symbol_names, corpus, true)
+                }
+                None => symbol_fingerprint::scan(&scan.symbol_names),
+            };
+            for m in symbol_matches {
                 // Q1: if the version-string scanner already produced an
                 // entry for this library on this binary, just record the
                 // symbol-fingerprint corroboration on that entry. The
                 // higher-confidence version-string PURL pins identity.
-                if let Some(existing) = by_library.get_mut(m.library) {
+                if let Some(existing) = by_library.get_mut(&m.library) {
                     existing.extra_annotations.insert(
                         "mikebom:fingerprint-symbols-matched".to_string(),
                         serde_json::Value::String(format!(
@@ -468,10 +497,21 @@ pub fn read(
                             m.matched_count, m.total_count
                         )),
                     );
+                    // Milestone 108: the corpus-sha annotation rides
+                    // along on the corroboration path so the SBOM still
+                    // attributes the symbol-fingerprint signal to a
+                    // specific corpus when the operator is opted in.
+                    if let Some(ref sha) = m.corpus_sha_annotation {
+                        existing.extra_annotations.insert(
+                            "mikebom:fingerprint-corpus-sha".to_string(),
+                            serde_json::Value::String(sha.clone()),
+                        );
+                    }
                     continue;
                 }
+                let library_key = m.library.clone();
                 if let Some(entry) = symbol_match_to_entry(&m, &path) {
-                    by_library.insert(m.library.to_string(), entry);
+                    by_library.insert(library_key, entry);
                 }
             }
             // Deterministic order: sort by PURL string so cross-run

@@ -591,6 +591,22 @@ pub struct ScanArgs {
         default_value = "full",
     )]
     pub spdx2_relationship_compat: crate::generate::Spdx2RelationshipCompat,
+
+    /// Milestone 108 — opt into the external symbol-fingerprint
+    /// corpus. Defaults to false: mikebom uses the in-source bundled
+    /// 7-library corpus exactly as it did pre-108 (SC-003 byte-identity
+    /// guarantee). When set, mikebom loads fingerprint records from
+    /// the operator's per-host cache at the build-time-pinned SHA;
+    /// cache-miss triggers a one-shot fetch from
+    /// `kusari-sandbox/mikebom-fingerprints` (skipped under `--offline`,
+    /// falls back to bundled defaults on failure). Components
+    /// identified via the symbol-fingerprint path then carry a
+    /// `mikebom:fingerprint-corpus-sha` annotation (12-hex SHA or
+    /// the `bundled` sentinel) per FR-005.
+    ///
+    /// Also enabled via `MIKEBOM_FINGERPRINTS_CORPUS=1`.
+    #[arg(long, env = "MIKEBOM_FINGERPRINTS_CORPUS")]
+    pub fingerprints_corpus: bool,
 }
 
 /// Clap value_parser for `--spdx2-relationship-compat`. Accepts
@@ -1353,6 +1369,21 @@ pub async fn execute(
         // SAFETY: see comment above — single-threaded.
         unsafe {
             std::env::set_var("MIKEBOM_INCLUDE_VENDORED", "1");
+        }
+    }
+
+    // Milestone 108 FR-002: propagate the `--fingerprints-corpus`
+    // opt-in to the env var that the binary-scan loop's fingerprint
+    // matcher reads directly. Same pattern as MIKEBOM_INCLUDE_VENDORED
+    // above. Clap's `env = "MIKEBOM_FINGERPRINTS_CORPUS"` derive picks
+    // up the env-set form; this re-export handles the
+    // operator-passed-the-flag-but-not-the-env form. The matcher then
+    // calls `LoadOptions::from_env()` (which also reads `MIKEBOM_OFFLINE`,
+    // already set by main.rs).
+    if args.fingerprints_corpus {
+        // SAFETY: see comment above — single-threaded.
+        unsafe {
+            std::env::set_var("MIKEBOM_FINGERPRINTS_CORPUS", "1");
         }
     }
 
@@ -2510,6 +2541,8 @@ mod tests {
             spdx2_relationship_compat: crate::generate::Spdx2RelationshipCompat::Full,
             // Milestone 102 — default vendored-deps emission OFF.
             include_vendored: false,
+            // Milestone 108 — default external fingerprint-corpus opt-in OFF.
+            fingerprints_corpus: false,
         }
     }
 

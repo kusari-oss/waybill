@@ -21,11 +21,29 @@
 /// `mikebom:evidence-kind = "symbol-fingerprint"`,
 /// `mikebom:confidence = "heuristic"`, and
 /// `mikebom:fingerprint-symbols-matched = "<count>/<total>"`.
+///
+/// Milestone 108 adds three optional fields:
+/// - `target_purl`: explicit PURL string. Bundled-corpus matches set
+///   this to `pkg:generic/<library>` (identical to today's hardcoded
+///   format in `symbol_match_to_entry`); external-corpus matches use
+///   the record's `target_purl` field (which may carry variant or
+///   non-generic namespaces — e.g. `pkg:generic/openssl?variant=fips`).
+/// - `corpus_sha_annotation`: when `Some(_)`, the value is emitted as
+///   the `mikebom:fingerprint-corpus-sha` annotation per FR-005.
+///   `None` means "don't emit the annotation" — preserves SC-003
+///   byte-identity for non-opt-in scans.
+/// - `also_detected_via`: FR-013 multi-record collision. When two
+///   records match the same target binary (vendor-fork variant + the
+///   upstream library), each match lists the OTHER's library name
+///   here, surfaced as `mikebom:also-detected-via`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SymbolFingerprintMatch {
-    pub library: &'static str,
+    pub library: String,
     pub matched_count: usize,
     pub total_count: usize,
+    pub target_purl: String,
+    pub corpus_sha_annotation: Option<String>,
+    pub also_detected_via: Vec<String>,
 }
 
 struct SymbolFingerprint {
@@ -225,36 +243,100 @@ pub(crate) fn bundled_records() -> Vec<super::fingerprints::FingerprintRecord> {
 /// `symbol_names` is a slice of exported-symbol names (the values
 /// the caller pulled from ELF `.dynsym`). Empty slice → empty result.
 ///
-/// Currently uses the bundled `FINGERPRINTS` const exclusively. Phase
-/// 4 of milestone 108 will add a `scan_with_corpus` variant that
-/// consumes an external corpus from
-/// `super::fingerprints::load_corpus(...)`; the bundled-only `scan()`
-/// will become a thin wrapper at that point. Until then, both paths
-/// return identical matches because the bundled corpus and the
-/// seeded sibling-repo content are content-identical.
+/// Milestone 108: this is now a thin wrapper around `scan_with_corpus`
+/// that always uses the bundled fallback (`stamp_corpus_sha = false`).
+/// New callers should prefer `scan_with_corpus` so they can pass
+/// in the active corpus (bundled OR external) and the stamp opt-in.
+/// SC-003 byte-identity: `scan()`'s output is identical to the
+/// pre-108 implementation — same matches, no new annotations.
 pub fn scan(symbol_names: &[String]) -> Vec<SymbolFingerprintMatch> {
+    scan_with_corpus(symbol_names, super::fingerprints::load_bundled(), false)
+}
+
+/// Match the binary's dynamic-symbol set against a (bundled OR
+/// external) corpus. Drives the milestone-108 opt-in path.
+///
+/// When `stamp_corpus_sha` is true, every emitted match carries the
+/// `corpus_sha_annotation` set from `corpus.source.annotation_value()`
+/// (12-hex for `Cached`/`Fetched`, literal `"bundled"` for the
+/// fallback path). When false, the annotation is `None` — preserves
+/// SC-003 byte-identity for the bundled-only path.
+///
+/// FR-013 multi-record collision: when ≥2 records in `corpus.records`
+/// both clear their `min_symbols` threshold against `symbol_names`,
+/// each emitted match's `also_detected_via` lists the OTHER matching
+/// records' library names (alphabetically sorted for byte-stable
+/// downstream emission).
+pub fn scan_with_corpus(
+    symbol_names: &[String],
+    corpus: &super::fingerprints::FingerprintCorpus,
+    stamp_corpus_sha: bool,
+) -> Vec<SymbolFingerprintMatch> {
     if symbol_names.is_empty() {
         return Vec::new();
     }
     let symbol_set: std::collections::HashSet<&str> =
         symbol_names.iter().map(String::as_str).collect();
+    let corpus_annotation = if stamp_corpus_sha {
+        Some(corpus.source.annotation_value())
+    } else {
+        None
+    };
 
-    let mut out = Vec::new();
-    for fp in FINGERPRINTS {
-        let matched = fp
+    // First pass: collect every record whose match-count clears its
+    // `min_symbols` threshold. For FR-013 collision detection (second
+    // pass) we also keep the set of symbols that drove each record's
+    // match — the cheapest unambiguous discriminator between
+    // "co-resident independent libraries" (disjoint matched sets;
+    // common case — openssl + zlib in the same binary) and
+    // "variant collision" (overlapping matched sets — LibreSSL and
+    // OpenSSL records both satisfied by the same `SSL_*` symbols).
+    let mut hits: Vec<SymbolFingerprintMatch> = Vec::new();
+    let mut matched_symbol_sets: Vec<std::collections::HashSet<String>> = Vec::new();
+    for record in &corpus.records {
+        let matched_symbols: std::collections::HashSet<String> = record
             .symbols
             .iter()
-            .filter(|sym| symbol_set.contains(**sym))
-            .count();
-        if matched >= fp.required {
-            out.push(SymbolFingerprintMatch {
-                library: fp.library,
-                matched_count: matched,
-                total_count: fp.symbols.len(),
+            .filter(|sym| symbol_set.contains(sym.as_str()))
+            .cloned()
+            .collect();
+        if matched_symbols.len() as u32 >= record.min_symbols {
+            hits.push(SymbolFingerprintMatch {
+                library: record.library.clone(),
+                matched_count: matched_symbols.len(),
+                total_count: record.symbols.len(),
+                target_purl: record.target_purl.clone(),
+                corpus_sha_annotation: corpus_annotation.clone(),
+                also_detected_via: Vec::new(),
             });
+            matched_symbol_sets.push(matched_symbols);
         }
     }
-    out
+    // Second pass: FR-013 — populate `also_detected_via` ONLY for
+    // hits whose matched-symbol sets overlap (variant collision).
+    // Independent co-resident libraries have disjoint matched sets and
+    // do NOT trigger this annotation — preserves SC-003 byte-identity
+    // for the common multi-library case (e.g., openssl + zlib in one
+    // binary, exercised by existing `two_libraries_both_match` test).
+    if hits.len() > 1 {
+        for i in 0..hits.len() {
+            let mut others: Vec<String> = Vec::new();
+            for (j, other_hit) in hits.iter().enumerate() {
+                if i == j {
+                    continue;
+                }
+                let overlap = matched_symbol_sets[i]
+                    .intersection(&matched_symbol_sets[j])
+                    .count();
+                if overlap > 0 {
+                    others.push(other_hit.library.clone());
+                }
+            }
+            others.sort();
+            hits[i].also_detected_via = others;
+        }
+    }
+    hits
 }
 
 #[cfg(test)]
@@ -408,7 +490,7 @@ mod tests {
         let hits = scan(&s);
         assert_eq!(hits.len(), 2);
         let libs: std::collections::HashSet<&str> =
-            hits.iter().map(|h| h.library).collect();
+            hits.iter().map(|h| h.library.as_str()).collect();
         assert!(libs.contains("openssl"));
         assert!(libs.contains("zlib"));
     }
@@ -548,5 +630,172 @@ mod tests {
         assert_eq!(hits.len(), 1);
         assert_eq!(hits[0].library, "gnutls");
         assert_eq!(hits[0].matched_count, 10);
+    }
+
+    // ====================================================================
+    // Milestone 108 — annotation stamping + FR-013 multi-record collision
+    // ====================================================================
+
+    /// T039 — bundled, non-opt-in `scan()` does NOT stamp the corpus-sha
+    /// annotation (`corpus_sha_annotation == None`). Preserves SC-003
+    /// byte-identity for the 33 byte-identity goldens.
+    #[test]
+    fn scan_emits_no_corpus_sha_annotation_for_bundled_non_opt_in() {
+        let s = syms(&[
+            "OPENSSL_init_ssl",
+            "OPENSSL_init_crypto",
+            "SSL_CTX_new",
+            "SSL_library_init",
+            "EVP_DigestInit_ex",
+            "EVP_EncryptInit_ex",
+            "RSA_new",
+            "BN_new",
+        ]);
+        let hits = scan(&s);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].corpus_sha_annotation, None);
+        // target_purl is still populated (cheap; identical to the
+        // pre-108 hardcoded `pkg:generic/<library>` shape).
+        assert_eq!(hits[0].target_purl, "pkg:generic/openssl");
+    }
+
+    /// T039 — bundled corpus + opt-in stamps the `bundled` sentinel
+    /// per FR-005's "bundled" sentinel rule.
+    #[test]
+    fn scan_with_corpus_emits_bundled_sentinel_for_bundled_opt_in() {
+        let s = syms(&[
+            "OPENSSL_init_ssl",
+            "OPENSSL_init_crypto",
+            "SSL_CTX_new",
+            "SSL_library_init",
+            "EVP_DigestInit_ex",
+            "EVP_EncryptInit_ex",
+            "RSA_new",
+            "BN_new",
+        ]);
+        let bundled = super::super::fingerprints::load_bundled();
+        let hits = scan_with_corpus(&s, bundled, true);
+        assert_eq!(hits.len(), 1);
+        assert_eq!(
+            hits[0].corpus_sha_annotation.as_deref(),
+            Some("bundled"),
+        );
+    }
+
+    /// T039 — external `Cached` corpus stamps the 12-hex SHA per FR-005.
+    #[test]
+    fn scan_with_corpus_emits_12_hex_for_cached_corpus() {
+        use super::super::fingerprints::{
+            CorpusSha, CorpusSource, FingerprintCorpus, FingerprintRecord,
+        };
+        let sha = CorpusSha::from_hex("fff39c6ad22ce8420b506323ce1d5cce4b628d5c").unwrap();
+        let corpus = FingerprintCorpus {
+            records: vec![FingerprintRecord {
+                library: "libfoo".to_string(),
+                target_purl: "pkg:generic/libfoo".to_string(),
+                symbols: vec![
+                    "foo_init".to_string(),
+                    "foo_run".to_string(),
+                    "foo_close".to_string(),
+                    "foo_a".to_string(),
+                    "foo_b".to_string(),
+                ],
+                min_symbols: 3,
+                version_hint: None,
+                variant: None,
+                notes: None,
+            }],
+            source: CorpusSource::Cached { sha },
+        };
+        let s = syms(&["foo_init", "foo_run", "foo_close"]);
+        let hits = scan_with_corpus(&s, &corpus, true);
+        assert_eq!(hits.len(), 1);
+        let stamp = hits[0].corpus_sha_annotation.as_deref().unwrap();
+        assert_eq!(stamp.len(), 12, "annotation must be 12-hex; got {stamp:?}");
+        assert_eq!(stamp, "fff39c6ad22c");
+    }
+
+    /// T038a — FR-013 multi-record collision: two records that match
+    /// the same target binary via overlapping symbol sets BOTH emit,
+    /// and each carries the OTHER's library name in `also_detected_via`.
+    /// Models the LibreSSL / OpenSSL variant-collision case.
+    #[test]
+    fn multi_record_match_emits_both_components_with_also_detected_via() {
+        use super::super::fingerprints::{
+            CorpusSha, CorpusSource, FingerprintCorpus, FingerprintRecord,
+        };
+        let sha = CorpusSha::from_hex("fff39c6ad22ce8420b506323ce1d5cce4b628d5c").unwrap();
+        let shared_symbols: Vec<String> = (0..5).map(|i| format!("SSL_shared_{i}")).collect();
+        let corpus = FingerprintCorpus {
+            records: vec![
+                FingerprintRecord {
+                    library: "openssl".to_string(),
+                    target_purl: "pkg:generic/openssl".to_string(),
+                    symbols: shared_symbols.clone(),
+                    min_symbols: 3,
+                    version_hint: None,
+                    variant: None,
+                    notes: None,
+                },
+                FingerprintRecord {
+                    library: "libressl".to_string(),
+                    target_purl: "pkg:generic/openssl?variant=libressl".to_string(),
+                    symbols: shared_symbols.clone(),
+                    min_symbols: 3,
+                    version_hint: None,
+                    variant: Some("libressl".to_string()),
+                    notes: None,
+                },
+            ],
+            source: CorpusSource::Cached { sha },
+        };
+        let hits = scan_with_corpus(&shared_symbols, &corpus, true);
+        assert_eq!(hits.len(), 2, "both records must emit (no silent dedup)");
+        // openssl → also_detected_via = ["libressl"]
+        let openssl = hits.iter().find(|h| h.library == "openssl").unwrap();
+        assert_eq!(openssl.also_detected_via, vec!["libressl".to_string()]);
+        // libressl → also_detected_via = ["openssl"]
+        let libressl = hits.iter().find(|h| h.library == "libressl").unwrap();
+        assert_eq!(libressl.also_detected_via, vec!["openssl".to_string()]);
+        // Both also carry the corpus-sha stamp.
+        assert!(openssl.corpus_sha_annotation.is_some());
+        assert!(libressl.corpus_sha_annotation.is_some());
+    }
+
+    /// T038a — independent co-resident libraries (openssl + zlib with
+    /// disjoint symbol sets) do NOT trigger `also_detected_via`.
+    /// SC-003 byte-identity guard: this is the common case for the
+    /// existing 33 byte-identity goldens (multi-library binaries).
+    #[test]
+    fn independent_libraries_do_not_emit_also_detected_via() {
+        let s = syms(&[
+            // OpenSSL — 8 symbols.
+            "OPENSSL_init_ssl",
+            "OPENSSL_init_crypto",
+            "SSL_CTX_new",
+            "SSL_library_init",
+            "EVP_DigestInit_ex",
+            "EVP_EncryptInit_ex",
+            "RSA_new",
+            "BN_new",
+            // zlib — 8 symbols. Disjoint from the openssl set.
+            "deflate",
+            "inflate",
+            "deflateInit_",
+            "inflateInit_",
+            "deflateEnd",
+            "inflateEnd",
+            "crc32",
+            "adler32",
+        ]);
+        let hits = scan(&s);
+        assert_eq!(hits.len(), 2);
+        for h in &hits {
+            assert!(
+                h.also_detected_via.is_empty(),
+                "{} should have empty also_detected_via (disjoint matched sets)",
+                h.library
+            );
+        }
     }
 }

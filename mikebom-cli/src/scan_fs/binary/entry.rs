@@ -33,20 +33,39 @@ pub(super) fn symbol_match_to_entry(
     m: &symbol_fingerprint::SymbolFingerprintMatch,
     path: &Path,
 ) -> Option<PackageDbEntry> {
-    let purl_str = format!(
-        "pkg:generic/{}",
-        mikebom_common::types::purl::encode_purl_segment(m.library),
-    );
-    let purl = mikebom_common::types::purl::Purl::new(&purl_str).ok()?;
+    // Milestone 108 — prefer the match's explicit `target_purl` (set
+    // by `scan_with_corpus` from the corpus record). The bundled-corpus
+    // path emits the same `pkg:generic/<library>` shape as pre-108
+    // by construction (see `symbol_fingerprint::bundled_records`).
+    let purl = mikebom_common::types::purl::Purl::new(&m.target_purl).ok()?;
     let mut extra: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra.insert(
         "mikebom:fingerprint-symbols-matched".to_string(),
         serde_json::Value::String(format!("{}/{}", m.matched_count, m.total_count)),
     );
+    // Milestone 108 FR-005: stamp the corpus provenance when present.
+    // `None` here means the scan was bundled-only and non-opt-in, so
+    // no annotation is emitted (preserves SC-003 byte-identity).
+    if let Some(ref sha) = m.corpus_sha_annotation {
+        extra.insert(
+            "mikebom:fingerprint-corpus-sha".to_string(),
+            serde_json::Value::String(sha.clone()),
+        );
+    }
+    // Milestone 108 FR-013: when the same target binary triggered
+    // matches against multiple corpus records (variant collision —
+    // e.g., LibreSSL + OpenSSL share `SSL_*` symbols), surface the
+    // sibling matches so consumers can disambiguate.
+    if !m.also_detected_via.is_empty() {
+        extra.insert(
+            "mikebom:also-detected-via".to_string(),
+            serde_json::json!(m.also_detected_via),
+        );
+    }
     Some(PackageDbEntry {
         purl,
-        name: m.library.to_string(),
+        name: m.library.clone(),
         version: String::new(),
         arch: None,
         source_path: path.to_string_lossy().into_owned(),
