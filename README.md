@@ -1,6 +1,6 @@
 # mikebom
 
-**NOTE: This tool is in no way production ready. This requires a lot more hardening**
+**NOTE: mikebom is pre-1.0 alpha. The CLI surface, output formats, and per-ecosystem coverage are still being stabilized; expect breaking changes between alpha releases, and expect additional ecosystem readers + binary-analysis surface to keep landing release-over-release.**
 
 A toolkit for working with software bills of materials end-to-end:
 
