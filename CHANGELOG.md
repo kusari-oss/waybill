@@ -7,6 +7,64 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.1.0-alpha.45] — 2026-06-03
+
+Cross-platform completion of the symbol-fingerprint matcher (PE now joins ELF + Mach-O) + the milestone-109 cross-tier PURL attribution that closes the cmake-demo's documented "source SBOM and binary SBOM don't equality-join" gap.
+
+**Default behavior unchanged.** Operators who don't opt into `--fingerprints-corpus` see byte-identical SBOMs to alpha.44 across all 33 byte-identity goldens. Operators who DO opt in get richer attribution: PE binaries now participate in fingerprint matching, AND cmake `FetchContent_Declare` source declarations now drive the binary-tier match's PURL into a single source-tier identity (`pkg:github/madler/zlib@v1.3.1` instead of two non-joining shadows).
+
+### PE export-table fingerprint extraction (#309)
+
+Extends the symbol-fingerprint matcher (originally ELF-only in milestone 099; Mach-O added in alpha.44 #305) to Windows PE binaries via `IMAGE_EXPORT_DIRECTORY` reads. The matcher's cross-platform story is now complete: same corpus content + same `min_symbols` thresholds apply across ELF + Mach-O + PE. Catches DLLs that re-export wrapped library APIs (the canonical fingerprint-matcher target on Windows). Stripped EXEs with empty export tables are documented false-negatives — same shape limitation as ELF/Mach-O.
+
+New `pe::extract_pe_export_names(bytes)` dispatches PE32 vs PE32+ via the same magic-byte path as the milestone-098 `parse_pe_identity`; the `scan.rs::scan_binary` branch adds `class == "pe"` alongside ELF and Mach-O. 3 new unit tests (defensive garbage-bytes, PE without export table on both PE32 and PE32+).
+
+### Milestone 109 — binary-source PURL binding via cmake build-directory observation (#310, #311)
+
+When mikebom scans a cmake project root with `--fingerprints-corpus`, fingerprint matches in built binaries are attributed to the source-tier PURL the cmake reader emitted from `FetchContent_Declare` (`pkg:github/madler/zlib@v1.3.1`) instead of the milestone-108 generic shadow (`pkg:generic/zlib`). The two SBOM emission paths produce ONE component per real library — closing the cmake-demo's documented "phantom mismatch" gap consumers tripped over.
+
+#### MVP (#310, US1+US2)
+
+New sub-module `mikebom-cli/src/scan_fs/binary/source_binding/` containing the cmake build-directory observer + attribution registry:
+
+- `cmake_observer.rs` walks the scan root with bounded recursion (depth ≤6) for cmake project build dirs (`CMakeCache.txt` + `_deps/` co-presence); joins cmake declarations against `_deps/<name>-build/` existence.
+- `registry.rs` provides case-insensitive library-name lookup + path-ancestor scope matching + deterministic multi-project tie-break per the milestone-105 dedup-pipeline conventions.
+- `BuildDirObserver` trait keeps the cmake-specific path-observation logic isolated; future Bazel / Meson observers plug into the same registry without rework.
+
+`symbol_fingerprint::scan_with_corpus` gained two optional params (`Option<&BuildAttributionRegistry>` + `Option<&Path>`) — when both are `Some(_)`, the matcher rewrites each match's `target_purl` from `pkg:generic/<library>` to the registry-resolved source-tier PURL. `None`/`None` preserves milestone-108 behavior exactly.
+
+The dedup pipeline (`resolve::deduplicator::deduplicate`) now folds LOSER-side `extra_annotations` into the WINNER on PURL collision so the merged component carries BOTH source-tier (`mikebom:source-mechanism = cmake-fetchcontent-git`) AND binary-tier (`mikebom:fingerprint-corpus-sha`, `mikebom:fingerprint-symbols-matched`) annotations.
+
+Scope: `FetchContent_Declare` (git + url forms) only this milestone. `ExternalProject_Add` deferred per the Phase-2 clarification (its `<name>-prefix/` default layout needs separate research). Bazel + Meson tracked as follow-on observers.
+
+12 new unit tests + 3 new integration tests cover the join key, scope-ancestry, ExternalProject deferral, multi-project workspaces, noise-directory skip (`.git`, `node_modules`, etc.), and the cmake-demo's end-to-end "scan project root, get ONE zlib component" contract.
+
+#### Polish (#311, US3+US4+US5)
+
+- **US3 regression tests** prove non-opt-in scans + single-binary scans preserve milestone-108 behavior (SC-003 + SC-004): no `mikebom:fingerprint-corpus-sha` annotations appear without the opt-in; the milestone-108 generic-PURL fallback fires correctly for single-binary scans.
+- **US4 cross-format symmetry test** emits CDX 1.6 + SPDX 2.3 + SPDX 3 of the same fixture; verifies each format carries the source-mechanism + corpus-sha annotations AND the source-tier PURL, with zero `pkg:generic/zlib` shadows.
+- **US5 forward-compat smoke test** implements `BuildDirObserver` with a Bazel-shaped stub, proving the trait surface is observer-agnostic per FR-012. Architectural extension comment at the bottom of `source_binding/mod.rs` documents the 3-step recipe for adding future observers.
+- `docs/ecosystems.md` "Binary analysis" section gains a milestone-109 subsection explaining the 4-step attribution mechanism + scope limits.
+- `docs/reference/identifiers.md` §11.7 explains the three observable component shapes (source+binary multi-evidence; source-only declared-but-unused; binary-only single-binary-scan).
+- New `tests/offline_mode_audit_ecosystem_109.rs` enforces all three `source_binding/` files are free of network primitives (no allowlist — milestone 109 has no network surface).
+
+### README pre-1.0 stabilization framing (#308)
+
+Replaced the "no way production ready / needs a lot more hardening" line with concrete pre-1.0 framing that names the three stabilizing surfaces (CLI, output formats, per-ecosystem coverage) and sets the expectation that more ecosystem readers + binary-analysis surface keep landing release-over-release.
+
+### Companion demo: `kusari-sandbox/mikebom-cmake-demo`
+
+The runnable cmake + ninja C project (introduced in alpha.44) gained:
+
+- Cross-platform reframing for Step 4: Mach-O (alpha.44) + PE (alpha.45) are now first-class; the original "Linux-only via Docker" framing is gone.
+- New **Step 5 — Cross-tier alignment** demonstrating milestone 109's attribution mechanism end-to-end + the consumer-side `comm -23` equality-join recipe for diffing source-only vs project-root SBOMs.
+
+### Validation across the release
+
+- Workspace-wide unit + integration tests: 1790+ tests pass on `./scripts/pre-pr.sh`.
+- 33 byte-identity goldens pass byte-identically pre/post #309 + #310 + #311 — SC-003 contract honored across the entire release window.
+- No new Cargo dependencies between alpha.44 and alpha.45.
+
 ## [0.1.0-alpha.44] — 2026-06-02
 
 External symbol-fingerprint corpus (milestone 108) — the first milestone since 091 to add a NEW network call to mikebom, deliberately and bounded. mikebom can now identify statically-linked C libraries beyond the bundled 7 (openssl, zlib, libcurl, sqlite, pcre, pcre2, gnutls) by consulting an external corpus pinned at a SHA in the sibling repo [`kusari-sandbox/mikebom-fingerprints`](https://github.com/kusari-sandbox/mikebom-fingerprints). Every component identified via the external path carries a `mikebom:fingerprint-corpus-sha` provenance annotation that consumers can resolve back to the exact fingerprint record. Plus a Mach-O extension to the symbol matcher that closes the macOS gap on the fingerprint path.
