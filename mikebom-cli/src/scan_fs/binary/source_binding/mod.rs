@@ -105,3 +105,92 @@ pub(crate) fn build_attribution_registry(
     let observations = observer.observe(scan_root, source_declarations);
     BuildAttributionRegistry::from_observations(observations)
 }
+
+// ============================================================
+// Architectural extension path (FR-012 forward-compat)
+// ============================================================
+//
+// Future Bazel / Meson observers live as sibling modules in this
+// directory (e.g., `bazel_observer.rs`, `meson_observer.rs`). Each
+// implements the `BuildDirObserver` trait above and returns
+// `Vec<CmakeBuildDirObservation>` (the type name is generic enough
+// to reuse — it could be renamed to `BuildDirObservation` in a
+// follow-on if Bazel-specific fields become necessary). The
+// `BuildAttributionRegistry::from_observations` constructor accepts
+// any observer's output uniformly; the registry's lookup logic is
+// observer-agnostic.
+//
+// To add a Bazel observer:
+//   1. Add `mikebom-cli/src/scan_fs/binary/source_binding/bazel_observer.rs`
+//      with a `BazelExternalRepoObserver` struct implementing
+//      `BuildDirObserver`. Walk `bazel-out/<config>/bin/external/`
+//      for Bazel's external-repo build artifacts.
+//   2. Declare it in `mod.rs` (`pub(crate) mod bazel_observer;`).
+//   3. Extend `build_attribution_registry` to fold its observations
+//      in alongside the cmake observer's output, OR rename the
+//      function to `build_attribution_registry_for(observers: &[...])`
+//      taking a slice of trait objects.
+//
+// No changes to `cmake_observer.rs` or `registry.rs` are required.
+// The `attribution-rules.md` contract (case-insensitive name match
+// + scope-ancestry path-ancestor match) applies uniformly to all
+// observers.
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod tests {
+    use super::*;
+
+    /// US5 / FR-012 — stub Bazel-shaped observer proves the trait
+    /// surface is observer-agnostic. This test would fail to compile
+    /// if `BuildDirObserver` had cmake-specific assumptions baked
+    /// into its method signature.
+    struct StubBazelObserver {
+        canned_observations: Vec<CmakeBuildDirObservation>,
+    }
+
+    impl BuildDirObserver for StubBazelObserver {
+        fn observe(
+            &self,
+            _scan_root: &Path,
+            _source_declarations: &[PackageDbEntry],
+        ) -> Vec<CmakeBuildDirObservation> {
+            self.canned_observations.clone()
+        }
+    }
+
+    #[test]
+    fn stub_bazel_observer_integrates_with_registry_without_modification() {
+        // Construct a stub observation that a hypothetical Bazel
+        // reader might emit — same shape as the cmake observer's
+        // output. Note: `source_mechanism` would be `bazel-http-archive`
+        // for a real Bazel observer; we use `cmake-fetchcontent-git`
+        // here for type compatibility (the registry doesn't validate
+        // the source_mechanism value's per-observer correctness).
+        let stub_observations = vec![CmakeBuildDirObservation {
+            library_name: "zlib".to_string(),
+            source_tier_purl: "pkg:github/madler/zlib@v1.3.1".to_string(),
+            source_mechanism: "bazel-http-archive".to_string(),
+            build_artifact_dir: PathBuf::from(
+                "/tmp/proj/bazel-out/k8-fastbuild/bin/external/zlib",
+            ),
+            cmake_project_build_root: PathBuf::from("/tmp/proj"),
+        }];
+        let observer = StubBazelObserver {
+            canned_observations: stub_observations.clone(),
+        };
+
+        let observations = observer.observe(Path::new("/tmp/proj"), &[]);
+        let registry = BuildAttributionRegistry::from_observations(observations);
+
+        // The registry's lookup logic doesn't care which observer
+        // produced the observation. Bazel-shaped path-ancestor
+        // matching works identically to cmake-shaped matching.
+        let hit = registry.lookup("zlib", Path::new("/tmp/proj/bazel-bin/main"));
+        assert!(
+            hit.is_some(),
+            "registry must accept observations from any BuildDirObserver impl"
+        );
+        assert_eq!(hit.unwrap().source_mechanism, "bazel-http-archive");
+    }
+}

@@ -1224,6 +1224,39 @@ ambiguity edge case at lookup time (GitHub's API resolves the
 prefix to the canonical full SHA before the consumer fetches the
 tarball).
 
+### 11.7 Milestone 109 — source-tier PURL attribution
+
+The `mikebom:fingerprint-corpus-sha` annotation also surfaces on
+components whose PURL was REWRITTEN from the milestone-108 generic
+form (`pkg:generic/zlib`) to a source-tier PURL
+(`pkg:github/madler/zlib@v1.3.1`) by milestone-109's cmake build-
+directory observer. The annotation value space is unchanged
+(12-hex SHA OR `bundled` sentinel); only the carrier component's
+PURL changes.
+
+How to tell whether an emitted component's identity is source-tier
+or binary-tier:
+
+- **Source-tier PURL + `mikebom:source-mechanism = cmake-fetchcontent-git`**
+  (or `cmake-fetchcontent-url`) + `mikebom:fingerprint-corpus-sha`
+  present: this component was DECLARED by the cmake source tree
+  AND OBSERVED in a built binary. The fingerprint corroborated the
+  source-tier identity claim. Consumers can treat this as a high-
+  confidence dep identification (multi-evidence merge).
+- **Source-tier PURL + `mikebom:source-mechanism = cmake-fetchcontent-{git,url}`**
+  but NO `mikebom:fingerprint-corpus-sha`: declared but not linked
+  into any scanned binary (declared-but-unused). Operator might
+  want to investigate dead deps.
+- **Generic PURL `pkg:generic/<library>` + `mikebom:fingerprint-corpus-sha`
+  present**: fingerprint-only identification (no cmake declaration
+  to attribute against). Operator was either scanning a single
+  binary in isolation or the cmake project doesn't use FetchContent.
+
+The 4-step consumer recipe in §11.4 above applies unchanged to
+both PURL forms — the corpus-sha resolution against the sibling
+repo works identically whether the carrier component is source-
+tier or binary-tier.
+
 ---
 
 ## See also

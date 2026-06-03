@@ -796,3 +796,35 @@ The cache-first / fetch-on-miss flow, the
 - [`kusari-sandbox/mikebom-cmake-demo`](https://github.com/kusari-sandbox/mikebom-cmake-demo)
   — runnable cmake + ninja demo that exercises both the source-tree
   reader AND the fingerprint matcher end-to-end.
+
+### Milestone 109 — cross-tier PURL attribution for cmake projects
+
+When mikebom scans a cmake project root with `--fingerprints-corpus`
+(alpha.45+), fingerprint matches in built binaries are attributed to
+the source-tier PURL the cmake reader emitted from
+`FetchContent_Declare` (`pkg:github/madler/zlib@v1.3.1`) instead of
+the milestone-108 generic shadow (`pkg:generic/zlib`). The mechanism:
+
+1. Walk the scan root for cmake project build dirs (`CMakeCache.txt`
+   + `_deps/` co-presence at depth ≤6).
+2. For each cmake `FetchContent_Declare` source declaration that
+   produced a `_deps/<name>-build/` directory, register an
+   attribution observation.
+3. When a fingerprint match's library name (case-insensitive)
+   resolves against the registry AND the matched binary lives under
+   the cmake project's build dir, rewrite the match's PURL to the
+   source-tier value.
+4. The dedup pipeline then merges the source-tier + binary-tier
+   components by shared PURL into ONE final component carrying both
+   sources' evidence (`mikebom:source-mechanism = cmake-fetchcontent-git`
+   AND `mikebom:fingerprint-corpus-sha = <sha>` AND
+   `mikebom:fingerprint-symbols-matched = "10/10"`).
+
+Scope: `FetchContent_Declare` only (git + url forms). `ExternalProject_Add`,
+Bazel, Meson, and hand-written Makefiles are out of scope this
+milestone but the architecture accommodates them as follow-on
+observers feeding the same registry. Operators scanning a SINGLE
+binary (no source tree) or running without `--fingerprints-corpus`
+see milestone-108 behavior unchanged.
+
+Full design + contracts in [`specs/109-binary-source-purl-binding/`](../specs/109-binary-source-purl-binding/).
