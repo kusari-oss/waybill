@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kusari-oss.github.io/mikebom/reference/corpus-record-v2.schema.json",
+  "title": "mikebom fingerprint corpus record (v2)",
+  "description": "A single (library, version-range, ABI) tuple description with multi-indicator match specifications and provenance. Consumed by mikebom-cli's fingerprint matcher. See milestone 110 spec.md + data-model.md for the design intent.",
+  "type": "object",
+  "required": ["id", "purl", "version_range", "indicators", "provenance", "schema_version"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_.-]{1,127}$",
+      "description": "Stable identifier within the corpus. Used as the cache key and the SBOM annotation pointer."
+    },
+    "purl": {
+      "type": "string",
+      "pattern": "^pkg:[a-z0-9.-]+/.+",
+      "description": "Canonical PURL for this library identity. MUST conform to the PURL specification per Constitution Principle V."
+    },
+    "purl_aliases": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^pkg:[a-z0-9.-]+/.+" },
+      "uniqueItems": true,
+      "description": "Alternative ecosystem-specific PURLs for the same identity (e.g., upstream + deb + vcpkg)."
+    },
+    "cpe_candidates": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^cpe:2\\.3:[aoh]:.*" },
+      "uniqueItems": true,
+      "description": "CPE 2.3 candidates for NVD lookups."
+    },
+    "version_range": {
+      "type": "string",
+      "description": "SemVer range string (e.g., '>=3.1.4,<3.2.0') OR the literal 'unknown' for libraries without semver discipline."
+    },
+    "architectures": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9_]+-[a-z]+(-[a-z]+)*$" },
+      "uniqueItems": true,
+      "description": "Target architecture triples (e.g., 'x86_64-linux-gnu'). Empty array means any architecture."
+    },
+    "abi": {
+      "type": ["string", "null"],
+      "description": "ABI marker (e.g., 'glibc-2.31+'). Free-form; human triage only."
+    },
+    "indicators": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "At least one indicator block required. Keys are IndicatorKind enum values; values are typed IndicatorSpec objects.",
+      "patternProperties": {
+        "^(exported_symbols|version_string|build_id|macho_uuid|pe_pdb|abi_marker)$": {
+          "oneOf": [
+            { "$ref": "#/$defs/SymbolSetSpec" },
+            { "$ref": "#/$defs/RodataLiteralSpec" },
+            { "$ref": "#/$defs/ExactHashSpec" }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "collision": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "look_alikes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["purl", "shared_indicators"],
+            "additionalProperties": false,
+            "properties": {
+              "purl": { "type": "string", "pattern": "^pkg:[a-z0-9.-]+/.+" },
+              "shared_indicators": {
+                "type": "array",
+                "items": { "enum": ["exported_symbols", "version_string", "build_id", "macho_uuid", "pe_pdb", "abi_marker"] },
+                "uniqueItems": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["tier", "extracted_from", "extracted_from_sha256", "extraction_toolchain", "extracted_at"],
+      "additionalProperties": false,
+      "properties": {
+        "tier": { "enum": ["automated-ingestion", "reproducible-build", "manual-curation"] },
+        "extracted_from": { "type": "string", "format": "uri" },
+        "extracted_from_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "extraction_toolchain": { "type": "string" },
+        "extracted_at": { "type": "string", "format": "date-time" },
+        "verified": { "type": "boolean", "default": true }
+      }
+    },
+    "schema_version": { "const": 2 }
+  },
+  "$defs": {
+    "SymbolSetSpec": {
+      "type": "object",
+      "required": ["type", "required", "min_match", "confidence_baseline"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "symbol-set" },
+        "required": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+        "min_match": { "type": "integer", "minimum": 1 },
+        "confidence_baseline": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "suppress_when_self_identity_matches": { "type": "boolean", "default": false }
+      }
+    },
+    "RodataLiteralSpec": {
+      "type": "object",
+      "required": ["type", "patterns", "confidence_baseline"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "rodata-literal" },
+        "patterns": { "type": "array", "items": { "type": "string" }, "minItems": 1, "uniqueItems": true },
+        "confidence_baseline": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "suppress_when_self_identity_matches": { "type": "boolean", "default": false }
+      }
+    },
+    "ExactHashSpec": {
+      "type": "object",
+      "required": ["type", "sha_or_uuid_set", "confidence_baseline"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "exact-hash" },
+        "sha_or_uuid_set": { "type": "array", "items": { "type": "string", "pattern": "^[a-f0-9]+$" }, "minItems": 1, "uniqueItems": true },
+        "confidence_baseline": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "suppress_when_self_identity_matches": { "type": "boolean", "default": true }
+      }
+    }
+  }
+}

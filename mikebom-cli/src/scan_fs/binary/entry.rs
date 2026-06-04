@@ -58,10 +58,24 @@ pub(super) fn symbol_match_to_entry(
     // Milestone 108 FR-005: stamp the corpus provenance when present.
     // `None` here means the scan was bundled-only and non-opt-in, so
     // no annotation is emitted (preserves SC-003 byte-identity).
+    //
+    // Milestone 110 FR-017 (US3 regression-gate): when corpus-sha is
+    // emitted (i.e., operator is opted in to fingerprints), ALSO emit
+    // the numeric fused-confidence value as `mikebom:fingerprint-
+    // confidence`. Distinct from the existing `mikebom:confidence`
+    // enum-string carrier (C16, value=`"heuristic"`) so no collision.
+    // v1 records all map to the 0.70 baseline per the design doc §7
+    // "threshold-met exported symbols" entry + the 2026-06-03
+    // /speckit-clarify Q3 mapping. v2 records (Phase 4) will compute
+    // their own values via the fusion rule and stamp that instead.
     if let Some(ref sha) = m.corpus_sha_annotation {
         extra.insert(
             "mikebom:fingerprint-corpus-sha".to_string(),
             serde_json::Value::String(sha.clone()),
+        );
+        extra.insert(
+            "mikebom:fingerprint-confidence".to_string(),
+            serde_json::Value::String("0.70".to_string()),
         );
     }
     // Milestone 108 FR-013: when the same target binary triggered

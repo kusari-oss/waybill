@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-06-02
+Auto-generated from all feature plans. Last updated: 2026-06-03
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -113,6 +113,8 @@ Auto-generated from all feature plans. Last updated: 2026-06-02
 - Per-host cache at `~/.cache/mikebom/fingerprints/<sha>/` (same pattern as milestone 090's `~/.cache/mikebom/fixtures/<sha>/`). On-disk layout mirrors the sibling repo's `corpus/` directory verbatim for transparency + Docker-COPY-friendliness. No databases, no daemons. (108-fingerprint-corpus)
 - Rust stable (workspace toolchain inherited from milestones 001–108; no nightly required for this user-space-only attribution layer). + existing only — `std::fs::canonicalize` / `std::fs::read_dir` (build-dir walking), the milestone-102/103 cmake reader's existing parsed-declaration output (`PackageDbEntry` instances tagged with `mikebom:source-mechanism = cmake-fetchcontent-{git,url}`), and the milestone-099/108 fingerprint matcher's existing `SymbolFingerprintMatch` records. The milestone-105 dedup pipeline (`SourceMechanism` enum + `mikebom:also-detected-via` collision handling) merges the cmake source-tier component with the post-attribution binary-tier component into ONE final component via shared PURL. (109-binary-source-purl-binding)
 - N/A — all attribution state is in-process for the duration of a single scan; mirrors every milestone since 002. (109-binary-source-purl-binding)
+- Rust stable (workspace toolchain inherited from milestones 001–109; no nightly required for this user-space-only work). (110-pluggable-corpus-v2)
+- Per-host cache at `~/.cache/mikebom/fingerprints/<source-id>/<pinned-sha>/` where `<source-id>` is a stable hash of the source URL (so multiple sources coexist without filename collisions) and `<pinned-sha>` is the archive's content SHA (matching the milestone-090 + milestone-108 pattern). The 24-hour TTL is implemented as a `last_used.touch` sidecar file whose mtime is checked at scan startup; expiry triggers re-fetch but does NOT delete the cache directory (re-fetch may write the same SHA back, in which case the existing dir is reused). (110-pluggable-corpus-v2)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -175,9 +177,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 110-pluggable-corpus-v2: Added Rust stable (workspace toolchain inherited from milestones 001–109; no nightly required for this user-space-only work).
 - 109-binary-source-purl-binding: Added Rust stable (workspace toolchain inherited from milestones 001–108; no nightly required for this user-space-only attribution layer). + existing only — `std::fs::canonicalize` / `std::fs::read_dir` (build-dir walking), the milestone-102/103 cmake reader's existing parsed-declaration output (`PackageDbEntry` instances tagged with `mikebom:source-mechanism = cmake-fetchcontent-{git,url}`), and the milestone-099/108 fingerprint matcher's existing `SymbolFingerprintMatch` records. The milestone-105 dedup pipeline (`SourceMechanism` enum + `mikebom:also-detected-via` collision handling) merges the cmake source-tier component with the post-attribution binary-tier component into ONE final component via shared PURL.
 - 108-fingerprint-corpus: Added Rust stable (workspace toolchain inherited from milestones 001–107; no nightly required for this user-space-only work). + Existing only — no new Cargo additions. `reqwest = "0.12"` (workspace; `rustls-tls` + `blocking` features already enabled; used for the corpus tarball fetch), `tar = "0.4"` (workspace; reused from milestone-002 layer extraction), `flate2` (workspace; gzip), `serde`/`serde_json` (corpus record (de)serialization), `sha2` + `data-encoding` (cache directory key validation), `tracing`, `anyhow`, `thiserror`, `clap` (the new flags via derive). Build-time embed of the corpus SHA uses `env!()` driven by a `build.rs`-set env var sourced from a per-crate `Cargo.toml` `[package.metadata.fingerprints]` entry — no new build dependencies.
-- 107-yocto-recipe-reader: Added Rust stable (workspace toolchain inherited from milestones 001–106; no nightly required for this user-space-only work). + Existing only — no new Cargo additions. The opkg DB stanza format reuses the existing dpkg parser (refactored into a shared helper); the `<image>.manifest` parser is line-oriented (`std::str::Lines`); the `.bb` recipe walker uses `walkdir` (workspace dep) + `regex` (workspace dep). `tracing`, `anyhow`, `thiserror`, `serde_json` pervasive in the workspace and unchanged.
 
 
 <!-- MANUAL ADDITIONS START -->

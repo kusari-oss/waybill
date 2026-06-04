@@ -531,10 +531,20 @@ pub fn read(
                     // along on the corroboration path so the SBOM still
                     // attributes the symbol-fingerprint signal to a
                     // specific corpus when the operator is opted in.
+                    //
+                    // Milestone 110 FR-017 (US3): when corpus-sha is
+                    // emitted, ALSO emit the numeric fused-confidence
+                    // value as `mikebom:fingerprint-confidence`. Distinct
+                    // from the existing C16 `mikebom:confidence` enum
+                    // (value=`"heuristic"`) so no carrier collision.
                     if let Some(ref sha) = m.corpus_sha_annotation {
                         existing.extra_annotations.insert(
                             "mikebom:fingerprint-corpus-sha".to_string(),
                             serde_json::Value::String(sha.clone()),
+                        );
+                        existing.extra_annotations.insert(
+                            "mikebom:fingerprint-confidence".to_string(),
+                            serde_json::Value::String("0.70".to_string()),
                         );
                     }
                     continue;

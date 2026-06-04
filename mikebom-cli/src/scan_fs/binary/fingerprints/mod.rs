@@ -21,9 +21,13 @@
 //! See `specs/108-fingerprint-corpus/`.
 
 pub(crate) mod cache;
+pub(crate) mod confidence;
 pub(crate) mod fetch;
 pub(crate) mod loader;
+pub(crate) mod matcher;
 pub(crate) mod record;
+pub(crate) mod self_identity;
+pub(crate) mod source_config;
 pub(crate) mod source_sha;
 
 use std::sync::OnceLock;
