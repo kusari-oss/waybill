@@ -539,6 +539,10 @@ spdx3_anno!(c57_spdx3, "mikebom:build-reference",          component);
 // 12-hex SHA prefix OR literal `bundled` sentinel.
 spdx3_anno!(c58_spdx3, "mikebom:fingerprint-corpus-sha",   component);
 
+// C59 — `mikebom:fingerprint-confidence` (milestone 110 FR-017).
+// Numeric "X.XX" fused-confidence string.
+spdx3_anno!(c59_spdx3, "mikebom:fingerprint-confidence",   component);
+
 // C47 — document-level user-defined identifiers (milestone 073).
 // Per `contracts/identifiers-annotation.md` C-1 SPDX 3 and C-2
 // SPDX 3: user-defined identifiers ride `Element.externalIdentifier[]`
