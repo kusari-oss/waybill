@@ -647,6 +647,14 @@ cdx_anno!(c57_cdx, "mikebom:build-reference",           component);
 // property — uses the standard macro.
 cdx_anno!(c58_cdx, "mikebom:fingerprint-corpus-sha",    component);
 
+// C59 — `mikebom:fingerprint-confidence` (milestone 110 FR-017).
+// Numeric fused-confidence value formatted as "X.XX" attached to
+// fingerprint-derived components. Co-gated with C58 on the
+// `--fingerprints-corpus` opt-in. Distinct from the C16
+// `mikebom:confidence` enum-string carrier (value="heuristic") so
+// no value-space collision. Simple property — uses the standard macro.
+cdx_anno!(c59_cdx, "mikebom:fingerprint-confidence",    component);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================

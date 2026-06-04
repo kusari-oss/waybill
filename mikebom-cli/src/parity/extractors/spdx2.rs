@@ -468,6 +468,11 @@ spdx23_anno!(c57_spdx23, "mikebom:build-reference",          component);
 // 12-hex SHA prefix OR literal `bundled` sentinel — simple property.
 spdx23_anno!(c58_spdx23, "mikebom:fingerprint-corpus-sha",   component);
 
+// C59 — `mikebom:fingerprint-confidence` (milestone 110 FR-017).
+// Numeric "X.XX" fused-confidence string — simple property.
+// Co-gated with C58; preserves SC-003 byte-identity for non-opt-in.
+spdx23_anno!(c59_spdx23, "mikebom:fingerprint-confidence",   component);
+
 // ============================================================
 // Sections D-G — custom SPDX 2.3 extractors
 // ============================================================
