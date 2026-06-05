@@ -43,7 +43,7 @@ mod scan;
 use discover::discover_binaries;
 use entry::{
     cargo_auditable_packages_to_entries, make_file_level_component, note_package_to_entry,
-    symbol_match_to_entry, version_match_to_entry,
+    symbol_match_to_entry, v2_match_to_entry, version_match_to_entry,
 };
 use predicates::{
     detect_rootfs_kind, has_rpmdb_at, is_host_system_path, is_os_managed_directory, RootfsKind,
@@ -141,10 +141,29 @@ pub fn read(
     // binary.
     let fingerprints_opts = fingerprints::LoadOptions::from_env();
     let external_corpus = if fingerprints_opts.external_enabled {
-        Some(fingerprints::load_corpus(fingerprints_opts))
+        Some(fingerprints::load_corpus(fingerprints_opts.clone()))
     } else {
         None
     };
+
+    // Milestone 110 Phase 4 Slice B-2 — load v2 records from the same
+    // per-SHA cache directory the v1 path uses. Coexists with the v1
+    // corpus: a single cache directory MAY contain a mix of v1 and v2
+    // records (peek-at-schema_version dispatch lives in loader.rs).
+    // When no v2 records are present (the current milestone-108 state),
+    // this returns an empty Vec and the v2 matcher path is a no-op.
+    let external_v2_records: Vec<fingerprints::record::CorpusRecordV2> =
+        if external_corpus.is_some() {
+            let sha = fingerprints_opts
+                .sha_override
+                .unwrap_or_else(fingerprints::source_sha::CorpusSha::build_time_embedded);
+            fingerprints::loader::load_v2_records_from_cache(&sha).unwrap_or_default()
+        } else {
+            Vec::new()
+        };
+    let v2_source_id = fingerprints::source_config::CorpusSourceId::from_raw(
+        fingerprints::source_config::CorpusSourceId::MILESTONE_108_DEFAULT.to_string(),
+    );
 
     // Milestone 109 — build the source-tier attribution registry exactly
     // once per scan when the operator opted in via `--fingerprints-corpus`.
@@ -554,6 +573,44 @@ pub fn read(
                     by_library.insert(library_key, entry);
                 }
             }
+
+            // Milestone 110 Phase 4 Slice B-2 — v2 matcher pass.
+            //
+            // After the v1 path has settled, run the v2 matcher against
+            // any v2 records the cache loaded. v2 records carry typed
+            // multi-indicator specs + canonical (often versioned) PURLs;
+            // each non-suppressed match becomes a PackageDbEntry via
+            // entry::v2_match_to_entry.
+            //
+            // CRITICAL ordering: v2 results are merged AFTER v1 + only
+            // for libraries the v1 path didn't already cover (the
+            // `entry()`-vacant gate below). This preserves
+            // milestone-108 byte-identity for the 33 existing
+            // byte-identity goldens — a v2 record that happens to
+            // share a library name with a v1 record does NOT override
+            // the v1 emission. Cross-tier collision handling +
+            // mikebom:also-detected-via cross-references ship in a
+            // follow-on slice (Phase 6 / US4).
+            if !external_v2_records.is_empty() {
+                let artifact = fingerprints::v2_bridge::binary_artifact_from_scan(
+                    &scan.symbol_names,
+                    &scan.string_region,
+                    scan.build_id.as_deref(),
+                    scan.macho_uuid.as_deref(),
+                    scan.pe_pdb_id.as_deref(),
+                );
+                let v2_results = fingerprints::matcher::match_binary(
+                    &artifact,
+                    &external_v2_records,
+                    None, // self-identity ladder lands Phase 6.
+                    &v2_source_id,
+                );
+                for r in v2_results {
+                    let key = r.purl.name().to_lowercase();
+                    by_library.entry(key).or_insert_with(|| v2_match_to_entry(&r, &path));
+                }
+            }
+
             // Deterministic order: sort by PURL string so cross-run
             // golden bytes stay stable.
             let mut new_entries: Vec<PackageDbEntry> =

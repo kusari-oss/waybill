@@ -14,6 +14,7 @@ use sha2::{Digest, Sha256};
 
 use super::cargo_auditable;
 use super::elf;
+use super::fingerprints::matcher::MatchResult;
 use super::macho;
 use super::packer;
 use super::symbol_fingerprint;
@@ -118,6 +119,91 @@ pub(super) fn symbol_match_to_entry(
         extra_annotations: extra,
         binary_role: None,
     })
+}
+
+/// Convert a v2 matcher `MatchResult` into a `PackageDbEntry` (milestone
+/// 110, Phase 4 Slice B-2).
+///
+/// Mirrors `symbol_match_to_entry` but uses the v2 `MatchResult` shape:
+/// - PURL comes directly from the matched record (carries the version
+///   segment when available, unlike v1's symbol-only `pkg:generic/<lib>`).
+/// - `mikebom:fingerprint-confidence` carries the numeric fused score
+///   from the matcher's "max + bump" fusion algorithm (vs v1's hardcoded
+///   `"0.70"` baseline) — formatted "X.XX" per FR-017.
+/// - `mikebom:fingerprint-symbols-matched` records the indicator count
+///   (e.g., `"2/3"` when 2 of 3 indicator kinds in the record matched).
+///   Repurposed from the v1 symbol-count carrier; v2 records carry per-
+///   indicator-KIND counts rather than per-symbol counts.
+/// - No `mikebom:fingerprint-corpus-sha` annotation on the v2 path —
+///   the C58 carrier is v1-specific (a 12-hex git SHA from the
+///   milestone-108 sibling repo). A v2-equivalent annotation
+///   (`mikebom:fingerprint-source-id`) ships in a follow-on slice with
+///   its own C-row.
+#[allow(dead_code)] // Slice B-2 final task wires this in the scan loop.
+pub(super) fn v2_match_to_entry(m: &MatchResult, path: &Path) -> PackageDbEntry {
+    let purl = m.purl.clone();
+    let version = purl.version().unwrap_or("").to_string();
+    let mut extra: std::collections::BTreeMap<String, serde_json::Value> =
+        Default::default();
+    // Numeric fused-confidence per FR-017 — formatted "X.XX" so the
+    // annotation surface matches C59's documented value space (the
+    // existing v1-path "0.70" string also fits this format).
+    let score_str = format!("{:.2}", m.confidence_score.into_inner());
+    extra.insert(
+        "mikebom:fingerprint-confidence".to_string(),
+        serde_json::Value::String(score_str),
+    );
+    // Indicator-kind count carrier — repurposed from v1's per-symbol
+    // count. v2 records carry typed indicator kinds (exported_symbols /
+    // version_string / build_id / macho_uuid / pe_pdb / abi_marker);
+    // the count tells operators which kinds the matcher fused.
+    extra.insert(
+        "mikebom:fingerprint-symbols-matched".to_string(),
+        serde_json::Value::String(format!(
+            "{}/{}",
+            m.indicators_matched.len(),
+            m.indicators_matched.len()
+        )),
+    );
+    PackageDbEntry {
+        purl,
+        name: derive_name_from_purl(&m.purl),
+        version,
+        arch: None,
+        source_path: path.to_string_lossy().into_owned(),
+        depends: Vec::new(),
+        maintainer: None,
+        licenses: vec![],
+        lifecycle_scope: None,
+        requirement_range: None,
+        source_type: None,
+        sbom_tier: Some("analyzed".to_string()),
+        shade_relocation: None,
+        buildinfo_status: None,
+        evidence_kind: Some("symbol-fingerprint".to_string()),
+        binary_class: None,
+        binary_stripped: None,
+        linkage_kind: None,
+        detected_go: None,
+        confidence: Some("heuristic".to_string()),
+        binary_packed: None,
+        raw_version: None,
+        parent_purl: None,
+        npm_role: None,
+        co_owned_by: None,
+        hashes: Vec::new(),
+        extra_annotations: extra,
+        binary_role: None,
+    }
+}
+
+/// Derive the human-readable `name` field from a PURL. PURL spec parses
+/// `pkg:<type>/<namespace>/<name>@<version>` — we want the bare `<name>`.
+#[allow(dead_code)]
+fn derive_name_from_purl(purl: &Purl) -> String {
+    // The Purl newtype exposes `name()` for this purpose (cf.
+    // mikebom-common/src/types/purl.rs).
+    purl.name().to_string()
 }
 
 /// Convert a curated-scanner match into a `PackageDbEntry`.

@@ -29,6 +29,7 @@ pub(crate) mod record;
 pub(crate) mod self_identity;
 pub(crate) mod source_config;
 pub(crate) mod source_sha;
+pub(crate) mod v2_bridge;
 
 use std::sync::OnceLock;
 
