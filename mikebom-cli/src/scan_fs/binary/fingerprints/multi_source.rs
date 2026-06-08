@@ -37,14 +37,35 @@ use super::record::CorpusRecordV2;
 use super::source_config::{CorpusSource, CorpusSourceId};
 use super::source_sha::CorpusSha;
 
-/// Outcome of `fetch_and_load_multi_source`. Records carry the merged
-/// v2 records from every successful source; `per_source` lets callers
-/// surface diagnostics for the partial-failure case.
+/// Outcome of `fetch_and_load_multi_source`. Each `SourceLoadStatus`
+/// carries the records that came from its source so the matcher can
+/// stamp the right `source_id` onto each `MatchResult`. Use
+/// `merged_records()` for callers that just want the flat union.
 #[allow(dead_code)]
 #[derive(Debug)]
 pub(crate) struct MultiSourceLoadResult {
-    pub records: Vec<CorpusRecordV2>,
     pub per_source: Vec<SourceLoadStatus>,
+}
+
+#[allow(dead_code)]
+impl MultiSourceLoadResult {
+    /// Total record count across all successful sources.
+    pub(crate) fn total_record_count(&self) -> usize {
+        self.per_source.iter().map(|s| s.records.len()).sum()
+    }
+
+    /// Iterator over `(source_id, records)` pairs for sources that
+    /// contributed at least one record. The matcher loop dispatches
+    /// per-pair so each match's `source_id` reflects where its record
+    /// came from.
+    pub(crate) fn record_groups(
+        &self,
+    ) -> impl Iterator<Item = (&CorpusSourceId, &[CorpusRecordV2])> {
+        self.per_source
+            .iter()
+            .filter(|s| !s.records.is_empty())
+            .map(|s| (&s.source_id, s.records.as_slice()))
+    }
 }
 
 #[allow(dead_code)]
@@ -53,6 +74,10 @@ pub(crate) struct SourceLoadStatus {
     pub source_id: CorpusSourceId,
     pub url: String,
     pub outcome: SourceOutcome,
+    /// Records loaded from this source. Empty for failed sources +
+    /// for sources that fetched OK but contained zero v2 records (the
+    /// v1-only state, common for the milestone-108 default today).
+    pub records: Vec<CorpusRecordV2>,
 }
 
 #[allow(dead_code)]
@@ -116,7 +141,6 @@ pub(crate) fn fetch_and_load_multi_source(
     offline: bool,
     sha_override: Option<CorpusSha>,
 ) -> MultiSourceLoadResult {
-    let mut records: Vec<CorpusRecordV2> = Vec::new();
     let mut per_source: Vec<SourceLoadStatus> = Vec::with_capacity(sources.len());
     for source in sources {
         let outcome = if is_milestone_108_default(source) {
@@ -124,7 +148,7 @@ pub(crate) fn fetch_and_load_multi_source(
         } else {
             fetch_and_load_arbitrary(source, offline)
         };
-        match &outcome {
+        let records = match &outcome {
             SourceOutcome::Loaded { content_sha, record_count } => {
                 tracing::info!(
                     source_url = %source.url,
@@ -133,7 +157,6 @@ pub(crate) fn fetch_and_load_multi_source(
                     record_count,
                     "fingerprint corpus source loaded",
                 );
-                // Load records and merge.
                 let recs = if is_milestone_108_default(source) {
                     loader::load_v2_records_from_cache(content_sha)
                 } else {
@@ -142,9 +165,7 @@ pub(crate) fn fetch_and_load_multi_source(
                         content_sha,
                     )
                 };
-                if let Ok(mut recs) = recs {
-                    records.append(&mut recs);
-                }
+                recs.unwrap_or_default()
             }
             SourceOutcome::SkippedOffline => {
                 tracing::warn!(
@@ -152,6 +173,7 @@ pub(crate) fn fetch_and_load_multi_source(
                     "fingerprint corpus source skipped (offline mode + no usable cache); \
                      other sources unaffected. Run without --offline to fetch this source.",
                 );
+                Vec::new()
             }
             SourceOutcome::Failed { category, message } => {
                 tracing::warn!(
@@ -161,15 +183,17 @@ pub(crate) fn fetch_and_load_multi_source(
                     "fingerprint corpus source failed; skipping this source for this scan. \
                      Other sources unaffected.",
                 );
+                Vec::new()
             }
-        }
+        };
         per_source.push(SourceLoadStatus {
             source_id: source.source_id.clone(),
             url: source.url.clone(),
             outcome,
+            records,
         });
     }
-    MultiSourceLoadResult { records, per_source }
+    MultiSourceLoadResult { per_source }
 }
 
 fn is_milestone_108_default(source: &CorpusSource) -> bool {
@@ -454,11 +478,19 @@ mod tests {
             fetch_and_load_multi_source(&[source_a, source_b], false, None);
 
         // Both sources contributed records.
-        assert_eq!(result.records.len(), 2, "expected one record per source");
-        let mut ids: Vec<String> = result.records.iter().map(|r| r.id.clone()).collect();
+        assert_eq!(
+            result.total_record_count(),
+            2,
+            "expected one record per source"
+        );
+        let mut ids: Vec<String> = result
+            .per_source
+            .iter()
+            .flat_map(|s| s.records.iter().map(|r| r.id.clone()))
+            .collect();
         ids.sort();
         assert_eq!(ids, vec!["liba-1.0".to_string(), "libb-1.0".to_string()]);
-        // Per-source status: both Loaded.
+        // Per-source view: each Loaded with exactly its own record.
         assert_eq!(result.per_source.len(), 2);
         for s in &result.per_source {
             assert!(
@@ -466,7 +498,12 @@ mod tests {
                 "expected Loaded with 1 record; got {:?}",
                 s.outcome
             );
+            assert_eq!(s.records.len(), 1);
         }
+        // The `record_groups` iterator visits each (source_id, records)
+        // pair exactly once for the matcher loop.
+        let groups: Vec<_> = result.record_groups().collect();
+        assert_eq!(groups.len(), 2);
 
         unsafe {
             std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
@@ -505,12 +542,15 @@ mod tests {
         let result = fetch_and_load_multi_source(&[good, bad], false, None);
 
         // Good source still loaded; bad source recorded as Failed.
-        assert_eq!(result.records.len(), 1);
-        assert_eq!(result.records[0].id, "libgood-1.0");
+        assert_eq!(result.total_record_count(), 1);
+        assert_eq!(result.per_source[0].records.len(), 1);
+        assert_eq!(result.per_source[0].records[0].id, "libgood-1.0");
         assert!(matches!(
             result.per_source[0].outcome,
             SourceOutcome::Loaded { .. }
         ));
+        // Failed source has zero records.
+        assert!(result.per_source[1].records.is_empty());
         match &result.per_source[1].outcome {
             SourceOutcome::Failed { category, .. } => {
                 assert_eq!(*category, SourceFailureCategory::NetworkUnreachable);
