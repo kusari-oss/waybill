@@ -146,24 +146,38 @@ pub fn read(
         None
     };
 
-    // Milestone 110 Phase 4 Slice B-2 — load v2 records from the same
-    // per-SHA cache directory the v1 path uses. Coexists with the v1
-    // corpus: a single cache directory MAY contain a mix of v1 and v2
-    // records (peek-at-schema_version dispatch lives in loader.rs).
-    // When no v2 records are present (the current milestone-108 state),
-    // this returns an empty Vec and the v2 matcher path is a no-op.
-    let external_v2_records: Vec<fingerprints::record::CorpusRecordV2> =
+    // Milestone 110 Phase 5-Slim PR 3 — dispatch v2 record loading
+    // through the multi-source orchestrator. Behavior matrix:
+    //
+    //   - No `--fingerprints-source` configured: orchestrator runs
+    //     with `[milestone_108_default]` as the only source. This is
+    //     functionally identical to the milestone-108 single-source
+    //     path (cache-hit short-circuits the re-fetch); byte-identity
+    //     goldens are preserved.
+    //   - One or more `--fingerprints-source` configured: orchestrator
+    //     fetches each source in turn (default + extras, minus the
+    //     default if `--fingerprints-source-no-default` is set),
+    //     keeps records grouped per source so the matcher stamps the
+    //     right `source_id` on each `MatchResult`.
+    //
+    // FR-007 / FR-008 / FR-012a remain deferred per the slim slice.
+    let v2_records_by_source: Vec<(fingerprints::source_config::CorpusSourceId, Vec<fingerprints::record::CorpusRecordV2>)> =
         if external_corpus.is_some() {
-            let sha = fingerprints_opts
-                .sha_override
-                .unwrap_or_else(fingerprints::source_sha::CorpusSha::build_time_embedded);
-            fingerprints::loader::load_v2_records_from_cache(&sha).unwrap_or_default()
+            let sources = fingerprints_opts.sources.materialize();
+            let result = fingerprints::multi_source::fetch_and_load_multi_source(
+                &sources,
+                fingerprints_opts.offline,
+                fingerprints_opts.sha_override,
+            );
+            result
+                .per_source
+                .into_iter()
+                .filter(|s| !s.records.is_empty())
+                .map(|s| (s.source_id, s.records))
+                .collect()
         } else {
             Vec::new()
         };
-    let v2_source_id = fingerprints::source_config::CorpusSourceId::from_raw(
-        fingerprints::source_config::CorpusSourceId::MILESTONE_108_DEFAULT.to_string(),
-    );
 
     // Milestone 109 — build the source-tier attribution registry exactly
     // once per scan when the operator opted in via `--fingerprints-corpus`.
@@ -591,7 +605,13 @@ pub fn read(
             // the v1 emission. Cross-tier collision handling +
             // mikebom:also-detected-via cross-references ship in a
             // follow-on slice (Phase 6 / US4).
-            if !external_v2_records.is_empty() {
+            // Milestone 110 Phase 5-Slim PR 3 — dispatch the matcher
+            // per source so each `MatchResult` carries the correct
+            // `source_id` for downstream annotation emission. When
+            // no extras are configured this loop runs once with the
+            // milestone-108 default's records, preserving the existing
+            // single-source behavior.
+            if !v2_records_by_source.is_empty() {
                 let artifact = fingerprints::v2_bridge::binary_artifact_from_scan(
                     &scan.symbol_names,
                     &scan.string_region,
@@ -599,15 +619,19 @@ pub fn read(
                     scan.macho_uuid.as_deref(),
                     scan.pe_pdb_id.as_deref(),
                 );
-                let v2_results = fingerprints::matcher::match_binary(
-                    &artifact,
-                    &external_v2_records,
-                    None, // self-identity ladder lands Phase 6.
-                    &v2_source_id,
-                );
-                for r in v2_results {
-                    let key = r.purl.name().to_lowercase();
-                    by_library.entry(key).or_insert_with(|| v2_match_to_entry(&r, &path));
+                for (source_id, records) in &v2_records_by_source {
+                    let v2_results = fingerprints::matcher::match_binary(
+                        &artifact,
+                        records,
+                        None, // self-identity ladder lands Phase 6.
+                        source_id,
+                    );
+                    for r in v2_results {
+                        let key = r.purl.name().to_lowercase();
+                        by_library
+                            .entry(key)
+                            .or_insert_with(|| v2_match_to_entry(&r, &path));
+                    }
                 }
             }
 
