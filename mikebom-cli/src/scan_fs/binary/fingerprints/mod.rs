@@ -37,6 +37,7 @@ pub(crate) use record::FingerprintRecord;
 pub(crate) use source_sha::CorpusSha;
 
 use loader::LoaderError;
+use source_config::Sources;
 
 /// Provenance tag for the corpus that produced a match. Surfaces as
 /// the value of the `mikebom:fingerprint-corpus-sha` SBOM annotation
@@ -100,6 +101,14 @@ pub(crate) struct LoadOptions {
     /// cache lookup and any cache-miss fetch. The SBOM annotation
     /// reflects the override.
     pub sha_override: Option<CorpusSha>,
+    /// Milestone 110 Phase 5-Slim — multi-source configuration
+    /// materialized from `MIKEBOM_FINGERPRINTS_SOURCES` and
+    /// `MIKEBOM_FINGERPRINTS_NO_DEFAULT`. PR-1 of the Phase 5-Slim
+    /// slice parses this into the struct but does not yet fetch
+    /// extras — those land in PR-2. `load_corpus` logs the parsed
+    /// extras so operators can confirm their configuration is being
+    /// picked up.
+    pub sources: Sources,
 }
 
 impl LoadOptions {
@@ -130,6 +139,7 @@ impl LoadOptions {
             external_enabled: env_flag("MIKEBOM_FINGERPRINTS_CORPUS"),
             offline: env_flag("MIKEBOM_OFFLINE"),
             sha_override,
+            sources: Sources::from_env(),
         }
     }
 }
@@ -139,6 +149,25 @@ fn env_flag(name: &str) -> bool {
         Some(v) => v == "1" || v == "true",
         None => false,
     }
+}
+
+/// PR-1 informational log: list the parsed source configuration so
+/// operators can confirm CLI-flag / env-var propagation is correct.
+/// Emits at most one line per scan invocation. Behavior contract:
+/// extras logged here are NOT yet fetched — that wiring lands in PR-2.
+fn log_configured_sources(sources: &Sources) {
+    if sources.extras.is_empty() && !sources.no_default {
+        // OSS default — nothing to surface.
+        return;
+    }
+    let extra_urls: Vec<&str> = sources.extras.iter().map(|s| s.url.as_str()).collect();
+    tracing::info!(
+        no_default = sources.no_default,
+        extra_source_count = sources.extras.len(),
+        extra_sources = ?extra_urls,
+        "fingerprint corpus: multi-source configuration parsed; \
+         Phase 5-Slim PR-1 logs only — extras will be fetched starting in PR-2",
+    );
 }
 
 /// Return the bundled in-source 7-library corpus. Memoized via
@@ -176,6 +205,15 @@ pub(crate) fn load_corpus(opts: LoadOptions) -> FingerprintCorpus {
     if !opts.external_enabled {
         return load_bundled().clone();
     }
+    // Milestone 110 Phase 5-Slim (PR-1): surface the parsed multi-
+    // source configuration via a single info log so operators can
+    // confirm `--fingerprints-source` and `MIKEBOM_FINGERPRINTS_SOURCES`
+    // are being picked up. The extras are NOT yet fetched in PR-1;
+    // PR-2 wires the per-source fetch + cache layout and PR-3
+    // dispatches to the multi-source orchestrator. The implicit
+    // milestone-108 default continues to drive the single-source
+    // load below.
+    log_configured_sources(&opts.sources);
     // Milestone 108 US5: runtime override (when present) wins over
     // the build-time-embedded SHA. The override flows through to
     // BOTH the cache key AND the fetch URL, so the SBOM annotation
@@ -264,6 +302,7 @@ mod tests {
             external_enabled: false,
             offline: false,
             sha_override: None,
+            sources: Sources::default(),
         });
         assert!(matches!(corpus.source, CorpusSource::Bundled));
         assert_eq!(corpus.source.annotation_value(), "bundled");
@@ -283,6 +322,7 @@ mod tests {
             external_enabled: true,
             offline: true,
             sha_override: None,
+            sources: Sources::default(),
         });
         assert!(matches!(corpus.source, CorpusSource::Bundled));
         unsafe {
@@ -321,6 +361,7 @@ mod tests {
             external_enabled: true,
             offline: true, // No network — proves the cache-lookup path used the override.
             sha_override: Some(override_sha),
+            sources: Sources::default(),
         });
         // The annotation reflects the OVERRIDE — not the embedded SHA.
         assert!(matches!(corpus.source, CorpusSource::Cached { .. }));
@@ -361,6 +402,7 @@ mod tests {
             external_enabled: true,
             offline: true, // Doesn't matter — cache hit short-circuits.
             sha_override: None,
+            sources: Sources::default(),
         });
         assert!(matches!(corpus.source, CorpusSource::Cached { .. }));
         assert_eq!(corpus.records.len(), 1);

@@ -608,6 +608,38 @@ pub struct ScanArgs {
     #[arg(long, env = "MIKEBOM_FINGERPRINTS_CORPUS")]
     pub fingerprints_corpus: bool,
 
+    /// Milestone 110 Phase 5-Slim (FR-006) — declare additional
+    /// fingerprint-corpus sources. Repeatable. Each value is a URL
+    /// pointing to a corpus tarball; the optional `=ENV_VAR` suffix
+    /// for per-source bearer-token auth is parsed but currently
+    /// warned-and-stripped (FR-007 is deferred to a follow-on slice).
+    ///
+    /// Requires `--fingerprints-corpus`. Sources from this flag are
+    /// UNION'd with `MIKEBOM_FINGERPRINTS_SOURCES` and the implicit
+    /// milestone-108 default (unless `--fingerprints-source-no-default`
+    /// is set).
+    ///
+    /// Also settable via `MIKEBOM_FINGERPRINTS_SOURCES` (comma-
+    /// separated).
+    #[arg(
+        long = "fingerprints-source",
+        value_name = "URL",
+        action = clap::ArgAction::Append,
+    )]
+    pub fingerprints_source: Vec<String>,
+
+    /// Milestone 110 Phase 5-Slim (FR-006) — suppress the implicit
+    /// milestone-108 default fingerprint corpus. Use this for air-
+    /// gapped runs that must NOT attempt the public-corpus fetch, or
+    /// when the operator's own mirror is the only desired source.
+    ///
+    /// Also settable via `MIKEBOM_FINGERPRINTS_NO_DEFAULT=1`.
+    #[arg(
+        long = "fingerprints-source-no-default",
+        env = "MIKEBOM_FINGERPRINTS_NO_DEFAULT",
+    )]
+    pub fingerprints_source_no_default: bool,
+
     /// Milestone 108 (US5) — override the build-time-embedded corpus
     /// SHA with a runtime-specified one. Format: 40-char lowercase hex.
     /// Requires `--fingerprints-corpus` (or
@@ -1424,6 +1456,39 @@ pub async fn execute(
         // SAFETY: see comment above — single-threaded.
         unsafe {
             std::env::set_var("MIKEBOM_FINGERPRINTS_CORPUS", "1");
+        }
+    }
+
+    // Milestone 110 Phase 5-Slim (FR-006): re-export the multi-source
+    // declarations to the env vars that the fingerprints subsystem's
+    // `Sources::from_env()` reads. Same pattern as the `--fingerprints-
+    // corpus` and `--fingerprints-rev` re-exports above. When the
+    // operator passed `--fingerprints-source` but not `--fingerprints-
+    // corpus`, the sources are still propagated; the corpus opt-in
+    // gate downstream will short-circuit before any fetch happens, so
+    // the env vars are inert.
+    if !args.fingerprints_source.is_empty() {
+        // SAFETY: env-mutation pattern matches MIKEBOM_FINGERPRINTS_CORPUS
+        // above; called single-threaded before any scan thread spawns.
+        unsafe {
+            std::env::set_var(
+                "MIKEBOM_FINGERPRINTS_SOURCES",
+                args.fingerprints_source.join(","),
+            );
+        }
+        if !args.fingerprints_corpus {
+            tracing::warn!(
+                count = args.fingerprints_source.len(),
+                "--fingerprints-source declared without --fingerprints-corpus; \
+                 the sources are parsed but no corpus loading will occur. \
+                 Add --fingerprints-corpus (or MIKEBOM_FINGERPRINTS_CORPUS=1) to enable.",
+            );
+        }
+    }
+    if args.fingerprints_source_no_default {
+        // SAFETY: see comment above.
+        unsafe {
+            std::env::set_var("MIKEBOM_FINGERPRINTS_NO_DEFAULT", "1");
         }
     }
 
@@ -2601,6 +2666,11 @@ mod tests {
             include_vendored: false,
             // Milestone 108 — default external fingerprint-corpus opt-in OFF.
             fingerprints_corpus: false,
+            // Milestone 110 Phase 5-Slim — defaults for new multi-
+            // source flags keep the test helper's "minimal flags"
+            // contract intact.
+            fingerprints_source: vec![],
+            fingerprints_source_no_default: false,
             // Milestone 108 US5 — default runtime SHA override unset.
             fingerprints_rev: None,
         }
