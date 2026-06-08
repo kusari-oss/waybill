@@ -26,6 +26,7 @@
 
 use std::path::PathBuf;
 
+use super::source_config::CorpusSourceId;
 use super::source_sha::CorpusSha;
 
 const CACHE_ENV_OVERRIDE: &str = "MIKEBOM_FINGERPRINTS_CACHE_DIR";
@@ -68,6 +69,48 @@ pub(crate) fn cache_dir_for_sha(sha: &CorpusSha) -> PathBuf {
 #[allow(dead_code)]
 pub(crate) fn cache_hit(sha: &CorpusSha) -> bool {
     cache_dir_for_sha(sha)
+        .join("corpus")
+        .join("index.json")
+        .is_file()
+}
+
+// =====================================================================
+// Per-source cache layout (milestone 110 Phase 5-Slim PR 2)
+// =====================================================================
+//
+// Milestone-110 sources beyond the milestone-108 default get nested
+// `<source-id>/<content-sha>/corpus/` paths. The milestone-108 default
+// keeps the flat `<content-sha>/corpus/` layout to preserve existing
+// caches — no migration; no re-fetch on upgrade. See the PR-2 commit
+// message for the decision rationale.
+//
+// `<source-id>` comes from `CorpusSourceId::from_url(source.url)`.
+// `<content-sha>` is computed at fetch time over the response body
+// (research R3 + the operator's locked Source-SHA-Model choice).
+// Mixing the two layouts on disk is safe because the per-source prefix
+// (a 16-char BASE32 hash) cannot collide with a 40-hex SHA used by
+// the milestone-108 layout.
+
+/// Cache directory for a per-source content SHA.
+/// Layout: `<cache-root>/<source-id>/<content-sha>/`.
+#[allow(dead_code)]
+pub(crate) fn cache_dir_for_source(
+    source_id: &CorpusSourceId,
+    content_sha: &CorpusSha,
+) -> PathBuf {
+    cache_root()
+        .join(source_id.as_str())
+        .join(content_sha.to_full_hex())
+}
+
+/// True when the per-source cache contains a loadable corpus for the
+/// given source + content SHA combination.
+#[allow(dead_code)]
+pub(crate) fn cache_hit_for_source(
+    source_id: &CorpusSourceId,
+    content_sha: &CorpusSha,
+) -> bool {
+    cache_dir_for_source(source_id, content_sha)
         .join("corpus")
         .join("index.json")
         .is_file()
@@ -184,6 +227,53 @@ mod tests {
         assert_eq!(removed.len(), 2);
         assert!(!tmp.path().join(SAMPLE_SHA).exists());
         assert!(!tmp.path().join(ALT_SHA).exists());
+        unsafe {
+            std::env::remove_var(CACHE_ENV_OVERRIDE);
+        }
+    }
+
+    // ============================================================
+    // Per-source layout tests (milestone 110 Phase 5-Slim PR 2)
+    // ============================================================
+
+    #[test]
+    fn cache_dir_for_source_nests_source_id_then_sha() {
+        let _g = env_lock();
+        let tmp = tempfile::tempdir().unwrap();
+        let path_str = tmp.path().to_string_lossy().into_owned();
+        unsafe {
+            std::env::set_var(CACHE_ENV_OVERRIDE, &path_str);
+        }
+        let source_id = CorpusSourceId::from_url("https://corpus.example/x.tar.gz");
+        let sha = CorpusSha::from_hex(SAMPLE_SHA).unwrap();
+        let dir = cache_dir_for_source(&source_id, &sha);
+        // <root>/<source-id>/<full-sha>/
+        let expected = tmp.path().join(source_id.as_str()).join(SAMPLE_SHA);
+        assert_eq!(dir, expected);
+        unsafe {
+            std::env::remove_var(CACHE_ENV_OVERRIDE);
+        }
+    }
+
+    #[test]
+    fn cache_hit_for_source_requires_index_json() {
+        let _g = env_lock();
+        let tmp = tempfile::tempdir().unwrap();
+        let path_str = tmp.path().to_string_lossy().into_owned();
+        unsafe {
+            std::env::set_var(CACHE_ENV_OVERRIDE, &path_str);
+        }
+        let source_id = CorpusSourceId::from_url("https://corpus.example/x.tar.gz");
+        let sha = CorpusSha::from_hex(SAMPLE_SHA).unwrap();
+        // Missing dir → no hit.
+        assert!(!cache_hit_for_source(&source_id, &sha));
+        // Dir present but no index.json → still no hit.
+        let dir = cache_dir_for_source(&source_id, &sha).join("corpus");
+        std::fs::create_dir_all(&dir).unwrap();
+        assert!(!cache_hit_for_source(&source_id, &sha));
+        // index.json present → hit.
+        std::fs::write(dir.join("index.json"), r#"{"version":1,"entries":[]}"#).unwrap();
+        assert!(cache_hit_for_source(&source_id, &sha));
         unsafe {
             std::env::remove_var(CACHE_ENV_OVERRIDE);
         }

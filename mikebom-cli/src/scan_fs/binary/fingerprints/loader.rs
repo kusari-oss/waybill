@@ -28,6 +28,7 @@ use thiserror::Error;
 
 use super::cache;
 use super::record::{CorpusRecordV2, FingerprintRecord};
+use super::source_config::CorpusSourceId;
 use super::source_sha::CorpusSha;
 
 #[allow(dead_code)]
@@ -156,6 +157,46 @@ pub(crate) fn load_v2_records_from_cache(
     sha: &CorpusSha,
 ) -> Result<Vec<CorpusRecordV2>, LoaderError> {
     let dir = cache::cache_dir_for_sha(sha);
+    let corpus_dir = dir.join("corpus");
+    let index_path = corpus_dir.join("index.json");
+
+    let index_text = std::fs::read_to_string(&index_path).map_err(|_| {
+        LoaderError::CacheNotFound {
+            path: index_path.display().to_string(),
+        }
+    })?;
+
+    let index: CorpusIndex = serde_json::from_str(&index_text).map_err(|e| {
+        LoaderError::CacheCorrupt {
+            path: index_path.display().to_string(),
+            reason: format!("index.json parse failed: {e}"),
+        }
+    })?;
+
+    if index.version != 1 {
+        return Err(LoaderError::CacheCorrupt {
+            path: index_path.display().to_string(),
+            reason: format!("unsupported index version: {}", index.version),
+        });
+    }
+
+    Ok(load_per_library_v2_records(&corpus_dir, &index))
+}
+
+/// Load v2 records from a per-source cache directory (milestone 110
+/// Phase 5-Slim PR 2). Same parsing logic as `load_v2_records_from_cache`
+/// but reads from `<cache-root>/<source-id>/<content-sha>/corpus/`
+/// instead of `<cache-root>/<content-sha>/corpus/`.
+///
+/// Returns an empty Vec for a per-source cache that happens to contain
+/// only v1 records — the multi-source orchestrator (PR-2 multi_source.rs)
+/// treats that as "this source has no v2 contribution" and continues.
+#[allow(dead_code)]
+pub(crate) fn load_v2_records_from_source_cache(
+    source_id: &CorpusSourceId,
+    content_sha: &CorpusSha,
+) -> Result<Vec<CorpusRecordV2>, LoaderError> {
+    let dir = cache::cache_dir_for_source(source_id, content_sha);
     let corpus_dir = dir.join("corpus");
     let index_path = corpus_dir.join("index.json");
 
@@ -575,6 +616,108 @@ mod tests {
         }
         let err = load_v2_records_from_cache(&sha).unwrap_err();
         assert!(matches!(err, LoaderError::CacheNotFound { .. }));
+        unsafe {
+            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+        }
+    }
+
+    // ============================================================
+    // Per-source loader tests (milestone 110 Phase 5-Slim PR 2)
+    // ============================================================
+
+    fn setup_per_source_cache(
+        source_id: &CorpusSourceId,
+        content_sha: &CorpusSha,
+        v2_libs: &[&str],
+    ) -> tempfile::TempDir {
+        let tmp = tempfile::tempdir().unwrap();
+        let corpus_dir = tmp
+            .path()
+            .join(source_id.as_str())
+            .join(content_sha.to_full_hex())
+            .join("corpus");
+        std::fs::create_dir_all(&corpus_dir).unwrap();
+        for lib in v2_libs {
+            write_v2_record(&corpus_dir, &format!("{lib}-1.0"), lib);
+        }
+        write_index(&corpus_dir, v2_libs);
+        tmp
+    }
+
+    #[test]
+    fn per_source_loader_reads_nested_layout() {
+        let _g = env_lock();
+        let source_id = CorpusSourceId::from_url("https://corpus.example/extras.tar.gz");
+        let sha = CorpusSha::from_hex(SAMPLE_SHA).unwrap();
+        let tmp = setup_per_source_cache(&source_id, &sha, &["libfoo", "libbar"]);
+        let path_str = tmp.path().to_string_lossy().into_owned();
+        unsafe {
+            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+        }
+        let records = load_v2_records_from_source_cache(&source_id, &sha).unwrap();
+        assert_eq!(records.len(), 2);
+        let mut ids: Vec<String> = records.iter().map(|r| r.id.clone()).collect();
+        ids.sort();
+        assert_eq!(ids, vec!["libbar-1.0".to_string(), "libfoo-1.0".to_string()]);
+        unsafe {
+            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+        }
+    }
+
+    #[test]
+    fn per_source_loader_returns_not_found_for_missing_layout() {
+        let _g = env_lock();
+        let tmp = tempfile::tempdir().unwrap();
+        let path_str = tmp.path().to_string_lossy().into_owned();
+        unsafe {
+            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+        }
+        let source_id = CorpusSourceId::from_url("https://corpus.example/nope.tar.gz");
+        let sha = CorpusSha::from_hex(SAMPLE_SHA).unwrap();
+        let err = load_v2_records_from_source_cache(&source_id, &sha).unwrap_err();
+        assert!(matches!(err, LoaderError::CacheNotFound { .. }));
+        unsafe {
+            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+        }
+    }
+
+    #[test]
+    fn per_source_and_flat_layouts_coexist() {
+        // The milestone-108 default uses the flat `<sha>/` layout;
+        // arbitrary sources nest under `<source-id>/<sha>/`. Both
+        // must load cleanly from the same cache root in one scan.
+        let _g = env_lock();
+        let tmp = tempfile::tempdir().unwrap();
+        let path_str = tmp.path().to_string_lossy().into_owned();
+        unsafe {
+            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+        }
+        // Flat layout for the milestone-108 default.
+        let default_sha = CorpusSha::from_hex(SAMPLE_SHA).unwrap();
+        let default_dir = tmp.path().join(default_sha.to_full_hex()).join("corpus");
+        std::fs::create_dir_all(&default_dir).unwrap();
+        write_v2_record(&default_dir, "openssl-1.0", "openssl");
+        write_index(&default_dir, &["openssl"]);
+        // Nested layout for an arbitrary source.
+        let arb_source_id = CorpusSourceId::from_url("https://corpus.example/extra.tar.gz");
+        let arb_sha =
+            CorpusSha::from_hex("0123456789abcdef0123456789abcdef01234567").unwrap();
+        let arb_dir = tmp
+            .path()
+            .join(arb_source_id.as_str())
+            .join(arb_sha.to_full_hex())
+            .join("corpus");
+        std::fs::create_dir_all(&arb_dir).unwrap();
+        write_v2_record(&arb_dir, "libxyz-1.0", "libxyz");
+        write_index(&arb_dir, &["libxyz"]);
+
+        let default_recs = load_v2_records_from_cache(&default_sha).unwrap();
+        assert_eq!(default_recs.len(), 1);
+        assert_eq!(default_recs[0].id, "openssl-1.0");
+        let extra_recs =
+            load_v2_records_from_source_cache(&arb_source_id, &arb_sha).unwrap();
+        assert_eq!(extra_recs.len(), 1);
+        assert_eq!(extra_recs[0].id, "libxyz-1.0");
         unsafe {
             std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
         }

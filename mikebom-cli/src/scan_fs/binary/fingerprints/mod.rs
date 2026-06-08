@@ -25,6 +25,7 @@ pub(crate) mod confidence;
 pub(crate) mod fetch;
 pub(crate) mod loader;
 pub(crate) mod matcher;
+pub(crate) mod multi_source;
 pub(crate) mod record;
 pub(crate) mod self_identity;
 pub(crate) mod source_config;

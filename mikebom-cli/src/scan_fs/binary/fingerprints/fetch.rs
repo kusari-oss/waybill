@@ -9,9 +9,11 @@ use std::io::Read;
 use std::path::Path;
 use std::time::Duration;
 
+use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 use super::cache;
+use super::source_config::{CorpusSource, CorpusSourceId};
 use super::source_sha::CorpusSha;
 
 const PRODUCTION_BASE_URL: &str = "https://github.com";
@@ -291,6 +293,232 @@ fn corpus_filename_from_tar_path(path: &Path) -> Option<String> {
         return None;
     }
     Some(name.to_string())
+}
+
+// =====================================================================
+// Per-source arbitrary-URL fetcher (milestone 110 Phase 5-Slim PR 2)
+// =====================================================================
+//
+// `fetch_arbitrary_source` downloads a corpus tarball directly from a
+// caller-supplied URL (no SHA-pinned URL construction like the
+// milestone-108 default), computes a content SHA-256 over the response
+// body, and extracts to the per-source cache path
+// `<cache_root>/<source-id>/<content-sha>/corpus/`. Returns the
+// computed content SHA so the caller can persist it for later loads.
+//
+// What this fetcher does NOT yet do (deferred to follow-on slices):
+// - bearer-token auth (FR-007): no `Authorization` header is attached
+// - sigstore signature verification (FR-008): the archive is trusted
+//   on the strength of TLS alone, matching the milestone-108 default's
+//   current production posture
+// - TTL-based cache freshness (FR-012a): a cache hit is "exists"; no
+//   mtime / last_used.touch is consulted
+
+/// Result of a per-source fetch attempt. Returned by
+/// `fetch_arbitrary_source` so the orchestrator can record per-source
+/// status without needing a second filesystem stat.
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct FetchedSourceOutcome {
+    pub content_sha: CorpusSha,
+    /// True when the bytes were re-fetched from the network; false
+    /// when an existing per-source cache directory satisfied the
+    /// request without I/O. Phase 5-Slim has no TTL, so this becomes
+    /// `false` only when an upstream caller pre-populated the cache
+    /// (e.g. a previous scan in the same session) — the production
+    /// scan path always re-fetches at scan startup.
+    pub from_network: bool,
+}
+
+/// Fetch a single arbitrary corpus source. Production entry point for
+/// PR-2's orchestrator. Reads `source.url` directly and writes to the
+/// per-source cache path.
+#[allow(dead_code)]
+pub(crate) fn fetch_arbitrary_source(
+    source: &CorpusSource,
+) -> Result<FetchedSourceOutcome, FetchError> {
+    let cache_root = cache::cache_root();
+    fetch_arbitrary_source_to(source, &cache_root)
+}
+
+/// Internal helper that production + tests share. `cache_root` lets
+/// tests redirect writes into a tempdir. Wraps the blocking reqwest
+/// client in a fresh OS thread for the same reason as
+/// `fetch_corpus_to` (avoid panicking inside a tokio runtime).
+#[allow(dead_code)]
+pub(crate) fn fetch_arbitrary_source_to(
+    source: &CorpusSource,
+    cache_root: &Path,
+) -> Result<FetchedSourceOutcome, FetchError> {
+    let source = source.clone();
+    let cache_root = cache_root.to_path_buf();
+    std::thread::scope(|s| {
+        s.spawn(move || fetch_arbitrary_source_blocking(&source, &cache_root))
+            .join()
+            .map_err(|_| FetchError::Network("fetch thread panicked".to_string()))?
+    })
+}
+
+fn fetch_arbitrary_source_blocking(
+    source: &CorpusSource,
+    cache_root: &Path,
+) -> Result<FetchedSourceOutcome, FetchError> {
+    tracing::info!(
+        source_url = %source.url,
+        source_id = %source.source_id,
+        "fetching multi-source fingerprint corpus",
+    );
+    let client = build_client()?;
+    // Reuse the same retry / Retry-After policy as the milestone-108
+    // default fetcher; per-source error categorization happens at the
+    // orchestrator layer (PR-2 multi_source.rs).
+    let response = perform_get_arbitrary_with_retry(&client, &source.url)?;
+    let body = response
+        .bytes()
+        .map_err(|e| FetchError::Network(e.to_string()))?;
+
+    let content_sha = sha256_of(&body);
+    extract_to_source_cache(&source.source_id, &content_sha, &body, cache_root)?;
+    Ok(FetchedSourceOutcome {
+        content_sha,
+        from_network: true,
+    })
+}
+
+/// Per-source variant of `perform_get_with_retry` that does NOT
+/// translate 404 into the milestone-108 `NotFound { sha }` variant
+/// (an arbitrary source URL's 404 is just an HTTP error, not a
+/// SHA-pinning bug). Other-4xx still no-retry; 5xx + 429 + network
+/// errors still retry per the milestone-108 policy.
+fn perform_get_arbitrary_with_retry(
+    client: &reqwest::blocking::Client,
+    url: &str,
+) -> Result<reqwest::blocking::Response, FetchError> {
+    let mut last_status: Option<u16> = None;
+    for attempt in 0..MAX_RETRY_ATTEMPTS {
+        match client.get(url).send() {
+            Ok(response) => {
+                let status = response.status();
+                if status.is_success() {
+                    return Ok(response);
+                }
+                if status.as_u16() == 429 {
+                    let retry_after = response
+                        .headers()
+                        .get(reqwest::header::RETRY_AFTER)
+                        .and_then(|v| v.to_str().ok())
+                        .and_then(|s| s.parse::<u64>().ok())
+                        .map(|secs| Duration::from_secs(secs).min(RETRY_AFTER_CAP))
+                        .unwrap_or_else(|| backoff_for(attempt));
+                    tracing::warn!(
+                        attempt = attempt + 1,
+                        sleep_secs = retry_after.as_secs(),
+                        url,
+                        "arbitrary corpus source rate-limited; sleeping per Retry-After",
+                    );
+                    std::thread::sleep(retry_after);
+                    last_status = Some(429);
+                    continue;
+                }
+                if status.is_server_error() {
+                    let sleep = backoff_for(attempt);
+                    tracing::warn!(
+                        attempt = attempt + 1,
+                        status = status.as_u16(),
+                        sleep_secs = sleep.as_secs(),
+                        url,
+                        "arbitrary corpus source server error; retrying",
+                    );
+                    std::thread::sleep(sleep);
+                    last_status = Some(status.as_u16());
+                    continue;
+                }
+                return Err(FetchError::HttpError {
+                    status: status.as_u16(),
+                    attempts: attempt + 1,
+                });
+            }
+            Err(e) => {
+                let sleep = backoff_for(attempt);
+                tracing::warn!(
+                    attempt = attempt + 1,
+                    error = %e,
+                    sleep_secs = sleep.as_secs(),
+                    url,
+                    "arbitrary corpus source network error; retrying",
+                );
+                if attempt + 1 == MAX_RETRY_ATTEMPTS {
+                    return Err(FetchError::Network(e.to_string()));
+                }
+                std::thread::sleep(sleep);
+            }
+        }
+    }
+    Err(FetchError::HttpError {
+        status: last_status.unwrap_or(0),
+        attempts: MAX_RETRY_ATTEMPTS,
+    })
+}
+
+fn sha256_of(bytes: &[u8]) -> CorpusSha {
+    let mut hasher = Sha256::new();
+    hasher.update(bytes);
+    let digest = hasher.finalize();
+    let mut hex = String::with_capacity(64);
+    for b in &digest[..] {
+        hex.push_str(&format!("{b:02x}"));
+    }
+    // The CorpusSha type historically holds 40 hex chars (git-style)
+    // because the milestone-108 default URL is constructed from a
+    // 40-char Git SHA. For content-addressed cache keys we truncate
+    // the sha256 to its leading 40 hex chars — collision resistance
+    // is still 160 bits, well above the cache-key needs. The leading
+    // bytes give the same locality + alphabet so the existing path-
+    // building helpers (`to_full_hex`, `to_short_hex`) keep working.
+    let truncated = &hex[..40];
+    CorpusSha::from_hex(truncated).expect("sha256 hex is always valid")
+}
+
+fn extract_to_source_cache(
+    source_id: &CorpusSourceId,
+    content_sha: &CorpusSha,
+    body: &[u8],
+    cache_root: &Path,
+) -> Result<(), FetchError> {
+    let source_root = cache_root.join(source_id.as_str());
+    std::fs::create_dir_all(&source_root).map_err(|e| FetchError::Io(e.to_string()))?;
+
+    let staging = source_root.join(format!(".tmp-{}", uuid::Uuid::new_v4()));
+    let staging_corpus = staging.join("corpus");
+    std::fs::create_dir_all(&staging_corpus)
+        .map_err(|e| FetchError::Io(e.to_string()))?;
+
+    if let Err(e) = extract_corpus_into(body, &staging_corpus) {
+        let _ = std::fs::remove_dir_all(&staging);
+        return Err(e);
+    }
+
+    let dest = source_root.join(content_sha.to_full_hex());
+    if dest.exists() {
+        let _ = std::fs::remove_dir_all(&staging);
+        tracing::debug!(
+            source_id = %source_id,
+            content_sha = %content_sha.to_full_hex(),
+            "concurrent writer beat us to the per-source cache; using existing entry",
+        );
+        return Ok(());
+    }
+    std::fs::rename(&staging, &dest).map_err(|e| {
+        if dest.exists() {
+            let _ = std::fs::remove_dir_all(&staging);
+            return FetchError::Io(format!(
+                "concurrent writer race (cleaned up staging): {e}"
+            ));
+        }
+        let _ = std::fs::remove_dir_all(&staging);
+        FetchError::Io(e.to_string())
+    })?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -613,5 +841,158 @@ mod tests {
             "mikebom-fingerprints-fff39c6/corpus/file.txt"
         ))
         .is_none());
+    }
+
+    // ============================================================
+    // Per-source arbitrary-URL fetcher tests (Phase 5-Slim PR 2)
+    // ============================================================
+
+    fn build_arbitrary_corpus_tarball() -> Vec<u8> {
+        // Same payload shape as the milestone-108 tarball but with a
+        // generic wrapper directory name + a single v2 record.
+        let mut tar_bytes: Vec<u8> = Vec::new();
+        {
+            let enc = flate2::write::GzEncoder::new(
+                &mut tar_bytes,
+                flate2::Compression::default(),
+            );
+            let mut builder = tar::Builder::new(enc);
+            let wrapper = "extras-v2/";
+            for name in ["index.json", "libxyz.json"] {
+                let payload: &[u8] = match name {
+                    "index.json" => br#"{"version":1,"entries":[{"library":"libxyz","path":"libxyz.json"}]}"#,
+                    "libxyz.json" => br#"{
+                        "id":"libxyz-1.0",
+                        "purl":"pkg:github/example/libxyz@1.0.0",
+                        "version_range":"1.0",
+                        "indicators":{
+                            "exported_symbols":{
+                                "type":"symbol-set",
+                                "required":["xyz_init","xyz_run","xyz_done"],
+                                "min_match":2,
+                                "confidence_baseline":0.70
+                            }
+                        },
+                        "provenance":{
+                            "tier":"manual-curation",
+                            "extracted_from":"https://example.com/libxyz",
+                            "extracted_from_sha256":"0000000000000000000000000000000000000000000000000000000000000000",
+                            "extraction_toolchain":"test-fixture",
+                            "extracted_at":"2026-06-01T12:00:00Z"
+                        },
+                        "schema_version":2
+                    }"#,
+                    _ => unreachable!(),
+                };
+                let mut header = tar::Header::new_gnu();
+                header.set_path(format!("{wrapper}corpus/{name}")).unwrap();
+                header.set_size(payload.len() as u64);
+                header.set_mode(0o644);
+                header.set_cksum();
+                builder.append(&header, payload).unwrap();
+            }
+            let mut enc = builder.into_inner().unwrap();
+            enc.flush().unwrap();
+            enc.finish().unwrap();
+        }
+        tar_bytes
+    }
+
+    #[test]
+    fn fetch_arbitrary_source_writes_to_per_source_layout() {
+        let _g = env_lock();
+        let tarball = build_arbitrary_corpus_tarball();
+        let tarball_for_mock = tarball.clone();
+        let harness = WiremockHarness::new(|rt, server| {
+            rt.block_on(async {
+                Mock::given(method("GET"))
+                    .and(path_regex(r"/.+\.tar\.gz"))
+                    .respond_with(
+                        ResponseTemplate::new(200)
+                            .set_body_bytes(tarball_for_mock.clone())
+                            .insert_header("content-type", "application/x-gzip"),
+                    )
+                    .mount(server)
+                    .await;
+            });
+        });
+        let tmp = tempfile::tempdir().unwrap();
+        let url = format!("{}/extras.tar.gz", harness.base_url);
+        let source = CorpusSource::unauthenticated(url.clone());
+        let outcome = fetch_arbitrary_source_to(&source, tmp.path()).unwrap();
+
+        // Per-source layout: <root>/<source-id>/<content-sha>/corpus/...
+        let dest = tmp
+            .path()
+            .join(source.source_id.as_str())
+            .join(outcome.content_sha.to_full_hex())
+            .join("corpus");
+        assert!(dest.join("index.json").exists());
+        assert!(dest.join("libxyz.json").exists());
+        // Content SHA is derived from the body — passing the same
+        // bytes twice yields the same key.
+        let outcome2 = fetch_arbitrary_source_to(&source, tmp.path()).unwrap();
+        assert_eq!(outcome.content_sha, outcome2.content_sha);
+    }
+
+    #[test]
+    fn fetch_arbitrary_source_returns_http_error_on_4xx() {
+        let _g = env_lock();
+        let harness = WiremockHarness::new(|rt, server| {
+            rt.block_on(async {
+                Mock::given(method("GET"))
+                    .and(path_regex(r"/.+\.tar\.gz"))
+                    .respond_with(ResponseTemplate::new(403))
+                    .mount(server)
+                    .await;
+            });
+        });
+        let tmp = tempfile::tempdir().unwrap();
+        let url = format!("{}/private.tar.gz", harness.base_url);
+        let source = CorpusSource::unauthenticated(url);
+        let err = fetch_arbitrary_source_to(&source, tmp.path()).unwrap_err();
+        assert!(matches!(err, FetchError::HttpError { status: 403, .. }));
+        // No partial cache written.
+        let entries: Vec<_> = std::fs::read_dir(tmp.path())
+            .unwrap()
+            .filter_map(|e| e.ok())
+            .collect();
+        assert!(entries.is_empty());
+    }
+
+    #[test]
+    fn fetch_arbitrary_source_cleans_up_on_malformed_archive() {
+        let _g = env_lock();
+        let bad_tarball = build_invalid_tarball_with_no_corpus_entries();
+        let harness = WiremockHarness::new(|rt, server| {
+            rt.block_on(async {
+                Mock::given(method("GET"))
+                    .and(path_regex(r"/.+\.tar\.gz"))
+                    .respond_with(
+                        ResponseTemplate::new(200)
+                            .set_body_bytes(bad_tarball.clone())
+                            .insert_header("content-type", "application/x-gzip"),
+                    )
+                    .mount(server)
+                    .await;
+            });
+        });
+        let tmp = tempfile::tempdir().unwrap();
+        let url = format!("{}/extras.tar.gz", harness.base_url);
+        let source = CorpusSource::unauthenticated(url);
+        let err = fetch_arbitrary_source_to(&source, tmp.path()).unwrap_err();
+        assert!(matches!(err, FetchError::Extraction(_)));
+        // No staging dir left behind under the source-id parent.
+        let source_root = tmp.path().join(source.source_id.as_str());
+        if source_root.exists() {
+            let leftover: Vec<_> = std::fs::read_dir(&source_root)
+                .unwrap()
+                .filter_map(|e| e.ok())
+                .collect();
+            assert!(
+                leftover.is_empty(),
+                "expected empty source root after extraction failure; got {leftover:?}"
+            );
+        }
     }
 }
