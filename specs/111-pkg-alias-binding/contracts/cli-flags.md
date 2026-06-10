@@ -22,7 +22,7 @@
 
 | Element | Rule |
 |---|---|
-| Outer separator | `=` (exactly one) |
+| Outer separator | `=` — qualifier-aware: PURL qualifiers legitimately contain `=` (e.g. `pkg:generic/baz?file-sha256=<hex>` as LHS), so the parser tries each `=` position left-to-right and accepts the first split whose right side starts with `pkg:` and whose two sides both canonicalize |
 | LHS | Canonical-form PURL string |
 | RHS | Canonical-form PURL string |
 | LHS == RHS | Rejected (`AliasError::LhsEqualsRhs`) |

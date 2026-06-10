@@ -195,11 +195,16 @@ impl AliasMap {
 
 /// Clap `value_parser` for the `--pkg-alias LHS=RHS` flag.
 ///
-/// Splits the raw value on the FIRST `=` (PURLs may contain qualifier
-/// keys with `=`-shaped suffixes, but those live AFTER the `?`
-/// segment; a top-level PURL never starts with `?` so the split on
-/// first `=` is unambiguous when the LHS is itself a well-formed
-/// PURL — `Purl::new` will reject anything malformed).
+/// The LHS/RHS separator is NOT simply the first `=`: a PURL's
+/// qualifier section legitimately contains `=` (e.g. the binary
+/// walker's file-level `pkg:generic/baz?file-sha256=<hex>` — the
+/// primary US1 alias source), so the first `=` in the raw value may
+/// belong to an LHS qualifier. Instead, each `=` position is tried
+/// left-to-right; the first split whose right side starts with the
+/// `pkg:` scheme prefix AND whose two sides both canonicalize via
+/// [`Purl::new`] wins. When no candidate has a `pkg:`-prefixed right
+/// side, the first-`=` split's parse errors are surfaced so the
+/// operator sees the standard malformed-PURL diagnostics.
 ///
 /// Returns `Result<PurlAlias, String>` per clap's parser-error
 /// contract (clap calls `.to_string()` on the error type). Maps
@@ -210,12 +215,41 @@ impl AliasMap {
 /// values have been collected.
 pub fn parse_pkg_alias(raw: &str) -> Result<PurlAlias, String> {
     let trimmed = raw.trim();
-    let (lhs_raw, rhs_raw) = trimmed.split_once('=').ok_or_else(|| {
-        AliasError::MissingSeparator {
+    if !trimmed.contains('=') {
+        return Err(AliasError::MissingSeparator {
             raw: trimmed.to_string(),
         }
-        .to_string()
-    })?;
+        .to_string());
+    }
+    // First viable split wins; first viable-candidate error (a split
+    // whose RHS at least looked like a PURL) is kept for diagnostics.
+    let mut candidate_err: Option<AliasError> = None;
+    for (idx, _) in trimmed.match_indices('=') {
+        let (lhs_raw, rhs_raw) = (&trimmed[..idx], &trimmed[idx + 1..]);
+        if !rhs_raw.starts_with("pkg:") {
+            continue;
+        }
+        match PurlAlias::try_new(lhs_raw, rhs_raw) {
+            Ok(alias) => return Ok(alias),
+            Err(e) => {
+                candidate_err.get_or_insert(e);
+            }
+        }
+    }
+    if let Some(e) = candidate_err {
+        return Err(e.to_string());
+    }
+    // No split produced a `pkg:`-prefixed RHS — fall back to the
+    // first `=` so the operator gets the malformed-PURL message for
+    // what they most plausibly intended as the boundary.
+    let (lhs_raw, rhs_raw) = trimmed
+        .split_once('=')
+        .ok_or_else(|| {
+            AliasError::MissingSeparator {
+                raw: trimmed.to_string(),
+            }
+            .to_string()
+        })?;
     PurlAlias::try_new(lhs_raw, rhs_raw).map_err(|e| e.to_string())
 }
 
@@ -347,6 +381,25 @@ mod tests {
         let alias =
             parse_pkg_alias(&format!("   {LHS_GENERIC}={RHS_CARGO}   ")).unwrap();
         assert_eq!(alias.lhs().as_str(), LHS_GENERIC);
+    }
+
+    #[test]
+    fn parse_handles_qualifier_bearing_lhs() {
+        // The binary walker's file-level PURL shape — the qualifier's
+        // own `=` precedes the LHS/RHS separator and must not be
+        // mistaken for it (US1 primary use case).
+        let lhs = "pkg:generic/baz?file-sha256=446db4a0be0f85cb27407792fd4ff3de0a60a92b1055dc14ee810483df82b5c9";
+        let alias = parse_pkg_alias(&format!("{lhs}={RHS_CARGO}")).unwrap();
+        assert_eq!(alias.lhs().as_str(), lhs);
+        assert_eq!(alias.rhs().as_str(), RHS_CARGO);
+    }
+
+    #[test]
+    fn parse_handles_qualifier_bearing_rhs() {
+        let rhs = "pkg:cargo/baz@1.0.0?repository_url=https%3A%2F%2Fexample.test";
+        let alias = parse_pkg_alias(&format!("{LHS_GENERIC}={rhs}")).unwrap();
+        assert_eq!(alias.lhs().as_str(), LHS_GENERIC);
+        assert_eq!(alias.rhs().as_str(), rhs);
     }
 
     #[test]
