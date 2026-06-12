@@ -1,0 +1,104 @@
+name: Auto-tag release
+
+# Closes part of issue #171. When a release-bump PR is merged into
+# `main`, this workflow extracts the new workspace version from
+# `Cargo.toml`, creates the matching annotated tag on the merge
+# commit, pushes it to origin, and then explicitly dispatches the
+# release workflow against the new tag.
+#
+# Why the explicit dispatch step:
+# A tag push made via GITHUB_TOKEN does NOT trigger downstream
+# workflows by design — GitHub's anti-loop policy disables event
+# triggers for refs created by the actions token. Without an
+# explicit `gh workflow run` call, `release.yml`'s
+# `push: tags: [v*-alpha.*]` trigger would silently no-op here.
+# We close that gap by invoking `release.yml`'s
+# `workflow_dispatch` entry-point (added in the same PR), passing
+# the tag name as input. The release workflow then checks out the
+# tag's commit, builds the four platform tarballs, and publishes
+# the GitHub release.
+#
+# Idempotency: if the tag already exists (re-run, manual tag, or
+# duplicate merge), this workflow logs and skips both the tag
+# creation and the workflow dispatch — so re-running on a tag
+# that already has a release in flight is safe.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write   # to push the new tag
+  actions: write    # to dispatch release.yml
+
+jobs:
+  tag-and-dispatch:
+    if: "${{ github.event.pull_request.merged == true && startsWith(github.event.pull_request.title, 'release: bump workspace to v') }}"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+          # Per project memory: never let workflow steps inherit the
+          # actions token via `auth.<host>.extraheader`. We push the
+          # tag using an explicit `https://x-access-token:…` URL in
+          # the run-step below, not via the persisted credential.
+          persist-credentials: false
+
+      - name: Extract version + create + push tag
+        id: tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # Parse the workspace version from the FIRST `version = "…"`
+          # line in Cargo.toml. The release-bump PR always lands that
+          # change at the top of the file in the [workspace.package]
+          # block; the precedent dates back to alpha.5.
+          version=$(grep -m1 '^version' Cargo.toml | sed -E 's/version = "(.*)"/\1/')
+          if [ -z "$version" ]; then
+            echo "ERROR: failed to extract version from Cargo.toml"
+            exit 1
+          fi
+          tag="v${version}"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
+          # Idempotency: skip if the tag already exists on origin.
+          # Don't fail the run — a maintainer manually creating the
+          # tag is a legitimate path, and re-runs should be safe.
+          if git ls-remote --tags origin "refs/tags/${tag}" | grep -q "${tag}"; then
+            echo "Tag ${tag} already exists on origin; skipping create + dispatch."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Create the annotated tag pointing at the merge commit.
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -a "$tag" -m "Release $tag" "$MERGE_SHA"
+
+          # Push using an explicit x-access-token URL so the credential
+          # stays scoped to this single push (rather than persisting as
+          # a git-config extraheader for the rest of the runner's
+          # lifetime). The `set-url --push` form only affects the push
+          # target, not the fetch URL.
+          git remote set-url --push origin "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+          git push origin "$tag"
+          echo "Pushed tag ${tag}."
+
+      - name: Dispatch release workflow
+        if: steps.tag.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          # release.yml's workflow_dispatch entry-point looks at
+          # inputs.tag and runs the existing build+publish pipeline
+          # against the named tag.
+          gh workflow run release.yml --ref "$TAG" -f "tag=${TAG}"
+          echo "Dispatched release.yml against ${TAG}."

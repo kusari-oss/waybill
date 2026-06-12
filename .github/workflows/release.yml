@@ -6,6 +6,19 @@ on:
       - 'v*-alpha.*'
       - 'v*-beta.*'
       - 'v*-rc.*'
+  # Manual escape hatch (issue #171). Lets a maintainer kick off a
+  # release against an existing tag without a workstation
+  # `git push origin v*-alpha.*` — useful when an existing tag's
+  # workflow run was cancelled mid-flight, when re-cutting a partial
+  # release, or when the `auto-tag-release.yml` worker pushed a tag
+  # via GITHUB_TOKEN (which by design does NOT trigger downstream
+  # workflows — see auto-tag-release.yml's explanatory comment).
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g., v0.1.0-alpha.47). Must already exist on the repo.'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -13,6 +26,11 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
+  # Single source of truth for the tag-name string used throughout
+  # the workflow. `inputs.tag` is set only on workflow_dispatch;
+  # `github.ref_name` is set on the push-tags path and falls through
+  # to the auto-trigger case.
+  TAG_NAME: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   # Build the target-independent bpfel-unknown-none bytecode once and share
@@ -22,6 +40,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ env.TAG_NAME }}
 
       - name: Install eBPF build deps
         run: |
@@ -92,6 +112,8 @@ jobs:
       TARGET: x86_64-unknown-linux-gnu
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ env.TAG_NAME }}
 
       - name: Install stable Rust (x86_64 target)
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
@@ -153,7 +175,7 @@ jobs:
       - name: Package tarball
         run: |
           set -euo pipefail
-          stage="mikebom-${{ github.ref_name }}-${TARGET}"
+          stage="mikebom-${{ env.TAG_NAME }}-${TARGET}"
           # Lay out the tarball so the loader finds the eBPF object
           # relative to CWD at the path it already expects:
           # mikebom-ebpf/target/bpfel-unknown-none/release/mikebom-ebpf.
@@ -189,8 +211,8 @@ jobs:
       - name: Upload tarball artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: mikebom-${{ github.ref_name }}-x86_64-unknown-linux-gnu
-          path: mikebom-${{ github.ref_name }}-${{ env.TARGET }}.tar.gz
+          name: mikebom-${{ env.TAG_NAME }}-x86_64-unknown-linux-gnu
+          path: mikebom-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
           if-no-files-found: error
 
   build-linux-aarch64:
@@ -201,6 +223,8 @@ jobs:
       TARGET: aarch64-unknown-linux-gnu
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ env.TAG_NAME }}
 
       - name: Install stable Rust (aarch64 target)
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
@@ -257,7 +281,7 @@ jobs:
       - name: Package tarball
         run: |
           set -euo pipefail
-          stage="mikebom-${{ github.ref_name }}-${TARGET}"
+          stage="mikebom-${{ env.TAG_NAME }}-${TARGET}"
           mkdir -p "$stage/mikebom-ebpf/target/bpfel-unknown-none/release"
           cp "target/${TARGET}/release/mikebom" "$stage/mikebom"
           cp ebpf-download/mikebom-ebpf "$stage/mikebom-ebpf/target/bpfel-unknown-none/release/mikebom-ebpf"
@@ -280,8 +304,8 @@ jobs:
       - name: Upload tarball artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: mikebom-${{ github.ref_name }}-aarch64-unknown-linux-gnu
-          path: mikebom-${{ github.ref_name }}-${{ env.TARGET }}.tar.gz
+          name: mikebom-${{ env.TAG_NAME }}-aarch64-unknown-linux-gnu
+          path: mikebom-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
           if-no-files-found: error
 
   build-macos-aarch64:
@@ -291,6 +315,8 @@ jobs:
       TARGET: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ env.TAG_NAME }}
 
       - name: Install stable Rust (aarch64-apple-darwin)
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
@@ -333,7 +359,7 @@ jobs:
       - name: Package tarball
         run: |
           set -euo pipefail
-          stage="mikebom-${{ github.ref_name }}-${TARGET}"
+          stage="mikebom-${{ env.TAG_NAME }}-${TARGET}"
           mkdir -p "$stage"
           cp "target/${TARGET}/release/mikebom" "$stage/mikebom"
           cp README.md "$stage/README.md"
@@ -344,8 +370,8 @@ jobs:
       - name: Upload tarball artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: mikebom-${{ github.ref_name }}-aarch64-apple-darwin
-          path: mikebom-${{ github.ref_name }}-${{ env.TARGET }}.tar.gz
+          name: mikebom-${{ env.TAG_NAME }}-aarch64-apple-darwin
+          path: mikebom-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
           if-no-files-found: error
 
   # Milestone 100 — Windows x86_64 release artifact. Produces a .zip
@@ -359,6 +385,8 @@ jobs:
       TARGET: x86_64-pc-windows-msvc
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ env.TAG_NAME }}
 
       - name: Install stable Rust (x86_64-pc-windows-msvc)
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
@@ -402,7 +430,7 @@ jobs:
       - name: Package zip
         shell: pwsh
         env:
-          REF_NAME: ${{ github.ref_name }}
+          REF_NAME: ${{ env.TAG_NAME }}
         run: |
           $stage = "mikebom-$env:REF_NAME-$env:TARGET"
           New-Item -ItemType Directory -Path $stage | Out-Null
@@ -415,8 +443,8 @@ jobs:
       - name: Upload zip artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: mikebom-${{ github.ref_name }}-x86_64-pc-windows-msvc
-          path: mikebom-${{ github.ref_name }}-${{ env.TARGET }}.zip
+          name: mikebom-${{ env.TAG_NAME }}-x86_64-pc-windows-msvc
+          path: mikebom-${{ env.TAG_NAME }}-${{ env.TARGET }}.zip
           if-no-files-found: error
 
   # Issue #234 — multi-arch production container image. Reuses the
@@ -436,6 +464,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          ref: ${{ env.TAG_NAME }}
           # Kusari Inspector requirement: prevent token-in-.git/config
           # exposure to subsequent steps / artifacts. This workflow
           # doesn't push back to the repo, so persisting creds is
@@ -445,13 +474,13 @@ jobs:
       - name: Download linux-x86_64 tarball
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: mikebom-${{ github.ref_name }}-x86_64-unknown-linux-gnu
+          name: mikebom-${{ env.TAG_NAME }}-x86_64-unknown-linux-gnu
           path: ./image-context/amd64
 
       - name: Download linux-aarch64 tarball
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: mikebom-${{ github.ref_name }}-aarch64-unknown-linux-gnu
+          name: mikebom-${{ env.TAG_NAME }}-aarch64-unknown-linux-gnu
           path: ./image-context/arm64
 
       - name: Extract tarballs into per-arch staging dirs
@@ -498,7 +527,7 @@ jobs:
         # bind them to env: variables first to neutralize shell-
         # injection via attacker-controllable refs/branch names.
         env:
-          REF_NAME: ${{ github.ref_name }}
+          REF_NAME: ${{ env.TAG_NAME }}
           REPO_OWNER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
@@ -549,7 +578,7 @@ jobs:
       - name: Download all tarball artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          pattern: mikebom-${{ github.ref_name }}-*
+          pattern: mikebom-${{ env.TAG_NAME }}-*
           merge-multiple: true
 
       - name: Generate SHA256SUMS
@@ -561,6 +590,10 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
+          # Issue #171: pin the release to TAG_NAME so workflow_dispatch
+          # invocations (where github.ref is the dispatched-from branch,
+          # not the tag) target the correct existing tag.
+          tag_name: ${{ env.TAG_NAME }}
           prerelease: true
           generate_release_notes: true
           files: |
