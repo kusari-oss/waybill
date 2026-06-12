@@ -1540,13 +1540,13 @@ pub async fn execute(
 
     // Milestone 052/part-3: the default is to include all lifecycle
     // scopes natively tagged. Readers receive `include_dev = true`
-    // unconditionally; the centralized `exclude_scope` filter
-    // (applied post-resolution) drops components per the user's
-    // opt-out. Pre-052 code paths still reference `include_dev` —
-    // we pass `true` so they don't drop anything; the per-reader
-    // drop gates are dead code and slated for removal in a
-    // follow-on cleanup pass.
-    let include_dev = true;
+    // unconditionally (inlined as `true` at the two callsites
+    // below); the centralized `exclude_scope` filter applied post-
+    // resolution drops components per the user's opt-out. The
+    // deprecated `--include-dev` CLI shim was removed in issue
+    // #101 — see CHANGELOG `[Unreleased]` BREAKING. Per-reader
+    // drop gates that still consume the parameter are dead code,
+    // slated for removal in a follow-on refactor.
     // Milestone 004 US4: the flag is threaded all the way to
     // `scan_path` so the (future) BDB rpmdb reader can consume it.
     // Until the BDB reader lands (T064), the parameter rides through
@@ -1719,7 +1719,7 @@ pub async fn execute(
         args.max_file_size,
         !args.no_package_db,
         !args.no_deep_hash,
-        include_dev,
+        true, // include_dev — see comment above the scan_path call site
         include_legacy_rpmdb,
         scan_mode,
         effective_include_declared_deps,
@@ -2060,7 +2060,7 @@ pub async fn execute(
         os_release_missing_fields: &os_release_missing_fields,
         scan_target_coord: scan_target_coord.as_ref(),
         generation_context: generation_context.clone(),
-        include_dev,
+        include_dev: true,
         include_hashes: !args.no_hashes,
         include_source_files: true, // path-pattern evidence is the whole value prop here
         scope_mode: if effective_include_declared_deps {

@@ -7,6 +7,10 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Removed (BREAKING)
+
+- **`--include-dev` CLI flag removed** (closes #101). Deprecated since milestone 052/part-3 (alpha.20, PR #100) when the scan default flipped to emit ALL lifecycle scopes natively tagged. The post-052 shim only logged a deprecation warning and was otherwise a no-op; the soak window has elapsed (>20 weeks since the warning landed). Operators wanting the pre-052 strict deployed-runtime view should use `--exclude-scope dev,build,test`. Shell scripts and CI configs still passing `--include-dev` will now fail with clap's standard "unexpected argument" message — the operator-visible fix is a one-token swap.
+
 ## [0.1.0-alpha.47] — 2026-06-12
 
 Milestones 110 Phase 5-Slim (multi-source corpus configuration + fetch), 111 (cross-tier PURL aliasing), 112 (Go build-inclusion clarity via `go mod why -m -vendor`), and 113 (user-supplied directory exclusion) ship in this release. Two Go correctness fixes also land: test-scope closure propagation, and skipping `testdata/` + `_`-prefixed directories per the Go tool convention.

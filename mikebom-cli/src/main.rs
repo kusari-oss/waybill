@@ -96,18 +96,6 @@ struct Cli {
     #[arg(long = "no-go-mod-why", global = true)]
     no_go_mod_why: bool,
 
-    /// **DEPRECATED** (milestone 052/part-3). Pre-052 this flag was
-    /// off-by-default and gated dev/test/build dep emission. Post-052
-    /// the default is to include ALL scopes natively tagged
-    /// (`scope: "excluded"` in CDX, `DEV/BUILD/TEST_DEPENDENCY_OF` in
-    /// SPDX 2.3, `lifecycleScope` in SPDX 3). To restore the
-    /// strict deployed-runtime view, use
-    /// `--exclude-scope dev,build,test`. This flag still parses
-    /// for back-compat but emits a deprecation warning to stderr
-    /// and otherwise has no effect.
-    #[arg(long, global = true)]
-    include_dev: bool,
-
     /// Drop components whose lifecycle scope matches any of the
     /// listed values. Comma-separated. Valid values: `dev`,
     /// `build`, `test`. Runtime-scope is always retained
@@ -290,20 +278,6 @@ async fn main() -> anyhow::Result<std::process::ExitCode> {
                 std::process::exit(124);
             });
         }
-    }
-
-    // Milestone 052/part-3: deprecation warning for --include-dev.
-    // The flag still parses (back-compat — automation that bakes it
-    // in continues to work) but has no effect post-052: the new
-    // default emits all scopes. Operators wanting the strict
-    // deployed-runtime view migrate to --exclude-scope.
-    if cli.include_dev {
-        tracing::warn!(
-            "--include-dev is deprecated and has no effect post-052; \
-             native lifecycle-scope emission is on by default. \
-             Use --exclude-scope dev,build,test for the strict \
-             deployed-runtime view (alpha.9-equivalent).",
-        );
     }
 
     let exclude_scope: Vec<mikebom_common::resolution::LifecycleScope> =

@@ -50,7 +50,6 @@ noun on every subcommand (clap's flag-position-tolerant parser).
 | `--timeout <SECONDS>` | u64 | disabled | Wall-clock time limit for the entire mikebom invocation. Exits with status 124 (POSIX `timeout(1)` convention) when exceeded. Set to `0` (or omit) to disable. |
 | `--no-go-mod-why` | bool | off | Disable Go build-graph classification via `go mod why`. Also via `MIKEBOM_NO_GO_MOD_WHY=1`. |
 | `--exclude-path <PATH_OR_PATTERN>` | string (repeatable) | (none) | Skip directory subtrees matching the given path or glob pattern during scan. Entries with `*`/`?`/`[` are patterns at any depth; otherwise literal paths anchored at scan root. Also via `MIKEBOM_EXCLUDE_PATH`. See [`--exclude-path`](#--exclude-path-path_or_pattern). |
-| `--include-dev` | bool | off | **Deprecated.** See the deprecated flags section. |
 
 ### `--offline`
 
@@ -121,17 +120,6 @@ mikebom sbom scan --image centos7.tar --include-legacy-rpmdb --output centos7.cd
 Modern RHEL-8+ / Fedora / Amazon-Linux-2023 images use the SQLite rpmdb
 (`/var/lib/rpm/rpmdb.sqlite`) which mikebom reads by default; the BDB format
 is opt-in to keep the modern hot-path slim.
-
-### `--include-dev` (deprecated)
-
-**Deprecated:** since milestone 052/part-3. Replacement: `--exclude-scope`.
-Removal target: not yet scheduled (the flag still parses for back-compat).
-
-Pre-052 this flag was off-by-default and gated dev/test/build dep emission.
-Post-052 the default is to include ALL scopes natively tagged. To restore
-the strict deployed-runtime view, use `--exclude-scope dev,build,test` (see
-the deprecation warning emitted on stderr). Set `MIKEBOM_NO_DEPRECATION_NOTICE=1`
-to suppress the warning during a controlled migration.
 
 ### `--timeout <SECONDS>`
 

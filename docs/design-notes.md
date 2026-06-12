@@ -129,7 +129,7 @@ See `specs/055-go-transitive-edges/` for the full design + capability matrix.
 - **Pure-Rust SQLite reader** only handles leaf-table + interior-table pages; overflow pages refused. RHEL rpmdbs don't use overflow pages in practice.
 
 ### Ruby
-- Only `--include-dev` gating is on gems under `test` scope in the declaration tree; bundler's full scope semantics not modeled.
+- Bundler's full scope semantics (`:development`, `:production`, grouped) aren't modeled. Test-scoped gems carry the milestone-052 native scope tag; operators use `--exclude-scope test` to drop them.
 - **Gemspec walker** (added 2026-04-20 for sbom-conformance bug 3) parses name + version from `specifications/*.gemspec` files via a line-scanner for `s.name = "..."` / `s.version = "..."`. Interpolated versions (`"#{FOO_VERSION}"`) produce garbage strings — downstream PURL construction will typically reject them. In practice, gemspec versions are always literal strings so this is a theoretical edge case.
 
 ### Binary scanner

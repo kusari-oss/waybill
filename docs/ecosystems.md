@@ -175,9 +175,11 @@ work — see the sbomqs-score-lift items in
 - ClearlyDefined: fetches concluded licenses from CD's rubygems provider.
 
 **Known limitations:**
-- Only `--include-dev` gates gems under `test` scope in the declaration
-  tree; bundler's full scope semantics (`:development`, `:production`,
-  grouped) aren't modeled.
+- Bundler's full scope semantics (`:development`, `:production`,
+  grouped) aren't modeled. Test-scoped gems carry the milestone-052
+  native scope tag (CDX `scope: "excluded"`, SPDX 2.3
+  `TEST_DEPENDENCY_OF`, SPDX 3 `LifecycleScopeType: test`); operators
+  use `--exclude-scope test` to drop them.
 - Interpolated gemspec versions (`"#{FOO_VERSION}"`) produce garbage
   strings — downstream PURL construction rejects them. Theoretical edge
   case; in practice gemspec versions are always literal strings.

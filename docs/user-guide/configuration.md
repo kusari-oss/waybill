@@ -21,7 +21,6 @@ Global flags apply to every subcommand. They can be passed before the noun
 | `--exclude-scope <SCOPE>` | — | Drop components whose lifecycle scope matches any listed value. Valid: `dev`, `build`, `test`. Comma-separated; runtime always retained. |
 | `--include-declared-deps` | — | Include declared-but-not-on-disk dependencies (manifest SBOM mode). Auto-on for `--path`; explicit for `--image`. |
 | `--include-legacy-rpmdb` | `MIKEBOM_INCLUDE_LEGACY_RPMDB=1` | Read legacy Berkeley-DB rpmdb on pre-RHEL-8 / CentOS-7 / Amazon-Linux-2 images. |
-| `--include-dev` | — | **Deprecated.** Replacement: `--exclude-scope`. See [CLI reference](cli-reference.md) for the deprecation block. |
 
 ## Environment variables
 
@@ -38,7 +37,7 @@ These affect actual scan / trace / verify behavior.
 | `MIKEBOM_OCI_CACHE` | `0` to disable; unset to enable | enabled | Disable the on-disk OCI blob cache for registry pulls. Equivalent to `--no-oci-cache`. |
 | `MIKEBOM_OCI_CACHE_DIR` | absolute path | XDG cache convention | Override the OCI blob cache directory. Resolved before `XDG_CACHE_HOME` when set non-empty. |
 | `MIKEBOM_OCI_CACHE_SIZE` | bytes (decimal integer) | `10737418240` (10 GB) | Cap for the on-disk OCI blob cache. Equivalent to `--oci-cache-size`. |
-| `MIKEBOM_NO_DEPRECATION_NOTICE` | `1` (any non-empty value) | unset | Suppresses stderr deprecation warnings emitted by deprecated flags / format ids (e.g., `--include-dev`, `spdx-3-json-experimental`). Useful in CI logs during a controlled migration. |
+| `MIKEBOM_NO_DEPRECATION_NOTICE` | `1` (any non-empty value) | unset | Suppresses stderr deprecation warnings emitted by deprecated flags / format ids (e.g., `spdx-3-json-experimental`). Useful in CI logs during a controlled migration. |
 | `MIKEBOM_FIXED_TIMESTAMP` | RFC 3339 timestamp | unset | Pin emission timestamps for reproducible-build pipelines. When set, every emitted SBOM uses this timestamp instead of "now". |
 
 ### Logging
