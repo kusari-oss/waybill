@@ -7,6 +7,66 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.1.0-alpha.47] — 2026-06-12
+
+Milestones 110 Phase 5-Slim (multi-source corpus configuration + fetch), 111 (cross-tier PURL aliasing), 112 (Go build-inclusion clarity via `go mod why -m -vendor`), and 113 (user-supplied directory exclusion) ship in this release. Two Go correctness fixes also land: test-scope closure propagation, and skipping `testdata/` + `_`-prefixed directories per the Go tool convention.
+
+**Default behavior changes (non-byte-identical for Go scans):**
+
+- Go components discovered only via `go.sum` fallback now carry `mikebom:build-inclusion: unknown` always-on; when a `go` toolchain is on PATH, `go mod why -m -vendor` runs by default to classify those modules into `not-needed` (CDX `scope: "excluded"`) / `test-only` (lifecycle scope test) / `needed`. Opt-out via `--no-go-mod-why` or `MIKEBOM_NO_GO_MOD_WHY=1` (milestone 112).
+- Go test scope now propagates correctly through the test-only module closure — modules transitively reachable only from `_test.go` imports now carry `mikebom:lifecycle-scope: test` plus `mikebom:lifecycle-scope-derivation: test-only-closure`.
+- Go walkers now skip `testdata/` directories and `_`-prefixed directories per `go help packages` ("ignored by the go tool"). Fixes the inverted-dependency-edge bug class where a fixture's `go.mod` was emitted as a real workspace.
+
+All other ecosystems see byte-identical SBOMs by default — milestone 113's `--exclude-path` is off by default and milestone 111's `--pkg-alias` is opt-in.
+
+### Pluggable fingerprint corpus v2 — multi-source configuration (#322)
+
+First slice of milestone 110 Phase 5-Slim. Adds the `MIKEBOM_FINGERPRINTS_CORPUS_SOURCES` env-var parser + `CorpusSource` deduplication + per-source cache directory derivation. The default public corpus source is still the sole effective source when the env var is unset; operators wanting to layer in private corpus sources can now do so by listing multiple URLs.
+
+### Pluggable fingerprint corpus v2 — multi-source fetch + wire-up (#325)
+
+Second + third slice. Wires the multi-source configuration into the runtime fetch path: each source is fetched in parallel into its own per-source cache dir (`~/.cache/mikebom/fingerprints/<source-id>/<sha>/`), with a 24-hour TTL via the `last_used.touch` sidecar pattern. Matcher loads records from every successful source and de-duplicates by record `primary_purl + indicator content`.
+
+### Cross-tier PURL aliasing — foundational types + envelope (#327)
+
+First PR of milestone 111. Introduces the `mikebom:source-document-binding-alias` envelope extension on the existing milestone-072 binding envelope. The `PurlAlias { from: Purl, to: Purl, reason: Option<String> }` newtype carries an operator-declared "this PURL alias-equals that PURL" assertion so downstream consumers can collapse cross-tier same-component shadows even when the source-tier and build-tier readers emit slightly different canonical PURLs (e.g. `pkg:github/madler/zlib@v1.3.1` ↔ `pkg:generic/zlib@1.3.1`).
+
+### Cross-tier PURL aliasing — `--pkg-alias` flag + env var (#330)
+
+Second PR of milestone 111. Wires `--pkg-alias <FROM=TO>` (repeatable) + `MIKEBOM_PKG_ALIAS` (comma-separated) into the scan binding path. The alias map is propagated into the milestone-072 binding-emit pipeline so the envelope is extended at SBOM emission time. Off by default; byte-identical output when not supplied.
+
+### Cross-tier PURL aliasing — US1 end-to-end integration tests + qualifier-aware parser (#331)
+
+Third PR of milestone 111. Adds the qualifier-aware alias parser (so `pkg:github/foo/bar@v1?subpath=…` is properly canonicalized before equality compare) + 6 end-to-end integration tests covering CLI parsing, env var precedence, envelope emission across CDX/SPDX 2.3/SPDX 3, and round-trip via `verify-binding`.
+
+### Scan performance — drop build intermediates before reading them (#329)
+
+Bug fix: the milestone-098 ELF compiler-stamps extractor was reading `.o`/`.a`/`.rlib` files looking for `.comment` sections, dominating scan wall-time on Rust `target/` trees with hundreds of thousands of intermediate object files. Added a fast-path skip on those four extensions in `go_binary.rs`'s recursive walker before the full-file probe. On a `target/`-heavy fixture, this cuts scan time by ~95%. No behavioral change to emission.
+
+### Go test-scope closure propagation (#332)
+
+Fix for a class of false-negative test-scope tagging. Pre-fix, a module reachable only from test-only roots through transitive `requires` was tagged `lifecycle-scope: prod` because the import walk hit it from a non-`_test.go` file (transitively, via a module that was itself only test-needed). Post-fix, mikebom propagates test scope through the test-only closure: a module is `lifecycle-scope: test` iff every path from any `_test.go` import root in any main module reaches it, and no path from a non-test import does. The new derivation gets `mikebom:lifecycle-scope-derivation: test-only-closure`.
+
+### Go walker — skip `testdata/` + `_`-prefixed dirs per Go tool convention (#335, closes part of #334)
+
+`go help packages` is explicit: directories named `testdata`, plus any directory whose name begins with `.` or `_`, are ignored by the Go tool. mikebom's Go source walker and Go binary walker now match exactly. Fixes the inverted-dependency-edge bug class where a Go test fixture at `pkg/sbomgen/testdata/gofixture/go.mod` (whose go.mod `required` the parent module as a fixture scenario) was emitted as a real main-module with a synthetic edge back to the parent — producing the chain `app → test-fixture-sbomgen → app` in consumer tooling.
+
+### User-supplied directory exclusion — `--exclude-path` flag (#336, milestone 113, closes #334)
+
+Generic directory-exclusion flag for ecosystems without a documented language convention. Repeatable on the CLI (`--exclude-path tests/fixtures --exclude-path '**/examples'`), env-var counterpart `MIKEBOM_EXCLUDE_PATH` accepting platform-path-list-separated entries, and combines by union. Entries containing `*`/`?`/`[` are `globset` patterns matching directory paths at arbitrary depth; other entries are literal paths anchored at the scan root.
+
+Honored across every ecosystem walker (cargo, maven, gem, pip, npm, gradle, nuget, yocto, golang source + binary) by threading `&ExclusionSet` through each walker's recursive descent decision. Additive on top of the built-in skip set — operators can't use it to re-enable scanning of `vendor/`/`node_modules/`/etc., only to add their own entries.
+
+Off by default: zero entries produce byte-identical SBOMs to a pre-feature build. Non-empty entries trigger the Principle-X transparency annotation `mikebom:exclude-path` at envelope level across CDX 1.6 / SPDX 2.3 / SPDX 3.0.1 (new parity catalog row C63), so consumers can detect the narrowing without access to the original scan invocation. Malformed patterns abort before any walker begins with a single error line naming the offending entry verbatim.
+
+One new direct Cargo dep: `globset = "0.4"` (pure Rust; all transitives — `regex`, `regex-syntax`, `regex-automata`, `aho-corasick` — already in the workspace closure).
+
+### Validation across the release
+
+- Workspace-wide unit + integration tests: 1900+ tests pass on `./scripts/pre-pr.sh` (milestone 110 Phase 5-Slim + milestone 111 + milestone 112 + milestone 113 land cleanly).
+- 33 byte-identity goldens regenerated for the version bump (alpha.46 → alpha.47). All deltas are version-bump-only — the milestone-112 build-inclusion annotations + test-closure-propagation derivation were already captured in their respective feature PRs' golden regenerations, so this release carries no emission-shape changes to the committed goldens beyond the mikebom-self-component `version` field bump (and the SHA-derived SPDX document IDs that shift accordingly per milestone 011's deterministic-ID scheme).
+- One new direct Cargo dependency between alpha.46 and alpha.47: `globset = "0.4"` (pure Rust, all transitives already in the lockfile).
+
 ## [0.1.0-alpha.46] — 2026-06-08
 
 Milestone 110 Phase 4 surface complete: the pluggable fingerprint corpus v2 capability lands end-to-end. mikebom now ships a multi-indicator corpus record schema (symbols + version strings + Build-IDs + ABI markers + ecosystem-alias PURLs + CPE candidates) AND the matcher + loader + production wiring that consumes it. Third-party corpus authors can target `docs/reference/corpus-record-v2.schema.json` today and have mikebom load, fuse, and emit versioned PURLs against scanned binaries.
