@@ -39,7 +39,7 @@ jobs:
     name: Build eBPF object
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ env.TAG_NAME }}
 
@@ -111,7 +111,7 @@ jobs:
     env:
       TARGET: x86_64-unknown-linux-gnu
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ env.TAG_NAME }}
 
@@ -222,7 +222,7 @@ jobs:
     env:
       TARGET: aarch64-unknown-linux-gnu
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ env.TAG_NAME }}
 
@@ -314,7 +314,7 @@ jobs:
     env:
       TARGET: aarch64-apple-darwin
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ env.TAG_NAME }}
 
@@ -384,7 +384,7 @@ jobs:
     env:
       TARGET: x86_64-pc-windows-msvc
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ env.TAG_NAME }}
 
@@ -462,7 +462,7 @@ jobs:
       packages: write
       id-token: write # Required for cosign keyless OIDC token exchange.
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: ${{ env.TAG_NAME }}
           # Kusari Inspector requirement: prevent token-in-.git/config
