@@ -124,6 +124,35 @@ struct Cli {
     #[arg(long, global = true, value_delimiter = ',')]
     exclude_scope: Vec<ExcludeScopeArg>,
 
+    /// Skip directory subtrees matching the given path or glob pattern
+    /// during scan. Repeatable for multiple entries. Entries containing
+    /// glob metacharacters (`*`, `?`, `[`) are treated as patterns
+    /// matched at any depth in the tree; entries containing none are
+    /// literal paths anchored at the scan root (e.g.
+    /// `--exclude-path tests/fixtures` matches `<root>/tests/fixtures`
+    /// only, while `--exclude-path '**/testdata'` matches every
+    /// `testdata` directory at any depth).
+    ///
+    /// Honored across every ecosystem walker (cargo, maven, gem, pip,
+    /// npm, gradle, nuget, yocto, Go source, Go binary). Additive on
+    /// top of the scanner's built-in skip set (`vendor/`,
+    /// `node_modules/`, `target/`, `dist/`, `build/`, `__pycache__/`,
+    /// `.`-prefixed dirs, the Go-tool unconditional skips of
+    /// `testdata/` and `_`-prefixed dirs).
+    ///
+    /// Also via `MIKEBOM_EXCLUDE_PATH` using the platform's path-list
+    /// separator (`:` on Unix, `;` on Windows). CLI flags and env-var
+    /// entries combine by union.
+    ///
+    /// When any exclusion is in effect the emitted SBOM carries a
+    /// `mikebom:exclude-path` envelope annotation listing the active
+    /// entries (Constitution Principle X). When omitted the emitted
+    /// SBOM is byte-identical to a pre-feature build.
+    ///
+    /// See docs/user-guide/cli-reference.md#--exclude-path.
+    #[arg(long, global = true, action = clap::ArgAction::Append, value_name = "PATH_OR_PATTERN")]
+    exclude_path: Vec<String>,
+
     /// Include declared-but-not-on-disk dependencies (manifest SBOM).
     /// By default, mikebom emits only components physically present in
     /// the scanned tree or image ("artifact SBOM" — if it's in the
@@ -280,6 +309,26 @@ async fn main() -> anyhow::Result<std::process::ExitCode> {
     let exclude_scope: Vec<mikebom_common::resolution::LifecycleScope> =
         cli.exclude_scope.iter().map(|a| a.as_lifecycle_scope()).collect();
 
+    // Milestone 113 — user-supplied directory exclusion. CLI flag
+    // entries plus MIKEBOM_EXCLUDE_PATH env-var entries (split on the
+    // platform's path-list separator: `:` on Unix, `;` on Windows)
+    // combine by union, in flag-then-env order. Reject malformed
+    // entries at parse time (FR-007 / SC-005) so the scan never
+    // begins on a bad config.
+    let mut exclude_path_entries: Vec<String> = cli.exclude_path.clone();
+    if let Ok(env_value) = std::env::var("MIKEBOM_EXCLUDE_PATH") {
+        for piece in std::env::split_paths(&env_value) {
+            let s = piece.to_string_lossy().into_owned();
+            if !s.is_empty() {
+                exclude_path_entries.push(s);
+            }
+        }
+    }
+    let exclude_set = scan_fs::package_db::exclude_path::ExclusionSet::from_iter(
+        exclude_path_entries.iter().map(|s| s.as_str()),
+    )
+    .map_err(|e| anyhow::anyhow!("{e}"))?;
+
     match cli.command {
         Commands::Trace(cmd) => {
             cli::trace_cmd::execute(cmd).await?;
@@ -292,6 +341,7 @@ async fn main() -> anyhow::Result<std::process::ExitCode> {
                 exclude_scope,
                 cli.include_legacy_rpmdb,
                 cli.include_declared_deps,
+                exclude_set,
             )
             .await
         }

@@ -359,6 +359,23 @@ pub fn annotate_document(
         );
     }
 
+    // Milestone 113 FR-014 / Constitution Principle X: user-supplied
+    // directory exclusions active for this scan. See CDX twin in
+    // `cyclonedx/metadata.rs`; the SPDX 2.3 envelope encodes the same
+    // payload as a comma-joined string under the document-level
+    // annotation comment.
+    if let Some(entries) =
+        crate::scan_fs::package_db::exclude_path::current_annotation()
+    {
+        if !entries.is_empty() {
+            push(
+                &mut out,
+                "mikebom:exclude-path",
+                json!(entries.join(",")),
+            );
+        }
+    }
+
     // C44 (milestone 061, closes #119): doc-level Go graph-completeness
     // signal. Per Constitution Principle X (Transparency): when mikebom
     // can't supply every transitive edge for `go.sum` components, the

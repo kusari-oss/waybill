@@ -558,6 +558,11 @@ spdx3_anno!(c61_spdx3, "mikebom:build-inclusion-derivation", component);
 // the annotation IS emitted on SPDX 3.
 spdx3_anno!(c62_spdx3, "mikebom:lifecycle-scope-derivation", component);
 
+// C63 — `mikebom:exclude-path` (milestone 113 FR-014 / SC-007).
+// Envelope-level transparency annotation. Document-scope, mirrors
+// CDX `metadata.properties[].mikebom:exclude-path`.
+spdx3_anno!(c63_spdx3, "mikebom:exclude-path",             document);
+
 // C47 — document-level user-defined identifiers (milestone 073).
 // Per `contracts/identifiers-annotation.md` C-1 SPDX 3 and C-2
 // SPDX 3: user-defined identifiers ride `Element.externalIdentifier[]`

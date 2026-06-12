@@ -115,7 +115,7 @@ pub struct ScanResult {
 ///   the dpkg-provided `.md5sums` file content (no per-file detail).
 ///   Ignored when `read_package_db` is false.
 #[allow(clippy::too_many_arguments)] // entry-point flag bundle; keeps caller-side wiring shape stable across milestones.
-pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_package_db: bool, deep_hash: bool, include_dev: bool, include_legacy_rpmdb: bool, scan_mode: ScanMode, include_declared_deps: bool, scan_target_name: Option<&str>) -> Result<ScanResult, ScanError> {
+pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_package_db: bool, deep_hash: bool, include_dev: bool, include_legacy_rpmdb: bool, scan_mode: ScanMode, include_declared_deps: bool, scan_target_name: Option<&str>, exclude_set: &package_db::exclude_path::ExclusionSet) -> Result<ScanResult, ScanError> {
     // Canonicalize the rootfs once at entry so downstream path
     // comparisons use a consistent base. Without this, macOS's
     // `/tmp` → `/private/tmp` symlink (and other host-level symlinks)
@@ -227,7 +227,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     let mut go_graph_completeness_reason: Option<String> = None;
     let mut scan_target_coord: Option<package_db::maven::ScanTargetCoord> = None;
     if read_package_db {
-        let scan_result = package_db::read_all(root, deb_codename, include_dev, include_legacy_rpmdb, scan_mode, include_declared_deps, scan_target_name)?;
+        let scan_result = package_db::read_all(root, deb_codename, include_dev, include_legacy_rpmdb, scan_mode, include_declared_deps, scan_target_name, exclude_set)?;
         os_release_missing_fields = scan_result.diagnostics.os_release_missing_fields.clone();
         go_graph_completeness = scan_result.diagnostics.go_graph_completeness;
         go_graph_completeness_reason = scan_result.diagnostics.go_graph_completeness_reason.clone();
@@ -950,7 +950,7 @@ mod tests {
         std::fs::create_dir_all(&cache_dir).unwrap();
         std::fs::write(cache_dir.join("serde-1.0.197.crate"), b"bytes").unwrap();
 
-        let result = scan_path(dir.path(), None, 1024, false, true, false, false, ScanMode::Path, true, None).unwrap();
+        let result = scan_path(dir.path(), None, 1024, false, true, false, false, ScanMode::Path, true, None, &Default::default()).unwrap();
         assert_eq!(result.components.len(), 1);
         assert!(result.relationships.is_empty());
         let c = &result.components[0];
@@ -971,7 +971,7 @@ mod tests {
         )
         .unwrap();
 
-        let result = scan_path(dir.path(), Some("bookworm"), 1024, false, true, false, false, ScanMode::Path, true, None).unwrap();
+        let result = scan_path(dir.path(), Some("bookworm"), 1024, false, true, false, false, ScanMode::Path, true, None, &Default::default()).unwrap();
         assert_eq!(result.components.len(), 1);
         let purl = result.components[0].purl.as_str();
         assert!(
@@ -986,7 +986,7 @@ mod tests {
         std::fs::write(dir.path().join("README.md"), b"not a package").unwrap();
         std::fs::write(dir.path().join("build.log"), b"also not").unwrap();
 
-        let result = scan_path(dir.path(), None, 1024, false, true, false, false, ScanMode::Path, true, None).unwrap();
+        let result = scan_path(dir.path(), None, 1024, false, true, false, false, ScanMode::Path, true, None, &Default::default()).unwrap();
         assert!(result.components.is_empty());
     }
 
@@ -1013,7 +1013,7 @@ Architecture: arm64
         )
         .unwrap();
 
-        let result = scan_path(dir.path(), Some("bookworm"), 1024, true, true, false, false, ScanMode::Path, true, None).unwrap();
+        let result = scan_path(dir.path(), Some("bookworm"), 1024, true, true, false, false, ScanMode::Path, true, None, &Default::default()).unwrap();
         // Both packages resolve from the db.
         assert_eq!(result.components.len(), 2, "{:#?}", result.components);
         assert!(result
@@ -1050,7 +1050,7 @@ Architecture: arm64
         )
         .unwrap();
 
-        let result = scan_path(dir.path(), None, 1024, true, true, false, false, ScanMode::Path, true, None).unwrap();
+        let result = scan_path(dir.path(), None, 1024, true, true, false, false, ScanMode::Path, true, None, &Default::default()).unwrap();
         assert_eq!(result.relationships.len(), 1);
         let rel = &result.relationships[0];
         assert!(rel.from.contains("jq@1.6"));
@@ -1099,7 +1099,7 @@ Architecture: arm64
         .unwrap();
 
         // Deep hash off so we don't depend on .list/.md5sums fixtures.
-        let result = scan_path(dir.path(), Some("bookworm"), 1024, true, false, false, false, ScanMode::Path, true, None).unwrap();
+        let result = scan_path(dir.path(), Some("bookworm"), 1024, true, false, false, false, ScanMode::Path, true, None, &Default::default()).unwrap();
 
         // Exactly two components: jq (merged) + libjq1. NOT three.
         assert_eq!(
@@ -1187,7 +1187,7 @@ Maintainer: Some Maintainer <m@example.org>
         )
         .unwrap();
 
-        let result = scan_path(dir.path(), Some("bookworm"), 1024, true, false, false, false, ScanMode::Path, true, None).unwrap();
+        let result = scan_path(dir.path(), Some("bookworm"), 1024, true, false, false, false, ScanMode::Path, true, None, &Default::default()).unwrap();
 
         // One merged component, not two.
         assert_eq!(
@@ -1241,7 +1241,7 @@ Architecture: amd64
         )
         .unwrap();
 
-        let result = scan_path(dir.path(), None, 1024, /*read_package_db=*/ false, true, false, false, ScanMode::Path, true, None).unwrap();
+        let result = scan_path(dir.path(), None, 1024, /*read_package_db=*/ false, true, false, false, ScanMode::Path, true, None, &Default::default()).unwrap();
         assert!(
             result.components.is_empty(),
             "db should be ignored when flag is off"

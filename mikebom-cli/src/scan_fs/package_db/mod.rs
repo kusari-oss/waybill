@@ -18,6 +18,7 @@ pub mod conan;
 mod control_file;
 pub mod copyright;
 pub mod dpkg;
+pub mod exclude_path;
 pub mod file_hashes;
 pub mod gem;
 pub mod go_binary;
@@ -1133,6 +1134,7 @@ fn apply_go_mod_why_verdicts(
 ///   `docker_image::extract` or a user-supplied `--path`).
 /// * `deb_codename` — used to stamp the `distro=` qualifier on deb
 ///   PURLs when present.
+#[allow(clippy::too_many_arguments)] // Orchestrator flag bundle — milestone 113 extension.
 pub fn read_all(
     rootfs: &Path,
     _deb_codename: Option<&str>,
@@ -1141,6 +1143,7 @@ pub fn read_all(
     scan_mode: crate::scan_fs::ScanMode,
     include_declared_deps: bool,
     scan_target_name: Option<&str>,
+    exclude_set: &exclude_path::ExclusionSet,
 ) -> Result<DbScanResult, PackageDbError> {
     // Milestone 102 FR-016: opt-in vendored-dep emission for CMake
     // `add_subdirectory(third_party/...)`. Read via env var so the
@@ -1249,12 +1252,12 @@ pub fn read_all(
     // built. Cross-tier collisions (opkg-installed-DB + recipe-tier
     // both naming the same coord) keep BOTH components because the
     // PURL ecosystem differs (`pkg:opkg/` vs `pkg:bitbake/`).
-    out.extend(yocto::recipe::read(rootfs));
+    out.extend(yocto::recipe::read(rootfs, exclude_set));
 
     // Python: venv dist-info + lockfiles + requirements.txt per R13 tiers.
     // No fail-closed: an empty Python section is fine if the scan root
     // doesn't contain any Python artefacts.
-    out.extend(pip::read(rootfs, include_dev));
+    out.extend(pip::read(rootfs, include_dev, exclude_set));
     // Collect pip-claimed paths from dist-info RECORD files.
     pip::collect_claimed_paths(
         rootfs,
@@ -1277,7 +1280,7 @@ pub fn read_all(
     // `Err` for callers that want to handle it explicitly; the
     // dispatcher just chooses warn-and-continue for the polyglot
     // safety case.
-    match npm::read(rootfs, include_dev, scan_mode) {
+    match npm::read(rootfs, include_dev, scan_mode, exclude_set) {
         Ok(entries) => out.extend(entries),
         Err(npm::NpmError::LockfileV1Unsupported { path }) => {
             tracing::warn!(
@@ -1304,7 +1307,7 @@ pub fn read_all(
     // triggers the proxy-fetch path, so the headline US1 behavior works
     // even without the flag being threaded — T010 records this as a
     // known limitation.
-    let (golang_entries, go_signals) = golang::read(rootfs, include_dev);
+    let (golang_entries, go_signals) = golang::read(rootfs, include_dev, exclude_set);
     out.extend(golang_entries);
 
     // Milestone 061 (closes #119): propagate the Go ecosystem's
@@ -1350,6 +1353,7 @@ pub fn read_all(
         &claimed,
         #[cfg(unix)]
         &claimed_inodes,
+        exclude_set,
     );
     // Milestone 050: capture binary count BEFORE moving entries
     // into `out`, for the source-tree-no-binary scope hint emitted
@@ -1371,6 +1375,7 @@ pub fn read_all(
         #[cfg(unix)]
         &claimed_inodes,
         scan_target_name,
+        exclude_set,
     );
     out.extend(maven_entries);
     // Milestone 106 US3 (closes #277): Gradle source-tree readers
@@ -1380,18 +1385,18 @@ pub fn read_all(
     // `LifecycleScope::Build` so the existing milestone-052 emission
     // path tags them `scope: "excluded"` (CDX) /
     // `BUILD_DEPENDENCY_OF` (SPDX 2.3) automatically.
-    out.extend(gradle::read(rootfs));
+    out.extend(gradle::read(rootfs, exclude_set));
     // Milestone 106 US4 (closes #275): NuGet source-tree reader for
     // `.csproj` / `.vbproj` / `.fsproj` with packages.lock.json
     // precedence, Directory.Packages.props (CPM) fallback, and
     // PrivateAssets-driven lifecycle-scope mapping. Emits
     // `pkg:nuget/<name>@<version>` PURLs feeding the existing
     // deps.dev enrichment path.
-    out.extend(nuget::read(rootfs));
+    out.extend(nuget::read(rootfs, exclude_set));
     // Cargo is fail-closed on v1/v2 lockfiles (FR-040), mirroring the
     // npm v1 refusal pattern.
-    out.extend(cargo::read(rootfs, include_dev)?);
-    out.extend(gem::read(rootfs, include_dev));
+    out.extend(cargo::read(rootfs, include_dev, exclude_set)?);
+    out.extend(gem::read(rootfs, include_dev, exclude_set));
 
     // Milestone 102: C/C++ source-tree readers (Bazel + CMake +
     // vcpkg + Conan). Skip-with-warn on parse errors per FR-015;
@@ -1634,7 +1639,9 @@ Architecture: arm64
             false,
             false,
             crate::scan_fs::ScanMode::Path,
-            true, None,
+            true,
+            None,
+            &Default::default(),
         )
         .unwrap();
 

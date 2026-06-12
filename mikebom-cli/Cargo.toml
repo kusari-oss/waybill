@@ -121,6 +121,13 @@ data-encoding = "2"
 # explicitly names regex.
 regex = "1"
 
+# Milestone 113 — user-supplied directory exclusion for `mikebom scan`.
+# `globset` provides `**`-capable glob patterns with no negation
+# (matches the spec assumption); pure Rust per Principle I; all
+# transitives (regex, regex-syntax, regex-automata, aho-corasick)
+# already in the workspace dep closure.
+globset = "0.4"
+
 # Milestone 003 — pure-Rust-only deps. See specs/003-multi-ecosystem-expansion/
 # tasks.md T001 for the feature-pinning rationale (Principle I: zero C).
 # Any feature change here must be cross-checked with

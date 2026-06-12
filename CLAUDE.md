@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-06-11
+Auto-generated from all feature plans. Last updated: 2026-06-12
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -119,6 +119,8 @@ Auto-generated from all feature plans. Last updated: 2026-06-11
 - N/A — alias declarations are in-process per scan; persisted only inside the emitted SBOM via the extended envelope. No caches, no databases. (111-pkg-alias-binding)
 - Rust stable (workspace toolchain inherited from milestones 001–111; no nightly required for this user-space-only feature) + Existing only — `std::process::Command` + `std::sync::mpsc` (subprocess with timeout, pattern at `golang/go_mod_graph.rs:81–158`), `clap` (new boolean flag via derive), `serde`/`serde_json` (annotation values), `tracing` (FR-013 logs), `anyhow`/`thiserror` (error classes). **No new Cargo dependencies.** Child-process tool: the host's `go` binary (optional; absence degrades). (112-go-build-inclusion)
 - N/A — all classification state is in-process per scan; persisted only as annotations in the emitted SBOM. (112-go-build-inclusion)
+- Rust stable (workspace toolchain inherited from milestones 001–113; no nightly required for this user-space-only work). + existing only EXCEPT one new direct dep — `globset = "0.4"` (pure Rust, pulls `regex` + `regex-syntax` which are already in the workspace dependency closure). Existing crates reused: `clap` (the new flag via `ArgAction::Append` derive + `value_parser` validation), `serde`/`serde_json` (transparency annotation emission), `tracing` (debug logs for matched directories), `anyhow`/`thiserror` (parse-error class for malformed patterns), `walkdir`/`std::fs::canonicalize` (existing descent helpers — unchanged). `url` (workspace) for env-var-list separator handling on Windows is not needed; we use `std::env::var` + `std::env::join_paths`-style splitting. (113-exclude-path-flag)
+- N/A — exclusion entries are in-process per scan; no caches, no persistence. (113-exclude-path-flag)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -181,6 +183,7 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 113-exclude-path-flag: Added Rust stable (workspace toolchain inherited from milestones 001–113; no nightly required for this user-space-only work). + existing only EXCEPT one new direct dep — `globset = "0.4"` (pure Rust, pulls `regex` + `regex-syntax` which are already in the workspace dependency closure). Existing crates reused: `clap` (the new flag via `ArgAction::Append` derive + `value_parser` validation), `serde`/`serde_json` (transparency annotation emission), `tracing` (debug logs for matched directories), `anyhow`/`thiserror` (parse-error class for malformed patterns), `walkdir`/`std::fs::canonicalize` (existing descent helpers — unchanged). `url` (workspace) for env-var-list separator handling on Windows is not needed; we use `std::env::var` + `std::env::join_paths`-style splitting.
 - 112-go-build-inclusion: Added Rust stable (workspace toolchain inherited from milestones 001–111; no nightly required for this user-space-only feature) + Existing only — `std::process::Command` + `std::sync::mpsc` (subprocess with timeout, pattern at `golang/go_mod_graph.rs:81–158`), `clap` (new boolean flag via derive), `serde`/`serde_json` (annotation values), `tracing` (FR-013 logs), `anyhow`/`thiserror` (error classes). **No new Cargo dependencies.** Child-process tool: the host's `go` binary (optional; absence degrades).
 - 111-pkg-alias-binding: Added Rust stable (workspace toolchain inherited from milestones 001–110; no nightly required for this user-space-only feature). + Existing only — `clap` (the new flag via `ArgAction::Append` derive), `serde`/`serde_json` (additive envelope round-trip), `Purl` newtype from `mikebom-common` (milestone 005 — canonicalization + equality), milestone-072 `SourceDocumentBinding` (the envelope this extends), `tracing` (warn/info logs), `anyhow` (error propagation), `thiserror` (alias-parse error variants). **No new Cargo dependencies.**
 - 110-pluggable-corpus-v2: Added Rust stable (workspace toolchain inherited from milestones 001–109; no nightly required for this user-space-only work).

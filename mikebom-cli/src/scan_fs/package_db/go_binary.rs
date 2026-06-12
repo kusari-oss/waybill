@@ -494,6 +494,7 @@ pub fn read(
     _include_dev: bool,
     claimed_paths: &std::collections::HashSet<std::path::PathBuf>,
     #[cfg(unix)] claimed_inodes: &std::collections::HashSet<(u64, u64)>,
+    exclude_set: &super::exclude_path::ExclusionSet,
 ) -> (
     Vec<PackageDbEntry>,
     std::collections::HashSet<String>,
@@ -506,6 +507,7 @@ pub fn read(
         std::collections::HashSet::new();
     walk_for_binaries(
         rootfs,
+        rootfs,
         0,
         &mut visited,
         &mut out,
@@ -514,6 +516,7 @@ pub fn read(
         claimed_paths,
         #[cfg(unix)]
         claimed_inodes,
+        exclude_set,
     );
     if !out.is_empty() {
         tracing::info!(
@@ -541,6 +544,7 @@ const MAX_BINARY_WALK_DEPTH: usize = 10;
 #[allow(clippy::too_many_arguments)]
 fn walk_for_binaries(
     dir: &Path,
+    rootfs: &Path,
     depth: usize,
     visited: &mut std::collections::HashSet<std::path::PathBuf>,
     out: &mut Vec<PackageDbEntry>,
@@ -548,6 +552,7 @@ fn walk_for_binaries(
     main_modules: &mut std::collections::HashSet<String>,
     claimed_paths: &std::collections::HashSet<std::path::PathBuf>,
     #[cfg(unix)] claimed_inodes: &std::collections::HashSet<(u64, u64)>,
+    exclude_set: &super::exclude_path::ExclusionSet,
 ) {
     if depth >= MAX_BINARY_WALK_DEPTH {
         return;
@@ -572,8 +577,17 @@ fn walk_for_binaries(
             if should_skip_binary_descent(&path) {
                 continue;
             }
+            // Milestone 113 — user-supplied directory exclusion.
+            if !exclude_set.is_empty() {
+                if let Ok(rel) = path.strip_prefix(rootfs) {
+                    if exclude_set.matches(&rel.to_string_lossy()) {
+                        continue;
+                    }
+                }
+            }
             walk_for_binaries(
                 &path,
+                rootfs,
                 depth + 1,
                 visited,
                 out,
@@ -582,6 +596,7 @@ fn walk_for_binaries(
                 claimed_paths,
                 #[cfg(unix)]
                 claimed_inodes,
+                exclude_set,
             );
             continue;
         }
@@ -1124,6 +1139,7 @@ mod tests {
             &std::collections::HashSet::new(),
             #[cfg(unix)]
             &std::collections::HashSet::new(),
+            &Default::default(),
         );
         assert!(entries.iter().any(|e| e.name == "example.com/app"));
         assert!(entries.iter().any(|e| e.name == "gh/x/y"));
@@ -1153,6 +1169,7 @@ mod tests {
             &std::collections::HashSet::new(),
             #[cfg(unix)]
             &std::collections::HashSet::new(),
+            &Default::default(),
         );
         assert!(entries.is_empty(), "intermediates must not emit entries: {entries:?}");
     }
@@ -1176,6 +1193,7 @@ mod tests {
             &std::collections::HashSet::new(),
             #[cfg(unix)]
             &std::collections::HashSet::new(),
+            &Default::default(),
         );
         assert!(entries
             .iter()
@@ -1210,6 +1228,7 @@ mod tests {
             &std::collections::HashSet::new(),
             #[cfg(unix)]
             &std::collections::HashSet::new(),
+            &Default::default(),
         );
         assert!(
             unclaimed
@@ -1231,6 +1250,7 @@ mod tests {
             &claimed,
             #[cfg(unix)]
             &claimed_inodes,
+            &Default::default(),
         );
         assert!(
             !claimed_entries
@@ -1262,6 +1282,7 @@ mod tests {
             &claimed_paths,
             #[cfg(unix)]
             &claimed_inodes,
+            &Default::default(),
         );
         // No binaries in the synthesized fixture; the test only
         // asserts the call returned (didn't hang).

@@ -56,11 +56,12 @@ pub fn read(
     rootfs: &Path,
     include_dev: bool,
     scan_mode: crate::scan_fs::ScanMode,
+    exclude_set: &super::exclude_path::ExclusionSet,
 ) -> Result<Vec<PackageDbEntry>, NpmError> {
     let mut entries: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: std::collections::HashSet<String> = std::collections::HashSet::new();
 
-    for project_root in candidate_project_roots(rootfs) {
+    for project_root in candidate_project_roots(rootfs, exclude_set) {
         // Detect v1 first — fail closed before emitting anything partial.
         let pkg_lock = project_root.join("package-lock.json");
         if pkg_lock.is_file() {
@@ -140,7 +141,7 @@ pub fn read(
     // collided, emit a net-new main-module (library packages without
     // committed lockfiles).
     let mut main_modules_emitted = 0usize;
-    for project_root in candidate_project_roots(rootfs) {
+    for project_root in candidate_project_roots(rootfs, exclude_set) {
         let Some(synthesized) = walk::build_npm_main_module_entry(&project_root) else {
             continue;
         };
@@ -204,7 +205,7 @@ pub fn read(
     // catalog row needed today; row C45 / milestone 061's annotation
     // infrastructure is the natural place to extend if we want
     // cross-format parity guarantees on source-manifest.
-    apply_nameless_secondary_umbrella(rootfs, include_dev, &mut entries);
+    apply_nameless_secondary_umbrella(rootfs, include_dev, &mut entries, exclude_set);
 
     // Milestone 066 same-PURL dedup. Collapses same-PURL collisions
     // (rare for npm given `node_modules/` exclusion in
@@ -267,6 +268,7 @@ fn apply_nameless_secondary_umbrella(
     rootfs: &Path,
     include_dev: bool,
     entries: &mut [PackageDbEntry],
+    exclude_set: &super::exclude_path::ExclusionSet,
 ) {
     // Pre-pass: enumerate project_root directories whose `package.json`
     // produced an actual main-module entry in `entries`. This is the
@@ -281,7 +283,7 @@ fn apply_nameless_secondary_umbrella(
     // the strictly correct condition — it captures every manifest the
     // main-module-build loop above DIDN'T handle (whether due to
     // nameless OR private+no-version).
-    let project_roots = candidate_project_roots(rootfs);
+    let project_roots = candidate_project_roots(rootfs, exclude_set);
     let main_module_dirs: Vec<PathBuf> = entries
         .iter()
         .filter(|e| {
@@ -448,7 +450,10 @@ const MAX_PROJECT_ROOT_DEPTH: usize = 6;
 ///
 /// Dedup by PURL in `read()` handles the common case where a root
 /// lockfile and a sub-package `package.json` reference the same dep.
-fn candidate_project_roots(rootfs: &Path) -> Vec<PathBuf> {
+fn candidate_project_roots(
+    rootfs: &Path,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PathBuf> {
     use super::project_roots::{
         should_skip_default_descent, walk_for_project_roots, WalkConfig,
     };
@@ -458,6 +463,7 @@ fn candidate_project_roots(rootfs: &Path) -> Vec<PathBuf> {
             max_depth: MAX_PROJECT_ROOT_DEPTH,
             is_project_root: &has_npm_signal,
             should_skip: &should_skip_default_descent,
+            exclude_set,
         },
     )
 }
@@ -666,7 +672,7 @@ mod tests {
             "lockfileVersion: '6.0'\npackages:\n  /b@2.0.0:\n    dev: false\n",
         )
         .unwrap();
-        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path).unwrap();
+        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path, &Default::default()).unwrap();
         assert!(out.iter().any(|e| e.name == "a"));
         assert!(
             !out.iter().any(|e| e.name == "b"),
@@ -684,7 +690,7 @@ mod tests {
             r#"{"name":"foo","version":"1.2.3","license":"MIT"}"#,
         )
         .unwrap();
-        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path).unwrap();
+        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path, &Default::default()).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].name, "foo");
         assert_eq!(out[0].sbom_tier.as_deref(), Some("deployed"));
@@ -704,7 +710,7 @@ mod tests {
             r#"{"name":"express","version":"4.18.2","license":"MIT"}"#,
         )
         .unwrap();
-        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path).unwrap();
+        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path, &Default::default()).unwrap();
         assert_eq!(out.len(), 1, "expected 1 entry from image-mode walk");
         assert_eq!(out[0].name, "express");
         assert_eq!(out[0].sbom_tier.as_deref(), Some("deployed"));
@@ -725,7 +731,7 @@ mod tests {
             r#"{"name":"npm","version":"10.2.4","license":"Artistic-2.0"}"#,
         )
         .unwrap();
-        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Image).unwrap();
+        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Image, &Default::default()).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].name, "npm");
         assert_eq!(out[0].npm_role.as_deref(), Some("internal"));
@@ -764,7 +770,7 @@ mod tests {
             .unwrap();
         }
 
-        let out = read(root, false, crate::scan_fs::ScanMode::Path).unwrap();
+        let out = read(root, false, crate::scan_fs::ScanMode::Path, &Default::default()).unwrap();
         // Expect: 1 lockfile entry (shared-lib) + 3 design-tier deps
         // (fastify, next, bull). Each sub-package's own design-tier
         // entry for its own name is allowed but the names are distinct
@@ -797,7 +803,7 @@ mod tests {
         )
         .unwrap();
 
-        let out = read(root, false, crate::scan_fs::ScanMode::Path).unwrap();
+        let out = read(root, false, crate::scan_fs::ScanMode::Path, &Default::default()).unwrap();
         assert!(
             !out.iter().any(|e| e.name == "should-not-resurface"),
             "descent into node_modules must not create bogus project roots"
@@ -818,7 +824,7 @@ mod tests {
             )
             .unwrap();
         }
-        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path).unwrap();
+        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path, &Default::default()).unwrap();
         assert_eq!(out.len(), 1, "duplicate PURLs must be deduped");
         assert_eq!(out[0].name, "lodash");
     }
@@ -831,7 +837,7 @@ mod tests {
             r#"{"dependencies":{"lodash":"^4.0"}}"#,
         )
         .unwrap();
-        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path).unwrap();
+        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path, &Default::default()).unwrap();
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].name, "lodash");
         assert_eq!(out[0].sbom_tier.as_deref(), Some("design"));
@@ -860,7 +866,7 @@ mod tests {
             r#"{"name":"npm","version":"10.2.4"}"#,
         )
         .unwrap();
-        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path).unwrap();
+        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path, &Default::default()).unwrap();
         assert!(
             out.iter().all(|e| e.name != "@npmcli/arborist"),
             "arborist should not appear in --path-mode output; got {:?}",
@@ -893,7 +899,7 @@ mod tests {
             r#"{"name":"npm","version":"10.2.4"}"#,
         )
         .unwrap();
-        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Image).unwrap();
+        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Image, &Default::default()).unwrap();
         let arborist = out
             .iter()
             .find(|e| e.name == "@npmcli/arborist")
@@ -943,7 +949,7 @@ mod tests {
         )
         .unwrap();
 
-        let out = read(root, false, crate::scan_fs::ScanMode::Path).unwrap();
+        let out = read(root, false, crate::scan_fs::ScanMode::Path, &Default::default()).unwrap();
 
         // schemalint emitted as a component.
         let schemalint = out
@@ -1014,7 +1020,7 @@ mod tests {
         )
         .unwrap();
 
-        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path).unwrap();
+        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path, &Default::default()).unwrap();
         // axios is emitted but has no source-manifest annotation
         // (because no anchor existed to attach it to).
         let axios = out
@@ -1060,7 +1066,7 @@ mod tests {
         )
         .unwrap();
 
-        let out = read(root, false, crate::scan_fs::ScanMode::Path).unwrap();
+        let out = read(root, false, crate::scan_fs::ScanMode::Path, &Default::default()).unwrap();
         let schemalint = out
             .iter()
             .find(|e| e.name == "schemalint")
@@ -1133,7 +1139,7 @@ mod tests {
         )
         .unwrap();
 
-        let out = read(root, false, crate::scan_fs::ScanMode::Path).unwrap();
+        let out = read(root, false, crate::scan_fs::ScanMode::Path, &Default::default()).unwrap();
 
         // Verify all four components emitted.
         let names: Vec<&str> = out.iter().map(|e| e.name.as_str()).collect();
@@ -1209,7 +1215,7 @@ mod tests {
         )
         .unwrap();
 
-        let out = read(root, false, crate::scan_fs::ScanMode::Path).unwrap();
+        let out = read(root, false, crate::scan_fs::ScanMode::Path, &Default::default()).unwrap();
 
         // pg gets emitted via Tier B walk.
         assert!(
@@ -1285,7 +1291,7 @@ mod tests {
             }"#,
         )
         .unwrap();
-        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path).unwrap();
+        let out = read(dir.path(), false, crate::scan_fs::ScanMode::Path, &Default::default()).unwrap();
 
         // Both pathes emitted as components.
         let pathe_versions: Vec<&str> = out

@@ -49,6 +49,7 @@ noun on every subcommand (clap's flag-position-tolerant parser).
 | `--include-legacy-rpmdb` | bool | off | Read legacy Berkeley-DB rpmdb on pre-RHEL-8 / CentOS-7 / Amazon-Linux-2 images. Also enabled via `MIKEBOM_INCLUDE_LEGACY_RPMDB=1`. |
 | `--timeout <SECONDS>` | u64 | disabled | Wall-clock time limit for the entire mikebom invocation. Exits with status 124 (POSIX `timeout(1)` convention) when exceeded. Set to `0` (or omit) to disable. |
 | `--no-go-mod-why` | bool | off | Disable Go build-graph classification via `go mod why`. Also via `MIKEBOM_NO_GO_MOD_WHY=1`. |
+| `--exclude-path <PATH_OR_PATTERN>` | string (repeatable) | (none) | Skip directory subtrees matching the given path or glob pattern during scan. Entries with `*`/`?`/`[` are patterns at any depth; otherwise literal paths anchored at scan root. Also via `MIKEBOM_EXCLUDE_PATH`. See [`--exclude-path`](#--exclude-path-path_or_pattern). |
 | `--include-dev` | bool | off | **Deprecated.** See the deprecated flags section. |
 
 ### `--offline`
@@ -179,6 +180,108 @@ case $? in
   *)   echo "scan failed with another error: $?" ;;
 esac
 ```
+
+### `--exclude-path <PATH_OR_PATTERN>`
+
+Skip directory subtrees matching the supplied path or glob pattern when
+scanning. Repeatable for multiple entries; an environment-variable form
+`MIKEBOM_EXCLUDE_PATH` accepts a list joined by the platform's path-list
+separator (`:` on Unix, `;` on Windows). CLI flags and env-var entries
+combine by union.
+
+#### When to use it
+
+Some repositories carry throwaway fixture or sample projects in
+directories like `tests/fixtures/`, `examples/sample-projects/`, or
+`services/*/testdata/`. Out of the box, mikebom walks into those subtrees
+and emits their manifests as if they were real components — sometimes
+also recording synthetic dependency edges declared in fixture manifests.
+The Go ecosystem skips `testdata/` and `_`-prefixed directories
+unconditionally per [`go help packages`](https://pkg.go.dev/cmd/go#hdr-Package_lists_and_patterns);
+every other ecosystem (cargo, maven, gem, pip, npm, gradle, nuget, yocto)
+has no documented convention to lean on, so the skip is opt-in via this
+flag.
+
+#### Classification
+
+Each entry is classified at parse time:
+
+- **Literal path** — no glob metacharacters (`*`, `?`, `[`). Interpreted
+  as a path relative to the scan root. `--exclude-path tests/fixtures`
+  matches `<root>/tests/fixtures` and every directory underneath it,
+  but NOT `services/a/tests/fixtures`.
+- **Pattern** — contains at least one `*`, `?`, or `[`. Compiled as a
+  glob; matches directory paths at arbitrary depth.
+  `--exclude-path '**/testdata'` matches `testdata`, `services/a/testdata`,
+  and `apps/web/internal/testdata` in one entry. Shell-quote the value
+  so your shell doesn't expand `*` itself.
+
+#### Examples
+
+Single literal exclusion at repo root:
+
+```bash
+mikebom sbom scan --path /path/to/repo --exclude-path tests/fixtures \
+  --format cyclonedx-json --output sbom.cdx.json
+```
+
+Two repeated literal paths:
+
+```bash
+mikebom sbom scan --path /path/to/repo \
+  --exclude-path tests/fixtures \
+  --exclude-path examples/sample-projects \
+  --format cyclonedx-json --output sbom.cdx.json
+```
+
+Glob pattern across a monorepo:
+
+```bash
+mikebom sbom scan --path /path/to/monorepo --exclude-path '**/testdata' \
+  --format cyclonedx-json --output sbom.cdx.json
+```
+
+Persistent exclusion list via env var (Unix):
+
+```bash
+export MIKEBOM_EXCLUDE_PATH='tests/fixtures:**/testdata'
+mikebom sbom scan --path . --format cyclonedx-json --output sbom.cdx.json
+```
+
+#### Transparency annotation
+
+When at least one exclusion entry is in effect, the emitted SBOM carries
+an envelope-level `mikebom:exclude-path` annotation listing the active
+entries verbatim (Constitution Principle X — Transparency). Consumers
+can detect this from the CDX `metadata.properties[]` entry, the SPDX 2.3
+`creationInfo.annotations[]` entry, or the SPDX 3 document-level
+`Annotation` element. When the flag is omitted the annotation is absent
+and the SBOM is byte-identical to a pre-feature mikebom build against
+the same inputs.
+
+#### Interaction with built-in skips
+
+User-supplied entries are **additive** on top of the scanner's built-in
+skip set:
+
+- Always skipped (no opt-out): `vendor/`, `node_modules/`,
+  `bower_components/`, `target/`, `dist/`, `build/`, `out/`, `coverage/`,
+  `__pycache__/`, `venv/`, `.`-prefixed dirs, Go module-cache trees
+  (`go/pkg/mod/`).
+- Go-specific (always skipped, documented convention):
+  `testdata/`, `_`-prefixed dirs.
+- User-supplied via `--exclude-path`: added to all of the above.
+
+You cannot use `--exclude-path` to re-enable scanning of a built-in skip.
+
+#### Troubleshooting
+
+| Symptom | Cause / fix |
+|---|---|
+| `error: --exclude-path entry <X>: <details>` | Pattern has unbalanced brackets or invalid glob syntax. Quote the value and check `*`/`?`/`[` placements. |
+| `error: --exclude-path entry was empty` | An empty string was passed. Remove the empty entry. |
+| Fixture component still appears | Pattern didn't match. Re-run with `RUST_LOG=debug` and look for `exclude-path: skipping directory matched by user-supplied entry` lines. If none appear, your pattern doesn't match the actual path; try `--exclude-path '**/<dir-name>'`. |
+| Real component disappeared | Your exclusion is too broad. Use a more specific path or pattern. |
 
 ### `--no-go-mod-why`
 

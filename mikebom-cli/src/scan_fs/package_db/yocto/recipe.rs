@@ -31,16 +31,27 @@ const RECIPE_FILENAME_REGEX: &str =
 /// `PackageDbEntry` per recipe. Bounded to depth 8 (matches the
 /// established source-tree-walker convention) to avoid runaway
 /// traversal in deep monorepos.
-pub fn read(rootfs: &Path) -> Vec<PackageDbEntry> {
+pub fn read(
+    rootfs: &Path,
+    exclude_set: &super::super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
     let Ok(regex) = Regex::new(RECIPE_FILENAME_REGEX) else {
         return Vec::new();
     };
     let mut out = Vec::new();
-    walk(rootfs, 0, 8, &regex, &mut out);
+    walk(rootfs, rootfs, 0, 8, &regex, &mut out, exclude_set);
     out
 }
 
-fn walk(dir: &Path, depth: usize, max_depth: usize, regex: &Regex, out: &mut Vec<PackageDbEntry>) {
+fn walk(
+    dir: &Path,
+    rootfs: &Path,
+    depth: usize,
+    max_depth: usize,
+    regex: &Regex,
+    out: &mut Vec<PackageDbEntry>,
+    exclude_set: &super::super::exclude_path::ExclusionSet,
+) {
     if depth > max_depth {
         return;
     }
@@ -59,7 +70,15 @@ fn walk(dir: &Path, depth: usize, max_depth: usize, regex: &Regex, out: &mut Vec
             if super::super::project_roots::should_skip_default_descent(name) {
                 continue;
             }
-            walk(&path, depth + 1, max_depth, regex, out);
+            // Milestone 113 — user-supplied directory exclusion.
+            if !exclude_set.is_empty() {
+                if let Ok(rel) = path.strip_prefix(rootfs) {
+                    if exclude_set.matches(&rel.to_string_lossy()) {
+                        continue;
+                    }
+                }
+            }
+            walk(&path, rootfs, depth + 1, max_depth, regex, out, exclude_set);
         } else if ft.is_file() {
             let Some(filename) = path.file_name().and_then(|s| s.to_str()) else {
                 continue;
@@ -241,7 +260,7 @@ mod tests {
             .join("mikebom-fixture-lib")
             .join("mikebom-fixture-lib_1.2.3.bb");
         touch(&recipe);
-        let entries = read(tmp.path());
+        let entries = read(tmp.path(), &Default::default());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "mikebom-fixture-lib");
         assert_eq!(entries[0].version, "1.2.3");
@@ -257,7 +276,7 @@ mod tests {
             .join("mikebom-fixture-lib")
             .join("mikebom-fixture-lib_1.2.3.bb");
         touch(&recipe);
-        let entries = read(tmp.path());
+        let entries = read(tmp.path(), &Default::default());
         assert_eq!(entries.len(), 1);
         assert_eq!(
             entries[0].purl.as_str(),
@@ -297,7 +316,7 @@ mod tests {
                 .join("mikebom-fixture-real")
                 .join("mikebom-fixture-real_1.0.bb"),
         );
-        let entries = read(tmp.path());
+        let entries = read(tmp.path(), &Default::default());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "mikebom-fixture-real");
     }
@@ -312,7 +331,7 @@ mod tests {
                 .join("mikebom-fixture-noversion")
                 .join("mikebom-fixture-noversion.bb"),
         );
-        let entries = read(tmp.path());
+        let entries = read(tmp.path(), &Default::default());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "mikebom-fixture-noversion");
         assert_eq!(entries[0].version, "unknown");
@@ -350,7 +369,7 @@ mod tests {
                 .join("mikebom-fixture-lib")
                 .join("mikebom-fixture-lib_1.0.bb"),
         );
-        let entries = read(tmp.path());
+        let entries = read(tmp.path(), &Default::default());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "mikebom-fixture-lib");
     }
@@ -365,7 +384,7 @@ mod tests {
                 .join("mikebom-fixture-lib")
                 .join("mikebom-fixture-lib_1.2.3+git0abc123.bb"),
         );
-        let entries = read(tmp.path());
+        let entries = read(tmp.path(), &Default::default());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].version, "1.2.3+git0abc123");
     }

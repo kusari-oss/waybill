@@ -507,7 +507,7 @@ mod tests {
             r#"{"name":"old","lockfileVersion":1,"dependencies":{}}"#,
         )
         .unwrap();
-        let err = read(dir.path(), false, crate::scan_fs::ScanMode::Path).unwrap_err();
+        let err = read(dir.path(), false, crate::scan_fs::ScanMode::Path, &Default::default()).unwrap_err();
         assert!(
             matches!(err, NpmError::LockfileV1Unsupported { .. }),
             "got {err:?}"
@@ -528,7 +528,7 @@ mod tests {
                 format!(r#"{{"lockfileVersion":{v},"packages":{{}}}}"#),
             )
             .unwrap();
-            let res = read(dir.path(), false, crate::scan_fs::ScanMode::Path);
+            let res = read(dir.path(), false, crate::scan_fs::ScanMode::Path, &Default::default());
             assert!(res.is_ok(), "v{v} lockfile should parse without refusal");
         }
     }

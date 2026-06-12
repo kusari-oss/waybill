@@ -823,7 +823,11 @@ fn parse_lockfile(
 /// against the lockfile, and tags entries outside that closure with
 /// `is_dev = Some(true)`. When `include_dev = false`, tagged entries
 /// are dropped (mirrors maven.rs:1786 + go-source-set filter).
-pub fn read(rootfs: &Path, include_dev: bool) -> Result<Vec<PackageDbEntry>, CargoError> {
+pub fn read(
+    rootfs: &Path,
+    include_dev: bool,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Result<Vec<PackageDbEntry>, CargoError> {
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
     let mut tagged_dev = 0usize;
@@ -841,7 +845,7 @@ pub fn read(rootfs: &Path, include_dev: bool) -> Result<Vec<PackageDbEntry>, Car
     // Order matters: Phase B FIRST (builds the dep graph), Phase A
     // SECOND (adds main-modules for crates not seen in any lockfile,
     // and tags lockfile-derived workspace-member entries with C40).
-    let all_manifests = find_cargo_manifests(rootfs);
+    let all_manifests = find_cargo_manifests(rootfs, exclude_set);
     let workspace_ctx = WorkspaceContext::build_from_manifests(&all_manifests);
 
     // Milestone 064 — Phase B: per-lockfile dependency emission
@@ -850,7 +854,7 @@ pub fn read(rootfs: &Path, include_dev: bool) -> Result<Vec<PackageDbEntry>, Car
     // (which honors `[workspace] members = [...]` rather than walking
     // the filesystem) so dev/build classification works exactly as
     // before. Phase A's main-module emission is layered on top below.
-    for lock_path in find_cargo_lockfiles(rootfs) {
+    for lock_path in find_cargo_lockfiles(rootfs, exclude_set) {
         let manifests = discover_workspace_manifests(&lock_path);
         let mut workspace_sections = CargoTomlSections::default();
         for manifest_path in &manifests {
@@ -895,7 +899,7 @@ pub fn read(rootfs: &Path, include_dev: bool) -> Result<Vec<PackageDbEntry>, Car
     // and harvest them for milestone-064 main-module population.
     let mut workspace_root_deps: HashMap<(String, String), Vec<String>> =
         HashMap::new();
-    for lock_path in find_cargo_lockfiles(rootfs) {
+    for lock_path in find_cargo_lockfiles(rootfs, exclude_set) {
         if let Ok(Some(doc)) = parse_lockfile_doc(&lock_path) {
             for pkg in &doc.package {
                 if pkg.source.is_some() {
@@ -1055,10 +1059,13 @@ fn parse_lockfile_doc(path: &Path) -> Result<Option<CargoLock>, CargoError> {
     }
 }
 
-fn find_cargo_lockfiles(rootfs: &Path) -> Vec<PathBuf> {
+fn find_cargo_lockfiles(
+    rootfs: &Path,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let mut visited: std::collections::HashSet<PathBuf> = std::collections::HashSet::new();
-    walk_for_cargo_lockfiles(rootfs, 0, &mut visited, &mut out);
+    walk_for_cargo_lockfiles(rootfs, rootfs, 0, &mut visited, &mut out, exclude_set);
     out
 }
 
@@ -1070,18 +1077,23 @@ fn find_cargo_lockfiles(rootfs: &Path) -> Vec<PathBuf> {
 /// deterministic walk order (alphabetical-like via `read_dir` for a
 /// given platform — preserved for golden cross-host stability via the
 /// dedup-by-PURL convention).
-fn find_cargo_manifests(rootfs: &Path) -> Vec<PathBuf> {
+fn find_cargo_manifests(
+    rootfs: &Path,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let mut visited: std::collections::HashSet<PathBuf> = std::collections::HashSet::new();
-    walk_for_cargo_manifests(rootfs, 0, &mut visited, &mut out);
+    walk_for_cargo_manifests(rootfs, rootfs, 0, &mut visited, &mut out, exclude_set);
     out
 }
 
 fn walk_for_cargo_manifests(
     dir: &Path,
+    rootfs: &Path,
     depth: usize,
     visited: &mut std::collections::HashSet<PathBuf>,
     out: &mut Vec<PathBuf>,
+    exclude_set: &super::exclude_path::ExclusionSet,
 ) {
     let manifest = dir.join("Cargo.toml");
     if manifest.is_file() {
@@ -1118,7 +1130,15 @@ fn walk_for_cargo_manifests(
         if should_skip_descent(name) {
             continue;
         }
-        walk_for_cargo_manifests(&path, depth + 1, visited, out);
+        // Milestone 113 — user-supplied directory exclusion.
+        if !exclude_set.is_empty() {
+            if let Ok(rel) = path.strip_prefix(rootfs) {
+                if exclude_set.matches(&rel.to_string_lossy()) {
+                    continue;
+                }
+            }
+        }
+        walk_for_cargo_manifests(&path, rootfs, depth + 1, visited, out, exclude_set);
     }
 }
 
@@ -1127,9 +1147,11 @@ fn walk_for_cargo_manifests(
 /// loops (e.g., `linkToRoot -> .` test fixtures).
 fn walk_for_cargo_lockfiles(
     dir: &Path,
+    rootfs: &Path,
     depth: usize,
     visited: &mut std::collections::HashSet<PathBuf>,
     out: &mut Vec<PathBuf>,
+    exclude_set: &super::exclude_path::ExclusionSet,
 ) {
     let lock = dir.join("Cargo.lock");
     if lock.is_file() {
@@ -1160,7 +1182,15 @@ fn walk_for_cargo_lockfiles(
         if should_skip_descent(name) {
             continue;
         }
-        walk_for_cargo_lockfiles(&path, depth + 1, visited, out);
+        // Milestone 113 — user-supplied directory exclusion.
+        if !exclude_set.is_empty() {
+            if let Ok(rel) = path.strip_prefix(rootfs) {
+                if exclude_set.matches(&rel.to_string_lossy()) {
+                    continue;
+                }
+            }
+        }
+        walk_for_cargo_lockfiles(&path, rootfs, depth + 1, visited, out, exclude_set);
     }
 }
 
@@ -1397,7 +1427,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e8eabd0c76a9f2678a5e1a5c0c7b8b8c99999999999999999999999999999999"
 "#;
         std::fs::write(sub.join("Cargo.lock"), body).unwrap();
-        let entries = read(dir.path(), false).unwrap();
+        let entries = read(dir.path(), false, &Default::default()).unwrap();
         // Walk found the nested Cargo.lock and emitted the registry dep.
         assert!(entries.iter().any(|e| e.name == "serde"));
         // Milestone 087: workspace root IS now emitted (was filtered
@@ -1429,7 +1459,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20"
 "#;
         std::fs::write(dir.path().join("Cargo.lock"), body).unwrap();
-        let entries = read(dir.path(), false).unwrap();
+        let entries = read(dir.path(), false, &Default::default()).unwrap();
         assert_eq!(entries.len(), 2, "expected 2 entries, got {entries:?}");
         let app = entries
             .iter()
@@ -1469,7 +1499,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393"
 "#;
         std::fs::write(dir.path().join("Cargo.lock"), body).unwrap();
-        let entries = read(dir.path(), false).unwrap();
+        let entries = read(dir.path(), false, &Default::default()).unwrap();
         assert_eq!(entries.len(), 4, "all four entries should be present");
         assert!(entries.iter().any(|e| e.name == "my-app"));
         assert!(entries.iter().any(|e| e.name == "my-lib"));
@@ -1480,7 +1510,7 @@ checksum = "0a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393"
     #[test]
     fn read_empty_rootfs_returns_zero() {
         let dir = tempfile::tempdir().unwrap();
-        assert!(read(dir.path(), false).unwrap().is_empty());
+        assert!(read(dir.path(), false, &Default::default()).unwrap().is_empty());
     }
 
     #[test]
@@ -1492,7 +1522,7 @@ checksum = "0a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393"
         )
         .unwrap();
         assert!(matches!(
-            read(dir.path(), false),
+            read(dir.path(), false, &Default::default()),
             Err(CargoError::LockfileUnsupportedVersion { version: 1, .. })
         ));
     }
@@ -1730,7 +1760,8 @@ foo = { package = "real-name", version = "1" }
         let loop_dir = tmp.path().join("loop");
         std::fs::create_dir_all(&loop_dir).unwrap();
         std::os::unix::fs::symlink(&loop_dir, loop_dir.join("link")).unwrap();
-        let result = find_cargo_lockfiles(tmp.path());
+        let result =
+            find_cargo_lockfiles(tmp.path(), &super::super::exclude_path::ExclusionSet::new_empty());
         // No Cargo.lock in the synthesized fixture; the test only
         // asserts the call returned (didn't hang).
         assert!(result.is_empty());

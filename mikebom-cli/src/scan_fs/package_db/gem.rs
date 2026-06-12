@@ -603,12 +603,16 @@ fn find_grouping_sources(lock_path: &Path) -> (Option<PathBuf>, Vec<PathBuf>) {
 /// production wins when sources disagree); compute prod-reachable
 /// closure; tag entries OUTSIDE the prod set with `is_dev = Some(true)`;
 /// drop tagged entries when `!include_dev`.
-pub fn read(rootfs: &Path, include_dev: bool) -> Vec<PackageDbEntry> {
+pub fn read(
+    rootfs: &Path,
+    include_dev: bool,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
     let mut tagged_dev = 0usize;
     let mut dropped = 0usize;
-    for lock_path in find_gemfile_locks(rootfs) {
+    for lock_path in find_gemfile_locks(rootfs, exclude_set) {
         let Ok(text) = std::fs::read_to_string(&lock_path) else {
             continue;
         };
@@ -691,7 +695,7 @@ pub fn read(rootfs: &Path, include_dev: bool) -> Vec<PackageDbEntry> {
     // and are invisible to Gemfile.lock scanning. Also catches any
     // system-wide `gem install` outputs living in the standard
     // specifications dirs.
-    for spec_path in find_gemspecs(rootfs) {
+    for spec_path in find_gemspecs(rootfs, exclude_set) {
         let Ok(text) = std::fs::read_to_string(&spec_path) else {
             continue;
         };
@@ -1017,10 +1021,13 @@ fn merge_groups(
     }
 }
 
-fn find_gemfile_locks(rootfs: &Path) -> Vec<PathBuf> {
+fn find_gemfile_locks(
+    rootfs: &Path,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let mut visited: HashSet<PathBuf> = HashSet::new();
-    walk_for_gemfile_locks(rootfs, 0, &mut visited, &mut out);
+    walk_for_gemfile_locks(rootfs, rootfs, 0, &mut visited, &mut out, exclude_set);
     out
 }
 
@@ -1029,9 +1036,11 @@ fn find_gemfile_locks(rootfs: &Path) -> Vec<PathBuf> {
 /// loops.
 fn walk_for_gemfile_locks(
     dir: &Path,
+    rootfs: &Path,
     depth: usize,
     visited: &mut HashSet<PathBuf>,
     out: &mut Vec<PathBuf>,
+    exclude_set: &super::exclude_path::ExclusionSet,
 ) {
     let lock = dir.join("Gemfile.lock");
     if lock.is_file() {
@@ -1062,7 +1071,15 @@ fn walk_for_gemfile_locks(
         if should_skip_descent(name) {
             continue;
         }
-        walk_for_gemfile_locks(&path, depth + 1, visited, out);
+        // Milestone 113 — user-supplied directory exclusion.
+        if !exclude_set.is_empty() {
+            if let Ok(rel) = path.strip_prefix(rootfs) {
+                if exclude_set.matches(&rel.to_string_lossy()) {
+                    continue;
+                }
+            }
+        }
+        walk_for_gemfile_locks(&path, rootfs, depth + 1, visited, out, exclude_set);
     }
 }
 
@@ -1091,10 +1108,13 @@ fn should_skip_descent(name: &str) -> bool {
 /// files. Cheap, covers all Ruby install layouts (distro packages,
 /// rbenv, rvm, asdf, ruby-install), and doesn't depend on environment
 /// variables.
-fn find_gemspecs(rootfs: &Path) -> Vec<PathBuf> {
+fn find_gemspecs(
+    rootfs: &Path,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let mut visited: HashSet<PathBuf> = HashSet::new();
-    walk_for_gemspecs(rootfs, 0, &mut visited, &mut out);
+    walk_for_gemspecs(rootfs, rootfs, 0, &mut visited, &mut out, exclude_set);
     out
 }
 
@@ -1109,9 +1129,11 @@ const MAX_GEMSPEC_WALK_DEPTH: usize = 10;
 /// loops.
 fn walk_for_gemspecs(
     dir: &Path,
+    rootfs: &Path,
     depth: usize,
     visited: &mut HashSet<PathBuf>,
     out: &mut Vec<PathBuf>,
+    exclude_set: &super::exclude_path::ExclusionSet,
 ) {
     if depth >= MAX_GEMSPEC_WALK_DEPTH {
         return;
@@ -1136,6 +1158,14 @@ fn walk_for_gemspecs(
             if should_skip_descent(name) {
                 continue;
             }
+            // Milestone 113 — user-supplied directory exclusion.
+            if !exclude_set.is_empty() {
+                if let Ok(rel) = path.strip_prefix(rootfs) {
+                    if exclude_set.matches(&rel.to_string_lossy()) {
+                        continue;
+                    }
+                }
+            }
             // When we hit a `specifications` directory, harvest its
             // .gemspec files (plus any nested `default/` subdirectory
             // that Ruby uses for stdlib gems) and do NOT descend
@@ -1145,7 +1175,7 @@ fn walk_for_gemspecs(
                 harvest_gemspecs_in_dir(&path, out);
                 continue;
             }
-            walk_for_gemspecs(&path, depth + 1, visited, out);
+            walk_for_gemspecs(&path, rootfs, depth + 1, visited, out, exclude_set);
         }
     }
 }
@@ -1483,7 +1513,7 @@ DEPENDENCIES
     #[test]
     fn read_empty_rootfs_returns_zero() {
         let dir = tempfile::tempdir().unwrap();
-        assert!(read(dir.path(), false).is_empty());
+        assert!(read(dir.path(), false, &Default::default()).is_empty());
     }
 
     #[test]
@@ -1494,7 +1524,7 @@ DEPENDENCIES
             "GEM\n  specs:\n    activesupport (7.1.3)\n\nDEPENDENCIES\n  activesupport\n",
         )
         .unwrap();
-        let entries = read(dir.path(), false);
+        let entries = read(dir.path(), false, &Default::default());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "activesupport");
         assert_eq!(entries[0].purl.as_str(), "pkg:gem/activesupport@7.1.3");
@@ -1508,7 +1538,7 @@ DEPENDENCIES
             "GIT\n  remote: https://x/y\n  revision: abc\n  specs:\n    y (0.1.0)\n\nDEPENDENCIES\n  y!\n",
         )
         .unwrap();
-        let entries = read(dir.path(), false);
+        let entries = read(dir.path(), false, &Default::default());
         assert_eq!(entries[0].source_type.as_deref(), Some("git"));
     }
 
@@ -1662,7 +1692,8 @@ end
             "Gem::Specification.new do |s|\n  s.name = \"psych\"\n  s.version = \"5.1.2\"\nend\n",
         )
         .unwrap();
-        let found = find_gemspecs(dir.path());
+        let found =
+            find_gemspecs(dir.path(), &super::super::exclude_path::ExclusionSet::new_empty());
         assert_eq!(found.len(), 2, "expected two gemspecs, got {found:?}");
     }
 
@@ -1676,7 +1707,7 @@ end
             "Gem::Specification.new do |s|\n  s.name = \"bigdecimal\"\n  s.version = \"3.1.5\"\nend\n",
         )
         .unwrap();
-        let entries = read(dir.path(), false);
+        let entries = read(dir.path(), false, &Default::default());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "bigdecimal");
         assert_eq!(entries[0].version, "3.1.5");
@@ -1703,7 +1734,7 @@ end
             "Gem::Specification.new do |s|\n  s.name = \"json\"\n  s.version = \"2.7.2\"\nend\n",
         )
         .unwrap();
-        let entries = read(dir.path(), false);
+        let entries = read(dir.path(), false, &Default::default());
         // Two distinct PURLs — different versions so they're distinct
         // packages, both emitted. This is correct: two different
         // versions of json are installed.
@@ -1849,8 +1880,9 @@ end
         let loop_dir = tmp.path().join("loop");
         std::fs::create_dir_all(&loop_dir).unwrap();
         std::os::unix::fs::symlink(&loop_dir, loop_dir.join("link")).unwrap();
-        let locks = find_gemfile_locks(tmp.path());
-        let specs = find_gemspecs(tmp.path());
+        let empty = super::super::exclude_path::ExclusionSet::new_empty();
+        let locks = find_gemfile_locks(tmp.path(), &empty);
+        let specs = find_gemspecs(tmp.path(), &empty);
         assert!(locks.is_empty());
         assert!(specs.is_empty());
     }

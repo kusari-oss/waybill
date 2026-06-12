@@ -98,7 +98,11 @@ fn build_pypi_purl_str(name: &str, version: &str) -> String {
 ///   dev-only are included; when false they're filtered out at source.
 ///   Venv dist-info and requirements.txt entries don't carry a dev/prod
 ///   distinction and are always emitted.
-pub fn read(rootfs: &Path, include_dev: bool) -> Vec<PackageDbEntry> {
+pub fn read(
+    rootfs: &Path,
+    include_dev: bool,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
     let mut entries: Vec<PackageDbEntry> = Vec::new();
 
     // Tier 1: installed venvs. The venv enumerator already handles
@@ -121,7 +125,7 @@ pub fn read(rootfs: &Path, include_dev: bool) -> Vec<PackageDbEntry> {
     //   `services/worker/Pipfile.lock`, etc. — each becomes its own
     //   root, so per-service declarations surface.
     let mut had_project_marker = false;
-    for project_root in candidate_python_project_roots(rootfs) {
+    for project_root in candidate_python_project_roots(rootfs, exclude_set) {
         // A project is anything holding a lockfile / requirements /
         // pyproject; track this for the "pyproject.toml only" skip log
         // below. Tier 1 venv does NOT count as a project root here —
@@ -170,7 +174,7 @@ pub fn read(rootfs: &Path, include_dev: bool) -> Vec<PackageDbEntry> {
     // hashes, Phase A adds the C40 tag + parent_purl: None.
     let mut main_modules_emitted = 0usize;
     let mut poetry_skips = 0usize;
-    for project_root in candidate_python_project_roots(rootfs) {
+    for project_root in candidate_python_project_roots(rootfs, exclude_set) {
         let (synthesized, was_poetry_only) =
             build_pip_main_module_entry(&project_root);
         if was_poetry_only {
@@ -271,7 +275,10 @@ const MAX_PROJECT_ROOT_DEPTH: usize = 6;
 /// project case is unchanged. Recurses up to `MAX_PROJECT_ROOT_DEPTH`
 /// levels via the shared
 /// [`super::project_roots::walk_for_project_roots`] helper.
-fn candidate_python_project_roots(rootfs: &Path) -> Vec<PathBuf> {
+fn candidate_python_project_roots(
+    rootfs: &Path,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PathBuf> {
     use super::project_roots::{
         should_skip_default_descent, walk_for_project_roots, WalkConfig,
     };
@@ -285,6 +292,7 @@ fn candidate_python_project_roots(rootfs: &Path) -> Vec<PathBuf> {
             should_skip: &|name| {
                 should_skip_default_descent(name) || name == "site-packages"
             },
+            exclude_set,
         },
     )
 }
@@ -729,7 +737,7 @@ mod tests {
             )
             .unwrap();
         }
-        let out = read(root, false);
+        let out = read(root, false, &Default::default());
         let names: Vec<&str> = out.iter().map(|e| e.name.as_str()).collect();
         assert!(names.contains(&"fastapi"), "got {names:?}");
         assert!(names.contains(&"celery"), "got {names:?}");
@@ -749,7 +757,7 @@ mod tests {
         )
         .unwrap();
         std::fs::write(app.join("requirements.txt"), "httpx==0.25.0\n").unwrap();
-        let out = read(dir.path(), false);
+        let out = read(dir.path(), false, &Default::default());
         // Pre-068: only `httpx` (the requirements.txt-derived dep).
         // Post-068: `httpx` + the milestone-068 main-module component
         // emitted from the same project's pyproject.toml [project] table.
@@ -775,7 +783,7 @@ mod tests {
             )
             .unwrap();
         }
-        let out = read(root, false);
+        let out = read(root, false, &Default::default());
         assert!(
             !out.iter().any(|e| e.name == "should-not-appear"),
             "walker must not descend into venv/ or node_modules/"

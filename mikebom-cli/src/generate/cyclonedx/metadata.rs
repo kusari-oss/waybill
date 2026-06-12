@@ -119,6 +119,21 @@ pub fn build_metadata(
         }));
     }
 
+    // Milestone 113 FR-014 / Constitution Principle X: when the scan
+    // applied user-supplied directory exclusions, list the entries
+    // verbatim in source order. Absent annotation ⇒ no exclusions in
+    // effect (default, byte-identical to pre-feature emission).
+    if let Some(entries) =
+        crate::scan_fs::package_db::exclude_path::current_annotation()
+    {
+        if !entries.is_empty() {
+            properties.push(json!({
+                "name": "mikebom:exclude-path",
+                "value": entries.join(","),
+            }));
+        }
+    }
+
     // Milestone 061 (closes #119, catalog row C44): doc-level Go
     // graph-completeness signal. Per Constitution Principle X
     // (Transparency): when mikebom can't supply every transitive edge

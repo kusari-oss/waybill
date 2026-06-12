@@ -26,7 +26,10 @@ use super::PackageDbEntry;
 /// Walk `rootfs` for `gradle.lockfile` and `buildscript-gradle.lockfile`
 /// files; parse each one; return all emitted entries. Empty when neither
 /// file appears anywhere in the scan tree.
-pub fn read(rootfs: &Path) -> Vec<PackageDbEntry> {
+pub fn read(
+    rootfs: &Path,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
     let cfg = super::project_roots::WalkConfig {
         max_depth: 6,
         is_project_root: &|dir: &Path| {
@@ -34,6 +37,7 @@ pub fn read(rootfs: &Path) -> Vec<PackageDbEntry> {
                 || dir.join("buildscript-gradle.lockfile").is_file()
         },
         should_skip: &|name: &str| super::project_roots::should_skip_default_descent(name),
+        exclude_set,
     };
     let mut out = Vec::new();
     for project_dir in super::project_roots::walk_for_project_roots(rootfs, &cfg) {

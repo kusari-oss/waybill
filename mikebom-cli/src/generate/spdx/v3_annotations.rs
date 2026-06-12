@@ -328,6 +328,21 @@ fn push_document_fields(
         );
     }
 
+    // Milestone 113 FR-014 / Constitution Principle X: user-supplied
+    // directory exclusions active for this scan. Mirrors CDX
+    // `metadata.properties` + SPDX 2.3 envelope annotation.
+    if let Some(entries) =
+        crate::scan_fs::package_db::exclude_path::current_annotation()
+    {
+        if !entries.is_empty() {
+            push(
+                out,
+                "mikebom:exclude-path",
+                json!(entries.join(",")),
+            );
+        }
+    }
+
     // C44 (milestone 061, closes #119): doc-level Go graph-completeness
     // signal — Principle X transparency for the Trivy-style orphan
     // condition introduced by milestone 059. Absent annotation ⇒ no

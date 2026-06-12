@@ -486,6 +486,11 @@ spdx23_anno!(c61_spdx23, "mikebom:build-inclusion-derivation", component);
 // milestone 112). `test-only-closure` / `go-mod-why`. Simple property.
 spdx23_anno!(c62_spdx23, "mikebom:lifecycle-scope-derivation", component);
 
+// C63 — `mikebom:exclude-path` (milestone 113 FR-014 / SC-007).
+// Envelope-level transparency annotation. Document-scope, mirrors
+// CDX `metadata.properties[].mikebom:exclude-path`.
+spdx23_anno!(c63_spdx23, "mikebom:exclude-path",             document);
+
 // ============================================================
 // Sections D-G — custom SPDX 2.3 extractors
 // ============================================================

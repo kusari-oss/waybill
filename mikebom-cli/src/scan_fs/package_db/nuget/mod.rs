@@ -40,8 +40,11 @@ const UNRESOLVED_VERSION_SENTINEL: &str = "unresolved";
 /// Walk `rootfs` for NuGet project files and emit one `PackageDbEntry`
 /// per resolved `<PackageReference>` (or `packages.lock.json` entry).
 /// Empty when no project files are found.
-pub fn read(rootfs: &Path) -> Vec<PackageDbEntry> {
-    let project_files = walk_project_files(rootfs);
+pub fn read(
+    rootfs: &Path,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    let project_files = walk_project_files(rootfs, exclude_set);
     if project_files.is_empty() {
         return Vec::new();
     }
@@ -52,13 +55,22 @@ pub fn read(rootfs: &Path) -> Vec<PackageDbEntry> {
     out
 }
 
-fn walk_project_files(rootfs: &Path) -> Vec<PathBuf> {
+fn walk_project_files(
+    rootfs: &Path,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PathBuf> {
     let mut out = Vec::new();
-    walk_inner(rootfs, &mut out, 0);
+    walk_inner(rootfs, rootfs, &mut out, 0, exclude_set);
     out
 }
 
-fn walk_inner(dir: &Path, out: &mut Vec<PathBuf>, depth: usize) {
+fn walk_inner(
+    dir: &Path,
+    rootfs: &Path,
+    out: &mut Vec<PathBuf>,
+    depth: usize,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) {
     if depth > 8 {
         return;
     }
@@ -77,7 +89,15 @@ fn walk_inner(dir: &Path, out: &mut Vec<PathBuf>, depth: usize) {
             if super::project_roots::should_skip_default_descent(name) {
                 continue;
             }
-            walk_inner(&path, out, depth + 1);
+            // Milestone 113 — user-supplied directory exclusion.
+            if !exclude_set.is_empty() {
+                if let Ok(rel) = path.strip_prefix(rootfs) {
+                    if exclude_set.matches(&rel.to_string_lossy()) {
+                        continue;
+                    }
+                }
+            }
+            walk_inner(&path, rootfs, out, depth + 1, exclude_set);
         } else if file_type.is_file() {
             let is_project = path
                 .extension()
@@ -343,7 +363,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path());
+        let entries = read(tmp.path(), &Default::default());
         assert_eq!(entries.len(), 1);
         assert_eq!(
             entries[0].purl.as_str(),
@@ -373,7 +393,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path());
+        let entries = read(tmp.path(), &Default::default());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "MikebomFixture.Cpm");
         assert_eq!(entries[0].version, "9.0.1");
@@ -422,7 +442,7 @@ mod tests {
                 }
             }"#,
         );
-        let entries = read(tmp.path());
+        let entries = read(tmp.path(), &Default::default());
         // SampleLib should pick up the lockfile's 1.2.4 (not csproj's 1.2.3).
         let sample = entries
             .iter()
@@ -450,7 +470,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path());
+        let entries = read(tmp.path(), &Default::default());
         assert_eq!(entries.len(), 1);
         assert!(matches!(
             entries[0].lifecycle_scope,
@@ -470,7 +490,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path());
+        let entries = read(tmp.path(), &Default::default());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].version, "unresolved");
     }
@@ -496,7 +516,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path());
+        let entries = read(tmp.path(), &Default::default());
         assert_eq!(entries.len(), 2);
         let names: BTreeSet<_> = entries.iter().map(|e| e.name.clone()).collect();
         assert!(names.contains("MikebomFixture.VbLib"));

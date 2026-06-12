@@ -36,6 +36,11 @@ pub(crate) struct WalkConfig<'a> {
     /// into a directory named `name`. Compose [`should_skip_default_descent`]
     /// with ecosystem-specific additions.
     pub should_skip: &'a dyn Fn(&str) -> bool,
+    /// Milestone 113 — user-supplied directory-exclusion set. The
+    /// walker consults this AFTER `should_skip` so user entries are
+    /// additive on top of built-in skips (FR-004). An empty set
+    /// (default) preserves pre-feature behavior (FR-003).
+    pub exclude_set: &'a super::exclude_path::ExclusionSet,
 }
 
 /// Find every directory under `rootfs` (depth-limited) that
@@ -49,12 +54,13 @@ pub(crate) struct WalkConfig<'a> {
 pub(crate) fn walk_for_project_roots(rootfs: &Path, cfg: &WalkConfig) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let mut visited: HashSet<PathBuf> = HashSet::new();
-    walk_inner(rootfs, 0, cfg, &mut out, &mut visited);
+    walk_inner(rootfs, rootfs, 0, cfg, &mut out, &mut visited);
     out
 }
 
 fn walk_inner(
     dir: &Path,
+    rootfs: &Path,
     depth: usize,
     cfg: &WalkConfig,
     out: &mut Vec<PathBuf>,
@@ -90,7 +96,23 @@ fn walk_inner(
         if (cfg.should_skip)(name) {
             continue;
         }
-        walk_inner(&path, depth + 1, cfg, out, visited);
+        // Milestone 113 — user-supplied directory exclusion. Match
+        // against the candidate's path relative to rootfs so literal
+        // entries anchored at scan root and `**`-style pattern
+        // entries both work.
+        if !cfg.exclude_set.is_empty() {
+            if let Ok(rel) = path.strip_prefix(rootfs) {
+                let rel_str = rel.to_string_lossy();
+                if cfg.exclude_set.matches(&rel_str) {
+                    tracing::debug!(
+                        candidate = %rel.display(),
+                        "exclude-path: skipping directory matched by user-supplied entry"
+                    );
+                    continue;
+                }
+            }
+        }
+        walk_inner(&path, rootfs, depth + 1, cfg, out, visited);
     }
 }
 

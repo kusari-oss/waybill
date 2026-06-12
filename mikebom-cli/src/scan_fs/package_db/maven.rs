@@ -2255,7 +2255,11 @@ fn jar_pom_to_entry(
 /// `read_with_claims` directly via the package-db walker's claim set
 /// so RPM-owned Maven JARs are skipped (conformance bug 2b).
 #[cfg(test)]
-pub fn read(rootfs: &Path, include_dev: bool) -> Vec<PackageDbEntry> {
+pub fn read(
+    rootfs: &Path,
+    include_dev: bool,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
     let claimed = std::collections::HashSet::new();
     #[cfg(unix)]
     let claimed_inodes = std::collections::HashSet::new();
@@ -2273,6 +2277,7 @@ pub fn read(rootfs: &Path, include_dev: bool) -> Vec<PackageDbEntry> {
         #[cfg(unix)]
         &claimed_inodes,
         None,
+        exclude_set,
     );
     entries
 }
@@ -2302,6 +2307,7 @@ pub fn read_with_claims(
     claimed: &std::collections::HashSet<std::path::PathBuf>,
     #[cfg(unix)] claimed_inodes: &std::collections::HashSet<(u64, u64)>,
     scan_target_name: Option<&str>,
+    exclude_set: &super::exclude_path::ExclusionSet,
 ) -> (Vec<PackageDbEntry>, Option<ScanTargetCoord>) {
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
@@ -2310,7 +2316,7 @@ pub fn read_with_claims(
     // caller promotes this to `metadata.component` instead of the
     // generic placeholder.
     let mut scan_target_coord: Option<ScanTargetCoord> = None;
-    let (pom_files, jar_files) = find_maven_artifacts(rootfs);
+    let (pom_files, jar_files) = find_maven_artifacts(rootfs, exclude_set);
     // Discover M2 repo cache once per scan. Each dep's own pom.xml
     // sits at <repo>/<group-as-path>/<artifact>/<version>/<artifact>-<version>.pom;
     // fetching it gives us that dep's own <dependencies> block for
@@ -3064,7 +3070,7 @@ pub fn read_with_claims(
     // gem (069). Multi-module reactor builds emit per-submodule
     // (FR-002) via the parent's <modules> traversal.
     let mut main_modules_emitted = 0usize;
-    let pom_paths = find_top_level_poms(rootfs);
+    let pom_paths = find_top_level_poms(rootfs, exclude_set);
     let inheritance_ctx = MavenInheritanceContext::build_from_poms(&pom_paths);
     for pom_path in &pom_paths {
         let Some(doc) = inheritance_ctx.doc_for_path(pom_path) else {
@@ -3161,11 +3167,16 @@ pub fn read_with_claims(
     (out, scan_target_coord)
 }
 
-fn find_maven_artifacts(rootfs: &Path) -> (Vec<PathBuf>, Vec<PathBuf>) {
+fn find_maven_artifacts(
+    rootfs: &Path,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> (Vec<PathBuf>, Vec<PathBuf>) {
     let mut poms = Vec::new();
     let mut jars = Vec::new();
     let mut visited: std::collections::HashSet<PathBuf> = std::collections::HashSet::new();
-    walk_for_maven(rootfs, 0, &mut visited, &mut poms, &mut jars);
+    walk_for_maven(
+        rootfs, rootfs, 0, &mut visited, &mut poms, &mut jars, exclude_set,
+    );
     (poms, jars)
 }
 
@@ -3174,10 +3185,12 @@ fn find_maven_artifacts(rootfs: &Path) -> (Vec<PathBuf>, Vec<PathBuf>) {
 /// loops.
 fn walk_for_maven(
     dir: &Path,
+    rootfs: &Path,
     depth: usize,
     visited: &mut std::collections::HashSet<PathBuf>,
     poms: &mut Vec<PathBuf>,
     jars: &mut Vec<PathBuf>,
+    exclude_set: &super::exclude_path::ExclusionSet,
 ) {
     if depth >= MAX_PROJECT_ROOT_DEPTH {
         // Even past the depth cap, still scan for archives in the
@@ -3217,8 +3230,16 @@ fn walk_for_maven(
                         continue;
                     }
                 }
+                // Milestone 113 — user-supplied directory exclusion.
+                if !exclude_set.is_empty() {
+                    if let Ok(rel) = path.strip_prefix(rootfs) {
+                        if exclude_set.matches(&rel.to_string_lossy()) {
+                            continue;
+                        }
+                    }
+                }
                 if depth < MAX_PROJECT_ROOT_DEPTH {
-                    walk_for_maven(&path, depth + 1, visited, poms, jars);
+                    walk_for_maven(&path, rootfs, depth + 1, visited, poms, jars, exclude_set);
                 }
             }
         }
@@ -3264,18 +3285,23 @@ enum PropertyResolution {
 /// install-state paths (`target/`, `.m2/`, `node_modules/`,
 /// `vendor/`) per FR-003. Output is alphabetically sorted for
 /// cross-host determinism.
-fn find_top_level_poms(rootfs: &Path) -> Vec<PathBuf> {
+fn find_top_level_poms(
+    rootfs: &Path,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let mut visited: HashSet<PathBuf> = HashSet::new();
-    walk_for_top_level_poms(rootfs, 0, &mut visited, &mut out);
+    walk_for_top_level_poms(rootfs, rootfs, 0, &mut visited, &mut out, exclude_set);
     out
 }
 
 fn walk_for_top_level_poms(
     dir: &Path,
+    rootfs: &Path,
     depth: usize,
     visited: &mut HashSet<PathBuf>,
     out: &mut Vec<PathBuf>,
+    exclude_set: &super::exclude_path::ExclusionSet,
 ) {
     if depth >= MAX_PROJECT_ROOT_DEPTH {
         return;
@@ -3308,7 +3334,15 @@ fn walk_for_top_level_poms(
             {
                 continue;
             }
-            walk_for_top_level_poms(&path, depth + 1, visited, out);
+            // Milestone 113 — user-supplied directory exclusion.
+            if !exclude_set.is_empty() {
+                if let Ok(rel) = path.strip_prefix(rootfs) {
+                    if exclude_set.matches(&rel.to_string_lossy()) {
+                        continue;
+                    }
+                }
+            }
+            walk_for_top_level_poms(&path, rootfs, depth + 1, visited, out, exclude_set);
         }
     }
 }
@@ -4204,7 +4238,7 @@ mod tests {
                 &pom_properties("ex", "baz", "3.0"),
             )],
         );
-        let entries = read(dir.path(), false);
+        let entries = read(dir.path(), false, &Default::default());
         let foo = entries.iter().find(|e| e.name == "foo").unwrap();
         assert_eq!(foo.depends, vec!["bar".to_string()]);
         let bar = entries.iter().find(|e| e.name == "bar").unwrap();
@@ -4236,7 +4270,7 @@ mod tests {
                 ),
             ],
         );
-        let entries = read(dir.path(), false);
+        let entries = read(dir.path(), false, &Default::default());
         let foo = entries.iter().find(|e| e.name == "foo").unwrap();
         // missing wasn't observed on disk — edge dropped.
         assert!(foo.depends.is_empty());
@@ -4270,7 +4304,7 @@ mod tests {
                 &pom_properties("ex", "bar", "2.5"),
             )],
         );
-        let entries = read(dir.path(), false);
+        let entries = read(dir.path(), false, &Default::default());
         let bar = entries.iter().find(|e| e.name == "bar").unwrap();
         // Version is the one on disk, not the one declared.
         assert_eq!(bar.version, "2.5");
@@ -4300,7 +4334,7 @@ mod tests {
 </project>"#,
         )
         .unwrap();
-        let entries = read(dir.path(), false);
+        let entries = read(dir.path(), false, &Default::default());
         // Pre-milestone-070: the workspace root ("app") was suppressed
         // — the project's own pom.xml coord wasn't emitted as a
         // dependency.
@@ -4332,7 +4366,7 @@ mod tests {
     #[test]
     fn read_empty_rootfs_returns_zero() {
         let dir = tempfile::tempdir().unwrap();
-        assert!(read(dir.path(), false).is_empty());
+        assert!(read(dir.path(), false, &Default::default()).is_empty());
     }
 
     // --- M2 repo cache walker --------------------------------------------
@@ -5411,7 +5445,7 @@ mod tests {
 </project>"#,
         )
         .unwrap();
-        let entries = read(dir.path(), false);
+        let entries = read(dir.path(), false, &Default::default());
         let sibling = entries.iter().find(|e| e.name == "sibling").unwrap();
         assert_eq!(sibling.sbom_tier.as_deref(), Some("design"));
         assert_eq!(
@@ -5459,6 +5493,7 @@ mod tests {
             #[cfg(unix)]
             &empty_inodes,
             None,
+            &Default::default(),
         );
         assert_eq!(no_claim.len(), 1, "baseline: expected 1 Maven entry");
         assert_eq!(no_claim[0].name, "commons-io");
@@ -5484,6 +5519,7 @@ mod tests {
             #[cfg(unix)]
             &claimed_inodes,
             None,
+            &Default::default(),
         );
         assert_eq!(
             with_claim.len(),
@@ -5554,6 +5590,7 @@ mod tests {
             #[cfg(unix)]
             &claimed_inodes,
             None,
+            &Default::default(),
         );
         let names: Vec<&str> = out.iter().map(|e| e.name.as_str()).collect();
         assert!(
@@ -5605,6 +5642,7 @@ mod tests {
             #[cfg(unix)]
             &claimed_inodes,
             None,
+            &Default::default(),
         );
         // Pre-milestone-070 expected `out.len() == 0` because the
         // declared deps' bytes weren't on disk and the project itself
@@ -5656,6 +5694,7 @@ mod tests {
             #[cfg(unix)]
             &claimed_inodes,
             None,
+            &Default::default(),
         );
         let names: Vec<&str> = out.iter().map(|e| e.name.as_str()).collect();
         assert!(names.contains(&"alpha"), "alpha missing: {names:?}");
@@ -5700,6 +5739,7 @@ mod tests {
             #[cfg(unix)]
             &claimed_inodes,
             None,
+            &Default::default(),
         );
         let names: Vec<&str> = out.iter().map(|e| e.name.as_str()).collect();
         assert!(
@@ -5754,6 +5794,7 @@ mod tests {
             #[cfg(unix)]
             &empty_inodes,
             Some("myapp"),
+            &Default::default(),
         );
         let names: Vec<&str> = out.iter().map(|e| e.name.as_str()).collect();
         assert!(
@@ -5801,6 +5842,7 @@ mod tests {
             #[cfg(unix)]
             &empty_inodes,
             Some("other-service"),
+            &Default::default(),
         );
         let names: Vec<&str> = out.iter().map(|e| e.name.as_str()).collect();
         assert!(
@@ -5836,6 +5878,7 @@ mod tests {
             #[cfg(unix)]
             &empty_inodes,
             None,
+            &Default::default(),
         );
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].name, "myapp");
@@ -5883,6 +5926,7 @@ mod tests {
             #[cfg(unix)]
             &empty_inodes,
             None,
+            &Default::default(),
         );
         let names: Vec<&str> = out.iter().map(|e| e.name.as_str()).collect();
         assert!(
@@ -5924,6 +5968,7 @@ mod tests {
             #[cfg(unix)]
             &empty_inodes,
             None,
+            &Default::default(),
         );
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].name, "guava");
@@ -5977,6 +6022,7 @@ mod tests {
             #[cfg(unix)]
             &claimed_inodes,
             None,
+            &Default::default(),
         );
         let names: Vec<&str> = out.iter().map(|e| e.name.as_str()).collect();
         assert!(
@@ -6391,7 +6437,7 @@ mod tests {
         let loop_dir = tmp.path().join("loop");
         std::fs::create_dir_all(&loop_dir).unwrap();
         std::os::unix::fs::symlink(&loop_dir, loop_dir.join("link")).unwrap();
-        let (poms, jars) = find_maven_artifacts(tmp.path());
+        let (poms, jars) = find_maven_artifacts(tmp.path(), &Default::default());
         assert!(poms.is_empty());
         assert!(jars.is_empty());
     }

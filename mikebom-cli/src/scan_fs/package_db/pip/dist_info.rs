@@ -491,7 +491,7 @@ License: Ignored
             ("requests", "2.31.0", "Name: requests\nVersion: 2.31.0\nLicense: Apache 2.0\n"),
             ("urllib3", "2.0.7", "Name: urllib3\nVersion: 2.0.7\nLicense: MIT\n"),
         ]);
-        let out = read(dir.path(), false);
+        let out = read(dir.path(), false, &Default::default());
         assert_eq!(out.len(), 2);
         // Deterministic alphabetical order by dist-info dir name.
         assert_eq!(out[0].name, "requests");
@@ -515,7 +515,7 @@ License: Ignored
             "[project]\nname = \"myapp\"\nversion = \"0.1.0\"\ndependencies = [\"requests\"]\n",
         )
         .unwrap();
-        let out = read(dir.path(), false);
+        let out = read(dir.path(), false, &Default::default());
         assert_eq!(
             out.len(),
             1,
@@ -543,7 +543,7 @@ License: Ignored
             "3.0.0",
             "Name: Flask\nVersion: 3.0.0\nLicense: BSD-3-Clause\n",
         )]);
-        let out = read(dir.path(), false);
+        let out = read(dir.path(), false, &Default::default());
         assert_eq!(out.len(), 1);
         assert_eq!(out[0].name, "Flask", "component.name keeps declared form");
         assert_eq!(
@@ -621,7 +621,7 @@ Requires-Dist: charset-normalizer < 4, >= 2
 Requires-Dist: pytest ; extra == 'dev'
 ";
         let dir = make_venv_rootfs(&[("requests", "2.31.0", body)]);
-        let out = read(dir.path(), false);
+        let out = read(dir.path(), false, &Default::default());
         assert_eq!(out.len(), 1);
         let e = &out[0];
         // extra-marker dep dropped, rest emitted.

@@ -59,6 +59,7 @@ pub async fn execute(
     exclude_scope: Vec<mikebom_common::resolution::LifecycleScope>,
     include_legacy_rpmdb: bool,
     include_declared_deps: bool,
+    exclude_set: crate::scan_fs::package_db::exclude_path::ExclusionSet,
 ) -> anyhow::Result<ExitCode> {
     match cmd.command {
         SbomSubcommand::Generate(args) => {
@@ -77,6 +78,7 @@ pub async fn execute(
                 exclude_scope,
                 include_legacy_rpmdb,
                 include_declared_deps,
+                exclude_set,
             )
             .await?;
             Ok(ExitCode::from(0))

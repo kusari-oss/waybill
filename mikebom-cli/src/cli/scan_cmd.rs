@@ -1455,6 +1455,7 @@ pub async fn execute(
     exclude_scope: Vec<mikebom_common::resolution::LifecycleScope>,
     include_legacy_rpmdb: bool,
     include_declared_deps: bool,
+    exclude_set: crate::scan_fs::package_db::exclude_path::ExclusionSet,
 ) -> anyhow::Result<()> {
     // Milestone 102 FR-016: propagate the `--include-vendored` flag to
     // the env var that the C/C++ readers read directly. This avoids
@@ -1728,8 +1729,24 @@ pub async fn execute(
         // `maven::read_with_claims` and docs/design-notes.md "Scan
         // target identity" for rationale.
         Some(&target_name),
+        &exclude_set,
     )
     .with_context(|| format!("scan failed for {}", root_path.display()))?;
+
+    // Milestone 113 FR-014 / Constitution Principle X: when any
+    // exclusion entry is active, install its snapshot via the
+    // exclude_path thread-local so the CDX/SPDX 2.3/SPDX 3 metadata
+    // emitters can pick it up and emit `mikebom:exclude-path` at
+    // envelope level. The guard MUST outlive every emitter call
+    // below so successive in-process scans (e.g. integration tests)
+    // never leak state.
+    let _exclude_path_guard = if !exclude_set.is_empty() {
+        Some(crate::scan_fs::package_db::exclude_path::install_annotation(
+            exclude_set.as_normalized_strings(),
+        ))
+    } else {
+        None
+    };
     tracing::info!(
         components = components.len(),
         relationships = relationships.len(),

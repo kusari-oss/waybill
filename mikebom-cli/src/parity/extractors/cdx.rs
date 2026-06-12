@@ -676,6 +676,13 @@ cdx_anno!(c61_cdx, "mikebom:build-inclusion-derivation", component);
 // direct-import-walk test tags. Simple property — standard macro.
 cdx_anno!(c62_cdx, "mikebom:lifecycle-scope-derivation", component);
 
+// C63 — `mikebom:exclude-path` (milestone 113 FR-014 / SC-007).
+// Envelope-level transparency annotation listing every user-supplied
+// directory-exclusion entry that was in effect for the scan. Emitted
+// only when at least one entry was supplied; absent (+ byte-identical
+// pre-feature output) when no exclusions in effect.
+cdx_anno!(c63_cdx, "mikebom:exclude-path",              document);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================
