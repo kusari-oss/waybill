@@ -130,6 +130,7 @@ mod tests {
     fn make_component(purl: &str) -> ResolvedComponent {
         let p = Purl::new(purl).expect("valid purl");
         ResolvedComponent {
+            build_inclusion: None,
             name: p.name().to_string(),
             version: p.version().unwrap_or("").to_string(),
             purl: p,

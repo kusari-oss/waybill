@@ -84,6 +84,7 @@ impl RequirementsTxtEntry {
             "source"
         };
         Some(PackageDbEntry {
+            build_inclusion: None,
             purl,
             name: self.name,
             version: self.version,

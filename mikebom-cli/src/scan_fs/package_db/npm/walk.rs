@@ -147,6 +147,7 @@ fn walk_node_modules(
             None
         };
         out.push(PackageDbEntry {
+            build_inclusion: None,
             purl,
             name: name.to_string(),
             version: version.to_string(),
@@ -232,6 +233,7 @@ pub(crate) fn parse_root_package_json(
                 continue;
             };
             out.push(PackageDbEntry {
+                build_inclusion: None,
                 purl,
                 name: name.to_string(),
                 version: String::new(),
@@ -422,6 +424,7 @@ pub(crate) fn build_npm_main_module_entry(
         })
         .collect();
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: name.to_string(),
         version: version.to_string(),

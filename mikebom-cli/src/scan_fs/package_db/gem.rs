@@ -260,6 +260,7 @@ fn spec_to_entry(
     // as specs in this lockfile).
     let depends = spec.depends.clone();
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: spec.name.clone(),
         version: spec.version.clone(),
@@ -303,6 +304,7 @@ fn gemspec_to_entry(
 ) -> Option<PackageDbEntry> {
     let purl = build_gem_purl(name, version)?;
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: name.to_string(),
         version: version.to_string(),
@@ -922,6 +924,7 @@ fn build_gem_main_module_entry(gemspec_path: &Path) -> Option<PackageDbEntry> {
     let groups = parse_gemspec_groups(gemspec_path);
     let depends: Vec<String> = groups.into_keys().collect();
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name,
         version,
@@ -1991,6 +1994,7 @@ end
             serde_json::Value::String("main-module".to_string()),
         );
         PackageDbEntry {
+            build_inclusion: None,
             purl,
             name: name.to_string(),
             version: version.to_string(),

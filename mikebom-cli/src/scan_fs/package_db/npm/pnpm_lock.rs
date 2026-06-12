@@ -91,6 +91,7 @@ pub(crate) fn parse_pnpm_lock(
             .unwrap_or_default();
 
         out.push(PackageDbEntry {
+            build_inclusion: None,
             purl,
             name,
             version,

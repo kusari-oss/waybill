@@ -90,6 +90,7 @@ pub(super) fn symbol_match_to_entry(
         );
     }
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: m.library.clone(),
         version,
@@ -166,6 +167,7 @@ pub(super) fn v2_match_to_entry(m: &MatchResult, path: &Path) -> PackageDbEntry 
         )),
     );
     PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: derive_name_from_purl(&m.purl),
         version,
@@ -218,6 +220,7 @@ pub(super) fn version_match_to_entry(
     );
     let purl = Purl::new(&purl_str).ok()?;
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: m.library.slug().to_string(),
         version: m.version.clone(),
@@ -336,6 +339,7 @@ pub(super) fn cargo_auditable_packages_to_entries(
                 );
             }
             Some(PackageDbEntry {
+                build_inclusion: None,
                 purl,
                 name: pkg.name.clone(),
                 version: pkg.version.clone(),
@@ -545,6 +549,7 @@ pub(super) fn make_file_level_component(
     .to_string();
 
     PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: filename,
         version: String::new(),
@@ -909,6 +914,7 @@ pub(super) fn note_package_to_entry(
 
     let purl = Purl::new(&purl_str).ok()?;
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: note.name.clone(),
         version: note.version.clone(),

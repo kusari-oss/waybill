@@ -208,6 +208,52 @@ empty today; see
 [design-notes sbomqs deferred item 17](design-notes.md#deferred-sbomqs-score-lift)
 for the plan.
 
+**Build-inclusion clarity (milestone 112):** `go.sum` routinely retains
+entries for modules outside the final build list (test-only transitives,
+pruned graph leftovers). Modules that mikebom could only attach via the
+lower-fidelity fallback paths (the milestone-091 `go.sum` flat fallback,
+recognizable by `mikebom:resolver-step: go-sum-fallback`) get two layers
+of treatment:
+
+1. **Always-on marker:** every fallback-attached module carries
+   `mikebom:build-inclusion: unknown` — an explicit "mikebom cannot
+   prove this module participates in the build" signal, instead of
+   silently looking like a confirmed dependency. No native scope field
+   is set (CDX `scope` absent ≠ `excluded`).
+2. **Default-on classification:** when a `go` toolchain is found on
+   PATH, mikebom runs `go mod why -m -vendor` against each main module
+   (modules batched in chunks of 20, 60-second total budget shared
+   across the scan) and upgrades the marker per verdict:
+   - outside the build graph → `mikebom:build-inclusion: not-needed` +
+     CDX `scope: "excluded"` + `mikebom:build-inclusion-derivation:
+     go-mod-why`;
+   - reachable only through `.test` packages → test lifecycle scope +
+     `mikebom:lifecycle-scope-derivation: go-mod-why`;
+   - needed by ANY main module in the scanned tree → no marker (a
+     module needed by one of several main modules is never excluded).
+
+   Disable with `--no-go-mod-why` or `MIKEBOM_NO_GO_MOD_WHY=1`; see the
+   [CLI reference](user-guide/cli-reference.md#--no-go-mod-why).
+
+**Degrade matrix:** classification never fails a scan — every failure
+class falls back to the conservative `unknown` marker and logs a
+warning, plus a one-line summary
+(`go-mod-why classification: analyzed=… skipped=… elapsed_ms=…`):
+
+| Failure | Skip class | Effect |
+|---|---|---|
+| no `go` on PATH | `no-toolchain` | markers only, no classification |
+| flag / env var set | `disabled` | markers only (operator intent) |
+| `go list all` preflight fails | `unresolvable-packages` | ALL verdicts for that main module rejected (guards against `go mod why` silently reporting false not-needed) |
+| `go mod why` non-zero exit / spawn failure | `subprocess-error` | that chunk's modules stay `unknown` |
+| 60 s budget exhausted | `budget-exhausted` | remaining modules stay `unknown`; verdicts already obtained are kept |
+
+With `--offline`, the `go` children run with `GOPROXY=off`,
+`GOFLAGS=-mod=mod`, `GOTOOLCHAIN=local` pinned so they can neither hit
+the network nor self-upgrade. Catalog rows C60–C62 in the
+[SBOM format mapping](reference/sbom-format-mapping.md) define how the
+three annotations carry across CDX / SPDX 2.3 / SPDX 3.
+
 ### Binary scans
 
 **Detection:** `runtime/debug.BuildInfo` inline-format decoder. Works for

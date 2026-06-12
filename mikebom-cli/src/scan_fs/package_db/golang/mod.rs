@@ -21,11 +21,14 @@
 //   - `go_mod_graph`   — step 1: `go mod graph` subprocess + output parser.
 //   - `proxy_fetch`    — step 3: HTTP client + Go module-path escape.
 //   - `goprivate`      — `$GOPROXY` and `$GOPRIVATE` env-var parsers.
+//   - `mod_why`        — milestone 112: `go mod why -m -vendor`
+//                        build-graph classification (runner + parser).
 
 pub mod legacy;
 pub mod module_id;
 pub mod graph_resolver;
 pub mod go_mod_graph;
+pub mod mod_why;
 pub mod proxy_fetch;
 pub mod goprivate;
 

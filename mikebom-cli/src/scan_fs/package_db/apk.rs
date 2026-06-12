@@ -281,6 +281,7 @@ fn parse_stanza(
         .collect();
 
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name,
         version,

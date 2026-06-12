@@ -163,6 +163,7 @@ pub(crate) fn parse_bun_lock(
             );
 
             out.push(PackageDbEntry {
+                build_inclusion: None,
                 purl,
                 name: member_name.clone(),
                 version,
@@ -246,6 +247,7 @@ pub(crate) fn parse_bun_lock(
             };
 
             out.push(PackageDbEntry {
+                build_inclusion: None,
                 purl,
                 name: name.to_string(),
                 version: resolved_version,

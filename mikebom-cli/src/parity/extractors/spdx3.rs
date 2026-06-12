@@ -543,6 +543,21 @@ spdx3_anno!(c58_spdx3, "mikebom:fingerprint-corpus-sha",   component);
 // Numeric "X.XX" fused-confidence string.
 spdx3_anno!(c59_spdx3, "mikebom:fingerprint-confidence",   component);
 
+// C60 — `mikebom:build-inclusion` (milestone 112). Open-enum
+// `unknown` / `not-needed` — parity bridge (`LifecycleScopeType`
+// has no excluded/unknown value).
+spdx3_anno!(c60_spdx3, "mikebom:build-inclusion",          component);
+
+// C61 — `mikebom:build-inclusion-derivation` (milestone 112).
+// Provenance discriminator for C60 `not-needed`.
+spdx3_anno!(c61_spdx3, "mikebom:build-inclusion-derivation", component);
+
+// C62 — `mikebom:lifecycle-scope-derivation` (test-closure fix +
+// milestone 112). Unlike C42 (scope itself rides the native
+// `LifecycleScopeType`), the derivation has no native carrier, so
+// the annotation IS emitted on SPDX 3.
+spdx3_anno!(c62_spdx3, "mikebom:lifecycle-scope-derivation", component);
+
 // C47 — document-level user-defined identifiers (milestone 073).
 // Per `contracts/identifiers-annotation.md` C-1 SPDX 3 and C-2
 // SPDX 3: user-defined identifiers ride `Element.externalIdentifier[]`

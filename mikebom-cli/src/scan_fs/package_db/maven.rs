@@ -1635,6 +1635,7 @@ pub(crate) fn emit_shade_relocation_entries(
             .map(|l| vec![l])
             .unwrap_or_default();
         out.push(PackageDbEntry {
+            build_inclusion: None,
             purl,
             name: ancestor.artifact_id.clone(),
             version: ancestor.version.clone(),
@@ -1888,6 +1889,7 @@ fn pom_dep_to_entry(
         .map(|c| c.read_artifact_hash(&dep.group_id, &dep.artifact_id, &resolved_version))
         .unwrap_or_default();
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: dep.artifact_id.clone(),
         version: resolved_version,
@@ -2157,6 +2159,7 @@ fn build_transitive_entry(
         .map(|c| c.read_artifact_hash(group, artifact, version))
         .unwrap_or_default();
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: artifact.to_string(),
         version: version.to_string(),
@@ -2211,6 +2214,7 @@ fn jar_pom_to_entry(
         hashes.extend(archive_sha256);
     }
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: p.artifact_id.clone(),
         version: p.version.clone(),
@@ -3513,6 +3517,7 @@ fn build_maven_main_module_entry(
         .map(|d| format!("{}:{}", d.group_id, d.artifact_id))
         .collect();
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: artifact,
         version,

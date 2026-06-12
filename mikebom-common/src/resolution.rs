@@ -62,6 +62,17 @@ pub struct ResolvedComponent {
     /// (dpkg, apk, rpmdb, etc.).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lifecycle_scope: Option<LifecycleScope>,
+    /// Build-inclusion status (milestone 112). Set on source-tier
+    /// components whose participation in the main module's production
+    /// build was ruled out (`NotNeeded`) or could not be determined
+    /// (`Unknown`). `None` means production participation is confirmed
+    /// or assumed — pre-feature semantics, byte-identical emission.
+    /// Maps per format: CDX `scope: "excluded"` (NotNeeded only) +
+    /// `mikebom:build-inclusion` property; SPDX 2.3 package annotation;
+    /// SPDX 3 element annotation (parity bridges — neither SPDX format
+    /// has a native excluded-scope construct).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub build_inclusion: Option<BuildInclusion>,
     /// Original unresolved requirement specification for fallback-tier
     /// entries (`requirements.txt` range specs, root `package.json`
     /// dependency declarations without a lockfile). The string is
@@ -425,6 +436,37 @@ pub enum BinaryRole {
     Other,
 }
 
+/// Milestone 112 — build-inclusion status for a source-tier component
+/// whose participation in a production build was either ruled out by
+/// package-level analysis or could not be determined. Absence
+/// (`None` on `ResolvedComponent.build_inclusion`) means production
+/// participation is confirmed or assumed (pre-feature semantics).
+///
+/// String forms (`"unknown"`, `"not-needed"`) appear only at emission
+/// via [`BuildInclusion::as_str`] / serde — never as raw strings
+/// across internal boundaries (Constitution IV).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum BuildInclusion {
+    /// Discovered only via go.sum fallback / orphan flat-attach and
+    /// confirmed by no higher-fidelity signal.
+    Unknown,
+    /// Package-level analysis (`go mod why`) determined the main
+    /// module's production build does not need this module.
+    NotNeeded,
+}
+
+impl BuildInclusion {
+    /// Kebab-case serde-style variant name. Used for the
+    /// `mikebom:build-inclusion` property/annotation value.
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            BuildInclusion::Unknown => "unknown",
+            BuildInclusion::NotNeeded => "not-needed",
+        }
+    }
+}
+
 /// Backward-compat helper bridging the milestone-052 lifecycle_scope
 /// field to the pre-052 `is_dev: Option<bool>` semantic. Returns true
 /// when the component is `Development`, `Build`, or `Test` scoped —
@@ -494,6 +536,7 @@ mod tests {
             advisories: vec![],
             occurrences: vec![],
             lifecycle_scope: None,
+            build_inclusion: None,
             requirement_range: None,
             source_type: None,
             sbom_tier: None,
@@ -519,6 +562,26 @@ mod tests {
         assert!(!json.contains("\"supplier\""));
         assert!(!json.contains("\"deps_dev_match\""));
         assert!(!json.contains("\"cpes\""));
+        assert!(!json.contains("\"build_inclusion\""));
+    }
+
+    #[test]
+    fn build_inclusion_serde_kebab_case_round_trip() {
+        let json = serde_json::to_string(&BuildInclusion::Unknown).expect("serialize unknown");
+        assert_eq!(json, "\"unknown\"");
+        let json =
+            serde_json::to_string(&BuildInclusion::NotNeeded).expect("serialize not-needed");
+        assert_eq!(json, "\"not-needed\"");
+
+        let back: BuildInclusion =
+            serde_json::from_str("\"unknown\"").expect("deserialize unknown");
+        assert_eq!(back, BuildInclusion::Unknown);
+        let back: BuildInclusion =
+            serde_json::from_str("\"not-needed\"").expect("deserialize not-needed");
+        assert_eq!(back, BuildInclusion::NotNeeded);
+
+        assert_eq!(BuildInclusion::Unknown.as_str(), "unknown");
+        assert_eq!(BuildInclusion::NotNeeded.as_str(), "not-needed");
     }
 
     #[test]
@@ -550,6 +613,7 @@ mod tests {
             }],
             occurrences: vec![],
             lifecycle_scope: None,
+            build_inclusion: None,
             requirement_range: None,
             source_type: None,
             sbom_tier: None,

@@ -131,6 +131,7 @@ fn build_vcpkg_purl(name: &str, version: &str) -> Option<Purl> {
 fn build_entry(name: &str, version: &str, source_path: &str) -> Option<PackageDbEntry> {
     let purl = build_vcpkg_purl(name, version)?;
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: name.to_string(),
         version: version.to_string(),

@@ -51,6 +51,7 @@ fn dual_scan(case: &EcosystemCase) -> Scan {
     let spdx_path = tmp.path().join("out.spdx.json");
     let bin = env!("CARGO_BIN_EXE_mikebom");
     let mut cmd = Command::new(bin);
+    cmd.env("MIKEBOM_NO_GO_MOD_WHY", "1");
     cmd.arg("--offline")
         .arg("sbom")
         .arg("scan")

@@ -94,6 +94,7 @@ impl JdkCollapser {
                     .collect::<Vec<_>>()
                     .join("; ");
                 Some(PackageDbEntry {
+                    build_inclusion: None,
                     purl,
                     name: "openjdk".to_string(),
                     version,

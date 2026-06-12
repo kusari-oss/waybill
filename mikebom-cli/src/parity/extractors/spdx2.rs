@@ -473,6 +473,19 @@ spdx23_anno!(c58_spdx23, "mikebom:fingerprint-corpus-sha",   component);
 // Co-gated with C58; preserves SC-003 byte-identity for non-opt-in.
 spdx23_anno!(c59_spdx23, "mikebom:fingerprint-confidence",   component);
 
+// C60 — `mikebom:build-inclusion` (milestone 112). Open-enum
+// `unknown` / `not-needed` — parity bridge (SPDX 2.3 has no native
+// excluded-scope field). Simple property.
+spdx23_anno!(c60_spdx23, "mikebom:build-inclusion",          component);
+
+// C61 — `mikebom:build-inclusion-derivation` (milestone 112).
+// Provenance discriminator for C60 `not-needed`. Simple property.
+spdx23_anno!(c61_spdx23, "mikebom:build-inclusion-derivation", component);
+
+// C62 — `mikebom:lifecycle-scope-derivation` (test-closure fix +
+// milestone 112). `test-only-closure` / `go-mod-why`. Simple property.
+spdx23_anno!(c62_spdx23, "mikebom:lifecycle-scope-derivation", component);
+
 // ============================================================
 // Sections D-G — custom SPDX 2.3 extractors
 // ============================================================

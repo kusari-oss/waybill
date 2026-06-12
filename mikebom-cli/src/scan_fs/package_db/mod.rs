@@ -215,6 +215,17 @@ pub struct PackageDbEntry {
     /// to `ResolvedComponent.binary_role` and drives the format-native
     /// component-type field at emission time.
     pub binary_role: Option<mikebom_common::resolution::BinaryRole>,
+    /// Milestone 112 — build-inclusion status for golang source-tier
+    /// entries. Set ONLY by the post-filter classification passes in
+    /// `read_all()` (`go mod why` → `NotNeeded`; fallback-discovered
+    /// with no higher-fidelity signal → `Unknown`); every reader
+    /// constructs entries with `None`. Propagates verbatim to
+    /// `ResolvedComponent.build_inclusion` (same plumbing as
+    /// `lifecycle_scope`) and drives CDX `scope: "excluded"` +
+    /// `mikebom:build-inclusion` property / SPDX annotations at
+    /// emission. `None` = production participation confirmed or
+    /// assumed (pre-feature semantics, byte-identical emission).
+    pub build_inclusion: Option<mikebom_common::resolution::BuildInclusion>,
 }
 
 /// Hard failures a database reader can raise that MUST abort the scan
@@ -744,6 +755,375 @@ fn apply_go_linked_filter(entries: &mut [PackageDbEntry]) {
     }
 }
 
+/// Milestone 112 Part B — mark golang source-tier entries whose
+/// production-build participation no signal can confirm with
+/// `BuildInclusion::Unknown` (rendered as the consumer-visible
+/// `mikebom:build-inclusion: unknown` annotation at emission).
+///
+/// Targets exactly the fallback-discovered entries:
+/// - `mikebom:resolver-step: go-sum-fallback` (milestone 091's go.sum
+///   transitive fallback), or
+/// - `mikebom:orphan-reason: flat-attached-fallback` (issue #251's
+///   orphan backfill).
+///
+/// Exemptions (data-model.md state transitions, FR-010):
+/// - BuildInfo-confirmed entries — a Go binary was scanned (golang
+///   analyzed-tier entries exist) and the entry does NOT carry
+///   `mikebom:not-linked`: the linker proved production inclusion;
+///   never marked Unknown.
+/// - Main-module entries (`mikebom:component-role: main-module`) —
+///   exempt from all build-inclusion passes.
+/// - Already-classified entries: `build_inclusion` already set by the
+///   `go mod why` classification pass, or test-scoped
+///   (`LifecycleScope::Test` — Unknown and a test classification are
+///   mutually exclusive; a test verdict IS a classification), or named
+///   in `classified` — the Part C handoff set of module paths that
+///   received a definitive `go mod why` verdict. `ProdNeeded` verdicts
+///   leave no per-entry state (FR-011 byte-stability for prod
+///   components), so the handoff set is the only way this pass learns
+///   a fallback-discovered module was confirmed prod-needed.
+///
+/// Runs LAST among the Go passes in `read_all()` so it observes final
+/// post-filter, post-classification state. Never adds or removes
+/// entries (FR-011).
+fn apply_go_build_inclusion_unknown_markers(
+    entries: &mut [PackageDbEntry],
+    classified: &std::collections::HashSet<String>,
+) -> usize {
+    use mikebom_common::resolution::{BuildInclusion, LifecycleScope};
+
+    let buildinfo_present = entries.iter().any(|e| {
+        e.purl.ecosystem() == "golang" && e.sbom_tier.as_deref() == Some("analyzed")
+    });
+
+    let mut marked = 0usize;
+    for e in entries.iter_mut() {
+        if e.purl.ecosystem() != "golang" || e.sbom_tier.as_deref() != Some("source") {
+            continue;
+        }
+        if e.extra_annotations
+            .get("mikebom:component-role")
+            .and_then(|v| v.as_str())
+            == Some("main-module")
+        {
+            continue;
+        }
+        if e.build_inclusion.is_some() {
+            continue;
+        }
+        if e.lifecycle_scope == Some(LifecycleScope::Test) {
+            continue;
+        }
+        if classified.contains(&e.name) {
+            continue;
+        }
+        let fallback_discovered = e
+            .extra_annotations
+            .get("mikebom:resolver-step")
+            .and_then(|v| v.as_str())
+            == Some("go-sum-fallback")
+            || e.extra_annotations
+                .get("mikebom:orphan-reason")
+                .and_then(|v| v.as_str())
+                == Some("flat-attached-fallback");
+        if !fallback_discovered {
+            continue;
+        }
+        // FR-010: BuildInfo wins. Binary present + no not-linked tag
+        // ⇒ the linker embedded this module; inclusion is confirmed.
+        if buildinfo_present && !e.extra_annotations.contains_key("mikebom:not-linked") {
+            continue;
+        }
+        e.build_inclusion = Some(BuildInclusion::Unknown);
+        marked += 1;
+    }
+
+    if marked > 0 {
+        tracing::info!(
+            marked,
+            "build-inclusion pass: marked fallback-discovered Go modules with \
+             mikebom:build-inclusion: unknown (no higher-fidelity signal confirms \
+             production-build participation)",
+        );
+    }
+    marked
+}
+
+/// Milestone 112 Part C — `go mod why -m -vendor` build-graph
+/// classification. Runs BETWEEN the existing Go filters (G3/G4/G5)
+/// and the Part B unknown-marker pass so verdicts can remove modules
+/// from Unknown eligibility.
+///
+/// Orchestration per contracts/go-toolchain-invocation.md:
+/// - one invocation series per main module (workspace dir = parent of
+///   the synthetic main-module entry's `source_path`, which is always
+///   `<workspace>/go.sum`), gated per main module by the `go list all`
+///   reliability preflight inside `mod_why::analyze_main_module`;
+/// - shared 60s budget across all workspaces
+///   (`MIKEBOM_GO_MOD_WHY_BUDGET_MS` test override);
+/// - multi-module trees: EVERY main module is asked about the UNION
+///   of eligible module names (dedup may leave a shared module's
+///   `source_path` naming only one go.sum) and verdicts merge with
+///   needed-by-ANY precedence (`ProdNeeded` over `TestOnly` over
+///   `NotNeeded` over `Unresolved`) — a module needed by ANY main
+///   module is never excluded;
+/// - skip classes (`disabled` / `no-toolchain` / per-workspace
+///   degrades) never error the scan (FR-007).
+///
+/// Returns a [`GoModWhyOutcome`]: the classified-names handoff set
+/// consumed by `apply_go_build_inclusion_unknown_markers`
+/// (`ProdNeeded` verdicts set no entry state per FR-011, so the set
+/// is the only signal) plus the verdict/skip counters feeding the
+/// FR-013 observability summary emitted in `read_all`.
+fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOutcome {
+    use crate::scan_fs::package_db::golang::mod_why::{
+        self, BudgetTracker, GoModWhyVerdict, SkipReason,
+    };
+    use mikebom_common::resolution::LifecycleScope;
+    use std::collections::{HashMap, HashSet};
+
+    let mut outcome = GoModWhyOutcome::default();
+
+    let is_main_module = |e: &PackageDbEntry| {
+        e.extra_annotations
+            .get("mikebom:component-role")
+            .and_then(|v| v.as_str())
+            == Some("main-module")
+    };
+
+    // Workspace discovery from synthetic main-module entries.
+    let mut workspaces: Vec<std::path::PathBuf> = Vec::new();
+    for e in entries.iter() {
+        if e.purl.ecosystem() == "golang"
+            && e.sbom_tier.as_deref() == Some("source")
+            && is_main_module(e)
+        {
+            if let Some(dir) = std::path::Path::new(&e.source_path).parent() {
+                let dir = dir.to_path_buf();
+                if !workspaces.contains(&dir) {
+                    workspaces.push(dir);
+                }
+            }
+        }
+    }
+    if workspaces.is_empty() {
+        return outcome;
+    }
+    outcome.go_workspaces_found = true;
+
+    if mod_why::classification_disabled() {
+        tracing::info!(
+            "go-mod-why analysis skipped (disabled): --no-go-mod-why / \
+             MIKEBOM_NO_GO_MOD_WHY set; build-inclusion falls back to \
+             unknown markers"
+        );
+        outcome.skipped = Some(SkipReason::Disabled.as_str());
+        return outcome;
+    }
+    if !mod_why::toolchain_available() {
+        tracing::warn!(
+            "go-mod-why analysis skipped (no-toolchain): 'go' not found on \
+             PATH; build-inclusion falls back to unknown markers"
+        );
+        outcome.skipped = Some(SkipReason::NoToolchain.as_str());
+        return outcome;
+    }
+
+    let offline = std::env::var("MIKEBOM_OFFLINE").is_ok();
+    let buildinfo_present = entries.iter().any(|e| {
+        e.purl.ecosystem() == "golang" && e.sbom_tier.as_deref() == Some("analyzed")
+    });
+
+    // Query set: the UNION of eligible golang source-tier module names
+    // across the whole tree, asked of EVERY main module. Deliberately
+    // NOT filtered to each workspace's own `source_path`: when two
+    // main modules require the same module, cross-reader dedup keeps
+    // ONE entry whose `source_path` names only one of the go.sum
+    // files — a per-workspace filter would never ask the other main
+    // module and the needed-by-ANY merge below would see only one
+    // verdict. Asking a main module about a module it doesn't require
+    // is harmless: `go mod why` answers `(main module does not need …)`
+    // (rank 1), which any real ProdNeeded/TestOnly verdict outranks.
+    let mut query: Vec<String> = Vec::new();
+    let mut seen: HashSet<&str> = HashSet::new();
+    for e in entries.iter() {
+        if e.purl.ecosystem() != "golang"
+            || e.sbom_tier.as_deref() != Some("source")
+            || is_main_module(e)
+            || e.build_inclusion.is_some()
+            || e.lifecycle_scope == Some(LifecycleScope::Test)
+        {
+            continue;
+        }
+        // FR-010: BuildInfo-confirmed entries are exempt from all
+        // build-inclusion passes — don't spend budget on them.
+        if buildinfo_present && !e.extra_annotations.contains_key("mikebom:not-linked") {
+            continue;
+        }
+        if seen.insert(e.name.as_str()) {
+            query.push(e.name.clone());
+        }
+    }
+    if query.is_empty() {
+        return outcome;
+    }
+
+    let budget = BudgetTracker::from_env();
+    let mut merged: HashMap<String, GoModWhyVerdict> = HashMap::new();
+    for workspace in &workspaces {
+        let analysis = mod_why::analyze_main_module(workspace, &query, offline, &budget);
+        // FR-013 `skipped=` field: report the first per-workspace
+        // skip/degrade reason (the per-workspace warn lines carry the
+        // full detail; the summary carries one representative reason).
+        if let Some(reason) = analysis.skip_reason {
+            outcome.skipped.get_or_insert(reason.as_str());
+        }
+        for (module, verdict) in analysis.verdicts {
+            merged
+                .entry(module)
+                .and_modify(|existing| {
+                    if verdict_rank(verdict) > verdict_rank(*existing) {
+                        *existing = verdict;
+                    }
+                })
+                .or_insert(verdict);
+        }
+    }
+    outcome.elapsed_ms = budget.elapsed_ms();
+    outcome.analyzed = merged.len();
+    for verdict in merged.values() {
+        match verdict {
+            GoModWhyVerdict::ProdNeeded => outcome.prod += 1,
+            GoModWhyVerdict::TestOnly => outcome.test += 1,
+            GoModWhyVerdict::NotNeeded => outcome.not_needed += 1,
+            GoModWhyVerdict::Unresolved => outcome.unresolved += 1,
+        }
+    }
+
+    outcome.classified = apply_go_mod_why_verdicts(entries, &merged, buildinfo_present);
+    outcome
+}
+
+/// Aggregated outcome of the milestone-112 `go mod why` pass — the
+/// classified-names handoff set plus the FR-013 summary counters.
+#[derive(Debug, Default)]
+struct GoModWhyOutcome {
+    /// Module names with an accepted verdict; consumed by
+    /// `apply_go_build_inclusion_unknown_markers`.
+    classified: std::collections::HashSet<String>,
+    /// At least one Go main-module workspace was discovered — the
+    /// FR-013 summary line is only emitted for Go source scans.
+    go_workspaces_found: bool,
+    /// Modules with a merged verdict (`analyzed=` in the summary).
+    analyzed: usize,
+    prod: usize,
+    test: usize,
+    not_needed: usize,
+    unresolved: usize,
+    /// First skip/degrade reason encountered, as the contract's
+    /// kebab-case token (`skipped=<reason|none>` in the summary).
+    skipped: Option<&'static str>,
+    elapsed_ms: u128,
+}
+
+/// Needed-by-ANY merge precedence (spec edge case: a module needed by
+/// only one of several main modules is NOT excluded).
+fn verdict_rank(
+    v: crate::scan_fs::package_db::golang::mod_why::GoModWhyVerdict,
+) -> u8 {
+    use crate::scan_fs::package_db::golang::mod_why::GoModWhyVerdict::*;
+    match v {
+        ProdNeeded => 3,
+        TestOnly => 2,
+        NotNeeded => 1,
+        Unresolved => 0,
+    }
+}
+
+/// Apply merged `go mod why` verdicts to entries (pure — separable
+/// from the subprocess orchestration for unit testing with injected
+/// verdict maps).
+///
+/// Per data-model.md state transitions:
+/// - `ProdNeeded` — no entry state (FR-011 byte stability); the
+///   returned handoff set is the only signal;
+/// - `TestOnly` — `LifecycleScope::Test` +
+///   `mikebom:lifecycle-scope-derivation: go-mod-why` (no-op when
+///   already test-tagged — never overwrite an existing derivation);
+/// - `NotNeeded` — `BuildInclusion::NotNeeded` +
+///   `mikebom:build-inclusion-derivation: go-mod-why`, EXCEPT when the
+///   entry already carries a test tag (never downgrade existing test
+///   classifications);
+/// - `Unresolved` — untouched; eligible for the unknown-marker pass.
+///
+/// Exemptions mirror the query-set filter: main-module entries,
+/// already-classified entries, and BuildInfo-confirmed entries are
+/// never modified.
+fn apply_go_mod_why_verdicts(
+    entries: &mut [PackageDbEntry],
+    verdicts: &std::collections::HashMap<
+        String,
+        crate::scan_fs::package_db::golang::mod_why::GoModWhyVerdict,
+    >,
+    buildinfo_present: bool,
+) -> std::collections::HashSet<String> {
+    use crate::scan_fs::package_db::golang::mod_why::GoModWhyVerdict;
+    use mikebom_common::resolution::{BuildInclusion, LifecycleScope};
+    use std::collections::HashSet;
+
+    let mut classified: HashSet<String> = HashSet::new();
+    for e in entries.iter_mut() {
+        if e.purl.ecosystem() != "golang" || e.sbom_tier.as_deref() != Some("source") {
+            continue;
+        }
+        if e.extra_annotations
+            .get("mikebom:component-role")
+            .and_then(|v| v.as_str())
+            == Some("main-module")
+        {
+            continue;
+        }
+        if e.build_inclusion.is_some() {
+            continue;
+        }
+        if buildinfo_present && !e.extra_annotations.contains_key("mikebom:not-linked") {
+            continue;
+        }
+        let Some(verdict) = verdicts.get(&e.name) else {
+            continue;
+        };
+        match verdict {
+            GoModWhyVerdict::ProdNeeded => {
+                classified.insert(e.name.clone());
+            }
+            GoModWhyVerdict::TestOnly => {
+                classified.insert(e.name.clone());
+                if e.lifecycle_scope != Some(LifecycleScope::Test) {
+                    e.lifecycle_scope = Some(LifecycleScope::Test);
+                    e.extra_annotations.insert(
+                        "mikebom:lifecycle-scope-derivation".to_string(),
+                        serde_json::Value::String("go-mod-why".to_string()),
+                    );
+                }
+            }
+            GoModWhyVerdict::NotNeeded => {
+                classified.insert(e.name.clone());
+                if e.lifecycle_scope == Some(LifecycleScope::Test) {
+                    // Never downgrade an existing test tag.
+                    continue;
+                }
+                e.build_inclusion = Some(BuildInclusion::NotNeeded);
+                e.extra_annotations.insert(
+                    "mikebom:build-inclusion-derivation".to_string(),
+                    serde_json::Value::String("go-mod-why".to_string()),
+                );
+            }
+            GoModWhyVerdict::Unresolved => {}
+        }
+    }
+    classified
+}
+
 /// Try every supported database reader against `rootfs` and return all
 /// successful entries. Missing db files are not an error — a rootfs
 /// with no apt/apk is just empty output. Only fail-closed errors (npm
@@ -1067,6 +1447,42 @@ pub fn read_all(
         .collect();
     apply_go_main_module_filter(&mut out, &main_modules);
 
+    // Milestone 112 Part C: `go mod why -m -vendor` build-graph
+    // classification. Runs after the G3/G4/G5 filters (so it queries
+    // only surviving entries) and before the Part B unknown pass (so
+    // classified modules never receive unknown markers). Default-on
+    // when a `go` toolchain is on PATH; disabled via --no-go-mod-why /
+    // MIKEBOM_NO_GO_MOD_WHY; every failure mode degrades to Part B.
+    let go_mod_why_outcome = apply_go_mod_why_classification(&mut out);
+
+    // Milestone 112 Part B (runs LAST among Go passes so it observes
+    // final post-filter state): mark fallback-discovered golang
+    // source-tier entries no higher-fidelity signal confirms with
+    // BuildInclusion::Unknown. The Part C `go mod why` classification
+    // pass runs before this and removes entries from Unknown
+    // eligibility by classifying them (the handoff set).
+    let unknown_marked =
+        apply_go_build_inclusion_unknown_markers(&mut out, &go_mod_why_outcome.classified);
+
+    // FR-013 observability: one info-level summary line per Go source
+    // scan, regardless of whether classification ran, was skipped, or
+    // degraded (contracts/go-toolchain-invocation.md).
+    if go_mod_why_outcome.go_workspaces_found {
+        tracing::info!(
+            "go-mod-why classification: analyzed={} prod={} test={} \
+             not_needed={} unresolved={} unknown_marked={} skipped={} \
+             elapsed_ms={}",
+            go_mod_why_outcome.analyzed,
+            go_mod_why_outcome.prod,
+            go_mod_why_outcome.test,
+            go_mod_why_outcome.not_needed,
+            go_mod_why_outcome.unresolved,
+            unknown_marked,
+            go_mod_why_outcome.skipped.unwrap_or("none"),
+            go_mod_why_outcome.elapsed_ms,
+        );
+    }
+
     // Milestone 050: source-tree Go scan with go.mod parsed but no
     // built Go binary present. Without a binary, mikebom can't
     // distinguish modules that the linker actually embedded from
@@ -1268,6 +1684,7 @@ Architecture: arm64
         sbom_tier: Option<&str>,
     ) -> PackageDbEntry {
         PackageDbEntry {
+            build_inclusion: None,
             purl: Purl::new(purl_str).expect("valid purl"),
             name: name.to_string(),
             version: version.to_string(),
@@ -1761,5 +2178,376 @@ Architecture: arm64
              mikebom:not-linked. extra_annotations = {:?}",
             mm.extra_annotations,
         );
+    }
+
+    // --- Milestone 112 Part B: build-inclusion unknown markers -----------
+
+    use mikebom_common::resolution::BuildInclusion;
+
+    fn make_go_fallback_entry(name: &str, key: &str, value: &str) -> PackageDbEntry {
+        let mut e = make_go_entry(name, &[]);
+        e.extra_annotations.insert(
+            key.to_string(),
+            serde_json::Value::String(value.to_string()),
+        );
+        e
+    }
+
+    fn inclusion_of(entries: &[PackageDbEntry], name: &str) -> Option<BuildInclusion> {
+        entries
+            .iter()
+            .find(|e| e.name == name)
+            .expect("entry present")
+            .build_inclusion
+    }
+
+    /// go.sum-fallback entries with no higher-fidelity signal are
+    /// marked Unknown (FR-001).
+    #[test]
+    fn unknown_marker_set_on_go_sum_fallback_entry() {
+        let mut entries = vec![make_go_fallback_entry(
+            "example.com/orphan",
+            "mikebom:resolver-step",
+            "go-sum-fallback",
+        )];
+        apply_go_build_inclusion_unknown_markers(&mut entries, &Default::default());
+        assert_eq!(
+            inclusion_of(&entries, "example.com/orphan"),
+            Some(BuildInclusion::Unknown),
+        );
+    }
+
+    /// flat-attached orphan-backfill entries are marked Unknown too.
+    #[test]
+    fn unknown_marker_set_on_flat_attached_fallback_entry() {
+        let mut entries = vec![make_go_fallback_entry(
+            "example.com/flat",
+            "mikebom:orphan-reason",
+            "flat-attached-fallback",
+        )];
+        apply_go_build_inclusion_unknown_markers(&mut entries, &Default::default());
+        assert_eq!(
+            inclusion_of(&entries, "example.com/flat"),
+            Some(BuildInclusion::Unknown),
+        );
+    }
+
+    /// FR-010: when a Go binary was scanned and the entry is NOT
+    /// tagged not-linked, BuildInfo confirms inclusion — never Unknown.
+    #[test]
+    fn unknown_marker_exempts_buildinfo_confirmed_entry() {
+        let analyzed = make_entry(
+            "pkg:golang/example.com/confirmed@v1.0.0",
+            "example.com/confirmed",
+            "v1.0.0",
+            Some("analyzed"),
+        );
+        // Fallback-discovered but linker-confirmed (no not-linked tag
+        // after G3 because its (name, version) IS in BuildInfo).
+        let confirmed = make_go_fallback_entry(
+            "example.com/confirmed",
+            "mikebom:resolver-step",
+            "go-sum-fallback",
+        );
+        // Fallback-discovered AND not-linked: stays Unknown-eligible.
+        let mut unconfirmed = make_go_fallback_entry(
+            "example.com/unconfirmed",
+            "mikebom:resolver-step",
+            "go-sum-fallback",
+        );
+        unconfirmed.extra_annotations.insert(
+            "mikebom:not-linked".to_string(),
+            serde_json::Value::Bool(true),
+        );
+        let mut entries = vec![analyzed, confirmed, unconfirmed];
+        apply_go_build_inclusion_unknown_markers(&mut entries, &Default::default());
+        let confirmed_source = entries
+            .iter()
+            .find(|e| e.name == "example.com/confirmed" && e.sbom_tier.as_deref() == Some("source"))
+            .expect("source-tier entry present");
+        assert_eq!(
+            confirmed_source.build_inclusion, None,
+            "BuildInfo-confirmed entry must never be marked Unknown (FR-010)",
+        );
+        assert_eq!(
+            inclusion_of(&entries, "example.com/unconfirmed"),
+            Some(BuildInclusion::Unknown),
+            "not-linked fallback entry stays Unknown-eligible",
+        );
+    }
+
+    /// Main-module entries are exempt from all build-inclusion passes.
+    #[test]
+    fn unknown_marker_exempts_main_module() {
+        let mut mm = make_go_main_module_entry("example.com/proj", &[]);
+        // Pathological: even if a main-module somehow carried a
+        // fallback marker, the role exemption wins.
+        mm.extra_annotations.insert(
+            "mikebom:resolver-step".to_string(),
+            serde_json::Value::String("go-sum-fallback".to_string()),
+        );
+        let mut entries = vec![mm];
+        apply_go_build_inclusion_unknown_markers(&mut entries, &Default::default());
+        assert_eq!(inclusion_of(&entries, "example.com/proj"), None);
+    }
+
+    /// Graph-resolved entries (no fallback annotations) are exempt —
+    /// only fallback-discovered entries are Unknown candidates.
+    #[test]
+    fn unknown_marker_exempts_graph_resolved_entry() {
+        let mut entries = vec![make_go_entry("example.com/resolved", &[])];
+        apply_go_build_inclusion_unknown_markers(&mut entries, &Default::default());
+        assert_eq!(inclusion_of(&entries, "example.com/resolved"), None);
+    }
+
+    /// Test-scoped entries are never marked Unknown — a test verdict
+    /// is a classification (data-model.md mutual exclusion).
+    #[test]
+    fn unknown_marker_exempts_test_scoped_entry() {
+        let mut e = make_go_fallback_entry(
+            "example.com/testonly",
+            "mikebom:resolver-step",
+            "go-sum-fallback",
+        );
+        e.lifecycle_scope = Some(mikebom_common::resolution::LifecycleScope::Test);
+        let mut entries = vec![e];
+        apply_go_build_inclusion_unknown_markers(&mut entries, &Default::default());
+        assert_eq!(inclusion_of(&entries, "example.com/testonly"), None);
+    }
+
+    /// Already-classified entries (NotNeeded from the go-mod-why pass)
+    /// are never overwritten by the unknown pass.
+    #[test]
+    fn unknown_marker_exempts_already_classified_entry() {
+        let mut e = make_go_fallback_entry(
+            "example.com/classified",
+            "mikebom:resolver-step",
+            "go-sum-fallback",
+        );
+        e.build_inclusion = Some(BuildInclusion::NotNeeded);
+        let mut entries = vec![e];
+        apply_go_build_inclusion_unknown_markers(&mut entries, &Default::default());
+        assert_eq!(
+            inclusion_of(&entries, "example.com/classified"),
+            Some(BuildInclusion::NotNeeded),
+        );
+    }
+
+    /// Non-golang and non-source-tier entries are untouched, and the
+    /// pass never adds or removes entries (FR-011).
+    #[test]
+    fn unknown_marker_ignores_non_go_and_preserves_count() {
+        let mut npm = make_entry(
+            "pkg:npm/lodash@4.17.21",
+            "lodash",
+            "4.17.21",
+            Some("source"),
+        );
+        npm.extra_annotations.insert(
+            "mikebom:resolver-step".to_string(),
+            serde_json::Value::String("go-sum-fallback".to_string()),
+        );
+        let fallback = make_go_fallback_entry(
+            "example.com/orphan",
+            "mikebom:resolver-step",
+            "go-sum-fallback",
+        );
+        let mut entries = vec![npm, fallback];
+        let before = entries.len();
+        apply_go_build_inclusion_unknown_markers(&mut entries, &Default::default());
+        assert_eq!(entries.len(), before, "FR-011: count unchanged");
+        assert_eq!(inclusion_of(&entries, "lodash"), None);
+        assert_eq!(
+            inclusion_of(&entries, "example.com/orphan"),
+            Some(BuildInclusion::Unknown),
+        );
+    }
+
+    // --- Milestone 112 Part C: go-mod-why verdict application -----------
+
+    use crate::scan_fs::package_db::golang::mod_why::GoModWhyVerdict;
+
+    fn verdict_map(
+        pairs: &[(&str, GoModWhyVerdict)],
+    ) -> std::collections::HashMap<String, GoModWhyVerdict> {
+        pairs.iter().map(|(n, v)| (n.to_string(), *v)).collect()
+    }
+
+    /// NotNeeded → BuildInclusion::NotNeeded + derivation annotation;
+    /// the module joins the classified handoff set.
+    #[test]
+    fn verdict_not_needed_sets_build_inclusion_and_derivation() {
+        let mut entries = vec![make_go_fallback_entry(
+            "example.com/unneeded",
+            "mikebom:resolver-step",
+            "go-sum-fallback",
+        )];
+        let verdicts =
+            verdict_map(&[("example.com/unneeded", GoModWhyVerdict::NotNeeded)]);
+        let classified = apply_go_mod_why_verdicts(&mut entries, &verdicts, false);
+        assert_eq!(
+            inclusion_of(&entries, "example.com/unneeded"),
+            Some(BuildInclusion::NotNeeded),
+        );
+        assert_eq!(
+            entries[0]
+                .extra_annotations
+                .get("mikebom:build-inclusion-derivation")
+                .and_then(|v| v.as_str()),
+            Some("go-mod-why"),
+        );
+        assert!(classified.contains("example.com/unneeded"));
+        // The unknown pass must now skip it (already classified).
+        apply_go_build_inclusion_unknown_markers(&mut entries, &classified);
+        assert_eq!(
+            inclusion_of(&entries, "example.com/unneeded"),
+            Some(BuildInclusion::NotNeeded),
+        );
+    }
+
+    /// TestOnly → LifecycleScope::Test + go-mod-why derivation.
+    #[test]
+    fn verdict_test_only_sets_test_scope_and_derivation() {
+        let mut entries = vec![make_go_entry("example.com/testdep", &[])];
+        let verdicts =
+            verdict_map(&[("example.com/testdep", GoModWhyVerdict::TestOnly)]);
+        let classified = apply_go_mod_why_verdicts(&mut entries, &verdicts, false);
+        assert_eq!(
+            entries[0].lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Test),
+        );
+        assert_eq!(
+            entries[0]
+                .extra_annotations
+                .get("mikebom:lifecycle-scope-derivation")
+                .and_then(|v| v.as_str()),
+            Some("go-mod-why"),
+        );
+        assert!(classified.contains("example.com/testdep"));
+    }
+
+    /// TestOnly on an already-test-tagged entry: no derivation
+    /// overwrite (the prior derivation — e.g. test-only-closure —
+    /// wins; never clobber existing classification provenance).
+    #[test]
+    fn verdict_test_only_never_overwrites_existing_test_tag() {
+        let mut e = make_go_entry("example.com/already", &[]);
+        e.lifecycle_scope = Some(mikebom_common::resolution::LifecycleScope::Test);
+        e.extra_annotations.insert(
+            "mikebom:lifecycle-scope-derivation".to_string(),
+            serde_json::Value::String("test-only-closure".to_string()),
+        );
+        let mut entries = vec![e];
+        let verdicts =
+            verdict_map(&[("example.com/already", GoModWhyVerdict::TestOnly)]);
+        apply_go_mod_why_verdicts(&mut entries, &verdicts, false);
+        assert_eq!(
+            entries[0]
+                .extra_annotations
+                .get("mikebom:lifecycle-scope-derivation")
+                .and_then(|v| v.as_str()),
+            Some("test-only-closure"),
+        );
+    }
+
+    /// NotNeeded on a test-tagged entry never downgrades the test
+    /// classification (data-model.md precedence).
+    #[test]
+    fn verdict_not_needed_never_downgrades_test_tag() {
+        let mut e = make_go_entry("example.com/testtagged", &[]);
+        e.lifecycle_scope = Some(mikebom_common::resolution::LifecycleScope::Test);
+        let mut entries = vec![e];
+        let verdicts =
+            verdict_map(&[("example.com/testtagged", GoModWhyVerdict::NotNeeded)]);
+        apply_go_mod_why_verdicts(&mut entries, &verdicts, false);
+        assert_eq!(inclusion_of(&entries, "example.com/testtagged"), None);
+        assert_eq!(
+            entries[0].lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Test),
+        );
+    }
+
+    /// ProdNeeded leaves the entry byte-identical (FR-011) but the
+    /// handoff set shields it from the unknown-marker pass.
+    #[test]
+    fn verdict_prod_needed_shields_fallback_entry_from_unknown_marker() {
+        let mut entries = vec![make_go_fallback_entry(
+            "example.com/prodfallback",
+            "mikebom:resolver-step",
+            "go-sum-fallback",
+        )];
+        let verdicts = verdict_map(&[(
+            "example.com/prodfallback",
+            GoModWhyVerdict::ProdNeeded,
+        )]);
+        let classified = apply_go_mod_why_verdicts(&mut entries, &verdicts, false);
+        assert_eq!(inclusion_of(&entries, "example.com/prodfallback"), None);
+        assert!(
+            !entries[0]
+                .extra_annotations
+                .contains_key("mikebom:build-inclusion-derivation"),
+            "ProdNeeded must leave no entry state"
+        );
+        assert!(classified.contains("example.com/prodfallback"));
+        apply_go_build_inclusion_unknown_markers(&mut entries, &classified);
+        assert_eq!(
+            inclusion_of(&entries, "example.com/prodfallback"),
+            None,
+            "classified handoff must shield ProdNeeded fallback entries from unknown markers"
+        );
+    }
+
+    /// Unresolved verdicts leave the entry untouched — it stays
+    /// eligible for the unknown-marker pass.
+    #[test]
+    fn verdict_unresolved_falls_through_to_unknown_marker() {
+        let mut entries = vec![make_go_fallback_entry(
+            "example.com/unres",
+            "mikebom:resolver-step",
+            "go-sum-fallback",
+        )];
+        let verdicts =
+            verdict_map(&[("example.com/unres", GoModWhyVerdict::Unresolved)]);
+        let classified = apply_go_mod_why_verdicts(&mut entries, &verdicts, false);
+        assert!(classified.is_empty());
+        apply_go_build_inclusion_unknown_markers(&mut entries, &classified);
+        assert_eq!(
+            inclusion_of(&entries, "example.com/unres"),
+            Some(BuildInclusion::Unknown),
+        );
+    }
+
+    /// Main-module entries are exempt from verdict application even
+    /// when a verdict names them.
+    #[test]
+    fn verdict_application_exempts_main_module() {
+        let mut entries =
+            vec![make_go_main_module_entry("example.com/mainmod", &[])];
+        let verdicts =
+            verdict_map(&[("example.com/mainmod", GoModWhyVerdict::NotNeeded)]);
+        let classified = apply_go_mod_why_verdicts(&mut entries, &verdicts, false);
+        assert!(classified.is_empty());
+        assert_eq!(inclusion_of(&entries, "example.com/mainmod"), None);
+    }
+
+    /// FR-010: BuildInfo-confirmed entries (binary present, no
+    /// not-linked tag) are never modified by verdicts.
+    #[test]
+    fn verdict_application_exempts_buildinfo_confirmed() {
+        let mut entries = vec![make_go_entry("example.com/linked", &[])];
+        let verdicts =
+            verdict_map(&[("example.com/linked", GoModWhyVerdict::NotNeeded)]);
+        let classified = apply_go_mod_why_verdicts(&mut entries, &verdicts, true);
+        assert!(classified.is_empty());
+        assert_eq!(inclusion_of(&entries, "example.com/linked"), None);
+    }
+
+    /// Needed-by-ANY merge precedence: ProdNeeded > TestOnly >
+    /// NotNeeded > Unresolved.
+    #[test]
+    fn verdict_rank_orders_needed_by_any() {
+        assert!(verdict_rank(GoModWhyVerdict::ProdNeeded) > verdict_rank(GoModWhyVerdict::TestOnly));
+        assert!(verdict_rank(GoModWhyVerdict::TestOnly) > verdict_rank(GoModWhyVerdict::NotNeeded));
+        assert!(verdict_rank(GoModWhyVerdict::NotNeeded) > verdict_rank(GoModWhyVerdict::Unresolved));
     }
 }

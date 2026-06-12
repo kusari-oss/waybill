@@ -48,6 +48,7 @@ noun on every subcommand (clap's flag-position-tolerant parser).
 | `--include-declared-deps` | bool | off (`--image`) / on (`--path`) | Include declared-but-not-on-disk dependencies (manifest SBOM mode). |
 | `--include-legacy-rpmdb` | bool | off | Read legacy Berkeley-DB rpmdb on pre-RHEL-8 / CentOS-7 / Amazon-Linux-2 images. Also enabled via `MIKEBOM_INCLUDE_LEGACY_RPMDB=1`. |
 | `--timeout <SECONDS>` | u64 | disabled | Wall-clock time limit for the entire mikebom invocation. Exits with status 124 (POSIX `timeout(1)` convention) when exceeded. Set to `0` (or omit) to disable. |
+| `--no-go-mod-why` | bool | off | Disable Go build-graph classification via `go mod why`. Also via `MIKEBOM_NO_GO_MOD_WHY=1`. |
 | `--include-dev` | bool | off | **Deprecated.** See the deprecated flags section. |
 
 ### `--offline`
@@ -178,6 +179,41 @@ case $? in
   *)   echo "scan failed with another error: $?" ;;
 esac
 ```
+
+### `--no-go-mod-why`
+
+Disable Go package-level build-graph classification (milestone 112).
+
+By default, when a Go source scan finds a `go` toolchain on PATH, mikebom
+runs `go mod why -m -vendor` against each main module (modules batched in
+chunks of 20, 60-second total budget shared across the scan) to classify
+`go.sum`-fallback modules that sit outside the build graph:
+
+- **not needed** → emitted with CDX `scope: "excluded"`,
+  `mikebom:build-inclusion: not-needed`, and
+  `mikebom:build-inclusion-derivation: go-mod-why`;
+- **test-only** → emitted with test lifecycle scope and
+  `mikebom:lifecycle-scope-derivation: go-mod-why`;
+- **needed by any main module** → emitted unchanged.
+
+With this flag set, the subprocess never runs and affected modules keep
+the conservative always-on `mikebom:build-inclusion: unknown` marker.
+
+```bash
+# Disable via flag
+mikebom sbom scan --path . --output project.cdx.json --no-go-mod-why
+
+# Disable via env var (any non-empty value other than "0")
+MIKEBOM_NO_GO_MOD_WHY=1 mikebom sbom scan --path . --output project.cdx.json
+```
+
+Classification degrades rather than failing: a missing toolchain, a
+failed `go list all` preflight, a non-zero `go mod why` exit, or budget
+exhaustion all fall back to the `unknown` marker with a warning and a
+one-line `go-mod-why classification: …` summary on stderr. See the
+[golang ecosystem notes](../ecosystems.md#golang) for the full degrade
+matrix. With `--offline`, the `go` children are pinned to `GOPROXY=off`,
+`GOFLAGS=-mod=mod`, `GOTOOLCHAIN=local`.
 
 ---
 

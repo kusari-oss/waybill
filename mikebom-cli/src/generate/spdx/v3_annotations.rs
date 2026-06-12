@@ -168,6 +168,17 @@ fn push_component_fields(
     // variants set by `apply_lifecycle_scope_to_edges` in
     // `scan_fs/mod.rs`, then emitted as `lifecycleScope` by
     // `spdx/v3_relationships.rs`. No annotation needed.
+    // Milestone 112: `mikebom:build-inclusion` — parity-bridging
+    // element annotation. SPDX 3.0.1's `LifecycleScopeType` has no
+    // excluded or unknown value (CDX expresses not-needed natively
+    // via `scope: "excluded"`); the annotation is the only carrier
+    // here. Values: `unknown` | `not-needed`. The companion
+    // `mikebom:build-inclusion-derivation` flows through the
+    // extra_annotations bag. Documented in
+    // `docs/reference/sbom-format-mapping.md`.
+    if let Some(inclusion) = c.build_inclusion {
+        push(out, "mikebom:build-inclusion", json!(inclusion.as_str()));
+    }
     // C7 co-owned-by
     if let Some(ref v) = c.co_owned_by {
         push(out, "mikebom:co-owned-by", json!(v));

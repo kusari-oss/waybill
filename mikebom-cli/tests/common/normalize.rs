@@ -87,6 +87,14 @@
 //! - `CARGO_HOME` → `fake_home/no-cargo-home`. Cargo registry +
 //!   git clone cache; defaults to `$HOME/.cargo`. Currently rarely
 //!   affects output but isolated for future-proofing.
+//!
+//! Additionally pins `MIKEBOM_NO_GO_MOD_WHY=1` (milestone 112): the
+//! default-on `go mod why -m -vendor` classification would otherwise
+//! invoke the host's real `go` toolchain on every Go-fixture scan,
+//! making golden output depend on whether `go` is installed and on
+//! its module-resolution behavior. Tests that exercise the
+//! classification (`go_build_inclusion.rs`) opt back in by
+//! re-setting the var to `0` after calling this helper.
 
 #![allow(dead_code)]
 
@@ -354,5 +362,8 @@ pub fn apply_fake_home_env(cmd: &mut Command, fake_home: &Path) {
         .env("GOPATH", fake_home.join("no-gopath"))
         .env("GOMODCACHE", fake_home.join("no-gomodcache"))
         .env("CARGO_HOME", fake_home.join("no-cargo-home"))
-        .env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+        .env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
+        // Milestone 112: keep golden/byte-identity tests independent
+        // of the host's `go` toolchain (classification is default-on).
+        .env("MIKEBOM_NO_GO_MOD_WHY", "1");
 }

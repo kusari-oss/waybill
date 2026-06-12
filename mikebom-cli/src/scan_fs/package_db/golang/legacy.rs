@@ -737,6 +737,7 @@ where
             );
         }
         out.push(PackageDbEntry {
+            build_inclusion: None,
             purl,
             name: resolved_path,
             version: resolved_version,
@@ -1006,6 +1007,7 @@ pub(crate) fn build_main_module_entry(
     let licenses = detect_main_module_license(project_root);
 
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: module_path,
         version,

@@ -147,6 +147,7 @@ mod tests {
     fn make_component(name: &str, version: &str) -> ResolvedComponent {
         let purl_str = format!("pkg:cargo/{name}@{version}");
         ResolvedComponent {
+            build_inclusion: None,
             purl: Purl::new(&purl_str).expect("valid purl"),
             name: name.to_string(),
             version: version.to_string(),

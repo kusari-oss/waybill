@@ -389,6 +389,7 @@ fn parse_rpm_file(
     let maintainer = vendor_header.or(packager);
 
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name,
         version: version_tok.clone(),

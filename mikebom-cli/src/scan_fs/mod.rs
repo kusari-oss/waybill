@@ -186,6 +186,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             // hash but can't tell whether the file is installed: tier =
             // "analyzed" per R13. No dev/prod info, no range spec.
             lifecycle_scope: None,
+            build_inclusion: None,
             requirement_range: None,
             source_type: None,
             sbom_tier: Some("analyzed".to_string()),
@@ -574,6 +575,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 // None (set in their constructors); sbom_tier = "deployed"
                 // because both read installed-package databases.
                 lifecycle_scope: entry.lifecycle_scope,
+                build_inclusion: entry.build_inclusion,
                 requirement_range: entry.requirement_range.clone(),
                 source_type: entry.source_type.clone(),
                 sbom_tier: entry.sbom_tier.clone(),

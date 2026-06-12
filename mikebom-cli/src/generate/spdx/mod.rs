@@ -311,6 +311,7 @@ mod tests {
 
     fn mk_component(purl: &str, advisories: Vec<AdvisoryRef>) -> ResolvedComponent {
         ResolvedComponent {
+            build_inclusion: None,
             purl: Purl::new(purl).unwrap(),
             name: "x".to_string(),
             version: "1".to_string(),

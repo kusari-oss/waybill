@@ -28,7 +28,7 @@ use std::process::Command;
 // cross-test consistency on subprocess env setup.
 #[path = "../common/normalize.rs"]
 mod fake_home_normalize;
-use fake_home_normalize::apply_fake_home_env;
+pub use fake_home_normalize::apply_fake_home_env;
 
 /// A directed dependency edge between two PURL-identified components.
 /// Cross-tool comparison key.

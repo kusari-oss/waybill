@@ -309,6 +309,7 @@ mod tests {
             canonical_purl: purl.to_string(),
             source_mechanism: sm,
             reader_output: PackageDbEntry {
+                build_inclusion: None,
                 purl: Purl::new(purl).unwrap(),
                 name: "test".to_string(),
                 version: "0.0".to_string(),

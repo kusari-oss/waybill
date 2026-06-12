@@ -209,6 +209,7 @@ impl PipDistInfoEntry {
         let licenses = extract_license(&self);
 
         Some(PackageDbEntry {
+            build_inclusion: None,
             purl,
             name: self.name,
             version: self.version,

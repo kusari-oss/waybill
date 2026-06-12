@@ -258,6 +258,7 @@ fn build_bazel_entry(
     };
 
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: name.to_string(),
         version: version.to_string(),

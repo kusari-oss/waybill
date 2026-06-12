@@ -187,6 +187,7 @@ fn build_entry(
     }
 
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name,
         version,

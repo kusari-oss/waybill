@@ -81,6 +81,21 @@ struct Cli {
     )]
     offline: bool,
 
+    /// Disable Go package-level build-graph classification. By default,
+    /// when a `go` toolchain is found on PATH during a Go source scan,
+    /// mikebom runs `go mod why -m -vendor` (60-second total budget,
+    /// modules batched in chunks of 20) to classify modules outside the
+    /// build graph as `not-needed` (emitted with `scope: "excluded"`)
+    /// or test-only (emitted with test scope). With this flag set, that
+    /// subprocess never runs: affected modules keep the conservative
+    /// `mikebom:build-inclusion: unknown` marker instead.
+    ///
+    /// Also settable via `MIKEBOM_NO_GO_MOD_WHY` (any non-empty value
+    /// other than `0` disables classification). Flag or env var — either
+    /// one disables. Milestone 112.
+    #[arg(long = "no-go-mod-why", global = true)]
+    no_go_mod_why: bool,
+
     /// **DEPRECATED** (milestone 052/part-3). Pre-052 this flag was
     /// off-by-default and gated dev/test/build dep emission. Post-052
     /// the default is to include ALL scopes natively tagged
@@ -208,6 +223,19 @@ async fn main() -> anyhow::Result<std::process::ExitCode> {
         // SAFETY: single-threaded prelude before any async runtime
         // workers spawn — env mutation here is race-free.
         std::env::set_var("MIKEBOM_OFFLINE", "1");
+    }
+
+    // Milestone 112 (T012): expose --no-go-mod-why as the
+    // MIKEBOM_NO_GO_MOD_WHY env var so the go-mod-why classification
+    // pass in `scan_fs::package_db` can honor it without plumbing a
+    // bool through `scan_path` → `read_all` → `golang::read` (same
+    // env-var-bridge rationale as MIKEBOM_OFFLINE above). The read
+    // side treats any non-empty value other than `0` as "disabled",
+    // so flag OR pre-set env var disables classification.
+    if cli.no_go_mod_why {
+        // SAFETY: single-threaded prelude before any async runtime
+        // workers spawn — env mutation here is race-free.
+        std::env::set_var("MIKEBOM_NO_GO_MOD_WHY", "1");
     }
 
     // Global wall-clock watchdog. When `--timeout <SECONDS>` is set

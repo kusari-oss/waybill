@@ -180,6 +180,7 @@ fn parse_dep_token(
     ))
     .ok()?;
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: name.to_string(),
         version: version.to_string(),

@@ -888,6 +888,7 @@ mod tests {
 
     fn mk_component(purl: &str, name: &str, version: &str) -> ResolvedComponent {
         ResolvedComponent {
+            build_inclusion: None,
             purl: Purl::new(purl).unwrap(),
             name: name.to_string(),
             version: version.to_string(),

@@ -82,6 +82,7 @@ fn scan_to_spdx(case: &EcosystemCase) -> serde_json::Value {
     let out_path = tmp.path().join("mikebom.spdx.json");
     let bin = env!("CARGO_BIN_EXE_mikebom");
     let mut cmd = Command::new(bin);
+    cmd.env("MIKEBOM_NO_GO_MOD_WHY", "1");
     cmd.arg("--offline")
         .arg("sbom")
         .arg("scan")

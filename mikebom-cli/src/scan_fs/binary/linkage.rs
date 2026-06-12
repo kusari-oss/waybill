@@ -148,6 +148,7 @@ impl LinkageAggregator {
         records
             .into_iter()
             .map(|(soname, rec)| PackageDbEntry {
+                build_inclusion: None,
                 purl: rec.purl,
                 name: soname,
                 version: String::new(),

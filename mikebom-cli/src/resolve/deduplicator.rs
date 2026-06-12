@@ -453,6 +453,7 @@ mod tests {
     ) -> ResolvedComponent {
         let purl = Purl::new(purl_str).expect("valid purl");
         ResolvedComponent {
+            build_inclusion: None,
             name: purl.name().to_string(),
             version: purl.version().unwrap_or("0.0.0").to_string(),
             purl,

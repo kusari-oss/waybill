@@ -165,6 +165,7 @@ fn build_entry(name: &str, arch: &str, version: &str, source_path: &str) -> Opti
     }
 
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: name.to_string(),
         version: version.to_string(),

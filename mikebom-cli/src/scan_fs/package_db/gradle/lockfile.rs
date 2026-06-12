@@ -122,6 +122,7 @@ pub(super) fn read_gradle_lockfile(path: &Path) -> Vec<PackageDbEntry> {
         }
 
         out.push(PackageDbEntry {
+            build_inclusion: None,
             purl,
             name: name.to_string(),
             version: version.to_string(),

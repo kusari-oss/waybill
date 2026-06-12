@@ -236,6 +236,7 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
             .unwrap_or_else(|| project_path.to_string_lossy().to_string());
 
         out.push(PackageDbEntry {
+            build_inclusion: None,
             purl,
             name,
             version,

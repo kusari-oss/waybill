@@ -610,6 +610,7 @@ fn assemble_entry(
     };
 
     PackageDbEntry {
+        build_inclusion: None,
         purl,
         name,
         version: full_version.clone(),

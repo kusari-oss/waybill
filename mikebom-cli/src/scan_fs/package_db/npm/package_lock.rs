@@ -227,6 +227,7 @@ pub(crate) fn parse_package_lock(
         let depends: Vec<String> = depends_set.into_values().collect();
 
         out.push(PackageDbEntry {
+            build_inclusion: None,
             purl,
             name,
             version,

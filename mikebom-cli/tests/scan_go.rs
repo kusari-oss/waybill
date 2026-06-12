@@ -31,6 +31,9 @@ fn scan_path_args(path: &std::path::Path, extra: &[&str]) -> serde_json::Value {
     let tmp = tempfile::NamedTempFile::new().expect("tempfile");
     let out_path = tmp.path().to_path_buf();
     let mut cmd = Command::new(bin);
+    // Milestone 112: keep these fixture scans independent of the
+    // host's `go` toolchain (classification is default-on).
+    cmd.env("MIKEBOM_NO_GO_MOD_WHY", "1");
     cmd.arg("--offline")
         .arg("sbom")
         .arg("scan")
@@ -794,6 +797,7 @@ fn scan_path_with_stderr(path: &std::path::Path) -> (serde_json::Value, String) 
     let tmp = tempfile::NamedTempFile::new().expect("tempfile");
     let out_path = tmp.path().to_path_buf();
     let output = Command::new(bin)
+        .env("MIKEBOM_NO_GO_MOD_WHY", "1")
         .arg("--offline")
         .arg("sbom")
         .arg("scan")
@@ -890,6 +894,7 @@ fn scan_isolated_two_format(
     let mut cmd = Command::new(bin);
     cmd.env("HOME", fake_home.path())
         .env("GOMODCACHE", empty_cache.path().join("empty"))
+        .env("MIKEBOM_NO_GO_MOD_WHY", "1")
         .arg("--offline")
         .arg("sbom")
         .arg("scan")
@@ -1212,6 +1217,7 @@ fn scan_go_zero_requires_emits_main_module_no_edges() {
     let output = Command::new(bin)
         .env("HOME", fake_home.path())
         .env("GOMODCACHE", empty_cache.path().join("empty"))
+        .env("MIKEBOM_NO_GO_MOD_WHY", "1")
         .arg("--offline")
         .arg("sbom")
         .arg("scan")

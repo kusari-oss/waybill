@@ -187,6 +187,18 @@ pub fn annotate_component(
             push(&mut out, "mikebom:lifecycle-scope", json!(s));
         }
     }
+    // Milestone 112: `mikebom:build-inclusion` — parity-bridging
+    // annotation per Constitution Principle V's format-asymmetry
+    // carve-out. SPDX 2.3 has no per-package excluded-scope or
+    // build-inclusion construct (CDX expresses not-needed natively
+    // via `scope: "excluded"`); the annotation is the only carrier
+    // here. Values: `unknown` | `not-needed`. The companion
+    // `mikebom:build-inclusion-derivation` flows through the
+    // extra_annotations bag. Documented in
+    // `docs/reference/sbom-format-mapping.md`.
+    if let Some(inclusion) = c.build_inclusion {
+        push(&mut out, "mikebom:build-inclusion", json!(inclusion.as_str()));
+    }
     // C7 co-owned-by
     if let Some(ref v) = c.co_owned_by {
         push(&mut out, "mikebom:co-owned-by", json!(v));
@@ -596,6 +608,7 @@ mod tests {
         use mikebom_common::resolution::{ResolutionEvidence, ResolutionTechnique};
         use mikebom_common::types::purl::Purl;
         ResolvedComponent {
+            build_inclusion: None,
             purl: Purl::new(purl).unwrap(),
             name: "demo".to_string(),
             version: "1".to_string(),

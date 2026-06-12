@@ -604,6 +604,23 @@ impl CycloneDxBuilder {
                 }
             }
 
+            // Milestone 112 (T016): `BuildInclusion::NotNeeded`
+            // components emit the native `scope: "excluded"`
+            // UNCONDITIONALLY — independent of the include-dev gate
+            // above (clarification 2026-06-11). Rationale: `go mod
+            // why` proved the production build does not need this
+            // module, which is a build-graph fact, not a lifecycle-
+            // scope preference the operator can toggle. The component
+            // is kept in the SBOM (never dropped by scope filtering —
+            // its lifecycle_scope stays `None`, so `--exclude-scope`
+            // can't match it) with the finer-grained reason carried by
+            // the `mikebom:build-inclusion` property below.
+            if component.build_inclusion
+                == Some(mikebom_common::resolution::BuildInclusion::NotNeeded)
+            {
+                entry["scope"] = json!("excluded");
+            }
+
             // Include hashes if configured.
             if self.config.include_hashes && !component.hashes.is_empty() {
                 let hashes: Vec<serde_json::Value> = component
@@ -747,6 +764,21 @@ impl CycloneDxBuilder {
                         "value": scope.as_str()
                     }));
                 }
+            }
+            // Milestone 112: `mikebom:build-inclusion` property from
+            // the typed `BuildInclusion` field. `unknown` carries no
+            // native CDX construct (the 3-value `scope` enum cannot
+            // express "undetermined"); `not-needed`'s PRIMARY signal is
+            // the native `scope: "excluded"` set in the scope block —
+            // this property carries the finer-grained reason
+            // (contracts/annotations.md, Constitution V/X). The
+            // companion `mikebom:build-inclusion-derivation` flows
+            // through the extra_annotations bag.
+            if let Some(inclusion) = component.build_inclusion {
+                properties.push(json!({
+                    "name": "mikebom:build-inclusion",
+                    "value": inclusion.as_str()
+                }));
             }
             if let Some(ref range) = component.requirement_range {
                 properties.push(json!({
@@ -1143,6 +1175,7 @@ mod tests {
     fn make_component(name: &str, version: &str) -> ResolvedComponent {
         let purl_str = format!("pkg:cargo/{name}@{version}");
         ResolvedComponent {
+            build_inclusion: None,
             purl: Purl::new(&purl_str).expect("valid purl"),
             name: name.to_string(),
             version: version.to_string(),
@@ -1205,6 +1238,50 @@ mod tests {
         assert!(bom["compositions"].is_array());
         assert!(bom["dependencies"].is_array());
         assert!(bom["vulnerabilities"].is_array());
+    }
+
+    /// Milestone 112 (T016): `BuildInclusion::NotNeeded` emits the
+    /// native `scope: "excluded"` UNCONDITIONALLY — the default
+    /// config has `include_dev: false`, so this proves the emission
+    /// is independent of the include-dev gate, and that the
+    /// component is kept in `components[]` rather than dropped by
+    /// scope filtering (clarification 2026-06-11).
+    #[test]
+    fn not_needed_build_inclusion_emits_excluded_scope_without_include_dev() {
+        let config = CycloneDxConfig::default();
+        assert!(!config.include_dev, "test premise: include_dev off");
+        let builder = CycloneDxBuilder::new(config);
+        let mut excluded = make_component("excluded-mod", "1.0.0");
+        excluded.build_inclusion =
+            Some(mikebom_common::resolution::BuildInclusion::NotNeeded);
+        let kept = make_component("kept-mod", "2.0.0");
+        let components = vec![excluded, kept];
+        let integrity = clean_integrity();
+
+        let bom = builder
+            .build(&components, &[], &integrity, "myapp", &[], None)
+            .expect("build bom");
+        let comps = bom["components"].as_array().expect("components array");
+        assert_eq!(comps.len(), 2, "NotNeeded component must never be dropped");
+        let not_needed = comps
+            .iter()
+            .find(|c| c["name"] == "excluded-mod")
+            .expect("NotNeeded component present in components[]");
+        assert_eq!(not_needed["scope"], "excluded");
+        let props = not_needed["properties"]
+            .as_array()
+            .expect("properties array");
+        assert!(
+            props.iter().any(|p| p["name"] == "mikebom:build-inclusion"
+                && p["value"] == "not-needed"),
+            "mikebom:build-inclusion: not-needed property must be emitted"
+        );
+        // The unaffected sibling has no scope field (default = required).
+        let plain = comps
+            .iter()
+            .find(|c| c["name"] == "kept-mod")
+            .expect("plain component present");
+        assert!(plain.get("scope").is_none());
     }
 
     /// Shade-jar nested emission (CDX 1.6 component.components[]).

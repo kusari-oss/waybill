@@ -154,6 +154,7 @@ fn package_to_entry(pkg: &CargoPackage, source_path: &str) -> Option<PackageDbEn
         None
     };
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: pkg.name.clone(),
         version: pkg.version.clone(),
@@ -367,6 +368,7 @@ fn build_cargo_main_module_entry(
     );
     let source_path = format!("path+file://{}", manifest_dir.display());
     Some(PackageDbEntry {
+        build_inclusion: None,
         purl,
         name: name.to_string(),
         version,
@@ -1964,6 +1966,7 @@ version = "0.1.0-alpha.11"
             serde_json::Value::String("main-module".to_string()),
         );
         PackageDbEntry {
+            build_inclusion: None,
             purl,
             name: name.to_string(),
             version: version.to_string(),
@@ -1998,6 +2001,7 @@ version = "0.1.0-alpha.11"
     fn make_regular_entry(name: &str, version: &str) -> PackageDbEntry {
         let purl = build_cargo_purl(name, version).unwrap();
         PackageDbEntry {
+            build_inclusion: None,
             purl,
             name: name.to_string(),
             version: version.to_string(),
