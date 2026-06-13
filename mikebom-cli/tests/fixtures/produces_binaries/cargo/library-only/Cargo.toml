@@ -1,0 +1,8 @@
+[package]
+name = "fixture-libonly"
+version = "1.0.0"
+edition = "2021"
+
+[lib]
+name = "fixture_libonly"
+path = "src/lib.rs"

@@ -563,6 +563,10 @@ spdx3_anno!(c62_spdx3, "mikebom:lifecycle-scope-derivation", component);
 // CDX `metadata.properties[].mikebom:exclude-path`.
 spdx3_anno!(c63_spdx3, "mikebom:exclude-path",             document);
 
+// C64 — `mikebom:produces-binaries` (milestone 116). Per-Package
+// graph-element annotation listing produced binary names.
+spdx3_anno!(c64_spdx3, "mikebom:produces-binaries",        component);
+
 // C47 — document-level user-defined identifiers (milestone 073).
 // Per `contracts/identifiers-annotation.md` C-1 SPDX 3 and C-2
 // SPDX 3: user-defined identifiers ride `Element.externalIdentifier[]`

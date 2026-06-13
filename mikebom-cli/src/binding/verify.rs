@@ -24,7 +24,8 @@ use serde_json::Value;
 
 use crate::binding::{
     deserialize_from_cdx_property, deserialize_from_envelope_value, BindingError,
-    BindingHash, BindingStrength, SourceDocumentBinding, BINDING_PROPERTY_NAME,
+    AliasSource, BindingHash, BindingStrength, SourceDocumentBinding, BINDING_PROPERTY_NAME,
+    PRODUCES_BINARIES_PROPERTY_NAME,
 };
 
 /// One row of the verification report — one image-tier component
@@ -251,11 +252,17 @@ pub fn verify_binding(image_sbom: &Value, source_sbom: &Value) -> VerifyReport {
     }
 }
 
-/// One image-tier component's binding-relevant fields.
+/// One image-tier (or source-tier, during `--bind-to-source` load) component's
+/// binding-relevant fields.
 struct ImageComponent {
     purl: String,
     bom_ref: Option<String>,
     binding: Option<SourceDocumentBinding>,
+    /// Milestone 116 — parsed value of the `mikebom:produces-binaries`
+    /// property, if present. Empty `Vec` when absent OR when the property
+    /// failed to parse as a JSON array of strings. Used at bind-time to
+    /// build the `SourceSbomContext.binary_name_to_purl` index.
+    produces_binaries: Vec<String>,
 }
 
 /// Walk image-tier SBOM components across CDX / SPDX 2.3 / SPDX 3.
@@ -293,11 +300,18 @@ fn decode_cdx_component(c: &Value) -> Option<ImageComponent> {
         .and_then(|v| v.as_str())
         .map(String::from);
     let mut binding: Option<SourceDocumentBinding> = None;
+    let mut produces_binaries: Vec<String> = Vec::new();
     if let Some(props) = c.get("properties").and_then(|v| v.as_array()) {
         for p in props {
-            if p.get("name").and_then(|v| v.as_str()) == Some(BINDING_PROPERTY_NAME) {
-                if let Some(value_str) = p.get("value").and_then(|v| v.as_str()) {
-                    binding = deserialize_from_cdx_property(value_str).ok();
+            let name = p.get("name").and_then(|v| v.as_str());
+            let value_str = p.get("value").and_then(|v| v.as_str());
+            if name == Some(BINDING_PROPERTY_NAME) {
+                if let Some(s) = value_str {
+                    binding = deserialize_from_cdx_property(s).ok();
+                }
+            } else if name == Some(PRODUCES_BINARIES_PROPERTY_NAME) {
+                if let Some(s) = value_str {
+                    produces_binaries = parse_produces_binaries_value(s);
                 }
             }
         }
@@ -306,7 +320,34 @@ fn decode_cdx_component(c: &Value) -> Option<ImageComponent> {
         purl,
         bom_ref,
         binding,
+        produces_binaries,
     })
+}
+
+/// Parse the JSON-encoded value of a `mikebom:produces-binaries` property.
+/// Returns an empty `Vec` on malformed input — backwards-compat with non-
+/// mikebom SBOMs and hand-edited values requires graceful degradation, NOT
+/// panic (per FR-014 / SC-005).
+fn parse_produces_binaries_value(s: &str) -> Vec<String> {
+    let v: Value = match serde_json::from_str(s) {
+        Ok(v) => v,
+        Err(e) => {
+            tracing::warn!(
+                error = %e,
+                "mikebom:produces-binaries property value failed to parse as JSON; ignoring"
+            );
+            return Vec::new();
+        }
+    };
+    let Some(arr) = v.as_array() else {
+        tracing::warn!(
+            "mikebom:produces-binaries value is not a JSON array; ignoring"
+        );
+        return Vec::new();
+    };
+    arr.iter()
+        .filter_map(|el| el.as_str().map(String::from))
+        .collect()
 }
 
 fn walk_spdx23_components(doc: &Value) -> Vec<ImageComponent> {
@@ -320,13 +361,15 @@ fn walk_spdx23_components(doc: &Value) -> Vec<ImageComponent> {
             None => continue,
         };
         let spdxid = p.get("SPDXID").and_then(|v| v.as_str()).map(String::from);
-        let binding = decode_spdx_envelope_binding_from_annotations(
-            p.get("annotations").and_then(|v| v.as_array()),
-        );
+        let annotations = p.get("annotations").and_then(|v| v.as_array());
+        let binding = decode_spdx_envelope_binding_from_annotations(annotations);
+        let produces_binaries =
+            decode_spdx_envelope_produces_binaries_from_annotations(annotations);
         out.push(ImageComponent {
             purl,
             bom_ref: spdxid,
             binding,
+            produces_binaries,
         });
     }
     out
@@ -370,6 +413,39 @@ fn decode_envelope_binding(serialized: &str) -> Option<SourceDocumentBinding> {
     deserialize_from_envelope_value(value).ok()
 }
 
+fn decode_spdx_envelope_produces_binaries_from_annotations(
+    annotations: Option<&Vec<Value>>,
+) -> Vec<String> {
+    let Some(arr) = annotations else {
+        return Vec::new();
+    };
+    for a in arr {
+        let Some(comment) = a.get("comment").and_then(|v| v.as_str()) else {
+            continue;
+        };
+        if let Some(names) = decode_envelope_produces_binaries(comment) {
+            return names;
+        }
+    }
+    Vec::new()
+}
+
+fn decode_envelope_produces_binaries(serialized: &str) -> Option<Vec<String>> {
+    let v: Value = serde_json::from_str(serialized).ok()?;
+    if v.get("schema").and_then(|x| x.as_str()) != Some("mikebom-annotation/v1") {
+        return None;
+    }
+    if v.get("field").and_then(|x| x.as_str()) != Some(PRODUCES_BINARIES_PROPERTY_NAME) {
+        return None;
+    }
+    let arr = v.get("value")?.as_array()?;
+    Some(
+        arr.iter()
+            .filter_map(|el| el.as_str().map(String::from))
+            .collect(),
+    )
+}
+
 fn walk_spdx3_components(doc: &Value) -> Vec<ImageComponent> {
     let mut out = Vec::new();
     let Some(graph) = doc.get("@graph").and_then(|v| v.as_array()) else {
@@ -396,6 +472,7 @@ fn walk_spdx3_components(doc: &Value) -> Vec<ImageComponent> {
                     purl,
                     bom_ref: Some(spdxid.to_string()),
                     binding: None,
+                    produces_binaries: Vec::new(),
                 },
             );
         }
@@ -414,6 +491,12 @@ fn walk_spdx3_components(doc: &Value) -> Vec<ImageComponent> {
         if let Some(b) = decode_envelope_binding(statement) {
             if let Some(comp) = by_iri.get_mut(subject) {
                 comp.binding = Some(b);
+            }
+            continue;
+        }
+        if let Some(names) = decode_envelope_produces_binaries(statement) {
+            if let Some(comp) = by_iri.get_mut(subject) {
+                comp.produces_binaries = names;
             }
         }
     }
@@ -471,6 +554,16 @@ pub struct SourceSbomContext {
     /// fresh hashes from on-disk evidence.
     pub source_bindings_by_purl:
         std::collections::BTreeMap<String, SourceDocumentBinding>,
+    /// Milestone 116 — produced-binary-name → source-tier PURL(s) index.
+    /// Built during `load()` by scanning each component for a
+    /// `mikebom:produces-binaries` property. Vec-valued because FR-013's
+    /// name-collision case (two source-tier components declaring the same
+    /// binary name) MUST surface as `weak` with `multiple-source-candidates
+    /// -for-binary-name` reason; the binder retains all candidates so the
+    /// audit trail can list them. Empty when no source component carries
+    /// the property — preserves milestone-072 backwards-compat (FR-014 /
+    /// SC-005) via the same short-circuit path.
+    pub binary_name_to_purl: std::collections::HashMap<String, Vec<String>>,
 }
 
 impl SourceSbomContext {
@@ -492,8 +585,18 @@ impl SourceSbomContext {
 
         let mut source_purls = std::collections::BTreeSet::new();
         let mut source_bindings_by_purl = std::collections::BTreeMap::new();
+        let mut binary_name_to_purl: std::collections::HashMap<String, Vec<String>> =
+            std::collections::HashMap::new();
         for ic in walk_image_components(&doc) {
             source_purls.insert(ic.purl.clone());
+            // Milestone 116 — populate the auto-alias index BEFORE
+            // potentially moving `ic.binding`/`ic.purl` below.
+            for name in &ic.produces_binaries {
+                binary_name_to_purl
+                    .entry(name.clone())
+                    .or_default()
+                    .push(ic.purl.clone());
+            }
             if let Some(b) = ic.binding {
                 source_bindings_by_purl.insert(ic.purl, b);
             }
@@ -503,6 +606,7 @@ impl SourceSbomContext {
             source_doc_id,
             source_purls,
             source_bindings_by_purl,
+            binary_name_to_purl,
         })
     }
 
@@ -519,6 +623,21 @@ impl SourceSbomContext {
     ///   "source-not-found-in-bind-target" }` per FR-003.
     pub fn binding_for_purl(&self, purl: &str) -> SourceDocumentBinding {
         if !self.source_purls.contains(purl) {
+            // Milestone 116 — auto-alias fallback per
+            // specs/116-produces-binaries/contracts/binder.md. If the
+            // incoming PURL is `pkg:generic/<name>` and the source SBOM
+            // declared `<name>` via `mikebom:produces-binaries`, alias
+            // to the declaring source-tier PURL. If multiple source
+            // components declared the same name, return `Weak` with the
+            // FR-013 multi-candidate reason. Otherwise return the
+            // original Unknown (preserves milestone-072 baseline /
+            // FR-014 backwards compat).
+            if let Some(name) = generic_purl_name(purl) {
+                let lookup = normalize_for_auto_alias(name);
+                if let Some(candidates) = self.binary_name_to_purl.get(&lookup) {
+                    return self.build_auto_alias_binding(purl, candidates);
+                }
+            }
             return SourceDocumentBinding::unknown(
                 self.source_doc_id.clone(),
                 "source-not-found-in-bind-target",
@@ -531,10 +650,12 @@ impl SourceSbomContext {
                 strength: b.strength,
                 reason: b.reason.clone(),
                 algo: b.algo.clone(),
-                // Source-tier bindings never carry milestone-111
-                // alias context; aliases are image-tier-only.
+                // Source-tier bindings never carry alias context;
+                // aliases are image-tier-only (milestone 111 operator-
+                // supplied + milestone 116 automatic).
                 alias_from: None,
                 alias_to: None,
+                alias_source: None,
             },
             None => SourceDocumentBinding::unknown(
                 self.source_doc_id.clone(),
@@ -542,6 +663,82 @@ impl SourceSbomContext {
             ),
         }
     }
+
+    /// Milestone 116 — produce a binding result for an auto-alias hit.
+    /// `candidates` is guaranteed non-empty by caller. Single-candidate
+    /// case inherits the candidate's hash/strength/reason; multi-
+    /// candidate case downgrades to `Weak` with the FR-013 reason.
+    fn build_auto_alias_binding(
+        &self,
+        original_purl: &str,
+        candidates: &[String],
+    ) -> SourceDocumentBinding {
+        let alias_from = mikebom_common::types::purl::Purl::new(original_purl).ok();
+        let target_purl = &candidates[0];
+        let alias_to = mikebom_common::types::purl::Purl::new(target_purl).ok();
+        if candidates.len() > 1 {
+            return SourceDocumentBinding {
+                source_doc_id: self.source_doc_id.clone(),
+                hash: None,
+                strength: BindingStrength::Weak,
+                reason: Some("multiple-source-candidates-for-binary-name".to_string()),
+                algo: crate::binding::BINDING_HASH_ALGO_V1.to_string(),
+                alias_from,
+                alias_to,
+                alias_source: Some(AliasSource::AutomaticFromProducesBinaries),
+            };
+        }
+        match self.source_bindings_by_purl.get(target_purl) {
+            Some(b) => SourceDocumentBinding {
+                source_doc_id: self.source_doc_id.clone(),
+                hash: b.hash.clone(),
+                strength: b.strength,
+                reason: b.reason.clone(),
+                algo: b.algo.clone(),
+                alias_from,
+                alias_to,
+                alias_source: Some(AliasSource::AutomaticFromProducesBinaries),
+            },
+            None => SourceDocumentBinding {
+                source_doc_id: self.source_doc_id.clone(),
+                hash: None,
+                strength: BindingStrength::Unknown,
+                reason: Some("source-tier-binding-evidence-missing".to_string()),
+                algo: crate::binding::BINDING_HASH_ALGO_V1.to_string(),
+                alias_from,
+                alias_to,
+                alias_source: Some(AliasSource::AutomaticFromProducesBinaries),
+            },
+        }
+    }
+}
+
+/// Extract the name segment of a `pkg:generic/<name>` PURL. Returns
+/// `None` for any other PURL shape. The name segment is taken verbatim;
+/// suffix/case normalization is the caller's responsibility (see
+/// [`normalize_for_auto_alias`]).
+fn generic_purl_name(purl: &str) -> Option<&str> {
+    let rest = purl.strip_prefix("pkg:generic/")?;
+    // The name is the part up to `@`, `?`, or end. PURL spec allows
+    // version + qualifiers; we ignore both for matching.
+    let cut = rest.find(['@', '?', '#']).unwrap_or(rest.len());
+    Some(&rest[..cut])
+}
+
+/// Image-side name normalization per
+/// `specs/116-produces-binaries/contracts/binder.md` §
+/// "Image-side normalization". Lowercases the input and strips a
+/// trailing `.exe` or `.jar` (case-insensitive). Other suffixes pass
+/// through unchanged.
+fn normalize_for_auto_alias(name: &str) -> String {
+    let lower = name.to_ascii_lowercase();
+    if let Some(stem) = lower.strip_suffix(".exe") {
+        return stem.to_string();
+    }
+    if let Some(stem) = lower.strip_suffix(".jar") {
+        return stem.to_string();
+    }
+    lower
 }
 
 #[cfg(test)]
@@ -592,6 +789,7 @@ mod tests {
             algo: "v1".to_string(),
             alias_from: None,
             alias_to: None,
+            alias_source: None,
         }
     }
 

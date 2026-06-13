@@ -848,6 +848,7 @@ mod tests {
             algo: "v1".to_string(),
             alias_from: None,
             alias_to: None,
+            alias_source: None,
         }
     }
 

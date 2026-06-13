@@ -683,6 +683,14 @@ cdx_anno!(c62_cdx, "mikebom:lifecycle-scope-derivation", component);
 // pre-feature output) when no exclusions in effect.
 cdx_anno!(c63_cdx, "mikebom:exclude-path",              document);
 
+// C64 — `mikebom:produces-binaries` (milestone 116 FR-001 / FR-005..010).
+// Per-main-module-component annotation listing the canonical (lowercase,
+// extensionless, sorted+deduped) binary names the source's ecosystem
+// manifest declares. Read by the cross-tier `--bind-to-source` flow to
+// auto-alias `pkg:generic/<name>` image components to the source-tier
+// ecosystem PURL. Library-only components MUST NOT carry this property.
+cdx_anno!(c64_cdx, "mikebom:produces-binaries",         component);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================

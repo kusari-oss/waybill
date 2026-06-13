@@ -36,6 +36,12 @@ use crate::binding::{BindingError, SourceDocumentBinding};
 /// envelope `field`.
 pub const BINDING_PROPERTY_NAME: &str = "mikebom:source-document-binding";
 
+/// Milestone 116 — source-tier main-module property listing produced
+/// binary names. Read by `SourceSbomContext::load()` at bind-time to
+/// build the `binary_name_to_purl` auto-alias index. See
+/// `specs/116-produces-binaries/contracts/property.md`.
+pub const PRODUCES_BINARIES_PROPERTY_NAME: &str = "mikebom:produces-binaries";
+
 /// Serialize a `SourceDocumentBinding` to the CDX-property-string
 /// shape per `contracts/source-document-binding-annotation.md` C-3 CDX
 /// 1.6 example: a single-line JSON-encoded string suitable for
@@ -98,6 +104,7 @@ mod tests {
             algo: "v1".to_string(),
             alias_from: None,
             alias_to: None,
+            alias_source: None,
         }
     }
 

@@ -162,6 +162,30 @@ impl BindingStrength {
     }
 }
 
+/// Milestone 116 — provenance of an applied PURL alias on a binding result.
+///
+/// Carried on the `SourceDocumentBinding.alias_source` field whenever
+/// `alias_from` / `alias_to` are populated (paired-presence invariant).
+/// Lets auditors distinguish operator-supplied aliases (milestone 111's
+/// `--pkg-alias` flag) from automatic aliases derived at bind-time from
+/// the source-tier `mikebom:produces-binaries` declaration (milestone 116).
+///
+/// Pre-feature SBOMs that carry milestone-111 aliases without this field
+/// deserialize cleanly via `#[serde(default)]`; consumers SHOULD interpret
+/// absent `alias_source` as implicitly `OperatorSupplied` (only possible
+/// source pre-feature). Post-feature, every alias-bearing envelope
+/// populates this field explicitly.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum AliasSource {
+    /// `--pkg-alias` flag (or `MIKEBOM_PKG_ALIAS` env var). Milestone 111.
+    OperatorSupplied,
+    /// Source-tier `mikebom:produces-binaries` declaration auto-aliased the
+    /// image-tier `pkg:generic/<name>` to the source-tier ecosystem PURL.
+    /// Milestone 116.
+    AutomaticFromProducesBinaries,
+}
+
 /// Stable identifier for the source-tier SBOM document.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct SourceDocumentId {
@@ -214,6 +238,13 @@ pub struct SourceDocumentBinding {
     /// Paired-presence invariant with `alias_from`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub alias_to: Option<mikebom_common::types::purl::Purl>,
+    /// Milestone 116 — provenance of the applied alias. `Some(_)` iff
+    /// `alias_from` is `Some` (extended paired-presence invariant). Pre-
+    /// milestone-116 SBOMs lack this field and deserialize as `None`;
+    /// consumers SHOULD interpret absent on an alias-bearing binding as
+    /// implicit [`AliasSource::OperatorSupplied`] (only possible pre-116).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alias_source: Option<AliasSource>,
 }
 
 fn default_algo_v1() -> String {
@@ -233,6 +264,7 @@ impl SourceDocumentBinding {
             algo: default_algo_v1(),
             alias_from: None,
             alias_to: None,
+            alias_source: None,
         }
     }
 }
@@ -269,6 +301,7 @@ pub enum VexPropagationMode {
 pub use annotation::{
     deserialize_from_cdx_property, deserialize_from_envelope_value,
     serialize_to_cdx_property, serialize_to_envelope_value, BINDING_PROPERTY_NAME,
+    PRODUCES_BINARIES_PROPERTY_NAME,
 };
 pub use hash::{compute_binding_hash, BINDING_HASH_ALGO_V1};
 pub use source_inputs::{extract_source_inputs, BindingEcosystem};
@@ -401,6 +434,7 @@ mod tests {
             algo: "v1".to_string(),
             alias_from: None,
             alias_to: None,
+            alias_source: None,
         }
     }
 
@@ -417,6 +451,7 @@ mod tests {
             algo: "v1".to_string(),
             alias_from: Some(Purl::new("pkg:generic/baz").unwrap()),
             alias_to: Some(Purl::new("pkg:cargo/baz@1.0.0").unwrap()),
+            alias_source: Some(AliasSource::OperatorSupplied),
         }
     }
 

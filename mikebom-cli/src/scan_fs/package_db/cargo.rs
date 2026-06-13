@@ -366,6 +366,21 @@ fn build_cargo_main_module_entry(
         "mikebom:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
+
+    // Milestone 116 — produces-binaries extraction per FR-005 (Cargo).
+    // Three sources per Cargo's implicit-binary convention:
+    //   (a) Explicit `[[bin]]` table entries.
+    //   (b) Default-binary inference: `src/main.rs` exists → binary
+    //       named after the package's `name` field.
+    //   (c) Implicit `src/bin/*.rs` files (depth-1 only per Cargo docs).
+    let mut binary_candidates: Vec<String> =
+        extract_cargo_bin_table_names(&parsed);
+    if manifest_dir.join("src").join("main.rs").is_file() {
+        binary_candidates.push(name.to_string());
+    }
+    binary_candidates.extend(extract_cargo_src_bin_names(manifest_dir));
+    stamp_produces_binaries_if_any(&mut extra_annotations, binary_candidates);
+
     let source_path = format!("path+file://{}", manifest_dir.display());
     Some(PackageDbEntry {
         build_inclusion: None,
@@ -398,6 +413,83 @@ fn build_cargo_main_module_entry(
         extra_annotations,
         binary_role: None,
     })
+}
+
+/// Milestone 116 — extract explicit `[[bin]]` table entries' `name`
+/// fields from a parsed `Cargo.toml`. Filters out entries without a
+/// `name` field (those use Cargo's default-name-from-filename rule
+/// which we cover via the `src/bin/*.rs` walk).
+fn extract_cargo_bin_table_names(parsed: &toml::Value) -> Vec<String> {
+    let mut out = Vec::new();
+    if let Some(arr) = parsed.get("bin").and_then(|v| v.as_array()) {
+        for entry in arr {
+            if let Some(n) = entry.get("name").and_then(|v| v.as_str()) {
+                out.push(n.to_string());
+            }
+        }
+    }
+    out
+}
+
+/// Milestone 116 — enumerate Cargo's implicit `src/bin/<name>.rs`
+/// binaries via `safe_walk` (depth-1 only per Cargo docs; nested
+/// subdirectories of `src/bin/` are NOT implicit binaries). Returns
+/// the file stems as candidate binary names.
+fn extract_cargo_src_bin_names(manifest_dir: &Path) -> Vec<String> {
+    let src_bin = manifest_dir.join("src").join("bin");
+    if !src_bin.is_dir() {
+        return Vec::new();
+    }
+    let mut out: Vec<String> = Vec::new();
+    let exclude_set = super::exclude_path::ExclusionSet::new_empty();
+    let cfg = crate::scan_fs::walk::WalkConfig {
+        max_depth: 1,
+        should_skip: &|_p, _root| false,
+        exclude_set: &exclude_set,
+    };
+    crate::scan_fs::walk::safe_walk(&src_bin, &cfg, |path| {
+        if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("rs") {
+            if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+                out.push(stem.to_string());
+            }
+        }
+    });
+    out
+}
+
+/// Milestone 116 — normalize the candidate binary names, union-merge
+/// with any pre-existing `mikebom:produces-binaries` entry on the
+/// component (FR-012 operator preservation), and stamp into
+/// `extra_annotations`. Omits the property entirely when the merged
+/// set is empty (FR-001 absence-is-correct rule).
+fn stamp_produces_binaries_if_any(
+    extra_annotations: &mut std::collections::BTreeMap<String, serde_json::Value>,
+    candidates: Vec<String>,
+) {
+    use crate::scan_fs::produces_binaries::normalize_produces_binaries;
+
+    let property_name = "mikebom:produces-binaries";
+    // Union with any pre-existing value.
+    let mut combined: Vec<String> = Vec::new();
+    if let Some(existing) = extra_annotations.get(property_name).and_then(|v| v.as_array()) {
+        for el in existing {
+            if let Some(s) = el.as_str() {
+                combined.push(s.to_string());
+            }
+        }
+    }
+    combined.extend(candidates);
+    let normalized = normalize_produces_binaries(combined);
+    if normalized.is_empty() {
+        return;
+    }
+    let value = serde_json::Value::Array(
+        normalized
+            .into_iter()
+            .map(serde_json::Value::String)
+            .collect(),
+    );
+    extra_annotations.insert(property_name.to_string(), value);
 }
 
 /// Record describing a duplicate main-module dropped during dedup,

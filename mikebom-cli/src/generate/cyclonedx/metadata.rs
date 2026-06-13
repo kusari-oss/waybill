@@ -497,6 +497,24 @@ pub fn build_metadata(
                 "value": "true",
             }));
         }
+        // Milestone 116 — propagate `mikebom:produces-binaries` (C64) so
+        // single-package scans (which promote the manifest main-module to
+        // `metadata.component`) carry the declaration where the cross-
+        // tier binder will find it. Multi-member workspaces emit through
+        // the components[] path and pick up the property automatically
+        // via the general extra_annotations → properties wiring; only
+        // the single-main-module → metadata.component promotion path
+        // needs explicit propagation.
+        if let Some(value) = c
+            .extra_annotations
+            .get("mikebom:produces-binaries")
+            .and_then(|v| v.as_array())
+        {
+            comp_props.push(json!({
+                "name": "mikebom:produces-binaries",
+                "value": serde_json::Value::Array(value.clone()).to_string(),
+            }));
+        }
         metadata["component"]["properties"] = json!(comp_props);
 
         // Propagate the supplier so the parity Section A `cdx_supplier`

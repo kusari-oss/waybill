@@ -2371,6 +2371,12 @@ fn attach_bindings_to_components(
             consumed_aliases.insert(lhs.as_str().to_string());
             binding.alias_from = Some(lhs);
             binding.alias_to = Some(rhs);
+            // Milestone 116 — operator-supplied alias overrides any
+            // automatic alias that binding_for_purl may have stamped
+            // (this preserves the FR-004 operator-precedence rule even
+            // in the edge case where the operator's RHS itself triggers
+            // the pkg:generic/<name> auto-alias path).
+            binding.alias_source = Some(mikebom::binding::AliasSource::OperatorSupplied);
         }
 
         // Serialize via the canonical serde shape so emission is
@@ -3389,6 +3395,7 @@ mod tests {
             },
             source_purls,
             source_bindings_by_purl,
+            binary_name_to_purl: std::collections::HashMap::new(),
         }
     }
 
@@ -3406,6 +3413,7 @@ mod tests {
             algo: "v1".to_string(),
             alias_from: None,
             alias_to: None,
+            alias_source: None,
         }
     }
 

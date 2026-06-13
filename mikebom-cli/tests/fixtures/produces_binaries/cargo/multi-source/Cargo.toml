@@ -1,0 +1,8 @@
+[package]
+name = "fixture-baz"
+version = "1.0.0"
+edition = "2021"
+
+[[bin]]
+name = "fixture-baz-alt"
+path = "src/bin/fixture-baz-alt.rs"

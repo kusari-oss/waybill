@@ -17,6 +17,7 @@ pub mod docker_image;
 pub mod oci_pull;
 pub mod os_release;
 pub mod package_db;
+pub(crate) mod produces_binaries;
 pub mod sbom_path;
 pub(crate) mod walk;
 pub mod walker;

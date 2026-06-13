@@ -491,6 +491,11 @@ spdx23_anno!(c62_spdx23, "mikebom:lifecycle-scope-derivation", component);
 // CDX `metadata.properties[].mikebom:exclude-path`.
 spdx23_anno!(c63_spdx23, "mikebom:exclude-path",             document);
 
+// C64 — `mikebom:produces-binaries` (milestone 116). Per-Package
+// annotation listing produced binary names. Component-scope, mirrors
+// CDX `properties[].mikebom:produces-binaries`.
+spdx23_anno!(c64_spdx23, "mikebom:produces-binaries",        component);
+
 // ============================================================
 // Sections D-G — custom SPDX 2.3 extractors
 // ============================================================
