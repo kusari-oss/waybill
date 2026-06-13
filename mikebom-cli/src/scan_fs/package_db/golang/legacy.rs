@@ -998,6 +998,22 @@ pub(crate) fn build_main_module_entry(
         serde_json::Value::String("main-module".to_string()),
     );
 
+    // Milestone 116 — produces-binaries extraction per FR-010 (Go).
+    // Go has no manifest field naming binaries; the binary name is the
+    // basename of any directory containing a `*.go` file with
+    // `package main`. The two conventions covered:
+    //   (a) `cmd/<name>/main.go` — binary = `<name>` (modern layout)
+    //   (b) root-of-repo `main.go` — binary = the project root's
+    //       basename (older / minimal layout)
+    {
+        let binary_candidates =
+            extract_go_package_main_directory_names(project_root);
+        crate::scan_fs::produces_binaries::stamp_into_annotations(
+            &mut extra_annotations,
+            binary_candidates,
+        );
+    }
+
     // Milestone 057 Layer 1: detect the project's own license from a
     // LICENSE-style file at the workspace root via SPDX header scan.
     // Empty when no candidate file exists / no SPDX header found /
@@ -1037,6 +1053,138 @@ pub(crate) fn build_main_module_entry(
         extra_annotations,
         binary_role: None,
     })
+}
+
+/// Milestone 116 — enumerate `package main` directories under
+/// `project_root` and return their basenames as candidate produced
+/// binary names. Per spec FR-010 + research §5:
+///
+///   - Walks via [`crate::scan_fs::walk::safe_walk`] with `max_depth: 4`
+///     to cover both `cmd/<name>/main.go` (depth 2) and `cmd/<name>/
+///     <subcmd>/main.go` (depth 3). The depth-4 ceiling is harmless
+///     over-coverage.
+///   - Skips `vendor/`, `testdata/`, `_`-prefix dirs (Go toolchain's
+///     standard skip conventions per `go help packages` + milestone 091).
+///   - For each candidate `*.go` file: read the first ~4 KB, skip
+///     line-comments + `// +build` / `//go:build` directives + blank
+///     lines, and check for `package main` as the first non-skipped
+///     `package` clause.
+///   - Root-of-repo case (FR-010 acceptance #3): if the project root
+///     itself contains a `package main` `*.go` file, the binary name is
+///     `project_root.file_name()`.
+fn extract_go_package_main_directory_names(project_root: &Path) -> Vec<String> {
+    let exclude_set = super::super::exclude_path::ExclusionSet::new_empty();
+    let cfg = crate::scan_fs::walk::WalkConfig {
+        max_depth: 4,
+        should_skip: &|p, _root| {
+            p.file_name()
+                .and_then(|s| s.to_str())
+                .map(|name| {
+                    name == "vendor"
+                        || name == "testdata"
+                        || name.starts_with('_')
+                        || name == "node_modules"
+                        || name == ".git"
+                })
+                .unwrap_or(false)
+        },
+        exclude_set: &exclude_set,
+    };
+
+    let mut dirs_with_main: std::collections::BTreeSet<std::path::PathBuf> =
+        std::collections::BTreeSet::new();
+    crate::scan_fs::walk::safe_walk(project_root, &cfg, |path| {
+        if !path.is_file() {
+            return;
+        }
+        if path.extension().and_then(|s| s.to_str()) != Some("go") {
+            return;
+        }
+        if file_declares_package_main(path) {
+            if let Some(parent) = path.parent() {
+                dirs_with_main.insert(parent.to_path_buf());
+            }
+        }
+    });
+
+    let mut out: Vec<String> = Vec::new();
+    let root_canon = project_root.canonicalize().ok();
+    for dir in &dirs_with_main {
+        let basename = match (dir.canonicalize().ok(), root_canon.as_ref()) {
+            // Root-of-repo case: use the project root's basename.
+            (Some(d), Some(r)) if &d == r => project_root
+                .canonicalize()
+                .ok()
+                .as_ref()
+                .and_then(|p| p.file_name().map(|s| s.to_owned()))
+                .or_else(|| {
+                    project_root.file_name().map(|s| s.to_owned())
+                }),
+            _ => dir.file_name().map(|s| s.to_owned()),
+        };
+        if let Some(name) = basename.and_then(|s| s.into_string().ok()) {
+            out.push(name);
+        }
+    }
+    out
+}
+
+/// Milestone 116 — decide whether a `.go` file declares `package main`.
+///
+/// Reads up to roughly 4 KB, enough for header comments, build-tag
+/// directives, and the package clause. Skips line comments and build-tag
+/// directives such as the legacy `// +build` form and the modern
+/// `//go:build` form, plus blank lines. The first non-skipped line that
+/// begins with `package <name>` is the deciding clause. Conservative on
+/// parse failure — returns `false`.
+fn file_declares_package_main(path: &Path) -> bool {
+    use std::io::Read;
+    let mut file = match std::fs::File::open(path) {
+        Ok(f) => f,
+        Err(_) => return false,
+    };
+    let mut buf = [0u8; 4096];
+    let n = match file.read(&mut buf) {
+        Ok(n) => n,
+        Err(_) => return false,
+    };
+    let text = std::str::from_utf8(&buf[..n]).unwrap_or("");
+    let mut in_block_comment = false;
+    for raw_line in text.lines() {
+        let line = raw_line.trim();
+        if in_block_comment {
+            if line.contains("*/") {
+                in_block_comment = false;
+            }
+            continue;
+        }
+        if line.is_empty() {
+            continue;
+        }
+        if line.starts_with("//") {
+            // line comment OR build-tag directive — both irrelevant.
+            continue;
+        }
+        if line.starts_with("/*") {
+            if !line.contains("*/") {
+                in_block_comment = true;
+            }
+            continue;
+        }
+        // First non-skipped, non-comment line. Must be the package clause.
+        if let Some(rest) = line.strip_prefix("package") {
+            let rest = rest.trim_start();
+            let name: String = rest
+                .chars()
+                .take_while(|c| c.is_alphanumeric() || *c == '_')
+                .collect();
+            return name == "main";
+        }
+        // Some other non-comment, non-package line — Go syntax error;
+        // bail conservatively rather than guess.
+        return false;
+    }
+    false
 }
 
 /// Resolve the synthetic main-module version per milestone 053 FR-001's
