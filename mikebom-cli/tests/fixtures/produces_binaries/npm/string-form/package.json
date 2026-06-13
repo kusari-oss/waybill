@@ -1,0 +1,5 @@
+{
+  "name": "fixture-baz",
+  "version": "1.0.0",
+  "bin": "./bin/cli.js"
+}

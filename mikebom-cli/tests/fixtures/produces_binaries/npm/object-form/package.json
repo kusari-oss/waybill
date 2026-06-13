@@ -1,0 +1,8 @@
+{
+  "name": "fixture-baz",
+  "version": "1.0.0",
+  "bin": {
+    "baz": "./cli.js",
+    "baz-init": "./init.js"
+  }
+}

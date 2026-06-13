@@ -492,6 +492,32 @@ pub(crate) fn build_pip_main_module_entry(
         "mikebom:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
+
+    // Milestone 116 — produces-binaries extraction per FR-007 (pip).
+    // PEP 621 `[project.scripts]` and `[project.gui-scripts]` are
+    // tables mapping `<binary-name>` → `<module:func>`. Each key is one
+    // produced binary name. Setup.cfg fallback (`[options.entry_points]`
+    // `console_scripts` + `gui_scripts`) runs when neither pyproject
+    // key exists OR when pyproject exists but declares no scripts —
+    // supports legacy + mid-migration projects per spec clarification.
+    {
+        let mut binary_candidates: Vec<String> = Vec::new();
+        for key in ["scripts", "gui-scripts"] {
+            if let Some(table) = project.get(key).and_then(|v| v.as_table()) {
+                for entry_name in table.keys() {
+                    binary_candidates.push(entry_name.clone());
+                }
+            }
+        }
+        if binary_candidates.is_empty() {
+            binary_candidates.extend(extract_pip_setupcfg_scripts(project_root));
+        }
+        crate::scan_fs::produces_binaries::stamp_into_annotations(
+            &mut extra_annotations,
+            binary_candidates,
+        );
+    }
+
     let source_path = format!("path+file://{}", project_root.display());
     let entry = PackageDbEntry {
         build_inclusion: None,
@@ -531,6 +557,53 @@ pub(crate) fn build_pip_main_module_entry(
 /// Mirrors cargo's `dedup_main_modules_by_purl` from milestone 064 T010.
 /// Predicate is C40-tag-driven; non-main-module pip entries are
 /// untouched even if their PURLs would collide.
+/// Milestone 116 — fallback for projects whose binary names live in
+/// `setup.cfg`'s `[options.entry_points]` table rather than (or in
+/// addition to) `pyproject.toml`. Two key names contribute names:
+/// `console_scripts` and `gui_scripts`. Each line under those keys is
+/// `<binary-name> = <module>:<func>`; we take the LHS of the `=`.
+fn extract_pip_setupcfg_scripts(project_root: &Path) -> Vec<String> {
+    let setupcfg_path = project_root.join("setup.cfg");
+    let Ok(text) = std::fs::read_to_string(&setupcfg_path) else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    let mut in_entry_points = false;
+    let mut in_scripts_subkey = false;
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if let Some(section) = trimmed
+            .strip_prefix('[')
+            .and_then(|s| s.strip_suffix(']'))
+        {
+            in_entry_points = section == "options.entry_points";
+            in_scripts_subkey = false;
+            continue;
+        }
+        if !in_entry_points {
+            continue;
+        }
+        // setup.cfg sub-key shape: `console_scripts =` or
+        // `gui_scripts =` on its own line followed by indented entries.
+        if let Some(key) = trimmed.strip_suffix('=').map(str::trim) {
+            in_scripts_subkey =
+                matches!(key, "console_scripts" | "gui_scripts");
+            continue;
+        }
+        if !in_scripts_subkey || trimmed.is_empty() {
+            continue;
+        }
+        // Entry shape: `<name> = <module>:<func>`. Take the LHS.
+        if let Some((name, _)) = trimmed.split_once('=') {
+            let name = name.trim();
+            if !name.is_empty() {
+                out.push(name.to_string());
+            }
+        }
+    }
+    out
+}
+
 pub(crate) fn dedup_pip_main_modules_by_purl(
     entries: &mut Vec<PackageDbEntry>,
 ) -> Vec<DroppedDuplicate> {

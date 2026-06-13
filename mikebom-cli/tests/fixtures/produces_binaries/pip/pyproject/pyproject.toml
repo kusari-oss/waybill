@@ -1,0 +1,9 @@
+[project]
+name = "fixture-baz"
+version = "1.0.0"
+
+[project.scripts]
+baz = "fixture_baz.cli:main"
+
+[project.gui-scripts]
+baz-gui = "fixture_baz.gui:main"

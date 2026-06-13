@@ -18,6 +18,54 @@
 
 use std::collections::BTreeSet;
 
+/// CDX property + SPDX annotation key. Public so per-ecosystem extractors
+/// and the cross-tier binder share one string literal.
+pub(crate) const PROPERTY_NAME: &str = "mikebom:produces-binaries";
+
+/// Stamp a normalized + union-merged produces-binaries declaration onto a
+/// main-module component's `extra_annotations` map. Performs:
+///   1. Read any pre-existing `mikebom:produces-binaries` value already on
+///      the component (e.g., operator pre-seeded via `--from-sbom` round-
+///      trip per FR-012 operator-preservation rule).
+///   2. Union-merge with the newly-discovered candidates.
+///   3. Pass through [`normalize_produces_binaries`] (lowercase, strip
+///      suffixes, dedupe, sort).
+///   4. If the result is empty, omit the property entirely (FR-001 absence-
+///      is-correct rule).
+///   5. Otherwise stamp as `serde_json::Value::Array` so downstream CDX
+///      serialization renders a JSON-array-as-string and the SPDX paths
+///      wrap it in the existing `MikebomAnnotationCommentV1` envelope.
+pub(crate) fn stamp_into_annotations(
+    extra_annotations: &mut std::collections::BTreeMap<String, serde_json::Value>,
+    candidates: Vec<String>,
+) {
+    let mut combined: Vec<String> = Vec::new();
+    if let Some(existing) = extra_annotations
+        .get(PROPERTY_NAME)
+        .and_then(|v| v.as_array())
+    {
+        for el in existing {
+            if let Some(s) = el.as_str() {
+                combined.push(s.to_string());
+            }
+        }
+    }
+    combined.extend(candidates);
+    let normalized = normalize_produces_binaries(combined);
+    if normalized.is_empty() {
+        return;
+    }
+    extra_annotations.insert(
+        PROPERTY_NAME.to_string(),
+        serde_json::Value::Array(
+            normalized
+                .into_iter()
+                .map(serde_json::Value::String)
+                .collect(),
+        ),
+    );
+}
+
 /// Canonical-form normalization for `mikebom:produces-binaries` declarations.
 ///
 /// Returns the input names lowercased, with `.exe` / `.jar` suffixes stripped,

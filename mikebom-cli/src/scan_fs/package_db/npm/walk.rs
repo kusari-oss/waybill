@@ -335,6 +335,38 @@ pub(crate) fn build_npm_main_module_entry(
         "mikebom:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
+
+    // Milestone 116 — produces-binaries extraction per FR-006 (npm).
+    // The `bin` field shape per npm docs:
+    //   - String form: `"bin": "./bin/foo.js"` — single binary named
+    //     after the package's `name` field (npm strips any leading
+    //     `@scope/` from the name when installing the symlink, but for
+    //     identification purposes the package name IS the binary name).
+    //   - Object form: `"bin": {"baz": "./cli.js", "baz-init": "..."}`
+    //     — each key is one binary name.
+    {
+        let mut binary_candidates: Vec<String> = Vec::new();
+        match parsed.get("bin") {
+            Some(serde_json::Value::String(_)) => {
+                // String form — binary name = package `name` field
+                // (with any leading `@scope/` stripped per npm install
+                // convention for unscoped consumption).
+                let bin_name = name.rsplit('/').next().unwrap_or(name);
+                binary_candidates.push(bin_name.to_string());
+            }
+            Some(serde_json::Value::Object(obj)) => {
+                for k in obj.keys() {
+                    binary_candidates.push(k.clone());
+                }
+            }
+            _ => {}
+        }
+        crate::scan_fs::produces_binaries::stamp_into_annotations(
+            &mut extra_annotations,
+            binary_candidates,
+        );
+    }
+
     let source_path = format!("path+file://{}", project_root.display());
     // Collect direct-dep names from the four npm dep sections per
     // FR-007. If a `package-lock.json` is present alongside the

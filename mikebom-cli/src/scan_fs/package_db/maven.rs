@@ -583,6 +583,97 @@ pub(crate) enum MavenVersion {
     Placeholder(String), // raw `${...}` text
 }
 
+/// Milestone 116 — extract `<finalName>` value for a specific plugin
+/// (`maven-shade-plugin` or `maven-jar-plugin`) from a POM. Returns the
+/// raw finalName value if found inside that plugin's `<configuration>`
+/// block, `None` otherwise. Event-driven traversal with a tag stack +
+/// per-plugin scoping; doesn't require extending `PomXmlDocument`.
+fn extract_pom_plugin_final_name(bytes: &[u8], plugin_artifact_id: &str) -> Option<String> {
+    use quick_xml::events::Event;
+    let mut reader = quick_xml::Reader::from_reader(bytes);
+    reader.trim_text(true);
+    let mut buf = Vec::new();
+    let mut stack: Vec<String> = Vec::new();
+    let mut current_plugin_artifact: Option<String> = None;
+    let mut text_target: Option<&'static str> = None;
+    let mut found_artifact_text: Option<String> = None;
+    let mut found_final_name: Option<String> = None;
+    loop {
+        match reader.read_event_into(&mut buf) {
+            Ok(Event::Start(e)) => {
+                let local = std::str::from_utf8(e.local_name().as_ref())
+                    .ok()
+                    .map(|s| s.to_string())
+                    .unwrap_or_default();
+                stack.push(local.clone());
+                // Enter a new <plugin> block — reset the per-plugin state.
+                if local == "plugin" {
+                    current_plugin_artifact = None;
+                    found_final_name = None;
+                }
+                // Are we positioned to capture the <artifactId> text of
+                // the current <plugin>? The path is
+                // .../plugin/artifactId; we cheaply check the parent.
+                if local == "artifactId"
+                    && stack.len() >= 2
+                    && stack[stack.len() - 2] == "plugin"
+                {
+                    text_target = Some("artifact");
+                } else if local == "finalName"
+                    && stack
+                        .iter()
+                        .rev()
+                        .skip(1)
+                        .any(|t| t == "configuration")
+                {
+                    text_target = Some("finalName");
+                }
+            }
+            Ok(Event::Text(t)) => {
+                if let Some(target) = text_target.take() {
+                    if let Ok(s) = t.unescape() {
+                        match target {
+                            "artifact" => found_artifact_text = Some(s.to_string()),
+                            "finalName" => found_final_name = Some(s.to_string()),
+                            _ => {}
+                        }
+                    }
+                }
+            }
+            Ok(Event::End(e)) => {
+                let local = std::str::from_utf8(e.local_name().as_ref())
+                    .ok()
+                    .map(|s| s.to_string())
+                    .unwrap_or_default();
+                stack.pop();
+                text_target = None;
+                if local == "plugin" {
+                    if let (Some(art), Some(fname)) =
+                        (&current_plugin_artifact, &found_final_name)
+                    {
+                        if art == plugin_artifact_id {
+                            return Some(fname.clone());
+                        }
+                    }
+                    // Also handle the case where artifactId text closed
+                    // inside the plugin block — we move it into current_
+                    // plugin_artifact on the artifactId End event.
+                }
+                if local == "artifactId"
+                    && stack.last().map(String::as_str) == Some("plugin")
+                {
+                    current_plugin_artifact = found_artifact_text.take();
+                }
+            }
+            Ok(Event::Eof) => break,
+            Err(_) => break,
+            _ => {}
+        }
+        buf.clear();
+    }
+    None
+}
+
 /// Parse `pom.xml` bytes with quick-xml. Event-driven traversal — we
 /// keep a stack of element names and collect textual content inside
 /// the ones we care about.
@@ -3469,6 +3560,34 @@ fn build_maven_main_module_entry(
         "mikebom:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
+
+    // Milestone 116 — produces-binaries extraction per FR-009 (maven).
+    // The shade-plugin and jar-plugin's `<finalName>` configuration
+    // names the produced JAR. Per spec clarification Q2, the extractor
+    // emits the canonical extensionless name (no `.jar`); the binder's
+    // FR-002 `.jar`-suffix tolerance handles the image-side
+    // `pkg:generic/baz.jar` translation.
+    if let Ok(pom_bytes) = std::fs::read(pom_path) {
+        let mut binary_candidates: Vec<String> = Vec::new();
+        for plugin_artifact in ["maven-shade-plugin", "maven-jar-plugin"] {
+            if let Some(name) =
+                extract_pom_plugin_final_name(&pom_bytes, plugin_artifact)
+            {
+                let trimmed = name
+                    .strip_suffix(".jar")
+                    .unwrap_or(&name)
+                    .to_string();
+                if !trimmed.is_empty() {
+                    binary_candidates.push(trimmed);
+                }
+            }
+        }
+        crate::scan_fs::produces_binaries::stamp_into_annotations(
+            &mut extra_annotations,
+            binary_candidates,
+        );
+    }
+
     // Direct deps from <dependencies> block per FR-007. The dep's
     // groupId:artifactId becomes the depend name; the existing
     // edge-emission machinery resolves them via name_to_purl.

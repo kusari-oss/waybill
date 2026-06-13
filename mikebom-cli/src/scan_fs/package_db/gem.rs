@@ -901,6 +901,20 @@ fn build_gem_main_module_entry(gemspec_path: &Path) -> Option<PackageDbEntry> {
         "mikebom:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
+
+    // Milestone 116 — produces-binaries extraction per FR-008 (gem).
+    // The gemspec's `s.executables = [...]` declaration enumerates
+    // produced binary names. We support both the array-literal form
+    // (`s.executables = ["a", "b"]`) and the %w-syntax shorthand
+    // (`s.executables = %w[a b]`).
+    {
+        let binary_candidates = extract_gemspec_executables(&text);
+        crate::scan_fs::produces_binaries::stamp_into_annotations(
+            &mut extra_annotations,
+            binary_candidates,
+        );
+    }
+
     let manifest_dir = gemspec_path.parent()?;
     let source_path = format!("path+file://{}", manifest_dir.display());
     // Direct-dep names from `s.add_dependency` / `s.add_runtime_dependency`
@@ -1167,6 +1181,52 @@ pub(crate) struct GemspecFields {
     pub name: String,
     pub version: String,
     pub authors: Option<String>,
+}
+
+/// Milestone 116 — extract produced binary names from a gemspec's
+/// `s.executables = [...]` declaration. Supports both shapes:
+///
+///   - Array-literal: `s.executables = ["foo", "bar"]`
+///   - %w shorthand:  `s.executables = %w[foo bar]`
+///
+/// Returns the names in source order (the shared normalizer dedup-sorts
+/// at stamp time). Empty when the declaration is absent.
+fn extract_gemspec_executables(text: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    for raw_line in text.lines() {
+        let line = raw_line.trim();
+        let Some(rhs) = strip_assignment(line, "executables") else {
+            continue;
+        };
+        let rhs = rhs.trim();
+        // %w[a b] / %w(a b) / %w{a b}
+        if let Some(rest) = rhs.strip_prefix("%w") {
+            let body = rest
+                .trim()
+                .trim_start_matches(['[', '(', '{'])
+                .trim_end_matches([']', ')', '}']);
+            for token in body.split_whitespace() {
+                if !token.is_empty() {
+                    out.push(token.to_string());
+                }
+            }
+            continue;
+        }
+        // ["a", "b"] / ['a', 'b']
+        if let Some(inner) = rhs
+            .strip_prefix('[')
+            .and_then(|s| s.strip_suffix(']'))
+        {
+            for piece in inner.split(',') {
+                if let Some(literal) = extract_string_literal(piece.trim()) {
+                    if !literal.is_empty() {
+                        out.push(literal);
+                    }
+                }
+            }
+        }
+    }
+    out
 }
 
 pub(crate) fn parse_gemspec_full(text: &str) -> Option<GemspecFields> {
