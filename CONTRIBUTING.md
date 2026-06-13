@@ -144,9 +144,13 @@ but possible (per-descent stateful pruning, parent-name-aware recursion,
    file:
    ```bash
    grep -rEn --include='*.rs' 'fn walk[_(]' mikebom-cli/src/scan_fs/ \
+     | sed 's/^\([^:]*\):[0-9]*:/\1:/' \
      | LC_ALL=C sort -u \
      > mikebom-cli/src/scan_fs/walk.audit-allowlist.txt
    ```
+   (The `sed` step strips the absolute line-number column so position
+   drift from unrelated code insertions doesn't perturb the allow-list.
+   Milestone 117 / issue #347.)
    `git diff` should show **exactly one** added line. More than one
    means either upstream drift (rebase first) or you added more than
    one walker.

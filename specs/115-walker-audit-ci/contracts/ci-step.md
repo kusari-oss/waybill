@@ -7,6 +7,8 @@
 
 This contract defines the externally observable behavior of the single CI step this feature ships. It is the surface against which the negative-test runbook in [quickstart.md](../quickstart.md) verifies the gate, and the surface a maintainer can rely on when reading `ci.yml`.
 
+> **Supersession note (2026-06-13)**: The "Pipeline", "Outputs", and "Backwards compatibility" sections below are superseded by [`specs/117-line-stable-allowlist/contracts/ci-step.md`](../../117-line-stable-allowlist/contracts/ci-step.md), which adds a symmetric `sed` line-number strip to both sides of the comparison so unrelated insertions above an existing walker no longer trigger false-positive failures (closes issue #347). The other sections (Step name, Trigger surface, Step ordering, Inputs, Performance, Idempotency, Failure-mode parity, Out-of-band overrides) remain canonical here.
+
 ## Step name (workflow YAML)
 
 ```text

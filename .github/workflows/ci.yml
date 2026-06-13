@@ -70,6 +70,17 @@ jobs:
         run: |
           set -u
           ALLOWLIST="mikebom-cli/src/scan_fs/walk.audit-allowlist.txt"
+          # Milestone 117 (#347): strip the absolute line-number column from
+          # both the live grep output AND the committed allow-list before
+          # diffing, so unrelated insertions above an allow-listed walker
+          # don't trigger false-positive failures from pure position drift.
+          # Applied symmetrically so a hand-edited OLD-shape line in the
+          # allow-list (with the `:NNN:` middle column) still compares
+          # correctly against the new line-stripped live output (forgiveness
+          # toward drift; the committed file SHOULD always be in NEW shape
+          # per milestone 117 FR-002). BRE regex works identically on
+          # GNU sed (Linux) and BSD sed (macOS).
+          STRIP_LINE_NUMBERS='s/^\([^:]*\):[0-9]*:/\1:/'
           FAIL_HEADLINE="[FAIL] Walker-audit allow-list mismatch — see mikebom-cli/src/scan_fs/walk.rs's module-level comment for the exception policy."
           FAIL_POINTER_NEW="If your PR intentionally adds a new walker exception, see CONTRIBUTING.md § Walker-audit CI gate."
           FAIL_POINTER_BAD="If your PR did NOT intend to add a walker, remove the new fn walk_* function and use scan_fs::walk::safe_walk instead."
@@ -90,7 +101,7 @@ jobs:
             echo "See CONTRIBUTING.md § Walker-audit CI gate for the file's purpose." >&2
             exit 1
           fi
-          EXPECTED=$(grep -v '^#' "$ALLOWLIST" | grep -v '^$' | LC_ALL=C sort -u)
+          EXPECTED=$(grep -v '^#' "$ALLOWLIST" | grep -v '^$' | sed "$STRIP_LINE_NUMBERS" | LC_ALL=C sort -u)
           if [ -z "$EXPECTED" ]; then
             echo "$FAIL_HEADLINE" >&2
             echo "" >&2
@@ -108,7 +119,7 @@ jobs:
           # match its own allow-list file (`walk.audit-allowlist.txt`
           # lives under scan_fs/ for adjacency per SC-005, and every
           # entry inside it contains the substring `fn walk_`).
-          LIVE=$(LC_ALL=C grep -rEn --include='*.rs' 'fn walk[_(]' mikebom-cli/src/scan_fs/ | LC_ALL=C sort -u)
+          LIVE=$(LC_ALL=C grep -rEn --include='*.rs' 'fn walk[_(]' mikebom-cli/src/scan_fs/ | sed "$STRIP_LINE_NUMBERS" | LC_ALL=C sort -u)
 
           START_NS=$(date +%s%N 2>/dev/null || echo 0)
           if DIFF_OUT=$(diff -u <(printf '%s\n' "$EXPECTED") <(printf '%s\n' "$LIVE")); then
@@ -120,7 +131,7 @@ jobs:
             echo "$FAIL_HEADLINE" >&2
             echo "" >&2
             echo "--- mikebom-cli/src/scan_fs/walk.audit-allowlist.txt (expected)" >&2
-            echo "+++ live: grep -rEn 'fn walk[_(]' mikebom-cli/src/scan_fs/ | sort -u (actual)" >&2
+            echo "+++ live: grep -rEn --include='*.rs' 'fn walk[_(]' mikebom-cli/src/scan_fs/ | sed -e 's/^\([^:]*\):[0-9]*:/\1:/' | sort -u (actual)" >&2
             printf '%s\n' "$DIFF_OUT" | tail -n +3 >&2
             echo "" >&2
             echo "$FAIL_POINTER_NEW" >&2
