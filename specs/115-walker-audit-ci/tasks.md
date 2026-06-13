@@ -83,7 +83,7 @@ Single-project layout (mikebom workspace at repo root). Affected paths:
 
 - [X] T009 Cold-read the final `CONTRIBUTING.md § Walker-audit CI gate` section against the spec's US2 Independent Test criteria. Without consulting `walk.rs` or `design-notes.md`, verify the section answers: (a) where `safe_walk` lives, (b) when to add a new exception vs migrate, (c) which two files to edit + that both must land in the SAME PR. Adjust wording if any criterion is unmet.
 
-- [ ] T010 Open the PR. Title: `feat(ci): walker-audit gate (closes #342)`. Body includes: (1) the feature spec link; (2) the negative-test CI URL from T004 as evidence the gate fires; (3) a `## Test plan` section listing the four spec acceptance scenarios for US1 + the two for US2 as manually-verified-on-this-PR checklist items. Verify CI on the feature PR itself goes green on the `Walker-audit allow-list check` step.
+- [X] T010 Open the PR. Title: `feat(ci): walker-audit gate (closes #342)`. Body includes: (1) the feature spec link; (2) the negative-test CI URL from T004 as evidence the gate fires; (3) a `## Test plan` section listing the four spec acceptance scenarios for US1 + the two for US2 as manually-verified-on-this-PR checklist items. Verify CI on the feature PR itself goes green on the `Walker-audit allow-list check` step.
 
 ---
 
