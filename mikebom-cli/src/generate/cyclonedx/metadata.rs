@@ -3,6 +3,7 @@ use chrono::Utc;
 use mikebom_common::attestation::integrity::TraceIntegrity;
 use mikebom_common::attestation::metadata::GenerationContext;
 use mikebom_common::resolution::ResolvedComponent;
+use mikebom_common::types::license::SpdxExpression;
 use mikebom_common::types::purl::encode_purl_segment;
 use serde_json::json;
 
@@ -540,6 +541,26 @@ pub fn build_metadata(
                 "name": supplier_name,
             });
         }
+
+        // Milestone 119 follow-up — propagate the main-module's typed
+        // `licenses[]` (and `concluded_licenses[]`) onto the
+        // metadata.component subject. When a supplement override is in
+        // effect the supplement's declared licenses have already been
+        // projected into the typed Vec by
+        // `crate::supplement::conflict::resolve_component`; this
+        // propagation makes them visible on the BOM subject regardless
+        // of whether the main-module promoted to metadata.component
+        // (single-member workspace) or stayed in components[]
+        // (multi-member workspace).
+        //
+        // Absent supplement → the main-module's pre-existing typed
+        // licenses (from Cargo.toml `license` field, etc.) propagate
+        // exactly the same way; behavior is byte-identical when the
+        // scanner had nothing AND no supplement was supplied (FR-013).
+        let license_array = build_metadata_component_licenses(c);
+        if !license_array.is_empty() {
+            metadata["component"]["licenses"] = json!(license_array);
+        }
     }
 
     if !lifecycles.is_empty() {
@@ -677,6 +698,51 @@ pub fn build_metadata(
 /// empty vec when `user_metadata.is_active()` would not produce any
 /// bom-level annotation entries.
 ///
+/// Milestone 119 follow-up — render the main-module's typed
+/// `licenses[]` + `concluded_licenses[]` into the CDX 1.6 license
+/// array shape (`oneOf` `{license:{id,...}}` / `{license:{name,...}}`
+/// / `{expression,...}`). Mirrors the lighter end of `build_components`'s
+/// per-component license rendering at `builder.rs:678-715` — single-
+/// component scope so no `try_split_or_compound` short-circuit is
+/// needed for the MVP propagation.
+fn build_metadata_component_licenses(
+    c: &ResolvedComponent,
+) -> Vec<serde_json::Value> {
+    let mut out: Vec<serde_json::Value> = Vec::new();
+    let sources: [(&[SpdxExpression], &str); 2] = [
+        (&c.licenses, "declared"),
+        (&c.concluded_licenses, "concluded"),
+    ];
+    for (exprs, ack) in sources {
+        for l in exprs {
+            if let Some(id) = l.as_spdx_id() {
+                out.push(json!({
+                    "license": { "id": id, "acknowledgement": ack }
+                }));
+            } else if l.as_str().starts_with("LicenseRef-")
+                || l.as_str().starts_with("DocumentRef-")
+            {
+                out.push(json!({
+                    "license": { "name": l.as_str(), "acknowledgement": ack }
+                }));
+            } else {
+                // Compound or otherwise non-id expression — emit as a
+                // license.name so single-string operator-declared
+                // values (e.g. "Acme Custom License") surface
+                // intelligibly. The full builder.rs path also handles
+                // `OR`/`AND` splitting + expression fallback; we keep
+                // this helper minimal because the BOM subject's
+                // licenses are operator-declared (already canonical)
+                // far more often than the per-component case.
+                out.push(json!({
+                    "license": { "name": l.as_str(), "acknowledgement": ack }
+                }));
+            }
+        }
+    }
+    out
+}
+
 /// Per research §1, CDX 1.6 `bom.annotations[]` is the
 /// standards-native landing slot. The `subjects[]` entry points at
 /// the root component's bom-ref to satisfy the CDX 1.6 schema's

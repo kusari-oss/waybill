@@ -177,15 +177,9 @@ pub(crate) fn resolve_component(
                 scanner_value: scanner_licenses_json.clone(),
                 supplement_value: supplement_licenses_json.clone(),
             });
-            // Developer wins: stash scanner's value as annotation, but
-            // do NOT overwrite the typed `licenses` Vec on the scanner-
-            // side ResolvedComponent (the typed field carries
-            // SpdxExpression entries; we can't round-trip the
-            // supplement's raw CDX-license-array shape into it without
-            // re-parsing). Instead, attach the developer's verbatim
-            // license array as a strong override annotation; the CDX
-            // emitter picks it up by the same key as native fields
-            // through the existing extra_annotations channel.
+            // Developer wins. Preserve the scanner's prior values + the
+            // supplement's verbatim CDX-shape array as annotations so
+            // consumers can audit both sides.
             scanner.extra_annotations.insert(
                 "mikebom:scanner-discovered-licenses".to_string(),
                 scanner_licenses_json,
@@ -194,6 +188,23 @@ pub(crate) fn resolve_component(
                 "mikebom:supplement-licenses".to_string(),
                 supplement_licenses_json,
             );
+            // Project the supplement's CDX-shaped license entries into
+            // the typed `Vec<SpdxExpression>` field so every emission
+            // path (CDX `components[]`, CDX `metadata.component`,
+            // SPDX 2.3 `licenseDeclared`, SPDX 3 license elements)
+            // sees the developer-declared value uniformly. Per the
+            // standing scanner-side pattern (apk / rpm / maven / dpkg
+            // copyright readers): try strict canonicalization first,
+            // fall back to the permissive `SpdxExpression::new`. If
+            // EVERY supplement license entry fails to project — e.g.,
+            // the supplement carries only a `text` blob without an
+            // `id` or `expression` — keep the scanner's typed Vec
+            // unchanged so the annotation-only override (above) still
+            // documents the operator's intent.
+            let projected = project_supplement_licenses(supp_licenses);
+            if !projected.is_empty() {
+                scanner.licenses = projected;
+            }
         }
     }
 
@@ -379,13 +390,49 @@ pub(crate) fn resolve_component(
     (scanner, conflicts)
 }
 
+/// Project the supplement's CDX-shaped `licenses[]` array — each
+/// entry is one of `{"license":{"id":"<SPDX-ID>"}}`,
+/// `{"license":{"name":"<free-form-name>"}}`, or `{"expression":
+/// "<SPDX-expr>"}` — into the typed `Vec<SpdxExpression>` form
+/// the rest of the pipeline consumes. Follows the standing
+/// scanner-side pattern (`SpdxExpression::try_canonical` first,
+/// falling back to the permissive `SpdxExpression::new` so we
+/// surface operator-declared free-form text without losing it).
+///
+/// Entries that fail BOTH constructors are dropped; the caller
+/// detects an empty Vec and leaves the scanner's typed field
+/// unchanged, falling back to annotation-only override semantics.
+fn project_supplement_licenses(
+    cdx_entries: &[serde_json::Value],
+) -> Vec<mikebom_common::types::license::SpdxExpression> {
+    use mikebom_common::types::license::SpdxExpression;
+    let mut out: Vec<SpdxExpression> = Vec::new();
+    for entry in cdx_entries {
+        let raw_opt = entry
+            .get("license")
+            .and_then(|l| {
+                l.get("id")
+                    .and_then(|v| v.as_str())
+                    .or_else(|| l.get("name").and_then(|v| v.as_str()))
+            })
+            .or_else(|| entry.get("expression").and_then(|v| v.as_str()));
+        let Some(raw) = raw_opt else {
+            continue;
+        };
+        if let Ok(expr) = SpdxExpression::try_canonical(raw) {
+            out.push(expr);
+        } else if let Ok(expr) = SpdxExpression::new(raw) {
+            out.push(expr);
+        }
+    }
+    out
+}
+
 /// Project the scanner's typed `licenses: Vec<SpdxExpression>` to a
 /// JSON-array shape comparable with the supplement's CDX-shaped
-/// licenses array. We only need this for the conflict-record
-/// `scanner_value` field; the round-trip back into typed form would
-/// require re-parsing each license expression, which is unnecessary
-/// because the developer-wins path takes the supplement's typed
-/// payload directly (see `licenses` branch above).
+/// licenses array. Used for the conflict-record `scanner_value` field
+/// and the `mikebom:scanner-discovered-licenses` annotation so
+/// consumers can audit what the scanner observed pre-merge.
 fn licenses_to_json(
     licenses: &[mikebom_common::types::license::SpdxExpression],
 ) -> serde_json::Value {
@@ -484,6 +531,39 @@ mod tests {
         assert!(merged
             .extra_annotations
             .contains_key("mikebom:supplement-licenses"));
+        // Follow-up: the supplement license now propagates into the
+        // typed Vec<SpdxExpression> field so every emission path
+        // (including Cargo's main-module → metadata.component
+        // promotion) sees the operator-declared value uniformly.
+        assert_eq!(merged.licenses.len(), 1);
+        assert_eq!(merged.licenses[0].as_str(), "Apache-2.0");
+    }
+
+    #[test]
+    fn project_supplement_licenses_handles_id_name_and_expression() {
+        let entries = vec![
+            serde_json::json!({"license":{"id":"MIT"}}),
+            serde_json::json!({"license":{"name":"Acme Custom"}}),
+            serde_json::json!({"expression":"Apache-2.0 OR MIT"}),
+        ];
+        let out = project_supplement_licenses(&entries);
+        assert_eq!(out.len(), 3);
+        assert_eq!(out[0].as_str(), "MIT");
+        assert_eq!(out[1].as_str(), "Acme Custom");
+        assert_eq!(out[2].as_str(), "Apache-2.0 OR MIT");
+    }
+
+    #[test]
+    fn project_supplement_licenses_drops_unrecognized_entries() {
+        // Entries with neither `license.id` / `license.name` nor
+        // `expression` are dropped; the caller falls back to
+        // annotation-only override semantics.
+        let entries = vec![
+            serde_json::json!({"license":{"text":"Some text-only license"}}),
+            serde_json::json!({"random":"shape"}),
+        ];
+        let out = project_supplement_licenses(&entries);
+        assert!(out.is_empty());
     }
 
     #[test]

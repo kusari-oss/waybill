@@ -561,6 +561,97 @@ fn t016_supplement_cannot_remove_scanner_discovered_component() {
 }
 
 // =========================================================================
+// Follow-up — Cargo metadata.component license-override propagation
+// =========================================================================
+
+#[test]
+fn cargo_metadata_component_carries_supplement_declared_license() {
+    // Single-member Cargo project — the main-module promotes to
+    // CDX `metadata.component` per milestone 064 FR-001a. The
+    // supplement asserts a license override on the main-module's
+    // canonical PURL; the typed `licenses[]` field on
+    // `metadata.component` must carry the operator's value (not
+    // just the `mikebom:supplement-licenses` annotation).
+    let dir = tempfile::tempdir().unwrap();
+    write_cargo_project(dir.path(), "demo-app", "1.0.0");
+    let supp = write_supplement(
+        dir.path(),
+        r#"{
+            "bomFormat":"CycloneDX","specVersion":"1.6",
+            "components":[
+                {
+                    "purl":"pkg:cargo/demo-app@1.0.0",
+                    "licenses":[{"license":{"id":"Apache-2.0"}}]
+                }
+            ]
+        }"#,
+    );
+    let (cdx, out) = run_scan(dir.path(), Some(&supp));
+    assert_success(&out);
+    let cdx = cdx.expect("CDX output produced");
+    let meta_comp = cdx
+        .get("metadata")
+        .and_then(|m| m.get("component"))
+        .expect("metadata.component present");
+    let licenses = meta_comp
+        .get("licenses")
+        .and_then(|v| v.as_array())
+        .expect("metadata.component.licenses[] present");
+    assert!(!licenses.is_empty(), "license array must be non-empty");
+    // The first entry should carry `license.id = Apache-2.0` per CDX
+    // single-SPDX-id shape (mikebom routes single-ID expressions
+    // through `license.id` not `license.expression`).
+    let found = licenses.iter().any(|l| {
+        l.get("license")
+            .and_then(|x| x.get("id"))
+            .and_then(|v| v.as_str())
+            == Some("Apache-2.0")
+    });
+    assert!(
+        found,
+        "expected Apache-2.0 license id on metadata.component.licenses[]: {licenses:?}"
+    );
+}
+
+#[test]
+fn cargo_metadata_component_carries_supplement_license_in_spdx23() {
+    // Same scenario, SPDX 2.3 output: the main-module Package's
+    // `licenseDeclared` field should carry the operator-declared
+    // value (Apache-2.0). Verifies the projection flows through
+    // EVERY emission format uniformly, not just CDX.
+    let dir = tempfile::tempdir().unwrap();
+    write_cargo_project(dir.path(), "demo-app", "1.0.0");
+    let supp = write_supplement(
+        dir.path(),
+        r#"{
+            "bomFormat":"CycloneDX","specVersion":"1.6",
+            "components":[
+                {
+                    "purl":"pkg:cargo/demo-app@1.0.0",
+                    "licenses":[{"license":{"id":"Apache-2.0"}}]
+                }
+            ]
+        }"#,
+    );
+    let (_cdx, spdx23, _spdx3, out) = run_scan_all_formats(dir.path(), Some(&supp));
+    assert_success(&out);
+    let spdx23 = spdx23.expect("SPDX 2.3 output produced");
+    let pkgs = spdx23
+        .get("packages")
+        .and_then(|v| v.as_array())
+        .expect("packages[] present");
+    let demo_app = pkgs
+        .iter()
+        .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("demo-app"))
+        .expect("demo-app main-module package present in SPDX 2.3 packages[]");
+    assert_eq!(
+        demo_app.get("licenseDeclared").and_then(|v| v.as_str()),
+        Some("Apache-2.0"),
+        "SPDX 2.3 licenseDeclared must carry the supplement-declared value"
+    );
+}
+
+// =========================================================================
 // Phase-2 — US3 SPDX projection (T017 + T018)
 // =========================================================================
 
