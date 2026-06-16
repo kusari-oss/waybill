@@ -18,6 +18,7 @@ diving into the [architecture docs](architecture/overview.md).
 | [nuget](#nuget) | `*.csproj` / `*.vbproj` / `*.fsproj` + `packages.lock.json` + `Directory.Packages.props` | Lockfile (full tree) when present; otherwise direct-deps only | — | ✓ / — | Implemented |
 | [pip](#pip) | venv `dist-info/METADATA` + Poetry/Pipfile + `uv.lock` + `requirements.txt` | Lockfile (Poetry / Pipfile / uv), flat (venv) | `--hash=alg:hex` flags | ✓ / ✓ | Implemented |
 | [rpm](#rpm) | `/var/lib/rpm/rpmdb.sqlite` (pure-Rust reader) | DB (`REQUIRES`) | — (rpmdb has none) | — / — | Implemented (BDB format detected, not parsed) |
+| [swift](#swift) | `Package.resolved` (SwiftPM v1/v2/v3 schema) | Lockfile (full pin set) | — | — / — | Implemented (milestone 122 US1; `Package.swift` not parsed in v0.1) |
 | [yocto](#yocto) | opkg `/var/lib/opkg/status` + `build/tmp/deploy/images/*/*.manifest` + `meta-*/recipes-*/<name>/<name>_<version>.bb` | Flat (per-stanza / per-line / per-recipe) | — | — / — | Implemented |
 
 "Enrichment" columns mark whether deps.dev version info and ClearlyDefined
@@ -891,6 +892,77 @@ Licenses on opkg-installed components come from the `License:`
 stanza field directly when present. The Yocto image-manifest
 format doesn't carry licenses, so those entries ship with empty
 `licenses[]`.
+
+---
+
+## swift
+
+**Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
+
+mikebom's Swift Package Manager (SwiftPM) reader (milestone 122 US1)
+parses `Package.resolved` lockfiles at any directory in the scan tree
+and emits one component per `pins[]` entry. Schema versions 1, 2, and 3
+are dispatched on the lockfile's top-level `version` integer. The
+sibling `Package.swift` manifest is detected — it signals that a
+directory is a SwiftPM project root — but its content is NEVER parsed
+in v0.1 (per spec FR-002 + clarification Q3 of milestone 122).
+`Package.swift` is executable Swift code; safe parsing requires either
+a Swift parser dependency (Constitution Principle I violation) or
+shelling out to the host `swift` toolchain (Strict Boundary 3 +
+scan-time-dependency violation). Local-path declarations
+(`.package(path: ...)`), target declarations, conditional-platform
+deps, and workspace-member emission from `Package.swift` content are
+all deferred to a future phase.
+
+PURLs emit as `pkg:swift/<host>/<namespace>/<name>@<version>` per the
+[purl-spec swift type](https://github.com/package-url/purl-spec/blob/main/PURL-TYPES.rst#swift):
+
+- HTTPS-form locations with the `.git` suffix have it stripped:
+  `https://github.com/apple/swift-log.git` → `pkg:swift/github.com/apple/swift-log@<ver>`.
+- SSH-form locations have the user segment dropped and the `.git`
+  suffix stripped: `git@gitlab.acme.com:internal/lib.git` →
+  `pkg:swift/gitlab.acme.com/internal/lib@<ver>`.
+- Deep-namespace URLs (GitLab subgroups: more than one path segment
+  between host and the package name) are NOT supported in v0.1 — the
+  purl-spec swift type currently allows single-segment namespaces
+  only. Affected entries emit a `tracing::warn!` and drop. Operators
+  using subgroups should declare their packages via SwiftPM workspace
+  layouts instead until the spec extension lands.
+
+Commit-pinned mode (the SwiftPM "branch-tracking" lockfile shape — a
+`state.revision` without a `state.version`) emits the component with
+the FULL 40-char revision SHA as the PURL version segment AND a
+`mikebom:source-type = "git"` property AND a redundant
+`mikebom:source-revision` property for grep convenience. This matches
+the existing Go reader's `pkg:golang/...@<sha>` convention and lets
+deps.dev / OSV consumers exact-match the commit.
+
+Per-component:
+
+- `mikebom:source-files = "<path>/Package.resolved"` — the path of the
+  lockfile that emitted this component.
+- `mikebom:source-type = "git"` — set only on commit-pinned entries
+  (no `state.version`).
+- `mikebom:source-revision = "<40-char sha>"` — set only on
+  commit-pinned entries.
+- `mikebom:sbom-tier = "source"` — every Swift lockfile-discovered
+  component.
+
+Parse failures (malformed JSON, missing `pins[]`, unknown schema
+version) emit a `tracing::warn!` naming the file path + the specific
+failure; mikebom continues the walk on sibling files (per spec
+FR-009). Per-entry failures (invalid revision, unparseable URL,
+deep-namespace) emit a `tracing::warn!` naming the affected pin's
+identity; other entries in the same file still emit.
+
+### Known limitations (Swift v0.1)
+
+- `Package.swift` content is not parsed (see above).
+- Deep-namespace URLs (GitLab subgroups) emit a warn-and-drop.
+- CocoaPods (`Podfile.lock`) + Carthage (`Cartfile.resolved`) are not
+  supported. SwiftPM is the modern Apple-blessed dependency manager;
+  CocoaPods adoption is declining. Adding either is a future
+  milestone if operator demand surfaces.
 
 ---
 

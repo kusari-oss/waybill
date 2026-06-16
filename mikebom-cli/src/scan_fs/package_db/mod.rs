@@ -35,6 +35,7 @@ pub mod rpm;
 pub mod rpm_file;
 pub mod rpmdb_bdb;
 pub mod rpmdb_sqlite;
+pub mod swift;
 pub mod vcpkg;
 mod workspace;
 pub mod yocto;
@@ -1386,6 +1387,12 @@ pub fn read_all(
     // path tags them `scope: "excluded"` (CDX) /
     // `BUILD_DEPENDENCY_OF` (SPDX 2.3) automatically.
     out.extend(gradle::read(rootfs, exclude_set));
+    // Milestone 122 US1: Swift Package Manager source-tree reader.
+    // Parses `Package.resolved` lockfiles (v1/v2/v3 schema) and emits
+    // `pkg:swift/<host>/<namespace>/<name>@<version>` PURLs per the
+    // purl-spec swift type. `Package.swift` is detected (signals
+    // SwiftPM project root) but never parsed for content in v0.1.
+    out.extend(swift::read(rootfs, exclude_set));
     // Milestone 106 US4 (closes #275): NuGet source-tree reader for
     // `.csproj` / `.vbproj` / `.fsproj` with packages.lock.json
     // precedence, Directory.Packages.props (CPM) fallback, and
