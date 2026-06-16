@@ -17,6 +17,7 @@ diving into the [architecture docs](architecture/overview.md).
 | [npm](#npm) | `package-lock.json` v2/v3, `pnpm-lock.yaml`, `bun.lock`, `yarn.lock` (v1 + Berry), `node_modules/` | Lockfile (full tree) | Lockfile `integrity` (package-lock / pnpm-lock only) | ✓ / ✓ | Implemented |
 | [nuget](#nuget) | `*.csproj` / `*.vbproj` / `*.fsproj` + `packages.lock.json` + `Directory.Packages.props` | Lockfile (full tree) when present; otherwise direct-deps only | — | ✓ / — | Implemented |
 | [pip](#pip) | venv `dist-info/METADATA` + Poetry/Pipfile + `uv.lock` + `requirements.txt` | Lockfile (Poetry / Pipfile / uv), flat (venv) | `--hash=alg:hex` flags | ✓ / ✓ | Implemented |
+| [kotlin](#kotlin) | `build.gradle.kts` (regex) + `gradle/libs.versions.toml` (catalog) + `settings.gradle.kts` (workspace topology) | Manifest (declarations only) | — | ✓ (via `pkg:maven/`) / ✓ | Implemented (milestone 122 US2; design-tier — gated by `--include-declared-deps`) |
 | [rpm](#rpm) | `/var/lib/rpm/rpmdb.sqlite` (pure-Rust reader) | DB (`REQUIRES`) | — (rpmdb has none) | — / — | Implemented (BDB format detected, not parsed) |
 | [swift](#swift) | `Package.resolved` (SwiftPM v1/v2/v3 schema) | Lockfile (full pin set) | — | — / — | Implemented (milestone 122 US1; `Package.swift` not parsed in v0.1) |
 | [yocto](#yocto) | opkg `/var/lib/opkg/status` + `build/tmp/deploy/images/*/*.manifest` + `meta-*/recipes-*/<name>/<name>_<version>.bb` | Flat (per-stanza / per-line / per-recipe) | — | — / — | Implemented |
@@ -892,6 +893,127 @@ Licenses on opkg-installed components come from the `License:`
 stanza field directly when present. The Yocto image-manifest
 format doesn't carry licenses, so those entries ship with empty
 `licenses[]`.
+
+---
+
+## kotlin
+
+**Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
+
+mikebom's Kotlin DSL Gradle reader (milestone 122 US2) regex-extracts
+dependency declarations from `build.gradle.kts` files (the Android
+Studio / IntelliJ default since 2023) and resolves `libs.<alias>`
+references against the workspace's `gradle/libs.versions.toml` version
+catalog. PURLs emit as `pkg:maven/<group>/<name>@<version>` per the
+existing milestone-106 `pkg:maven/` lane so downstream deps.dev / OSV
+enrichment applies without changes.
+
+This reader complements (not replaces) the existing milestone-106
+`gradle.lockfile` reader: `gradle.lockfile`-locked components emit at
+source-tier (`mikebom:sbom-tier = "source"`); `build.gradle.kts`-only-
+discovered components emit at design-tier (`mikebom:sbom-tier =
+"design"`) and are gated by the existing `--include-declared-deps`
+flag (auto-on for `--path` scans; opt-in for `--image` scans). When
+both readers find the same canonical PURL the milestone-105 dedup
+pipeline collapses them with the lockfile-discovered tier winning.
+
+### What gets parsed
+
+Three regex shapes cover the dominant `build.gradle.kts` dep
+declaration syntax:
+
+1. **String-literal GAV**: `implementation("com.squareup.okhttp3:okhttp:4.12.0")`
+   → `pkg:maven/com.squareup.okhttp3/okhttp@4.12.0`.
+2. **Catalog alias**: `implementation(libs.okhttp)` →
+   resolved against `gradle/libs.versions.toml` →
+   `pkg:maven/com.squareup.okhttp3/okhttp@<version-from-catalog>`.
+3. **Named-args GAV**: `implementation(group = "g", name = "n", version = "v")` →
+   `pkg:maven/g/n@v`.
+
+What's NOT matched (documented "common surface syntax only" contract):
+deps declared via meta-programming (`deps.forEach { implementation(it) }`),
+deps declared via custom DSL extensions (`coreDeps()` shorthands),
+deps declared via Kotlin reflection. Operators using exotic
+declarations get a `tracing::debug!` and a degraded SBOM — adopting a
+full Kotlin parser would require either a tree-sitter Kotlin grammar
+(C code, Principle I violation) or shelling out to `kotlinc` (JVM
+dependency at scan time, Strict Boundary 3 violation), neither of
+which mikebom takes on.
+
+### Dep-configuration → lifecycle-scope mapping
+
+| Configuration | `mikebom:lifecycle-scope` (CDX `scope`) |
+|---|---|
+| `implementation`, `api`, `runtimeOnly`, `compileOnly` | (omitted — runtime default) |
+| `testImplementation`, `androidTestImplementation`, `testRuntimeOnly`, `testCompileOnly` | `test` (`excluded`) |
+| `debugImplementation`, `releaseImplementation` | `development` (`excluded`) |
+| `kapt`, `annotationProcessor`, `ksp` | `build` (`excluded`) |
+
+Non-listed configurations capture as runtime (no annotation) with a
+`tracing::debug!` line announcing the unrecognized config.
+
+### Multi-module workspaces
+
+When mikebom finds a `settings.gradle.kts` declaring
+`rootProject.name = "..."` + `include(":mod1", ":mod2")`, it
+synthesizes a workspace-root component:
+
+- PURL: `pkg:generic/<rootProject.name>@0.0.0` (falling back to the
+  workspace directory name when `rootProject.name` is absent).
+- `mikebom:component-role = "workspace-root"`.
+- `mikebom:source-files = "<path>/settings.gradle.kts"`.
+- `mikebom:sbom-tier = "source"`.
+
+Only the OUTERMOST `settings.gradle.kts` per scan tree synthesizes a
+workspace-root — nested `settings.gradle.kts` files are walked for
+sibling `build.gradle.kts` discovery only and DO NOT emit additional
+workspace-root components (per the "Two-deep nested Gradle workspaces"
+edge case from spec).
+
+### Kotlin Multiplatform (KMP) source-set provenance
+
+When a `build.gradle.kts` declares deps inside a
+`kotlin { sourceSets { <name> { dependencies { ... } } } }` block,
+mikebom stamps `mikebom:kmp-source-set` on the emitted component as a
+JSON-encoded array of every source-set name that declared the dep
+(lex-sorted, deduped). Multiple source-sets declaring the same
+canonical PURL accumulate into one merged array — consumers reading
+the SBOM call `JSON.parse(prop.value).includes("commonMain")` etc. to
+filter to a specific KMP target.
+
+Per the FR-006 timing contract, the kotlin_dsl reader may emit one
+`PackageDbEntry` per `(dep × source-set)` tuple pre-dedup; each
+duplicate carries the SAME merged source-set array; the milestone-105
+dedup pipeline collapses them into ONE canonical component
+post-emission while preserving the merged annotation.
+
+### Known limitations (Kotlin DSL v0.1)
+
+- Meta-programmed deps (`deps.forEach { ... }`, custom DSL extensions,
+  reflection-driven declarations) are NOT extracted. Operators using
+  these patterns get a degraded SBOM.
+- `apply(from = "common.gradle.kts")` indirection is NOT followed in
+  v0.1 — only the immediate `build.gradle.kts` is parsed. Convention-
+  plugin chains (rare) are deferred to a future phase.
+- The catalog reader looks at `gradle/libs.versions.toml` only — other
+  catalog paths (multi-catalog setups via `dependencyResolutionManagement`)
+  are deferred.
+- Cargo workspace + Gradle workspace co-located in one scan tree (rare
+  cross-ecosystem polyglot) emit one workspace-root per ecosystem; the
+  milestone-105 dedup pipeline handles cross-reader collapse via
+  canonical PURL match.
+
+### Per-component annotations (Kotlin)
+
+| Annotation | When emitted |
+|---|---|
+| `mikebom:source-files` | always — path to the `build.gradle.kts` |
+| `mikebom:sbom-tier = "design"` | every kotlin_dsl-discovered dep |
+| `mikebom:lifecycle-scope` | per dep-config family (see table above); absent for runtime |
+| `mikebom:kmp-source-set` | KMP source-set deps only; JSON-encoded array |
+
+Workspace-root entries additionally carry `mikebom:component-role =
+"workspace-root"`.
 
 ---
 

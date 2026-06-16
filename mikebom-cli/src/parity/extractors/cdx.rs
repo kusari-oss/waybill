@@ -715,6 +715,13 @@ cdx_anno!(c66_cdx, "mikebom:supplement-cdx",            document);
 // components.
 cdx_anno!(c67_cdx, "mikebom:assertion-conflict",        component);
 
+// C68 — `mikebom:kmp-source-set` (milestone 122 FR-006).
+// Per-component Kotlin Multiplatform source-set provenance. JSON-
+// encoded array of source-set names (lex-sorted, deduped). Emitted
+// only on components discovered from a `kotlin { sourceSets { ... } }`
+// block in `build.gradle.kts`; absent on non-KMP components.
+cdx_anno!(c68_cdx, "mikebom:kmp-source-set",            component);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================

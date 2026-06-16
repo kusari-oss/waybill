@@ -508,6 +508,11 @@ spdx23_anno!(c66_spdx23, "mikebom:supplement-cdx",           document);
 // envelope carrying the JSON-encoded array of conflict records.
 spdx23_anno!(c67_spdx23, "mikebom:assertion-conflict",       component);
 
+// C68 — `mikebom:kmp-source-set` (milestone 122). Per-Package envelope
+// carrying the JSON-encoded array of Kotlin Multiplatform source-set
+// names that declared the dep.
+spdx23_anno!(c68_spdx23, "mikebom:kmp-source-set",           component);
+
 // ============================================================
 // Sections D-G — custom SPDX 2.3 extractors
 // ============================================================

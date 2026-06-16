@@ -581,6 +581,11 @@ spdx3_anno!(c66_spdx3, "mikebom:supplement-cdx",           document);
 // conflict records.
 spdx3_anno!(c67_spdx3, "mikebom:assertion-conflict",       component);
 
+// C68 — `mikebom:kmp-source-set` (milestone 122). Per-component
+// graph-element annotation carrying the JSON-encoded array of Kotlin
+// Multiplatform source-set names that declared the dep.
+spdx3_anno!(c68_spdx3, "mikebom:kmp-source-set",           component);
+
 // C47 — document-level user-defined identifiers (milestone 073).
 // Per `contracts/identifiers-annotation.md` C-1 SPDX 3 and C-2
 // SPDX 3: user-defined identifiers ride `Element.externalIdentifier[]`

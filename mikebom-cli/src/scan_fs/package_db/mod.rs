@@ -24,6 +24,7 @@ pub mod gem;
 pub mod go_binary;
 pub mod golang;
 pub mod gradle;
+pub mod kotlin_dsl;
 pub mod maven;
 pub mod maven_sidecar;
 pub mod npm;
@@ -1387,6 +1388,15 @@ pub fn read_all(
     // path tags them `scope: "excluded"` (CDX) /
     // `BUILD_DEPENDENCY_OF` (SPDX 2.3) automatically.
     out.extend(gradle::read(rootfs, exclude_set));
+    // Milestone 122 US2: Kotlin DSL Gradle source-tree reader. Regex-
+    // extracts deps from `build.gradle.kts` + resolves `libs.<alias>`
+    // references against `gradle/libs.versions.toml` version catalogs.
+    // Emits `pkg:maven/<group>/<name>@<version>` design-tier components
+    // gated by `include_dev` per clarification Q5. Multi-module
+    // workspaces synthesize a `pkg:generic/<rootProject.name>@0.0.0`
+    // workspace-root per FR-007. KMP source-set provenance rides
+    // `mikebom:kmp-source-set` as a JSON-encoded array per FR-006.
+    out.extend(kotlin_dsl::read(rootfs, include_dev, exclude_set));
     // Milestone 122 US1: Swift Package Manager source-tree reader.
     // Parses `Package.resolved` lockfiles (v1/v2/v3 schema) and emits
     // `pkg:swift/<host>/<namespace>/<name>@<version>` PURLs per the
