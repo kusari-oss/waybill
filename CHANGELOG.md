@@ -7,6 +7,52 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Maven nested-JAR recursion (milestone 130 US2)
+
+Extends the existing milestone-009 maven JAR reader with depth-bounded recursive descent into nested
+`.jar`/`.war`/`.ear` entries — closing the gap on Spring Boot uber JARs, shaded fat JARs, EAR-packaged
+enterprise apps, and similar fat-JAR shapes where dependency `pom.properties` live INSIDE the outer
+archive's `BOOT-INF/lib/<dep>.jar` (or equivalent layout) rather than as separate top-level JAR files
+on disk.
+
+**Design**:
+
+- `walk_jar_maven_meta` retains its alpha.48 byte-identical top-level extraction. After it completes,
+  a new outer-level walker iterates the same JAR for `.jar`/`.war`/`.ear` ENTRIES ONLY (no re-extraction
+  of meta — the top-level loop already handled the outer archive's own `META-INF/maven/`). Each matching
+  entry's bytes are extracted in-memory and processed via `walk_nested_archives_in_bytes`, which DOES
+  extract meta + further recurse.
+- **Depth-bounded** at 8 levels (matches the milestone-128 `INCLUDE_DEPTH_LIMIT` convention). Beyond
+  the bound, descent stops with a single `warn`-level log.
+- **Cycle-detected** via a SHA-256 visited set on each archive's bytes — pathological self-referencing
+  inputs return immediately without infinite recursion.
+- **Zip-bomb-mitigated** via a per-entry 1 GB uncompressed-size cap. Entries declaring a higher
+  uncompressed size emit a `warn` log and skip; never extracted into memory.
+- **Extension-restricted** to `.jar`/`.war`/`.ear` (per the milestone-129 clarification Q2 — `.zip`
+  excluded due to false-positive risk on maven-assembly-plugin distribution archives, locale bundles,
+  sample data).
+
+**Nested entries** flow through the existing milestone-009 `jar_pom_to_entry` emission helper. They're
+marked `is_primary = false` (bypasses the outer-JAR scan-target heuristics) and carry two new
+annotations populated by the walker:
+
+- `mikebom:source-mechanism = "maven-jar-nested"` distinguishes them from top-level entries
+  (which emit unchanged with no source-mechanism annotation, preserving alpha.48 byte-identity).
+- `mikebom:source-files` uses the JAR-URL `!`-separator convention:
+  `<outer-jar-path>!<nested-path>!<deeper-nested-path>...` per FR-016. A leaf coord 4 levels deep
+  (EAR > WAR > JAR > inner JAR) carries a 4-segment chain.
+
+**Byte-identity preserved** across the 33 alpha.48 goldens. For top-level JARs without nested
+`.jar`/`.war`/`.ear` entries (the common case), the recursive walker iterates the outer ZIP looking
+for them and finds none — zero new emissions, zero changes to existing emissions.
+
+**4 new maven tests** (88 existing pass unchanged):
+
+- `nested_jar_with_pom_properties_emits_maven_jar_nested_annotation` — Spring Boot uber JAR shape.
+- `deeply_nested_archives_recurse_with_chained_url_separator` — EAR > WAR > JAR > inner-JAR.
+- `zip_entries_inside_jar_are_not_descended_into` — clarification Q2 enforcement.
+- `nested_archive_cycle_detected_via_sha256_visited_set` — cycle protection sanity (no hang).
+
 ### Cargo-auditable gate fix for package-db-claimed binaries (milestone 130 US1)
 
 Closes the second-largest single ecosystem gap surfaced by the audit against syft on the polyglot
