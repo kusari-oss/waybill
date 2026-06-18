@@ -504,6 +504,10 @@ spdx23_anno!(c65_spdx23, "mikebom:source-tier",              component);
 // provenance for `--supplement-cdx`; envelope shape mirrors C63.
 spdx23_anno!(c66_spdx23, "mikebom:supplement-cdx",           document);
 
+// Milestone 127: C69 — envelope-level mirror of CDX C69. Same emission
+// gating as the CDX side.
+spdx23_anno!(c69_spdx23, "mikebom:root-selection-heuristic", document);
+
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-Package
 // envelope carrying the JSON-encoded array of conflict records.
 spdx23_anno!(c67_spdx23, "mikebom:assertion-conflict",       component);

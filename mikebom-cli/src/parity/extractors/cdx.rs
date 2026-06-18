@@ -722,6 +722,13 @@ cdx_anno!(c67_cdx, "mikebom:assertion-conflict",        component);
 // block in `build.gradle.kts`; absent on non-KMP components.
 cdx_anno!(c68_cdx, "mikebom:kmp-source-set",            component);
 
+// Milestone 127: C69 `mikebom:root-selection-heuristic` — envelope-level
+// signal naming the heuristic + confidence that elected the BOM subject.
+// Emitted ONLY when the new ladder fired AND the auto-pick fell through
+// past at least one detected main-module. Pattern parallels C63
+// (exclude-path) and C66 (supplement-cdx).
+cdx_anno!(c69_cdx, "mikebom:root-selection-heuristic",  document);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================

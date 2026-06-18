@@ -666,6 +666,23 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         c.cpes = synthesize_cpes(c);
     }
 
+    // Milestone 127 FR-012 — Maven dedup. When a Maven `pom.xml` reader
+    // emitted a main-module whose PURL matches the JAR walker's
+    // `scan_target_coord`, suppress the `scan_target_coord` synthesis
+    // before it reaches the metadata.component ladder. Keeps the FR-007
+    // warning surface clean for pure-Java repos.
+    let scan_target_coord =
+        maybe_suppress_scan_target_coord(&components, scan_target_coord);
+
+    // Milestone 127 FR-001 — tag every main-module-tagged component with
+    // `mikebom:is-workspace-root: <bool>`. The signal feeds the
+    // `generate/root_selector.rs` ladder (FR-002, FR-003) at SBOM
+    // emission time. The key is internal-only — filtered out by
+    // `is_internal_emission_key` at every per-format
+    // `extra_annotations` iteration site so it never reaches
+    // serialized SBOM output.
+    tag_main_modules_with_workspace_root(&mut components, root);
+
     Ok(ScanResult {
         components,
         relationships,
@@ -675,6 +692,112 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         go_graph_completeness_reason,
         scan_target_coord,
     })
+}
+
+/// Milestone 127 FR-001 implementation. Walks every component once;
+/// for main-module-tagged ones, computes whether the component's
+/// defining manifest file's parent directory canonicalizes to
+/// `scan_root` and writes the result to `mikebom:is-workspace-root`.
+///
+/// Strict equality of canonicalized parent directories per research
+/// R3. `canonicalize` failures on EITHER side degrade gracefully to
+/// `false` (the affected main-module is just "not at the workspace
+/// root" — ladder falls through to LCP or further). Matches the
+/// permissive posture of milestone-114 `safe_walk`.
+///
+/// The annotation key is internal-only — `is_internal_emission_key`
+/// strips it at every per-format `extra_annotations` iteration site
+/// so it never appears in serialized SBOM output (preserves SC-003
+/// byte-identity on the 33 alpha.48 goldens).
+fn tag_main_modules_with_workspace_root(
+    components: &mut [mikebom_common::resolution::ResolvedComponent],
+    scan_root: &Path,
+) {
+    let canonical_root = std::fs::canonicalize(scan_root).ok();
+
+    for c in components.iter_mut() {
+        let is_main_module = c
+            .extra_annotations
+            .get("mikebom:component-role")
+            .and_then(|v| v.as_str())
+            == Some("main-module");
+        if !is_main_module {
+            continue;
+        }
+
+        // Manifest path lookup: ecosystems vary on where they record it.
+        // Go reader populates `evidence.source_file_paths`. Workspace-
+        // synthesizer + Swift / Kotlin / NuGet readers use the
+        // `mikebom:source-files` annotation (as either a string OR an
+        // array depending on the ecosystem). Read both, prefer evidence.
+        let from_evidence: Option<String> = c
+            .evidence
+            .source_file_paths
+            .first()
+            .cloned();
+        let from_annotation: Option<String> = c
+            .extra_annotations
+            .get("mikebom:source-files")
+            .and_then(|v| match v {
+                serde_json::Value::String(s) => Some(s.clone()),
+                serde_json::Value::Array(arr) => arr
+                    .first()
+                    .and_then(|x| x.as_str())
+                    .map(|s| s.to_string()),
+                _ => None,
+            });
+        let manifest_path: Option<String> = from_evidence.or(from_annotation);
+        let manifest_path = manifest_path.as_deref();
+
+        let is_workspace_root = match (manifest_path, canonical_root.as_ref()) {
+            (Some(p), Some(canon_root)) => {
+                let manifest_parent = Path::new(p).parent();
+                manifest_parent
+                    .and_then(|parent| std::fs::canonicalize(parent).ok())
+                    .map(|canon_manifest_parent| canon_manifest_parent == *canon_root)
+                    .unwrap_or(false)
+            }
+            _ => false,
+        };
+
+        c.extra_annotations.insert(
+            crate::generate::root_selector::IS_WORKSPACE_ROOT_KEY.to_string(),
+            serde_json::Value::Bool(is_workspace_root),
+        );
+    }
+}
+
+/// Milestone 127 FR-012 implementation. When a Maven main-module
+/// component exists whose PURL matches the JAR walker's
+/// `scan_target_coord`, return `None` (suppress the duplicate
+/// signal). Otherwise return the input untouched.
+fn maybe_suppress_scan_target_coord(
+    components: &[mikebom_common::resolution::ResolvedComponent],
+    scan_target_coord: Option<package_db::maven::ScanTargetCoord>,
+) -> Option<package_db::maven::ScanTargetCoord> {
+    let coord = scan_target_coord.as_ref()?;
+    let expected_purl =
+        format!("pkg:maven/{}/{}@{}", coord.group, coord.artifact, coord.version);
+
+    let dup = components.iter().any(|c| {
+        let role = c
+            .extra_annotations
+            .get("mikebom:component-role")
+            .and_then(|v| v.as_str());
+        role == Some("main-module")
+            && c.purl.ecosystem() == "maven"
+            && c.purl.as_str() == expected_purl
+    });
+
+    if dup {
+        tracing::debug!(
+            coord = %expected_purl,
+            "Milestone 127 FR-012: suppressed JAR-walker scan_target_coord (covered by Maven main-module)"
+        );
+        None
+    } else {
+        scan_target_coord
+    }
 }
 
 /// Normalise a dependency name to the canonical form used as the

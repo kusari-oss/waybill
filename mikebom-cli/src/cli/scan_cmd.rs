@@ -1842,6 +1842,71 @@ pub async fn execute(
         );
     }
 
+    // Milestone 127 FR-007 — surface a warning when the root-selection
+    // heuristic fell through past at least one detected main-module.
+    // The warning names the picked subject AND the loser main-modules'
+    // PURLs so operators can pass `--root-name`/`--root-purl-type`
+    // for deterministic control. Gated on `losers.is_empty() == false`
+    // (matches the FR-006 annotation emission gate).
+    {
+        let root_override_tmp = crate::generate::RootComponentOverride {
+            name: args.root_name.clone(),
+            version: args.root_version.clone(),
+            purl_type: args.root_purl_type.clone(),
+            omit_purl: args.no_root_purl,
+        };
+        let selection = crate::generate::root_selector::select_root(
+            &components,
+            &root_override_tmp,
+            scan_target_coord.as_ref(),
+            &target_name,
+            "0.0.0",
+        );
+        if let Some(h) = selection.heuristic {
+            if !selection.losers.is_empty() {
+                let loser_strs: Vec<String> = selection
+                    .losers
+                    .iter()
+                    .map(|p| p.as_str().to_string())
+                    .collect();
+                let selected_str = match &selection.subject {
+                    crate::generate::root_selector::ResolvedRootSubject::MainModule(idx) => {
+                        components
+                            .get(*idx)
+                            .map(|c| c.purl.as_str().to_string())
+                            .unwrap_or_default()
+                    }
+                    crate::generate::root_selector::ResolvedRootSubject::MavenCoord => {
+                        scan_target_coord
+                            .as_ref()
+                            .map(|c| {
+                                format!(
+                                    "pkg:maven/{}/{}@{}",
+                                    c.group, c.artifact, c.version
+                                )
+                            })
+                            .unwrap_or_default()
+                    }
+                    crate::generate::root_selector::ResolvedRootSubject::SyntheticPlaceholder {
+                        name,
+                        version,
+                    } => format!("pkg:generic/{name}@{version}"),
+                    crate::generate::root_selector::ResolvedRootSubject::OperatorOverride => {
+                        String::new()
+                    }
+                };
+                tracing::warn!(
+                    selected = %selected_str,
+                    losers = ?loser_strs,
+                    heuristic = h.name(),
+                    confidence = h.confidence(),
+                    hint = "pass --root-name and --root-purl-type to override",
+                    "root-component selected via heuristic; operator override recommended for deterministic identity"
+                );
+            }
+        }
+    }
+
     // Enrichment source control: resolve which sources are enabled.
     // `--offline` is handled by each enrichment source's internal
     // short-circuit (they log "offline, skipping" themselves), so we

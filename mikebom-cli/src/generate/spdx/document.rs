@@ -369,55 +369,41 @@ pub fn build_document(
         .map(|(i, _)| i)
         .collect();
 
-    let main_module_indices: Vec<usize> = top_level
-        .iter()
-        .filter(|&&i| {
-            artifacts.components[i]
-                .extra_annotations
-                .get("mikebom:component-role")
-                .and_then(|v| v.as_str())
-                == Some("main-module")
-        })
-        .copied()
-        .collect();
-
-    // Milestone 077 — when override is active, ALWAYS synthesize a
-    // root using the override values, regardless of how many top-level
-    // components remain after the main-module filter. The override is
-    // a clean replacement at the BOM-subject slot per Q2 clarification.
-    let (root_ids, synthetic_root) = if artifacts.root_override.is_active() {
-        let (id, root) = synthesize_root_with_override(
-            artifacts.target_name,
-            &namespace,
-            artifacts.root_override.name.as_deref(),
-            artifacts.root_override.version.as_deref(),
-            &artifacts.root_override,
-        );
-        (vec![id], Some(root))
-    } else if main_module_indices.len() == 1 {
-        // Case 0a: single main-module → use it as root.
-        let idx = main_module_indices[0];
-        let purl = &artifacts.components[idx].purl;
-        (vec![SpdxId::for_purl(purl)], None)
-    } else if main_module_indices.len() > 1 {
-        // Case 0b (milestones 053 + 064 FR-008 + #127): multiple main-
-        // modules (cargo workspace members, go.work monorepo, polyglot
-        // scans). NO synthetic super-root needed for SPDX 2.3 — the
-        // `documentDescribes[]` array is plural by design and the
-        // DESCRIBES relationship type is many-to-many. Each main-
-        // module gets its own SPDXRef-DOCUMENT DESCRIBES edge,
-        // emitted in deterministic PURL-string-sorted order so
-        // goldens stay byte-identical across hosts.
-        let mut ids: Vec<SpdxId> = main_module_indices
-            .iter()
-            .map(|&i| SpdxId::for_purl(&artifacts.components[i].purl))
-            .collect();
-        // Sort by SPDXID's canonical string (a deterministic function
-        // of the PURL) so the order is host-agnostic.
-        ids.sort_by(|a, b| a.as_str().cmp(b.as_str()));
-        (ids, None)
-    } else {
-        match top_level.len() {
+    // Milestone 127 — delegate BOM-subject selection to the central
+    // `generate::root_selector::select_root` ladder. The selector
+    // handles override > count==1 fast path > FR-002 repo-root >
+    // FR-003 ecosystem-priority > FR-004 LCP > Maven coord >
+    // synthetic placeholder, all in one call. When the result names
+    // a `MainModule` (the count==1 fast path OR a count>1 tiebreaker
+    // picked one), emit a single `documentDescribes` ID for it. When
+    // the result names an `OperatorOverride`, synthesize a root using
+    // the milestone-077 override values. Otherwise (Maven coord OR
+    // synthetic placeholder), fall back to the existing top-level
+    // selection (a top-level component whose name matches the scan
+    // target, else synthesize).
+    let selection = crate::generate::root_selector::select_root(
+        artifacts.components,
+        &artifacts.root_override,
+        artifacts.scan_target_coord,
+        artifacts.target_name,
+        "0.0.0",
+    );
+    let (root_ids, synthetic_root) = match &selection.subject {
+        crate::generate::root_selector::ResolvedRootSubject::OperatorOverride => {
+            let (id, root) = synthesize_root_with_override(
+                artifacts.target_name,
+                &namespace,
+                artifacts.root_override.name.as_deref(),
+                artifacts.root_override.version.as_deref(),
+                &artifacts.root_override,
+            );
+            (vec![id], Some(root))
+        }
+        crate::generate::root_selector::ResolvedRootSubject::MainModule(idx) => {
+            let purl = &artifacts.components[*idx].purl;
+            (vec![SpdxId::for_purl(purl)], None)
+        }
+        _ => match top_level.len() {
             0 => {
                 let (id, root) = synthesize_root(artifacts.target_name, &namespace);
                 (vec![id], Some(root))
@@ -428,11 +414,10 @@ pub fn build_document(
                 (vec![SpdxId::for_purl(purl)], None)
             }
             _ => {
-                // Prefer a top-level component whose name matches the
-                // scan target exactly. Otherwise synthesize.
-                if let Some(idx) = top_level.iter().find(|&&i| {
-                    artifacts.components[i].name == artifacts.target_name
-                }) {
+                if let Some(idx) = top_level
+                    .iter()
+                    .find(|&&i| artifacts.components[i].name == artifacts.target_name)
+                {
                     let purl = &artifacts.components[*idx].purl;
                     (vec![SpdxId::for_purl(purl)], None)
                 } else {
@@ -440,7 +425,7 @@ pub fn build_document(
                     (vec![id], Some(root))
                 }
             }
-        }
+        },
     };
 
     // Prepend the synthetic-root package (if any) so it precedes

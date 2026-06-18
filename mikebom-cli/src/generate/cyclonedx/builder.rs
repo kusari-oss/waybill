@@ -974,7 +974,14 @@ impl CycloneDxBuilder {
             // pass through verbatim; other JSON values are
             // serde_json-stringified (matches the existing convention
             // for array- and object-shaped CDX property values).
+            //
+            // Milestone 127: filter out internal-only keys (the
+            // `mikebom:is-workspace-root` signal that drives root-selector
+            // logic but is NOT meant to surface in emitted SBOMs).
             for (key, value) in &component.extra_annotations {
+                if crate::generate::root_selector::is_internal_emission_key(key) {
+                    continue;
+                }
                 let value_str = match value {
                     serde_json::Value::String(s) => s.clone(),
                     other => serde_json::to_string(other).unwrap_or_default(),

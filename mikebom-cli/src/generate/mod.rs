@@ -24,6 +24,7 @@ pub mod cpe;
 pub mod cyclonedx;
 pub mod lifecycle_phases;
 pub mod openvex;
+pub mod root_selector;
 pub mod spdx;
 
 use std::collections::BTreeMap;

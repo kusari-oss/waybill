@@ -842,26 +842,29 @@ fn pick_root_iri(
         return (vec![synth_iri], true);
     }
 
-    // Milestones 053 (Go) + 064 (cargo) FR-008 + #127: prefer
-    // main-module-tagged components as root elements. SPDX 3.0.1's
-    // `rootElement` is a plural array, so multi-main-module
-    // workspaces (cargo workspace members, polyglot scans) emit one
-    // root entry per main-module.
-    let main_module_iris: Vec<String> = components
-        .iter()
-        .filter(|c| {
-            c.parent_purl.is_none()
-                && c.extra_annotations
-                    .get("mikebom:component-role")
-                    .and_then(|v| v.as_str())
-                    == Some("main-module")
-        })
-        .filter_map(|c| package_iri_by_purl.get(c.purl.as_str()).cloned())
-        .collect();
-    if !main_module_iris.is_empty() {
-        let mut sorted = main_module_iris;
-        sorted.sort();
-        return (sorted, false);
+    // Milestone 127 — delegate root-element selection to the central
+    // `generate::root_selector::select_root` ladder. The selector
+    // handles count==1 fast path > FR-002 repo-root > FR-003
+    // ecosystem-priority > FR-004 LCP > Maven coord > synthetic
+    // placeholder. When the result names a `MainModule`, return its
+    // IRI as the sole rootElement. Otherwise fall through to the
+    // existing target-name match + synthesis branches below (which
+    // handle the no-main-modules case and provide the
+    // sbomqs-compatible synthesized root).
+    let selection = crate::generate::root_selector::select_root(
+        components,
+        &scan.root_override,
+        scan.scan_target_coord,
+        scan.target_name,
+        "0.0.0",
+    );
+    if let crate::generate::root_selector::ResolvedRootSubject::MainModule(idx) =
+        &selection.subject
+    {
+        let comp = &components[*idx];
+        if let Some(iri) = package_iri_by_purl.get(comp.purl.as_str()) {
+            return (vec![iri.clone()], false);
+        }
     }
 
     if let Some(c) = components.iter().find(|c| c.name == scan.target_name) {

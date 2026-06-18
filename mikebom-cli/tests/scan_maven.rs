@@ -893,7 +893,16 @@ fn scan_maven_single_module_emits_main_module() {
 }
 
 /// US1 AS#2 + SC-002: multi-module reactor emits per-submodule
-/// main-modules; documentDescribes lists all of them.
+/// main-modules as `packages[]`. Pre-milestone-127 the
+/// `documentDescribes` array carried all 3 main-modules in plural
+/// shape. Post-milestone-127 the `generate::root_selector::select_root`
+/// ladder picks the SINGLE main-module whose manifest sits at the
+/// repo root (the parent `pom.xml`) via the FR-002 repo-root
+/// tiebreaker; the other two reactor submodules remain in
+/// `packages[]` but no longer appear in `documentDescribes`. The
+/// per-format selection is consistent (CDX `metadata.component`,
+/// SPDX 2.3 `documentDescribes`, SPDX 3 `rootElement` all pick the
+/// parent) per FR-005.
 #[test]
 fn scan_maven_multi_module_reactor_emits_per_submodule_main_modules() {
     let path = cli_local_fixture("maven-multi-module-reactor");
@@ -927,13 +936,36 @@ fn scan_maven_multi_module_reactor_emits_per_submodule_main_modules() {
     assert!(purls.contains("pkg:maven/com.example/parent@1.0.0"));
     assert!(purls.contains("pkg:maven/com.example/module-a@1.0.0"));
     assert!(purls.contains("pkg:maven/com.example/module-b@1.0.0"));
+
+    // Milestone 127 FR-005: documentDescribes picks ONE main-module
+    // (the parent — its `pom.xml` is at the reactor root).
+    let document_describes = spdx["documentDescribes"]
+        .as_array()
+        .expect("documentDescribes is an array");
     assert_eq!(
-        spdx["documentDescribes"]
-            .as_array()
-            .map(|a| a.len())
-            .unwrap_or(0),
-        3,
-        "documentDescribes must list all 3 main-modules"
+        document_describes.len(),
+        1,
+        "documentDescribes carries the heuristic-picked root (FR-005); got {} entries",
+        document_describes.len()
+    );
+    let root_id = document_describes[0]
+        .as_str()
+        .expect("documentDescribes[0] is a string SPDXID");
+    let root_pkg = spdx["packages"]
+        .as_array()
+        .and_then(|arr| arr.iter().find(|p| p["SPDXID"].as_str() == Some(root_id)))
+        .expect("documentDescribes[0] references a package in packages[]");
+    let root_purl = root_pkg["externalRefs"]
+        .as_array()
+        .and_then(|refs| {
+            refs.iter()
+                .find(|r| r["referenceType"].as_str() == Some("purl"))
+                .and_then(|r| r["referenceLocator"].as_str())
+        })
+        .expect("root package has a PURL externalRef");
+    assert_eq!(
+        root_purl, "pkg:maven/com.example/parent@1.0.0",
+        "root MUST be the reactor parent (FR-002 repo-root tiebreaker)"
     );
 }
 

@@ -576,6 +576,10 @@ spdx3_anno!(c65_spdx3, "mikebom:source-tier",              component);
 // provenance for `--supplement-cdx`; envelope shape mirrors C63.
 spdx3_anno!(c66_spdx3, "mikebom:supplement-cdx",           document);
 
+// Milestone 127: C69 — envelope-level mirror of CDX C69. Same emission
+// gating as the CDX side.
+spdx3_anno!(c69_spdx3, "mikebom:root-selection-heuristic", document);
+
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-component
 // graph-element annotation carrying the JSON-encoded array of
 // conflict records.

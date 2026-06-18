@@ -7,6 +7,30 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Smarter root component selection on polyglot + multi-module Go workspace scans (milestone 127, closes #366 + #367)
+
+Replaces the previously inline metadata.component / SPDX 2.3 documentDescribes / SPDX 3 rootElement priority ladder in each of the three format emitters with a single shared `generate::root_selector::select_root` ladder. The new ladder applies these tiebreakers, in order, when multiple main-module-tagged components exist:
+
+1. **Operator override wins** — `--root-name` / `--root-version` / `--root-purl-type` / `--no-root-purl` per milestone 077 + #358 unchanged.
+2. **Single-main-module fast path** — exactly one main-module exists → use it. Byte-identical to alpha.48 output across all 33 committed goldens (cdx/spdx2.3/spdx3 byte-identity regression: 33/33 pass).
+3. **Repo-root tiebreaker (FR-002)** — exactly one main-module's manifest file sits at the scan's `--path` root → use it. Confidence 0.95.
+4. **Ecosystem-priority tiebreaker (FR-003)** — multiple main-modules at the repo root → fixed priority order `[golang, cargo, maven, npm, pip, gem, generic]` picks one. Confidence 0.70.
+5. **Longest-common-prefix tiebreaker (FR-004)** — no main-module at the repo root → if exactly one main-module's manifest path equals the LCP of all main-module manifest paths, pick it. Confidence 0.80.
+6. **Maven `scan_target_coord` fallback** — as today, confidence 0.60.
+7. **`pkg:generic/<target>@0.0.0` placeholder** — as today, confidence 0.30.
+
+Whenever any tiebreaker fires AND the auto-pick falls through past at least one detected main-module, the emitted SBOM gains a document-scope `mikebom:root-selection-heuristic` annotation carrying `{"heuristic": <name>, "confidence": <float>}` (C-row C69 in `docs/reference/sbom-format-mapping.md` — full Principle V native-field audit attached). The same condition surfaces a `tracing::warn!` log at scan-end naming the picked subject AND every loser main-module's PURL, recommending the operator pass `--root-name`/`--root-purl-type` for deterministic control.
+
+**Behavior changes worth flagging:**
+
+- **`argo-workflows`-shape repos** (polyglot Go + Maven + npm where the Go module sits at the repo root) — root identity moves from `pkg:maven/io.argoproj.workflow/argo-client-java-tests@0.0.0-VERSION` (alpha.48) to `pkg:golang/github.com/argoproj/argo-workflows/v3@v3.5.5` (post-127). Closes #366.
+- **`opentelemetry-collector`-shape repos** (multi-module Go workspace with 50+ nested `go.mod` files, one at the repo root) — root identity moves from an alphabetic-leaf sub-module to the repo-root module (`pkg:golang/go.opentelemetry.io/collector@v0.105.0`). Closes #367.
+- **`--bind-to-source` operator scripts targeting the old (wrong) subject** on the two affected project shapes above need updating; the binding follows the corrected root.
+
+**Internal-only annotation kept off the wire:** the new `mikebom:is-workspace-root` boolean drives the tiebreakers but is filtered out at every per-format `extra_annotations` iteration site (`generate/cyclonedx/builder.rs`, `generate/spdx/annotations.rs`, `generate/spdx/v3_annotations.rs`) so it never reaches serialized SBOM output. This is the byte-identity preservation lever — without it the 33 alpha.48 goldens would churn at every emission.
+
+**FR-012 Maven `scan_target_coord` dedup:** when the Maven `pom.xml` reader (milestone 070) emits a main-module whose PURL matches the JAR walker's `scan_target_coord`, the duplicate signal gets suppressed at the source (in `scan_fs/mod.rs::scan_path` before the metadata.component ladder runs). Pure-Java repos with one `pom.xml` at the root see one coord, not two, AND the FR-007 warning surface stays clean for them.
+
 ## [0.1.0-alpha.48] — 2026-06-16
 
 Milestones 114 (`safe_walk` refactor), 115 + 117 (walker-audit CI gate), 116 (cross-tier `produces-binaries` binder), 118 (`--exclude-path` polish), 119 (operator supplement file via `--supplement-cdx`), and 122 (Swift Package Manager + Kotlin DSL Gradle ecosystem readers + KMP polyglot regression) all ship in this release. Plus producer-side root-PURL control (`--root-purl-type` / `--no-root-purl`), the deprecated `--include-dev` shim removal, and the CI release-tag-push gap closure.

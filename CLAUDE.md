@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-06-14
+Auto-generated from all feature plans. Last updated: 2026-06-17
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -136,6 +136,8 @@ Auto-generated from all feature plans. Last updated: 2026-06-14
 - N/A — the supplement file is read once at scan startup; its parsed representation lives in-process for the duration of the scan; no caching, no persistence. (119-supplement-cdx)
 - Rust stable (workspace toolchain inherited from milestones 001–121; no nightly required for this user-space-only ecosystem-expansion work). + Existing only — `serde` + `serde_json` (`Package.resolved` JSON parsing — already used by every JSON-format reader), `toml = "0.8"` (`libs.versions.toml` parsing — already used by `cargo.rs` + `pip/`), `regex` (`build.gradle.kts` dep-declaration extraction — already used by milestone-106 + milestone-119), `tracing` (parse-error warnings), `anyhow` (error propagation). The PURL construction reuses `mikebom_common::types::purl::Purl::new()` which already supports the `pkg:swift/` ecosystem type per the upstream `packageurl` crate. **Zero new Cargo dependencies.** (122-kotlin-swift-readers)
 - N/A — all reader state is in-process per scan; the lookup table built from `libs.versions.toml` is constructed at parse time and dies with the scan. Mirrors every milestone since 002. (122-kotlin-swift-readers)
+- Rust stable (workspace toolchain inherited from milestones 001–126; no nightly required for this user-space-only selection logic). + Existing only — `std::path::{Path, PathBuf}` + `std::fs::canonicalize` (already pervasive in `scan_fs/`), `tracing` (warn/info logs), `anyhow` (error propagation), `serde`/`serde_json` (annotation construction). **Zero new Cargo dependencies.** (127-smarter-root-pick)
+- N/A — all state in-process per scan; persisted only inside the emitted SBOM via the existing document-scope annotation channel. Mirrors every milestone since 002. (127-smarter-root-pick)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -198,9 +200,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 127-smarter-root-pick: Added Rust stable (workspace toolchain inherited from milestones 001–126; no nightly required for this user-space-only selection logic). + Existing only — `std::path::{Path, PathBuf}` + `std::fs::canonicalize` (already pervasive in `scan_fs/`), `tracing` (warn/info logs), `anyhow` (error propagation), `serde`/`serde_json` (annotation construction). **Zero new Cargo dependencies.**
 - 122-kotlin-swift-readers: Added Rust stable (workspace toolchain inherited from milestones 001–121; no nightly required for this user-space-only ecosystem-expansion work). + Existing only — `serde` + `serde_json` (`Package.resolved` JSON parsing — already used by every JSON-format reader), `toml = "0.8"` (`libs.versions.toml` parsing — already used by `cargo.rs` + `pip/`), `regex` (`build.gradle.kts` dep-declaration extraction — already used by milestone-106 + milestone-119), `tracing` (parse-error warnings), `anyhow` (error propagation). The PURL construction reuses `mikebom_common::types::purl::Purl::new()` which already supports the `pkg:swift/` ecosystem type per the upstream `packageurl` crate. **Zero new Cargo dependencies.**
 - 119-supplement-cdx: Added Rust stable (workspace toolchain inherited from milestones 001–118; no nightly required). + Existing only — `serde`/`serde_json` (CDX JSON parse), `clap` (the new flag via derive), `sha2` + `data-encoding` (the supplement file's sha256 for FR-012 provenance — both already in the workspace), `tracing`, `anyhow`, `thiserror`. **Zero new Cargo dependencies.** Per research §1, the supplement file validation is a hand-rolled structural check — no `jsonschema` runtime dep added.
-- 118-exclude-path-polish: Added Rust stable (workspace toolchain inherited from milestones 001–117; no nightly required for this user-space-only feature). + Existing only — `std::sync::atomic::AtomicUsize` (std), `tracing`, `tempfile` (test-only; already a dev-dep), `serde_json` (test parsing), `globset` (workspace; already used by milestone 113's `ExclusionSet`). **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

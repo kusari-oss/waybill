@@ -237,37 +237,33 @@ pub fn build_metadata(
     // CDX shape for the workspace-multi-member case; Trivy's "Root:
     // true" pattern doesn't generalize cleanly when there's no single
     // root crate to elect.
-    let main_module_count = components
-        .iter()
-        .filter(|c| {
-            c.extra_annotations
-                .get("mikebom:component-role")
-                .and_then(|v| v.as_str())
-                == Some("main-module")
-        })
-        .count();
-    let main_module: Option<&ResolvedComponent> = if main_module_count == 1 {
-        components.iter().find(|c| {
-            c.extra_annotations
-                .get("mikebom:component-role")
-                .and_then(|v| v.as_str())
-                == Some("main-module")
-        })
-    } else {
-        None
-    };
-
-    // Milestone 077 — when the operator-supplied override is active,
-    // short-circuit the priority ladder above. The override values
-    // become the BOM-subject identity verbatim, with PURL percent-
-    // encoding applied per RFC 3986 §2.3 (research §1). This also
-    // means the manifest-derived main-module is suppressed at the
-    // metadata.component slot here AND filtered out of the
-    // components[] array by the builder per FR-008 / Q2 clean-
-    // replacement clarification.
+    // Milestone 127 — delegate BOM-subject selection to the central
+    // ladder in `generate::root_selector::select_root`. The ladder
+    // handles override > count==1 fast path > FR-002 repo-root >
+    // FR-003 ecosystem-priority > FR-004 LCP > Maven coord > synthetic
+    // placeholder, all in one call. Returns the elected subject + the
+    // heuristic name (None on fast-path / override) + losers (for
+    // FR-007 warning emission downstream).
+    //
+    // The match below maps `ResolvedRootSubject` back into the
+    // `(main_module, subject_name, subject_version, synthetic_component_purl)`
+    // tuple downstream consumers (CPE synthesizer at line ~327,
+    // metadata.component builder at line ~404) read from.
+    let selection = crate::generate::root_selector::select_root(
+        components,
+        root_override,
+        scan_target_coord,
+        target_name,
+        target_version,
+    );
     let override_active = root_override.is_active();
-    let (subject_name, subject_version, synthetic_component_purl) =
-        if override_active {
+    let (main_module, subject_name, subject_version, synthetic_component_purl): (
+        Option<&ResolvedComponent>,
+        String,
+        String,
+        String,
+    ) = match &selection.subject {
+        crate::generate::root_selector::ResolvedRootSubject::OperatorOverride => {
             let name = root_override
                 .name
                 .clone()
@@ -276,37 +272,112 @@ pub fn build_metadata(
                 .version
                 .clone()
                 .unwrap_or_else(|| target_version.to_string());
-            // Milestone N+1: `build_subject_purl` returns `None` when
-            // `--no-root-purl` is in effect; the empty-string fallback
-            // here is safe because the `purl` JSON field is post-
-            // processed off the emitted `metadata.component` below
-            // when `omit_purl` is set.
+            // Milestone 077/#358 — `build_subject_purl` returns `None`
+            // when `--no-root-purl` is in effect; the empty-string
+            // fallback is safe because the `purl` JSON field is
+            // post-processed off the emitted `metadata.component`
+            // below when `omit_purl` is set.
             let purl = root_override
                 .build_subject_purl(&name, &version)
                 .unwrap_or_default();
-            (name, version, purl)
-        } else if let Some(c) = main_module {
-            (
-                c.name.clone(),
-                c.version.clone(),
-                c.purl.as_str().to_string(),
-            )
-        } else if let Some(coord) = scan_target_coord {
-            let purl = format!(
-                "pkg:maven/{}/{}@{}",
-                encode_purl_segment(&coord.group),
-                encode_purl_segment(&coord.artifact),
-                encode_purl_segment(&coord.version),
-            );
-            (coord.artifact.clone(), coord.version.clone(), purl)
-        } else {
+            (None, name, version, purl)
+        }
+        crate::generate::root_selector::ResolvedRootSubject::MainModule(idx) => {
+            let c = components.get(*idx);
+            match c {
+                Some(comp) => (
+                    Some(comp),
+                    comp.name.clone(),
+                    comp.version.clone(),
+                    comp.purl.as_str().to_string(),
+                ),
+                None => {
+                    // Defensive fallback — should never happen because
+                    // the selector validated the index. Degrade to the
+                    // synthetic placeholder shape.
+                    let purl = format!(
+                        "pkg:generic/{}@{}",
+                        encode_purl_segment(target_name),
+                        encode_purl_segment(target_version),
+                    );
+                    (
+                        None,
+                        target_name.to_string(),
+                        target_version.to_string(),
+                        purl,
+                    )
+                }
+            }
+        }
+        crate::generate::root_selector::ResolvedRootSubject::MavenCoord => {
+            // Selector returns MavenCoord only when scan_target_coord is
+            // Some; defend against an unexpected None by falling back to
+            // the synthetic placeholder.
+            match scan_target_coord {
+                Some(coord) => {
+                    let purl = format!(
+                        "pkg:maven/{}/{}@{}",
+                        encode_purl_segment(&coord.group),
+                        encode_purl_segment(&coord.artifact),
+                        encode_purl_segment(&coord.version),
+                    );
+                    (None, coord.artifact.clone(), coord.version.clone(), purl)
+                }
+                None => {
+                    let purl = format!(
+                        "pkg:generic/{}@{}",
+                        encode_purl_segment(target_name),
+                        encode_purl_segment(target_version),
+                    );
+                    (
+                        None,
+                        target_name.to_string(),
+                        target_version.to_string(),
+                        purl,
+                    )
+                }
+            }
+        }
+        crate::generate::root_selector::ResolvedRootSubject::SyntheticPlaceholder {
+            name,
+            version,
+        } => {
             let purl = format!(
                 "pkg:generic/{}@{}",
-                encode_purl_segment(target_name),
-                encode_purl_segment(target_version),
+                encode_purl_segment(name),
+                encode_purl_segment(version),
             );
-            (target_name.to_string(), target_version.to_string(), purl)
-        };
+            (None, name.clone(), version.clone(), purl)
+        }
+    };
+
+    // Milestone 127 FR-006 — emit the document-scope
+    // `mikebom:root-selection-heuristic` property when a tiebreaker
+    // fired AND the auto-pick actually fell through past at least one
+    // detected main-module (losers non-empty). This matches FR-007's
+    // warning gate exactly and preserves byte-identity on the 8
+    // zero-main-module fixtures (apk, bazel, cargo, cmake, deb, gem,
+    // pip, rpm) per SC-003 — those fixtures hit `SyntheticPlaceholder`
+    // with empty losers, where there's no "loss" to signal. The 3
+    // single-main-module fixtures (golang, maven, npm) hit the
+    // count==1 fast path with `heuristic == None`. Envelope shape
+    // matches contracts/annotation-schema.md.
+    if let Some(h) = selection.heuristic {
+        if !selection.losers.is_empty() {
+            let envelope = json!({
+                "schema": "mikebom-annotation/v1",
+                "field": "mikebom:root-selection-heuristic",
+                "value": {
+                    "heuristic": h.name(),
+                    "confidence": h.confidence(),
+                }
+            });
+            properties.push(json!({
+                "name": "mikebom:root-selection-heuristic",
+                "value": serde_json::to_string(&envelope).unwrap_or_default(),
+            }));
+        }
+    }
 
     // Synthesize a minimal valid CPE 2.3 for the scan subject.
     //

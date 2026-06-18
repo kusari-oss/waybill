@@ -325,7 +325,14 @@ fn push_component_fields(
     // Milestone 023: generic per-component annotation bag. Each
     // entry surfaces as a SPDX 3 graph-element Annotation. BTreeMap
     // iteration order is sorted by key — deterministic across runs.
+    //
+    // Milestone 127: filter out internal-only keys (the
+    // `mikebom:is-workspace-root` signal that drives root-selector
+    // logic but is NOT meant to surface in emitted SBOMs).
     for (key, value) in &c.extra_annotations {
+        if crate::generate::root_selector::is_internal_emission_key(key) {
+            continue;
+        }
         push(out, key, value.clone());
     }
 }
@@ -393,6 +400,36 @@ fn push_document_fields(
                 )
             ),
         );
+    }
+
+    // Milestone 127 FR-006 — document-scope root-selection-heuristic
+    // signal. Emitted only when the selector's ladder fired AND the
+    // auto-pick actually fell through past at least one detected
+    // main-module (losers non-empty). Suppressed on the count==1 fast
+    // path (heuristic=None), under operator override (heuristic=None),
+    // AND when zero main-modules existed (losers empty — no loss to
+    // signal). Preserves byte-identity on the 33 alpha.48 goldens
+    // per SC-003. Envelope shape per contracts/annotation-schema.md.
+    {
+        let selection = crate::generate::root_selector::select_root(
+            scan.components,
+            &scan.root_override,
+            scan.scan_target_coord,
+            scan.target_name,
+            "0.0.0",
+        );
+        if let Some(h) = selection.heuristic {
+            if !selection.losers.is_empty() {
+                push(
+                    out,
+                    "mikebom:root-selection-heuristic",
+                    json!({
+                        "heuristic": h.name(),
+                        "confidence": h.confidence(),
+                    }),
+                );
+            }
+        }
     }
 
     // C44 (milestone 061, closes #119): doc-level Go graph-completeness
