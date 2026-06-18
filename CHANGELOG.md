@@ -7,6 +7,33 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### `.deps.json` reader for .NET container images (milestone 129 US1A)
+
+Fills the largest single ecosystem gap surfaced by a side-by-side audit against syft on a polyglot Wolfi-based dev-tooling container image (`767397973649.dkr.ecr.us-east-1.amazonaws.com/remediation-planner:latest`): pre-milestone-129, mikebom emitted **zero** `pkg:nuget` PURLs on .NET-bearing images because the existing milestone-106 NuGet reader is source-tier (`.csproj`/`Directory.Packages.props`/`packages.lock.json`) and production container images ship only the compiled output. This milestone adds a `.deps.json` sidecar reader to `mikebom-cli/src/scan_fs/package_db/nuget/deps_json.rs` that walks the rootfs for `*.deps.json` files (emitted by `dotnet publish` and shipped throughout the .NET SDK + runtime store layouts) and emits one `pkg:nuget/<name>@<version>` per `libraries[]` entry with `type: "package"`. On the audit image, this lifts the unique NuGet count from 0 to **184** (vs syft's 635 unique; the residual ~451 packages live in `.dll` PE/CLR metadata which a follow-up milestone will address).
+
+**Output shape**:
+
+- Per-component `mikebom:sbom-tier = "image"` annotation (distinguishes from source-tier NuGet hits from milestone 106).
+- Per-component `mikebom:source-mechanism = "dotnet-deps-json"` annotation.
+- Per-document `mikebom:dotnet-runtime-target` annotation carrying the `.NETCoreApp,Version=v8.0`-style runtime target name when `runtimeTarget.name` is set in the `.deps.json`.
+- Per-component `mikebom:image-presence = "declared-not-installed"` annotation when the `.deps.json` entry declares a `path` field pointing at an assembly file that isn't present in the rootfs (best-effort probe checks the `.deps.json`'s parent dir, grandparent dir, and the `/usr/share/dotnet/` runtime-store root).
+
+**Behavior**:
+
+- `type: "project"` entries (the application's own first-party assembly) are silently skipped — these are not third-party NuGet dependencies (FR-009).
+- `type: "referenceassembly"` entries are silently skipped — these are compile-time-only reference assemblies, not runtime dependencies.
+- Malformed JSON, malformed `name/version` library keys, and unknown `type` values emit a single `warn`-level log and skip the affected entry; the surrounding scan does not abort (FR-006 fail-closed-but-keep-going).
+- Reader honors `--offline` (no network, no subprocess) and `--exclude-path` (routes via `safe_walk`).
+- Existing milestone-105 dedup pipeline collapses cross-mechanism duplicates; collisions between source-tier (.csproj) and image-tier (.deps.json) emit ONE component with both source-mechanism strings in `mikebom:also-detected-via`.
+
+**Byte-identity preserved** across the 33 committed alpha.48 goldens. For images without `.deps.json` files (pure-Go, pure-Python, pure-Rust trees), the reader is a no-op and the emitted SBOM is byte-identical to alpha.48.
+
+**Follow-ups tracked separately**:
+
+- US1B (PE/CLR managed-assembly metadata reader) — covers the ~451 packages in `Microsoft.AspNetCore.*.dll` / `DotNetWatchTasks.dll` / etc. that don't have neighboring `.deps.json` entries. Bounded ECMA-335 §II.22 hand-roll on `object` 0.36's PE primitives. Tracked for a follow-up milestone.
+- US2 cargo-auditable debugging — mikebom's existing milestone-029 `cargo_auditable.rs` reader emits 0 components on the audit image's `/usr/bin/uv` and `/usr/bin/uvx`; the 58 `pkg:cargo` components currently emitted come from a `Cargo.lock` source-tier hit, not the `.dep-v0` ELF section. Bug investigation tracked for a follow-up.
+- US3 maven nested-JAR recursion — tracked for a follow-up milestone.
+
 ### Deeper Yocto/OpenEmbedded SBOM coverage (milestone 128)
 
 Extends the milestone-107 `.bb` recipe reader from "name + version only" to a full source-tier identity layer for OpenEmbedded recipes. Inspired by an audit of three balena meta-layers (`balena-os/meta-balena`, `balena-os/balena-raspberrypi`, `balena-os/balena-generic`), where the alpha.48 reader emitted just `pkg:bitbake/<name>@<version>` — enough to land the recipe in the SBOM but not enough for SCA, OSV vulnerability matching, or downstream license review.

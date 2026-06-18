@@ -23,6 +23,7 @@
 //! Cross-platform (no `#[cfg(unix)]`); zero new Cargo dependencies.
 
 mod csproj;
+mod deps_json;
 mod directory_packages_props;
 mod packages_lock;
 mod private_assets;
@@ -45,13 +46,17 @@ pub fn read(
     exclude_set: &super::exclude_path::ExclusionSet,
 ) -> Vec<PackageDbEntry> {
     let project_files = collect_project_files(rootfs, exclude_set);
-    if project_files.is_empty() {
-        return Vec::new();
-    }
     let mut out = Vec::new();
     for project_path in project_files {
         out.extend(read_one_project(rootfs, &project_path));
     }
+    // Milestone 129 US1A: also walk the rootfs for `.deps.json`
+    // files (the .NET runtime dependency sidecar emitted by
+    // `dotnet publish` and shipped throughout the SDK / runtime
+    // store layouts). This is the path that closes the 1,489-package
+    // nuget gap surfaced by the remediation-planner image audit
+    // where no source manifests are present.
+    out.extend(deps_json::read(rootfs, exclude_set));
     out
 }
 
@@ -274,7 +279,7 @@ struct AccEntry {
     sources: BTreeSet<PathBuf>,
 }
 
-fn build_nuget_purl(name: &str, version: &str) -> Option<Purl> {
+pub(super) fn build_nuget_purl(name: &str, version: &str) -> Option<Purl> {
     Purl::new(&format!(
         "pkg:nuget/{}@{}",
         encode_purl_segment(name),
