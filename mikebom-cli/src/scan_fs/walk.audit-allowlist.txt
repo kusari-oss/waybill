@@ -14,6 +14,8 @@ mikebom-cli/src/scan_fs/package_db/maven.rs:    fn walk_rootfs_poms_skips_host_s
 mikebom-cli/src/scan_fs/package_db/maven.rs:    fn walk_rootfs_poms_truncates_at_cap() {
 mikebom-cli/src/scan_fs/package_db/maven.rs:    pub(crate) fn walk_rootfs_poms(
 mikebom-cli/src/scan_fs/package_db/maven.rs:fn walk_m2_jars(repo_cache: &MavenRepoCache) -> Vec<PathBuf> {
+mikebom-cli/src/scan_fs/package_db/maven.rs:fn walk_nested_archives_in_bytes(
+mikebom-cli/src/scan_fs/package_db/maven.rs:fn walk_nested_archives_in_jar_file(
 mikebom-cli/src/scan_fs/package_db/maven.rs:pub(crate) fn walk_jar_maven_meta(archive_path: &Path) -> Vec<EmbeddedMavenMeta> {
 mikebom-cli/src/scan_fs/package_db/maven_sidecar.rs:    fn walk(dir: &Path, depth: usize, out: &mut HashMap<String, PathBuf>) {
 mikebom-cli/src/scan_fs/package_db/npm/mod.rs:    fn walk_skips_node_modules_subtrees() {

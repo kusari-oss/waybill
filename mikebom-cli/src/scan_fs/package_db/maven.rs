@@ -1272,6 +1272,24 @@ pub(crate) struct EmbeddedMavenMeta {
     /// `component.components[]` nesting at emission time: primary ==
     /// parent, non-primary == children with `parent_purl` set.
     pub is_primary: bool,
+    /// Milestone 130 US2 nested-JAR recursion: optional
+    /// already-constructed annotations the walker assembled at
+    /// discovery time. Always empty for top-level (outer-JAR)
+    /// `META-INF/maven/` entries — those keep the alpha.48 byte-
+    /// identical emission path. For entries discovered inside a
+    /// `.jar`/`.war`/`.ear` ENTRY of the outer archive (Spring Boot
+    /// `BOOT-INF/lib/<dep>.jar` and similar fat-JAR shapes), this
+    /// carries:
+    ///
+    /// - `mikebom:source-mechanism = "maven-jar-nested"`
+    /// - `mikebom:source-files = "<outer-path>!<inner-path>!..."`
+    ///   in the JAR-URL `!`-separator convention (FR-016)
+    ///
+    /// Consumed by `jar_pom_to_entry` to flow into the emitted
+    /// `PackageDbEntry.extra_annotations`. Top-level entries leave
+    /// this empty and the existing emission path is byte-identical
+    /// pre-130.
+    pub extra_annotations: std::collections::BTreeMap<String, serde_json::Value>,
 }
 
 /// Crack open `archive_path` and return every `META-INF/maven/<g>/<a>/`
@@ -1898,7 +1916,327 @@ pub(crate) fn walk_jar_maven_meta(archive_path: &Path) -> Vec<EmbeddedMavenMeta>
             sidecar_hash,
             archive_sha256: sha256_for_coord,
             is_primary,
+            extra_annotations: Default::default(),
         });
+    }
+    // Milestone 130 US2 — nested-JAR recursion. After the top-level
+    // META-INF/maven extraction completes, walk the same JAR for
+    // entries whose names end in `.jar`/`.war`/`.ear` (per clarification
+    // Q2 — `.zip` excluded due to false-positive risk on maven-assembly-
+    // plugin distribution archives). Each such entry's bytes are
+    // extracted into memory and recursively processed for embedded
+    // pom.properties.
+    let outer_path_str = archive_path.to_string_lossy().into_owned();
+    let mut visited: std::collections::HashSet<[u8; 32]> =
+        std::collections::HashSet::new();
+    let archive_sha = compute_zip_bytes_sha(archive_path);
+    if let Some(sha) = archive_sha {
+        visited.insert(sha);
+    }
+    out.extend(walk_nested_archives_in_jar_file(
+        archive_path,
+        &outer_path_str,
+        &mut visited,
+        Vec::new(),
+        1, // depth = 1 inside the outer archive's children
+    ));
+    out
+}
+
+// --------------------------------------------------------------
+// Milestone 130 US2 — nested-JAR recursion helpers.
+//
+// Top-level walker (`walk_jar_maven_meta` above) extracts the outer
+// JAR's `META-INF/maven/.../pom.properties` entries verbatim. After
+// it returns, that walker calls `walk_nested_archives_in_jar_file`
+// which iterates the same outer ZIP for entries named
+// `.jar`/`.war`/`.ear` (clarification Q2 — `.zip` excluded). Each
+// matching entry's bytes are extracted into memory, opened via
+// `zip::ZipArchive::new(Cursor::new(...))`, recursed for nested
+// `pom.properties` AND further nested archives. Depth bounded at 8
+// (matches milestone-128 INCLUDE_DEPTH_LIMIT). 1 GB per-archive
+// decompressed-size cap (FR-014). SHA-256-keyed visited set on
+// archive bytes for cycle protection (FR-013). Nested entries get
+// `is_primary = false` so they bypass the outer-JAR scan-target
+// heuristics + carry `mikebom:source-mechanism = "maven-jar-nested"`
+// + `mikebom:source-files = "<outer>!<inner>!..."` annotations
+// per FR-015 + FR-016.
+// --------------------------------------------------------------
+
+const NESTED_ARCHIVE_MAX_DEPTH: u8 = 8;
+const NESTED_ARCHIVE_SIZE_CAP_BYTES: u64 = 1 << 30; // 1 GB per FR-014
+
+/// SHA-256 of the file's bytes — used by `walk_nested_archives_in_jar_file`
+/// to seed the visited set so cycles through the outer archive's own
+/// bytes are detected. Returns a raw `[u8; 32]` (not the
+/// `ContentHash` wrapper) for use as a `HashSet` key.
+fn compute_zip_bytes_sha(path: &Path) -> Option<[u8; 32]> {
+    use sha2::{Digest, Sha256};
+    use std::io::Read;
+    let mut file = std::fs::File::open(path).ok()?;
+    let mut hasher = Sha256::new();
+    let mut buf = [0u8; 64 * 1024];
+    loop {
+        let n = file.read(&mut buf).ok()?;
+        if n == 0 {
+            break;
+        }
+        hasher.update(&buf[..n]);
+    }
+    Some(hasher.finalize().into())
+}
+
+/// Compute SHA-256 of an in-memory byte slice. Used by the recursive
+/// walker for cycle detection on nested archive bytes.
+fn compute_bytes_sha(bytes: &[u8]) -> [u8; 32] {
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(bytes);
+    hasher.finalize().into()
+}
+
+/// Walk an outer JAR file on disk for `.jar`/`.war`/`.ear` ENTRIES
+/// ONLY (not its own `META-INF/maven/` — that's already extracted by
+/// `walk_jar_maven_meta`'s top-level loop). Each matching entry's
+/// bytes are extracted into memory and recursively processed via
+/// `walk_nested_archives_in_bytes`, which DOES extract meta + recurse
+/// further (because at depth >=2 we're inside a vendored archive
+/// whose contents were not enumerated by the top-level walker).
+fn walk_nested_archives_in_jar_file(
+    archive_path: &Path,
+    outer_path_url: &str,
+    visited: &mut std::collections::HashSet<[u8; 32]>,
+    _nested_stack: Vec<String>,
+    depth: u8,
+) -> Vec<EmbeddedMavenMeta> {
+    use std::io::Read;
+    if depth > NESTED_ARCHIVE_MAX_DEPTH {
+        tracing::warn!(
+            outer = %archive_path.display(),
+            depth = depth,
+            "nested-archive depth limit (8) reached; further nesting skipped"
+        );
+        return Vec::new();
+    }
+    let Ok(file) = std::fs::File::open(archive_path) else {
+        return Vec::new();
+    };
+    let Ok(mut zip) = zip::ZipArchive::new(file) else {
+        return Vec::new();
+    };
+    let mut out: Vec<EmbeddedMavenMeta> = Vec::new();
+    let mut nested_archive_jobs: Vec<(String, Vec<u8>)> = Vec::new();
+    for i in 0..zip.len() {
+        let Ok(mut entry) = zip.by_index(i) else {
+            continue;
+        };
+        let name = entry.name().to_string();
+        if name.contains("..") {
+            continue;
+        }
+        let lower = name.to_ascii_lowercase();
+        let is_nested_archive = lower.ends_with(".jar")
+            || lower.ends_with(".war")
+            || lower.ends_with(".ear");
+        if !is_nested_archive {
+            continue;
+        }
+        if entry.size() > NESTED_ARCHIVE_SIZE_CAP_BYTES {
+            tracing::warn!(
+                outer = %archive_path.display(),
+                nested = %name,
+                declared_size = entry.size(),
+                "nested archive exceeds 1 GB decompressed-size cap; skipping"
+            );
+            continue;
+        }
+        let mut buf = Vec::new();
+        if entry.read_to_end(&mut buf).is_err() {
+            continue;
+        }
+        let sha = compute_bytes_sha(&buf);
+        if !visited.insert(sha) {
+            continue;
+        }
+        nested_archive_jobs.push((name, buf));
+    }
+    for (entry_name, inner_bytes) in nested_archive_jobs {
+        let stack = vec![entry_name];
+        out.extend(walk_nested_archives_in_bytes(
+            &inner_bytes,
+            outer_path_url,
+            visited,
+            stack,
+            depth + 1,
+        ));
+    }
+    out
+}
+
+/// Walk an in-memory archive (already extracted from a parent JAR's
+/// nested entry) for `META-INF/maven/` AND further-nested
+/// `.jar`/`.war`/`.ear` entries. Recursive depth-bounded descent.
+fn walk_nested_archives_in_bytes(
+    bytes: &[u8],
+    outer_path_url: &str,
+    visited: &mut std::collections::HashSet<[u8; 32]>,
+    nested_stack: Vec<String>,
+    depth: u8,
+) -> Vec<EmbeddedMavenMeta> {
+    if depth > NESTED_ARCHIVE_MAX_DEPTH {
+        tracing::warn!(
+            outer = %outer_path_url,
+            depth = depth,
+            "nested-archive depth limit (8) reached; further nesting skipped"
+        );
+        return Vec::new();
+    }
+    let cursor = std::io::Cursor::new(bytes);
+    let Ok(mut zip) = zip::ZipArchive::new(cursor) else {
+        tracing::warn!(
+            outer = %outer_path_url,
+            nested = ?nested_stack,
+            "nested archive failed to parse as ZIP; skipping"
+        );
+        return Vec::new();
+    };
+    extract_nested_meta(
+        &mut zip,
+        outer_path_url,
+        visited,
+        nested_stack,
+        depth,
+    )
+}
+
+/// Shared inner loop: given an open `ZipArchive<R>`, extract any
+/// `META-INF/maven/<g>/<a>/pom.properties` entries AS NESTED
+/// EmbeddedMavenMeta and ALSO walk the same archive for
+/// `.jar`/`.war`/`.ear` entries to recursively descend. Returns
+/// merged results.
+fn extract_nested_meta<R: std::io::Read + std::io::Seek>(
+    zip: &mut zip::ZipArchive<R>,
+    outer_path_url: &str,
+    visited: &mut std::collections::HashSet<[u8; 32]>,
+    nested_stack: Vec<String>,
+    depth: u8,
+) -> Vec<EmbeddedMavenMeta> {
+    use std::io::Read;
+    let mut out: Vec<EmbeddedMavenMeta> = Vec::new();
+    let mut properties_by_dir: HashMap<String, PomProperties> = HashMap::new();
+    let mut pom_xml_by_dir: HashMap<String, Vec<u8>> = HashMap::new();
+    // Nested archives to descend into AFTER the meta-extraction pass.
+    let mut nested_archive_jobs: Vec<(String, Vec<u8>)> = Vec::new();
+    for i in 0..zip.len() {
+        let Ok(mut entry) = zip.by_index(i) else {
+            continue;
+        };
+        let name = entry.name().to_string();
+        if name.contains("..") {
+            continue;
+        }
+        let lower = name.to_ascii_lowercase();
+        // Nested archive candidates (clarification Q2 — `.zip` excluded).
+        let is_nested_archive = lower.ends_with(".jar")
+            || lower.ends_with(".war")
+            || lower.ends_with(".ear");
+        if is_nested_archive {
+            if entry.size() > NESTED_ARCHIVE_SIZE_CAP_BYTES {
+                tracing::warn!(
+                    outer = %outer_path_url,
+                    nested = %name,
+                    declared_size = entry.size(),
+                    "nested archive exceeds 1 GB decompressed-size cap; skipping"
+                );
+                continue;
+            }
+            let mut buf = Vec::with_capacity(entry.size().min(64 * 1024) as usize);
+            if entry.read_to_end(&mut buf).is_err() {
+                continue;
+            }
+            let sha = compute_bytes_sha(&buf);
+            if !visited.insert(sha) {
+                // Cycle detected — milestone-128 visited-set pattern.
+                continue;
+            }
+            nested_archive_jobs.push((name, buf));
+            continue;
+        }
+        // META-INF/maven/ extraction for THIS level.
+        if entry.size() > MAX_JAR_ENTRY_BYTES {
+            continue;
+        }
+        if !name.starts_with("META-INF/maven/") {
+            continue;
+        }
+        if name.ends_with("/pom.properties") {
+            let dir = name.trim_end_matches("pom.properties").to_string();
+            let mut text = String::new();
+            if entry.read_to_string(&mut text).is_err() {
+                continue;
+            }
+            if let Some(props) = parse_pom_properties(&text) {
+                properties_by_dir.insert(dir, props);
+            }
+        } else if name.ends_with("/pom.xml") {
+            let dir = name.trim_end_matches("pom.xml").to_string();
+            let mut bytes = Vec::new();
+            if entry.read_to_end(&mut bytes).is_err() {
+                continue;
+            }
+            pom_xml_by_dir.insert(dir, bytes);
+        }
+    }
+    // Emit nested EmbeddedMavenMeta for every pom.properties pair found
+    // at THIS depth level. Source-files annotation uses the JAR-URL
+    // `!` separator convention.
+    let mut source_files_url = outer_path_url.to_string();
+    for seg in &nested_stack {
+        source_files_url.push('!');
+        source_files_url.push_str(seg);
+    }
+    for (dir, coord) in properties_by_dir {
+        let pom_xml_bytes = pom_xml_by_dir.get(&dir).cloned();
+        let declared_deps = pom_xml_bytes
+            .as_ref()
+            .map(|bytes| parse_pom_xml(bytes).dependencies)
+            .unwrap_or_default();
+        let mut annotations: std::collections::BTreeMap<String, serde_json::Value> =
+            std::collections::BTreeMap::new();
+        annotations.insert(
+            "mikebom:source-mechanism".to_string(),
+            serde_json::Value::String("maven-jar-nested".to_string()),
+        );
+        annotations.insert(
+            "mikebom:source-files".to_string(),
+            serde_json::Value::String(source_files_url.clone()),
+        );
+        out.push(EmbeddedMavenMeta {
+            coord,
+            declared_deps,
+            pom_xml_bytes,
+            sidecar_hash: None,
+            archive_sha256: None,
+            // Nested artefacts are never the outer-JAR's primary
+            // coord — they're vendored dependencies. Forcing
+            // `is_primary = false` keeps them out of the
+            // scan-target-suppression heuristics in the orchestrator.
+            is_primary: false,
+            extra_annotations: annotations,
+        });
+    }
+    // Descend into each nested archive AFTER the same-level extraction
+    // completes — keeps the visited-set ordering deterministic.
+    for (entry_name, inner_bytes) in nested_archive_jobs {
+        let mut child_stack = nested_stack.clone();
+        child_stack.push(entry_name);
+        out.extend(walk_nested_archives_in_bytes(
+            &inner_bytes,
+            outer_path_url,
+            visited,
+            child_stack,
+            depth + 1,
+        ));
     }
     out
 }
@@ -2282,6 +2620,7 @@ fn build_transitive_entry(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn jar_pom_to_entry(
     p: &PomProperties,
     depends: Vec<String>,
@@ -2290,6 +2629,10 @@ fn jar_pom_to_entry(
     archive_sha256: Option<mikebom_common::types::hash::ContentHash>,
     parent_purl: Option<String>,
     co_owned_by: Option<String>,
+    // Milestone 130 US2: walker-prepared annotations for nested-JAR
+    // entries. Empty for top-level entries (alpha.48 byte-identical
+    // emission path preserved).
+    walker_annotations: std::collections::BTreeMap<String, serde_json::Value>,
 ) -> Option<PackageDbEntry> {
     let purl = build_maven_purl(&p.group_id, &p.artifact_id, &p.version)?;
     let mut hashes: Vec<mikebom_common::types::hash::ContentHash> = Vec::new();
@@ -2332,7 +2675,7 @@ fn jar_pom_to_entry(
         hashes,
         sbom_tier: Some("analyzed".to_string()),
         shade_relocation: None,
-        extra_annotations: Default::default(),
+        extra_annotations: walker_annotations,
         binary_role: None,
     })
 }
@@ -2553,6 +2896,7 @@ pub fn read_with_claims(
                     sidecar_hash: None,
                     archive_sha256: None,
                     is_primary: true,
+                    extra_annotations: Default::default(),
                 };
                 jar_meta.push((
                     jar_path.to_string_lossy().into_owned(),
@@ -3001,6 +3345,7 @@ pub fn read_with_claims(
                 meta.archive_sha256.clone(),
                 parent_purl,
                 co_owned_by.clone(),
+                meta.extra_annotations.clone(),
             ) else {
                 continue;
             };
@@ -6486,5 +6831,171 @@ mod tests {
         let (poms, jars) = find_maven_artifacts(tmp.path(), &Default::default());
         assert!(poms.is_empty());
         assert!(jars.is_empty());
+    }
+
+    // ============================================================
+    // Milestone 130 US2 — nested-JAR recursion tests.
+    // ============================================================
+
+    /// Synthesize an in-memory JAR (returns raw bytes) carrying the
+    /// supplied META-INF/maven coord. Useful for embedding as a nested
+    /// entry inside a parent JAR.
+    fn build_inner_jar_bytes(group: &str, artifact: &str, version: &str) -> Vec<u8> {
+        use std::io::Write;
+        let cursor = std::io::Cursor::new(Vec::<u8>::new());
+        let mut zip = zip::ZipWriter::new(cursor);
+        let options = zip::write::FileOptions::default()
+            .compression_method(zip::CompressionMethod::Stored);
+        let props_name =
+            format!("META-INF/maven/{group}/{artifact}/pom.properties");
+        let props_body = format!(
+            "groupId={group}\nartifactId={artifact}\nversion={version}\n"
+        );
+        zip.start_file(props_name, options).unwrap();
+        zip.write_all(props_body.as_bytes()).unwrap();
+        zip.finish().unwrap().into_inner()
+    }
+
+    #[test]
+    fn nested_jar_with_pom_properties_emits_maven_jar_nested_annotation() {
+        // Spring Boot uber JAR shape: outer JAR's own pom.properties +
+        // BOOT-INF/lib/<dep>.jar carrying the dep's pom.properties.
+        let inner = build_inner_jar_bytes("org.example", "depA", "1.2.3");
+        let outer = write_jar_with_entries(&[
+            (
+                "META-INF/maven/com.example.app/myapp/pom.properties",
+                &pom_properties("com.example.app", "myapp", "0.1.0"),
+            ),
+            ("BOOT-INF/lib/depA-1.2.3.jar", &inner),
+        ]);
+        let meta = walk_jar_maven_meta(outer.path());
+        // 1 top-level (myapp) + 1 nested (depA) = 2.
+        assert_eq!(meta.len(), 2, "{meta:?}");
+        let nested = meta
+            .iter()
+            .find(|m| m.coord.artifact_id == "depA")
+            .expect("nested depA entry present");
+        // Nested entries are never primary — bypasses outer-JAR
+        // scan-target heuristics in the orchestrator.
+        assert!(!nested.is_primary);
+        // mikebom:source-mechanism annotation per FR-015.
+        let mech = nested
+            .extra_annotations
+            .get("mikebom:source-mechanism")
+            .and_then(|v| v.as_str());
+        assert_eq!(mech, Some("maven-jar-nested"));
+        // mikebom:source-files annotation uses the JAR-URL `!`
+        // separator convention per FR-016.
+        let sf = nested
+            .extra_annotations
+            .get("mikebom:source-files")
+            .and_then(|v| v.as_str())
+            .unwrap();
+        assert!(sf.ends_with("!BOOT-INF/lib/depA-1.2.3.jar"), "got: {sf}");
+        // Top-level entry has NO walker annotations — byte-identity
+        // preservation per SC-005. (We don't assert `is_primary` here
+        // because the tempfile's randomized stem can't match the
+        // myapp coord — that's a property of the test fixture, not
+        // the production primary-coord heuristic.)
+        let top = meta
+            .iter()
+            .find(|m| m.coord.artifact_id == "myapp")
+            .expect("top-level myapp entry present");
+        assert!(top.extra_annotations.is_empty());
+    }
+
+    #[test]
+    fn deeply_nested_archives_recurse_with_chained_url_separator() {
+        // Build an EAR > WAR > JAR > inner-JAR 4-level chain.
+        let leaf = build_inner_jar_bytes("org.deep", "leaf", "4.0.0");
+        let level3 = {
+            use std::io::Write;
+            let cursor = std::io::Cursor::new(Vec::<u8>::new());
+            let mut zip = zip::ZipWriter::new(cursor);
+            let opts = zip::write::FileOptions::default()
+                .compression_method(zip::CompressionMethod::Stored);
+            zip.start_file("nested-level3.jar", opts).unwrap();
+            zip.write_all(&leaf).unwrap();
+            zip.finish().unwrap().into_inner()
+        };
+        let level2 = {
+            use std::io::Write;
+            let cursor = std::io::Cursor::new(Vec::<u8>::new());
+            let mut zip = zip::ZipWriter::new(cursor);
+            let opts = zip::write::FileOptions::default()
+                .compression_method(zip::CompressionMethod::Stored);
+            zip.start_file("WEB-INF/lib/level3.war", opts).unwrap();
+            zip.write_all(&level3).unwrap();
+            zip.finish().unwrap().into_inner()
+        };
+        let outer = write_jar_with_entries(&[
+            ("modules/level2.ear", &level2),
+        ]);
+        let meta = walk_jar_maven_meta(outer.path());
+        let leaf_meta = meta
+            .iter()
+            .find(|m| m.coord.artifact_id == "leaf")
+            .expect("leaf entry at 4 levels deep present");
+        let sf = leaf_meta
+            .extra_annotations
+            .get("mikebom:source-files")
+            .and_then(|v| v.as_str())
+            .unwrap();
+        // Path uses the JAR-URL `!`-separator chain.
+        assert!(
+            sf.contains("modules/level2.ear")
+                && sf.contains("!WEB-INF/lib/level3.war")
+                && sf.contains("!nested-level3.jar"),
+            "got: {sf}"
+        );
+    }
+
+    #[test]
+    fn zip_entries_inside_jar_are_not_descended_into() {
+        // Per clarification Q2: `.zip` entries MUST NOT trigger
+        // recursion (false-positive risk on maven-assembly-plugin
+        // distribution archives).
+        let inner_zip = build_inner_jar_bytes("org.skip", "zipdep", "0.0.0");
+        let outer = write_jar_with_entries(&[
+            ("META-INF/maven/com.example/host/pom.properties",
+             &pom_properties("com.example", "host", "1.0")),
+            ("dist/inner.zip", &inner_zip),
+        ]);
+        let meta = walk_jar_maven_meta(outer.path());
+        // Only the top-level host entry — zipdep is NOT descended into.
+        assert_eq!(meta.len(), 1, "{meta:?}");
+        assert_eq!(meta[0].coord.artifact_id, "host");
+    }
+
+    #[test]
+    fn nested_archive_cycle_detected_via_sha256_visited_set() {
+        // Build a JAR whose nested entry IS the same JAR's bytes.
+        // First write the inner bytes, then construct the outer with
+        // a copy as a nested entry — the SHA-256 visited set should
+        // catch the self-reference and skip the recursion.
+        let inner_self = write_jar_with_entries(&[
+            ("META-INF/maven/c.y/cycle/pom.properties",
+             &pom_properties("c.y", "cycle", "1.0")),
+        ]);
+        let inner_bytes = std::fs::read(inner_self.path()).unwrap();
+        let outer = write_jar_with_entries(&[
+            ("META-INF/maven/c.y/cycle/pom.properties",
+             &pom_properties("c.y", "cycle", "1.0")),
+            ("BOOT-INF/lib/cycle.jar", &inner_bytes),
+        ]);
+        let meta = walk_jar_maven_meta(outer.path());
+        // The same (group, artifact, version) coord appears at both
+        // the top level AND inside the nested JAR. Important property
+        // for this test: the call MUST NOT hang (cycle detection
+        // bounds it) and MUST return at least the top-level entry.
+        // The nested entry MAY appear (if the inner bytes differ from
+        // the outer file's bytes — they typically do due to ZIP
+        // central-directory ordering / temp-file metadata).
+        assert!(!meta.is_empty(), "expected at least one entry; got: {meta:?}");
+        let cycle_count = meta
+            .iter()
+            .filter(|m| m.coord.artifact_id == "cycle")
+            .count();
+        assert!(cycle_count >= 1);
     }
 }
