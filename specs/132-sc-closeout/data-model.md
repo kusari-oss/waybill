@@ -207,50 +207,54 @@ SPDX IDs are validated against the existing
 time via a `#[test]` in the file (matches milestone 131's existing test pattern). A
 typo in a new SPDX ID fails the unit test, NOT a production-time scan.
 
-## Entity: License-enrichment dispatch (US3 Path C — deps.dev cargo support)
+## Entity: License-enrichment dispatch (US3 Path C — deps.dev online enrichment)
 
-**Source location**: Extension of the existing milestone-012 scaffolding at
-`mikebom-cli/src/enrich/depsdev_source.rs`. Milestone 012 wired nuget already; this
-milestone adds the `pkg:cargo` arm to the `match purl.ecosystem()` dispatch.
-**Driven by**: FR-013 (Path C primary), FR-014.
+**Source location** (CORRECTED 2026-06-19): the entirety of Path C — including the
+cargo arm I claimed needed to be added — **already exists** in
+`mikebom-cli/src/enrich/depsdev_source.rs` and `mikebom-cli/src/enrich/deps_dev_system.rs`.
+The actual implementation predates milestone 132 and covers every deps.dev-indexed
+ecosystem (cargo, npm, pypi, golang, maven, nuget).
 
-### Shape
+**Driven by**: FR-013 Path C (verification), FR-014 (measurable outcome).
 
-```rust
-fn depsdev_endpoint(ecosystem: &str, name: &str, version: &str) -> Option<String> {
-    match ecosystem {
-        "cargo" => Some(format!(
-            "https://api.deps.dev/v3/systems/CARGO/packages/{}/versions/{}",
-            urlencode(name), urlencode(version)
-        )),
-        "nuget" => Some(format!(           // existing milestone-012 arm
-            "https://api.deps.dev/v3/systems/NUGET/packages/{}/versions/{}",
-            urlencode(name), urlencode(version)
-        )),
-        _ => None,
-    }
-}
-```
+### Actual control surface
 
-### Validation
+| Operator action | Effect on Path C |
+|---|---|
+| Default invocation (`mikebom sbom scan --image ...`) | Path C runs (`enrich_cfg.deps_dev = true` from `resolve_enrich_sources` at `scan_cmd.rs:1145`). |
+| `--offline` | Path C is a no-op (the source's internal `if source.offline { return 0; }` short-circuit at `depsdev_source.rs:157`). All other enrichments also skip. |
+| `--no-deps-dev` | Path C is skipped; other enrichments (ClearlyDefined, deps.dev dep-graph) still run. |
+| `--enrich-sources clearly-defined` (allowlist mode without `deps-dev`) | Path C is skipped. |
 
-- Network call is conditional on `--offline=false` AND on the new
-  `--enrich-licenses=depsdev` flag (off by default per Principle III "Fail Closed" —
-  operators explicitly opt in to network access).
-- Response is deserialized into the existing `DepsDevLicense` newtype; the response's
-  `spdxExpression` field passes
-  `mikebom_common::types::license::SpdxExpression::try_canonical` before being attached
-  to the component (rejecting malformed responses; Principle IX accuracy).
-- HTTP errors fall through to the existing milestone-012 retry / cache /
-  transparency-annotation paths.
+There is **no** `--enrich-licenses=depsdev` flag and never was. My original spec
+text claiming this was a fabrication.
 
-### Emission targets
+### Existing implementation traces
+
+- `scan_fs/mod.rs::scan_cmd` line 1927: `enrich_components(&deps_dev_source, &mut components).await`
+- `enrich/depsdev_source.rs::enrich_components` (line 156): iterates every
+  component, looks up `deps_dev_system_for(ecosystem)`, hits the deps.dev API for
+  supported ecosystems, applies the result with `apply_version_info`.
+- `enrich/deps_dev_system.rs::deps_dev_system_for` (line 12): maps PURL ecosystem
+  to deps.dev system identifier. cargo, npm, pypi, golang, maven, nuget all
+  supported. deb, apk, generic, github, gem, docker silently skipped (deps.dev has
+  no data).
+- `enrich/depsdev_source.rs::apply_version_info` (line 88): runs each returned
+  license expression through `SpdxExpression::try_canonical`, de-dupes against
+  existing component licenses, stamps `component.evidence.deps_dev_match` with
+  `(system, name, version)` for provenance.
+
+### Emission shape (as actually shipped)
 
 | Format | Field |
 |---|---|
-| CycloneDX 1.6 | `components[].licenses[].license.id = <canonical SPDX expression>` AND `properties[]` entry `{name: "mikebom:license-source", value: "depsdev"}` |
-| SPDX 2.3 | `packages[].licenseConcluded = <canonical SPDX expression>` AND existing milestone-012 annotation envelope |
+| CycloneDX 1.6 | `components[].licenses[].license.id = <canonical SPDX>`; `components[].evidence.identity[]` carries the deps.dev match record |
+| SPDX 2.3 | `packages[].licenseConcluded = <canonical SPDX>`; evidence-identity carried via annotation per the existing milestone-001/012 convention |
 | SPDX 3 | `software:declaredLicense` with `LicenseExpression` element |
+
+No `mikebom:license-source = "depsdev"` annotation is emitted today; provenance
+lives in `evidence.deps_dev_match`. My original FR-013 description of the
+annotation was based on a different (now-removed) milestone-012 pattern.
 
 ## Entity: Milestone-131 spec amendment (US4)
 

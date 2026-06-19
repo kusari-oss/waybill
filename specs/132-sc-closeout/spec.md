@@ -310,27 +310,56 @@ the measured value from the actual post-131 sbom-comparison run.
   The path choice is pinned at `/speckit-plan` time based on these numbers, NOT at
   `/speckit-specify` time. Closes the assumption-driven-implementation pattern flagged in
   milestone-131 post-mortem.
-- **FR-013**: After FR-012's research deliverable completes, milestone 132 ships a
-  **combined Path A + Path C** implementation (decision recorded in
-  `research.md §License Path Analysis §Decision matrix`):
+- **FR-013** (CORRECTED 2026-06-19 — milestone 132 US3 Path C verification PR; see
+  §Plan corrections at the bottom of this section):
   - **Path A (extended PE/CLR fingerprinting)** — always on, no flag required, no
-    network. Extends the SPDX fingerprint table to include MS-PL, LGPL-2.1-only,
-    LGPL-3.0-only, LGPL-2.1-or-later, MIT-0, EPL-1.0, EPL-2.0. Runs at PE/CLR reader
-    time; populates `licenses[]` on hit. Bounded LOC.
-  - **Path C (online deps.dev enrichment for `pkg:cargo` and `pkg:nuget`)** — opt-in
-    via the new `--enrich-licenses=depsdev` flag (mutually exclusive with `--offline`).
-    Off by default per Constitution III "Fail Closed" — operators explicitly opt in to
-    network access. Runs as a post-resolution hook; only enriches components whose
-    `licenses[]` is still empty after Path A. Annotated with `mikebom:license-source =
-    "depsdev"` (existing milestone-012 provenance annotation).
+    network. Extends the existing milestone-131 `fn fingerprint_license` substring
+    matcher at `pe_clr.rs:973` with six new SPDX patterns: MS-PL, LGPL-3.0, LGPL-2.1,
+    MIT-0, EPL-2.0, EPL-1.0. Runs at PE/CLR reader time; populates `licenses[]` on
+    hit. Shipped via PR #382.
+  - **Path C (online deps.dev enrichment for every deps.dev-indexed ecosystem —
+    cargo, npm, pypi, golang, maven, nuget)** — **ALREADY SHIPPED** pre-milestone-132.
+    deps.dev license enrichment is **default ON** in `scan_fs/mod.rs::scan_cmd` (line
+    1927; gated by `enrich_cfg.deps_dev` which defaults to `true`). The ONLY thing
+    that turns it off is `--offline` (operator-set) or `--no-deps-dev` (operator-set).
+    My original FR-013 description of "opt-in via the new `--enrich-licenses=depsdev`
+    flag, off by default per Constitution III Fail Closed" was a fabricated claim
+    about the CLI surface — the actual CLI is the inverse (default-on, opt-out). The
+    milestone-132 US3 Path C deliverable is therefore not a code change; it is the
+    SC verification step (re-scan WITHOUT `--offline` and measure the resulting
+    license coverage). Existing enrichment infrastructure stamps
+    `evidence.deps_dev_match` on enriched components for provenance.
   - **Path B (rootfs-local cargo cache)** — **REJECTED**. Production container images
     do not ship `~/.cargo/registry/cache/` artifacts; projected lift on the audit image
     is ≈0. Full rejection rationale in `research.md §License Path Analysis §Path B`.
-- **FR-014**: After the combined Path A + Path C implementation per FR-013, the post-132
-  sbom-comparison License Coverage score MUST move to ≥3/5 on the pinned audit image
-  (per §Assumptions Q3), measured under `--enrich-licenses=depsdev` (online mode);
-  offline-mode scans MUST NOT regress license coverage relative to the milestone-131
-  baseline.
+- **FR-014**: License Coverage score on the pinned audit image (per §Assumptions Q3)
+  MUST move to ≥3/5. Measured outcome (PR-with-this-correction): **4/5** (mikebom
+  effectiveRate 86.3 % vs syft 3.1 %) when scanned without `--offline`. Offline-mode
+  scans MUST NOT regress license coverage relative to the milestone-131 baseline —
+  unchanged at 37.9 % / 2/5 (the Path A complement from PR #382 alone is insufficient
+  to lift the offline-mode score).
+
+### Plan corrections (2026-06-19, milestone 132 US3 Path C PR)
+
+Two fabricated claims about Path C are corrected in place above:
+
+1. **CLI surface**: the milestone-132 spec / research / data-model / quickstart
+   described Path C as gated by a "new `--enrich-licenses=depsdev` flag, off by
+   default". The actual CLI has deps.dev license enrichment **on by default** with
+   `--no-deps-dev` as the opt-out and `--enrich-sources <list>` as the allowlist
+   form. `--offline` is the global kill-switch. No new flag exists.
+2. **Scope of code change**: I claimed milestone 132 would "ship" Path C as a code
+   change ("add a `cargo` arm to the `match purl.ecosystem()` dispatch"). The cargo
+   arm — along with every other deps.dev-indexed ecosystem — was already present in
+   `enrich/deps_dev_system.rs::deps_dev_system_for` and already wired into the scan
+   pipeline pre-milestone-132. The milestone-132 US3 Path C deliverable was the
+   verification step (re-scan without `--offline`), not a code change.
+
+Both fabrications were caught during US3 implementation prep (after Path A PR #382
+merged). The first surfaced when I read the existing depsdev_source.rs scaffolding
+expecting to add a cargo arm and found `enrich_components` already iterating every
+supported ecosystem. The second surfaced when I traced the CLI flag back through
+`resolve_enrich_sources` and found `deps_dev: !args.no_deps_dev` (default true).
 
 #### US4 — Retrospective milestone-131 SC accounting
 
