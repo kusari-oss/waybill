@@ -729,6 +729,30 @@ fn is_plausible_version_string(s: &str) -> bool {
     true
 }
 
+/// Strip the SemVer §10 build-metadata suffix from an
+/// `AssemblyInformationalVersion` value and return the prefix when the
+/// prefix passes [`is_plausible_version_string`].
+///
+/// Milestone 132 US2 (FR-008 + FR-009 + FR-010): syft and similar
+/// comparators strip everything from the first `+` onward when matching
+/// `pkg:nuget` versions. mikebom keeps the verbatim Informational per
+/// SemVer §10 but ALSO emits this stripped form alongside so consumers
+/// can key on either.
+///
+/// - Returns `None` when `s` contains no `+` (FR-009 — no semantic content
+///   to surface when there's no build metadata to strip).
+/// - Returns `None` when the stripped prefix fails the milestone-131
+///   `is_plausible_version_string` sanity filter (FR-010 — silent skip
+///   rather than emit garbage).
+fn strip_informational_build_metadata(s: &str) -> Option<&str> {
+    let (prefix, _build_meta) = s.split_once('+')?;
+    if is_plausible_version_string(prefix) {
+        Some(prefix)
+    } else {
+        None
+    }
+}
+
 /// Real managed-assembly names: start with a letter, contain only
 /// `[A-Za-z0-9._-]`, are at least 2 characters long, and contain at
 /// least one letter (rejects pure-digit or pure-punctuation garbage).
@@ -1117,6 +1141,17 @@ impl AssemblyAccumulator {
                     "mikebom:assembly-version-informational".to_string(),
                     serde_json::Value::String(v.clone()),
                 );
+                // Milestone 132 US2 (FR-008): companion annotation carrying
+                // the InformationalVersion with the SemVer §10 build-metadata
+                // suffix removed. FR-009 (no `+` → skip) and FR-010 (stripped
+                // prefix re-runs sanity filter) are enforced inside
+                // strip_informational_build_metadata.
+                if let Some(stripped) = strip_informational_build_metadata(v) {
+                    extra_annotations.insert(
+                        "mikebom:assembly-version-informational-stripped".to_string(),
+                        serde_json::Value::String(stripped.to_string()),
+                    );
+                }
             }
             if let Some(v) = &acc.file_version {
                 extra_annotations.insert(
@@ -1465,6 +1500,43 @@ mod tests {
         assert!(is_plausible_version_string("1.2.3-rc.1"));
         assert!(is_plausible_version_string("8.0.27-servicing.26230.7+sha.a1b2c3d"));
         assert!(is_plausible_version_string("8.0.27.0"));
+    }
+
+    #[test]
+    fn strip_informational_build_metadata_plus_sha() {
+        // FR-008 happy path: split-once on first `+`, return prefix.
+        assert_eq!(
+            strip_informational_build_metadata(
+                "4.8.0-7.25569.25+38896ab4abcdef0123456789",
+            ),
+            Some("4.8.0-7.25569.25"),
+        );
+    }
+
+    #[test]
+    fn strip_informational_build_metadata_no_plus_returns_none() {
+        // FR-009: no `+` separator → no stripped annotation to emit.
+        assert_eq!(strip_informational_build_metadata("5.0.0"), None);
+        assert_eq!(strip_informational_build_metadata("1.2.3-rc.1"), None);
+    }
+
+    #[test]
+    fn strip_informational_build_metadata_multiple_plus_uses_first() {
+        // SemVer §10: everything from the FIRST `+` onward is build
+        // metadata; mikebom MUST NOT interpret further.
+        assert_eq!(
+            strip_informational_build_metadata("1.2.3+meta+more"),
+            Some("1.2.3"),
+        );
+    }
+
+    #[test]
+    fn strip_informational_build_metadata_prefix_sanity_fail_returns_none() {
+        // FR-010: prefix re-runs is_plausible_version_string. Bare "+sha"
+        // means prefix is empty → empty fails sanity → silent skip.
+        assert_eq!(strip_informational_build_metadata("+sha"), None);
+        // Prefix is single digit with no separator → fails sanity.
+        assert_eq!(strip_informational_build_metadata("7+meta"), None);
     }
 
     #[test]

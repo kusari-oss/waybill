@@ -7,6 +7,73 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Stripped-Informational version annotation for syft-parity comparisons (milestone 132 US2)
+
+**Discrete deliverable**: implements FR-008 (companion annotation emission). **Does NOT
+close SC-002** (`VERSION_MISMATCH < 50`) — that target is unreachable from FR-008
+alone and is documented for a follow-up PR. See §SC-002 reality check below.
+
+Of the 389 mismatches measured against the milestone-132 MVP scorecard
+(`/tmp/mb-rp-132-mvp.scorecard.json`), 380 are `pkg:nuget` components. 321 of those
+have a `+sha` build-metadata suffix in mikebom's version that syft strips. mikebom
+emits the verbatim `AssemblyInformationalVersion` per SemVer §10 ("build metadata
+SHOULD be ignored when determining version precedence" but is permitted in the
+representation); syft strips at the first `+`. Both choices are defensible. This PR
+makes the stripped form available alongside the verbatim so consumers comparing
+mikebom against syft can key on either representation — **without changing what's
+in `components[].version`**, which is what every existing downstream tool reads.
+
+**Behavior change (additive)**: every PE/CLR-emitted `pkg:nuget` component carrying
+the existing `mikebom:assembly-version-informational` annotation now ALSO carries a
+companion `mikebom:assembly-version-informational-stripped` annotation when:
+
+- the source value contains a `+` (FR-009: no `+` → no semantic content to surface,
+  annotation skipped); AND
+- the prefix passes the milestone-131 `is_plausible_version_string` sanity filter
+  (FR-010: stripped form re-runs sanity, silent skip on failure).
+
+**Standards-native audit (Constitution Principle V v1.4.0)**: CDX 1.6
+`components[].version`, SPDX 2.3 `packages[].versionInfo`, SPDX 3 `software:version`
+are all single canonical-version slots — no native field expresses "alternate
+canonical representation" alongside a primary version. The parity-bridging `mikebom:*`
+annotation is justified; new C87 row added to
+`docs/reference/sbom-format-mapping.md` with the audit clause inline (cites the three
+formats' native slots and their inability to carry an alternate representation).
+
+**Tests** (5 new): `strip_informational_build_metadata_plus_sha` (FR-008 happy path);
+`strip_informational_build_metadata_no_plus_returns_none` (FR-009); `…_multiple_plus_uses_first`
+(SemVer §10 first-`+` rule); `…_prefix_sanity_fail_returns_none` (FR-010 — `"+sha"`
+empty-prefix + `"7+meta"` single-digit-no-separator both rejected).
+
+**Helper**: `strip_informational_build_metadata(&str) -> Option<&str>` placed
+adjacent to `is_plausible_version_string` in `pe_clr.rs` and called from the
+existing `mikebom:assembly-version-informational` emission site in `read()`.
+
+**§SC-002 reality check**: `sbom-comparison`'s `versions.mismatch` count keys on
+the CDX `components[].version` field (resolved via `effectiveVersion(p)` in
+`pkg/compare/versions.go`, then normalized only by `strings.TrimPrefix(s, "v")` in
+`pkg/compare/packages.go::normVersion`). It does NOT read mikebom annotations.
+This PR adds the annotation but does NOT change `components[].version`, so the
+scorecard mismatch count stays at ~389 — **SC-002 is not moved by this PR alone**.
+
+The natural follow-up is a 3-line version-ladder swap in `AssemblyAccumulator::flatten`
+that prefers the stripped form for `components[].version` when Informational has a
+`+`, while keeping the verbatim available in the existing
+`mikebom:assembly-version-informational` annotation. Projected impact based on the
+389-mismatch sample: 209 mismatches resolved (`stripped == syft.version` exactly),
+112 still differ after strip (different version FIELDS — milestone-129 Q3 chose
+`Informational` while syft picks `FileVersion`'s 4-tuple — closing those requires a
+separate design decision, see milestone-132 spec §Honest accounting), 59 nuget
+mismatches with no `+` (same field-choice issue, no `+` to strip), 9 unrelated. So
+the projected ceiling for SC-002 movement via mikebom-side changes alone is from 389
+to ~180 — still misses <50, which would require either matching syft's
+`FileVersion` choice (loses milestone-129 Q3 intent) or patching `sbom-comparison`'s
+`normVersion` to read `mikebom:assembly-version-informational-stripped`. Both
+options are characterized for milestone 133.
+
+**Pinned audit baseline** (unchanged from milestone-132 MVP PR #379):
+`767397973649.dkr.ecr.us-east-1.amazonaws.com/remediation-planner@sha256:4e7b05811ce4885d8a7183819b4e0e209662784fe24b7553ceea3d149e3c719c`.
+
 ### Supplier-name backfill via canonical PURL-ecosystem table (milestone 132 US1 + US4)
 
 Closes milestone-131 SC-004 (Supplier Attribution) which was claimed at PR-merge time but

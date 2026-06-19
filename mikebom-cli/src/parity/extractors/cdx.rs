@@ -749,6 +749,7 @@ cdx_anno!(c83_cdx, "mikebom:yocto-class-extend",        component);
 cdx_anno!(c84_cdx, "mikebom:yocto-overrides-merged",    component);
 cdx_anno!(c85_cdx, "mikebom:yocto-recipe-name",         component);
 cdx_anno!(c86_cdx, "mikebom:yocto-recipe-version",      component);
+cdx_anno!(c87_cdx, "mikebom:assembly-version-informational-stripped", component);
 
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)

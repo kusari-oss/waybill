@@ -526,6 +526,7 @@ spdx23_anno!(c83_spdx23, "mikebom:yocto-class-extend",        component);
 spdx23_anno!(c84_spdx23, "mikebom:yocto-overrides-merged",    component);
 spdx23_anno!(c85_spdx23, "mikebom:yocto-recipe-name",         component);
 spdx23_anno!(c86_spdx23, "mikebom:yocto-recipe-version",      component);
+spdx23_anno!(c87_spdx23, "mikebom:assembly-version-informational-stripped", component);
 
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-Package
 // envelope carrying the JSON-encoded array of conflict records.
