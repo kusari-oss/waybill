@@ -7,6 +7,68 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### PE/CLR managed-assembly metadata reader (milestone 130 US3, Phase A)
+
+Closes the third and final track in milestone 130: extracting NuGet package coordinates from `.dll`
+files in the rootfs that carry CLR managed-assembly metadata. On .NET images that ship the SDK or
+runtime store, many managed assemblies have no neighboring `.deps.json` declaration — reference
+assemblies under `/usr/share/dotnet/packs/Microsoft.AspNetCore.App.Ref/<ver>/ref/net8.0/`, MSBuild
+task DLLs, CLI host extensions, and the FSharp toolchain. Milestone 129's `.deps.json` reader can't
+see them.
+
+**New module** `mikebom-cli/src/scan_fs/package_db/nuget/pe_clr.rs` (~580 LOC):
+
+- Walks the rootfs for `*.dll` via `safe_walk` (milestone 114).
+- Parses each as a PE via `object` 0.36's `PeFile{32,64}` primitives.
+- Gates on `IMAGE_OPTIONAL_HEADER.DataDirectory[14]` (the `IMAGE_COR20_HEADER` pointer per
+  ECMA-335 §II.25.3.3) — non-managed Win32 DLLs are silently skipped per FR-022.
+- Reads the metadata root (`BSJB` signature + stream headers per §II.24.2.1).
+- Locates the `#~` tables stream and `#Strings` heap.
+- Parses the `Assembly` table (token 0x20) row 0 per §II.22 to extract `Name` + Version 4-tuple +
+  `Culture`.
+- Emits one `pkg:nuget/<name>@<X.Y.Z.W>` component per unique `(AssemblyName, AssemblyVersion)`
+  pair, with resource-assembly culture variants collapsed via an intra-reader `AssemblyAccumulator`
+  per FR-024 + the 2026-06-18 clarification Q1.
+
+**Annotations emitted**:
+
+- `mikebom:source-mechanism = "dotnet-assembly-metadata"`
+- `mikebom:assembly-version-runtime` carries the 4-tuple
+- `mikebom:assembly-cultures` carries the comma-joined sorted set of non-"neutral" cultures
+  (omitted entirely when the collapsed component has only the "neutral" culture)
+- `mikebom:sbom-tier = "image"`
+
+**Scope notes (Phase A)**: The reader extracts the `AssemblyVersion` 4-tuple from the Assembly
+table. `AssemblyInformationalVersionAttribute` and `AssemblyFileVersionAttribute` (the upper rungs
+of the milestone-129 Q3 version-ladder) require walking the `CustomAttribute` table (token 0x0C)
+through `MemberRef` and `TypeRef` resolution — deferred to a follow-up milestone. Coverage with
+Phase A alone is meaningful: the audit image's syft baseline shows 635 unique `pkg:nuget`
+components; mikebom now emits 819 unique (184 from `.deps.json` + 635 from PE/CLR), exceeding the
+syft superset.
+
+**Row-size sanity check**: ECMA-335 metadata-table row widths depend on heap-size flags AND on
+coded-index widths derived from row counts of other tables. The Phase A implementation is a
+best-effort approximation of these widths — for some assemblies the row offset misaligns and the
+`Name` index reads from the wrong byte position, producing a garbage string (single digit, leading
+underscore, or what looks like a dotted assembly path in the Culture slot). A sanity-check filter
+at `is_plausible_assembly_name` rejects these false positives: the name must start with an ASCII
+letter, contain only `[A-Za-z0-9._\-+]`, and have at least 2 letter characters. A corresponding
+`looks_like_assembly_name` check on the Culture field rejects mis-shifted reads. Net result on the
+audit image: 681 raw emissions → 635 after filter (46 garbage rejected). Phase B (full
+table-width computation per §II.22) is tracked for a follow-up.
+
+**Byte-identity preserved** across the 33 alpha.48 goldens. For images without managed `.dll`
+files (pure-Go, pure-Python, etc.), the reader is a no-op.
+
+**8 unit tests + audit-image end-to-end verification**:
+- `version_4tuple_display_dot_separates`
+- `u_le_helpers_bounded_check`
+- `read_string_heap_returns_null_terminated` / `read_string_heap_empty_at_zero`
+- `parse_managed_assembly_returns_none_for_non_pe_bytes` (silent skip on native PEs)
+- `accumulator_dedups_same_name_version_across_cultures` (FR-024)
+- `accumulator_omits_assembly_cultures_when_only_neutral` (no annotation when set is empty)
+- `empty_rootfs_emits_no_entries`
+
 ### Maven nested-JAR recursion (milestone 130 US2)
 
 Extends the existing milestone-009 maven JAR reader with depth-bounded recursive descent into nested

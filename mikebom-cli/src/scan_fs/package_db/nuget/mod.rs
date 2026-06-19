@@ -26,6 +26,7 @@ mod csproj;
 mod deps_json;
 mod directory_packages_props;
 mod packages_lock;
+mod pe_clr;
 mod private_assets;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -57,6 +58,14 @@ pub fn read(
     // nuget gap surfaced by the remediation-planner image audit
     // where no source manifests are present.
     out.extend(deps_json::read(rootfs, exclude_set));
+    // Milestone 130 US3: walk the rootfs for `*.dll` files carrying
+    // CLR managed-assembly metadata (PE files with a non-zero
+    // IMAGE_OPTIONAL_HEADER.DataDirectory[14] / COR20 header). Closes
+    // the .NET reference-assemblies + MSBuild-tasks-DLL gap on
+    // images that ship the dotnet SDK or runtime store. Resource
+    // assemblies (de/fr/ja/... resources.dll) dedup per FR-024 via
+    // an intra-reader culture-set accumulator.
+    out.extend(pe_clr::read(rootfs, exclude_set));
     out
 }
 
