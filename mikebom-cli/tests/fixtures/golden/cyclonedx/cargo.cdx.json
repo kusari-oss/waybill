@@ -18,6 +18,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/anyhow/1.0.80"
+        }
+      ],
       "name": "anyhow",
       "properties": [
         {
@@ -50,6 +56,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/my-app/0.1.0"
+        }
+      ],
       "name": "my-app",
       "properties": [
         {
@@ -86,6 +98,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/my-fork/0.1.0"
+        }
+      ],
       "name": "my-fork",
       "properties": [
         {
@@ -122,6 +140,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/proc-macro2/1.0.76"
+        }
+      ],
       "name": "proc-macro2",
       "properties": [
         {
@@ -154,6 +178,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/quote/1.0.35"
+        }
+      ],
       "name": "quote",
       "properties": [
         {
@@ -186,6 +216,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/serde/1.0.197"
+        }
+      ],
       "name": "serde",
       "properties": [
         {
@@ -218,6 +254,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/serde_derive/1.0.197"
+        }
+      ],
       "name": "serde_derive",
       "properties": [
         {
@@ -250,6 +292,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/syn/2.0.48"
+        }
+      ],
       "name": "syn",
       "properties": [
         {
@@ -282,6 +330,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/unicode-ident/1.0.12"
+        }
+      ],
       "name": "unicode-ident",
       "properties": [
         {
@@ -314,6 +368,12 @@
           }
         ]
       },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/workspace-local/0.1.0"
+        }
+      ],
       "name": "workspace-local",
       "properties": [
         {

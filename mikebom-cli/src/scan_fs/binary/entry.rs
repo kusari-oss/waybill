@@ -338,6 +338,20 @@ pub(super) fn cargo_auditable_packages_to_entries(
                     serde_json::Value::String(pkg.source.clone()),
                 );
             }
+            // Milestone 131 US3 (FR-020 + C98): when the source field
+            // carries a parseable `git+https://...` URL, extract it
+            // (stripping the `git+` prefix, any trailing `.git`, and
+            // the `#<rev>` fragment) and stash under
+            // `mikebom:cargo-vcs-source-url`. The downstream
+            // `external_refs_from_purl` helper at scan_fs/mod.rs reads
+            // this annotation to emit a `vcs`-type ExternalReference
+            // on the resolved component.
+            if let Some(vcs_url) = parse_cargo_auditable_git_source(&pkg.source) {
+                extra.insert(
+                    "mikebom:cargo-vcs-source-url".to_string(),
+                    serde_json::Value::String(vcs_url),
+                );
+            }
             Some(PackageDbEntry {
                 build_inclusion: None,
                 purl,
@@ -389,6 +403,31 @@ pub(super) fn cargo_auditable_packages_to_entries(
     });
 
     entries
+}
+
+/// Milestone 131 US3 (FR-020): parse a cargo-auditable `source` field
+/// for a `git+https://...` URL and return the cleaned URL. Strips the
+/// `git+` prefix, any trailing `.git`, and the `#<rev>` fragment per
+/// CDX best practice. Returns `None` when the source field isn't a
+/// git URL (registry/local/unknown all return None).
+///
+/// Examples:
+/// - `"git+https://github.com/serde-rs/serde.git#a1b2c3d"` → `Some("https://github.com/serde-rs/serde")`
+/// - `"git+https://gitlab.com/foo/bar"` → `Some("https://gitlab.com/foo/bar")`
+/// - `"registry"` / `"local"` / `"unknown"` → `None`
+pub(super) fn parse_cargo_auditable_git_source(source: &str) -> Option<String> {
+    let stripped = source.strip_prefix("git+")?;
+    // Drop the #<rev> fragment if present.
+    let no_fragment = stripped.split('#').next().unwrap_or(stripped);
+    // Drop trailing `.git` if present.
+    let no_dotgit = no_fragment
+        .strip_suffix(".git")
+        .unwrap_or(no_fragment);
+    // Sanity: must look like an http(s) URL.
+    if !no_dotgit.starts_with("https://") && !no_dotgit.starts_with("http://") {
+        return None;
+    }
+    Some(no_dotgit.to_string())
 }
 
 /// Cross-format scan result. Common fields populated from all three
@@ -1515,5 +1554,87 @@ mod tests {
         assert!(!entries[0]
             .extra_annotations
             .contains_key("mikebom:cargo-auditable-kind"));
+    }
+
+    // ============================================================
+    // Milestone 131 US3 — parse_cargo_auditable_git_source.
+    // ============================================================
+
+    #[test]
+    fn parse_git_source_strips_prefix_and_rev_fragment() {
+        let out = parse_cargo_auditable_git_source(
+            "git+https://github.com/serde-rs/serde.git#a1b2c3d4e5f6",
+        );
+        assert_eq!(out, Some("https://github.com/serde-rs/serde".to_string()));
+    }
+
+    #[test]
+    fn parse_git_source_strips_dotgit_when_no_fragment() {
+        let out =
+            parse_cargo_auditable_git_source("git+https://github.com/serde-rs/serde.git");
+        assert_eq!(out, Some("https://github.com/serde-rs/serde".to_string()));
+    }
+
+    #[test]
+    fn parse_git_source_passes_through_url_without_dotgit() {
+        let out = parse_cargo_auditable_git_source("git+https://gitlab.com/foo/bar");
+        assert_eq!(out, Some("https://gitlab.com/foo/bar".to_string()));
+    }
+
+    #[test]
+    fn parse_git_source_handles_http_not_only_https() {
+        let out = parse_cargo_auditable_git_source("git+http://internal.example/foo.git");
+        assert_eq!(out, Some("http://internal.example/foo".to_string()));
+    }
+
+    #[test]
+    fn parse_git_source_returns_none_for_registry() {
+        assert!(parse_cargo_auditable_git_source("registry").is_none());
+    }
+
+    #[test]
+    fn parse_git_source_returns_none_for_local() {
+        assert!(parse_cargo_auditable_git_source("local").is_none());
+    }
+
+    #[test]
+    fn parse_git_source_returns_none_for_unknown() {
+        assert!(parse_cargo_auditable_git_source("unknown").is_none());
+    }
+
+    #[test]
+    fn parse_git_source_returns_none_for_non_http_scheme() {
+        // `git+ssh://...` not supported (rare, requires keypair anyway).
+        assert!(parse_cargo_auditable_git_source("git+ssh://git@github.com/foo/bar.git").is_none());
+    }
+
+    #[test]
+    fn cargo_auditable_packages_to_entries_emits_vcs_url_for_git_source() {
+        use super::cargo_auditable::{CargoAuditableManifest, CargoAuditablePackage};
+        let manifest = CargoAuditableManifest {
+            packages: vec![CargoAuditablePackage {
+                name: "mycrate".to_string(),
+                version: "0.1.0".to_string(),
+                source: "git+https://github.com/example/mycrate.git#abc123".to_string(),
+                kind: Some("runtime".to_string()),
+                dependencies: vec![],
+                root: false,
+            }],
+        };
+        let file_level_purl = mikebom_common::types::purl::Purl::new(
+            "pkg:generic/binary?file-sha256=deadbeef",
+        )
+        .unwrap();
+        let path = std::path::PathBuf::from("/bin/binary");
+        let entries =
+            cargo_auditable_packages_to_entries(&manifest, &file_level_purl, &path);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            entries[0]
+                .extra_annotations
+                .get("mikebom:cargo-vcs-source-url")
+                .and_then(|v| v.as_str()),
+            Some("https://github.com/example/mycrate"),
+        );
     }
 }

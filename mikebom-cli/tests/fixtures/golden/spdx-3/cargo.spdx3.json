@@ -89,6 +89,7 @@
         }
       ],
       "name": "my-app",
+      "software_homePage": "https://crates.io/crates/my-app/0.1.0",
       "software_packageUrl": "pkg:cargo/my-app@0.1.0",
       "software_packageVersion": "0.1.0",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NHPD5OIWCMJW4CWJBH2Y6UWR/pkg-7I3OEASNAR5ZCRZY",
@@ -109,6 +110,7 @@
         }
       ],
       "name": "quote",
+      "software_homePage": "https://crates.io/crates/quote/1.0.35",
       "software_packageUrl": "pkg:cargo/quote@1.0.35",
       "software_packageVersion": "1.0.35",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NHPD5OIWCMJW4CWJBH2Y6UWR/pkg-7QZEBQB7QRFNI5M5",
@@ -129,6 +131,7 @@
         }
       ],
       "name": "my-fork",
+      "software_homePage": "https://crates.io/crates/my-fork/0.1.0",
       "software_packageUrl": "pkg:cargo/my-fork@0.1.0",
       "software_packageVersion": "0.1.0",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NHPD5OIWCMJW4CWJBH2Y6UWR/pkg-AMQQ7AE3OQIQRIZH",
@@ -149,6 +152,7 @@
         }
       ],
       "name": "syn",
+      "software_homePage": "https://crates.io/crates/syn/2.0.48",
       "software_packageUrl": "pkg:cargo/syn@2.0.48",
       "software_packageVersion": "2.0.48",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NHPD5OIWCMJW4CWJBH2Y6UWR/pkg-BKMD7Y4M3VJPWGQM",
@@ -169,6 +173,7 @@
         }
       ],
       "name": "serde_derive",
+      "software_homePage": "https://crates.io/crates/serde_derive/1.0.197",
       "software_packageUrl": "pkg:cargo/serde_derive@1.0.197",
       "software_packageVersion": "1.0.197",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NHPD5OIWCMJW4CWJBH2Y6UWR/pkg-CDE3XEXSDOGUXIZT",
@@ -189,6 +194,7 @@
         }
       ],
       "name": "unicode-ident",
+      "software_homePage": "https://crates.io/crates/unicode-ident/1.0.12",
       "software_packageUrl": "pkg:cargo/unicode-ident@1.0.12",
       "software_packageVersion": "1.0.12",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NHPD5OIWCMJW4CWJBH2Y6UWR/pkg-E3KDPHV32PPHGGT4",
@@ -209,6 +215,7 @@
         }
       ],
       "name": "anyhow",
+      "software_homePage": "https://crates.io/crates/anyhow/1.0.80",
       "software_packageUrl": "pkg:cargo/anyhow@1.0.80",
       "software_packageVersion": "1.0.80",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NHPD5OIWCMJW4CWJBH2Y6UWR/pkg-IYTSKXZIE4RF3PSV",
@@ -229,6 +236,7 @@
         }
       ],
       "name": "workspace-local",
+      "software_homePage": "https://crates.io/crates/workspace-local/0.1.0",
       "software_packageUrl": "pkg:cargo/workspace-local@0.1.0",
       "software_packageVersion": "0.1.0",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NHPD5OIWCMJW4CWJBH2Y6UWR/pkg-SADUYFXP4BC6PE4A",
@@ -249,6 +257,7 @@
         }
       ],
       "name": "serde",
+      "software_homePage": "https://crates.io/crates/serde/1.0.197",
       "software_packageUrl": "pkg:cargo/serde@1.0.197",
       "software_packageVersion": "1.0.197",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NHPD5OIWCMJW4CWJBH2Y6UWR/pkg-UFXHU3P5DZAY42HF",
@@ -269,6 +278,7 @@
         }
       ],
       "name": "proc-macro2",
+      "software_homePage": "https://crates.io/crates/proc-macro2/1.0.76",
       "software_packageUrl": "pkg:cargo/proc-macro2@1.0.76",
       "software_packageVersion": "1.0.76",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NHPD5OIWCMJW4CWJBH2Y6UWR/pkg-Z72PVEYDZTEVUFVQ",

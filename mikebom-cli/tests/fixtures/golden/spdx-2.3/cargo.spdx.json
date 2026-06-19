@@ -114,6 +114,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:anyhow:anyhow:1.0.80:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/anyhow/1.0.80",
+          "referenceType": "website"
         }
       ],
       "filesAnalyzed": false,
@@ -161,6 +166,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:my-app:my-app:0.1.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/my-app/0.1.0",
+          "referenceType": "website"
         }
       ],
       "filesAnalyzed": false,
@@ -208,6 +218,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:my-fork:my-fork:0.1.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/my-fork/0.1.0",
+          "referenceType": "website"
         }
       ],
       "filesAnalyzed": false,
@@ -249,6 +264,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:proc-macro2:proc-macro2:1.0.76:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/proc-macro2/1.0.76",
+          "referenceType": "website"
         }
       ],
       "filesAnalyzed": false,
@@ -290,6 +310,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:quote:quote:1.0.35:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/quote/1.0.35",
+          "referenceType": "website"
         }
       ],
       "filesAnalyzed": false,
@@ -331,6 +356,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:serde:serde:1.0.197:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/serde/1.0.197",
+          "referenceType": "website"
         }
       ],
       "filesAnalyzed": false,
@@ -372,6 +402,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:serde_derive:serde_derive:1.0.197:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/serde_derive/1.0.197",
+          "referenceType": "website"
         }
       ],
       "filesAnalyzed": false,
@@ -413,6 +448,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:syn:syn:2.0.48:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/syn/2.0.48",
+          "referenceType": "website"
         }
       ],
       "filesAnalyzed": false,
@@ -454,6 +494,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:unicode-ident:unicode-ident:1.0.12:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/unicode-ident/1.0.12",
+          "referenceType": "website"
         }
       ],
       "filesAnalyzed": false,
@@ -501,6 +546,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:workspace-local:workspace-local:0.1.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/crates/workspace-local/0.1.0",
+          "referenceType": "website"
         }
       ],
       "filesAnalyzed": false,

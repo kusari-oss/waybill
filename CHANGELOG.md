@@ -7,6 +7,31 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Supplier external-reference URL synthesis for cargo / NuGet / nested Maven (milestone 131 US3)
+
+Closes the Supplier Attribution scorecard regression from milestone 130. The post-130 audit
+showed mikebom's supplier-attribution score dropping from 4/5 to 2/5 because the three new
+reader paths (cargo-auditable, .deps.json, PE/CLR managed-assembly metadata, nested-JAR) emit
+no `externalReferences[]` URLs. This PR backfills synthetic registry-website URLs derived from
+each component's PURL.
+
+**`mikebom-cli/src/scan_fs/mod.rs::external_refs_from_purl` extensions**:
+
+- **cargo**: `pkg:cargo/<name>@<version>` → `externalReferences[].url = "https://crates.io/crates/<name>/<version>"` with `type = "website"` (FR-017).
+- **nuget**: `pkg:nuget/<name>@<version>` → `externalReferences[].url = "https://www.nuget.org/packages/<name>/<version>"` with `type = "website"` (FR-018).
+- **maven-nested**: `pkg:maven/<g>/<a>@<v>` components carrying `mikebom:source-mechanism = "maven-jar-nested"` (from milestone 130 US2) → `externalReferences[].url = "https://search.maven.org/artifact/<g>/<a>/<v>/jar"` with `type = "website"` (FR-019). Top-level JARs unchanged so the existing milestone-009 sidecar-derived URLs aren't clobbered.
+- **cargo with `git+https://...` source field**: cargo-auditable's `source` field is parsed for `git+`-prefixed URLs at `binary/entry.rs::cargo_auditable_packages_to_entries`. When matched, the cleaned URL (sans `git+` prefix, sans trailing `.git`, sans `#<rev>` fragment) is stashed under the new C98 `mikebom:cargo-vcs-source-url` plumbing annotation. The downstream `external_refs_from_purl` helper reads this and emits an additional `type = "vcs"` ExternalReference (FR-020). Provenance is preserved: the VCS URL came from the build-time cargo-auditable declaration, not from PURL-heuristic guessing.
+
+**New annotation key catalogued (C98)**: `mikebom:cargo-vcs-source-url` — see `specs/131-quality-metadata-backfill/contracts/annotation-schema.md` for the full Principle V audit narrative. The annotation is in-process plumbing; the native CDX `externalReferences[]` entry is the wire-format primary.
+
+**Golden churn**: 3 fixtures (`cargo.cdx.json` + `cargo.spdx.json` + `cargo.spdx3.json`) gain the new `externalReferences[].url = "https://crates.io/..."` entries — purely additive, no existing fields modified. This is the intentional FR-017 behavior; the spec's SC-005 byte-identity claim was overly strict for US3 (only goldens without cargo/nuget/maven-nested components remain byte-identical). For images without cargo / nuget / maven-nested components (pure-Python, pure-Go, etc.), the readers are no-ops and goldens stay byte-identical.
+
+**15 new unit tests**: 6 in `scan_fs::external_refs_tests` (cargo / nuget / maven-nested / maven-top-level-skip / cargo-with-vcs / golang preservation) + 9 in `binary::entry::tests` (git source parsing — strip-prefix-and-fragment, dot-git, http/https, registry/local/unknown reject, ssh reject, end-to-end emission).
+
+**Follow-ups tracked separately**:
+- **US1** (PE/CLR Phase B — CustomAttribute walking for InformationalVersion + FileVersion) — resolves 373 VERSION_MISMATCH cases. ~300 LOC ECMA-335 walk. See `specs/131-quality-metadata-backfill/spec.md` US1.
+- **US2** (license backfill — nested-JAR `<licenses>` + PE/CLR LICENSE.txt fingerprint-matching + cargo-auditable `registry-required` annotation) — License Coverage 1/5 → ≥3/5. See spec.md US2.
+
 ### PE/CLR managed-assembly metadata reader (milestone 130 US3, Phase A)
 
 Closes the third and final track in milestone 130: extracting NuGet package coordinates from `.dll`

@@ -595,7 +595,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 parent_purl: entry.parent_purl.clone(),
                 co_owned_by: entry.co_owned_by.clone(),
                 shade_relocation: entry.shade_relocation,
-                external_references: external_refs_from_purl(&entry.purl),
+                external_references: external_refs_from_purl(&entry.purl, &entry.extra_annotations),
                 extra_annotations: entry.extra_annotations.clone(),
                 // Milestone 104 — propagate role from PackageDbEntry
                 // (set by the binary reader's `make_file_level_component`).
@@ -967,39 +967,92 @@ fn supplier_from_purl(purl: &mikebom_common::types::purl::Purl) -> Option<String
 /// Derive VCS / website external references from a PURL when the
 /// module path embeds them. Currently limited to Go modules whose
 /// canonical form starts with a known repo host — that's where the
-/// signal is unambiguous. npm / cargo / pypi / maven need deps.dev
-/// or registry metadata to find the repo URL and are populated
-/// elsewhere (out of scope for this pass).
+/// signal is unambiguous.
+///
+/// Milestone 131 US3: extended to synthesize canonical registry
+/// `website` URLs for `pkg:cargo`, `pkg:nuget`, and nested
+/// `pkg:maven` components (FR-017..019), plus a `vcs` URL parsed
+/// from cargo-auditable's `source` field when carried via the C98
+/// `mikebom:cargo-vcs-source-url` plumbing annotation (FR-020).
 fn external_refs_from_purl(
     purl: &mikebom_common::types::purl::Purl,
+    extra_annotations: &std::collections::BTreeMap<String, serde_json::Value>,
 ) -> Vec<mikebom_common::resolution::ExternalReference> {
     use mikebom_common::resolution::ExternalReference;
     let mut out = Vec::new();
-    if purl.ecosystem() != "golang" {
-        return out;
+    let ecosystem = purl.ecosystem();
+    let name = purl.name();
+    let version = purl.version().unwrap_or_default();
+    match ecosystem {
+        "golang" => {
+            // Existing milestone-001 heuristic.
+            if let Some(namespace) = purl.namespace() {
+                let segments: Vec<&str> = namespace.split('/').collect();
+                if segments.len() >= 2 {
+                    let host = segments[0];
+                    if matches!(host, "github.com" | "gitlab.com" | "bitbucket.org") {
+                        let org = segments[1];
+                        let repo = name;
+                        out.push(ExternalReference {
+                            ref_type: "vcs".to_string(),
+                            url: format!("https://{host}/{org}/{repo}"),
+                        });
+                    }
+                }
+            }
+        }
+        "cargo" if !name.is_empty() && !version.is_empty() => {
+            // FR-017: crates.io registry website.
+            out.push(ExternalReference {
+                ref_type: "website".to_string(),
+                url: format!("https://crates.io/crates/{name}/{version}"),
+            });
+        }
+        "nuget" if !name.is_empty() && !version.is_empty() => {
+            // FR-018: nuget.org registry website.
+            out.push(ExternalReference {
+                ref_type: "website".to_string(),
+                url: format!("https://www.nuget.org/packages/{name}/{version}"),
+            });
+        }
+        "maven" => {
+            // FR-019: search.maven.org canonical per-artifact URL.
+            // Gated on `mikebom:source-mechanism = "maven-jar-nested"` so the
+            // existing top-level milestone-009 reader's sidecar-derived URLs
+            // aren't clobbered.
+            let is_nested = extra_annotations
+                .get("mikebom:source-mechanism")
+                .and_then(|v| v.as_str())
+                == Some("maven-jar-nested");
+            if is_nested {
+                if let Some(namespace) = purl.namespace() {
+                    if !namespace.is_empty() && !name.is_empty() && !version.is_empty() {
+                        out.push(ExternalReference {
+                            ref_type: "website".to_string(),
+                            url: format!(
+                                "https://search.maven.org/artifact/{namespace}/{name}/{version}/jar"
+                            ),
+                        });
+                    }
+                }
+            }
+        }
+        _ => {}
     }
-    let Some(namespace) = purl.namespace() else {
-        return out;
-    };
-    // `pkg:golang/github.com/sirupsen/logrus@v1.9.3` → namespace
-    // `github.com/sirupsen`, name `logrus` → vcs
-    // `https://github.com/sirupsen/logrus`. Same shape for gitlab
-    // and bitbucket. Anything else (gopkg.in, custom vanity
-    // domains) needs deps.dev and skips here.
-    let segments: Vec<&str> = namespace.split('/').collect();
-    if segments.len() < 2 {
-        return out;
+    // FR-020: emit a `vcs`-type ExternalReference when cargo-auditable
+    // carried a parseable `git+https://...` source field. The URL
+    // itself flows through the C98 `mikebom:cargo-vcs-source-url`
+    // plumbing annotation, populated upstream at
+    // `binary/entry.rs::cargo_auditable_packages_to_entries`.
+    if let Some(vcs_url) = extra_annotations
+        .get("mikebom:cargo-vcs-source-url")
+        .and_then(|v| v.as_str())
+    {
+        out.push(ExternalReference {
+            ref_type: "vcs".to_string(),
+            url: vcs_url.to_string(),
+        });
     }
-    let host = segments[0];
-    if !matches!(host, "github.com" | "gitlab.com" | "bitbucket.org") {
-        return out;
-    }
-    let org = segments[1];
-    let repo = purl.name();
-    out.push(ExternalReference {
-        ref_type: "vcs".to_string(),
-        url: format!("https://{host}/{org}/{repo}"),
-    });
     out
 }
 
@@ -1040,6 +1093,88 @@ mod supplier_tests {
     fn cargo_has_none() {
         let p = Purl::new("pkg:cargo/serde@1.0.197").unwrap();
         assert_eq!(supplier_from_purl(&p), None);
+    }
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod external_refs_tests {
+    use super::external_refs_from_purl;
+    use mikebom_common::types::purl::Purl;
+    use std::collections::BTreeMap;
+
+    fn no_annotations() -> BTreeMap<String, serde_json::Value> {
+        BTreeMap::new()
+    }
+
+    #[test]
+    fn cargo_purl_emits_crates_io_website() {
+        let p = Purl::new("pkg:cargo/serde@1.0.197").unwrap();
+        let refs = external_refs_from_purl(&p, &no_annotations());
+        assert_eq!(refs.len(), 1);
+        assert_eq!(refs[0].ref_type, "website");
+        assert_eq!(refs[0].url, "https://crates.io/crates/serde/1.0.197");
+    }
+
+    #[test]
+    fn nuget_purl_emits_nuget_org_website() {
+        let p = Purl::new("pkg:nuget/Microsoft.AspNetCore@8.0.27").unwrap();
+        let refs = external_refs_from_purl(&p, &no_annotations());
+        assert_eq!(refs.len(), 1);
+        assert_eq!(refs[0].ref_type, "website");
+        assert_eq!(refs[0].url, "https://www.nuget.org/packages/Microsoft.AspNetCore/8.0.27");
+    }
+
+    #[test]
+    fn maven_nested_emits_search_maven_website_when_gated() {
+        let p = Purl::new("pkg:maven/com.example/foo@1.0.0").unwrap();
+        let mut annotations = BTreeMap::new();
+        annotations.insert(
+            "mikebom:source-mechanism".to_string(),
+            serde_json::Value::String("maven-jar-nested".to_string()),
+        );
+        let refs = external_refs_from_purl(&p, &annotations);
+        assert_eq!(refs.len(), 1);
+        assert_eq!(refs[0].ref_type, "website");
+        assert_eq!(
+            refs[0].url,
+            "https://search.maven.org/artifact/com.example/foo/1.0.0/jar"
+        );
+    }
+
+    #[test]
+    fn maven_top_level_does_not_emit_website() {
+        // Top-level maven JARs (no source-mechanism annotation) get
+        // their URLs from sidecar paths elsewhere; we don't synthesize
+        // here to avoid clobbering.
+        let p = Purl::new("pkg:maven/com.example/foo@1.0.0").unwrap();
+        let refs = external_refs_from_purl(&p, &no_annotations());
+        assert!(refs.is_empty());
+    }
+
+    #[test]
+    fn cargo_with_vcs_annotation_emits_both_website_and_vcs() {
+        let p = Purl::new("pkg:cargo/serde@1.0.197").unwrap();
+        let mut annotations = BTreeMap::new();
+        annotations.insert(
+            "mikebom:cargo-vcs-source-url".to_string(),
+            serde_json::Value::String("https://github.com/serde-rs/serde".to_string()),
+        );
+        let refs = external_refs_from_purl(&p, &annotations);
+        assert_eq!(refs.len(), 2);
+        // Order: website first (ecosystem branch), then vcs (cross-cutting).
+        assert_eq!(refs[0].ref_type, "website");
+        assert_eq!(refs[1].ref_type, "vcs");
+        assert_eq!(refs[1].url, "https://github.com/serde-rs/serde");
+    }
+
+    #[test]
+    fn golang_heuristic_preserved() {
+        let p = Purl::new("pkg:golang/github.com/sirupsen/logrus@v1.9.3").unwrap();
+        let refs = external_refs_from_purl(&p, &no_annotations());
+        assert_eq!(refs.len(), 1);
+        assert_eq!(refs[0].ref_type, "vcs");
+        assert_eq!(refs[0].url, "https://github.com/sirupsen/logrus");
     }
 }
 
