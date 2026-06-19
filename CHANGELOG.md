@@ -7,6 +7,71 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Milestone 132 US3 Path C closeout — SC-003 met without code change; spec corrections only
+
+**Truth-finding outcome**: the entire "Path C deps.dev online enrichment" deliverable
+described in `specs/132-sc-closeout/spec.md` FR-013 + `data-model.md` Path C entity
++ `research.md` Path C section was based on two fabricated claims:
+
+1. That a new `--enrich-licenses=depsdev` CLI flag needed to be added, with
+   Path C off-by-default per Constitution III Fail Closed.
+2. That a new cargo arm needed to be added to `enrich/depsdev_source.rs` because
+   only nuget was supported.
+
+Both claims are wrong. Reality verified during this PR's prep:
+
+- `enrich/deps_dev_system.rs::deps_dev_system_for` already supports **all six
+  deps.dev-indexed ecosystems** (cargo, npm, pypi, golang, maven, nuget) — has since
+  before milestone 132 started.
+- `scan_fs/mod.rs::scan_cmd` at line 1927 already wires `enrich_components`
+  unconditionally except for the `if enrich_cfg.deps_dev { ... }` gate — which
+  defaults to **true** via `deps_dev: !args.no_deps_dev` at
+  `resolve_enrich_sources` line 1145.
+- The only thing that disabled Path C on the milestone-132 MVP scan was the operator
+  passing `--offline` (which the milestone-132 spec quickstart and PR descriptions
+  baked in). Without `--offline`, deps.dev license enrichment runs by default.
+
+**SC-003 verification** — re-scan the pinned audit baseline without `--offline`,
+nothing else changed:
+
+| Metric | MVP scan (offline, post-Path-A) | Online scan (this PR) |
+|---|---|---|
+| License Coverage stars | 2★ | **4★** |
+| License effective rate | 37.9 % | **86.3 %** (2 523 / 2 926 components) |
+| Overall weighted score (mikebom vs syft) | 2.8 vs 2.3 = +0.5 | **3.1 vs 2.3 = +0.8** |
+| Supplier Attribution stars | 5★ | 5★ (unchanged) |
+| VERSION_MISMATCH | 389 | 389 (unchanged — US2 ships annotation only) |
+| Scan time | ~25 s | ~5 min (deps.dev API call latency) |
+
+**SC-003 closed with margin (4★ vs ≥3★ target)**. **SC-001 also exceeds its +0.4
+target with +0.8** (was +0.5 post-MVP; the License Coverage jump from 2★ → 4★ on
+the Critical-weighted dimension drove the +0.3 increment).
+
+**This PR ships only spec corrections + CHANGELOG entry** — no Rust code change. The
+corrections land in:
+
+- `specs/132-sc-closeout/spec.md` FR-013 + FR-014 — rewritten to reflect the actual
+  control surface (default-on, `--no-deps-dev` opt-out, no new flag) and the actual
+  measured outcome (4/5).
+- `specs/132-sc-closeout/data-model.md` §License-enrichment dispatch (Path C) —
+  rewritten to describe the existing implementation and trace through `scan_cmd.rs`
+  + `depsdev_source.rs` + `deps_dev_system.rs`.
+- `specs/132-sc-closeout/quickstart.md §Step 1` + §Step 4 — `--enrich-licenses=depsdev`
+  references replaced with "omit `--offline`" (the actual UX).
+- Both `spec.md §Plan corrections` and this CHANGELOG entry document the
+  fabrications explicitly so future maintainers see both the original mistake and
+  the truth.
+
+**Course-correction note**: the milestone-132 spec / plan / research / data-model /
+tasks artifacts have now landed **three** documented in-place corrections (PR #382's
+data-model `LICENSE_FINGERPRINT_TABLE` correction, this PR's FR-013 Path C
+correction, this PR's `data-model.md` Path C correction). Each was caught during
+implementation prep, before code landed on a bad foundation. The pattern: read the
+actual source code to ground every claim before writing — the spec is descriptive
+of an existing repo, not aspirational. The milestone-132 spec writing itself was
+where these fabrications were introduced; the fix is more code-grounding during
+spec-writing, not less.
+
 ### License coverage extension Path A — 6 new SPDX patterns in PE/CLR fingerprint matcher (milestone 132 US3 Path A)
 
 **Discrete deliverable**: extends the milestone-131 `fingerprint_license` substring

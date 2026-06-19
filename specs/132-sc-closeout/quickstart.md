@@ -47,12 +47,13 @@ docker pull "$IMAGE"
   --root-name 767397973649.dkr.ecr.us-east-1.amazonaws.com/remediation-planner \
   --offline
 
-# mikebom (online mode — Path C deps.dev enrichment ON)
+# mikebom (online mode — Path C deps.dev enrichment ON; this is the DEFAULT,
+# omitting --offline is sufficient. --no-deps-dev / --enrich-sources / --offline
+# are the opt-out controls.)
 ./target/release/mikebom sbom scan \
   --image "$IMAGE" \
   --output /tmp/mb-rp-132-online.cdx.json \
-  --root-name 767397973649.dkr.ecr.us-east-1.amazonaws.com/remediation-planner \
-  --enrich-licenses=depsdev
+  --root-name 767397973649.dkr.ecr.us-east-1.amazonaws.com/remediation-planner
 
 # syft (against the SAME pinned digest — do NOT reuse the cached
 # ~/Downloads/remediation-planner-syft-image-sbom.json which is stale `:latest`)
@@ -125,7 +126,7 @@ cargo +stable test --workspace --test golden_byte_identity
 # specs/131-quality-metadata-backfill/quickstart.md (if absent, re-measure milestone 131
 # main first):
 hyperfine --warmup 1 \
-  "./target/release/mikebom sbom scan --image '$IMAGE' --output /tmp/discard.cdx.json --root-name foo --enrich-licenses=depsdev" \
+  "./target/release/mikebom sbom scan --image '$IMAGE' --output /tmp/discard.cdx.json --root-name foo" \
   --export-json /tmp/mb-rp-132.timing.json
 
 # Compare median scan time to the 131 baseline. The growth percentage MUST be < 30 %.
