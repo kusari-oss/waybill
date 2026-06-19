@@ -7,6 +7,43 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Nested-JAR `<licenses>` extraction (milestone 131 US2b)
+
+Closes the deferred US2b track from milestone 131. The post-milestone-130 nested-JAR walker
+extracted `<dependencies>` from each nested JAR's `META-INF/maven/<g>/<a>/pom.xml` but discarded
+the `<licenses>` element. This PR plumbs the licenses through to the emitted `PackageDbEntry`.
+
+**Implementation**:
+
+- `PomXmlDocument` gains a `licenses: Vec<String>` field carrying raw `<project>/<licenses>/<license>/<name>` element values in document order.
+- `parse_pom_xml` extended with two new XML-walking rules: extract `<name>` text when inside `<licenses>/<license>` and push to `doc.licenses` on `</license>` close.
+- The milestone-130 nested walker at `extract_nested_meta` reads both `dependencies` AND `licenses` from each nested entry's pom.xml. When `licenses` is non-empty, the raw `<name>` strings serialize as a JSON array under the `mikebom:nested-licenses` plumbing annotation on the emitted `EmbeddedMavenMeta`.
+- `jar_pom_to_entry` consumes the plumbing annotation: each name is run through `SpdxExpression::try_canonical`; successful canonicalizations populate `PackageDbEntry.licenses`. The plumbing annotation is STRIPPED from the output map (it's not a wire-format primary — the canonical CDX `licenses[].license.id` / SPDX `Package.licenseDeclared` are). Successful extraction also adds `mikebom:license-source = "pom-xml"` per FR-012.
+- Failed canonicalization (e.g. raw `<name>Apache License 2.0</name>` instead of `Apache-2.0`) emits a `debug`-level log and skips the entry — no fabricated SPDX expressions.
+
+**Audit-image impact**: ZERO on `remediation-planner:latest` — that image carries 72 top-level
+maven JARs but no Spring Boot fat JARs with nested deps. The feature is genuinely useful for any
+Spring Boot / Quarkus / Micronaut / WAR/EAR-bearing image; the audit-image regression test simply
+doesn't exercise this code path.
+
+**4 new maven tests** (96 total pass: 92 existing + 4 new):
+
+- `parse_pom_xml_extracts_licenses_names_in_order` — single-`<licenses>` block with multiple `<license>` entries, order preserved.
+- `parse_pom_xml_no_licenses_block_is_empty_vec` — POM without `<licenses>` yields empty vec, no crash.
+- `nested_jar_pom_xml_licenses_flow_through_to_nested_meta_annotations` — Spring Boot uber JAR shape with nested pom.xml carrying `<licenses><license><name>Apache-2.0</name></license></licenses>` → emitted `EmbeddedMavenMeta` carries `mikebom:nested-licenses` JSON array annotation.
+- `nested_jar_no_pom_xml_licenses_emits_no_nested_licenses_annotation` — nested JAR without `<licenses>` produces no annotation (no false positives).
+
+**Byte-identity preserved** across the 33 alpha.48 goldens.
+
+**Milestone 131 status after this PR**:
+
+| Track | Status | Audit-image scorecard delta |
+|---|---|---|
+| US3 (supplier URLs) | ✅ merged #374 | Supplier Attribution 2/5 unchanged (was already at this level) |
+| US2a + US2c (license backfill PE/CLR + cargo) | ✅ merged #375 | License Coverage 1/5 → 2/5 |
+| US2b (nested-JAR licenses) | this PR | Audit-image neutral; genuine win on Spring Boot images |
+| US1 (PE/CLR Phase B CustomAttribute walking) | pending | Would resolve 373 VERSION_MISMATCH cases |
+
 ### License coverage backfill for PE/CLR + cargo-auditable components (milestone 131 US2a + US2c)
 
 Closes the second-largest scorecard regression from milestone 130 — License Coverage dropped from 3/5 to 1/5 because the new readers (cargo-auditable, PE/CLR managed-assembly metadata) emit no license expressions. This PR backfills via two complementary paths:

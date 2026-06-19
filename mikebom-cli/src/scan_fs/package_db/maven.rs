@@ -563,6 +563,15 @@ pub(crate) struct PomXmlDocument {
     /// `pom.xml`. Milestone 070 uses this for FR-002 reactor
     /// traversal (per-submodule main-module emission).
     pub modules: Vec<String>,
+    /// Milestone 131 US2b — `<project>/<licenses>/<license>/<name>`
+    /// element values, in document order. Each entry is the raw
+    /// declared name string (e.g. `"Apache License 2.0"`,
+    /// `"MIT"`, `"BSD-3-Clause"`). Downstream consumers canonicalize
+    /// via `SpdxExpression::try_canonical` and fall back to skipping
+    /// unrecognized names. Used by the milestone-130 nested-JAR
+    /// walker to backfill license metadata on `pkg:maven` components
+    /// whose pom.xml lives inside a fat JAR's `BOOT-INF/lib/<dep>.jar`.
+    pub licenses: Vec<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -699,6 +708,8 @@ pub(crate) fn parse_pom_xml(bytes: &[u8]) -> PomXmlDocument {
     let mut dep_v: Option<String> = None;
     let mut dep_scope: Option<String> = None;
     let mut dep_type: Option<String> = None;
+    // Milestone 131 US2b — `<project>/<licenses>/<license>/<name>`.
+    let mut license_name: Option<String> = None;
 
     let mut buf = Vec::new();
     loop {
@@ -754,6 +765,22 @@ pub(crate) fn parse_pom_xml(bytes: &[u8]) -> PomXmlDocument {
                         "scope" => dep_scope = Some(current_text.clone()),
                         "type" => dep_type = Some(current_text.clone()),
                         _ => {}
+                    }
+                }
+                // Milestone 131 US2b — project/licenses/license/name.
+                // Other license sub-elements (`<url>`, `<distribution>`,
+                // `<comments>`) are ignored — only the canonical name
+                // string flows into the SBOM `licenses[]` field via
+                // `SpdxExpression::try_canonical` downstream.
+                if popped == "name" && parent == "license" && grand == "licenses" {
+                    let trimmed = current_text.trim();
+                    if !trimmed.is_empty() {
+                        license_name = Some(trimmed.to_string());
+                    }
+                }
+                if popped == "license" && parent == "licenses" {
+                    if let Some(n) = license_name.take() {
+                        doc.licenses.push(n);
                     }
                 }
                 if popped == "dependency" {
@@ -2197,9 +2224,12 @@ fn extract_nested_meta<R: std::io::Read + std::io::Seek>(
     }
     for (dir, coord) in properties_by_dir {
         let pom_xml_bytes = pom_xml_by_dir.get(&dir).cloned();
-        let declared_deps = pom_xml_bytes
+        let (declared_deps, nested_licenses) = pom_xml_bytes
             .as_ref()
-            .map(|bytes| parse_pom_xml(bytes).dependencies)
+            .map(|bytes| {
+                let parsed = parse_pom_xml(bytes);
+                (parsed.dependencies, parsed.licenses)
+            })
             .unwrap_or_default();
         let mut annotations: std::collections::BTreeMap<String, serde_json::Value> =
             std::collections::BTreeMap::new();
@@ -2211,6 +2241,19 @@ fn extract_nested_meta<R: std::io::Read + std::io::Seek>(
             "mikebom:source-files".to_string(),
             serde_json::Value::String(source_files_url.clone()),
         );
+        // Milestone 131 US2b: stash nested-JAR <licenses> raw names
+        // for downstream `jar_pom_to_entry` consumption. JSON array of
+        // strings under `mikebom:nested-licenses` — consistent with the
+        // milestone-130 extra_annotations plumbing pattern.
+        if !nested_licenses.is_empty() {
+            let json_arr = serde_json::Value::Array(
+                nested_licenses
+                    .into_iter()
+                    .map(serde_json::Value::String)
+                    .collect(),
+            );
+            annotations.insert("mikebom:nested-licenses".to_string(), json_arr);
+        }
         out.push(EmbeddedMavenMeta {
             coord,
             declared_deps,
@@ -2647,6 +2690,41 @@ fn jar_pom_to_entry(
     if co_owned_by.is_none() {
         hashes.extend(archive_sha256);
     }
+    // Milestone 131 US2b: consume the `mikebom:nested-licenses`
+    // plumbing annotation (a JSON array of raw `<license>/<name>`
+    // strings from the nested JAR's pom.xml) and canonicalize each
+    // via `SpdxExpression::try_canonical`. Strip the plumbing
+    // annotation from the output map (it's not a wire-format primary
+    // — the canonical `licenses[]` field is). Add
+    // `mikebom:license-source = "pom-xml"` when at least one license
+    // was successfully canonicalized.
+    let mut walker_annotations = walker_annotations;
+    let nested_licenses_raw = walker_annotations
+        .remove("mikebom:nested-licenses")
+        .and_then(|v| match v {
+            serde_json::Value::Array(a) => Some(a),
+            _ => None,
+        })
+        .unwrap_or_default();
+    let mut licenses: Vec<mikebom_common::types::license::SpdxExpression> = Vec::new();
+    for entry in nested_licenses_raw {
+        let Some(raw) = entry.as_str() else { continue };
+        match mikebom_common::types::license::SpdxExpression::try_canonical(raw) {
+            Ok(expr) => licenses.push(expr),
+            Err(_) => {
+                tracing::debug!(
+                    raw_name = %raw,
+                    "nested-JAR <license><name> not canonical SPDX; skipping"
+                );
+            }
+        }
+    }
+    if !licenses.is_empty() {
+        walker_annotations.insert(
+            "mikebom:license-source".to_string(),
+            serde_json::Value::String("pom-xml".to_string()),
+        );
+    }
     Some(PackageDbEntry {
         build_inclusion: None,
         purl,
@@ -2656,7 +2734,7 @@ fn jar_pom_to_entry(
         source_path: source_path.to_string(),
         depends,
         maintainer: None,
-        licenses: Vec::new(),
+        licenses,
         lifecycle_scope: None,
         requirement_range: None,
         source_type: None,
@@ -6997,5 +7075,131 @@ mod tests {
             .filter(|m| m.coord.artifact_id == "cycle")
             .count();
         assert!(cycle_count >= 1);
+    }
+
+    // ============================================================
+    // Milestone 131 US2b — nested-JAR <licenses> extraction tests.
+    // ============================================================
+
+    /// Build an inner JAR carrying BOTH `pom.properties` AND `pom.xml`
+    /// where the pom.xml declares `<licenses><license><name>...</name>`.
+    fn build_inner_jar_with_licenses(
+        group: &str,
+        artifact: &str,
+        version: &str,
+        licenses: &[&str],
+    ) -> Vec<u8> {
+        use std::io::Write;
+        let cursor = std::io::Cursor::new(Vec::<u8>::new());
+        let mut zip = zip::ZipWriter::new(cursor);
+        let options = zip::write::FileOptions::default()
+            .compression_method(zip::CompressionMethod::Stored);
+        let props_name =
+            format!("META-INF/maven/{group}/{artifact}/pom.properties");
+        let props_body = format!(
+            "groupId={group}\nartifactId={artifact}\nversion={version}\n"
+        );
+        zip.start_file(props_name, options).unwrap();
+        zip.write_all(props_body.as_bytes()).unwrap();
+        let licenses_xml = licenses
+            .iter()
+            .map(|n| format!(
+                "    <license><name>{n}</name></license>"
+            ))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let pom_xml_body = format!(
+            r#"<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  <groupId>{group}</groupId>
+  <artifactId>{artifact}</artifactId>
+  <version>{version}</version>
+  <licenses>
+{licenses_xml}
+  </licenses>
+</project>
+"#
+        );
+        let xml_name = format!("META-INF/maven/{group}/{artifact}/pom.xml");
+        zip.start_file(xml_name, options).unwrap();
+        zip.write_all(pom_xml_body.as_bytes()).unwrap();
+        zip.finish().unwrap().into_inner()
+    }
+
+    #[test]
+    fn parse_pom_xml_extracts_licenses_names_in_order() {
+        let body = br#"<?xml version="1.0"?>
+<project>
+  <licenses>
+    <license><name>Apache-2.0</name><url>http://example/apache</url></license>
+    <license><name>MIT</name></license>
+  </licenses>
+</project>"#;
+        let doc = parse_pom_xml(body);
+        assert_eq!(doc.licenses, vec!["Apache-2.0".to_string(), "MIT".to_string()]);
+    }
+
+    #[test]
+    fn parse_pom_xml_no_licenses_block_is_empty_vec() {
+        let body = br#"<?xml version="1.0"?>
+<project><groupId>g</groupId><artifactId>a</artifactId><version>1.0</version></project>"#;
+        let doc = parse_pom_xml(body);
+        assert!(doc.licenses.is_empty());
+    }
+
+    #[test]
+    fn nested_jar_pom_xml_licenses_flow_through_to_nested_meta_annotations() {
+        // Build a Spring Boot uber JAR shape with a nested dep JAR
+        // whose pom.xml declares <licenses><license><name>Apache-2.0</name>.
+        let inner = build_inner_jar_with_licenses(
+            "org.example",
+            "depA",
+            "1.2.3",
+            &["Apache-2.0"],
+        );
+        let outer = write_jar_with_entries(&[
+            (
+                "META-INF/maven/com.example.app/myapp/pom.properties",
+                &pom_properties("com.example.app", "myapp", "0.1.0"),
+            ),
+            ("BOOT-INF/lib/depA-1.2.3.jar", &inner),
+        ]);
+        let meta = walk_jar_maven_meta(outer.path());
+        let nested = meta
+            .iter()
+            .find(|m| m.coord.artifact_id == "depA")
+            .expect("nested depA entry present");
+        // Plumbing annotation carries the raw <name> strings as JSON.
+        let raw = nested
+            .extra_annotations
+            .get("mikebom:nested-licenses")
+            .and_then(|v| v.as_array())
+            .expect("mikebom:nested-licenses array present");
+        assert_eq!(raw.len(), 1);
+        assert_eq!(raw[0].as_str(), Some("Apache-2.0"));
+    }
+
+    #[test]
+    fn nested_jar_no_pom_xml_licenses_emits_no_nested_licenses_annotation() {
+        let inner = build_inner_jar_bytes("org.example", "depB", "2.0.0");
+        let outer = write_jar_with_entries(&[
+            (
+                "META-INF/maven/com.example.app/myapp/pom.properties",
+                &pom_properties("com.example.app", "myapp", "0.1.0"),
+            ),
+            ("BOOT-INF/lib/depB-2.0.0.jar", &inner),
+        ]);
+        let meta = walk_jar_maven_meta(outer.path());
+        let nested = meta
+            .iter()
+            .find(|m| m.coord.artifact_id == "depB")
+            .expect("nested depB entry present");
+        assert!(
+            !nested
+                .extra_annotations
+                .contains_key("mikebom:nested-licenses"),
+            "no <licenses> in pom.xml MUST mean no annotation; got: {:?}",
+            nested.extra_annotations
+        );
     }
 }
