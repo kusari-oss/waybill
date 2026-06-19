@@ -36,6 +36,9 @@
         }
       ],
       "purl": "pkg:cargo/anyhow@1.0.80",
+      "supplier": {
+        "name": "crates.io"
+      },
       "type": "library",
       "version": "1.0.80"
     },
@@ -78,6 +81,9 @@
         }
       ],
       "purl": "pkg:cargo/my-app@0.1.0",
+      "supplier": {
+        "name": "crates.io"
+      },
       "type": "library",
       "version": "0.1.0"
     },
@@ -120,6 +126,9 @@
         }
       ],
       "purl": "pkg:cargo/my-fork@0.1.0",
+      "supplier": {
+        "name": "crates.io"
+      },
       "type": "library",
       "version": "0.1.0"
     },
@@ -158,6 +167,9 @@
         }
       ],
       "purl": "pkg:cargo/proc-macro2@1.0.76",
+      "supplier": {
+        "name": "crates.io"
+      },
       "type": "library",
       "version": "1.0.76"
     },
@@ -196,6 +208,9 @@
         }
       ],
       "purl": "pkg:cargo/quote@1.0.35",
+      "supplier": {
+        "name": "crates.io"
+      },
       "type": "library",
       "version": "1.0.35"
     },
@@ -234,6 +249,9 @@
         }
       ],
       "purl": "pkg:cargo/serde@1.0.197",
+      "supplier": {
+        "name": "crates.io"
+      },
       "type": "library",
       "version": "1.0.197"
     },
@@ -272,6 +290,9 @@
         }
       ],
       "purl": "pkg:cargo/serde_derive@1.0.197",
+      "supplier": {
+        "name": "crates.io"
+      },
       "type": "library",
       "version": "1.0.197"
     },
@@ -310,6 +331,9 @@
         }
       ],
       "purl": "pkg:cargo/syn@2.0.48",
+      "supplier": {
+        "name": "crates.io"
+      },
       "type": "library",
       "version": "2.0.48"
     },
@@ -348,6 +372,9 @@
         }
       ],
       "purl": "pkg:cargo/unicode-ident@1.0.12",
+      "supplier": {
+        "name": "crates.io"
+      },
       "type": "library",
       "version": "1.0.12"
     },
@@ -390,6 +417,9 @@
         }
       ],
       "purl": "pkg:cargo/workspace-local@0.1.0",
+      "supplier": {
+        "name": "crates.io"
+      },
       "type": "library",
       "version": "0.1.0"
     }

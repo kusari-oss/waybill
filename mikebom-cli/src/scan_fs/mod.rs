@@ -933,35 +933,63 @@ fn normalize_dep_name(ecosystem: &str, name: &str) -> String {
 /// Derive a best-effort supplier string from a PURL when the
 /// component's source didn't carry explicit maintainer metadata.
 /// Drives CycloneDX `component.supplier.name` (sbomqs
-/// `comp_with_supplier`).
+/// `comp_with_supplier`) + SPDX 2.3 `Package.originator` + SPDX 3
+/// `software:supplier`.
 ///
-/// - `pkg:golang/<host>/<org>/<repo>` → `<host>/<org>`.
-/// - `pkg:maven/<group>/<artifact>` → `<group>`.
-/// - `pkg:npm/@<scope>/<name>` → `@<scope>`; unscoped npm → `None`.
-/// - Anything else → `None` (let deb/apk maintainer fields or later
-///   enrichment fill in).
+/// Precedence (highest first):
+/// 1. Reader-populated `entry.maintainer` (FR-006) — applied at the
+///    callsite via `entry.maintainer.clone().or_else(supplier_from_purl)`.
+/// 2. Namespace-derived heuristic for ecosystems whose PURL namespace
+///    carries informative supplier signal:
+///    - `pkg:golang/<host>/<org>/<repo>` → `<host>/<org>`.
+///    - `pkg:maven/<group>/<artifact>` → `<group>`.
+///    - `pkg:npm/@<scope>/<name>` → `@<scope>`.
+/// 3. **Milestone 132 US1 (FR-005)**: canonical PURL-ecosystem →
+///    registry-name table fallback. Fills the Supplier Attribution gap
+///    for ecosystems whose PURLs don't carry a discriminating namespace
+///    (cargo, nuget, pypi, gem, apk, deb, rpm) and for unscoped npm.
+///    Sets the emitted `supplier.name` field via the existing
+///    `entry.maintainer.or_else` chain at `scan_fs/mod.rs:572`.
 fn supplier_from_purl(purl: &mikebom_common::types::purl::Purl) -> Option<String> {
     let ecosystem = purl.ecosystem();
-    let namespace = purl.namespace()?;
-    match ecosystem {
-        "golang" => {
-            let segments: Vec<&str> = namespace.split('/').collect();
-            if segments.len() >= 2 {
-                Some(format!("{}/{}", segments[0], segments[1]))
-            } else {
-                Some(namespace.to_string())
+
+    // Existing namespace-derived heuristics (milestone 001) — preserved
+    // because they emit MORE-specific supplier strings than the canonical
+    // table can. Apply only when the PURL carries a namespace segment.
+    if let Some(namespace) = purl.namespace() {
+        match ecosystem {
+            "golang" => {
+                let segments: Vec<&str> = namespace.split('/').collect();
+                if segments.len() >= 2 {
+                    return Some(format!("{}/{}", segments[0], segments[1]));
+                }
+                return Some(namespace.to_string());
             }
-        }
-        "maven" => Some(namespace.to_string()),
-        "npm" => {
-            if namespace.starts_with('@') {
-                Some(namespace.to_string())
-            } else {
-                None
+            "maven" => return Some(namespace.to_string()),
+            "npm" if namespace.starts_with('@') => {
+                return Some(namespace.to_string());
             }
+            _ => {}
         }
-        _ => None,
     }
+
+    // Milestone 132 US1 (FR-005): canonical registry-name lookup table.
+    const SUPPLIER_TABLE: &[(&str, &str)] = &[
+        ("cargo", "crates.io"),
+        ("nuget", "nuget.org"),
+        ("maven", "Maven Central"),
+        ("npm", "npmjs.com"),
+        ("pypi", "PyPI"),
+        ("gem", "RubyGems"),
+        ("apk", "Alpine Package Maintainer"),
+        ("deb", "Debian Package Maintainer"),
+        ("rpm", "RPM Package Maintainer"),
+    ];
+
+    SUPPLIER_TABLE
+        .iter()
+        .find(|(eco, _)| *eco == ecosystem)
+        .map(|(_, supplier)| (*supplier).to_string())
 }
 
 /// Derive VCS / website external references from a PURL when the
@@ -1083,15 +1111,75 @@ mod supplier_tests {
         assert_eq!(supplier_from_purl(&p), Some("@types".to_string()));
     }
 
+    // Milestone 132 US1: FR-005 SUPPLIER_TABLE fallback flips these from
+    // None to canonical registry names. Tests updated in-place rather than
+    // duplicated so the assertions remain the source of truth for the
+    // function's current behavior.
+
     #[test]
-    fn npm_unscoped_has_none() {
+    fn npm_unscoped_resolves_via_table() {
         let p = Purl::new("pkg:npm/express@4.22.1").unwrap();
-        assert_eq!(supplier_from_purl(&p), None);
+        assert_eq!(supplier_from_purl(&p), Some("npmjs.com".to_string()));
     }
 
     #[test]
-    fn cargo_has_none() {
+    fn cargo_resolves_via_table() {
         let p = Purl::new("pkg:cargo/serde@1.0.197").unwrap();
+        assert_eq!(supplier_from_purl(&p), Some("crates.io".to_string()));
+    }
+
+    #[test]
+    fn nuget_resolves_via_table() {
+        let p = Purl::new("pkg:nuget/Newtonsoft.Json@13.0.3").unwrap();
+        assert_eq!(supplier_from_purl(&p), Some("nuget.org".to_string()));
+    }
+
+    #[test]
+    fn pypi_resolves_via_table() {
+        let p = Purl::new("pkg:pypi/requests@2.31.0").unwrap();
+        assert_eq!(supplier_from_purl(&p), Some("PyPI".to_string()));
+    }
+
+    #[test]
+    fn gem_resolves_via_table() {
+        let p = Purl::new("pkg:gem/rails@7.1.2").unwrap();
+        assert_eq!(supplier_from_purl(&p), Some("RubyGems".to_string()));
+    }
+
+    #[test]
+    fn apk_resolves_via_table() {
+        let p = Purl::new("pkg:apk/alpine/ca-certificates@20240226-r0").unwrap();
+        // apk has a namespace (the distro) but it is not a golang/maven/npm
+        // ecosystem; falls through to the SUPPLIER_TABLE.
+        assert_eq!(
+            supplier_from_purl(&p),
+            Some("Alpine Package Maintainer".to_string()),
+        );
+    }
+
+    #[test]
+    fn deb_resolves_via_table() {
+        let p = Purl::new("pkg:deb/debian/curl@7.74.0-1.3+deb11u14").unwrap();
+        assert_eq!(
+            supplier_from_purl(&p),
+            Some("Debian Package Maintainer".to_string()),
+        );
+    }
+
+    #[test]
+    fn rpm_resolves_via_table() {
+        let p = Purl::new("pkg:rpm/redhat/openssl@1.1.1k-12.el8_9").unwrap();
+        assert_eq!(
+            supplier_from_purl(&p),
+            Some("RPM Package Maintainer".to_string()),
+        );
+    }
+
+    #[test]
+    fn bitbake_not_in_table_returns_none() {
+        // FR-001 edge case: ecosystems not in the FR-005 table return None;
+        // existing readers populate entry.maintainer instead.
+        let p = Purl::new("pkg:bitbake/openssl@1.1.1w-r0").unwrap();
         assert_eq!(supplier_from_purl(&p), None);
     }
 }

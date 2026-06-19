@@ -98,6 +98,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "MIT",
       "name": "express",
+      "supplier": "Organization: npmjs.com",
       "versionInfo": "4.18.2"
     },
     {
@@ -146,6 +147,7 @@
       "licenseDeclared": "NOASSERTION",
       "name": "node-modules-walk-fixture",
       "primaryPackagePurpose": "APPLICATION",
+      "supplier": "Organization: npmjs.com",
       "versionInfo": "0.1.0"
     },
     {
@@ -187,6 +189,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "MIT",
       "name": "safe-buffer",
+      "supplier": "Organization: npmjs.com",
       "versionInfo": "5.2.1"
     }
   ],

@@ -125,6 +125,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "anyhow",
+      "supplier": "Organization: crates.io",
       "versionInfo": "1.0.80"
     },
     {
@@ -177,6 +178,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "my-app",
+      "supplier": "Organization: crates.io",
       "versionInfo": "0.1.0"
     },
     {
@@ -229,6 +231,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "my-fork",
+      "supplier": "Organization: crates.io",
       "versionInfo": "0.1.0"
     },
     {
@@ -275,6 +278,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "proc-macro2",
+      "supplier": "Organization: crates.io",
       "versionInfo": "1.0.76"
     },
     {
@@ -321,6 +325,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "quote",
+      "supplier": "Organization: crates.io",
       "versionInfo": "1.0.35"
     },
     {
@@ -367,6 +372,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "serde",
+      "supplier": "Organization: crates.io",
       "versionInfo": "1.0.197"
     },
     {
@@ -413,6 +419,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "serde_derive",
+      "supplier": "Organization: crates.io",
       "versionInfo": "1.0.197"
     },
     {
@@ -459,6 +466,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "syn",
+      "supplier": "Organization: crates.io",
       "versionInfo": "2.0.48"
     },
     {
@@ -505,6 +513,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "unicode-ident",
+      "supplier": "Organization: crates.io",
       "versionInfo": "1.0.12"
     },
     {
@@ -557,6 +566,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "workspace-local",
+      "supplier": "Organization: crates.io",
       "versionInfo": "0.1.0"
     }
   ],

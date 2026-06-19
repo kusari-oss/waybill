@@ -120,6 +120,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "busybox",
+      "supplier": "Organization: Alpine Package Maintainer",
       "versionInfo": "1.36.1-r15"
     },
     {
@@ -167,6 +168,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "musl",
+      "supplier": "Organization: Alpine Package Maintainer",
       "versionInfo": "1.2.4_git20230717-r4"
     }
   ],

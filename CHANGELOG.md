@@ -7,6 +7,97 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Supplier-name backfill via canonical PURL-ecosystem table (milestone 132 US1 + US4)
+
+Closes milestone-131 SC-004 (Supplier Attribution) which was claimed at PR-merge time but
+never met against the audit baseline. Adds a canonical PURL-ecosystem → registry-name
+lookup as a fallback in `scan_fs/mod.rs::supplier_from_purl`, populating CDX
+`components[].supplier.name` + SPDX 2.3 `Package.originator` + SPDX 3 `software:supplier`
+for cargo / nuget / pypi / gem / apk / deb / rpm / npm components that the existing
+namespace-derived heuristics couldn't reach.
+
+**Behavior change (additive)**:
+
+- `pkg:cargo/<name>@<ver>` → `supplier.name = "crates.io"`
+- `pkg:nuget/<name>@<ver>` → `supplier.name = "nuget.org"`
+- `pkg:npm/<unscoped>@<ver>` → `supplier.name = "npmjs.com"` (was None)
+- `pkg:pypi/<name>@<ver>` → `supplier.name = "PyPI"`
+- `pkg:gem/<name>@<ver>` → `supplier.name = "RubyGems"`
+- `pkg:apk/<distro>/<name>@<ver>` → `supplier.name = "Alpine Package Maintainer"` when
+  the reader didn't already populate `entry.maintainer`
+- `pkg:deb/<distro>/<name>@<ver>` → `supplier.name = "Debian Package Maintainer"` (same
+  proviso)
+- `pkg:rpm/<distro>/<name>@<ver>` → `supplier.name = "RPM Package Maintainer"` (same)
+
+**Preserved**: `pkg:golang/<host>/<org>/<repo>` keeps the existing host/org heuristic
+(more specific). `pkg:maven/<group>/<artifact>` keeps the existing groupId heuristic
+(more specific). Scoped npm (`pkg:npm/@scope/<name>`) keeps `@scope`. Reader-populated
+`entry.maintainer` continues to win over the synthesis per the existing
+`.or_else(supplier_from_purl)` precedence chain at `scan_fs/mod.rs:572`.
+
+**Golden churn** (FR-003 expected additive churn): 15 byte-identity goldens regenerated
+— apk / cargo / gem / npm / pip × CDX / SPDX 2.3 / SPDX 3. Pure additions; zero
+deletions; bazel / cmake / deb / golang / maven / rpm goldens unchanged.
+
+**Retrospective honesty (US4 / FR-015 / FR-016 / SC-007)**: edits
+`specs/131-quality-metadata-backfill/spec.md` in place — appends `**Status (2026-06-19)**:`
+clauses to each of SC-001…SC-004 documenting actual measured outcomes vs original targets,
+and adds a new `## Post-Milestone Outcomes (2026-06-19)` section identifying the root errors
+in the milestone-131 PRs (#374 misidentified supplier-scoring target; #375 mis-scoped the
+license gap to nuget when cargo dominates; #377 surfaced semver-build-metadata
+disagreement which the <20 VERSION_MISMATCH target hadn't accounted for) and the
+structural remediation in milestone 132. This section exists because the implementing
+AI declared milestone 131 "complete" without verifying SCs against the audit baseline;
+the maintainer flagged the pattern.
+
+**Pinned audit baseline**: SC verification protocol re-anchored to
+`767397973649.dkr.ecr.us-east-1.amazonaws.com/remediation-planner@sha256:4e7b05811ce4885d8a7183819b4e0e209662784fe24b7553ceea3d149e3c719c`
+per the 2026-06-19 Q3 spec clarification, captured via cross-account ECR describe-images
+at `/speckit-plan` time. No more `:latest` for forward-looking SC measurements.
+
+**Measured outcomes vs the pinned baseline** (sbom-comparison full scorecard at
+`/tmp/mb-rp-132-mvp.scorecard.json`):
+
+| SC | Target | Measured | Status |
+|---|---|---|---|
+| SC-001 weighted (milestone-131 was syft + 0.1) | ≥ syft + 0.4 | mikebom 2.8 − syft 2.3 = **+0.5** | MET |
+| SC-002 VERSION_MISMATCH | < 50 | 389 | NOT MET — US2 deferred |
+| SC-003 License Coverage | ≥ 3★ | 2★ (mikebom 37.9 % vs syft 3.1 %) | NOT MET — US3 deferred |
+| SC-004 Supplier Attribution | ≥ 3★ | **5★** (mikebom 99.9 % vs syft 2.6 %) | MET |
+| SC-005 byte-identity goldens | preserved except enumerated | exactly 15 expected churns | MET |
+| SC-006 scan-time growth | < 30 % | not benchmarked this PR | UNMEASURED — will rerun when US2 + US3 land |
+| SC-007 milestone-131 retrospective | 4 Status + 1 section | 4 + 1 verified by grep | MET |
+
+Per-dimension scorecard (mikebom vs syft): Completeness 1★ vs 5★ (structural — syft's
+file inventory; see §Out of Scope item 2 in milestone-132 spec), Version Accuracy 3★ vs
+3★ (tied; US2 needed for >3), **License Coverage 2★ vs 1★** (mikebom leads but below
+3★ target; US3 needed), Dependency Graph 2★ vs 2★, **Supplier Attribution 5★ vs 1★** (this
+PR's headline), Checksum Coverage 1★ vs 4★ (structural — same as Completeness), PURL
+Quality 4★ vs 1★ (milestone-131 PR #374 already established this), CPE Coverage 5★ vs
+1★ (pre-existing), Annotations/Transparency 5★ vs 1★ (pre-existing). The Supplier-Attribution
+jump from 2★ → 5★ is the dominant driver of the +0.5 weighted-score lift; combined with
+the milestone-131 wins still standing, the MVP alone already meets the milestone-132
+SC-001 +0.4 target.
+
+**Bug surfaced during SC verification** (not fixed in this PR): `mikebom sbom scan
+--image <registry>@sha256:<digest>` fails with `parsing manifest.json: invalid type:
+null, expected a sequence at line 1 column 106` when the image was pulled by digest
+without a tag — `docker save` emits `"RepoTags": null`, which mikebom's manifest
+deserializer doesn't tolerate. Workaround: locally tag the image before scanning
+(`docker tag <registry>@<digest> <local-tag>`). Fix should add `#[serde(default)]` on
+the `RepoTags` field or change its type to `Option<Vec<String>>`. Tracked for a separate
+small PR — not part of milestone-132 scope.
+
+**Scope deferred to follow-up PRs**: US2 (`mikebom:assembly-version-informational-stripped`
+companion annotation, addressing SC-002) and US3 (Path A extended PE/CLR fingerprints +
+Path C deps.dev online enrichment for cargo+nuget, addressing SC-003) per the milestone-132
+plan §Implementation Strategy. US3's `data-model.md` description of a
+`LICENSE_FINGERPRINT_TABLE` constant + `include_bytes!` fixtures was a planning-time
+miscall — the actual milestone-131 fingerprinter at `pe_clr.rs:949` is a
+`fn fingerprint_license(bytes: &[u8]) -> Option<&'static str>` substring-matching
+function over the first 4 KB of license text. The US3 plan-correction lands as the first
+task of the follow-up US3 PR.
+
 ### PE/CLR Phase B — `CustomAttribute` walking for `InformationalVersion` + `FileVersion` (milestone 131 US1)
 
 Closes the final remaining track of milestone 131. The milestone-130 US3 Phase A reader emits

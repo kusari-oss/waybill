@@ -42,6 +42,9 @@
         }
       ],
       "purl": "pkg:pypi/certifi@2023.7.22",
+      "supplier": {
+        "name": "PyPI"
+      },
       "type": "library",
       "version": "2023.7.22"
     },
@@ -86,6 +89,9 @@
         }
       ],
       "purl": "pkg:pypi/charset-normalizer@3.3.2",
+      "supplier": {
+        "name": "PyPI"
+      },
       "type": "library",
       "version": "3.3.2"
     },
@@ -130,6 +136,9 @@
         }
       ],
       "purl": "pkg:pypi/flask@3.0.0",
+      "supplier": {
+        "name": "PyPI"
+      },
       "type": "library",
       "version": "3.0.0"
     },
@@ -174,6 +183,9 @@
         }
       ],
       "purl": "pkg:pypi/idna@3.6",
+      "supplier": {
+        "name": "PyPI"
+      },
       "type": "library",
       "version": "3.6"
     },
@@ -218,6 +230,9 @@
         }
       ],
       "purl": "pkg:pypi/jinja2@3.1.2",
+      "supplier": {
+        "name": "PyPI"
+      },
       "type": "library",
       "version": "3.1.2"
     },
@@ -262,6 +277,9 @@
         }
       ],
       "purl": "pkg:pypi/requests@2.31.0",
+      "supplier": {
+        "name": "PyPI"
+      },
       "type": "library",
       "version": "2.31.0"
     },
@@ -306,6 +324,9 @@
         }
       ],
       "purl": "pkg:pypi/urllib3@2.0.7",
+      "supplier": {
+        "name": "PyPI"
+      },
       "type": "library",
       "version": "2.0.7"
     }

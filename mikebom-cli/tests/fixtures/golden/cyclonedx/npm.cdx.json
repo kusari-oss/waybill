@@ -38,6 +38,9 @@
         }
       ],
       "purl": "pkg:npm/express@4.18.2",
+      "supplier": {
+        "name": "npmjs.com"
+      },
       "type": "library",
       "version": "4.18.2"
     },
@@ -78,6 +81,9 @@
         }
       ],
       "purl": "pkg:npm/safe-buffer@5.2.1",
+      "supplier": {
+        "name": "npmjs.com"
+      },
       "type": "library",
       "version": "5.2.1"
     }
@@ -153,6 +159,9 @@
         }
       ],
       "purl": "pkg:npm/node-modules-walk-fixture@0.1.0",
+      "supplier": {
+        "name": "npmjs.com"
+      },
       "type": "application",
       "version": "0.1.0"
     },

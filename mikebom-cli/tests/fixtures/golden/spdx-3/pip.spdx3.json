@@ -97,6 +97,7 @@
       "software_packageUrl": "pkg:pypi/requests@2.31.0",
       "software_packageVersion": "2.31.0",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NXFDLTJMIC7J6NQAEHMOXGNG/pkg-6PK6TYQPA2QWXM26",
+      "suppliedBy": "https://mikebom.kusari.dev/spdx3/doc-NXFDLTJMIC7J6NQAEHMOXGNG/agent-org-FEUX73OAEUGOM2DW",
       "type": "software_Package"
     },
     {
@@ -122,6 +123,7 @@
       "software_packageUrl": "pkg:pypi/jinja2@3.1.2",
       "software_packageVersion": "3.1.2",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NXFDLTJMIC7J6NQAEHMOXGNG/pkg-E7GW44NAPCTLSLSL",
+      "suppliedBy": "https://mikebom.kusari.dev/spdx3/doc-NXFDLTJMIC7J6NQAEHMOXGNG/agent-org-FEUX73OAEUGOM2DW",
       "type": "software_Package"
     },
     {
@@ -147,6 +149,7 @@
       "software_packageUrl": "pkg:pypi/certifi@2023.7.22",
       "software_packageVersion": "2023.7.22",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NXFDLTJMIC7J6NQAEHMOXGNG/pkg-IGBIL3UCACAQFOM3",
+      "suppliedBy": "https://mikebom.kusari.dev/spdx3/doc-NXFDLTJMIC7J6NQAEHMOXGNG/agent-org-FEUX73OAEUGOM2DW",
       "type": "software_Package"
     },
     {
@@ -172,6 +175,7 @@
       "software_packageUrl": "pkg:pypi/idna@3.6",
       "software_packageVersion": "3.6",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NXFDLTJMIC7J6NQAEHMOXGNG/pkg-KVTB5ZDMEOOSAO3A",
+      "suppliedBy": "https://mikebom.kusari.dev/spdx3/doc-NXFDLTJMIC7J6NQAEHMOXGNG/agent-org-FEUX73OAEUGOM2DW",
       "type": "software_Package"
     },
     {
@@ -197,6 +201,7 @@
       "software_packageUrl": "pkg:pypi/flask@3.0.0",
       "software_packageVersion": "3.0.0",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NXFDLTJMIC7J6NQAEHMOXGNG/pkg-ND26YIDZX2IHEVKH",
+      "suppliedBy": "https://mikebom.kusari.dev/spdx3/doc-NXFDLTJMIC7J6NQAEHMOXGNG/agent-org-FEUX73OAEUGOM2DW",
       "type": "software_Package"
     },
     {
@@ -222,6 +227,7 @@
       "software_packageUrl": "pkg:pypi/urllib3@2.0.7",
       "software_packageVersion": "2.0.7",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NXFDLTJMIC7J6NQAEHMOXGNG/pkg-R4X6ZI7PYUOFDI6S",
+      "suppliedBy": "https://mikebom.kusari.dev/spdx3/doc-NXFDLTJMIC7J6NQAEHMOXGNG/agent-org-FEUX73OAEUGOM2DW",
       "type": "software_Package"
     },
     {
@@ -247,7 +253,14 @@
       "software_packageUrl": "pkg:pypi/charset-normalizer@3.3.2",
       "software_packageVersion": "3.3.2",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NXFDLTJMIC7J6NQAEHMOXGNG/pkg-Z2NM5GYCT4SAIAVF",
+      "suppliedBy": "https://mikebom.kusari.dev/spdx3/doc-NXFDLTJMIC7J6NQAEHMOXGNG/agent-org-FEUX73OAEUGOM2DW",
       "type": "software_Package"
+    },
+    {
+      "creationInfo": "_:creation-info",
+      "name": "PyPI",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NXFDLTJMIC7J6NQAEHMOXGNG/agent-org-FEUX73OAEUGOM2DW",
+      "type": "Organization"
     },
     {
       "creationInfo": "_:creation-info",

@@ -74,6 +74,7 @@
       "software_packageVersion": "0.1.0",
       "software_primaryPurpose": "application",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-XRTWNSERFAFBVRYY4TFH6Q5B/pkg-IZGDOM2QHWPWWLEX",
+      "suppliedBy": "https://mikebom.kusari.dev/spdx3/doc-XRTWNSERFAFBVRYY4TFH6Q5B/agent-org-JXCO5KNA4S5YOEFX",
       "type": "software_Package"
     },
     {
@@ -94,6 +95,7 @@
       "software_packageUrl": "pkg:npm/safe-buffer@5.2.1",
       "software_packageVersion": "5.2.1",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-XRTWNSERFAFBVRYY4TFH6Q5B/pkg-M4HOORJPEJNNEAJV",
+      "suppliedBy": "https://mikebom.kusari.dev/spdx3/doc-XRTWNSERFAFBVRYY4TFH6Q5B/agent-org-JXCO5KNA4S5YOEFX",
       "type": "software_Package"
     },
     {
@@ -114,7 +116,14 @@
       "software_packageUrl": "pkg:npm/express@4.18.2",
       "software_packageVersion": "4.18.2",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-XRTWNSERFAFBVRYY4TFH6Q5B/pkg-TXLIZUEJRNELTNPP",
+      "suppliedBy": "https://mikebom.kusari.dev/spdx3/doc-XRTWNSERFAFBVRYY4TFH6Q5B/agent-org-JXCO5KNA4S5YOEFX",
       "type": "software_Package"
+    },
+    {
+      "creationInfo": "_:creation-info",
+      "name": "npmjs.com",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-XRTWNSERFAFBVRYY4TFH6Q5B/agent-org-JXCO5KNA4S5YOEFX",
+      "type": "Organization"
     },
     {
       "creationInfo": "_:creation-info",

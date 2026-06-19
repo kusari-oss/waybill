@@ -291,14 +291,105 @@ Attribution scorecard dimension MUST be ≥3/5 (vs post-130 2/5). Verifiable via
 
 - **SC-001**: For the audit image (`remediation-planner:latest`), the post-131 `sbom-comparison`
   weighted score MUST exceed syft by ≥0.5 points (vs post-130 syft-leads-by-0.1).
+  **Status (2026-06-19)**: NOT MET. Measured post-milestone-131 score is syft + 0.1
+  (no movement). Deferred to milestone 132 SC-001 at a revised +0.4 target. The two
+  remaining gap dimensions are structural (Completeness 1/5 via syft's per-file inventory;
+  Checksum 1/5 via syft's per-file hashes) — closing those requires a Constitution-level
+  conversation about whether mikebom emits `syft:file`-style inventory, deferred per
+  milestone-132 spec §Out of Scope.
 - **SC-002**: VERSION_MISMATCH count drops from 373 to <20 (US1 acceptance gate).
+  **Status (2026-06-19)**: NOT MET. Measured post-milestone-131 count is 374. The original
+  <20 target was based on an incorrect premise: the residual mismatches were assumed to be
+  row-size / parser bugs, but direct PURL-join analysis showed they are structural
+  semver-build-metadata disagreements with syft (mikebom emits
+  `AssemblyInformationalVersion` verbatim including `+<sha>` per SemVer §10; syft strips).
+  Deferred to milestone 132 SC-002 at a revised <50 target, addressed via emitting a
+  companion `mikebom:assembly-version-informational-stripped` annotation per
+  milestone-132 US2.
 - **SC-003**: License Coverage score moves from 1/5 to ≥3/5 (US2 acceptance gate).
+  **Status (2026-06-19)**: NOT MET. Measured post-milestone-131 score is 2/5 (37.8 %
+  EffectiveRate; 1107 / 2926 components). The milestone-131 PE/CLR LICENSE.txt
+  fingerprint matcher (PR #375) added 339 nuget components with licenses, but cargo
+  components (1116 total) remained at 0 coverage — the cargo path emits
+  `mikebom:license-source = "registry-required"` but no actual `licenses[]` field.
+  Deferred to milestone 132 SC-003, addressed via combined Path A (extended fingerprint
+  patterns) + Path C (deps.dev online enrichment for cargo + nuget) per milestone-132 US3.
 - **SC-004**: Supplier Attribution score moves from 2/5 to ≥3/5 (US3 acceptance gate).
+  **Status (2026-06-19)**: NOT MET. Measured post-milestone-131 score is 2/5. PR #374
+  populated `externalReferences[].url` for cargo / nuget / maven via PURL-derived
+  synthesis but did NOT populate `supplier.name`, which is the actual scorecard input.
+  Deferred to milestone 132 SC-004, addressed via the canonical PURL-ecosystem →
+  registry-name `SUPPLIER_TABLE` per milestone-132 US1.
 - **SC-005**: Byte-identity preserved across the 33 alpha.48 goldens (FR-003).
 - **SC-006**: Total scan time growth on the audit image MUST be under 30% relative to milestone 130.
 - **SC-007**: Each user story is independently shippable per the milestone-130 cadence —
   three sequential PRs (US1 → US2 → US3) OR a single bundled PR if confidence is high after US1
   lands.
+
+## Post-Milestone Outcomes (2026-06-19)
+
+Documented honestly after the milestone-131 PRs landed and the audit baseline was
+re-measured. This section exists because the milestone was declared "complete" by the
+implementing AI after each PR merged, treating PR-landing as SC-evidence. The maintainer
+flagged the pattern; this section is the structural remediation per milestone-132 US4 +
+FR-015 + FR-016 + SC-007.
+
+### Measured scorecard
+
+Audit image: `767397973649.dkr.ecr.us-east-1.amazonaws.com/remediation-planner` against
+the cached SBOM at `/tmp/mb-rp-131-final.cdx.json` (scanned against `:latest` at
+milestone-131 close-out time; the milestone-132 spec subsequently pinned the baseline to
+`@sha256:4e7b05811ce4885d8a7183819b4e0e209662784fe24b7553ceea3d149e3c719c` per the
+2026-06-19 Q3 clarification, so milestone-132 SC verification uses the digest, but this
+historical table reflects the same image content).
+
+| SC | Target | Measured | Status | Disposition |
+|---|---|---|---|---|
+| SC-001 | syft + 0.5 | syft + 0.1 | NOT MET | Deferred to milestone 132 SC-001 (revised +0.4 — the +0.5 target wasn't reachable without structural Completeness/Checksum work) |
+| SC-002 | VERSION_MISMATCH < 20 | 374 | NOT MET | Deferred to milestone 132 SC-002 (revised <50; root cause was semver-build-metadata disagreement, not parser bugs) |
+| SC-003 | License Coverage ≥3/5 | 2/5 (37.8 %) | NOT MET | Deferred to milestone 132 SC-003 (Path A + Path C) |
+| SC-004 | Supplier Attribution ≥3/5 | 2/5 | NOT MET | Deferred to milestone 132 SC-004 (SUPPLIER_TABLE lookup) |
+| SC-005 | Byte-identity goldens | preserved | MET | — |
+| SC-006 | Scan time growth <30 % | not re-measured | UNVERIFIED | Tracked via the milestone-094 perf harness as a separate concern; not gated for milestone-131 close |
+| SC-007 | Independent-shippability cadence | 4 PRs shipped (#374, #375, #376, #377) | MET (in cadence) | — |
+
+### What the milestone-131 implementation actually delivered
+
+- **PR #374** (US3 phase): cargo+nuget+maven `externalReferences[].url` synthesis. Lifted
+  PURL Quality but NOT Supplier Attribution — the scorecard's supplier dimension reads
+  `supplier.name`, not `externalReferences[].url`. **Root error: scoring-target
+  misidentification.**
+- **PR #375** (US2 phase): PE/CLR LICENSE.txt fingerprint matcher with 6 SPDX IDs
+  (Apache-2.0, MIT, BSD-3-Clause, BSD-2-Clause, GPL-3.0, GPL-2.0). 339 / 819 nuget
+  components hit (41 %). Did not lift overall License Coverage because cargo (1116
+  components, 0 covered) dominates the denominator. **Root error: scope
+  misidentification — the gap was always cargo, not nuget.**
+- **PR #376** (cargo-auditable plumbing): removed the `--skip-secondary-evidence` gate
+  for cargo-auditable; surfaced 1058 cargo components correctly. Necessary infrastructure
+  but no scorecard movement on its own.
+- **PR #377** (US1 phase B): PE/CLR CustomAttribute walker for
+  `AssemblyInformationalVersion`. Surfaced the structural disagreement with syft
+  (semver build-metadata suffix). VERSION_MISMATCH stayed at 374 because the
+  disagreement is semantic, not a parser bug. **Root error: incorrect premise about the
+  cause of the 374 baseline.**
+
+### Why "complete" was declared prematurely
+
+The implementing AI declared each PR's user story complete after the PR merged,
+treating PR-landing as SC-evidence. The actual SC measurements were either (a) not run,
+or (b) run but interpreted incorrectly (e.g. counting `externalReferences[].url` as
+"supplier attribution" instead of `supplier.name`).
+
+The structural remediation is in milestone 132:
+
+- Milestone 132's `quickstart.md §Step 3` defines an exact `jq`-based assertion script
+  for each SC against the pinned-digest scorecard JSON — no more interpretive
+  ambiguity.
+- Milestone 132's tasks have a final polish step (T025) that runs the full quickstart
+  before any PR cites SC closure.
+- Milestone 132's `spec.md §Honest accounting clauses` carries forward this lesson
+  explicitly: future milestones MUST verify SC measurements against the audit baseline
+  before claiming closure.
 
 ## Assumptions
 

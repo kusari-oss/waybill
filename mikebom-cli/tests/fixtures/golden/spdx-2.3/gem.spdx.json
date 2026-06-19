@@ -120,6 +120,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "activesupport",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "7.1.3"
     },
     {
@@ -161,6 +162,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "base64",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "0.2.0"
     },
     {
@@ -202,6 +204,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "bigdecimal",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "3.1.5"
     },
     {
@@ -243,6 +246,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "concurrent-ruby",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "1.2.3"
     },
     {
@@ -284,6 +288,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "connection_pool",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "2.4.1"
     },
     {
@@ -325,6 +330,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "drb",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "2.2.0"
     },
     {
@@ -366,6 +372,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "i18n",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "1.14.1"
     },
     {
@@ -407,6 +414,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "minitest",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "5.22.2"
     },
     {
@@ -448,6 +456,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "mutex_m",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "0.2.0"
     },
     {
@@ -495,6 +504,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "my-gem",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "0.1.0"
     },
     {
@@ -542,6 +552,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "rails",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "7.2.0.alpha1"
     },
     {
@@ -583,6 +594,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "rspec-core",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "3.13.0"
     },
     {
@@ -624,6 +636,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "rspec-expectations",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "3.13.0"
     },
     {
@@ -665,6 +678,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "rspec-mocks",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "3.13.0"
     },
     {
@@ -706,6 +720,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "rspec-support",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "3.13.0"
     },
     {
@@ -747,6 +762,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "rspec",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "3.13.0"
     },
     {
@@ -788,6 +804,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "tzinfo",
+      "supplier": "Organization: RubyGems",
       "versionInfo": "2.0.6"
     }
   ],
