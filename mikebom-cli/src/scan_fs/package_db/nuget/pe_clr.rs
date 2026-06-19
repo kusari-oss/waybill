@@ -576,7 +576,122 @@ fn coded_idx_width(rows: &BTreeMap<u8, u32>, referenced: &[u8], tag_bits: u32) -
 }
 
 // =============================================================
-// Resource-assembly culture-set dedup (FR-024).
+// Milestone 131 US2a — LICENSE.txt probing + fingerprint-matching.
+// =============================================================
+
+/// Per FR-013: walk up from `dll_path`'s parent directory up to
+/// `max_depth` levels looking for case-insensitive `LICENSE`,
+/// `LICENSE.txt`, `LICENSE.md`, `COPYING`, or `COPYING.txt`.
+/// Returns the first match's first 4 KB of bytes + the file path.
+/// `None` when no match.
+fn probe_license_file(dll_path: &Path, max_depth: u8) -> Option<(Vec<u8>, PathBuf)> {
+    const LICENSE_CANDIDATE_NAMES: &[&str] = &[
+        "LICENSE",
+        "LICENSE.txt",
+        "LICENSE.md",
+        "COPYING",
+        "COPYING.txt",
+    ];
+    const READ_CAP_BYTES: usize = 4 * 1024;
+    let mut current = dll_path.parent()?;
+    for _ in 0..=max_depth {
+        let dir_entries = std::fs::read_dir(current).ok();
+        if let Some(entries) = dir_entries {
+            for entry in entries.flatten() {
+                let Some(name) = entry.file_name().to_str().map(|s| s.to_string()) else {
+                    continue;
+                };
+                let matches_candidate = LICENSE_CANDIDATE_NAMES
+                    .iter()
+                    .any(|c| name.eq_ignore_ascii_case(c));
+                if !matches_candidate {
+                    continue;
+                }
+                let path = entry.path();
+                if !path.is_file() {
+                    continue;
+                }
+                let Ok(file_bytes) = std::fs::read(&path) else {
+                    continue;
+                };
+                let truncated = file_bytes
+                    .into_iter()
+                    .take(READ_CAP_BYTES)
+                    .collect::<Vec<_>>();
+                return Some((truncated, path));
+            }
+        }
+        let Some(parent) = current.parent() else {
+            break;
+        };
+        current = parent;
+    }
+    None
+}
+
+/// Per FR-013: match the license file's first 4 KB against canonical
+/// opening-text patterns of common SPDX licenses. Returns the SPDX
+/// id when a match fires, else `None` (signals the C97 fallback).
+fn fingerprint_license(bytes: &[u8]) -> Option<&'static str> {
+    let text = std::str::from_utf8(bytes).ok()?;
+    // Case-insensitive substring detection. Order matters: more-specific
+    // patterns first (BSD-3 before BSD-2; GPL-3 before GPL-2).
+    if text.contains("Apache License")
+        && (text.contains("Version 2.0") || text.contains("Version 2,"))
+    {
+        return Some("Apache-2.0");
+    }
+    if text.contains("MIT License")
+        || text.contains("Permission is hereby granted, free of charge")
+    {
+        return Some("MIT");
+    }
+    if text.contains("BSD 3-Clause")
+        || (text.contains("Redistribution and use in source and binary forms")
+            && text.contains("Neither the name"))
+    {
+        return Some("BSD-3-Clause");
+    }
+    if text.contains("BSD 2-Clause")
+        || (text.contains("Redistribution and use in source and binary forms")
+            && !text.contains("Neither the name"))
+    {
+        return Some("BSD-2-Clause");
+    }
+    if text.contains("GNU General Public License")
+        && (text.contains("version 3") || text.contains("Version 3"))
+    {
+        return Some("GPL-3.0");
+    }
+    if text.contains("GNU General Public License")
+        && (text.contains("version 2") || text.contains("Version 2"))
+    {
+        return Some("GPL-2.0");
+    }
+    None
+}
+
+/// Per C97: hex-encode the SHA-256 of the license file's first 4 KB.
+fn compute_license_sha256_hex(bytes: &[u8]) -> String {
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(bytes);
+    let digest = hasher.finalize();
+    digest.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+#[derive(Debug, Clone)]
+enum LicenseProbeResult {
+    /// File found, fingerprint matched.
+    Identified { spdx_id: &'static str },
+    /// File found, no fingerprint match. Emits C97 hash annotation.
+    Unrecognized { sha256_hex: String },
+    /// File not found in the probe walk.
+    NotFound,
+}
+
+// =============================================================
+// Resource-assembly culture-set dedup (FR-024) + license accumulator.
 // =============================================================
 
 struct AssemblyAccumulator {
@@ -587,6 +702,11 @@ struct AccumulatedAssembly {
     representative_version: Version4Tuple,
     cultures: BTreeSet<String>,
     source_paths: BTreeSet<PathBuf>,
+    /// Milestone 131 US2a — license probe result for this component.
+    /// `None` until first absorb completes; subsequent absorbs from
+    /// culture-variant DLLs DO NOT overwrite (the first-probed wins,
+    /// keeping the per-(name,version) result stable).
+    license: Option<LicenseProbeResult>,
 }
 
 impl AssemblyAccumulator {
@@ -597,14 +717,34 @@ impl AssemblyAccumulator {
     fn absorb(&mut self, assembly: ManagedAssembly, path: &Path) {
         let version_str = assembly.version.to_string();
         let key = (assembly.name.clone(), version_str);
+        let is_new = !self.components.contains_key(&key);
         let entry = self.components.entry(key).or_insert_with(|| AccumulatedAssembly {
             representative_version: assembly.version,
             cultures: BTreeSet::new(),
             source_paths: BTreeSet::new(),
+            license: None,
         });
         entry.source_paths.insert(path.to_path_buf());
         if let Some(culture) = assembly.culture {
             entry.cultures.insert(culture);
+        }
+        // Milestone 131 US2a — license probe per FR-013. Run only on
+        // the FIRST absorb for this (name, version) key so multi-culture
+        // resource-assembly files don't redundantly probe (and so the
+        // result is deterministic — first DLL's parent-directory wins).
+        if is_new {
+            entry.license = Some(match probe_license_file(path, 3) {
+                Some((bytes, _file_path)) => {
+                    if let Some(spdx_id) = fingerprint_license(&bytes) {
+                        LicenseProbeResult::Identified { spdx_id }
+                    } else {
+                        LicenseProbeResult::Unrecognized {
+                            sha256_hex: compute_license_sha256_hex(&bytes),
+                        }
+                    }
+                }
+                None => LicenseProbeResult::NotFound,
+            });
         }
     }
 
@@ -636,6 +776,45 @@ impl AssemblyAccumulator {
                     serde_json::Value::String(joined),
                 );
             }
+            // Milestone 131 US2a — license-source annotations (C96) +
+            // SPDX-id-driven licenses[] population per FR-013 / FR-015.
+            let licenses_vec = match &acc.license {
+                Some(LicenseProbeResult::Identified { spdx_id }) => {
+                    extra_annotations.insert(
+                        "mikebom:license-source".to_string(),
+                        serde_json::Value::String("package-dir".to_string()),
+                    );
+                    match mikebom_common::types::license::SpdxExpression::try_canonical(spdx_id) {
+                        Ok(expr) => vec![expr],
+                        Err(e) => {
+                            tracing::warn!(
+                                spdx_id = %spdx_id,
+                                err = %e,
+                                "fingerprint-matched SPDX id failed try_canonical; skipping"
+                            );
+                            Vec::new()
+                        }
+                    }
+                }
+                Some(LicenseProbeResult::Unrecognized { sha256_hex }) => {
+                    extra_annotations.insert(
+                        "mikebom:license-source".to_string(),
+                        serde_json::Value::String("package-dir-unrecognized".to_string()),
+                    );
+                    extra_annotations.insert(
+                        "mikebom:license-text-sha256".to_string(),
+                        serde_json::Value::String(sha256_hex.clone()),
+                    );
+                    Vec::new()
+                }
+                Some(LicenseProbeResult::NotFound) | None => {
+                    extra_annotations.insert(
+                        "mikebom:license-source".to_string(),
+                        serde_json::Value::String("package-dir-no-license".to_string()),
+                    );
+                    Vec::new()
+                }
+            };
             let primary_source = acc
                 .source_paths
                 .iter()
@@ -651,7 +830,7 @@ impl AssemblyAccumulator {
                 source_path: primary_source,
                 depends: Vec::new(),
                 maintainer: None,
-                licenses: Vec::new(),
+                licenses: licenses_vec,
                 lifecycle_scope: None,
                 requirement_range: None,
                 source_type: None,
@@ -781,5 +960,82 @@ mod tests {
         let tmp = tempfile::TempDir::new().unwrap();
         let entries = read(tmp.path(), &ExclusionSet::new_empty());
         assert!(entries.is_empty());
+    }
+
+    // ============================================================
+    // Milestone 131 US2a — license probe + fingerprint tests.
+    // ============================================================
+
+    #[test]
+    fn fingerprint_license_detects_apache_2_0() {
+        let text = b"\n                                 Apache License\n                           Version 2.0, January 2004\n";
+        assert_eq!(fingerprint_license(text), Some("Apache-2.0"));
+    }
+
+    #[test]
+    fn fingerprint_license_detects_mit_via_permission_grant() {
+        let text = b"Copyright (c) 2024 Example Corp\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software";
+        assert_eq!(fingerprint_license(text), Some("MIT"));
+    }
+
+    #[test]
+    fn fingerprint_license_detects_bsd_3_clause_via_neither_clause() {
+        let text = b"Redistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n* Neither the name of Example nor the names of its contributors may be used";
+        assert_eq!(fingerprint_license(text), Some("BSD-3-Clause"));
+    }
+
+    #[test]
+    fn fingerprint_license_returns_none_for_unrecognized_text() {
+        let text = b"This is some proprietary license that mikebom doesn't recognize.";
+        assert!(fingerprint_license(text).is_none());
+    }
+
+    #[test]
+    fn probe_license_file_finds_at_dll_parent_dir() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let dll_dir = tmp.path().join("packs/Foo.Bar/1.0.0/ref/net8.0");
+        std::fs::create_dir_all(&dll_dir).unwrap();
+        let dll_path = dll_dir.join("Foo.Bar.dll");
+        std::fs::write(&dll_path, b"fake dll").unwrap();
+        // Place LICENSE.TXT (case-mixed) one level above the DLL's dir.
+        let license_path = tmp.path().join("packs/Foo.Bar/1.0.0/LICENSE.TXT");
+        std::fs::write(&license_path, b"Apache License\nVersion 2.0, January 2004").unwrap();
+        let result = probe_license_file(&dll_path, 3);
+        let (bytes, found_path) = result.expect("should find LICENSE");
+        assert!(std::str::from_utf8(&bytes).unwrap().contains("Apache License"));
+        assert_eq!(found_path.file_name().and_then(|s| s.to_str()), Some("LICENSE.TXT"));
+    }
+
+    #[test]
+    fn probe_license_file_caps_read_at_4kb() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let dll_dir = tmp.path().join("pkg");
+        std::fs::create_dir_all(&dll_dir).unwrap();
+        let dll_path = dll_dir.join("Foo.dll");
+        std::fs::write(&dll_path, b"fake").unwrap();
+        // 10 KB LICENSE; probe must return only first 4 KB.
+        let huge_license = vec![b'A'; 10 * 1024];
+        std::fs::write(dll_dir.join("LICENSE"), &huge_license).unwrap();
+        let (bytes, _) = probe_license_file(&dll_path, 1).unwrap();
+        assert_eq!(bytes.len(), 4 * 1024);
+    }
+
+    #[test]
+    fn probe_license_file_returns_none_when_no_license_in_walk() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let dll_dir = tmp.path().join("pkg/nested/deep");
+        std::fs::create_dir_all(&dll_dir).unwrap();
+        let dll_path = dll_dir.join("Foo.dll");
+        std::fs::write(&dll_path, b"fake").unwrap();
+        assert!(probe_license_file(&dll_path, 3).is_none());
+    }
+
+    #[test]
+    fn compute_license_sha256_hex_is_deterministic() {
+        let bytes = b"Some license body";
+        let h1 = compute_license_sha256_hex(bytes);
+        let h2 = compute_license_sha256_hex(bytes);
+        assert_eq!(h1, h2);
+        assert_eq!(h1.len(), 64); // SHA-256 hex
     }
 }

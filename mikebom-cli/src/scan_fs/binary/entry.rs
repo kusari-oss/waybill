@@ -338,6 +338,23 @@ pub(super) fn cargo_auditable_packages_to_entries(
                     serde_json::Value::String(pkg.source.clone()),
                 );
             }
+            // Milestone 131 US2c (FR-014): for crates.io-sourced
+            // entries, the license is published on the crates.io
+            // registry but NOT in the .dep-v0 section. Signal
+            // downstream tooling (a future deps.dev enrichment
+            // milestone) where to look. For "local" / "git" / "unknown"
+            // / other sources, no annotation is added (we don't know
+            // where the license is).
+            if pkg.source == "registry"
+                || pkg.source.starts_with("registry+https://")
+                || pkg.source == "crates-io"
+                || pkg.source == "crates.io"
+            {
+                extra.insert(
+                    "mikebom:license-source".to_string(),
+                    serde_json::Value::String("registry-required".to_string()),
+                );
+            }
             // Milestone 131 US3 (FR-020 + C98): when the source field
             // carries a parseable `git+https://...` URL, extract it
             // (stripping the `git+` prefix, any trailing `.git`, and

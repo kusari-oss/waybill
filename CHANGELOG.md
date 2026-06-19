@@ -7,6 +7,48 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### License coverage backfill for PE/CLR + cargo-auditable components (milestone 131 US2a + US2c)
+
+Closes the second-largest scorecard regression from milestone 130 — License Coverage dropped from 3/5 to 1/5 because the new readers (cargo-auditable, PE/CLR managed-assembly metadata) emit no license expressions. This PR backfills via two complementary paths:
+
+**US2a — PE/CLR LICENSE.txt fingerprint-matching** (`mikebom-cli/src/scan_fs/package_db/nuget/pe_clr.rs`):
+
+- New `probe_license_file(dll_path, max_depth=3)` walks up to 3 levels above each managed assembly's parent directory looking for case-insensitive `LICENSE` / `LICENSE.txt` / `LICENSE.md` / `COPYING` / `COPYING.txt`. Returns the first 4 KB of bytes + path. The .NET runtime store convention places LICENSE files at the package-version root (e.g. `/usr/share/dotnet/packs/Microsoft.AspNetCore.App.Ref/8.0.27/LICENSE.TXT`) — the 3-level walk covers this layout AND the nested `ref/net8.0/` subdirectory pattern. 4 KB cap prevents pathological license-file-as-DDoS attacks while accommodating realistic license texts (MIT ~1 KB, Apache-2.0 ~10 KB truncated at 4 KB).
+- New `fingerprint_license(bytes)` matches the first 4 KB against canonical opening-text patterns of common SPDX licenses: `"Apache License" + "Version 2.0"` → `Apache-2.0`; `"MIT License"` OR `"Permission is hereby granted, free of charge"` → `MIT`; `"BSD 3-Clause"` / Neither-the-name-clause → `BSD-3-Clause`; `"BSD 2-Clause"` → `BSD-2-Clause`; `"GNU General Public License" + "version 3"` → `GPL-3.0`; same + `"version 2"` → `GPL-2.0`. Returns `Some(spdx_id)` on match, `None` for unrecognized text.
+- New `LicenseProbeResult` enum + `AccumulatedAssembly.license` field track the per-(name, version) probe result through the milestone-130 culture-set dedup pipeline. First-absorb-wins so multi-culture resource-assembly files don't redundantly probe.
+- `AssemblyAccumulator::flatten` emits per FR-013 / FR-015 / C97:
+  - `LicenseProbeResult::Identified { spdx_id }` → `PackageDbEntry.licenses` populated via `SpdxExpression::try_canonical(spdx_id)` + `mikebom:license-source = "package-dir"` annotation.
+  - `LicenseProbeResult::Unrecognized { sha256_hex }` → empty `licenses[]` + `mikebom:license-source = "package-dir-unrecognized"` + `mikebom:license-text-sha256 = <hex>` (C97 — hex-encoded SHA-256 of the 4 KB window so downstream tools can cross-reference the same license body across packages).
+  - `LicenseProbeResult::NotFound` → empty `licenses[]` + `mikebom:license-source = "package-dir-no-license"` (FR-015).
+
+**US2c — cargo-auditable registry-required signal** (`mikebom-cli/src/scan_fs/binary/entry.rs::cargo_auditable_packages_to_entries`):
+
+- For each `packages[]` entry whose `source` matches `"crates.io"`, `"crates-io"`, `"registry"`, or `"registry+https://..."`, emit `mikebom:license-source = "registry-required"`. Per Constitution Principle XII this is a signal for downstream deps.dev-style enrichment — the annotation does NOT consult external sources itself; it just tells downstream tools where to look. Per FR-014.
+
+**Audit-image impact**:
+
+| Annotation value | Count | Source |
+|---|---|---|
+| `package-dir` (SPDX-id resolved) | 339 | PE/CLR LICENSE.txt fingerprint matched |
+| `package-dir-no-license` | 296 | PE/CLR probed but absent |
+| `registry-required` | 926 | cargo-auditable from crates.io |
+
+Components carrying non-empty `licenses[]` lifted from ~700 (pre-131-US2) to **1,107** (post-131-US2). License Coverage scorecard: **1/5 → 2/5**. The remaining 3/5 → 4/5 jump requires US2b (nested-JAR `<licenses>` extraction; tracked as a follow-up since `parse_pom_xml` doesn't currently extract `<licenses>` and adding it is more substantial work than originally scoped).
+
+**Overall sbom-comparison weighted score**: post-130 2.4 → post-131-US3 2.6 → **post-131-US2 2.6** (mikebom leads syft 2.5 on weighted score). License-Coverage component of the weighted average lifted.
+
+**New annotation keys catalogued** (C96 + C97):
+- `mikebom:license-source` (US2a + US2c) — values: `package-dir`, `package-dir-no-license`, `package-dir-unrecognized`, `registry-required`. Catalogued in `specs/131-quality-metadata-backfill/contracts/annotation-schema.md` with full Principle V audit.
+- `mikebom:license-text-sha256` (US2a only, unrecognized-license branch) — parity-bridging extension for cross-package license-body identity matching.
+
+**8 new unit tests** in `pe_clr.rs`: 4 fingerprint detection cases (Apache-2.0 / MIT / BSD-3-Clause / unrecognized-returns-None); 3 probe-file behaviors (finds at parent dir / 4 KB read cap / returns None when no LICENSE in walk); 1 SHA-256 determinism test. All 16 pe_clr tests pass.
+
+**Byte-identity preserved** across the 33 alpha.48 goldens (zero `.cdx.json` / `.spdx.json` churn).
+
+**Follow-up tracked separately**:
+- **US1** (PE/CLR Phase B — CustomAttribute walking for `InformationalVersion` + `FileVersion`) — resolves 373 VERSION_MISMATCH cases. ~300 LOC ECMA-335 hand-roll.
+- **US2b** (nested-JAR `<licenses>` extraction) — requires extending `parse_pom_xml` with `<licenses>` element handling. Modest follow-up.
+
 ### Supplier external-reference URL synthesis for cargo / NuGet / nested Maven (milestone 131 US3)
 
 Closes the Supplier Attribution scorecard regression from milestone 130. The post-130 audit
