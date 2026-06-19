@@ -7,6 +7,83 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### PE/CLR Phase B — `CustomAttribute` walking for `InformationalVersion` + `FileVersion` (milestone 131 US1)
+
+Closes the final remaining track of milestone 131. The milestone-130 US3 Phase A reader emits
+`pkg:nuget/<name>@<X.Y.Z.W>` using the Assembly table's 4-tuple version. NuGet.org publishes
+packages using `AssemblyInformationalVersion` (a semver-style string like
+`"8.0.27+be2530c3035e4bfa7670c6b18f5a64ef89e0e80d"`) — this PR adds CustomAttribute table walking
+per ECMA-335 §II.22.10 to extract that version and route the PURL through the milestone-129
+clarification Q3 ladder: `Informational > File > 4-tuple`.
+
+**ECMA-335 metadata-table walk implementation** (~400 LOC):
+
+- `walk_custom_attributes` at the end of `parse_tables_stream`: iterates every row in the
+  CustomAttribute table (token 0x0C); decodes the `Type` column's CustomAttributeType coded index
+  (3-bit tag); when tag=3 (MemberRef), resolves through to MemberRef → TypeRef → `#Strings` heap
+  to extract the attribute type name; filters for `"AssemblyInformationalVersionAttribute"` and
+  `"AssemblyFileVersionAttribute"`.
+- `decode_attribute_string_blob` decodes the matching row's `Value` blob per §II.23.3: read blob
+  via compressed-int-prefixed `#Blob` heap entry; verify 2-byte prolog `0x0001`; decode SerString
+  argument.
+- `decode_compressed_int` per §II.24.2.4: 1-byte form when high bit clear (value <128); 2-byte
+  form when high 2 bits=10 (value <16384); 4-byte form when high 3 bits=110 (value <2^29).
+- `decode_serstring` per §II.23.3: `0xFF` → null; else compressed-int length-prefix + UTF-8 bytes.
+- `compute_table_offsets` helper returns a `BTreeMap<u8, usize>` of all present tables' absolute
+  byte offsets, computed via cumulative `row_count × row_size` walk. Cleaner than the inline
+  hard-coded `for token in 0..0x20` loop from Phase A; needed because Phase B walks 3 different
+  tables (CustomAttribute, MemberRef, TypeRef).
+
+**Sanity filter**: `is_plausible_version_string` rejects garbage decoded strings — empty, >128
+chars, non-ASCII, no digit, no separator (`.`/`-`), or control characters. Mirrors the
+milestone-130 Phase A `is_plausible_assembly_name` posture: the row-size approximation is
+imperfect, so we filter on the OUTPUT.
+
+**PURL ladder integration**:
+
+- `ManagedAssembly` extended with `informational_version: Option<String>` and
+  `file_version: Option<String>`.
+- `AccumulatedAssembly` extended with the same fields, populated first-absorb-wins (culture
+  variants share the same Informational/File version by construction).
+- `AssemblyAccumulator::flatten` builds the PURL version per the ladder; PE/CLR-emitted
+  `pkg:nuget/<name>@<purl_version>` now uses Informational when available, falling through to
+  File then to the 4-tuple.
+- The full set of 3 version annotations (`mikebom:assembly-version-{informational,file,runtime}`)
+  emits on the component when each version was extracted. The 4-tuple `runtime` annotation always
+  emits (FR-010).
+
+**Audit-image impact**:
+
+- **630 of 635** PE/CLR managed-assembly components now carry `mikebom:assembly-version-informational`.
+- VERSION_MISMATCH count vs syft: **373 → 374** (essentially unchanged). The PURL fidelity gain
+  is real but doesn't show up in the metric because subtle semver build-metadata differences
+  (`+<sha>` suffixes, partial date stamps, etc.) cause both improvements AND new mismatches.
+  Sample post-fix component: `Microsoft.AspNetCore.Http.Connections.Common.dll` →
+  `pkg:nuget/<name>@8.0.27+be2530c3035e4bfa7670c6b18f5a64ef89e0e80d`. Syft's emission for the same
+  assembly may differ in the `+<sha>` suffix — both are "correct" from different perspectives.
+- Overall weighted scorecard unchanged at 2.6 (mikebom) vs 2.5 (syft).
+
+**Honest caveats** (inherited from milestone-130 Phase A):
+
+- The ECMA-335 §II.22 row-size approximation in `compute_row_size` is best-effort — for some
+  assemblies the row offsets misalign and the Phase B decoder either fails (Value blob doesn't
+  start with `0x0001` prolog, filter rejects) or produces a garbage version string that the
+  sanity filter rejects. Net result on the audit image: 630 successful extractions out of 635
+  emitted components.
+- Components where Phase A's `Name` extraction is also misaligned (~46 cases on the audit image
+  pre-130 — same set as the milestone-130 Phase A 46-name-rejected count) now carry both garbage
+  names AND garbage InformationalVersion strings that pass the filter coincidentally. Future
+  improvement: tighten the row-size computation.
+
+**11 new unit tests** (27 total pe_clr tests pass):
+
+- 4 `decode_compressed_int` cases (1-byte, 2-byte, 4-byte, empty input)
+- 3 `decode_serstring` cases (short string, null `0xFF`, empty length-0)
+- 2 `is_plausible_version_string` cases (accept semver/4-tuple, reject garbage)
+- 2 `decode_attribute_string_blob` round-trip cases (success + wrong-prolog rejection)
+
+**Byte-identity preserved** across the 33 alpha.48 goldens.
+
 ### Nested-JAR `<licenses>` extraction (milestone 131 US2b)
 
 Closes the deferred US2b track from milestone 131. The post-milestone-130 nested-JAR walker

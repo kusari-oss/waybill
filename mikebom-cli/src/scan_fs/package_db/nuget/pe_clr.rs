@@ -118,6 +118,16 @@ pub(crate) struct ManagedAssembly {
     pub name: String,
     pub version: Version4Tuple,
     pub culture: Option<String>,
+    /// Milestone 131 US1 (Phase B): the `AssemblyInformationalVersionAttribute`
+    /// value, when present in the CustomAttribute table AND sanity-checked
+    /// (must contain a digit + a dot, ASCII-printable, ≤128 chars). `None`
+    /// when absent or when the walk produced garbage (row-size
+    /// approximation can misalign on some assemblies, same caveat as
+    /// milestone-130 Phase A's name field).
+    pub informational_version: Option<String>,
+    /// Milestone 131 US1 (Phase B): the `AssemblyFileVersionAttribute`
+    /// value, same sanity-check rules as `informational_version`.
+    pub file_version: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -285,8 +295,7 @@ fn parse_metadata_root(metadata: &[u8]) -> Result<ManagedAssembly, ClrParseError
     }
     let tables_stream = tables_stream.ok_or(ClrParseError::MissingStreams)?;
     let strings_heap = strings_heap.ok_or(ClrParseError::MissingStreams)?;
-    let _ = blob_heap; // unused in Phase A; needed for Phase B
-    parse_tables_stream(tables_stream, strings_heap)
+    parse_tables_stream(tables_stream, strings_heap, blob_heap.unwrap_or(&[]))
 }
 
 // =============================================================
@@ -296,6 +305,7 @@ fn parse_metadata_root(metadata: &[u8]) -> Result<ManagedAssembly, ClrParseError
 fn parse_tables_stream(
     tables: &[u8],
     strings_heap: &[u8],
+    blob_heap: &[u8],
 ) -> Result<ManagedAssembly, ClrParseError> {
     // Header layout:
     //   u32 reserved
@@ -408,11 +418,315 @@ fn parse_tables_stream(
     // Same sanity check for the culture field: if the culture looks
     // like a real assembly name, our row offsets are off — discard.
     let culture = culture.filter(|c| !looks_like_assembly_name(c));
+
+    // Milestone 131 US1 (Phase B): walk the CustomAttribute table
+    // (token 0x0C) for `AssemblyInformationalVersionAttribute` +
+    // `AssemblyFileVersionAttribute` per ECMA-335 §II.22.10 + §II.23.3.
+    // Reuses the same row-size approximation as Phase A's Assembly
+    // walk — inherits the same caveat that some assemblies misalign.
+    let (informational_version, file_version) = walk_custom_attributes(
+        tables,
+        row_cursor,
+        &table_widths,
+        &row_counts,
+        strings_heap,
+        blob_heap,
+    );
     Ok(ManagedAssembly {
         name: name.to_string(),
         version: Version4Tuple { major, minor, build, revision },
         culture,
+        informational_version,
+        file_version,
     })
+}
+
+/// Milestone 131 US1 (Phase B): walk the CustomAttribute table
+/// (token 0x0C) for rows whose `Type` column resolves through
+/// MemberRef → TypeRef → #Strings to `AssemblyInformationalVersionAttribute`
+/// or `AssemblyFileVersionAttribute`. Decodes the matching row's
+/// `Value` blob (prolog 0x0001 + SerString) into a UTF-8 string.
+/// Returns `(informational, file)` — `None` for fields not found OR
+/// not passing the version-string sanity filter.
+///
+/// `start_offset` is the byte offset in `tables_stream` where
+/// table 0x00 (Module) starts (the row_counts header end).
+fn walk_custom_attributes(
+    tables: &[u8],
+    start_offset: usize,
+    widths: &TableWidths,
+    row_counts: &BTreeMap<u8, u32>,
+    strings_heap: &[u8],
+    blob_heap: &[u8],
+) -> (Option<String>, Option<String>) {
+    // Compute the absolute offsets of every table whose rows we need
+    // to walk: 0x01 TypeRef, 0x0A MemberRef, 0x0C CustomAttribute.
+    let table_offsets = compute_table_offsets(start_offset, widths, row_counts);
+    let Some(&ca_offset) = table_offsets.get(&0x0C) else {
+        return (None, None);
+    };
+    let Some(&typeref_offset) = table_offsets.get(&0x01) else {
+        return (None, None);
+    };
+    let memberref_offset = table_offsets.get(&0x0A).copied().unwrap_or(0);
+    let ca_rows = row_counts.get(&0x0C).copied().unwrap_or(0);
+    let ca_row_size = compute_row_size(0x0C, widths, row_counts);
+    let memberref_row_size = compute_row_size(0x0A, widths, row_counts);
+    let typeref_row_size = compute_row_size(0x01, widths, row_counts);
+    let has_ca_width = coded_idx_width(
+        row_counts,
+        &[
+            0x06, 0x04, 0x01, 0x02, 0x08, 0x09, 0x0A, 0x00, 0x0E, 0x17, 0x14, 0x11, 0x1A, 0x1B,
+            0x20, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B,
+        ],
+        5,
+    );
+    let ca_type_width = coded_idx_width(row_counts, &[0xFF, 0xFF, 0x06, 0x0A, 0xFF], 3);
+    let member_ref_parent_width =
+        coded_idx_width(row_counts, &[0x02, 0x01, 0x1A, 0x06, 0x1B], 3);
+
+    let mut informational: Option<String> = None;
+    let mut file: Option<String> = None;
+    for i in 0..ca_rows {
+        let row_offset = ca_offset + (i as usize) * ca_row_size;
+        let Some(row) = tables.get(row_offset..row_offset + ca_row_size) else {
+            break;
+        };
+        // CustomAttribute row layout:
+        //   <has_ca_width> Parent
+        //   <ca_type_width> Type
+        //   <blob_idx>     Value
+        let type_idx_raw = match ca_type_width {
+            2 => match u16_le(row, has_ca_width) {
+                Some(v) => v as u32,
+                None => continue,
+            },
+            4 => match u32_le(row, has_ca_width) {
+                Some(v) => v,
+                None => continue,
+            },
+            _ => continue,
+        };
+        let value_offset = has_ca_width + ca_type_width;
+        let blob_idx = match widths.blob_idx {
+            2 => match u16_le(row, value_offset) {
+                Some(v) => v as u32,
+                None => continue,
+            },
+            4 => match u32_le(row, value_offset) {
+                Some(v) => v,
+                None => continue,
+            },
+            _ => continue,
+        };
+        // CustomAttributeType coded index: 3-bit tag (low bits),
+        // remaining bits = row index (1-based).
+        let tag = (type_idx_raw & 0x7) as u8;
+        let table_row_index = type_idx_raw >> 3;
+        if tag != 3 {
+            continue; // We only handle MemberRef (tag 3); MethodDef (tag 2) is .ctor in same assembly — exceedingly rare for the attrs we care about.
+        }
+        if table_row_index == 0 {
+            continue;
+        }
+        // Resolve the MemberRef row (1-based index).
+        if memberref_offset == 0 || memberref_row_size == 0 {
+            continue;
+        }
+        let mr_row_offset = memberref_offset + ((table_row_index - 1) as usize) * memberref_row_size;
+        let Some(mr_row) = tables.get(mr_row_offset..mr_row_offset + memberref_row_size) else {
+            continue;
+        };
+        // MemberRef row layout:
+        //   <member_ref_parent_width> Class
+        //   <strings_idx> Name
+        //   <blob_idx>    Signature
+        let class_raw = match member_ref_parent_width {
+            2 => match u16_le(mr_row, 0) {
+                Some(v) => v as u32,
+                None => continue,
+            },
+            4 => match u32_le(mr_row, 0) {
+                Some(v) => v,
+                None => continue,
+            },
+            _ => continue,
+        };
+        // MemberRefParent coded index: 3-bit tag, tag 1 = TypeRef.
+        let class_tag = (class_raw & 0x7) as u8;
+        let typeref_row_idx = class_raw >> 3;
+        if class_tag != 1 || typeref_row_idx == 0 {
+            continue;
+        }
+        // Resolve the TypeRef row.
+        let tr_row_offset =
+            typeref_offset + ((typeref_row_idx - 1) as usize) * typeref_row_size;
+        let Some(tr_row) = tables.get(tr_row_offset..tr_row_offset + typeref_row_size) else {
+            continue;
+        };
+        // TypeRef row layout:
+        //   <resolution_scope> ResolutionScope
+        //   <strings_idx>      TypeName
+        //   <strings_idx>      TypeNamespace
+        let resolution_scope_width =
+            coded_idx_width(row_counts, &[0x00, 0x1A, 0x23, 0x01], 2);
+        let typename_offset = resolution_scope_width;
+        let typename_idx = match widths.strings_idx {
+            2 => match u16_le(tr_row, typename_offset) {
+                Some(v) => v as u32,
+                None => continue,
+            },
+            4 => match u32_le(tr_row, typename_offset) {
+                Some(v) => v,
+                None => continue,
+            },
+            _ => continue,
+        };
+        let Some(typename) = read_string_heap(strings_heap, typename_idx) else {
+            continue;
+        };
+        let is_informational = typename == "AssemblyInformationalVersionAttribute";
+        let is_file = typename == "AssemblyFileVersionAttribute";
+        if !is_informational && !is_file {
+            continue;
+        }
+        // Decode the Value blob.
+        let Some(version_str) = decode_attribute_string_blob(blob_heap, blob_idx) else {
+            continue;
+        };
+        if !is_plausible_version_string(&version_str) {
+            continue;
+        }
+        if is_informational && informational.is_none() {
+            informational = Some(version_str);
+        } else if is_file && file.is_none() {
+            file = Some(version_str);
+        }
+    }
+    (informational, file)
+}
+
+/// Compute absolute byte offsets in the tables stream for every
+/// present table. Each table's offset = `start_offset` + sum of
+/// `(row_count × row_size)` for every table with a lower token number.
+fn compute_table_offsets(
+    start_offset: usize,
+    widths: &TableWidths,
+    row_counts: &BTreeMap<u8, u32>,
+) -> BTreeMap<u8, usize> {
+    let mut out = BTreeMap::new();
+    let mut cursor = start_offset;
+    for token in 0..64u8 {
+        if let Some(&rows) = row_counts.get(&token) {
+            out.insert(token, cursor);
+            let row_size = compute_row_size(token, widths, row_counts);
+            cursor = cursor.saturating_add((rows as usize) * row_size);
+        }
+    }
+    out
+}
+
+/// Decode a custom-attribute Value blob per ECMA-335 §II.23.3:
+/// the blob payload is a compressed-int length prefix (already
+/// consumed by the heap index — we read the blob bytes via
+/// `read_blob_at`), then prolog `0x0001` (2 bytes LE), then a
+/// SerString. Returns the decoded UTF-8 string, or `None` on failure.
+fn decode_attribute_string_blob(blob_heap: &[u8], blob_idx: u32) -> Option<String> {
+    let blob = read_blob_at(blob_heap, blob_idx)?;
+    if blob.len() < 4 {
+        return None;
+    }
+    // Prolog must be 0x0001 (little-endian).
+    if blob[0] != 0x01 || blob[1] != 0x00 {
+        return None;
+    }
+    // After prolog, decode SerString.
+    decode_serstring(&blob[2..])
+}
+
+/// Read a blob from the `#Blob` heap starting at `idx`. The blob's
+/// own length is encoded via the ECMA-335 §II.24.2.4 compressed
+/// integer format. Returns the slice of the blob's content bytes.
+fn read_blob_at(blob_heap: &[u8], idx: u32) -> Option<&[u8]> {
+    let start = idx as usize;
+    if start >= blob_heap.len() {
+        return None;
+    }
+    let (length, consumed) = decode_compressed_int(&blob_heap[start..])?;
+    let payload_start = start + consumed;
+    let payload_end = payload_start.checked_add(length as usize)?;
+    blob_heap.get(payload_start..payload_end)
+}
+
+/// ECMA-335 §II.24.2.4 compressed-integer decode.
+///
+/// - 1 byte if high bit = 0 (value < 128)
+/// - 2 bytes if high 2 bits = 10 (value < 16384)
+/// - 4 bytes if high 3 bits = 110 (value < 2^29)
+///
+/// Returns `(value, bytes_consumed)` or `None` on malformed input.
+fn decode_compressed_int(bytes: &[u8]) -> Option<(u32, usize)> {
+    let b0 = *bytes.first()?;
+    if b0 & 0x80 == 0 {
+        return Some((b0 as u32, 1));
+    }
+    if b0 & 0xC0 == 0x80 {
+        let b1 = *bytes.get(1)?;
+        let v = ((b0 as u32 & 0x3F) << 8) | (b1 as u32);
+        return Some((v, 2));
+    }
+    if b0 & 0xE0 == 0xC0 {
+        let b1 = *bytes.get(1)?;
+        let b2 = *bytes.get(2)?;
+        let b3 = *bytes.get(3)?;
+        let v = ((b0 as u32 & 0x1F) << 24)
+            | ((b1 as u32) << 16)
+            | ((b2 as u32) << 8)
+            | (b3 as u32);
+        return Some((v, 4));
+    }
+    None
+}
+
+/// ECMA-335 §II.23.3 SerString decode.
+/// - 0xFF byte = null string → returns None silently (skip).
+/// - Otherwise: compressed-int length prefix + UTF-8 bytes.
+fn decode_serstring(bytes: &[u8]) -> Option<String> {
+    let first = *bytes.first()?;
+    if first == 0xFF {
+        return None;
+    }
+    let (length, consumed) = decode_compressed_int(bytes)?;
+    let str_bytes = bytes.get(consumed..consumed + length as usize)?;
+    String::from_utf8(str_bytes.to_vec()).ok()
+}
+
+/// Sanity-filter for the decoded version strings. Real
+/// AssemblyInformationalVersion / AssemblyFileVersion strings look
+/// like `"8.0.27"`, `"1.2.3-rc.1"`, `"8.0.27-servicing.26230.7+sha.a1b2c3d"`.
+/// Reject empty strings, strings >128 chars, strings without any
+/// digit, strings without a dot or hyphen separator.
+fn is_plausible_version_string(s: &str) -> bool {
+    if s.is_empty() || s.len() > 128 {
+        return false;
+    }
+    if !s.is_ascii() {
+        return false;
+    }
+    if !s.chars().any(|c| c.is_ascii_digit()) {
+        return false;
+    }
+    // Must contain at least one `.` or `-` separator (so single-digit
+    // garbage like "0" or "7" gets rejected). Real versions always have
+    // either a dotted version number or a semver-style hyphen suffix.
+    if !s.contains('.') && !s.contains('-') {
+        return false;
+    }
+    // Must NOT contain control characters (NUL, escape, etc.).
+    if s.chars().any(|c| (c as u32) < 0x20) {
+        return false;
+    }
+    true
 }
 
 /// Real managed-assembly names: start with a letter, contain only
@@ -707,6 +1021,12 @@ struct AccumulatedAssembly {
     /// culture-variant DLLs DO NOT overwrite (the first-probed wins,
     /// keeping the per-(name,version) result stable).
     license: Option<LicenseProbeResult>,
+    /// Milestone 131 US1 (Phase B) — AssemblyInformationalVersionAttribute
+    /// value from the first absorb's CustomAttribute walk. Drives the
+    /// PURL version per FR-008 ladder.
+    informational_version: Option<String>,
+    /// Milestone 131 US1 — AssemblyFileVersionAttribute value.
+    file_version: Option<String>,
 }
 
 impl AssemblyAccumulator {
@@ -723,10 +1043,22 @@ impl AssemblyAccumulator {
             cultures: BTreeSet::new(),
             source_paths: BTreeSet::new(),
             license: None,
+            informational_version: None,
+            file_version: None,
         });
         entry.source_paths.insert(path.to_path_buf());
         if let Some(culture) = assembly.culture {
             entry.cultures.insert(culture);
+        }
+        // Milestone 131 US1 — first-absorb-wins for Phase B version
+        // strings. Culture-variant resource DLLs all share the same
+        // AssemblyInformationalVersion / AssemblyFileVersion (built
+        // from the same project), so first-wins is deterministic.
+        if entry.informational_version.is_none() && assembly.informational_version.is_some() {
+            entry.informational_version = assembly.informational_version;
+        }
+        if entry.file_version.is_none() && assembly.file_version.is_some() {
+            entry.file_version = assembly.file_version;
         }
         // Milestone 131 US2a — license probe per FR-013. Run only on
         // the FIRST absorb for this (name, version) key so multi-culture
@@ -750,9 +1082,22 @@ impl AssemblyAccumulator {
 
     fn flatten(self) -> Vec<PackageDbEntry> {
         let mut out = Vec::new();
-        for ((name, version), acc) in self.components {
-            let Some(purl) = super::build_nuget_purl(&name, &version) else {
-                tracing::warn!(name = %name, version = %version, "nuget PURL invalid; skipping");
+        for ((name, _runtime_version_str), acc) in self.components {
+            // Milestone 131 US1 (Phase B) — PURL version ladder per
+            // FR-008 + milestone-129 clarification Q3:
+            //   AssemblyInformationalVersion > AssemblyFileVersion >
+            //   AssemblyVersion 4-tuple.
+            let purl_version = acc
+                .informational_version
+                .clone()
+                .or_else(|| acc.file_version.clone())
+                .unwrap_or_else(|| acc.representative_version.to_string());
+            let Some(purl) = super::build_nuget_purl(&name, &purl_version) else {
+                tracing::warn!(
+                    name = %name,
+                    version = %purl_version,
+                    "nuget PURL invalid; skipping"
+                );
                 continue;
             };
             let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
@@ -760,10 +1105,25 @@ impl AssemblyAccumulator {
                 "mikebom:source-mechanism".to_string(),
                 serde_json::Value::String("dotnet-assembly-metadata".to_string()),
             );
+            // Always-emit the 4-tuple AssemblyVersion per FR-010.
             extra_annotations.insert(
                 "mikebom:assembly-version-runtime".to_string(),
                 serde_json::Value::String(acc.representative_version.to_string()),
             );
+            // Milestone 131 US1 — additional version annotations when
+            // extracted from CustomAttribute walk.
+            if let Some(v) = &acc.informational_version {
+                extra_annotations.insert(
+                    "mikebom:assembly-version-informational".to_string(),
+                    serde_json::Value::String(v.clone()),
+                );
+            }
+            if let Some(v) = &acc.file_version {
+                extra_annotations.insert(
+                    "mikebom:assembly-version-file".to_string(),
+                    serde_json::Value::String(v.clone()),
+                );
+            }
             if !acc.cultures.is_empty() {
                 let joined = acc
                     .cultures
@@ -825,7 +1185,7 @@ impl AssemblyAccumulator {
                 build_inclusion: None,
                 purl,
                 name: name.clone(),
-                version: version.clone(),
+                version: purl_version.clone(),
                 arch: None,
                 source_path: primary_source,
                 depends: Vec::new(),
@@ -903,16 +1263,22 @@ mod tests {
             name: "Foo.Bar".to_string(),
             version: Version4Tuple { major: 1, minor: 0, build: 0, revision: 0 },
             culture: None,
+            informational_version: None,
+            file_version: None,
         };
         let de = ManagedAssembly {
             name: "Foo.Bar".to_string(),
             version: Version4Tuple { major: 1, minor: 0, build: 0, revision: 0 },
             culture: Some("de".to_string()),
+            informational_version: None,
+            file_version: None,
         };
         let fr = ManagedAssembly {
             name: "Foo.Bar".to_string(),
             version: Version4Tuple { major: 1, minor: 0, build: 0, revision: 0 },
             culture: Some("fr".to_string()),
+            informational_version: None,
+            file_version: None,
         };
         acc.absorb(neutral, Path::new("/a/Foo.Bar.dll"));
         acc.absorb(de, Path::new("/a/de/Foo.Bar.resources.dll"));
@@ -936,6 +1302,8 @@ mod tests {
             name: "Foo.Bar".to_string(),
             version: Version4Tuple { major: 8, minor: 0, build: 0, revision: 0 },
             culture: None,
+            informational_version: None,
+            file_version: None,
         };
         acc.absorb(neutral, Path::new("/a/Foo.Bar.dll"));
         let entries = acc.flatten();
@@ -1037,5 +1405,106 @@ mod tests {
         let h2 = compute_license_sha256_hex(bytes);
         assert_eq!(h1, h2);
         assert_eq!(h1.len(), 64); // SHA-256 hex
+    }
+
+    // ============================================================
+    // Milestone 131 US1 — Phase B CustomAttribute walking tests.
+    // ============================================================
+
+    #[test]
+    fn decode_compressed_int_one_byte_when_high_bit_clear() {
+        // 0x42 = 66 (no high bit), 1-byte form.
+        assert_eq!(decode_compressed_int(&[0x42]), Some((66, 1)));
+        assert_eq!(decode_compressed_int(&[0x00]), Some((0, 1)));
+        assert_eq!(decode_compressed_int(&[0x7F]), Some((127, 1)));
+    }
+
+    #[test]
+    fn decode_compressed_int_two_byte_when_high_bits_10() {
+        // 0x80 0x80 = 0b10_000000_10000000 → value = 0x80 = 128.
+        assert_eq!(decode_compressed_int(&[0x80, 0x80]), Some((128, 2)));
+        // 0xBF 0xFF = 0b10_111111_11111111 → value = 0x3FFF = 16383.
+        assert_eq!(decode_compressed_int(&[0xBF, 0xFF]), Some((16383, 2)));
+    }
+
+    #[test]
+    fn decode_compressed_int_four_byte_when_high_bits_110() {
+        // 0xC0 0x00 0x40 0x00 = 0b110_00000_00000000_01000000_00000000 → value = 0x4000 = 16384.
+        assert_eq!(
+            decode_compressed_int(&[0xC0, 0x00, 0x40, 0x00]),
+            Some((16384, 4))
+        );
+    }
+
+    #[test]
+    fn decode_compressed_int_returns_none_for_empty_input() {
+        assert_eq!(decode_compressed_int(&[]), None);
+    }
+
+    #[test]
+    fn decode_serstring_short_string() {
+        // Length-prefixed UTF-8: 0x05 ('H', 'e', 'l', 'l', 'o').
+        let bytes = [0x05, b'H', b'e', b'l', b'l', b'o'];
+        assert_eq!(decode_serstring(&bytes), Some("Hello".to_string()));
+    }
+
+    #[test]
+    fn decode_serstring_null_returns_none() {
+        assert_eq!(decode_serstring(&[0xFF]), None);
+    }
+
+    #[test]
+    fn decode_serstring_empty_string() {
+        // Length 0 → empty string.
+        assert_eq!(decode_serstring(&[0x00]), Some(String::new()));
+    }
+
+    #[test]
+    fn is_plausible_version_string_accepts_semver_and_4tuple() {
+        assert!(is_plausible_version_string("8.0.27"));
+        assert!(is_plausible_version_string("1.2.3-rc.1"));
+        assert!(is_plausible_version_string("8.0.27-servicing.26230.7+sha.a1b2c3d"));
+        assert!(is_plausible_version_string("8.0.27.0"));
+    }
+
+    #[test]
+    fn is_plausible_version_string_rejects_garbage() {
+        assert!(!is_plausible_version_string(""));
+        // No separator AND no digit.
+        assert!(!is_plausible_version_string("hello"));
+        // No digit.
+        assert!(!is_plausible_version_string("abc.def"));
+        // No separator.
+        assert!(!is_plausible_version_string("12345"));
+        // Control character.
+        assert!(!is_plausible_version_string("1.2\x00.3"));
+        // Too long.
+        let long = "1.".repeat(100);
+        assert!(!is_plausible_version_string(&long));
+    }
+
+    #[test]
+    fn decode_attribute_string_blob_round_trips_via_blob_heap() {
+        // Construct a synthetic #Blob heap: blob at idx=1 carries the
+        // attribute payload.
+        // Blob structure on the heap:
+        //   [length_compressed_int][prolog 0x01 0x00][serstring]
+        // For SerString "8.0.27" (6 bytes): length-prefix=0x06.
+        // Inner payload: 0x01 0x00 0x06 '8' '.' '0' '.' '2' '7' = 9 bytes.
+        // Outer blob: length_prefix=0x09, then the 9 bytes.
+        let mut heap = vec![0x00]; // index 0 is empty/unused per spec
+        heap.push(0x09); // outer blob length = 9
+        heap.push(0x01); // prolog low byte
+        heap.push(0x00); // prolog high byte
+        heap.push(0x06); // serstring length = 6
+        heap.extend_from_slice(b"8.0.27");
+        let result = decode_attribute_string_blob(&heap, 1);
+        assert_eq!(result, Some("8.0.27".to_string()));
+    }
+
+    #[test]
+    fn decode_attribute_string_blob_rejects_wrong_prolog() {
+        let heap = [0x00, 0x09, 0xFF, 0xFF, 0x06, b'X', b'.', b'Y', b'.', b'Z'];
+        assert_eq!(decode_attribute_string_blob(&heap, 1), None);
     }
 }
