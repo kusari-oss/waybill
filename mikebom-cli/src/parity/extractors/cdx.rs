@@ -771,14 +771,60 @@ pub(super) fn d1_cdx(doc: &Value) -> BTreeSet<String> {
         })
         .collect()
 }
+// Walk every CDX `evidence.occurrences[]` element and normalize it to
+// the same flat-key shape the SPDX 2.3/3 D2 extractors produce so the
+// `Directionality::SymmetricEqual` assertion at row D2 holds across
+// formats. The CDX-spec occurrence shape is
+// `{location, additionalContext: '{"sha256":"...","md5":"...",...}'}`
+// (additionalContext is a JSON-encoded string carrying scanner-specific
+// fields); the SPDX-annotation shape is the flat
+// `{location, sha256, md5?, ...}`. We lift the additionalContext keys
+// to the top level, drop any non-canonical CDX wrapping, and re-
+// stringify each occurrence individually — yielding ONE entry per
+// occurrence, identical to the SPDX side. Milestone 133 US2.3.
 pub(super) fn d2_cdx(doc: &Value) -> BTreeSet<String> {
-    walk_cdx_components(doc)
-        .iter()
-        .filter_map(|c| {
-            let occ = c.get("evidence")?.get("occurrences")?;
-            serde_json::to_string(occ).ok()
-        })
-        .collect()
+    let mut out = BTreeSet::new();
+    // Use the main-module-inclusive walker so the CDX
+    // `metadata.component` (which carries main-module-tagged components
+    // in CDX) is compared against the SPDX 2.3/3 main-module Package
+    // (which lives in the regular `packages[]` array). Without this,
+    // the language-ecosystem main-module's go.mod / Cargo.lock /
+    // pom.xml occurrence is asymmetrically present on the SPDX side
+    // only. Milestone 133 US2.3.
+    for component in walk_cdx_components_and_main_module(doc) {
+        let Some(occurrences) = component
+            .get("evidence")
+            .and_then(|e| e.get("occurrences"))
+            .and_then(|v| v.as_array())
+        else {
+            continue;
+        };
+        for occ in occurrences {
+            let Some(obj) = occ.as_object() else {
+                continue;
+            };
+            let mut normalized = serde_json::Map::new();
+            if let Some(loc) = obj.get("location") {
+                normalized.insert("location".to_string(), loc.clone());
+            }
+            // additionalContext is a JSON-encoded string per CDX 1.6.
+            // Decode and merge its keys into the flat shape.
+            if let Some(ctx_str) = obj.get("additionalContext").and_then(|v| v.as_str()) {
+                if let Ok(serde_json::Value::Object(ctx)) = serde_json::from_str(ctx_str) {
+                    for (k, v) in ctx {
+                        normalized.insert(k, v);
+                    }
+                }
+            }
+            // Sort keys deterministically by re-emitting through a
+            // BTreeMap (serde_json::Map preserves insertion order).
+            let sorted: std::collections::BTreeMap<String, Value> = normalized.into_iter().collect();
+            if let Ok(s) = serde_json::to_string(&sorted) {
+                out.insert(s);
+            }
+        }
+    }
+    out
 }
 
 // ============================================================

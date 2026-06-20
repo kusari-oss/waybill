@@ -455,6 +455,15 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // an empty map at zero cost.
         let rpm_file_lists = package_db::rpm::read_file_lists(root);
 
+        // Milestone 133 US2.3 (FR-014): per-scan cache of manifest-file
+        // SHA-256. Keyed by absolute `entry.source_path` (e.g. the
+        // host-local tempdir path during image scans). Cached so a
+        // single `Cargo.lock` shared by 500 cargo crates is hashed
+        // once, not 500 times. `None` cached on read failure
+        // (graceful skip per FR-014 second paragraph).
+        let mut manifest_sha_cache: std::collections::HashMap<String, Option<String>> =
+            std::collections::HashMap::new();
+
         for entry in &db_entries {
             let purl_str = entry.purl.as_str().to_string();
             let ecosystem = entry.purl.ecosystem().to_string();
@@ -534,7 +543,18 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                     (Vec::new(), h.into_iter().collect::<Vec<_>>())
                 }
             } else {
-                (Vec::new(), Vec::new())
+                // Milestone 133 US2.3 (FR-014): language-ecosystem +
+                // binary-tier readers populate a single FileOccurrence
+                // at `entry.source_path` (the manifest file or binary
+                // we read to discover this component). The location is
+                // normalized to rootfs-relative + no-leading-`/` (the
+                // same convention as `mikebom:source-files` per
+                // FR-012). The SHA-256 anchors the occurrence to the
+                // exact manifest bytes we parsed — useful for cross-
+                // host SBOM diffing and supply-chain integrity.
+                let occs =
+                    manifest_occurrence(&entry.source_path, root, &mut manifest_sha_cache);
+                (occs, Vec::new())
             };
             // Thread manifest-provided hashes (npm integrity, cargo
             // checksum) onto the component. `entry.hashes` is
@@ -821,6 +841,82 @@ pub fn tag_components_with_layer_digest(
             );
         }
     }
+}
+
+/// Milestone 133 US2.3 (FR-014): build a single `FileOccurrence` for a
+/// language-ecosystem or binary-tier `PackageDbEntry`. The occurrence's
+/// `location` is the manifest's rootfs-relative path (e.g.
+/// `app/Cargo.lock`); the `sha256` is the streamed SHA-256 of the file
+/// at that path. `sha256_cache` is keyed by absolute `source_path` so
+/// shared manifests (one `Cargo.lock` → 500 cargo crates) are hashed
+/// once.
+///
+/// Returns an empty `Vec` when:
+/// - the source file can't be read (permission denied, missing — the
+///   spec degrades gracefully here per FR-014),
+/// - the file exceeds the 256 MB size cap (large binaries; we emit the
+///   occurrence sans SHA in this case rather than blowing the scan).
+///
+/// The 256 MB cap matches `crate::trace::hasher::sha256_file_hex`'s
+/// recommended cap. Cargo.lock / package.json / .gemspec / etc. are all
+/// well under 1 MB; binaries on this codepath (cargo-auditable, Go
+/// binaries) are typically 5-80 MB. The cap exists to keep an
+/// accidentally-classified gigabyte log from stalling the scan.
+fn manifest_occurrence(
+    source_path: &str,
+    root: &Path,
+    sha256_cache: &mut std::collections::HashMap<String, Option<String>>,
+) -> Vec<mikebom_common::resolution::FileOccurrence> {
+    // Skip URL-scheme markers: the cargo / gem / maven / pip / npm
+    // main-module path uses `path+file://<workspace>` as a marker
+    // (`source_path` at e.g. `cargo.rs:387`) rather than a real
+    // on-disk path. Treating it as an occurrence would leak a
+    // placeholder string into `evidence.occurrences[].location` with
+    // an empty `sha256`, and would also create a CDX/SPDX 2.3
+    // asymmetry (CDX `metadata.component` isn't walked by the D2
+    // extractor, SPDX's main-module Package is) which trips the
+    // `holistic_parity::parity_*` SymmetricEqual assertion. The
+    // workspace root is already surfaced via the existing
+    // `mikebom:source-files` annotation; we don't need to duplicate it
+    // here.
+    if source_path.starts_with("path+file://")
+        || source_path.starts_with("git+")
+        || source_path.starts_with("url+")
+        || source_path.starts_with("http://")
+        || source_path.starts_with("https://")
+    {
+        return Vec::new();
+    }
+
+    // Compute (or look up cached) SHA-256 of the manifest file.
+    let sha = if let Some(cached) = sha256_cache.get(source_path) {
+        cached.clone()
+    } else {
+        const MAX_BYTES: u64 = 256 * 1024 * 1024;
+        let computed =
+            crate::trace::hasher::sha256_file_hex(std::path::Path::new(source_path), MAX_BYTES)
+                .ok();
+        sha256_cache.insert(source_path.to_string(), computed.clone());
+        computed
+    };
+
+    // Either branch — SHA present or absent — emits the occurrence so
+    // path coverage stays at ≥95% per SC-002. When the SHA can't be
+    // computed (file removed, oversized, unreadable) we emit an empty
+    // string; the CDX evidence emission preserves the field shape and
+    // downstream consumers can still rely on `location`.
+    let location =
+        crate::scan_fs::sbom_path::normalize_sbom_path_relative(source_path, Some(root));
+    if location.is_empty() {
+        return Vec::new();
+    }
+    vec![mikebom_common::resolution::FileOccurrence {
+        location,
+        sha256: sha.unwrap_or_default(),
+        md5_legacy: None,
+        apk_sha1: None,
+        rpm_file_digest: None,
+    }]
 }
 
 /// Milestone 127 FR-012 implementation. When a Maven main-module

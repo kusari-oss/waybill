@@ -165,9 +165,25 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-DP2TXV4FZRLD2JRKFJJK4D7E/anno-45PYVPGAM5CPQLBR",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"CMakeLists.txt\",\"sha256\":\"3ead8cde49fa2c3a749244f05c71fcc85fdee8bbc3248374622e663b3a76a8c9\"}]}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-DP2TXV4FZRLD2JRKFJJK4D7E/pkg-LXTPKDHC3UVRRT5J",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-DP2TXV4FZRLD2JRKFJJK4D7E/anno-5LKQQ3CSWYETRKTW",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-DP2TXV4FZRLD2JRKFJJK4D7E/pkg-LXTPKDHC3UVRRT5J",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-DP2TXV4FZRLD2JRKFJJK4D7E/anno-5R4TY7SW2XDV3FK6",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"cmake/third_party.cmake\",\"sha256\":\"7352fc9bd0ca39c5efb4b1556e2104c08cc4b54ffa4da9df25b452975a67d8c7\"}]}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-DP2TXV4FZRLD2JRKFJJK4D7E/pkg-6JWGJCRVPGZ5RSBG",
       "type": "Annotation"
     },
     {
@@ -184,6 +200,14 @@
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-DP2TXV4FZRLD2JRKFJJK4D7E/anno-BOTGQCQIH6HYUSUP",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-DP2TXV4FZRLD2JRKFJJK4D7E/pkg-LXTPKDHC3UVRRT5J",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-DP2TXV4FZRLD2JRKFJJK4D7E/anno-DQAONRG3ZAGKGLX7",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"CMakeLists.txt\",\"sha256\":\"3ead8cde49fa2c3a749244f05c71fcc85fdee8bbc3248374622e663b3a76a8c9\"}]}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-DP2TXV4FZRLD2JRKFJJK4D7E/pkg-3ECZZDDDHD3O6FKS",
       "type": "Annotation"
     },
     {

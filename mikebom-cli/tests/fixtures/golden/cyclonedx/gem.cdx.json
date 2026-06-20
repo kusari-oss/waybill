@@ -16,6 +16,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
+          }
         ]
       },
       "name": "activesupport",
@@ -50,6 +56,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
           }
         ]
       },
@@ -86,6 +98,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
+          }
         ]
       },
       "name": "bigdecimal",
@@ -120,6 +138,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
           }
         ]
       },
@@ -156,6 +180,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
+          }
         ]
       },
       "name": "connection_pool",
@@ -190,6 +220,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
           }
         ]
       },
@@ -226,6 +262,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
+          }
         ]
       },
       "name": "i18n",
@@ -260,6 +302,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
           }
         ]
       },
@@ -296,6 +344,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
+          }
         ]
       },
       "name": "mutex_m",
@@ -330,6 +384,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
           }
         ]
       },
@@ -370,6 +430,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
+          }
         ]
       },
       "name": "rails",
@@ -409,6 +475,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
+          }
         ]
       },
       "name": "rspec-core",
@@ -443,6 +515,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
           }
         ]
       },
@@ -479,6 +557,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
+          }
         ]
       },
       "name": "rspec-mocks",
@@ -513,6 +597,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
           }
         ]
       },
@@ -549,6 +639,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
+          }
         ]
       },
       "name": "rspec",
@@ -583,6 +679,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"541146cad7a90425593c9bebc8585f7897fe8d185ef853b592afc4e9af8e3065\"}",
+            "location": "Gemfile.lock"
           }
         ]
       },

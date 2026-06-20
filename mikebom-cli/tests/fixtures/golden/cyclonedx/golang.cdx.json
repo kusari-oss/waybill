@@ -16,6 +16,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"9aded8247f7273dbceae5c01267f4c191edeaad5d26464d6fcc6cedadcd566be\"}",
+            "location": "go.sum"
+          }
         ]
       },
       "externalReferences": [
@@ -68,6 +74,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"9aded8247f7273dbceae5c01267f4c191edeaad5d26464d6fcc6cedadcd566be\"}",
+            "location": "go.sum"
           }
         ]
       },
@@ -122,6 +134,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"9aded8247f7273dbceae5c01267f4c191edeaad5d26464d6fcc6cedadcd566be\"}",
+            "location": "go.sum"
+          }
         ]
       },
       "externalReferences": [
@@ -174,6 +192,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"9aded8247f7273dbceae5c01267f4c191edeaad5d26464d6fcc6cedadcd566be\"}",
+            "location": "go.sum"
           }
         ]
       },
@@ -228,6 +252,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"9aded8247f7273dbceae5c01267f4c191edeaad5d26464d6fcc6cedadcd566be\"}",
+            "location": "go.sum"
+          }
         ]
       },
       "externalReferences": [
@@ -280,6 +310,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"9aded8247f7273dbceae5c01267f4c191edeaad5d26464d6fcc6cedadcd566be\"}",
+            "location": "go.sum"
           }
         ]
       },
@@ -334,6 +370,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"9aded8247f7273dbceae5c01267f4c191edeaad5d26464d6fcc6cedadcd566be\"}",
+            "location": "go.sum"
+          }
         ]
       },
       "externalReferences": [
@@ -386,6 +428,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"9aded8247f7273dbceae5c01267f4c191edeaad5d26464d6fcc6cedadcd566be\"}",
+            "location": "go.sum"
           }
         ]
       },
@@ -440,6 +488,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"9aded8247f7273dbceae5c01267f4c191edeaad5d26464d6fcc6cedadcd566be\"}",
+            "location": "go.sum"
+          }
         ]
       },
       "name": "golang.org/x/sys",
@@ -487,6 +541,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"9aded8247f7273dbceae5c01267f4c191edeaad5d26464d6fcc6cedadcd566be\"}",
+            "location": "go.sum"
+          }
         ]
       },
       "name": "gopkg.in/check.v1",
@@ -533,6 +593,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"9aded8247f7273dbceae5c01267f4c191edeaad5d26464d6fcc6cedadcd566be\"}",
+            "location": "go.sum"
           }
         ]
       },
@@ -683,6 +749,26 @@
     "component": {
       "bom-ref": "pkg:golang/example.com/simple@v0.0.0-unknown",
       "cpe": "cpe:2.3:a:example.com\\/simple:example.com\\/simple:v0.0.0-unknown:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"cdd0a93d26463fdb57eb644821e6dce4545c75eddd034231f3e6f98f3c333888\"}",
+            "location": "go.mod"
+          }
+        ]
+      },
       "name": "example.com/simple",
       "properties": [
         {
