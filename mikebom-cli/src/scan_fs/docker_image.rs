@@ -164,6 +164,49 @@ pub fn extract(archive_path: &Path) -> Result<ExtractedImage> {
     })
 }
 
+/// Issue #401 — when a tar Symlink entry's target is absolute
+/// (`/run`, `/lib64`, `/usr/bin`, ...), rewrite it to be a relative
+/// path that climbs back to the rootfs root and then descends into
+/// the target. Returns `Some(rewritten_target)` when the rewrite
+/// applies; `None` when the target is already relative.
+///
+/// Algorithm: for a symlink at rootfs-relative path
+/// `<parent_dir>/<link_name>` whose target is the absolute path
+/// `/x/y/z`, the rewritten target is `(../ × N)x/y/z` where N is
+/// the component count of `parent_dir`. This canonicalizes to
+/// `<rootfs>/x/y/z` instead of host `/x/y/z`.
+///
+/// Examples:
+/// - `var/run -> /run` → `var/run -> ../run` (1 `..`)
+/// - `usr/lib64 -> /lib64` → `usr/lib64 -> ../lib64`
+/// - `var/lib/dpkg/status -> /etc/passwd` → `../../../etc/passwd`
+///
+/// `#[cfg(unix)]`-gated to match the only call site in
+/// `extract_layer_over_rootfs`. Windows image scans skip this path
+/// (Windows symlink semantics differ enough that the rewrite would
+/// need to be re-validated there).
+#[cfg(unix)]
+fn rewrite_symlink_target_if_absolute<R: std::io::Read>(
+    link_rel_path: &Path,
+    entry: &tar::Entry<'_, R>,
+) -> Option<PathBuf> {
+    let target = entry.link_name().ok()??.into_owned();
+    if !target.is_absolute() {
+        return None;
+    }
+    let bare_target = target.strip_prefix("/").unwrap_or(&target).to_path_buf();
+    let parent_depth = link_rel_path
+        .parent()
+        .map(|p| p.components().count())
+        .unwrap_or(0);
+    let mut rewritten = PathBuf::new();
+    for _ in 0..parent_depth {
+        rewritten.push("..");
+    }
+    rewritten.push(bare_target);
+    Some(rewritten)
+}
+
 /// Read a single named entry out of a tar archive into a `Vec<u8>`. The
 /// outer tarball is opened from scratch, scanned for the entry, and
 /// closed. `tar::Archive` doesn't let us hold a mutable borrow on the
@@ -425,6 +468,51 @@ fn extract_layer_over_rootfs(layer_bytes: &[u8], rootfs: &Path) -> Result<Vec<St
             entry_type,
             tar::EntryType::Regular | tar::EntryType::Symlink | tar::EntryType::Continuous,
         );
+
+        // Issue #401 — symlink-target host-fs escape. Container
+        // images legitimately ship absolute symlinks for distro
+        // compatibility (`var/run -> /run`, `usr/lib64 -> /lib64`,
+        // `bin -> /usr/bin`, ...). When `unpack_in` creates these
+        // verbatim, the symlink at `<rootfs>/var/run` points at the
+        // HOST's `/run` — every reader that touches that path
+        // (deep-hash, OS-package readers, os_release) then reads
+        // host content. PR #397 fixed the `safe_walk` directory
+        // walker; this fix closes the per-file-read variant.
+        //
+        // Treatment: rewrite absolute targets to be relative +
+        // rootfs-anchored. `<rootfs>/var/run -> /run` becomes
+        // `<rootfs>/var/run -> ../run`, which resolves to
+        // `<rootfs>/run` instead of host `/run`. In-image semantics
+        // preserved; host escape blocked.
+        #[cfg(unix)]
+        if entry_type == tar::EntryType::Symlink {
+            if let Some(rewrite) = rewrite_symlink_target_if_absolute(&path, &e) {
+                let link_abs = rootfs.join(&path);
+                if link_abs.exists() {
+                    // Layer overlay: later layer's symlink replaces
+                    // an earlier file/symlink at the same path.
+                    let _ = fs::remove_file(&link_abs);
+                }
+                match std::os::unix::fs::symlink(&rewrite, &link_abs) {
+                    Ok(()) => {
+                        tracing::debug!(
+                            link = %path.display(),
+                            rewritten = %rewrite.display(),
+                            "rewrote absolute symlink target to rootfs-anchored form (#401)"
+                        );
+                        paths_written.push(path.to_string_lossy().into_owned());
+                        continue;
+                    }
+                    Err(err) => {
+                        tracing::debug!(
+                            link = %path.display(),
+                            error = %err,
+                            "failed to create rewritten symlink; falling back to default unpack"
+                        );
+                    }
+                }
+            }
+        }
 
         if let Err(err) = e.unpack_in(rootfs) {
             tracing::debug!(path = %path.display(), error = %err, "failed to unpack entry");
@@ -895,6 +983,111 @@ mod tests {
     /// the cleanup loop's `rootfs.join(<wh-path>)` + `fs::remove_*`
     /// resolved `..` during the stat call — granting a malicious
     /// image a delete primitive on the operator's host filesystem.
+    /// Issue #401 — tar Symlink entries with absolute targets must
+    /// be rewritten at extraction time so the resulting symlink
+    /// resolves inside the rootfs. Without this, every downstream
+    /// reader (deep-hash, dpkg, apk, os_release) that touches the
+    /// path follows the absolute target to the HOST filesystem.
+    #[cfg(unix)]
+    #[test]
+    fn absolute_symlink_target_is_rewritten_to_rootfs_anchored_form() {
+        let dir = tempfile::tempdir().unwrap();
+        let rootfs = dir.path().join("rootfs");
+        std::fs::create_dir_all(&rootfs).unwrap();
+
+        let mut buf: Vec<u8> = Vec::new();
+        {
+            let mut ar = tar::Builder::new(&mut buf);
+
+            let mut h1 = tar::Header::new_gnu();
+            h1.set_path("var/run").unwrap();
+            h1.set_size(0);
+            h1.set_entry_type(tar::EntryType::Symlink);
+            h1.set_link_name("/run").unwrap();
+            h1.set_mode(0o777);
+            h1.set_cksum();
+            ar.append(&h1, std::io::empty()).unwrap();
+
+            let mut h2 = tar::Header::new_gnu();
+            h2.set_path("usr/lib64").unwrap();
+            h2.set_size(0);
+            h2.set_entry_type(tar::EntryType::Symlink);
+            h2.set_link_name("/lib64").unwrap();
+            h2.set_mode(0o777);
+            h2.set_cksum();
+            ar.append(&h2, std::io::empty()).unwrap();
+
+            let mut h3 = tar::Header::new_gnu();
+            h3.set_path("var/lib/dpkg/status").unwrap();
+            h3.set_size(0);
+            h3.set_entry_type(tar::EntryType::Symlink);
+            h3.set_link_name("/etc/passwd").unwrap();
+            h3.set_mode(0o644);
+            h3.set_cksum();
+            ar.append(&h3, std::io::empty()).unwrap();
+
+            ar.into_inner().unwrap();
+        }
+
+        extract_layer_over_rootfs(&buf, &rootfs).unwrap();
+
+        assert_eq!(
+            std::fs::read_link(rootfs.join("var/run")).unwrap(),
+            PathBuf::from("../run"),
+            "var/run -> /run must rewrite to ../run"
+        );
+        assert_eq!(
+            std::fs::read_link(rootfs.join("usr/lib64")).unwrap(),
+            PathBuf::from("../lib64"),
+            "usr/lib64 -> /lib64 must rewrite to ../lib64"
+        );
+        assert_eq!(
+            std::fs::read_link(rootfs.join("var/lib/dpkg/status")).unwrap(),
+            PathBuf::from("../../../etc/passwd"),
+            "var/lib/dpkg/status -> /etc/passwd must rewrite to ../../../etc/passwd"
+        );
+
+        // Sandbox property: every rewritten symlink must be relative.
+        for p in ["var/run", "usr/lib64", "var/lib/dpkg/status"] {
+            let target = std::fs::read_link(rootfs.join(p)).unwrap();
+            assert!(
+                !target.is_absolute(),
+                "rewritten symlink at {p} target {target:?} must be relative"
+            );
+        }
+    }
+
+    /// Issue #401 — relative symlink targets (already in-image-safe)
+    /// pass through unchanged.
+    #[cfg(unix)]
+    #[test]
+    fn relative_symlink_targets_are_left_alone() {
+        let dir = tempfile::tempdir().unwrap();
+        let rootfs = dir.path().join("rootfs");
+        std::fs::create_dir_all(&rootfs).unwrap();
+
+        let mut buf: Vec<u8> = Vec::new();
+        {
+            let mut ar = tar::Builder::new(&mut buf);
+            let mut h = tar::Header::new_gnu();
+            h.set_path("opt/symlink").unwrap();
+            h.set_size(0);
+            h.set_entry_type(tar::EntryType::Symlink);
+            h.set_link_name("../in-rootfs-target").unwrap();
+            h.set_mode(0o777);
+            h.set_cksum();
+            ar.append(&h, std::io::empty()).unwrap();
+            ar.into_inner().unwrap();
+        }
+        extract_layer_over_rootfs(&buf, &rootfs).unwrap();
+
+        assert_eq!(
+            std::fs::read_link(rootfs.join("opt/symlink")).unwrap(),
+            PathBuf::from("../in-rootfs-target"),
+            "relative symlinks must pass through unchanged"
+        );
+    }
+
     #[test]
     fn whiteout_with_parent_dir_escape_is_rejected() {
         let dir = tempfile::tempdir().unwrap();
