@@ -595,8 +595,41 @@ pub struct ScanArgs {
         long = "no-root-purl",
         requires = "root_name",
         conflicts_with = "root_purl_type",
+        conflicts_with = "root_purl",
     )]
     pub no_root_purl: bool,
+
+    /// Issue #359 — operator-supplied full PURL string for the root
+    /// component. When set, mikebom emits this PURL verbatim in every
+    /// format (CDX `metadata.component.purl`, SPDX 2.3 root Package
+    /// `externalRefs[purl]`, SPDX 3 root `software_packageUrl` +
+    /// `externalIdentifier[packageUrl]`). The BOM-subject `name` +
+    /// `version` are derived from the PURL itself (`packageurl`-crate
+    /// parser).
+    ///
+    /// Useful when downstream consumers expect a specific
+    /// canonical PURL and the operator wants to express it directly
+    /// — including PURL features the discrete flags don't reach
+    /// (qualifiers like `?arch=amd64`, subpaths like `#cmd/worker`,
+    /// custom namespace splits like `pkg:golang/github.com/example/svc`).
+    ///
+    /// Validated at parse time via `Purl::new`; non-spec input fails
+    /// fast with a clap-style error. Mutually exclusive with every
+    /// other `--root-*` flag (use one or the other, not both).
+    ///
+    /// Example: `--root-purl pkg:golang/github.com/example/svc@v1.2.3?arch=amd64`
+    /// → `metadata.component.purl = "pkg:golang/github.com/example/svc@v1.2.3?arch=amd64"`,
+    ///   name=`github.com/example/svc`, version=`v1.2.3`.
+    #[arg(
+        long = "root-purl",
+        value_name = "PURL",
+        value_parser = validate_root_purl,
+        conflicts_with = "root_name",
+        conflicts_with = "root_version",
+        conflicts_with = "root_purl_type",
+        conflicts_with = "no_root_purl",
+    )]
+    pub root_purl: Option<String>,
 
     // ────────────────────────────────────────────────────────────
     // Milestone 080 — user-provided SBOM metadata. See
@@ -923,6 +956,18 @@ pub(crate) fn validate_root_purl_type(value: &str) -> Result<String, String> {
              (expected lowercase ASCII alphanumeric + `.+-`, starting with a letter)"
         ))
     }
+}
+
+/// Issue #359 — `--root-purl <PURL>` validator. Defers to
+/// `mikebom_common::types::purl::Purl::new` (which delegates to the
+/// `packageurl` crate's spec-correct parser) so the operator gets the
+/// same error class clap surfaces for every other PURL-shaped input.
+/// Returns the canonicalized form on success so emission uses the same
+/// representation `Purl::new` would produce internally.
+pub(crate) fn validate_root_purl(value: &str) -> Result<String, String> {
+    mikebom_common::types::purl::Purl::new(value)
+        .map(|p| p.as_str().to_string())
+        .map_err(|e| format!("--root-purl `{value}` is not a valid PURL: {e}"))
 }
 
 /// Parse a `--id <scheme>=<value>` flag for a user-defined identifier.
@@ -1919,6 +1964,13 @@ pub async fn execute(
             version: args.root_version.clone(),
             purl_type: args.root_purl_type.clone(),
             omit_purl: args.no_root_purl,
+            // Issue #359 — the early root-selection helper above runs
+            // before the full RootComponentOverride is constructed.
+            // Pass the same #359 fields so the selector treats
+            // --root-purl identically to the final override.
+            full_purl: args.root_purl.clone(),
+            full_purl_name: None,
+            full_purl_version: None,
         };
         let selection = crate::generate::root_selector::select_root(
             &components,
@@ -2453,15 +2505,37 @@ pub async fn execute(
             scan_fs::file_tier::FileInventoryMode::Orphan => Some("orphan"),
             scan_fs::file_tier::FileInventoryMode::Full => Some("full"),
         },
-        // Milestone 077: operator-supplied overrides for the root
-        // component's name + version. Constructed from the new
-        // `--root-name` / `--root-version` CLI flags; defaults to
-        // both-None (back-compat) when neither flag is passed.
-        root_override: crate::generate::RootComponentOverride {
-            name: args.root_name.clone(),
-            version: args.root_version.clone(),
-            purl_type: args.root_purl_type.clone(),
-            omit_purl: args.no_root_purl,
+        // Milestone 077 + issue #359: operator-supplied overrides for
+        // the root component's name + version + PURL. Constructed
+        // from the `--root-name` / `--root-version` / `--root-purl-type`
+        // / `--no-root-purl` flags (milestone 077) plus the full-PURL
+        // shortcut `--root-purl` (#359). The discrete flags +
+        // `--root-purl` are clap-`conflicts_with` mutually exclusive so
+        // only one branch is populated at any time.
+        root_override: {
+            let (full_purl, full_name, full_version) = match args.root_purl.as_deref() {
+                Some(raw) => {
+                    let parsed = mikebom_common::types::purl::Purl::new(raw).expect(
+                        "--root-purl already validated at clap parse time via validate_root_purl",
+                    );
+                    let name = match parsed.namespace() {
+                        Some(ns) => format!("{ns}/{}", parsed.name()),
+                        None => parsed.name().to_string(),
+                    };
+                    let version = parsed.version().unwrap_or("").to_string();
+                    (Some(parsed.as_str().to_string()), Some(name), Some(version))
+                }
+                None => (None, None, None),
+            };
+            crate::generate::RootComponentOverride {
+                name: args.root_name.clone(),
+                version: args.root_version.clone(),
+                purl_type: args.root_purl_type.clone(),
+                omit_purl: args.no_root_purl,
+                full_purl,
+                full_purl_name: full_name,
+                full_purl_version: full_version,
+            }
         },
         // Milestone 080: user-provided SBOM metadata aggregated from
         // the new flags (--creator / --annotator / --annotation-comment
@@ -3212,6 +3286,7 @@ mod tests {
             root_version: None,
             root_purl_type: None,
             no_root_purl: false,
+            root_purl: None,
             // Milestone 080 — defaults for new fields keep the test
             // helper's "minimal flags" contract intact.
             creator: vec![],

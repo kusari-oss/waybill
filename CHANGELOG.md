@@ -7,6 +7,58 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### `--root-purl <PURL>` single-flag form for the root component PURL (closes #359)
+
+New CLI flag that the operator passes to express the BOM subject's
+PURL as a single, verbatim purl-spec string. Useful when downstream
+consumers expect a specific canonical PURL (matching their other
+data sources) and the operator wants to express it directly, including
+PURL features the milestone-077 discrete flags can't reach:
+
+- **Qualifiers** like `?arch=amd64`, `?distro=alpine-3.19`.
+- **Subpaths** like `#cmd/worker`.
+- **Custom namespace splits** like
+  `pkg:golang/github.com/example/svc` (slashed namespace).
+
+**Operator surface**:
+
+```
+mikebom sbom scan --path ... \
+  --root-purl 'pkg:golang/github.com/example/svc@v1.2.3?arch=amd64'
+```
+
+→ CDX `metadata.component.purl` / SPDX 2.3 root `externalRefs[purl]` /
+SPDX 3 root `software_packageUrl` + `externalIdentifier[packageUrl]`
+ALL emit the operator-supplied string verbatim. Name + version are
+parsed from the PURL (`packageurl`-crate spec parser) and surface on
+`metadata.component.name` / `versionInfo` / `software_packageVersion`
+accordingly.
+
+**Precedence + mutex**: `--root-purl` is clap-`conflicts_with`
+mutually exclusive with every discrete `--root-*` flag
+(`--root-name`, `--root-version`, `--root-purl-type`, `--no-root-purl`).
+Use one surface or the other, not both. The discrete milestone-077
+flags continue to work unchanged when `--root-purl` is absent
+(byte-identity preserved on existing scripts).
+
+**Validation**: parsed at clap-parse time via
+`mikebom_common::types::purl::Purl::new`; non-spec input fails fast
+with a clap-style error.
+
+**Decision (per the issue body)**: ship the single-flag form
+ALONGSIDE the discrete surface without starting a deprecation cycle.
+The migration's tradeoffs are documented; whether to deprecate the
+discrete flags in a future release stays an open question.
+
+**Tests**: 5 new integration tests
+(`mikebom-cli/tests/root_purl_flag.rs`) covering verbatim emission
+across all 3 formats, qualifier preservation, invalid-PURL clap
+rejection, mutex with `--root-name`, mutex with `--no-root-purl`,
+and absence-preserves-existing-behavior regression.
+
+No new Cargo dependencies. No golden churn (default behavior
+unchanged).
+
 ### `--conclude-licenses` operator-assertion flag (closes #363)
 
 New CLI flag that the operator passes to formally assert that the

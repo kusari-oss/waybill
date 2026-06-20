@@ -311,13 +311,19 @@ pub fn build_metadata(
         String,
     ) = match &selection.subject {
         crate::generate::root_selector::ResolvedRootSubject::OperatorOverride => {
+            // Issue #359 — when `--root-purl <full>` is set, the BOM
+            // subject's name + version come from the parsed PURL.
+            // `resolved_name()` / `resolved_version()` apply the
+            // precedence (full-purl-parsed name wins over discrete
+            // `--root-name`); both fall back to the auto-derived
+            // target when neither is set.
             let name = root_override
-                .name
-                .clone()
+                .resolved_name()
+                .map(str::to_string)
                 .unwrap_or_else(|| target_name.to_string());
             let version = root_override
-                .version
-                .clone()
+                .resolved_version()
+                .map(str::to_string)
                 .unwrap_or_else(|| target_version.to_string());
             // Milestone 077/#358 — `build_subject_purl` returns `None`
             // when `--no-root-purl` is in effect; the empty-string

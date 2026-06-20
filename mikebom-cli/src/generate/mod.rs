@@ -231,6 +231,26 @@ pub struct RootComponentOverride {
     /// with `externalIdentifierType: "packageUrl"`. REQUIRES `name`
     /// to be `Some`. Mutually exclusive with `purl_type`.
     pub omit_purl: bool,
+    /// Issue #359 — operator-supplied full PURL string. When `Some(_)`,
+    /// it WINS over every other field on this struct:
+    /// `build_subject_purl` returns the value verbatim, and the BOM
+    /// subject's name/version are parsed from the PURL itself (the
+    /// `Purl` newtype validates at construction time, so the parse
+    /// can't fail at emission). Mutually exclusive at the CLI layer
+    /// with `name`/`version`/`purl_type`/`omit_purl` (clap
+    /// `conflicts_with`) so combinations of "full PURL" + "override
+    /// one piece of the PURL" can't reach the emission code.
+    pub full_purl: Option<String>,
+    /// Name parsed out of `full_purl` at CLI-flag construction time.
+    /// Surfaces in `metadata.component.name` (CDX) / root
+    /// `Package.name` (SPDX 2.3) / root element name (SPDX 3). Set
+    /// only when `full_purl` is `Some(_)`.
+    pub full_purl_name: Option<String>,
+    /// Version parsed out of `full_purl` at CLI-flag construction
+    /// time. Surfaces in `metadata.component.version` / `versionInfo`
+    /// / `software_packageVersion`. Set only when `full_purl` is
+    /// `Some(_)`.
+    pub full_purl_version: Option<String>,
 }
 
 impl RootComponentOverride {
@@ -243,14 +263,21 @@ impl RootComponentOverride {
             || self.version.is_some()
             || self.purl_type.is_some()
             || self.omit_purl
+            || self.full_purl.is_some()
     }
 
     /// Build the PURL string for the BOM subject given the resolved
-    /// name + version. Returns `None` when `omit_purl` is set — the
-    /// caller MUST skip the PURL emission slot entirely. Otherwise
-    /// returns `pkg:<type>/<name>@<version>` with type defaulting to
-    /// `generic` and name/version percent-encoded per RFC 3986.
+    /// name + version. Issue #359 takes precedence: when `full_purl`
+    /// is `Some(_)` the operator's verbatim PURL string is returned
+    /// (already validated by `Purl::new` at CLI parse time, so
+    /// downstream emission can trust it). Otherwise the existing
+    /// milestone-077 behavior applies — `None` for `omit_purl`,
+    /// `pkg:<type>/<name>@<version>` for everything else, with name +
+    /// version percent-encoded per RFC 3986.
     pub fn build_subject_purl(&self, name: &str, version: &str) -> Option<String> {
+        if let Some(full) = &self.full_purl {
+            return Some(full.clone());
+        }
         if self.omit_purl {
             return None;
         }
@@ -260,6 +287,27 @@ impl RootComponentOverride {
             percent_encode_purl_name(name),
             percent_encode_purl_name(version),
         ))
+    }
+
+    /// Issue #359 — resolved BOM-subject name. Returns the
+    /// PURL-parsed name when `full_purl` is set; otherwise falls back
+    /// to the discrete `name` override; otherwise `None` (caller uses
+    /// the auto-derived name). Callers MUST prefer this over reading
+    /// `self.name` directly so the new flag's parsed name is honored.
+    pub fn resolved_name(&self) -> Option<&str> {
+        if let Some(n) = self.full_purl_name.as_deref() {
+            return Some(n);
+        }
+        self.name.as_deref()
+    }
+
+    /// Issue #359 — resolved BOM-subject version. See
+    /// [`Self::resolved_name`] for the precedence contract.
+    pub fn resolved_version(&self) -> Option<&str> {
+        if let Some(v) = self.full_purl_version.as_deref() {
+            return Some(v);
+        }
+        self.version.as_deref()
     }
 }
 
