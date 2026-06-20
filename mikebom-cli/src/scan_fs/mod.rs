@@ -13,6 +13,14 @@ pub mod binary;
 pub mod dedup;
 pub mod docker_daemon;
 pub mod docker_image;
+// Milestone 133 US1.A scaffolding — orphan file-tier walker,
+// content-shape classifier, hybrid dedupe. The submodules are
+// pub(crate) and their entry points are reachable from inside
+// `scan_fs::file_tier` but the production scan pipeline does NOT
+// yet invoke them. US1.B wires the walker into `scan_cmd::scan`
+// alongside the new `--file-inventory` CLI flag, multi-format
+// SBOM emission, and the new C-rows.
+pub(crate) mod file_tier;
 #[cfg(feature = "oci-registry")]
 pub mod oci_pull;
 pub mod os_release;
