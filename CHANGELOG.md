@@ -7,6 +7,52 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### File-tier emission default-flip + SPDX parity (milestone 133 US1.C)
+
+**BEHAVIOR CHANGE on milestone 133**: `--file-inventory` default flips from `off` to `orphan`. Every image scan now emits file-tier components for content surviving the FR-005 content-shape allowlist AND failing the FR-011 hybrid dedupe (path coverage from US2.3's `evidence.occurrences[]` + hash coverage from binary-tier `hashes[]`).
+
+**Operator opt-out** to preserve pre-milestone-133 byte-identity: `--file-inventory=off`.
+
+**SC verification on the milestone-132 audit baseline** (`remediation-planner@sha256:4e7b…`):
+
+| Metric | Pre-feature | Post-US1.C | FR-001 target | FR-022 narrowed range |
+|---|---|---|---|---|
+| Components total | 2926 | 3483 | — | — |
+| File-tier components | 0 | **557** | 200-800 | 200-400 (180-440 acceptable) |
+| Hash-set overlap (SC-002 must be 0) | n/a | **0** | 0 | 0 |
+
+The 557 count lands above the FR-022 narrowed band (200-400) but well within the original FR-001 target (200-800). The deviation reflects that US2.3 (`evidence.occurrences[]` for 99.96% of components) had not yet shipped when the FR-022 projection was measured — the actual dedupe set is much broader now, suppressing thousands of would-be orphans and leaving 557 genuinely-unattributed files (custom ECR binaries, embedded archives, lone manifests). Documented for transparency; no FR-005 tightening done in this PR.
+
+**Format support**:
+
+- **CDX 1.6** (already correct from US1.B): `type = "file"`, no `purl`, name = basename, SHA-256 in `hashes[]`, `mikebom:component-tier = "file"` + `mikebom:file-paths` in `properties[]`.
+- **SPDX 2.3** (new in US1.C): Package with `filesAnalyzed: false`, no `externalRef[purl]`, SHA-256 in `checksums[]`, `mikebom:component-tier` + `mikebom:file-paths` as `Package.annotations[]` envelope entries.
+- **SPDX 3** (new in US1.C): `software_File` element type per research §"SPDX 3 element type for file-tier components", no `software_packageUrl`, no `externalIdentifier[packageUrl]`, hash in `verifiedUsing[]`, annotations as Annotation-element subjects.
+
+**New parity catalog rows + extractors**:
+
+- **C91** `mikebom:component-tier` — per-component annotation. CDX side rides through `properties[]`; SPDX 2.3 / SPDX 3 sides ride through the standard annotation envelope. Extractors wired symmetrically; `holistic_parity::all_extractors_symmetric_or_directional` catches drift.
+- **C92** `mikebom:file-paths` — per-component annotation carrying a JSON-encoded sorted-ascending path array. Same emission shape across formats.
+
+**Parity-extractor adjustments**:
+
+- A2/A3/A6 (name / version / hashes) — SPDX 3 walker (`walk_spdx3_packages`) now includes `software_File` elements alongside `software_Package` so file-tier components participate in the universal-parity rows.
+- A3 — drop empty-string versions on both CDX and SPDX 2.3 extractor sides; SPDX 3 conditionally omits `software_packageVersion` when empty, and file-tier components have no version concept (FR-009).
+- `component_count_parity::spdx3_package_count_and_synthetic` now counts both `software_Package` and `software_File`.
+- `spdx3_annotation_fidelity::collect_spdx23 / collect_spdx3` fall back to SPDXID/IRI hash suffix when no PURL externalRef / `software_packageUrl` is present, so file-tier subjects align across formats.
+
+**`--exclude-path` honored by the file-tier walker**: the FR-011 walker integration now threads the operator-supplied `ExclusionSet` through `WalkerConfig::exclude_set`, and pre-checks whether the absolute scan root itself is on the exclude list (matching the package-DB readers' early-exit contract).
+
+**Test updates**:
+
+- `file_tier_orphan_emit.rs::default_mode_is_orphan_and_emits_file_tier_components` added — regression test for the default flip. `default_mode_emits_no_file_tier_components` renamed → `off_mode_emits_no_file_tier_components` and now explicitly passes `--file-inventory=off`.
+
+**Golden churn**: only `cyclonedx/npm.cdx.json` + `spdx-2.3/npm.spdx.json` + `spdx-3/npm.spdx3.json` regenerated. Every other ecosystem fixture's golden stays byte-identical because their `lockfile-vX` fixtures contain no orphan-eligible files. Image-scan goldens (`pkg_alias_binding/image-baz.cdx.json`) byte-identical because the fixture's only orphan-eligible content is already covered by package/binary tiers.
+
+**Constitution Principle V audit** — C91 / C92 inline in `docs/reference/sbom-format-mapping.md`. Both annotations are parity-bridges; neither CDX 1.6 nor SPDX 2.3 nor SPDX 3.0.1 carries a native field for "component-tier" identity OR "every observed path where this content hash was found". The SPDX 3 `software_File` element type IS the native tier signal in SPDX 3, and the annotation is the cross-format-symmetric carrier.
+
+**No new Cargo dependencies.**
+
 ### File-tier emission opt-in via `--file-inventory=orphan` (milestone 133 US1.B — CDX MVP)
 
 Lays down the operator-facing surface and the production CDX emission

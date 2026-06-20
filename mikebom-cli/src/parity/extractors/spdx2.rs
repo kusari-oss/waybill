@@ -70,6 +70,10 @@ pub(super) fn spdx23_version(doc: &Value) -> BTreeSet<String> {
                 .and_then(|v| v.as_str())
                 .map(String::from)
         })
+        // Milestone 133 US1.C: drop empty-string versions for parity
+        // with SPDX 3 (which omits `software_packageVersion` when
+        // empty). See parity/extractors/cdx.rs::cdx_version comment.
+        .filter(|s| !s.is_empty())
         .collect()
 }
 
@@ -528,6 +532,8 @@ spdx23_anno!(c85_spdx23, "mikebom:yocto-recipe-name",         component);
 spdx23_anno!(c86_spdx23, "mikebom:yocto-recipe-version",      component);
 spdx23_anno!(c87_spdx23, "mikebom:assembly-version-informational-stripped", component);
 spdx23_anno!(c88_spdx23, "mikebom:layer-digest", component);
+spdx23_anno!(c91_spdx23, "mikebom:component-tier", component);
+spdx23_anno!(c92_spdx23, "mikebom:file-paths", component);
 
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-Package
 // envelope carrying the JSON-encoded array of conflict records.

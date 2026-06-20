@@ -124,13 +124,17 @@ fn collect_spdx23(doc: &serde_json::Value) -> BTreeSet<MikebomEntry> {
     if let Some(pkgs) = doc.get("packages").and_then(|v| v.as_array()) {
         for pkg in pkgs {
             let purl = package_purl_spdx23(pkg).unwrap_or_else(|| {
-                // Fallback: keyed by SPDXID when no PURL externalRef
-                // is present. Should never happen on Section A-
-                // compliant output, but be defensive.
-                pkg.get("SPDXID")
+                // Milestone 133 US1.C: file-tier components have no
+                // purl externalRef per FR-009. Fall back to the
+                // SPDXID's hash suffix (e.g. extract
+                // `RI7DYUP7YVSLGONA` from `SPDXRef-Package-RI7DYUP7YVSLGONA`)
+                // so the subject key matches the SPDX 3 IRI's tail
+                // segment (`.../pkg-RI7DYUP7YVSLGONA`).
+                let id = pkg
+                    .get("SPDXID")
                     .and_then(|v| v.as_str())
-                    .unwrap_or("<unknown>")
-                    .to_string()
+                    .unwrap_or("<unknown>");
+                id.rsplit('-').next().unwrap_or(id).to_string()
             });
             let Some(annos) = pkg.get("annotations").and_then(|v| v.as_array()) else {
                 continue;
@@ -227,7 +231,16 @@ fn collect_spdx3(doc: &serde_json::Value) -> BTreeSet<MikebomEntry> {
         } else if let Some(purl) = purl_by_iri.get(subject_iri) {
             purl.clone()
         } else {
-            subject_iri.to_string()
+            // Milestone 133 US1.C: file-tier components (software_File)
+            // have no purl mapping. Fall back to the IRI's tail
+            // segment (e.g. extract `RI7DYUP7YVSLGONA` from
+            // `https://.../pkg-RI7DYUP7YVSLGONA`) so the subject key
+            // matches the SPDX 2.3 SPDXID's hash suffix.
+            subject_iri
+                .rsplit('-')
+                .next()
+                .unwrap_or(subject_iri)
+                .to_string()
         };
         out.insert(MikebomEntry {
             subject,

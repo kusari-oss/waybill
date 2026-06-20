@@ -56,7 +56,7 @@
   "documentDescribes": [
     "SPDXRef-Package-IZGDOM2QHWPWWLEX"
   ],
-  "documentNamespace": "https://mikebom.kusari.dev/spdx/TOR2IKXOLSDTOVHGQFACESVDBVCWJPWO",
+  "documentNamespace": "https://mikebom.kusari.dev/spdx/ZIHKMVJD7L5WQ5N4W2QJ3UMUWSQDPJKV",
   "name": "node-modules-walk",
   "packages": [
     {
@@ -203,6 +203,41 @@
       "name": "safe-buffer",
       "supplier": "Organization: npmjs.com",
       "versionInfo": "5.2.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-RI7DYUP7YVSLGONA",
+      "annotations": [
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"package.json\"]}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":\"[\\\"package.json\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "package.json",
+      "versionInfo": ""
     }
   ],
   "relationships": [

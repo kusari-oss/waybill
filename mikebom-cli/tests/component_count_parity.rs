@@ -139,15 +139,20 @@ fn spdx23_package_count_and_synthetic(doc: &serde_json::Value) -> (usize, usize)
     (total, synthetic)
 }
 
-/// Count SPDX 3 `software_Package` elements + the synthetic-root
-/// count (Packages whose spdxId path segment contains `/pkg-root-`).
+/// Count SPDX 3 `software_Package` AND `software_File` elements (file-
+/// tier components emit as `software_File` per milestone 133 US1.C +
+/// research §SPDX 3 element type) plus the synthetic-root count
+/// (Packages whose spdxId path segment contains `/pkg-root-`).
 fn spdx3_package_count_and_synthetic(doc: &serde_json::Value) -> (usize, usize) {
     let Some(graph) = doc.get("@graph").and_then(|v| v.as_array()) else {
         return (0, 0);
     };
     let total = graph
         .iter()
-        .filter(|e| e.get("type").and_then(|v| v.as_str()) == Some("software_Package"))
+        .filter(|e| {
+            let t = e.get("type").and_then(|v| v.as_str());
+            t == Some("software_Package") || t == Some("software_File")
+        })
         .count();
     let synthetic = graph
         .iter()

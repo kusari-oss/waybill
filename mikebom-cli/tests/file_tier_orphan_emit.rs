@@ -59,7 +59,7 @@ fn file_tier_components(sbom: &serde_json::Value) -> Vec<&serde_json::Value> {
 
 #[test]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
-fn default_mode_emits_no_file_tier_components() {
+fn off_mode_emits_no_file_tier_components() {
     let tmp = tempfile::tempdir().unwrap();
     // ELF magic header → would qualify in orphan mode.
     write_file(
@@ -74,12 +74,35 @@ fn default_mode_emits_no_file_tier_components() {
         b"[package]\nname = \"x\"\nversion = \"0.1.0\"\n",
     );
 
-    let sbom = run_scan(tmp.path(), &[]);
+    // Milestone 133 US1.C flipped the default to `orphan`; opt
+    // out explicitly to verify the off-path preserves pre-feature
+    // byte-identity. Operators wanting that behavior pass
+    // `--file-inventory=off`.
+    let sbom = run_scan(tmp.path(), &["--file-inventory=off"]);
     let file_tier = file_tier_components(&sbom);
     assert!(
         file_tier.is_empty(),
-        "default mode must NOT emit file-tier components (US1.B contract); got {} entries",
+        "off mode must NOT emit file-tier components; got {} entries",
         file_tier.len()
+    );
+}
+
+#[test]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+fn default_mode_is_orphan_and_emits_file_tier_components() {
+    let tmp = tempfile::tempdir().unwrap();
+    write_file(
+        tmp.path(),
+        "opt/unattributed-binary",
+        b"\x7FELF\x02\x01\x01\x00rest-of-elf",
+    );
+    // Milestone 133 US1.C default-flip regression: no `--file-inventory`
+    // flag at all → orphan walker runs → file-tier components emit.
+    let sbom = run_scan(tmp.path(), &[]);
+    let file_tier = file_tier_components(&sbom);
+    assert!(
+        !file_tier.is_empty(),
+        "post-US1.C default is `orphan`; expected at least one file-tier component, got none"
     );
 }
 

@@ -66,15 +66,34 @@ pub fn build_packages(
         let pkg_iri = format!("{doc_iri}/pkg-{}", hash_prefix(purl_str.as_bytes(), 16));
         package_iri_by_purl.insert(purl_str.to_string(), pkg_iri.clone());
 
+        // Milestone 133 US1.C: file-tier components emit as a
+        // distinct element type per research §"SPDX 3 element type
+        // for file-tier components" (FR-001). Detect the
+        // `mikebom:component-tier = "file"` annotation and emit
+        // `software_File` instead of the regular package element
+        // type; suppress `software_packageUrl` per FR-009.
+        let is_file_tier = c
+            .extra_annotations
+            .get(crate::scan_fs::file_tier::COMPONENT_TIER_KEY)
+            .and_then(|v| v.as_str())
+            == Some(crate::scan_fs::file_tier::COMPONENT_TIER_FILE_VALUE);
+
         let mut pkg = serde_json::Map::new();
-        pkg.insert("type".to_string(), json!("software_Package"));
+        let element_type = if is_file_tier {
+            "software_File"
+        } else {
+            "software_Package"
+        };
+        pkg.insert("type".to_string(), json!(element_type));
         pkg.insert("spdxId".to_string(), json!(pkg_iri));
         pkg.insert("creationInfo".to_string(), json!(creation_info_id));
         pkg.insert("name".to_string(), json!(c.name));
         if !c.version.is_empty() {
             pkg.insert("software_packageVersion".to_string(), json!(c.version));
         }
-        pkg.insert("software_packageUrl".to_string(), json!(purl_str));
+        if !is_file_tier {
+            pkg.insert("software_packageUrl".to_string(), json!(purl_str));
+        }
 
         // Milestone 053 FR-001a (SPDX 3.0.1): components carrying
         // `mikebom:component-role: main-module` (catalog row C40) are
@@ -166,6 +185,16 @@ pub fn build_packages(
         // v3_external_ids::build_external_identifiers_for so the
         // shape is owned by one module.
         let mut ext_ids = build_external_identifiers_for(c);
+        // Milestone 133 US1.C: filter out the `packageUrl` entry
+        // for file-tier components per FR-009. CPE entries (and any
+        // operator-supplied identifiers) stay; only the placeholder
+        // PURL is suppressed.
+        if is_file_tier {
+            ext_ids.retain(|v| {
+                v.get("externalIdentifierType").and_then(|s| s.as_str())
+                    != Some("packageUrl")
+            });
+        }
         // Milestone 076 — append per-component user-defined
         // identifiers after the pre-existing PURL/CPE entries.
         // Milestone 079 — every appended entry's

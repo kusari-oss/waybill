@@ -265,7 +265,15 @@ pub struct ScanArgs {
     /// Emitted file-tier components carry a `mikebom:component-tier =
     /// "file"` annotation and a `mikebom:file-paths` JSON-encoded
     /// array of every observed path for the unique content.
-    #[arg(long, value_name = "MODE", default_value = "off")]
+    ///
+    /// **Default flipped to `orphan` in milestone 133 US1.C per FR-015**
+    /// — operators wanting pre-milestone-133 byte-identity on SBOMs
+    /// opt out via `--file-inventory=off`. Image-scan SBOMs grow by
+    /// roughly 180-440 file-tier components on a typical container
+    /// image (the SC-001 acceptable range from the FR-022
+    /// projection); orphan-mode scan time grows by ~5-15 seconds on
+    /// a debian:bookworm-slim-sized rootfs.
+    #[arg(long, value_name = "MODE", default_value = "orphan")]
     pub file_inventory: String,
 
     /// Maximum file size (bytes) considered for file-tier emission.
@@ -2296,6 +2304,25 @@ pub async fn execute(
             )
         })?;
     if file_inventory_mode != scan_fs::file_tier::FileInventoryMode::Off {
+        // Milestone 133 US1.C: if the operator excluded the scan root
+        // itself via `--exclude-path=<abs-root>`, every package-DB
+        // reader emits zero components — the file-tier walker MUST
+        // honor the same contract. Pre-strip the leading `/` so the
+        // absolute root matches the leading-`/`-stripped literal in
+        // the exclusion set.
+        let root_excluded = {
+            let canon =
+                std::fs::canonicalize(&root_path).unwrap_or_else(|_| root_path.clone());
+            let s = canon.to_string_lossy().into_owned();
+            let stripped = s.trim_start_matches('/');
+            !exclude_set.is_empty() && exclude_set.matches(stripped)
+        };
+        if root_excluded {
+            tracing::info!(
+                scan_root = %root_path.display(),
+                "file-tier walker skipped: scan root is on --exclude-path"
+            );
+        } else {
         let exclusion_globs = scan_fs::file_tier::content_shape::build_orphan_exclusion_globs();
         let dedupe_index = match file_inventory_mode {
             scan_fs::file_tier::FileInventoryMode::Full => {
@@ -2309,6 +2336,7 @@ pub async fn execute(
             size_limit_bytes: args.file_inventory_size_limit,
             exclusion_globs: &exclusion_globs,
             dedupe_index: &dedupe_index,
+            exclude_set: &exclude_set,
         };
         let (entries, stats) =
             scan_fs::file_tier::walker::walk_file_tier(&root_path, &walker_cfg);
@@ -2323,6 +2351,7 @@ pub async fn execute(
             "file-tier walker complete"
         );
         components.extend(entries.into_iter().map(|e| e.into_resolved_component()));
+        } // end `else` branch for !root_excluded
     }
 
     // Build the neutral artifacts bundle once and hand it to every
@@ -3100,6 +3129,10 @@ mod tests {
             deb_codename: None,
             no_package_db: false,
             no_deep_hash: false,
+            // Test helper preserves byte-identity on enrichment-
+            // focused unit tests by keeping file-tier emission off.
+            // Production default in `scan_cmd.rs` is `orphan` per
+            // milestone 133 US1.C.
             file_inventory: "off".to_string(),
             file_inventory_size_limit: 100 * 1024 * 1024,
             json: false,

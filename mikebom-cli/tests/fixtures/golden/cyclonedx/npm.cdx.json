@@ -98,6 +98,40 @@
       },
       "type": "library",
       "version": "5.2.1"
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=47aff9f98bd6d42e10e5265ca6977827a36b831b73ffca82daccc613ee764203",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "package.json",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"package.json\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
     }
   ],
   "compositions": [
@@ -128,6 +162,10 @@
     }
   ],
   "dependencies": [
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=47aff9f98bd6d42e10e5265ca6977827a36b831b73ffca82daccc613ee764203"
+    },
     {
       "dependsOn": [
         "pkg:npm/safe-buffer@5.2.1"

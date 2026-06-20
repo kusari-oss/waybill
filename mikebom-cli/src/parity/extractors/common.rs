@@ -322,15 +322,23 @@ pub fn walk_spdx23_packages(doc: &Value) -> Vec<&Value> {
         .collect()
 }
 
-/// Iterate SPDX 3 `@graph[]` Package elements, skipping the
+/// Iterate SPDX 3 `@graph[]` Package + File elements, skipping the
 /// synthetic root (spdxId path segment includes `/pkg-root-`).
+/// Milestone 133 US1.C: includes `software_File` so file-tier
+/// components participate in the universal-parity rows (A2 name,
+/// A3 version, A6 hashes) alongside the regular `software_Package`
+/// elements. The PURL-shaped rows (A1) remain on Package-only since
+/// file-tier elements have no PURL per FR-009.
 pub fn walk_spdx3_packages(doc: &Value) -> Vec<&Value> {
     let Some(graph) = doc.get("@graph").and_then(|v| v.as_array()) else {
         return Vec::new();
     };
     graph
         .iter()
-        .filter(|el| el.get("type").and_then(|v| v.as_str()) == Some("software_Package"))
+        .filter(|el| {
+            let t = el.get("type").and_then(|v| v.as_str());
+            t == Some("software_Package") || t == Some("software_File")
+        })
         .filter(|el| {
             !el.get("spdxId")
                 .and_then(|v| v.as_str())

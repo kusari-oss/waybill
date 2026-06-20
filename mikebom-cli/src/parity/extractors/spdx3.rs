@@ -600,6 +600,8 @@ spdx3_anno!(c85_spdx3, "mikebom:yocto-recipe-name",         component);
 spdx3_anno!(c86_spdx3, "mikebom:yocto-recipe-version",      component);
 spdx3_anno!(c87_spdx3, "mikebom:assembly-version-informational-stripped", component);
 spdx3_anno!(c88_spdx3, "mikebom:layer-digest", component);
+spdx3_anno!(c91_spdx3, "mikebom:component-tier", component);
+spdx3_anno!(c92_spdx3, "mikebom:file-paths", component);
 
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-component
 // graph-element annotation carrying the JSON-encoded array of

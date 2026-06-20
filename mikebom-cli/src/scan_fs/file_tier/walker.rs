@@ -40,6 +40,12 @@ pub(crate) struct WalkerConfig<'a> {
     /// FR-011 hybrid dedupe index. Built once per scan after every
     /// reader completes.
     pub dedupe_index: &'a DedupeIndex,
+    /// Milestone 133 US1.C: operator-supplied `--exclude-path` set
+    /// (milestone 113). The file-tier walker honors the same
+    /// exclusions as the package-DB readers so an operator who
+    /// suppresses `tests/fixtures/**` doesn't get every test fixture
+    /// emitted as file-tier components in its place.
+    pub exclude_set: &'a crate::scan_fs::package_db::exclude_path::ExclusionSet,
 }
 
 /// Diagnostic skip-counters. Emitted as document-level annotations
@@ -83,11 +89,10 @@ pub(crate) fn walk_file_tier(
     let mut entries: HashMap<String, FileTierEntry> = HashMap::new();
     let mut stats = WalkerStats::default();
 
-    let empty_exclude = crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty();
     let walk_cfg = crate::scan_fs::walk::WalkConfig {
         max_depth: 32,
         should_skip: &|_candidate, _root| false,
-        exclude_set: &empty_exclude,
+        exclude_set: cfg.exclude_set,
     };
 
     crate::scan_fs::walk::safe_walk(rootfs, &walk_cfg, |abs_path| {
@@ -285,6 +290,10 @@ mod tests {
         DedupeIndex::default()
     }
 
+    fn empty_exclude() -> crate::scan_fs::package_db::exclude_path::ExclusionSet {
+        crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty()
+    }
+
     fn make_globs() -> globset::GlobSet {
         build_orphan_exclusion_globs()
     }
@@ -311,6 +320,7 @@ mod tests {
             size_limit_bytes: 100 * 1024 * 1024,
             exclusion_globs: &g,
             dedupe_index: &d,
+            exclude_set: &empty_exclude(),
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         assert!(entries.is_empty());
@@ -328,6 +338,7 @@ mod tests {
             size_limit_bytes: 100 * 1024 * 1024,
             exclusion_globs: &g,
             dedupe_index: &d,
+            exclude_set: &empty_exclude(),
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         assert_eq!(entries.len(), 1);
@@ -348,6 +359,7 @@ mod tests {
             size_limit_bytes: 100 * 1024 * 1024,
             exclusion_globs: &g,
             dedupe_index: &d,
+            exclude_set: &empty_exclude(),
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         assert!(entries.is_empty());
@@ -367,6 +379,7 @@ mod tests {
             size_limit_bytes: 100 * 1024 * 1024,
             exclusion_globs: &g,
             dedupe_index: &d,
+            exclude_set: &empty_exclude(),
         };
         let (entries, _stats) = walk_file_tier(tmp.path(), &cfg);
         assert_eq!(entries.len(), 1);
@@ -440,6 +453,7 @@ mod tests {
             size_limit_bytes: 100 * 1024 * 1024,
             exclusion_globs: &g,
             dedupe_index: &d,
+            exclude_set: &empty_exclude(),
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         assert!(entries.is_empty());
@@ -459,6 +473,7 @@ mod tests {
             size_limit_bytes: 8,
             exclusion_globs: &g,
             dedupe_index: &d,
+            exclude_set: &empty_exclude(),
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         assert!(entries.is_empty());
@@ -476,6 +491,7 @@ mod tests {
             size_limit_bytes: 100 * 1024 * 1024,
             exclusion_globs: &g,
             dedupe_index: &d,
+            exclude_set: &empty_exclude(),
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         assert_eq!(entries.len(), 1);
@@ -494,6 +510,7 @@ mod tests {
             size_limit_bytes: 100 * 1024 * 1024,
             exclusion_globs: &g,
             dedupe_index: &d,
+            exclude_set: &empty_exclude(),
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         // Cargo.lock is the locked manifest, ends with .lock → excluded.
@@ -515,6 +532,7 @@ mod tests {
             size_limit_bytes: 100 * 1024 * 1024,
             exclusion_globs: &g,
             dedupe_index: &d,
+            exclude_set: &empty_exclude(),
         };
         let (entries, _stats) = walk_file_tier(tmp.path(), &cfg);
         assert_eq!(entries.len(), 2);

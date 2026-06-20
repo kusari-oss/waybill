@@ -467,14 +467,30 @@ fn component_to_package(
         Vec::new()
     };
 
+    // Milestone 133 US1.C: file-tier components carry a placeholder
+    // `pkg:generic/file-tier?content-sha256=<hex>` in-process PURL
+    // but MUST NOT emit it on the wire (FR-009). Detect the
+    // `mikebom:component-tier = "file"` annotation and skip the
+    // purl externalRef entirely.
+    let is_file_tier = c
+        .extra_annotations
+        .get(crate::scan_fs::file_tier::COMPONENT_TIER_KEY)
+        .and_then(|v| v.as_str())
+        == Some(crate::scan_fs::file_tier::COMPONENT_TIER_FILE_VALUE);
+
     // A1: PURL. Always first so the primary cross-reference is at
-    // the top of the array (stable reader expectation).
-    let mut external_refs = vec![SpdxExternalRef {
-        category: SpdxExternalRefCategory::PackageManager,
-        ref_type: "purl".to_string(),
-        locator: c.purl.as_str().to_string(),
-        comment: None,
-    }];
+    // the top of the array (stable reader expectation). Skipped for
+    // file-tier components per FR-009.
+    let mut external_refs = if is_file_tier {
+        Vec::new()
+    } else {
+        vec![SpdxExternalRef {
+            category: SpdxExternalRefCategory::PackageManager,
+            ref_type: "purl".to_string(),
+            locator: c.purl.as_str().to_string(),
+            comment: None,
+        }]
+    };
 
     // A12: primary CPE. The first entry in `c.cpes` is the
     // highest-signal synthesized candidate; the full set lives in

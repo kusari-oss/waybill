@@ -117,6 +117,14 @@ pub(super) fn cdx_version(doc: &Value) -> BTreeSet<String> {
     walk_cdx_components_and_main_module(doc)
         .iter()
         .filter_map(|c| c.get("version").and_then(|v| v.as_str()).map(String::from))
+        // Milestone 133 US1.C: drop empty-string versions so the A3
+        // SymmetricEqual check tolerates the SPDX 3 file-element
+        // shape, which conditionally OMITS `software_packageVersion`
+        // when the version is empty (file-tier components have no
+        // version concept per FR-009). CDX emits `"version": ""`
+        // verbatim for those components; without this filter the A3
+        // row sees `{""}` only on the CDX side.
+        .filter(|s| !s.is_empty())
         .collect()
 }
 
@@ -751,6 +759,8 @@ cdx_anno!(c85_cdx, "mikebom:yocto-recipe-name",         component);
 cdx_anno!(c86_cdx, "mikebom:yocto-recipe-version",      component);
 cdx_anno!(c87_cdx, "mikebom:assembly-version-informational-stripped", component);
 cdx_anno!(c88_cdx, "mikebom:layer-digest", component);
+cdx_anno!(c91_cdx, "mikebom:component-tier", component);
+cdx_anno!(c92_cdx, "mikebom:file-paths", component);
 
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
