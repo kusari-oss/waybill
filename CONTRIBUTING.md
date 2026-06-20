@@ -134,7 +134,39 @@ five-minute walkthrough in
 [`specs/114-safe-walk-migration/quickstart.md`](specs/114-safe-walk-migration/quickstart.md)
 covers `max_depth` / `should_skip` / callback shape choices.
 
-**Scenario B — your walker legitimately can't fit `safe_walk`.** Rare,
+**Scenario B — your function name starts with `walk_` but doesn't
+walk the filesystem.** Common false-positive class: in-memory
+iterators (`walk_nested_archives_in_bytes` iterates ZIP entries
+parsed from a `Vec<u8>`), tree-page walkers (`walk_schema_page`
+walks SQLite B-tree pages), or `#[test]` functions whose name
+shares the prefix of the unit under test. The grep gate can't
+distinguish these from real filesystem walkers — it's a literal
+`fn walk[_(]` match.
+
+Opt out at the function definition site with a sigil comment on
+the line IMMEDIATELY above the `fn` signature:
+
+```rust
+// walker-audit: false-positive — iterates in-memory zip entries, no filesystem traversal
+fn walk_nested_archives_in_bytes(...) { ... }
+```
+
+The text after `// walker-audit:` is free-form developer audit
+trail (kept short — one phrase explaining what the function does
+instead of walking the filesystem). The CI gate's pre-filter
+drops any match whose preceding line carries the
+`// walker-audit:` sigil before the allow-list diff runs, so the
+allow-list file stays minimal and only documents the genuine
+filesystem-walking exceptions.
+
+**Don't reach for the allow-list here**: an entry in
+`walk.audit-allowlist.txt` says "this fn is a real walker we
+accept"; a sigil says "this fn isn't a walker at all". The two
+are different audit categories. Issue #378 (the milestone-133
+follow-on) introduced the sigil escape hatch precisely so the
+allow-list can shrink to only the real walkers.
+
+**Scenario C — your walker legitimately can't fit `safe_walk`.** Rare,
 but possible (per-descent stateful pruning, parent-name-aware recursion,
 …). In the SAME PR, do two edits:
 

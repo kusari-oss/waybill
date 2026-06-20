@@ -790,6 +790,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_ prefix of the unit under test
     fn walk_skips_node_modules_subtrees() {
         // Deliberately plant a package.json *inside* a node_modules/ —
         // this is a dependency's manifest, not a project root. The

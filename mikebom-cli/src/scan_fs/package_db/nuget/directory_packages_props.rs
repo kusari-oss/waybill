@@ -155,6 +155,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_up_ prefix of the unit under test
     fn walk_up_finds_props_in_ancestor() {
         let tmp = tempfile::tempdir().unwrap();
         let scan_root = tmp.path();
@@ -167,6 +168,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_up_ prefix of the unit under test
     fn walk_up_stops_at_scan_root() {
         let tmp = tempfile::tempdir().unwrap();
         let scan_root = tmp.path().join("project");

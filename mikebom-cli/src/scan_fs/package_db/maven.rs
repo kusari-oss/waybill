@@ -1847,6 +1847,7 @@ pub(crate) fn jar_has_main_class_manifest(archive_path: &Path) -> bool {
     false
 }
 
+// walker-audit: false-positive — opens ONE caller-supplied JAR and iterates its zip entries; no directory traversal
 pub(crate) fn walk_jar_maven_meta(archive_path: &Path) -> Vec<EmbeddedMavenMeta> {
     let Ok(file) = std::fs::File::open(archive_path) else {
         return Vec::new();
@@ -2029,6 +2030,7 @@ fn compute_bytes_sha(bytes: &[u8]) -> [u8; 32] {
 /// `walk_nested_archives_in_bytes`, which DOES extract meta + recurse
 /// further (because at depth >=2 we're inside a vendored archive
 /// whose contents were not enumerated by the top-level walker).
+// walker-audit: false-positive — opens ONE caller-supplied JAR and iterates its zip entries; no directory traversal
 fn walk_nested_archives_in_jar_file(
     archive_path: &Path,
     outer_path_url: &str,
@@ -2103,6 +2105,7 @@ fn walk_nested_archives_in_jar_file(
 /// Walk an in-memory archive (already extracted from a parent JAR's
 /// nested entry) for `META-INF/maven/` AND further-nested
 /// `.jar`/`.war`/`.ear` entries. Recursive depth-bounded descent.
+// walker-audit: false-positive — iterates in-memory zip entries, no filesystem traversal
 fn walk_nested_archives_in_bytes(
     bytes: &[u8],
     outer_path_url: &str,
@@ -4467,6 +4470,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_ prefix of the unit under test
     fn walk_jar_collects_coord_and_embedded_deps() {
         let dir = tempfile::tempdir().unwrap();
         let jar = dir.path().join("guava.jar");
@@ -4496,6 +4500,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_ prefix of the unit under test
     fn walk_jar_attaches_sidecar_hash_when_present() {
         let dir = tempfile::tempdir().unwrap();
         let jar = dir.path().join("guava.jar");
@@ -4520,6 +4525,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_ prefix of the unit under test
     fn walk_jar_no_sidecar_still_computes_archive_sha256() {
         // Even when no `.sha256`/`.sha512`/`.sha1` sidecar exists
         // alongside the JAR (the common container-image case where
@@ -4548,6 +4554,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_ prefix of the unit under test
     fn walk_jar_with_sha1_sidecar_also_gets_sha256() {
         // When a SHA-1 sidecar (Maven Central default) exists, the
         // walker emits BOTH the sidecar hash AND a computed SHA-256,
@@ -4574,6 +4581,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_ prefix of the unit under test
     fn walk_fat_jar_only_primary_coord_gets_archive_sha256() {
         // Fat / shaded JARs ship META-INF/maven dirs for their
         // vendored dependencies. The archive SHA-256 describes the
@@ -4609,6 +4617,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_ prefix of the unit under test
     fn walk_jar_without_pom_xml_returns_empty_deps() {
         // A JAR that ships pom.properties but no pom.xml — should still
         // emit a coord entry with empty declared_deps.
@@ -4627,6 +4636,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_ prefix of the unit under test
     fn walk_fat_jar_collects_one_meta_per_vendored_artifact() {
         // Shaded / uber JAR: multiple META-INF/maven/<g>/<a>/ directories,
         // each with its own pom.properties + pom.xml. Each yields a
@@ -6617,6 +6627,7 @@ mod tests {
     // in this tests module)
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_ prefix of the unit under test
     fn walk_rootfs_poms_finds_multiple_cached_artifacts() {
         let dir = tempfile::tempdir().unwrap();
         let repo_root = dir.path().to_path_buf();
@@ -6652,6 +6663,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_ prefix of the unit under test
     fn walk_rootfs_poms_skips_host_scoped_roots() {
         // A cache whose only root is in `host_roots` should produce
         // zero seeds even if the directory contains cached .pom files.
@@ -6684,6 +6696,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_ prefix of the unit under test
     fn walk_rootfs_poms_ignores_sibling_non_pom_files() {
         let dir = tempfile::tempdir().unwrap();
         let repo_root = dir.path().to_path_buf();
@@ -6713,6 +6726,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_ prefix of the unit under test
     fn walk_rootfs_poms_truncates_at_cap() {
         let dir = tempfile::tempdir().unwrap();
         let repo_root = dir.path().to_path_buf();
@@ -6733,6 +6747,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_ prefix of the unit under test
     fn walk_rootfs_poms_handles_deep_group_paths() {
         let dir = tempfile::tempdir().unwrap();
         let repo_root = dir.path().to_path_buf();
@@ -6753,6 +6768,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_ prefix of the unit under test
     fn walk_rootfs_poms_empty_cache_returns_nothing() {
         let dir = tempfile::tempdir().unwrap();
         let cache = MavenRepoCache::for_tests(vec![dir.path().to_path_buf()]);

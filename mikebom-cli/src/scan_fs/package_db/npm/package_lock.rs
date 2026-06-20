@@ -789,6 +789,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_up_ prefix of the unit under test
     fn walk_up_resolution_picks_hoisted_when_parent_lacks_nested() {
         // Real-world molcajete bug: d3-dsv declares `commander: "7"`
         // and has NO nested commander; a DIFFERENT parent

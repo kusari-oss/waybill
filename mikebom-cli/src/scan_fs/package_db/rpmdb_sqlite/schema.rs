@@ -50,6 +50,7 @@ where
     Ok(out)
 }
 
+// walker-audit: false-positive — walks SQLite B-tree pages in memory, no filesystem traversal
 fn walk_schema_page<F>(
     page_bytes: &[u8],
     is_first_page: bool,

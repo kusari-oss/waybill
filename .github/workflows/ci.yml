@@ -119,7 +119,28 @@ jobs:
           # match its own allow-list file (`walk.audit-allowlist.txt`
           # lives under scan_fs/ for adjacency per SC-005, and every
           # entry inside it contains the substring `fn walk_`).
-          LIVE=$(LC_ALL=C grep -rEn --include='*.rs' 'fn walk[_(]' mikebom-cli/src/scan_fs/ | sed "$STRIP_LINE_NUMBERS" | LC_ALL=C sort -u)
+          #
+          # Issue #378: a function whose name starts with `walk_` but
+          # does NOT walk the filesystem (in-memory iterators, test
+          # functions, etc.) MAY opt out of the audit by placing a
+          # `// walker-audit:` sigil comment on the line immediately
+          # above the function signature. The sigil's text after the
+          # colon is free-form developer audit-trail. The pre-filter
+          # below drops any match whose immediate predecessor line
+          # carries the sigil; surviving matches still go through the
+          # allow-list diff. Single sigil prefix per FR (issue body
+          # acceptance criteria); the prefix matches whole-token
+          # so `// walker-audit-elsewhere:` does NOT opt out.
+          LIVE=$(LC_ALL=C grep -rEn --include='*.rs' 'fn walk[_(]' mikebom-cli/src/scan_fs/ | while IFS=: read -r path line content; do
+            prev=$((line - 1))
+            if [ "$prev" -ge 1 ]; then
+              prev_line=$(LC_ALL=C sed -n "${prev}p" "$path" 2>/dev/null)
+              case "$prev_line" in
+                *"// walker-audit:"*) continue;;
+              esac
+            fi
+            printf '%s:%s:%s\n' "$path" "$line" "$content"
+          done | sed "$STRIP_LINE_NUMBERS" | LC_ALL=C sort -u)
 
           START_NS=$(date +%s%N 2>/dev/null || echo 0)
           if DIFF_OUT=$(diff -u <(printf '%s\n' "$EXPECTED") <(printf '%s\n' "$LIVE")); then
