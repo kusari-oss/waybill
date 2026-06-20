@@ -651,6 +651,25 @@ pub fn build_metadata(
         if !license_array.is_empty() {
             metadata["component"]["licenses"] = json!(license_array);
         }
+
+        // Milestone 133 US2.3 (FR-014): propagate the main-module's
+        // `evidence.occurrences[]` onto the promoted metadata.component
+        // so the CDX-native field is on the BOM subject in the same
+        // place SPDX 2.3/3 carry it (the main-module is a regular
+        // Package on the SPDX side). Without this, the
+        // `holistic_parity` D2 SymmetricEqual assertion fails on
+        // single-main-module workspaces because SPDX has the
+        // main-module's go.mod / Cargo.lock / pom.xml occurrence and
+        // CDX does not.
+        if !c.occurrences.is_empty() {
+            let evidence_value = crate::generate::cyclonedx::evidence::build_evidence(
+                &c.evidence,
+                &c.occurrences,
+                None,
+                &[],
+            );
+            metadata["component"]["evidence"] = evidence_value;
+        }
     }
 
     if !lifecycles.is_empty() {

@@ -16,6 +16,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"d8e036ec21bbd487041c2d5ef9f0ab129d19a54476857ebd110d79570a67f1b7\"}",
+            "location": "node_modules/express/package.json"
+          }
         ]
       },
       "licenses": [
@@ -58,6 +64,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"fd97e46efdaedc99483f95cfb371a9e6101e36659254be24d01f753ad483e9e2\"}",
+            "location": "node_modules/safe-buffer/package.json"
           }
         ]
       },

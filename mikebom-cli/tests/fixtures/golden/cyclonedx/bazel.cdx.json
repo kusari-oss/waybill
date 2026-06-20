@@ -15,6 +15,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"1c9abe33972ce2af015be153e24af6e7a70569e5ff497c927f7fc59fb8c40974\"}",
+            "location": "MODULE.bazel"
+          }
         ]
       },
       "name": "abseil-cpp",
@@ -49,6 +55,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"1c9abe33972ce2af015be153e24af6e7a70569e5ff497c927f7fc59fb8c40974\"}",
+            "location": "MODULE.bazel"
           }
         ]
       },
@@ -89,6 +101,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"a1bc93b94944ac14500cf7ae1a90f8aa0beec2c9f5a8aba19face7c55a305d21\"}",
+            "location": "WORKSPACE.bazel"
           }
         ]
       },
@@ -132,6 +150,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"a1bc93b94944ac14500cf7ae1a90f8aa0beec2c9f5a8aba19face7c55a305d21\"}",
+            "location": "WORKSPACE.bazel"
           }
         ]
       },

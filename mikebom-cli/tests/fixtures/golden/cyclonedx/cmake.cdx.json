@@ -15,6 +15,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"7352fc9bd0ca39c5efb4b1556e2104c08cc4b54ffa4da9df25b452975a67d8c7\"}",
+            "location": "cmake/third_party.cmake"
+          }
         ]
       },
       "name": "boost",
@@ -55,6 +61,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"3ead8cde49fa2c3a749244f05c71fcc85fdee8bbc3248374622e663b3a76a8c9\"}",
+            "location": "CMakeLists.txt"
+          }
         ]
       },
       "name": "zlib",
@@ -93,6 +105,12 @@
                 "technique": "manifest-analysis"
               }
             ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"3ead8cde49fa2c3a749244f05c71fcc85fdee8bbc3248374622e663b3a76a8c9\"}",
+            "location": "CMakeLists.txt"
           }
         ]
       },

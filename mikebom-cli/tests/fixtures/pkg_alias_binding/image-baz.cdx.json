@@ -15,6 +15,12 @@
               }
             ]
           }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"446db4a0be0f85cb27407792fd4ff3de0a60a92b1055dc14ee810483df82b5c9\"}",
+            "location": "usr/local/bin/baz"
+          }
         ]
       },
       "name": "baz",
