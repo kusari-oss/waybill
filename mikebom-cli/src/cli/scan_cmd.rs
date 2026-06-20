@@ -3286,6 +3286,7 @@ mod tests {
             root_version: None,
             root_purl_type: None,
             no_root_purl: false,
+            root_purl: None,
             // Milestone 080 — defaults for new fields keep the test
             // helper's "minimal flags" contract intact.
             creator: vec![],
