@@ -180,6 +180,12 @@ pub fn extract(archive_path: &Path) -> Result<ExtractedImage> {
 /// - `var/run -> /run` → `var/run -> ../run` (1 `..`)
 /// - `usr/lib64 -> /lib64` → `usr/lib64 -> ../lib64`
 /// - `var/lib/dpkg/status -> /etc/passwd` → `../../../etc/passwd`
+///
+/// `#[cfg(unix)]`-gated to match the only call site in
+/// `extract_layer_over_rootfs`. Windows image scans skip this path
+/// (Windows symlink semantics differ enough that the rewrite would
+/// need to be re-validated there).
+#[cfg(unix)]
 fn rewrite_symlink_target_if_absolute<R: std::io::Read>(
     link_rel_path: &Path,
     entry: &tar::Entry<'_, R>,
