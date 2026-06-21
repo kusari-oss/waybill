@@ -60,6 +60,36 @@ jobs:
             # measured value in realistic-project-baseline.md and
             # the floor can be tightened later.
             expected_min_pkg_golang_edges: 100
+          # Issue #109 expansion — top-3 most-common ecosystems
+          # beyond Go. Fixtures chosen for: small enough to keep CI
+          # wall-clock bounded; canonical upstreams developers
+          # recognize; stable per-tag dep graphs so floors don't
+          # flake on minor upstream churn.
+          #
+          # Component floors are set conservatively (well under
+          # the actual emit count at the pinned tag) so a
+          # one-version upstream bump won't false-positive — they
+          # catch a regression that drops a whole reader's
+          # output (the original #109 concern), not a single-dep
+          # delta.
+          # Floors calibrated against measured ubuntu-latest output
+          # from this PR's first CI run (express=60, flask=141,
+          # ripgrep=82). Each floor is set well below the measured
+          # value to absorb minor upstream churn without false-
+          # positives, while still catching a regression that drops
+          # a whole reader's output (#109's original concern).
+          - name: express
+            url: https://github.com/expressjs/express.git
+            tag: v5.2.1
+            expected_min_components: 30
+          - name: flask
+            url: https://github.com/pallets/flask.git
+            tag: 3.1.3
+            expected_min_components: 50
+          - name: ripgrep
+            url: https://github.com/BurntSushi/ripgrep.git
+            tag: 14.1.1
+            expected_min_components: 40
         platform:
           - ubuntu-latest
           - macos-latest
