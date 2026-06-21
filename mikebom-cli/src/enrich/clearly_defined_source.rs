@@ -11,10 +11,10 @@
 //! predictable.
 
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 use mikebom_common::resolution::ResolvedComponent;
 use mikebom_common::types::license::SpdxExpression;
@@ -23,15 +23,22 @@ use super::clearly_defined_client::{CdDefinition, ClearlyDefinedClient};
 use super::clearly_defined_coord::{cd_coord_for, CdCoord};
 
 const DEFAULT_TIMEOUT_SECS: u64 = 5;
+/// In-flight fetch cap. Mirrors `deps_dev_graph::CONCURRENT_REQUESTS`
+/// (8). CD's API tolerates more, but bounded concurrency keeps
+/// memory + connection-pool usage predictable on large scans.
+const CONCURRENT_REQUESTS: usize = 8;
 
-/// Owns the HTTP client + cache + offline flag.
+/// Owns the HTTP client + cache + offline flag. Cheap to clone — the
+/// cache is `Arc`-shared so concurrent fetch tasks see the same
+/// `HashMap` (and the same miss-deduplication).
+#[derive(Clone)]
 pub struct ClearlyDefinedSource {
     client: ClearlyDefinedClient,
     offline: bool,
     /// `Some(def)` when CD answered with a definition (license may be
     /// None inside it); `None` for confirmed misses (404). Either way
     /// caching prevents the same coord from being re-fetched in a scan.
-    cache: Mutex<HashMap<CdCoord, Option<CdDefinition>>>,
+    cache: Arc<Mutex<HashMap<CdCoord, Option<CdDefinition>>>>,
 }
 
 impl ClearlyDefinedSource {
@@ -39,7 +46,7 @@ impl ClearlyDefinedSource {
         Self {
             client: ClearlyDefinedClient::new(Duration::from_secs(DEFAULT_TIMEOUT_SECS)),
             offline,
-            cache: Mutex::new(HashMap::new()),
+            cache: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -114,10 +121,12 @@ impl ClearlyDefinedSource {
 /// Returns the number of components that picked up at least one
 /// concluded license — useful for an INFO-level log line.
 ///
-/// Sequential per-component; mirrors `depsdev_source::enrich_components`'s
-/// shape. Bounded-concurrency variant deferred until profiling shows
-/// it matters; CD's API is fast enough on small SBOMs that the round
-/// trips don't dominate scan time.
+/// Fetches run in bounded-concurrency batches (8 in-flight) using
+/// `tokio::task::JoinSet`. Coords are deduplicated before dispatch so
+/// the same definition is requested at most once per scan even when
+/// multiple components share a coord. Apply runs sequentially after
+/// all fetches complete — keeps the mutation site simple and the
+/// ordering deterministic.
 pub async fn enrich_components(
     source: &ClearlyDefinedSource,
     components: &mut [ResolvedComponent],
@@ -126,17 +135,79 @@ pub async fn enrich_components(
         debug!("ClearlyDefined enrichment skipped — offline mode active");
         return 0;
     }
+
+    // 1. Compute the coord per component (None means "skip this row").
+    let coords_by_index: Vec<Option<CdCoord>> = components
+        .iter()
+        .map(cd_coord_for)
+        .collect();
+
+    // 2. Deduplicate coords. Multiple components could share a coord
+    //    (e.g., the same maven artifact appearing in two places); the
+    //    cache already dedupes within a single sequential pass, but in
+    //    the concurrent pattern below we want to spawn at most one
+    //    fetch per unique coord up-front.
+    let mut seen = std::collections::HashSet::new();
+    let unique_coords: Vec<CdCoord> = coords_by_index
+        .iter()
+        .filter_map(|c| c.as_ref())
+        .filter(|c| seen.insert((*c).clone()))
+        .cloned()
+        .collect();
+
+    if unique_coords.is_empty() {
+        return 0;
+    }
+
+    info!(
+        unique_coords = unique_coords.len(),
+        concurrency = CONCURRENT_REQUESTS,
+        "ClearlyDefined enrichment starting",
+    );
+
+    // 3. Fan out fetches with a bounded in-flight cap. `Arc<Source>`
+    //    is the share-vehicle — Source is cheap-clone because cache is
+    //    already `Arc<Mutex<...>>`, so each spawned task gets a
+    //    no-op clone.
+    let source_arc = Arc::new(source.clone());
+    for chunk in unique_coords.chunks(CONCURRENT_REQUESTS) {
+        let mut set = tokio::task::JoinSet::new();
+        for coord in chunk {
+            let coord = coord.clone();
+            let s = Arc::clone(&source_arc);
+            set.spawn(async move {
+                // Result is written to the shared cache as a side effect;
+                // the JoinSet result itself is unused.
+                s.fetch_definition(&coord).await;
+            });
+        }
+        while let Some(result) = set.join_next().await {
+            if let Err(e) = result {
+                warn!(error = %e, "ClearlyDefined worker task panicked");
+            }
+        }
+    }
+
+    // 4. Apply cached results to each component. Re-reads from the
+    //    cache so we get the same definition every component would
+    //    have seen in the sequential version.
     let mut enriched = 0usize;
-    for component in components.iter_mut() {
-        let Some(coord) = cd_coord_for(component) else {
-            continue;
-        };
-        if let Some(def) = source.fetch_definition(&coord).await {
+    for (component, coord) in components.iter_mut().zip(coords_by_index) {
+        let Some(coord) = coord else { continue };
+        let def_opt = source_arc
+            .cache
+            .lock()
+            .expect("cd cache mutex poisoned")
+            .get(&coord)
+            .cloned()
+            .unwrap_or(None);
+        if let Some(def) = def_opt {
             if ClearlyDefinedSource::apply_definition(component, &def) {
                 enriched += 1;
             }
         }
     }
+
     if enriched > 0 {
         info!(
             count = enriched,
