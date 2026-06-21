@@ -4,37 +4,37 @@
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.49",
+      "annotator": "Tool: mikebom-0.1.0-alpha.50",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.49",
+      "annotator": "Tool: mikebom-0.1.0-alpha.50",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":0}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.49",
+      "annotator": "Tool: mikebom-0.1.0-alpha.50",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-events-dropped\",\"value\":0}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.49",
+      "annotator": "Tool: mikebom-0.1.0-alpha.50",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.49",
+      "annotator": "Tool: mikebom-0.1.0-alpha.50",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.49",
+      "annotator": "Tool: mikebom-0.1.0-alpha.50",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"apk\"]}}"
     }
   ],
@@ -42,19 +42,19 @@
     "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: operations. Per-component scope detail in mikebom:sbom-tier annotations.",
     "created": "1970-01-01T00:00:00Z",
     "creators": [
-      "Tool: mikebom-0.1.0-alpha.49",
+      "Tool: mikebom-0.1.0-alpha.50",
       "Organization: mikebom contributors"
     ]
   },
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-IZNWWDSW36R5XIA5"
+    "SPDXRef-DocumentRoot-DKQPPWXPH2DY7O7Q"
   ],
-  "documentNamespace": "https://mikebom.kusari.dev/spdx/4J3W7BCJ77DYBVHCUCRMFYHQY3DL4UPO",
+  "documentNamespace": "https://mikebom.kusari.dev/spdx/NVDU6LFWX63MZ2G4T7CGLORJGIHA2HGM",
   "name": "synthetic",
   "packages": [
     {
-      "SPDXID": "SPDXRef-DocumentRoot-IZNWWDSW36R5XIA5",
+      "SPDXID": "SPDXRef-DocumentRoot-DKQPPWXPH2DY7O7Q",
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
@@ -81,25 +81,25 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.49",
+          "annotator": "Tool: mikebom-0.1.0-alpha.50",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.49",
+          "annotator": "Tool: mikebom-0.1.0-alpha.50",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"lib/apk/db/installed\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.49",
+          "annotator": "Tool: mikebom-0.1.0-alpha.50",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:alpinelinux:busybox:1.36.1-r15:*:*:*:*:*:*:*\",\"cpe:2.3:a:busybox:busybox:1.36.1-r15:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.49",
+          "annotator": "Tool: mikebom-0.1.0-alpha.50",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         }
       ],
@@ -129,25 +129,25 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.49",
+          "annotator": "Tool: mikebom-0.1.0-alpha.50",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.49",
+          "annotator": "Tool: mikebom-0.1.0-alpha.50",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"lib/apk/db/installed\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.49",
+          "annotator": "Tool: mikebom-0.1.0-alpha.50",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:alpinelinux:musl:1.2.4_git20230717-r4:*:*:*:*:*:*:*\",\"cpe:2.3:a:musl:musl:1.2.4_git20230717-r4:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.49",
+          "annotator": "Tool: mikebom-0.1.0-alpha.50",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         }
       ],
@@ -174,19 +174,19 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-IZNWWDSW36R5XIA5",
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-DKQPPWXPH2DY7O7Q",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-DHDBA3PTGCIRJAUV",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-IZNWWDSW36R5XIA5"
+      "spdxElementId": "SPDXRef-DocumentRoot-DKQPPWXPH2DY7O7Q"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-NJ6CH7QTZDKJ74FQ",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-IZNWWDSW36R5XIA5"
+      "spdxElementId": "SPDXRef-DocumentRoot-DKQPPWXPH2DY7O7Q"
     }
   ],
   "spdxVersion": "SPDX-2.3"
