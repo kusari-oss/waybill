@@ -21,6 +21,16 @@ fn resolve_path(path: &str) -> Option<Purl> {
 /// stamped verbatim — callers decide the shape (scan-mode package-DB
 /// readers use `<namespace>-<VERSION_ID>`, e.g. `debian-12`).
 pub fn resolve_path_with_context(path: &str, deb_codename: Option<&str>) -> Option<Purl> {
+    // The matchers below anchor on forward-slash patterns like
+    // `.cargo/registry/cache/`, `/pkg/mod/`, `node_modules/`. On Windows
+    // hosts the input contains backslash separators, so normalize them
+    // to forward slashes so the matchers fire consistently across both
+    // lanes. POSIX inputs already use `/`, so the replace is semantically
+    // a no-op there (literal `\` in a POSIX filename is rare enough that
+    // package-shaped patterns wouldn't match it anyway).
+    let normalized = path.replace('\\', "/");
+    let path = normalized.as_str();
+
     None.or_else(|| resolve_cargo_path(path))
         .or_else(|| resolve_pip_path(path))
         .or_else(|| resolve_npm_path(path))
