@@ -331,6 +331,18 @@ pub struct ScanDiagnostics {
     /// ambiguity` properties on SBOM metadata when populated.
     /// Deduplicated; insertion order preserved.
     pub scan_ambiguities: Vec<String>,
+
+    /// Milestone 134 (closes #125): divergent-PURL collision records
+    /// detected by the per-ecosystem dedup sites. Aggregated by the
+    /// orchestrator at the end of `read_all` into a
+    /// [`CollisionsSummary`](mikebom_common::divergence::CollisionsSummary)
+    /// emitted as a document-scope `mikebom:purl-collisions-detected`
+    /// annotation. Each entry's per-component surface
+    /// (`mikebom:duplicate-purl-divergent`) is already stamped on the
+    /// owning `PackageDbEntry.extra_annotations` at construction time
+    /// (cargo today; npm / maven / pip / gem / go-binary follow-ups
+    /// converge on the same shape).
+    pub divergence_records: Vec<mikebom_common::divergence::DivergenceRecord>,
 }
 
 /// Document-level completeness classification for the Go ecosystem
@@ -1433,7 +1445,14 @@ pub fn read_all(
     out.extend(nuget::read(rootfs, exclude_set));
     // Cargo is fail-closed on v1/v2 lockfiles (FR-040), mirroring the
     // npm v1 refusal pattern.
-    out.extend(cargo::read(rootfs, include_dev, exclude_set)?);
+    //
+    // Milestone 134: the cargo reader now also returns per-collision
+    // `DivergenceRecord`s. They land in `diagnostics.divergence_records`
+    // for downstream aggregation into the document-scope
+    // `mikebom:purl-collisions-detected` annotation.
+    let cargo_out = cargo::read(rootfs, include_dev, exclude_set)?;
+    out.extend(cargo_out.entries);
+    diagnostics.divergence_records.extend(cargo_out.divergences);
     out.extend(gem::read(rootfs, include_dev, exclude_set));
 
     // Milestone 102: C/C++ source-tree readers (Bazel + CMake +

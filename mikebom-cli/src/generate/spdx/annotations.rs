@@ -487,6 +487,19 @@ pub fn annotate_document(
         }
     }
 
+    // Milestone 134 (closes #125, catalog row C100): document-scope
+    // `mikebom:purl-collisions-detected` summary annotation. Omitted
+    // entirely when no collisions were detected so clean scans stay
+    // byte-identical to alpha.51 emissions (FR-009 / SC-002). Per
+    // `contracts/document-scope-annotation.md`, value is the
+    // serialized `CollisionsSummary` envelope wrapped in the standard
+    // `MikebomAnnotationCommentV1` envelope.
+    if let Some(summary) = artifacts.collisions_summary {
+        if let Ok(value) = serde_json::to_value(summary) {
+            push(&mut out, "mikebom:purl-collisions-detected", value);
+        }
+    }
+
     // C23 trace-integrity-* — four scalars, emitted unconditionally
     // so consumers can distinguish "no trace ran" (0/0/[]/[]) from
     // "we didn't record it". Matches CDX's metadata-level shape.

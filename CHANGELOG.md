@@ -7,6 +7,70 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Divergent-PURL collision detection in main-module dedup (closes #125)
+
+Milestone 064's cargo main-module emission already dedupes same-PURL
+collisions (vendored copies, `examples/` mirrors, `target/package`
+extractions) and logs a `tracing::warn!` when it drops duplicates. The
+realistic milestone-064 cases have identical declared dep sets so
+first-wins is harmless. This milestone upgrades the silent
+augment-in-place case where two `Cargo.toml` files claim the same
+`pkg:cargo/<name>@<version>` PURL but the content actually diverges —
+either via different declared `[dependencies]` / `[dev-dependencies]`
+/ `[build-dependencies]` table keys, or (under `--deep-hash`) via
+different per-crate file-tree SHA-256s.
+
+**Per-component property** `mikebom:duplicate-purl-divergent` (C99)
+lands on the deduped root component for every detected divergent
+collision. Structured value:
+
+```json
+{
+  "v": 1,
+  "purl": "pkg:cargo/foo@1.2.3",
+  "reason": "deps-differ",
+  "paths": ["crates/foo/Cargo.toml", "vendor/foo/Cargo.toml"],
+  "dep_sets_by_path": {
+    "crates/foo/Cargo.toml": ["serde", "tokio"],
+    "vendor/foo/Cargo.toml": ["anyhow", "serde", "tokio"]
+  }
+}
+```
+
+`reason` is one of `deps-differ` / `hashes-differ` / `both`.
+`hashes_by_path` populates instead of (or alongside) `dep_sets_by_path`
+when the deep-hash compare fires under `--deep-hash`.
+
+**Document-scope summary** `mikebom:purl-collisions-detected` (C100)
+aggregates every detected collision into one `metadata.properties[]` /
+top-level `annotations[]` / `SpdxDocument.annotations[]` entry so
+consumers can enumerate all collisions via a single `jq` query.
+Sorted lex by PURL for stable output.
+
+**Scope**: cargo only this milestone; the `DivergenceRecord` /
+`CollisionsSummary` types in `mikebom-common::divergence` are
+ecosystem-agnostic so future npm / maven / pip / gem / go-binary
+follow-ups can populate the same shape at their own dedup sites.
+
+**Defaults**: soft-only — the annotation surfaces in the SBOM but the
+scan never fails on divergence. A hard-fail flag is deferred to a
+future milestone. The existing milestone-064 `tracing::warn!`
+continues to fire alongside the new annotation (FR-008 — preserves
+the log-watching contract).
+
+**Byte-identity**: no annotation appears in clean SBOMs. The existing
+11-ecosystem regression goldens
+(`mikebom-cli/tests/fixtures/golden/{cyclonedx,spdx-2.3,spdx-3}/*.json`)
+stay byte-identical pre/post this milestone (SC-002 invariant).
+
+**Why mikebom-specific (Constitution Principle V audit)**: no CDX 1.6
+/ SPDX 2.3 / SPDX 3.0.1 native field expresses "same identity,
+divergent content" semantics. CDX `evidence.occurrences[]` is
+presence-only ("found here too"); SPDX `VARIANT_OF` / `COPY_OF` is
+between DIFFERENT PURLs; `sourceInfo` is unstructured prose. Full
+audit narrative in `docs/reference/sbom-format-mapping.md` C99/C100 +
+`specs/134-divergent-purl-detection/research.md` R1.
+
 ### `--root-purl <PURL>` single-flag form for the root component PURL (closes #359)
 
 New CLI flag that the operator passes to express the BOM subject's

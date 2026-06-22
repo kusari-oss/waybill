@@ -114,7 +114,12 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // label so `metadata.properties[]` carries the
             // `mikebom:file-inventory-mode = "full"` override marker
             // when the operator opted into the dedupe bypass.
-            .with_file_inventory_mode(scan.file_inventory_mode.map(String::from));
+            .with_file_inventory_mode(scan.file_inventory_mode.map(String::from))
+            // Milestone 134 — document-scope divergent-PURL summary.
+            // `None` when no collisions were detected (FR-009 — no
+            // annotation in clean SBOMs; bytes stay identical to
+            // alpha.51 emissions).
+            .with_collisions_summary(scan.collisions_summary.cloned());
         let bom = builder.build(
             scan.components,
             scan.relationships,

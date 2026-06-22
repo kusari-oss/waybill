@@ -22,6 +22,7 @@
 
 pub mod cpe;
 pub mod cyclonedx;
+pub mod divergence_annotation;
 pub mod lifecycle_phases;
 pub mod openvex;
 pub mod root_selector;
@@ -193,6 +194,17 @@ pub struct ScanArtifacts<'a> {
     /// `docs/reference/sbom-format-mapping.md` C42 + the
     /// `--spdx2-relationship-compat` CLI flag.
     pub spdx2_relationship_compat: Spdx2RelationshipCompat,
+    /// Milestone 134 (closes #125): document-scope aggregate of every
+    /// divergent-PURL collision detected in the scan. `None` when no
+    /// divergence was detected — emitters MUST omit the
+    /// `mikebom:purl-collisions-detected` annotation entirely in
+    /// that case (FR-009: no SBOM bloat, no spurious signal on
+    /// clean scans). `Some(_)` triggers a document-level annotation
+    /// in CDX `metadata.properties[]`, SPDX 2.3 top-level
+    /// `annotations[]`, and SPDX 3 `SpdxDocument` element-level
+    /// `annotations` via the standard envelope plumbing.
+    pub collisions_summary:
+        Option<&'a mikebom_common::divergence::CollisionsSummary>,
 }
 
 /// Milestone 077 — operator-supplied overrides for the root component

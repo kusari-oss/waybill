@@ -321,6 +321,7 @@ pub fn build_document(
             user_metadata: artifacts.user_metadata.clone(),
             sbom_type_override: artifacts.sbom_type_override,
             spdx2_relationship_compat: artifacts.spdx2_relationship_compat,
+            collisions_summary: artifacts.collisions_summary,
         }
     } else {
         ScanArtifacts {
@@ -347,6 +348,7 @@ pub fn build_document(
             user_metadata: artifacts.user_metadata.clone(),
             sbom_type_override: artifacts.sbom_type_override,
             spdx2_relationship_compat: artifacts.spdx2_relationship_compat,
+            collisions_summary: artifacts.collisions_summary,
         }
     };
     let artifacts: &ScanArtifacts<'_> = &view_artifacts;
@@ -952,6 +954,7 @@ mod tests {
             user_metadata: mikebom::binding::user_metadata::UserMetadata::default(),
             sbom_type_override: None,
             spdx2_relationship_compat: crate::generate::Spdx2RelationshipCompat::Full,
+            collisions_summary: None,
         }
     }
 

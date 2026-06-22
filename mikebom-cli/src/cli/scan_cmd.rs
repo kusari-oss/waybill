@@ -1891,7 +1891,9 @@ pub async fn execute(
         go_graph_completeness,
         go_graph_completeness_reason,
         scan_target_coord,
+        divergence_records,
     } = scan_fs::scan_path(
+
         &root_path,
         effective_codename,
         args.max_file_size,
@@ -2453,6 +2455,19 @@ pub async fn execute(
         } // end `else` branch for !root_excluded
     }
 
+    // Milestone 134 — aggregate divergent-PURL collision records
+    // into a `CollisionsSummary` when at least one was detected.
+    // `None` when empty so the document-scope annotation is
+    // omitted entirely (FR-009).
+    let collisions_summary: Option<mikebom_common::divergence::CollisionsSummary> =
+        if divergence_records.is_empty() {
+            None
+        } else {
+            Some(mikebom_common::divergence::CollisionsSummary::from_records(
+                divergence_records.clone(),
+            ))
+        };
+
     // Build the neutral artifacts bundle once and hand it to every
     // serializer the user requested — the single-pass guarantee of
     // FR-004 / SC-009.
@@ -2552,6 +2567,10 @@ pub async fn execute(
         // `full` preserves the milestone-052/part-2 typed
         // reversed-direction emission).
         spdx2_relationship_compat: args.spdx2_relationship_compat,
+        // Milestone 134 — document-scope collisions summary built
+        // from `divergence_records`. `None` when no divergence
+        // detected (FR-009: no annotation emitted on clean scans).
+        collisions_summary: collisions_summary.as_ref(),
     };
     let output_cfg = OutputConfig {
         mikebom_version: env!("CARGO_PKG_VERSION"),

@@ -7,6 +7,8 @@ pub mod maps;
 #[cfg(feature = "std")]
 pub mod attestation;
 #[cfg(feature = "std")]
+pub mod divergence;
+#[cfg(feature = "std")]
 pub mod resolution;
 #[cfg(feature = "std")]
 pub mod types;

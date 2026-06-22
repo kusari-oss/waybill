@@ -69,6 +69,10 @@ pub fn build_metadata(
     // label. Only `Some("full")` triggers the document-level
     // override marker per Strict Boundary §5.
     file_inventory_mode: Option<&str>,
+    // Milestone 134 (closes #125) — document-scope aggregate of every
+    // divergent-PURL collision detected in the scan. `None` ⇒ no
+    // collisions ⇒ omit the annotation entirely (FR-009).
+    collisions_summary: Option<&mikebom_common::divergence::CollisionsSummary>,
 ) -> serde_json::Value {
     let version = env!("CARGO_PKG_VERSION");
     // Determinism: honor `MIKEBOM_FIXED_TIMESTAMP` (same env-var
@@ -220,6 +224,20 @@ pub fn build_metadata(
                 }));
             }
         }
+    }
+
+    // Milestone 134 (closes #125, catalog row C100): document-scope
+    // `mikebom:purl-collisions-detected` summary annotation. Omitted
+    // entirely when `collisions_summary.is_none()` so clean scans
+    // stay byte-identical to alpha.51 emissions (FR-009 / SC-002).
+    // Per `contracts/document-scope-annotation.md`, `value` is a
+    // JSON-encoded string of the `CollisionsSummary` envelope.
+    if let Some(summary) = collisions_summary {
+        properties.push(json!({
+            "name": "mikebom:purl-collisions-detected",
+            "value": serde_json::to_string(summary)
+                .unwrap_or_default(),
+        }));
     }
 
     // Trace-integrity counters (previously on compositions, moved
@@ -674,6 +692,27 @@ pub fn build_metadata(
                 "value": serde_json::Value::Array(value.clone()).to_string(),
             }));
         }
+        // Milestone 134 — propagate `mikebom:duplicate-purl-divergent`
+        // (C99) when the deduped main-module is promoted to
+        // `metadata.component`. Single-crate workspaces hit this path;
+        // multi-member workspaces emit via `components[]` and pick up
+        // the property automatically through the general
+        // extra_annotations → properties wiring in
+        // `builder.rs`. Mirrors the milestone-116
+        // `mikebom:produces-binaries` propagation pattern above.
+        if let Some(value) = c
+            .extra_annotations
+            .get("mikebom:duplicate-purl-divergent")
+        {
+            let value_str = match value {
+                serde_json::Value::String(s) => s.clone(),
+                other => serde_json::to_string(other).unwrap_or_default(),
+            };
+            comp_props.push(json!({
+                "name": "mikebom:duplicate-purl-divergent",
+                "value": value_str,
+            }));
+        }
         metadata["component"]["properties"] = json!(comp_props);
 
         // Propagate the supplier so the parity Section A `cdx_supplier`
@@ -983,7 +1022,7 @@ mod tests {
 
     #[test]
     fn metadata_has_required_fields() {
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None);
+        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
 
         assert!(meta["timestamp"].is_string());
         assert_eq!(meta["tools"]["components"][0]["name"], "mikebom");
@@ -1004,7 +1043,7 @@ mod tests {
     #[test]
     fn metadata_includes_authors_for_sbom_authors_score() {
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
         let authors = meta["authors"].as_array().expect("authors must be array");
         assert!(!authors.is_empty(), "authors must be non-empty");
         assert!(authors[0]["name"].is_string());
@@ -1013,7 +1052,7 @@ mod tests {
     #[test]
     fn metadata_includes_supplier_for_sbom_supplier_score() {
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
         assert!(
             meta["supplier"]["name"].is_string(),
             "supplier.name must be present as a string"
@@ -1025,7 +1064,7 @@ mod tests {
         // sbomqs sbom_data_license scores the SBOM's own license. SPDX
         // convention is CC0-1.0 so SBOM content is free to redistribute.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
         let licenses = meta["licenses"].as_array().expect("licenses must be array");
         assert!(!licenses.is_empty());
         assert_eq!(licenses[0]["license"]["id"], "CC0-1.0");
@@ -1036,7 +1075,7 @@ mod tests {
         // sbomqs flags metadata.component as invalid without a purl.
         // Mikebom synthesizes pkg:generic/<name>@<version>.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
         assert_eq!(meta["component"]["purl"], "pkg:generic/myapp@0.1.0");
     }
 
@@ -1045,7 +1084,7 @@ mod tests {
         // sbomqs flags empty/absent cpe on metadata.component as invalid.
         // Mikebom emits cpe:2.3:a:mikebom:<name>:<version>:*:*:*:*:*:*:*.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
         assert_eq!(
             meta["component"]["cpe"],
             "cpe:2.3:a:mikebom:myapp:0.1.0:*:*:*:*:*:*:*"
@@ -1082,6 +1121,7 @@ mod tests {
         None,
             None,
         None,
+        None,
         );
         let purl = meta["component"]["purl"].as_str().unwrap();
         assert!(
@@ -1097,16 +1137,16 @@ mod tests {
 
     #[test]
     fn metadata_bom_ref_format() {
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None);
+        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
         assert_eq!(meta["component"]["bom-ref"], "myapp@0.1.0");
     }
 
     #[test]
     fn metadata_context_varies_per_variant() {
-        let fs = build_metadata("myapp", "1.0", GenerationContext::FilesystemScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None);
+        let fs = build_metadata("myapp", "1.0", GenerationContext::FilesystemScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
         assert_eq!(fs["properties"][0]["value"], "filesystem-scan");
 
-        let img = build_metadata("myapp", "1.0", GenerationContext::ContainerImageScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None);
+        let img = build_metadata("myapp", "1.0", GenerationContext::ContainerImageScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
         assert_eq!(img["properties"][0]["value"], "container-image-scan");
     }
 
@@ -1129,6 +1169,7 @@ mod tests {
         &mikebom::binding::user_metadata::UserMetadata::default(),
         None,
             None,
+        None,
         None,
         );
         assert!(meta.get("lifecycles").is_none());
@@ -1206,6 +1247,7 @@ mod tests {
         &mikebom::binding::user_metadata::UserMetadata::default(),
         None,
             None,
+        None,
         None,
         );
 
@@ -1286,6 +1328,7 @@ mod tests {
         None,
             None,
         None,
+        None,
         );
         assert!(
             meta.get("lifecycles").is_none(),
@@ -1319,6 +1362,7 @@ mod tests {
             &mikebom::binding::user_metadata::UserMetadata::default(),
         None,
             None,
+        None,
         None,
         );
         let refs = meta["component"]["externalReferences"]
@@ -1361,6 +1405,7 @@ mod tests {
         None,
             None,
         None,
+        None,
         );
         let props = meta["properties"].as_array().expect("properties");
         let entry = props
@@ -1395,6 +1440,7 @@ mod tests {
             &mikebom::binding::user_metadata::UserMetadata::default(),
         None,
             None,
+        None,
         None,
         );
         let props = meta["properties"].as_array().expect("properties");

@@ -109,6 +109,11 @@ pub struct CycloneDxBuilder {
     /// `Some("full")` triggers the document-level override marker
     /// (Constitution Strict Boundary §5).
     file_inventory_mode: Option<String>,
+    /// Milestone 134 — document-scope aggregate of divergent-PURL
+    /// collision records detected in the scan. `None` ⇒ no
+    /// collisions ⇒ no document-scope annotation (FR-009).
+    collisions_summary:
+        Option<mikebom_common::divergence::CollisionsSummary>,
 }
 
 impl CycloneDxBuilder {
@@ -127,7 +132,19 @@ impl CycloneDxBuilder {
             sbom_type_override: None,
             file_inventory_stats: None,
             file_inventory_mode: None,
+            collisions_summary: None,
         }
+    }
+
+    /// Milestone 134 — record the document-scope `CollisionsSummary`
+    /// aggregating every divergent-PURL collision detected in the
+    /// scan. `None` ⇒ no collisions ⇒ no annotation emitted.
+    pub fn with_collisions_summary(
+        mut self,
+        summary: Option<mikebom_common::divergence::CollisionsSummary>,
+    ) -> Self {
+        self.collisions_summary = summary;
+        self
     }
 
     /// Milestone 133 US3 — record the file-tier walker's diagnostic
@@ -374,6 +391,7 @@ impl CycloneDxBuilder {
             self.sbom_type_override,
             self.file_inventory_stats.as_ref(),
             self.file_inventory_mode.as_deref(),
+            self.collisions_summary.as_ref(),
         );
         // Milestone 076 — track per-component identifier matches so
         // we can emit a warn for any selector that matched zero

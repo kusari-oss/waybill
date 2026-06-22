@@ -540,6 +540,10 @@ spdx23_anno!(c95_spdx23, "mikebom:file-inventory-unreadable", document);
 spdx23_anno!(c96_spdx23, "mikebom:file-paths-truncated", component);
 spdx23_anno!(c97_spdx23, "mikebom:file-inventory-mode", document);
 spdx23_anno!(c98_spdx23, "mikebom:license-concluded-source", component);
+// Milestone 134 (closes #125): divergent-PURL detection — see cdx.rs
+// for the C99/C100 design notes.
+spdx23_anno!(c99_spdx23, "mikebom:duplicate-purl-divergent", component);
+spdx23_anno!(c100_spdx23, "mikebom:purl-collisions-detected", document);
 
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-Package
 // envelope carrying the JSON-encoded array of conflict records.

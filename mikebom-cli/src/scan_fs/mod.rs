@@ -103,6 +103,16 @@ pub struct ScanResult {
     /// the scan-subject heuristic (non-Java target or simple
     /// standalone JAR layout).
     pub scan_target_coord: Option<package_db::maven::ScanTargetCoord>,
+    /// Milestone 134 (closes #125): divergent-PURL collision records
+    /// detected during per-ecosystem dedup. When non-empty, the format
+    /// emitters surface a document-scope `mikebom:purl-collisions-
+    /// detected` annotation aggregating every collision in the scan.
+    /// Per-component annotations
+    /// (`mikebom:duplicate-purl-divergent`) are already attached to
+    /// the owning components' `extra_annotations` bag — this field is
+    /// the document-scope twin.
+    pub divergence_records:
+        Vec<mikebom_common::divergence::DivergenceRecord>,
 }
 
 /// Walk `root`, hash matching artifact files, match each against the path
@@ -242,12 +252,28 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         Option<package_db::GraphCompleteness> = None;
     let mut go_graph_completeness_reason: Option<String> = None;
     let mut scan_target_coord: Option<package_db::maven::ScanTargetCoord> = None;
+    // Milestone 134 — divergent-PURL collision records collected by
+    // per-ecosystem dedup. Routed into ScanResult.divergence_records
+    // for document-scope `mikebom:purl-collisions-detected` emission.
+    let mut divergence_records: Vec<mikebom_common::divergence::DivergenceRecord> =
+        Vec::new();
     if read_package_db {
+        // Milestone 134 US2 — surface the `--deep-hash` choice to the
+        // cargo reader via env var (same plumbing pattern as
+        // `MIKEBOM_INCLUDE_VENDORED`; avoids churning the 75-callsite
+        // `scan_path -> read_all -> cargo::read` signature chain for
+        // an opt-in observability feature).
+        if deep_hash {
+            std::env::set_var("MIKEBOM_DEEP_HASH", "1");
+        } else {
+            std::env::remove_var("MIKEBOM_DEEP_HASH");
+        }
         let scan_result = package_db::read_all(root, deb_codename, include_dev, include_legacy_rpmdb, scan_mode, include_declared_deps, scan_target_name, exclude_set)?;
         os_release_missing_fields = scan_result.diagnostics.os_release_missing_fields.clone();
         go_graph_completeness = scan_result.diagnostics.go_graph_completeness;
         go_graph_completeness_reason = scan_result.diagnostics.go_graph_completeness_reason.clone();
         scan_target_coord = scan_result.scan_target_coord.clone();
+        divergence_records = scan_result.diagnostics.divergence_records.clone();
         let mut db_entries = scan_result.entries;
         let claimed_paths = scan_result.claimed_paths;
         #[cfg(unix)]
@@ -729,6 +755,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         go_graph_completeness,
         go_graph_completeness_reason,
         scan_target_coord,
+        divergence_records,
     })
 }
 

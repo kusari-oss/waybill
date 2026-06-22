@@ -359,6 +359,7 @@ mod tests {
             user_metadata: mikebom::binding::user_metadata::UserMetadata::default(),
             sbom_type_override: None,
             spdx2_relationship_compat: crate::generate::Spdx2RelationshipCompat::Full,
+            collisions_summary: None,
         }
     }
 

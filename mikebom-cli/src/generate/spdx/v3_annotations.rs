@@ -482,6 +482,16 @@ fn push_document_fields(
         }
     }
 
+    // Milestone 134 (closes #125, catalog row C100): document-scope
+    // `mikebom:purl-collisions-detected` summary. Omitted when no
+    // collisions were detected so clean scans stay byte-identical to
+    // alpha.51 emissions (FR-009 / SC-002).
+    if let Some(summary) = scan.collisions_summary {
+        if let Ok(value) = serde_json::to_value(summary) {
+            push(out, "mikebom:purl-collisions-detected", value);
+        }
+    }
+
     // C23 trace-integrity-* — four unconditional scalars.
     push(
         out,

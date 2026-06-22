@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-06-19
+Auto-generated from all feature plans. Last updated: 2026-06-21
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -147,6 +147,8 @@ Auto-generated from all feature plans. Last updated: 2026-06-19
 - Rust stable (workspace toolchain inherited from milestones 001–131; + Existing only — `serde`/`serde_json` (CDX/SPDX JSON I/O), (132-sc-closeout)
 - N/A — all state in-process per scan. The deps.dev enrichment client uses (132-sc-closeout)
 - Rust stable (workspace toolchain inherited from milestones + Existing only — `walkdir` is NOT used per (133-file-tier-components)
+- Rust stable (workspace toolchain inherited from milestones 001–133; no nightly required for this user-space-only feature). + Existing only — `serde`/`serde_json` (annotation value construction), `toml = "0.8"` (Cargo.toml parsing — already used by the cargo reader at `mikebom-cli/src/scan_fs/package_db/cargo.rs`), `sha2` (deep-hash comparison; reuses milestone-038 infrastructure), `tracing` (preserve milestone-064 `warn!`), `anyhow`, `thiserror`. **Zero new Cargo dependencies.** (134-divergent-purl-detection)
+- N/A — collision-detection state is in-process per scan, emitted into the SBOM as annotations. No caches, no persistence (matches every milestone since 002). (134-divergent-purl-detection)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -209,9 +211,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 134-divergent-purl-detection: Added Rust stable (workspace toolchain inherited from milestones 001–133; no nightly required for this user-space-only feature). + Existing only — `serde`/`serde_json` (annotation value construction), `toml = "0.8"` (Cargo.toml parsing — already used by the cargo reader at `mikebom-cli/src/scan_fs/package_db/cargo.rs`), `sha2` (deep-hash comparison; reuses milestone-038 infrastructure), `tracing` (preserve milestone-064 `warn!`), `anyhow`, `thiserror`. **Zero new Cargo dependencies.**
 - 133-file-tier-components: Added Rust stable (workspace toolchain inherited from milestones + Existing only — `walkdir` is NOT used per
 - 132-sc-closeout: Added Rust stable (workspace toolchain inherited from milestones 001–131; + Existing only — `serde`/`serde_json` (CDX/SPDX JSON I/O),
-- 131-quality-metadata-backfill: Added Rust stable (workspace toolchain inherited from milestones 001–130; no + Existing only — `object = "0.36"` (workspace; reused for the US1
 
 
 <!-- MANUAL ADDITIONS START -->

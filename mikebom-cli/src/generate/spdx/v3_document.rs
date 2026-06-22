@@ -112,6 +112,7 @@ pub fn build_document(
             user_metadata: scan.user_metadata.clone(),
             sbom_type_override: scan.sbom_type_override,
             spdx2_relationship_compat: scan.spdx2_relationship_compat,
+            collisions_summary: scan.collisions_summary,
         };
         &view_scan_storage
     } else {

@@ -608,6 +608,10 @@ spdx3_anno!(c95_spdx3, "mikebom:file-inventory-unreadable", document);
 spdx3_anno!(c96_spdx3, "mikebom:file-paths-truncated", component);
 spdx3_anno!(c97_spdx3, "mikebom:file-inventory-mode", document);
 spdx3_anno!(c98_spdx3, "mikebom:license-concluded-source", component);
+// Milestone 134 (closes #125): divergent-PURL detection — see cdx.rs
+// for the C99/C100 design notes.
+spdx3_anno!(c99_spdx3, "mikebom:duplicate-purl-divergent", component);
+spdx3_anno!(c100_spdx3, "mikebom:purl-collisions-detected", document);
 
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-component
 // graph-element annotation carrying the JSON-encoded array of

@@ -26,9 +26,12 @@
 //!   "workspace"` (no component emitted at read time; left to the
 //!   caller to decide whether to publish).
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
+use mikebom_common::divergence::{
+    DivergenceReason, DivergenceRecord, DIVERGENCE_SCHEMA_VERSION,
+};
 use mikebom_common::types::hash::ContentHash;
 use mikebom_common::types::purl::{encode_purl_segment, Purl};
 
@@ -470,6 +473,40 @@ pub(crate) struct DroppedDuplicate {
     pub dropped_path: String,
 }
 
+/// Milestone 134 — per-manifest accumulation for divergent-PURL
+/// collision detection. Built alongside each `build_cargo_main_module_
+/// entry` call so the dedup step has every colliding manifest's
+/// declared dep set (and optional deep-hash) available.
+///
+/// Stays a private helper in the cargo reader — future ecosystem
+/// expansions (npm / maven / pip / gem / go-binary) introduce their
+/// own analogous candidate types and converge on the shared
+/// [`DivergenceRecord`] at the format-emitter boundary.
+#[derive(Debug, Clone)]
+pub(crate) struct CargoManifestCandidate {
+    /// Matches the deduped [`PackageDbEntry::source_path`] (the
+    /// `"path+file://<dir>"` form). Used to look up the surviving
+    /// entry in [`dedup_main_modules_by_purl`].
+    pub entry_source_path: String,
+    /// Rootfs-relative path to the manifest file itself (e.g.
+    /// `"crates/foo/Cargo.toml"`), forward-slash normalized. This is
+    /// the value that lands in the emitted `paths[]` field.
+    pub display_path: String,
+    /// Captured for symmetry / future ecosystem-agnostic reuse; the
+    /// surviving entry's PURL is what drives dedup grouping today.
+    #[allow(dead_code)]
+    pub purl: Purl,
+    /// Union of `[dependencies]` / `[dev-dependencies]` /
+    /// `[build-dependencies]` table keys, sorted lex. Used for the
+    /// `dep_sets_by_path` map and pairwise compare.
+    pub declared_deps: BTreeSet<String>,
+    /// Per-manifest deep-hash of the crate directory tree. Populated
+    /// only when `--deep-hash` is set; otherwise `None`. Drives the
+    /// `hashes_by_path` map and the `HashesDiffer` / `Both` reason
+    /// classification when groups disagree.
+    pub deep_hash: Option<String>,
+}
+
 /// Dedup main-module entries by PURL, preserving the first occurrence
 /// (deterministic on the existing walker order — `discover_workspace_
 /// manifests` returns root-then-members in declaration order). Returns
@@ -477,6 +514,13 @@ pub(crate) struct DroppedDuplicate {
 /// emission per FR-001 + spec Clarifications Q1. Non-main-module
 /// entries (the predicate is C40-tag-driven) are left untouched even
 /// if their PURLs would collide with each other.
+///
+/// Milestone 134 note: divergence detection runs in a separate
+/// helper, [`detect_divergent_collisions`], because milestone-064's
+/// augment-in-place loop already collapses same-PURL Cargo.toml
+/// files before this function sees `entries` — so the dedup function
+/// rarely observes cargo same-PURL drops, and divergence has to be
+/// detected against the candidates map directly.
 pub(crate) fn dedup_main_modules_by_purl(
     entries: &mut Vec<PackageDbEntry>,
 ) -> Vec<DroppedDuplicate> {
@@ -507,6 +551,120 @@ pub(crate) fn dedup_main_modules_by_purl(
     }
     *entries = keep;
     dropped
+}
+
+/// Milestone 134 — compute divergence records over the per-manifest
+/// candidates collected during Phase A AND stamp the per-component
+/// `mikebom:duplicate-purl-divergent` annotation on the deduped
+/// surviving entry.
+///
+/// Runs independently of [`dedup_main_modules_by_purl`] because
+/// milestone-064's Phase A augment-in-place loop already collapses
+/// same-PURL Cargo.toml files into one `PackageDbEntry` before this
+/// function sees them — so the divergence detector cannot rely on
+/// the dedup function's drop list. Instead we group every collected
+/// `CargoManifestCandidate` by PURL and emit a `DivergenceRecord`
+/// for every group with 2+ candidates whose declared dep sets (or
+/// deep hashes) differ.
+pub(crate) fn detect_divergent_collisions(
+    entries: &mut [PackageDbEntry],
+    candidates: &[CargoManifestCandidate],
+) -> Vec<DivergenceRecord> {
+    let mut by_purl: BTreeMap<String, Vec<&CargoManifestCandidate>> = BTreeMap::new();
+    for c in candidates {
+        by_purl
+            .entry(c.purl.as_str().to_string())
+            .or_default()
+            .push(c);
+    }
+    let mut divergences: Vec<DivergenceRecord> = Vec::new();
+    for (purl_str, mut group) in by_purl {
+        if group.len() < 2 {
+            continue;
+        }
+        // Determinism: sort by display path (lex) for stable wire
+        // output across runs.
+        group.sort_by(|a, b| a.display_path.cmp(&b.display_path));
+        let display_paths: Vec<String> =
+            group.iter().map(|c| c.display_path.clone()).collect();
+
+        let mut dep_sets: BTreeMap<String, Vec<String>> = BTreeMap::new();
+        let mut hashes: BTreeMap<String, String> = BTreeMap::new();
+        let mut all_have_hashes = true;
+        for c in &group {
+            dep_sets.insert(
+                c.display_path.clone(),
+                c.declared_deps.iter().cloned().collect::<Vec<_>>(),
+            );
+            if let Some(h) = &c.deep_hash {
+                hashes.insert(c.display_path.clone(), h.clone());
+            } else {
+                all_have_hashes = false;
+            }
+        }
+        let dep_values: Vec<&Vec<String>> = display_paths
+            .iter()
+            .filter_map(|p| dep_sets.get(p))
+            .collect();
+        let deps_differ = dep_values.windows(2).any(|w| w[0] != w[1]);
+        let hashes_differ = if all_have_hashes && hashes.len() == display_paths.len() {
+            let hash_values: Vec<&String> = display_paths
+                .iter()
+                .filter_map(|p| hashes.get(p))
+                .collect();
+            hash_values.windows(2).any(|w| w[0] != w[1])
+        } else {
+            false
+        };
+        if !deps_differ && !hashes_differ {
+            continue;
+        }
+        let reason = match (deps_differ, hashes_differ) {
+            (true, true) => DivergenceReason::Both,
+            (true, false) => DivergenceReason::DepsDiffer,
+            (false, true) => DivergenceReason::HashesDiffer,
+            (false, false) => unreachable!("guarded above"),
+        };
+        let Ok(purl) = Purl::new(&purl_str) else {
+            continue;
+        };
+        let record = DivergenceRecord {
+            v: DIVERGENCE_SCHEMA_VERSION,
+            purl,
+            reason,
+            paths: display_paths,
+            dep_sets_by_path: if matches!(
+                reason,
+                DivergenceReason::DepsDiffer | DivergenceReason::Both
+            ) {
+                Some(dep_sets)
+            } else {
+                None
+            },
+            hashes_by_path: if matches!(
+                reason,
+                DivergenceReason::HashesDiffer | DivergenceReason::Both
+            ) {
+                Some(hashes)
+            } else {
+                None
+            },
+        };
+        debug_assert!(record.validate().is_ok(), "{:?}", record.validate());
+
+        // Stamp the per-component annotation on the surviving entry
+        // (matched by PURL).
+        if let Some(entry) = entries.iter_mut().find(|e| e.purl.as_str() == purl_str) {
+            let value = serde_json::to_value(&record)
+                .expect("DivergenceRecord serializes infallibly");
+            entry.extra_annotations.insert(
+                "mikebom:duplicate-purl-divergent".to_string(),
+                value,
+            );
+        }
+        divergences.push(record);
+    }
+    divergences
 }
 
 // ---------------------------------------------------------------------------
@@ -883,11 +1041,32 @@ fn parse_lockfile(
 /// against the lockfile, and tags entries outside that closure with
 /// `is_dev = Some(true)`. When `include_dev = false`, tagged entries
 /// are dropped (mirrors maven.rs:1786 + go-source-set filter).
+/// Output of [`read`]. `entries` is the standard `PackageDbEntry`
+/// list (unchanged contract). `divergences` carries milestone-134's
+/// per-collision [`DivergenceRecord`]s — empty when no divergent
+/// same-PURL collisions were detected. The orchestrator in
+/// `package_db/mod.rs::read_all` aggregates these into a
+/// [`CollisionsSummary`] for the document-scope annotation channel.
+#[derive(Debug, Default)]
+pub struct CargoReadOutput {
+    pub entries: Vec<PackageDbEntry>,
+    pub divergences: Vec<DivergenceRecord>,
+}
+
 pub fn read(
     rootfs: &Path,
     include_dev: bool,
     exclude_set: &super::exclude_path::ExclusionSet,
-) -> Result<Vec<PackageDbEntry>, CargoError> {
+) -> Result<CargoReadOutput, CargoError> {
+    // Milestone 134 — gate per-manifest deep-hash via env var so the
+    // candidate-accumulation loop doesn't add cost on the default path.
+    // Plumbed in from `scan_fs::scan_path` (which reads the `--deep-hash`
+    // CLI flag) the same way `MIKEBOM_INCLUDE_VENDORED` is plumbed for
+    // the C/C++ readers — avoids churning the 75-callsite `cargo::read`
+    // signature for an opt-in observability feature.
+    let deep_hash_enabled = std::env::var("MIKEBOM_DEEP_HASH")
+        .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+        .unwrap_or(false);
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
     let mut tagged_dev = 0usize;
@@ -1000,6 +1179,11 @@ pub fn read(
     // `workspace_root_deps` — the lockfile's `[[package]]` block
     // for the workspace-root entry carries the project's direct-dep
     // set even though parse_lockfile skipped emitting that entry.
+    // Milestone 134 — accumulate per-manifest dep sets (and optional
+    // deep-hash) keyed by the `PackageDbEntry.source_path` form so
+    // the dedup step can compute divergence records.
+    let mut candidates_by_entry_source: HashMap<String, CargoManifestCandidate> =
+        HashMap::new();
     for manifest_path in &all_manifests {
         let Some(mut synthesized) =
             build_cargo_main_module_entry(manifest_path, &workspace_ctx)
@@ -1013,6 +1197,42 @@ pub fn read(
         if let Some(deps) = workspace_root_deps.get(&lookup_key) {
             synthesized.depends.extend(deps.iter().cloned());
         }
+
+        // Milestone 134 — accumulate this manifest's candidate before
+        // dedup. `declared_deps` is the union of [dependencies] +
+        // [dev-dependencies] + [build-dependencies] (FR-002).
+        let declared_deps: BTreeSet<String> =
+            parse_cargo_toml(manifest_path)
+                .map(|s| {
+                    let mut all: BTreeSet<String> = BTreeSet::new();
+                    all.extend(s.prod_deps.iter().cloned());
+                    all.extend(s.dev_deps.iter().cloned());
+                    all.extend(s.build_deps.iter().cloned());
+                    all
+                })
+                .unwrap_or_default();
+        let display_path =
+            crate::scan_fs::sbom_path::normalize_sbom_path_relative(
+                &manifest_path.to_string_lossy(),
+                Some(rootfs),
+            );
+        let deep_hash = if deep_hash_enabled {
+            manifest_path
+                .parent()
+                .and_then(compute_cargo_crate_deep_hash)
+        } else {
+            None
+        };
+        let candidate = CargoManifestCandidate {
+            entry_source_path: synthesized.source_path.clone(),
+            display_path,
+            purl: synthesized.purl.clone(),
+            declared_deps,
+            deep_hash,
+        };
+        candidates_by_entry_source
+            .insert(candidate.entry_source_path.clone(), candidate);
+
         let purl_key = synthesized.purl.as_str().to_string();
         if let Some(existing) = out.iter_mut().find(|e| e.purl.as_str() == purl_key) {
             // (a) augment in-place with C40 + sbom_tier:source
@@ -1051,6 +1271,32 @@ pub fn read(
     // per FR-001 + Q1. Non-main-module entries are untouched
     // (already deduped by `seen_purls`).
     let dedup_drops = dedup_main_modules_by_purl(&mut out);
+    // Milestone 134 — divergence detection runs over the accumulated
+    // candidates, NOT the dedup drop list. Phase A's augment-in-place
+    // loop above already collapses same-PURL Cargo.toml files into
+    // one `PackageDbEntry`, so the dedup function rarely sees
+    // duplicates from cargo. The candidates_by_entry_source map
+    // carries every Cargo.toml's dep set independently, which is the
+    // ground truth for divergence comparison.
+    let candidate_vec: Vec<CargoManifestCandidate> =
+        candidates_by_entry_source.values().cloned().collect();
+    let divergences = detect_divergent_collisions(&mut out, &candidate_vec);
+    // FR-008 — divergent-PURL collisions emit a `tracing::warn!`
+    // alongside the new annotation so existing log-watching
+    // automation that filters on cargo same-PURL events keeps
+    // working. Pre-milestone-134 the warn only fired for
+    // dedup_drops; milestone-064's augment-in-place loop already
+    // collapses same-PURL Cargo.toml files in `out`, so the
+    // divergence detector is the only place divergent collisions
+    // surface.
+    for d in &divergences {
+        tracing::warn!(
+            purl = %d.purl.as_str(),
+            reason = ?d.reason,
+            paths = ?d.paths,
+            "cargo: detected divergent same-PURL Cargo.toml collision",
+        );
+    }
     if !dedup_drops.is_empty() {
         let dropped_paths: Vec<String> = dedup_drops
             .iter()
@@ -1081,10 +1327,81 @@ pub fn read(
             tagged_dev,
             dropped_when_no_include_dev = dropped,
             include_dev,
+            divergent_purl_collisions = divergences.len(),
             "parsed Cargo lockfiles",
         );
     }
-    Ok(out)
+    Ok(CargoReadOutput {
+        entries: out,
+        divergences,
+    })
+}
+
+/// Milestone 134 US2 helper — deterministic SHA-256 of every file
+/// under `crate_dir`, exclusive of build output. Walks the directory
+/// via `safe_walk`, sorts by relative path, concatenates per-file
+/// SHA-256s, returns the SHA-256 of the concatenation as a hex string.
+///
+/// Used ONLY when `--deep-hash` is set (the `MIKEBOM_DEEP_HASH=1`
+/// env-var gate). Returns `None` when the dir is unreadable or empty,
+/// so the calling code falls back to the dep-set-only divergence
+/// path. Excludes `target/` and dotfiles to stay deterministic across
+/// developer machines (the same `cargo build` on two hosts can leave
+/// different debug-info bytes in `target/`).
+fn compute_cargo_crate_deep_hash(crate_dir: &Path) -> Option<String> {
+    use sha2::{Digest, Sha256};
+    let mut files: Vec<(String, std::path::PathBuf)> = Vec::new();
+    let exclude_set = super::exclude_path::ExclusionSet::new_empty();
+    let cfg = crate::scan_fs::walk::WalkConfig {
+        max_depth: 16,
+        should_skip: &|path, _root| {
+            // Skip target/ and any dotfile/dotdir — keeps the hash
+            // stable across "did developer run `cargo build`" noise.
+            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                if name == "target" || name.starts_with('.') {
+                    return true;
+                }
+            }
+            false
+        },
+        exclude_set: &exclude_set,
+    };
+    crate::scan_fs::walk::safe_walk(crate_dir, &cfg, |path| {
+        if path.is_file() {
+            let rel = path
+                .strip_prefix(crate_dir)
+                .unwrap_or(path)
+                .to_string_lossy()
+                .replace('\\', "/");
+            files.push((rel, path.to_path_buf()));
+        }
+    });
+    if files.is_empty() {
+        return None;
+    }
+    files.sort_by(|a, b| a.0.cmp(&b.0));
+    let mut outer = Sha256::new();
+    for (rel, path) in &files {
+        let Ok(bytes) = std::fs::read(path) else {
+            continue;
+        };
+        let inner = Sha256::digest(&bytes);
+        outer.update(rel.as_bytes());
+        outer.update(b"\0");
+        outer.update(inner);
+    }
+    let digest = outer.finalize();
+    Some(hex_encode(&digest))
+}
+
+fn hex_encode(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut out = String::with_capacity(bytes.len() * 2);
+    for b in bytes {
+        out.push(HEX[(b >> 4) as usize] as char);
+        out.push(HEX[(b & 0x0f) as usize] as char);
+    }
+    out
 }
 
 /// Parse a `Cargo.lock` file into the typed `CargoLock` document
@@ -1427,7 +1744,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e8eabd0c76a9f2678a5e1a5c0c7b8b8c99999999999999999999999999999999"
 "#;
         std::fs::write(sub.join("Cargo.lock"), body).unwrap();
-        let entries = read(dir.path(), false, &Default::default()).unwrap();
+        let entries = read(dir.path(), false, &Default::default()).unwrap().entries;
         // Walk found the nested Cargo.lock and emitted the registry dep.
         assert!(entries.iter().any(|e| e.name == "serde"));
         // Milestone 087: workspace root IS now emitted (was filtered
@@ -1459,7 +1776,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20"
 "#;
         std::fs::write(dir.path().join("Cargo.lock"), body).unwrap();
-        let entries = read(dir.path(), false, &Default::default()).unwrap();
+        let entries = read(dir.path(), false, &Default::default()).unwrap().entries;
         assert_eq!(entries.len(), 2, "expected 2 entries, got {entries:?}");
         let app = entries
             .iter()
@@ -1499,7 +1816,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393"
 "#;
         std::fs::write(dir.path().join("Cargo.lock"), body).unwrap();
-        let entries = read(dir.path(), false, &Default::default()).unwrap();
+        let entries = read(dir.path(), false, &Default::default()).unwrap().entries;
         assert_eq!(entries.len(), 4, "all four entries should be present");
         assert!(entries.iter().any(|e| e.name == "my-app"));
         assert!(entries.iter().any(|e| e.name == "my-lib"));
@@ -1510,7 +1827,10 @@ checksum = "0a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393"
     #[test]
     fn read_empty_rootfs_returns_zero() {
         let dir = tempfile::tempdir().unwrap();
-        assert!(read(dir.path(), false, &Default::default()).unwrap().is_empty());
+        assert!(read(dir.path(), false, &Default::default())
+            .unwrap()
+            .entries
+            .is_empty());
     }
 
     #[test]
@@ -2105,9 +2425,6 @@ version = "0.1.0-alpha.11"
 
     #[test]
     fn dedup_does_not_touch_non_main_module_entries() {
-        // Two regular entries with the same PURL — caller is responsible
-        // for that dedup, not us. Our predicate only fires on main-module
-        // tagged entries.
         let mut entries = vec![
             make_regular_entry("foo", "1.2.3"),
             make_regular_entry("foo", "1.2.3"),
@@ -2115,6 +2432,148 @@ version = "0.1.0-alpha.11"
         let drops = dedup_main_modules_by_purl(&mut entries);
         assert_eq!(entries.len(), 2);
         assert!(drops.is_empty());
+    }
+
+    // -------- Milestone 134 — divergence detection unit tests --------
+
+    fn make_candidate(
+        display_path: &str,
+        purl_str: &str,
+        deps: &[&str],
+        deep_hash: Option<&str>,
+    ) -> CargoManifestCandidate {
+        let mut dep_set: BTreeSet<String> = BTreeSet::new();
+        for d in deps {
+            dep_set.insert(d.to_string());
+        }
+        CargoManifestCandidate {
+            entry_source_path: format!("path+file:///fake/{display_path}"),
+            display_path: display_path.to_string(),
+            purl: Purl::new(purl_str).unwrap(),
+            declared_deps: dep_set,
+            deep_hash: deep_hash.map(|s| s.to_string()),
+        }
+    }
+
+    #[test]
+    fn divergence_deps_differ_emits_record_and_stamps_annotation() {
+        let mut entries = vec![make_main_module_entry(
+            "foo",
+            "1.2.3",
+            "path+file:///tmp/crates/foo",
+        )];
+        let candidates = vec![
+            make_candidate(
+                "crates/foo/Cargo.toml",
+                "pkg:cargo/foo@1.2.3",
+                &["serde", "tokio"],
+                None,
+            ),
+            make_candidate(
+                "vendor/foo/Cargo.toml",
+                "pkg:cargo/foo@1.2.3",
+                &["anyhow", "serde", "tokio"],
+                None,
+            ),
+        ];
+        let divergences = detect_divergent_collisions(&mut entries, &candidates);
+        assert_eq!(divergences.len(), 1);
+        let rec = &divergences[0];
+        assert_eq!(rec.purl.as_str(), "pkg:cargo/foo@1.2.3");
+        assert_eq!(rec.reason, DivergenceReason::DepsDiffer);
+        assert_eq!(
+            rec.paths,
+            vec![
+                "crates/foo/Cargo.toml".to_string(),
+                "vendor/foo/Cargo.toml".to_string(),
+            ]
+        );
+        assert!(entries[0]
+            .extra_annotations
+            .contains_key("mikebom:duplicate-purl-divergent"));
+    }
+
+    #[test]
+    fn divergence_identical_deps_emits_no_record() {
+        let mut entries = vec![make_main_module_entry(
+            "foo",
+            "1.2.3",
+            "path+file:///tmp/crates/foo",
+        )];
+        let candidates = vec![
+            make_candidate(
+                "crates/foo/Cargo.toml",
+                "pkg:cargo/foo@1.2.3",
+                &["serde", "tokio"],
+                None,
+            ),
+            make_candidate(
+                "vendor/foo/Cargo.toml",
+                "pkg:cargo/foo@1.2.3",
+                &["serde", "tokio"],
+                None,
+            ),
+        ];
+        let divergences = detect_divergent_collisions(&mut entries, &candidates);
+        assert!(divergences.is_empty());
+        assert!(!entries[0]
+            .extra_annotations
+            .contains_key("mikebom:duplicate-purl-divergent"));
+    }
+
+    #[test]
+    fn divergence_hashes_differ_emits_record() {
+        let mut entries = vec![make_main_module_entry(
+            "foo",
+            "1.2.3",
+            "path+file:///tmp/a/foo",
+        )];
+        let candidates = vec![
+            make_candidate(
+                "a/foo/Cargo.toml",
+                "pkg:cargo/foo@1.2.3",
+                &["serde"],
+                Some(&"aa".repeat(32)),
+            ),
+            make_candidate(
+                "b/foo/Cargo.toml",
+                "pkg:cargo/foo@1.2.3",
+                &["serde"],
+                Some(&"bb".repeat(32)),
+            ),
+        ];
+        let divergences = detect_divergent_collisions(&mut entries, &candidates);
+        assert_eq!(divergences.len(), 1);
+        assert_eq!(divergences[0].reason, DivergenceReason::HashesDiffer);
+        assert!(divergences[0].hashes_by_path.is_some());
+    }
+
+    #[test]
+    fn divergence_both_when_deps_and_hashes_diverge() {
+        let mut entries = vec![make_main_module_entry(
+            "foo",
+            "1.2.3",
+            "path+file:///tmp/a/foo",
+        )];
+        let candidates = vec![
+            make_candidate(
+                "a/foo/Cargo.toml",
+                "pkg:cargo/foo@1.2.3",
+                &["serde"],
+                Some(&"aa".repeat(32)),
+            ),
+            make_candidate(
+                "b/foo/Cargo.toml",
+                "pkg:cargo/foo@1.2.3",
+                &["serde", "tokio"],
+                Some(&"bb".repeat(32)),
+            ),
+        ];
+        let divergences = detect_divergent_collisions(&mut entries, &candidates);
+        assert_eq!(divergences.len(), 1);
+        assert_eq!(divergences[0].reason, DivergenceReason::Both);
+        assert!(divergences[0].dep_sets_by_path.is_some());
+        assert!(divergences[0].hashes_by_path.is_some());
     }
 
     // Milestone 087 (issue #172): regression for the multi-version

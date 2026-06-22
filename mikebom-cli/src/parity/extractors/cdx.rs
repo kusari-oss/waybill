@@ -767,6 +767,22 @@ cdx_anno!(c95_cdx, "mikebom:file-inventory-unreadable", document);
 cdx_anno!(c96_cdx, "mikebom:file-paths-truncated", component);
 cdx_anno!(c97_cdx, "mikebom:file-inventory-mode", document);
 cdx_anno!(c98_cdx, "mikebom:license-concluded-source", component);
+// Milestone 134 (closes #125):
+//   C99  — `mikebom:duplicate-purl-divergent` per-component property
+//          on the deduped root component for every detected divergent
+//          collision. Stamped via the cargo reader's `extra_annotations`
+//          bag and emitted via the standard per-component property
+//          carrier in CDX, the standard `extra_annotations` envelope
+//          in SPDX 2.3/3, and propagated to `metadata.component` for
+//          single-crate workspaces that promote the main-module to BOM
+//          subject.
+//   C100 — `mikebom:purl-collisions-detected` document-scope summary
+//          (CDX `metadata.properties[]`, SPDX 2.3 top-level
+//          `annotations[]`, SPDX 3 `SpdxDocument` element-level
+//          annotation). Carries the full `CollisionsSummary` envelope
+//          aggregating every divergent collision in the scan.
+cdx_anno!(c99_cdx, "mikebom:duplicate-purl-divergent", component);
+cdx_anno!(c100_cdx, "mikebom:purl-collisions-detected", document);
 
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
