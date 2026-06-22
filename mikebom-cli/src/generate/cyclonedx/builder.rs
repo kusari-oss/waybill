@@ -970,12 +970,14 @@ impl CycloneDxBuilder {
                             | "symbol-fingerprint"
                             | "python-stdlib-collapsed"
                             | "jdk-runtime-collapsed"
+                            | "alpm-local-db"
                     ),
                     "mikebom:evidence-kind value '{kind}' is not in the canonical \
                      enum (rpm-file | rpmdb-sqlite | rpmdb-bdb | \
                      dynamic-linkage | elf-note-package | \
                      embedded-version-string | symbol-fingerprint | \
-                     python-stdlib-collapsed | jdk-runtime-collapsed)"
+                     python-stdlib-collapsed | jdk-runtime-collapsed | \
+                     alpm-local-db)"
                 );
                 properties.push(json!({
                     "name": "mikebom:evidence-kind",

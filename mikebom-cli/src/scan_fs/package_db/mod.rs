@@ -10,6 +10,7 @@
 //! dpkg first, then apk. The scan pipeline de-duplicates by PURL so
 //! that scenario's output is still well-formed.
 
+pub mod alpm;
 pub mod apk;
 pub mod bazel;
 pub mod cargo;
@@ -1216,6 +1217,14 @@ pub fn read_all(
             "debian".to_string()
         }
     };
+    // Milestone 135 — alpm PURL namespace derived from the same
+    // `/etc/os-release` `ID`. Defaults to `arch` when absent. Verbatim
+    // pass-through (no allowlist gate) so future derivative distros
+    // work without code changes (FR-010).
+    let alpm_namespace: String = match &id_raw {
+        Some(id) if !id.is_empty() => id.to_ascii_lowercase(),
+        _ => "arch".to_string(),
+    };
     if distro_version.is_none() {
         diagnostics.record_missing_os_release_field("VERSION_ID");
     }
@@ -1248,6 +1257,28 @@ pub fn read_all(
             );
         }
         Err(e) => tracing::debug!(error = %e, "apk db read failed (expected if no apk)"),
+    }
+    // Milestone 135 (closes #429): Arch Linux pacman/alpm reader.
+    // Same dispatcher posture as dpkg/apk/rpm — present on
+    // Arch/Manjaro/SteamOS/EndeavourOS/CachyOS rootfs; clean no-op
+    // when the pacman DB is absent (FR-008).
+    match alpm::read(rootfs, &alpm_namespace, distro_version.as_deref()) {
+        Ok(entries) => {
+            out.extend(entries);
+            // Milestone 135 US3 (FR-007): collect pacman-owned file
+            // paths into the cross-reader claim set so the binary
+            // walker skips emission of pkg:generic/* components for
+            // files owned by an Arch package.
+            alpm::collect_claimed_paths(
+                rootfs,
+                &mut claimed,
+                #[cfg(unix)]
+                &mut claimed_inodes,
+            );
+        }
+        Err(e) => {
+            tracing::debug!(error = %e, "pacman db read failed (expected if no pacman)")
+        }
     }
 
     // Milestone 107 US1+US3+US5: opkg installed-DB reader for Yocto /

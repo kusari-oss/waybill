@@ -7,6 +7,55 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Arch Linux pacman/alpm package database reader (closes #429)
+
+mikebom gains a fifth OS package-DB reader alongside the existing
+dpkg, apk, rpm, and opkg readers. Scanning Arch Linux containers,
+Steam Deck images (SteamOS), Manjaro / EndeavourOS / CachyOS rootfs,
+or any pacman-managed Linux installation now produces one component
+per installed package instead of leaving them invisible to the scan.
+
+**PURL identity** — uses the purl-spec's native `alpm` type:
+
+```text
+pkg:alpm/<distro>/<name>@<version>?arch=<arch>[&distro=<distro>-<verid>]
+```
+
+Examples:
+
+- Stock Arch container: `pkg:alpm/arch/bash@5.2.026-1?arch=x86_64`
+- SteamOS Deck: `pkg:alpm/steamos/bash@5.2.026-1?arch=x86_64&distro=steamos-3.5.7`
+- noarch package: `pkg:alpm/arch/terminfo@6.4-3?arch=any`
+- Unknown derivative `ID=mydistro`: `pkg:alpm/mydistro/...` (verbatim pass-through; no allowlist gate, so future Arch derivatives work without code changes)
+
+**Rolling-release Arch** correctly omits the `distro=` qualifier
+(matches the existing dpkg/apk/rpm convention when `VERSION_ID` is
+absent in `/etc/os-release`).
+
+**Binary walker dedup** — pacman's `files` manifests register into
+the cross-reader file-claim tracker, so the binary walker skips
+emission of `pkg:generic/<binary>` components for paths owned by an
+Arch package. No more duplicate `pkg:alpm/arch/bash` +
+`pkg:generic/bash` entries.
+
+**Per-package error posture** — malformed `desc` files warn-and-skip
+without aborting the scan; partial output is preserved (FR-009).
+Missing pacman DB is a clean no-op with zero warnings (FR-008).
+
+**Why mikebom-specific** (Constitution Principle V audit): the
+purl-spec `alpm` type IS the standards-native identity carrier.
+CDX 1.6, SPDX 2.3, and SPDX 3.0.1 all consume PURLs as a first-class
+component-identity field. Zero new `mikebom:*` annotations
+introduced; zero new parity-catalog C-rows; zero new Cargo
+dependencies. Full Principle V audit in
+`specs/135-arch-alpm-reader/research.md` R1.
+
+**Out of scope** (deferred follow-ups): URL/homepage emission as a
+wire-level external reference (cross-cutting OS-reader work — no
+existing OS reader does this today); pacman `mtree` per-file hash
+extraction; AUR vs official-repo provenance discrimination;
+`pacman.conf` repo configuration parsing.
+
 ### Divergent-PURL collision detection in main-module dedup (closes #125)
 
 Milestone 064's cargo main-module emission already dedupes same-PURL
