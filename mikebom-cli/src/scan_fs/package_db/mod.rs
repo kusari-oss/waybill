@@ -13,6 +13,7 @@
 pub mod alpm;
 pub mod apk;
 pub mod bazel;
+pub mod brew;
 pub mod cargo;
 pub mod cmake;
 pub mod conan;
@@ -1278,6 +1279,20 @@ pub fn read_all(
         }
         Err(e) => {
             tracing::debug!(error = %e, "pacman db read failed (expected if no pacman)")
+        }
+    }
+    // Milestone 136 (closes #432): Homebrew (brew + Linuxbrew) reader.
+    // Three prefix locations: /opt/homebrew (Apple Silicon),
+    // /usr/local (Intel macOS), /home/linuxbrew/.linuxbrew (Linux).
+    // Clean no-op when none of the three Cellar/ subdirs exist
+    // (FR-006). File-claim integration deferred per spec
+    // Out-of-Scope (Homebrew's symlink-heavy bottling warrants its
+    // own spec); known soft regression: binary walker may emit
+    // pkg:generic/<binary> duplicates alongside pkg:brew/<formula>.
+    match brew::read(rootfs) {
+        Ok(entries) => out.extend(entries),
+        Err(e) => {
+            tracing::debug!(error = %e, "brew read failed (expected if no Homebrew install)")
         }
     }
 

@@ -7,6 +7,91 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Homebrew (brew + Linuxbrew) package detection (closes #432)
+
+mikebom gains a sixth OS package-DB reader alongside dpkg, apk, rpm,
+opkg, and alpm. Scanning macOS developer machines (Apple Silicon or
+Intel), Steam Deck dev environments with Linuxbrew, CI runners with
+Linuxbrew installs, or any rootfs containing a Homebrew install now
+produces one component per `brew install`-ed formula and per
+(JSON-backed) cask — instead of leaving them invisible to the scan.
+
+**PURL identity** — uses the de-facto industry convention shared with
+syft + cyclonedx-bom-gen:
+
+```text
+pkg:brew/<name>@<version>[?tap=<owner>/<tap>][&type=cask]
+```
+
+Examples:
+
+- Apple Silicon `brew install curl`: `pkg:brew/curl@8.5.0`
+- noarch n/a (Homebrew is single-arch-per-install)
+- Third-party tap formula: `pkg:brew/terraform@1.10.0?tap=hashicorp/tap`
+- macOS Cask: `pkg:brew/visual-studio-code@1.95.3?type=cask`
+- Cask from non-default tap: `pkg:brew/intellij-idea@2024.3?tap=homebrew/cask-versions&type=cask`
+
+**Three install-prefix detection** — `/opt/homebrew` (Apple Silicon
+macOS), `/usr/local` (Intel macOS), `/home/linuxbrew/.linuxbrew`
+(Linux). Discrimination signal is the presence of `Cellar/`
+subdirectory; `/usr/local/` alone is NOT a Homebrew signal (it's a
+generic Linux sysadmin path). The install location does NOT leak into
+the PURL identity — a `curl@8.5.0` formula has the same PURL whether
+installed under any of the three prefixes.
+
+**Dep-graph edges** — extracted from each `INSTALL_RECEIPT.json`'s
+`runtime_dependencies` array. Tap-qualified dep names like
+`hashicorp/tap/terraform` are normalized to the bare formula name
+(`terraform`) so cross-component lookups in the deduplicator succeed
+for third-party-tap dependencies.
+
+**Cross-reader coexistence** — Linuxbrew runs on top of a real Linux
+distro; the brew reader runs alongside dpkg/apk/rpm cooperatively.
+Both sets of components emit — Homebrew supplements the underlying
+distro packages, never replaces them.
+
+**Cask support** — modern (Homebrew 4.0+) `Casks/<token>.json`
+metadata parses cleanly. Pre-4.0 `.rb`-only casks warn-and-skip per
+Constitution Principle I (no Ruby parser); operator-visible
+diagnostic names the cask and explains the skip.
+
+**Per-formula error posture** — malformed `INSTALL_RECEIPT.json` files
+warn-and-skip without aborting the scan; partial output is preserved
+(FR-007). Missing Homebrew install is a clean no-op with zero
+warnings (FR-006).
+
+**Why mikebom-specific** (Constitution Principle V audit): the
+`pkg:brew/` PURL type is not yet registered in the purl-spec
+PURL-TYPES.rst — mikebom emits per the de-facto convention shared
+with syft and cyclonedx-bom-gen. The PURL itself IS the
+standards-native identity carrier; only the type-name is unblessed.
+A follow-up issue should propose upstream addition. Zero new
+`mikebom:*` annotations introduced; zero new parity-catalog C-rows;
+zero new Cargo dependencies. Full audit in
+`specs/136-homebrew-reader/research.md` R1.
+
+**Out of scope** (deferred follow-ups documented in spec):
+
+- **File-claim tracker integration**: Homebrew's symlink-heavy
+  bottling (`<prefix>/bin/curl → <prefix>/Cellar/<formula>/<ver>/bin/curl`)
+  is fundamentally different from alpm/dpkg's flat ownership model.
+  Tracking it properly requires symlink resolution — separate spec.
+  Known soft regression: the binary walker may emit
+  `pkg:generic/<binary>` duplicates alongside `pkg:brew/<formula>`
+  components on Linuxbrew rootfs scans.
+- **License emission**: license is NOT in `INSTALL_RECEIPT.json` —
+  extracting it requires Ruby DSL parsing (Principle I conflict) or
+  network calls to `formulae.brew.sh` (FR-010 conflict). Tracked as
+  a cross-reader follow-up alongside milestone-135's FR-012 URL
+  deferral.
+- **`HOMEBREW_PREFIX` env-var custom install locations**: only the
+  three documented standard prefixes are scanned.
+- **Pre-receipt-format Homebrew installs**: receipt has been
+  universal since at least 2011; older installs (rare in 2026) are
+  out of scope.
+- **Pacman-style `co_owned_by` cross-reader dual-ownership
+  detection**: deferred.
+
 ### Arch Linux pacman/alpm package database reader (closes #429)
 
 mikebom gains a fifth OS package-DB reader alongside the existing
