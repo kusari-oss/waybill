@@ -16,6 +16,7 @@ pub mod bazel;
 pub mod brew;
 pub mod cargo;
 pub mod cmake;
+pub mod cocoapods;
 pub mod composer;
 pub mod conan;
 pub mod dart;
@@ -1511,6 +1512,13 @@ pub fn read_all(
     out.extend(cmake::read(rootfs, include_vendored));
     out.extend(vcpkg::read(rootfs));
     out.extend(conan::read(rootfs));
+
+    // Milestone 139: CocoaPods (iOS) ecosystem reader. One main-module
+    // per project root (FR-012 + Q1 cascade) + lockfile-driven (FR-002)
+    // + design-tier from Podfile (FR-005) + deployed-tier from
+    // Pods/Manifest.lock (FR-006 + Q3). Subspecs encode via PURL
+    // `#subpath` (per purl-spec). Zero new Cargo deps.
+    out.extend(cocoapods::read(rootfs, include_dev, exclude_set));
 
     // Milestone 138: PHP/Composer ecosystem reader. One main-module
     // per `composer.json` (FR-012) + lockfile-driven (FR-002) +
