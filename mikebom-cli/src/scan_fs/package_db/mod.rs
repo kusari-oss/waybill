@@ -16,6 +16,7 @@ pub mod bazel;
 pub mod brew;
 pub mod cargo;
 pub mod cmake;
+pub mod composer;
 pub mod conan;
 pub mod dart;
 mod control_file;
@@ -1510,6 +1511,13 @@ pub fn read_all(
     out.extend(cmake::read(rootfs, include_vendored));
     out.extend(vcpkg::read(rootfs));
     out.extend(conan::read(rootfs));
+
+    // Milestone 138: PHP/Composer ecosystem reader. One main-module
+    // per `composer.json` (FR-012) + lockfile-driven (FR-002) +
+    // design-tier (FR-005) + deployed-tier (FR-006 via installed.json)
+    // emission with lockfile-orphan drift detection. Pure-Rust JSON
+    // via `serde_json`; zero new Cargo deps.
+    out.extend(composer::read(rootfs, include_dev, exclude_set));
 
     // Milestone 137: Dart/Flutter pub ecosystem reader. One
     // main-module per `pubspec.yaml` (FR-012) + one component per
