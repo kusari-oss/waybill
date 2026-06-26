@@ -31,6 +31,7 @@ pub mod gem;
 pub mod go_binary;
 pub mod golang;
 pub mod gradle;
+pub mod haskell;
 pub mod kotlin_dsl;
 pub mod maven;
 pub mod maven_sidecar;
@@ -1573,6 +1574,18 @@ pub fn read_all(
     // part of the artifactId per Maven Central convention. SHA-256
     // hashes from schema-v2 checksums per FR-011. Zero new Cargo deps.
     out.extend(scala::read(rootfs, include_dev, exclude_set));
+
+    // Haskell ecosystem reader (milestone 143). Source-tier emission
+    // from cabal.project.freeze (FR-002) + stack.yaml.lock (FR-003 +
+    // Q3-style content-shape gate) + Stack snapshot placeholder per
+    // FR-005 + design-tier fallback from *.cabal (FR-007) + per-package
+    // main-module via FR-013 + multi-package via filesystem walk
+    // (FR-011). PURL pkg:hackage/<name>@<version> (purl-spec-blessed)
+    // for Hackage components; pkg:generic/stackage-<resolver>@<sha> for
+    // Stackage snapshot placeholders. Q1 GHC boot-library annotation
+    // (FR-014). Q2 multi-stanza union with most-binding-scope merging.
+    // Q3 Hpack detect-and-warn (FR-015). Zero new Cargo deps.
+    out.extend(haskell::read(rootfs, include_dev, exclude_set));
 
     // G3: when a scan produced BOTH `pkg:golang` source-tier entries
     // (from `golang.rs`'s go.sum parsing) AND `pkg:golang` analyzed-
