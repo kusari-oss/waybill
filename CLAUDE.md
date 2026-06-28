@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-06-26
+Auto-generated from all feature plans. Last updated: 2026-06-28
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -164,6 +164,7 @@ Auto-generated from all feature plans. Last updated: 2026-06-26
 - Rust stable (workspace toolchain inherited from milestones 001–142; no nightly required). + Existing only — `regex` (workspace dep, used by gem/alpm/brew/yocto/cocoapods/elixir/erlang/scala for DSL extraction), `serde_yaml = "0.9"` (workspace dep, used by dart/cocoapods readers for YAML parsing — Stack lockfile is YAML), `serde_json` (workspace dep), `mikebom_common::types::purl::Purl` (PURL construction), `tracing` (warn-and-skip per FR-009 + Q3 Hpack-detect diagnostic per FR-015), `anyhow`/`thiserror`, `std::sync::OnceLock` (regex compile-once). **No new Cargo dependencies.** (143-haskell-reader)
 - Rust stable (workspace toolchain inherited from milestones 001–143; no nightly required for this user-space-only work). + Existing only — `rpm = "0.22"` (already used by `rpm_file.rs` for the `rpm::Package::open()` path), `serde`/`serde_json`, `tracing`, `anyhow`, `thiserror`, `clap` (new flags via `Args`-derive). Reuses milestone-003's `mikebom_common::types::purl::Purl::new` for PURL validation and `mikebom_common::types::purl::encode_purl_segment` for segment encoding. Reuses milestone-135-era `mikebom-cli/src/scan_fs/os_release.rs::read_id_from_rootfs()` helper. **No new Cargo dependencies.** (144-rpm-purl-size-fixes)
 - N/A — all state in-process per scan; no caches, no persistence (matches every milestone since 002). (144-rpm-purl-size-fixes)
+- Rust stable (workspace toolchain inherited from milestones 001–144; no nightly required). + Existing only — `serde`/`serde_json` (Value construction + emission), `tracing`, `anyhow`, `thiserror`. Reuses milestone-133's `file_tier` module, milestone-005-era `evidence.source_file_paths` field, milestone-049/052's `LifecycleScope` newtype, milestone-071's parity catalog (C18 source-files, C42 lifecycle-scope, C92 file-paths — all `Directionality::SymmetricEqual`). **No new Cargo dependencies.** (145-annotation-parity-fixes)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -226,9 +227,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 145-annotation-parity-fixes: Added Rust stable (workspace toolchain inherited from milestones 001–144; no nightly required). + Existing only — `serde`/`serde_json` (Value construction + emission), `tracing`, `anyhow`, `thiserror`. Reuses milestone-133's `file_tier` module, milestone-005-era `evidence.source_file_paths` field, milestone-049/052's `LifecycleScope` newtype, milestone-071's parity catalog (C18 source-files, C42 lifecycle-scope, C92 file-paths — all `Directionality::SymmetricEqual`). **No new Cargo dependencies.**
 - 144-rpm-purl-size-fixes: Added Rust stable (workspace toolchain inherited from milestones 001–143; no nightly required for this user-space-only work). + Existing only — `rpm = "0.22"` (already used by `rpm_file.rs` for the `rpm::Package::open()` path), `serde`/`serde_json`, `tracing`, `anyhow`, `thiserror`, `clap` (new flags via `Args`-derive). Reuses milestone-003's `mikebom_common::types::purl::Purl::new` for PURL validation and `mikebom_common::types::purl::encode_purl_segment` for segment encoding. Reuses milestone-135-era `mikebom-cli/src/scan_fs/os_release.rs::read_id_from_rootfs()` helper. **No new Cargo dependencies.**
 - 143-haskell-reader: Added Rust stable (workspace toolchain inherited from milestones 001–142; no nightly required). + Existing only — `regex` (workspace dep, used by gem/alpm/brew/yocto/cocoapods/elixir/erlang/scala for DSL extraction), `serde_yaml = "0.9"` (workspace dep, used by dart/cocoapods readers for YAML parsing — Stack lockfile is YAML), `serde_json` (workspace dep), `mikebom_common::types::purl::Purl` (PURL construction), `tracing` (warn-and-skip per FR-009 + Q3 Hpack-detect diagnostic per FR-015), `anyhow`/`thiserror`, `std::sync::OnceLock` (regex compile-once). **No new Cargo dependencies.**
-- 142-scala-sbt-reader: Added Rust stable (workspace toolchain inherited from milestones 001–141; no nightly required). + Existing only — `regex` (workspace dep, used by gem/alpm/brew/yocto/cocoapods/elixir/erlang for line-format and DSL extraction), `serde_json` (workspace dep, used by every JSON-format reader), `mikebom_common::types::hash::{ContentHash, HashAlgorithm}` (FR-011 SHA-256 emission), `mikebom_common::types::purl::Purl` (PURL construction), `tracing` (warn-and-skip per FR-007), `anyhow`/`thiserror`, `std::sync::OnceLock` (regex compile-once). **No new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->
