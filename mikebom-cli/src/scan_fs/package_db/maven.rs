@@ -2240,8 +2240,24 @@ fn extract_nested_meta<R: std::io::Read + std::io::Seek>(
             "mikebom:source-mechanism".to_string(),
             serde_json::Value::String("maven-jar-nested".to_string()),
         );
+        // Milestone 145 US3 (Option 2b): the nested-JAR URL notation
+        // (`<outer>!<inner>!...`) lives under its OWN annotation key so
+        // it doesn't collide with the field-derived
+        // `mikebom:source-files` (which carries the rootfs-relative JAR
+        // path from `c.evidence.source_file_paths` via the milestone-
+        // 133 normalization pipeline). Pre-145 both stamped the same
+        // key and produced per-emitter value drift on the
+        // polyglot-builder-image fixture (51 audit findings).
+        //
+        // NOTE: `mikebom:source-files` has TWO emission sources — this
+        // crate's `c.evidence.source_file_paths` field (canonical) AND
+        // `extra_annotations["mikebom:source-files"]` (legacy, dedup'd
+        // at emit time via `root_selector::is_field_owned_annotation_key`).
+        // DO NOT stamp the latter from a new reader; use a distinct key
+        // like `mikebom:<reader>-source-url` (this one is
+        // `mikebom:source-files-nested-url`).
         annotations.insert(
-            "mikebom:source-files".to_string(),
+            "mikebom:source-files-nested-url".to_string(),
             serde_json::Value::String(source_files_url.clone()),
         );
         // Milestone 131 US2b: stash nested-JAR <licenses> raw names
@@ -6978,14 +6994,25 @@ mod tests {
             .get("mikebom:source-mechanism")
             .and_then(|v| v.as_str());
         assert_eq!(mech, Some("maven-jar-nested"));
-        // mikebom:source-files annotation uses the JAR-URL `!`
-        // separator convention per FR-016.
+        // Milestone 145 US3 (T017 / Option 2b): the JAR-URL
+        // `!`-separator value is stamped under the RENAMED key
+        // `mikebom:source-files-nested-url` to avoid colliding with
+        // the field-derived `mikebom:source-files` (which carries the
+        // rootfs-relative JAR path from `c.evidence.source_file_paths`).
+        // Pre-145 this assertion read `mikebom:source-files`.
         let sf = nested
             .extra_annotations
-            .get("mikebom:source-files")
+            .get("mikebom:source-files-nested-url")
             .and_then(|v| v.as_str())
             .unwrap();
         assert!(sf.ends_with("!BOOT-INF/lib/depA-1.2.3.jar"), "got: {sf}");
+        // Belt-and-suspenders: the OLD key MUST NOT appear post-145.
+        assert!(
+            !nested.extra_annotations.contains_key("mikebom:source-files"),
+            "FR-009 violation: nested-JAR reader still stamps the legacy \
+             `mikebom:source-files` key — should have moved to \
+             `mikebom:source-files-nested-url` per milestone 145 US3"
+        );
         // Top-level entry has NO walker annotations — byte-identity
         // preservation per SC-005. (We don't assert `is_primary` here
         // because the tempfile's randomized stem can't match the
@@ -7030,9 +7057,10 @@ mod tests {
             .iter()
             .find(|m| m.coord.artifact_id == "leaf")
             .expect("leaf entry at 4 levels deep present");
+        // Milestone 145 US3 (T017): renamed key, see sibling test above.
         let sf = leaf_meta
             .extra_annotations
-            .get("mikebom:source-files")
+            .get("mikebom:source-files-nested-url")
             .and_then(|v| v.as_str())
             .unwrap();
         // Path uses the JAR-URL `!`-separator chain.

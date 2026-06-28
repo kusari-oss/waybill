@@ -187,7 +187,12 @@ impl FileTierEntry {
     ///
     /// **Annotations** seeded:
     /// - `mikebom:component-tier = "file"` (FR-002)
-    /// - `mikebom:file-paths = <JSON-encoded-sorted-array>` (FR-007)
+    /// - `mikebom:file-paths = <sorted JSON array of paths>` (FR-007)
+    ///   — native JSON array, NOT a JSON-string-encoded array.
+    ///   The stringified-array shape (pre-milestone-145) was a wire
+    ///   bug; consumers were forced to do a second `JSON.parse(value)`
+    ///   to extract the paths. Fixed in milestone 145 US1 per
+    ///   `specs/145-annotation-parity-fixes/contracts/file-paths-shape.md`.
     /// - `mikebom:file-paths-truncated = "true"` (only when capped)
     pub(crate) fn into_resolved_component(self) -> ResolvedComponent {
         let basename = self
@@ -229,9 +234,11 @@ impl FileTierEntry {
             COMPONENT_TIER_KEY.to_string(),
             json!(COMPONENT_TIER_FILE_VALUE),
         );
-        if let Ok(file_paths_json) = serde_json::to_string(&paths_str) {
-            extra_annotations.insert(FILE_PATHS_KEY.to_string(), json!(file_paths_json));
-        }
+        // Milestone 145 US1 (FR-001 + research §A): emit the value as a
+        // native JSON array, NOT a JSON-string-encoding of the array.
+        // Pre-145: `Value::String("[\"path1\",\"path2\"]")`.
+        // Post-145: `Value::Array([Value::String("path1"), ...])`.
+        extra_annotations.insert(FILE_PATHS_KEY.to_string(), json!(paths_str));
         if truncated {
             extra_annotations.insert(FILE_PATHS_TRUNCATED_KEY.to_string(), json!("true"));
         }
@@ -395,14 +402,20 @@ mod tests {
                 .and_then(|v| v.as_str()),
             Some(COMPONENT_TIER_FILE_VALUE)
         );
-        // file-paths emitted as JSON-encoded string array (matches
-        // the milestone 133 US2.1 source-files shape).
+        // Milestone 145 US1: file-paths emitted as a native JSON array
+        // (NOT a JSON-string-encoding of the array). Pre-145 this test
+        // round-tripped through `serde_json::from_str(value)`; post-145
+        // the value IS the array directly.
         let fp = c
             .extra_annotations
             .get(FILE_PATHS_KEY)
-            .and_then(|v| v.as_str())
             .expect("file-paths annotation present");
-        let parsed: Vec<String> = serde_json::from_str(fp).expect("file-paths JSON parses");
+        let parsed: Vec<String> = fp
+            .as_array()
+            .expect("file-paths is array (milestone 145 US1)")
+            .iter()
+            .map(|v| v.as_str().expect("path is string").to_string())
+            .collect();
         assert_eq!(parsed, vec!["opt/custom/foo".to_string()]);
         // Single path → no truncated flag.
         assert!(!c.extra_annotations.contains_key(FILE_PATHS_TRUNCATED_KEY));
@@ -421,12 +434,19 @@ mod tests {
         }
         e.finalize();
         let c = e.into_resolved_component();
+        // Milestone 145 US1: file-paths is a native JSON array (NOT a
+        // JSON-string-encoding of the array). See the sibling test
+        // above for the rationale.
         let fp = c
             .extra_annotations
             .get(FILE_PATHS_KEY)
-            .and_then(|v| v.as_str())
             .expect("file-paths annotation present");
-        let parsed: Vec<String> = serde_json::from_str(fp).expect("file-paths JSON parses");
+        let parsed: Vec<String> = fp
+            .as_array()
+            .expect("file-paths is array (milestone 145 US1)")
+            .iter()
+            .map(|v| v.as_str().expect("path is string").to_string())
+            .collect();
         assert_eq!(parsed.len(), FILE_PATHS_CAP);
         assert_eq!(
             c.extra_annotations
@@ -452,6 +472,33 @@ mod tests {
         // mikebom:component-tier-driven PURL drop at emission.
         assert!(c.purl.as_str().contains(&sha));
         assert!(c.purl.as_str().starts_with("pkg:generic/file-tier"));
+    }
+
+    /// Milestone 145 US1 T004 (SC-002): the `mikebom:file-paths`
+    /// annotation value MUST be a `Value::Array`, NOT a `Value::String`
+    /// holding a JSON-string-encoding of the array. Guards against
+    /// regression of the pre-145 double-encoding bug.
+    #[test]
+    fn mikebom_file_paths_is_native_array_not_stringified() {
+        let mut e = FileTierEntry::new(
+            "abcd".repeat(16),
+            PathBuf::from("usr/sbin/losetup"),
+            ContentShape::ElfBinary,
+            10,
+        );
+        e.finalize();
+        let c = e.into_resolved_component();
+        let value = c
+            .extra_annotations
+            .get(FILE_PATHS_KEY)
+            .expect("mikebom:file-paths is present");
+        assert!(
+            value.is_array(),
+            "FR-001 violation: expected Value::Array, got {value:?}"
+        );
+        let arr = value.as_array().expect("file-paths is array");
+        assert_eq!(arr.len(), 1);
+        assert_eq!(arr[0].as_str(), Some("usr/sbin/losetup"));
     }
 
     #[test]

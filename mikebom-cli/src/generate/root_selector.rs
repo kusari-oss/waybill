@@ -438,6 +438,21 @@ pub fn is_internal_emission_key(key: &str) -> bool {
     key == IS_WORKSPACE_ROOT_KEY
 }
 
+/// Milestone 145 US3 (FR-009 + research §C/§C.1): annotation keys that
+/// are emitted from a field-derived source (typically
+/// `c.evidence.*`) and MUST NOT be re-emitted from the
+/// `extra_annotations` bag — doing so produces double-emission +
+/// per-emitter value-drift like the 2026-06-26 audit flagged for
+/// `mikebom:source-files` on Maven nested-JAR components.
+///
+/// Defense-in-depth: callers that intend to carry per-reader source
+/// provenance MUST use a DISTINCT annotation key (e.g.,
+/// `mikebom:<reader>-source-url`) to avoid colliding with the
+/// field-derived emission.
+pub fn is_field_owned_annotation_key(key: &str) -> bool {
+    matches!(key, "mikebom:source-files")
+}
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
@@ -447,6 +462,21 @@ mod tests {
     };
     use mikebom_common::types::purl::Purl;
     use std::collections::BTreeMap;
+
+    /// Milestone 145 US3 (FR-009): the field-owned-key helper protects
+    /// `mikebom:source-files` from double-emission. New field-owned
+    /// keys can be added by extending the `matches!` arm; the test
+    /// guards the contract.
+    #[test]
+    fn is_field_owned_annotation_key_md145() {
+        assert!(is_field_owned_annotation_key("mikebom:source-files"));
+        // Unrelated keys MUST NOT be filtered (they're emitted from
+        // extra_annotations as the only source).
+        assert!(!is_field_owned_annotation_key("mikebom:source-files-nested-url"));
+        assert!(!is_field_owned_annotation_key("mikebom:lifecycle-scope"));
+        assert!(!is_field_owned_annotation_key("mikebom:cpe-candidates"));
+        assert!(!is_field_owned_annotation_key("mikebom:file-paths"));
+    }
 
     fn make_main_module(
         purl_str: &str,

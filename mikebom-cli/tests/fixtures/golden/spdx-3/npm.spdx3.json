@@ -336,7 +336,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-7LMLT6DQIPVVOCVFIGMR2DBR/anno-UXAUVWV7MOJV7J4R",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":\"[\\\"package.json\\\"]\"}",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"package.json\"]}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-7LMLT6DQIPVVOCVFIGMR2DBR/pkg-RI7DYUP7YVSLGONA",
       "type": "Annotation"
     },

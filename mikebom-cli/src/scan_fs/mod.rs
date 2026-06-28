@@ -195,6 +195,15 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 // record it, so all three SBOM formats (CDX/SPDX 2.3/SPDX 3)
                 // get the same clean value (holistic_parity test asserts the
                 // C18 row's `SymmetricEqual` directionality across formats).
+                //
+                // NOTE (milestone 145 US3): `mikebom:source-files` has TWO
+                // emission sources — this field (canonical) AND
+                // `extra_annotations["mikebom:source-files"]` (legacy,
+                // dedup'd at emit time via
+                // `root_selector::is_field_owned_annotation_key`). DO NOT
+                // stamp the latter from a new reader; if you need to carry
+                // per-reader source provenance, use a distinct key like
+                // `mikebom:<reader>-source-url`.
                 source_file_paths: vec![crate::scan_fs::sbom_path::normalize_sbom_path_relative(
                     &path_string,
                     Some(root),
@@ -633,6 +642,10 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                     // Milestone 133 US2.1 (FR-012 Defects A + C): see same-
                     // numbered comment above; normalize at source-population
                     // time so SPDX/CDX/SPDX3 all read the clean value.
+                    //
+                    // NOTE (milestone 145 US3): canonical source for
+                    // `mikebom:source-files` emission — see also
+                    // `root_selector::is_field_owned_annotation_key`.
                     source_file_paths: vec![crate::scan_fs::sbom_path::normalize_sbom_path_relative(
                         &entry.source_path,
                         Some(root),

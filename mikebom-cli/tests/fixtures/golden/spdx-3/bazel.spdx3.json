@@ -233,6 +233,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-YGXGXM2344FEFXFIONNHE7N6/anno-B4MJRJBIDUBHZGZI",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"development\"}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-YGXGXM2344FEFXFIONNHE7N6/pkg-LM6FBYXSKLDBXQVU",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-YGXGXM2344FEFXFIONNHE7N6/anno-COPKKLC6APWPCRTF",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"MODULE.bazel\"]}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-YGXGXM2344FEFXFIONNHE7N6/pkg-SFZ6ZH3BHKUFYZNC",

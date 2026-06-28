@@ -263,6 +263,24 @@ fn push_component_fields(
     if let Some(ref v) = c.raw_version {
         push(out, "mikebom:raw-version", json!(v));
     }
+    // C42 mikebom:lifecycle-scope — parity-bridging annotation mirroring
+    // the SPDX 2.3 sibling at annotations.rs:227-236 (milestone 145 US2).
+    // CDX and SPDX 2.3 both emit this annotation for non-Runtime scopes
+    // (CDX at cyclonedx/builder.rs:851 via `s.is_non_runtime()`, SPDX 2.3
+    // at annotations.rs:233 via the `LifecycleScope::Runtime => None`
+    // match arm). SPDX 3 was the pre-145 outlier.
+    if let Some(ref scope) = c.lifecycle_scope {
+        use mikebom_common::resolution::LifecycleScope;
+        let s = match scope {
+            LifecycleScope::Development => Some("development"),
+            LifecycleScope::Build => Some("build"),
+            LifecycleScope::Test => Some("test"),
+            LifecycleScope::Runtime => None, // runtime is the default; no annotation
+        };
+        if let Some(s) = s {
+            push(out, "mikebom:lifecycle-scope", json!(s));
+        }
+    }
     // C18 source-files
     if include_source_files && !c.evidence.source_file_paths.is_empty() {
         push(
@@ -330,7 +348,13 @@ fn push_component_fields(
     // `mikebom:is-workspace-root` signal that drives root-selector
     // logic but is NOT meant to surface in emitted SBOMs).
     for (key, value) in &c.extra_annotations {
-        if crate::generate::root_selector::is_internal_emission_key(key) {
+        if crate::generate::root_selector::is_internal_emission_key(key)
+            || crate::generate::root_selector::is_field_owned_annotation_key(key)
+        {
+            // Milestone 145 US3 (FR-009): skip keys already emitted
+            // from a field-derived source (e.g., `mikebom:source-files`
+            // comes from `c.evidence.source_file_paths` at line ~267
+            // above) — re-emitting from the bag double-stamps.
             continue;
         }
         push(out, key, value.clone());
@@ -577,5 +601,237 @@ mod tests {
             !statement.contains(r#""value":true"#),
             "statement must NOT serialize bool as bare true: {statement}",
         );
+    }
+
+    // -----------------------------------------------------------------
+    // Milestone 145 US2 (T007/T008/T009): SPDX 3 lifecycle-scope
+    // emission parity with CDX + SPDX 2.3.
+    // -----------------------------------------------------------------
+
+    /// Helper: construct a minimal valid `ResolvedComponent` for tests.
+    /// Only `purl` is required; everything else defaults. The caller
+    /// overrides specific fields (e.g., `lifecycle_scope`) before use.
+    fn synthetic_resolved_component(
+        lifecycle_scope: Option<mikebom_common::resolution::LifecycleScope>,
+    ) -> ResolvedComponent {
+        use mikebom_common::resolution::{
+            ResolutionEvidence, ResolutionTechnique, ResolvedComponent,
+        };
+        let purl = mikebom_common::types::purl::Purl::new("pkg:npm/test@1.0.0").unwrap();
+        ResolvedComponent {
+            build_inclusion: None,
+            name: "test".to_string(),
+            version: "1.0.0".to_string(),
+            purl,
+            evidence: ResolutionEvidence {
+                technique: ResolutionTechnique::PackageDatabase,
+                confidence: 0.9,
+                source_connection_ids: vec![],
+                source_file_paths: vec![],
+                deps_dev_match: None,
+            },
+            licenses: vec![],
+            concluded_licenses: vec![],
+            hashes: vec![],
+            supplier: None,
+            cpes: vec![],
+            advisories: vec![],
+            occurrences: vec![],
+            lifecycle_scope,
+            requirement_range: None,
+            source_type: None,
+            sbom_tier: None,
+            buildinfo_status: None,
+            evidence_kind: None,
+            binary_class: None,
+            binary_stripped: None,
+            linkage_kind: None,
+            detected_go: None,
+            confidence: None,
+            binary_packed: None,
+            npm_role: None,
+            raw_version: None,
+            parent_purl: None,
+            co_owned_by: None,
+            shade_relocation: None,
+            external_references: vec![],
+            extra_annotations: Default::default(),
+            binary_role: None,
+        }
+    }
+
+    /// Returns the parsed `MikebomAnnotationCommentV1` envelopes from a
+    /// vector of SPDX 3 annotation graph elements whose `field` matches
+    /// the supplied predicate.
+    fn envelopes_for_field(
+        annos: &[Value],
+        field_name: &str,
+    ) -> Vec<MikebomAnnotationCommentV1> {
+        annos
+            .iter()
+            .filter_map(|a| a.get("statement").and_then(|s| s.as_str()))
+            .filter_map(|s| serde_json::from_str::<MikebomAnnotationCommentV1>(s).ok())
+            .filter(|env| env.field == field_name)
+            .collect()
+    }
+
+    /// T007 (SC-005 first half + FR-005): SPDX 3 emits
+    /// `mikebom:lifecycle-scope=development` for `Development` scope.
+    #[test]
+    fn spdx3_lifecycle_scope_development_emits() {
+        use mikebom_common::resolution::LifecycleScope;
+        let c = synthetic_resolved_component(Some(LifecycleScope::Development));
+        let mut out = Vec::new();
+        push_component_fields(
+            &mut out,
+            "https://example.org/doc#SPDXRef-comp-1",
+            "https://example.org/doc",
+            "_:creationinfo",
+            &c,
+            /* include_dev = */ true,
+            /* include_source_files = */ true,
+        );
+        let envs = envelopes_for_field(&out, "mikebom:lifecycle-scope");
+        assert_eq!(
+            envs.len(),
+            1,
+            "expected exactly one mikebom:lifecycle-scope annotation, got {envs:?}",
+        );
+        assert_eq!(envs[0].value, serde_json::json!("development"));
+    }
+
+    /// T008 (SC-005 second half + FR-006): SPDX 3 OMITS
+    /// `mikebom:lifecycle-scope` when scope is `Runtime` (parity with
+    /// CDX at `cyclonedx/builder.rs:851` via `is_non_runtime()` filter
+    /// and SPDX 2.3 at `annotations.rs:233` via `Runtime => None`).
+    #[test]
+    fn spdx3_lifecycle_scope_runtime_omitted() {
+        use mikebom_common::resolution::LifecycleScope;
+        let c = synthetic_resolved_component(Some(LifecycleScope::Runtime));
+        let mut out = Vec::new();
+        push_component_fields(
+            &mut out,
+            "https://example.org/doc#SPDXRef-comp-1",
+            "https://example.org/doc",
+            "_:creationinfo",
+            &c,
+            true,
+            true,
+        );
+        let envs = envelopes_for_field(&out, "mikebom:lifecycle-scope");
+        assert!(
+            envs.is_empty(),
+            "FR-006 violation: Runtime scope must NOT emit mikebom:lifecycle-scope; got {envs:?}"
+        );
+    }
+
+    /// T009 (FR-007): SPDX 3 OMITS `mikebom:lifecycle-scope` when
+    /// `lifecycle_scope == None` (matches SPDX 2.3 existing behavior).
+    #[test]
+    fn spdx3_lifecycle_scope_none_omitted() {
+        let c = synthetic_resolved_component(None);
+        let mut out = Vec::new();
+        push_component_fields(
+            &mut out,
+            "https://example.org/doc#SPDXRef-comp-1",
+            "https://example.org/doc",
+            "_:creationinfo",
+            &c,
+            true,
+            true,
+        );
+        let envs = envelopes_for_field(&out, "mikebom:lifecycle-scope");
+        assert!(
+            envs.is_empty(),
+            "FR-007 violation: None scope must NOT emit mikebom:lifecycle-scope; got {envs:?}"
+        );
+    }
+
+    /// T008 sibling: SPDX 3 emits with value "build" for Build scope.
+    #[test]
+    fn spdx3_lifecycle_scope_build_emits() {
+        use mikebom_common::resolution::LifecycleScope;
+        let c = synthetic_resolved_component(Some(LifecycleScope::Build));
+        let mut out = Vec::new();
+        push_component_fields(
+            &mut out,
+            "https://example.org/doc#SPDXRef-comp-1",
+            "https://example.org/doc",
+            "_:creationinfo",
+            &c,
+            true,
+            true,
+        );
+        let envs = envelopes_for_field(&out, "mikebom:lifecycle-scope");
+        assert_eq!(envs.len(), 1);
+        assert_eq!(envs[0].value, serde_json::json!("build"));
+    }
+
+    /// T016 (US3 + FR-009 + SC-009): when a component has BOTH a
+    /// field-derived `mikebom:source-files` (from
+    /// `c.evidence.source_file_paths`) AND a legacy stamping in
+    /// `extra_annotations["mikebom:source-files"]` (the pre-145 Maven
+    /// nested-JAR pattern), the SPDX 3 emitter MUST emit EXACTLY ONE
+    /// `mikebom:source-files` annotation — the field-derived one.
+    /// Guards against regression of the per-emitter double-emission
+    /// bug that caused 51 audit findings on polyglot-builder-image.
+    #[test]
+    fn spdx3_source_files_dedup_no_double_emission_md145() {
+        let mut c = synthetic_resolved_component(None);
+        c.evidence.source_file_paths =
+            vec!["root/.m2/repository/test/foo/1.0/foo-1.0.jar".to_string()];
+        // Pre-145 the Maven reader stamped THIS key (now renamed to
+        // mikebom:source-files-nested-url per Option 2b); we replicate
+        // the pre-145 shape to PROVE the emitter-side guard (Option 1)
+        // would suppress the double-emission even if a future reader
+        // recreated the trap.
+        c.extra_annotations.insert(
+            "mikebom:source-files".to_string(),
+            serde_json::json!("root/.m2/.../foo-1.0.jar!META-INF/MANIFEST.MF"),
+        );
+        let mut out = Vec::new();
+        push_component_fields(
+            &mut out,
+            "https://example.org/doc#SPDXRef-comp-1",
+            "https://example.org/doc",
+            "_:creationinfo",
+            &c,
+            /* include_dev = */ true,
+            /* include_source_files = */ true,
+        );
+        let envs = envelopes_for_field(&out, "mikebom:source-files");
+        assert_eq!(
+            envs.len(),
+            1,
+            "FR-009 violation: SPDX 3 emitted {} mikebom:source-files entries; \
+             expected EXACTLY ONE (the field-derived one wins). envs={envs:?}",
+            envs.len()
+        );
+        // The surviving entry MUST be the field-derived rootfs-relative
+        // JAR path, NOT the legacy `<outer>!<inner>!...` URL string.
+        assert_eq!(
+            envs[0].value,
+            serde_json::json!(["root/.m2/repository/test/foo/1.0/foo-1.0.jar"])
+        );
+    }
+
+    /// T008 sibling: SPDX 3 emits with value "test" for Test scope.
+    #[test]
+    fn spdx3_lifecycle_scope_test_emits() {
+        use mikebom_common::resolution::LifecycleScope;
+        let c = synthetic_resolved_component(Some(LifecycleScope::Test));
+        let mut out = Vec::new();
+        push_component_fields(
+            &mut out,
+            "https://example.org/doc#SPDXRef-comp-1",
+            "https://example.org/doc",
+            "_:creationinfo",
+            &c,
+            true,
+            true,
+        );
+        let envs = envelopes_for_field(&out, "mikebom:lifecycle-scope");
+        assert_eq!(envs.len(), 1);
+        assert_eq!(envs[0].value, serde_json::json!("test"));
     }
 }

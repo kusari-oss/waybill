@@ -1084,7 +1084,15 @@ impl CycloneDxBuilder {
             // `mikebom:is-workspace-root` signal that drives root-selector
             // logic but is NOT meant to surface in emitted SBOMs).
             for (key, value) in &component.extra_annotations {
-                if crate::generate::root_selector::is_internal_emission_key(key) {
+                if crate::generate::root_selector::is_internal_emission_key(key)
+                    || crate::generate::root_selector::is_field_owned_annotation_key(key)
+                {
+                    // Milestone 145 US3 (FR-009): skip keys already
+                    // emitted from a field-derived source (e.g.,
+                    // `mikebom:source-files` comes from
+                    // `c.evidence.source_file_paths` higher up in
+                    // this function — re-emitting from the bag
+                    // would double-stamp and produce value drift.
                     continue;
                 }
                 let value_str = match value {
