@@ -17,6 +17,90 @@ pub enum LicenseError {
     Invalid(String),
 }
 
+/// Milestone 146 (closes #470): dedupe byte-identical top-level operands
+/// in homogeneous AND-chain or OR-chain SPDX expressions before storing
+/// the canonical form. Operates on the already-parsed `spdx::Expression`
+/// tree via `iter()` (postfix order).
+///
+/// **Invariants** (from `specs/146-license-expression-dedup/contracts/`):
+/// 1. Homogeneous AND-chain dedup — `"MIT AND MIT"` → `"MIT"`.
+/// 2. Homogeneous OR-chain dedup — `"MIT OR MIT"` → `"MIT"`.
+/// 3. `WITH` clauses atomic — `LicenseReq::Display` includes
+///    ` WITH <exception>` suffix, so the byte-comparison treats
+///    `GPL WITH Classpath` as a single operand.
+/// 4. No-op for single-operand / already-deduped inputs.
+/// 5. No-op for mixed AND/OR expressions (recursive dedup deferred
+///    per spec Out of Scope §1).
+///
+/// **Constitution Principle V audit**: this is a semantics-preserving
+/// canonicalization (`X AND X ≡ X`, `X OR X ≡ X` per SPDX 2.x grammar).
+/// No new `mikebom:*` annotations introduced.
+fn dedupe_top_level_operands(expr: &spdx::Expression) -> String {
+    use spdx::expression::{ExprNode, Operator};
+
+    let nodes: Vec<&ExprNode> = expr.iter().collect();
+    if nodes.is_empty() {
+        return expr.to_string();
+    }
+
+    // Single-operand expressions have no Op nodes — dedup is a no-op
+    // (Invariant 4).
+    let outermost_op = match nodes.last() {
+        Some(ExprNode::Op(op)) => *op,
+        _ => return expr.to_string(),
+    };
+
+    // If the expression has MIXED operators (both AND and OR at any
+    // level), the outermost connector is `outermost_op` but inner
+    // operands are sub-expressions we don't recursively examine in v1.0
+    // (Invariant 5 + spec Out of Scope §1). Skip dedup to avoid
+    // splitting structure we can't safely reassemble.
+    let all_same_op = nodes.iter().all(|n| match n {
+        ExprNode::Op(op) => *op == outermost_op,
+        _ => true,
+    });
+    if !all_same_op {
+        return expr.to_string();
+    }
+
+    // Homogeneous chain — collect req strings (including WITH clauses
+    // via `LicenseReq::Display`) and dedupe in order of first occurrence.
+    let mut seen = std::collections::BTreeSet::new();
+    let mut unique: Vec<String> = Vec::new();
+    let mut total_reqs = 0usize;
+    for n in &nodes {
+        if let ExprNode::Req(req) = n {
+            total_reqs += 1;
+            let s = req.req.to_string();
+            if seen.insert(s.clone()) {
+                unique.push(s);
+            }
+        }
+    }
+
+    // CRITICAL: if no duplicates exist, return `expr.to_string()`
+    // unchanged. `Expression::Display` writes the original input
+    // string verbatim (preserving `GPL-2.0-only` casing), whereas
+    // rebuilding from `LicenseReq::Display` calls the spdx crate's
+    // `LicenseId::Display` which normalizes legacy names to short
+    // form (`GPL-2.0`). Only rebuild when we actually need to drop
+    // duplicate operands — otherwise canonical-form drift breaks
+    // every existing reader's `try_canonical` round-trip.
+    if unique.len() == total_reqs {
+        return expr.to_string();
+    }
+
+    if unique.len() <= 1 {
+        return unique.into_iter().next().unwrap_or_default();
+    }
+
+    let sep = match outermost_op {
+        Operator::And => " AND ",
+        Operator::Or => " OR ",
+    };
+    unique.join(sep)
+}
+
 impl SpdxExpression {
     /// Permissive constructor — accepts any non-empty, non-control-char
     /// string. Use this when the source data isn't guaranteed to be a
@@ -55,9 +139,18 @@ impl SpdxExpression {
         }
         match spdx::Expression::parse(trimmed) {
             Ok(expr) => {
-                // The expression renders back to its canonical form via
-                // Display; that's the value we want stored.
-                Ok(Self(expr.to_string()))
+                // Milestone 146 (closes #470): dedupe byte-identical
+                // top-level operands in homogeneous AND-/OR-chains
+                // before storing. SPDX 2.x defines `X AND X ≡ X` and
+                // `X OR X ≡ X` as canonical equivalences; the spdx
+                // crate's parse + Display round-trip preserves
+                // duplicates verbatim (Yocto-built RPMs ship
+                // `License: GPL-2.0-only AND GPL-2.0-only` in their
+                // headers — issue #470), so we dedupe here. The
+                // sibling `SpdxExpression::new` constructor below
+                // DOES NOT apply this dedup (FR-006 — preserves the
+                // lenient best-effort raw-storage contract).
+                Ok(Self(dedupe_top_level_operands(&expr)))
             }
             Err(e) => Err(LicenseError::Invalid(e.to_string())),
         }
@@ -266,5 +359,148 @@ mod tests {
     fn as_spdx_id_returns_none_for_unknown_identifier() {
         let l = SpdxExpression::new("SomethingNotOnTheSpdxList").unwrap();
         assert_eq!(l.as_spdx_id(), None);
+    }
+
+    // -----------------------------------------------------------------
+    // Milestone 146 (closes #470) — top-level operand dedup in
+    // homogeneous AND-/OR-chain expressions. See
+    // `specs/146-license-expression-dedup/contracts/spdx-expression-dedup.md`
+    // for the full 7-invariant contract.
+    // -----------------------------------------------------------------
+
+    /// T004 [US1] (US1.1, SC-002 anchor): `MIT AND MIT` collapses to
+    /// single-identifier `MIT`. The dominant Yocto-shaped input.
+    #[test]
+    fn try_canonical_dedupes_two_identical_and_operands() {
+        let l = SpdxExpression::try_canonical("MIT AND MIT").unwrap();
+        assert_eq!(l.as_str(), "MIT");
+    }
+
+    /// T005 [US1] (US1.2): distinct operand between duplicates is
+    /// preserved.
+    #[test]
+    fn try_canonical_dedupes_with_distinct_operand_preserved() {
+        let l = SpdxExpression::try_canonical("MIT AND Apache-2.0 AND MIT").unwrap();
+        assert_eq!(l.as_str(), "MIT AND Apache-2.0");
+    }
+
+    /// T006 [US1] (US1.3): multiple occurrences of the same operand
+    /// collapse to one, preserving first-occurrence order (FR-002).
+    /// Uses Apache-2.0 + BSD-3-Clause (single-form license ids that
+    /// the spdx 0.10 crate doesn't rename, unlike the `GPL-2.0-only` →
+    /// `GPL-2.0` normalization in the legacy SPDX list).
+    #[test]
+    fn try_canonical_dedupes_multiple_occurrences_preserves_first_order() {
+        let l = SpdxExpression::try_canonical(
+            "Apache-2.0 AND Apache-2.0 AND BSD-3-Clause AND Apache-2.0",
+        )
+        .unwrap();
+        assert_eq!(l.as_str(), "Apache-2.0 AND BSD-3-Clause");
+    }
+
+    /// T007 [US1] (US1.4 + FR-004): already-deduplicated input is a
+    /// no-op.
+    #[test]
+    fn try_canonical_already_deduped_unchanged() {
+        let l = SpdxExpression::try_canonical("MIT AND Apache-2.0").unwrap();
+        assert_eq!(l.as_str(), "MIT AND Apache-2.0");
+    }
+
+    /// T008 [US1] (SC-005): `WITH` clauses are atomic operands
+    /// (FR-003). Same WITH-clause on both sides dedupes; one side with
+    /// and one side without the exception does NOT dedupe.
+    #[test]
+    fn try_canonical_with_clauses_preserved_atomic() {
+        // Both operands byte-identical post-canonical (both have the
+        // WITH clause) → dedupe fires.
+        let same = SpdxExpression::try_canonical(
+            "GPL-2.0-or-later WITH Classpath-exception-2.0 \
+             AND GPL-2.0-or-later WITH Classpath-exception-2.0",
+        )
+        .unwrap();
+        assert_eq!(
+            same.as_str(),
+            "GPL-2.0-or-later WITH Classpath-exception-2.0"
+        );
+
+        // Two operands DIFFER (one has WITH, one doesn't) → no dedupe.
+        // The WITH-clause MUST NOT be split across the boundary; both
+        // operands stay as distinct items.
+        let diff = SpdxExpression::try_canonical(
+            "GPL-2.0-or-later WITH Classpath-exception-2.0 \
+             AND GPL-2.0-or-later",
+        )
+        .unwrap();
+        assert_eq!(
+            diff.as_str(),
+            "GPL-2.0-or-later WITH Classpath-exception-2.0 AND GPL-2.0-or-later"
+        );
+    }
+
+    /// T009 [US1] (FR-004): single-operand input is a no-op.
+    #[test]
+    fn try_canonical_single_operand_unchanged() {
+        let l = SpdxExpression::try_canonical("MIT").unwrap();
+        assert_eq!(l.as_str(), "MIT");
+    }
+
+    /// T010 [US1] (Invariant 5 + spec Out of Scope §1): mixed-operator
+    /// expressions are NOT deduped in v1.0 (recursive dedup deferred).
+    /// Uses the spdx crate's canonical form as the expected baseline
+    /// (insulates against crate version drift).
+    #[test]
+    fn try_canonical_mixed_operators_unchanged() {
+        let input = "MIT OR Apache-2.0 AND MIT";
+        let canonical_baseline = spdx::Expression::parse(input).unwrap().to_string();
+        let our_output = SpdxExpression::try_canonical(input).unwrap().as_str().to_string();
+        assert_eq!(
+            our_output, canonical_baseline,
+            "mixed-operator expression must not be deduped \
+             (recursive dedup out of v1.0 scope per spec Out of Scope §1)"
+        );
+    }
+
+    /// T011 [US2] (US2.1): OR-chain dedup, parallel to T004 for AND.
+    #[test]
+    fn try_canonical_dedupes_or_operands() {
+        let l = SpdxExpression::try_canonical("MIT OR MIT").unwrap();
+        assert_eq!(l.as_str(), "MIT");
+    }
+
+    /// T012 [US2] (US2.2): OR-chain with distinct operand preserved.
+    #[test]
+    fn try_canonical_dedupes_or_chain_distinct_preserved() {
+        let l = SpdxExpression::try_canonical("MIT OR Apache-2.0 OR MIT").unwrap();
+        assert_eq!(l.as_str(), "MIT OR Apache-2.0");
+    }
+
+    /// T013 [US2] (Invariant 7): second `try_canonical` call on the
+    /// already-deduped output is a no-op.
+    #[test]
+    fn try_canonical_is_idempotent() {
+        let e1 = SpdxExpression::try_canonical("MIT AND MIT").unwrap();
+        assert_eq!(e1.as_str(), "MIT", "first pass dedupes");
+        let e2 = SpdxExpression::try_canonical(e1.as_str()).unwrap();
+        assert_eq!(
+            e1.as_str(),
+            e2.as_str(),
+            "second pass on deduped output must be a no-op"
+        );
+    }
+
+    /// L1 (per /speckit-analyze): defensive guard — the lenient
+    /// `SpdxExpression::new` constructor MUST NOT apply the dedup
+    /// pass (FR-006 — preserves best-effort raw-storage contract for
+    /// non-SPDX-parseable inputs). Catches any future refactor that
+    /// accidentally pulls the dedup helper into `new()`.
+    #[test]
+    fn lenient_new_constructor_does_not_apply_dedup() {
+        let raw = SpdxExpression::new("MIT AND MIT").unwrap();
+        assert_eq!(
+            raw.as_str(),
+            "MIT AND MIT",
+            "SpdxExpression::new MUST preserve raw form (FR-006); \
+             only try_canonical applies milestone-146 dedup"
+        );
     }
 }
