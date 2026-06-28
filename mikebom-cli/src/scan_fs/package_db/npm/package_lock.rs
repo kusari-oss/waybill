@@ -165,22 +165,66 @@ pub(crate) fn parse_package_lock(
         // (name → version-pinned-string) pairs.
         let mut depends_set: std::collections::BTreeMap<String, String> =
             std::collections::BTreeMap::new();
-        // Skip `peerDependencies` — semantically declarative ("the
-        // consumer should have X installed"), not an install
-        // relationship. npm v7+ auto-installs peers as a convenience,
-        // but the SBOM `dependsOn` / `DEPENDS_ON` slot means "X
-        // depends on Y" not "X expects Y to be present." Trivy and
-        // syft also skip peer-edges. If a peer-installed package is
-        // genuinely orphan in the dep graph, the orphan signal is
-        // the correct one — the consumer (root or a direct
-        // requirer) should declare the dep explicitly.
+        // Milestone 147 US2: track which peer-driven edges were
+        // emitted so we can stamp a `mikebom:peer-edge-targets`
+        // annotation listing their PURLs. BTreeSet gives sort +
+        // dedup for free (research §A — alphabetical order matches
+        // milestone-145 `mikebom:file-paths` precedent).
+        let mut peer_edge_targets: std::collections::BTreeSet<String> =
+            std::collections::BTreeSet::new();
+        // Walk all four standard npm dep sections. peerDependencies were
+        // historically skipped (matching Syft's behavior pre-147), but
+        // milestone 147 enables them to close the orphan gap surfaced by
+        // the Trivy comparison on the looker-frontend lockfile (Trivy
+        // emits peer-edges as DEPENDS_ON; 5 mikebom orphans dropped to 0
+        // matching Trivy).
+        //
+        // The install-vs-functional distinction is preserved via a
+        // mikebom:peer-edge-targets annotation on the source component
+        // listing the PURLs of peer-driven edges (Constitution Principle V
+        // parity-bridging — CDX/SPDX 2.3/SPDX 3 all lack a native carrier
+        // for per-edge peer-kind metadata). Documented in
+        // docs/reference/sbom-format-mapping.md.
+        //
+        // FR-002 (no phantom edges for unmet peers) is satisfied for free
+        // via resolve_dep_via_node_modules_walk returning None when the
+        // peer isn't installed at any level.
         for section in &[
             "dependencies",
             "devDependencies",
             "optionalDependencies",
+            "peerDependencies",
         ] {
             if let Some(deps) = tbl.get(*section).and_then(|v| v.as_object()) {
                 for dep_name in deps.keys() {
+                    use std::collections::btree_map::Entry;
+                    if *section == "peerDependencies" {
+                        // Milestone 147: gate both edge emission AND
+                        // peer-target tracking on the Some/None return
+                        // — FR-002 (no phantom edges for unmet peers)
+                        // + FR-004 (peer-target annotation only for
+                        // ACTUALLY-resolved peers). Unlike the regular
+                        // sections we do NOT fall back to bare-name
+                        // for unmet peers.
+                        if let Some(version) = resolve_dep_via_node_modules_walk(
+                            path_key,
+                            dep_name,
+                            &path_versions,
+                        ) {
+                            let resolved = format!("{dep_name} {version}");
+                            // FR-003 precedence: only track + insert
+                            // in the Vacant arm. If a regular section
+                            // already handled this name, the peer
+                            // section neither emits a duplicate edge
+                            // nor adds a peer-edge-targets entry.
+                            if let Entry::Vacant(v) = depends_set.entry(dep_name.clone()) {
+                                v.insert(resolved);
+                                peer_edge_targets
+                                    .insert(format!("pkg:npm/{dep_name}@{version}"));
+                            }
+                        }
+                        continue;
+                    }
                     // Walk up the node_modules tree from this entry,
                     // mirroring npm's resolution algorithm: a package
                     // at `<...>/<parent>/.../X` resolves a declared
@@ -207,7 +251,6 @@ pub(crate) fn parse_package_lock(
                     // wins via the existing-or-insert pattern:
                     // version-pinned strings contain a space, bare
                     // names don't — prefer the more specific form.
-                    use std::collections::btree_map::Entry;
                     match depends_set.entry(dep_name.clone()) {
                         Entry::Vacant(v) => {
                             v.insert(resolved);
@@ -225,6 +268,25 @@ pub(crate) fn parse_package_lock(
             }
         }
         let depends: Vec<String> = depends_set.into_values().collect();
+
+        // Milestone 147 US2: stamp the peer-edge-targets annotation
+        // when ≥1 peer-driven edge was emitted (FR-004). Omit the
+        // key entirely when the set is empty (FR-005). BTreeSet
+        // iteration yields lex-ascending strings → the JSON array
+        // is naturally sorted (research §A + milestone-145
+        // paths_str.sort() precedent).
+        let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
+            Default::default();
+        if !peer_edge_targets.is_empty() {
+            let sorted_arr: Vec<serde_json::Value> = peer_edge_targets
+                .into_iter()
+                .map(serde_json::Value::String)
+                .collect();
+            extra_annotations.insert(
+                "mikebom:peer-edge-targets".to_string(),
+                serde_json::Value::Array(sorted_arr),
+            );
+        }
 
         out.push(PackageDbEntry {
             build_inclusion: None,
@@ -261,7 +323,7 @@ pub(crate) fn parse_package_lock(
             hashes,
             sbom_tier: Some("source".to_string()),
             shade_relocation: None,
-            extra_annotations: Default::default(),
+            extra_annotations,
             binary_role: None,
         });
     }
@@ -677,19 +739,18 @@ mod tests {
     // --- post-#263 follow-up: peer/optional sections + deeper nesting -----
 
     #[test]
-    fn peer_dependencies_are_skipped_declarative_not_install() {
-        // peerDependencies are declarative — they express "the
-        // consumer should have X" not "this package depends on X."
-        // npm v7+ auto-installs peers as a convenience, but the
-        // SBOM `dependsOn` slot means "X depends on Y" not "X
-        // expects Y to be present." Trivy and syft also skip
-        // peer-edges; mikebom matches.
+    fn peer_dependencies_emit_edges_md147() {
+        // Milestone 147 (closes Trivy-comparison orphan gap):
+        // peerDependencies emit as DEPENDS_ON edges when the peer is
+        // actually installed in the lockfile. Pre-147 the edge was
+        // skipped (matching Syft); post-147 mikebom matches Trivy's
+        // npm-7+ auto-install convention.
         //
-        // Reproducer: mlly declares `pathe` ONLY via
-        // peerDependencies (no regular dependency). Even though
-        // pathe is installed at multiple paths, mlly should NOT
-        // emit any edge to pathe — let the package that ACTUALLY
-        // requires pathe declare the edge instead.
+        // Reproducer: mlly declares `pathe` ONLY via peerDependencies
+        // (no regular dependency) AND a `node_modules/mlly/node_modules/
+        // pathe` install exists. Post-147 the edge emits to the
+        // nested install (per the existing resolve_dep_via_node_modules_walk
+        // ladder).
         let lockfile = serde_json::json!({
             "lockfileVersion": 3,
             "packages": {
@@ -703,10 +764,168 @@ mod tests {
         });
         let entries = parse_package_lock(&lockfile, "/tmp/lock.json", false);
         let mlly = entries.iter().find(|e| e.name == "mlly").expect("mlly");
-        assert!(
-            mlly.depends.is_empty(),
-            "`mlly` only declares `pathe` via peerDependencies — no edge should emit; got: {:?}",
+        assert_eq!(
+            mlly.depends,
+            vec!["pathe 2.0.3".to_string()],
+            "milestone-147: `mlly` MUST emit a peer-edge to pathe@2.0.3; got: {:?}",
             mlly.depends
+        );
+    }
+
+    #[test]
+    fn unmet_peer_emits_no_edge_md147() {
+        // FR-002: peer declared but NOT present in packages map ⇒
+        // no edge emitted. The existing resolve_dep_via_node_modules_walk
+        // helper returns None when the dep isn't installed at any
+        // level; we gate edge-emission AND peer-edge-targets tracking
+        // on that Some/None return for the peer section specifically.
+        let lockfile = serde_json::json!({
+            "lockfileVersion": 3,
+            "packages": {
+                "node_modules/mlly": {
+                    "version": "1.0.0",
+                    "peerDependencies": { "pathe": "^2.0.0" }
+                }
+                // No node_modules/pathe entry — unmet peer.
+            }
+        });
+        let entries = parse_package_lock(&lockfile, "/tmp/lock.json", false);
+        let mlly = entries.iter().find(|e| e.name == "mlly").expect("mlly");
+        assert!(
+            mlly.depends.is_empty()
+                || !mlly.depends.iter().any(|d| d.contains("pathe")),
+            "FR-002: unmet peer must NOT emit an edge; got: {:?}",
+            mlly.depends
+        );
+        assert!(
+            !mlly.extra_annotations.contains_key("mikebom:peer-edge-targets"),
+            "FR-002/FR-005: unmet peer must NOT contribute to peer-edge-targets; got: {:?}",
+            mlly.extra_annotations
+        );
+    }
+
+    #[test]
+    fn peer_already_in_regular_deps_takes_precedence_md147() {
+        // FR-003: when the same name appears in BOTH peerDependencies
+        // AND a regular section, the regular section wins (one edge
+        // emitted, not two) AND the peer-edge-targets annotation is
+        // NOT stamped for that name (the edge is regular, not peer-
+        // driven).
+        let lockfile = serde_json::json!({
+            "lockfileVersion": 3,
+            "packages": {
+                "node_modules/foo": { "version": "1.0.0" },
+                "node_modules/parent": {
+                    "version": "1.0.0",
+                    "dependencies": { "foo": "^1.0.0" },
+                    "peerDependencies": { "foo": "^1.0.0" }
+                }
+            }
+        });
+        let entries = parse_package_lock(&lockfile, "/tmp/lock.json", false);
+        let parent = entries.iter().find(|e| e.name == "parent").expect("parent");
+        let foo_edges: Vec<&String> =
+            parent.depends.iter().filter(|d| d.contains("foo")).collect();
+        assert_eq!(
+            foo_edges.len(),
+            1,
+            "FR-003: duplicate dep across regular+peer must emit ONCE; got: {:?}",
+            parent.depends
+        );
+        assert!(
+            !parent.extra_annotations.contains_key("mikebom:peer-edge-targets"),
+            "FR-003: name handled by regular section must NOT appear in peer-edge-targets; got: {:?}",
+            parent.extra_annotations
+        );
+    }
+
+    #[test]
+    fn peer_edge_targets_annotation_present_md147() {
+        // SC-003 / FR-004: ACTUALLY-resolved peer ⇒ component carries
+        // mikebom:peer-edge-targets as a native JSON array of PURL
+        // strings naming the peer-driven targets.
+        let lockfile = serde_json::json!({
+            "lockfileVersion": 3,
+            "packages": {
+                "node_modules/pathe": { "version": "1.1.2" },
+                "node_modules/mlly": {
+                    "version": "1.0.0",
+                    "peerDependencies": { "pathe": "^2.0.0" }
+                },
+                "node_modules/mlly/node_modules/pathe": { "version": "2.0.3" }
+            }
+        });
+        let entries = parse_package_lock(&lockfile, "/tmp/lock.json", false);
+        let mlly = entries.iter().find(|e| e.name == "mlly").expect("mlly");
+        let anno = mlly
+            .extra_annotations
+            .get("mikebom:peer-edge-targets")
+            .expect("milestone-147: mlly MUST carry mikebom:peer-edge-targets annotation");
+        assert_eq!(
+            anno,
+            &serde_json::json!(["pkg:npm/pathe@2.0.3"]),
+            "FR-004: peer-edge-targets value must be a native JSON array of PURL strings; got: {anno:?}"
+        );
+    }
+
+    #[test]
+    fn peer_annotation_omitted_when_set_empty_md147() {
+        // FR-005: component with zero peer-driven edges must NOT
+        // carry the mikebom:peer-edge-targets key (omitted, not
+        // empty-array).
+        let lockfile = serde_json::json!({
+            "lockfileVersion": 3,
+            "packages": {
+                "node_modules/foo": { "version": "1.0.0" },
+                "node_modules/parent": {
+                    "version": "1.0.0",
+                    "dependencies": { "foo": "^1.0.0" }
+                }
+            }
+        });
+        let entries = parse_package_lock(&lockfile, "/tmp/lock.json", false);
+        let parent = entries.iter().find(|e| e.name == "parent").expect("parent");
+        assert!(
+            !parent.extra_annotations.contains_key("mikebom:peer-edge-targets"),
+            "FR-005: components with zero peer-driven edges MUST NOT carry the annotation; got: {:?}",
+            parent.extra_annotations
+        );
+    }
+
+    #[test]
+    fn peer_edge_targets_array_is_sorted_alphabetically_md147() {
+        // research §A: peer-edge-targets MUST be alphabetically
+        // sorted. The BTreeSet collection yields lex-ascending
+        // strings → naturally sorted PURL array.
+        let lockfile = serde_json::json!({
+            "lockfileVersion": 3,
+            "packages": {
+                "node_modules/axios":   { "version": "1.0.0" },
+                "node_modules/lodash":  { "version": "4.0.0" },
+                "node_modules/react":   { "version": "17.0.0" },
+                "node_modules/parent": {
+                    "version": "1.0.0",
+                    "peerDependencies": {
+                        "react":  "^17.0.0",
+                        "lodash": "^4.0.0",
+                        "axios":  "^1.0.0"
+                    }
+                }
+            }
+        });
+        let entries = parse_package_lock(&lockfile, "/tmp/lock.json", false);
+        let parent = entries.iter().find(|e| e.name == "parent").expect("parent");
+        assert_eq!(
+            parent
+                .extra_annotations
+                .get("mikebom:peer-edge-targets")
+                .expect("annotation present"),
+            &serde_json::json!([
+                "pkg:npm/axios@1.0.0",
+                "pkg:npm/lodash@4.0.0",
+                "pkg:npm/react@17.0.0"
+            ]),
+            "research §A: peer-edge-targets MUST be alphabetically sorted (BTreeSet collection order)"
         );
     }
 

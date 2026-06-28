@@ -612,6 +612,10 @@ spdx3_anno!(c98_spdx3, "mikebom:license-concluded-source", component);
 // for the C99/C100 design notes.
 spdx3_anno!(c99_spdx3, "mikebom:duplicate-purl-divergent", component);
 spdx3_anno!(c100_spdx3, "mikebom:purl-collisions-detected", document);
+// Milestone 147: npm peerDependencies emit DEPENDS_ON edges; the
+// peer-edge-targets annotation lists their PURLs so consumers can
+// filter install-vs-functional. Per-component graph-element annotation.
+spdx3_anno!(c101_spdx3, "mikebom:peer-edge-targets", component);
 
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-component
 // graph-element annotation carrying the JSON-encoded array of

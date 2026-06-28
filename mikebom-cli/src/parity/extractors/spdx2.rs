@@ -544,6 +544,10 @@ spdx23_anno!(c98_spdx23, "mikebom:license-concluded-source", component);
 // for the C99/C100 design notes.
 spdx23_anno!(c99_spdx23, "mikebom:duplicate-purl-divergent", component);
 spdx23_anno!(c100_spdx23, "mikebom:purl-collisions-detected", document);
+// Milestone 147: npm peerDependencies emit DEPENDS_ON edges; the
+// peer-edge-targets annotation lists their PURLs so consumers can
+// filter install-vs-functional. Per-Package envelope annotation.
+spdx23_anno!(c101_spdx23, "mikebom:peer-edge-targets", component);
 
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-Package
 // envelope carrying the JSON-encoded array of conflict records.

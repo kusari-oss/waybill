@@ -783,6 +783,10 @@ cdx_anno!(c98_cdx, "mikebom:license-concluded-source", component);
 //          aggregating every divergent collision in the scan.
 cdx_anno!(c99_cdx, "mikebom:duplicate-purl-divergent", component);
 cdx_anno!(c100_cdx, "mikebom:purl-collisions-detected", document);
+// Milestone 147: npm peerDependencies emit DEPENDS_ON edges; the
+// peer-edge-targets annotation lists their PURLs so consumers can
+// filter install-vs-functional. Per-component property.
+cdx_anno!(c101_cdx, "mikebom:peer-edge-targets", component);
 
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
