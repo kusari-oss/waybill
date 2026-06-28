@@ -15,6 +15,16 @@ External sbom-conformance audit harness run on 2026-06-26 (post-milestone-144) f
 
 All three are PURE EMISSION-LAYER bugs — none affect dependency discovery (Constitution Principle II), component-presence, PURL conformance (Principle V's purl-spec clause), or any other binding correctness invariant. They are SBOM-quality regressions that erode downstream-tooling interoperability (SPDX 3 consumers see a different SBOM shape than CDX consumers expect; PURL-keyed dedup of file-tier components fails because the value isn't a queryable array).
 
+## US2 reverted post-investigation (2026-06-28)
+
+**Resolution**: US2 was implemented + then REVERTED during the `/speckit-implement` phase after the `spdx3_annotation_fidelity::fidelity_maven` test caught a Constitution Principle V violation. The fidelity test (per issue #228) encodes the existing design contract: SPDX 3 already carries lifecycle scope natively via `LifecycleScopedRelationship.scope` (set in `v3_relationships.rs` for `Dev`/`Build`/`TestDependsOn` edges); adding `mikebom:lifecycle-scope` annotations on Package elements would be REDUNDANT with the native field, which Principle V forbids.
+
+Local manual verification on the `maven` fixture confirmed SPDX 3 emits `LifecycleScopedRelationship` with `scope: "test"` for the `junit` dep — the native mechanism is working as designed.
+
+**Conclusion**: the 261 audit findings under `mikebom:lifecycle-scope Y | Y | -` are **false positives** from the sbom-conformance harness misreading the SPDX 3 scope mechanism. The harness should be updated to honor `LifecycleScopedRelationship.scope` as the SPDX 3 equivalent of CDX's `mikebom:lifecycle-scope` property and SPDX 2.3's `mikebom:lifecycle-scope` annotation. No mikebom-side change is appropriate.
+
+FR-005 / FR-006 / FR-007 / SC-004 / SC-005 / SC-006 in this spec are INVALIDATED by this resolution and remain only as historical record. US2 should be considered **closed without code change**; US1 + US3 continue as planned. Expected post-145 finding reduction drops from ~3,424 to ~3,163 (3,112 file-paths + 51 source-files).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - `mikebom:file-paths` is emitted as a native JSON array (Priority: P1)
