@@ -85,6 +85,12 @@ pub struct CycloneDxBuilder {
     /// from the emitted `components[]` array (clean replacement per
     /// the 2026-05-06 Q2 clarification).
     root_override: crate::generate::RootComponentOverride,
+    /// Milestone 149 (issue #151): when `true` AND `root_override.is_active()`,
+    /// preserve the manifest-derived main-module as a `library`-typed
+    /// entry in `components[]` rather than dropping it per the milestone-
+    /// 077 clean-replacement default. Default `false` preserves milestone-
+    /// 077 byte-identity (SC-002 regression guard).
+    preserve_manifest_main_module: bool,
     /// Milestone 080 — user-provided SBOM metadata aggregated from the
     /// `--creator` / `--annotator` / `--annotation-comment` /
     /// `--metadata-comment` / `--scan-target-name` / `--metadata-file`
@@ -128,6 +134,7 @@ impl CycloneDxBuilder {
             identifiers: Vec::new(),
             component_identifiers: Vec::new(),
             root_override: crate::generate::RootComponentOverride::default(),
+            preserve_manifest_main_module: false,
             user_metadata: mikebom::binding::user_metadata::UserMetadata::default(),
             sbom_type_override: None,
             file_inventory_stats: None,
@@ -202,6 +209,23 @@ impl CycloneDxBuilder {
         ov: crate::generate::RootComponentOverride,
     ) -> Self {
         self.root_override = ov;
+        self
+    }
+
+    /// Milestone 149 (issue #151) — record the operator-supplied
+    /// `--preserve-manifest-main-module` flag. When `true` AND
+    /// `root_override.is_active()`, the manifest-derived main-module
+    /// is preserved as a `library`-typed entry in `components[]` with
+    /// a `mikebom:demoted-from-main-module = "true"` annotation rather
+    /// than being dropped per the milestone-077 clean-replacement
+    /// default. No-op without an active root override (silent + INFO
+    /// log per spec FR-006) and on multi-main-module scans (silent +
+    /// INFO log per FR-013).
+    pub fn with_preserve_manifest_main_module(
+        mut self,
+        preserve: bool,
+    ) -> Self {
+        self.preserve_manifest_main_module = preserve;
         self
     }
 
@@ -321,30 +345,28 @@ impl CycloneDxBuilder {
         // dependencies[].ref entry pointing at the now-dropped main-module
         // PURL — same shape bug as the pre-fix main-module path, just with
         // the orphan and the legitimate root swapped).
-        let mut dropped_main_module_purls: Vec<String> = Vec::new();
+        // Milestone 149 (issue #151) — drop logic consolidated into
+        // `apply_main_module_drop_or_demote` in `root_selector.rs` so
+        // the same filter runs identically across all three emitters
+        // (CDX here, SPDX 2.3 + SPDX 3 parallel sites). When the new
+        // `preserve_manifest_main_module` flag is set, the helper
+        // takes the demote-as-library branch instead of dropping; the
+        // demoted entry's PURL still lands in `dropped_main_module_purls`
+        // (renamed `redirected_main_module_purls` in the helper return
+        // type) so the downstream relationship re-anchoring at lines
+        // 442-447 continues to fire per US1 clarification Option A
+        // (recorded 2026-06-29).
+        let drop_result = crate::generate::root_selector::apply_main_module_drop_or_demote(
+            components,
+            &self.root_override,
+            self.preserve_manifest_main_module,
+        );
         let filtered_components_owned: Option<Vec<ResolvedComponent>> = if override_active {
-            let mut keep: Vec<ResolvedComponent> = Vec::with_capacity(components.len());
-            for c in components.iter() {
-                let is_main_module = c
-                    .extra_annotations
-                    .get("mikebom:component-role")
-                    .and_then(|v| v.as_str())
-                    == Some("main-module");
-                if is_main_module {
-                    tracing::info!(
-                        purl = %c.purl,
-                        "override is set; dropping manifest-derived main-module component '{}' from emitted SBOM (per milestone 077 clean-replacement; see GitHub issue #151)",
-                        c.purl
-                    );
-                    dropped_main_module_purls.push(c.purl.as_str().to_string());
-                } else {
-                    keep.push(c.clone());
-                }
-            }
-            Some(keep)
+            Some(drop_result.effective_components)
         } else {
             None
         };
+        let dropped_main_module_purls: Vec<String> = drop_result.redirected_main_module_purls;
         let effective_components: &[ResolvedComponent] =
             filtered_components_owned.as_deref().unwrap_or(components);
 

@@ -787,6 +787,10 @@ cdx_anno!(c100_cdx, "mikebom:purl-collisions-detected", document);
 // peer-edge-targets annotation lists their PURLs so consumers can
 // filter install-vs-functional. Per-component property.
 cdx_anno!(c101_cdx, "mikebom:peer-edge-targets", component);
+// Milestone 149 (closes #151): preserves manifest-derived main-module
+// as a library entry when --root-name override fires + the new
+// --preserve-manifest-main-module flag is set. Per-component property.
+cdx_anno!(c102_cdx, "mikebom:demoted-from-main-module", component);
 
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)

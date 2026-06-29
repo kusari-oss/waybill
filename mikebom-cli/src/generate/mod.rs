@@ -149,6 +149,16 @@ pub struct ScanArtifacts<'a> {
     /// alpha.17 per FR-009). Default `RootComponentOverride::default()`
     /// keeps existing struct-literal call sites compiling.
     pub root_override: RootComponentOverride,
+    /// Milestone 149 (issue #151): when `true` AND `root_override.is_active()`,
+    /// preserve the manifest-derived main-module as a `library`-typed
+    /// entry in `components[]` rather than dropping it per the milestone-077
+    /// clean-replacement default. Demoted entries carry a
+    /// `mikebom:demoted-from-main-module = "true"` annotation per
+    /// Constitution Principle V parity-bridging audit. Default `false`
+    /// preserves milestone-077 byte-identity (SC-002 regression guard).
+    /// Read by the three per-format emitters and passed to
+    /// [`crate::generate::root_selector::apply_main_module_drop_or_demote`].
+    pub preserve_manifest_main_module: bool,
     /// Milestone 080: user-provided SBOM metadata aggregated from the
     /// `--creator` / `--annotator` / `--annotation-comment` /
     /// `--metadata-comment` / `--scan-target-name` / `--metadata-file`

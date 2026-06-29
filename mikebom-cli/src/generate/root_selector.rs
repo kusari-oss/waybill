@@ -453,6 +453,175 @@ pub fn is_field_owned_annotation_key(key: &str) -> bool {
     matches!(key, "mikebom:source-files")
 }
 
+// ============================================================
+// Milestone 149: apply_main_module_drop_or_demote
+// ============================================================
+
+/// Annotation key signalling that a `library`-typed component in
+/// `components[]` was preserved from the manifest-derived main-module
+/// after a milestone-077 root-override (`--root-name` / `--root-version`
+/// / `--root-purl`) AND the milestone-149 `--preserve-manifest-main-module`
+/// opt-in flag was set. Constitution Principle V parity-bridging:
+/// CDX 1.6 `component.type = "library"` describes the role but not the
+/// demote provenance; SPDX 2.3 + SPDX 3 likewise lack a native carrier.
+/// See `docs/reference/sbom-format-mapping.md` C102 for the audit.
+pub(crate) const DEMOTED_FROM_MAIN_MODULE_KEY: &str = "mikebom:demoted-from-main-module";
+
+/// Return shape for [`apply_main_module_drop_or_demote`].
+///
+/// `effective_components` is the filtered/transformed Vec the emitter
+/// iterates to build wire-side `components[]` / `packages[]` /
+/// `software_Package` elements.
+///
+/// `redirected_main_module_purls` collects the PURLs of every main-module
+/// entry whose outbound dependency edges need re-anchoring onto the
+/// operator-override root (milestone-084 logic at
+/// `cyclonedx/builder.rs:442-447` and parallel SPDX sites). Per
+/// milestone-149 US1 clarification (recorded 2026-06-29), the demoted
+/// entry has NO outbound `dependsOn` edges in the wire output even when
+/// it's KEPT in `components[]` — so this Vec is populated regardless of
+/// whether the entry was dropped (Path 2) or demoted (Path 3).
+pub(crate) struct DropOrDemoteResult {
+    pub effective_components: Vec<ResolvedComponent>,
+    pub redirected_main_module_purls: Vec<String>,
+}
+
+/// Milestone 149: consolidate the duplicated main-module-drop logic
+/// from three emitter sites (`cyclonedx/builder.rs:325-347`,
+/// `spdx/document.rs:262-282`, `spdx/v3_document.rs:57-75`) into a
+/// single shared helper, AND add the milestone-149 preserve-as-library-
+/// demote branch gated on `preserve_main_module`.
+///
+/// Three behavior paths:
+///
+/// 1. **Override INACTIVE** — passthrough; returns a clone of `components`
+///    with empty `redirected_main_module_purls`. Byte-identical to
+///    pre-149 for scans without override flags (SC-003 regression guard).
+///
+/// 2. **Override ACTIVE + preserve OFF** — milestone-077 clean-replacement.
+///    Filters out main-module entries from the returned Vec; populates
+///    `redirected_main_module_purls` with their PURLs for downstream
+///    relationship re-anchoring (milestone-084 logic). Byte-identical to
+///    pre-149 default behavior (SC-002 regression guard).
+///
+/// 3. **Override ACTIVE + preserve ON** — milestone 149 NEW. For each
+///    main-module entry: KEEP in the returned Vec after applying the
+///    demote transformation (remove the `mikebom:component-role:
+///    main-module` annotation so downstream type-derivation produces
+///    `type: "library"`; add `mikebom:demoted-from-main-module: "true"`
+///    annotation per Constitution Principle V parity-bridging); ADD
+///    PURL to `redirected_main_module_purls` so relationship re-anchoring
+///    still fires per US1 clarification Option A.
+///
+/// Multi-main-module scans (per milestone 127 — Cargo workspace,
+/// polyglot) where N>1 components carry the main-module role tag fall
+/// through to the drop path even when `preserve_main_module` is true,
+/// because there's no SINGLE manifest-derived main-module to demote.
+/// An INFO-level diagnostic surfaces the no-op per spec FR-013 +
+/// Edge Case 4.
+///
+/// Edge Case 1: `preserve_main_module` set WITHOUT an active override
+/// is a silent no-op with an INFO-level diagnostic. Path 1 fires.
+///
+/// Pure function over its inputs. No side effects beyond the
+/// `tracing::info!` diagnostics.
+pub(crate) fn apply_main_module_drop_or_demote(
+    components: &[ResolvedComponent],
+    root_override: &RootComponentOverride,
+    preserve_main_module: bool,
+) -> DropOrDemoteResult {
+    let override_active = root_override.is_active();
+
+    // Edge Case 1: preserve flag set without an active override is a
+    // silent no-op with an INFO diagnostic so the operator notices the
+    // flag had no effect.
+    if !override_active && preserve_main_module {
+        tracing::info!(
+            "--preserve-manifest-main-module has no effect without --root-name override",
+        );
+    }
+
+    // Path 1: override INACTIVE → passthrough.
+    if !override_active {
+        return DropOrDemoteResult {
+            effective_components: components.to_vec(),
+            redirected_main_module_purls: Vec::new(),
+        };
+    }
+
+    // Multi-main-module guard (Edge Case 4 + FR-013): when N>1 main-modules
+    // are tagged, NONE were promoted to metadata.component pre-149
+    // (milestone 127's placeholder-path behavior); the preserve flag is
+    // a no-op because there's no single main-module to demote. Emit INFO
+    // log and fall through to the drop-all path so the override clean-
+    // replacement semantic stays unchanged.
+    let main_module_count = components
+        .iter()
+        .filter(|c| is_main_module(c))
+        .count();
+    let effective_preserve = preserve_main_module && main_module_count == 1;
+    if preserve_main_module && main_module_count > 1 {
+        tracing::info!(
+            count = main_module_count,
+            "--preserve-manifest-main-module skipped: multi-main-module scan ({main_module_count} modules detected)",
+        );
+    }
+
+    // Single-pass walk: collect redirected PURLs + build effective Vec.
+    let mut effective = Vec::with_capacity(components.len());
+    let mut redirected = Vec::new();
+    for c in components {
+        if is_main_module(c) {
+            // Per US1 clarification Option A (recorded 2026-06-29):
+            // the demoted entry has NO outbound dependsOn edges in the
+            // wire output even when kept. Push the PURL to `redirected`
+            // regardless of whether we drop (Path 2) or demote (Path 3)
+            // so milestone-084 re-anchoring fires identically in both
+            // cases.
+            redirected.push(c.purl.as_str().to_string());
+            if effective_preserve {
+                // Path 3: demote in place — keep entry with transformed
+                // annotations. Removing the role tag flips downstream
+                // type-derivation to `library` automatically (per
+                // research §B + the existing `binary_role_to_cdx_type`
+                // default path).
+                let mut demoted = c.clone();
+                demoted.extra_annotations.remove(COMPONENT_ROLE_KEY);
+                demoted.extra_annotations.insert(
+                    DEMOTED_FROM_MAIN_MODULE_KEY.to_string(),
+                    serde_json::Value::String("true".to_string()),
+                );
+                effective.push(demoted);
+            } else {
+                // Path 2: drop. The existing tracing::info from the
+                // pre-149 emitter-side filter migrated here so the
+                // operator-facing diagnostic stays uniform across all
+                // three formats.
+                tracing::info!(
+                    purl = %c.purl,
+                    "override is set; dropping manifest-derived main-module component '{}' from emitted SBOM (per milestone 077 clean-replacement; see GitHub issue #151 + milestone 149 for the preserve-as-library opt-in)",
+                    c.purl,
+                );
+            }
+        } else {
+            effective.push(c.clone());
+        }
+    }
+
+    DropOrDemoteResult {
+        effective_components: effective,
+        redirected_main_module_purls: redirected,
+    }
+}
+
+#[inline]
+fn is_main_module(c: &ResolvedComponent) -> bool {
+    c.extra_annotations
+        .get(COMPONENT_ROLE_KEY)
+        .and_then(|v| v.as_str())
+        == Some(MAIN_MODULE_ROLE)
+}
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
@@ -773,6 +942,316 @@ mod tests {
         assert_eq!(
             RootSelectionHeuristic::SyntheticPlaceholder.name(),
             "synthetic-placeholder"
+        );
+    }
+
+    // ============================================================
+    // Milestone 149: apply_main_module_drop_or_demote tests
+    // ============================================================
+
+    fn active_override() -> RootComponentOverride {
+        RootComponentOverride {
+            name: Some("widget-svc".to_string()),
+            version: Some("1.2.3".to_string()),
+            ..Default::default()
+        }
+    }
+
+    /// Helper: build a non-main-module library component (no role tag).
+    fn make_library(purl_str: &str) -> ResolvedComponent {
+        let purl = Purl::new(purl_str).expect("valid purl");
+        ResolvedComponent {
+            build_inclusion: None,
+            name: purl.name().to_string(),
+            version: purl.version().unwrap_or("0.0.0").to_string(),
+            purl,
+            evidence: ResolutionEvidence {
+                technique: ResolutionTechnique::PackageDatabase,
+                confidence: 0.85,
+                source_connection_ids: vec![],
+                source_file_paths: vec![],
+                deps_dev_match: None,
+            },
+            licenses: vec![],
+            concluded_licenses: Vec::new(),
+            hashes: vec![],
+            supplier: None,
+            cpes: vec![],
+            advisories: vec![],
+            occurrences: vec![],
+            lifecycle_scope: None,
+            requirement_range: None,
+            source_type: None,
+            sbom_tier: None,
+            buildinfo_status: None,
+            evidence_kind: None,
+            binary_class: None,
+            binary_stripped: None,
+            linkage_kind: None,
+            detected_go: None,
+            confidence: None,
+            binary_packed: None,
+            npm_role: None,
+            raw_version: None,
+            parent_purl: None,
+            co_owned_by: None,
+            shade_relocation: None,
+            external_references: Vec::new(),
+            extra_annotations: BTreeMap::new(),
+            binary_role: None,
+        }
+    }
+
+    /// T009 — FR-007 + SC-003 regression guard: Path 1 (passthrough).
+    /// Override INACTIVE → helper returns input verbatim, no redirected
+    /// PURLs, no demote transformation. Main-module entries KEEP their
+    /// `mikebom:component-role` annotation.
+    #[test]
+    fn apply_drop_or_demote_no_override_is_passthrough_md149() {
+        let components = vec![
+            make_main_module("pkg:cargo/foo-internal@0.5.1", "/p/Cargo.toml", false),
+            make_library("pkg:cargo/dep-a@1.0.0"),
+        ];
+        let result = apply_main_module_drop_or_demote(
+            &components,
+            &no_override(),
+            /* preserve_main_module = */ true, // ← deliberately set; should be a no-op without override
+        );
+        assert_eq!(result.effective_components.len(), 2,
+            "passthrough MUST preserve every input component");
+        assert!(result.redirected_main_module_purls.is_empty(),
+            "passthrough MUST NOT populate redirected PURLs");
+        let preserved_main = result.effective_components.iter()
+            .find(|c| c.purl.as_str() == "pkg:cargo/foo-internal@0.5.1")
+            .expect("main-module entry preserved");
+        assert_eq!(
+            preserved_main.extra_annotations.get(COMPONENT_ROLE_KEY).and_then(|v| v.as_str()),
+            Some(MAIN_MODULE_ROLE),
+            "passthrough MUST preserve the main-module role tag (no demote when override inactive)",
+        );
+        assert!(
+            !preserved_main.extra_annotations.contains_key(DEMOTED_FROM_MAIN_MODULE_KEY),
+            "passthrough MUST NOT add the demote annotation",
+        );
+    }
+
+    /// T010 — FR-007 + SC-002 regression guard: Path 2 (drop).
+    /// Override ACTIVE + preserve OFF → main-modules dropped from
+    /// effective_components AND their PURLs land in redirected_main_module_purls
+    /// for milestone-084 re-anchoring.
+    #[test]
+    fn apply_drop_or_demote_override_no_preserve_drops_main_module_md149() {
+        let components = vec![
+            make_main_module("pkg:cargo/foo-internal@0.5.1", "/p/Cargo.toml", false),
+            make_library("pkg:cargo/dep-a@1.0.0"),
+        ];
+        let result = apply_main_module_drop_or_demote(
+            &components,
+            &active_override(),
+            /* preserve_main_module = */ false,
+        );
+        // Main-module dropped; dep library survives.
+        assert_eq!(result.effective_components.len(), 1);
+        assert_eq!(result.effective_components[0].purl.as_str(), "pkg:cargo/dep-a@1.0.0");
+        // Main-module's PURL in redirected for re-anchoring.
+        assert_eq!(
+            result.redirected_main_module_purls,
+            vec!["pkg:cargo/foo-internal@0.5.1".to_string()],
+            "FR-007 + milestone-084: dropped main-module's PURL MUST be redirected for re-anchoring",
+        );
+    }
+
+    /// T011 — FR-001 + FR-004 + US1 clarification Option A: Path 3 (demote).
+    /// Override ACTIVE + preserve ON → main-module KEPT in
+    /// effective_components with role-tag removed + demote annotation added;
+    /// PURL STILL in redirected_main_module_purls so re-anchoring fires
+    /// per Option A (demoted entry has no outbound dependsOn in wire output).
+    #[test]
+    fn apply_drop_or_demote_override_with_preserve_demotes_main_module_md149() {
+        let components = vec![
+            make_main_module("pkg:cargo/foo-internal@0.5.1", "/p/Cargo.toml", false),
+            make_library("pkg:cargo/dep-a@1.0.0"),
+        ];
+        let result = apply_main_module_drop_or_demote(
+            &components,
+            &active_override(),
+            /* preserve_main_module = */ true,
+        );
+        // Main-module KEPT + dep library: 2 entries.
+        assert_eq!(result.effective_components.len(), 2);
+        let demoted = result.effective_components.iter()
+            .find(|c| c.purl.as_str() == "pkg:cargo/foo-internal@0.5.1")
+            .expect("FR-001: main-module entry kept in effective_components");
+        // Role tag REMOVED → downstream type-derivation flips to library.
+        assert!(
+            !demoted.extra_annotations.contains_key(COMPONENT_ROLE_KEY),
+            "FR-003: main-module role tag MUST be removed so wire type derives to library",
+        );
+        // Demote annotation ADDED.
+        assert_eq!(
+            demoted.extra_annotations.get(DEMOTED_FROM_MAIN_MODULE_KEY),
+            Some(&serde_json::Value::String("true".to_string())),
+            "FR-004: demote annotation MUST be added",
+        );
+        // US1 clarification Option A: redirected PURL populated even when entry kept.
+        assert_eq!(
+            result.redirected_main_module_purls,
+            vec!["pkg:cargo/foo-internal@0.5.1".to_string()],
+            "US1 Option A: demoted entry's PURL MUST be redirected so relationship re-anchoring fires (demoted entry has no outbound edges in wire output)",
+        );
+    }
+
+    /// T012 — FR-005: demote preserves every field other than annotations.
+    #[test]
+    fn apply_drop_or_demote_demote_preserves_other_fields_md149() {
+        let mut main_module = make_main_module(
+            "pkg:cargo/foo-internal@0.5.1",
+            "/p/Cargo.toml",
+            false,
+        );
+        // Populate rich non-default values across the field surface.
+        main_module.lifecycle_scope =
+            Some(mikebom_common::resolution::LifecycleScope::Runtime);
+        main_module.sbom_tier = Some("source".to_string());
+        main_module.evidence.confidence = 0.9;
+        main_module.evidence.source_connection_ids = vec!["conn-42".to_string()];
+        // Keep a snapshot of the non-annotation fields for assertion.
+        let snapshot_name = main_module.name.clone();
+        let snapshot_version = main_module.version.clone();
+        let snapshot_parent_purl = main_module.parent_purl.clone();
+        let snapshot_lifecycle = main_module.lifecycle_scope;
+        let snapshot_sbom_tier = main_module.sbom_tier.clone();
+        let snapshot_hashes = main_module.hashes.clone();
+        let snapshot_confidence = main_module.evidence.confidence;
+        let snapshot_technique = main_module.evidence.technique.clone();
+        let snapshot_conn_ids = main_module.evidence.source_connection_ids.clone();
+        let snapshot_purl_str = main_module.purl.as_str().to_string();
+
+        let components = vec![main_module];
+        let result = apply_main_module_drop_or_demote(
+            &components,
+            &active_override(),
+            /* preserve_main_module = */ true,
+        );
+        let demoted = result.effective_components.iter()
+            .find(|c| c.purl.as_str() == snapshot_purl_str)
+            .expect("demoted entry kept");
+        // FR-005: every named field unchanged.
+        assert_eq!(demoted.name, snapshot_name);
+        assert_eq!(demoted.version, snapshot_version);
+        assert_eq!(demoted.parent_purl, snapshot_parent_purl);
+        assert_eq!(demoted.lifecycle_scope, snapshot_lifecycle);
+        assert_eq!(demoted.sbom_tier, snapshot_sbom_tier);
+        assert_eq!(demoted.hashes, snapshot_hashes);
+        assert_eq!(demoted.evidence.confidence, snapshot_confidence);
+        assert_eq!(demoted.evidence.technique, snapshot_technique);
+        assert_eq!(demoted.evidence.source_connection_ids, snapshot_conn_ids);
+    }
+
+    /// T013 — Edge Case 4 + FR-013: multi-main-module + preserve = no-op.
+    /// Falls through to the drop path so override clean-replacement stays
+    /// unchanged for workspace/polyglot scans. Both main-modules dropped,
+    /// both PURLs in redirected.
+    #[test]
+    fn apply_drop_or_demote_multi_main_module_with_preserve_is_noop_md149() {
+        let components = vec![
+            make_main_module("pkg:cargo/crate-a@0.1.0", "/p/a/Cargo.toml", false),
+            make_main_module("pkg:cargo/crate-b@0.2.0", "/p/b/Cargo.toml", false),
+            make_library("pkg:cargo/dep@1.0.0"),
+        ];
+        let result = apply_main_module_drop_or_demote(
+            &components,
+            &active_override(),
+            /* preserve_main_module = */ true,
+        );
+        // Only the library survives; both main-modules dropped.
+        assert_eq!(result.effective_components.len(), 1);
+        assert_eq!(result.effective_components[0].purl.as_str(), "pkg:cargo/dep@1.0.0");
+        // Both main-module PURLs in redirected.
+        assert_eq!(result.redirected_main_module_purls.len(), 2);
+        // No demote annotation anywhere (the multi-MM case falls through).
+        for c in &result.effective_components {
+            assert!(
+                !c.extra_annotations.contains_key(DEMOTED_FROM_MAIN_MODULE_KEY),
+                "FR-013: multi-main-module + preserve MUST NOT emit demote annotation",
+            );
+        }
+    }
+
+    /// T014 — US1 Option A regression guard: demoted entry's PURL is in
+    /// redirected_main_module_purls (matters because milestone-084 logic
+    /// re-anchors deps off it onto the operator-override root; demoted
+    /// entry has zero outbound edges in wire output).
+    #[test]
+    fn apply_drop_or_demote_demoted_entry_purl_is_redirected_for_re_anchoring_md149() {
+        let components = vec![make_main_module(
+            "pkg:npm/foo-internal@0.5.1",
+            "/p/package.json",
+            false,
+        )];
+        let result = apply_main_module_drop_or_demote(
+            &components,
+            &active_override(),
+            /* preserve_main_module = */ true,
+        );
+        assert_eq!(result.effective_components.len(), 1, "demoted entry kept");
+        assert!(
+            result.redirected_main_module_purls
+                .contains(&"pkg:npm/foo-internal@0.5.1".to_string()),
+            "US1 Option A: demoted PURL MUST be in redirected (drives milestone-084 \
+             re-anchoring; demoted entry has empty dependsOn in wire output)",
+        );
+    }
+
+    /// T014b — FR-009 + Edge Case 5 (M1 analyze-finding fix): when a
+    /// transitive library dep happens to share the manifest-main-module
+    /// PURL (rare; theoretical), the deduplicator's existing
+    /// (ecosystem, name, version, parent_purl) group-key merges them
+    /// pre-helper. The helper sees the single merged entry and demotes
+    /// it correctly. This test asserts the helper's behavior is invariant
+    /// over whether the input was a merged-from-collision case or a
+    /// natural single-entry case — both produce the same output shape.
+    #[test]
+    fn apply_drop_or_demote_handles_pre_merged_collision_entry_md149() {
+        // Simulate a merged-from-collision entry: it has the main-module
+        // role tag (because the main-module reader's emission won the
+        // confidence tiebreak in dedup) AND extra source_file_paths
+        // (because the colliding library dep contributed its paths
+        // during the within-group merge at deduplicator.rs:74-78).
+        let mut merged = make_main_module(
+            "pkg:cargo/foo-internal@0.5.1",
+            "/p/Cargo.toml",
+            false,
+        );
+        // Two source paths instead of zero — the collision contribution.
+        merged.evidence.source_file_paths = vec![
+            "Cargo.toml".to_string(),
+            "vendor/foo-internal/Cargo.toml".to_string(),
+        ];
+
+        let components = vec![merged];
+        let result = apply_main_module_drop_or_demote(
+            &components,
+            &active_override(),
+            /* preserve_main_module = */ true,
+        );
+        // The merged entry demotes cleanly: role tag removed, annotation added,
+        // source_file_paths PRESERVED verbatim (FR-005).
+        assert_eq!(result.effective_components.len(), 1);
+        let demoted = &result.effective_components[0];
+        assert!(!demoted.extra_annotations.contains_key(COMPONENT_ROLE_KEY));
+        assert_eq!(
+            demoted.extra_annotations.get(DEMOTED_FROM_MAIN_MODULE_KEY),
+            Some(&serde_json::Value::String("true".to_string())),
+        );
+        // FR-005 + FR-009: source_file_paths from the pre-helper merge
+        // are preserved on the demoted entry.
+        assert_eq!(
+            demoted.evidence.source_file_paths,
+            vec![
+                "Cargo.toml".to_string(),
+                "vendor/foo-internal/Cargo.toml".to_string(),
+            ],
         );
     }
 }

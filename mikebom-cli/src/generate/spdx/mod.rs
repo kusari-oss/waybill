@@ -399,6 +399,7 @@ mod tests {
             file_inventory_stats: None,
             file_inventory_mode: None,
             root_override: crate::generate::RootComponentOverride::default(),
+            preserve_manifest_main_module: false,
             user_metadata: mikebom::binding::user_metadata::UserMetadata::default(),
             sbom_type_override: None,
             spdx2_relationship_compat: crate::generate::Spdx2RelationshipCompat::Full,

@@ -54,27 +54,22 @@ pub fn build_document(
     // dependency edges sourced at those PURLs silently disappear in
     // `build_dependency_relationships`, leaving the new root with
     // zero outgoing edges (parity break vs CycloneDX).
-    let mut dropped_main_module_purls: Vec<String> = Vec::new();
+    // Milestone 149 (issue #151) — drop logic consolidated into
+    // `apply_main_module_drop_or_demote` in `root_selector.rs`; runs
+    // identically across all three emitters (CDX, SPDX 2.3, SPDX 3
+    // here). When the new `preserve_manifest_main_module` flag is set,
+    // the helper takes the demote-as-library branch; the demoted entry's
+    // PURL still lands in `dropped_main_module_purls` so the
+    // `package_iri_by_purl` aliasing below fires per US1 clarification
+    // Option A (recorded 2026-06-29).
+    let drop_result = crate::generate::root_selector::apply_main_module_drop_or_demote(
+        scan.components,
+        &scan.root_override,
+        scan.preserve_manifest_main_module,
+    );
+    let dropped_main_module_purls: Vec<String> = drop_result.redirected_main_module_purls;
     let filtered_components_owned: Option<Vec<ResolvedComponent>> =
         if override_active {
-            let mut keep: Vec<ResolvedComponent> = Vec::with_capacity(scan.components.len());
-            for c in scan.components.iter() {
-                let is_main_module = c
-                    .extra_annotations
-                    .get("mikebom:component-role")
-                    .and_then(|v| v.as_str())
-                    == Some("main-module");
-                if is_main_module {
-                    tracing::info!(
-                        purl = %c.purl,
-                        "override is set; dropping manifest-derived main-module component '{}' from emitted SBOM (per milestone 077 clean-replacement; see GitHub issue #151)",
-                        c.purl
-                    );
-                    dropped_main_module_purls.push(c.purl.as_str().to_string());
-                } else {
-                    keep.push(c.clone());
-                }
-            }
             tracing::info!(
                 name = scan.root_override.name.as_deref().unwrap_or(scan.target_name),
                 version = scan.root_override.version.as_deref().unwrap_or("0.0.0"),
@@ -82,7 +77,7 @@ pub fn build_document(
                 scan.root_override.name.as_deref().unwrap_or(scan.target_name),
                 scan.root_override.version.as_deref().unwrap_or("0.0.0"),
             );
-            Some(keep)
+            Some(drop_result.effective_components)
         } else {
             None
         };
@@ -109,6 +104,7 @@ pub fn build_document(
             file_inventory_stats: None,
             file_inventory_mode: None,
             root_override: scan.root_override.clone(),
+            preserve_manifest_main_module: scan.preserve_manifest_main_module,
             user_metadata: scan.user_metadata.clone(),
             sbom_type_override: scan.sbom_type_override,
             spdx2_relationship_compat: scan.spdx2_relationship_compat,

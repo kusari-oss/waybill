@@ -84,6 +84,10 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // and drops manifest-derived main-module components from
             // the emitted components[] array (clean replacement).
             .with_root_override(scan.root_override.clone())
+            // Milestone 149 (issue #151) — propagate the new
+            // `--preserve-manifest-main-module` flag to the helper that
+            // consolidates the drop logic across all three emitters.
+            .with_preserve_manifest_main_module(scan.preserve_manifest_main_module)
             // Milestone 080 — propagate user-supplied SBOM metadata
             // (`--creator`, `--annotator`/`--annotation-comment`,
             // `--metadata-comment`, `--scan-target-name`,

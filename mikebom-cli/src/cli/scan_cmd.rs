@@ -649,6 +649,21 @@ pub struct ScanArgs {
     )]
     pub root_purl: Option<String>,
 
+    /// Milestone 149 (issue #151): when set together with `--root-name`
+    /// / `--root-version` / `--root-purl`, preserve the manifest-derived
+    /// main-module identity as a `library`-typed entry in
+    /// `components[]` rather than dropping it per the milestone-077
+    /// clean-replacement default. The demoted entry carries a
+    /// `mikebom:demoted-from-main-module = "true"` annotation per
+    /// Constitution Principle V parity-bridging (none of CDX 1.6
+    /// `component.type`, SPDX 2.3 `primaryPackagePurpose`, or SPDX 3
+    /// `software_softwarePurpose` expresses demote-provenance). No-op
+    /// without an active root-override flag (silent + INFO log per
+    /// spec FR-006 / Edge Case 1) and no-op on multi-main-module scans
+    /// (silent + INFO log per FR-013 / Edge Case 4).
+    #[arg(long, default_value = "false")]
+    pub preserve_manifest_main_module: bool,
+
     // ────────────────────────────────────────────────────────────
     // Milestone 080 — user-provided SBOM metadata. See
     // `specs/080-user-sbom-metadata/` for the full design.
@@ -2600,6 +2615,11 @@ pub async fn execute(
                 full_purl_version: full_version,
             }
         },
+        // Milestone 149 (issue #151): opt-in flag to preserve the
+        // manifest-derived main-module as a library entry when the
+        // root-override flags above fire. Default OFF preserves
+        // milestone-077 clean-replacement byte-identity (SC-002).
+        preserve_manifest_main_module: args.preserve_manifest_main_module,
         // Milestone 080: user-provided SBOM metadata aggregated from
         // the new flags (--creator / --annotator / --annotation-comment
         // / --metadata-comment / --scan-target-name / --metadata-file).
@@ -3359,6 +3379,7 @@ mod tests {
             root_purl_type: None,
             no_root_purl: false,
             root_purl: None,
+            preserve_manifest_main_module: false,
             // Milestone 080 — defaults for new fields keep the test
             // helper's "minimal flags" contract intact.
             creator: vec![],

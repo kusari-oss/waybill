@@ -259,28 +259,22 @@ pub fn build_document(
     // (their PURL is no longer in the components view, so the
     // resolver silently drops them) and the new root ends up
     // orphaned from the dependency graph.
-    let mut dropped_main_module_purls: Vec<String> = Vec::new();
+    // Milestone 149 (issue #151) — drop logic consolidated into
+    // `apply_main_module_drop_or_demote` in `root_selector.rs`; runs
+    // identically across all three emitters (CDX, SPDX 2.3 here,
+    // SPDX 3). When the new `preserve_manifest_main_module` flag is
+    // set, the helper takes the demote-as-library branch; the demoted
+    // entry's PURL still lands in `dropped_main_module_purls` so the
+    // downstream relationship aliasing fires per US1 clarification
+    // Option A (recorded 2026-06-29).
+    let drop_result = crate::generate::root_selector::apply_main_module_drop_or_demote(
+        artifacts.components,
+        &artifacts.root_override,
+        artifacts.preserve_manifest_main_module,
+    );
+    let dropped_main_module_purls: Vec<String> = drop_result.redirected_main_module_purls;
     let filtered_components_owned: Option<Vec<mikebom_common::resolution::ResolvedComponent>> =
         if override_active {
-            let mut keep: Vec<mikebom_common::resolution::ResolvedComponent> =
-                Vec::with_capacity(artifacts.components.len());
-            for c in artifacts.components.iter() {
-                let is_main_module = c
-                    .extra_annotations
-                    .get("mikebom:component-role")
-                    .and_then(|v| v.as_str())
-                    == Some("main-module");
-                if is_main_module {
-                    tracing::info!(
-                        purl = %c.purl,
-                        "override is set; dropping manifest-derived main-module component '{}' from emitted SBOM (per milestone 077 clean-replacement; see GitHub issue #151)",
-                        c.purl
-                    );
-                    dropped_main_module_purls.push(c.purl.as_str().to_string());
-                } else {
-                    keep.push(c.clone());
-                }
-            }
             tracing::info!(
                 name = artifacts.root_override.name.as_deref().unwrap_or(artifacts.target_name),
                 version = artifacts.root_override.version.as_deref().unwrap_or("0.0.0"),
@@ -288,7 +282,7 @@ pub fn build_document(
                 artifacts.root_override.name.as_deref().unwrap_or(artifacts.target_name),
                 artifacts.root_override.version.as_deref().unwrap_or("0.0.0"),
             );
-            Some(keep)
+            Some(drop_result.effective_components)
         } else {
             None
         };
@@ -318,6 +312,7 @@ pub fn build_document(
             file_inventory_stats: None,
             file_inventory_mode: None,
             root_override: artifacts.root_override.clone(),
+            preserve_manifest_main_module: artifacts.preserve_manifest_main_module,
             user_metadata: artifacts.user_metadata.clone(),
             sbom_type_override: artifacts.sbom_type_override,
             spdx2_relationship_compat: artifacts.spdx2_relationship_compat,
@@ -345,6 +340,7 @@ pub fn build_document(
             file_inventory_stats: None,
             file_inventory_mode: None,
             root_override: artifacts.root_override.clone(),
+            preserve_manifest_main_module: artifacts.preserve_manifest_main_module,
             user_metadata: artifacts.user_metadata.clone(),
             sbom_type_override: artifacts.sbom_type_override,
             spdx2_relationship_compat: artifacts.spdx2_relationship_compat,
@@ -951,6 +947,7 @@ mod tests {
             file_inventory_stats: None,
             file_inventory_mode: None,
             root_override: crate::generate::RootComponentOverride::default(),
+            preserve_manifest_main_module: false,
             user_metadata: mikebom::binding::user_metadata::UserMetadata::default(),
             sbom_type_override: None,
             spdx2_relationship_compat: crate::generate::Spdx2RelationshipCompat::Full,

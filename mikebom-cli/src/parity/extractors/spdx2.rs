@@ -548,6 +548,11 @@ spdx23_anno!(c100_spdx23, "mikebom:purl-collisions-detected", document);
 // peer-edge-targets annotation lists their PURLs so consumers can
 // filter install-vs-functional. Per-Package envelope annotation.
 spdx23_anno!(c101_spdx23, "mikebom:peer-edge-targets", component);
+// Milestone 149 (closes #151): preserves manifest-derived main-module
+// as a library entry when --root-name override fires + the new
+// --preserve-manifest-main-module flag is set. Per-Package envelope
+// annotation.
+spdx23_anno!(c102_spdx23, "mikebom:demoted-from-main-module", component);
 
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-Package
 // envelope carrying the JSON-encoded array of conflict records.

@@ -552,6 +552,7 @@ Exactly one of `--path` or `--image` is required.
 | `--root-version <VERSION>` | string | auto-derived | Override `metadata.component.version`. |
 | `--root-purl-type <TYPE>` | string | (none) | Override the type segment of the root PURL. Defaults to `generic` when `--root-name` is set; this flag replaces that default. REQUIRES `--root-name`. Mutually exclusive with `--no-root-purl`. See [`--root-purl-type`](#--root-purl-type-type). |
 | `--no-root-purl` | bool | off | Omit the root component's PURL entirely from the emitted SBOM. REQUIRES `--root-name`. Mutually exclusive with `--root-purl-type`. See [`--no-root-purl`](#--no-root-purl). |
+| `--preserve-manifest-main-module` | bool | off | When set together with `--root-name` / `--root-version` / `--root-purl`, preserve the manifest-derived main-module identity as a `library`-typed entry in `components[]` rather than dropping it per the milestone-077 clean-replacement default. The demoted entry carries a `mikebom:demoted-from-main-module = "true"` annotation per Constitution V parity-bridging audit (C102 row in `docs/reference/sbom-format-mapping.md`). No-op without an active root-override flag (silent + INFO log) and on multi-main-module scans (silent + INFO log). Milestone 149 / issue #151. |
 | `--creator <TYPE: NAME>` | string (repeatable) | (none) | Attach a creator entry to the SBOM. |
 | `--annotator <TYPE: NAME>` | string (repeatable, paired) | (none) | Document-level annotator. Pair 1:1 with `--annotation-comment`. |
 | `--annotation-comment <TEXT>` | string (repeatable, paired) | (none) | Comment that pairs positionally with the preceding `--annotator`. |
@@ -1056,6 +1057,87 @@ mikebom sbom scan --path . \
   --root-version 1.0.0 --no-root-purl --output image.cdx.json
 # → metadata.component.name preserves the full registry path verbatim
 ```
+
+### `--preserve-manifest-main-module`
+
+**Milestone 149 (closes [issue #151](https://github.com/kusari-oss/mikebom/issues/151)).**
+
+When set together with `--root-name` / `--root-version` / `--root-purl`,
+preserve the manifest-derived main-module identity as a `library`-typed
+entry in `components[]` rather than dropping it per the milestone-077
+clean-replacement default. The demoted entry carries a
+`mikebom:demoted-from-main-module = "true"` annotation per Constitution
+Principle V parity-bridging audit (C102 row in
+`docs/reference/sbom-format-mapping.md`).
+
+**Why use it**: shipped services often have an internal Cargo / npm /
+etc. crate name that differs from the operator-meaningful deployment
+identity. `--root-name widget-svc --root-version 1.2.3` cleanly replaces
+the manifest identity at the root, but the compliance auditor loses
+visibility into the original manifest PURL + license + hashes. Setting
+this flag preserves both: the operator identity at the root AND the
+manifest identity as a `library` sibling carrying its full ecosystem-
+derived metadata.
+
+**Worked example** (Cargo project with `[package].name = "foo-internal"`,
+`version = "0.5.1"`):
+
+```bash
+mikebom sbom scan --path . \
+  --root-name widget-svc --root-version 1.2.3 \
+  --preserve-manifest-main-module \
+  --output svc.cdx.json
+# → metadata.component = {name: "widget-svc", version: "1.2.3", type: "application"}
+# → components[] contains:
+#     {
+#       "name": "foo-internal", "version": "0.5.1",
+#       "purl": "pkg:cargo/foo-internal@0.5.1",
+#       "type": "library",
+#       "properties": [
+#         { "name": "mikebom:demoted-from-main-module", "value": "true" }
+#       ]
+#     }
+```
+
+**Edge cases**:
+
+- **Without an active root-override flag**: silent no-op with an INFO-level
+  diagnostic (`--preserve-manifest-main-module has no effect without
+  --root-name override`). The manifest-derived main-module continues to
+  be the SBOM root per the existing milestone 053/064–070 behavior.
+- **On multi-main-module scans** (Cargo workspace, polyglot monorepo per
+  milestone 127): silent no-op with an INFO-level diagnostic. The flag
+  semantic requires a SINGLE manifest-derived main-module to demote;
+  multi-module scans don't promote any to root, so there's nothing to
+  demote. The override clean-replacement semantic stays unchanged.
+- **PURL collision** (a transitive library dep happens to share the
+  manifest-main-module PURL — rare): the existing deduplicator collapses
+  pre-helper; the merged entry demotes cleanly carrying the demote
+  annotation.
+
+**Dep-graph topology**: per US1 clarification recorded 2026-06-29, the
+demoted entry has NO outbound `dependsOn` edges in the wire output. Its
+dep-graph topology is re-anchored on the operator-override root via the
+existing milestone-084 logic. Queries like "what does the operator-
+override root depend on?" return the full transitive graph; queries
+against the demoted entry return zero outbound edges.
+
+**Wire format per output**: applied identically across all three formats
+(CycloneDX 1.6 `components[]` library entry, SPDX 2.3 `Package` element,
+SPDX 3 `software_Package` element). The annotation **VALUE** is byte-
+identical across formats per FR-009. The annotation **SUBJECT** in SPDX 3
+routes to the synth-root IRI rather than the demoted entry's own IRI due
+to `package_iri_by_purl` aliasing — consumers querying by annotation
+`field` key (not by subject IRI) find the annotation regardless. See the
+C102 row in `docs/reference/sbom-format-mapping.md` for the full
+subject-routing note.
+
+**Backward compatibility**: the flag is OPT-IN with default OFF. Operators
+who use `--root-name` without setting this flag continue to get
+milestone-077's clean-replacement output byte-for-byte (no demoted entry,
+no annotation, no behavior change). The 4-flag root-override family
+(`--root-name`, `--root-version`, `--root-purl-type`, `--no-root-purl`,
+`--root-purl`) stays unchanged.
 
 ### `--creator <TYPE: NAME>`
 

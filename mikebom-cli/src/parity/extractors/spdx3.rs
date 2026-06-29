@@ -616,6 +616,11 @@ spdx3_anno!(c100_spdx3, "mikebom:purl-collisions-detected", document);
 // peer-edge-targets annotation lists their PURLs so consumers can
 // filter install-vs-functional. Per-component graph-element annotation.
 spdx3_anno!(c101_spdx3, "mikebom:peer-edge-targets", component);
+// Milestone 149 (closes #151): preserves manifest-derived main-module
+// as a library entry when --root-name override fires + the new
+// --preserve-manifest-main-module flag is set. Per-component
+// graph-element annotation.
+spdx3_anno!(c102_spdx3, "mikebom:demoted-from-main-module", component);
 
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-component
 // graph-element annotation carrying the JSON-encoded array of
