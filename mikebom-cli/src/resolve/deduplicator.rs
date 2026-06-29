@@ -436,6 +436,72 @@ fn fold_declared_not_cached(components: &mut Vec<ResolvedComponent>) {
     }
 }
 
+/// Milestone 148: cross-PURL canonicalization of evidence.source_file_paths.
+///
+/// After the existing `deduplicate()` pass merges same-(ecosystem, name,
+/// version, parent_purl)-key groups, some ecosystems (Maven nested-coord
+/// case at `scan_fs/package_db/maven.rs:3429-3457`, Cargo workspace
+/// vendoring, Go vendored modules) intentionally retain multiple
+/// `ResolvedComponent` instances sharing the same `Purl::as_str()` value
+/// but differing in `parent_purl`. The CDX nested-components topology
+/// depends on this two-entry shape.
+///
+/// Each entry carries its own `evidence.source_file_paths` Vec (one
+/// observed path from the standalone reader pass, one observed path from
+/// the nested reader pass). Per-emitter iteration-order differences (CDX
+/// `cyclonedx/builder.rs:830-839`, SPDX 2.3 `spdx/annotations.rs:302-308`,
+/// SPDX 3 `spdx/v3_annotations.rs:267-273`) cause the sbom-conformance
+/// audit harness to observe cross-format divergence on the
+/// `mikebom:source-files` annotation for what the harness treats as the
+/// same PURL (51 polyglot-builder-image findings, 2026-06-28 audit).
+///
+/// This pass, keyed on the full canonical `Purl::as_str()` string,
+/// replaces each same-PURL entry's `source_file_paths` Vec with the
+/// alphabetically-sorted UNION of paths observed across all same-PURL
+/// entries. After the pass, every emitter sees the same Vec content for
+/// every same-PURL pair, so the wire-side `mikebom:source-files`
+/// annotation is identical across formats regardless of which entry the
+/// harness happens to pick.
+///
+/// - **Idempotent** — running twice produces byte-identical output
+///   (FR-004) via `BTreeSet` set-union semantics.
+/// - **Topology-preserving** — does NOT modify `parent_purl` or any
+///   other field (FR-005 + FR-006).
+/// - **Content-preserving no-op for single-entry PURLs** — the path
+///   *set* is unchanged (FR-007). Wire-order MAY canonicalize to
+///   alphabetical via the `BTreeSet` collection semantic; that's a
+///   non-breaking shift because `mikebom:source-files` value-order has
+///   no documented semantic and consumers parse the value as a set.
+/// - **Cross-ecosystem isolation** — keying on `Purl::as_str()` (which
+///   includes the ecosystem segment) prevents cross-ecosystem path
+///   cross-pollination (FR-003 + Edge Case 7).
+pub fn canonicalize_source_files_by_purl(
+    components: &mut [ResolvedComponent],
+) {
+    use std::collections::BTreeSet;
+
+    // Phase 1: collect — walk every component, accumulate paths into a
+    // BTreeSet per canonical PURL. BTreeSet gives sort + dedupe for free
+    // and guarantees idempotence under repeat application.
+    let mut paths_by_purl: HashMap<String, BTreeSet<String>> = HashMap::new();
+    for c in components.iter() {
+        paths_by_purl
+            .entry(c.purl.as_str().to_string())
+            .or_default()
+            .extend(c.evidence.source_file_paths.iter().cloned());
+    }
+
+    // Phase 2: write back — replace each entry's source_file_paths with
+    // the alphabetically-sorted union for its PURL. Iteration over a
+    // BTreeSet yields keys in lex-ascending order, so the resulting Vec
+    // is naturally sorted.
+    for c in components.iter_mut() {
+        if let Some(union) = paths_by_purl.get(c.purl.as_str()) {
+            c.evidence.source_file_paths = union.iter().cloned().collect();
+        }
+    }
+}
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
@@ -1146,5 +1212,343 @@ mod tests {
                 .contains_key("mikebom:component-role"),
             "application paths must NOT carry the role annotation",
         );
+    }
+
+    // ============================================================
+    // Milestone 148: canonicalize_source_files_by_purl tests
+    // ============================================================
+
+    /// Build a `ResolvedComponent` with an explicit `parent_purl`. The
+    /// existing `make_component` helper hardcodes `parent_purl: None`,
+    /// which doesn't exercise the Maven nested-coord same-PURL multi-
+    /// entry shape this milestone targets.
+    fn make_component_with_parent(
+        purl_str: &str,
+        parent_purl: Option<&str>,
+        file_paths: Vec<&str>,
+    ) -> ResolvedComponent {
+        let mut c = make_component(
+            purl_str,
+            ResolutionTechnique::FilePathPattern,
+            0.90,
+            vec![],
+            file_paths,
+        );
+        c.parent_purl = parent_purl.map(String::from);
+        c
+    }
+
+    /// Milestone 148 T004 — SC-004 + FR-001 + FR-002 + FR-006.
+    /// Two ResolvedComponent instances sharing a Maven PURL but with
+    /// different parent_purl values get the alphabetically-sorted union
+    /// of all observed paths on BOTH entries. Topology (parent_purl) is
+    /// preserved verbatim.
+    #[test]
+    fn canonicalize_source_files_by_purl_same_purl_different_parent_unions_paths_md148() {
+        let mut components = vec![
+            make_component_with_parent(
+                "pkg:maven/com.example/foo@1.0",
+                None,
+                vec!["root/.m2/repository/.../foo-1.0.jar"],
+            ),
+            make_component_with_parent(
+                "pkg:maven/com.example/foo@1.0",
+                Some("pkg:maven/com.example/fat-bundle@1.0"),
+                vec!["tmp/extract/fat-bundle.jar!.../foo-1.0.jar"],
+            ),
+        ];
+        canonicalize_source_files_by_purl(&mut components);
+
+        // Alphabetical sort: "root/..." < "tmp/..." lex-ascending.
+        let expected = vec![
+            "root/.m2/repository/.../foo-1.0.jar".to_string(),
+            "tmp/extract/fat-bundle.jar!.../foo-1.0.jar".to_string(),
+        ];
+        assert_eq!(
+            components[0].evidence.source_file_paths, expected,
+            "FR-001 + FR-002: standalone entry MUST carry the alphabetically-sorted union",
+        );
+        assert_eq!(
+            components[1].evidence.source_file_paths, expected,
+            "FR-001 + FR-002: nested entry MUST carry the SAME alphabetically-sorted union",
+        );
+        // FR-006: parent_purl topology preserved verbatim.
+        assert_eq!(components[0].parent_purl, None);
+        assert_eq!(
+            components[1].parent_purl,
+            Some("pkg:maven/com.example/fat-bundle@1.0".to_string())
+        );
+    }
+
+    /// Milestone 148 T005 — FR-007 (content-preserving no-op for
+    /// single-entry PURLs). The SET of paths is unchanged; wire-order
+    /// MAY canonicalize to alphabetical via the BTreeSet collection
+    /// semantic — that's explicitly allowed by the FR-007 wording.
+    /// This test asserts set-equality only.
+    #[test]
+    fn canonicalize_source_files_by_purl_single_entry_is_content_preserving_md148() {
+        use std::collections::BTreeSet;
+        // Deliberately NOT alphabetical to exercise the wire-order
+        // canonicalization semantic.
+        let original_paths = [
+            "node_modules/example/package.json".to_string(),
+            "node_modules/example/index.js".to_string(),
+        ];
+        let mut components = vec![make_component_with_parent(
+            "pkg:npm/example@1.0.0",
+            None,
+            vec![
+                "node_modules/example/package.json",
+                "node_modules/example/index.js",
+            ],
+        )];
+        canonicalize_source_files_by_purl(&mut components);
+
+        // FR-007 (content-preserving): set of paths is unchanged.
+        let pre_set: BTreeSet<String> = original_paths.iter().cloned().collect();
+        let post_set: BTreeSet<String> =
+            components[0].evidence.source_file_paths.iter().cloned().collect();
+        assert_eq!(
+            pre_set, post_set,
+            "FR-007: single-entry PURL's path-SET MUST be preserved",
+        );
+    }
+
+    /// Milestone 148 T006 — FR-004 + SC-005 (idempotence). Two
+    /// consecutive passes produce byte-identical output.
+    #[test]
+    fn canonicalize_source_files_by_purl_is_idempotent_md148() {
+        let mut components = vec![
+            make_component_with_parent(
+                "pkg:maven/com.example/foo@1.0",
+                None,
+                vec!["b/path"],
+            ),
+            make_component_with_parent(
+                "pkg:maven/com.example/foo@1.0",
+                Some("pkg:maven/com.example/parent@1.0"),
+                vec!["a/path", "c/path"],
+            ),
+        ];
+        canonicalize_source_files_by_purl(&mut components);
+        let after_first: Vec<Vec<String>> = components
+            .iter()
+            .map(|c| c.evidence.source_file_paths.clone())
+            .collect();
+        canonicalize_source_files_by_purl(&mut components);
+        let after_second: Vec<Vec<String>> = components
+            .iter()
+            .map(|c| c.evidence.source_file_paths.clone())
+            .collect();
+        assert_eq!(
+            after_first, after_second,
+            "FR-004: canonicalize_source_files_by_purl MUST be idempotent",
+        );
+    }
+
+    /// Milestone 148 T007 — FR-005 (preserves all other fields). Only
+    /// `evidence.source_file_paths` is touched; every other named field
+    /// on `ResolvedComponent` MUST be preserved verbatim.
+    #[test]
+    fn canonicalize_source_files_by_purl_preserves_other_fields_md148() {
+        use mikebom_common::resolution::LifecycleScope;
+
+        let mut component = make_component_with_parent(
+            "pkg:maven/com.example/foo@1.0",
+            Some("pkg:maven/com.example/parent@1.0"),
+            vec!["original/path.jar"],
+        );
+        // Populate rich non-default values across the field surface.
+        component.lifecycle_scope = Some(LifecycleScope::Runtime);
+        component.sbom_tier = Some("source".to_string());
+        component.evidence.confidence = 0.9;
+        component.evidence.source_connection_ids = vec!["conn-42".to_string()];
+        component.extra_annotations.insert(
+            "mikebom:test-key".to_string(),
+            serde_json::json!("test-value"),
+        );
+        let snapshot = component.clone();
+
+        // Pair with a second same-PURL entry so the union pass fires (non-no-op).
+        let mut components = vec![
+            component,
+            make_component_with_parent(
+                "pkg:maven/com.example/foo@1.0",
+                None,
+                vec!["other/path.jar"],
+            ),
+        ];
+        canonicalize_source_files_by_purl(&mut components);
+
+        // FR-005: every non-source_file_paths field on the first entry
+        // MUST be preserved verbatim.
+        assert_eq!(components[0].purl, snapshot.purl);
+        assert_eq!(components[0].name, snapshot.name);
+        assert_eq!(components[0].version, snapshot.version);
+        assert_eq!(components[0].parent_purl, snapshot.parent_purl);
+        assert_eq!(components[0].lifecycle_scope, snapshot.lifecycle_scope);
+        assert_eq!(components[0].sbom_tier, snapshot.sbom_tier);
+        assert_eq!(components[0].hashes, snapshot.hashes);
+        assert_eq!(components[0].evidence.confidence, snapshot.evidence.confidence);
+        assert_eq!(components[0].evidence.technique, snapshot.evidence.technique);
+        assert_eq!(
+            components[0].evidence.source_connection_ids,
+            snapshot.evidence.source_connection_ids
+        );
+        assert_eq!(components[0].extra_annotations, snapshot.extra_annotations);
+        // The union pass IS expected to change source_file_paths in the
+        // multi-entry case — that's the whole point of the milestone.
+        assert_ne!(
+            components[0].evidence.source_file_paths,
+            snapshot.evidence.source_file_paths,
+            "the union pass IS expected to change source_file_paths in the multi-entry case",
+        );
+    }
+
+    /// Milestone 148 T009b — analyze-finding-H1 fallback: code-shape
+    /// regression guard asserting `mikebom:source-files` remains the
+    /// single-source-of-truth field-owned key. Combined with
+    /// `canonicalize_source_files_by_purl_same_purl_*` (asserting
+    /// post-pass Vec content equality across same-PURL entries), this
+    /// transitively guarantees cross-format wire-side equality
+    /// (CDX 1.6 / SPDX 2.3 / SPDX 3) of the `mikebom:source-files`
+    /// annotation WITHOUT requiring a synthetic Maven fixture or full
+    /// per-format emitter invocation. This closes SC-003 / FR-009 in
+    /// CI even when T008 + T009 are deferred.
+    #[test]
+    fn source_files_single_source_of_truth_invariant_md148() {
+        use crate::generate::root_selector::is_field_owned_annotation_key;
+        // FR-008 + milestone-145 US3 invariant: `mikebom:source-files`
+        // is field-owned. All three SBOM emitters consume it from
+        // `c.evidence.source_file_paths` exclusively; the
+        // `extra_annotations` bag-stamped duplicate is filtered out
+        // at every emitter iteration site via
+        // `is_field_owned_annotation_key`. Any new emitter MUST NOT
+        // bypass this filter; any new reader MUST NOT stamp the
+        // bag-keyed duplicate (the Maven reader's renamed key is
+        // `mikebom:source-files-nested-url` post-145 specifically to
+        // avoid this collision).
+        assert!(
+            is_field_owned_annotation_key("mikebom:source-files"),
+            "FR-008 + milestone-145 US3 invariant: mikebom:source-files MUST remain \
+             field-owned (drives single-source-of-truth across CDX/SPDX2.3/SPDX3 emitters)",
+        );
+        assert!(
+            !is_field_owned_annotation_key("mikebom:source-files-nested-url"),
+            "the renamed Maven-reader key is NOT field-owned — it ships through \
+             extra_annotations as a distinct annotation",
+        );
+    }
+
+    /// Milestone 148 T009b — analyze-finding-H1 fallback: behavioral
+    /// assertion that the canonicalize pass produces a Vec the three
+    /// SBOM emitters consume identically. After the pass, all same-PURL
+    /// entries carry byte-identical `source_file_paths` Vecs — which,
+    /// combined with the single-source-of-truth invariant from
+    /// `source_files_single_source_of_truth_invariant_md148`, transitively
+    /// guarantees cross-format byte-equality of the wire-side
+    /// `mikebom:source-files` annotation.
+    #[test]
+    fn canonicalize_produces_emitter_ready_vec_across_formats_md148() {
+        let mut components = vec![
+            make_component_with_parent(
+                "pkg:maven/com.example/foo@1.0",
+                None,
+                vec!["target/primary.jar"],
+            ),
+            make_component_with_parent(
+                "pkg:maven/com.example/foo@1.0",
+                Some("pkg:maven/com.example/fat-bundle@1.0"),
+                vec!["target/fat-bundle.jar!foo-1.0.jar"],
+            ),
+        ];
+        canonicalize_source_files_by_purl(&mut components);
+
+        // SC-003 invariant: post-canonicalize, all same-PURL entries
+        // carry identical source_file_paths Vec. Combined with the
+        // single-source-of-truth invariant asserted by
+        // source_files_single_source_of_truth_invariant_md148, this
+        // is sufficient to guarantee cross-format wire-side equality
+        // of `mikebom:source-files` without instantiating the per-format
+        // emitters (which require full ScanResult plumbing the unit
+        // test cannot easily reproduce).
+        assert_eq!(
+            components[0].evidence.source_file_paths,
+            components[1].evidence.source_file_paths,
+            "SC-003: post-canonicalize, all same-PURL entries MUST carry identical \
+             source_file_paths Vec — this transitively guarantees cross-format \
+             mikebom:source-files equality because all three emitters read from \
+             this field exclusively (FR-008 + 145-US3 single-source-of-truth invariant)",
+        );
+    }
+
+    /// Milestone 148 T010 — FR-003 + Edge Case 7 (cross-ecosystem
+    /// isolation). Two PURLs that share name + version but differ in
+    /// ecosystem MUST NOT cross-pollinate paths.
+    #[test]
+    fn canonicalize_source_files_by_purl_cross_ecosystem_isolation_md148() {
+        let mut components = vec![
+            make_component_with_parent(
+                "pkg:maven/com.example/foo@1.0",
+                None,
+                vec!["target/foo-1.0.jar"],
+            ),
+            make_component_with_parent(
+                "pkg:npm/example@1.0",
+                None,
+                vec!["node_modules/example/index.js"],
+            ),
+        ];
+        canonicalize_source_files_by_purl(&mut components);
+
+        // FR-003 + Edge Case 7: each ecosystem's paths stay isolated.
+        assert_eq!(
+            components[0].evidence.source_file_paths,
+            vec!["target/foo-1.0.jar".to_string()],
+            "FR-003: Maven component MUST NOT pick up npm paths",
+        );
+        assert_eq!(
+            components[1].evidence.source_file_paths,
+            vec!["node_modules/example/index.js".to_string()],
+            "FR-003: npm component MUST NOT pick up Maven paths",
+        );
+    }
+
+    /// Milestone 148 T011 — Edge Case 1 (three-or-more same-PURL
+    /// entries). When 3+ entries share a PURL (e.g., one standalone +
+    /// two different fat-jar nestings), all three entries get the
+    /// full N-way alphabetically-sorted union.
+    #[test]
+    fn canonicalize_source_files_by_purl_three_entries_full_union_md148() {
+        let mut components = vec![
+            make_component_with_parent(
+                "pkg:maven/com.example/foo@1.0",
+                None,
+                vec!["root/standalone.jar"],
+            ),
+            make_component_with_parent(
+                "pkg:maven/com.example/foo@1.0",
+                Some("pkg:maven/com.example/bundle-a@1.0"),
+                vec!["root/bundle-a.jar!foo-1.0.jar"],
+            ),
+            make_component_with_parent(
+                "pkg:maven/com.example/foo@1.0",
+                Some("pkg:maven/com.example/bundle-b@1.0"),
+                vec!["root/bundle-b.jar!foo-1.0.jar"],
+            ),
+        ];
+        canonicalize_source_files_by_purl(&mut components);
+
+        let expected = vec![
+            "root/bundle-a.jar!foo-1.0.jar".to_string(),
+            "root/bundle-b.jar!foo-1.0.jar".to_string(),
+            "root/standalone.jar".to_string(),
+        ];
+        for (i, c) in components.iter().enumerate() {
+            assert_eq!(
+                c.evidence.source_file_paths, expected,
+                "Edge Case 1: entry {i} MUST carry the full 3-path alphabetically-sorted union",
+            );
+        }
     }
 }
