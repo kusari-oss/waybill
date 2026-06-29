@@ -51,6 +51,73 @@ The job of this doc is to tell consumers what each parity-bridging annotation me
 
 **Full wire-shape detail**: every per-signal section links to the corresponding row in [`sbom-format-mapping.md`](sbom-format-mapping.md). That catalog is the contract; this guide is the orientation.
 
+### 2.1 Curation rubric — which signals get depth coverage
+
+mikebom emits 100+ `mikebom:*` annotation keys (the full set lives in [Appendix A](#appendix-a--annotation-key-index)). Most are consumer-facing, but only a focused subset benefits from the full per-signal rendering treatment §3 uses — others are best served by a one-line appendix entry that points at the catalog row for the wire shape. This section documents the **decision rubric** the doc applies to make that call, so future signal additions stay principled rather than reflecting whatever the author happened to remember.
+
+**The rubric**: 5 yes/no criteria. A signal warrants depth coverage in §3 if **at least 3 of the 5** evaluate to YES; otherwise it stays in Appendix A only.
+
+**C1 — Drives a consumer policy decision.** YES if a documented consumer workflow (CVE filtering, license auditing, build-provenance verification, completeness audit, supplement-conflict resolution) explicitly reads the signal to decide whether to alert, suppress, gate, or escalate. NO if the signal is purely informational (e.g., binary forensics data like Mach-O load commands) or is consumed only by mikebom's own internal pipeline (e.g., dedup co-ownership evidence). Audit method: search this doc for an explicit "use it to do X" or "as a filter for Y" clause referencing the signal — if no such clause is plausibly authorable, C1 is NO.
+
+**C2 — Cross-ecosystem reach OR ecosystem-essential.** YES if either (a) the signal is emitted by ≥2 ecosystem readers, OR (b) the signal is emitted by exactly one ecosystem AND is essential to the default consumer workflow for that ecosystem (not just an opt-in / advanced-feature flag). The "essential" exception covers cases like [`mikebom:not-linked`](#mikebom-not-linked) (Go-only; essential for Go CVE matching because Go's `runtime/debug.BuildInfo` is the only mechanism for proving linker DCE) and [`mikebom:peer-edge-targets`](#mikebom-peer-edge-targets) (npm-only; essential for npm SCA closure because peer-dep semantics are npm-unique). It does NOT cover advanced-feature / opt-in signals like `mikebom:kmp-source-set` (Kotlin Multiplatform; Android-only Kotlin projects don't use it) or `mikebom:shade-relocation` (Maven shade plugin; opt-in build-tool feature).
+
+**C3 — Audit-significant.** YES if the signal affects the consumer's trust in the SBOM itself — it answers "should I trust this component's identification?" or "did mikebom miss anything?" or "did the operator override scanner-derived facts?". Drives auditor / reviewer workflows. NO if the signal is runtime-decision-oriented only (e.g., `mikebom:lifecycle-scope = "test"` filters CVE alerts but doesn't change the auditor's view of the SBOM's trustworthiness — it's a consumer-policy signal under C1, not an audit-trust signal under C3). A signal CAN satisfy both C1 and C3.
+
+**C4 — Composes with another signal.** YES if the signal forms a meaningful tuple / trio with related signals consumers query together. Examples: the trust trio (`mikebom:source-type` + `mikebom:evidence-kind` + `mikebom:confidence`); the completeness pair (`mikebom:graph-completeness` + `mikebom:graph-completeness-reason`); the collision pair (`mikebom:duplicate-purl-divergent` + `mikebom:purl-collisions-detected`); the unresolved-deps pair (`mikebom:depends-unresolved` + `mikebom:rdepends-unresolved`). NO if the signal is standalone — consumers query it on its own, not in combination with another `mikebom:*` key.
+
+**C5 — Wire shape requires documentation beyond the catalog row.** YES if the signal carries one or more of: (a) structured JSON-encoded data (object or array of records); (b) a closed enum value space (≥2 distinct named values) that benefits from explicit listing; (c) a two-state or three-state interpretation rule that affects consumer behavior (e.g., "absent means either X or Y; consumers MUST disambiguate via Z"); (d) per-format placement variance that benefits from worked jq examples. NO if the signal is a bare opaque hex string, a single boolean with no two-state interpretation rule, a single numeric with no scaling guidance, or an open-enum free-form string with no documented vocabulary.
+
+**How to apply this to a new signal**:
+
+1. **Score** the new `mikebom:KEY` against each of C1–C5 (5 yes/no answers).
+2. **Sum** the YES count.
+3. **Verdict**:
+   - YES count ≥ 3 → **DEPTH coverage**: add a new subsection in the appropriate §3 cluster per the per-signal rendering shape used throughout §3 (What it is / Where it lives (per-format) / What to do with it / Milestone / Catalog link / jq recipe + Expected output). Add an Appendix A entry with `(see §3.X for depth coverage)`. Add an Appendix B entry with the originating milestone.
+   - YES count < 3 → **APPENDIX coverage**: add an Appendix A entry only (one-line description + catalog C-row link).
+
+Edge cases: if the rubric yields exactly N=3 on a marginal signal, prefer DEPTH — the cost of a slightly-too-prominent depth section is lower than the cost of a consumer never discovering an actionable signal. If unsure on C2's "essential vs niche" judgment, look at the worked-example table below for precedent.
+
+#### Worked-example table — every depth-covered signal scored
+
+The 18 entries §3 currently depth-covers (covering 21 unique catalog keys — 3 paired entries collapse two keys each: duplicate-purl-divergent + purl-collisions-detected, graph-completeness + …-reason, depends-unresolved + …-rdepends-unresolved). Each scores ≥3 on the rubric:
+
+| Signal | Cluster | C1 | C2 | C3 | C4 | C5 | YES | Verdict |
+|--------|---------|:--:|:--:|:--:|:--:|:--:|:---:|:-------:|
+| `mikebom:lifecycle-scope` | 3.1 | Y | Y | Y | N | Y | 4 | DEPTH ✓ |
+| `mikebom:layer-digest` | 3.1 | Y | Y | Y | N | Y | 4 | DEPTH ✓ |
+| `mikebom:duplicate-purl-divergent` + `…-purl-collisions-detected` | 3.1 | Y | Y | Y | Y (paired) | Y | 5 | DEPTH ✓ |
+| `mikebom:linkage-kind` (new in 151) | 3.1 | Y | Y | Y | N | Y | 4 | DEPTH ✓ |
+| `mikebom:not-linked` (new in 151) | 3.1 | Y | Y (Go-essential) | Y | N | Y | 4 | DEPTH ✓ |
+| `mikebom:license-concluded-source` | 3.2 | Y | Y | Y | N | Y | 4 | DEPTH ✓ |
+| `mikebom:component-tier` (file value) | 3.2 | Y | Y | N | N | Y | 3 | DEPTH ✓ |
+| `mikebom:demoted-from-main-module` | 3.2 | Y | Y | Y | N | Y | 4 | DEPTH ✓ |
+| `mikebom:source-type` | 3.3 | Y | Y | Y | Y (trust trio) | Y | 5 | DEPTH ✓ |
+| `mikebom:evidence-kind` (new in 151) | 3.3 | Y | Y | Y | Y (trust trio) | Y | 5 | DEPTH ✓ |
+| `mikebom:confidence` (new in 151) | 3.3 | Y | Y | Y | Y (trust trio) | N | 4 | DEPTH ✓ |
+| `mikebom:generation-context` | 3.3 | Y | Y | Y | N | Y | 4 | DEPTH ✓ |
+| `mikebom:source-document-binding` | 3.3 | Y | Y | Y | Y | Y | 5 | DEPTH ✓ |
+| `mikebom:file-inventory-mode` | 3.4 | Y | Y | Y | N | Y | 4 | DEPTH ✓ |
+| `mikebom:graph-completeness` + `…-reason` | 3.4 | Y | Y | Y | Y (paired) | Y | 5 | DEPTH ✓ |
+| `mikebom:peer-edge-targets` | 3.4 | Y | Y (npm-essential) | Y | N | Y | 4 | DEPTH ✓ |
+| `mikebom:depends-unresolved` + `…-rdepends-unresolved` (new in 151) | 3.4 | Y | Y (Yocto-essential; reserved key) | Y | Y (paired) | Y | 5 | DEPTH ✓ |
+| `mikebom:assertion-conflict` (new in 151) | 3.4 | Y | Y | Y | N | Y | 4 | DEPTH ✓ |
+
+#### Counter-example table — representative appendix-only signals
+
+7 signals correctly excluded from depth coverage. Each scores <3 on the rubric:
+
+| Signal | C1 | C2 | C3 | C4 | C5 | YES | Verdict |
+|--------|:--:|:--:|:--:|:--:|:--:|:---:|:-------:|
+| `mikebom:macho-build-tools` (Mach-O load-command details) | N | N | N | N | N | 0 | APPENDIX ✓ |
+| `mikebom:pe-machine` (PE architecture enum) | N | N | N | N | N | 0 | APPENDIX ✓ |
+| `mikebom:elf-build-id` (opaque hex) | N | N | N | N | N | 0 | APPENDIX ✓ |
+| `mikebom:yocto-layer-version-missing` (Yocto-specific transparency) | N | N | Y | N | N | 1 | APPENDIX ✓ |
+| `mikebom:shade-relocation` (Maven opt-in build-time feature) | N | N | N | N | Y | 1 | APPENDIX ✓ |
+| `mikebom:co-owned-by` (dedup-pipeline internal evidence) | N | N | N | N | N | 0 | APPENDIX ✓ |
+| `mikebom:also-detected-via` (dedup-pipeline alternative-source list) | N | N | N | N | Y | 1 | APPENDIX ✓ |
+
+**Validation**: the rubric correctly classifies 25/25 sampled signals (18 depth + 7 appendix-only). If a future signal addition produces a classification the maintainer disagrees with after scoring, the disagreement is either (a) a real edge case warranting a rubric clarification milestone, or (b) a signal-specific judgment call that should be resolved by re-reading the criterion definitions and the worked-example precedent — NOT by author discretion.
+
 ---
 
 ## 3. Signals mikebom makes available — by use case
@@ -136,6 +203,58 @@ jq '.metadata.properties[]?
     | .collisions[]' your.cdx.json
 ```
 
+#### `mikebom:linkage-kind`
+
+> **What it is**: the binary-tier linkage mode for a component identified from a binary artifact (ELF / Mach-O / PE / Go binary). Closed enum: `dynamic` (component is loaded at runtime via a shared-library reference — e.g., an ELF `DT_NEEDED` entry pointing at `libssl.so`), `static` (component was linked into the binary at build time — e.g., a Rust crate compiled into the final binary, a Go module embedded via the toolchain), `mixed` (the binary references the component via both mechanisms, typical of binaries that statically link a base then dynamically load plugins). NO native field in any of CDX 1.6 / SPDX 2.3 / SPDX 3.0.1 — parity-bridging annotation per Constitution Principle V.
+> **Where it lives**:
+> - **CDX 1.6**: `components[].properties[]` entry `{name: "mikebom:linkage-kind", value: "<enum>"}` on binary-tier components.
+> - **SPDX 2.3**: annotation envelope on the Package.
+> - **SPDX 3**: annotation envelope on the `software_Package` element.
+> **What to do with it**: filter CVE alerting policies by linkage mode. A CVE in a `dynamic`-linked library only affects the binary at runtime IF the shared library is actually loaded — a strict policy might suppress dynamic-linked CVEs for binaries that ship with their own pinned `.so` files. `static`-linked CVEs are unconditional: the vulnerable code is baked into the binary. `mixed` warrants per-component disambiguation. Pair with `mikebom:not-linked` (Go-specific) for the full binary-tier filtering view.
+> **Milestone**: 005-era — added (binary tier readers landed); closed enum stabilized via milestone 104 (binary-role classification).
+> **Catalog**: [C12](sbom-format-mapping.md)
+
+```jq
+# CDX — list binary-tier components linked statically (most CVE-impactful):
+jq '.components[]
+    | select(.properties[]?
+             | .name == "mikebom:linkage-kind" and .value == "static")
+    | {name, version, purl}
+' your.cdx.json
+```
+
+#### `mikebom:not-linked`
+
+> **What it is**: marker on Go source-tier components (from `go.sum`) signaling that mikebom's binary-vs-source comparison proved the Go linker dead-code-eliminated the module from the produced binary's `runtime/debug.BuildInfo`. Emitted only when (a) a Go binary is present in the rootfs AND (b) the binary's BuildInfo does NOT confirm the component as linked. Boolean literal `true` when present. Composes with `mikebom:linkage-kind` for the full binary-tier filtering view.
+>
+> **Scope**: Go-only emission (milestone 050). This signal is NOT emitted on non-Go components, and a non-Go component lacking this annotation should NOT be interpreted as either present or absent in any binary. The signal applies to Go's specific build-time DCE behavior; equivalents for other ecosystems do not currently exist in mikebom.
+>
+> **Two-state interpretation rule** (per catalog C41):
+> - **Present + `true`** → mikebom PROVED the module is not linked (Go BuildInfo authoritative).
+> - **Absent** → either (a) the component IS linked (confirmed via BuildInfo), OR (b) no Go binary was present in the scan to compare against. Consumers MUST disambiguate by checking whether any binary-tier components exist in the SBOM — a SBOM with no `mikebom:component-tier = "binary"` components is in case (b).
+>
+> **Where it lives**:
+> - **CDX 1.6**: `components[].properties[]` entry `{name: "mikebom:not-linked", value: "true"}`.
+> - **SPDX 2.3**: annotation envelope on the Package with boolean `value: true`.
+> - **SPDX 3**: annotation envelope on the `software_Package` element with boolean `value: true`.
+> **What to do with it**: suppress CVE alerts for Go modules marked `not-linked = true` when the consumer is running CVE matching against the deployed binary — the vulnerable code is provably not in the binary. Typical false-positive sources this suppresses: build-tag-DCE'd alternatives (e.g., `bytedance/sonic` when gin's fast-path isn't compiled in), test scaffolding modules (`davecgh/go-spew`, `kr/pretty`), older-yaml shims pulled in by transitive `go.mod` requires. Pair with `mikebom:lifecycle-scope` (test-scoped modules can be BOTH `lifecycle-scope = "test"` AND `not-linked = "true"`).
+> **Milestone**: 050 — added (Go binary-vs-source comparison G3 redesign).
+> **Catalog**: [C41](sbom-format-mapping.md)
+
+```jq
+# CDX — list every Go module mikebom proved is not linked into the binary:
+jq '.components[]
+    | select(.properties[]?
+             | .name == "mikebom:not-linked" and .value == "true")
+    | .purl
+' your.cdx.json
+
+# Sanity check: confirm at least one binary-tier component exists in the SBOM
+# (otherwise an absent mikebom:not-linked annotation is ambiguous per the
+# two-state interpretation rule):
+jq '[.components[] | select(.properties[]? | .name == "mikebom:component-tier" and .value == "binary")] | length' your.cdx.json
+```
+
 ---
 
 ### 3.2 Compliance auditing
@@ -212,6 +331,8 @@ jq '.components[]
 
 Consumers verifying build-time provenance need to (a) distinguish components observed during an actual build vs lockfile-derived enrichment, (b) understand the doc-level generation mode (eBPF trace vs source-tree scan vs image scan), and (c) follow cross-tier bindings from a build SBOM back to its source SBOM.
 
+**Trust trio composition.** Three signals in this cluster compose to support threshold-based vulnerability-scanner policies: `mikebom:source-type` (where the evidence came from), `mikebom:evidence-kind` (how it was derived), and `mikebom:confidence` (how strongly mikebom backs the claim). Consumers building risk-weighting filters should consider all three together — `source-type` answers "where", `evidence-kind` answers "how", and `confidence` answers "how strongly". A worked composing jq recipe appears under [`mikebom:source-type`](#mikebom-source-type) below.
+
 #### `mikebom:source-type`
 
 > **What it is**: tags each component with its discovery provenance. Common values include `"trace-observed"` (eBPF-observed during a live build trace), `"declared-not-cached"` (declared in a lockfile but mikebom couldn't verify its presence on disk), `"transitive"` (added via transitive lockfile resolution from an observed component), `"package-database"` (read from a system package DB like dpkg/rpm/apk). Strong-vs-weak provenance markers.
@@ -222,6 +343,7 @@ Consumers verifying build-time provenance need to (a) distinguish components obs
 > **What to do with it**: trace-observed components have stronger ground truth than enrichment-derived ones. For vulnerability scanning, you may want to weight CVEs against trace-observed components more heavily than declared-not-cached ones. For compliance audits, mark non-trace-observed components for additional review (their presence in the SBOM is from secondary signals, not direct observation).
 > **Milestone**: 002 — added; refined across milestones 049–055.
 > **Catalog**: [C1](sbom-format-mapping.md)
+> **Composes with**: [`mikebom:evidence-kind`](#mikebom-evidence-kind) (how it was derived), [`mikebom:confidence`](#mikebom-confidence) (how strongly).
 
 ```jq
 # CDX — list components grouped by source-type provenance:
@@ -229,6 +351,83 @@ jq '[.components[]
      | {purl, source_type: (.properties[]? | select(.name == "mikebom:source-type") | .value)}]
     | group_by(.source_type)
     | map({source_type: .[0].source_type, count: length, examples: [.[0:3][] | .purl]})
+' your.cdx.json
+```
+
+**Trust-trio composing recipe** (the workflow that drove this milestone — filter to high-trust components only):
+
+```jq
+# CDX — components with all three trust-trio signals present, projected as a tuple:
+jq '.components[]
+    | {
+        purl,
+        source_type:   (.properties[]? | select(.name == "mikebom:source-type")   | .value),
+        evidence_kind: (.properties[]? | select(.name == "mikebom:evidence-kind") | .value),
+        confidence:    (.properties[]? | select(.name == "mikebom:confidence")    | .value)
+      }
+    | select(.source_type != null)
+' your.cdx.json
+```
+
+A vulnerability-scanner author can chain `select` calls on the tuple to filter by policy — e.g., `select(.source_type == "trace-observed" and .evidence_kind == "direct-observation")` for the strictest "alert only on directly-observed evidence" view.
+
+#### `mikebom:evidence-kind`
+
+> **What it is**: classification of how mikebom derived this component's identity. Closed enum: `direct-observation` (mikebom's eBPF / filesystem scan directly observed the evidence — e.g., a file with a matching SHA-256, a package-DB record, a `runtime/debug.BuildInfo` entry), `inference` (mikebom derived the identity from a secondary signal — e.g., a lockfile entry parsed without disk-confirming the artifact, a transitive resolution that walks a dep graph), `enrichment` (mikebom looked up the identity from an external source — e.g., deps.dev, PurlDB). Pairs with `mikebom:source-type` and `mikebom:confidence` as the trust trio.
+> **Where it lives**:
+> - **CDX 1.6**: `components[].properties[]` entry `{name: "mikebom:evidence-kind", value: "<enum>"}`.
+> - **SPDX 2.3**: annotation envelope on the Package — `{schema: "mikebom-annotation/v1", field: "mikebom:evidence-kind", value: "<enum>"}`.
+> - **SPDX 3**: annotation envelope on the `software_Package` element.
+> **What to do with it**: use as a filter in threshold-based vulnerability-scanner policies. Common policy: alert on `direct-observation` evidence at full severity; downgrade `inference`-derived CVEs to advisory; treat `enrichment`-only evidence as informational pending operator review. For compliance audits, the value affects which evidence-quality bucket a finding falls into — operator-asserted conclusions stacking on top of `direct-observation` evidence are strongest.
+> **Milestone**: 002 — added (foundational discovery / enrichment infrastructure).
+> **Catalog**: [C4](sbom-format-mapping.md)
+> **Composes with**: [`mikebom:source-type`](#mikebom-source-type) (where), [`mikebom:confidence`](#mikebom-confidence) (how strongly).
+
+```jq
+# CDX — list components whose identity came from direct observation:
+jq '.components[]
+    | select(.properties[]?
+             | .name == "mikebom:evidence-kind" and .value == "direct-observation")
+    | .purl
+' your.cdx.json
+
+# SPDX 2.3 — same query via the annotation envelope:
+jq -r '.packages[]
+       | select(.annotations[]?
+                | .comment | fromjson?
+                | select(.field == "mikebom:evidence-kind" and .value == "direct-observation"))
+       | .name + " " + .versionInfo' your.spdx.json
+
+# SPDX 3 — walk the @graph Annotation elements:
+jq -r '.["@graph"][]
+       | select(.type == "Annotation"
+                and (.statement | fromjson?
+                                | .field == "mikebom:evidence-kind"
+                                  and .value == "direct-observation"))
+       | .subject' your.spdx3.json
+```
+
+#### `mikebom:confidence`
+
+> **What it is**: qualitative confidence label for components identified via fuzzy or heuristic matching. Closed enum — currently only the value `"heuristic"` is emitted (set on components resolved through any heuristic path; absent on components with deterministic identity such as direct package-DB reads or content-hash matches). The third member of the trust trio (with `mikebom:source-type` and `mikebom:evidence-kind`).
+>
+> **Distinct from `mikebom:fingerprint-confidence`** (catalog C59, appendix-only, milestone 110): that separate annotation key carries a numeric quantitative score (`"0.70"` / `"0.85"` / `"0.99"`) specifically for milestone-108 / milestone-110 symbol-fingerprint matches on binary-tier components. Do NOT conflate the two keys — they have different value spaces, different emission gating, and live on different components. This guide depth-covers C16 (`mikebom:confidence`) only; C59 stays in Appendix A pending operator demand.
+>
+> **Where it lives**:
+> - **CDX 1.6**: `components[].properties[]` entry `{name: "mikebom:confidence", value: "heuristic"}`.
+> - **SPDX 2.3**: annotation envelope on the Package.
+> - **SPDX 3**: annotation envelope on the `software_Package` element.
+> **What to do with it**: pair with `mikebom:evidence-kind` to identify components where the identity is both heuristic-derived AND from inference / enrichment — the lowest-trust bucket. A policy might alert on these only when the underlying CVE itself has a high CVSS score, or surface them for operator review before downstream automation acts.
+> **Milestone**: 002 — added (foundational).
+> **Catalog**: [C16](sbom-format-mapping.md)
+> **Composes with**: [`mikebom:source-type`](#mikebom-source-type) (where), [`mikebom:evidence-kind`](#mikebom-evidence-kind) (how). For numeric quantitative confidence on fingerprint-matched components, see the separate [`mikebom:fingerprint-confidence`](#appendix-a--annotation-key-index) annotation (catalog C59).
+
+```jq
+# CDX — list every component flagged with heuristic confidence:
+jq '.components[]
+    | select(.properties[]?
+             | .name == "mikebom:confidence" and .value == "heuristic")
+    | {purl, evidence_kind: (.properties[]? | select(.name == "mikebom:evidence-kind") | .value)}
 ' your.cdx.json
 ```
 
@@ -328,6 +527,66 @@ jq --arg purl "pkg:npm/@react-native-async-storage/async-storage@1.24.0" '
   | select(.name == "mikebom:peer-edge-targets")
   | .value
   | fromjson
+' your.cdx.json
+```
+
+#### `mikebom:depends-unresolved` + `mikebom:rdepends-unresolved`
+
+> **What they are**: paired closure-gap markers naming components that mikebom KNOWS were declared as dependencies but couldn't pin to concrete components in the scan output. `mikebom:depends-unresolved` covers build-time / runtime DEPENDS-style declarations; `mikebom:rdepends-unresolved` covers the runtime-only RDEPENDS variant. The VALUE is a JSON-encoded array of unresolved dep names. Per Constitution Principle X (Transparency), the SBOM emits these markers rather than silently dropping the declarations — auditors can see exactly which deps mikebom failed to resolve.
+>
+> **Reserved-key framing**: the annotation key namespace is reserved for cross-ecosystem use. **Currently emitted only by the Yocto recipe reader** (milestone 128 FR-009). If you scan a non-Yocto source tree and these annotations are absent, that does NOT mean every dep was resolved — it means no reader on the scan path emits these signals yet. Treat absence as "no closure-gap data available for this ecosystem" rather than "no closure gaps." When other ecosystem readers adopt the key in future milestones, the wire shape (JSON-encoded array of names) and consumer-interpretation rule (each entry is a declared-but-unresolved dep) stay stable.
+>
+> **Where it lives**:
+> - **CDX 1.6**: `components[].properties[]` entry with `value` as a JSON-encoded string carrying an array of dep names.
+> - **SPDX 2.3**: annotation envelope on the Package with `value` as a native JSON array.
+> - **SPDX 3**: annotation envelope on the `software_Package` element with `value` as a native JSON array.
+> **What to do with it**: in compliance audit dashboards, surface each entry as a known closure gap — auditors validate the original declaration source (the upstream recipe / manifest) and decide whether the unresolved dep is an in-scope risk (the dep should have been resolved; investigate why) or out-of-scope (the dep doesn't ship in this artifact). Distinct from a component being absent from the SBOM entirely: absence is opaque ("mikebom doesn't know about this dep"); `mikebom:depends-unresolved` is transparent ("mikebom knows about this declared dep but couldn't resolve it"). The pair semantically composes — when querying for closure gaps, walk both keys together.
+> **Milestone**: 128 (Yocto recipe enrichment FR-009).
+> **Catalog**: [C77](sbom-format-mapping.md) + [C78](sbom-format-mapping.md)
+
+```jq
+# CDX — list every component with unresolved declared deps (closure gaps):
+jq '.components[]
+    | select(.properties[]?
+             | .name == "mikebom:depends-unresolved")
+    | {
+        purl,
+        depends_unresolved:  (.properties[]? | select(.name == "mikebom:depends-unresolved")  | .value | fromjson),
+        rdepends_unresolved: (.properties[]? | select(.name == "mikebom:rdepends-unresolved") | .value | fromjson? // [])
+      }
+' your.cdx.json
+```
+
+#### `mikebom:assertion-conflict`
+
+> **What it is**: structured audit signal flagging components where the operator's supplement file declared a value (via `--supplement-cdx <path>`) that contradicted what mikebom's scanner observed. The VALUE is a JSON-encoded array of conflict records, each shaped `{field, scanner_value, supplement_value, winner, justification}`. The `winner` is a closed enum: `scanner` (mikebom kept its observation; supplement was rejected) or `supplement` (operator's declaration won; mikebom's observation was overridden). The `justification` is a closed enum naming the conflict-resolution rule that fired: `bytes-evident-detection-preserved` (mikebom's observation was derived from binary evidence and trumps operator-asserted metadata) or `developer-metadata-override` (the field is metadata-only and the operator's declaration wins by policy).
+>
+> **Where it lives**:
+> - **CDX 1.6**: `components[].properties[]` entry with `value` as a JSON-encoded array string.
+> - **SPDX 2.3**: annotation envelope on the Package with `value` as a native JSON array of records.
+> - **SPDX 3**: annotation envelope on the `software_Package` element with `value` as a native JSON array of records.
+> **What to do with it**: in compliance audit workflows, walk every component carrying this annotation. For each record:
+> - `winner = "scanner"` records are informational — they document that the operator's supplement file declared X but the scanner observed Y; the scanner kept its observation because the field is bytes-derived. Auditors typically don't need to act, but the record exists for transparency.
+> - `winner = "supplement"` records are audit-significant — the operator's declaration overrode the scanner's observation. Auditors should validate the supplement-declared value against external evidence (operator's policy, upstream registry metadata, license verbatim text) before accepting the override.
+>
+> The hard / soft partition (scanner wins on bytes-derived facts; developer wins on metadata) is mechanically derived from the field — consumers can re-validate the partition by re-running the logic.
+> **Milestone**: 119 (supplement-CDX merge FR-008 / FR-009).
+> **Catalog**: [C67](sbom-format-mapping.md)
+
+```jq
+# CDX — surface every supplement-override (winner = "supplement") for auditor review:
+jq '.components[]
+    | select(.properties[]?
+             | .name == "mikebom:assertion-conflict")
+    | {
+        purl,
+        conflicts: (.properties[]
+                    | select(.name == "mikebom:assertion-conflict")
+                    | .value | fromjson)
+      }
+    | .conflicts[]
+    | select(.winner == "supplement")
+    | {purl: .purl, field: .field, justification: .justification}
 ' your.cdx.json
 ```
 
@@ -457,7 +716,7 @@ Alphabetical order. Each entry links to the FIRST catalog row that mentions the 
 - **`mikebom:also-detected-via`** — when the deduplicator merges entries from multiple readers, lists the alternative reader sources for the surviving component. ([C56](sbom-format-mapping.md))
 - **`mikebom:assembly-version-informational`** — for .NET assemblies, the raw `AssemblyInformationalVersion` value extracted from the binary. ([catalog](sbom-format-mapping.md))
 - **`mikebom:assembly-version-informational-stripped`** — for .NET assemblies, the `AssemblyInformationalVersion` stripped of its build-metadata SemVer suffix (everything after `+`) for cross-tool comparison. ([C87](sbom-format-mapping.md))
-- **`mikebom:assertion-conflict`** — milestone-119 supplement-CDX merge: signals when a supplement file's assertion conflicts with auto-detected scan data. ([C67](sbom-format-mapping.md))
+- **`mikebom:assertion-conflict`** — milestone-119 supplement-CDX merge: structured records flagging where the operator's supplement-declared values contradicted scanner observations (closed `winner` enum `scanner`/`supplement`, closed `justification` enum). See [§3.4](#34-transparency--completeness-gaps) for depth coverage. ([C67](sbom-format-mapping.md))
 - **`mikebom:bazel-archive-name`** — for Bazel-emitted components, the archive filename used in the BUILD/WORKSPACE rule. ([C54](sbom-format-mapping.md))
 - **`mikebom:bbappend-applied`** — Yocto: signals that a `.bbappend` recipe overlay was applied during build. ([C76](sbom-format-mapping.md))
 - **`mikebom:binary-class`** — binary-tier classification (`elf-executable` / `elf-shared-library` / `pe-executable` / `mach-o-binary` / etc.). ([C10](sbom-format-mapping.md))
@@ -468,12 +727,12 @@ Alphabetical order. Each entry links to the FIRST catalog row that mentions the 
 - **`mikebom:build-reference`** — links a build-tier component to its build-system reference (Bazel target, Maven coord, etc.). ([C57](sbom-format-mapping.md))
 - **`mikebom:buildinfo-status`** — Debian buildinfo-file presence + verification status (`present` / `absent` / `partial`). ([C13](sbom-format-mapping.md))
 - **`mikebom:co-owned-by`** — multi-source component co-ownership marker (e.g., Maven coord owned by both `groupA:artifact` and `groupB:artifact`). ([C7](sbom-format-mapping.md))
-- **`mikebom:component-role`** — milestone-127 role tag (`main-module` / `service` / etc.) for root-selection logic. Internal — filtered before emission. ([C40](sbom-format-mapping.md))
+- **`mikebom:component-role`** — milestone-127 role tag for root-selection + downstream filtering. Open-enum string; common values: `build-tool` / `language-runtime` / `main-module` / `workspace-root` / `saas-service`. Emitted to wire output for most values; the `main-module` value is stripped on a per-component basis when the milestone-077 root override fires with the milestone-149 drop or demote path. ([C40](sbom-format-mapping.md))
 - **`mikebom:component-tier`** — package-tier vs binary-tier vs file-tier classification. See [§3.2](#32-compliance-auditing) for depth coverage. ([C91](sbom-format-mapping.md))
-- **`mikebom:confidence`** — resolution-confidence score (0.0–1.0) for components identified via fuzzy matching. ([C16](sbom-format-mapping.md))
+- **`mikebom:confidence`** — qualitative confidence label for components identified via heuristic matching (closed enum — currently only `"heuristic"`). For numeric quantitative confidence on fingerprint-matched components see [`mikebom:fingerprint-confidence`](#appendix-a--annotation-key-index) (C59) — distinct key. See [§3.3](#33-build-provenance) for depth coverage. ([C16](sbom-format-mapping.md))
 - **`mikebom:cpe-candidates`** — when a component has multiple unresolved CPE candidates, the full set rides this annotation (resolved candidates ride native `externalRefs[cpe23Type]`). ([C19](sbom-format-mapping.md))
 - **`mikebom:demoted-from-main-module`** — milestone-149 marker for library entries preserved from the manifest-derived main-module after `--root-name` override + `--preserve-manifest-main-module` opt-in. See [§3.2](#32-compliance-auditing) for depth coverage. ([C102](sbom-format-mapping.md))
-- **`mikebom:depends-unresolved`** — for components with declared deps mikebom couldn't resolve, lists the unresolved dep names. ([C77](sbom-format-mapping.md))
+- **`mikebom:depends-unresolved`** — for components with declared deps mikebom couldn't resolve, lists the unresolved dep names (currently emitted only by the Yocto recipe reader; key namespace reserved for cross-ecosystem use). See [§3.4](#34-transparency--completeness-gaps) for depth coverage. ([C77](sbom-format-mapping.md))
 - **`mikebom:deps-dev-match`** — deps.dev enrichment match record (system + name + version triple). ([C3](sbom-format-mapping.md))
 - **`mikebom:detected-cargo-auditable`** — boolean signaling the binary embeds cargo-auditable JSON manifest data. ([C36](sbom-format-mapping.md))
 - **`mikebom:detected-go`** — Go-binary detection metadata (Go module path + version extracted from `runtime/debug.BuildInfo`). ([C14](sbom-format-mapping.md))
@@ -483,7 +742,7 @@ Alphabetical order. Each entry links to the FIRST catalog row that mentions the 
 - **`mikebom:elf-compiler-stamps`** — compiler-version strings extracted from ELF `.comment` / `.note.gnu` sections. ([C49](sbom-format-mapping.md))
 - **`mikebom:elf-debuglink`** — ELF `.gnu_debuglink` reference (path to debug-symbol companion file). ([C26](sbom-format-mapping.md))
 - **`mikebom:elf-runpath`** — ELF `DT_RPATH` / `DT_RUNPATH` colon-separated runpath entries. ([C25](sbom-format-mapping.md))
-- **`mikebom:evidence-kind`** — classification of evidence quality (`direct-observation` / `inference` / `enrichment`). ([C4](sbom-format-mapping.md))
+- **`mikebom:evidence-kind`** — classification of evidence quality (`direct-observation` / `inference` / `enrichment`). See [§3.3](#33-build-provenance) for depth coverage. ([C4](sbom-format-mapping.md))
 - **`mikebom:exclude-path`** — milestone-113 transparency annotation listing exclude-path patterns that suppressed file emission. ([C63](sbom-format-mapping.md))
 - **`mikebom:file-inventory-mode`** — milestone-133 marker emitted only when `--file-inventory=full` (override mode). See [§3.4](#34-transparency--completeness-gaps) for depth coverage. ([C97](sbom-format-mapping.md))
 - **`mikebom:file-inventory-skipped-oversize`** — milestone-133 transparency counter for files skipped during the file-tier walk due to size cap. ([C93](sbom-format-mapping.md))
@@ -505,7 +764,7 @@ Alphabetical order. Each entry links to the FIRST catalog row that mentions the 
 - **`mikebom:license-concluded-source`** — milestone-132 provenance marker for license conclusions. See [§3.2](#32-compliance-auditing) for depth coverage. ([C98](sbom-format-mapping.md))
 - **`mikebom:lifecycle-scope`** — milestone-052 finer-grained dev/build/test/runtime scope distinction. See [§3.1](#31-vulnerability-scanning) for depth coverage. ([C42](sbom-format-mapping.md))
 - **`mikebom:lifecycle-scope-derivation`** — milestone-062 reason-class for why a particular lifecycle-scope was chosen for a component. ([C62](sbom-format-mapping.md))
-- **`mikebom:linkage-kind`** — binary linkage classification (`statically-linked` / `dynamically-linked` / `cgo-import` / etc.). ([C12](sbom-format-mapping.md))
+- **`mikebom:linkage-kind`** — binary linkage classification (closed enum: `dynamic` / `static` / `mixed`). See [§3.1](#31-vulnerability-scanning) for depth coverage. ([C12](sbom-format-mapping.md))
 - **`mikebom:macho-build-tools`** — Mach-O `LC_BUILD_VERSION` build-tools entries (clang/swift version + similar). ([C51](sbom-format-mapping.md))
 - **`mikebom:macho-build-version`** — Mach-O `LC_BUILD_VERSION` SDK + min-OS values. ([C50](sbom-format-mapping.md))
 - **`mikebom:macho-codesign-flags`** — Mach-O code-signature flags bitmask (hex). ([C38](sbom-format-mapping.md))
@@ -514,7 +773,7 @@ Alphabetical order. Each entry links to the FIRST catalog row that mentions the 
 - **`mikebom:macho-min-os`** — Mach-O `LC_VERSION_MIN_*` minimum-OS version. ([C32](sbom-format-mapping.md))
 - **`mikebom:macho-rpath`** — Mach-O `LC_RPATH` runpath entries. ([C31](sbom-format-mapping.md))
 - **`mikebom:macho-uuid`** — Mach-O `LC_UUID` binary identifier. ([C30](sbom-format-mapping.md))
-- **`mikebom:not-linked`** — milestone-050 marker for Go components present in source but never linked into the binary output. ([C41](sbom-format-mapping.md))
+- **`mikebom:not-linked`** — milestone-050 marker for Go components present in source but never linked into the binary output (two-state: present `true` = proven not-linked; absent = either confirmed-linked OR no-binary-present). See [§3.1](#31-vulnerability-scanning) for depth coverage. ([C41](sbom-format-mapping.md))
 - **`mikebom:npm-role`** — npm-specific component role (e.g., `workspace-root` / `peer-dep`). ([C9](sbom-format-mapping.md))
 - **`mikebom:orphan-reason`** — when a component appears as a graph orphan (no inbound edges), enumerates the reason class. ([C45](sbom-format-mapping.md))
 - **`mikebom:os-release-missing-fields`** — document-scope transparency: lists `/etc/os-release` fields missing during distro detection. ([C22](sbom-format-mapping.md))
@@ -526,7 +785,7 @@ Alphabetical order. Each entry links to the FIRST catalog row that mentions the 
 - **`mikebom:produces-binaries`** — milestone-116 marker for source components that produce binary outputs (cross-tier binding helper). ([C64](sbom-format-mapping.md))
 - **`mikebom:purl-collisions-detected`** — milestone-134 document-scope summary of divergent same-PURL collisions. See [§3.1](#31-vulnerability-scanning) for depth coverage. ([C100](sbom-format-mapping.md))
 - **`mikebom:raw-version`** — pre-canonicalization raw version string when canonicalization altered the value. ([C17](sbom-format-mapping.md))
-- **`mikebom:rdepends-unresolved`** — for components with declared runtime-deps mikebom couldn't resolve, lists the unresolved names. ([C78](sbom-format-mapping.md))
+- **`mikebom:rdepends-unresolved`** — for components with declared runtime-deps mikebom couldn't resolve, lists the unresolved names (paired with [`mikebom:depends-unresolved`](#appendix-a--annotation-key-index); same Yocto-only emission + reserved-key framing). See [§3.4](#34-transparency--completeness-gaps) for depth coverage. ([C78](sbom-format-mapping.md))
 - **`mikebom:requirement-range`** — the declared version-range constraint (e.g., `^1.2.0` / `>=2.0`) when known. ([C20](sbom-format-mapping.md))
 - **`mikebom:resolver-step`** — milestone-091 Go resolver: enumerates which resolution-ladder step produced a transitive component (e.g., `go-mod-graph` / `go-sum-fallback`). ([C48](sbom-format-mapping.md))
 - **`mikebom:root-selection-heuristic`** — milestone-127 document-scope: which heuristic selected the root component (per the [SBOM root-selection ladder](component-tiers.md)). ([C69](sbom-format-mapping.md))
@@ -575,6 +834,12 @@ Each depth-covered signal cites the milestone that introduced or stabilized it. 
 | `mikebom:demoted-from-main-module` | 149 | added (closes issue #151) |
 | `mikebom:source-type` | 002 | added |
 | `mikebom:source-type` | 049, 050, 052, 055 | refined / extended across multiple milestones |
+| `mikebom:evidence-kind` | 002-era | added (foundational discovery / enrichment infrastructure); depth coverage added in 151 |
+| `mikebom:confidence` | 002-era | added (foundational; carries qualitative `"heuristic"` value — distinct from milestone-110's numeric `mikebom:fingerprint-confidence`); depth coverage added in 151 |
+| `mikebom:linkage-kind` | 005-era | added (binary tier readers landed); enum stabilized in milestone 104 (binary-role classification); depth coverage added in 151 |
+| `mikebom:not-linked` | 050 | added (Go binary-vs-source comparison G3 redesign); depth coverage added in 151 |
+| `mikebom:assertion-conflict` | 119 | added (supplement-CDX merge FR-008 / FR-009); depth coverage added in 151 |
+| `mikebom:depends-unresolved` + `mikebom:rdepends-unresolved` | 128 | added (Yocto recipe enrichment FR-009 — currently Yocto-only emission, key namespace reserved); depth coverage added in 151 |
 | `mikebom:generation-context` | 002 | added |
 | `mikebom:generation-context` | 005, 047 | refined |
 | `mikebom:source-document-binding` | 072 | added |
