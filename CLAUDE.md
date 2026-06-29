@@ -171,6 +171,7 @@ Auto-generated from all feature plans. Last updated: 2026-06-28
 - N/A — per-scan in-process state; no persistence. (147-npm-peer-edges)
 - Rust stable (workspace toolchain inherited from milestones 001–147; no nightly required for this user-space-only work). + Existing only — `std::collections::HashMap` + `std::collections::BTreeSet` (both pervasive in the codebase, no new use). The pass operates on `mikebom_common::resolution::ResolvedComponent` (already a workspace type). **No new Cargo dependencies.** (148-source-files-union)
 - N/A — purely in-process per-scan transformation; no persistence. (148-source-files-union)
+- Rust stable (workspace toolchain inherited from milestones 001–148; no nightly required for this user-space-only work). + Existing only — `clap` for the new boolean flag (via `Args`-derive — already used pervasively for milestones 077 / 081 / 119 / 134 flags), `serde`/`serde_json` for the annotation value, `tracing` for the INFO-level diagnostics on the no-op edge cases. `mikebom_common::resolution::ResolvedComponent` is the existing workspace type; `mikebom_common::types::purl::Purl` for the demoted entry's PURL (unchanged from pre-demote). **No new Cargo dependencies.** (149-demote-manifest-mainmod)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -233,9 +234,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 149-demote-manifest-mainmod: Added Rust stable (workspace toolchain inherited from milestones 001–148; no nightly required for this user-space-only work). + Existing only — `clap` for the new boolean flag (via `Args`-derive — already used pervasively for milestones 077 / 081 / 119 / 134 flags), `serde`/`serde_json` for the annotation value, `tracing` for the INFO-level diagnostics on the no-op edge cases. `mikebom_common::resolution::ResolvedComponent` is the existing workspace type; `mikebom_common::types::purl::Purl` for the demoted entry's PURL (unchanged from pre-demote). **No new Cargo dependencies.**
 - 148-source-files-union: Added Rust stable (workspace toolchain inherited from milestones 001–147; no nightly required for this user-space-only work). + Existing only — `std::collections::HashMap` + `std::collections::BTreeSet` (both pervasive in the codebase, no new use). The pass operates on `mikebom_common::resolution::ResolvedComponent` (already a workspace type). **No new Cargo dependencies.**
 - 147-npm-peer-edges: Added Rust stable (workspace toolchain inherited from milestones 001–146; no nightly required). + Existing only — `serde_json` (already pervasive in the npm reader), `BTreeMap` (already used at `package_lock.rs:166` for the existing `depends_set`), `BTreeSet` (for tracking peer-edge target uniqueness). **No new Cargo dependencies.**
-- 146-license-expression-dedup: Added Rust stable (workspace toolchain inherited from milestones 001–145; no nightly required). + Existing only — `spdx = "0.10"` (already a workspace dep at `mikebom-common`; reused for parse + tree-walking + display). **No new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->
