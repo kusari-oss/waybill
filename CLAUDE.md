@@ -173,6 +173,8 @@ Auto-generated from all feature plans. Last updated: 2026-06-29
 - N/A — purely in-process per-scan transformation; no persistence. (148-source-files-union)
 - Rust stable (workspace toolchain inherited from milestones 001–148; no nightly required for this user-space-only work). + Existing only — `clap` for the new boolean flag (via `Args`-derive — already used pervasively for milestones 077 / 081 / 119 / 134 flags), `serde`/`serde_json` for the annotation value, `tracing` for the INFO-level diagnostics on the no-op edge cases. `mikebom_common::resolution::ResolvedComponent` is the existing workspace type; `mikebom_common::types::purl::Purl` for the demoted entry's PURL (unchanged from pre-demote). **No new Cargo dependencies.** (149-demote-manifest-mainmod)
 - N/A — Markdown documentation. The mikebom binary is unchanged. + None. The doc is static reference Markdown. (150-sbom-consumer-guide)
+- N/A — Markdown documentation only. No Rust source touched. (The mikebom binary is unchanged; its CLI surface, library APIs, and emitted SBOM wire formats are all stable across this milestone per FR-016 / FR-017.) + Existing only — `jq` (for recipe verification at authoring time), the released `mikebom` binary at workspace HEAD (for generating real SBOMs the recipes run against), `bash` (for `verify-recipes.sh`). No new Cargo, Python, or Node dependencies. (151-expand-consumer-guide)
+- N/A — purely documentation. The verify-recipes.sh harness writes scratch SBOMs to `mktemp -d` and cleans up on exit (matches milestone 150's harness pattern). (151-expand-consumer-guide)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -235,9 +237,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 151-expand-consumer-guide: Added N/A — Markdown documentation only. No Rust source touched. (The mikebom binary is unchanged; its CLI surface, library APIs, and emitted SBOM wire formats are all stable across this milestone per FR-016 / FR-017.) + Existing only — `jq` (for recipe verification at authoring time), the released `mikebom` binary at workspace HEAD (for generating real SBOMs the recipes run against), `bash` (for `verify-recipes.sh`). No new Cargo, Python, or Node dependencies.
 - 150-sbom-consumer-guide: Added N/A — Markdown documentation. The mikebom binary is unchanged. + None. The doc is static reference Markdown.
 - 149-demote-manifest-mainmod: Added Rust stable (workspace toolchain inherited from milestones 001–148; no nightly required for this user-space-only work). + Existing only — `clap` for the new boolean flag (via `Args`-derive — already used pervasively for milestones 077 / 081 / 119 / 134 flags), `serde`/`serde_json` for the annotation value, `tracing` for the INFO-level diagnostics on the no-op edge cases. `mikebom_common::resolution::ResolvedComponent` is the existing workspace type; `mikebom_common::types::purl::Purl` for the demoted entry's PURL (unchanged from pre-demote). **No new Cargo dependencies.**
-- 148-source-files-union: Added Rust stable (workspace toolchain inherited from milestones 001–147; no nightly required for this user-space-only work). + Existing only — `std::collections::HashMap` + `std::collections::BTreeSet` (both pervasive in the codebase, no new use). The pass operates on `mikebom_common::resolution::ResolvedComponent` (already a workspace type). **No new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->
