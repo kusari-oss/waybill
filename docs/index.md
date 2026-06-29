@@ -48,6 +48,11 @@ the way it did, or contribute to the pipeline.
   `verify-binding`, `trace-binding`, and the binding-hash-v1 algorithm.
 - [Cross-format SBOM mapping](reference/sbom-format-mapping.md) — per-feature
   carrier matrix across CDX 1.6, SPDX 2.3, and SPDX 3.
+- [Reading a mikebom SBOM](reference/reading-a-mikebom-sbom.md) — consumer-facing
+  guide to mikebom-emitted signals (what they mean, where to find them per
+  format, how to use them). Cross-references the
+  [SBOM format mapping](reference/sbom-format-mapping.md) catalog for full
+  per-row wire-shape detail.
 - [Conformance harness guide](reference/conformance-harness-guide.md) —
   per-format envelope-decode rules and the 7 inherent format-spec asymmetries.
 - [Ecosystems](ecosystems.md) — per-ecosystem coverage matrix for all nine
