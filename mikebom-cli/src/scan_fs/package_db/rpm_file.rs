@@ -452,7 +452,24 @@ fn parse_rpm_file(
     };
     let purl = Purl::new(&purl_str).ok()?;
 
-    let licenses: Vec<SpdxExpression> = license_str
+    // Issue #475: Yocto recipes use BitBake-native `&` for AND and `|`
+    // for OR in the LICENSE field; rpmbuild copies the value verbatim
+    // into the RPM `License:` header without translating to SPDX
+    // canonical operators. The `spdx` crate's lexer (both strict and
+    // lax parse modes) rejects `&` and `|` as invalid characters before
+    // the parser ever runs, so `try_canonical` returns Err and the
+    // license drops to NOASSERTION downstream. Normalize the operators
+    // to SPDX-canonical form first so genuine multi-license expressions
+    // round-trip correctly. The substitution is space-delimited so it
+    // only fires on the operator positions — no SPDX-list identifier
+    // contains a literal `&` or `|`. If the normalized string is still
+    // not a valid SPDX expression, `try_canonical` returns Err and we
+    // fall back to the existing NOASSERTION behavior (correct — don't
+    // emit unverified strings).
+    let normalized_license = license_str
+        .as_deref()
+        .map(normalize_bitbake_license_operators);
+    let licenses: Vec<SpdxExpression> = normalized_license
         .as_deref()
         .and_then(|l| SpdxExpression::try_canonical(l).ok())
         .into_iter()
@@ -570,6 +587,24 @@ fn percent_encode_purl_segment(s: &str) -> String {
 fn percent_encode_purl_qualifier(s: &str) -> String {
     // Qualifier values are similar to segment but allow `.`, `_`.
     percent_encode_purl_segment(s)
+}
+
+/// Normalize Yocto BitBake-native license operators (`&`, `|`) to
+/// SPDX-canonical operators (`AND`, `OR`) so the `spdx` crate's parser
+/// accepts the expression. Issue #475: 10/35 Yocto-built RPMs in the
+/// core-image-minimal scan had multi-license `License:` headers that
+/// silently dropped to NOASSERTION because of this single root cause.
+///
+/// Substitution is space-delimited (` & ` → ` AND `, ` | ` → ` OR `) so
+/// it fires only on the operator positions — no SPDX-list identifier
+/// contains a literal `&` or `|`. Idempotent: re-running on already-
+/// canonical input returns the input unchanged. Non-allocating no-op
+/// when the input contains neither operator.
+fn normalize_bitbake_license_operators(raw: &str) -> String {
+    if !raw.contains(" & ") && !raw.contains(" | ") {
+        return raw.to_string();
+    }
+    raw.replace(" & ", " AND ").replace(" | ", " OR ")
 }
 
 fn is_purl_segment_safe(b: u8) -> bool {
@@ -1021,5 +1056,100 @@ mod tests {
         // No .rpm files in the synthesized fixture; the test only
         // asserts the call returned (didn't hang).
         assert!(result.is_empty());
+    }
+
+    // --- Issue #475: BitBake `&`/`|` license operator normalization ------
+
+    #[test]
+    fn normalize_bitbake_and_operator_to_spdx_canonical() {
+        // Yocto's actual core-image-minimal libc6 License: tag — was
+        // dropping to NOASSERTION pre-fix because the spdx crate's
+        // lexer rejects `&`.
+        let raw = "GPL-2.0-only & LGPL-2.1-or-later";
+        let normalized = normalize_bitbake_license_operators(raw);
+        assert_eq!(normalized, "GPL-2.0-only AND LGPL-2.1-or-later");
+        // Sanity: the normalized form MUST round-trip through
+        // SpdxExpression::try_canonical, which is the real-world
+        // condition the fix targets.
+        SpdxExpression::try_canonical(&normalized)
+            .expect("normalized expression MUST parse as canonical SPDX");
+    }
+
+    #[test]
+    fn normalize_bitbake_or_operator_to_spdx_canonical() {
+        // The `|` operator from Yocto recipes; less common in core-image-
+        // minimal but legitimate (e.g., dual-licensed crates).
+        let raw = "GPL-2.0-only | MIT";
+        let normalized = normalize_bitbake_license_operators(raw);
+        assert_eq!(normalized, "GPL-2.0-only OR MIT");
+        SpdxExpression::try_canonical(&normalized)
+            .expect("normalized OR expression MUST parse as canonical SPDX");
+    }
+
+    #[test]
+    fn normalize_preserves_already_canonical_spdx_expression() {
+        // Inputs that don't contain BitBake operators must be returned
+        // verbatim (no spurious substitution).
+        let inputs = [
+            "MIT",
+            "GPL-2.0-only AND LGPL-2.1-or-later",
+            "GPL-2.0-only OR Apache-2.0",
+            "GPL-2.0-or-later WITH Classpath-exception-2.0",
+            "DocumentRef-recipe-busybox:LicenseRef-bzip2-1.0.4",
+        ];
+        for input in inputs {
+            assert_eq!(
+                normalize_bitbake_license_operators(input),
+                input,
+                "already-canonical input MUST be returned verbatim: {input:?}",
+            );
+        }
+    }
+
+    #[test]
+    fn normalize_handles_mixed_bitbake_operators_in_one_expression() {
+        // Recipes can mix `&` and `|` (with parentheses), e.g.,
+        // `(GPL-2.0-only | LGPL-3.0-only) & BSD-3-Clause`. Normalize
+        // both at once.
+        let raw = "(GPL-2.0-only | LGPL-3.0-only) & BSD-3-Clause";
+        let normalized = normalize_bitbake_license_operators(raw);
+        assert_eq!(
+            normalized,
+            "(GPL-2.0-only OR LGPL-3.0-only) AND BSD-3-Clause"
+        );
+        SpdxExpression::try_canonical(&normalized)
+            .expect("mixed-operator normalized expression MUST parse as canonical SPDX");
+    }
+
+    #[test]
+    fn normalize_handles_bitbake_operator_with_license_ref() {
+        // The busybox-family case from issue #475: a SPDX-list ID
+        // combined with a DocumentRef:LicenseRef chain via `&`.
+        let raw = "GPL-2.0-only & DocumentRef-recipe-busybox:LicenseRef-bzip2-1.0.4";
+        let normalized = normalize_bitbake_license_operators(raw);
+        assert_eq!(
+            normalized,
+            "GPL-2.0-only AND DocumentRef-recipe-busybox:LicenseRef-bzip2-1.0.4"
+        );
+        SpdxExpression::try_canonical(&normalized)
+            .expect("normalized LicenseRef-bearing expression MUST parse as canonical SPDX");
+    }
+
+    #[test]
+    fn normalize_is_idempotent() {
+        // FR-style invariant: running the normalizer twice on the same
+        // input produces byte-identical output. Important because the
+        // normalizer is called on user-controlled RPM header data; an
+        // accidental double-invoke must not corrupt the value.
+        let inputs = [
+            "GPL-2.0-only & LGPL-2.1-or-later",
+            "MIT",
+            "GPL-2.0-only | Apache-2.0",
+        ];
+        for input in inputs {
+            let once = normalize_bitbake_license_operators(input);
+            let twice = normalize_bitbake_license_operators(&once);
+            assert_eq!(once, twice, "normalizer MUST be idempotent for {input:?}");
+        }
     }
 }
