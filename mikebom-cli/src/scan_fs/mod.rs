@@ -38,7 +38,7 @@ use mikebom_common::resolution::{
 };
 
 use crate::generate::cpe::synthesize_cpes;
-use crate::resolve::deduplicator::deduplicate;
+use crate::resolve::deduplicator::{canonicalize_source_files_by_purl, deduplicate};
 use crate::resolve::path_resolver::resolve_path_with_context;
 
 /// Confidence assigned to components discovered by a filesystem walk.
@@ -748,6 +748,22 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     apply_lifecycle_scope_to_edges(&components, &mut relationships);
 
     let mut components = deduplicate(components);
+    // Milestone 148: cross-PURL canonicalization. Some ecosystems (Maven
+    // nested-coord case at scan_fs/package_db/maven.rs:3429-3457, Cargo
+    // workspace vendoring, Go vendored modules) intentionally retain
+    // multiple ResolvedComponent instances sharing the same Purl::as_str()
+    // value but differing in parent_purl — the CDX nested-components
+    // topology depends on this. Pre-148 each surviving entry carried its
+    // own single-path source_file_paths Vec, and per-emitter iteration-
+    // order differences produced cross-format divergence on the
+    // mikebom:source-files annotation (51 polyglot-builder-image audit
+    // findings, 2026-06-28). The canonicalize pass writes the alphabetically-
+    // sorted union of all observed paths onto every same-PURL entry so
+    // every emitter sees the same Vec content and emits the same
+    // mikebom:source-files value regardless of which entry the harness
+    // picks first. Idempotent; preserves all other fields including
+    // parent_purl topology. See specs/148-source-files-union/ for details.
+    canonicalize_source_files_by_purl(&mut components);
     // Post-dedup CPE synthesis — runs on the merged set so a component
     // that exists in both the filename pass and the dpkg pass gets one
     // set of CPEs (attached to the single winning entry) instead of two.
