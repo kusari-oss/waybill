@@ -1,4 +1,6 @@
-//! CMake source-tree reader (milestone 102 US2 / milestone 103 implementation).
+//! CMake source-tree reader (milestone 102 US2 / milestone 103 impl;
+//! extended by milestone 155 to parse `find_package` +
+//! `pkg_check_modules` — reversing the milestone-102 FR-007 refusal).
 //!
 //! Parses `CMakeLists.txt` + included `.cmake` files for:
 //! - `FetchContent_Declare(<name> GIT_REPOSITORY ... GIT_TAG ...)` — emits
@@ -11,13 +13,24 @@
 //!   `include_vendored` parameter (wired from PR-A's CLI flag); emits
 //!   `pkg:generic/<name>@<version-from-version.txt>` with the JSON
 //!   boolean `mikebom:vendored = true` annotation.
-//!
-//! `find_package(X)` declarations are NOT parsed per FR-007 — they
-//! resolve to system-installed packages and would double-count
-//! against OS-package readers + vcpkg + Conan.
+//! - **milestone 155**: `find_package(<Name> [<Version>])` — emits
+//!   `pkg:generic/<lowercased-name>[@<highest-declared-version>]` with
+//!   `mikebom:source-mechanism = "cmake-find-package"`. Multi-file
+//!   same-name declarations are consolidated to the highest declared
+//!   version (Q1 clarification). Original casing preserved in the
+//!   `mikebom:cmake-find-package-name` annotation when it differs from
+//!   the lowercased PURL. Same-PURL cross-mechanism double-counting is
+//!   prevented by the production `resolve::deduplicator` pass.
+//! - **milestone 155**: `pkg_check_modules(<TARGET> <modules>)` +
+//!   `pkg_search_module(<TARGET> <modules>)` — emits one
+//!   `pkg:generic/<module>` per module (target variable discarded,
+//!   version constraints stripped) with
+//!   `mikebom:source-mechanism = "cmake-pkg-check-modules"`.
 //!
 //! Walks at depth 1: scan root for `CMakeLists.txt`; `cmake/`,
 //! `Modules/`, `third_party/` for `*.cmake` files. Per FR-005.
+//! Deeper walker scope (e.g., `cmake/modules/Find*.cmake`) is a
+//! separate future milestone.
 //!
 //! Cross-platform; no `#[cfg(unix)]` gates. Zero new Cargo deps —
 //! uses workspace `regex` + std.
@@ -32,9 +45,81 @@ use regex::Regex;
 
 use super::PackageDbEntry;
 
+/// Milestone 155 — one hit per successfully matched `find_package(<Name>
+/// [<Version>])` call site. Accumulated across all discovered CMake
+/// files by `read()`, then consumed by `emit_find_package_entries`.
+struct FindPackageHit {
+    lowercased_name: String,
+    original_casing: String,
+    declared_version: Option<String>,
+    source_path: String,
+}
+
+/// Milestone 155 — one hit per module in a `pkg_check_modules` /
+/// `pkg_search_module` module list. Accumulated across all discovered
+/// CMake files by `read()`, then consumed by `emit_pkg_check_module_entries`.
+struct PkgCheckHit {
+    lowercased_module: String,
+    #[allow(dead_code)] // Reserved for future case-preservation traceability.
+    original_casing: String,
+    source_path: String,
+}
+
+/// Milestone 155 — pick the highest declared version across a group of
+/// same-name `find_package` sites (Q1 clarification: highest declared
+/// version wins). Component-wise numeric SemVer with zero-padding when
+/// every part parses as `u64`; otherwise lexicographic with a
+/// `tracing::warn` diagnostic. Returns `None` when all inputs are None.
+fn pick_highest_version(versions: &[Option<String>]) -> Option<String> {
+    let some_versions: Vec<&String> = versions.iter().filter_map(|v| v.as_ref()).collect();
+    if some_versions.is_empty() {
+        return None;
+    }
+    if some_versions.len() == 1 {
+        return Some(some_versions[0].clone());
+    }
+    // Check if EVERY segment of EVERY version parses as u64.
+    let parsed: Option<Vec<Vec<u64>>> = some_versions
+        .iter()
+        .map(|v| {
+            v.split('.')
+                .map(|seg| seg.parse::<u64>().ok())
+                .collect::<Option<Vec<u64>>>()
+        })
+        .collect();
+    if let Some(mut all_numeric) = parsed {
+        // Zero-pad to the same length for component-wise comparison.
+        let max_len = all_numeric.iter().map(|v| v.len()).max().unwrap_or(0);
+        for v in all_numeric.iter_mut() {
+            v.resize(max_len, 0);
+        }
+        // Find the index of the largest.
+        let (best_idx, _) = all_numeric
+            .iter()
+            .enumerate()
+            .max_by(|a, b| a.1.cmp(b.1))
+            .expect("some_versions non-empty");
+        return Some(some_versions[best_idx].clone());
+    }
+    // Fallback: lexicographic with a warn diagnostic.
+    tracing::warn!(
+        versions = ?some_versions,
+        "milestone-155: mixed-format version strings; lexicographic ordering used — highest may not be semantically correct"
+    );
+    some_versions
+        .iter()
+        .max()
+        .map(|s| (*s).clone())
+}
+
 pub fn read(scan_root: &Path, include_vendored: bool) -> Vec<PackageDbEntry> {
     let cmake_files = discover_cmake_files(scan_root);
     let mut entries = Vec::new();
+    // Milestone 155: accumulate find_package + pkg_check_modules hits
+    // across ALL discovered CMake files so we can pick the highest
+    // declared version per name (Q1 clarification) before emitting.
+    let mut find_package_hits: Vec<FindPackageHit> = Vec::new();
+    let mut pkg_check_hits: Vec<PkgCheckHit> = Vec::new();
     for path in &cmake_files {
         let content = match std::fs::read_to_string(path) {
             Ok(s) => s,
@@ -61,8 +146,237 @@ pub fn read(scan_root: &Path, include_vendored: bool) -> Vec<PackageDbEntry> {
         if include_vendored {
             entries.extend(parse_vendored(&content, &source_path, scan_root));
         }
+        find_package_hits.extend(parse_find_package_calls(&content, &source_path));
+        pkg_check_hits.extend(parse_pkg_check_modules_calls(&content, &source_path));
     }
+    entries.extend(emit_find_package_entries(find_package_hits));
+    entries.extend(emit_pkg_check_module_entries(pkg_check_hits));
     entries
+}
+
+/// Milestone 155 — parse `find_package(<Name> [<Version>])` call sites
+/// from a CMake file body. Returns one hit per call site (dedup + version
+/// consolidation happen later in `emit_find_package_entries`).
+///
+/// Regex per research §R2.1:
+/// - `^[^#\n]*?` comment-strip prefix (FR-011): rejects lines where
+///   `#` precedes the token.
+/// - `\bfind_package\s*\(` requires the immediate open-paren so
+///   `find_package_handle_standard_args(...)` (FR-009) does NOT match
+///   — the `_handle_standard_args` suffix prevents `\s*\(` from matching
+///   immediately after the `find_package` prefix.
+/// - Capture group 1: name in the CMake identifier alphabet
+///   `[A-Za-z0-9_:.+-]+`. Excludes `$`, `{`, `}` so `find_package(${VAR})`
+///   (FR-010) fails to capture.
+/// - Capture group 2 (optional): version — MUST start with a digit to
+///   distinguish from modifier keywords like `REQUIRED`, `QUIET`,
+///   `EXACT`, `CONFIG`, `MODULE`, `COMPONENTS`, `NO_MODULE`.
+fn parse_find_package_calls(content: &str, source_path: &str) -> Vec<FindPackageHit> {
+    static FIND_PACKAGE_V155: OnceLock<Regex> = OnceLock::new();
+    let re = FIND_PACKAGE_V155.get_or_init(|| {
+        Regex::new(
+            r"(?im)^[^#\n]*?\bfind_package\s*\(\s*([A-Za-z0-9_:.+-]+)(?:\s+([0-9][A-Za-z0-9._-]*))?",
+        )
+        .expect("find_package v155 regex compiles")
+    });
+
+    // Secondary pattern for the `find_package(${VAR})` diagnostic
+    // (FR-010). Best-effort log-only; does not affect emission.
+    static FIND_PACKAGE_VAR: OnceLock<Regex> = OnceLock::new();
+    let var_re = FIND_PACKAGE_VAR
+        .get_or_init(|| {
+            Regex::new(r"(?im)\bfind_package\s*\(\s*\$\{")
+                .expect("find_package var-interp regex compiles")
+        });
+    if var_re.is_match(content) {
+        tracing::debug!(
+            source = %source_path,
+            "milestone-155: find_package(${{VAR}}) skipped — CMake variable interpolation not resolved"
+        );
+    }
+
+    let mut out = Vec::new();
+    for cap in re.captures_iter(content) {
+        let name_raw = match cap.get(1) {
+            Some(m) => m.as_str(),
+            None => continue,
+        };
+        let version = cap.get(2).map(|m| m.as_str().to_string());
+        let lowercased = name_raw.to_lowercase();
+        out.push(FindPackageHit {
+            lowercased_name: lowercased,
+            original_casing: name_raw.to_string(),
+            declared_version: version,
+            source_path: source_path.to_string(),
+        });
+    }
+    out
+}
+
+/// Milestone 155 — parse `pkg_check_modules` / `pkg_search_module` call
+/// sites. Returns one hit per module in each call's module list.
+///
+/// The regex captures the CMake TARGET variable (discarded) and the raw
+/// module-list body; the body is split on whitespace and each token is:
+/// - Filtered against the modifier-keyword set
+///   `{REQUIRED, IMPORTED_TARGET, GLOBAL, QUIET, NO_CMAKE_PATH,
+///     NO_CMAKE_ENVIRONMENT_PATH}` (case-insensitive).
+/// - Stripped of any pkg-config version-constraint suffix
+///   (`>=X.Y`, `<=X.Y`, `>X.Y`, `<X.Y`, `=X.Y`, `==X.Y`).
+/// - Lowercased for PURL emission.
+fn parse_pkg_check_modules_calls(content: &str, source_path: &str) -> Vec<PkgCheckHit> {
+    static PKG_CHECK: OnceLock<Regex> = OnceLock::new();
+    let re = PKG_CHECK.get_or_init(|| {
+        Regex::new(
+            r"(?im)^[^#\n]*?\bpkg_(?:check_modules|search_module)\s*\(\s*([A-Za-z0-9_]+)((?:\s+[A-Za-z0-9_>=<.+-]+)+)",
+        )
+        .expect("pkg_check_modules v155 regex compiles")
+    });
+
+    // Version-comparator stripper: matches a leading module name in the
+    // identifier alphabet, optionally followed by a comparator + version.
+    static MODULE_NAME: OnceLock<Regex> = OnceLock::new();
+    let module_re = MODULE_NAME.get_or_init(|| {
+        Regex::new(r"^([A-Za-z0-9_.+-]+)(?:[<>=]=?.*)?$")
+            .expect("pkg-config module name regex compiles")
+    });
+
+    let modifier_keywords: &[&str] = &[
+        "REQUIRED",
+        "IMPORTED_TARGET",
+        "GLOBAL",
+        "QUIET",
+        "NO_CMAKE_PATH",
+        "NO_CMAKE_ENVIRONMENT_PATH",
+    ];
+
+    let mut out = Vec::new();
+    for cap in re.captures_iter(content) {
+        let body = match cap.get(2) {
+            Some(m) => m.as_str(),
+            None => continue,
+        };
+        for token in body.split_whitespace() {
+            let upper = token.to_ascii_uppercase();
+            if modifier_keywords.contains(&upper.as_str()) {
+                continue;
+            }
+            // Strip version constraint if present.
+            let module_name = match module_re.captures(token) {
+                Some(c) => match c.get(1) {
+                    Some(m) => m.as_str().to_string(),
+                    None => continue,
+                },
+                None => continue,
+            };
+            if module_name.is_empty() {
+                continue;
+            }
+            let lowercased = module_name.to_lowercase();
+            out.push(PkgCheckHit {
+                lowercased_module: lowercased,
+                original_casing: module_name,
+                source_path: source_path.to_string(),
+            });
+        }
+    }
+    out
+}
+
+/// Milestone 155 — emit `PackageDbEntry` instances for `find_package`
+/// hits, applying the Q1 highest-declared-version-wins rule per group
+/// of same-lowercased-name hits. Emits ONE entry per input hit (with
+/// the group's chosen winning version) so downstream milestone-148
+/// source-file-paths union works naturally.
+fn emit_find_package_entries(hits: Vec<FindPackageHit>) -> Vec<PackageDbEntry> {
+    use std::collections::BTreeMap;
+    let mut groups: BTreeMap<String, Vec<FindPackageHit>> = BTreeMap::new();
+    for hit in hits {
+        groups.entry(hit.lowercased_name.clone()).or_default().push(hit);
+    }
+    let mut out = Vec::new();
+    for (lowercased_name, group) in groups {
+        let versions: Vec<Option<String>> =
+            group.iter().map(|h| h.declared_version.clone()).collect();
+        let winner_version = pick_highest_version(&versions);
+        let purl_str = match &winner_version {
+            Some(v) => format!(
+                "pkg:generic/{}@{}",
+                encode_purl_segment(&lowercased_name),
+                encode_purl_segment(v)
+            ),
+            None => format!("pkg:generic/{}", encode_purl_segment(&lowercased_name)),
+        };
+        for hit in group {
+            let purl = match Purl::new(&purl_str) {
+                Ok(p) => p,
+                Err(_) => continue,
+            };
+            let mut entry = build_cmake_entry(
+                &lowercased_name,
+                winner_version.as_deref().unwrap_or(""),
+                &hit.source_path,
+                purl,
+                None,
+                None,
+                false,
+                "cmake-find-package",
+            );
+            // FR-008: preserve original casing when it differs from the
+            // lowercased PURL name — parity-bridging annotation.
+            if hit.original_casing != hit.lowercased_name {
+                entry.extra_annotations.insert(
+                    "mikebom:cmake-find-package-name".to_string(),
+                    serde_json::json!(hit.original_casing),
+                );
+            }
+            // Preserve per-site version forensics when the site declared
+            // a different version than the group's chosen winner.
+            if let Some(site_v) = hit.declared_version.as_deref() {
+                if winner_version.as_deref() != Some(site_v) {
+                    entry.raw_version = Some(site_v.to_string());
+                }
+            }
+            // R10 correction: leave evidence_kind = None (matches
+            // existing cmake.rs FetchContent/ExternalProject/vendored
+            // precedent). The canonical evidence-kind enum in
+            // cyclonedx/builder.rs does not admit a "declared" value
+            // and rejects entries carrying non-enum strings. The
+            // manifest-declared semantic is already carried by
+            // sbom_tier = "source" set inside build_cmake_entry.
+            out.push(entry);
+        }
+    }
+    out
+}
+
+/// Milestone 155 — emit `PackageDbEntry` instances for `pkg_check_modules`
+/// hits. No version consolidation (pkg-config version constraints are
+/// stripped at parse time); each hit emits one entry.
+fn emit_pkg_check_module_entries(hits: Vec<PkgCheckHit>) -> Vec<PackageDbEntry> {
+    let mut out = Vec::new();
+    for hit in hits {
+        let purl_str = format!(
+            "pkg:generic/{}",
+            encode_purl_segment(&hit.lowercased_module)
+        );
+        let purl = match Purl::new(&purl_str) {
+            Ok(p) => p,
+            Err(_) => continue,
+        };
+        let entry = build_cmake_entry(
+            &hit.lowercased_module,
+            "",
+            &hit.source_path,
+            purl,
+            None,
+            None,
+            false,
+            "cmake-pkg-check-modules",
+        );
+        out.push(entry);
+    }
+    out
 }
 
 /// Collect the set of `find_package(<target> ...)` target names AND
@@ -430,6 +744,7 @@ fn build_cmake_entry(
     // Closed enum across cmake / vcpkg / conan / bazel:
     //   cmake-fetchcontent-git, cmake-fetchcontent-url,
     //   cmake-externalproject, cmake-vendored,
+    //   cmake-find-package, cmake-pkg-check-modules,  // milestone 155
     //   bazel-http-archive, vcpkg-manifest, conan-recipe.
     extra_annotations.insert(
         "mikebom:source-mechanism".to_string(),
@@ -535,18 +850,30 @@ mod tests {
     }
 
     #[test]
-    fn find_package_does_not_emit_components() {
+    fn find_package_emits_pkg_generic_since_milestone_155() {
+        // Milestone 155 REVERSES the milestone-102 FR-007 refusal.
+        // Previously (pre-155) this test asserted `entries.is_empty()`;
+        // now it asserts the emission per milestone-155 FR-002 (Q1
+        // clarification codified in spec.md §Clarifications 2026-07-02).
         let tmp = tempfile::tempdir().unwrap();
-        // ONLY find_package, no FetchContent_Declare or ExternalProject_Add.
         std::fs::write(
             tmp.path().join("CMakeLists.txt"),
             r#"find_package(zlib REQUIRED)"#,
         )
         .unwrap();
         let entries = read(tmp.path(), false);
-        assert!(
-            entries.is_empty(),
-            "find_package(X) MUST NOT emit components per FR-007; got {entries:?}"
+        assert_eq!(
+            entries.len(),
+            1,
+            "milestone 155 REVERSES milestone-102 FR-007: find_package(X) MUST now emit exactly one component; got {entries:?}"
+        );
+        assert_eq!(entries[0].purl.as_str(), "pkg:generic/zlib");
+        assert_eq!(
+            entries[0]
+                .extra_annotations
+                .get("mikebom:source-mechanism")
+                .and_then(|v| v.as_str()),
+            Some("cmake-find-package")
         );
     }
 
@@ -781,11 +1108,16 @@ add_subdirectory(tests)"#,
 
     #[test]
     fn collect_does_not_emit_components_invariant() {
-        // FR-008a guarantee: the collector populates a name set but
-        // does NOT contribute to PackageDbEntry emission. Calling
-        // both `read()` AND `collect_find_package_targets()` against
-        // the same input MUST behave identically: `read()` ignores
-        // find_package per milestone 102's FR-007.
+        // FR-008a guarantee: the collector populates a name set. It is
+        // orthogonal to milestone-155's `PackageDbEntry` emission — the
+        // collector operates on a DIFFERENT data pipeline (milestone-105
+        // US6 `git-submodule` classification) and does not interact
+        // with `read()`'s emitted entries. Post-milestone-155, `read()`
+        // DOES emit for `find_package` (previously refused per
+        // milestone-102 FR-007, now reversed); this test locks in that
+        // the collector's name set is populated INDEPENDENTLY of the
+        // emit path — both should surface `find_package(zlib)` per
+        // their respective conventions.
         let tmp = tempfile::tempdir().unwrap();
         std::fs::write(
             tmp.path().join("CMakeLists.txt"),
@@ -797,7 +1129,308 @@ add_subdirectory(tests)"#,
         .unwrap();
         let entries = read(tmp.path(), false);
         let names = collect_find_package_targets(tmp.path());
-        assert!(entries.is_empty(), "read() MUST emit zero components for find_package + ALIAS input");
+        // Milestone 155 REVERSAL: `read()` now emits for find_package.
+        let cmake_fp: Vec<_> = entries
+            .iter()
+            .filter(|e| {
+                e.extra_annotations
+                    .get("mikebom:source-mechanism")
+                    .and_then(|v| v.as_str())
+                    == Some("cmake-find-package")
+            })
+            .collect();
+        assert_eq!(
+            cmake_fp.len(),
+            1,
+            "milestone 155: read() MUST emit exactly one cmake-find-package entry for `find_package(zlib REQUIRED)`"
+        );
         assert!(!names.is_empty(), "collector MUST populate the set");
+    }
+
+    // ============================================================
+    // Milestone 155 unit tests (SC-006 floor ≥8; total = 14 tests)
+    // ============================================================
+
+    /// Helper: filter entries by source-mechanism annotation value.
+    fn by_mechanism<'a>(
+        entries: &'a [PackageDbEntry],
+        mechanism: &str,
+    ) -> Vec<&'a PackageDbEntry> {
+        entries
+            .iter()
+            .filter(|e| {
+                e.extra_annotations
+                    .get("mikebom:source-mechanism")
+                    .and_then(|v| v.as_str())
+                    == Some(mechanism)
+            })
+            .collect()
+    }
+
+    // ---- T004: 10 core unit tests per research §R6 ----
+
+    #[test]
+    fn find_package_simple_no_version_emits_pkg_generic() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            "find_package(Foo REQUIRED)\n",
+        )
+        .unwrap();
+        let entries = read(tmp.path(), false);
+        let fp = by_mechanism(&entries, "cmake-find-package");
+        assert_eq!(fp.len(), 1);
+        assert_eq!(fp[0].purl.as_str(), "pkg:generic/foo");
+        assert_eq!(
+            fp[0].extra_annotations
+                .get("mikebom:cmake-find-package-name")
+                .and_then(|v| v.as_str()),
+            Some("Foo")
+        );
+    }
+
+    #[test]
+    fn find_package_with_version_emits_at_version() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            "find_package(OpenSSL 1.1.0)\n",
+        )
+        .unwrap();
+        let entries = read(tmp.path(), false);
+        let fp = by_mechanism(&entries, "cmake-find-package");
+        assert_eq!(fp.len(), 1);
+        assert_eq!(fp[0].purl.as_str(), "pkg:generic/openssl@1.1.0");
+        assert_eq!(
+            fp[0].extra_annotations
+                .get("mikebom:cmake-find-package-name")
+                .and_then(|v| v.as_str()),
+            Some("OpenSSL")
+        );
+    }
+
+    #[test]
+    fn find_package_case_normalization() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            "find_package(BOOST 1.75.0)\n",
+        )
+        .unwrap();
+        let entries = read(tmp.path(), false);
+        let fp = by_mechanism(&entries, "cmake-find-package");
+        assert_eq!(fp.len(), 1);
+        assert_eq!(fp[0].purl.as_str(), "pkg:generic/boost@1.75.0");
+        assert_eq!(
+            fp[0].extra_annotations
+                .get("mikebom:cmake-find-package-name")
+                .and_then(|v| v.as_str()),
+            Some("BOOST")
+        );
+    }
+
+    #[test]
+    fn find_package_multiple_versions_highest_wins() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(tmp.path().join("cmake")).unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            "find_package(openssl 1.1.0)\n",
+        )
+        .unwrap();
+        std::fs::write(
+            tmp.path().join("cmake").join("defs.cmake"),
+            "find_package(openssl 3.0)\n",
+        )
+        .unwrap();
+        let entries = read(tmp.path(), false);
+        let fp = by_mechanism(&entries, "cmake-find-package");
+        // Two emissions (one per site) — but both carry the same
+        // winning-version PURL so downstream milestone-148 union
+        // merges them via same-canonical-PURL matching.
+        assert_eq!(fp.len(), 2);
+        for e in &fp {
+            assert_eq!(e.purl.as_str(), "pkg:generic/openssl@3.0");
+        }
+    }
+
+    #[test]
+    fn find_package_mixed_version_and_no_version() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(tmp.path().join("cmake")).unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            "find_package(openssl 1.1.0)\n",
+        )
+        .unwrap();
+        std::fs::write(
+            tmp.path().join("cmake").join("defs.cmake"),
+            "find_package(openssl REQUIRED)\n",
+        )
+        .unwrap();
+        let entries = read(tmp.path(), false);
+        let fp = by_mechanism(&entries, "cmake-find-package");
+        assert_eq!(fp.len(), 2);
+        for e in &fp {
+            assert_eq!(
+                e.purl.as_str(),
+                "pkg:generic/openssl@1.1.0",
+                "versioned declaration wins over version-less"
+            );
+        }
+    }
+
+    #[test]
+    fn find_package_handle_standard_args_not_extracted() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            "find_package_handle_standard_args(Foo DEFAULT_MSG FOO_LIBRARY FOO_INCLUDE_DIR)\n",
+        )
+        .unwrap();
+        let entries = read(tmp.path(), false);
+        let fp = by_mechanism(&entries, "cmake-find-package");
+        assert_eq!(
+            fp.len(),
+            0,
+            "FR-009: find_package_handle_standard_args MUST NOT emit"
+        );
+    }
+
+    #[test]
+    fn find_package_variable_interpolation_not_extracted() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            "find_package(${MY_LIB})\n",
+        )
+        .unwrap();
+        let entries = read(tmp.path(), false);
+        let fp = by_mechanism(&entries, "cmake-find-package");
+        assert_eq!(fp.len(), 0, "FR-010: variable-interpolated find_package MUST NOT emit");
+    }
+
+    #[test]
+    fn find_package_commented_out_not_extracted() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            "# find_package(SomeUnusedDep)\n    # find_package(AnotherUnusedDep 1.0)\n",
+        )
+        .unwrap();
+        let entries = read(tmp.path(), false);
+        let fp = by_mechanism(&entries, "cmake-find-package");
+        assert_eq!(fp.len(), 0, "FR-011: commented-out find_package MUST NOT emit");
+    }
+
+    #[test]
+    fn pkg_check_modules_single_module() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            "pkg_check_modules(RADIUS REQUIRED IMPORTED_TARGET radcli)\n",
+        )
+        .unwrap();
+        let entries = read(tmp.path(), false);
+        let pcm = by_mechanism(&entries, "cmake-pkg-check-modules");
+        assert_eq!(pcm.len(), 1);
+        assert_eq!(pcm[0].purl.as_str(), "pkg:generic/radcli");
+        assert!(
+            !pcm[0]
+                .extra_annotations
+                .contains_key("mikebom:cmake-find-package-name"),
+            "pkg_check_modules emissions MUST NOT carry cmake-find-package-name"
+        );
+    }
+
+    #[test]
+    fn pkg_check_modules_multi_module_with_version_constraints() {
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            "pkg_check_modules(GLIB REQUIRED glib-2.0>=2.42 gio-2.0)\n",
+        )
+        .unwrap();
+        let entries = read(tmp.path(), false);
+        let pcm = by_mechanism(&entries, "cmake-pkg-check-modules");
+        assert_eq!(pcm.len(), 2);
+        let purls: std::collections::BTreeSet<_> =
+            pcm.iter().map(|e| e.purl.as_str().to_string()).collect();
+        assert!(purls.contains("pkg:generic/glib-2.0"));
+        assert!(purls.contains("pkg:generic/gio-2.0"));
+    }
+
+    // ---- T005: 4 supplementary tests ----
+
+    #[test]
+    fn find_package_targets_collector_unaffected() {
+        // R9 regression guard: collect_find_package_targets remains
+        // orthogonal to milestone-155 emission behavior. Its return
+        // set is independent of read()'s emitted entries.
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            r#"
+                find_package(Foo)
+                add_library(Foo::Foo ALIAS foo)
+            "#,
+        )
+        .unwrap();
+        let names = collect_find_package_targets(tmp.path());
+        assert!(names.contains("foo"), "collector MUST contain foo (lowercased); got: {names:?}");
+    }
+
+    #[test]
+    fn find_package_all_lowercase_no_annotation() {
+        // Contracts/mikebom-cmake-find-package-name.md conditional
+        // emission: when the original casing equals the lowercased
+        // name, the annotation MUST NOT be emitted.
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            "find_package(zlib 1.2.11)\n",
+        )
+        .unwrap();
+        let entries = read(tmp.path(), false);
+        let fp = by_mechanism(&entries, "cmake-find-package");
+        assert_eq!(fp.len(), 1);
+        assert_eq!(fp[0].purl.as_str(), "pkg:generic/zlib@1.2.11");
+        assert!(
+            !fp[0]
+                .extra_annotations
+                .contains_key("mikebom:cmake-find-package-name"),
+            "all-lowercase input MUST NOT emit mikebom:cmake-find-package-name"
+        );
+    }
+
+    #[test]
+    fn find_package_pkg_search_module_alias() {
+        // FR-004: pkg_search_module is the sibling of pkg_check_modules.
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            "pkg_search_module(ZLIB REQUIRED zlib)\n",
+        )
+        .unwrap();
+        let entries = read(tmp.path(), false);
+        let pcm = by_mechanism(&entries, "cmake-pkg-check-modules");
+        assert_eq!(pcm.len(), 1);
+        assert_eq!(pcm[0].purl.as_str(), "pkg:generic/zlib");
+    }
+
+    #[test]
+    fn find_package_modifier_keywords_ignored() {
+        // F4 remediation: assert that modifier keywords (NO_MODULE,
+        // COMPONENTS, PATHS, etc.) don't contaminate the emitted PURL.
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("CMakeLists.txt"),
+            "find_package(Boost 1.75.0 NO_MODULE COMPONENTS system filesystem thread PATHS /usr/local/lib)\n",
+        )
+        .unwrap();
+        let entries = read(tmp.path(), false);
+        let fp = by_mechanism(&entries, "cmake-find-package");
+        assert_eq!(fp.len(), 1, "single component per parent package; NO sub-component emission");
+        assert_eq!(fp[0].purl.as_str(), "pkg:generic/boost@1.75.0");
     }
 }

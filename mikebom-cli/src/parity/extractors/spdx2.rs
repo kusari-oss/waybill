@@ -554,6 +554,11 @@ spdx23_anno!(c101_spdx23, "mikebom:peer-edge-targets", component);
 // annotation.
 spdx23_anno!(c102_spdx23, "mikebom:demoted-from-main-module", component);
 
+// C103 — `mikebom:cmake-find-package-name` (milestone 155). Per-Package
+// envelope. Preserves original casing of a find_package() name after
+// PURL-lowercase normalization.
+spdx23_anno!(c103_spdx23, "mikebom:cmake-find-package-name", component);
+
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-Package
 // envelope carrying the JSON-encoded array of conflict records.
 spdx23_anno!(c67_spdx23, "mikebom:assertion-conflict",       component);

@@ -622,6 +622,10 @@ spdx3_anno!(c101_spdx3, "mikebom:peer-edge-targets", component);
 // graph-element annotation.
 spdx3_anno!(c102_spdx3, "mikebom:demoted-from-main-module", component);
 
+// C103 — `mikebom:cmake-find-package-name` (milestone 155). Per-component
+// graph-element annotation.
+spdx3_anno!(c103_spdx3, "mikebom:cmake-find-package-name", component);
+
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-component
 // graph-element annotation carrying the JSON-encoded array of
 // conflict records.

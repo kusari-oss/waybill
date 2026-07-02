@@ -792,6 +792,11 @@ cdx_anno!(c101_cdx, "mikebom:peer-edge-targets", component);
 // --preserve-manifest-main-module flag is set. Per-component property.
 cdx_anno!(c102_cdx, "mikebom:demoted-from-main-module", component);
 
+// Milestone 155: preserves original casing of a find_package() name
+// after PURL-lowercase normalization. Per-component property, emitted
+// only when original casing differs from lowercased.
+cdx_anno!(c103_cdx, "mikebom:cmake-find-package-name", component);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================
