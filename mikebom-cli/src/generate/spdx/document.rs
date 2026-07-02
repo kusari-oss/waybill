@@ -210,6 +210,155 @@ pub struct SpdxExtractedLicensingInfo {
     pub name: String,
 }
 
+/// Milestone 153 (issue #485) — the placeholder text emitted in every
+/// sweep-produced `hasExtractedLicensingInfos[]` entry's `extractedText`
+/// field.
+///
+/// Byte-locked per milestone-153 Clarifications Q1 wire contract:
+/// downstream consumers may pattern-match on this exact string to
+/// distinguish mikebom-placeholder entries from entries with real
+/// extracted text (e.g., the milestone-012 hash-fallback path's raw
+/// preserved expression). Changing this string is a downstream break.
+///
+/// The `<name>` token inside the string is a LITERAL — mikebom does NOT
+/// substitute the package name at emission time. Consumers read it as
+/// "look for /usr/share/licenses/<the-package-name-in-your-context>/".
+///
+/// Consumers can identify placeholder entries via:
+///
+/// ```text
+/// jq '.hasExtractedLicensingInfos[]
+///     | select(.extractedText
+///              | startswith("License text not extracted by mikebom."))'
+/// ```
+const PLACEHOLDER_EXTRACTED_TEXT: &str =
+    "License text not extracted by mikebom. Consult the original package \
+     (e.g., /usr/share/licenses/<name>/ on Debian/RPM, or upstream project \
+     source) for the full text.";
+
+/// Milestone 153 — compiled regex for extracting SPDX 2.3
+/// `LicenseRef-<idstring>` tokens from license-expression strings.
+///
+/// Pattern: `(?:^|[^:])(LicenseRef-[a-zA-Z0-9.-]+)`
+///
+/// - Capture group 1 is the LicenseRef- token proper (never includes the
+///   preceding character).
+/// - The non-capturing prefix `(?:^|[^:])` excludes matches inside
+///   `DocumentRef-<doc>:LicenseRef-<id>` compound tokens per SPDX 2.3
+///   §10.1 (the LicenseRef- is defined in the referenced OTHER document,
+///   not this one; mikebom does not emit DocumentRef- forms today but
+///   defensive-code future-proofs the sweep against operator-supplied
+///   data via supplement-CDX or similar).
+/// - The idstring grammar `[a-zA-Z0-9.-]` matches SPDX 2.3 §10.1 (the
+///   `-` is at the end of the character class so it's literal, not a
+///   range).
+///
+/// Compiled once via `OnceLock` (standard workspace pattern).
+static LICENSE_REF_REGEX: std::sync::OnceLock<regex::Regex> =
+    std::sync::OnceLock::new();
+
+fn license_ref_regex() -> &'static regex::Regex {
+    LICENSE_REF_REGEX.get_or_init(|| {
+        regex::Regex::new(r"(?:^|[^:])(LicenseRef-[a-zA-Z0-9.-]+)")
+            .expect("milestone-153 LicenseRef regex must compile")
+    })
+}
+
+/// Milestone 153 (closes issue #485) — sweep every emitted SPDX 2.3
+/// package's license fields for inline `LicenseRef-<idstring>`
+/// substrings and emit a matching top-level
+/// `hasExtractedLicensingInfos[]` entry per SPDX 2.3 §10.1.
+///
+/// Milestone 152's `preserve_known_operands_with_license_ref` in
+/// `rpm_file.rs` injects `LicenseRef-<sanitized>` INSIDE compound
+/// expressions (e.g., `"GPL-2.0-only AND LicenseRef-bzip2-1.0.4"`),
+/// bypassing the milestone-012 per-package hash-fallback path at
+/// `packages.rs:build_packages`. Without this sweep, the resulting
+/// SPDX 2.3 document is §10.1-non-conformant (dangling LicenseRef
+/// references).
+///
+/// # Field coverage
+///
+/// Sweeps `SpdxPackage::license_declared` and
+/// `SpdxPackage::license_concluded` (matching on the `SpdxLicenseField`
+/// enum's `Expression` and `LicenseRef` variants; `NoAssertion` and
+/// `None` variants contribute nothing).
+///
+/// **`licenseInfoFromFiles` is NOT swept**: `SpdxPackage` does not carry
+/// this field because mikebom emits `filesAnalyzed: false` uniformly
+/// (spec §7.9.4 makes `licenseInfoFromFiles` inapplicable when files
+/// aren't analyzed). If a future milestone starts emitting per-file
+/// license info, this sweep MUST be extended.
+///
+/// # Dedup with milestone-012
+///
+/// Entries in `existing` (produced by `build_packages`'s hash-fallback
+/// path for wholly-non-canonicalizable expressions) WIN over any
+/// placeholder entry the sweep would emit for the same `licenseId`.
+/// Milestone-012 entries carry the raw expression as their
+/// `extractedText`; the milestone-153 sweep entries carry the
+/// `PLACEHOLDER_EXTRACTED_TEXT` const. The existing entry with its
+/// real text is always more useful.
+///
+/// # Determinism
+///
+/// The returned Vec is sorted by `license_id` (lex-ascending) so
+/// repeated runs on equal inputs produce byte-identical output. This
+/// preserves the SPDX 2.3 golden-test byte-identity contract.
+fn sweep_extracted_license_refs(
+    packages: &[super::packages::SpdxPackage],
+    existing: Vec<SpdxExtractedLicensingInfo>,
+) -> Vec<SpdxExtractedLicensingInfo> {
+    use std::collections::BTreeMap;
+
+    // Seed the dedup map with milestone-012's entries FIRST so their
+    // real extracted text wins over any placeholder emission (FR-005).
+    let mut by_id: BTreeMap<String, SpdxExtractedLicensingInfo> = existing
+        .into_iter()
+        .map(|e| (e.license_id.clone(), e))
+        .collect();
+
+    let re = license_ref_regex();
+
+    for pkg in packages {
+        for field in [&pkg.license_declared, &pkg.license_concluded] {
+            // Extract the string form of the license field. NoAssertion
+            // + None variants contribute no LicenseRef- substrings.
+            let expr = match field {
+                super::packages::SpdxLicenseField::Expression(s)
+                | super::packages::SpdxLicenseField::LicenseRef(s) => s.as_str(),
+                super::packages::SpdxLicenseField::NoAssertion
+                | super::packages::SpdxLicenseField::None => continue,
+            };
+            for cap in re.captures_iter(expr) {
+                // Capture group 1 is the LicenseRef- token proper
+                // (DocumentRef-prefixed matches are excluded by the
+                // non-capturing prefix in the pattern).
+                if let Some(m) = cap.get(1) {
+                    let license_id = m.as_str().to_string();
+                    if !by_id.contains_key(&license_id) {
+                        let name = license_id
+                            .strip_prefix("LicenseRef-")
+                            .unwrap_or(&license_id)
+                            .to_string();
+                        by_id.insert(
+                            license_id.clone(),
+                            SpdxExtractedLicensingInfo {
+                                license_id,
+                                extracted_text: PLACEHOLDER_EXTRACTED_TEXT
+                                    .to_string(),
+                                name,
+                            },
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    by_id.into_values().collect()
+}
+
 /// Assemble the SPDX 2.3 document envelope from a scan.
 ///
 /// (T025) Picks a deterministic root: if the scan carries exactly
@@ -351,6 +500,14 @@ pub fn build_document(
 
     let (packages, has_extracted_licensing_infos) =
         super::packages::build_packages(artifacts, &annotator, &date);
+
+    // Milestone 153 (closes issue #485): sweep the assembled packages
+    // for inline `LicenseRef-*` substrings (from milestone-152's escape-
+    // hatch path in `rpm_file.rs`) and merge with the milestone-012 hash-
+    // fallback entries returned above. Existing entries with real
+    // extracted text win over the sweep's placeholder entries.
+    let has_extracted_licensing_infos =
+        sweep_extracted_license_refs(&packages, has_extracted_licensing_infos);
 
     // Root selection: deterministic single-root algorithm.
     //   0. Milestone 053 FR-008 + US3: if exactly one top-level
@@ -1409,5 +1566,210 @@ mod tests {
             outgoing_count, 1,
             "synthetic root should get exactly 1 outgoing edge (to graph-root A); B is already depended on by A"
         );
+    }
+
+    // ------------------------------------------------------------------
+    // Milestone 153 / Issue #485: hasExtractedLicensingInfos sweep tests
+    // ------------------------------------------------------------------
+    //
+    // Tests for `sweep_extracted_license_refs` + `PLACEHOLDER_EXTRACTED_TEXT`.
+    // The sweep closes SPDX 2.3 §10.1 conformance by defining every
+    // inline `LicenseRef-*` referenced in any package's license field.
+    //
+    // Test naming convention matches milestone-152's rpm_file.rs tests.
+    // See `specs/153-spdx-license-refs-conformance/` for the spec/plan/
+    // tasks.
+
+    /// Helper: construct a minimal `SpdxPackage` with the given license-
+    /// declared string wrapped in `SpdxLicenseField::Expression`.
+    fn mk_pkg_with_declared(expr: &str) -> super::super::packages::SpdxPackage {
+        let mut p = mk_pkg("test");
+        p.license_declared =
+            super::super::packages::SpdxLicenseField::Expression(expr.to_string());
+        p
+    }
+
+    /// Helper: minimal `SpdxPackage` with all-NoAssertion licenses.
+    /// Constructor field order matches `packages.rs:177` struct
+    /// definition; only the license fields are load-bearing for the
+    /// milestone-153 sweep tests.
+    fn mk_pkg(name: &str) -> super::super::packages::SpdxPackage {
+        use super::super::packages::{SpdxLicenseField, SpdxPackage};
+        SpdxPackage {
+            spdx_id: super::super::ids::SpdxId::document(),
+            name: name.to_string(),
+            version_info: String::new(),
+            download_location: "NOASSERTION".to_string(),
+            supplier: None,
+            originator: None,
+            files_analyzed: false,
+            checksums: Vec::new(),
+            license_declared: SpdxLicenseField::NoAssertion,
+            license_concluded: SpdxLicenseField::NoAssertion,
+            copyright_text: None,
+            external_refs: Vec::new(),
+            annotations: Vec::new(),
+            primary_package_purpose: None,
+        }
+    }
+
+    #[test]
+    fn sweep_single_package_single_licenseref() {
+        // US1 A2 (liblzma5 case): a single-operand LicenseRef- becomes
+        // one entry with name = idstring, extractedText = placeholder.
+        let pkg = mk_pkg_with_declared("LicenseRef-PD");
+        let entries = sweep_extracted_license_refs(&[pkg], Vec::new());
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].license_id, "LicenseRef-PD");
+        assert_eq!(entries[0].name, "PD");
+        assert_eq!(entries[0].extracted_text, PLACEHOLDER_EXTRACTED_TEXT);
+    }
+
+    #[test]
+    fn sweep_single_package_compound_licenseref() {
+        // US1 A1 (busybox case): a compound expression yields ONE entry
+        // for the LicenseRef- (the GPL-2.0-only portion is a bare SPDX
+        // id, not a LicenseRef-, so it's not extracted).
+        let pkg = mk_pkg_with_declared("GPL-2.0-only AND LicenseRef-bzip2-1.0.4");
+        let entries = sweep_extracted_license_refs(&[pkg], Vec::new());
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].license_id, "LicenseRef-bzip2-1.0.4");
+        assert_eq!(entries[0].name, "bzip2-1.0.4");
+    }
+
+    #[test]
+    fn sweep_dedup_across_multiple_packages() {
+        // US1 A3: 4 busybox-family packages all reference the same
+        // LicenseRef-bzip2-1.0.4 → exactly ONE entry.
+        let pkgs: Vec<_> = ["busybox", "busybox-hwclock", "busybox-syslog", "busybox-udhcpc"]
+            .iter()
+            .map(|_| mk_pkg_with_declared("GPL-2.0-only AND LicenseRef-bzip2-1.0.4"))
+            .collect();
+        let entries = sweep_extracted_license_refs(&pkgs, Vec::new());
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].license_id, "LicenseRef-bzip2-1.0.4");
+    }
+
+    #[test]
+    fn sweep_covers_license_concluded_field() {
+        // US1 A5 (cross-field): LicenseRef in licenseConcluded (not
+        // licenseDeclared) still yields an entry.
+        let mut pkg = mk_pkg("cross-field-test");
+        pkg.license_concluded =
+            super::super::packages::SpdxLicenseField::Expression(
+                "LicenseRef-only-in-concluded".to_string(),
+            );
+        let entries = sweep_extracted_license_refs(&[pkg], Vec::new());
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].license_id, "LicenseRef-only-in-concluded");
+    }
+
+    #[test]
+    fn sweep_licenseref_variant_dedups_with_milestone_012() {
+        // T012 (repurposed from `sweep_covers_licenseInfoFromFiles_field`
+        // per implementation discovery: SpdxPackage does not carry
+        // licenseInfoFromFiles because mikebom emits filesAnalyzed:
+        // false uniformly). This test instead covers the milestone-012
+        // hash-fallback SpdxLicenseField::LicenseRef(...) variant: a
+        // wholly-non-canonicalizable expression stored as a
+        // LicenseRef-<hash> reference in the field, matched by the
+        // existing hasExtractedLicensingInfos entry in `existing` →
+        // sweep must NOT emit a duplicate placeholder entry.
+        let mut pkg = mk_pkg("m012-hash-fallback");
+        pkg.license_declared =
+            super::super::packages::SpdxLicenseField::LicenseRef(
+                "LicenseRef-hash-fallback-abc123".to_string(),
+            );
+        let existing = vec![SpdxExtractedLicensingInfo {
+            license_id: "LicenseRef-hash-fallback-abc123".to_string(),
+            extracted_text: "REAL EXTRACTED TEXT FROM M012".to_string(),
+            name: "mikebom-extracted-license".to_string(),
+        }];
+        let entries = sweep_extracted_license_refs(&[pkg], existing);
+        assert_eq!(entries.len(), 1, "must not duplicate the m012 entry");
+        // Milestone-012 entry wins — real text preserved, not overwritten
+        // with placeholder.
+        assert_eq!(
+            entries[0].extracted_text,
+            "REAL EXTRACTED TEXT FROM M012"
+        );
+    }
+
+    #[test]
+    fn sweep_dedup_with_milestone_012_entry() {
+        // US1 A6 + FR-005: existing entry with real text wins over
+        // placeholder for the same licenseId. Different from the test
+        // above: this variant tests the case where the SpdxPackage's
+        // license field is an Expression containing a LicenseRef
+        // (milestone-152's inline injection path) AND the milestone-012
+        // path already emitted an entry for the same id.
+        let pkg = mk_pkg_with_declared("GPL-2.0-only AND LicenseRef-shared");
+        let existing = vec![SpdxExtractedLicensingInfo {
+            license_id: "LicenseRef-shared".to_string(),
+            extracted_text: "REAL EXTRACTED TEXT".to_string(),
+            name: "shared-license-actual-name".to_string(),
+        }];
+        let entries = sweep_extracted_license_refs(&[pkg], existing);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].extracted_text, "REAL EXTRACTED TEXT");
+        assert_eq!(entries[0].name, "shared-license-actual-name");
+    }
+
+    #[test]
+    fn sweep_ignores_document_ref_prefixed() {
+        // Edge Case per spec: `DocumentRef-<doc>:LicenseRef-<id>` compound
+        // refers to a LicenseRef defined in ANOTHER document. mikebom's
+        // sweep MUST NOT emit an entry for it (that would be technically
+        // incorrect — the entry belongs in the OTHER document).
+        let pkg = mk_pkg_with_declared("MIT AND DocumentRef-external:LicenseRef-foo");
+        let entries = sweep_extracted_license_refs(&[pkg], Vec::new());
+        assert_eq!(
+            entries.len(),
+            0,
+            "DocumentRef-prefixed LicenseRef must not be swept"
+        );
+    }
+
+    #[test]
+    fn sweep_covers_nested_compound_structure() {
+        // Edge Case per spec: nested parens + mixed operators. Both
+        // LicenseRefs must be extracted regardless of surroundings.
+        let pkg = mk_pkg_with_declared(
+            "MIT AND LicenseRef-foo OR (LicenseRef-bar AND Apache-2.0)",
+        );
+        let entries = sweep_extracted_license_refs(&[pkg], Vec::new());
+        assert_eq!(entries.len(), 2);
+        // Sorted lex by license_id per determinism guarantee.
+        assert_eq!(entries[0].license_id, "LicenseRef-bar");
+        assert_eq!(entries[1].license_id, "LicenseRef-foo");
+    }
+
+    #[test]
+    fn sweep_no_licenserefs_returns_empty_vec() {
+        // US2 A2 + FR-006: no LicenseRef-* anywhere → returned Vec is
+        // empty. Combined with the SpdxDocument's serde
+        // `skip_serializing_if = "Vec::is_empty"`, this guarantees the
+        // `hasExtractedLicensingInfos` JSON key is ABSENT from happy-
+        // path output — byte-identity preserved for cargo/npm/go/pip
+        // scans that never trigger milestone-152's fallback.
+        let pkgs = vec![
+            mk_pkg_with_declared("MIT"),
+            mk_pkg_with_declared("Apache-2.0 AND GPL-2.0-only"),
+        ];
+        let entries = sweep_extracted_license_refs(&pkgs, Vec::new());
+        assert!(entries.is_empty(), "no LicenseRefs → empty Vec");
+    }
+
+    #[test]
+    fn placeholder_text_matches_wire_contract() {
+        // Milestone-153 Clarifications Q1 wire contract: the placeholder
+        // string is byte-locked. Any accidental future edit to the const
+        // trips this test. Downstream consumers may pattern-match on
+        // this exact string (see the const's doc comment for a jq
+        // recipe).
+        let expected = "License text not extracted by mikebom. Consult the \
+             original package (e.g., /usr/share/licenses/<name>/ on \
+             Debian/RPM, or upstream project source) for the full text.";
+        assert_eq!(PLACEHOLDER_EXTRACTED_TEXT, expected);
     }
 }
