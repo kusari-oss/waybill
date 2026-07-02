@@ -585,7 +585,24 @@ pub fn build_document(
             &doc_iri,
             CREATION_INFO_ID,
         );
+
+    // Milestone 154 (closes issue #487): sweep the emitted
+    // simplelicensing_LicenseExpression elements for inline LicenseRef-*
+    // substrings and emit matching simplelicensing_CustomLicense elements
+    // per SPDX 3.0.1 § licensing_CustomLicense. Paired follow-up to
+    // milestone 153's SPDX 2.3 hasExtractedLicensingInfos[] sweep —
+    // preserves cross-format symmetry (same LicenseRef set defined in
+    // both formats with byte-identical placeholder text).
+    let custom_license_elements = super::v3_licenses::sweep_custom_licenses(
+        &license_elements,
+        &doc_iri,
+        CREATION_INFO_ID,
+    );
+
     for elem in license_elements {
+        graph.push(elem);
+    }
+    for elem in custom_license_elements {
         graph.push(elem);
     }
 

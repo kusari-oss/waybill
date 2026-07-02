@@ -7,6 +7,75 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### SPDX 3: emit `simplelicensing_CustomLicense` for every `LicenseRef-*` (closes #487)
+
+Paired follow-up to #485 (closed in `2d7ab0e` via PR #486), which added
+the SPDX 2.3 `hasExtractedLicensingInfos[]` sweep. Milestone 153's
+`spdx3-validate` investigation showed SPDX 3.0.1 was validator-permissive
+for undefined `LicenseRef-*` tokens (Outcome B), so the SPDX 3 emitter
+shipped unchanged. Issue #487 filed a paired follow-up asking for
+symmetry regardless — a compliance auditor reading both formats of the
+same scan should get consistent LicenseRef-resolution.
+
+mikebom now sweeps every emitted `simplelicensing_LicenseExpression`
+element's expression string for inline `LicenseRef-<idstring>` tokens
+at SPDX 3 document-assembly time and emits a matching
+`simplelicensing_CustomLicense` graph element per distinct token.
+Placeholder text is byte-identical to milestone 153's SPDX 2.3
+`hasExtractedLicensingInfos[].extractedText` field — the milestone-153
+`PLACEHOLDER_EXTRACTED_TEXT` const is promoted from module-private to
+`pub(crate)` in `document.rs` so the SPDX 3 emitter imports it as the
+single source of truth for the wire contract. Any future change to the
+const value trips both milestones' contract-lock tests
+(`placeholder_text_matches_wire_contract` in `document.rs`,
+`cross_format_placeholder_identity` in `v3_licenses.rs`).
+
+**Element shape**:
+
+```json
+{
+  "type": "simplelicensing_CustomLicense",
+  "spdxId": "{doc_iri}/licenseref/{idstring}",
+  "creationInfo": "{creation_info_id}",
+  "name": "{idstring}",
+  "simplelicensing_licenseText": "License text not extracted by mikebom. Consult the original package (e.g., /usr/share/licenses/<name>/ on Debian/RPM, or upstream project source) for the full text."
+}
+```
+
+**IRI scheme** (per milestone-154 Clarifications Q1): the readable path
+segment `{doc_iri}/licenseref/{idstring}` — human-diffable against the
+LicenseRef- reference inside the license expression. Idstring alphabet
+`[a-zA-Z0-9-.]+` is a subset of RFC 3986 unreserved characters, so no
+percent-encoding needed.
+
+**Cross-format symmetry**: for any given scan target, the set of
+`LicenseRef-<idstring>` tokens defined by SPDX 2.3's
+`hasExtractedLicensingInfos[].licenseId` equals the set derivable from
+SPDX 3's `simplelicensing_CustomLicense.name` fields (with `LicenseRef-`
+prefix reapplied). Consumers reading both formats of the same scan get
+consistent LicenseRef-resolution. Verify via jq recipe:
+
+```bash
+diff \
+  <(jq -c '[.hasExtractedLicensingInfos[].licenseId] | sort' out.spdx.json) \
+  <(jq -c '[.["@graph"][] | select(.type == "simplelicensing_CustomLicense") | ("LicenseRef-" + .name)] | sort' out.spdx3.json)
+```
+
+Empty diff = symmetry holds.
+
+**Happy-path byte-identity preserved**: scans that emit no LicenseRef-*
+in any expression string (Cargo / npm / Go / pip source trees, in the
+default case) produce byte-identical SPDX 3 output vs pre-154 — the
+sweep returns an empty Vec, and no new `simplelicensing_CustomLicense`
+elements are pushed onto `@graph`.
+
+**Constitution Principle V**: `simplelicensing_CustomLicense` is the
+SPDX 3.0.1-native carrier for defining `LicenseRef-*` identifiers. No
+new `mikebom:*` annotation introduced. **Principle IX + X**: the
+placeholder text explicitly discloses that mikebom did not extract the
+real text (same guarantee as milestone 153); byte-locked cross-format
+identity is a machine-parseable signal consumers pattern-match on.
+
 ### SPDX 2.3: emit `hasExtractedLicensingInfos` for every `LicenseRef-*` (closes #485)
 
 Follow-up to #481 (closed in `feba7cb` via PR #484). Milestone 152's

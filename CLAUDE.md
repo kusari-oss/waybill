@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-07-01
+Auto-generated from all feature plans. Last updated: 2026-07-02
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -179,6 +179,8 @@ Auto-generated from all feature plans. Last updated: 2026-07-01
 - N/A — pure-function transformation; the new helper takes a `&str` and returns `Option<String>`. No caches, no persistence (matches the milestone-478 pattern at `rpm_file.rs:603`). (152-preserve-license-operands)
 - Rust stable (workspace toolchain inherited from milestones 001–152; no nightly required). + Existing only — `regex = "1"` (workspace; already a direct dep for the milestone-013 catalog parser; here used to extract LicenseRef- substrings), `serde`/`serde_json` (JSON emission), `mikebom_common::types::license::SpdxExpression` (unchanged), `spdx = "0.10"` (workspace; already a direct dep since milestone 152). **No new Cargo dependencies.** (153-spdx-license-refs-conformance)
 - N/A — pure-function sweep over the assembled `Vec<SpdxPackage>` at document-serialization time. No caches, no persistence. (153-spdx-license-refs-conformance)
+- Rust stable (workspace toolchain inherited from milestones 001–153; no nightly required). + Existing only — `regex = "1"` (workspace; already direct dep since milestone 013; here used identically to milestone 153's sweep), `serde_json` (used by v3_licenses.rs for `json!` macro), `std::sync::OnceLock` (regex compile), `std::collections::BTreeMap` (dedup by idstring). **No new Cargo dependencies.** (154-spdx3-custom-licenses)
+- N/A — pure-function sweep over `&[Value]` (the already-emitted `simplelicensing_LicenseExpression` elements). No caches, no persistence. (154-spdx3-custom-licenses)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -241,9 +243,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 154-spdx3-custom-licenses: Added Rust stable (workspace toolchain inherited from milestones 001–153; no nightly required). + Existing only — `regex = "1"` (workspace; already direct dep since milestone 013; here used identically to milestone 153's sweep), `serde_json` (used by v3_licenses.rs for `json!` macro), `std::sync::OnceLock` (regex compile), `std::collections::BTreeMap` (dedup by idstring). **No new Cargo dependencies.**
 - 153-spdx-license-refs-conformance: Added Rust stable (workspace toolchain inherited from milestones 001–152; no nightly required). + Existing only — `regex = "1"` (workspace; already a direct dep for the milestone-013 catalog parser; here used to extract LicenseRef- substrings), `serde`/`serde_json` (JSON emission), `mikebom_common::types::license::SpdxExpression` (unchanged), `spdx = "0.10"` (workspace; already a direct dep since milestone 152). **No new Cargo dependencies.**
 - 152-preserve-license-operands: Added Rust stable (workspace toolchain inherited from milestones 001–151; no nightly required for this user-space-only RPM-reader extension). + Existing only — `spdx = "0.10"` (workspace; already used by `SpdxExpression::try_canonical` at `mikebom-common/src/types/license.rs:135`), `mikebom_common::types::license::SpdxExpression` newtype (`try_canonical` + `as_str` + `Display`), `tracing`, `anyhow`. **No new Cargo dependencies.** No subprocess calls. No network access.
-- 151-expand-consumer-guide: Added N/A — Markdown documentation only. No Rust source touched. (The mikebom binary is unchanged; its CLI surface, library APIs, and emitted SBOM wire formats are all stable across this milestone per FR-016 / FR-017.) + Existing only — `jq` (for recipe verification at authoring time), the released `mikebom` binary at workspace HEAD (for generating real SBOMs the recipes run against), `bash` (for `verify-recipes.sh`). No new Cargo, Python, or Node dependencies.
 
 
 <!-- MANUAL ADDITIONS START -->

@@ -231,7 +231,13 @@ pub struct SpdxExtractedLicensingInfo {
 ///     | select(.extractedText
 ///              | startswith("License text not extracted by mikebom."))'
 /// ```
-const PLACEHOLDER_EXTRACTED_TEXT: &str =
+// Milestone 154 (closes issue #487): promoted to `pub(crate)` so the
+// SPDX 3 emitter at `v3_licenses.rs::sweep_custom_licenses` can import
+// this const. Single source of truth for the cross-format placeholder
+// wire contract — the SPDX 3 side's `simplelicensing_licenseText`
+// field emits this same byte-string, guaranteeing consumers can
+// pattern-match on identical text across both SPDX formats.
+pub(crate) const PLACEHOLDER_EXTRACTED_TEXT: &str =
     "License text not extracted by mikebom. Consult the original package \
      (e.g., /usr/share/licenses/<name>/ on Debian/RPM, or upstream project \
      source) for the full text.";
