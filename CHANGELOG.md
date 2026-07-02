@@ -7,6 +7,73 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### SPDX 2.3: emit `hasExtractedLicensingInfos` for every `LicenseRef-*` (closes #485)
+
+Follow-up to #481 (closed in `feba7cb` via PR #484). Milestone 152's
+`LicenseRef-<sanitized>` escape hatch correctly preserves recognized
+operands in compound license expressions when one operand is
+unrecognized — but a strict SPDX 2.3 consumer will reject the resulting
+document as non-conformant because SPDX 2.3 §10.1 requires every
+distinct `LicenseRef-<idstring>` referenced in any package's
+`licenseDeclared` / `licenseConcluded` field to have a matching entry
+in the top-level `hasExtractedLicensingInfos[]` array.
+
+mikebom now sweeps every emitted SPDX 2.3 document for inline
+`LicenseRef-*` substrings at document-assembly time and emits a matching
+entry for each distinct id. Entries produced by the pre-existing
+milestone-012 hash-fallback path (which carries the raw
+non-canonicalizable expression as its `extractedText`) are preserved
+unchanged; the new sweep only fills in entries the pre-existing path
+didn't cover.
+
+**Placeholder `extractedText`**: this milestone does NOT extract real
+license text from RPM contents or upstream sources. Every sweep-emitted
+entry carries the byte-exact placeholder text:
+
+```
+License text not extracted by mikebom. Consult the original package
+(e.g., /usr/share/licenses/<name>/ on Debian/RPM, or upstream project
+source) for the full text.
+```
+
+The `<name>` token is a LITERAL — mikebom does not substitute the
+package name. Consumers may pattern-match on this exact prefix to
+distinguish mikebom-placeholder entries from entries with real
+extracted text (from the milestone-012 hash-fallback path):
+
+```jq
+.hasExtractedLicensingInfos[]
+| select(.extractedText | startswith("License text not extracted by mikebom."))
+```
+
+Best-effort text extraction from RPM contents (e.g.,
+`/usr/share/licenses/<pkg>/COPYING`) is deferred to a follow-up
+milestone if operator demand surfaces.
+
+**DocumentRef-prefixed LicenseRefs**: `DocumentRef-<doc>:LicenseRef-<id>`
+compound tokens are correctly EXCLUDED from the sweep — the LicenseRef
+is defined in the referenced OTHER document, not this one. mikebom
+doesn't emit DocumentRef- forms today; this is defensive-code future-
+proofing for operator-supplied data via supplement-CDX or similar.
+
+**Happy-path byte-identity preserved**: scans that emit no LicenseRef-*
+(the common case for Cargo, npm, Go, pip source trees) produce
+byte-identical SPDX 2.3 output vs pre-153 — the sweep returns an empty
+Vec, and the document's serde `skip_serializing_if = "Vec::is_empty"`
+attribute omits the `hasExtractedLicensingInfos` key entirely.
+
+**SPDX 3 investigation outcome (FR-008 / FR-009)**: `spdx3-validate`
+against a synthetic SPDX 3.0.1 document containing an inline
+`LicenseRef-*` in a `simplelicensing_LicenseExpression` WITHOUT any
+matching `licensing_CustomLicense` element passes both schema and
+SHACL checks (exit 0). SPDX 3.0.1's model does NOT require equivalent
+emission — the SPDX 3 emitter is already conformant as-is. No code
+change to `v3_licenses.rs` was needed.
+
+**CycloneDX unaffected**: CDX 1.6 has no §10.1-equivalent constraint;
+its `license.expression` accepts arbitrary tokens without a separate
+definition table. Only SPDX 2.3 needed the fix.
+
 ### RPM license expressions: preserve known operands when one is unknown (closes #481)
 
 Follow-up to #475 (closed in `eb75853` via PR #478). The milestone-478
