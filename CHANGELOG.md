@@ -7,6 +7,91 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### CMake `find_package` + `pkg_check_modules` extraction (milestone 155)
+
+Reverses milestone-102's FR-007 refusal of `find_package(<Name>
+[<Version>])` extraction — the original double-counting concern is
+resolved by the production `resolve::deduplicator` pipeline's same-PURL
+merging. Source-tree scans of CMake-based C/C++ projects that declare
+external deps via `find_package(...)` calls at depth-1
+(`CMakeLists.txt` + `cmake/*.cmake` files) now surface those deps in
+the emitted SBOM.
+
+**Emissions added**:
+
+- `find_package(<Name> [<Version>])` → `pkg:generic/<lowercased-name>[@<highest-declared-version>]`
+  with `mikebom:source-mechanism = "cmake-find-package"`. Multi-file
+  same-name declarations are consolidated to the highest declared
+  version (Q1 clarification: SemVer-style component-wise numeric with
+  zero-padding for shorter versions; lex fallback + `tracing::warn`
+  when segments aren't all-numeric).
+- `pkg_check_modules(<TARGET> [REQUIRED] [IMPORTED_TARGET] <modules>)`
+  + `pkg_search_module(...)` → one `pkg:generic/<module>` per module
+  (TARGET var discarded, version constraints stripped, modifier
+  keywords filtered) with `mikebom:source-mechanism = "cmake-pkg-check-modules"`.
+- **Case preservation**: `find_package(OpenSSL 1.1.0)` emits
+  `pkg:generic/openssl@1.1.0` (PURL lowercased per spec convention) and
+  a new `mikebom:cmake-find-package-name = "OpenSSL"` annotation
+  preserves the original casing. The annotation is emitted ONLY when
+  original casing ≠ lowercased.
+
+**Not extracted** (regex boundary or intentional exclusion):
+
+- `find_package_handle_standard_args(...)` — CMake-internal, not a
+  package declaration (FR-009).
+- `find_package(${VAR})` — CMake variable interpolation not resolved;
+  logged at `debug` level (FR-010).
+- Same-line commented `# find_package(...)` (FR-011).
+
+**Consumer jq recipe** — list all find_package-derived components:
+
+```bash
+jq '.components[] | select(.properties[]?
+  | select(.name == "mikebom:source-mechanism"
+           and .value == "cmake-find-package"))
+  | .purl' sbom.cdx.json
+```
+
+**Kamailio testbed impact**: 0 → 1 identified component at Kamailio HEAD's
+depth-1 walker scope (`OpenSSL 1.1.0` from `cmake/defs.cmake`).
+Kamailio's remaining 9+ `find_package` calls live at depth-2 inside
+`cmake/modules/Find*.cmake` and are NOT reached by mikebom's current
+`discover_cmake_files` helper — walker-depth extension is a separate
+future milestone opportunity. Projects with all-depth-1 layouts
+(typical vcpkg / conan / Ninja-first projects) yield higher counts
+immediately; SC-004's synthetic Kamailio-shape testbed at
+`mikebom-cli/tests/fixtures/cmake-find-package/kamailio-shape/`
+exercises a 5-component shape end-to-end.
+
+**Same-PURL cross-mechanism dedup** — a project declaring `openssl` via
+BOTH `find_package(openssl 1.1.0)` AND
+`FetchContent_Declare(openssl URL ...openssl-1.1.0.tar.gz)` produces
+exactly ONE `pkg:generic/openssl@1.1.0` component in the emitted SBOM;
+the production `resolve::deduplicator` pipeline merges them via its
+`(ecosystem, name, version, parent_purl)` grouping key and folds
+non-conflicting `extra_annotations` per milestone 109's pattern.
+Cross-namespace dedup (e.g., cmake vs dpkg/rpm/apk) is NOT provided by
+this milestone — operators wanting that should use the milestone-111
+`--pkg-alias-binding` CLI flag, or await a milestone-105
+`scan_fs::dedup` completion follow-up that wires the
+`mikebom:also-detected-via` list into production emission.
+
+**Q1 clarification** (highest declared version wins across multi-file
+same-name declarations) codified in FR-002 + US1 A3.
+**Q2 clarification** (uniform emission — no build-tool denylist;
+`find_package(Threads)`, `find_package(PkgConfig)`, `find_package(Doxygen)`,
+etc. all emit uniformly; consumers filter by name post-emission) codified
+in FR-017.
+
+Wire-format-agnostic: no changes to CycloneDX 1.6 / SPDX 2.3 / SPDX
+3.0.1 emitters. No changes to any other reader or the milestone-133
+file-tier walker. Zero new Cargo dependencies. One new
+`mikebom:*`-prefixed annotation key (`mikebom:cmake-find-package-name`)
+per Constitution Principle V audit at plan.md; catalog documentation
+in `docs/reference/sbom-format-mapping.md` deferred to a follow-up
+docs-refresh milestone (matches milestone 105's prior additive-annotation
+precedent).
+
 ### SPDX 3: emit `simplelicensing_CustomLicense` for every `LicenseRef-*` (closes #487)
 
 Paired follow-up to #485 (closed in `2d7ab0e` via PR #486), which added
