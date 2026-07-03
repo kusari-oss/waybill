@@ -1530,7 +1530,7 @@ pub fn read_all(
     // cross-platform (no `#[cfg(unix)]` per FR-013); zero new
     // Cargo deps (workspace `regex` + `serde_json` reused).
     out.extend(bazel::read(rootfs));
-    out.extend(cmake::read(rootfs, include_vendored));
+    out.extend(cmake::read(rootfs, include_vendored, exclude_set));
     out.extend(vcpkg::read(rootfs));
     out.extend(conan::read(rootfs));
 

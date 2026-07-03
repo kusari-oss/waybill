@@ -195,7 +195,7 @@ pub fn read(
     // package_db layer. Cost: microseconds (regex + line iteration on
     // CMakeLists.txt files at depth 1 + Modules/ + third_party/).
     let attribution_registry = if external_corpus.is_some() {
-        let cmake_decls = crate::scan_fs::package_db::cmake::read(rootfs, false);
+        let cmake_decls = crate::scan_fs::package_db::cmake::read(rootfs, false, exclude_set);
         source_binding::build_attribution_registry(rootfs, &cmake_decls)
     } else {
         source_binding::BuildAttributionRegistry::from_observations(Vec::new())
