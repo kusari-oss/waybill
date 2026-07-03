@@ -7,6 +7,80 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### CMake walker depth extension (milestone 156)
+
+Direct closure of milestone-155's F1 remediation debt. Milestone 155
+shipped as walker-scope-honest — Kamailio's identified-component floor
+was ≥1 because `discover_cmake_files` only walked depth-1 under
+`cmake/`, `Modules/`, `third_party/`, missing the 9+ `find_package`
+calls in Kamailio's `cmake/modules/Find*.cmake` files at depth-2.
+
+Milestone 156 extends the walker to recursive descent under `cmake/`
+and `Modules/`. `<scan_root>/third_party/` stays at depth-1 by
+default (matching milestone-102 behavior) — a new opt-in flag
+`--cmake-third-party-recursive` (env alias
+`MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE=1`) extends recursion to
+`third_party/` too when set.
+
+**Implementation**: reuses milestone-054's `safe_walk` helper
+(`mikebom-cli/src/scan_fs/walk.rs`) for the recursive descent —
+inherits symlink-cycle safety (canonicalize-keyed visited-set),
+rootfs sandbox enforcement, and `tracing::debug!` skip logging.
+Milestone-113 `--exclude-path` integration handled inside the cmake
+walker's visit callback (safe_walk's own exclude_set relativizes
+against its rootfs argument, which for the cmake reader is a subdir
+of the scan root, not the scan root itself — so operator-supplied
+scan-root-relative exclude patterns are matched here instead).
+
+**Kamailio testbed impact**: 1 → 4 identified components at
+Kamailio HEAD (empirical result 2026-07-02). Kamailio's
+`cmake/modules/Find*.cmake` files are CMake module DEFINITIONS (using
+`find_path` / `find_library` / `find_package_handle_standard_args`),
+not `find_package` call sites — the milestone-155 F1 remediation
+misread the tree layout. Only 2 depth-2 Find*.cmake files contain
+actual `find_package` calls (`PkgConfig`, `LibfreeradiusClient`);
+plus the depth-1 `OpenSSL` from `cmake/defs.cmake`; plus `radcli`
+from a depth-2 `pkg_check_modules` call. The walker-depth capability
+itself is correct and verified independently via synthetic SC-004
+depth-3 fixtures — other projects (e.g., CPM.cmake users, projects
+using `include()` chains to depth-N) benefit fully. Kamailio's
+specific tree layout produces a modest 4x improvement rather than
+the 10x anticipated.
+
+**Q1 clarification** (2026-07-02): `third_party/` recursive-walking
+policy resolved as "depth-1 default; opt-in via
+`--cmake-third-party-recursive`". Auditors of narrow-scope projects
+(Kamailio, without a large `third_party/` tree) get their win
+noise-free. Auditors of projects vendoring large trees (LLVM,
+Chromium, WebRTC) opt in explicitly to reach the vendored
+transitive-dep declarations.
+
+**Build-tree contamination note**: CMake can emit `.cmake` files
+under `build/`, `cmake-build-*/`, `out/` during a real build. If
+those directories are in the scan target, they get walked by the
+extended recursive descent (per FR-018 mikebom does NOT auto-exclude
+them — some projects legitimately have a `build/` directory in
+source). Operators encountering noise from build-tree emissions
+should add `--exclude-path build,cmake-build-*,out` to their scan
+invocation.
+
+**Consumer jq recipe** — filter cmake-find-package components by
+depth of source-file:
+```bash
+jq '.components[] | select(.properties[]?
+  | select(.name == "mikebom:source-mechanism" and .value == "cmake-find-package"))
+  | select(.properties[]?
+    | select(.name == "mikebom:source-files" and (.value | contains("cmake/modules/"))))
+  | .purl' sbom.cdx.json
+```
+
+Wire-format-agnostic: no changes to CycloneDX 1.6 / SPDX 2.3 / SPDX
+3.0.1 emitters. Zero new `mikebom:*` annotation keys. Zero new
+`docs/reference/sbom-format-mapping.md` catalog rows (milestone
+155's C55 + C103 rows cover everything this milestone emits). Zero
+new Cargo dependencies. Byte-identity guaranteed for depth-1-only
+scan targets (SC-002 verified via all 3 golden regression suites).
+
 ### CMake `find_package` + `pkg_check_modules` extraction (milestone 155)
 
 Reverses milestone-102's FR-007 refusal of `find_package(<Name>

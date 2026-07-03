@@ -27,10 +27,15 @@
 //!   version constraints stripped) with
 //!   `mikebom:source-mechanism = "cmake-pkg-check-modules"`.
 //!
-//! Walks at depth 1: scan root for `CMakeLists.txt`; `cmake/`,
-//! `Modules/`, `third_party/` for `*.cmake` files. Per FR-005.
-//! Deeper walker scope (e.g., `cmake/modules/Find*.cmake`) is a
-//! separate future milestone.
+//! Walks the scan root for `CMakeLists.txt` at depth-0. Under
+//! `cmake/` and `Modules/`, recursive descent captures every
+//! `.cmake` file + `CMakeLists.txt` at any depth (milestone 156 —
+//! reaches nested `Find*.cmake` files like Kamailio's
+//! `cmake/modules/Find*.cmake`). Under `third_party/`, depth-1 walk
+//! by default (matches milestone-102 behavior); opt in to recursive
+//! descent via `--cmake-third-party-recursive` (env alias
+//! `MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE=1`) to also walk vendored
+//! deps' own `find_package` declarations.
 //!
 //! Cross-platform; no `#[cfg(unix)]` gates. Zero new Cargo deps —
 //! uses workspace `regex` + std.
@@ -112,8 +117,22 @@ fn pick_highest_version(versions: &[Option<String>]) -> Option<String> {
         .map(|s| (*s).clone())
 }
 
-pub fn read(scan_root: &Path, include_vendored: bool) -> Vec<PackageDbEntry> {
-    let cmake_files = discover_cmake_files(scan_root);
+pub fn read(
+    scan_root: &Path,
+    include_vendored: bool,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    // Milestone 156: opt-in recursive descent for third_party/. Default
+    // depth-1 (matches milestone-102 behavior) unless the CLI flag
+    // `--cmake-third-party-recursive` OR the env var
+    // `MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE=1` is set. Mirrors the
+    // milestone-102 MIKEBOM_INCLUDE_VENDORED env-var propagation
+    // pattern at read_all:1193 to avoid plumbing a new bool through
+    // the 75-callsite scan_path -> read_all chain.
+    let include_third_party_recursive = std::env::var("MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE")
+        .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+        .unwrap_or(false);
+    let cmake_files = discover_cmake_files(scan_root, include_third_party_recursive, exclude_set);
     let mut entries = Vec::new();
     // Milestone 155: accumulate find_package + pkg_check_modules hits
     // across ALL discovered CMake files so we can pick the highest
@@ -413,7 +432,16 @@ fn emit_pkg_check_module_entries(hits: Vec<PkgCheckHit>) -> Vec<PackageDbEntry> 
 /// would otherwise reject the public fn.
 #[allow(dead_code)]
 pub fn collect_find_package_targets(scan_root: &Path) -> BTreeSet<String> {
-    let cmake_files = discover_cmake_files(scan_root);
+    // Milestone 156 — reuses the extended discover_cmake_files but
+    // passes false for `include_third_party_recursive` (the collector's
+    // name-set semantics don't depend on third_party depth) and an
+    // empty ExclusionSet (the collector is a milestone-105 US6 helper
+    // orthogonal to operator-supplied --exclude-path).
+    let cmake_files = discover_cmake_files(
+        scan_root,
+        false,
+        &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty(),
+    );
     let mut out: BTreeSet<String> = BTreeSet::new();
     for path in &cmake_files {
         let content = match std::fs::read_to_string(path) {
@@ -508,34 +536,137 @@ fn insert_name(raw: &str, out: &mut BTreeSet<String>) {
     }
 }
 
-/// Discover CMake files: top-level `CMakeLists.txt` + any `*.cmake`
-/// (and `CMakeLists.txt`) at depth 1 of `cmake/`, `Modules/`,
-/// `third_party/`. Non-recursive per FR-005.
-fn discover_cmake_files(scan_root: &Path) -> Vec<PathBuf> {
+/// Milestone 156 helper: predicate for CMake file discovery. A path
+/// counts as a CMake file when it has a `.cmake` extension
+/// (case-insensitive) OR its filename is `CMakeLists.txt`
+/// (case-insensitive).
+fn is_cmake_file(p: &Path) -> bool {
+    let is_cmake_module = p
+        .extension()
+        .and_then(|s| s.to_str())
+        .map(|s| s.eq_ignore_ascii_case("cmake"))
+        .unwrap_or(false);
+    let is_cmakelists = p
+        .file_name()
+        .and_then(|s| s.to_str())
+        .map(|s| s.eq_ignore_ascii_case("CMakeLists.txt"))
+        .unwrap_or(false);
+    is_cmake_module || is_cmakelists
+}
+
+/// Milestone 156 helper: depth-1 walk of a directory. Preserves the
+/// milestone-102 behavior for `third_party/` when the
+/// `--cmake-third-party-recursive` opt-in is not set. Push every
+/// CMake file at depth-1 (no recursive descent).
+fn collect_cmake_files_depth1(dir: &Path, out: &mut Vec<PathBuf>) {
+    let Ok(read_dir) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for entry in read_dir.flatten() {
+        let p = entry.path();
+        if p.is_file() && is_cmake_file(&p) {
+            out.push(p);
+        }
+    }
+}
+
+/// Milestone 156 helper: recursive walk of a directory via
+/// milestone-054's `safe_walk`. Inherits symlink-cycle safety
+/// (canonicalize-keyed visited-set), rootfs sandbox enforcement,
+/// and `tracing::debug!` skip logging.
+///
+/// Milestone-113 `--exclude-path` integration is done here rather
+/// than via safe_walk's `exclude_set` config: safe_walk relativizes
+/// candidate paths against its `rootfs` argument (`subdir_root` in
+/// our case, e.g. `scan_root/cmake/`), but operators write
+/// `--exclude-path` values relative to the SCAN ROOT
+/// (`scan_root/`). So we pass safe_walk an empty ExclusionSet and
+/// perform the match ourselves using the scan-root-relative path.
+///
+/// `max_depth = 16` is a defensive backstop for the canonicalize-keyed
+/// visited-set: if canonicalization is unavailable (sandboxed
+/// filesystem, missing realpath perms), max_depth guarantees bounded
+/// termination. Realistic projects have depth <5; 16 accommodates any
+/// legitimate hierarchy.
+fn collect_cmake_files_recursive(
+    scan_root: &Path,
+    subdir_root: &Path,
+    exclude_set: &super::exclude_path::ExclusionSet,
+    out: &mut Vec<PathBuf>,
+) {
+    use crate::scan_fs::walk::{safe_walk, WalkConfig};
+    // Pass safe_walk an empty ExclusionSet (rootfs mismatch would
+    // silently miss operator-supplied scan-root-relative patterns).
+    // We do the match ourselves in the visit closure below.
+    let empty = super::exclude_path::ExclusionSet::new_empty();
+    let cfg = WalkConfig {
+        max_depth: 16,
+        should_skip: &|_candidate: &Path, _rootfs: &Path| false,
+        exclude_set: &empty,
+    };
+    safe_walk(subdir_root, &cfg, |path: &Path| {
+        if !path.is_file() || !is_cmake_file(path) {
+            return;
+        }
+        // Milestone-113 --exclude-path integration: match against the
+        // scan-root-relative path form that operators write.
+        if !exclude_set.is_empty() {
+            if let Ok(rel) = path.strip_prefix(scan_root) {
+                let rel_str = rel.to_string_lossy();
+                if exclude_set.matches(&rel_str) {
+                    tracing::debug!(
+                        candidate = %rel.display(),
+                        cause = "exclude-path",
+                        "cmake walker: skipping file matched by --exclude-path"
+                    );
+                    return;
+                }
+            }
+        }
+        out.push(path.to_path_buf());
+    });
+}
+
+/// Discover CMake files (milestone 156 extended scope):
+/// - Top-level `<scan_root>/CMakeLists.txt` (depth-0, unchanged from
+///   milestone 102).
+/// - `<scan_root>/cmake/**` — recursive descent. Every `.cmake` file
+///   AND every `CMakeLists.txt` file at any depth beneath `cmake/`
+///   is discovered. Reaches Kamailio's `cmake/modules/Find*.cmake`
+///   files that the pre-156 depth-1 walker missed.
+/// - `<scan_root>/Modules/**` — same recursive descent.
+/// - `<scan_root>/third_party/` — depth-1 walk by default (matches
+///   milestone-102 behavior). Recursive descent applied only when
+///   `include_third_party_recursive = true` (from the
+///   `--cmake-third-party-recursive` CLI flag or
+///   `MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE=1` env var).
+///
+/// Reuses milestone-054's `safe_walk` for recursive descent —
+/// symlink cycles caught by the canonicalize-keyed visited-set;
+/// cross-scan-root symlinks refused by the rootfs sandbox;
+/// milestone-113 `--exclude-path` matches consulted per-descent.
+fn discover_cmake_files(
+    scan_root: &Path,
+    include_third_party_recursive: bool,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let top = scan_root.join("CMakeLists.txt");
     if top.is_file() {
         out.push(top);
     }
-    for subdir in &["cmake", "Modules", "third_party"] {
+    for subdir in &["cmake", "Modules"] {
         let dir = scan_root.join(subdir);
-        if let Ok(read_dir) = std::fs::read_dir(&dir) {
-            for entry in read_dir.flatten() {
-                let p = entry.path();
-                let is_cmake_module = p
-                    .extension()
-                    .and_then(|s| s.to_str())
-                    .map(|s| s.eq_ignore_ascii_case("cmake"))
-                    .unwrap_or(false);
-                let is_cmakelists = p
-                    .file_name()
-                    .and_then(|s| s.to_str())
-                    .map(|s| s.eq_ignore_ascii_case("CMakeLists.txt"))
-                    .unwrap_or(false);
-                if (is_cmake_module || is_cmakelists) && p.is_file() {
-                    out.push(p);
-                }
-            }
+        if dir.is_dir() {
+            collect_cmake_files_recursive(scan_root, &dir, exclude_set, &mut out);
+        }
+    }
+    let third_party = scan_root.join("third_party");
+    if third_party.is_dir() {
+        if include_third_party_recursive {
+            collect_cmake_files_recursive(scan_root, &third_party, exclude_set, &mut out);
+        } else {
+            collect_cmake_files_depth1(&third_party, &mut out);
         }
     }
     out
@@ -801,7 +932,7 @@ mod tests {
     #[test]
     fn empty_when_no_files() {
         let tmp = tempfile::tempdir().unwrap();
-        assert!(read(tmp.path(), false).is_empty());
+        assert!(read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty()).is_empty());
     }
 
     #[test]
@@ -812,7 +943,7 @@ mod tests {
             r#"FetchContent_Declare(googletest GIT_REPOSITORY https://github.com/google/googletest.git GIT_TAG release-1.14.0)"#,
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         assert_eq!(entries.len(), 1);
         assert_eq!(
             entries[0].purl.as_str(),
@@ -828,7 +959,7 @@ mod tests {
             r#"FetchContent_Declare(zlib URL https://zlib.net/zlib-1.3.1.tar.gz URL_HASH SHA256=9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23)"#,
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].purl.as_str(), "pkg:generic/zlib@1.3.1");
         assert_eq!(entries[0].hashes.len(), 1);
@@ -849,7 +980,7 @@ mod tests {
             r#"ExternalProject_Add(boost URL https://example.com/boost_1_84_0.tar.gz)"#,
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         assert_eq!(entries.len(), 1);
         assert!(entries[0].purl.as_str().starts_with("pkg:generic/boost@"));
     }
@@ -866,7 +997,7 @@ mod tests {
             r#"find_package(zlib REQUIRED)"#,
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         assert_eq!(
             entries.len(),
             1,
@@ -898,10 +1029,10 @@ mod tests {
         .unwrap();
 
         // Default off: no emission.
-        assert!(read(tmp.path(), false).is_empty());
+        assert!(read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty()).is_empty());
 
         // With include_vendored = true: 1 component with vendored annotation.
-        let entries = read(tmp.path(), true);
+        let entries = read(tmp.path(), true, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].purl.as_str(), "pkg:generic/foo@1.2.3");
         assert_eq!(
@@ -921,7 +1052,7 @@ add_subdirectory(tests)"#,
         .unwrap();
         // Even with include_vendored=true, first-party `src/`/`tests/`
         // sub-modules MUST NOT emit per FR-008's path-prefix gate.
-        let entries = read(tmp.path(), true);
+        let entries = read(tmp.path(), true, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         assert!(
             entries.is_empty(),
             "first-party add_subdirectory(src) MUST NOT emit; got {entries:?}"
@@ -938,7 +1069,7 @@ add_subdirectory(tests)"#,
             r#"FetchContent_Declare(googletest GIT_REPOSITORY https://github.com/google/googletest.git GIT_TAG release-1.14.0)"#,
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         assert_eq!(entries.len(), 1);
         assert_eq!(
             entries[0]
@@ -959,7 +1090,7 @@ add_subdirectory(tests)"#,
             r#"FetchContent_Declare(zlib URL https://zlib.net/zlib-1.3.1.tar.gz URL_HASH SHA256=9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23)"#,
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         assert_eq!(entries.len(), 1);
         assert_eq!(
             entries[0]
@@ -978,7 +1109,7 @@ add_subdirectory(tests)"#,
             r#"ExternalProject_Add(boost URL https://example.com/boost_1_84_0.tar.gz)"#,
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         assert_eq!(entries.len(), 1);
         assert_eq!(
             entries[0]
@@ -1000,7 +1131,7 @@ add_subdirectory(tests)"#,
         // Vendored dir needs a version source — use third_party/foo/version.txt
         std::fs::create_dir_all(tmp.path().join("third_party/foo")).unwrap();
         std::fs::write(tmp.path().join("third_party/foo/version.txt"), "1.2.3").unwrap();
-        let entries = read(tmp.path(), true);
+        let entries = read(tmp.path(), true, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         assert_eq!(entries.len(), 1);
         assert_eq!(
             entries[0]
@@ -1132,7 +1263,7 @@ add_subdirectory(tests)"#,
             "#,
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let names = collect_find_package_targets(tmp.path());
         // Milestone 155 REVERSAL: `read()` now emits for find_package.
         let cmake_fp: Vec<_> = entries
@@ -1182,7 +1313,7 @@ add_subdirectory(tests)"#,
             "find_package(Foo REQUIRED)\n",
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let fp = by_mechanism(&entries, "cmake-find-package");
         assert_eq!(fp.len(), 1);
         assert_eq!(fp[0].purl.as_str(), "pkg:generic/foo");
@@ -1202,7 +1333,7 @@ add_subdirectory(tests)"#,
             "find_package(OpenSSL 1.1.0)\n",
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let fp = by_mechanism(&entries, "cmake-find-package");
         assert_eq!(fp.len(), 1);
         assert_eq!(fp[0].purl.as_str(), "pkg:generic/openssl@1.1.0");
@@ -1222,7 +1353,7 @@ add_subdirectory(tests)"#,
             "find_package(BOOST 1.75.0)\n",
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let fp = by_mechanism(&entries, "cmake-find-package");
         assert_eq!(fp.len(), 1);
         assert_eq!(fp[0].purl.as_str(), "pkg:generic/boost@1.75.0");
@@ -1248,7 +1379,7 @@ add_subdirectory(tests)"#,
             "find_package(openssl 3.0)\n",
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let fp = by_mechanism(&entries, "cmake-find-package");
         // Two emissions (one per site) — but both carry the same
         // winning-version PURL so downstream milestone-148 union
@@ -1273,7 +1404,7 @@ add_subdirectory(tests)"#,
             "find_package(openssl REQUIRED)\n",
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let fp = by_mechanism(&entries, "cmake-find-package");
         assert_eq!(fp.len(), 2);
         for e in &fp {
@@ -1293,7 +1424,7 @@ add_subdirectory(tests)"#,
             "find_package_handle_standard_args(Foo DEFAULT_MSG FOO_LIBRARY FOO_INCLUDE_DIR)\n",
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let fp = by_mechanism(&entries, "cmake-find-package");
         assert_eq!(
             fp.len(),
@@ -1310,7 +1441,7 @@ add_subdirectory(tests)"#,
             "find_package(${MY_LIB})\n",
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let fp = by_mechanism(&entries, "cmake-find-package");
         assert_eq!(fp.len(), 0, "FR-010: variable-interpolated find_package MUST NOT emit");
     }
@@ -1323,7 +1454,7 @@ add_subdirectory(tests)"#,
             "# find_package(SomeUnusedDep)\n    # find_package(AnotherUnusedDep 1.0)\n",
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let fp = by_mechanism(&entries, "cmake-find-package");
         assert_eq!(fp.len(), 0, "FR-011: commented-out find_package MUST NOT emit");
     }
@@ -1336,7 +1467,7 @@ add_subdirectory(tests)"#,
             "pkg_check_modules(RADIUS REQUIRED IMPORTED_TARGET radcli)\n",
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let pcm = by_mechanism(&entries, "cmake-pkg-check-modules");
         assert_eq!(pcm.len(), 1);
         assert_eq!(pcm[0].purl.as_str(), "pkg:generic/radcli");
@@ -1356,7 +1487,7 @@ add_subdirectory(tests)"#,
             "pkg_check_modules(GLIB REQUIRED glib-2.0>=2.42 gio-2.0)\n",
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let pcm = by_mechanism(&entries, "cmake-pkg-check-modules");
         assert_eq!(pcm.len(), 2);
         let purls: std::collections::BTreeSet<_> =
@@ -1396,7 +1527,7 @@ add_subdirectory(tests)"#,
             "find_package(zlib 1.2.11)\n",
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let fp = by_mechanism(&entries, "cmake-find-package");
         assert_eq!(fp.len(), 1);
         assert_eq!(fp[0].purl.as_str(), "pkg:generic/zlib@1.2.11");
@@ -1417,7 +1548,7 @@ add_subdirectory(tests)"#,
             "pkg_search_module(ZLIB REQUIRED zlib)\n",
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let pcm = by_mechanism(&entries, "cmake-pkg-check-modules");
         assert_eq!(pcm.len(), 1);
         assert_eq!(pcm[0].purl.as_str(), "pkg:generic/zlib");
@@ -1433,9 +1564,167 @@ add_subdirectory(tests)"#,
             "find_package(Boost 1.75.0 NO_MODULE COMPONENTS system filesystem thread PATHS /usr/local/lib)\n",
         )
         .unwrap();
-        let entries = read(tmp.path(), false);
+        let entries = read(tmp.path(), false, &crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty());
         let fp = by_mechanism(&entries, "cmake-find-package");
         assert_eq!(fp.len(), 1, "single component per parent package; NO sub-component emission");
         assert_eq!(fp[0].purl.as_str(), "pkg:generic/boost@1.75.0");
+    }
+
+    // ============================================================
+    // Milestone 156 unit tests (SC-008 floor ≥6). All 6 test fns
+    // named with the `discover_cmake_files_` prefix so the SC-008
+    // grep count command
+    //   grep -cE "^\s+fn discover_cmake_files_" mikebom-cli/src/scan_fs/package_db/cmake.rs
+    // returns ≥6 (F2 remediation from /speckit-analyze 2026-07-02).
+    // ============================================================
+
+    /// Serial guard for env-var mutation tests. cargo runs tests
+    /// concurrently by default; `MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE`
+    /// is process-global, so tests #3 + #4 (default vs opt-in
+    /// behavior) MUST NOT run concurrently.
+    static ENV_MUTEX: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    fn empty_exclude_set() -> crate::scan_fs::package_db::exclude_path::ExclusionSet {
+        crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty()
+    }
+
+    #[test]
+    fn discover_cmake_files_walks_cmake_recursively() {
+        // FR-001: recursive descent under cmake/. Fixture has a
+        // depth-2 `cmake/modules/FindFoo.cmake` file.
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(tmp.path().join("cmake").join("modules")).unwrap();
+        std::fs::write(
+            tmp.path().join("cmake").join("modules").join("FindFoo.cmake"),
+            "# depth-2 file\n",
+        )
+        .unwrap();
+        let files = discover_cmake_files(tmp.path(), false, &empty_exclude_set());
+        assert!(
+            files.iter().any(|p| p.ends_with("FindFoo.cmake")),
+            "milestone 156 FR-001: cmake/modules/FindFoo.cmake at depth-2 MUST be discovered; got {files:?}"
+        );
+    }
+
+    #[test]
+    fn discover_cmake_files_walks_modules_recursively() {
+        // FR-001: recursive descent under Modules/.
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(tmp.path().join("Modules").join("utils")).unwrap();
+        std::fs::write(
+            tmp.path().join("Modules").join("utils").join("Extra.cmake"),
+            "# depth-2 file\n",
+        )
+        .unwrap();
+        let files = discover_cmake_files(tmp.path(), false, &empty_exclude_set());
+        assert!(
+            files.iter().any(|p| p.ends_with("Extra.cmake")),
+            "milestone 156 FR-001: Modules/utils/Extra.cmake at depth-2 MUST be discovered; got {files:?}"
+        );
+    }
+
+    #[test]
+    fn discover_cmake_files_depth1_third_party_by_default() {
+        // FR-019: without --cmake-third-party-recursive, third_party/
+        // stays at depth-1 (matches milestone-102 behavior).
+        let _guard = ENV_MUTEX.lock().unwrap();
+        // SAFETY: guarded by ENV_MUTEX above; single-threaded across
+        // this test and the opt-in variant below.
+        unsafe { std::env::remove_var("MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE") };
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(tmp.path().join("third_party").join("subdir")).unwrap();
+        std::fs::write(
+            tmp.path().join("third_party").join("depth1.cmake"),
+            "# depth-1 file\n",
+        )
+        .unwrap();
+        std::fs::write(
+            tmp.path().join("third_party").join("subdir").join("depth2.cmake"),
+            "# depth-2 file\n",
+        )
+        .unwrap();
+        let files = discover_cmake_files(tmp.path(), false, &empty_exclude_set());
+        assert!(
+            files.iter().any(|p| p.ends_with("depth1.cmake")),
+            "third_party/depth1.cmake at depth-1 MUST be discovered by default; got {files:?}"
+        );
+        assert!(
+            !files.iter().any(|p| p.ends_with("depth2.cmake")),
+            "milestone 156 FR-019 default: third_party/subdir/depth2.cmake at depth-2 MUST NOT be discovered without the flag; got {files:?}"
+        );
+    }
+
+    #[test]
+    fn discover_cmake_files_recursive_third_party_when_opt_in() {
+        // FR-019 opt-in: passing include_third_party_recursive=true
+        // extends the recursive descent to third_party/ too.
+        let _guard = ENV_MUTEX.lock().unwrap();
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(tmp.path().join("third_party").join("subdir")).unwrap();
+        std::fs::write(
+            tmp.path().join("third_party").join("depth1.cmake"),
+            "# depth-1 file\n",
+        )
+        .unwrap();
+        std::fs::write(
+            tmp.path().join("third_party").join("subdir").join("depth2.cmake"),
+            "# depth-2 file\n",
+        )
+        .unwrap();
+        let files = discover_cmake_files(tmp.path(), true, &empty_exclude_set());
+        assert!(
+            files.iter().any(|p| p.ends_with("depth1.cmake")),
+            "third_party/depth1.cmake at depth-1 MUST be discovered when flag is set; got {files:?}"
+        );
+        assert!(
+            files.iter().any(|p| p.ends_with("depth2.cmake")),
+            "milestone 156 FR-019 opt-in: third_party/subdir/depth2.cmake at depth-2 MUST be discovered when include_third_party_recursive=true; got {files:?}"
+        );
+    }
+
+    #[test]
+    fn discover_cmake_files_respects_exclude_set() {
+        // FR-005: --exclude-path integration. A file under an excluded
+        // subdirectory is not walked.
+        use crate::scan_fs::package_db::exclude_path::ExclusionSet;
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(tmp.path().join("cmake").join("modules")).unwrap();
+        std::fs::write(
+            tmp.path().join("cmake").join("modules").join("FindFoo.cmake"),
+            "# excluded\n",
+        )
+        .unwrap();
+        let excludes = ExclusionSet::from_iter(["cmake/modules"]).unwrap();
+        let files = discover_cmake_files(tmp.path(), false, &excludes);
+        assert!(
+            !files.iter().any(|p| p.ends_with("FindFoo.cmake")),
+            "milestone 156 FR-005: excluded cmake/modules/ MUST NOT contribute FindFoo.cmake; got {files:?}"
+        );
+    }
+
+    #[test]
+    fn discover_cmake_files_emits_find_package_at_depth2() {
+        // End-to-end via read(): fixture at cmake/modules/FindLibev.cmake
+        // (depth-2) contains find_package(Libev 1.4.0). Assert emission
+        // via the full milestone-155 pipeline.
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(tmp.path().join("cmake").join("modules")).unwrap();
+        std::fs::write(
+            tmp.path().join("cmake").join("modules").join("FindLibev.cmake"),
+            "find_package(Libev 1.4.0)\n",
+        )
+        .unwrap();
+        let entries = read(tmp.path(), false, &empty_exclude_set());
+        let fp = by_mechanism(&entries, "cmake-find-package");
+        assert_eq!(fp.len(), 1);
+        assert_eq!(fp[0].purl.as_str(), "pkg:generic/libev@1.4.0");
+        assert!(
+            fp[0]
+                .source_path
+                .contains("cmake/modules/FindLibev.cmake")
+                || fp[0].source_path.contains("cmake\\modules\\FindLibev.cmake"),
+            "source path should point at the depth-2 file; got {}",
+            fp[0].source_path
+        );
     }
 }

@@ -364,6 +364,21 @@ pub struct ScanArgs {
     #[arg(long)]
     pub include_vendored: bool,
 
+    /// Extend the CMake reader's recursive descent to `third_party/`.
+    /// By default (unset) `third_party/` is walked at depth-1 only
+    /// (matching milestone-102 behavior); recursive descent applies
+    /// only to `cmake/` and `Modules/`. Setting this flag treats
+    /// `third_party/` the same way. Useful when the parent project
+    /// has vendored a large dep tree (LLVM, Chromium, WebRTC, etc.)
+    /// whose transitive `find_package` declarations should surface
+    /// in the SBOM.
+    ///
+    /// Also accepts `MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE=1` env var,
+    /// read directly by the milestone-156 cmake reader (mirrors the
+    /// `MIKEBOM_INCLUDE_VENDORED` env-var propagation pattern).
+    #[arg(long)]
+    pub cmake_third_party_recursive: bool,
+
     /// Skip the deps.dev transitive dep-graph enrichment step.
     /// Keeps deps.dev license enrichment and ClearlyDefined active.
     /// Useful when the graph response is large or unneeded. Has no
@@ -1704,6 +1719,18 @@ pub async fn execute(
         // SAFETY: see comment above — single-threaded.
         unsafe {
             std::env::set_var("MIKEBOM_INCLUDE_VENDORED", "1");
+        }
+    }
+
+    // Milestone 156: propagate `--cmake-third-party-recursive` to the
+    // env var that the cmake reader reads directly. Same pattern as
+    // MIKEBOM_INCLUDE_VENDORED above — zero-plumbing propagation
+    // avoiding the 75-callsite scan_path -> read_all chain.
+    // SAFETY: single-threaded at this point in the scan-cmd lifecycle.
+    if args.cmake_third_party_recursive {
+        // SAFETY: see comment above — single-threaded.
+        unsafe {
+            std::env::set_var("MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE", "1");
         }
     }
 
@@ -3394,6 +3421,8 @@ mod tests {
             spdx2_relationship_compat: crate::generate::Spdx2RelationshipCompat::Full,
             // Milestone 102 — default vendored-deps emission OFF.
             include_vendored: false,
+            // Milestone 156 — default third_party/ recursive-walk OFF.
+            cmake_third_party_recursive: false,
             // Milestone 108 — default external fingerprint-corpus opt-in OFF.
             fingerprints_corpus: false,
             // Milestone 110 Phase 5-Slim — defaults for new multi-
