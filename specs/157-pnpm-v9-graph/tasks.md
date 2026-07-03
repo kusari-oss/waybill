@@ -34,7 +34,7 @@ description: "Task list for milestone 157 — pnpm-lock v9 dep-graph fix"
 
 **Purpose**: Baseline verification. No project scaffolding needed — this is a single-file additive change to an existing crate.
 
-- [ ] T001 Verify baseline state: `git log -1 --oneline`, confirm branch `157-pnpm-v9-graph`, capture pre-milestone `pnpm_lock.rs` LOC (`wc -l mikebom-cli/src/scan_fs/package_db/npm/pnpm_lock.rs`) + pre-milestone test count (`grep -cE "^\s+fn pnpm_" mikebom-cli/src/scan_fs/package_db/npm/pnpm_lock.rs`), and confirm milestone 156 (PR #490) is on main (`git log main --oneline | head -3` should show `impl(156)` at or near the top).
+- [X] T001 Verify baseline state: `git log -1 --oneline`, confirm branch `157-pnpm-v9-graph`, capture pre-milestone `pnpm_lock.rs` LOC (`wc -l mikebom-cli/src/scan_fs/package_db/npm/pnpm_lock.rs`) + pre-milestone test count (`grep -cE "^\s+fn pnpm_" mikebom-cli/src/scan_fs/package_db/npm/pnpm_lock.rs`), and confirm milestone 156 (PR #490) is on main (`git log main --oneline | head -3` should show `impl(156)` at or near the top).
 
 ---
 
@@ -44,7 +44,7 @@ description: "Task list for milestone 157 — pnpm-lock v9 dep-graph fix"
 
 **⚠️ CRITICAL**: T002 + T003 must complete before US1 work begins.
 
-- [ ] T002 Add the shared constant + inline-path helper to `mikebom-cli/src/scan_fs/package_db/npm/pnpm_lock.rs`. Place both at the top of the file, immediately after the `use` block (currently ends at line 8):
+- [X] T002 Add the shared constant + inline-path helper to `mikebom-cli/src/scan_fs/package_db/npm/pnpm_lock.rs`. Place both at the top of the file, immediately after the `use` block (currently ends at line 8):
 
   ```rust
   /// pnpm dep-section names walked by both the snapshots pre-scan (v9)
@@ -102,7 +102,7 @@ description: "Task list for milestone 157 — pnpm-lock v9 dep-graph fix"
 
   Verify `cargo check -p mikebom` compiles cleanly (helper is unused-warned as `dead_code` until T003/T004 land — that's expected; the whole batch lands together as an atomic commit).
 
-- [ ] T003 Add the v9 snapshots pre-scan helper to `mikebom-cli/src/scan_fs/package_db/npm/pnpm_lock.rs`, immediately after `walk_pnpm_dep_sections`:
+- [X] T003 Add the v9 snapshots pre-scan helper to `mikebom-cli/src/scan_fs/package_db/npm/pnpm_lock.rs`, immediately after `walk_pnpm_dep_sections`:
 
   ```rust
   /// Milestone 157: pre-scan the top-level `snapshots:` section
@@ -154,7 +154,7 @@ description: "Task list for milestone 157 — pnpm-lock v9 dep-graph fix"
 
 ### Implementation for User Story 1
 
-- [ ] T004 [US1] Refactor `parse_pnpm_lock` at `mikebom-cli/src/scan_fs/package_db/npm/pnpm_lock.rs:20` to consume the new helpers. Specifically:
+- [X] T004 [US1] Refactor `parse_pnpm_lock` at `mikebom-cli/src/scan_fs/package_db/npm/pnpm_lock.rs:20` to consume the new helpers. Specifically:
   - Add `let snapshots_lookup = build_snapshots_lookup(root);` at the top of the function body (immediately after `let mut out = Vec::new();` at line 25).
   - Replace the existing `depends` construction at lines 83-91 with (F3 remediation — distinguish "lookup hit but empty" from "lookup miss" so T005's `fell_back_count` is accurate):
     ```rust
@@ -177,7 +177,7 @@ description: "Task list for milestone 157 — pnpm-lock v9 dep-graph fix"
   - Delete the pre-milestone-157 `depends` construction (lines 83-91 of the current file).
   - Verify: `cargo check -p mikebom --all-targets` compiles cleanly (no more `dead_code` warnings).
 
-- [ ] T005 [US1] Add FR-007 + FR-008 diagnostic emissions to `parse_pnpm_lock` in `mikebom-cli/src/scan_fs/package_db/npm/pnpm_lock.rs`. Note: `fell_back_count` counter declaration + increment logic is in T004 (F3 remediation); this task adds the emissions that CONSUME the counter. Add these at appropriate points inside the function body:
+- [X] T005 [US1] Add FR-007 + FR-008 diagnostic emissions to `parse_pnpm_lock` in `mikebom-cli/src/scan_fs/package_db/npm/pnpm_lock.rs`. Note: `fell_back_count` counter declaration + increment logic is in T004 (F3 remediation); this task adds the emissions that CONSUME the counter. Add these at appropriate points inside the function body:
   - At the very top, after reading the root YAML mapping, add lockfile-version detection per research §R7:
     ```rust
     let lock_version: String = root
@@ -214,7 +214,7 @@ description: "Task list for milestone 157 — pnpm-lock v9 dep-graph fix"
     }
     ```
 
-- [ ] T006 [US1] Update the module doc-comment at `mikebom-cli/src/scan_fs/package_db/npm/pnpm_lock.rs:1-4` + the internal comment at lines 27-30 to reflect the milestone-157 shape. Replace the current 4-line module doc with:
+- [X] T006 [US1] Update the module doc-comment at `mikebom-cli/src/scan_fs/package_db/npm/pnpm_lock.rs:1-4` + the internal comment at lines 27-30 to reflect the milestone-157 shape. Replace the current 4-line module doc with:
   ```rust
   //! pnpm-lock.yaml parser.
   //!
@@ -230,7 +230,7 @@ description: "Task list for milestone 157 — pnpm-lock v9 dep-graph fix"
   ```
   And update the comment at lines 27-30 (which describes the intended-but-unimplemented v9 shape) to reflect that the shape is now IMPLEMENTED per FR-001 + FR-002 (via `build_snapshots_lookup` + `walk_pnpm_dep_sections`).
 
-- [ ] T007 [US1] Add 9 unit tests to `mikebom-cli/src/scan_fs/package_db/npm/pnpm_lock.rs` inside the existing `#[cfg(test)] mod tests` block (currently starts at line 156). All 9 test function names begin with `pnpm_v6_`, `pnpm_v9_`, or `pnpm_walks_` per SC-007 grep. Per research §R8 + F1 remediation:
+- [X] T007 [US1] Add 9 unit tests to `mikebom-cli/src/scan_fs/package_db/npm/pnpm_lock.rs` inside the existing `#[cfg(test)] mod tests` block (currently starts at line 156). All 9 test function names begin with `pnpm_v6_`, `pnpm_v9_`, or `pnpm_walks_` per SC-007 grep. Per research §R8 + F1 remediation:
   1. `pnpm_v9_minimal_dependencies_only_emits_edge` — fixture: minimal v9 lockfile with 1 `packages:` entry + 1 `snapshots:` entry with `dependencies: {bar: 2.0.0}`. Assert 1 emitted `PackageDbEntry` with `depends = ["bar@2.0.0"]`.
   2. `pnpm_v9_empty_snapshot_body_leaf_node` — fixture: `snapshots: {foo@1.0.0: {}}`. Assert `depends.is_empty()`.
   3. `pnpm_v9_peer_dep_suffix_normalized_in_key_and_value` — fixture: `snapshots: {foo@1.0.0(bar@2.0.0): {dependencies: {baz: 3.0.0(qux@4.0.0)}}}` + matching `packages:` entry. Assert emitted PURL is `pkg:npm/foo@1.0.0` (identity peer-suffix stripped) + `depends = ["baz@3.0.0"]` (value peer-suffix stripped).
@@ -243,7 +243,7 @@ description: "Task list for milestone 157 — pnpm-lock v9 dep-graph fix"
 
   All 9 tests use the same `serde_yaml::from_str(...).unwrap() → parse_pnpm_lock(&parsed, "/pnpm-lock.yaml", false)` pattern as the existing `pnpm_lock_v6_style_parses` test at line 156.
 
-- [ ] T008 [US1] Create the SC-008 integration test at `mikebom-cli/tests/npm_pnpm_v9_dep_graph.rs`. Test invokes the release binary via `Command::new(env!("CARGO_BIN_EXE_mikebom"))` against a temp-dir-synthesized 5-package v9 testbed (all files created at test-runtime via `tempfile::tempdir` + `std::fs::write` — no vendored fixture files under `tests/fixtures/`). The synthesized `pnpm-lock.yaml` includes:
+- [X] T008 [US1] Create the SC-008 integration test at `mikebom-cli/tests/npm_pnpm_v9_dep_graph.rs`. Test invokes the release binary via `Command::new(env!("CARGO_BIN_EXE_mikebom"))` against a temp-dir-synthesized 5-package v9 testbed (all files created at test-runtime via `tempfile::tempdir` + `std::fs::write` — no vendored fixture files under `tests/fixtures/`). The synthesized `pnpm-lock.yaml` includes:
   - Root project (from a matching `package.json`).
   - 5 packages entries + 5 matching snapshots entries.
   - At least one entry with a peer-dep suffix on the snapshots key.
@@ -258,7 +258,7 @@ description: "Task list for milestone 157 — pnpm-lock v9 dep-graph fix"
 
   Uses the same `run_scan` pattern as milestone-156's `cmake_walker_depth_deep_emission.rs` integration test.
 
-- [ ] T009 [US1] Add the monotonic-additive golden diff helper at the top of `mikebom-cli/tests/npm_pnpm_v9_dep_graph.rs` (inline in the same file as T008 — single-use helper, no separate common module needed). Signature:
+- [X] T009 [US1] Add the monotonic-additive golden diff helper at the top of `mikebom-cli/tests/npm_pnpm_v9_dep_graph.rs` (inline in the same file as T008 — single-use helper, no separate common module needed). Signature:
   ```rust
   fn assert_monotonic_additive(old: &serde_json::Value, new: &serde_json::Value) {
       // Index each doc's dependencies[] by ref.
@@ -275,7 +275,7 @@ description: "Task list for milestone 157 — pnpm-lock v9 dep-graph fix"
 
   This second test proves the helper catches the failure mode it's designed to detect.
 
-- [ ] T010 [US1] Regenerate the 3 pnpm golden fixtures (npm.cdx.json / npm.spdx.json / npm.spdx3.json) — F2-remediated procedure with automated monotonic-additive verification against real pre-157 goldens.
+- [X] T010 [US1] Regenerate the 3 pnpm golden fixtures (npm.cdx.json / npm.spdx.json / npm.spdx3.json) — F2-remediated procedure with automated monotonic-additive verification against real pre-157 goldens.
   Step 1: Snapshot the pre-157 goldens via `git show` BEFORE regeneration:
   ```bash
   mkdir -p /tmp/mikebom-m157-pre-goldens
@@ -331,7 +331,7 @@ description: "Task list for milestone 157 — pnpm-lock v9 dep-graph fix"
 
 ## Phase 4: Polish & Cross-Cutting Concerns
 
-- [ ] T011 Add CHANGELOG.md entry under `## [Unreleased]` per research §R9 + SC-009. Entry names:
+- [X] T011 Add CHANGELOG.md entry under `## [Unreleased]` per research §R9 + SC-009. Entry names:
   - The pnpm-lock v9 `snapshots:` support fix.
   - The team's bug report against `kusari-sandbox/argo-cd` + empirical reproduction date (2026-07-03).
   - The argo-cd testbed impact (110 → ≥5000 edges).
@@ -339,11 +339,11 @@ description: "Task list for milestone 157 — pnpm-lock v9 dep-graph fix"
   - The monotonic-additive pnpm v6/v7 golden regeneration (pre-existing edges preserved; new peer + optional edges added).
   - Consumer jq recipe for verifying edge presence per research §R9.
 
-- [ ] T012 Run SC-006 pre-PR gate. **CRITICAL** — per the milestone-155 fix memory `feedback_prepr_gate_bails_on_first_failure.md`, both commands MUST be run:
+- [X] T012 Run SC-006 pre-PR gate. **CRITICAL** — per the milestone-155 fix memory `feedback_prepr_gate_bails_on_first_failure.md`, both commands MUST be run:
   1. `./scripts/pre-pr.sh` — the mandatory gate.
   2. `cargo +stable test --workspace --no-fail-fast 2>&1 | grep -E '^---- .+ stdout ----'` — enumerate every failing test binary. Expected output: ONLY `sbomqs_spdx_score_meets_or_beats_cdx_across_ecosystems` (documented env-only flake). Any other failure name → real regression; do NOT proceed. Reproduce the failure individually via `cargo test -p mikebom --test <name>` and fix.
 
-- [ ] T013 SC-010 wire-format guard verification. Run each guard command from quickstart.md Scenario 10 and confirm the expected empty output:
+- [X] T013 SC-010 wire-format guard verification. Run each guard command from quickstart.md Scenario 10 and confirm the expected empty output:
   ```bash
   git diff main --name-only -- mikebom-cli/src/generate/
   git diff main --name-only -- mikebom-cli/src/parity/
@@ -359,14 +359,14 @@ description: "Task list for milestone 157 — pnpm-lock v9 dep-graph fix"
   ```
   Each MUST return empty (only npm.* pnpm goldens should have changed; the sibling-readers filter allows only `pnpm_lock.rs`). Also run `git diff main --name-only` and verify the shipped file-list matches plan.md's expected shape.
 
-- [ ] T014 SC-001 manual operator-cadence argo-cd testbed verification per quickstart.md Scenario 1. Clone or point at `/tmp/argo-cd/ui`, build release binary `cargo +stable build --release -p mikebom`, run `./target/release/mikebom --offline sbom scan --path /tmp/argo-cd/ui --format cyclonedx-json --output cyclonedx-json=/tmp/mikebom-m157/argo-cd.cdx.json --no-deep-hash`. Run the SC-001 jq recipes:
+- [X] T014 SC-001 manual operator-cadence argo-cd testbed verification per quickstart.md Scenario 1. Clone or point at `/tmp/argo-cd/ui`, build release binary `cargo +stable build --release -p mikebom`, run `./target/release/mikebom --offline sbom scan --path /tmp/argo-cd/ui --format cyclonedx-json --output cyclonedx-json=/tmp/mikebom-m157/argo-cd.cdx.json --no-deep-hash`. Run the SC-001 jq recipes:
   1. **Total edge count**: `jq '[.dependencies[] | .dependsOn // [] | length] | add' /tmp/mikebom-m157/argo-cd.cdx.json`. **Defensive floor**: ≥2500 (fail hard if not met — halt and investigate). **Aspirational target**: ≥5000 (documents expected shape; not-met → note in PR but still ship since defensive floor satisfied). **F4 remediation empirical revision**: whichever number is measured MUST be recorded inline in spec.md's SC-001 as the new observed floor. Follow milestone-156's F1 pattern of transparent inline revision.
   2. Verify `@actions/core@3.0.1`'s edges include the 2 known deps (`@actions/exec@3.0.0` + `@actions/http-client@4.0.1`).
   3. Verify `react@19.2.6` has empty `dependsOn` (leaf).
   4. Report format for the PR comment: `SC-001 result: X edges (defensive floor 2500 ✓ | aspirational 5000 [MET/NOT-MET]). @actions/core@3.0.1 shape ✓. react@19.2.6 leaf ✓.`
   If measured edge count < 2500: HALT, do not merge. Investigate via `RUST_LOG=info` re-scan looking for the FR-007 diagnostic — `fell_back_to_snapshots` should approach `packages_count`. If it's much less, there's a normalization bug between the packages-side canonical key and the snapshots-side canonical key. Reproduce with a minimal fixture + open a follow-up finding.
 
-- [ ] T015 Update the requirements checklist at `specs/157-pnpm-v9-graph/checklists/requirements.md` with implementation-completion notes: measured argo-cd edge count from T014, pre-PR gate result from T012, monotonic-additive golden diff summary from T010, any surprises encountered during impl.
+- [X] T015 Update the requirements checklist at `specs/157-pnpm-v9-graph/checklists/requirements.md` with implementation-completion notes: measured argo-cd edge count from T014, pre-PR gate result from T012, monotonic-additive golden diff summary from T010, any surprises encountered during impl.
 
 ---
 
