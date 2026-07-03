@@ -163,7 +163,7 @@ jobs:
       # regressions per FR-007).
       - name: Cache realistic-project fixture
         id: cache-fixture
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: /tmp/realistic-fixtures/${{ matrix.project.name }}-${{ matrix.project.tag }}
           key: realistic-fixture-${{ matrix.project.name }}-${{ matrix.project.tag }}-v1
@@ -373,7 +373,7 @@ jobs:
       # save` (the slower of the two on cold runners).
       - name: Cache rootfs tarball
         id: cache-tarball
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: /tmp/${{ matrix.image.name }}.tar
           key: rootfs-tarball-${{ matrix.image.name }}-${{ matrix.image.tag }}-v1

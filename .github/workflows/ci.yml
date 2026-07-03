@@ -222,7 +222,7 @@ jobs:
       # bump cleanly invalidates. See specs/090-split-test-fixtures-repo/
       # contracts/fixture-path-helper.md for the full contract.
       - name: Cache fixture repo
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/mikebom/fixtures
           key: mikebom-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
@@ -413,7 +413,7 @@ jobs:
 
       # Milestone 090 — fixture-repo cache (see Linux lane above).
       - name: Cache fixture repo
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/mikebom/fixtures
           key: mikebom-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
@@ -485,7 +485,7 @@ jobs:
       # ~/.cache/mikebom/fixtures path; the build.rs shells out to
       # `git` which is preinstalled on `windows-latest` runners.
       - name: Cache fixture repo
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/mikebom/fixtures
           key: mikebom-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
@@ -587,7 +587,7 @@ jobs:
 
       # Milestone 090 — fixture-repo cache (see Linux lane above).
       - name: Cache fixture repo
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/mikebom/fixtures
           key: mikebom-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
