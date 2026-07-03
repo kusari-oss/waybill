@@ -32,8 +32,14 @@
 ## Notes
 
 - All 16 checklist items pass on first authoring pass.
-- The fix shape is well-scoped: the "losers" list already exists in memory during root-selection (evidenced by the current scan log line); milestone 158 only needs to (a) wire it into the root's `dependsOn` and (b) emit the two document-scope annotations. Estimated <100 LOC of source-tree code plus tests and parity catalog rows.
+- The fix shape is well-scoped: the "losers" list already exists in memory during root-selection (evidenced by the current scan log line); milestone 158 only needs to (a) wire it into the root's `dependsOn` and (b) emit the two document-scope annotations after a BFS reachability pass. Estimated 150–250 LOC of source-tree code (upped from 100 after Q3 added multi-root BFS + per-ecosystem root identification) plus tests and parity catalog rows.
 - The empirical baseline (19.5% BFS reachability on test-podman-desktop, measured 2026-07-03) is the ground-truth SC-001 target. Any implementation that doesn't push this to ≥99% doesn't meet SC-001.
 - The three-valued `complete | partial | unknown` domain and the structured reason `<code>: <detail>` format follow the milestone-127 root-selection annotation pattern (existing precedent for structured mikebom annotations).
 - The SC-002 dual-side byte-identity guard follows milestone 157's precedent exactly: golden regression should show ONE property addition and zero other bytes changed.
-- Ready for `/speckit-clarify` OR `/speckit-plan`. Nothing critical remains ambiguous, but `/speckit-clarify` could still tighten SC-004's Go testbed values (test-podman/test-kubernetes) if we want a locked-in expectation before impl.
+- `/speckit-clarify` session 2026-07-03 locked in three decisions:
+  - Q1 (complete/partial/unknown determination): **Full BFS at emit-time + caution-first fallback** — prefer `unknown` over guessing when uncertain. FR-006 + FR-008 updated with the semantics.
+  - Q2 (orphaned components not from workspace peers): **`partial` with reason `orphaned-components-detected: <N>`** — faithful reporting, no filtering, no auto-linking. FR-011 added. SC-004 test-rails outcome updated to reflect the nested test-tree package.json warning virtually guaranteeing `partial` for test-rails.
+  - Q3 (multi-ecosystem repos with multiple conceptual roots): **Multi-root BFS + new reason-code `multi-ecosystem-partial-root`**. Reachability = union of per-ecosystem-root reachable sets. FR-012 added. When multiple reason codes apply, joined by `; ` in a single reason string.
+- SC-005 vocabulary expanded from 3 codes to 8 (with orphaned-components-detected + multi-ecosystem-partial-root + edge-resolution-degraded + go-transitive-coverage-degraded + go-workspace-mode-anomaly added by clarifications).
+- SC-007 unit test floor raised from 6 → 10 to cover the Q2/Q3 additions.
+- Ready for `/speckit-plan`. Coverage taxonomy: all High/Medium-impact categories Clear. One Deferred: log-line/observability (milestone-157-style FR-007 pattern) — better resolved at planning time.
