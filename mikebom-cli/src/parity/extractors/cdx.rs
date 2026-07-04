@@ -815,6 +815,10 @@ cdx_anno!(c109_cdx, "mikebom:go-transitive-unresolved-reason",  component);
 cdx_anno!(c110_cdx, "mikebom:go-transitive-coverage",           document);
 cdx_anno!(c111_cdx, "mikebom:go-transitive-coverage-reason",    document);
 
+// Milestone 161 (closes #495): C112 document-scope Go-workspace-mode
+// detection annotation.
+cdx_anno!(c112_cdx, "mikebom:go-workspace-mode",                document);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================
