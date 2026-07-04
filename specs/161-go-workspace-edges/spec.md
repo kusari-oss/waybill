@@ -5,6 +5,14 @@
 **Status**: Draft
 **Input**: User description: "495" (implement fix for [issue #495](https://github.com/kusari-oss/mikebom/issues/495))
 
+## Clarifications
+
+### Session 2026-07-04
+
+- Q: How should `v0.0.0-unknown` false edges to workspace-internal targets be disposed of? → A: Hybrid — SUPPRESS the edge iff the target is NOT in the source module's own require block (matches FR-002 per-module truthful attribution); RESOLVE the target's version from the sibling `use`d module's go.mod iff the target IS in the source's require block (preserves legitimate intra-workspace edges). Matches FR-002 exactly and avoids the false-leakage pattern that causes the 30.8% wrong-edge rate.
+- Q: `mikebom:go-workspace-mode` value when `go.work` present but has zero `use` entries? → A: `detected: 0 use-modules`. File is syntactically valid, semantically empty — a legitimate Go workspace-mode scenario (e.g. scaffolding). Treating it as `malformed:` would false-positive consumer defect-detection heuristics. Transparency-first per Constitution Principle X — consumers see workspace-mode-detected + zero members, distinguishable from truly-absent `go.work`.
+- Q: What ground-truth generator defines SC-001's ≤ 5% wrong-edge measurement? → A: Per-`use`d-module `cd <use-module-dir> && GOWORK=off go mod graph`. Executes `go mod graph` in each `use`d module's own directory with workspace mode explicitly disabled, so the result is that module's isolated declared-dep view (no cross-workspace edge merging). Matches FR-002 semantic exactly + milestone-160 Q3 per-module methodology. Reproducible by any auditor with `go` installed; deterministic single-command per module. Rejected whole-workspace `go mod graph` from root because Go's workspace-mode semantics merge edges across `use` members, diverging from FR-002 truthful per-module attribution.
+
 ## Motivation
 
 Discovered during the milestone-157/158/159/160 audit expansion against `kusari-sandbox/test-*` repos: on Go repos using `go.work` workspace mode with multiple nested modules, mikebom emits **wrong `dependsOn` edges** — base type libraries appear to depend on unrelated leaf applications that don't actually declare them.
