@@ -626,6 +626,11 @@ spdx3_anno!(c102_spdx3, "mikebom:demoted-from-main-module", component);
 // graph-element annotation.
 spdx3_anno!(c103_spdx3, "mikebom:cmake-find-package-name", component);
 
+// Milestone 158 (closes #492): C104/C105 — document-scope graph-
+// completeness signal + reason. See contracts/annotation-schema.md.
+spdx3_anno!(c104_spdx3, "mikebom:graph-completeness",        document);
+spdx3_anno!(c105_spdx3, "mikebom:graph-completeness-reason", document);
+
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-component
 // graph-element annotation carrying the JSON-encoded array of
 // conflict records.

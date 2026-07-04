@@ -559,6 +559,11 @@ spdx23_anno!(c102_spdx23, "mikebom:demoted-from-main-module", component);
 // PURL-lowercase normalization.
 spdx23_anno!(c103_spdx23, "mikebom:cmake-find-package-name", component);
 
+// Milestone 158 (closes #492): C104/C105 — document-scope graph-
+// completeness signal + reason. See contracts/annotation-schema.md.
+spdx23_anno!(c104_spdx23, "mikebom:graph-completeness",        document);
+spdx23_anno!(c105_spdx23, "mikebom:graph-completeness-reason", document);
+
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-Package
 // envelope carrying the JSON-encoded array of conflict records.
 spdx23_anno!(c67_spdx23, "mikebom:assertion-conflict",       component);

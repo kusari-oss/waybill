@@ -906,6 +906,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-4MQQMZDGBQUBOPRUIXDJ7TU4/anno-I7NJI6MYUBZRJOIL",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"partial\"}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-4MQQMZDGBQUBOPRUIXDJ7TU4",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-4MQQMZDGBQUBOPRUIXDJ7TU4/anno-IJU3ALGJNFNIGHG5",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"go.sum\"]}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-4MQQMZDGBQUBOPRUIXDJ7TU4/pkg-ZPQ6ND5QEI5V2QHC",
@@ -1197,6 +1205,14 @@
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-4MQQMZDGBQUBOPRUIXDJ7TU4/anno-TOJBGJ53HXMX6HMX",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:github.com\\\\/sirupsen\\\\/logrus:github.com\\\\/sirupsen\\\\/logrus:v1.9.4:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/sirupsen:github.com\\\\/sirupsen\\\\/logrus:v1.9.4:*:*:*:*:*:*:*\"]}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-4MQQMZDGBQUBOPRUIXDJ7TU4/pkg-JBX4TYZ3HEXJNFYD",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-4MQQMZDGBQUBOPRUIXDJ7TU4/anno-TPABOXVGXVC3VTJD",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 1 component(s) not reachable from root\"}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-4MQQMZDGBQUBOPRUIXDJ7TU4",
       "type": "Annotation"
     },
     {

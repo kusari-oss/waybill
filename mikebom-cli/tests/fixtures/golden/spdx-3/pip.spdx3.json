@@ -709,6 +709,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-R6NUDHRJGONEMFTY6NL2F3PO/anno-Y3LCQCLU2JESR3UE",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"complete\"}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-R6NUDHRJGONEMFTY6NL2F3PO",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-R6NUDHRJGONEMFTY6NL2F3PO/anno-YJXOYURFP2ZMLQ7M",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-R6NUDHRJGONEMFTY6NL2F3PO/pkg-KVTB5ZDMEOOSAO3A",

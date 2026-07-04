@@ -197,6 +197,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-WY44EYD3MGVUM7XR7DV63ISQ/anno-46T3XPGI3FFPV7NA",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"complete\"}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-WY44EYD3MGVUM7XR7DV63ISQ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-WY44EYD3MGVUM7XR7DV63ISQ/anno-5K2WIURVILA774EY",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-kprobe-attach-failures\",\"value\":[]}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-WY44EYD3MGVUM7XR7DV63ISQ",

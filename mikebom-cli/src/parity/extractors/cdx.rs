@@ -797,6 +797,11 @@ cdx_anno!(c102_cdx, "mikebom:demoted-from-main-module", component);
 // only when original casing differs from lowercased.
 cdx_anno!(c103_cdx, "mikebom:cmake-find-package-name", component);
 
+// Milestone 158 (closes #492): C104/C105 — document-scope graph-
+// completeness signal + reason. See contracts/annotation-schema.md.
+cdx_anno!(c104_cdx, "mikebom:graph-completeness",        document);
+cdx_anno!(c105_cdx, "mikebom:graph-completeness-reason", document);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================

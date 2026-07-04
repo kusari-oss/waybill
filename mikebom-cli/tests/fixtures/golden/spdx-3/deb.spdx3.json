@@ -203,6 +203,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NVLHNNHIGQQEORRU7JR6PUAC/anno-KWDXOA3MYTJCTSJ4",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"complete\"}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-NVLHNNHIGQQEORRU7JR6PUAC",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-NVLHNNHIGQQEORRU7JR6PUAC/anno-OZONMS4FHGHTWEXL",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"var/lib/dpkg/status\"]}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-NVLHNNHIGQQEORRU7JR6PUAC/pkg-FBZUYFQKGJMH6COB",

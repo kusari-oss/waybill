@@ -617,6 +617,72 @@ pub fn build_document(
     let mut relationships =
         super::relationships::build_relationships(artifacts, &root_ids, &purl_aliases);
 
+    // Milestone 158 US1 — append workspace-peer synthetic edges so
+    // SPDX 2.3 emits DEPENDS_ON relationships from the primary root
+    // to each detected workspace peer (loser). Byte-identical to the
+    // CDX side's peer-linkage. Reuses milestone-127's `losers` list.
+    let m158_workspace_peer_edges =
+        crate::generate::graph_completeness::build_workspace_peer_edges(
+            &selection,
+            artifacts.components,
+        );
+    if !m158_workspace_peer_edges.is_empty() {
+        if let crate::generate::root_selector::ResolvedRootSubject::MainModule(idx) = &selection.subject {
+            if let Some(root_c) = artifacts.components.get(*idx) {
+                let root_id = super::ids::SpdxId::for_purl(&root_c.purl);
+                for loser_purl in &selection.losers {
+                    relationships.push(super::relationships::SpdxRelationship {
+                        source: root_id.clone(),
+                        target: super::ids::SpdxId::for_purl(loser_purl),
+                        kind: super::relationships::SpdxRelationshipType::DependsOn,
+                        comment: None,
+                    });
+                }
+            }
+        }
+    }
+
+    // Milestone 158 US2 — compute the multi-root BFS reachability
+    // pass on the AUGMENTED graph (post workspace-peer linkage) and
+    // pass into `annotate_document` for the two document-scope
+    // annotations. Independently computed from the CDX side because
+    // each format has its own emission flow — the result is
+    // deterministic (same select_root ladder, same seed set, same
+    // edges) so both emissions agree byte-equally on the value.
+    let m158_augmented_relationships: Vec<mikebom_common::resolution::Relationship> = artifacts
+        .relationships
+        .iter()
+        .cloned()
+        .chain(m158_workspace_peer_edges.iter().cloned())
+        .collect();
+    // Milestone 158 — pass the emitted SPDX root's PURL (or empty when
+    // the synthetic-root fallback fired without a Package ref) as the
+    // target_ref so BFS mirrors the emitter's primary-dep-fallback.
+    let m158_target_ref: String = match &selection.subject {
+        crate::generate::root_selector::ResolvedRootSubject::MainModule(idx) => artifacts
+            .components
+            .get(*idx)
+            .map(|c| c.purl.as_str().to_string())
+            .unwrap_or_default(),
+        crate::generate::root_selector::ResolvedRootSubject::MavenCoord => artifacts
+            .scan_target_coord
+            .map(|c| format!("pkg:maven/{}/{}@{}", c.group, c.artifact, c.version))
+            .unwrap_or_default(),
+        crate::generate::root_selector::ResolvedRootSubject::SyntheticPlaceholder { name, version } => {
+            format!("pkg:generic/{name}@{version}")
+        }
+        crate::generate::root_selector::ResolvedRootSubject::OperatorOverride => {
+            artifacts.target_name.to_string()
+        }
+    };
+    let m158_graph_completeness =
+        crate::generate::graph_completeness::compute_graph_completeness(
+            artifacts.components,
+            &m158_augmented_relationships,
+            &selection,
+            &m158_target_ref,
+        );
+
     // Issue #236: when `synthesize_root` fires (multi-top-level
     // scans with no main-module and no name match — the dominant
     // case for image scans and OS-package scans), the synthetic
@@ -749,7 +815,7 @@ pub fn build_document(
 
     // Document-level mikebom annotations (Sections C21–C23 + E1).
     let mut annotations =
-        super::annotations::annotate_document(&annotator, &date, artifacts);
+        super::annotations::annotate_document(&annotator, &date, artifacts, &m158_graph_completeness);
     // Milestone 080 — append user-supplied `--annotator` /
     // `--annotation-comment` pairs per the SPDX 2.3 routing matrix
     // (contracts/user-sbom-metadata.md). Each pair → SpdxAnnotation

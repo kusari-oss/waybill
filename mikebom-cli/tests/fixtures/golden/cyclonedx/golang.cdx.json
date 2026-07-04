@@ -879,6 +879,14 @@
       {
         "name": "mikebom:trace-integrity-kprobe-attach-failures",
         "value": "0"
+      },
+      {
+        "name": "mikebom:graph-completeness",
+        "value": "partial"
+      },
+      {
+        "name": "mikebom:graph-completeness-reason",
+        "value": "orphaned-components-detected: 1 component(s) not reachable from root"
       }
     ],
     "supplier": {

@@ -278,6 +278,10 @@
       {
         "name": "mikebom:trace-integrity-kprobe-attach-failures",
         "value": "0"
+      },
+      {
+        "name": "mikebom:graph-completeness",
+        "value": "complete"
       }
     ],
     "supplier": {

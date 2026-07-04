@@ -73,6 +73,12 @@ pub fn build_metadata(
     // divergent-PURL collision detected in the scan. `None` ⇒ no
     // collisions ⇒ omit the annotation entirely (FR-009).
     collisions_summary: Option<&mikebom_common::divergence::CollisionsSummary>,
+    // Milestone 158 (US2) — the multi-root BFS reachability pass
+    // result. Drives the two document-scope annotations
+    // `mikebom:graph-completeness` + `mikebom:graph-completeness-reason`
+    // per FR-003 + FR-004. Threaded from `builder::build()` after the
+    // graph is fully assembled (post workspace-peer linkage).
+    graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult,
 ) -> serde_json::Value {
     let version = env!("CARGO_PKG_VERSION");
     // Determinism: honor `MIKEBOM_FIXED_TIMESTAMP` (same env-var
@@ -448,6 +454,28 @@ pub fn build_metadata(
                 "value": serde_json::to_string(&envelope).unwrap_or_default(),
             }));
         }
+    }
+
+    // Milestone 158 US2 — always-emit `mikebom:graph-completeness`
+    // at document scope per FR-003 (universal presence). Value is
+    // the three-way `complete|partial|unknown` string. The
+    // companion `mikebom:graph-completeness-reason` is emitted
+    // conditionally per FR-004/FR-005 (present iff value !=
+    // complete AND reason codes exist).
+    properties.push(json!({
+        "name": "mikebom:graph-completeness",
+        "value": graph_completeness.value.as_str(),
+    }));
+    if graph_completeness.value
+        != crate::generate::graph_completeness::GraphCompletenessValue::Complete
+        && !graph_completeness.reason_codes.is_empty()
+    {
+        properties.push(json!({
+            "name": "mikebom:graph-completeness-reason",
+            "value": crate::generate::graph_completeness::join_reason_codes(
+                &graph_completeness.reason_codes,
+            ),
+        }));
     }
 
     // Synthesize a minimal valid CPE 2.3 for the scan subject.
@@ -1058,7 +1086,7 @@ mod tests {
 
     #[test]
     fn metadata_has_required_fields() {
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
+        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete());
 
         assert!(meta["timestamp"].is_string());
         assert_eq!(meta["tools"]["components"][0]["name"], "mikebom");
@@ -1079,7 +1107,7 @@ mod tests {
     #[test]
     fn metadata_includes_authors_for_sbom_authors_score() {
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete());
         let authors = meta["authors"].as_array().expect("authors must be array");
         assert!(!authors.is_empty(), "authors must be non-empty");
         assert!(authors[0]["name"].is_string());
@@ -1088,7 +1116,7 @@ mod tests {
     #[test]
     fn metadata_includes_supplier_for_sbom_supplier_score() {
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete());
         assert!(
             meta["supplier"]["name"].is_string(),
             "supplier.name must be present as a string"
@@ -1100,7 +1128,7 @@ mod tests {
         // sbomqs sbom_data_license scores the SBOM's own license. SPDX
         // convention is CC0-1.0 so SBOM content is free to redistribute.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete());
         let licenses = meta["licenses"].as_array().expect("licenses must be array");
         assert!(!licenses.is_empty());
         assert_eq!(licenses[0]["license"]["id"], "CC0-1.0");
@@ -1111,7 +1139,7 @@ mod tests {
         // sbomqs flags metadata.component as invalid without a purl.
         // Mikebom synthesizes pkg:generic/<name>@<version>.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete());
         assert_eq!(meta["component"]["purl"], "pkg:generic/myapp@0.1.0");
     }
 
@@ -1120,7 +1148,7 @@ mod tests {
         // sbomqs flags empty/absent cpe on metadata.component as invalid.
         // Mikebom emits cpe:2.3:a:mikebom:<name>:<version>:*:*:*:*:*:*:*.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete());
         assert_eq!(
             meta["component"]["cpe"],
             "cpe:2.3:a:mikebom:myapp:0.1.0:*:*:*:*:*:*:*"
@@ -1158,6 +1186,7 @@ mod tests {
             None,
         None,
         None,
+            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
         );
         let purl = meta["component"]["purl"].as_str().unwrap();
         assert!(
@@ -1173,16 +1202,16 @@ mod tests {
 
     #[test]
     fn metadata_bom_ref_format() {
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
+        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete());
         assert_eq!(meta["component"]["bom-ref"], "myapp@0.1.0");
     }
 
     #[test]
     fn metadata_context_varies_per_variant() {
-        let fs = build_metadata("myapp", "1.0", GenerationContext::FilesystemScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
+        let fs = build_metadata("myapp", "1.0", GenerationContext::FilesystemScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete());
         assert_eq!(fs["properties"][0]["value"], "filesystem-scan");
 
-        let img = build_metadata("myapp", "1.0", GenerationContext::ContainerImageScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None);
+        let img = build_metadata("myapp", "1.0", GenerationContext::ContainerImageScan, &[], &[], &TraceIntegrity::default(), None, None, None, None, &[], &RootComponentOverride::default(), &mikebom::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete());
         assert_eq!(img["properties"][0]["value"], "container-image-scan");
     }
 
@@ -1207,6 +1236,7 @@ mod tests {
             None,
         None,
         None,
+            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
         );
         assert!(meta.get("lifecycles").is_none());
     }
@@ -1285,6 +1315,7 @@ mod tests {
             None,
         None,
         None,
+            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
         );
 
         let lifecycles = meta["lifecycles"]
@@ -1365,6 +1396,7 @@ mod tests {
             None,
         None,
         None,
+            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
         );
         assert!(
             meta.get("lifecycles").is_none(),
@@ -1400,6 +1432,7 @@ mod tests {
             None,
         None,
         None,
+            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
         );
         let refs = meta["component"]["externalReferences"]
             .as_array()
@@ -1442,6 +1475,7 @@ mod tests {
             None,
         None,
         None,
+            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
         );
         let props = meta["properties"].as_array().expect("properties");
         let entry = props
@@ -1478,6 +1512,7 @@ mod tests {
             None,
         None,
         None,
+            &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
         );
         let props = meta["properties"].as_array().expect("properties");
         let found = props

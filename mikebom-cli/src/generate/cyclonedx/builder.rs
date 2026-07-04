@@ -396,6 +396,62 @@ impl CycloneDxBuilder {
             None => format!("{}@{}", effective_target_name, effective_target_version),
         };
 
+        // Milestone 158 (US1 + US2) — pre-compute selection so we can:
+        //   (a) augment the effective relationships with root → loser
+        //       edges (workspace-peer linkage per FR-002).
+        //   (b) run the multi-root BFS reachability pass over the
+        //       AUGMENTED graph and thread the result into
+        //       `build_metadata` for the two document-scope
+        //       annotations (FR-003 + FR-004).
+        //
+        // We duplicate the `select_root` call that `build_metadata`
+        // will also make internally (needed for milestone 127's
+        // `mikebom:root-selection-heuristic`). Both callers see the
+        // same result — the ladder is deterministic — so no drift.
+        let m158_selection = crate::generate::root_selector::select_root(
+            effective_components,
+            &self.root_override,
+            scan_target_coord,
+            target_name,
+            "0.0.0",
+        );
+
+        // FR-002 workspace-peer linkage: for each loser Purl, emit a
+        // synthetic `root → loser` DependsOn edge. `build_dependencies`
+        // and `build_relationships` (SPDX side) naturally emit these
+        // via the existing infrastructure once they're in the list.
+        let m158_workspace_peer_edges: Vec<Relationship> =
+            crate::generate::graph_completeness::build_workspace_peer_edges(
+                &m158_selection,
+                effective_components,
+            );
+
+        let metadata_relationships_augmented: Vec<Relationship> = relationships
+            .iter()
+            .cloned()
+            .chain(m158_workspace_peer_edges.iter().cloned())
+            .collect();
+
+        // FR-008 multi-root BFS on the AUGMENTED graph.
+        let graph_completeness =
+            crate::generate::graph_completeness::compute_graph_completeness(
+                effective_components,
+                &metadata_relationships_augmented,
+                &m158_selection,
+                &target_ref,
+            );
+
+        // FR-013 tracing log line (research §R8). Grep-friendly for
+        // CI-log analysis, follows the milestone-157 FR-007 precedent.
+        tracing::info!(
+            value = %graph_completeness.value,
+            reachable_count = graph_completeness.reachable_count,
+            total_count = graph_completeness.total_count,
+            orphan_count = graph_completeness.orphan_count,
+            reason_codes = ?graph_completeness.reason_codes,
+            "graph completeness computed"
+        );
+
         let metadata = build_metadata(
             target_name,
             "0.0.0",
@@ -414,6 +470,7 @@ impl CycloneDxBuilder {
             self.file_inventory_stats.as_ref(),
             self.file_inventory_mode.as_deref(),
             self.collisions_summary.as_ref(),
+            &graph_completeness,
         );
         // Milestone 076 — track per-component identifier matches so
         // we can emit a warn for any selector that matched zero
@@ -489,9 +546,29 @@ impl CycloneDxBuilder {
             } else {
                 None
             };
-        let effective_relationships: &[Relationship] = filtered_relationships_owned
+        let effective_relationships_base: &[Relationship] = filtered_relationships_owned
             .as_deref()
             .unwrap_or(relationships);
+        // Milestone 158 US1 — append the workspace-peer synthetic
+        // edges computed above so `build_dependencies` naturally
+        // emits root → each-loser edges in the CDX `dependencies[]`
+        // output. Reuses the same edge set the graph-completeness
+        // BFS was run against for internal consistency.
+        let effective_relationships_owned: Option<Vec<Relationship>> =
+            if !m158_workspace_peer_edges.is_empty() {
+                Some(
+                    effective_relationships_base
+                        .iter()
+                        .cloned()
+                        .chain(m158_workspace_peer_edges.iter().cloned())
+                        .collect(),
+                )
+            } else {
+                None
+            };
+        let effective_relationships: &[Relationship] = effective_relationships_owned
+            .as_deref()
+            .unwrap_or(effective_relationships_base);
         let deps = build_dependencies(effective_components, effective_relationships, &target_ref);
         let vulnerabilities = build_vulnerabilities(effective_components);
 

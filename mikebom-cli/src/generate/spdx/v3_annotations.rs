@@ -68,11 +68,51 @@ pub fn build_document_annotations(
     scan: &ScanArtifacts<'_>,
     doc_iri: &str,
     creation_info_id: &str,
+    graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult,
 ) -> Vec<Value> {
     let mut out: Vec<Value> = Vec::new();
     push_document_fields(&mut out, doc_iri, creation_info_id, scan);
+    push_m158_graph_completeness_annotations(
+        &mut out,
+        doc_iri,
+        creation_info_id,
+        graph_completeness,
+    );
     sort_by_spdx_id(&mut out);
     out
+}
+
+/// Milestone 158 US2 — emit the two document-scope
+/// `mikebom:graph-completeness` + `mikebom:graph-completeness-reason`
+/// annotations in SPDX 3.
+fn push_m158_graph_completeness_annotations(
+    out: &mut Vec<Value>,
+    doc_iri: &str,
+    creation_info_id: &str,
+    gc: &crate::generate::graph_completeness::GraphCompletenessResult,
+) {
+    // Always emit the primary value annotation per FR-003.
+    out.push(build_annotation(
+        doc_iri,
+        doc_iri,
+        creation_info_id,
+        "mikebom:graph-completeness",
+        serde_json::Value::String(gc.value.as_str().to_string()),
+    ));
+    // Conditional reason per FR-004 / FR-005.
+    if gc.value != crate::generate::graph_completeness::GraphCompletenessValue::Complete
+        && !gc.reason_codes.is_empty()
+    {
+        out.push(build_annotation(
+            doc_iri,
+            doc_iri,
+            creation_info_id,
+            "mikebom:graph-completeness-reason",
+            serde_json::Value::String(
+                crate::generate::graph_completeness::join_reason_codes(&gc.reason_codes),
+            ),
+        ));
+    }
 }
 
 /// Milestone 119 phase-2 — build SPDX 3 Annotation elements for the

@@ -7,6 +7,128 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Workspace-root peer linkage + graph-completeness annotations (milestone 158)
+
+Closes issue #492 (surfaced during the milestone-157 Round-2 audit of
+`kusari-sandbox/test-*` repos). For workspace monorepos, mikebom's
+per-package dep-graph was accurate (99.78% snapshot-match on
+test-podman-desktop) but consumers BFS-traversing from the SBOM's
+declared root component reached only **552 of 2835 components
+(19.5%)**. Root cause: `select_root` identifies workspace peers as
+"losers" via the milestone-127 ladder but never links them back to
+the chosen root's `dependsOn`. Every consumer that renders a rooted
+tree — the standard mental model for CDX `dependencies` and SPDX
+relationships — missed 4/5 of the actual dep-graph.
+
+**Two-part fix**:
+
+1. **Workspace-peer linkage** — the CDX / SPDX 2.3 / SPDX 3 emitters
+   now synthesize `Relationship { from: root, to: loser, kind:
+   DependsOn }` edges for every workspace peer identified during
+   root selection. Reuses milestone-127's `RootSelectionResult.losers`
+   field — no new plumbing.
+
+2. **`mikebom:graph-completeness` + `mikebom:graph-completeness-reason`
+   document-scope annotations** — every emitted SBOM now carries a
+   truthful graph-completeness signal computed via a multi-root BFS
+   pass at emit-time. Values: `complete` (100% reachable from the
+   multi-root seed set), `partial` (gap detected AND classified into
+   one of 8 documented reason codes), `unknown` (Q1 caution-first
+   fallback: prefer `unknown` over guessing).
+
+**Q1/Q2/Q3 clarifications (2026-07-03)**:
+
+- **Q1 caution-first**: when in doubt, emit `unknown` rather than
+  claiming `complete` or `partial`. Prevents silent-lie failure modes.
+- **Q2 orphaned components**: nested test-tree package.json devDeps
+  and similar orphans are emitted faithfully (no filtering, no
+  synthetic auto-linking) and flagged via
+  `orphaned-components-detected: <N>` reason code.
+- **Q3 multi-ecosystem**: repos with multiple ecosystems (e.g.,
+  test-rails: gem + npm) run BFS from each per-ecosystem main-module
+  root. Reachability = union. Per-ecosystem root identification
+  failures fire the `multi-ecosystem-partial-root: <ecosystems>`
+  reason code.
+
+**T035 empirical measurement 2026-07-03** on `test-podman-desktop`:
+
+- Pre-158: 552/2835 npm components reachable (19.5%).
+- Post-158: **698/2835 npm components reachable (24.6%)** —
+  a +146-component / +5.1 percentage-point improvement from linking
+  the 25 detected workspace peers.
+- The pre-implementation ≥99% target was miscalibrated: the fixture
+  contains declared-only workspace-peer deps (e.g.,
+  `pkg:npm/%40docusaurus/core@` with EMPTY VERSION strings) that don't
+  resolve to any emitted component's canonical PURL. BFS walks these
+  phantom edges but reaches nothing further. This is a pre-existing
+  edge-resolution issue in mikebom's npm workspace-peer parsers,
+  orthogonal to milestone 158's scope; will be tracked as a follow-on.
+- The milestone-158 annotation correctly signals `partial` with reason
+  `orphaned-components-detected: 2173` per Constitution Principle X.
+
+**Reason-code vocabulary** (spec.md SC-005, closed 8-code set;
+adding a new code is a spec/CHANGELOG event, not a silent code
+change):
+
+- `workspace-peer-detection-degraded`
+- `root-selection-ambiguous`
+- `root-selection-failed`
+- `edge-resolution-degraded`
+- `go-transitive-coverage-degraded` (deferred to #495)
+- `go-workspace-mode-anomaly` (deferred to #494)
+- `orphaned-components-detected`
+- `multi-ecosystem-partial-root`
+
+Multiple codes joined by `; ` (semicolon + space) per FR-012.
+
+**Verification**:
+
+- 25 new unit tests in `mikebom-cli/src/generate/graph_completeness/`
+  (SC-007 floor ≥10; 25 total after impl).
+- Parity catalog rows C104 + C105 with `Directionality::SymmetricEqual`
+  ensure CDX / SPDX 2.3 / SPDX 3 emit the annotation with identical
+  values (SC-010).
+- SC-002 dual-side byte-identity guard: 27 of 33 milestone-090 goldens
+  changed by exactly the added `mikebom:graph-completeness = complete`
+  annotation (4 CDX / 6 SPDX 2.3 / 8 SPDX 3 diff lines). 6 goldens
+  (golang + npm × 3 formats each) emit `partial` due to real orphans
+  in those fixtures — this is truthful per Constitution Principle X,
+  not a regression.
+- 33 goldens regenerated via `./scripts/regen-goldens.sh`.
+
+**Consumer jq recipe** (per research §R9):
+
+```bash
+# Gate a CI pipeline on graph completeness
+completeness=$(jq -r '.metadata.properties[] | select(.name == "mikebom:graph-completeness") | .value' sbom.cdx.json)
+case "$completeness" in
+    complete)
+        echo "Graph is fully connected — safe to consume"
+        ;;
+    partial)
+        reason=$(jq -r '.metadata.properties[] | select(.name == "mikebom:graph-completeness-reason") | .value' sbom.cdx.json)
+        echo "Partial graph: $reason"
+        ;;
+    unknown)
+        reason=$(jq -r '.metadata.properties[] | select(.name == "mikebom:graph-completeness-reason") | .value' sbom.cdx.json)
+        echo "Unknown completeness: $reason (recommend re-scan or manual review)"
+        exit 1
+        ;;
+esac
+```
+
+**Constitution alignment**:
+
+- Principle VIII (Completeness): the milestone's whole point.
+- Principle X (Transparency): the annotations ARE transparency
+  metadata in the constitution's exact sense.
+- Principle V (Standards-native precedence): FR-010 acknowledges the
+  `mikebom:*` deviation is required because no CDX 1.6 / SPDX 2.3 /
+  SPDX 3.0.1 native "graph completeness" property exists at emission
+  time; a future standard enum would supersede.
+
+Zero new Cargo dependencies. `mikebom-ebpf` untouched.
+
 ### pnpm-lock v9 dep-graph fix (milestone 157)
 
 The team reported "pnpm isn't working" against `kusari-sandbox/argo-cd`.

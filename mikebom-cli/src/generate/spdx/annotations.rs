@@ -394,6 +394,7 @@ pub fn annotate_document(
     annotator: &str,
     date: &str,
     artifacts: &ScanArtifacts<'_>,
+    graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult,
 ) -> Vec<SpdxAnnotation> {
     use serde_json::json;
     let mut out: Vec<SpdxAnnotation> = Vec::new();
@@ -517,6 +518,29 @@ pub fn annotate_document(
                 );
             }
         }
+    }
+
+    // Milestone 158 US2 — always-emit `mikebom:graph-completeness`
+    // at document scope per FR-003 (universal presence). Value is
+    // the three-way `complete|partial|unknown` string. The
+    // companion `mikebom:graph-completeness-reason` is emitted
+    // conditionally per FR-004/FR-005.
+    push(
+        &mut out,
+        "mikebom:graph-completeness",
+        json!(graph_completeness.value.as_str()),
+    );
+    if graph_completeness.value
+        != crate::generate::graph_completeness::GraphCompletenessValue::Complete
+        && !graph_completeness.reason_codes.is_empty()
+    {
+        push(
+            &mut out,
+            "mikebom:graph-completeness-reason",
+            json!(crate::generate::graph_completeness::join_reason_codes(
+                &graph_completeness.reason_codes,
+            )),
+        );
     }
 
     // C44 (milestone 061, closes #119): doc-level Go graph-completeness

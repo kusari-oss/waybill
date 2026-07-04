@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-07-02
+Auto-generated from all feature plans. Last updated: 2026-07-03
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -187,6 +187,8 @@ Auto-generated from all feature plans. Last updated: 2026-07-02
 - N/A — visited-set is per-`safe_walk`-invocation `HashSet<PathBuf>` in-memory state; cleared at return. Mirrors every milestone since 002. (156-cmake-walker-depth)
 - Rust stable (workspace toolchain inherited from milestones 001–156; no nightly required). + Existing only — `serde_yaml` (workspace) for the YAML walk (already parsing pnpm-lock.yaml today), `tracing` (info + warn + debug), `anyhow`/`thiserror` (error propagation), `std::collections::HashMap` for the lookup table. Reuses the existing `parse_pnpm_key` helper at `pnpm_lock.rs:129`. **Zero new Cargo dependencies.** (157-pnpm-v9-graph)
 - N/A — lookup table is a per-parse `HashMap<String, Vec<String>>` in-process state; dropped at function return. Mirrors every milestone since 002. (157-pnpm-v9-graph)
+- Rust stable (workspace toolchain inherited from milestones 001–157; no nightly required for this user-space-only work). + Existing only — `serde` / `serde_json` (annotation envelope + JSON emission), `tracing` (info-level log line per FR-013 below), `anyhow` / `thiserror` (error propagation), `clap` (no new flags — the annotation is unconditional). The multi-root BFS + reason-code classifier uses `std::collections::{HashMap, HashSet, VecDeque}` from stdlib. **Zero new Cargo dependencies.** (158-graph-completeness)
+- N/A — all state in-process per scan; the graph-completeness pass runs once at emit-time, its result is a stack-allocated `GraphCompletenessResult` struct that flows into the three format emitters and is dropped when serialization finishes. No caches, no persistence (matches every milestone since 002). (158-graph-completeness)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -249,9 +251,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 158-graph-completeness: Added Rust stable (workspace toolchain inherited from milestones 001–157; no nightly required for this user-space-only work). + Existing only — `serde` / `serde_json` (annotation envelope + JSON emission), `tracing` (info-level log line per FR-013 below), `anyhow` / `thiserror` (error propagation), `clap` (no new flags — the annotation is unconditional). The multi-root BFS + reason-code classifier uses `std::collections::{HashMap, HashSet, VecDeque}` from stdlib. **Zero new Cargo dependencies.**
 - 157-pnpm-v9-graph: Added Rust stable (workspace toolchain inherited from milestones 001–156; no nightly required). + Existing only — `serde_yaml` (workspace) for the YAML walk (already parsing pnpm-lock.yaml today), `tracing` (info + warn + debug), `anyhow`/`thiserror` (error propagation), `std::collections::HashMap` for the lookup table. Reuses the existing `parse_pnpm_key` helper at `pnpm_lock.rs:129`. **Zero new Cargo dependencies.**
 - 156-cmake-walker-depth: Added Rust stable (workspace toolchain inherited from milestones 001–155; no nightly required). + Existing only — the milestone-054 `safe_walk` helper (in-crate, at `mikebom-cli/src/scan_fs/walk.rs`), `tracing` (skip-decision debug logs already emitted by `safe_walk`), `anyhow`/`thiserror` (error propagation), `clap` (the new arg field via `#[arg(long)]` derive). Milestone-113 `ExclusionSet` (in-crate). No new Cargo crates.
-- 155-cmake-find-package: Added Rust stable (workspace toolchain inherited from milestones 001–154; no nightly required for this user-space-only work). + Existing only — `regex = "1"` (workspace; already used pervasively in `cmake.rs`), `tracing` (`warn!` / `debug!` diagnostics), `anyhow`/`thiserror` (error propagation), `serde`/`serde_json` (annotation value construction). Reuses `mikebom_common::types::purl::Purl` for PURL construction + validation. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

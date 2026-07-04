@@ -606,12 +606,35 @@ pub fn build_document(
         graph.push(elem);
     }
 
+    // Milestone 158 US1 — compute selection + workspace-peer edges
+    // ONCE per SPDX 3 build. Reused for (a) augmenting the dependency-
+    // relationships input, (b) computing graph-completeness on the
+    // augmented graph.
+    let m158_selection = crate::generate::root_selector::select_root(
+        scan.components,
+        &scan.root_override,
+        scan.scan_target_coord,
+        scan.target_name,
+        "0.0.0",
+    );
+    let m158_workspace_peer_edges =
+        crate::generate::graph_completeness::build_workspace_peer_edges(
+            &m158_selection,
+            scan.components,
+        );
+    let m158_augmented_relationships: Vec<mikebom_common::resolution::Relationship> = scan
+        .relationships
+        .iter()
+        .cloned()
+        .chain(m158_workspace_peer_edges.iter().cloned())
+        .collect();
+
     // 7. Relationship elements — dependency edges, containment edges,
     //    license/agent edges, document-describes edge. Combined into
     //    one bucket so they sort together by spdxId.
     let mut all_relationships: Vec<Value> = Vec::new();
     all_relationships.extend(super::v3_relationships::build_dependency_relationships(
-        scan.relationships,
+        &m158_augmented_relationships,
         &package_iri_by_purl,
         &doc_iri,
         CREATION_INFO_ID,
@@ -695,10 +718,42 @@ pub fn build_document(
             scan.include_dev,
             scan.include_source_files,
         );
+    // Milestone 158 US2 — compute the multi-root BFS reachability
+    // pass on the AUGMENTED SPDX 3 graph and pass into
+    // `build_document_annotations` for the two document-scope
+    // annotations. Independently computed per format (each has its
+    // own emission flow); result is deterministic across formats.
+    // Milestone 158 — mirror the emitter's primary-dep-fallback by
+    // seeding BFS with the emitted root's identity.
+    let m158_target_ref: String = match &m158_selection.subject {
+        crate::generate::root_selector::ResolvedRootSubject::MainModule(idx) => scan
+            .components
+            .get(*idx)
+            .map(|c| c.purl.as_str().to_string())
+            .unwrap_or_default(),
+        crate::generate::root_selector::ResolvedRootSubject::MavenCoord => scan
+            .scan_target_coord
+            .map(|c| format!("pkg:maven/{}/{}@{}", c.group, c.artifact, c.version))
+            .unwrap_or_default(),
+        crate::generate::root_selector::ResolvedRootSubject::SyntheticPlaceholder { name, version } => {
+            format!("pkg:generic/{name}@{version}")
+        }
+        crate::generate::root_selector::ResolvedRootSubject::OperatorOverride => {
+            scan.target_name.to_string()
+        }
+    };
+    let m158_graph_completeness =
+        crate::generate::graph_completeness::compute_graph_completeness(
+            scan.components,
+            &m158_augmented_relationships,
+            &m158_selection,
+            &m158_target_ref,
+        );
     annotations.extend(super::v3_annotations::build_document_annotations(
         scan,
         &doc_iri,
         CREATION_INFO_ID,
+        &m158_graph_completeness,
     ));
     // Milestone 119 phase-2 — supplement-declared services need C40
     // saas-service + C65 source-tier=declared annotations on the
