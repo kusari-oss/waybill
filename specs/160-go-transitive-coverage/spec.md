@@ -5,6 +5,15 @@
 **Status**: Draft
 **Input**: User description: "494" (implement fix for [issue #494](https://github.com/kusari-oss/mikebom/issues/494))
 
+## Clarifications
+
+### Session 2026-07-04
+
+- Q: How is `partial` vs `unknown` decided for `mikebom:go-transitive-coverage`? → A: Reason-code-driven (mirrors milestone-158 Q1 caution-first). `unknown` iff a documented "we can't measure" reason applies (offline mode, `off` in GOPROXY chain, `go mod graph` subprocess degraded). `partial` iff we ran the pass and ≥1 module ended up `unresolved`. `complete` iff every module resolved via steps 1–4 of the ladder. Deterministic; not fragile to network flake counts.
+- Q: Should `mikebom:go-transitive-source` be universal-per-component or signal-only? → A: Universal — every Go component carries the annotation naming which ladder step resolved it (`go-mod-graph` / `module-cache` / `proxy-fetch` / `go-sum-fallback` / `unresolved`). Matches milestone-158 C104 + milestone-159 alias-annotation universal-presence pattern. Consumers gate on annotation value, not presence/absence (avoids the "no annotation = success" silent-lie failure mode). Approx +300 annotations on test-podman; acceptable per Constitution Principle X (Transparency).
+- Q: What ground-truth defines SC-001's ≥90% edge-match measurement? → A: `go mod graph` — same generator as the milestone-157 audit script that established the 52.2% pre-160 baseline. Union of ALL module-`requires`-module edges across the module closure. Cross-platform-inclusive (matches mikebom's build-tag-agnostic scan posture per milestone 112's out-of-scope note). Deterministic single-command invocation. Rejected `go list -m all` / `go mod why -m all` because build-tag filtering would artificially narrow the denominator and diverge from mikebom's own scan semantics.
+- Q: Should the `mikebom:go-transitive-coverage-reason` code vocabulary be closed or open? → A: Closed but extensible — the FR-005 5-code vocab (`offline`, `goproxy-off`, `go-mod-graph-degraded`, `fetch-failures`, `unknown-modules`) is the stable consumer surface for milestone 160; new codes require a future milestone bump. Exactly mirrors milestone-158's SC-005 governance of the `mikebom:graph-completeness-reason` 8-code list. Balances consumer stability (jq recipes with fixed switch statements stay correct) with deliberate future-proofing.
+
 ## Motivation
 
 Discovered during the milestone-157 Round-2 audit against `kusari-sandbox/test-podman`: even in ONLINE mode (with `GOPROXY` reachable), mikebom's Go dep-graph covers only ~50% of the edges reported by `go mod graph`.
