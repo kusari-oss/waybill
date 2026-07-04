@@ -807,6 +807,14 @@ cdx_anno!(c105_cdx, "mikebom:graph-completeness-reason", document);
 cdx_anno!(c106_cdx, "mikebom:pnpm-alias",                component);
 cdx_anno!(c107_cdx, "mikebom:yarn-alias",                component);
 
+// Milestone 160 (closes #494): C108/C109 per-component + C110/C111
+// document-scope Go-transitive coverage annotations. See
+// contracts/annotations.md for the per-format wire shapes and vocab.
+cdx_anno!(c108_cdx, "mikebom:go-transitive-source",             component);
+cdx_anno!(c109_cdx, "mikebom:go-transitive-unresolved-reason",  component);
+cdx_anno!(c110_cdx, "mikebom:go-transitive-coverage",           document);
+cdx_anno!(c111_cdx, "mikebom:go-transitive-coverage-reason",    document);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================

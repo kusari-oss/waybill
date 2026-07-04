@@ -636,6 +636,13 @@ spdx3_anno!(c105_spdx3, "mikebom:graph-completeness-reason", document);
 spdx3_anno!(c106_spdx3, "mikebom:pnpm-alias",                component);
 spdx3_anno!(c107_spdx3, "mikebom:yarn-alias",                component);
 
+// Milestone 160 (closes #494): C108/C109 per-component + C110/C111
+// document-scope Go-transitive coverage annotations.
+spdx3_anno!(c108_spdx3, "mikebom:go-transitive-source",             component);
+spdx3_anno!(c109_spdx3, "mikebom:go-transitive-unresolved-reason",  component);
+spdx3_anno!(c110_spdx3, "mikebom:go-transitive-coverage",           document);
+spdx3_anno!(c111_spdx3, "mikebom:go-transitive-coverage-reason",    document);
+
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-component
 // graph-element annotation carrying the JSON-encoded array of
 // conflict records.

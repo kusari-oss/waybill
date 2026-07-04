@@ -569,6 +569,13 @@ spdx23_anno!(c105_spdx23, "mikebom:graph-completeness-reason", document);
 spdx23_anno!(c106_spdx23, "mikebom:pnpm-alias",                component);
 spdx23_anno!(c107_spdx23, "mikebom:yarn-alias",                component);
 
+// Milestone 160 (closes #494): C108/C109 per-component + C110/C111
+// document-scope Go-transitive coverage annotations.
+spdx23_anno!(c108_spdx23, "mikebom:go-transitive-source",             component);
+spdx23_anno!(c109_spdx23, "mikebom:go-transitive-unresolved-reason",  component);
+spdx23_anno!(c110_spdx23, "mikebom:go-transitive-coverage",           document);
+spdx23_anno!(c111_spdx23, "mikebom:go-transitive-coverage-reason",    document);
+
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-Package
 // envelope carrying the JSON-encoded array of conflict records.
 spdx23_anno!(c67_spdx23, "mikebom:assertion-conflict",       component);
