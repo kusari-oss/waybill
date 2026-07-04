@@ -419,6 +419,21 @@ pub struct WorkspaceContext {
     pub gomodcache: PathBuf,
     pub goproxy: ProxyChain,
     pub goprivate: PrivatePatterns,
+    /// Milestone 161 (T006): workspace-mode detection outcome. When
+    /// `workspace_mode.is_active()`, per-`use`d-module edge attribution
+    /// semantics apply — the resolver invokes `go mod graph` with
+    /// `GOWORK=off` at the subprocess level so each `use`d module's
+    /// isolated view is returned instead of the merged workspace view.
+    pub workspace_mode: crate::scan_fs::package_db::golang::gowork::WorkspaceMode,
+    /// Milestone 161 (T006): canonical `use`d-module path → filesystem
+    /// directory mapping. Empty when `workspace_mode.is_active()` is
+    /// false. Consumed by the Q1 hybrid classifier post-resolution.
+    pub use_modules_map: HashMap<String, PathBuf>,
+    /// Milestone 161 (T006): workspace-level `replace` directives from
+    /// `go.work`. Merged into `self.replaces` with workspace precedence
+    /// per FR-005 + Go MVS semantics. Stored separately for
+    /// observability + testing.
+    pub workspace_replaces: HashMap<(String, String), (String, String)>,
 }
 
 // --------------------------------------------------------------------
@@ -1131,6 +1146,13 @@ impl WorkspaceContext {
             gomodcache,
             goproxy,
             goprivate,
+            // Milestone 161: default workspace-mode fields to inactive.
+            // Callers that detected go.work at Go-scan entry override
+            // these before invoking `resolver.resolve()`.
+            workspace_mode:
+                crate::scan_fs::package_db::golang::gowork::WorkspaceMode::default(),
+            use_modules_map: HashMap::new(),
+            workspace_replaces: HashMap::new(),
         }
     }
 }
@@ -1825,6 +1847,9 @@ mod wiremock_integration {
             gomodcache: PathBuf::from("/tmp"),
             goproxy: parse_proxy_chain(goproxy_env).unwrap(),
             goprivate: parse_private_patterns(""),
+            workspace_mode: Default::default(),
+            use_modules_map: HashMap::new(),
+            workspace_replaces: HashMap::new(),
         }
     }
 

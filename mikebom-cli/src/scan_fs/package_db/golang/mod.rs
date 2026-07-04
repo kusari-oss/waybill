@@ -31,6 +31,9 @@ pub mod go_mod_graph;
 pub mod mod_why;
 pub mod proxy_fetch;
 pub mod goprivate;
+// Milestone 161 (T001): go.work parser + workspace-mode types +
+// Q1 hybrid edge-disposition classifier.
+pub mod gowork;
 
 // Preserve the pre-T008 import surface — callers say
 // `crate::scan_fs::package_db::golang::read(...)`,
