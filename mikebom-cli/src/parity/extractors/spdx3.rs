@@ -647,6 +647,11 @@ spdx3_anno!(c111_spdx3, "mikebom:go-transitive-coverage-reason",    document);
 // detection annotation.
 spdx3_anno!(c112_spdx3, "mikebom:go-workspace-mode",                document);
 
+// Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
+// gem synthetic-component annotations.
+spdx3_anno!(c113_spdx3, "mikebom:synthetic-built-in",               component);
+spdx3_anno!(c114_spdx3, "mikebom:built-in-requirement",             component);
+
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-component
 // graph-element annotation carrying the JSON-encoded array of
 // conflict records.

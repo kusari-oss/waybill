@@ -819,6 +819,11 @@ cdx_anno!(c111_cdx, "mikebom:go-transitive-coverage-reason",    document);
 // detection annotation.
 cdx_anno!(c112_cdx, "mikebom:go-workspace-mode",                document);
 
+// Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
+// gem synthetic-component annotations.
+cdx_anno!(c113_cdx, "mikebom:synthetic-built-in",               component);
+cdx_anno!(c114_cdx, "mikebom:built-in-requirement",             component);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================
