@@ -42,7 +42,7 @@
 //! we handle both via indent counting (≥2 for section body, ≥4 for
 //! specs) rather than fixed counts.
 
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use mikebom_common::types::purl::{encode_purl_segment, Purl};
@@ -55,17 +55,155 @@ use super::PackageDbEntry;
 // visited-set primary mechanism. Per milestone-054 FR-003.
 const MAX_PROJECT_ROOT_DEPTH: usize = 6;
 
+// --------------------------------------------------------------------
+// Milestone 162 (T001) — Ruby built-in gems allowlist
+// --------------------------------------------------------------------
+
+/// Ruby built-in gems allowlist per milestone 162 (issue #496).
+///
+/// Union across Ruby 3.2, 3.3, and 3.4 stable-release `Gem::default_gems`
+/// outputs — any gem present in the default_gems set of ANY of these
+/// releases is treated as built-in per Q2 clarification. This is the
+/// authoritative list for the FR-002 synthetic-emission gate: gem names
+/// in this list that appear as dep-targets in `Gemfile.lock` but NOT in
+/// the GEM/specs section trigger synthetic component emission per
+/// data-model.md E4.
+///
+/// Review cadence: annual (aligned with Ruby's stable release cycle).
+/// When Ruby N+1 stable ships:
+///
+///   1. Add any newly-introduced default_gems to this array.
+///   2. Drop any gem that has NOT been default in the last 3 stable
+///      Ruby releases (rolling window).
+///
+/// See FR-006 in specs/162-ruby-built-in-gems/spec.md.
+pub(crate) const RUBY_BUILT_IN_GEMS: &[&str] = &[
+    "base64",
+    "bigdecimal",
+    "bundler",
+    "cgi",
+    "csv",
+    "date",
+    "delegate",
+    "did_you_mean",
+    "digest",
+    "drb",
+    "english",
+    "erb",
+    "etc",
+    "fcntl",
+    "fiddle",
+    "fileutils",
+    "find",
+    "forwardable",
+    "getoptlong",
+    "io-console",
+    "io-nonblock",
+    "io-wait",
+    "ipaddr",
+    "irb",
+    "json",
+    "logger",
+    "mutex_m",
+    "net-http",
+    "net-protocol",
+    "nkf",
+    "observer",
+    "open-uri",
+    "open3",
+    "openssl",
+    "optparse",
+    "ostruct",
+    "pathname",
+    "pp",
+    "prettyprint",
+    "prime",
+    "pstore",
+    "psych",
+    "racc",
+    "rdoc",
+    "readline",
+    "reline",
+    "resolv",
+    "resolv-replace",
+    "rinda",
+    "rss",
+    "ruby2_keywords",
+    "securerandom",
+    "set",
+    "shellwords",
+    "singleton",
+    "stringio",
+    "strscan",
+    "syslog",
+    "tempfile",
+    "time",
+    "timeout",
+    "tmpdir",
+    "tsort",
+    "un",
+    "uri",
+    "weakref",
+    "yaml",
+    "zlib",
+];
+
+/// Milestone 162 (T002): True iff `name` is a Ruby toolchain-provided
+/// built-in gem per the FR-001 allowlist. O(N) linear scan — N=67 as of
+/// 2026-07-04.
+pub(crate) fn is_ruby_built_in_gem(name: &str) -> bool {
+    RUBY_BUILT_IN_GEMS.contains(&name)
+}
+
+// --------------------------------------------------------------------
+// Milestone 162 (T005) — SyntheticGemKind for C113 annotation value
+// --------------------------------------------------------------------
+
+/// Language runtime whose toolchain provides this gem as built-in.
+/// Serialized to the `mikebom:synthetic-built-in` (C113) annotation value.
+///
+/// Closed 1-variant vocab in scope for milestone 162; extensible in
+/// future milestones if similar patterns are discovered in other
+/// ecosystems.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum SyntheticGemKind {
+    RubyBuiltIn,
+}
+
+impl SyntheticGemKind {
+    pub(crate) fn as_wire_str(&self) -> &'static str {
+        match self {
+            Self::RubyBuiltIn => "ruby",
+        }
+    }
+}
+
 /// One spec line in GEM / GIT / PATH. `depends` holds the transitive
 /// dependency names parsed from the indent-6 block under this spec —
 /// the bit of Gemfile.lock that actually encodes the per-gem dep graph.
-/// Version constraints like `(~> 1.0, >= 1.0.2)` are stripped; only
-/// the bare gem name is retained.
+/// Per milestone 162 (T003), `depends` carries both the dep-name AND
+/// the raw version-constraint clause (empty when the source declaration
+/// had no clause). The constraint is load-bearing for FR-005 (C114
+/// `mikebom:built-in-requirement` annotation on synthetic components).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct GemSpec {
     pub name: String,
     pub version: String,
     pub kind: GemSection,
-    pub depends: Vec<String>,
+    pub depends: Vec<GemDep>,
+}
+
+/// Milestone 162 (T003): one dep-line under a `GemSpec`.
+///
+/// - `name` — the bare gem name (e.g., `"bundler"`).
+/// - `requirement` — the original parenthesized version-constraint
+///   from Gemfile.lock's indent-6 dep line, WITHOUT the parentheses.
+///   For example: `">= 1.2.0"`, `"~> 1.0, >= 1.0.2"`, or `""` when the
+///   source declared no constraint.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct GemDep {
+    pub name: String,
+    pub requirement: String,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -181,20 +319,33 @@ pub(crate) fn parse_gemfile_lock(text: &str) -> GemfileLockDocument {
             }
         } else if indent >= 6 {
             // Transitive dep line under the most-recently-opened spec.
-            // Format is `name` or `name (constraint[, constraint])`;
-            // strip any trailing `(...)` constraint and the `!` source
-            // pin to match the DEPENDENCIES block's convention.
-            let bare = trimmed
-                .split_whitespace()
+            // Format is `name` or `name (constraint[, constraint])`.
+            // Milestone 162 (T004): preserve the version-constraint
+            // clause (needed for the FR-005 C114
+            // `mikebom:built-in-requirement` annotation on synthetic
+            // components). Also strip the `!` source pin per the
+            // DEPENDENCIES block's convention.
+            let mut parts = trimmed.splitn(2, char::is_whitespace);
+            let bare = parts
                 .next()
                 .unwrap_or("")
                 .trim_end_matches('!');
+            let raw_req = parts.next().unwrap_or("").trim();
+            // Strip surrounding parens: `(>= 1.2.0)` → `>= 1.2.0`.
+            let requirement = raw_req
+                .strip_prefix('(')
+                .and_then(|s| s.strip_suffix(')'))
+                .unwrap_or(raw_req)
+                .to_string();
             if !bare.is_empty() {
                 if let Some(last) = doc.specs.last_mut() {
                     // Ignore duplicate edges if a lockfile lists the
                     // same transitive dep twice (unusual but harmless).
-                    if !last.depends.iter().any(|d| d == bare) {
-                        last.depends.push(bare.to_string());
+                    if !last.depends.iter().any(|d| d.name == bare) {
+                        last.depends.push(GemDep {
+                            name: bare.to_string(),
+                            requirement,
+                        });
                     }
                 }
             }
@@ -242,6 +393,137 @@ fn build_gem_purl(name: &str, version: &str) -> Option<Purl> {
     .ok()
 }
 
+/// Milestone 162 (T006): build a **versionless** PURL for a synthetic
+/// Ruby built-in gem component per FR-003 + Q1. The PURL spec permits
+/// omitting the `@version` segment when the version is unknown —
+/// consumer vulnerability scanners doing exact-version CVE lookups
+/// won't false-positive on `pkg:gem/bundler` (no version to match).
+fn build_gem_purl_versionless(name: &str) -> Option<Purl> {
+    Purl::new(&format!("pkg:gem/{}", encode_purl_segment(name))).ok()
+}
+
+/// Milestone 162 (T006): append synthetic components for Ruby built-in
+/// gems referenced as dep targets but not present in GEM/specs.
+///
+/// Enforces FR-002 (allowlist gate), FR-003 (versionless PURL), FR-004
+/// (real-gem-precedence via `emitted_names` check), FR-005 (requirement
+/// annotation), and R4 (multi-source union → JSON array).
+///
+/// - `out` — the already-populated `Vec<PackageDbEntry>` from the
+///   per-spec emission loop. Mutated in-place to append synthetic entries.
+/// - `emitted_names` — set of gem names already in `out`. Used to
+///   enforce FR-004 real-gem-precedence: a real GEM/specs entry with
+///   the same name as an allowlist gem takes precedence and NO
+///   synthetic entry is emitted for that name.
+/// - `source_path` — the Gemfile.lock path (evidence provenance).
+/// - `specs` — the parsed `GemfileLockDocument.specs`.
+///
+/// Returns the list of built-in gem names emitted as synthetic (used
+/// for the FR-011 tracing log). Empty when no synthetic components
+/// were appended this call.
+fn append_synthetic_built_in_gems(
+    out: &mut Vec<PackageDbEntry>,
+    emitted_names: &HashSet<String>,
+    source_path: &str,
+    specs: &[GemSpec],
+) -> Vec<String> {
+    // Collect built-in gem name → set-of-requirement-strings. BTreeMap
+    // + BTreeSet for deterministic (sorted) output across runs.
+    let mut built_in_refs: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for spec in specs {
+        for dep in &spec.depends {
+            if !is_ruby_built_in_gem(&dep.name) {
+                continue;
+            }
+            if emitted_names.contains(&dep.name) {
+                // FR-004: real gem takes precedence over synthetic.
+                continue;
+            }
+            let requirements = built_in_refs.entry(dep.name.clone()).or_default();
+            if !dep.requirement.is_empty() {
+                requirements.insert(dep.requirement.clone());
+            }
+        }
+    }
+
+    let mut emitted_built_in_names: Vec<String> = Vec::new();
+
+    for (name, requirements) in built_in_refs {
+        // FR-003: versionless PURL.
+        let Some(purl) = build_gem_purl_versionless(&name) else {
+            continue;
+        };
+
+        let mut extra_annotations: std::collections::BTreeMap<
+            String,
+            serde_json::Value,
+        > = std::collections::BTreeMap::new();
+        // C113: mikebom:synthetic-built-in = "ruby"
+        extra_annotations.insert(
+            "mikebom:synthetic-built-in".to_string(),
+            serde_json::Value::String(
+                SyntheticGemKind::RubyBuiltIn.as_wire_str().to_string(),
+            ),
+        );
+        // C114: mikebom:built-in-requirement — string OR JSON array
+        // per R4 (multi-source union).
+        if !requirements.is_empty() {
+            let value = if requirements.len() == 1 {
+                // Single source: bare string. `into_iter().next()` on a
+                // non-empty BTreeSet is safe.
+                match requirements.into_iter().next() {
+                    Some(v) => serde_json::Value::String(v),
+                    None => serde_json::Value::Null,
+                }
+            } else {
+                serde_json::Value::Array(
+                    requirements
+                        .into_iter()
+                        .map(serde_json::Value::String)
+                        .collect(),
+                )
+            };
+            extra_annotations.insert("mikebom:built-in-requirement".to_string(), value);
+        }
+
+        let entry = PackageDbEntry {
+            build_inclusion: None,
+            purl,
+            name: name.clone(),
+            version: String::new(), // versionless per FR-003
+            arch: None,
+            source_path: source_path.to_string(),
+            depends: Vec::new(),
+            maintainer: None,
+            licenses: Vec::new(),
+            lifecycle_scope: None,
+            requirement_range: None,
+            source_type: None,
+            buildinfo_status: None,
+            evidence_kind: None,
+            binary_class: None,
+            binary_stripped: None,
+            linkage_kind: None,
+            detected_go: None,
+            confidence: None,
+            binary_packed: None,
+            raw_version: None,
+            parent_purl: None,
+            npm_role: None,
+            co_owned_by: None,
+            hashes: Vec::new(),
+            sbom_tier: Some("source".to_string()),
+            shade_relocation: None,
+            extra_annotations,
+            binary_role: None,
+        };
+        emitted_built_in_names.push(name);
+        out.push(entry);
+    }
+
+    emitted_built_in_names
+}
+
 fn spec_to_entry(
     spec: &GemSpec,
     source_path: &str,
@@ -258,7 +540,12 @@ fn spec_to_entry(
     // `spec.depends`. Scan_fs's relationship resolver will drop any
     // dangling targets (e.g. bundler-provided gems that aren't listed
     // as specs in this lockfile).
-    let depends = spec.depends.clone();
+    //
+    // Milestone 162 (T004): `spec.depends` is now `Vec<GemDep>` (each
+    // dep carries both the name and the raw version-constraint); the
+    // `PackageDbEntry.depends` shape is `Vec<String>` of bare names.
+    // Extract `.name` for edge construction.
+    let depends: Vec<String> = spec.depends.iter().map(|d| d.name.clone()).collect();
     Some(PackageDbEntry {
         build_inclusion: None,
         purl,
@@ -562,8 +849,8 @@ pub(crate) fn compute_gem_prod_set(
         }
         if let Some(spec) = by_name.get(name.as_str()) {
             for dep in &spec.depends {
-                if !visited.contains(dep) {
-                    frontier.push(dep.clone());
+                if !visited.contains(&dep.name) {
+                    frontier.push(dep.name.clone());
                 }
             }
         }
@@ -688,6 +975,41 @@ pub fn read(
             if seen_purls.insert(purl_key) {
                 out.push(entry);
             }
+        }
+
+        // Milestone 162 (T012): after the per-spec emission loop, walk
+        // every entry's dep list and emit synthetic components for
+        // allowlist gem names that were referenced as deps but NOT
+        // already in `out`. FR-004 real-gem-precedence enforced via
+        // `emitted_names` HashSet.
+        let emitted_names: HashSet<String> = out
+            .iter()
+            .filter(|e| e.purl.as_str().starts_with("pkg:gem/"))
+            .map(|e| e.name.clone())
+            .collect();
+        let synthetic_names = append_synthetic_built_in_gems(
+            &mut out,
+            &emitted_names,
+            &source_path,
+            &doc.specs,
+        );
+        // Update `seen_purls` to include the synthetic PURLs (versionless)
+        // so a later Gemfile.lock in the same scan doesn't emit a
+        // duplicate.
+        for name in &synthetic_names {
+            if let Some(purl) = build_gem_purl_versionless(name) {
+                seen_purls.insert(purl.as_str().to_string());
+            }
+        }
+        // FR-011 tracing log: emit ONLY when at least one synthetic
+        // component was appended.
+        if !synthetic_names.is_empty() {
+            tracing::info!(
+                lockfile_path = %source_path,
+                count = synthetic_names.len(),
+                built_in_names = %synthetic_names.join(","),
+                "gem built-in synthetic components emitted"
+            );
         }
     }
     // Gemspec walk (conformance bug 3): Ruby stdlib and default gems
@@ -1374,9 +1696,13 @@ BUNDLED WITH
             .find(|s| s.name == "activesupport")
             .expect("activesupport spec");
         assert_eq!(active.version, "7.1.3");
-        // Transitive deps captured from indent-6 lines.
+        // Transitive deps captured from indent-6 lines. Milestone 162
+        // (T003): `depends` is now `Vec<GemDep>` — compare names only
+        // for this test.
+        let dep_names: Vec<String> =
+            active.depends.iter().map(|d| d.name.clone()).collect();
         assert_eq!(
-            active.depends,
+            dep_names,
             vec!["base64".to_string(), "concurrent-ruby".to_string()],
         );
         // Leaf specs carry empty depends.
@@ -1400,8 +1726,9 @@ GEM
 "#;
         let doc = parse_gemfile_lock(text);
         let foo = doc.specs.iter().find(|s| s.name == "foo").unwrap();
+        let dep_names: Vec<String> = foo.depends.iter().map(|d| d.name.clone()).collect();
         assert_eq!(
-            foo.depends,
+            dep_names,
             vec![
                 "activesupport".to_string(),
                 "base64".to_string(),
@@ -1425,7 +1752,8 @@ GEM
 "#;
         let doc = parse_gemfile_lock(text);
         let foo = doc.specs.iter().find(|s| s.name == "foo").unwrap();
-        assert_eq!(foo.depends, vec!["bar".to_string()]);
+        let dep_names: Vec<String> = foo.depends.iter().map(|d| d.name.clone()).collect();
+        assert_eq!(dep_names, vec!["bar".to_string()]);
     }
 
     #[test]
@@ -1827,13 +2155,13 @@ end
                     name: "a".to_string(),
                     version: "1".to_string(),
                     kind: GemSection::Gem,
-                    depends: vec!["b".to_string()],
+                    depends: vec![GemDep { name: "b".to_string(), requirement: String::new() }],
                 },
                 GemSpec {
                     name: "b".to_string(),
                     version: "1".to_string(),
                     kind: GemSection::Gem,
-                    depends: vec!["c".to_string()],
+                    depends: vec![GemDep { name: "c".to_string(), requirement: String::new() }],
                 },
                 GemSpec {
                     name: "c".to_string(),
@@ -2064,5 +2392,292 @@ end
         assert_eq!(entries[0].source_path, "/tmp/proj/foo.gemspec");
         assert_eq!(drops.len(), 1);
         assert_eq!(drops[0].dropped_path, "/tmp/proj/dup/foo.gemspec");
+    }
+
+    // ====================================================================
+    // Milestone 162 (T013–T023, T025–T027): Ruby built-in gem allowlist
+    // + synthetic emission + SC-004 dual invariant tests
+    // ====================================================================
+
+    fn synth_gem_spec(name: &str, version: &str, deps: &[(&str, &str)]) -> GemSpec {
+        GemSpec {
+            name: name.to_string(),
+            version: version.to_string(),
+            kind: GemSection::Gem,
+            depends: deps
+                .iter()
+                .map(|(n, r)| GemDep {
+                    name: n.to_string(),
+                    requirement: r.to_string(),
+                })
+                .collect(),
+        }
+    }
+
+    #[test]
+    fn t013_allowlist_contains_bundler() {
+        // SC-009 (a): bundler is Ruby-toolchain-provided; MUST be in
+        // the FR-001 allowlist.
+        assert!(is_ruby_built_in_gem("bundler"));
+    }
+
+    #[test]
+    fn t014_allowlist_excludes_thor() {
+        // SC-009 (b): thor is a real gem (not Ruby-toolchain-provided);
+        // MUST NOT be in the allowlist.
+        assert!(!is_ruby_built_in_gem("thor"));
+    }
+
+    #[test]
+    fn t015_allowlist_contains_csv() {
+        // Verifies coverage of csv — a gem promoted to Ruby 3.4
+        // default_gems that older projects still reference. Union
+        // strategy (per Q2) MUST include it.
+        assert!(is_ruby_built_in_gem("csv"));
+    }
+
+    #[test]
+    fn t016_parser_preserves_version_constraint() {
+        // SC-009 (f): the parser preserves the (>= 1.2.0) clause
+        // (parens stripped) on GemSpec.depends[i].requirement.
+        let text = "\
+GEM
+  specs:
+    bundler-audit (0.9.3)
+      bundler (>= 1.2.0)
+      thor (~> 1.0)
+
+DEPENDENCIES
+  bundler-audit
+";
+        let doc = parse_gemfile_lock(text);
+        let spec = doc
+            .specs
+            .iter()
+            .find(|s| s.name == "bundler-audit")
+            .expect("bundler-audit spec");
+        let bundler_dep = spec
+            .depends
+            .iter()
+            .find(|d| d.name == "bundler")
+            .expect("bundler dep");
+        assert_eq!(bundler_dep.requirement, ">= 1.2.0");
+        let thor_dep = spec
+            .depends
+            .iter()
+            .find(|d| d.name == "thor")
+            .expect("thor dep");
+        assert_eq!(thor_dep.requirement, "~> 1.0");
+    }
+
+    #[test]
+    fn t017_synthetic_component_versionless_purl() {
+        // SC-009 (d) + FR-003: emitted synthetic component's PURL is
+        // exactly `pkg:gem/bundler` — no `@` symbol.
+        let mut out: Vec<PackageDbEntry> = Vec::new();
+        let specs = vec![synth_gem_spec(
+            "bundler-audit",
+            "0.9.3",
+            &[("bundler", ">= 1.2.0")],
+        )];
+        let names = append_synthetic_built_in_gems(
+            &mut out,
+            &HashSet::new(),
+            "/tmp/Gemfile.lock",
+            &specs,
+        );
+        assert_eq!(names, vec!["bundler".to_string()]);
+        assert_eq!(out.len(), 1);
+        let entry = &out[0];
+        assert_eq!(entry.purl.as_str(), "pkg:gem/bundler");
+        assert!(!entry.purl.as_str().contains('@'));
+        assert_eq!(entry.version, "");
+    }
+
+    #[test]
+    fn t018_synthetic_component_carries_c113() {
+        // SC-009 (e): C113 mikebom:synthetic-built-in = "ruby".
+        let mut out: Vec<PackageDbEntry> = Vec::new();
+        let specs = vec![synth_gem_spec(
+            "bundler-audit",
+            "0.9.3",
+            &[("bundler", ">= 1.2.0")],
+        )];
+        append_synthetic_built_in_gems(&mut out, &HashSet::new(), "/tmp", &specs);
+        assert_eq!(out.len(), 1);
+        let entry = &out[0];
+        assert_eq!(
+            entry.extra_annotations.get("mikebom:synthetic-built-in"),
+            Some(&serde_json::Value::String("ruby".to_string()))
+        );
+    }
+
+    #[test]
+    fn t019_synthetic_component_carries_c114_single_source() {
+        // SC-009 (f): C114 mikebom:built-in-requirement carries the
+        // Gemfile.lock version-constraint (single source → bare string).
+        let mut out: Vec<PackageDbEntry> = Vec::new();
+        let specs = vec![synth_gem_spec(
+            "bundler-audit",
+            "0.9.3",
+            &[("bundler", ">= 1.2.0")],
+        )];
+        append_synthetic_built_in_gems(&mut out, &HashSet::new(), "/tmp", &specs);
+        let entry = &out[0];
+        assert_eq!(
+            entry.extra_annotations.get("mikebom:built-in-requirement"),
+            Some(&serde_json::Value::String(">= 1.2.0".to_string()))
+        );
+    }
+
+    #[test]
+    fn t020_real_gem_takes_precedence() {
+        // SC-009 (g) + FR-004: if `bundler` is already in `emitted_names`
+        // (as a real GEM/specs entry), NO synthetic component is
+        // appended for that name.
+        let mut out: Vec<PackageDbEntry> = Vec::new();
+        let mut emitted_names: HashSet<String> = HashSet::new();
+        emitted_names.insert("bundler".to_string());
+        let specs = vec![synth_gem_spec(
+            "bundler-audit",
+            "0.9.3",
+            &[("bundler", ">= 1.2.0")],
+        )];
+        let names = append_synthetic_built_in_gems(
+            &mut out,
+            &emitted_names,
+            "/tmp",
+            &specs,
+        );
+        assert!(names.is_empty());
+        assert!(out.is_empty());
+    }
+
+    #[test]
+    fn t021_multi_source_dedup_single_component() {
+        // SC-009 (h): 3 specs each declare `bundler` → exactly ONE
+        // synthetic entry appended.
+        let mut out: Vec<PackageDbEntry> = Vec::new();
+        let specs = vec![
+            synth_gem_spec("gem-a", "1.0.0", &[("bundler", ">= 1.0")]),
+            synth_gem_spec("gem-b", "1.0.0", &[("bundler", ">= 2.0")]),
+            synth_gem_spec("gem-c", "1.0.0", &[("bundler", ">= 1.0")]),
+        ];
+        let names = append_synthetic_built_in_gems(
+            &mut out,
+            &HashSet::new(),
+            "/tmp",
+            &specs,
+        );
+        assert_eq!(names.len(), 1);
+        assert_eq!(names[0], "bundler");
+        assert_eq!(out.len(), 1);
+    }
+
+    #[test]
+    fn t022_multi_source_requirement_union_as_json_array() {
+        // R4: multi-source with distinct requirements → JSON array of
+        // sorted, deduplicated constraints.
+        let mut out: Vec<PackageDbEntry> = Vec::new();
+        let specs = vec![
+            synth_gem_spec("gem-a", "1.0.0", &[("bundler", ">= 1.2.0")]),
+            synth_gem_spec("gem-b", "1.0.0", &[("bundler", ">= 2.0.0")]),
+        ];
+        append_synthetic_built_in_gems(&mut out, &HashSet::new(), "/tmp", &specs);
+        let entry = &out[0];
+        let req = entry
+            .extra_annotations
+            .get("mikebom:built-in-requirement")
+            .expect("C114 present");
+        // BTreeSet sorts alphabetically: `">= 1.2.0"` < `">= 2.0.0"`.
+        let expected = serde_json::Value::Array(vec![
+            serde_json::Value::String(">= 1.2.0".to_string()),
+            serde_json::Value::String(">= 2.0.0".to_string()),
+        ]);
+        assert_eq!(req, &expected);
+    }
+
+    #[test]
+    fn t023_non_allowlist_dangling_target_dropped() {
+        // SC-009 (j) + FR-008: unknown dep-name (not in allowlist)
+        // does NOT trigger synthetic emission.
+        let mut out: Vec<PackageDbEntry> = Vec::new();
+        let specs = vec![synth_gem_spec(
+            "gem-a",
+            "1.0.0",
+            &[("some-unknown-gem", ">= 1.0")],
+        )];
+        let names = append_synthetic_built_in_gems(
+            &mut out,
+            &HashSet::new(),
+            "/tmp",
+            &specs,
+        );
+        assert!(names.is_empty());
+        assert!(out.is_empty());
+    }
+
+    // --- Milestone 162 US2 (T025–T027): SC-004 dual invariant ---------
+
+    #[test]
+    fn t025_synthetic_component_has_no_at_symbol() {
+        // SC-004: synthetic component's PURL has NO `@` — versionless.
+        let mut out: Vec<PackageDbEntry> = Vec::new();
+        let specs = vec![synth_gem_spec("gem-a", "1.0.0", &[("bundler", "")])];
+        append_synthetic_built_in_gems(&mut out, &HashSet::new(), "/tmp", &specs);
+        assert!(!out[0].purl.as_str().contains('@'));
+    }
+
+    #[test]
+    fn t026_real_gem_carries_at_version_and_no_c113() {
+        // SC-004 complement: a real GEM/specs entry emitted via
+        // spec_to_entry has `@version` in PURL AND does NOT carry the
+        // mikebom:synthetic-built-in annotation.
+        let spec = synth_gem_spec("bundler-audit", "0.9.3", &[]);
+        let entry = spec_to_entry(&spec, "/tmp", &HashSet::new())
+            .expect("real entry constructed");
+        assert!(entry.purl.as_str().contains("@0.9.3"));
+        assert!(!entry
+            .extra_annotations
+            .contains_key("mikebom:synthetic-built-in"));
+    }
+
+    #[test]
+    fn t027_dual_invariant_holds_for_mixed_output() {
+        // SC-004: iterate mixed real + synthetic components; assert the
+        // dual invariant `has @` XOR `has C113 annotation`.
+        let mut out: Vec<PackageDbEntry> = Vec::new();
+        // Real components
+        let real_specs = [
+            synth_gem_spec("bundler-audit", "0.9.3", &[("bundler", ">= 1.2.0")]),
+            synth_gem_spec("thor", "1.4.0", &[]),
+        ];
+        for spec in &real_specs {
+            let entry = spec_to_entry(spec, "/tmp", &HashSet::new()).unwrap();
+            out.push(entry);
+        }
+        // Synthetic emission for `bundler` (referenced by bundler-audit
+        // but not in `out`).
+        let emitted_names: HashSet<String> = out
+            .iter()
+            .filter(|e| e.purl.as_str().starts_with("pkg:gem/"))
+            .map(|e| e.name.clone())
+            .collect();
+        append_synthetic_built_in_gems(&mut out, &emitted_names, "/tmp", &real_specs);
+        // Now iterate all pkg:gem/* components and verify the dual
+        // invariant.
+        for entry in &out {
+            let has_at = entry.purl.as_str().contains('@');
+            let has_c113 = entry
+                .extra_annotations
+                .contains_key("mikebom:synthetic-built-in");
+            assert_ne!(
+                has_at, has_c113,
+                "SC-004 dual invariant violated for {}: has_at={has_at}, has_c113={has_c113}",
+                entry.purl.as_str()
+            );
+        }
+        // Verify we actually have 3 entries: 2 real + 1 synthetic.
+        assert_eq!(out.len(), 3);
     }
 }
