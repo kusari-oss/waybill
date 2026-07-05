@@ -824,6 +824,17 @@ cdx_anno!(c112_cdx, "mikebom:go-workspace-mode",                document);
 cdx_anno!(c113_cdx, "mikebom:synthetic-built-in",               component);
 cdx_anno!(c114_cdx, "mikebom:built-in-requirement",             component);
 
+// Milestone 163 (closes #498): C115 per-component npm workspace-peer
+// unresolved-declared-dep annotation. When a workspace-peer
+// `package.json` declares a dep that couldn't be cross-resolved against
+// the union of Tier A lockfile entries in the scan, the peer's main-
+// module component carries a `mikebom:unresolved-declared-dep`
+// annotation naming the dep (bare string when 1; JSON array when ≥2).
+// Preserves the "declared but unresolvable" auditor signal per
+// Constitution Principle X while eliminating phantom empty-version
+// PURLs from consumer graph-traversal paths (Principle IX).
+cdx_anno!(c115_cdx, "mikebom:unresolved-declared-dep",          component);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================

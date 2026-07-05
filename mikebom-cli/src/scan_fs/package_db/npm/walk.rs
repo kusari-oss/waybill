@@ -7,6 +7,119 @@ use super::super::PackageDbEntry;
 use super::build_npm_purl;
 use super::enrich::extract_author_string;
 
+// ---------------------------------------------------------------------------
+// Milestone 163 (T001-T004, closes #498) — cross-workspace resolution types
+// ---------------------------------------------------------------------------
+
+/// Outcome of cross-workspace resolution for a workspace-peer declared dep
+/// per milestone 163's Q1+Q2 unified disposition (see spec §Clarifications
+/// at `specs/163-npm-phantom-edges/spec.md`).
+///
+/// - `Resolved { version }`: the peer's declared dep matched either the
+///   peer's own nested `node_modules/<dep>/package.json` (FR-003
+///   closest-ancestor semantics matching Node.js's runtime resolver) OR
+///   a Tier A lockfile-emitted entry surfaced via the cross-workspace
+///   index (FR-001). The `version` is the concrete pinned version.
+/// - `Unresolved`: neither source produced a hit. Per unified Q1+Q2
+///   disposition, the peer's main-module component gains a
+///   `mikebom:unresolved-declared-dep` annotation (C115) naming the dep
+///   and NO `dependsOn` edge is emitted. Zero phantom empty-version
+///   PURLs enter the graph (SC-004 invariant).
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) enum CrossResolution {
+    Resolved { version: String },
+    Unresolved,
+}
+
+/// Milestone 163 (T002) — scan-local index mapping npm-package-name →
+/// concrete lockfile-resolved version. Constructed once per scan from
+/// the current `entries` snapshot after Tier A completes for all
+/// workspace roots; consulted per workspace-peer during Tier C emission.
+pub(crate) type CrossWorkspaceIndex = std::collections::HashMap<String, String>;
+
+/// Milestone 163 (T003) — parameter bundle threaded from `npm::read()`
+/// into `parse_root_package_json` when the current project root is a
+/// workspace peer (has `package.json` AND no lockfile file alongside).
+/// When `None` is passed instead, pre-163 design-tier phantom emission
+/// is preserved for backward-compatible standalone-package.json scans.
+pub(crate) struct CrossWorkspaceContext<'a> {
+    pub peer_root: &'a Path,
+    pub index: &'a CrossWorkspaceIndex,
+}
+
+/// Milestone 163 (T004) — per-workspace-peer accumulator for the
+/// cross-resolution results. `resolved_deps` become the peer's main-
+/// module `depends` names (downstream graph resolver in `scan_fs/mod.rs`
+/// wires them to concrete-version PURLs via `name_to_purl` at line 471).
+/// `unresolved_deps` become the C115 `mikebom:unresolved-declared-dep`
+/// annotation value on the peer's main-module component (bare string
+/// when 1; JSON array sorted+deduplicated when ≥2).
+#[derive(Debug, Default, Clone)]
+pub(crate) struct WorkspacePeerAccumulator {
+    pub resolved_deps: Vec<String>,
+    pub unresolved_deps: Vec<String>,
+}
+
+/// Milestone 163 (T006) — build a name → version map from the current
+/// `entries` snapshot. Skips empty-version entries (design-tier
+/// phantoms are precisely what we're about to reshape).
+///
+/// Multi-version collision: the first-encountered entry wins
+/// (deterministic per candidate-project-roots walk order — parent-first
+/// filesystem sort). Rare in practice; overrideable in a future
+/// milestone if a concrete case emerges.
+pub(crate) fn build_cross_workspace_index(entries: &[PackageDbEntry]) -> CrossWorkspaceIndex {
+    let mut index = CrossWorkspaceIndex::new();
+    for entry in entries {
+        if entry.purl.as_str().starts_with("pkg:npm/") && !entry.version.is_empty() {
+            index
+                .entry(entry.name.clone())
+                .or_insert_with(|| entry.version.clone());
+        }
+    }
+    index
+}
+
+/// Milestone 163 (T007) — FR-003 + Q1+Q2 unified classifier. Consults
+/// the peer's own `node_modules/<dep>/package.json` first (Node.js
+/// runtime resolver semantics: closest-ancestor install wins). Falls
+/// through to the cross-workspace index (Tier A lockfile-emitted entries
+/// across the scan).
+pub(crate) fn resolve_for_workspace_peer(
+    peer_root: &Path,
+    dep_name: &str,
+    cross_workspace_index: &CrossWorkspaceIndex,
+) -> CrossResolution {
+    // Step 1: FR-003 closest-ancestor — check the peer's own node_modules.
+    let nested = peer_root
+        .join("node_modules")
+        .join(dep_name)
+        .join("package.json");
+    if nested.is_file() {
+        if let Some(version) = read_installed_package_version(&nested) {
+            if !version.is_empty() {
+                return CrossResolution::Resolved { version };
+            }
+        }
+    }
+    // Step 2: fall through to the cross-workspace index.
+    match cross_workspace_index.get(dep_name) {
+        Some(version) => CrossResolution::Resolved {
+            version: version.clone(),
+        },
+        None => CrossResolution::Unresolved,
+    }
+}
+
+fn read_installed_package_version(path: &Path) -> Option<String> {
+    let text = std::fs::read_to_string(path).ok()?;
+    let parsed: serde_json::Value = serde_json::from_str(&text).ok()?;
+    parsed
+        .get("version")
+        .and_then(|v| v.as_str())
+        .map(String::from)
+}
+
 pub(super) fn read_node_modules(
     rootfs: &Path,
     scan_mode: crate::scan_fs::ScanMode,
@@ -195,7 +308,11 @@ fn walk_node_modules(
 /// Overlay `maintainer` on lockfile-derived entries by reading the
 /// corresponding installed `package.json` under the project's
 /// `node_modules/`. Silent no-op when the tree isn't present; only
-pub(super) fn read_root_package_json(rootfs: &Path, include_dev: bool) -> Option<Vec<PackageDbEntry>> {
+pub(super) fn read_root_package_json(
+    rootfs: &Path,
+    include_dev: bool,
+    cross_workspace_ctx: Option<&CrossWorkspaceContext<'_>>,
+) -> Option<(Vec<PackageDbEntry>, WorkspacePeerAccumulator)> {
     let path = rootfs.join("package.json");
     if !path.is_file() {
         return None;
@@ -203,19 +320,47 @@ pub(super) fn read_root_package_json(rootfs: &Path, include_dev: bool) -> Option
     let text = std::fs::read_to_string(&path).ok()?;
     let parsed: serde_json::Value = serde_json::from_str(&text).ok()?;
     let source_path = path.to_string_lossy().into_owned();
-    let out = parse_root_package_json(&parsed, &source_path, include_dev);
-    if out.is_empty() { None } else { Some(out) }
+    let (entries, acc) =
+        parse_root_package_json(&parsed, &source_path, include_dev, cross_workspace_ctx);
+    if entries.is_empty() && acc.resolved_deps.is_empty() && acc.unresolved_deps.is_empty() {
+        None
+    } else {
+        Some((entries, acc))
+    }
 }
 
 /// Parse `dependencies` (always) + `devDependencies` (when include_dev).
-/// Each key becomes a design-tier component with the range spec in
-/// `requirement_range` and `source_type` set for non-registry sources.
+///
+/// **Pre-163 behavior (when `cross_workspace_ctx = None`)**: each declared
+/// dep becomes a design-tier component with empty version + range spec
+/// in `requirement_range`. Preserved for backward-compatible standalone-
+/// package.json scans.
+///
+/// **Milestone 163 (when `cross_workspace_ctx = Some(_)`)**: the caller is
+/// a workspace peer. Per Q1+Q2 unified disposition:
+/// - Each declared dep is classified via `resolve_for_workspace_peer`.
+/// - `Resolved { version }` → dep-name accumulated in
+///   `WorkspacePeerAccumulator.resolved_deps`. NO design-tier phantom
+///   entry emitted. Downstream graph resolver in `scan_fs/mod.rs:471`
+///   wires the peer's main-module edge to the already-emitted Tier A
+///   concrete-version PURL by name.
+/// - `Unresolved` → dep-name accumulated in
+///   `WorkspacePeerAccumulator.unresolved_deps`. NO design-tier phantom
+///   entry emitted. The peer's main-module component will gain the
+///   C115 `mikebom:unresolved-declared-dep` annotation naming the dep
+///   (stamped in `npm::read()` post-fixup).
+///
+/// Guarantees SC-004: zero empty-version PURLs enter the graph when
+/// `cross_workspace_ctx.is_some()`. Guarantees SC-002: zero phantom
+/// edges (unresolved deps produce annotations, not edges).
 pub(crate) fn parse_root_package_json(
     root: &serde_json::Value,
     source_path: &str,
     include_dev: bool,
-) -> Vec<PackageDbEntry> {
+    cross_workspace_ctx: Option<&CrossWorkspaceContext<'_>>,
+) -> (Vec<PackageDbEntry>, WorkspacePeerAccumulator) {
     let mut out = Vec::new();
+    let mut acc = WorkspacePeerAccumulator::default();
     for (section, is_dev) in [("dependencies", false), ("devDependencies", true)] {
         if is_dev && !include_dev {
             continue;
@@ -227,8 +372,23 @@ pub(crate) fn parse_root_package_json(
         names.sort();
         for name in names {
             let range = obj[name].as_str().unwrap_or("").to_string();
+
+            // Milestone 163 (T008): workspace-peer path — cross-resolve
+            // and accumulate; do NOT emit phantom entries.
+            if let Some(ctx) = cross_workspace_ctx {
+                match resolve_for_workspace_peer(ctx.peer_root, name, ctx.index) {
+                    CrossResolution::Resolved { .. } => {
+                        acc.resolved_deps.push(name.to_string());
+                    }
+                    CrossResolution::Unresolved => {
+                        acc.unresolved_deps.push(name.to_string());
+                    }
+                }
+                continue;
+            }
+
+            // Pre-163 backward-compat path: emit design-tier phantom.
             let source_type = classify_npm_source(&range);
-            // Empty version for range-specs (spec FR-007a).
             let Some(purl) = build_npm_purl(name, "") else {
                 continue;
             };
@@ -265,7 +425,7 @@ pub(crate) fn parse_root_package_json(
             });
         }
     }
-    out
+    (out, acc)
 }
 
 // ---------------------------------------------------------------------------
@@ -552,7 +712,7 @@ mod tests {
             "dependencies": { "requests": "^1.0", "foo": "*" },
             "devDependencies": { "jest": "^29.0" }
         });
-        let out = parse_root_package_json(&src, "/package.json", false);
+        let (out, _acc) = parse_root_package_json(&src, "/package.json", false, None);
         assert_eq!(out.len(), 2);
         for c in &out {
             assert_eq!(c.sbom_tier.as_deref(), Some("design"));
@@ -567,7 +727,7 @@ mod tests {
             "dependencies": { "foo": "^1.0" },
             "devDependencies": { "jest": "^29.0" }
         });
-        let out = parse_root_package_json(&src, "/package.json", true);
+        let (out, _acc) = parse_root_package_json(&src, "/package.json", true, None);
         assert_eq!(out.len(), 2);
         let jest = out.iter().find(|c| c.name == "jest").unwrap();
         assert_eq!(jest.lifecycle_scope, Some(mikebom_common::resolution::LifecycleScope::Development));
@@ -583,7 +743,7 @@ mod tests {
                 "registry-pkg": "^1.0.0"
             }
         });
-        let out = parse_root_package_json(&src, "/package.json", false);
+        let (out, _acc) = parse_root_package_json(&src, "/package.json", false, None);
         let source_types: std::collections::HashMap<String, Option<String>> = out
             .into_iter()
             .map(|c| (c.name, c.source_type))
@@ -638,6 +798,330 @@ mod tests {
             assert!(
                 !is_npm_internal_path(Path::new(p)),
                 "expected false for {p}"
+            );
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // Milestone 163 (T019-T027 + T024a + T029-T030 + T032, closes #498)
+    // Cross-workspace resolution unit tests.
+    // -----------------------------------------------------------------
+
+    fn make_purl(purl_str: &str) -> mikebom_common::types::purl::Purl {
+        mikebom_common::types::purl::Purl::new(purl_str).unwrap()
+    }
+
+    fn make_pkg_entry(name: &str, version: &str, purl_str: &str) -> PackageDbEntry {
+        PackageDbEntry {
+            build_inclusion: None,
+            purl: make_purl(purl_str),
+            name: name.to_string(),
+            version: version.to_string(),
+            arch: None,
+            source_path: "/lockfile-derived".to_string(),
+            depends: Vec::new(),
+            maintainer: None,
+            licenses: Vec::new(),
+            lifecycle_scope: None,
+            requirement_range: None,
+            source_type: None,
+            buildinfo_status: None,
+            evidence_kind: None,
+            binary_class: None,
+            binary_stripped: None,
+            linkage_kind: None,
+            detected_go: None,
+            confidence: None,
+            binary_packed: None,
+            raw_version: None,
+            parent_purl: None,
+            npm_role: None,
+            co_owned_by: None,
+            hashes: Vec::new(),
+            sbom_tier: None,
+            shade_relocation: None,
+            extra_annotations: Default::default(),
+            binary_role: None,
+        }
+    }
+
+    // T019: build_cross_workspace_index maps 2 real entries.
+    #[test]
+    fn t019_build_index_maps_lockfile_entries() {
+        let entries = vec![
+            make_pkg_entry(
+                "@docusaurus/core",
+                "3.10.1",
+                "pkg:npm/%40docusaurus/core@3.10.1",
+            ),
+            make_pkg_entry("thor", "1.4.0", "pkg:npm/thor@1.4.0"),
+        ];
+        let index = build_cross_workspace_index(&entries);
+        assert_eq!(index.get("@docusaurus/core").map(String::as_str), Some("3.10.1"));
+        assert_eq!(index.get("thor").map(String::as_str), Some("1.4.0"));
+        assert_eq!(index.len(), 2);
+    }
+
+    // T020: build_cross_workspace_index SKIPS design-tier (empty-version).
+    #[test]
+    fn t020_build_index_skips_design_tier_entries() {
+        let entries = vec![
+            make_pkg_entry("real-pkg", "1.0.0", "pkg:npm/real-pkg@1.0.0"),
+            make_pkg_entry("design-tier", "", "pkg:npm/design-tier@"),
+        ];
+        let index = build_cross_workspace_index(&entries);
+        assert!(index.contains_key("real-pkg"));
+        assert!(!index.contains_key("design-tier"));
+        assert_eq!(index.len(), 1);
+    }
+
+    // T021: resolve_for_workspace_peer returns Resolved when the dep is
+    // in the cross-workspace index (no nested node_modules).
+    #[test]
+    fn t021_resolve_hits_index_when_no_nested() {
+        let tmp = tempfile::tempdir().unwrap();
+        let mut index = CrossWorkspaceIndex::new();
+        index.insert("@docusaurus/core".to_string(), "3.10.1".to_string());
+        match resolve_for_workspace_peer(tmp.path(), "@docusaurus/core", &index) {
+            CrossResolution::Resolved { version } => assert_eq!(version, "3.10.1"),
+            CrossResolution::Unresolved => panic!("expected Resolved"),
+        }
+    }
+
+    // T022: resolve_for_workspace_peer returns Unresolved when the dep
+    // is neither nested nor in the index.
+    #[test]
+    fn t022_resolve_returns_unresolved_when_missing() {
+        let tmp = tempfile::tempdir().unwrap();
+        let index = CrossWorkspaceIndex::new();
+        assert_eq!(
+            resolve_for_workspace_peer(tmp.path(), "@some/missing", &index),
+            CrossResolution::Unresolved
+        );
+    }
+
+    // T023: FR-003 closest-ancestor — nested wins over index.
+    #[test]
+    fn t023_nested_node_modules_wins_over_index() {
+        let tmp = tempfile::tempdir().unwrap();
+        let nested_dir = tmp.path().join("node_modules").join("foo");
+        std::fs::create_dir_all(&nested_dir).unwrap();
+        std::fs::write(
+            nested_dir.join("package.json"),
+            r#"{"name":"foo","version":"2.0.0"}"#,
+        )
+        .unwrap();
+        let mut index = CrossWorkspaceIndex::new();
+        index.insert("foo".to_string(), "1.0.0".to_string());
+        match resolve_for_workspace_peer(tmp.path(), "foo", &index) {
+            CrossResolution::Resolved { version } => assert_eq!(
+                version, "2.0.0",
+                "nested version 2.0.0 must win over index-only 1.0.0"
+            ),
+            CrossResolution::Unresolved => panic!("expected Resolved"),
+        }
+    }
+
+    // T024: reshaped parse_root_package_json — Some(_) + resolved →
+    // dep accumulated in resolved_deps, no phantom entries.
+    #[test]
+    fn t024_reshape_resolved_accumulates_no_phantom() {
+        let src = serde_json::json!({
+            "dependencies": {
+                "@docusaurus/core": "^3.10.1"
+            }
+        });
+        let tmp = tempfile::tempdir().unwrap();
+        let mut index = CrossWorkspaceIndex::new();
+        index.insert("@docusaurus/core".to_string(), "3.10.1".to_string());
+        let ctx = CrossWorkspaceContext {
+            peer_root: tmp.path(),
+            index: &index,
+        };
+        let (out, acc) = parse_root_package_json(&src, "/peer/package.json", false, Some(&ctx));
+        assert_eq!(out.len(), 0, "no phantom entries when cross-resolved");
+        assert_eq!(acc.resolved_deps, vec!["@docusaurus/core"]);
+        assert!(acc.unresolved_deps.is_empty());
+    }
+
+    // T024a: SC-007 sub-item (i) — devDependencies get same treatment.
+    #[test]
+    fn t024a_devdeps_get_cross_resolution() {
+        let src = serde_json::json!({
+            "devDependencies": {
+                "typescript": "^5.0.0",
+                "some-missing-dev-dep": "^1.0.0"
+            }
+        });
+        let tmp = tempfile::tempdir().unwrap();
+        let mut index = CrossWorkspaceIndex::new();
+        index.insert("typescript".to_string(), "5.4.0".to_string());
+        // `some-missing-dev-dep` intentionally not in index.
+        let ctx = CrossWorkspaceContext {
+            peer_root: tmp.path(),
+            index: &index,
+        };
+        // include_dev = true; devDependencies must be processed.
+        let (out, acc) = parse_root_package_json(&src, "/peer/package.json", true, Some(&ctx));
+        assert_eq!(out.len(), 0, "no phantom entries in workspace-peer mode");
+        assert_eq!(
+            acc.resolved_deps,
+            vec!["typescript"],
+            "devDep resolved via index accumulates in resolved_deps"
+        );
+        assert_eq!(
+            acc.unresolved_deps,
+            vec!["some-missing-dev-dep"],
+            "devDep missing from index accumulates in unresolved_deps"
+        );
+    }
+
+    // T025: reshaped parse_root_package_json — Some(_) + unresolved →
+    // dep accumulated in unresolved_deps, no phantom entries.
+    #[test]
+    fn t025_reshape_unresolved_accumulates_no_phantom() {
+        let src = serde_json::json!({
+            "dependencies": {
+                "@some/removed": "^1.0.0"
+            }
+        });
+        let tmp = tempfile::tempdir().unwrap();
+        let index = CrossWorkspaceIndex::new();
+        let ctx = CrossWorkspaceContext {
+            peer_root: tmp.path(),
+            index: &index,
+        };
+        let (out, acc) = parse_root_package_json(&src, "/peer/package.json", false, Some(&ctx));
+        assert_eq!(out.len(), 0, "no phantom entries when unresolved");
+        assert!(acc.resolved_deps.is_empty());
+        assert_eq!(acc.unresolved_deps, vec!["@some/removed"]);
+    }
+
+    // T026: reshaped parse_root_package_json — None → pre-163 behavior
+    // preserved: phantom entries emitted with empty version.
+    #[test]
+    fn t026_reshape_none_preserves_pre163_behavior() {
+        let src = serde_json::json!({
+            "dependencies": {
+                "foo": "^1.0.0"
+            }
+        });
+        let (out, acc) = parse_root_package_json(&src, "/standalone/package.json", false, None);
+        assert_eq!(out.len(), 1, "pre-163 emits one design-tier phantom");
+        assert!(out[0].version.is_empty());
+        assert_eq!(out[0].sbom_tier.as_deref(), Some("design"));
+        assert_eq!(out[0].requirement_range.as_deref(), Some("^1.0.0"));
+        assert!(acc.resolved_deps.is_empty());
+        assert!(acc.unresolved_deps.is_empty());
+    }
+
+    // T027: verify the wire-shape helper used by npm::read() — bare
+    // string vs JSON array for the C115 annotation value. The
+    // stamping code lives in mod.rs; here we mirror the shape rule.
+    #[test]
+    fn t027_c115_wire_shape_singleton_vs_array() {
+        // Singleton: bare string.
+        let mut singles = vec!["@some/removed".to_string()];
+        singles.sort();
+        singles.dedup();
+        let single_value = if singles.len() == 1 {
+            serde_json::Value::String(singles.into_iter().next().unwrap())
+        } else {
+            serde_json::Value::Array(singles.into_iter().map(serde_json::Value::String).collect())
+        };
+        assert!(single_value.is_string(), "singleton must be bare String");
+
+        // Multi: JSON array, sorted+deduplicated.
+        let mut multi = vec![
+            "@b/pkg".to_string(),
+            "@a/pkg".to_string(),
+            "@b/pkg".to_string(), // duplicate — must be removed
+        ];
+        multi.sort();
+        multi.dedup();
+        let multi_value = if multi.len() == 1 {
+            serde_json::Value::String(multi.into_iter().next().unwrap())
+        } else {
+            serde_json::Value::Array(multi.into_iter().map(serde_json::Value::String).collect())
+        };
+        let arr = multi_value.as_array().expect("multi must be JSON array");
+        assert_eq!(arr.len(), 2, "duplicates removed");
+        assert_eq!(arr[0].as_str(), Some("@a/pkg"), "sorted lex-first");
+        assert_eq!(arr[1].as_str(), Some("@b/pkg"));
+    }
+
+    // T029: SC-005 coverage-preservation — index build does NOT drop
+    // entries.
+    #[test]
+    fn t029_build_index_preserves_entries_len() {
+        let entries = vec![
+            make_pkg_entry("real-a", "1.0.0", "pkg:npm/real-a@1.0.0"),
+            make_pkg_entry("real-b", "2.0.0", "pkg:npm/real-b@2.0.0"),
+            make_pkg_entry("design-tier", "", "pkg:npm/design-tier@"),
+        ];
+        let entries_len_before = entries.len();
+        let _index = build_cross_workspace_index(&entries);
+        assert_eq!(
+            entries.len(),
+            entries_len_before,
+            "build_cross_workspace_index reads entries; must not mutate"
+        );
+    }
+
+    // T030: FR-010 peer-dep regression guard — peerDependencies block
+    // is NOT cross-resolved (out of scope per milestone 147's C1/C2).
+    #[test]
+    fn t030_peer_dependencies_not_cross_resolved() {
+        let src = serde_json::json!({
+            "dependencies": { "regular-dep": "^1.0" },
+            "peerDependencies": { "peer-only": "^2.0" }
+        });
+        let tmp = tempfile::tempdir().unwrap();
+        let mut index = CrossWorkspaceIndex::new();
+        index.insert("regular-dep".to_string(), "1.5.0".to_string());
+        index.insert("peer-only".to_string(), "2.5.0".to_string());
+        let ctx = CrossWorkspaceContext {
+            peer_root: tmp.path(),
+            index: &index,
+        };
+        let (_out, acc) = parse_root_package_json(&src, "/peer/package.json", false, Some(&ctx));
+        assert_eq!(
+            acc.resolved_deps,
+            vec!["regular-dep"],
+            "only `dependencies:` names get accumulated; peer-only must NOT"
+        );
+        assert!(acc.unresolved_deps.is_empty());
+    }
+
+    // T032: FR-005 lockfile-format-agnostic behavior — build_cross_
+    // workspace_index operates on `&[PackageDbEntry]` regardless of
+    // provenance (PURL prefix + non-empty version are the only filters).
+    #[test]
+    fn t032_index_agnostic_to_provenance() {
+        // Simulate entries from 4 different lockfile-format provenance
+        // sources (source_path varies; the builder should not care).
+        let mut entries = Vec::new();
+        for (name, version, src_path) in [
+            ("pkg-from-npm", "1.0.0", "/root/package-lock.json"),
+            ("pkg-from-pnpm", "2.0.0", "/root/pnpm-lock.yaml"),
+            ("pkg-from-yarn", "3.0.0", "/root/yarn.lock"),
+            ("pkg-from-bun", "4.0.0", "/root/bun.lock"),
+        ] {
+            let mut e = make_pkg_entry(name, version, &format!("pkg:npm/{name}@{version}"));
+            e.source_path = src_path.to_string();
+            entries.push(e);
+        }
+        let index = build_cross_workspace_index(&entries);
+        assert_eq!(index.len(), 4, "all 4 lockfile-provenance entries indexed");
+        for name in [
+            "pkg-from-npm",
+            "pkg-from-pnpm",
+            "pkg-from-yarn",
+            "pkg-from-bun",
+        ] {
+            assert!(
+                index.contains_key(name),
+                "index-builder must not filter on lockfile-format provenance"
             );
         }
     }

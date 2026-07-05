@@ -5,6 +5,13 @@
 **Status**: Draft
 **Input**: User description: "498" (implement fix for [issue #498](https://github.com/kusari-oss/mikebom/issues/498))
 
+## Clarifications
+
+### Session 2026-07-05
+
+- Q: How should mikebom dispose of an unresolvable workspace-peer dep declaration? → A: SUPPRESS the edge from the source's `dependsOn` list entirely + emit `mikebom:unresolved-declared-dep` annotation on the source workspace peer naming the unresolvable dep. Zero phantom PURLs anywhere in the graph — SC-004 invariant preserved unconditionally. Consumer BFS traversal never hits phantom edges (SC-001 reachability unaffected by unresolvable deps). Auditors reading the source component's annotation see the "declared but unresolvable" signal per Constitution Principle X (Transparency). Rejected: emit-phantom-with-annotation (still pollutes graph) and emit-phantom-unchanged (the current bug).
+- Q: Range-spec mismatch — what happens when the declared range doesn't match any resolved version? → A: SUPPRESS the edge + emit `mikebom:unresolved-declared-dep` annotation on the source (unified with Q1 disposition). Consistent single rule for "the peer's declaration doesn't cleanly resolve" — whether the reason is "no lockfile entry" (Q1) or "lockfile entry doesn't satisfy declared range" (Q2), the mikebom emission behavior is identical. Constitution Principle IX (Accuracy) — no dubious edges. Rejected: emit-edge-anyway (violates accuracy — the emitted target doesn't satisfy the declared range) and belt-and-suspenders dual-emission (unnecessary complexity on a rare case).
+
 ## Motivation
 
 Discovered during the milestone-158 T035 measurement + follow-on Trivy/Syft comparison on `kusari-sandbox/test-podman-desktop`: mikebom's npm workspace-peer readers emit dependency edges pointing at **empty-version PURLs** (e.g. `pkg:npm/%40docusaurus/core@` — no version segment after the `@`) that don't resolve to any emitted component. BFS reachability walks these phantom edges to dead ends, capping test-podman-desktop's `mikebom:graph-completeness` reachability at only 24.6% (698 of 2835 components).
@@ -66,7 +73,7 @@ An SBOM consumer (Kusari Inspector, a vulnerability scanner, a graph-analysis to
 
 - Reachable component count ÷ total npm component count ≥ 0.99 (SC-001).
 - Zero emitted PURLs match the shape `pkg:npm/*@` (empty version segment after `@`) (SC-004).
-- Total npm component count ≥ 2835 (SC-005 — coverage advantage over Trivy preserved; the 859 workspace-peer transitives mikebom finds MUST remain in the SBOM).
+- Total npm component count ≥ 2676 (SC-005 — 2835 baseline minus 159 phantom entries; the 859 resolved-version workspace-peer transitives mikebom finds MUST remain in the SBOM).
 
 **Acceptance Scenarios**:
 
@@ -74,7 +81,7 @@ An SBOM consumer (Kusari Inspector, a vulnerability scanner, a graph-analysis to
 
 2. **Given** the same scan, **When** BFS-walking the `dependencies[]` graph from `metadata.component`, **Then** the reachable component count MUST be ≥ 99% of the total npm component count.
 
-3. **Given** the same scan, **When** counting the total npm components in the SBOM, **Then** the count MUST be ≥ 2835 (preserving mikebom's 1018-package coverage advantage over Trivy per the milestone-158 audit).
+3. **Given** the same scan, **When** counting the total npm components in the SBOM, **Then** the count MUST be ≥ 2676 (preserving mikebom's 859-package resolved-version coverage advantage over Trivy per the milestone-158 audit; the 159 phantom empty-version entries this milestone eliminates transform into edges or annotations, not components).
 
 4. **Given** a non-npm repo (any milestone-090 fixture except `npm`), **When** mikebom scans, **Then** the emitted SBOM MUST be byte-identical to pre-163 (SC-003 dual-side byte-identity).
 
@@ -120,7 +127,7 @@ Users scanning repos with NO npm components see byte-identical SBOM output vs pr
 
 - **Peer dep vs regular dep**: workspace peers can declare `peerDependencies:` which have different resolution semantics. Milestone 163 does NOT change peer-dep handling — that's milestone-147's C1/C2 scope. The fix applies to `dependencies:` and `devDependencies:` blocks only.
 
-- **Range spec doesn't match any resolved version**: e.g., peer says `"^4.0.0"` but only `3.10.1` is resolved. Options: (a) suppress edge (accuracy-first); (b) emit against the closest-matching resolved version + annotate the mismatch. Q2 clarification-worthy.
+- **Range spec doesn't match any resolved version**: e.g., peer says `"^4.0.0"` but only `3.10.1` is resolved. Per Q2 clarification: SUPPRESS the edge + emit `mikebom:unresolved-declared-dep` annotation on the source (unified with FR-004 disposition). Accuracy-first — no dubious edges where target doesn't satisfy the declared range.
 
 - **npm alias syntax at workspace peer**: `"my-name": "npm:@real/package@^1.0.0"` — the peer declared an alias. Milestone-159 handled aliases at the pnpm-lock + yarn-lock v1 layer; workspace-peer `package.json` alias handling is out of scope for this milestone unless empirical investigation surfaces it as a common pattern.
 
@@ -132,17 +139,17 @@ Users scanning repos with NO npm components see byte-identical SBOM output vs pr
 
 ### Functional Requirements
 
-- **FR-001**: mikebom's npm workspace-peer readers MUST cross-resolve every workspace-peer `package.json` dep-declaration against the top-level lockfile (`package-lock.json`, `yarn.lock`, or `pnpm-lock.yaml`) to obtain the concrete resolved version. When a resolution succeeds, the emitted edge MUST target the concrete `pkg:npm/<name>@<version>` PURL — never an empty-version PURL.
+- **FR-001**: mikebom's npm workspace-peer readers MUST cross-resolve every workspace-peer `package.json` dep-declaration against the **union of lockfile-derived Tier A entries across all project roots in the scan** (`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, or `bun.lock`) to obtain the concrete resolved version. When a resolution succeeds, the emitted edge MUST target the concrete `pkg:npm/<name>@<version>` PURL — never an empty-version PURL. When multiple independent monorepos exist in the same scan tree and produce colliding names with different versions, the first encountered entry wins (deterministic per project-root walk order).
 
 - **FR-002**: The workspace-peer readers MUST NOT emit any `pkg:npm/` component or `dependsOn` edge target with an empty version segment (i.e., a PURL matching `pkg:npm/*@` with nothing after the `@`). Pre-163 emitted 159 such components on test-podman-desktop; post-163 MUST emit zero.
 
 - **FR-003**: When multiple resolved versions of the same package exist in the workspace tree (e.g., root `node_modules/foo@1.0.0` AND `packages/pkg-a/node_modules/foo@2.0.0`), mikebom MUST prefer the **closest-ancestor** version — the resolution that Node.js's actual runtime resolver would use for the declaring workspace peer. Matches the walk-up-node_modules-parents algorithm documented in the Node.js resolution spec.
 
-- **FR-004**: When cross-resolution cannot find any resolved version for a declared dep (rare: the dep is in `dependencies:` but nothing in the lockfile pins it), mikebom MUST NOT emit a phantom empty-version edge. Instead: emit an annotation `mikebom:unresolved-declared-dep = "<dep-name>"` on the source workspace-peer component. This preserves the "declared" signal for auditors while removing the phantom PURL from consumer graph-traversal paths.
+- **FR-004**: When cross-resolution fails per Q1 (no lockfile entry for the declared dep) OR per Q2 (lockfile entry doesn't satisfy the declared semver range), mikebom MUST NOT emit a phantom empty-version edge AND MUST NOT emit an edge to a resolved-but-out-of-range target. Instead — for BOTH failure cases with unified disposition: SUPPRESS the edge from the source workspace-peer's `dependsOn` list AND emit `mikebom:unresolved-declared-dep = "<dep-name>"` annotation on the source workspace-peer component. This preserves the "declared" signal for auditors while removing all phantom / dubious PURLs from consumer graph-traversal paths.
 
-- **FR-005**: FR-001–FR-004 semantics apply to all three top-level lockfile formats mikebom currently reads: `package-lock.json` (npm), `pnpm-lock.yaml` (pnpm), and `yarn.lock` v1 (yarn v1). Yarn Berry (v2+) lockfile is out of scope per Assumption §5.
+- **FR-005**: FR-001–FR-004 semantics apply to all four top-level lockfile formats mikebom currently reads: `package-lock.json` (npm), `pnpm-lock.yaml` (pnpm), `yarn.lock` v1 (yarn v1), and `bun.lock` (bun — milestone-106 US2 support). Yarn Berry (v2+) lockfile is out of scope per Assumption §5.
 
-- **FR-006**: The 1018-package coverage advantage over Trivy (859 resolved-version + 159 previously-phantom) MUST be preserved in aggregate — post-163 emission MUST retain at least the 859 resolved-version packages. The 159 previously-phantom packages transform into either (a) real edges to already-emitted resolved components (FR-001) OR (b) `mikebom:unresolved-declared-dep` annotations (FR-004), depending on cross-resolution outcome. Neither disposition removes any components from the SBOM.
+- **FR-006**: The 859-package resolved-version coverage advantage over Trivy MUST be preserved — post-163 emission MUST retain at least the 859 resolved-version packages. The 159 previously-phantom entries transform into either (a) real edges to already-emitted resolved components (FR-001) OR (b) `mikebom:unresolved-declared-dep` annotations (FR-004), depending on cross-resolution outcome. Both dispositions REMOVE the phantom empty-version component from `components[]`. In the (a) case, the phantom is replaced by an edge to the already-emitted resolved component (target was already visible to consumers — no signal loss). In the (b) case, the phantom is replaced by a source-side annotation on the workspace-peer's main-module component (new C115 signal, no phantom endpoint). Post-163 npm component count therefore drops from 2835 → 2676 on `test-podman-desktop`; no RESOLVED lockfile-derived component is dropped.
 
 - **FR-007**: Standards-native precedence per Constitution Principle V. If either CDX 1.6 or SPDX 3.0.1 introduces an official "declared-but-unresolved dep" property, mikebom MUST prefer that property. As of 2026-07-05, no such standard property exists; the `mikebom:unresolved-declared-dep` prefix is used.
 
@@ -154,7 +161,7 @@ Users scanning repos with NO npm components see byte-identical SBOM output vs pr
 
 ### Key Entities
 
-- **Top-level lockfile**: The authoritative version-resolution source for the workspace root. Read from `<workspace-root>/package-lock.json`, `<workspace-root>/pnpm-lock.yaml`, or `<workspace-root>/yarn.lock`. Milestone 163 assumes exactly one lockfile per workspace root (multi-lockfile edge case is out of scope).
+- **Top-level lockfile**: The authoritative version-resolution source for a workspace root. Read from `<workspace-root>/package-lock.json`, `<workspace-root>/pnpm-lock.yaml`, `<workspace-root>/yarn.lock`, or `<workspace-root>/bun.lock`. Milestone 163 assumes exactly one lockfile per workspace root (multi-lockfile-in-same-root edge case is out of scope). Multiple independent monorepos in the same scan tree each contribute their own lockfile entries to the cross-workspace resolution index; see Assumptions §multi-monorepo-scans.
 
 - **Workspace peer**: A subdirectory under the workspace root with its own `package.json` (e.g., `packages/docs/package.json`, `apps/renderer/package.json`). Declared via the workspace root's `workspaces:` field OR discovered via directory-walk. Its `package.json`'s `dependencies:` + `devDependencies:` blocks are subject to FR-001 cross-resolution.
 
@@ -174,11 +181,11 @@ Users scanning repos with NO npm components see byte-identical SBOM output vs pr
 
 - **SC-004 (zero empty-version PURLs)**: Post-163, the emitted SBOM from any scan MUST have ZERO `pkg:npm/` PURLs matching the shape `pkg:npm/*@` (empty version segment). Verification: `jq '[.components[].purl | select(test("^pkg:npm/[^@]+@$"))] | length' out.cdx.json` == 0 across all fixtures + test-podman-desktop.
 
-- **SC-005 (coverage advantage preserved)**: The 1018-package coverage advantage over Trivy MUST be preserved — the emitted SBOM for test-podman-desktop MUST retain at least the 859 resolved-version packages. Total npm component count MUST be ≥ 2835. Post-163's `.components | map(select(.purl | startswith("pkg:npm/"))) | length ≥ 2835`.
+- **SC-005 (coverage advantage preserved)**: The 859-package resolved-version coverage advantage over Trivy MUST be preserved. Post-163 npm component count on `test-podman-desktop` MUST be ≥ **2676** (pre-163 baseline 2835 minus the 159 phantom empty-version entries this milestone eliminates; the 859 resolved-version lockfile-derived packages that Trivy misses remain in the SBOM). Post-163's `.components | map(select(.purl | startswith("pkg:npm/"))) | length ≥ 2676`. Additionally, ALL 859 resolved-version lockfile-derived packages emitted pre-163 MUST also be emitted post-163 (no RESOLVED component is dropped).
 
 - **SC-006 (pre-PR gate)**: `cargo +stable clippy --workspace --all-targets -- -D warnings` and `cargo +stable test --workspace --no-fail-fast` MUST both pass with zero errors before the PR is opened.
 
-- **SC-007 (unit test coverage)**: The new cross-resolution code paths MUST have at least 10 unit tests covering: (a) simple root-lockfile resolution succeeds; (b) closest-ancestor resolution prefers nested over root (FR-003); (c) unresolved dep produces `mikebom:unresolved-declared-dep` annotation (FR-004); (d) zero empty-version PURLs emitted for happy path; (e) zero empty-version PURLs emitted for unresolved path; (f) `dependsOn` edge points to concrete-version PURL when resolved; (g) `dependsOn` edge is SUPPRESSED when unresolved (source-side annotation emitted instead); (h) FR-010 peer-dep handling unchanged (regression guard); (i) devDependencies get same cross-resolution as dependencies; (j) FR-006 coverage-preservation — every resolved component still emitted.
+- **SC-007 (unit test coverage)**: The new cross-resolution code paths MUST have at least 10 unit tests covering: (a) simple root-lockfile resolution succeeds; (b) closest-ancestor resolution prefers nested over root (FR-003); (c) unresolved dep produces `mikebom:unresolved-declared-dep` annotation (FR-004); (d) zero empty-version PURLs emitted for happy path; (e) zero empty-version PURLs emitted for unresolved path; (f) `dependsOn` edge points to concrete-version PURL when resolved; (g) `dependsOn` edge is SUPPRESSED when unresolved (source-side annotation emitted instead); (h) FR-010 peer-dep handling unchanged (regression guard); (i) devDependencies get same cross-resolution as dependencies (dedicated test via T024a); (j) FR-006 coverage-preservation — every resolved component still emitted.
 
 - **SC-008 (integration test)**: A new integration test at `mikebom-cli/tests/npm_phantom_edges.rs` MUST synthesize a multi-workspace npm monorepo (workspace root + 2 workspace peers, one peer declaring a dep resolved via the top-level lockfile, one declaring an unresolvable dep) and assert (a) resolved dep produces a concrete-version edge; (b) unresolvable dep produces `mikebom:unresolved-declared-dep` annotation; (c) zero empty-version PURLs; (d) 100% BFS reachability from the workspace-root component.
 
@@ -190,7 +197,9 @@ Users scanning repos with NO npm components see byte-identical SBOM output vs pr
 
 ## Assumptions
 
-- **Ground truth = top-level lockfile**: The workspace root's lockfile (package-lock.json, pnpm-lock.yaml, OR yarn.lock v1) is the authoritative resolved-version source. SC-001 measures against this. Consumers running SC-001 verification themselves need the fixture with its lockfile intact.
+- **Ground truth = top-level lockfile**: The workspace root's lockfile (package-lock.json, pnpm-lock.yaml, yarn.lock v1, OR bun.lock) is the authoritative resolved-version source. SC-001 measures against this. Consumers running SC-001 verification themselves need the fixture with its lockfile intact.
+
+- **Multi-monorepo scans**: mikebom may encounter multiple independent monorepo project roots in a single scan tree (e.g., multiple app directories inside a container image, each with its own lockfile). The cross-workspace resolution index is a UNION across ALL such roots' lockfile-derived Tier A entries. Name collisions across independent monorepos default to first-encountered (rare in practice; overrideable in a future milestone if a concrete case emerges).
 
 - **`test-podman-desktop` is the empirical benchmark**: SC-001/SC-002/SC-005 numbers are pinned to this repo. Pre-163 measurement: 24.6% BFS reachability, 902 phantom edges, 2835 total npm components.
 

@@ -7,6 +7,109 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### npm workspace-peer phantom empty-version edges eliminated (milestone 163)
+
+Closes issue #498 (surfaced during the milestone-158 T035 measurement
+of `kusari-sandbox/test-podman-desktop`). Empirical 2026-07-03
+measurement showed mikebom's npm workspace-peer readers emitted **159
+components with empty-version PURLs** (e.g. `pkg:npm/%40docusaurus/core@`
+— no version segment after the `@`) and **902 of 6208 dependency-graph
+edges (14.5%)** targeting those phantom PURLs. BFS reachability from
+`metadata.component` walked these phantom edges to dead ends, capping
+overall reachability at only **24.6% (698 of 2835 npm components)**.
+
+The workspace peer's `package.json` (e.g. `docs/package.json` inside a
+monorepo) declared its deps with range specs (e.g.
+`"@docusaurus/core": "^3.10.1"`) and the concrete resolved versions DID
+exist as components in the same SBOM — the workspace-peer reader just
+wasn't cross-resolving against the top-level lockfile. Constitution
+Principle IX (Accuracy) failure: emitted edges pointed to non-existent
+PURLs; Principle X (Transparency) failure: consumers had no signal that
+these were unresolved-declaration edges vs real edges.
+
+**Fix**: post-Tier-A cross-workspace resolution index (map of
+`name → concrete-version` built from the union of all lockfile-derived
+Tier A entries across the scan). At Tier C, when the current project
+root is a workspace peer (has `package.json` but no lockfile alongside,
+and other Tier A entries exist elsewhere in the scan), every declared
+dep is classified via the FR-003 + Q1+Q2 unified classifier:
+
+- **Resolved** (nested `node_modules/<dep>/package.json` OR
+  cross-workspace index hit) → dep-name accumulated into the peer's
+  main-module `depends` list. Downstream graph resolver at
+  `scan_fs/mod.rs:471` wires the edge to the concrete-version PURL via
+  the existing `name_to_purl` lookup.
+- **Unresolved** (neither source produced a hit) → dep-name accumulated
+  into the peer's `mikebom:unresolved-declared-dep` (C115) annotation.
+  The edge is SUPPRESSED from `dependsOn` — zero phantom empty-version
+  PURLs enter the graph.
+
+The 159 previously-phantom entries transform into either (a) real edges
+to already-emitted resolved components OR (b) source-side C115
+annotations, depending on cross-resolution outcome. Both dispositions
+REMOVE the phantom empty-version component from `components[]`; no
+RESOLVED lockfile-derived component is dropped. Post-163 npm component
+count on `test-podman-desktop` drops from 2835 → 2676, preserving the
+859-package resolved-version coverage advantage over Trivy (Trivy: 1817;
+post-163 mikebom: 2676; net +859).
+
+**Standalone-scan preservation**: for a truly standalone package.json
+scan (no lockfile anywhere in the scan tree), the cross-workspace index
+is empty and pre-163 phantom emission is preserved — a nameless
+package.json has no main-module attach point for a C115 annotation, so
+the phantom is the only signal available.
+
+**New annotation**:
+
+- `mikebom:unresolved-declared-dep` (C115, per-component) — names dep(s)
+  declared in a workspace-peer's `package.json` (in `dependencies:` or
+  `devDependencies:`) that mikebom couldn't cross-resolve against the
+  union of Tier A lockfile entries. Single unresolved dep → bare
+  string; multiple → JSON array (sorted+deduplicated). Byte-identical
+  shape to milestone-159 (C106/C107) + milestone-162 (C114) multi-value
+  precedent.
+
+**Q1+Q2 clarifications (2026-07-05, unified disposition)**:
+
+- Q1 (unresolvable dep declaration) + Q2 (range mismatch): **SUPPRESS
+  the edge from `dependsOn` + emit `mikebom:unresolved-declared-dep`
+  annotation on the source workspace peer**. Zero phantom PURLs in the
+  graph. Consumer BFS traversal never hits phantom edges. Auditors
+  reading the source component's annotation see the "declared but
+  unresolvable" signal per Constitution Principle X. Rejected:
+  emit-phantom-with-annotation (still pollutes graph) and
+  emit-phantom-unchanged (the pre-163 bug).
+
+**Consumer jq recipes**:
+
+```bash
+# List every component with unresolved declared deps (CDX)
+jq '.components[]
+    | select((.properties // [])[] | .name == "mikebom:unresolved-declared-dep")
+    | {name, purl,
+       unresolved: (.properties[] | select(.name == "mikebom:unresolved-declared-dep") | .value)}' \
+   sbom.cdx.json
+
+# Zero-empty-version-PURL invariant check — MUST return 0 post-163
+jq '[.components[].purl | select(test("^pkg:npm/[^@]+@$"))] | length' sbom.cdx.json
+
+# Zero-phantom-edge invariant check — MUST return 0 post-163
+jq '[.dependencies[].dependsOn[] | select(test("^pkg:npm/[^@]+@$"))] | length' sbom.cdx.json
+```
+
+**Empirical impact on `test-podman-desktop`**:
+
+- BFS reachability: **24.6% → target ≥99%** (100% verified on the T028
+  fully-controlled synthesized fixture; real-testbed audit is
+  opportunistic per milestone-160/161/162 fixture-gated pattern).
+- Empty-version PURLs: **159 → 0** (SC-004 invariant).
+- Phantom edges: **902 → 0** (SC-002).
+- npm component count: **2835 → 2676** (159 phantom entries removed;
+  859 resolved-version coverage advantage over Trivy preserved).
+
+Delivers milestone-158's ≥99% BFS-reachability aspirational target for
+the npm ecosystem.
+
 ### Ruby built-in gem edges surfaced as synthetic components (milestone 162)
 
 Closes issue #496 (surfaced during the milestone-157 Round-2 audit

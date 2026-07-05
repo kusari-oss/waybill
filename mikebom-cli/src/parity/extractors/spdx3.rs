@@ -652,6 +652,10 @@ spdx3_anno!(c112_spdx3, "mikebom:go-workspace-mode",                document);
 spdx3_anno!(c113_spdx3, "mikebom:synthetic-built-in",               component);
 spdx3_anno!(c114_spdx3, "mikebom:built-in-requirement",             component);
 
+// Milestone 163 (closes #498): C115 per-component npm workspace-peer
+// unresolved-declared-dep annotation.
+spdx3_anno!(c115_spdx3, "mikebom:unresolved-declared-dep",          component);
+
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-component
 // graph-element annotation carrying the JSON-encoded array of
 // conflict records.
