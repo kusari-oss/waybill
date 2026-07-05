@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-07-04
+Auto-generated from all feature plans. Last updated: 2026-07-05
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -197,6 +197,8 @@ Auto-generated from all feature plans. Last updated: 2026-07-04
 - N/A — all state in-process per scan; matches every milestone since 002. The new `WorkspaceMode` enum + `GoWorkDocument` parsed struct live on the stack for the duration of a single Go-reader invocation. (161-go-workspace-edges)
 - Rust stable (workspace toolchain inherited from milestones 001–161; no nightly required for this user-space-only work). + Existing only — `mikebom_common::types::purl::{Purl, encode_purl_segment}` (already used by `gem.rs::build_gem_purl`), `serde`/`serde_json` (annotation values), `tracing` (FR-011 log), `anyhow`/`thiserror` (error propagation). **Zero new Cargo dependencies.** The allowlist is a `const &[&str]` array literal. (162-ruby-built-in-gems)
 - N/A — all state in-process per scan; matches every milestone since 002. The allowlist lives in the compiled binary; the synthetic components live in the `Vec<PackageDbEntry>` returned by `gem::read`. (162-ruby-built-in-gems)
+- Rust stable (workspace toolchain inherited from milestones 001–162; no nightly required). + Existing only — `mikebom_common::types::purl::{Purl, encode_purl_segment}` (already used by `npm/mod.rs::build_npm_purl`), `serde`/`serde_json` (annotation values), `tracing` (FR-009 log), `anyhow`/`thiserror` (error propagation). **Zero new Cargo dependencies.** No semver crate needed — Q2 disposition sidesteps range-comparison logic (the lockfile is authoritative). (163-npm-phantom-edges)
+- N/A — cross-workspace resolution index lives in `Vec<PackageDbEntry>` scan-locally, rebuilt from Tier-A output per scan. Matches every milestone since 002. (163-npm-phantom-edges)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -259,9 +261,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 163-npm-phantom-edges: Added Rust stable (workspace toolchain inherited from milestones 001–162; no nightly required). + Existing only — `mikebom_common::types::purl::{Purl, encode_purl_segment}` (already used by `npm/mod.rs::build_npm_purl`), `serde`/`serde_json` (annotation values), `tracing` (FR-009 log), `anyhow`/`thiserror` (error propagation). **Zero new Cargo dependencies.** No semver crate needed — Q2 disposition sidesteps range-comparison logic (the lockfile is authoritative).
 - 162-ruby-built-in-gems: Added Rust stable (workspace toolchain inherited from milestones 001–161; no nightly required for this user-space-only work). + Existing only — `mikebom_common::types::purl::{Purl, encode_purl_segment}` (already used by `gem.rs::build_gem_purl`), `serde`/`serde_json` (annotation values), `tracing` (FR-011 log), `anyhow`/`thiserror` (error propagation). **Zero new Cargo dependencies.** The allowlist is a `const &[&str]` array literal.
 - 161-go-workspace-edges: Added Rust stable (workspace toolchain inherited from milestones 001–160; no nightly required for this user-space-only work). + Existing only — `std::process::Command` for the `GOWORK=off go mod graph` subprocess invocations (same pattern as milestone-055 `run_go_mod_graph` at `go_mod_graph.rs:81`), `std::fs::exists` for `go.work` detection, `serde`/`serde_json` (annotation values), `tracing` (FR-011 log), `anyhow`/`thiserror` (error propagation). **Zero new Cargo dependencies.** The go.work parser is stdlib-only (line-based, mirrors the existing `parse_go_mod` structure at `legacy.rs:200`).
-- 160-go-transitive-coverage: Added Rust stable (workspace toolchain inherited from milestones 001–159; no nightly required for this user-space-only work). + Existing only — `reqwest = "0.12"` (workspace, `default-features = false, features = ["json", "rustls-tls", "blocking"]`) reused by `proxy_fetch.rs`; `tokio` (workspace) for the semaphore-driven parallel fetches; `serde`/`serde_json` (annotation values); `tracing` (info-level ladder summary + FR-010 log line); `anyhow`/`thiserror` (error propagation). The `GraphResolverConfig.fetch_concurrency = 16` at `graph_resolver.rs:344` (milestone-055 FR-008a) is preserved unchanged. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

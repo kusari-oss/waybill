@@ -60,6 +60,21 @@ pub fn read(
 ) -> Result<Vec<PackageDbEntry>, NpmError> {
     let mut entries: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: std::collections::HashSet<String> = std::collections::HashSet::new();
+    // Milestone 163 (T012, closes #498): per-workspace-peer accumulators
+    // collected at Tier C time; used to stamp the peer's main-module
+    // component with (a) resolved dep NAMES in `depends` (downstream
+    // graph resolver wires the edge to the concrete-version PURL via
+    // `name_to_purl` at `scan_fs/mod.rs:471`), and (b) the C115
+    // `mikebom:unresolved-declared-dep` annotation naming any dep the
+    // cross-workspace index couldn't resolve.
+    let mut peer_accumulators: std::collections::HashMap<
+        PathBuf,
+        walk::WorkspacePeerAccumulator,
+    > = std::collections::HashMap::new();
+    // Milestone 163 (T013): tallies for the FR-009 tracing log at the
+    // end of `read()`.
+    let mut ms163_resolved_total: usize = 0;
+    let mut ms163_unresolved_total: usize = 0;
 
     for project_root in candidate_project_roots(rootfs, exclude_set) {
         // Detect v1 first — fail closed before emitting anything partial.
@@ -118,9 +133,45 @@ pub fn read(
         }
 
         // Tier C: root package.json fallback (FR-007a).
+        //
+        // Milestone 163 (T011/T012, closes #498): when Tier A + Tier B
+        // produced nothing at this project_root, we're either scanning a
+        // workspace peer (hoisted-node_modules monorepo layout — some
+        // OTHER project root in the scan had a lockfile that populated
+        // Tier A entries in the shared `entries` accumulator) OR a
+        // standalone package.json (no lockfile anywhere in the scan).
+        //
+        // Heuristic: the cross-workspace index built from the current
+        // `entries` snapshot is EMPTY iff no lockfile-derived Tier A
+        // entries exist in this scan. In that case we're standalone —
+        // preserve pre-163 design-tier phantom emission to avoid signal
+        // loss (a nameless package.json with no lockfile has no main-
+        // module attach point for a C115 annotation). Otherwise the
+        // scan HAS a workspace root; cross-resolve per Q1+Q2 unified
+        // disposition — deps that resolve become NAMES in the peer's
+        // main-module `depends`, deps that don't become C115
+        // annotations, and ZERO phantom PURLs enter the graph
+        // (SC-004 invariant for workspace-peer scans).
         if project_entries.is_empty() {
-            if let Some(fb_entries) = walk::read_root_package_json(&project_root, include_dev) {
+            let cross_workspace_index = walk::build_cross_workspace_index(&entries);
+            let ctx = walk::CrossWorkspaceContext {
+                peer_root: &project_root,
+                index: &cross_workspace_index,
+            };
+            let effective_ctx = if cross_workspace_index.is_empty() {
+                None // standalone scan — preserve pre-163 phantom emission
+            } else {
+                Some(&ctx) // workspace-peer context — cross-resolve
+            };
+            if let Some((fb_entries, acc)) =
+                walk::read_root_package_json(&project_root, include_dev, effective_ctx)
+            {
                 project_entries.extend(fb_entries);
+                ms163_resolved_total += acc.resolved_deps.len();
+                ms163_unresolved_total += acc.unresolved_deps.len();
+                if !acc.resolved_deps.is_empty() || !acc.unresolved_deps.is_empty() {
+                    peer_accumulators.insert(project_root.clone(), acc);
+                }
             }
         }
 
@@ -142,9 +193,43 @@ pub fn read(
     // committed lockfiles).
     let mut main_modules_emitted = 0usize;
     for project_root in candidate_project_roots(rootfs, exclude_set) {
-        let Some(synthesized) = walk::build_npm_main_module_entry(&project_root) else {
+        let Some(mut synthesized) = walk::build_npm_main_module_entry(&project_root) else {
             continue;
         };
+        // Milestone 163 (T013, closes #498): stamp the synthesized
+        // main-module with the workspace-peer accumulator collected
+        // at Tier C. `resolved_deps` become NAMES appended to
+        // `synthesized.depends` (downstream resolver at
+        // `scan_fs/mod.rs:729` walks these to build DependsOn edges via
+        // `name_to_purl` lookup against emitted Tier A entries).
+        // `unresolved_deps` become the C115
+        // `mikebom:unresolved-declared-dep` annotation on the peer's
+        // main-module (bare string when 1; JSON array
+        // sorted+deduplicated when ≥2).
+        if let Some(acc) = peer_accumulators.remove(&project_root) {
+            let existing_deps: std::collections::HashSet<String> =
+                synthesized.depends.iter().cloned().collect();
+            for name in &acc.resolved_deps {
+                if !existing_deps.contains(name) {
+                    synthesized.depends.push(name.clone());
+                }
+            }
+            if !acc.unresolved_deps.is_empty() {
+                let mut sorted: Vec<String> = acc.unresolved_deps.clone();
+                sorted.sort();
+                sorted.dedup();
+                let value = if sorted.len() == 1 {
+                    serde_json::Value::String(sorted.into_iter().next().unwrap_or_default())
+                } else {
+                    serde_json::Value::Array(
+                        sorted.into_iter().map(serde_json::Value::String).collect(),
+                    )
+                };
+                synthesized
+                    .extra_annotations
+                    .insert("mikebom:unresolved-declared-dep".to_string(), value);
+            }
+        }
         let purl_key = synthesized.purl.as_str().to_string();
         if let Some(existing) = entries.iter_mut().find(|e| e.purl.as_str() == purl_key) {
             // Augment in-place: layer C40 tag + sbom_tier:source over
@@ -174,6 +259,15 @@ pub fn read(
             entries.push(synthesized);
             main_modules_emitted += 1;
         }
+    }
+    // Milestone 163 (T013 FR-009): grep-friendly summary line.
+    if ms163_resolved_total > 0 || ms163_unresolved_total > 0 {
+        tracing::info!(
+            resolved_count = ms163_resolved_total,
+            phantom_prevented_count = ms163_resolved_total + ms163_unresolved_total,
+            unresolved_declared_count = ms163_unresolved_total,
+            "npm workspace-peer cross-resolution summary"
+        );
     }
 
     // Issue #256: nameless secondary `package.json` umbrella pass.
@@ -749,7 +843,19 @@ mod tests {
     fn monorepo_layout_discovers_each_workspace_package() {
         // Arbitrary layout — no image convention assumed. Root has a
         // lockfile (tier A fires there) and each service has only a
-        // package.json (tier C design-tier fallback fires).
+        // package.json.
+        //
+        // Milestone 163 (closes #498) reshape: fastify/next/bull are
+        // NOT in the root lockfile → per Q1+Q2 unified disposition, they
+        // are UNRESOLVABLE. Post-163 does NOT emit phantom empty-version
+        // entries for them (SC-004). Instead each peer's main-module
+        // component carries a `mikebom:unresolved-declared-dep` (C115)
+        // annotation naming its unresolvable dep. The test verifies:
+        //   1. root lockfile entry (`shared-lib`) still emitted.
+        //   2. all 3 sub-package main-modules emitted (per milestone 066).
+        //   3. root main-module (`monorepo`) emitted.
+        //   4. NO phantom fastify/next/bull entries in the output.
+        //   5. Each peer main-module has its C115 annotation stamped.
         let dir = tempfile::tempdir().unwrap();
         let root = dir.path();
 
@@ -779,15 +885,54 @@ mod tests {
         }
 
         let out = read(root, false, crate::scan_fs::ScanMode::Path, &Default::default()).unwrap();
-        // Expect: 1 lockfile entry (shared-lib) + 3 design-tier deps
-        // (fastify, next, bull). Each sub-package's own design-tier
-        // entry for its own name is allowed but the names are distinct
-        // PURLs so no dedup collision.
         let names: Vec<&str> = out.iter().map(|e| e.name.as_str()).collect();
+
+        // (1) Root lockfile entry preserved.
         assert!(names.contains(&"shared-lib"), "root lockfile: got {names:?}");
-        assert!(names.contains(&"fastify"), "services/api: got {names:?}");
-        assert!(names.contains(&"next"), "services/web: got {names:?}");
-        assert!(names.contains(&"bull"), "services/worker: got {names:?}");
+
+        // (2) Sub-package main-modules emitted per milestone 066.
+        for peer in ["@monorepo/api", "@monorepo/web", "@monorepo/worker"] {
+            assert!(
+                names.contains(&peer),
+                "milestone-066 main-module `{peer}` missing: got {names:?}"
+            );
+        }
+
+        // (3) Root main-module emitted (has name/version).
+        assert!(
+            names.contains(&"monorepo"),
+            "root main-module `monorepo` missing: got {names:?}"
+        );
+
+        // (4) Milestone 163 SC-004 invariant: NO phantom fastify/next/
+        // bull emitted (they're unresolvable → C115 annotations, not
+        // components).
+        for phantom in ["fastify", "next", "bull"] {
+            assert!(
+                !names.contains(&phantom),
+                "SC-004 violated: phantom `{phantom}` must NOT appear post-163: got {names:?}"
+            );
+        }
+
+        // (5) Milestone 163 C115 stamped on each peer's main-module.
+        for (svc, dep) in [("api", "fastify"), ("web", "next"), ("worker", "bull")] {
+            let peer_name = format!("@monorepo/{svc}");
+            let peer = out
+                .iter()
+                .find(|e| e.name == peer_name)
+                .unwrap_or_else(|| panic!("peer {peer_name} not found in {names:?}"));
+            let c115 = peer
+                .extra_annotations
+                .get("mikebom:unresolved-declared-dep")
+                .unwrap_or_else(|| {
+                    panic!("C115 annotation missing on peer {peer_name}");
+                });
+            assert_eq!(
+                c115.as_str(),
+                Some(dep),
+                "peer {peer_name} C115 value must name `{dep}`"
+            );
+        }
     }
 
     #[test]
