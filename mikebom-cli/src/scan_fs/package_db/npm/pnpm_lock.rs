@@ -47,8 +47,21 @@ fn collect_pnpm_dep_names(
     entry_tbl: &serde_yaml::Mapping,
     aliases: &mut Vec<super::alias_mapping::AliasResolution>,
     source_path: &str,
+    // Milestone 164 (T003, implements m164 FR-001): when true, push
+    // `"<name> <version>"` disambiguation form into `deps` so the
+    // downstream `name_to_purl` lookup at `scan_fs/mod.rs:519-525`
+    // (extended for npm per issue #262 + m087 cargo precedent) can
+    // pick the correct version when multiple emitted `pkg:npm/<name>@*`
+    // components exist. When false, preserve pre-164 bare-name
+    // emission — used at the v6/v7 inline call site to satisfy m164
+    // User Story 2 byte-identity guard.
+    emit_versioned: bool,
+    versioned_counter: Option<&mut usize>,
+    warn_counter: Option<&mut usize>,
 ) -> Vec<String> {
     let mut deps: Vec<String> = Vec::new();
+    let mut versioned_local: usize = 0;
+    let mut warn_local: usize = 0;
     for section in PNPM_DEP_SECTIONS {
         let Some(sub) = entry_tbl
             .get(serde_yaml::Value::String((*section).to_string()))
@@ -66,7 +79,15 @@ fn collect_pnpm_dep_names(
             if let Some(alias) =
                 super::alias_mapping::detect_pnpm_alias(dep_name, dep_ver_raw, source_path)
             {
-                deps.push(alias.aliased_name.clone());
+                // Milestone 164: when emit_versioned, carry the aliased
+                // version through for the downstream `rewrite_dep_names`
+                // pass to preserve on substitution (m164 FR-003 + R7).
+                if emit_versioned && !alias.aliased_version.is_empty() {
+                    deps.push(format!("{} {}", alias.aliased_name, alias.aliased_version));
+                    versioned_local += 1;
+                } else {
+                    deps.push(alias.aliased_name.clone());
+                }
                 aliases.push(alias);
                 continue;
             }
@@ -77,15 +98,37 @@ fn collect_pnpm_dep_names(
             let stripped = dep_pair_raw
                 .strip_prefix('/')
                 .unwrap_or(&dep_pair_raw);
-            let Some((canon_name, _canon_ver)) = parse_pnpm_key(stripped) else {
+            let Some((canon_name, canon_ver)) = parse_pnpm_key(stripped) else {
                 tracing::debug!(dep = %dep_pair_raw, "pnpm-lock: skipping non-registry dep value");
                 continue;
             };
-            deps.push(canon_name);
+            // Milestone 164 (T003, FR-001 + FR-008): thread the version
+            // through when the caller wants disambiguation.
+            if emit_versioned {
+                if canon_ver.is_empty() {
+                    tracing::warn!(
+                        key = %stripped,
+                        "pnpm-lock v9: peer-dep-suffixed key parsed to empty version; falling back to bare-name form"
+                    );
+                    warn_local += 1;
+                    deps.push(canon_name);
+                } else {
+                    versioned_local += 1;
+                    deps.push(format!("{canon_name} {canon_ver}"));
+                }
+            } else {
+                deps.push(canon_name);
+            }
         }
     }
     deps.sort();
     deps.dedup();
+    if let Some(c) = versioned_counter {
+        *c += versioned_local;
+    }
+    if let Some(c) = warn_counter {
+        *c += warn_local;
+    }
     deps
 }
 
@@ -102,6 +145,10 @@ fn build_snapshots_lookup(
     root: &serde_yaml::Value,
     aliases: &mut Vec<super::alias_mapping::AliasResolution>,
     source_path: &str,
+    // Milestone 164 (T004): threaded from `parse_pnpm_lock` for
+    // the FR-009 info-log summary.
+    versioned_counter: &mut usize,
+    warn_counter: &mut usize,
 ) -> std::collections::HashMap<String, Vec<String>> {
     let mut out = std::collections::HashMap::new();
     let Some(snapshots) = root
@@ -119,7 +166,16 @@ fn build_snapshots_lookup(
         };
         let canonical = format!("{name}@{version}");
         let Some(tbl) = entry.as_mapping() else { continue };
-        let deps = collect_pnpm_dep_names(tbl, aliases, source_path);
+        // Milestone 164 (T004, FR-001): v9 snapshots are the load-bearing
+        // multi-version site — emit disambiguation form.
+        let deps = collect_pnpm_dep_names(
+            tbl,
+            aliases,
+            source_path,
+            /* emit_versioned = */ true,
+            Some(versioned_counter),
+            Some(warn_counter),
+        );
         out.insert(canonical, deps);
     }
     out
@@ -148,6 +204,11 @@ pub(crate) fn parse_pnpm_lock(
 ) -> Vec<PackageDbEntry> {
     let mut out = Vec::new();
     let mut fell_back_count: usize = 0;
+    // Milestone 164 (T006, FR-009): tally counters threaded through
+    // `build_snapshots_lookup` and surfaced in the `pnpm-lock parsed`
+    // info-log summary at the end of this function.
+    let mut multi_version_disambiguated_count: usize = 0;
+    let mut malformed_key_warn_count: usize = 0;
 
     // Milestone 157: lockfileVersion detection for FR-007 / FR-008
     // diagnostic gating. Field may be quoted string ('9.0') or
@@ -176,7 +237,13 @@ pub(crate) fn parse_pnpm_lock(
     // lookup keyed by canonical name@version. Empty HashMap on
     // v6/v7 (no snapshots section) — the inline packages path
     // takes precedence via collect_pnpm_dep_names.
-    let snapshots_lookup = build_snapshots_lookup(root, &mut aliases, source_path);
+    let snapshots_lookup = build_snapshots_lookup(
+        root,
+        &mut aliases,
+        source_path,
+        &mut multi_version_disambiguated_count,
+        &mut malformed_key_warn_count,
+    );
 
     // v6/v7 put per-package info under `packages:` keyed by
     // "/<name>@<version>" (or "/@scope/name@version"). v9 removes
@@ -259,7 +326,16 @@ pub(crate) fn parse_pnpm_lock(
                 Vec::new()
             }
         } else {
-            collect_pnpm_dep_names(tbl, &mut aliases, source_path)
+            // Milestone 164 (T005): v6/v7 inline path preserves pre-164
+            // bare-name emission (User Story 2 byte-identity guard).
+            collect_pnpm_dep_names(
+                tbl,
+                &mut aliases,
+                source_path,
+                /* emit_versioned = */ false,
+                None,
+                None,
+            )
         };
 
         out.push(PackageDbEntry {
@@ -374,6 +450,10 @@ pub(crate) fn parse_pnpm_lock(
         packages_count = packages.len(),
         snapshots_count = snapshots_lookup.len(),
         fell_back_to_snapshots = fell_back_count,
+        // Milestone 164 (T006, FR-009): two new fields extending the
+        // existing summary line. Backward-compat for regex consumers.
+        multi_version_disambiguated_count = multi_version_disambiguated_count,
+        malformed_key_warn_count = malformed_key_warn_count,
         "pnpm-lock parsed"
     );
 
@@ -497,7 +577,10 @@ snapshots:
         let parsed: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
         let out = parse_pnpm_lock(&parsed, "/pnpm-lock.yaml", false);
         let foo = entry_by_name(&out, "foo").expect("foo emitted");
-        assert_eq!(foo.depends, vec!["bar"]);
+        // Milestone 164 (T003): v9 depends now carry version-qualified
+        // disambiguation form so the downstream `name_to_purl` lookup
+        // picks the correct version when multi-version cases arise.
+        assert_eq!(foo.depends, vec!["bar 2.0.0"]);
     }
 
     #[test]
@@ -543,8 +626,9 @@ snapshots:
         let foo = entry_by_name(&out, "foo").expect("foo emitted");
         // Identity peer-suffix stripped from PURL.
         assert_eq!(foo.purl.as_str(), "pkg:npm/foo@1.0.0");
-        // Value peer-suffix stripped from edge target.
-        assert_eq!(foo.depends, vec!["baz"]);
+        // Value peer-suffix stripped from edge target. Milestone 164
+        // (T003): v9 depends carry version-qualified disambiguation form.
+        assert_eq!(foo.depends, vec!["baz 3.0.0"]);
     }
 
     #[test]
@@ -598,10 +682,11 @@ snapshots:
         let parsed: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
         let out = parse_pnpm_lock(&parsed, "/pnpm-lock.yaml", false);
         let foo = entry_by_name(&out, "foo").expect("foo emitted");
-        // Sorted + deduped union (shared@5.0.0 appears once).
+        // Sorted + deduped union (shared@5.0.0 appears once). Milestone
+        // 164 (T003): v9 depends carry version-qualified form.
         assert_eq!(
             foo.depends,
-            vec!["a", "b", "c", "shared"]
+            vec!["a 1.0.0", "b 2.0.0", "c 3.0.0", "shared 5.0.0"]
         );
     }
 
@@ -659,9 +744,10 @@ snapshots:
         let foo = entry_by_name(&out, "foo").expect("foo emitted");
         assert_eq!(
             foo.depends,
-            vec!["only-snapshots"],
+            vec!["only-snapshots 2.0.0"],
             "v9 MUST read edges from snapshots and MUST NOT emit \
-             the specifier-only edge from packages:.peerDependencies"
+             the specifier-only edge from packages:.peerDependencies. \
+             Milestone 164 (T003): depends carry version-qualified form."
         );
     }
 
@@ -791,14 +877,18 @@ snapshots:
         );
 
         // The depender's depends list references the aliased identity.
+        // Milestone 164 (T003 + T007): v9 depends now carry the
+        // version-qualified disambiguation form; milestone-159 alias
+        // substitution preserves the version segment through the rename
+        // (per T007 `rewrite_dep_names` update).
         let docusaurus = by_name["docusaurus-core"];
-        assert!(docusaurus.depends.contains(&"@slorber/react-helmet-async".to_string()));
-        assert!(docusaurus.depends.contains(&"@docusaurus/react-loadable".to_string()));
+        assert!(docusaurus.depends.contains(&"@slorber/react-helmet-async 1.3.0".to_string()));
+        assert!(docusaurus.depends.contains(&"@docusaurus/react-loadable 6.0.0".to_string()));
         assert!(!docusaurus.depends.contains(&"react-helmet-async".to_string()));
 
         let cliui = by_name["cliui"];
-        assert!(cliui.depends.contains(&"string-width".to_string()));
-        assert!(cliui.depends.contains(&"strip-ansi".to_string()));
+        assert!(cliui.depends.contains(&"string-width 4.2.3".to_string()));
+        assert!(cliui.depends.contains(&"strip-ansi 6.0.1".to_string()));
         assert!(!cliui.depends.contains(&"string-width-cjs".to_string()));
     }
 
@@ -866,6 +956,243 @@ snapshots:
                 !entry.extra_annotations.contains_key("mikebom:pnpm-alias"),
                 "no-alias lockfile MUST NOT add mikebom:pnpm-alias; {} did",
                 entry.name
+            );
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // Milestone 164 (T008-T014, implements m164 FR-001 through FR-010)
+    // Cross-workspace multi-version disambiguation unit tests.
+    // -----------------------------------------------------------------
+
+    fn make_yaml_mapping(yaml: &str) -> serde_yaml::Mapping {
+        let v: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+        v.as_mapping().unwrap().clone()
+    }
+
+    /// T008: `emit_versioned=true` produces `"<name> <version>"` form
+    /// per SC-007 (a) + (b).
+    #[test]
+    fn t008_collect_pnpm_dep_names_emit_versioned_true_produces_versioned() {
+        let tbl = make_yaml_mapping(
+            r#"
+dependencies:
+  foo: 1.2.3(peer@4.5.6)
+"#,
+        );
+        let mut aliases = Vec::new();
+        let deps = collect_pnpm_dep_names(&tbl, &mut aliases, "/test", true, None, None);
+        assert_eq!(deps, vec!["foo 1.2.3".to_string()]);
+    }
+
+    /// T009: `emit_versioned=false` preserves pre-164 bare-name form
+    /// per SC-007 (b) + US2 regression guard.
+    #[test]
+    fn t009_collect_pnpm_dep_names_emit_versioned_false_preserves_bare_name() {
+        let tbl = make_yaml_mapping(
+            r#"
+dependencies:
+  foo: 1.2.3(peer@4.5.6)
+"#,
+        );
+        let mut aliases = Vec::new();
+        let deps = collect_pnpm_dep_names(&tbl, &mut aliases, "/test", false, None, None);
+        assert_eq!(deps, vec!["foo".to_string()]);
+    }
+
+    /// T010: FR-008 malformed-key fallback. Per research R3 option (a),
+    /// verified empirically 2026-07-05 (`malformed_key_warn_count=0`
+    /// on live podman-desktop): `parse_pnpm_key` returns `None` (never
+    /// `Some((name, ""))`) for empty-version keys, so the WARN branch
+    /// is defensive-only. This test asserts THAT parser property —
+    /// the FR-008 branch fires only if `parse_pnpm_key` ever regresses
+    /// to returning `Some(_, "")`. Any future change to `parse_pnpm_key`
+    /// that violates this invariant will surface here.
+    #[test]
+    fn t010_parse_pnpm_key_never_returns_empty_version() {
+        // Cases that should return None (either malformed or unparseable):
+        let none_cases = &[
+            "foo@",         // empty version
+            "@scope/foo@",  // scoped empty version
+            "@scope/foo",   // no @version separator (scope-only)
+            "foo",          // no @version separator
+            "",             // empty
+        ];
+        for case in none_cases {
+            let result = parse_pnpm_key(case);
+            assert!(
+                result.is_none() || result.as_ref().map(|(_, v)| !v.is_empty()).unwrap_or(true),
+                "parse_pnpm_key({case:?}) returned Some with empty version — \
+                 milestone-164 FR-008 WARN branch would fire on this input. \
+                 Fix `parse_pnpm_key` to return None on empty-version keys."
+            );
+        }
+    }
+
+    /// T011: v9 `build_snapshots_lookup` emits versioned form + threads
+    /// counters per SC-007 (b).
+    #[test]
+    fn t011_build_snapshots_lookup_emits_versioned_for_v9() {
+        let yaml = r#"
+lockfileVersion: '9.0'
+packages:
+  foo@1.0.0:
+    resolution: {integrity: sha512-aaaa}
+  bar@2.0.0:
+    resolution: {integrity: sha512-bbbb}
+snapshots:
+  foo@1.0.0:
+    dependencies:
+      bar: 2.0.0
+  bar@2.0.0: {}
+"#;
+        let root: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+        let mut aliases = Vec::new();
+        let mut versioned = 0usize;
+        let mut warned = 0usize;
+        let lookup =
+            build_snapshots_lookup(&root, &mut aliases, "/test.yaml", &mut versioned, &mut warned);
+        assert_eq!(lookup.get("foo@1.0.0"), Some(&vec!["bar 2.0.0".to_string()]));
+        assert!(versioned >= 1, "versioned_counter must increment on v9");
+        assert_eq!(warned, 0, "no malformed keys expected on well-formed fixture");
+    }
+
+    /// T012: multi-version edges resolve correctly — parents pointing
+    /// at different versions of the same package. Per SC-007 (f).
+    #[test]
+    fn t012_parse_pnpm_lock_multi_version_edges_resolve_correctly() {
+        let yaml = r#"
+lockfileVersion: '9.0'
+packages:
+  foo@1.0.0:
+    resolution: {integrity: sha512-aaaa}
+  foo@2.0.0:
+    resolution: {integrity: sha512-bbbb}
+  parent-a@1.0.0:
+    resolution: {integrity: sha512-cccc}
+  parent-b@1.0.0:
+    resolution: {integrity: sha512-dddd}
+snapshots:
+  foo@1.0.0: {}
+  foo@2.0.0: {}
+  parent-a@1.0.0:
+    dependencies:
+      foo: 1.0.0
+  parent-b@1.0.0:
+    dependencies:
+      foo: 2.0.0
+"#;
+        let root: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+        let out = parse_pnpm_lock(&root, "/test.yaml", false);
+        // (a) both foo@1.0.0 AND foo@2.0.0 emitted
+        let foo_versions: Vec<&str> = out
+            .iter()
+            .filter(|e| e.name == "foo")
+            .map(|e| e.version.as_str())
+            .collect();
+        assert!(foo_versions.contains(&"1.0.0"), "foo@1.0.0 missing: {foo_versions:?}");
+        assert!(foo_versions.contains(&"2.0.0"), "foo@2.0.0 missing: {foo_versions:?}");
+        // (b) parent-a → foo 1.0.0 (versioned form for downstream disambiguation)
+        let parent_a = entry_by_name(&out, "parent-a").expect("parent-a emitted");
+        assert_eq!(parent_a.depends, vec!["foo 1.0.0"]);
+        // (c) parent-b → foo 2.0.0
+        let parent_b = entry_by_name(&out, "parent-b").expect("parent-b emitted");
+        assert_eq!(parent_b.depends, vec!["foo 2.0.0"]);
+    }
+
+    /// T013: FR-005 — emitted PURL NEVER contains peer-dep suffix `(`.
+    #[test]
+    fn t013_parse_pnpm_lock_purl_never_includes_peer_dep_suffix() {
+        let yaml = r#"
+lockfileVersion: '9.0'
+packages:
+  foo@1.0.0:
+    resolution: {integrity: sha512-aaaa}
+  bar@2.0.0:
+    resolution: {integrity: sha512-bbbb}
+snapshots:
+  foo@1.0.0(bar@2.0.0):
+    dependencies:
+      bar: 2.0.0
+  bar@2.0.0: {}
+"#;
+        let root: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+        let out = parse_pnpm_lock(&root, "/test.yaml", false);
+        for entry in &out {
+            assert!(
+                !entry.purl.as_str().contains('('),
+                "FR-005 violated: emitted PURL contains `(`: {}",
+                entry.purl.as_str()
+            );
+        }
+    }
+
+    /// T014: FR-010 — `peerDependencies` inclusion behavior unchanged
+    /// by milestone 164 (still part of the SC-004 3-section union per
+    /// milestone 157 Q1). Milestone 164 does NOT touch peer-dep
+    /// semantics; verifies pre-164 handling persists.
+    #[test]
+    fn t014_peer_dependencies_handling_unchanged_after_164() {
+        let yaml = r#"
+lockfileVersion: '9.0'
+packages:
+  foo@1.0.0:
+    resolution: {integrity: sha512-aaaa}
+  peer-dep@2.0.0:
+    resolution: {integrity: sha512-bbbb}
+snapshots:
+  foo@1.0.0:
+    peerDependencies:
+      peer-dep: 2.0.0
+  peer-dep@2.0.0: {}
+"#;
+        let root: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+        let out = parse_pnpm_lock(&root, "/test.yaml", false);
+        let foo = entry_by_name(&out, "foo").expect("foo emitted");
+        // Per milestone 157 Q1, peerDependencies is part of the union;
+        // milestone 164 preserves that behavior AND applies the new
+        // disambiguation-key form to peer-dep edges (uniform treatment
+        // across all 3 sub-sections).
+        assert_eq!(foo.depends, vec!["peer-dep 2.0.0"]);
+    }
+
+    /// T016 (US2): pnpm v6/v7 inline path emits bare-name form (NO
+    /// version-qualified disambiguation). Confirms FR-002 byte-identity
+    /// guard for pre-v9 lockfiles — even though `collect_pnpm_dep_names`
+    /// now has an `emit_versioned` parameter, the v6/v7 code path calls
+    /// it with `emit_versioned=false` so pre-164 output shape is
+    /// preserved. Milestone 164 (T005 + T016 US2).
+    #[test]
+    fn t016_v6_v7_inline_path_emits_bare_names() {
+        let yaml = r#"
+lockfileVersion: '6.0'
+packages:
+  /foo@1.0.0:
+    resolution: {integrity: sha512-aaaa}
+    dependencies:
+      bar: 2.0.0
+      baz: 3.0.0
+    peerDependencies:
+      qux: 4.0.0
+    optionalDependencies:
+      opt: 5.0.0
+"#;
+        let root: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+        let out = parse_pnpm_lock(&root, "/test.yaml", false);
+        let foo = entry_by_name(&out, "foo").expect("foo emitted");
+        // Pre-164 bare-name form preserved for v6/v7 lockfiles.
+        assert_eq!(
+            foo.depends,
+            vec!["bar", "baz", "opt", "qux"],
+            "v6/v7 inline path MUST emit bare-name form (US2 byte-identity guard); \
+             got {:?}",
+            foo.depends
+        );
+        // Guard: no versioned form leaked through.
+        for dep in &foo.depends {
+            assert!(
+                !dep.contains(' '),
+                "v6/v7 dep `{dep}` MUST NOT contain space — versioned form leaked from m164 path"
             );
         }
     }
