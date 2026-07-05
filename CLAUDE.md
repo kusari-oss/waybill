@@ -199,6 +199,7 @@ Auto-generated from all feature plans. Last updated: 2026-07-05
 - N/A — all state in-process per scan; matches every milestone since 002. The allowlist lives in the compiled binary; the synthetic components live in the `Vec<PackageDbEntry>` returned by `gem::read`. (162-ruby-built-in-gems)
 - Rust stable (workspace toolchain inherited from milestones 001–162; no nightly required). + Existing only — `mikebom_common::types::purl::{Purl, encode_purl_segment}` (already used by `npm/mod.rs::build_npm_purl`), `serde`/`serde_json` (annotation values), `tracing` (FR-009 log), `anyhow`/`thiserror` (error propagation). **Zero new Cargo dependencies.** No semver crate needed — Q2 disposition sidesteps range-comparison logic (the lockfile is authoritative). (163-npm-phantom-edges)
 - N/A — cross-workspace resolution index lives in `Vec<PackageDbEntry>` scan-locally, rebuilt from Tier-A output per scan. Matches every milestone since 002. (163-npm-phantom-edges)
+- Rust stable (workspace toolchain inherited from milestones 001–163; no nightly required for this user-space-only work). + Existing only — `serde_yaml` (already used pervasively in the pnpm-lock parser), `tracing`, `anyhow`. **Zero new Cargo dependencies.** (164-pnpm-multi-version-edges)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -261,9 +262,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 164-pnpm-multi-version-edges: Added Rust stable (workspace toolchain inherited from milestones 001–163; no nightly required for this user-space-only work). + Existing only — `serde_yaml` (already used pervasively in the pnpm-lock parser), `tracing`, `anyhow`. **Zero new Cargo dependencies.**
 - 163-npm-phantom-edges: Added Rust stable (workspace toolchain inherited from milestones 001–162; no nightly required). + Existing only — `mikebom_common::types::purl::{Purl, encode_purl_segment}` (already used by `npm/mod.rs::build_npm_purl`), `serde`/`serde_json` (annotation values), `tracing` (FR-009 log), `anyhow`/`thiserror` (error propagation). **Zero new Cargo dependencies.** No semver crate needed — Q2 disposition sidesteps range-comparison logic (the lockfile is authoritative).
 - 162-ruby-built-in-gems: Added Rust stable (workspace toolchain inherited from milestones 001–161; no nightly required for this user-space-only work). + Existing only — `mikebom_common::types::purl::{Purl, encode_purl_segment}` (already used by `gem.rs::build_gem_purl`), `serde`/`serde_json` (annotation values), `tracing` (FR-011 log), `anyhow`/`thiserror` (error propagation). **Zero new Cargo dependencies.** The allowlist is a `const &[&str]` array literal.
-- 161-go-workspace-edges: Added Rust stable (workspace toolchain inherited from milestones 001–160; no nightly required for this user-space-only work). + Existing only — `std::process::Command` for the `GOWORK=off go mod graph` subprocess invocations (same pattern as milestone-055 `run_go_mod_graph` at `go_mod_graph.rs:81`), `std::fs::exists` for `go.work` detection, `serde`/`serde_json` (annotation values), `tracing` (FR-011 log), `anyhow`/`thiserror` (error propagation). **Zero new Cargo dependencies.** The go.work parser is stdlib-only (line-based, mirrors the existing `parse_go_mod` structure at `legacy.rs:200`).
 
 
 <!-- MANUAL ADDITIONS START -->

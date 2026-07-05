@@ -313,19 +313,34 @@ pub(crate) fn detect_yarn_v1_alias(
 /// Rewrite a dep-name list to use aliased canonical names per FR-005.
 ///
 /// For each dep-name in `dep_names`:
-///   - Look up in `alias_map`. If present, replace with
-///     `aliased_name`.
-///   - Otherwise preserve byte-identically.
+///   - Split on the FIRST space to separate `<name>` from an optional
+///     `<version>` suffix (per milestone 164's version-qualified
+///     disambiguation form emitted by `collect_pnpm_dep_names` when
+///     `emit_versioned=true`).
+///   - Look up `<name>` in `alias_map`. If present:
+///       * With version → emit `format!("{aliased_name} {version}")`
+///         (version preserved through alias substitution — m164 FR-003
+///         alias-composition contract).
+///       * Without version → emit bare `aliased_name` (pre-164
+///         behavior preserved for the no-version case).
+///   - Otherwise preserve byte-identically (both name and any version).
 ///
 /// Preserves the input ordering.
 pub(crate) fn rewrite_dep_names(dep_names: &[String], alias_map: &AliasMap) -> Vec<String> {
     dep_names
         .iter()
-        .map(|name| {
-            alias_map
-                .get(name)
-                .map(|ident| ident.aliased_name.clone())
-                .unwrap_or_else(|| name.clone())
+        .map(|dep| {
+            let (name, version_opt) = match dep.find(' ') {
+                Some(idx) => (&dep[..idx], Some(&dep[idx + 1..])),
+                None => (dep.as_str(), None),
+            };
+            match alias_map.get(name) {
+                Some(ident) => match version_opt {
+                    Some(v) => format!("{} {}", ident.aliased_name, v),
+                    None => ident.aliased_name.clone(),
+                },
+                None => dep.clone(),
+            }
         })
         .collect()
 }
@@ -544,6 +559,30 @@ mod tests {
                 "@slorber/react-helmet-async".to_string(),
             ]
         );
+    }
+
+    // ─── Milestone 164 (T007a): rewrite_dep_names must preserve the
+    // version segment through alias substitution when milestone-164's
+    // `emit_versioned=true` path puts `"<name> <version>"` into
+    // `depends`. Closes the FR-003 alias-composition test gap.
+    #[test]
+    fn t007a_rewrite_dep_names_preserves_version() {
+        let alias_map = make_alias_map(&[("foo", "@real/foo", "1.2.3")]);
+
+        // Case (a): bare name + alias hit → aliased bare (no version to
+        // preserve — pre-164 behavior).
+        let out_bare = rewrite_dep_names(&["foo".to_string()], &alias_map);
+        assert_eq!(out_bare, vec!["@real/foo".to_string()]);
+
+        // Case (b): versioned form + alias hit → version preserved
+        // through substitution (m164 FR-003).
+        let out_versioned = rewrite_dep_names(&["foo 1.2.3".to_string()], &alias_map);
+        assert_eq!(out_versioned, vec!["@real/foo 1.2.3".to_string()]);
+
+        // Case (c): versioned form + no alias hit → passthrough
+        // unchanged (byte-identical).
+        let out_passthrough = rewrite_dep_names(&["baz 4.5.6".to_string()], &alias_map);
+        assert_eq!(out_passthrough, vec!["baz 4.5.6".to_string()]);
     }
 
     // ─── AliasEcosystem helper tests ───

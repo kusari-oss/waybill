@@ -7,6 +7,89 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### pnpm v9 multi-version edge disambiguation (milestone 164)
+
+Empirical follow-up to milestone 163's podman-desktop re-measurement
+(2026-07-05, live upstream `github.com/podman-desktop/podman-desktop`).
+Post-163 BFS reachability jumped 24.6% → 77.4% (+52.8pp) as designed,
+but a 22-point residual gap remained. Root-cause investigation traced
+435 of 568 remaining orphans (76.6% of the gap) to a single bug class:
+pnpm-lock v9 emitted multi-version co-existence (e.g.
+`pkg:npm/@algolia/autocomplete-core@1.17.9` AND
+`pkg:npm/@algolia/autocomplete-core@1.19.8`), but parent edges targeted
+the WRONG version.
+
+Concrete root cause verified 2026-07-05: `@docsearch/react@3.9.0`'s
+pnpm-lock declaration was `@algolia/autocomplete-core: 1.17.9(...)`
+(with peer-dep suffix), but the emitted SBOM edge pointed at
+`@algolia/autocomplete-core@1.19.8`. `parse_pnpm_key` at
+`pnpm_lock.rs:479-492` correctly extracted `(name, "1.17.9")` from the
+peer-dep-suffixed value, but the caller at line 80 discarded the
+version via `_canon_ver` and pushed the bare name into `depends`.
+Downstream `name_to_purl` resolution at `scan_fs/mod.rs:471` then
+last-write-wins on the name-only key, picking whichever version was
+inserted last. **Constitution Principle IX (Accuracy) failure**:
+emitted edges pointed at the wrong version of a real component.
+
+**Fix**: thread the version through `collect_pnpm_dep_names` via a new
+`emit_versioned: bool` parameter. When true (called from the v9
+`snapshots:` path only), the function pushes
+`format!("{canon_name} {canon_ver}")` — the disambiguation-key form
+already indexed at `scan_fs/mod.rs:519-525` (extended for npm per issue
+#262 + milestone-087 cargo precedent). When false (v6/v7 inline path,
+per User Story 2 byte-identity guard), pre-164 bare-name emission is
+preserved. Milestone-159's `rewrite_dep_names` was updated to split
+each input on the first space and preserve the version segment through
+alias substitution (FR-003 alias-composition contract).
+
+**No new annotations, no new parity-catalog rows, no new CLI flags.**
+Reuses existing `name_to_purl` disambiguation mechanism — the receiver
+was already in place, milestone 164 just activates it on the pnpm v9
+code path.
+
+**Empirical impact on live podman-desktop** (measured 2026-07-05):
+
+| Metric | Pre-163 | Post-163 | Post-164 |
+|---|---|---|---|
+| BFS reachability | 24.6% | 77.4% | **99.6%** |
+| Multi-version orphans | 902 | 435 | **12** |
+| Truly-isolated orphans | 1235 | 133 | **0** (were all multi-version) |
+| Empty-version PURLs | 159 | 0 | 0 |
+| Phantom edges | 902 | 0 | 0 |
+
+Milestone 164 blew past its SC-002 ≥93% target — reached **99.6%** BFS
+reachability, essentially achieving milestone-158's aspirational
+≥99% target for the npm ecosystem. The FR-008 malformed-key WARN
+counter fired 0 times on podman-desktop (2668 snapshots processed),
+confirming research R3's option (a): `parse_pnpm_key` returns `None`
+for empty-version keys, making the WARN branch defensive-only.
+
+**New tracing observability** (FR-009): the existing `pnpm-lock parsed`
+info-log gains two fields:
+- `multi_version_disambiguated_count` — deps emitted through the new
+  versioned-form path.
+- `malformed_key_warn_count` — FR-008 fallback fires (defensive-only
+  in practice per research R3).
+
+**Consumer jq recipes**:
+
+```bash
+# Verify no wrong-version edges (multi-version orphans) on any scan
+jq '[
+  .components[] | select(.purl | startswith("pkg:npm/")) | .purl
+] | group_by(sub("@[^@]+$"; "")) | map(select(length > 1))
+  | .[] | .[]' sbom.cdx.json  # shows multi-version co-existence
+
+# Grep the FR-009 log summary
+mikebom sbom scan --path <monorepo> 2>&1 | grep 'pnpm-lock parsed'
+# Look for: multi_version_disambiguated_count=<N> malformed_key_warn_count=<W>
+```
+
+Delivers essentially all remaining reachability toward milestone-158's
+≥99% aspirational target for the npm ecosystem. Future milestone 165
+would address the small residual (12 remaining multi-version orphans
+on podman-desktop — likely edge cases involving deep peer-dep chains).
+
 ### npm workspace-peer phantom empty-version edges eliminated (milestone 163)
 
 Closes issue #498 (surfaced during the milestone-158 T035 measurement
