@@ -1975,6 +1975,7 @@ pub async fn execute(
         go_graph_completeness,
         go_graph_completeness_reason,
         go_transitive_coverage,
+        go_workspace_mode,
         scan_target_coord,
         divergence_records,
     } = scan_fs::scan_path(
@@ -2589,6 +2590,9 @@ pub async fn execute(
         // signal for the C110/C111 annotations. Distinct from
         // graph-completeness per research.md R1.
         go_transitive_coverage: go_transitive_coverage.as_ref(),
+        // Milestone 161 (T014): doc-scope Go-workspace-mode signal
+        // for the C112 annotation.
+        go_workspace_mode: go_workspace_mode.as_ref(),
         // Milestone 072 / T010-T014: when --bind-to-source was set
         // AND the scan target is image-tier, expose the source-doc
         // identifier so each format's metadata builder can emit the

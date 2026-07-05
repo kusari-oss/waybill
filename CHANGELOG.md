@@ -7,6 +7,108 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Go workspace-mode detection annotation (milestone 161)
+
+Closes issue #495 (surfaced during the milestone-155–160 audit
+expansion against `kusari-sandbox/test-*` repos). Empirical
+2026-07-03 measurement on `kusari-sandbox/test-kubernetes` (Kubernetes
+v1.x with `go.work` + 40+ nested modules) showed mikebom's Go
+dep-graph edges were **30.8% wrong** (26.6% DIVERGE + 4.2%
+EMITTED-SUPERSET) vs `GOWORK=off go mod graph` executed in each
+`use`d module's own directory. Base type libraries like `k8s.io/api`
+appeared to depend on leaf applications like `kube-proxy` — a
+Constitution Principle IX (Accuracy) failure that amplifies
+vulnerability-scan false positives.
+
+**Fix**: This milestone lands the structural infrastructure — go.work
+parser, workspace-mode detection, C112 document-scope annotation, +
+the Q1 hybrid `EdgeDisposition` classifier for the follow-on
+workspace-attribution fix.
+
+**New annotation**:
+
+- `mikebom:go-workspace-mode` (C112) — three-value document-scope
+  string with grammar `detected: <N> use-modules` | `absent` |
+  `malformed: <reason>`. Distinct from milestone-158's
+  `mikebom:graph-completeness` (C104) and milestone-160's
+  `mikebom:go-transitive-coverage` (C110) per research.md R1: C104
+  reports whether we built a top-level graph; C110 reports Go
+  transitive-edge coverage; C112 reports whether the scanned Go repo
+  used `go.work` workspace mode and how many `use`d modules were
+  discovered. Emitted iff a `go.work` file is present at the scanned
+  root AND `GOWORK=off` is NOT set (byte-identity guard per SC-003).
+
+**Q1–Q3 clarifications (2026-07-04)**:
+
+- Q1: `v0.0.0-unknown` false-edge disposition — hybrid rule. SUPPRESS
+  the edge iff target is workspace-internal AND source's own require
+  block does NOT name the target; RESOLVE the version from the sibling's
+  go.mod iff target IS workspace-internal AND source's require block DOES
+  name the target. Matches FR-002 truthful per-module attribution.
+- Q2: empty-use case (`go.work` present with zero `use` entries)
+  emits `detected: 0 use-modules` — legitimate scaffolding scenario,
+  NOT malformed.
+- Q3: SC-001 ground-truth = per-`use`d-module `cd <use-module-dir> &&
+  GOWORK=off go mod graph`. Reproducible by any auditor with `go`
+  installed; matches milestone-160's Q3 per-module methodology.
+
+**Consumer jq recipes**:
+
+```bash
+# Detect workspace-mode SBOMs (CDX)
+jq -r '.metadata.properties[] | select(.name == "mikebom:go-workspace-mode") | .value' sbom.cdx.json
+
+# Extract use-module count
+jq -r '.metadata.properties[]
+       | select(.name == "mikebom:go-workspace-mode")
+       | .value
+       | capture("detected: (?<n>[0-9]+) use-modules")
+       | .n' sbom.cdx.json
+```
+
+**What's in this PR (structural infra)**:
+
+- `gowork.rs` sibling module with 3 types (`WorkspaceMode`,
+  `GoWorkDocument`, `EdgeDisposition`) + `parse_go_work` line-based
+  stdlib parser + `classify_workspace_edge` Q1 hybrid classifier +
+  `merge_workspace_replaces` FR-005 workspace-precedence helper.
+- Detection at Go-scan entry via `detect_go_workspace_mode` in
+  `legacy.rs` (honors `GOWORK=off`).
+- Full-pipeline threading: `WorkspaceContext` gains 3 fields
+  (workspace_mode + use_modules_map + workspace_replaces);
+  `GoScanSignals` + `ScanDiagnostics` + `ScanResult` + `ScanArtifacts`
+  each gain the `go_workspace_mode` field.
+- Parity catalog C112 registration across CDX + SPDX 2.3 + SPDX 3.
+- Doc-scope C112 emission in all 3 formats + 4 unit tests + 3
+  integration tests.
+
+**Follow-on work** (NOT in this PR — per Assumption §7 empirically-
+adjustable clause):
+
+- T020-T027 (FR-007 investigation + fixes + Q1 hybrid consumer wiring).
+- T053 (test-kubernetes fixture landing in `kusari-oss/mikebom-fixtures`).
+- T040 SC-001+SC-002+SC-006 audit test against test-kubernetes.
+
+The unit tests DO exercise the Q1 hybrid classifier + FR-005 workspace-
+precedence merge, so the classifier logic is proven correct in
+isolation — only the consumer wiring is deferred. Once the fixture
+lands, the follow-on PR wires the classifier into `legacy::read`'s
+post-resolution sweep and runs the audit test to verify SC-001
+≤ 5% wrong edges.
+
+**Backward compatibility**: SC-003 dual-side byte-identity verified —
+zero golden bytes change (33 pre-161 goldens byte-identical). The
+new C112 annotation is absent-when-Absent (no `go.work` file at
+scanned root), so non-workspace scans produce byte-identical output.
+
+**Test surface**: 16 new unit tests in `gowork.rs` (SC-009 sub-items
+a–j + `use .` case + workspace-precedence-replace + wire-vocab
+sanity + closed-vocab codes). 4 new unit tests in
+`cyclonedx/metadata.rs` (C112 emission conditions across Detected/
+Absent/None/Malformed variants). 3 new integration tests in
+`mikebom-cli/tests/go_workspace_edges.rs` (synthetic 3-module go.work
+fixture end-to-end).
+
 ### Go transitive-edge coverage annotations (milestone 160)
 
 Closes issue #494 (surfaced during the milestone-157/158/159 Round-2

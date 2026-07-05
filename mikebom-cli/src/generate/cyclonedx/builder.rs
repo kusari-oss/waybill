@@ -63,6 +63,11 @@ pub struct CycloneDxBuilder {
     /// `None` ⇒ no Go scan (annotation absent).
     go_transitive_coverage:
         Option<crate::scan_fs::package_db::golang::graph_resolver::GoTransitiveCoverage>,
+    /// Milestone 161 (T041): doc-scope Go-workspace-mode signal.
+    /// Distinct from `go_transitive_coverage` per research.md R1.
+    /// `None` ⇒ no `go.work` at scanned root (C112 absent).
+    go_workspace_mode:
+        Option<crate::scan_fs::package_db::golang::gowork::WorkspaceMode>,
     /// Milestone 072 / T010: source-tier SBOM identity for the
     /// document-level cross-document reference
     /// (`metadata.component.externalReferences[type:bom]`). `None`
@@ -136,6 +141,7 @@ impl CycloneDxBuilder {
             go_graph_completeness: None,
             go_graph_completeness_reason: None,
             go_transitive_coverage: None,
+            go_workspace_mode: None,
             source_document_binding: None,
             identifiers: Vec::new(),
             component_identifiers: Vec::new(),
@@ -306,6 +312,18 @@ impl CycloneDxBuilder {
         coverage: Option<crate::scan_fs::package_db::golang::graph_resolver::GoTransitiveCoverage>,
     ) -> Self {
         self.go_transitive_coverage = coverage;
+        self
+    }
+
+    /// Milestone 161 (T041) — record the doc-scope Go-workspace-mode
+    /// signal per FR-004. Drives the C112 document-scope annotation.
+    /// `None` ⇒ no `go.work` at scanned root (annotation absent per
+    /// SC-003).
+    pub fn with_go_workspace_mode(
+        mut self,
+        mode: Option<crate::scan_fs::package_db::golang::gowork::WorkspaceMode>,
+    ) -> Self {
+        self.go_workspace_mode = mode;
         self
     }
 
@@ -490,6 +508,7 @@ impl CycloneDxBuilder {
             self.collisions_summary.as_ref(),
             &graph_completeness,
             self.go_transitive_coverage.as_ref(),
+            self.go_workspace_mode.as_ref(),
         );
         // Milestone 076 — track per-component identifier matches so
         // we can emit a warn for any selector that matched zero

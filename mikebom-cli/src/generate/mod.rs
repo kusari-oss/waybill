@@ -84,6 +84,13 @@ pub struct ScanArtifacts<'a> {
     pub go_transitive_coverage: Option<
         &'a crate::scan_fs::package_db::golang::graph_resolver::GoTransitiveCoverage,
     >,
+    /// Milestone 161 (T013): workspace-mode detection outcome for the
+    /// C112 doc-scope annotation. Distinct from
+    /// `go_transitive_coverage` per research.md R1. `None` iff no
+    /// `go.work` at scanned root (C112 absent per SC-003).
+    pub go_workspace_mode: Option<
+        &'a crate::scan_fs::package_db::golang::gowork::WorkspaceMode,
+    >,
     /// Milestone 072 / T010-T014: when the scan was invoked with
     /// `--bind-to-source <path>` AND the source SBOM was loaded
     /// successfully, this field carries the source SBOM's stable

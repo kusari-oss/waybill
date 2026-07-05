@@ -556,6 +556,18 @@ fn push_document_fields(
         }
     }
 
+    // Milestone 161 (T045): doc-scope Go-workspace-mode annotation
+    // (C112). Emitted iff `go.work` file was present at the scanned
+    // root (`Detected` or `Malformed` variant); `Absent` is treated
+    // as unpopulated to preserve SC-003 byte-identity on non-workspace
+    // scans.
+    if let Some(mode) = scan.go_workspace_mode {
+        use crate::scan_fs::package_db::golang::gowork::WorkspaceMode;
+        if !matches!(mode, WorkspaceMode::Absent) {
+            push(out, "mikebom:go-workspace-mode", json!(mode.as_wire_str()));
+        }
+    }
+
     // Milestone 134 (closes #125, catalog row C100): document-scope
     // `mikebom:purl-collisions-detected` summary. Omitted when no
     // collisions were detected so clean scans stay byte-identical to

@@ -1405,6 +1405,15 @@ pub struct GoScanSignals {
     pub go_transitive_coverage: Option<
         crate::scan_fs::package_db::golang::graph_resolver::GoTransitiveCoverage,
     >,
+    /// Milestone 161 (T009): workspace-mode detection outcome from
+    /// parsing `<rootfs>/go.work`. `None` iff no `go.work` file was
+    /// present at scan entry, OR `GOWORK=off` in the scan env.
+    /// Consumed by `read_all` to populate
+    /// `ScanDiagnostics.go_workspace_mode` for the C112 doc-scope
+    /// annotation.
+    pub workspace_mode: Option<
+        crate::scan_fs::package_db::golang::gowork::WorkspaceMode,
+    >,
     /// Sorted-deduplicated list of `<reason-class>` tokens contributing
     /// to the `Partial` completeness state. Empty when `Complete` /
     /// `None`. Ecosystem prefix (`go:`) added by the upstream
@@ -1463,6 +1472,46 @@ fn join_reasons(a: &str, b: &str) -> String {
 /// start with `pkg:golang/`) and for Go entries the graph didn't cover
 /// (fixture-only edge case where an entry survives dedup without a
 /// resolver record).
+/// Milestone 161 (T007): Detect `go.work` at the scanned root and
+/// classify per the WorkspaceMode taxonomy. Returns `None` iff the
+/// scan should proceed as a non-workspace scan (either no `go.work`
+/// file, OR the operator disabled workspace mode via `GOWORK=off` per
+/// FR-006). Otherwise returns `Some(mode)` where `mode` is either
+/// `Detected` or `Malformed` — both drive the C112 emission at
+/// document scope; only `Detected` activates workspace-attribution
+/// semantics via `WorkspaceMode::is_active()`.
+fn detect_go_workspace_mode(
+    rootfs: &Path,
+) -> Option<crate::scan_fs::package_db::golang::gowork::WorkspaceMode> {
+    use crate::scan_fs::package_db::golang::gowork::{parse_go_work, WorkspaceMode};
+
+    // FR-006: `GOWORK=off` disables workspace mode regardless of
+    // filesystem contents. Note: we deliberately do NOT emit a C112
+    // annotation in this case — the annotation is absent-when-Absent
+    // per SC-003 byte-identity guard.
+    if std::env::var("GOWORK").as_deref() == Ok("off") {
+        return None;
+    }
+
+    let go_work_path = rootfs.join("go.work");
+    if !go_work_path.is_file() {
+        return None;
+    }
+
+    let mode = match std::fs::read_to_string(&go_work_path) {
+        Ok(text) => parse_go_work(&text),
+        Err(e) => WorkspaceMode::Malformed {
+            reason: format!("io-error: {e}"),
+        },
+    };
+    tracing::info!(
+        go_work_path = %go_work_path.display(),
+        outcome = %mode.as_wire_str(),
+        "go.work workspace-mode detected"
+    );
+    Some(mode)
+}
+
 fn stamp_go_transitive_annotations(
     entry: &mut PackageDbEntry,
     graph_map:
@@ -1501,7 +1550,15 @@ pub fn read(
 ) -> (Vec<PackageDbEntry>, GoScanSignals) {
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
-    let mut signals = GoScanSignals::default();
+    // Milestone 161 (T007): detect `go.work` at the scanned root.
+    // Honor `GOWORK=off` env-var override per FR-006. Populates
+    // `signals.workspace_mode` for the C112 doc-scope annotation.
+    let workspace_mode = detect_go_workspace_mode(rootfs);
+    let mut signals = GoScanSignals {
+        workspace_mode,
+        ..Default::default()
+    };
+
     // Discover module cache roots once per scan — N module lookups
     // would otherwise stat the same non-existent paths repeatedly.
     let cache = GoModCache::discover(rootfs);

@@ -345,6 +345,7 @@ mod tests {
             go_graph_completeness: None,
             go_graph_completeness_reason: None,
             go_transitive_coverage: None,
+            go_workspace_mode: None,
             scan_target_coord: None,
             generation_context: GenerationContext::FilesystemScan,
             include_dev: false,

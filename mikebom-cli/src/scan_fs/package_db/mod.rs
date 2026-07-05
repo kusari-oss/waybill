@@ -346,6 +346,18 @@ pub struct ScanDiagnostics {
     pub go_transitive_coverage:
         Option<golang::graph_resolver::GoTransitiveCoverage>,
 
+    /// Milestone 161 (T010): workspace-mode detection outcome for the
+    /// C112 document-scope annotation. Distinct from
+    /// `go_transitive_coverage` (C110) and `go_graph_completeness`
+    /// (C104) per research.md R1 — this reports whether the scanned
+    /// repo used `go.work` workspace mode and how many `use`d modules
+    /// were discovered. `None` ⇒ no `go.work` at scanned root OR
+    /// `GOWORK=off` (C112 annotation absent). `Some(Detected)` /
+    /// `Some(Malformed)` both emit the C112 annotation at document
+    /// scope with the appropriate value.
+    pub go_workspace_mode:
+        Option<golang::gowork::WorkspaceMode>,
+
     /// Milestone 107 FR-005a: scan-context ambiguities detected by the
     /// Yocto sysroot-vs-rootfs heuristic. Each entry is a free-form
     /// reason string explaining the conflict (e.g. "env-script present
@@ -1435,6 +1447,9 @@ pub fn read_all(
     // which flows through ScanResult into the format emitters for the
     // C110/C111 doc-scope annotations.
     diagnostics.go_transitive_coverage = go_signals.go_transitive_coverage;
+    // Milestone 161 (T011): propagate workspace-mode detection outcome
+    // into the doc-level ScanDiagnostics for the C112 annotation.
+    diagnostics.go_workspace_mode = go_signals.workspace_mode;
     out.extend(rpm::read(rootfs, include_dev, distro_version.as_deref()));
     // v5 Phase B: rpm-owned file claim-skip — mirrors the dpkg / apk /
     // pip pattern. Real RHEL / Fedora rpmdbs store file paths inside

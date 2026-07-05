@@ -643,6 +643,10 @@ spdx3_anno!(c109_spdx3, "mikebom:go-transitive-unresolved-reason",  component);
 spdx3_anno!(c110_spdx3, "mikebom:go-transitive-coverage",           document);
 spdx3_anno!(c111_spdx3, "mikebom:go-transitive-coverage-reason",    document);
 
+// Milestone 161 (closes #495): C112 document-scope Go-workspace-mode
+// detection annotation.
+spdx3_anno!(c112_spdx3, "mikebom:go-workspace-mode",                document);
+
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-component
 // graph-element annotation carrying the JSON-encoded array of
 // conflict records.

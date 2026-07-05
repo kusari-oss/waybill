@@ -106,6 +106,13 @@ pub struct ScanResult {
     /// modules were scanned (C110 annotation absent in output).
     pub go_transitive_coverage:
         Option<crate::scan_fs::package_db::golang::graph_resolver::GoTransitiveCoverage>,
+    /// Milestone 161 (T012): workspace-mode detection outcome from
+    /// `go.work` at scanned root. Distinct from
+    /// `go_transitive_coverage` and `go_graph_completeness` per
+    /// research.md R1. `None` iff no `go.work` at scanned root OR
+    /// `GOWORK=off` (C112 annotation absent per SC-003).
+    pub go_workspace_mode:
+        Option<crate::scan_fs::package_db::golang::gowork::WorkspaceMode>,
     /// M3 — Maven scan-subject coord identified during the JAR walk,
     /// promoted from the `PackageDbEntry` layer to drive CDX
     /// `metadata.component`. `None` when no Maven fat-jar matched
@@ -275,6 +282,12 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // emitters for the C110/C111 doc-scope annotations.
     let mut go_transitive_coverage:
         Option<package_db::golang::graph_resolver::GoTransitiveCoverage> = None;
+    // Milestone 161 (T012): doc-scope go-workspace-mode signal.
+    // Distinct from `go_transitive_coverage` per research.md R1.
+    // Carried through ScanResult into the format emitters for the
+    // C112 doc-scope annotation.
+    let mut go_workspace_mode:
+        Option<package_db::golang::gowork::WorkspaceMode> = None;
     let mut scan_target_coord: Option<package_db::maven::ScanTargetCoord> = None;
     // Milestone 134 — divergent-PURL collision records collected by
     // per-ecosystem dedup. Routed into ScanResult.divergence_records
@@ -309,6 +322,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         go_graph_completeness = scan_result.diagnostics.go_graph_completeness;
         go_graph_completeness_reason = scan_result.diagnostics.go_graph_completeness_reason.clone();
         go_transitive_coverage = scan_result.diagnostics.go_transitive_coverage.clone();
+        go_workspace_mode = scan_result.diagnostics.go_workspace_mode.clone();
         scan_target_coord = scan_result.scan_target_coord.clone();
         divergence_records = scan_result.diagnostics.divergence_records.clone();
         let mut db_entries = scan_result.entries;
@@ -812,6 +826,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         go_graph_completeness,
         go_graph_completeness_reason,
         go_transitive_coverage,
+        go_workspace_mode,
         scan_target_coord,
         divergence_records,
     })
