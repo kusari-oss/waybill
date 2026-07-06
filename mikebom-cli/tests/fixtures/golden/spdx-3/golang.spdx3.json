@@ -962,14 +962,6 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-4MQQMZDGBQUBOPRUIXDJ7TU4/anno-I7NJI6MYUBZRJOIL",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"partial\"}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-4MQQMZDGBQUBOPRUIXDJ7TU4",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-4MQQMZDGBQUBOPRUIXDJ7TU4/anno-IJU3ALGJNFNIGHG5",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"go.sum\"]}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-4MQQMZDGBQUBOPRUIXDJ7TU4/pkg-ZPQ6ND5QEI5V2QHC",

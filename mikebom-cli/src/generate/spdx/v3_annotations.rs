@@ -619,6 +619,39 @@ fn sort_by_spdx_id(values: &mut [Value]) {
     });
 }
 
+/// Milestone 166 (T003, implements m166 FR-001–FR-006) — dedup a vector
+/// of SPDX 3 Annotation JSON values by `spdxId`. Preserves LAST-writer-
+/// wins semantics (per research §R2) so builder order at
+/// `v3_document.rs:754-820` determines which entry survives when
+/// duplicates exist. Also returns the drop count for FR-007 tracing
+/// observability.
+///
+/// Empirically-motivated fix for the duplicate-Annotation-spdxId bug
+/// surfaced by milestone 165's audit on
+/// `github.com/kubernetes/kubernetes` (2 duplicates of 4477 annotations,
+/// 0.04%) and `github.com/argoproj/argo-cd` (1 duplicate).
+/// `spdx3-validate` FAILS on any document with duplicate spdxIds
+/// because the SPDX 3.0.1 SHACL constraint `Annotation.statement` is
+/// max-1-per-subject.
+///
+/// The `BTreeMap` iteration order is lex-sorted by spdxId string —
+/// eliminating the need for the prior explicit `sort_by` step at the
+/// call site (research §R3).
+pub(crate) fn dedup_annotations_by_spdx_id(
+    annotations: Vec<Value>,
+) -> (Vec<Value>, usize) {
+    let mut map: std::collections::BTreeMap<String, Value> =
+        std::collections::BTreeMap::new();
+    let mut dropped: usize = 0;
+    for anno in annotations {
+        let key = anno["spdxId"].as_str().unwrap_or("").to_string();
+        if map.insert(key, anno).is_some() {
+            dropped += 1;
+        }
+    }
+    (map.into_values().collect(), dropped)
+}
+
 fn hash_prefix(input: &[u8], chars: usize) -> String {
     let digest = Sha256::digest(input);
     let encoded = BASE32_NOPAD.encode(&digest);
@@ -821,4 +854,118 @@ mod tests {
         );
     }
 
+    // -----------------------------------------------------------------
+    // Milestone 166 (T006–T011, implements m166 FR-001–FR-006)
+    // dedup_annotations_by_spdx_id unit tests. See spec.md SC-008 for
+    // sub-item mapping.
+    // -----------------------------------------------------------------
+
+    fn make_anno(spdx_id: &str, statement: &str) -> Value {
+        serde_json::json!({
+            "type": "Annotation",
+            "spdxId": spdx_id,
+            "subject": "urn:test:subject",
+            "annotationType": "other",
+            "statement": statement,
+        })
+    }
+
+    /// T006 (SC-008 a): two entries with same spdxId + same content
+    /// → 1 element in output, dropped == 1.
+    #[test]
+    fn t006_dedup_two_identical_spdx_ids_dropped_to_one() {
+        let input = vec![
+            make_anno("urn:test:doc/anno-A", "hello"),
+            make_anno("urn:test:doc/anno-A", "hello"),
+        ];
+        let (out, dropped) = dedup_annotations_by_spdx_id(input);
+        assert_eq!(out.len(), 1);
+        assert_eq!(dropped, 1);
+        assert_eq!(out[0]["statement"].as_str(), Some("hello"));
+    }
+
+    /// T007 (SC-008 c): distinct spdxIds → all preserved,
+    /// dropped == 0, output sorted lex (BTreeMap natural order).
+    #[test]
+    fn t007_dedup_different_spdx_ids_all_preserved() {
+        let input = vec![
+            make_anno("urn:test:doc/anno-C", "c"),
+            make_anno("urn:test:doc/anno-A", "a"),
+            make_anno("urn:test:doc/anno-B", "b"),
+        ];
+        let (out, dropped) = dedup_annotations_by_spdx_id(input);
+        assert_eq!(out.len(), 3);
+        assert_eq!(dropped, 0);
+        // BTreeMap lex-sorted iteration.
+        assert_eq!(out[0]["spdxId"].as_str(), Some("urn:test:doc/anno-A"));
+        assert_eq!(out[1]["spdxId"].as_str(), Some("urn:test:doc/anno-B"));
+        assert_eq!(out[2]["spdxId"].as_str(), Some("urn:test:doc/anno-C"));
+    }
+
+    /// T008 (SC-008 b): same spdxId + DIFFERENT content → LAST-writer-wins.
+    #[test]
+    fn t008_dedup_last_writer_wins_on_different_content() {
+        let input = vec![
+            make_anno("urn:test:doc/anno-A", "first"),
+            make_anno("urn:test:doc/anno-A", "second"),
+            make_anno("urn:test:doc/anno-A", "third"),
+        ];
+        let (out, dropped) = dedup_annotations_by_spdx_id(input);
+        assert_eq!(out.len(), 1);
+        assert_eq!(dropped, 2);
+        // LAST inserted (third) wins per FR-004.
+        assert_eq!(out[0]["statement"].as_str(), Some("third"));
+    }
+
+    /// T009 (SC-008 d): empty input → empty output, no drops.
+    #[test]
+    fn t009_dedup_empty_input_no_op() {
+        let (out, dropped) = dedup_annotations_by_spdx_id(vec![]);
+        assert_eq!(out.len(), 0);
+        assert_eq!(dropped, 0);
+    }
+
+    /// T010 (SC-008 e): mix of unique + duplicate → uniques preserved,
+    /// duplicates deduped, drop count correct.
+    #[test]
+    fn t010_dedup_mixed_unique_and_duplicate() {
+        let input = vec![
+            make_anno("urn:test:doc/anno-A", "a"),
+            make_anno("urn:test:doc/anno-B", "b"),
+            make_anno("urn:test:doc/anno-A", "a-dup"),
+            make_anno("urn:test:doc/anno-C", "c"),
+            make_anno("urn:test:doc/anno-B", "b-dup"),
+        ];
+        let (out, dropped) = dedup_annotations_by_spdx_id(input);
+        assert_eq!(out.len(), 3);
+        assert_eq!(dropped, 2);
+        // Retained ones are the LAST-writer per spdxId.
+        let by_id: std::collections::HashMap<&str, &str> = out
+            .iter()
+            .map(|v| {
+                (
+                    v["spdxId"].as_str().unwrap_or(""),
+                    v["statement"].as_str().unwrap_or(""),
+                )
+            })
+            .collect();
+        assert_eq!(by_id.get("urn:test:doc/anno-A"), Some(&"a-dup"));
+        assert_eq!(by_id.get("urn:test:doc/anno-B"), Some(&"b-dup"));
+        assert_eq!(by_id.get("urn:test:doc/anno-C"), Some(&"c"));
+    }
+
+    /// T011 (defensive): malformed input missing `spdxId` field. The
+    /// .unwrap_or("") fallback maps all such entries to an empty-string
+    /// key, so multiples collapse to one. Matches pre-166 sort-key
+    /// coercion at v3_document.rs.
+    #[test]
+    fn t011_dedup_malformed_missing_spdx_id() {
+        let input = vec![
+            serde_json::json!({"type": "Annotation", "statement": "a"}),
+            serde_json::json!({"type": "Annotation", "statement": "b"}),
+        ];
+        let (out, dropped) = dedup_annotations_by_spdx_id(input);
+        assert_eq!(out.len(), 1);
+        assert_eq!(dropped, 1);
+    }
 }

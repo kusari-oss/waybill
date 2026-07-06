@@ -7,6 +7,74 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### SPDX 3 duplicate-Annotation-spdxId dedup fix (milestone 166)
+
+Empirical follow-on from milestone 165's audit — the #1 top-3 recommendation
+was a real bug discovered in mikebom's SPDX 3 emission on live upstream Go
+monorepos. Milestone-165 audit (2026-07-05) measured:
+
+- Kubernetes: 2 of 4477 annotations (0.04%) duplicate by `spdxId`.
+- ArgoCD: 1 duplicate.
+
+The whole SPDX 3 document FAILED `spdx3-validate` on both targets with error
+`More than 1 values on <anno-*>->ns1:statement` — the SHACL constraint
+`Annotation.statement` max-1-per-subject was violated.
+
+**Root cause**: mikebom's SPDX 3 annotation merge point at
+`mikebom-cli/src/generate/spdx/v3_document.rs:754-820` combined 4 annotation
+builders (`build_component_annotations`, `build_document_annotations`,
+`build_supplement_service_annotations`, user-supplied `--metadata-comment` +
+`--annotator` pairs) into `@graph[]` sorted by `spdxId` but WITHOUT
+deduplicating. When two builder call paths derived the same
+`hash(subject_iri | field)` — e.g., `mikebom:graph-completeness` emitted on
+the SpdxDocument subject from two distinct builders — both landed in
+`@graph[]` with identical `spdxId`.
+
+**Fix**: dedup by `spdxId` via `BTreeMap<String, Value>` at merge time.
+LAST-writer-wins (natural Rust `insert` semantics; byte-identity-safe given
+deterministic builder ordering established by milestone 017). BTreeMap
+iteration is naturally lex-sorted, eliminating the redundant prior explicit
+`sort_by` step. Zero new Cargo dependencies.
+
+**New tracing observability** (FR-007): a new field
+`spdx3_annotation_duplicates_dropped=<N>` extends the SPDX 3 emission info
+log. Fires unconditionally per scan (grep-friendly per m157-onwards
+convention). Zero on healthy scans; non-zero surfaces redundant emitter code
+paths for future investigation (root-cause investigation is deferred to a
+follow-on milestone per research §R7).
+
+**Empirical impact**:
+
+| Metric | Pre-166 | Post-166 |
+|---|---|---|
+| K8s `spdx3-validate` exit code | non-zero (FAIL) | expected 0 (PASS) |
+| ArgoCD `spdx3-validate` exit code | non-zero (FAIL) | expected 0 (PASS) |
+| milestone-090 fixture SPDX 3 goldens with duplicate spdxIds | 1 (golang) | 0 |
+
+The golang milestone-090 fixture had a duplicate
+`mikebom:graph-completeness=partial` annotation on the SpdxDocument subject
+— exactly the same bug class as K8s + ArgoCD. Post-166 dedup removes it;
+the golang SPDX 3 golden shrinks by 8 lines (one Annotation entry). No
+other milestone-090 fixture drifts.
+
+**Consumer jq recipe** to verify the uniqueness invariant on any mikebom SPDX
+3 SBOM:
+
+```bash
+jq '[.["@graph"][].spdxId] | group_by(.) | map(select(length > 1)) | length' \
+    sbom.spdx3.json
+# Expected: 0 post-166.
+```
+
+**Zero new annotations, no new parity-catalog rows, no new CLI flags.**
+Reuses existing SPDX 3 emission infrastructure end-to-end per FR-010 +
+Constitution Principle V. Only new observable output is the FR-007 log
+field.
+
+Delivers milestone-165's #1 top-3 follow-on recommendation. Constitution
+Principle IX (Accuracy — emitted documents must satisfy their own schema)
+mapping.
+
 ### pnpm v9 multi-version edge disambiguation (milestone 164)
 
 Empirical follow-up to milestone 163's podman-desktop re-measurement

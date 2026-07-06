@@ -811,13 +811,26 @@ pub fn build_document(
             }));
         }
     }
-    annotations.sort_by(|a, b| {
-        let key = |v: &Value| v["spdxId"].as_str().unwrap_or("").to_string();
-        key(a).cmp(&key(b))
-    });
+    // Milestone 166 (T004, implements m166 FR-001–FR-006): dedup by
+    // spdxId at merge point. BTreeMap iteration is naturally lex-sorted
+    // (research §R3), replacing the prior explicit sort_by step. Returns
+    // (deduped_vec, dropped_count) — dropped feeds the FR-007 log below.
+    let (annotations, spdx3_annotation_duplicates_dropped) =
+        super::v3_annotations::dedup_annotations_by_spdx_id(annotations);
     for anno in annotations {
         graph.push(anno);
     }
+
+    // Milestone 166 (T005, FR-007): unconditional info-level tracing
+    // log with the dedup counter. Zero on healthy scans; non-zero
+    // surfaces redundant emitter code paths for future investigation.
+    // Grep-friendly per m157-onwards observability convention.
+    tracing::info!(
+        graph_element_count = graph.len(),
+        spdx3_annotation_duplicates_dropped =
+            spdx3_annotation_duplicates_dropped,
+        "spdx3 document emitted"
+    );
 
     Ok(json!({
         "@context": SPDX_3_CONTEXT,
