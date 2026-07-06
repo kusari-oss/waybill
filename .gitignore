@@ -47,3 +47,17 @@ mikebom-cli/tests/fixtures/golden/**/*.actual.json
 # the SPDX 3 conformance integration test. Created on demand by
 # scripts/install-spdx3-validate.sh; never committed.
 .venv/
+
+# Milestone 168 — Round-4 audit intermediate artifacts. Cloned source
+# trees + emitted per-tool SBOMs + analysis JSON are all regenerable
+# from the pinned commit SHAs recorded in the audit report header.
+# Only `docs/audits/2026-07-06-tauri-airflow.md` and the audit scripts
+# under `specs/168-rust-python-audit/scripts/` are committed. Mirrors
+# m165's gitignore treatment (m090 fixture-stayset guidance).
+specs/168-rust-python-audit/artifacts/tauri-src/
+specs/168-rust-python-audit/artifacts/airflow-src/
+specs/168-rust-python-audit/artifacts/**/mikebom.*.json
+specs/168-rust-python-audit/artifacts/**/trivy.*.json
+specs/168-rust-python-audit/artifacts/**/syft.*.json
+specs/168-rust-python-audit/artifacts/**/analysis.json
+specs/168-rust-python-audit/artifacts/**/*.log

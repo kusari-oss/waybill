@@ -204,6 +204,8 @@ Auto-generated from all feature plans. Last updated: 2026-07-06
 - Single Markdown file at `docs/audits/2026-07-05-kubernetes-argocd.md`. Intermediate SBOMs stored under `specs/165-k8s-argocd-audit/artifacts/` (regenerable, not versioned). (165-k8s-argocd-audit)
 - Rust stable (workspace toolchain inherited from milestones 001–165; no nightly required for this user-space-only work). + Existing only — `serde_json` (already used for SPDX 3 emission), `std::collections::BTreeMap` (stdlib), `tracing`. **Zero new Cargo dependencies.** (166-spdx3-annotation-dedup)
 - Rust stable (workspace toolchain inherited from milestones 001–166; no nightly). + Existing only — `serde_json` (annotation values), `std::collections::{HashSet, HashMap}`, `tracing`. Reuses `mikebom-cli/src/generate/graph_completeness/bfs.rs` (m158's multi-source BFS). **Zero new Cargo dependencies.** (167-orphan-reason-expand)
+- N/A for mikebom production code (unchanged). Audit harness is shell script + Python 3.10+ analysis (matches m165 precedent verbatim). + External audit tools — mikebom (**post-milestone-167 release build**; commit `ccde910`-descended), Trivy (0.71.1 per m083/m165 pin), Syft (1.44.0 per m083/m165 pin), spdx3-validate (0.0.5 per memory `reference_spdx3_validator`, at `.venv/spdx3-validate/bin/spdx3-validate`), `jq`, `git`, `python3`, `time`. Standard POSIX tools. (168-rust-python-audit)
+- Single Markdown file at `docs/audits/2026-07-06-tauri-airflow.md`. Intermediate SBOMs stored under `specs/168-rust-python-audit/artifacts/` (regenerable, not versioned — same gitignore treatment as m165). (168-rust-python-audit)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -266,9 +268,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 168-rust-python-audit: Added N/A for mikebom production code (unchanged). Audit harness is shell script + Python 3.10+ analysis (matches m165 precedent verbatim). + External audit tools — mikebom (**post-milestone-167 release build**; commit `ccde910`-descended), Trivy (0.71.1 per m083/m165 pin), Syft (1.44.0 per m083/m165 pin), spdx3-validate (0.0.5 per memory `reference_spdx3_validator`, at `.venv/spdx3-validate/bin/spdx3-validate`), `jq`, `git`, `python3`, `time`. Standard POSIX tools.
 - 167-orphan-reason-expand: Added Rust stable (workspace toolchain inherited from milestones 001–166; no nightly). + Existing only — `serde_json` (annotation values), `std::collections::{HashSet, HashMap}`, `tracing`. Reuses `mikebom-cli/src/generate/graph_completeness/bfs.rs` (m158's multi-source BFS). **Zero new Cargo dependencies.**
 - 166-spdx3-annotation-dedup: Added Rust stable (workspace toolchain inherited from milestones 001–165; no nightly required for this user-space-only work). + Existing only — `serde_json` (already used for SPDX 3 emission), `std::collections::BTreeMap` (stdlib), `tracing`. **Zero new Cargo dependencies.**
-- 165-k8s-argocd-audit: Added N/A for mikebom production code (unchanged). Audit harness is shell script + Python 3.10+ analysis (matches milestone-078 precedent). + External audit tools — mikebom (milestone-164 release build), Trivy (0.71.1 per milestone-083 pin, needs local install; research §R1), Syft (1.44.0 per milestone-083 pin, already installed locally), spdx3-validate (0.0.5 per memory `reference_spdx3_validator`, already at `.venv/spdx3-validate/bin/spdx3-validate`), `jq`, `git`, `python3`, `time`. Standard POSIX tools.
 
 
 <!-- MANUAL ADDITIONS START -->
