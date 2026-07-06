@@ -407,12 +407,7 @@ spdx23_anno!(c40_spdx23, "mikebom:component-role",            component);
 // C41 (milestone 050 — not-linked classifier).
 spdx23_anno!(c41_spdx23, "mikebom:not-linked",                component);
 
-// C44 — doc-level Go graph-completeness signal (milestone 061).
-pub(super) fn c44_spdx23(doc: &serde_json::Value) -> std::collections::BTreeSet<String> {
-    let mut out = extract_mikebom_annotation_values(doc, "mikebom:graph-completeness", true);
-    out.extend(extract_mikebom_annotation_values(doc, "mikebom:graph-completeness-reason", true));
-    out
-}
+// C44 removed in milestone 170 — see cdx.rs for context.
 
 // C45 — per-component orphan-reason (milestone 061).
 spdx23_anno!(c45_spdx23, "mikebom:orphan-reason",             component);

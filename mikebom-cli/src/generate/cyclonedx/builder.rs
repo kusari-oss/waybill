@@ -51,13 +51,6 @@ pub struct CycloneDxBuilder {
     /// `metadata.properties` as `mikebom:os-release-missing-fields`
     /// when non-empty.
     os_release_missing_fields: Vec<String>,
-    /// Milestone 061 (closes #119): doc-level Go graph-completeness
-    /// signal. `None` ⇒ no Go scan (annotation absent in output).
-    go_graph_completeness:
-        Option<crate::scan_fs::package_db::GraphCompleteness>,
-    /// Milestone 061 — comma-separated `<ecosystem>:<reason-class>`
-    /// list. `None`/empty when completeness is `Complete` or `None`.
-    go_graph_completeness_reason: Option<String>,
     /// Milestone 160 (T034/T035): doc-scope Go-transitive coverage
     /// signal. Distinct from `go_graph_completeness` per research.md R1.
     /// `None` ⇒ no Go scan (annotation absent).
@@ -138,8 +131,6 @@ impl CycloneDxBuilder {
         Self {
             config,
             os_release_missing_fields: Vec::new(),
-            go_graph_completeness: None,
-            go_graph_completeness_reason: None,
             go_transitive_coverage: None,
             go_workspace_mode: None,
             source_document_binding: None,
@@ -286,20 +277,6 @@ impl CycloneDxBuilder {
     /// CycloneDX metadata property.
     pub fn with_os_release_missing_fields(mut self, fields: Vec<String>) -> Self {
         self.os_release_missing_fields = fields;
-        self
-    }
-
-    /// Milestone 061 — record the doc-level Go graph-completeness
-    /// signal. Drives the `mikebom:graph-completeness` +
-    /// `mikebom:graph-completeness-reason` metadata properties per
-    /// spec FR-005. Pass `None` for both when no Go scan happened.
-    pub fn with_go_graph_completeness(
-        mut self,
-        completeness: Option<crate::scan_fs::package_db::GraphCompleteness>,
-        reason: Option<String>,
-    ) -> Self {
-        self.go_graph_completeness = completeness;
-        self.go_graph_completeness_reason = reason;
         self
     }
 
@@ -496,8 +473,6 @@ impl CycloneDxBuilder {
             &self.os_release_missing_fields,
             integrity,
             scan_target_coord,
-            self.go_graph_completeness,
-            self.go_graph_completeness_reason.as_deref(),
             self.source_document_binding.as_ref(),
             &self.identifiers,
             &self.root_override,

@@ -491,19 +491,45 @@ jq '.metadata.properties[]?
 
 #### `mikebom:graph-completeness` + `mikebom:graph-completeness-reason`
 
-> **What they are**: document-scope Go-graph-completeness signal — `Complete` (all observed Go components have full dep edges) or `Partial` (some edges couldn't be resolved). The companion `-reason` annotation enumerates the specific cause classes. Currently Go-only (the only ecosystem where mikebom can detect partial graph state explicitly); other ecosystems either complete or fail closed.
+> **What they are**: document-scope **universal reachability** signal — `complete` (every component in the SBOM is reachable from a root via `dependsOn` edges), `partial` (at least one component is orphaned), or `unknown` (the classifier couldn't run — e.g., trace-mode SBOM with no root marker). The companion `-reason` annotation enumerates the cause when the value is not `complete`. Applies to every emitted SBOM regardless of ecosystem — the milestone-158 multi-root BFS runs on any resolved graph.
+>
+> **Rewritten in milestone 170**: pre-m170 this signal wore two hats. Milestone 061 emitted it as Go-scoped ("did every `go.sum` transitive edge resolve?") from catalog row C44; milestone 158 also emitted it as universal ("is every component reachable from a root?") from catalog row C104. Both emissions landed at the same annotation key, producing undefined consumer behavior. Milestone 170 retired C44; C104 is now the sole owner. The Go-specific "did transitive edges resolve?" signal moved to [`mikebom:go-transitive-coverage`](#mikebomgo-transitive-coverage) — its modern canonical home with a richer reason-code vocabulary.
+>
+> **Where it lives**:
+> - **CDX 1.6**: `metadata.properties[]` entries (document-scope). Guaranteed exactly-once emission per SBOM post-m170.
+> - **SPDX 2.3**: document-scope annotations on `SpdxDocument`.
+> - **SPDX 3**: document-scope Annotation element targeting the `SpdxDocument` root IRI.
+>
+> **What to do with it**: when an SBOM reports `partial`, at least one component is orphaned in the dep-graph view. Surface the gap in your compliance dashboard or vulnerability scanner; the reason string tells you which reason-code class applies (e.g., `orphaned-components-detected`). Compose with per-component `mikebom:orphan-reason` (C45) to localize the gap.
+>
+> **Milestone**: 158 — added (universal reachability). 170 — dedup + docs rewrite. See [issue #516](https://github.com/kusari-oss/mikebom/issues/516) for the follow-up investigation into whether pre-m170's Go-scoped signal is reconstructible from remaining signals.
+> **Catalog**: [C104](sbom-format-mapping.md) (C44 REMOVED in m170)
+
+```jq
+# CDX — check universal graph-completeness for this scan (single value post-m170):
+jq '.metadata.properties[]?
+    | select(.name == "mikebom:graph-completeness" or .name == "mikebom:graph-completeness-reason")
+    | {name, value}' your.cdx.json
+```
+
+#### `mikebom:go-transitive-coverage` + `mikebom:go-transitive-coverage-reason`
+
+> **What they are**: document-scope Go-specific transitive-edge coverage signal — `complete` (every observed Go module resolved via the milestone-055/091 ladder: local cache → GOPROXY fetch → `go mod graph` → `go.sum` fallback), `partial` (at least one module ended `Unresolved`), or `unknown` (the classifier couldn't measure — e.g., `--offline` + empty cache + `GOPROXY=off`, or `go mod graph` degraded). The companion `-reason` annotation enumerates the reason-code class(es). Emitted only when the scan includes ≥1 Go component; absent otherwise.
+>
 > **Where it lives**:
 > - **CDX 1.6**: `metadata.properties[]` entries (document-scope).
 > - **SPDX 2.3**: document-scope annotations on `SpdxDocument`.
-> - **SPDX 3**: document-scope annotations on the `SpdxDocument` element.
-> **What to do with it**: when a Go-bearing SBOM reports `Partial`, surface the gap in your compliance dashboard or vulnerability scanner — the dep-graph view is incomplete. The reason string tells you whether the gap is recoverable (e.g., re-scan with `go.sum` present) or structural (e.g., cgo external refs).
-> **Milestone**: 061 — added (closes #119).
-> **Catalog**: search for "graph-completeness" in [sbom-format-mapping.md](sbom-format-mapping.md)
+> - **SPDX 3**: document-scope Annotation elements targeting the `SpdxDocument` root IRI.
+>
+> **What to do with it**: this is the modern home for the "did Go transitive edges resolve?" question that pre-m170 lived under [`mikebom:graph-completeness`](#mikebomgraph-completeness-mikebomgraph-completeness-reason)'s C44 emission. Consumers building Go-vulnerability policies pair it with universal graph-completeness: `unknown` on Go-transitive + `complete` on universal means "we couldn't verify Go's transitive edges, but the graph we DID emit is fully reachable"; `partial` on Go-transitive + `partial` on universal indicates a Go-specific gap that also produced orphans in the overall graph. The reason-code vocabulary includes `offline-mode`, `proxy-fetch-degraded`, `goproxy-off-in-chain`, `go-mod-graph-degraded`, `module-cache-empty-and-no-proxy`.
+>
+> **Milestone**: 160 — added (closes #494).
+> **Catalog**: [C110](sbom-format-mapping.md) + [C111](sbom-format-mapping.md)
 
 ```jq
-# CDX — check Go-graph completeness for this scan:
+# CDX — check Go-transitive coverage for this scan:
 jq '.metadata.properties[]?
-    | select(.name == "mikebom:graph-completeness" or .name == "mikebom:graph-completeness-reason")
+    | select(.name == "mikebom:go-transitive-coverage" or .name == "mikebom:go-transitive-coverage-reason")
     | {name, value}' your.cdx.json
 ```
 
@@ -756,8 +782,10 @@ Alphabetical order. Each entry links to the FIRST catalog row that mentions the 
 - **`mikebom:go-vcs-modified`** — Go binary's `vcs.modified` flag from `runtime/debug.BuildInfo`. ([C29](sbom-format-mapping.md))
 - **`mikebom:go-vcs-revision`** — Go binary's `vcs.revision` (commit SHA) from `runtime/debug.BuildInfo`. ([C27](sbom-format-mapping.md))
 - **`mikebom:go-vcs-time`** — Go binary's `vcs.time` (commit timestamp) from `runtime/debug.BuildInfo`. ([C28](sbom-format-mapping.md))
-- **`mikebom:graph-completeness`** — milestone-061 document-scope signal for Go-graph completeness (`Complete` / `Partial`). See [§3.4](#34-transparency--completeness-gaps) for depth coverage. ([C44](sbom-format-mapping.md))
-- **`mikebom:graph-completeness-reason`** — milestone-061 companion enumerating the reason class for `Partial` Go-graph completeness. ([C44](sbom-format-mapping.md))
+- **`mikebom:graph-completeness`** — milestone-158 document-scope signal for universal graph reachability (`complete` / `partial` / `unknown`). Rewritten in milestone 170 (was Go-scoped pre-m170; C44's Go-scoped emission retired, moved to `mikebom:go-transitive-coverage` — see [§3.4](#34-transparency--completeness-gaps) for depth coverage). ([C104](sbom-format-mapping.md); C44 REMOVED in m170)
+- **`mikebom:graph-completeness-reason`** — milestone-158 companion enumerating the reason class for non-`complete` graph-completeness (e.g., `orphaned-components-detected: N component(s) not reachable from root`). ([C105](sbom-format-mapping.md))
+- **`mikebom:go-transitive-coverage`** — milestone-160 document-scope Go-transitive edge-resolution signal (`complete` / `partial` / `unknown`). Modern home for the Go-specific completeness question that pre-m170 lived at C44. See [§3.4](#34-transparency--completeness-gaps) for depth coverage. ([C110](sbom-format-mapping.md))
+- **`mikebom:go-transitive-coverage-reason`** — milestone-160 companion enumerating the reason class for non-`complete` Go-transitive coverage (e.g., `offline-mode`, `proxy-fetch-degraded`, `goproxy-off-in-chain`, `go-mod-graph-degraded`, `module-cache-empty-and-no-proxy`). ([C111](sbom-format-mapping.md))
 - **`mikebom:identifiers`** — milestone-073 user-defined identifier envelope (`<scheme>:<value>` records beyond the built-in `repo:` / `git:` / `image:` / `attestation:` schemes). See [identifiers.md](identifiers.md). ([C47](sbom-format-mapping.md))
 - **`mikebom:kmp-source-set`** — milestone-122 Kotlin Multiplatform source-set names that declared each dep. ([C68](sbom-format-mapping.md))
 - **`mikebom:layer-digest`** — milestone-133 OCI layer-digest attribution. See [§3.1](#31-vulnerability-scanning) for depth coverage. ([C88](sbom-format-mapping.md))
@@ -844,8 +872,10 @@ Each depth-covered signal cites the milestone that introduced or stabilized it. 
 | `mikebom:generation-context` | 005, 047 | refined |
 | `mikebom:source-document-binding` | 072 | added |
 | `mikebom:file-inventory-mode` | 133 (US4) | added; codified in Constitution Strict Boundary §5 |
-| `mikebom:graph-completeness` | 061 | added (closes #119) |
-| `mikebom:graph-completeness-reason` | 061 | added |
+| `mikebom:graph-completeness` | 061 | added as Go-scoped signal (closes #119); 170 rewrote as universal reachability (C104), retired C44 Go-scoped emission |
+| `mikebom:graph-completeness-reason` | 061 | added as Go-scoped reason (closes #119); 170 rewrote as universal reachability reason (C105) |
+| `mikebom:go-transitive-coverage` | 160 | added (closes #494) — modern home for Go-scoped transitive-edge coverage; replaces the pre-m170 C44 emission |
+| `mikebom:go-transitive-coverage-reason` | 160 | added (closes #494) — companion for C110 |
 | `mikebom:peer-edge-targets` | 147 | added (closes Trivy-comparison orphan gap on the looker-frontend npm lockfile) |
 
 mikebom releases follow the `v*-alpha.*` tag sequence. As of milestone 149, the released version is `v0.1.0-alpha.52`. To determine signal availability for a specific binary version, cross-reference the [CHANGELOG](../../CHANGELOG.md) for the release-to-milestone mapping.
