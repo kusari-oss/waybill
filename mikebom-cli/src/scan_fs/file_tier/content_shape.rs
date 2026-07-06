@@ -236,7 +236,16 @@ pub(crate) fn classify(
         {
             return Some(ContentShape::JavaOrArchive);
         }
-        if name.ends_with(".deb") || name.ends_with(".rpm") || name.ends_with(".apk") {
+        if name.ends_with(".deb")
+            || name.ends_with(".rpm")
+            || name.ends_with(".apk")
+            || name.ends_with(".ipk")
+        {
+            // Milestone 169 (T004, closes #500): `.ipk` = Yocto/OpenWrt
+            // opkg-produced package archive. Modern format is
+            // gzip(tar{debian-binary, control.tar.gz, data.tar.gz})
+            // per research §R2. Reader lives at
+            // `scan_fs/package_db/ipk_file.rs`.
             return Some(ContentShape::OsPackage);
         }
         if name.ends_with(".tar.gz")

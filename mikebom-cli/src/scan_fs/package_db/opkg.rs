@@ -52,7 +52,25 @@ const NATIVESDK_PREFIX: &str = "nativesdk-";
 pub fn read(rootfs: &Path) -> (Vec<PackageDbEntry>, ScanContext) {
     let status_path = rootfs.join(OPKG_STATUS_PATH);
     let ctx = detect_scan_context(rootfs);
+    // Milestone 169 T033 (US5, FR-010): read the distro tag once at the
+    // reader entry point. When absent, emitted PURLs omit the `distro=`
+    // qualifier entirely — no hardcoded default.
+    let distro_tag = super::super::os_release::read_distro_tag_from_rootfs(rootfs);
+    let distro_tag_ref = distro_tag.as_deref();
     if !status_path.is_file() {
+        // Milestone 169 (T020, FR-014): status file absent → fall back
+        // to enumerating `/var/lib/opkg/info/*.control` per-package
+        // files. Emits one entry per control file. Fires an INFO log
+        // so operators can tell the fallback was taken.
+        let info_dir = rootfs.join(OPKG_INFO_DIR);
+        if info_dir.is_dir() {
+            tracing::info!(
+                info_dir = %info_dir.display(),
+                "opkg installed-DB: status file absent; falling back to info/*.control per FR-014"
+            );
+            let out = parse_info_dir_fallback(&info_dir, &ctx, distro_tag_ref);
+            return (out, ctx);
+        }
         return (Vec::new(), ctx);
     }
     let text = match std::fs::read_to_string(&status_path) {
@@ -67,8 +85,53 @@ pub fn read(rootfs: &Path) -> (Vec<PackageDbEntry>, ScanContext) {
         }
     };
     let source_path = status_path.to_string_lossy().into_owned();
-    let out = parse(&text, &source_path, &ctx);
+    let out = parse(&text, &source_path, &ctx, distro_tag_ref);
     (out, ctx)
+}
+
+/// Milestone 169 (T020, FR-014): fallback enumeration of
+/// `/var/lib/opkg/info/*.control` files when `/var/lib/opkg/status` is
+/// absent. Each `.control` file is a single-stanza subset of
+/// `status`-file syntax, parsed via the same `parse_stanzas` helper.
+///
+/// Adds a `mikebom:opkg-status-fallback = "true"` annotation on every
+/// emitted entry so consumers can distinguish primary-parse emissions
+/// from fallback-parse emissions.
+fn parse_info_dir_fallback(
+    info_dir: &Path,
+    ctx: &ScanContext,
+    distro_tag: Option<&str>,
+) -> Vec<PackageDbEntry> {
+    let mut out = Vec::new();
+    let Ok(read_dir) = std::fs::read_dir(info_dir) else {
+        return out;
+    };
+    for dirent in read_dir.flatten() {
+        let path = dirent.path();
+        let is_control = path
+            .extension()
+            .and_then(|s| s.to_str())
+            .map(|s| s.eq_ignore_ascii_case("control"))
+            .unwrap_or(false);
+        if !is_control {
+            continue;
+        }
+        let Ok(text) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        let source_path = path.to_string_lossy().into_owned();
+        let stanzas = super::control_file::parse_stanzas(&text);
+        for stanza in stanzas {
+            if let Some(mut entry) = build_entry(&stanza, &source_path, ctx, distro_tag) {
+                entry.extra_annotations.insert(
+                    "mikebom:opkg-status-fallback".to_string(),
+                    serde_json::Value::String("true".to_string()),
+                );
+                out.push(entry);
+            }
+        }
+    }
+    out
 }
 
 /// Read per-package `<rootfs>/usr/lib/opkg/info/<pkg>.list` files and
@@ -121,11 +184,16 @@ pub fn collect_claimed_paths(
     Ok(())
 }
 
-fn parse(text: &str, source_path: &str, ctx: &ScanContext) -> Vec<PackageDbEntry> {
+fn parse(
+    text: &str,
+    source_path: &str,
+    ctx: &ScanContext,
+    distro_tag: Option<&str>,
+) -> Vec<PackageDbEntry> {
     let stanzas = super::control_file::parse_stanzas(text);
     let mut out = Vec::with_capacity(stanzas.len());
     for stanza in stanzas {
-        if let Some(entry) = build_entry(&stanza, source_path, ctx) {
+        if let Some(entry) = build_entry(&stanza, source_path, ctx, distro_tag) {
             out.push(entry);
         }
     }
@@ -136,6 +204,7 @@ fn build_entry(
     stanza: &super::control_file::ControlStanza,
     source_path: &str,
     ctx: &ScanContext,
+    distro_tag: Option<&str>,
 ) -> Option<PackageDbEntry> {
     let name = stanza.name()?.to_string();
     if name.is_empty() {
@@ -156,11 +225,16 @@ fn build_entry(
         .maintainer()
         .map(str::to_string)
         .filter(|s| !s.is_empty());
-    let depends = stanza
-        .depends()
-        .map(parse_depends)
-        .unwrap_or_default();
-    let purl = build_opkg_purl(&name, &version, &arch)?;
+    // Milestone 169 T021: Q2 alternative-list clarification —
+    // `Depends: pkg-a | pkg-b` now emits ONLY `pkg-a` as an edge and
+    // records `pkg-b` in `mikebom:dep-alternative-alternates`. Uses
+    // the shared parser at `control_file::parse_depends_field_with_alternatives`.
+    let depends_raw = stanza.depends().unwrap_or("");
+    let super::control_file::DepsWithAlternatives {
+        resolved: depends,
+        alternates_by_source,
+    } = super::control_file::parse_depends_field_with_alternatives(depends_raw);
+    let purl = build_opkg_purl(&name, &version, &arch, distro_tag)?;
 
     // FR-006 + FR-005a lifecycle-scope decision.
     let is_nativesdk = name.starts_with(NATIVESDK_PREFIX);
@@ -185,6 +259,23 @@ fn build_entry(
             serde_json::Value::String("missing".to_string()),
         );
     }
+    // Milestone 169 T021 (Q2 clarification): emit alt-list fallbacks
+    // as a per-source-component annotation. Key = first-alt name (the
+    // one in `depends`); value = JSON array of fallback names.
+    if !alternates_by_source.is_empty() {
+        let json_map: serde_json::Map<String, serde_json::Value> = alternates_by_source
+            .into_iter()
+            .map(|(k, v)| {
+                let arr: Vec<serde_json::Value> =
+                    v.into_iter().map(serde_json::Value::String).collect();
+                (k, serde_json::Value::Array(arr))
+            })
+            .collect();
+        extra_annotations.insert(
+            "mikebom:dep-alternative-alternates".to_string(),
+            serde_json::Value::Object(json_map),
+        );
+    }
 
     Some(PackageDbEntry {
         build_inclusion: None,
@@ -200,7 +291,10 @@ fn build_entry(
         requirement_range: None,
         source_type: None,
         buildinfo_status: None,
-        evidence_kind: None,
+        // Milestone 169 T019 (FR-015): opkg installed-DB is the sibling
+        // evidence-kind to rpm's `rpmdb-sqlite`. Distinguishes from
+        // archive-file emissions (`ipk-file` per FR-009).
+        evidence_kind: Some("opkg-status-db".to_string()),
         binary_class: None,
         binary_stripped: None,
         linkage_kind: None,
@@ -219,8 +313,18 @@ fn build_entry(
     })
 }
 
-fn build_opkg_purl(name: &str, version: &str, arch: &str) -> Option<Purl> {
-    let purl_str = if version.is_empty() {
+/// Build a `pkg:opkg/<name>@<version>?arch=<arch>[&distro=<tag>]` PURL
+/// per FR-004 + FR-010 (m169 T033 US5). Mirrors
+/// `ipk_file::build_opkg_purl` verbatim so archive-file + installed-DB
+/// emissions produce byte-identical PURLs for the same package. When
+/// `distro_tag` is `None`, the qualifier is omitted (no default).
+fn build_opkg_purl(
+    name: &str,
+    version: &str,
+    arch: &str,
+    distro_tag: Option<&str>,
+) -> Option<Purl> {
+    let mut purl_str = if version.is_empty() {
         format!(
             "pkg:opkg/{}?arch={}",
             encode_purl_segment(name),
@@ -234,23 +338,19 @@ fn build_opkg_purl(name: &str, version: &str, arch: &str) -> Option<Purl> {
             encode_purl_segment(arch)
         )
     };
+    if let Some(tag) = distro_tag {
+        if !tag.is_empty() {
+            purl_str.push_str("&distro=");
+            purl_str.push_str(&encode_purl_segment(tag));
+        }
+    }
     Purl::new(&purl_str).ok()
 }
 
-/// Tokenize opkg's `Depends:` field. Same shape as dpkg —
-/// comma-separated dep names with optional version constraints in
-/// parens that we strip.
-fn parse_depends(raw: &str) -> Vec<String> {
-    raw.split(',')
-        .map(|tok| {
-            let tok = tok.trim();
-            // Strip version constraint: "libc (>= 2.38)" -> "libc"
-            let name = tok.split_whitespace().next().unwrap_or("").trim();
-            name.to_string()
-        })
-        .filter(|s| !s.is_empty())
-        .collect()
-}
+// NOTE (Milestone 169 T021): the previous `fn parse_depends` was
+// replaced by the shared `control_file::parse_depends_field_with_alternatives`
+// helper — see build_entry() above. The Q2 alternative-list treatment
+// requires the shared helper's `DepsWithAlternatives` return shape.
 
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
@@ -465,6 +565,117 @@ mod tests {
                 "mikebom-fixture-child".to_string(),
                 "mikebom-fixture-other".to_string()
             ]
+        );
+    }
+
+    // ------------------------------------------------------------
+    // Milestone 169 T022 (FR-015): status-DB primary parse emits
+    // `opkg-status-db` evidence-kind.
+    // ------------------------------------------------------------
+    #[test]
+    fn t022_status_db_primary_parse_emits_opkg_status_db_evidence_kind() {
+        let tmp = tempfile::tempdir().unwrap();
+        write_status(
+            tmp.path(),
+            "Package: mikebom-fixture-lib\n\
+             Version: 1.2.3\n\
+             Architecture: mikebom-fixture-arch\n\
+             Status: install user installed\n",
+        );
+        let (entries, _ctx) = read(tmp.path());
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            entries[0].evidence_kind.as_deref(),
+            Some("opkg-status-db"),
+            "installed-DB emissions MUST carry evidence-kind opkg-status-db per FR-015"
+        );
+    }
+
+    // ------------------------------------------------------------
+    // Milestone 169 T023 (FR-014): info/*.control fallback when
+    // status file is absent.
+    // ------------------------------------------------------------
+    #[test]
+    fn t023_info_dir_fallback_fires_when_status_absent() {
+        let tmp = tempfile::tempdir().unwrap();
+        // Create OPKG_INFO_DIR but NO status file.
+        let info_dir = tmp.path().join(OPKG_INFO_DIR);
+        std::fs::create_dir_all(&info_dir).unwrap();
+        std::fs::write(
+            info_dir.join("busybox.control"),
+            "Package: busybox\n\
+             Version: 1.36.1-r0\n\
+             Architecture: core2-64\n\
+             License: GPL-2.0\n",
+        )
+        .unwrap();
+        std::fs::write(
+            info_dir.join("glibc.control"),
+            "Package: glibc\n\
+             Version: 2.39-r0\n\
+             Architecture: core2-64\n\
+             License: LGPL-2.1\n",
+        )
+        .unwrap();
+
+        let (entries, _ctx) = read(tmp.path());
+        assert_eq!(
+            entries.len(),
+            2,
+            "FR-014 fallback should emit one entry per info/*.control file"
+        );
+        // Every fallback emission carries the marker annotation.
+        for e in &entries {
+            assert_eq!(
+                e.extra_annotations
+                    .get("mikebom:opkg-status-fallback")
+                    .and_then(|v| v.as_str()),
+                Some("true"),
+                "fallback emissions must carry mikebom:opkg-status-fallback annotation"
+            );
+            assert_eq!(
+                e.evidence_kind.as_deref(),
+                Some("opkg-status-db"),
+                "fallback emissions still use opkg-status-db evidence-kind"
+            );
+        }
+    }
+
+    // ------------------------------------------------------------
+    // Milestone 169 T024 (Q2 alt-list): opkg reader wires through
+    // the shared parse_depends_field_with_alternatives helper.
+    // ------------------------------------------------------------
+    #[test]
+    fn t024_depends_alternative_list_semantic_matches_us1() {
+        let tmp = tempfile::tempdir().unwrap();
+        write_status(
+            tmp.path(),
+            "Package: mikebom-fixture-app\n\
+             Version: 1.0.0\n\
+             Architecture: mikebom-fixture-arch\n\
+             Depends: libmbedtls-12 | libssl3\n\
+             Status: install user installed\n",
+        );
+        let (entries, _ctx) = read(tmp.path());
+        assert_eq!(entries.len(), 1);
+        // Q2: first alt goes to depends[], fallbacks to annotation.
+        assert_eq!(
+            entries[0].depends,
+            vec!["libmbedtls-12".to_string()],
+            "first-wins: depends[] carries only the first alt"
+        );
+        let annotation = entries[0]
+            .extra_annotations
+            .get("mikebom:dep-alternative-alternates")
+            .expect("alt-list annotation must be present");
+        let obj = annotation.as_object().expect("annotation is JSON object");
+        assert_eq!(
+            obj.get("libmbedtls-12")
+                .and_then(|v| v.as_array())
+                .and_then(|arr| arr.first())
+                .and_then(|v| v.as_str()),
+            Some("libssl3"),
+            "libssl3 recorded as fallback under libmbedtls-12 key"
         );
     }
 }

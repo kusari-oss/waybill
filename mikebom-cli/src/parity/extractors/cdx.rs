@@ -834,6 +834,13 @@ cdx_anno!(c114_cdx, "mikebom:built-in-requirement",             component);
 // Constitution Principle X while eliminating phantom empty-version
 // PURLs from consumer graph-traversal paths (Principle IX).
 cdx_anno!(c115_cdx, "mikebom:unresolved-declared-dep",          component);
+// Milestone 169 (closes #500 Q2): C116 per-source-component
+// `mikebom:dep-alternative-alternates` annotation records
+// second-and-later alternates in a Debian/opkg `Depends: pkg-a | pkg-b`
+// alt-list. The reader picks the first alternative as the edge; the
+// annotation preserves the fallback set. JSON-object value keyed by
+// first-alt name. See `control_file::parse_depends_field_with_alternatives`.
+cdx_anno!(c116_cdx, "mikebom:dep-alternative-alternates",       component);
 
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)

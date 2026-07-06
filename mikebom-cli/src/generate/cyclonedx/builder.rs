@@ -1128,6 +1128,11 @@ impl CycloneDxBuilder {
                             | "cabal-freeze"
                             | "stack-yaml-lock"
                             | "cabal-pkg-descriptor"
+                            // Milestone 169 (T013, closes #500) — ipk
+                            // archive-file reader + opkg installed-DB
+                            // hardening. See spec.md FR-009 + FR-015.
+                            | "ipk-file"
+                            | "opkg-status-db"
                     ),
                     "mikebom:evidence-kind value '{kind}' is not in the canonical \
                      enum (rpm-file | rpmdb-sqlite | rpmdb-bdb | \
@@ -1139,7 +1144,8 @@ impl CycloneDxBuilder {
                      composer-installed-json | cocoapods-podfile-lock | \
                      cocoapods-podfile | cocoapods-manifest-lock | mix-lock | mix-exs | \
                      rebar-lock | rebar-config | app-src | sbt-lock | sbt-build | \
-                     cabal-freeze | stack-yaml-lock | cabal-pkg-descriptor)"
+                     cabal-freeze | stack-yaml-lock | cabal-pkg-descriptor | \
+                     ipk-file | opkg-status-db)"
                 );
                 properties.push(json!({
                     "name": "mikebom:evidence-kind",

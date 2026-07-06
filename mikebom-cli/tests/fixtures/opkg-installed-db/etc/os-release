@@ -1,0 +1,3 @@
+ID=poky
+VERSION_ID=5.0
+NAME="Poky (Yocto Project Reference Distro)"

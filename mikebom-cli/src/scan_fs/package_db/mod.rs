@@ -32,6 +32,7 @@ pub mod go_binary;
 pub mod golang;
 pub mod gradle;
 pub mod haskell;
+pub mod ipk_file;
 pub mod kotlin_dsl;
 pub mod maven;
 pub mod maven_sidecar;
@@ -1344,6 +1345,16 @@ pub fn read_all(
         #[cfg(unix)]
         &mut claimed_inodes,
     );
+    // Milestone 169 T029 (US4, FR-011): every `.ipk` archive-file's
+    // `data.tar.gz` payload declares the paths its package installs.
+    // Feed those into the binary walker's claim set so the same files
+    // don't also emit as `pkg:generic/*` from binary-tier analysis.
+    ipk_file::collect_claimed_paths(
+        rootfs,
+        &mut claimed,
+        #[cfg(unix)]
+        &mut claimed_inodes,
+    );
     // Milestone 107 US2: Yocto image-manifest reader. Walks
     // `build/tmp/deploy/images/<machine>/<image>.manifest` files and
     // emits one `pkg:opkg/<name>@<version>?arch=<arch>` per line —
@@ -1503,6 +1514,14 @@ pub fn read_all(
             .filter(|s| !s.is_empty()),
     };
     out.extend(rpm_file::read(rootfs, distro_version.as_deref(), &rpm_config));
+    // Milestone 169 US1 (T013, closes #500): ipk archive-file reader.
+    // Analogous to rpm_file above — walks the scan target for `.ipk`
+    // files (build outputs at `tmp/deploy/ipk/` or downloaded OpenWrt
+    // feed artifacts) and emits `pkg:opkg/*` components. Sibling to
+    // the milestone-107 `opkg::read` installed-DB reader which fires
+    // separately at line ~1341.
+    let ipk_config = ipk_file::IpkReaderConfig::default();
+    out.extend(ipk_file::read(rootfs, &ipk_config));
     // Milestone 004 US4: legacy BDB rpmdb reader (stub until T061–T065
     // land). Gated behind --include-legacy-rpmdb; no-op when flag unset.
     out.extend(rpmdb_bdb::read(rootfs, include_legacy_rpmdb));
@@ -1749,6 +1768,27 @@ pub fn read_all(
         );
     }
 
+    // Milestone 169 T030 (US4, FR-016): dedup pass that lets
+    // installed-DB emissions WIN when they collide on the same PURL
+    // with archive-file emissions from the same scan. Two collisions
+    // are possible in practice today:
+    //
+    //   - rpm installed-DB (rpmdb-sqlite / rpmdb-bdb) vs rpm archive
+    //     files (rpm-file). Live rpm systems typically contain BOTH
+    //     an installed DB AND cached artefacts under /var/cache/dnf/,
+    //     /var/cache/yum/, etc.
+    //   - opkg installed-DB (opkg-status-db) vs ipk archive files
+    //     (ipk-file). Yocto build outputs land in tmp/deploy/ipk/;
+    //     a runtime rootfs additionally carries /var/lib/opkg/status.
+    //
+    // The precedence: installed-DB wins because the installed state
+    // is more authoritative than a build-cache artefact. Archive-file
+    // components that don't collide with an installed-DB entry are
+    // preserved unchanged. Log a per-scan drop count at INFO so
+    // consumers can grep for "unexpected zero drops" as a sanity
+    // check on multi-source scans.
+    let out = dedup_installed_db_over_archive_file(out);
+
     Ok(DbScanResult {
         entries: out,
         claimed_paths: claimed,
@@ -1757,6 +1797,69 @@ pub fn read_all(
         diagnostics,
         scan_target_coord,
     })
+}
+
+/// Milestone 169 T030 (US4 FR-016): partition emissions by
+/// evidence_kind literal into installed-DB vs archive-file categories,
+/// then drop archive-file entries whose PURL already appears from an
+/// installed-DB source. See the call-site comment in `read_all` for
+/// the collision matrix + precedence rationale.
+///
+/// Categorization (per analyze-report F3 verified via `rg 'evidence_kind: Some\\('`
+/// on 2026-07-06):
+///
+///   - installed-DB kinds: `rpmdb-sqlite`, `rpmdb-bdb`, `opkg-status-db`,
+///     `alpm-local-db`, `brew-install-receipt`, `brew-cask-metadata`.
+///   - archive-file kinds: `rpm-file`, `ipk-file`.
+///
+/// Every OTHER evidence-kind (`None`, or one of the manifest-file
+/// values like `pubspec-lock`, `composer-json`, etc.) is treated as
+/// installed-DB for precedence purposes — those readers don't have
+/// an archive-file sibling, so misclassification wouldn't cause a
+/// false drop. Adding a NEW installed-DB kind after m169 falls in
+/// this bucket automatically; adding a NEW archive-file kind
+/// requires extending the match arm below.
+fn dedup_installed_db_over_archive_file(
+    entries: Vec<PackageDbEntry>,
+) -> Vec<PackageDbEntry> {
+    // Build a PURL set from installed-DB emissions (non-archive-file).
+    let installed_purls: std::collections::HashSet<String> = entries
+        .iter()
+        .filter(|e| !is_archive_file_evidence_kind(e.evidence_kind.as_deref()))
+        .map(|e| e.purl.as_str().to_string())
+        .collect();
+
+    let before = entries.len();
+    let out: Vec<PackageDbEntry> = entries
+        .into_iter()
+        .filter(|e| {
+            // Drop only archive-file entries whose PURL collides with
+            // an installed-DB entry from the same scan.
+            if is_archive_file_evidence_kind(e.evidence_kind.as_deref()) {
+                !installed_purls.contains(e.purl.as_str())
+            } else {
+                true
+            }
+        })
+        .collect();
+    let dropped = before.saturating_sub(out.len());
+    if dropped > 0 {
+        tracing::info!(
+            m169_archive_file_dropped_by_installed_db = dropped,
+            "installed-DB emissions won precedence over archive-file peers per m169 FR-016"
+        );
+    }
+    out
+}
+
+/// Milestone 169 T030 — categorize an evidence_kind literal as
+/// "archive-file kind" (i.e. eligible to be dropped by the dedup
+/// pass when a same-PURL installed-DB peer exists in the same scan).
+///
+/// Extend this match arm when a new archive-file reader lands (e.g. a
+/// future `.deb` file reader).
+fn is_archive_file_evidence_kind(kind: Option<&str>) -> bool {
+    matches!(kind, Some("rpm-file") | Some("ipk-file"))
 }
 
 /// Map an `/etc/os-release::ID` value to the PURL vendor segment used
@@ -2787,5 +2890,128 @@ Architecture: arm64
         assert!(verdict_rank(GoModWhyVerdict::ProdNeeded) > verdict_rank(GoModWhyVerdict::TestOnly));
         assert!(verdict_rank(GoModWhyVerdict::TestOnly) > verdict_rank(GoModWhyVerdict::NotNeeded));
         assert!(verdict_rank(GoModWhyVerdict::NotNeeded) > verdict_rank(GoModWhyVerdict::Unresolved));
+    }
+
+    // ------------------------------------------------------------
+    // Milestone 169 T032 (US4 FR-016): dispatcher dedup pass — when
+    // installed-DB + archive-file emissions collide on the same PURL,
+    // installed-DB wins. Companion test verifies the partition
+    // classifier catches every installed-DB evidence-kind literal
+    // (defends against future readers adding new kinds without
+    // updating the archive-file matcher).
+    // ------------------------------------------------------------
+
+    fn make_pkg(purl_str: &str, evidence_kind: Option<&str>) -> PackageDbEntry {
+        let purl = mikebom_common::types::purl::Purl::new(purl_str).unwrap();
+        PackageDbEntry {
+            build_inclusion: None,
+            purl,
+            name: "test-pkg".to_string(),
+            version: "1.0".to_string(),
+            arch: Some("x86_64".to_string()),
+            source_path: "/tmp/synthetic".to_string(),
+            depends: Vec::new(),
+            maintainer: None,
+            licenses: Vec::new(),
+            lifecycle_scope: None,
+            requirement_range: None,
+            source_type: None,
+            buildinfo_status: None,
+            evidence_kind: evidence_kind.map(str::to_string),
+            binary_class: None,
+            binary_stripped: None,
+            linkage_kind: None,
+            detected_go: None,
+            confidence: None,
+            binary_packed: None,
+            raw_version: None,
+            parent_purl: None,
+            npm_role: None,
+            co_owned_by: None,
+            hashes: Vec::new(),
+            sbom_tier: None,
+            shade_relocation: None,
+            extra_annotations: Default::default(),
+            binary_role: None,
+        }
+    }
+
+    #[test]
+    fn t032_dispatcher_dedup_installed_db_wins_over_archive_file() {
+        // Two entries collide on the same PURL: one installed-DB
+        // sourced (opkg-status-db) + one archive-file sourced
+        // (ipk-file). Dedup should preserve the installed-DB entry
+        // and drop the archive-file peer.
+        let purl = "pkg:opkg/busybox@1.36.1-r0?arch=core2-64";
+        let installed = make_pkg(purl, Some("opkg-status-db"));
+        let archive = make_pkg(purl, Some("ipk-file"));
+        let inp = vec![installed.clone(), archive];
+
+        let out = dedup_installed_db_over_archive_file(inp);
+
+        assert_eq!(out.len(), 1, "collision must resolve to a single entry");
+        assert_eq!(
+            out[0].evidence_kind.as_deref(),
+            Some("opkg-status-db"),
+            "installed-DB entry must win"
+        );
+    }
+
+    /// Companion test per analyze-report F3 — defends against silent
+    /// dedup no-op when a new installed-DB kind is added without
+    /// updating `is_archive_file_evidence_kind`. If a future reader
+    /// adds a NEW kind that fits neither category, this test still
+    /// passes because non-archive-file kinds default to "not
+    /// droppable" (safe). If a future reader wrongly labels an
+    /// installed-DB kind as archive-file, one of the collision cases
+    /// below breaks.
+    #[test]
+    fn t032b_dedup_partition_catches_every_installed_db_reader_evidence_kind() {
+        // Every currently-known installed-DB evidence-kind literal
+        // (per m169 T030 pre-step grep 2026-07-06):
+        for installed_kind in &[
+            "rpmdb-sqlite",
+            "opkg-status-db",
+            "alpm-local-db",
+            "brew-install-receipt",
+            "brew-cask-metadata",
+        ] {
+            // Same PURL emitted by an installed-DB source vs the
+            // archive-file source (rpm-file OR ipk-file — pick one
+            // based on ecosystem for realism, but the classifier
+            // shouldn't care).
+            let purl = "pkg:generic/collision-test@1.0";
+            let installed = make_pkg(purl, Some(installed_kind));
+            let archive = make_pkg(purl, Some("ipk-file")); // any archive-file kind
+            let out = dedup_installed_db_over_archive_file(vec![
+                installed,
+                archive,
+            ]);
+            assert_eq!(
+                out.len(),
+                1,
+                "installed-DB kind {installed_kind} must be recognized by the partition classifier"
+            );
+            assert_eq!(
+                out[0].evidence_kind.as_deref(),
+                Some(*installed_kind),
+                "installed-DB entry ({installed_kind}) must win over archive-file peer"
+            );
+        }
+    }
+
+    /// Sanity check: when NO collision exists, both entries survive.
+    #[test]
+    fn t032c_no_collision_preserves_both_entries() {
+        let installed = make_pkg(
+            "pkg:opkg/foo@1.0?arch=all",
+            Some("opkg-status-db"),
+        );
+        let archive = make_pkg(
+            "pkg:opkg/bar@2.0?arch=all",
+            Some("ipk-file"),
+        );
+        let out = dedup_installed_db_over_archive_file(vec![installed, archive]);
+        assert_eq!(out.len(), 2, "non-colliding entries must both survive");
     }
 }

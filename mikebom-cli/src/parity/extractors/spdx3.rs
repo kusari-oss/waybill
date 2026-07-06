@@ -655,6 +655,9 @@ spdx3_anno!(c114_spdx3, "mikebom:built-in-requirement",             component);
 // Milestone 163 (closes #498): C115 per-component npm workspace-peer
 // unresolved-declared-dep annotation.
 spdx3_anno!(c115_spdx3, "mikebom:unresolved-declared-dep",          component);
+// Milestone 169 (closes #500 Q2): C116 per-source-component
+// `mikebom:dep-alternative-alternates` annotation for Debian/opkg alt-lists.
+spdx3_anno!(c116_spdx3, "mikebom:dep-alternative-alternates",       component);
 
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-component
 // graph-element annotation carrying the JSON-encoded array of

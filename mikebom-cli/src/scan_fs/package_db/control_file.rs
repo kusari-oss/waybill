@@ -155,6 +155,78 @@ pub(super) fn parse_stanzas(text: &str) -> Vec<ControlStanza> {
     out
 }
 
+/// Milestone 169 (T005, closes #500 US2 Q2 clarification) — parse a
+/// Debian-style `Depends:` field with alternative-list syntax.
+///
+/// Input: raw `Depends:` field text (may contain commas separating
+/// multiple deps + `|` separating alternatives within each dep).
+///
+/// Semantics (per m169 Q2 clarification 2026-07-06):
+///
+/// - `Depends: pkg-a, pkg-b` → `resolved = ["pkg-a", "pkg-b"]` (2 edges; no alternatives).
+/// - `Depends: pkg-a | pkg-b, pkg-c` → `resolved = ["pkg-a", "pkg-c"]` + `alternates_by_source["pkg-a"] = ["pkg-b"]` (first-wins matches opkg runtime default; fallback preserved for downstream consumers via `mikebom:dep-alternative-alternates` annotation).
+/// - Version constraints in parens are ignored for the resolved list per existing dpkg/opkg reader precedent.
+///
+/// Consumed by `ipk_file.rs` (m169 US1 T011, wired up 2026-07-06) and
+/// scheduled for `opkg.rs` (m169 US2 hardening T021).
+pub(super) fn parse_depends_field_with_alternatives(
+    raw: &str,
+) -> DepsWithAlternatives {
+    let mut resolved: Vec<String> = Vec::new();
+    let mut alternates_by_source: std::collections::HashMap<String, Vec<String>> =
+        std::collections::HashMap::new();
+
+    for chunk in raw.split(',') {
+        let chunk = chunk.trim();
+        if chunk.is_empty() {
+            continue;
+        }
+        // Split into `|`-separated alternatives (opkg alt-list syntax).
+        let alts: Vec<String> = chunk
+            .split('|')
+            .map(|s| strip_version_constraint(s.trim()))
+            .filter(|s| !s.is_empty())
+            .collect();
+        if alts.is_empty() {
+            continue;
+        }
+        let first = alts[0].clone();
+        resolved.push(first.clone());
+        if alts.len() > 1 {
+            alternates_by_source.insert(first, alts[1..].to_vec());
+        }
+    }
+
+    DepsWithAlternatives {
+        resolved,
+        alternates_by_source,
+    }
+}
+
+/// Trim trailing version constraints like `(>= 1.2)` from a package
+/// name — matches the existing dpkg/opkg reader convention where the
+/// dep target is name-only.
+fn strip_version_constraint(s: &str) -> String {
+    match s.find('(') {
+        Some(i) => s[..i].trim().to_string(),
+        None => s.to_string(),
+    }
+}
+
+/// Return value of [`parse_depends_field_with_alternatives`].
+#[derive(Debug, Default, PartialEq, Eq)]
+pub(super) struct DepsWithAlternatives {
+    /// First-wins dep names — feeds `PackageDbEntry.depends` +
+    /// dependsOn edges.
+    pub(super) resolved: Vec<String>,
+    /// Fallback alternatives per source-dep name — feeds the
+    /// `mikebom:dep-alternative-alternates` annotation on the SOURCE
+    /// component. Key = the first-wins name in `resolved`; value =
+    /// non-empty list of fallback names.
+    pub(super) alternates_by_source:
+        std::collections::HashMap<String, Vec<String>>,
+}
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
@@ -259,5 +331,73 @@ mod tests {
         let text = " orphan continuation\nPackage: foo\n";
         let stanzas = parse_stanzas(text);
         assert_eq!(stanzas[0].name(), Some("foo"));
+    }
+
+    // ------------------------------------------------------------
+    // Milestone 169 T005 — parse_depends_field_with_alternatives
+    // (Q2 clarification: first-wins + alternates recorded)
+    // ------------------------------------------------------------
+
+    #[test]
+    fn depends_simple_comma_separated_no_alternatives() {
+        let d = parse_depends_field_with_alternatives("libc, zlib");
+        assert_eq!(d.resolved, vec!["libc".to_string(), "zlib".to_string()]);
+        assert!(d.alternates_by_source.is_empty());
+    }
+
+    #[test]
+    fn depends_alternative_list_first_wins() {
+        // `pkg-a | pkg-b` per Q2: first-alt goes to resolved; fallbacks
+        // to alternates_by_source keyed by the first-alt name.
+        let d = parse_depends_field_with_alternatives("libmbedtls-12 | libssl3");
+        assert_eq!(d.resolved, vec!["libmbedtls-12".to_string()]);
+        assert_eq!(
+            d.alternates_by_source.get("libmbedtls-12"),
+            Some(&vec!["libssl3".to_string()])
+        );
+    }
+
+    #[test]
+    fn depends_mixed_alternatives_and_simple_deps() {
+        let d = parse_depends_field_with_alternatives(
+            "libc, libmbedtls-12 | libssl3 | libssl1.1, zlib",
+        );
+        assert_eq!(
+            d.resolved,
+            vec![
+                "libc".to_string(),
+                "libmbedtls-12".to_string(),
+                "zlib".to_string(),
+            ]
+        );
+        assert_eq!(
+            d.alternates_by_source.get("libmbedtls-12"),
+            Some(&vec!["libssl3".to_string(), "libssl1.1".to_string()])
+        );
+        assert!(!d.alternates_by_source.contains_key("libc"));
+        assert!(!d.alternates_by_source.contains_key("zlib"));
+    }
+
+    #[test]
+    fn depends_strips_version_constraints() {
+        // Existing dpkg/opkg reader convention: dep target is
+        // name-only; `(>= 1.2)` constraints are ignored.
+        let d = parse_depends_field_with_alternatives("libc (>= 1.2), zlib (>= 1.0)");
+        assert_eq!(d.resolved, vec!["libc".to_string(), "zlib".to_string()]);
+    }
+
+    #[test]
+    fn depends_empty_input_returns_empty() {
+        let d = parse_depends_field_with_alternatives("");
+        assert!(d.resolved.is_empty());
+        assert!(d.alternates_by_source.is_empty());
+    }
+
+    #[test]
+    fn depends_trailing_pipe_ignored_gracefully() {
+        // `pkg-a | ` — trailing pipe with empty alternative.
+        let d = parse_depends_field_with_alternatives("libc | ");
+        assert_eq!(d.resolved, vec!["libc".to_string()]);
+        assert!(d.alternates_by_source.is_empty());
     }
 }

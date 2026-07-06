@@ -1,0 +1,5 @@
+Package: glibc
+Version: 2.39-r0
+Architecture: core2-64
+License: LGPL-2.1
+Description: GNU C library

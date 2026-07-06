@@ -1,0 +1,6 @@
+Package: busybox
+Version: 1.36.1-r0
+Architecture: core2-64
+License: GPL-2.0
+Description: Multi-call binary for embedded systems
+Depends: libc, kmod-sit

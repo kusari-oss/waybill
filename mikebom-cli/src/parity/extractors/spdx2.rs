@@ -588,6 +588,9 @@ spdx23_anno!(c114_spdx23, "mikebom:built-in-requirement",             component)
 // Milestone 163 (closes #498): C115 per-component npm workspace-peer
 // unresolved-declared-dep annotation.
 spdx23_anno!(c115_spdx23, "mikebom:unresolved-declared-dep",          component);
+// Milestone 169 (closes #500 Q2): C116 per-source-component
+// `mikebom:dep-alternative-alternates` annotation for Debian/opkg alt-lists.
+spdx23_anno!(c116_spdx23, "mikebom:dep-alternative-alternates",       component);
 
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-Package
 // envelope carrying the JSON-encoded array of conflict records.
