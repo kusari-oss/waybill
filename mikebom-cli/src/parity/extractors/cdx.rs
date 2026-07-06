@@ -529,16 +529,10 @@ cdx_anno!(c40_cdx, "mikebom:component-role",            component);
 // binary's BuildInfo does NOT confirm the component as linked.
 cdx_anno!(c41_cdx, "mikebom:not-linked",                 component);
 
-// C44 — doc-level Go graph-completeness signal (milestone 061,
-// closes #119). The annotation has TWO field-name members
-// (`mikebom:graph-completeness` + `mikebom:graph-completeness-reason`)
-// emitted as separate metadata properties; the parity extractor
-// pulls both into one set for the SymmetricEqual check.
-pub(super) fn c44_cdx(doc: &serde_json::Value) -> std::collections::BTreeSet<String> {
-    let mut out = cdx_property_values(doc, "mikebom:graph-completeness", true);
-    out.extend(cdx_property_values(doc, "mikebom:graph-completeness-reason", true));
-    out
-}
+// C44 removed in milestone 170 — the duplicate-key emission was retired;
+// `mikebom:graph-completeness` is now C104's sole property (universal
+// reachability), and the Go-specific transitive-edge signal lives at
+// C110 `mikebom:go-transitive-coverage`.
 
 // C45 — per-component orphan-reason (milestone 061, closes #119).
 cdx_anno!(c45_cdx, "mikebom:orphan-reason",              component);

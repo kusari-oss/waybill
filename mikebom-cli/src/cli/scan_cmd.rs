@@ -1972,8 +1972,6 @@ pub async fn execute(
         mut relationships,
         complete_ecosystems,
         os_release_missing_fields,
-        go_graph_completeness,
-        go_graph_completeness_reason,
         go_transitive_coverage,
         go_workspace_mode,
         scan_target_coord,
@@ -2609,12 +2607,6 @@ pub async fn execute(
         } else {
             crate::generate::ScopeMode::Artifact
         },
-        // Milestone 061 (closes #119): doc-level Go graph-completeness
-        // signal flows from the scan_fs::ScanResult into ScanArtifacts
-        // for the per-format emitters' metadata.properties[] /
-        // document-level annotations[] entries.
-        go_graph_completeness,
-        go_graph_completeness_reason: go_graph_completeness_reason.as_deref(),
         // Milestone 160 (T034/T035): doc-scope Go-transitive coverage
         // signal for the C110/C111 annotations. Distinct from
         // graph-completeness per research.md R1.

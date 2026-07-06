@@ -56,10 +56,6 @@ impl SbomSerializer for CycloneDxJsonSerializer {
         };
         let builder = CycloneDxBuilder::new(cdx_config)
             .with_os_release_missing_fields(scan.os_release_missing_fields.to_vec())
-            .with_go_graph_completeness(
-                scan.go_graph_completeness,
-                scan.go_graph_completeness_reason.map(String::from),
-            )
             // Milestone 160 (T034/T035) — propagate the doc-scope
             // Go-transitive coverage signal from ScanArtifacts into
             // the builder for the C110/C111 metadata properties.

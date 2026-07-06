@@ -909,10 +909,6 @@
         "value": "ID,VERSION_ID"
       },
       {
-        "name": "mikebom:graph-completeness",
-        "value": "partial"
-      },
-      {
         "name": "mikebom:trace-integrity-ring-buffer-overflows",
         "value": "0"
       },

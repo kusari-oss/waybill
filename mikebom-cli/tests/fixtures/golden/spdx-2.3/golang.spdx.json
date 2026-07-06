@@ -29,12 +29,6 @@
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
       "annotator": "Tool: mikebom-0.1.0-alpha.53",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"partial\"}"
-    },
-    {
-      "annotationDate": "1970-01-01T00:00:00Z",
-      "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.53",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:go-transitive-coverage\",\"value\":\"unknown\"}"
     },
     {

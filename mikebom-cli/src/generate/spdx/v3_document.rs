@@ -96,8 +96,6 @@ pub fn build_document(
             include_hashes: scan.include_hashes,
             include_source_files: scan.include_source_files,
             scope_mode: scan.scope_mode,
-            go_graph_completeness: scan.go_graph_completeness,
-            go_graph_completeness_reason: scan.go_graph_completeness_reason,
             go_transitive_coverage: scan.go_transitive_coverage,
             go_workspace_mode: scan.go_workspace_mode,
             source_document_binding: scan.source_document_binding,

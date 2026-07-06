@@ -521,23 +521,6 @@ fn push_document_fields(
         }
     }
 
-    // C44 (milestone 061, closes #119): doc-level Go graph-completeness
-    // signal — Principle X transparency for the Trivy-style orphan
-    // condition introduced by milestone 059. Absent annotation ⇒ no
-    // Go scan happened (signal not applicable).
-    if let Some(gc) = scan.go_graph_completeness {
-        let value = serde_json::to_value(gc)
-            .ok()
-            .and_then(|v| v.as_str().map(|s| s.to_string()))
-            .unwrap_or_else(|| "unknown".to_string());
-        push(out, "mikebom:graph-completeness", json!(value));
-        if let Some(reason) = scan.go_graph_completeness_reason {
-            if !reason.is_empty() {
-                push(out, "mikebom:graph-completeness-reason", json!(reason));
-            }
-        }
-    }
-
     // Milestone 160 (T034/T035): doc-scope Go-transitive coverage
     // annotations (C110/C111). C110 emitted iff the scan had ≥1 Go
     // component; C111 conditionally emitted iff coverage != Complete.

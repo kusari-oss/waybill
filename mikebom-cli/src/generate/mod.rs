@@ -67,16 +67,6 @@ pub struct ScanArtifacts<'a> {
     /// `creationInfo.comment` / `SpdxDocument.comment` (direct).
     /// Milestone 047.
     pub scope_mode: ScopeMode,
-    /// Milestone 061 (closes #119): doc-level Go graph-completeness
-    /// signal. `None` when no Go scan happened (annotation absent in
-    /// output). `Some(Complete)` / `Some(Partial)` per the per-scan
-    /// orphan classification done by `golang::legacy::read()`.
-    pub go_graph_completeness:
-        Option<crate::scan_fs::package_db::GraphCompleteness>,
-    /// Milestone 061 — comma-separated `<ecosystem>:<reason-class>`
-    /// list summarizing why `go_graph_completeness == Partial`.
-    /// Empty/None when completeness is `Complete` or `None`.
-    pub go_graph_completeness_reason: Option<&'a str>,
     /// Milestone 160 (T034/T035): doc-scope Go-transitive coverage
     /// signal. Distinct from `go_graph_completeness` per research.md R1
     /// — this reports what fraction of Go modules had per-module
