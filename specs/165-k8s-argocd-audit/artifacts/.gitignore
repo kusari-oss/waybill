@@ -1,0 +1,11 @@
+# Milestone 165 intermediate audit artifacts — regenerable from
+# pinned commit SHAs + tool versions per
+# docs/audits/2026-07-05-kubernetes-argocd.md reproduction appendix.
+# Not versioned per milestone-090 fixture-stayset guidance.
+*.json
+*.spdx.json
+*.cdx.json
+snapshot.json
+analysis.json
+delta_full.json
+ranking-scratch.md
