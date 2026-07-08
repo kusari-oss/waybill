@@ -28,6 +28,15 @@ fn go_fixture(sub: &str) -> PathBuf {
         .join(sub)
 }
 
+/// Returns `true` iff `go version` succeeds — i.e., the Go toolchain
+/// is available on the current host. Some CI lanes (rust-only lint +
+/// test runners) intentionally omit Go; tests that exercise
+/// successful `go mod download` warming soft-skip when this is false
+/// so they don't produce false-negative CI failures.
+fn has_go_binary() -> bool {
+    Command::new("go").arg("version").output().is_ok()
+}
+
 /// Scan `path` and return the emitted CDX SBOM as parsed JSON.
 ///
 /// `warm_mode`: pass the flag value to test as `Some("per-workspace")`
@@ -487,8 +496,22 @@ fn t030_us3_go_binary_absent_degrades() {
 /// requires, no failing modules) the C119 annotation MUST be ABSENT
 /// (not present with an empty array). This is the byte-identity gate:
 /// clean scans don't get a spurious "no failures" record.
+///
+/// Requires `go` on PATH — the test invokes `--warm-go-cache=per-
+/// workspace` which spawns `go mod download`. On CI lanes without a
+/// Go toolchain (rust-only lint/test runners), this test soft-skips
+/// with a stderr note. The `go-binary-absent` failure path is
+/// separately covered by `t030_us3_go_binary_absent_degrades`.
 #[test]
 fn t030_us3_c119_absent_on_healthy_scan() {
+    if !has_go_binary() {
+        eprintln!(
+            "SKIP: t030_us3_c119_absent_on_healthy_scan requires `go` on PATH; \
+             `go-binary-absent` path is covered by t030_us3_go_binary_absent_degrades"
+        );
+        return;
+    }
+
     let tmp = tempfile::tempdir().expect("tempdir");
     write_empty_go_project(tmp.path());
 
