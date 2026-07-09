@@ -25,6 +25,57 @@ use super::content_shape::{
 use super::dedupe::DedupeIndex;
 use super::FileTierEntry;
 
+/// Milestone 174 — closed set of VCS metadata directory + file names
+/// the file-tier walker skips at descent AND at file-visit time.
+///
+/// - **Exact base-name match**. `.git`, `.hg`, and `.svn` are excluded;
+///   `.github`, `.githooks`, `.gitignore`, `.gitattributes`, `.gitmodules`
+///   are NOT excluded (per FR-006 similar-name protection).
+/// - **Case-sensitive**. `.GIT/` would not match. No known VCS tool
+///   creates upper-case metadata directories; fold-safe comparison
+///   would add complexity for zero real-world benefit and would risk
+///   false-positive exclusion of unrelated operator content (spec
+///   Assumptions #3).
+/// - **Closed set**. Adding a fourth name (`.bzr`, `.fslckout`,
+///   `_darcs`, `CVS`, `RCS`) requires a follow-up milestone per spec
+///   Assumptions.
+///
+/// This const covers both the directory-form case (`should_skip`
+/// closure at `walk_file_tier` line ~104) and the file-form case
+/// (git submodule pointer file, checked at the top of the visit
+/// callback). One const, two call sites — see [`is_vcs_metadata_name`].
+const VCS_METADATA_NAMES: &[&str] = &[".git", ".hg", ".svn"];
+
+/// Returns `true` when `candidate`'s base name exactly matches one of
+/// [`VCS_METADATA_NAMES`]. Used by both the `should_skip` closure
+/// (directory-descend gate) AND the visit callback (file-form gate
+/// for the git-submodule `.git` pointer file case).
+///
+/// Non-UTF-8 filenames on Unix return `false` (fail-open per
+/// Constitution Principle III — a non-UTF-8-named directory is
+/// exceedingly unlikely to be VCS metadata since git/hg/svn all
+/// create canonical ASCII names).
+///
+/// Emits a `tracing::debug!` line naming the candidate when returning
+/// `true`. FR-009: MUST NOT appear at INFO or higher. Default log
+/// level suppresses; `RUST_LOG=debug` surfaces the skip decisions.
+///
+/// Pure function — no I/O, no allocation, no mutable state. Safe to
+/// call before `symlink_metadata` so that a symlink named `.git`
+/// pointing at arbitrary content is also skipped without opening it.
+fn is_vcs_metadata_name(candidate: &Path) -> bool {
+    match candidate.file_name().and_then(|s| s.to_str()) {
+        Some(name) if VCS_METADATA_NAMES.contains(&name) => {
+            tracing::debug!(
+                candidate = %candidate.display(),
+                "file-tier walker: skipping VCS metadata"
+            );
+            true
+        }
+        _ => false,
+    }
+}
+
 /// Per-scan configuration for [`walk_file_tier`]. No defaults; all
 /// fields supplied by the caller.
 pub(crate) struct WalkerConfig<'a> {
@@ -91,11 +142,21 @@ pub(crate) fn walk_file_tier(
 
     let walk_cfg = crate::scan_fs::walk::WalkConfig {
         max_depth: 32,
-        should_skip: &|_candidate, _root| false,
+        should_skip: &|candidate, _root| is_vcs_metadata_name(candidate),
         exclude_set: cfg.exclude_set,
     };
 
     crate::scan_fs::walk::safe_walk(rootfs, &walk_cfg, |abs_path| {
+        // Milestone 174 FR-002: skip file-form VCS metadata (git
+        // submodule pointer file — `.git` FILE contains a `gitdir:`
+        // line pointing at the real metadata). MUST run BEFORE
+        // symlink_metadata so a symlink named `.git` pointing at
+        // arbitrary content is also skipped (per contracts/walker-
+        // exclusion.md ordering constraint). Skipped files do NOT
+        // increment any counter category per FR-005.
+        if is_vcs_metadata_name(abs_path) {
+            return;
+        }
         // Only files are interesting. `safe_walk` invokes the
         // visit closure for both directories and files; we
         // discriminate here.
@@ -537,5 +598,318 @@ mod tests {
         let (entries, _stats) = walk_file_tier(tmp.path(), &cfg);
         assert_eq!(entries.len(), 2);
         assert!(entries[0].sha256_hex < entries[1].sha256_hex);
+    }
+
+    // ================================================================
+    // Milestone 174 — VCS metadata directory + file exclusion tests.
+    //
+    // T005 (US1 P1): FR-001 directory-descend gate for `.git`, `.hg`,
+    //                `.svn`.
+    // T008 (US2 P1): FR-002 file-form `.git` submodule pointer +
+    //                FR-006 similar-name protection.
+    // T008b (US2):   FR-009 debug-level-only log guarantee.
+    // T008c (US2):   FR-007 bare-repo scan completes without panic.
+    // ================================================================
+
+    /// T005 (FR-001): descent into `<root>/.git/` is skipped at any
+    /// depth. `walk_file_tier` returns an empty entry vec on a rootfs
+    /// whose only content is inside `.git/`.
+    #[test]
+    fn walker_skips_dot_git_directory() {
+        let tmp = TempDir::new().unwrap();
+        write_file(
+            tmp.path(),
+            ".git/hooks/pre-commit.sample",
+            b"#!/bin/sh\n# sample hook - should not appear in SBOM\n",
+        );
+        write_file(tmp.path(), ".git/HEAD", b"ref: refs/heads/main\n");
+        let g = make_globs();
+        let d = empty_dedupe();
+        let cfg = WalkerConfig {
+            size_limit_bytes: 100 * 1024 * 1024,
+            exclusion_globs: &g,
+            dedupe_index: &d,
+            exclude_set: &empty_exclude(),
+        };
+        let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
+        assert!(
+            entries.is_empty(),
+            "expected zero file-tier entries under .git/; got {:?}",
+            entries.iter().map(|e| &e.paths).collect::<Vec<_>>()
+        );
+        assert_eq!(stats.emitted, 0);
+    }
+
+    /// T005 (FR-001 + SC-005): same guarantee for `.hg/`.
+    #[test]
+    fn walker_skips_dot_hg_directory() {
+        let tmp = TempDir::new().unwrap();
+        write_file(tmp.path(), ".hg/store/data/foo.i", b"mercurial internals");
+        write_file(tmp.path(), ".hg/dirstate", b"whatever");
+        let g = make_globs();
+        let d = empty_dedupe();
+        let cfg = WalkerConfig {
+            size_limit_bytes: 100 * 1024 * 1024,
+            exclusion_globs: &g,
+            dedupe_index: &d,
+            exclude_set: &empty_exclude(),
+        };
+        let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
+        assert!(entries.is_empty(), "expected zero entries under .hg/");
+        assert_eq!(stats.emitted, 0);
+    }
+
+    /// T005 (FR-001 + SC-005): same guarantee for `.svn/`.
+    #[test]
+    fn walker_skips_dot_svn_directory() {
+        let tmp = TempDir::new().unwrap();
+        write_file(
+            tmp.path(),
+            ".svn/pristine/aa/aabbccdd.svn-base",
+            b"pristine base",
+        );
+        write_file(tmp.path(), ".svn/wc.db", b"sqlite? whatever");
+        let g = make_globs();
+        let d = empty_dedupe();
+        let cfg = WalkerConfig {
+            size_limit_bytes: 100 * 1024 * 1024,
+            exclusion_globs: &g,
+            dedupe_index: &d,
+            exclude_set: &empty_exclude(),
+        };
+        let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
+        assert!(entries.is_empty(), "expected zero entries under .svn/");
+        assert_eq!(stats.emitted, 0);
+    }
+
+    /// T008 (FR-002): file-form `.git` (git submodule pointer) is
+    /// skipped. The visit callback's file-form check catches this
+    /// case; the directory-descend gate can't (it only fires on
+    /// directories).
+    #[test]
+    fn walker_skips_dot_git_submodule_file() {
+        let tmp = TempDir::new().unwrap();
+        // Submodule root has a `.git` FILE (not directory) containing
+        // a `gitdir:` pointer. Git's canonical shape.
+        write_file(
+            tmp.path(),
+            "submodule/.git",
+            b"gitdir: ../.git/modules/submodule\n",
+        );
+        // A first-party file inside the same submodule dir survives.
+        write_file(
+            tmp.path(),
+            "submodule/README.sh",
+            b"#!/bin/sh\necho hello\n",
+        );
+        let g = make_globs();
+        let d = empty_dedupe();
+        let cfg = WalkerConfig {
+            size_limit_bytes: 100 * 1024 * 1024,
+            exclusion_globs: &g,
+            dedupe_index: &d,
+            exclude_set: &empty_exclude(),
+        };
+        let (entries, _stats) = walk_file_tier(tmp.path(), &cfg);
+        // No entry represents `.git` (file-form).
+        let has_dot_git_file = entries.iter().any(|e| {
+            e.paths
+                .iter()
+                .any(|p| p.file_name().and_then(|n| n.to_str()) == Some(".git"))
+        });
+        assert!(
+            !has_dot_git_file,
+            "FR-002: expected no entry for file-form `.git`; got entries={:?}",
+            entries.iter().map(|e| &e.paths).collect::<Vec<_>>()
+        );
+    }
+
+    /// T008 (FR-006): similar-name protection. `.github`, `.githooks`,
+    /// `.gitignore`, `.gitattributes`, `.gitmodules` are NOT VCS
+    /// metadata — exact base-name match protects them from exclusion.
+    /// These files still go through the content-shape classifier —
+    /// some may still be dropped by that filter, but the m174 walker
+    /// gate does NOT drop them.
+    ///
+    /// Verified by: walking a tempdir with the 5 similar-name files
+    /// AND a trivially-classifiable `.sh` script. Assert the walker
+    /// returns a non-empty entry set including the `.sh` script,
+    /// confirming the walker did descend into (not skip) directories
+    /// like `.github/workflows/`. Also assert no entry paths start
+    /// with `.git/` (which would mean the .git-form exclusion
+    /// accidentally fired on the .github/ path).
+    #[test]
+    fn walker_preserves_similar_names() {
+        let tmp = TempDir::new().unwrap();
+        // The 5 similar-name files.
+        write_file(
+            tmp.path(),
+            ".github/workflows/ci.yml",
+            b"name: CI\non: push\njobs: {}\n",
+        );
+        write_file(
+            tmp.path(),
+            ".githooks/pre-commit",
+            b"#!/bin/sh\necho custom hook\n",
+        );
+        write_file(tmp.path(), ".gitignore", b"target/\n*.log\n");
+        write_file(tmp.path(), ".gitattributes", b"*.rs eol=lf\n");
+        write_file(
+            tmp.path(),
+            ".gitmodules",
+            b"[submodule \"foo\"]\n\tpath = foo\n\turl = ../foo\n",
+        );
+        // A trivially-classifiable script inside `.githooks/` proves
+        // the walker DID descend into similar-name directories.
+        write_file(
+            tmp.path(),
+            ".githooks/deploy.sh",
+            b"#!/bin/bash\necho deploying\n",
+        );
+        let g = make_globs();
+        let d = empty_dedupe();
+        let cfg = WalkerConfig {
+            size_limit_bytes: 100 * 1024 * 1024,
+            exclusion_globs: &g,
+            dedupe_index: &d,
+            exclude_set: &empty_exclude(),
+        };
+        let (entries, _stats) = walk_file_tier(tmp.path(), &cfg);
+        // The walker DID descend into `.githooks/` (proven by the
+        // presence of at least one entry). The classifier decides
+        // final emission; the m174 gate does not intercept.
+        let has_similar_name_content = entries.iter().any(|e| {
+            e.paths.iter().any(|p| {
+                let s = p.to_string_lossy();
+                s.starts_with(".githooks/")
+                    || s.starts_with(".github/")
+                    || s == ".gitignore"
+                    || s == ".gitattributes"
+                    || s == ".gitmodules"
+            })
+        });
+        assert!(
+            has_similar_name_content,
+            "FR-006: expected at least one similar-name file to reach the walker; \
+             got entries={:?}",
+            entries.iter().map(|e| &e.paths).collect::<Vec<_>>()
+        );
+        // No entry path should start with `.git/` (the exact-name
+        // match must not accidentally consume `.github/`).
+        let dot_git_paths: Vec<&std::path::PathBuf> = entries
+            .iter()
+            .flat_map(|e| e.paths.iter())
+            .filter(|p| p.to_string_lossy().starts_with(".git/"))
+            .collect();
+        assert!(
+            dot_git_paths.is_empty(),
+            "FR-006: exact-name match should not match `.github/*` etc.; \
+             got .git/ paths={dot_git_paths:?}"
+        );
+    }
+
+    /// T008b (FR-009): the VCS-skip log MUST NOT fire at INFO or
+    /// higher. Structural guarantee (the helper uses `tracing::debug!`
+    /// which cannot produce INFO-level output at the macro level) —
+    /// this is a belt-and-braces gate against a future change that
+    /// accidentally upgrades the log level.
+    #[test]
+    fn walker_vcs_skip_does_not_emit_info_log() {
+        use std::sync::{Arc, Mutex};
+        use tracing_subscriber::fmt::MakeWriter;
+
+        // In-memory capture writer.
+        #[derive(Clone, Default)]
+        struct CaptureWriter(Arc<Mutex<Vec<u8>>>);
+        impl std::io::Write for CaptureWriter {
+            fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+                self.0.lock().unwrap().extend_from_slice(buf);
+                Ok(buf.len())
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
+        }
+        impl<'a> MakeWriter<'a> for CaptureWriter {
+            type Writer = CaptureWriter;
+            fn make_writer(&'a self) -> Self::Writer {
+                self.clone()
+            }
+        }
+
+        let captured = Arc::new(Mutex::new(Vec::new()));
+        let writer = CaptureWriter(captured.clone());
+        let subscriber = tracing_subscriber::fmt()
+            .with_max_level(tracing::Level::INFO)
+            .with_writer(writer)
+            .finish();
+
+        let tmp = TempDir::new().unwrap();
+        write_file(tmp.path(), ".git/HEAD", b"ref: refs/heads/main\n");
+        write_file(
+            tmp.path(),
+            ".git/hooks/pre-commit.sample",
+            b"template\n",
+        );
+
+        // Run the walker under the INFO-max subscriber.
+        tracing::subscriber::with_default(subscriber, || {
+            let g = make_globs();
+            let d = empty_dedupe();
+            let cfg = WalkerConfig {
+                size_limit_bytes: 100 * 1024 * 1024,
+                exclusion_globs: &g,
+                dedupe_index: &d,
+                exclude_set: &empty_exclude(),
+            };
+            let (_entries, _stats) = walk_file_tier(tmp.path(), &cfg);
+        });
+
+        let output = captured.lock().unwrap();
+        let output_str = String::from_utf8_lossy(&output);
+        assert!(
+            !output_str.contains("skipping VCS metadata"),
+            "FR-009: VCS-skip message MUST NOT appear at INFO level; \
+             captured stderr contained the substring: {output_str}"
+        );
+    }
+
+    /// T008c (FR-007 post-remediation): scanning a bare-repo shape
+    /// (top-level HEAD + refs/ + config, no `.git/` subdirectory)
+    /// completes without panicking. This test documents the deliberate
+    /// scope limit — m174's exclusion is scoped to descendants NAMED
+    /// `.git`/`.hg`/`.svn`, not to bare-repo internal-layout detection.
+    /// The tool MAY still emit file-tier components for readable text
+    /// files at the bare repo's own root; a follow-up milestone MAY
+    /// add bare-repo detection if operator demand surfaces.
+    #[test]
+    fn walker_bare_repo_completes_successfully() {
+        let tmp = TempDir::new().unwrap();
+        write_file(tmp.path(), "HEAD", b"ref: refs/heads/main\n");
+        write_file(
+            tmp.path(),
+            "refs/heads/main",
+            b"0123456789abcdef0123456789abcdef01234567\n",
+        );
+        write_file(
+            tmp.path(),
+            "config",
+            b"[core]\n\tbare = true\n\trepositoryformatversion = 0\n",
+        );
+        write_file(tmp.path(), "objects/pack/.gitkeep", b"");
+        let g = make_globs();
+        let d = empty_dedupe();
+        let cfg = WalkerConfig {
+            size_limit_bytes: 100 * 1024 * 1024,
+            exclusion_globs: &g,
+            dedupe_index: &d,
+            exclude_set: &empty_exclude(),
+        };
+        // The call returns without panic. Component count is NOT
+        // asserted — per FR-007 post-remediation, m174 does NOT
+        // guarantee zero components on bare-repo scans (the exclusion
+        // gates on directory base names being one of `.git`/`.hg`/
+        // `.svn`, and a bare repo's own root is not named that).
+        let (_entries, _stats) = walk_file_tier(tmp.path(), &cfg);
     }
 }
