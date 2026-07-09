@@ -2967,6 +2967,40 @@ pub async fn execute(
         }
     }
 
+    // Milestone 175 — FR-002 advisory log. Emitted at INFO level exactly
+    // once when THREE predicates hold:
+    //   1. At least one component has `sbom_tier = "design"` (constraint-
+    //      only manifest — pip `requirements.txt` alone, Ruby `Gemfile`
+    //      without `Gemfile.lock`, npm root `package.json` without
+    //      `package-lock.json`, etc.).
+    //   2. The scan produced ≥1 component (empty scans stay quiet).
+    //   3. The `MIKEBOM_NO_DESIGN_TIER_ADVISORY` env var is unset (or
+    //      set to a value other than "1" / "true"). Env-var precedent:
+    //      milestone-110 `MIKEBOM_NO_DEPRECATION_NOTICE=1`.
+    // NOT gated on --offline: the remediation (generate a lockfile,
+    // install into a venv) works fully offline (FR-002 explicit).
+    // Stable grep substring: "design-tier components detected: " —
+    // dashboards grep-detect design-tier scans via this token.
+    {
+        let design_tier_count = components
+            .iter()
+            .filter(|c| c.sbom_tier.as_deref() == Some("design"))
+            .count();
+        let suppress = std::env::var("MIKEBOM_NO_DESIGN_TIER_ADVISORY")
+            .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+            .unwrap_or(false);
+        if design_tier_count > 0 && !components.is_empty() && !suppress {
+            tracing::info!(
+                "design-tier components detected: {design_tier_count} components lack \
+                 resolved versions. Remediation: generate a lockfile (uv lock / poetry \
+                 lock / pip-compile / npm install / bundle lock / cargo generate-lockfile) \
+                 OR install into a venv and re-scan. See \
+                 docs/reference/reading-a-mikebom-sbom.md#design-tier-components for jq \
+                 recipes and per-ecosystem guidance."
+            );
+        }
+    }
+
     tracing::info!(
         output = %primary_output_path
             .as_ref()

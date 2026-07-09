@@ -725,6 +725,80 @@ jq '{
 }' your.cdx.json
 ```
 
+#### Design-tier components
+
+> **What they are**: components emitted from a *constraint-only* manifest — a Python `requirements.txt` line like `pyyaml>=6.0` (no lockfile), a Ruby `Gemfile` line naming a gem without a `Gemfile.lock`, an npm root `package.json` without `package-lock.json`, a `Cargo.toml` without `Cargo.lock`, and equivalents. mikebom's ecosystem readers tag these with `sbom_tier = "design"` (native `mikebom:sbom-tier` per-component annotation) and emit them with an **empty `version` field** — because the operator's manifest DECLARED the dependency but no lockfile or install evidence pins the resolved version. Empty version is Constitution Principle IX-honest behavior: mikebom refuses to fabricate a resolved version when the scan input doesn't carry one.
+>
+> **The problem this signal is solving**: two empirical audits ([2026-07 langflow](audits/2026-07-05-kubernetes-argocd.md), [2026-07 test-tensorflow-models](audits/2026-07-06-tauri-airflow.md)) produced the same operator confusion — SBOMs contained dozens of components with empty version strings, and consumers couldn't tell if it was a mikebom bug or intentional. It's intentional. This subsection + the milestone-175 advisory log make it discoverable.
+>
+> **The traceability ladder** (mikebom's `sbom_tier` closed enum, ascending in evidence strength):
+> - `"design"` — unlocked manifest declaration (this subsection's topic).
+> - `"source"` — lockfile entry (`.lock` / `.freeze` / `Gemfile.lock` / etc.).
+> - `"analyzed"` — artifact file on disk with a SHA-256 hash.
+> - `"deployed"` — installed package DB / installed venv / installed rpm/deb/apk.
+> - `"build"` — eBPF build-time trace evidence.
+>
+> Higher tiers imply stronger provenance. Operators MAY threshold their CI on minimum tier.
+>
+> **How to recognize a design-tier component in an emitted SBOM**:
+>
+> - **CDX 1.6**: `component.version = ""` + `evidence.identity[].confidence < 1.0` + technique `"manifest-analysis"` + `properties[]` contains `{name: "mikebom:sbom-tier", value: "design"}`. Doc-scope: `metadata.lifecycles[]` contains `{"phase": "design"}` when the SBOM has ≥1 design-tier component (m047/m081 native aggregate).
+> - **SPDX 2.3**: `Package.versionInfo = ""` + `annotations[]` includes the `MikebomAnnotationCommentV1` envelope with `{field: "mikebom:sbom-tier", value: "design"}`. Doc-scope: `SpdxDocument.annotations[]` may carry parity-bridge annotations depending on config.
+> - **SPDX 3.0.1**: `software_Package.packageVersion = ""` + typed `Annotation` element with `mikebom:sbom-tier = "design"` targeting the Package IRI.
+>
+> **The advisory log** — when the scan detects ≥1 design-tier component AND the scan produced at least one component AND `MIKEBOM_NO_DESIGN_TIER_ADVISORY` is unset, mikebom emits exactly one INFO-level log line on stderr containing the stable substring `"design-tier components detected: "`. Fires under `--offline` (remediation is offline-capable). Suppressible via the env var for CI pipelines that intentionally scan constraint-only projects.
+>
+> **Operator remediation** — the SBOM is correct; the *scan input* is what could improve. Two operator actions lift design-tier components to a higher-provenance tier:
+>
+> | Ecosystem | Lift to source-tier (generate a lockfile) | Lift to deployed-tier (install into isolated env) |
+> |---|---|---|
+> | pip | `uv lock` / `poetry lock` / `pip-compile requirements.in` — produces `uv.lock` / `poetry.lock` / `requirements.txt` (with pins) | `python -m venv .venv && .venv/bin/pip install -r requirements.txt` — then rescan; mikebom's pip reader detects the installed venv |
+> | npm | `npm install` — writes `package-lock.json` | `npm install` also installs into `node_modules/`; the walker picks up installed packages |
+> | Cargo | `cargo generate-lockfile` — writes `Cargo.lock` | `cargo build` — populates `target/` + registry cache; rescan sees the resolved crates |
+> | Ruby | `bundle lock` OR `bundle install --deployment` — writes `Gemfile.lock` | `bundle install --path vendor/bundle` — installs into a per-project vendor dir; walker picks it up |
+> | Composer (PHP) | `composer install --no-dev` — writes `composer.lock` | Same command; also installs into `vendor/` |
+> | Cocoapods | `pod install` — writes `Podfile.lock` | Same command; also installs into `Pods/` |
+> | Mix (Elixir) | `mix deps.get` — writes `mix.lock` | Also fetches into `deps/` |
+> | Rebar3 (Erlang) | `rebar3 get-deps` — writes `rebar.lock` | Also fetches into `_build/` |
+>
+> **The `pip install` warning** — NEVER recommend `pip install <manifest>` without a virtualenv; it pollutes the operator's system Python. Every remediation above assumes venv isolation OR an alternative that doesn't touch system Python.
+>
+> **Milestone**: 175 — added.
+> **Catalog**: [KEEP-NATIVE-FIRST audit row](sbom-format-mapping.md). See also [component-tiers.md](component-tiers.md).
+
+```jq
+# Count design-tier components (the exact number the advisory log reports):
+jq '[.components[]?.version | select(. == "")] | length' your.cdx.json
+```
+
+```jq
+# List design-tier PURLs — one per line:
+jq -r '.components[] | select(.version == "") | .purl' your.cdx.json
+```
+
+```jq
+# Verify CDX's native doc-scope aggregate — returns 1 when the SBOM has
+# any design-tier component; 0 when none:
+jq '[.metadata.lifecycles[]? | select(.phase == "design")] | length' your.cdx.json
+```
+
+```jq
+# Mixed-tier breakdown — histogram of sbom_tier values across components:
+jq '[.components[]?.properties[]? | select(.name == "mikebom:sbom-tier") | .value]
+    | group_by(.)
+    | map({tier: .[0], count: length})' your.cdx.json
+```
+
+```bash
+# CI threshold-check (informational only, matching the m175 advisory tone):
+DESIGN=$(jq '[.components[]?.version | select(. == "")] | length' scan.cdx.json)
+if [ "$DESIGN" -gt 0 ]; then
+  echo "::warning::mikebom found $DESIGN design-tier components; consider generating a lockfile"
+fi
+```
+
+**Suppressing the advisory log in CI**: set `MIKEBOM_NO_DESIGN_TIER_ADVISORY=1` (or `true`, case-insensitive) in the environment before running mikebom. Matches the milestone-110 `MIKEBOM_NO_DEPRECATION_NOTICE=1` env-var convention. The suppression is diagnostic-only; the emitted SBOM bytes are unchanged.
+
 #### `mikebom:peer-edge-targets`
 
 > **What it is**: alphabetically-sorted array of PURL strings naming the peer-driven `dependsOn` edges from a given npm component. npm `peerDependencies` are install-time conventional (npm 7+ auto-installs them) but semantically declarative — different from regular `dependencies`. mikebom emits peer-edges as standard `dependsOn` (matching the npm install reality) AND tags the source component with this annotation so consumers can distinguish install-driven edges from functional-dep edges. Emitted only on npm components with ≥1 resolved peer-driven edge.

@@ -70,7 +70,7 @@ impl core::fmt::Display for HexString {
 
 impl core::fmt::Debug for HexString {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "Hex({})", &self.0)
+        write!(f, "Hex({})", self.0)
     }
 }
 
