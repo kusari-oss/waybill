@@ -840,7 +840,12 @@ fi
 > - **SPDX 2.3**: annotation envelope on the Package — VALUE is a native JSON array (per the milestone-145 envelope-shape).
 > - **SPDX 3**: annotation envelope on the `software_Package` — VALUE is a native JSON array.
 > **What to do with it**: vulnerability scanners that want the install-only edge view (matching pre-milestone-147 mikebom behavior) can subtract this set from each component's `dependsOn`. License auditors who care about the functional-dep distinction can flag peer-edges separately.
-> **Milestone**: 147 — added (closes Trivy-comparison orphan gap on the looker-frontend lockfile: 5 orphans → 0).
+>
+> **Milestone 178 — SPDX 2.3 native primary signal**: post-m178, peer-driven edges in SPDX 2.3 output carry `relationshipType: "PROVIDED_DEPENDENCY_OF"` (reversed direction — reads as "B is a provided dependency of A" when A declares B as a peer) under the default `--spdx2-relationship-compat=full`. Consumers walking SPDX 2.3 typed relationship types now see the peer distinction natively without needing to parse this annotation. Under `--spdx2-relationship-compat=basic` (the m228 escape hatch for downstream tooling with basic-vocabulary relationship-type support), peer edges collapse to `DEPENDS_ON` natural-direction (pre-178 behavior preserved). The annotation itself remains present in **both** compat modes with byte-identical value — it's the finer-grained "which specific peer targets are declared" supplement (Principle V's "carry information the standard doesn't natively express" carve-out — the native relationship type says "this edge is peer" but not "which specific targets").
+>
+> **CDX 1.6 and SPDX 3.0.1 unchanged**: neither format has a native peer construct. CDX 1.6 `dependencies[].dependsOn[]` has NO per-element metadata slot. SPDX 3.0.1's `LifecycleScopeType` enum values `{development, build, test, runtime, design, other}` have NO `peer` value. The annotation remains the primary peer signal in both formats — parity-bridge for the missing native construct. m178 is the canonical **Principle V pattern for the "native construct exists in ONE format but not others" case**: elevate the format that has the construct; keep the annotation as parity-bridge for the others.
+>
+> **Milestone**: 147 — added (closes Trivy-comparison orphan gap on the looker-frontend lockfile: 5 orphans → 0). 178 — SPDX 2.3 native-first migration via `PROVIDED_DEPENDENCY_OF` relationship type.
 > **Catalog**: [C101](sbom-format-mapping.md)
 
 ```jq
@@ -853,6 +858,16 @@ jq --arg purl "pkg:npm/@react-native-async-storage/async-storage@1.24.0" '
   | .value
   | fromjson
 ' your.cdx.json
+```
+
+```jq
+# SPDX 2.3 — extract every peer edge natively via PROVIDED_DEPENDENCY_OF
+# (post-m178, under default --spdx2-relationship-compat=full). Reads as
+# "provided-package → consumer-package" pairs due to the reversed
+# direction convention (m228).
+jq '.relationships[]
+    | select(.relationshipType == "PROVIDED_DEPENDENCY_OF")
+    | { provided: .spdxElementId, consumer: .relatedSpdxElement }' your.spdx.json
 ```
 
 #### `mikebom:depends-unresolved` + `mikebom:rdepends-unresolved`

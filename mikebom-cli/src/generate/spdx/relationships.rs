@@ -34,6 +34,16 @@ pub enum SpdxRelationshipType {
     DevDependencyOf,
     BuildDependencyOf,
     TestDependencyOf,
+    /// Milestone 178 — SPDX 2.3 §11.1 native semantic for npm peer
+    /// deps: "SPDXRef-A depends on SPDXRef-B as a provided
+    /// dependency" (source consumer provides the target dep).
+    /// Emitted reversed-direction per m228 convention: internal
+    /// `A DependsOn B` where B appears in A's `mikebom:peer-edge-
+    /// targets` annotation → SPDX `B PROVIDED_DEPENDENCY_OF A`
+    /// under `Spdx2RelationshipCompat::Full`. Under `Basic` mode,
+    /// peer edges fall through to the existing catch-all Basic arm
+    /// (natural-direction `DEPENDS_ON`) per m228 escape hatch.
+    ProvidedDependencyOf,
     Contains,
     ContainedBy,
     /// Milestone 072 / T012 — SPDX 2.3 §11.1 native semantic for
@@ -152,6 +162,51 @@ pub fn build_relationships(
         purl_to_id.insert(purl.clone(), id.clone());
     }
 
+    // Milestone 178 — pre-compute peer-edge lookup set from m147's
+    // `mikebom:peer-edge-targets` annotation on source components.
+    // Fail-open: missing annotation or unrecognized value shape
+    // silently skips — the affected component's edges fall through
+    // to the existing DependsOn treatment. O(N + P) construction
+    // where P is the peer-edge count. Consumed by the match block
+    // below to select the SPDX 2.3 relationship type (Principle V
+    // native-first migration for npm peer semantics under Full mode).
+    //
+    // The annotation value in the extra_annotations bag can arrive
+    // as EITHER a native JSON array (m147's emission — direct storage
+    // via `Vec<serde_json::Value>` → `Value::Array`) OR a JSON-encoded
+    // string (some annotation channels re-serialize). Handle both.
+    let peer_edges: std::collections::HashSet<(String, String)> = {
+        let mut set = std::collections::HashSet::new();
+        for c in artifacts.components {
+            let Some(value) = c
+                .extra_annotations
+                .get("mikebom:peer-edge-targets")
+            else {
+                continue;
+            };
+            let targets: Vec<String> = match value {
+                // Native array shape (m147's storage).
+                serde_json::Value::Array(arr) => arr
+                    .iter()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .collect(),
+                // String-encoded-JSON shape (some annotation channels
+                // re-serialize the value into a string).
+                serde_json::Value::String(s) => {
+                    match serde_json::from_str::<Vec<String>>(s) {
+                        Ok(v) => v,
+                        Err(_) => continue,
+                    }
+                }
+                _ => continue,
+            };
+            for target_purl in targets {
+                set.insert((c.purl.as_str().to_string(), target_purl));
+            }
+        }
+        set
+    };
+
     // 2. Dependency edges.
     for rel in artifacts.relationships {
         let from_id = match purl_to_id.get(&rel.from) {
@@ -187,6 +242,19 @@ pub fn build_relationships(
             artifacts.spdx2_relationship_compat,
             rel.relationship_type.clone(),
         ) {
+            // Milestone 178 — peer edges under Full mode fire
+            // PROVIDED_DEPENDENCY_OF reversed-direction. Matches m228
+            // typed-dep-scope precedent (Dev/Build/Test DependencyOf).
+            // Guard: only fires when (source, target) tuple appears in
+            // the m147 peer-edge annotation lookup set. Under Basic
+            // mode, peer edges fall through to the existing catch-all
+            // arm below (SC-002 gate holds by construction — same
+            // treatment as regular DependsOn).
+            (crate::generate::Spdx2RelationshipCompat::Full, RelationshipType::DependsOn)
+                if peer_edges.contains(&(rel.from.clone(), rel.to.clone())) =>
+            {
+                (to_id.clone(), from_id.clone(), SpdxRelationshipType::ProvidedDependencyOf)
+            }
             (_, RelationshipType::DependsOn) => {
                 (from_id, to_id, SpdxRelationshipType::DependsOn)
             }
