@@ -23,6 +23,12 @@
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
       "annotator": "Tool: mikebom-0.1.0-alpha.55",
+      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspaces-detected\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info\\\",\\\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info\\\",\\\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info\\\",\\\".venv/lib/python3.12/site-packages/idna-3.6.dist-info\\\",\\\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info\\\",\\\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info\\\",\\\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info\\\"]\"}"
+    },
+    {
+      "annotationDate": "1970-01-01T00:00:00Z",
+      "annotationType": "OTHER",
+      "annotator": "Tool: mikebom-0.1.0-alpha.55",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
     },
     {
@@ -119,6 +125,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.55",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info/METADATA\",\"sha256\":\"b909abaa5b9c22dfb8e2274c8f3f309ef1488b6ef74baa726fd7e7863bf97e8c\"}]}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.55",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -173,6 +185,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.55",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info/METADATA\",\"sha256\":\"d5a184970c7ef9ceea049bcde19c58cab9c0979f48c2a3274d4f21db57b5dfdf\"}]}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.55",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -227,6 +245,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.55",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info/METADATA\",\"sha256\":\"53e6c8feccc51ba487a150d1bbcbab039db9aedff2b4d9ffef1019ff568bc105\"}]}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.55",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -281,6 +305,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.55",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/idna-3.6.dist-info/METADATA\",\"sha256\":\"37bf632be18976af3f8dba1491b7544dd1237cae0aef99f07a43401d2a7b8108\"}]}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.55",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/idna-3.6.dist-info\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -335,6 +365,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.55",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info/METADATA\",\"sha256\":\"c61109515dd028b28580b694f1e30a2344c8f9d32076dbc22dab382b7dde14e9\"}]}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.55",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -389,6 +425,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.55",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info/METADATA\",\"sha256\":\"73bca15fbb30049fa2ada6bff0900355dff44797764540ced790b3f7d99b8cd8\"}]}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.55",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -443,6 +485,12 @@
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.55",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info/METADATA\",\"sha256\":\"b8411ac5544b741fdd9e47cf56811c689c9c2030f711526ed97cc93aca77d65a\"}]}"
+        },
+        {
+          "annotationDate": "1970-01-01T00:00:00Z",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.55",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",

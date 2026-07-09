@@ -41,6 +41,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "deployed"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"node_modules/express\"]"
         }
       ],
       "purl": "pkg:npm/express@4.18.2",
@@ -90,6 +94,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "deployed"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"node_modules/safe-buffer\"]"
         }
       ],
       "purl": "pkg:npm/safe-buffer@5.2.1",
@@ -206,6 +214,10 @@
         {
           "name": "mikebom:source-files",
           "value": "[\"path+file://<WORKSPACE>/tests/fixtures/npm/node-modules-walk\"]"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:npm/node-modules-walk-fixture@0.1.0",
@@ -262,6 +274,10 @@
       {
         "name": "mikebom:graph-completeness-reason",
         "value": "orphaned-components-detected: 1 component(s) not reachable from root"
+      },
+      {
+        "name": "mikebom:workspaces-detected",
+        "value": "[\".\",\"node_modules/express\",\"node_modules/safe-buffer\"]"
       }
     ],
     "supplier": {

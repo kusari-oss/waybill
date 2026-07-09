@@ -164,6 +164,77 @@ jq -r '.["@graph"][]
        | .to[]' your.spdx3.json
 ```
 
+#### `mikebom:workspace-member` + `mikebom:workspaces-detected`
+
+> **What they are**: paired signals introduced in milestone 176 to close the "which subproject is this dep in?" discoverability gap for monorepo scans. C120 is per-component (which workspace does this component belong to?); C121 is doc-scope (which workspaces does this SBOM enumerate?).
+>
+> **The problem being solved**: pre-m176, a security team receiving a fresh CVE (say, `pyyaml < 6.0.2`) against a mikebom SBOM of the langflow monorepo (9 pypi + 2 npm workspace members, 3280 total components) had to cross-reference the `mikebom:source-files` annotation manually to answer "which of our subprojects is affected?" That's 3280 jq walks. Post-m176 they get the answer in one jq call — `contains(["src/frontend"])` on the per-component annotation returns exactly the components that workspace declares or locks.
+>
+> **What C120 tells you** — the workspace(s) a component belongs to. Value is a JSON-encoded array of workspace root-relative paths (forward-slash separator on all platforms per FR-010), alphabetically sorted, deduplicated. Single-workspace components emit a 1-element array (not a bare string) for consumer-parsing uniformity. Cross-workspace shared deps (npm hoisted, Python transitive pinned in multiple lockfiles) emit N-element arrays and match every included workspace's filter via `contains()`. **File-tier (m133) and any other unattributable components do NOT get the annotation** — absence is the wire-visible signal for "no workspace attribution." Consumers wanting to enumerate file-tier components have the existing `mikebom:sbom-tier` / `mikebom:component-tier=file` discriminators; workspace-scoped filters naturally exclude file-tier via absence-selection.
+>
+> **What C121 tells you** — every workspace enumerated in the scan. Value equals the sorted-deduplicated UNION of every C120 value (the FR-012 cross-annotation invariant, guaranteed by construction). Emitted iff the union is non-empty; absent when zero workspaces detected (matches the C119 no-empty-array precedent). Enables the "how many subprojects does this SBOM cover?" question in one jq call — no `components[]` walk required.
+>
+> **The advisory log** — when the scan detects N > 1 workspaces AND produced ≥1 component, mikebom emits exactly one INFO-level log line on stderr:
+>
+> ```
+> monorepo shape detected: 3 workspaces (docs, src/frontend, src/lfx). Downstream consumers can filter per-workspace via `mikebom:workspace-member`; see docs/reference/monorepos.md for jq recipes.
+> ```
+>
+> The message is grep-stable: `grep -F 'monorepo shape detected: '` matches whether mikebom's log formatter is plain-text or JSON. Suppressed on single-project scans (N ≤ 1) so non-monorepo scans stay quiet. NOT gated on `--offline` — the remediation (per-workspace jq slicing) is entirely consumer-side.
+>
+> **Where they live**:
+> - **CDX 1.6**: C120 in `components[].properties[]`; C121 in `metadata.properties[]`.
+> - **SPDX 2.3**: `MikebomAnnotationCommentV1` envelope on the target Package (C120) or `SpdxDocument` (C121).
+> - **SPDX 3**: typed `Annotation` graph element targeting the Package IRI (C120) or `SpdxDocument` root IRI (C121).
+>
+> **Standards-native audit** (Constitution Principle V): **KEEP-NO-NATIVE**. CDX `component.group` is the closest native field but semantically different — it's the component's *authoring organization/project* (e.g., `com.fasterxml.jackson.core`), NOT the scan target's workspace boundary. SPDX 2.3 has no analogous field; SPDX 3 `Element.namespace` scopes to identity-URI generation, not workspace boundary. Nested CDX composition via `metadata.component.components[]` is structural, not enumerative; loses the "workspaces that exist" vs "workspaces that produce components" distinction. See `sbom-format-mapping.md` C120 + C121 for the full rejected-alternatives audit.
+>
+> **What to do with them**: filter emitted components by workspace for per-subproject CVE triage (see recipes below) — the P1 use case. Enumerate workspaces via C121 without walking `components[]`. Read the monorepo reading guide at [docs/reference/monorepos.md](monorepos.md) for the full jq recipe set + composition patterns.
+>
+> **Follow-up milestones**: m177 (structural CDX composition per workspace) and m178 (per-workspace multi-SBOM emission) are candidate follow-ups that will build on C120 as their substrate. Emit-once, reuse many.
+>
+> **Milestone**: 176 — added.
+> **Catalog**: [C120](sbom-format-mapping.md) + [C121](sbom-format-mapping.md)
+
+```jq
+# CDX — enumerate every workspace in the SBOM (single call, no components walk):
+jq '.metadata.properties[]?
+    | select(.name == "mikebom:workspaces-detected")
+    | .value | fromjson' your.cdx.json
+```
+
+```jq
+# CDX — list every PURL declared/locked in a specific workspace:
+jq -r '.components[]
+       | select((.properties[]?
+                 | select(.name == "mikebom:workspace-member")
+                 | .value | fromjson
+                 | contains(["src/frontend"])))
+       | .purl' your.cdx.json
+```
+
+```jq
+# CDX — per-CVE workspace scoping ("which subprojects does this CVE hit?"):
+jq -r '.components[]
+       | select(.purl | startswith("pkg:pypi/pyyaml"))
+       | .properties[]?
+       | select(.name == "mikebom:workspace-member")
+       | .value | fromjson | .[]' your.cdx.json
+```
+
+```jq
+# CDX — verify the FR-012 cross-annotation invariant (C121 == union of C120):
+jq '
+  [.components[]?.properties[]?
+   | select(.name == "mikebom:workspace-member")
+   | .value | fromjson | .[]] | unique as $union
+  | .metadata.properties[]?
+  | select(.name == "mikebom:workspaces-detected")
+  | .value | fromjson
+  | {union: $union, detected: ., match: (. == $union)}
+' your.cdx.json
+```
+
 #### `mikebom:layer-digest`
 
 > **What it is**: the OCI layer's compressed-blob `sha256:<hex>` digest (matches the `LayerDigest` semantic from OCI's image manifest — NOT the uncompressed `DiffID`). Tells you which layer in an OCI image first introduced the file backing this component. When a path is written by multiple layers, the LAST writer in the manifest's `Layers[]` array wins (OCI overlay semantics).

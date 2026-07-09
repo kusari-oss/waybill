@@ -217,6 +217,8 @@ Auto-generated from all feature plans. Last updated: 2026-07-08
 - N/A — cache warming mutates the operator's `$GOMODCACHE` (owned by the Go toolchain, not mikebom). mikebom's own state remains in-process per scan; the warming-result record dies at scan end after emission. (173-warm-go-cache)
 - Rust stable (workspace toolchain inherited from milestones 001–173; no nightly required for this user-space-only bug fix). + Existing only — `std::path::Path` + `std::path::PathBuf` (base-name extraction), `tracing` (debug-level skip logs), existing `scan_fs::walk::safe_walk` (unchanged), existing `scan_fs::walk::WalkConfig` (unchanged). **Zero new Cargo dependencies.** Zero new subprocess calls. Zero new network access. Zero new filesystem writes. (174-file-tier-vcs-skip)
 - N/A — pure walker logic change; no persistence. (174-file-tier-vcs-skip)
+- Rust stable (workspace toolchain inherited from milestones 001–174; no nightly required). + Existing only — `std::path::{Path, PathBuf}` (dirname derivation), `serde_json` (JSON-array-in-string encoding matching m134/m147/m173 precedent), `std::collections::BTreeSet` (sorted-deduplicated storage), `tracing` (advisory log). **Zero new Cargo dependencies.** No subprocess calls. No network access. (176-workspace-visibility)
+- N/A — pure emission-time derivation; no persistence. (176-workspace-visibility)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -279,9 +281,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 176-workspace-visibility: Added Rust stable (workspace toolchain inherited from milestones 001–174; no nightly required). + Existing only — `std::path::{Path, PathBuf}` (dirname derivation), `serde_json` (JSON-array-in-string encoding matching m134/m147/m173 precedent), `std::collections::BTreeSet` (sorted-deduplicated storage), `tracing` (advisory log). **Zero new Cargo dependencies.** No subprocess calls. No network access.
 - 174-file-tier-vcs-skip: Added Rust stable (workspace toolchain inherited from milestones 001–173; no nightly required for this user-space-only bug fix). + Existing only — `std::path::Path` + `std::path::PathBuf` (base-name extraction), `tracing` (debug-level skip logs), existing `scan_fs::walk::safe_walk` (unchanged), existing `scan_fs::walk::WalkConfig` (unchanged). **Zero new Cargo dependencies.** Zero new subprocess calls. Zero new network access. Zero new filesystem writes.
 - 173-warm-go-cache: Added Rust stable (workspace toolchain inherited from milestones 001–172; no nightly required). Synchronous throughout — the warmer uses `std::thread::spawn` + `std::sync::mpsc` like the m055/m091 parallel HTTP fetcher, not tokio. + Existing only — `std::process::Command` (subprocess spawn; same pattern as `go_mod_graph.rs:81-158`), `std::thread` + `std::sync::mpsc` (concurrency; same pattern as `graph_resolver.rs:1001-1050`'s `parallel_fetch`), `serde`/`serde_json` (annotation values), `tracing` (advisory + warn logs), `anyhow`/`thiserror` (error propagation + reason-class enum), `clap` (the two new `Args`-derive flags with `ValueEnum` for the mode flag). **Zero new Cargo dependencies. No tokio in the warmer.**
-- 172-go-fallback-count: Added Rust stable (workspace toolchain inherited from milestones 001–171; no nightly required). + Existing only — `serde`/`serde_json` (JSON round-trip), `tracing`, `anyhow`, `thiserror`. Reuses milestone-091 `ResolutionStep::GoSumFallback` enum variant (already at `graph_resolver.rs:76`) + milestone-160 `GoTransitiveCoverage`/`LadderSummary` infrastructure verbatim. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

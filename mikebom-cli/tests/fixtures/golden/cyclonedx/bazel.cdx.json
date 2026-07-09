@@ -36,6 +36,10 @@
         {
           "name": "mikebom:source-mechanism",
           "value": "bazel-http-archive"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:bazel/abseil-cpp@20240722.0",
@@ -81,6 +85,10 @@
         {
           "name": "mikebom:source-mechanism",
           "value": "bazel-http-archive"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:bazel/googletest@1.14.0",
@@ -131,6 +139,10 @@
         {
           "name": "mikebom:source-mechanism",
           "value": "bazel-http-archive"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:bazel/rules_foo@deadbee",
@@ -180,6 +192,10 @@
         {
           "name": "mikebom:source-mechanism",
           "value": "bazel-http-archive"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:bazel/rules_python@0.30.0",
@@ -282,6 +298,10 @@
       {
         "name": "mikebom:graph-completeness",
         "value": "complete"
+      },
+      {
+        "name": "mikebom:workspaces-detected",
+        "value": "[\".\"]"
       }
     ],
     "supplier": {

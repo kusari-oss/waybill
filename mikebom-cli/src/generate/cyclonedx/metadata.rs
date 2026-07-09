@@ -495,6 +495,24 @@ pub fn build_metadata(
         }
     }
 
+    // Milestone 176 — C121 doc-scope `mikebom:workspaces-detected`
+    // annotation. Value is a JSON-encoded array of the sorted-
+    // deduplicated union of every per-component `mikebom:workspace-
+    // member` value (FR-003 + FR-012). Emission gated on the union
+    // being non-empty (FR-003: absent when zero workspaces detected).
+    // Computed by the shared helper so all three formats guarantee
+    // the FR-012 cross-annotation invariant by construction.
+    {
+        let workspaces = crate::generate::workspace_detected::compute(components);
+        if !workspaces.is_empty() {
+            let value = serde_json::to_string(&workspaces).unwrap_or_default();
+            properties.push(json!({
+                "name": "mikebom:workspaces-detected",
+                "value": value,
+            }));
+        }
+    }
+
     // Milestone 173 — C118 doc-scope Go cache-warming mode annotation.
     // Emitted BEFORE C110 for alphabetic sort. Value is one of `"off"`
     // / `"per-workspace"` / `"offline-inhibited"`. Emission gated on
@@ -772,6 +790,25 @@ pub fn build_metadata(
             comp_props.push(json!({
                 "name": "mikebom:detected-go",
                 "value": "true",
+            }));
+        }
+        // Milestone 176 — propagate `mikebom:workspace-member` (C120)
+        // so the main-module's workspace annotation lands on
+        // metadata.component's properties[] (parity with SPDX 2.3 +
+        // SPDX 3 which emit the main-module as a Package with the
+        // annotation intact). Mirrors the milestone-116 / milestone-
+        // 134 propagation pattern above. Without this, holistic
+        // parity fails: SPDX side finds the main-module's workspace
+        // path (e.g., `.`) while CDX drops it, producing a
+        // C120 `SymmetricEqual` violation.
+        if let Some(value) = c
+            .extra_annotations
+            .get("mikebom:workspace-member")
+            .and_then(|v| v.as_str())
+        {
+            comp_props.push(json!({
+                "name": "mikebom:workspace-member",
+                "value": value,
             }));
         }
         // Milestone 116 — propagate `mikebom:produces-binaries` (C64) so

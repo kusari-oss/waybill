@@ -2561,6 +2561,22 @@ pub async fn execute(
         _extracted.as_ref().map(|e| &e.layer_path_map),
     );
 
+    // Milestone 176 (US1 / FR-001): stamp per-component
+    // `mikebom:workspace-member` annotation on every component whose
+    // evidence.source_file_paths yields a derivable workspace root.
+    // Uses the canonicalized scan root so `path+file://<abs>` URI-form
+    // source paths (pip/cargo/npm main-modules) can have their scan-
+    // root prefix stripped to yield root-relative workspace paths.
+    // File-tier components (m133) and any other component with no
+    // derivable workspace omit the annotation per FR-002 / Q1. Runs
+    // AFTER `tag_components_with_layer_digest` so both tag passes see
+    // the same components slice.
+    {
+        let canonical_root = std::fs::canonicalize(&root_path)
+            .unwrap_or_else(|_| root_path.clone());
+        scan_fs::tag_components_with_workspace_member(&mut components, &canonical_root);
+    }
+
     // Issue #363 — operator-asserted license-concluded promotion. Runs
     // AFTER every external enricher (ClearlyDefined, deps.dev) so the
     // empty-concluded check correctly identifies components those
@@ -2913,6 +2929,42 @@ pub async fn execute(
         tracing::info!(
             "mikebom:go-transitive-fallback-count > 0 detected. Prime the cache with --warm-go-cache=per-workspace or 'go mod download' per workspace before scanning."
         );
+    }
+
+    // Milestone 176 — FR-004 advisory log. Emitted at INFO level
+    // exactly once when TWO predicates hold:
+    //   1. The scan detected N > 1 workspaces (union of every
+    //      component's `mikebom:workspace-member` annotation).
+    //   2. The scan produced ≥1 component (else there's nothing to
+    //      slice per-workspace and no useful advice to give).
+    // Suppressed otherwise (single-project + bare-directory scans stay
+    // quiet per FR-005). NOT gated on --offline: the remediation
+    // (jq per-workspace slicing) is entirely consumer-side and
+    // requires no network (per FR-006). The stable grep substring
+    // `"monorepo shape detected: "` is load-bearing — dashboards
+    // grep-detect monorepo scans via this token.
+    {
+        use std::collections::BTreeSet;
+        let mut workspaces: BTreeSet<String> = BTreeSet::new();
+        for c in &components {
+            if let Some(v) = c.extra_annotations.get("mikebom:workspace-member") {
+                if let Some(s) = v.as_str() {
+                    if let Ok(paths) = serde_json::from_str::<Vec<String>>(s) {
+                        for p in paths {
+                            workspaces.insert(p);
+                        }
+                    }
+                }
+            }
+        }
+        if workspaces.len() > 1 && !components.is_empty() {
+            let list = workspaces.iter().cloned().collect::<Vec<_>>().join(", ");
+            tracing::info!(
+                "monorepo shape detected: {} workspaces ({}). Downstream consumers can filter per-workspace via `mikebom:workspace-member`; see docs/reference/monorepos.md for jq recipes.",
+                workspaces.len(),
+                list,
+            );
+        }
     }
 
     tracing::info!(

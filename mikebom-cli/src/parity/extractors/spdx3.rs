@@ -660,6 +660,10 @@ spdx3_anno!(c117_spdx3, "mikebom:go-transitive-fallback-count",     document);
 // annotations.
 spdx3_anno!(c118_spdx3, "mikebom:go-cache-warming-mode",            document);
 spdx3_anno!(c119_spdx3, "mikebom:go-cache-warming-failed",          document);
+// Milestone 176: C120 per-component workspace-member annotation.
+spdx3_anno!(c120_spdx3, "mikebom:workspace-member",                 component);
+// Milestone 176: C121 document-scope workspaces-detected aggregate.
+spdx3_anno!(c121_spdx3, "mikebom:workspaces-detected",              document);
 
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-component
 // graph-element annotation carrying the JSON-encoded array of

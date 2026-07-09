@@ -55,6 +55,10 @@
         {
           "name": "mikebom:resolver-step",
           "value": "go-sum-fallback"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:golang/github.com/davecgh/go-spew@v1.1.1",
@@ -118,6 +122,10 @@
         {
           "name": "mikebom:resolver-step",
           "value": "go-sum-fallback"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:golang/github.com/inconshreveable/mousetrap@v1.1.0",
@@ -181,6 +189,10 @@
         {
           "name": "mikebom:resolver-step",
           "value": "go-sum-fallback"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:golang/github.com/mattn/go-isatty@v0.0.21",
@@ -244,6 +256,10 @@
         {
           "name": "mikebom:resolver-step",
           "value": "go-sum-fallback"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:golang/github.com/pmezard/go-difflib@v1.0.0",
@@ -307,6 +323,10 @@
         {
           "name": "mikebom:resolver-step",
           "value": "go-sum-fallback"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:golang/github.com/sirupsen/logrus@v1.9.4",
@@ -370,6 +390,10 @@
         {
           "name": "mikebom:resolver-step",
           "value": "go-sum-fallback"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:golang/github.com/spf13/cobra@v1.10.2",
@@ -433,6 +457,10 @@
         {
           "name": "mikebom:resolver-step",
           "value": "go-sum-fallback"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:golang/github.com/spf13/pflag@v1.0.9",
@@ -496,6 +524,10 @@
         {
           "name": "mikebom:resolver-step",
           "value": "go-sum-fallback"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:golang/github.com/stretchr/testify@v1.11.1",
@@ -553,6 +585,10 @@
         {
           "name": "mikebom:resolver-step",
           "value": "go-sum-fallback"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:golang/golang.org/x/sys@v0.28.0",
@@ -610,6 +646,10 @@
         {
           "name": "mikebom:resolver-step",
           "value": "go-sum-fallback"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:golang/gopkg.in/check.v1@v0.0.0-20161208181325-20d25e280405",
@@ -667,6 +707,10 @@
         {
           "name": "mikebom:resolver-step",
           "value": "go-sum-fallback"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:golang/gopkg.in/yaml.v3@v3.0.1",
@@ -712,6 +756,10 @@
         {
           "name": "mikebom:orphan-reason",
           "value": "unresolved-indirect-require"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:golang/stdlib@v1.26.1",
@@ -878,6 +926,10 @@
         {
           "name": "mikebom:detected-go",
           "value": "true"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:golang/example.com/simple@v0.0.0-unknown",
@@ -931,6 +983,10 @@
       {
         "name": "mikebom:graph-completeness-reason",
         "value": "orphaned-components-detected: 1 component(s) not reachable from root"
+      },
+      {
+        "name": "mikebom:workspaces-detected",
+        "value": "[\".\"]"
       },
       {
         "name": "mikebom:go-cache-warming-mode",

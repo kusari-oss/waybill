@@ -31,6 +31,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "deployed"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"var/lib/dpkg\"]"
         }
       ],
       "purl": "pkg:deb/debian/libc6@2.36-9?arch=amd64&distro=debian-12",
@@ -70,6 +74,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "deployed"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"var/lib/dpkg\"]"
         }
       ],
       "purl": "pkg:deb/debian/zlib1g@1:1.2.13.dfsg-1?arch=amd64&distro=debian-12",
@@ -172,6 +180,10 @@
       {
         "name": "mikebom:graph-completeness",
         "value": "complete"
+      },
+      {
+        "name": "mikebom:workspaces-detected",
+        "value": "[\"var/lib/dpkg\"]"
       }
     ],
     "supplier": {

@@ -29,6 +29,7 @@ pub mod openvex;
 pub mod orphan_reason;
 pub mod root_selector;
 pub mod spdx;
+pub mod workspace_detected;
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;

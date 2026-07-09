@@ -848,6 +848,17 @@ cdx_anno!(c117_cdx, "mikebom:go-transitive-fallback-count",     document);
 // conditional on at least one workspace failure.
 cdx_anno!(c118_cdx, "mikebom:go-cache-warming-mode",            document);
 cdx_anno!(c119_cdx, "mikebom:go-cache-warming-failed",          document);
+// Milestone 176: C120 per-component workspace-member annotation.
+// Emitted for every component whose evidence.source_file_paths
+// yields a derivable workspace root via
+// scan_fs::workspace_root::derive_workspace_root (FR-001). Absent
+// for file-tier / unattributed components (FR-002).
+cdx_anno!(c120_cdx, "mikebom:workspace-member",                 component);
+// Milestone 176: C121 document-scope workspaces-detected
+// aggregate. Value equals the union of every C120 value across
+// components, alphabetically sorted (FR-003 + FR-012). Absent
+// when zero workspaces are detected.
+cdx_anno!(c121_cdx, "mikebom:workspaces-detected",              document);
 
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)

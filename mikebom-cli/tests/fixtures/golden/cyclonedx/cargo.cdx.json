@@ -39,6 +39,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:cargo/anyhow@1.0.80",
@@ -90,6 +94,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:cargo/my-app@0.1.0",
@@ -141,6 +149,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:cargo/my-fork@0.1.0",
@@ -188,6 +200,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:cargo/proc-macro2@1.0.76",
@@ -235,6 +251,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:cargo/quote@1.0.35",
@@ -282,6 +302,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:cargo/serde@1.0.197",
@@ -329,6 +353,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:cargo/serde_derive@1.0.197",
@@ -376,6 +404,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:cargo/syn@2.0.48",
@@ -423,6 +455,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:cargo/unicode-ident@1.0.12",
@@ -474,6 +510,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:cargo/workspace-local@0.1.0",
@@ -647,6 +687,10 @@
       {
         "name": "mikebom:graph-completeness",
         "value": "complete"
+      },
+      {
+        "name": "mikebom:workspaces-detected",
+        "value": "[\".\"]"
       }
     ],
     "supplier": {

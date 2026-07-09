@@ -187,9 +187,25 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-4DKOJDS3J2XISY4JQCGLWYBD/anno-5UWTMQ65QXVHA2HC",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"var/lib/dpkg\\\"]\"}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-4DKOJDS3J2XISY4JQCGLWYBD/pkg-FBZUYFQKGJMH6COB",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-4DKOJDS3J2XISY4JQCGLWYBD/anno-7SWC4QV7F7TTIN4J",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"var/lib/dpkg/status\"]}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-4DKOJDS3J2XISY4JQCGLWYBD/pkg-ZKB4GX3JBL66K2UG",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-4DKOJDS3J2XISY4JQCGLWYBD/anno-CFSJJC3RWFWJTN3N",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspaces-detected\",\"value\":\"[\\\"var/lib/dpkg\\\"]\"}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-4DKOJDS3J2XISY4JQCGLWYBD",
       "type": "Annotation"
     },
     {
@@ -238,6 +254,14 @@
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-4DKOJDS3J2XISY4JQCGLWYBD/anno-OCYINAACRRFQJ46K",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-4DKOJDS3J2XISY4JQCGLWYBD",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-4DKOJDS3J2XISY4JQCGLWYBD/anno-QGYJOO3NA6U3JIJU",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"var/lib/dpkg\\\"]\"}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-4DKOJDS3J2XISY4JQCGLWYBD/pkg-ZKB4GX3JBL66K2UG",
       "type": "Annotation"
     },
     {

@@ -45,6 +45,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "deployed"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info\"]"
         }
       ],
       "purl": "pkg:pypi/certifi@2023.7.22",
@@ -98,6 +102,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "deployed"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info\"]"
         }
       ],
       "purl": "pkg:pypi/charset-normalizer@3.3.2",
@@ -151,6 +159,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "deployed"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info\"]"
         }
       ],
       "purl": "pkg:pypi/flask@3.0.0",
@@ -204,6 +216,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "deployed"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".venv/lib/python3.12/site-packages/idna-3.6.dist-info\"]"
         }
       ],
       "purl": "pkg:pypi/idna@3.6",
@@ -257,6 +273,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "deployed"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info\"]"
         }
       ],
       "purl": "pkg:pypi/jinja2@3.1.2",
@@ -310,6 +330,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "deployed"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info\"]"
         }
       ],
       "purl": "pkg:pypi/requests@2.31.0",
@@ -363,6 +387,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "deployed"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info\"]"
         }
       ],
       "purl": "pkg:pypi/urllib3@2.0.7",
@@ -505,6 +533,10 @@
       {
         "name": "mikebom:graph-completeness",
         "value": "complete"
+      },
+      {
+        "name": "mikebom:workspaces-detected",
+        "value": "[\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info\",\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info\",\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info\",\".venv/lib/python3.12/site-packages/idna-3.6.dist-info\",\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info\",\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info\",\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info\"]"
       }
     ],
     "supplier": {

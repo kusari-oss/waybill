@@ -56,6 +56,10 @@
         {
           "name": "mikebom:source-document-binding",
           "value": "{\"algo\":\"v1\",\"reason\":\"source-not-found-in-bind-target\",\"source_doc_id\":{\"iri\":\"<WORKSPACE>/mikebom-cli/tests/fixtures/pkg_alias_binding/source-baz.cdx.json\",\"sha256\":\"77f8f8a7c3cdfb462d1db32380dda41236e0064872d15120992e9166081dd1b6\"},\"strength\":\"unknown\"}"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"usr/local/bin\"]"
         }
       ],
       "purl": "pkg:generic/baz?file-sha256=446db4a0be0f85cb27407792fd4ff3de0a60a92b1055dc14ee810483df82b5c9",
@@ -161,6 +165,10 @@
       {
         "name": "mikebom:graph-completeness",
         "value": "complete"
+      },
+      {
+        "name": "mikebom:workspaces-detected",
+        "value": "[\"usr/local/bin\"]"
       }
     ],
     "supplier": {

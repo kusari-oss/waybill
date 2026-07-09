@@ -187,6 +187,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-3AJEECNE5TENUR6XS4R4OZHW/anno-BVMB6F2XKF4B4XLU",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"lib/apk/db\\\"]\"}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-3AJEECNE5TENUR6XS4R4OZHW/pkg-NJ6CH7QTZDKJ74FQ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-3AJEECNE5TENUR6XS4R4OZHW/anno-FILZPARZAOQOLNVI",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-3AJEECNE5TENUR6XS4R4OZHW/pkg-NJ6CH7QTZDKJ74FQ",
@@ -219,6 +227,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-3AJEECNE5TENUR6XS4R4OZHW/anno-NYLECR6OROF6AWFS",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspaces-detected\",\"value\":\"[\\\"lib/apk/db\\\"]\"}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-3AJEECNE5TENUR6XS4R4OZHW",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-3AJEECNE5TENUR6XS4R4OZHW/anno-OGDV3AMF373SMXJJ",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-3AJEECNE5TENUR6XS4R4OZHW",
@@ -246,6 +262,14 @@
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-3AJEECNE5TENUR6XS4R4OZHW/anno-QWZSOCKCGE5CYOKP",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"apk\"]}}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-3AJEECNE5TENUR6XS4R4OZHW",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-3AJEECNE5TENUR6XS4R4OZHW/anno-SMZJQGGARRLLMHPQ",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"lib/apk/db\\\"]\"}",
+      "subject": "https://mikebom.kusari.dev/spdx3/doc-3AJEECNE5TENUR6XS4R4OZHW/pkg-DHDBA3PTGCIRJAUV",
       "type": "Annotation"
     },
     {

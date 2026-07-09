@@ -29,6 +29,7 @@ pub(crate) mod produces_binaries;
 pub mod sbom_path;
 pub(crate) mod walk;
 pub mod walker;
+pub(crate) mod workspace_root;
 
 use std::path::Path;
 
@@ -974,6 +975,55 @@ pub fn tag_components_with_layer_digest(
                 serde_json::Value::String(digest.clone()),
             );
         }
+    }
+}
+
+/// Milestone 176 (US1 / FR-001): stamp per-component
+/// `mikebom:workspace-member` annotation on every component derived
+/// from a workspace-scoped source. Value is a JSON-encoded array of
+/// workspace root-relative paths that the component belongs to,
+/// alphabetically sorted, deduplicated. Single-workspace components
+/// emit a 1-element array (not a bare string) — matches the m147
+/// peer-edge-targets shape precedent.
+///
+/// File-tier components (m133) and any other component whose
+/// `evidence.source_file_paths` yields no derivable workspace root
+/// via [`workspace_root::derive_workspace_root`] do NOT get the
+/// annotation (per FR-002 / Q1). Absence is the wire-visible signal
+/// for "no workspace attribution."
+///
+/// The annotation goes into `extra_annotations`; the existing CDX +
+/// SPDX 2.3 + SPDX 3 emission paths iterate that bag and emit the
+/// annotation under the same key in all three formats (validated by
+/// the `holistic_parity` test under the C120 row's `SymmetricEqual`
+/// directionality). Same emission mechanism as milestone 133's
+/// [`tag_components_with_layer_digest`] above.
+///
+/// Runs post-resolution, before emission. Must be called AFTER the
+/// resolution pipeline has populated `evidence.source_file_paths` for
+/// every component (both root-relative filesystem paths for
+/// manifest-derived components and `path+file://<abs>` URI-shape
+/// paths for pip/cargo/npm main-modules).
+pub fn tag_components_with_workspace_member(
+    components: &mut [mikebom_common::resolution::ResolvedComponent],
+    scan_root_abs: &Path,
+) {
+    for c in components.iter_mut() {
+        let workspaces: std::collections::BTreeSet<String> = c
+            .evidence
+            .source_file_paths
+            .iter()
+            .filter_map(|p| workspace_root::derive_workspace_root(p, scan_root_abs))
+            .collect();
+        if workspaces.is_empty() {
+            continue;
+        }
+        let sorted: Vec<String> = workspaces.into_iter().collect();
+        let value = serde_json::to_string(&sorted).unwrap_or_default();
+        c.extra_annotations.insert(
+            "mikebom:workspace-member".to_string(),
+            serde_json::Value::String(value),
+        );
     }
 }
 

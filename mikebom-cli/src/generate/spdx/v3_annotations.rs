@@ -531,6 +531,22 @@ fn push_document_fields(
         }
     }
 
+    // Milestone 176: C121 doc-scope `mikebom:workspaces-detected`.
+    // Value is a JSON-encoded array of the sorted-deduplicated union
+    // of every per-component `mikebom:workspace-member` value (FR-003
+    // + FR-012). Emission gated on the union being non-empty (FR-003:
+    // absent when zero workspaces detected). Computed via the shared
+    // helper so all three formats guarantee the FR-012 cross-
+    // annotation invariant by construction.
+    {
+        let workspaces =
+            crate::generate::workspace_detected::compute(scan.components);
+        if !workspaces.is_empty() {
+            let value = serde_json::to_string(&workspaces).unwrap_or_default();
+            push(out, "mikebom:workspaces-detected", json!(value));
+        }
+    }
+
     // Milestone 173: C118 doc-scope `mikebom:go-cache-warming-mode`.
     // Emitted BEFORE C110 for alphabetic sort. Value one of `"off"` /
     // `"per-workspace"` / `"offline-inhibited"`.

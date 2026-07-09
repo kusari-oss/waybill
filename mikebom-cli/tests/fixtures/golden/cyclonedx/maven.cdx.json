@@ -41,6 +41,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:maven/com.google.guava/guava@32.1.3-jre",
@@ -90,6 +94,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:maven/junit/junit@4.13.2",
@@ -140,6 +148,10 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:maven/org.apache.commons/commons-lang3@3.14.0",
@@ -223,6 +235,10 @@
         {
           "name": "mikebom:source-files",
           "value": "[\"path+file://<WORKSPACE>/tests/fixtures/maven/pom-three-deps\"]"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
         }
       ],
       "purl": "pkg:maven/com.example/demo-app@1.0.0",
@@ -272,6 +288,10 @@
       {
         "name": "mikebom:graph-completeness",
         "value": "complete"
+      },
+      {
+        "name": "mikebom:workspaces-detected",
+        "value": "[\".\"]"
       }
     ],
     "supplier": {
