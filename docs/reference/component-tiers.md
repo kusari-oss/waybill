@@ -9,6 +9,16 @@ emission. The behavioral contract here is normative; the catalog at
 `docs/reference/sbom-format-mapping.md` is the per-annotation wire-shape
 source of truth.
 
+> **Not the same as the `sbom_tier` traceability ladder.** This file
+> covers the **component-tier axis** (package / binary / file — what
+> kind of *evidence* backs the component). The **`sbom_tier`
+> axis** (design / source / analyzed / deployed / build — how strongly
+> the resolved *version* is pinned) is orthogonal and documented at
+> [reading-a-mikebom-sbom.md → Design-tier components](reading-a-mikebom-sbom.md).
+> Milestone 175 adds an INFO-level advisory log at scan time when the
+> scan produces ≥1 `sbom_tier = "design"` component; the advisory can
+> be suppressed in CI via `MIKEBOM_NO_DESIGN_TIER_ADVISORY=1`.
+
 ## The three tiers
 
 ### Tier 1: Package-tier
