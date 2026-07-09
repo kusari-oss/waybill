@@ -722,10 +722,9 @@ fn parse_gem_call(rest: &str) -> Option<(String, BTreeSet<String>)> {
     let s = rest.trim();
     let (name_quote, name) = if let Some(s) = s.strip_prefix('"') {
         ('"', s)
-    } else if let Some(s) = s.strip_prefix('\'') {
-        ('\'', s)
     } else {
-        return None;
+        let s = s.strip_prefix('\'')?;
+        ('\'', s)
     };
     let close = name.find(name_quote)?;
     let gem_name = name[..close].to_string();

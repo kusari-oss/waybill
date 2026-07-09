@@ -50,10 +50,9 @@ fn resolve_cargo_path(path: &str) -> Option<Purl> {
     // `cargo/registry/cache/` anchor so non-$HOME CARGO_HOMEs work too.
     let (cache_idx, marker_len) = if let Some(i) = path.find(".cargo/registry/cache/") {
         (i, ".cargo/registry/cache/".len())
-    } else if let Some(i) = path.find("cargo/registry/cache/") {
-        (i, "cargo/registry/cache/".len())
     } else {
-        return None;
+        let i = path.find("cargo/registry/cache/")?;
+        (i, "cargo/registry/cache/".len())
     };
     let after_cache = &path[cache_idx + marker_len..];
 
