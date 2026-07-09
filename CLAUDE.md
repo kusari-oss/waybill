@@ -221,6 +221,8 @@ Auto-generated from all feature plans. Last updated: 2026-07-09
 - N/A — pure emission-time derivation; no persistence. (176-workspace-visibility)
 - Rust stable (workspace toolchain inherited from milestones 001–176; no nightly required). + Existing only — `tracing` (advisory-log emission at INFO level), `std::env` (env-var read for suppression), no touch of `mikebom-common`. **Zero new Cargo dependencies.** No subprocess calls. No network access. No filesystem writes. (175-design-tier-visibility)
 - N/A — pure emission-time diagnostic; no persistence. (175-design-tier-visibility)
+- Rust stable (workspace toolchain inherited from milestones 001–176; local + CI both on 1.97 post-m175). No nightly required. + Existing only — `std::collections::HashMap` + `std::collections::HashSet` (already used pervasively in graph_completeness), `mikebom_common::resolution::ResolvedComponent` (existing type; `sbom_tier: Option<String>` field at `resolution.rs:98`), `mikebom_common::types::purl::Purl` (existing type; `ecosystem()` method already used at `graph_completeness/mod.rs:243`). **Zero new Cargo dependencies.** No subprocess calls. No network access. (177-graph-reachability-signal)
+- N/A — pure emission-time classification; no persistence. (177-graph-reachability-signal)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -283,9 +285,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 177-graph-reachability-signal: Added Rust stable (workspace toolchain inherited from milestones 001–176; local + CI both on 1.97 post-m175). No nightly required. + Existing only — `std::collections::HashMap` + `std::collections::HashSet` (already used pervasively in graph_completeness), `mikebom_common::resolution::ResolvedComponent` (existing type; `sbom_tier: Option<String>` field at `resolution.rs:98`), `mikebom_common::types::purl::Purl` (existing type; `ecosystem()` method already used at `graph_completeness/mod.rs:243`). **Zero new Cargo dependencies.** No subprocess calls. No network access.
 - 175-design-tier-visibility: Added Rust stable (workspace toolchain inherited from milestones 001–176; no nightly required). + Existing only — `tracing` (advisory-log emission at INFO level), `std::env` (env-var read for suppression), no touch of `mikebom-common`. **Zero new Cargo dependencies.** No subprocess calls. No network access. No filesystem writes.
 - 176-workspace-visibility: Added Rust stable (workspace toolchain inherited from milestones 001–174; no nightly required). + Existing only — `std::path::{Path, PathBuf}` (dirname derivation), `serde_json` (JSON-array-in-string encoding matching m134/m147/m173 precedent), `std::collections::BTreeSet` (sorted-deduplicated storage), `tracing` (advisory log). **Zero new Cargo dependencies.** No subprocess calls. No network access.
-- 174-file-tier-vcs-skip: Added Rust stable (workspace toolchain inherited from milestones 001–173; no nightly required for this user-space-only bug fix). + Existing only — `std::path::Path` + `std::path::PathBuf` (base-name extraction), `tracing` (debug-level skip logs), existing `scan_fs::walk::safe_walk` (unchanged), existing `scan_fs::walk::WalkConfig` (unchanged). **Zero new Cargo dependencies.** Zero new subprocess calls. Zero new network access. Zero new filesystem writes.
 
 
 <!-- MANUAL ADDITIONS START -->

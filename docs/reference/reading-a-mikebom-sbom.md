@@ -575,7 +575,13 @@ jq '.metadata.properties[]?
 >
 > **What to do with it**: when an SBOM reports `partial`, at least one component is orphaned in the dep-graph view. Surface the gap in your compliance dashboard or vulnerability scanner; the reason string tells you which reason-code class applies (e.g., `orphaned-components-detected`). Compose with per-component `mikebom:orphan-reason` (C45) to localize the gap.
 >
-> **Milestone**: 158 — added (universal reachability). 170 — dedup + docs rewrite. See [issue #516](https://github.com/kusari-oss/mikebom/issues/516) for the follow-up investigation into whether pre-m170's Go-scoped signal is reconstructible from remaining signals.
+> **Milestone 177 — reachability-consumer contract**: post-m177 mikebom fires the reason code `transitive-edges-unresolvable: <ecosystem-list>` whenever the scan emits ≥1 design-tier or analyzed-tier component that lacks a same-package source-tier-or-higher counterpart (per the m005 traceability ladder: `design` → `source` → `analyzed` → `deployed` → `build`; `source`/`deployed`/`build` are the "safe" tiers). This makes `graph-completeness = "partial"` on scans where the transitive-edge closure is unreliable — e.g., a Python project with only `requirements.txt` (no lockfile), or a scan where all components resolved via hash-match (analyzed-tier) without a matching source-tier peer.
+>
+> **Reachability consumers** (downstream tools that answer "does this CVE actually reach my application code via the dep graph?") SHOULD machine-check this signal BEFORE running: if the value is `"partial"` AND the reason contains `transitive-edges-unresolvable:`, the affected-ecosystem transitive-edge closure is unwalkable, and reachability analysis in those ecosystems WILL produce silent false negatives (nothing reaches anything because nothing is connected). Reachability tools have three options: (a) **refuse** to run and instruct the operator to remediate the scan input, (b) **run** with results flagged as low-confidence, (c) **filter** to reachability-analyze only the ecosystems NOT named in the reason detail (the partial-reachability pattern for polyglot scans).
+>
+> **Composes orthogonally with milestone 175** (design-tier component visibility): m175 emits an INFO-level advisory log at scan time (`"design-tier components detected: "`) for the OPERATOR; m177 emits this machine-readable signal in the SBOM for downstream reachability CONSUMERS. Both fire on the same underlying scan-input state but serve different audiences.
+>
+> **Milestone**: 158 — added (universal reachability). 170 — dedup + docs rewrite. 177 — added `transitive-edges-unresolvable` code to the closed vocabulary (vocabulary extended 8 → 9 codes). See [issue #516](https://github.com/kusari-oss/mikebom/issues/516) for the follow-up investigation into whether pre-m170's Go-scoped signal is reconstructible from remaining signals.
 > **Catalog**: [C104](sbom-format-mapping.md) (C44 REMOVED in m170)
 
 ```jq
@@ -583,6 +589,33 @@ jq '.metadata.properties[]?
 jq '.metadata.properties[]?
     | select(.name == "mikebom:graph-completeness" or .name == "mikebom:graph-completeness-reason")
     | {name, value}' your.cdx.json
+```
+
+```jq
+# CDX — Milestone 177 reachability-tool pre-flight gate: returns
+# `true` when the graph is unreliable for reachability analysis
+# (transitive-edge closure unwalkable in ≥1 ecosystem); `false`
+# otherwise. Reachability tools SHOULD refuse or downgrade when true.
+jq '
+    .metadata.properties[]?
+    | select(.name == "mikebom:graph-completeness-reason")
+    | .value
+    | contains("transitive-edges-unresolvable")
+' your.cdx.json
+```
+
+```jq
+# CDX — Milestone 177: extract the affected-ecosystem list so a
+# reachability tool can filter to safe ecosystems (partial-reachability
+# pattern for polyglot scans). Returns array of ecosystem names.
+jq '
+    .metadata.properties[]?
+    | select(.name == "mikebom:graph-completeness-reason")
+    | .value
+    | capture("transitive-edges-unresolvable: (?<eco>[^;]+)")
+    | .eco
+    | split(", ")
+' your.cdx.json
 ```
 
 #### `mikebom:go-transitive-coverage` + `mikebom:go-transitive-coverage-reason`

@@ -273,6 +273,18 @@ pub fn compute_graph_completeness(
     //   AND no classifier fired. Should be impossible given the
     //   coverage above, but caution-first says emit `unknown` rather
     //   than lying.
+    // Milestone 177 — classify tier-based reachability gaps
+    // (design-tier or analyzed-tier components without same-package
+    // source-tier-or-higher counterpart). Orthogonal to BFS-orphan
+    // classification above — CAN fire even when orphan_count == 0.
+    // Placement (after MultiEcosystemPartialRoot + OrphanedComponentsDetected,
+    // before the final value computation) matters for reason-string
+    // ordering: BFS-orphan-derived codes appear FIRST, m177 code
+    // appears LAST when both fire.
+    if let Some(code) = classify_transitive_edges_unresolvable(components) {
+        reason_codes.push(code);
+    }
+
     let value = if reason_codes.is_empty() && orphan_count == 0 {
         GraphCompletenessValue::Complete
     } else if !reason_codes.is_empty() {
@@ -291,6 +303,69 @@ pub fn compute_graph_completeness(
         orphan_count,
         reachable_set,
     }
+}
+
+/// Milestone 177 classifier — identify ecosystems where the
+/// transitive-edge closure is unwalkable due to design-tier or
+/// analyzed-tier components lacking a same-package source-tier-or-
+/// higher counterpart.
+///
+/// Two-pass algorithm per data-model.md §Entity 3:
+///
+///   1. Build a same-package lookup table keyed by `(purl.ecosystem(),
+///      purl.name())`. Value: `true` iff any component with that key
+///      has `sbom_tier ∈ {"source", "deployed", "build"}` (the "safe"
+///      set per spec Q2).
+///   2. Iterate components filtered to `sbom_tier ∈ {"design",
+///      "analyzed"}` (the "triggering" set per spec Q2). For each
+///      triggering component whose same-package key has no safe
+///      counterpart in the lookup, add its PURL type to the affected-
+///      ecosystems set.
+///
+/// Returns `Some(TransitiveEdgesUnresolvable { ecosystems })` when
+/// the affected-ecosystems set is non-empty (sorted-deduplicated);
+/// `None` otherwise.
+///
+/// Complexity: O(N) time, O(N) auxiliary space. Pure function.
+fn classify_transitive_edges_unresolvable(
+    components: &[ResolvedComponent],
+) -> Option<ReasonCode> {
+    use std::collections::HashMap;
+
+    // Pass 1: same-package safety lookup.
+    let mut safe_packages: HashMap<(String, String), bool> = HashMap::new();
+    for c in components {
+        let key = (c.purl.ecosystem().to_string(), c.purl.name().to_string());
+        let is_safe = matches!(
+            c.sbom_tier.as_deref(),
+            Some("source") | Some("deployed") | Some("build")
+        );
+        let entry = safe_packages.entry(key).or_insert(false);
+        *entry = *entry || is_safe;
+    }
+
+    // Pass 2: collect affected ecosystems.
+    let mut affected_ecosystems: HashSet<String> = HashSet::new();
+    for c in components {
+        let is_triggering_tier = matches!(
+            c.sbom_tier.as_deref(),
+            Some("design") | Some("analyzed")
+        );
+        if !is_triggering_tier {
+            continue;
+        }
+        let key = (c.purl.ecosystem().to_string(), c.purl.name().to_string());
+        if !safe_packages.get(&key).copied().unwrap_or(false) {
+            affected_ecosystems.insert(c.purl.ecosystem().to_string());
+        }
+    }
+
+    if affected_ecosystems.is_empty() {
+        return None;
+    }
+    let mut sorted: Vec<String> = affected_ecosystems.into_iter().collect();
+    sorted.sort();
+    Some(ReasonCode::TransitiveEdgesUnresolvable { ecosystems: sorted })
 }
 
 /// Milestone 158 FR-002 — construct the synthetic `root → loser`

@@ -164,7 +164,11 @@
       },
       {
         "name": "mikebom:graph-completeness",
-        "value": "complete"
+        "value": "partial"
+      },
+      {
+        "name": "mikebom:graph-completeness-reason",
+        "value": "transitive-edges-unresolvable: generic"
       },
       {
         "name": "mikebom:workspaces-detected",

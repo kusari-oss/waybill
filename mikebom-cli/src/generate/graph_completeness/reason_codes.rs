@@ -67,6 +67,27 @@ pub enum ReasonCode {
     MultiEcosystemPartialRoot {
         ecosystems: Vec<String>,
     },
+    /// Milestone 177 — emitted when the scan produced ≥1 component
+    /// at design-tier or analyzed-tier (`sbom_tier ∈ {"design",
+    /// "analyzed"}`) that lacks a same-package source-tier-or-higher
+    /// counterpart. Same-package identity is determined by PURL type
+    /// plus name (version ignored — design-tier version is empty by
+    /// definition).
+    ///
+    /// Signals to downstream reachability consumers that the
+    /// transitive-edge closure past these components is unreliable:
+    /// hash-match resolution (analyzed-tier) identifies components
+    /// but doesn't emit transitive edges; constraint-only
+    /// declarations (design-tier) have no version to resolve past.
+    ///
+    /// Detail: `<comma-separated PURL-type-canonical ecosystem
+    /// list>`, alphabetically sorted, deduplicated. Format precedent:
+    /// `MultiEcosystemPartialRoot`. Non-empty precondition — the
+    /// classifier constructs this variant only when at least one
+    /// affected ecosystem is present.
+    TransitiveEdgesUnresolvable {
+        ecosystems: Vec<String>,
+    },
 }
 
 impl ReasonCode {
@@ -98,6 +119,10 @@ impl ReasonCode {
             ),
             Self::MultiEcosystemPartialRoot { ecosystems } => format!(
                 "multi-ecosystem-partial-root: {}",
+                ecosystems.join(", ")
+            ),
+            Self::TransitiveEdgesUnresolvable { ecosystems } => format!(
+                "transitive-edges-unresolvable: {}",
                 ecosystems.join(", ")
             ),
         }
@@ -238,6 +263,52 @@ mod tests {
         assert_eq!(
             join_reason_codes(&codes),
             "multi-ecosystem-partial-root: npm; orphaned-components-detected: 3 component(s) not reachable from root"
+        );
+    }
+
+    // ------------------------------------------------------------
+    // Milestone 177 — TransitiveEdgesUnresolvable wire-format tests.
+    // ------------------------------------------------------------
+
+    #[test]
+    fn transitive_edges_unresolvable_single_ecosystem() {
+        let c = ReasonCode::TransitiveEdgesUnresolvable {
+            ecosystems: vec!["pypi".to_string()],
+        };
+        assert_eq!(
+            c.to_reason_string(),
+            "transitive-edges-unresolvable: pypi"
+        );
+    }
+
+    #[test]
+    fn transitive_edges_unresolvable_multi_ecosystem() {
+        // Ecosystems arrive alphabetically-sorted from the classifier.
+        let c = ReasonCode::TransitiveEdgesUnresolvable {
+            ecosystems: vec!["composer".to_string(), "pypi".to_string()],
+        };
+        assert_eq!(
+            c.to_reason_string(),
+            "transitive-edges-unresolvable: composer, pypi"
+        );
+    }
+
+    #[test]
+    fn transitive_edges_unresolvable_composes_with_orphaned() {
+        // FR-004: joined by "; " alongside existing codes. Order
+        // follows Vec insertion — orphaned appears before the new
+        // m177 code per the classifier placement in
+        // compute_graph_completeness (m177 classifier runs AFTER
+        // BFS-orphan classification).
+        let codes = vec![
+            ReasonCode::OrphanedComponentsDetected { orphan_count: 3 },
+            ReasonCode::TransitiveEdgesUnresolvable {
+                ecosystems: vec!["pypi".to_string()],
+            },
+        ];
+        assert_eq!(
+            join_reason_codes(&codes),
+            "orphaned-components-detected: 3 component(s) not reachable from root; transitive-edges-unresolvable: pypi"
         );
     }
 }
