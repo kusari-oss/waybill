@@ -1,0 +1,10 @@
+{
+  "name": "m181-yarn-v1-optional-fixture",
+  "version": "0.1.0",
+  "description": "Milestone 181 US1 fixture — yarn v1 project where the root depends on chokidar (runtime) and lodash (runtime); chokidar in turn declares fsevents as optional (see yarn.lock's `chokidar` entry which has an `optionalDependencies:` sub-block naming fsevents). mikebom's yarn v1 classifier MUST mark fsevents as LifecycleScope::Optional based on the yarn.lock structure.",
+  "private": true,
+  "dependencies": {
+    "chokidar": "^3",
+    "lodash": "^4"
+  }
+}

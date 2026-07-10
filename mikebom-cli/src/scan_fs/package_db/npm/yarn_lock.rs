@@ -35,7 +35,24 @@ pub(super) fn read_yarn_lock(rootfs: &Path, _include_dev: bool) -> Option<Vec<Pa
     let path = rootfs.join("yarn.lock");
     let text = std::fs::read_to_string(&path).ok()?;
     let source_path = path.to_string_lossy().into_owned();
-    let out = parse_yarn_lock(&text, &source_path);
+    // Milestone 181 T003 — also read root package.json for the m181
+    // optional-dep classifier (v1's `optionalDependencies:` sub-block
+    // guard, Berry's `dependenciesMeta.<name>.optional` cross-reference,
+    // and the m180 peer-precedence guard). Value::Null on any error
+    // per FR-004 fail-safe: parsers safely yield zero optional entries
+    // when the file is missing/unparseable.
+    let pkg_json_path = rootfs.join("package.json");
+    let pkg_json = std::fs::read_to_string(&pkg_json_path)
+        .ok()
+        .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+        .unwrap_or(serde_json::Value::Null);
+    if pkg_json.is_null() {
+        tracing::debug!(
+            path = %pkg_json_path.display(),
+            "package.json missing or unparseable — yarn optional-dep classification skipped (FR-004 fail-safe)"
+        );
+    }
+    let out = parse_yarn_lock(&text, &source_path, &pkg_json);
     if out.is_empty() {
         None
     } else {
@@ -44,11 +61,21 @@ pub(super) fn read_yarn_lock(rootfs: &Path, _include_dev: bool) -> Option<Vec<Pa
 }
 
 /// Parse a yarn.lock document (auto-detects v1 vs Berry).
-pub(super) fn parse_yarn_lock(text: &str, source_path: &str) -> Vec<PackageDbEntry> {
+///
+/// Milestone 181 T003: `pkg_json` is the parsed root `package.json`
+/// (`serde_json::Value::Null` if missing/unparseable). Both parsers
+/// use it for optional-dep classification per m181 spec.md FR-001..
+/// FR-005. Existing test callers pre-m181 pass `&Value::Null` for
+/// backward-compat (they don't exercise the classification path).
+pub(super) fn parse_yarn_lock(
+    text: &str,
+    source_path: &str,
+    pkg_json: &serde_json::Value,
+) -> Vec<PackageDbEntry> {
     if is_berry(text) {
-        parse_berry(text, source_path)
+        parse_berry(text, source_path, pkg_json)
     } else {
-        parse_v1(text, source_path)
+        parse_v1(text, source_path, pkg_json)
     }
 }
 
@@ -62,7 +89,11 @@ fn is_berry(text: &str) -> bool {
 // Berry parser (Yarn 2+)
 // ────────────────────────────────────────────────────────────────────
 
-fn parse_berry(text: &str, source_path: &str) -> Vec<PackageDbEntry> {
+fn parse_berry(
+    text: &str,
+    source_path: &str,
+    pkg_json: &serde_json::Value,
+) -> Vec<PackageDbEntry> {
     // Skip the `__metadata:` block by stripping it from a deserialized
     // map. yarn.lock Berry is YAML-shaped — serde_yaml accepts it.
     let parsed: serde_yaml::Value = match serde_yaml::from_str(text) {
@@ -79,6 +110,19 @@ fn parse_berry(text: &str, source_path: &str) -> Vec<PackageDbEntry> {
     let Some(mapping) = parsed.as_mapping() else {
         return Vec::new();
     };
+
+    // Milestone 181 T012 — build the Berry optional-name set from
+    // `package.json > dependenciesMeta.<name>.optional = true` (m181
+    // FR-003). Berry's lockfile does NOT carry the flag (it lives in
+    // package.json only). Apply the peer-precedence guard immediately
+    // per m181 FR-005: names that ALSO satisfy m180's
+    // `is_peer_optional` predicate are removed from the set so m178's
+    // `PROVIDED_DEPENDENCY_OF` classification wins (KEEP-BOTH polarity).
+    let mut optional_names: std::collections::HashSet<String> =
+        berry_optional_names_from_pkg_json(pkg_json);
+    optional_names.retain(|n| {
+        !super::peer_optional::is_peer_optional(n, pkg_json)
+    });
 
     let mut out = Vec::new();
     for (raw_key, entry) in mapping {
@@ -116,11 +160,30 @@ fn parse_berry(text: &str, source_path: &str) -> Vec<PackageDbEntry> {
                     .collect::<Vec<_>>()
             })
             .unwrap_or_default();
-        if let Some(entry) = build_entry(&name, &version, source_path, dep_names) {
+        if let Some(entry) = build_entry(&name, &version, source_path, dep_names, &optional_names) {
             out.push(entry);
         }
     }
     out
+}
+
+/// Milestone 181 T012 — extract the set of names declared as optional
+/// via `package.json > dependenciesMeta.<name>.optional = true`. Berry
+/// stores optional-dep information out-of-band from the lockfile — the
+/// package.json map is the ONLY source. Any error (missing field,
+/// wrong shape, non-object meta) safely collapses to the empty set via
+/// the option-chain per m181 spec.md Assumption 2.
+fn berry_optional_names_from_pkg_json(
+    pkg_json: &serde_json::Value,
+) -> std::collections::HashSet<String> {
+    pkg_json
+        .get("dependenciesMeta")
+        .and_then(|v| v.as_object())
+        .into_iter()
+        .flat_map(|obj| obj.iter())
+        .filter(|(_, meta)| meta.get("optional").and_then(|v| v.as_bool()) == Some(true))
+        .map(|(name, _)| name.to_string())
+        .collect()
 }
 
 // ────────────────────────────────────────────────────────────────────
@@ -136,7 +199,11 @@ fn parse_berry(text: &str, source_path: &str) -> Vec<PackageDbEntry> {
 //     dependencies:
 //       bar "^2.0.0"
 
-fn parse_v1(text: &str, source_path: &str) -> Vec<PackageDbEntry> {
+fn parse_v1(
+    text: &str,
+    source_path: &str,
+    pkg_json: &serde_json::Value,
+) -> Vec<PackageDbEntry> {
     // Two-pass aggregator keyed by (name, version) so multi-alias
     // headers (where one block declares two aliases of the same coord)
     // don't double-emit.
@@ -151,6 +218,19 @@ fn parse_v1(text: &str, source_path: &str) -> Vec<PackageDbEntry> {
     // = deduped-preserved-order Vec<local_name>.
     let mut annotation_locals: BTreeMap<String, Vec<String>> = BTreeMap::new();
 
+    // Milestone 181 T004 — scan-wide accumulators for the optional-
+    // dep classifier (spec.md FR-001 + FR-007). `optional_children_seen`
+    // collects every child name that appeared under some parent's
+    // `optionalDependencies:` sub-block; `regular_children_seen`
+    // collects every child from regular `dependencies:` sub-blocks.
+    // The final classifier input (below) is the set-difference
+    // `optional - regular` — enforces FR-007's diamond-shape rule that
+    // Runtime (regular) wins over Optional when a name appears in both.
+    let mut optional_children_seen: std::collections::HashSet<String> =
+        Default::default();
+    let mut regular_children_seen: std::collections::HashSet<String> =
+        Default::default();
+
     let mut lines = text.lines().peekable();
     while let Some(line) = lines.next() {
         if !is_v1_entry_header(line) {
@@ -164,7 +244,14 @@ fn parse_v1(text: &str, source_path: &str) -> Vec<PackageDbEntry> {
         // unindented line (a comment or another header).
         let mut version: Option<String> = None;
         let mut in_deps_block = false;
+        // Milestone 181 T004 — companion boolean flipped when the
+        // current sub-block is `optionalDependencies:` (vs the
+        // pre-m181 flat `dependencies:` OR `optionalDependencies:`
+        // fallthrough). Routes each collected child name to the
+        // per-entry `optional_dep_names` accumulator when true.
+        let mut is_optional_block = false;
         let mut dep_names: Vec<String> = Vec::new();
+        let mut optional_dep_names: Vec<String> = Vec::new();
         while let Some(&body_line) = lines.peek() {
             let leading_ws = body_line.len() - body_line.trim_start().len();
             if !body_line.trim().is_empty() && leading_ws == 0 {
@@ -174,27 +261,51 @@ fn parse_v1(text: &str, source_path: &str) -> Vec<PackageDbEntry> {
             let trimmed = body_line.trim();
             if trimmed.is_empty() {
                 in_deps_block = false;
+                is_optional_block = false;
                 continue;
             }
             if leading_ws == 2 {
                 in_deps_block = false;
+                is_optional_block = false;
                 if let Some(rest) = trimmed.strip_prefix("version ") {
                     version = Some(unquote(rest.trim()).to_string());
-                } else if trimmed == "dependencies:" || trimmed == "optionalDependencies:" {
+                } else if trimmed == "dependencies:" {
                     in_deps_block = true;
+                    is_optional_block = false;
+                } else if trimmed == "optionalDependencies:" {
+                    in_deps_block = true;
+                    is_optional_block = true;
                 }
             } else if leading_ws >= 4 && in_deps_block {
                 // "name version-range" line; first token is the dep name.
                 if let Some((dep_name, _rest)) = trimmed.split_once(char::is_whitespace) {
                     let dep_clean = unquote(dep_name.trim()).to_string();
                     if !dep_clean.is_empty() {
-                        dep_names.push(dep_clean);
+                        if is_optional_block {
+                            optional_dep_names.push(dep_clean);
+                        } else {
+                            dep_names.push(dep_clean);
+                        }
                     }
                 }
             }
         }
         if let Some(v) = version {
             if !v.is_empty() {
+                // Milestone 181 T004 — record every child name into the
+                // scan-wide sets BEFORE the m159 alias merge. Diamond-
+                // shape rule (FR-007) is enforced post-loop by
+                // set-difference.
+                for n in &optional_dep_names {
+                    optional_children_seen.insert(n.clone());
+                }
+                for n in &dep_names {
+                    regular_children_seen.insert(n.clone());
+                }
+                // Merge the two per-entry accumulators into `dep_names`
+                // for downstream edge emission (edges don't care about
+                // the regular/optional distinction — same as pre-m181).
+                dep_names.extend(optional_dep_names);
                 // Milestone 159 — check for yarn v1 key-side alias. When
                 // detected, the entry is aggregated under the ALIASED
                 // canonical identity per FR-003, and the local-name is
@@ -238,6 +349,22 @@ fn parse_v1(text: &str, source_path: &str) -> Vec<PackageDbEntry> {
     }
     let alias_count = aliases.len();
 
+    // Milestone 181 T004 — compute the final optional-name set:
+    // `optional_children_seen - regular_children_seen` enforces the
+    // FR-007 diamond-shape rule (Runtime wins when a name appears in
+    // both sub-block kinds across any parents). Then apply the m180
+    // peer-precedence guard per FR-005: names that are ALSO peer-
+    // optional per the root package.json get removed so m178's
+    // `PROVIDED_DEPENDENCY_OF` classification wins (KEEP-BOTH
+    // polarity).
+    let mut optional_names: std::collections::HashSet<String> = optional_children_seen
+        .difference(&regular_children_seen)
+        .cloned()
+        .collect();
+    optional_names.retain(|n| {
+        !super::peer_optional::is_peer_optional(n, pkg_json)
+    });
+
     let mut out = Vec::new();
     for ((name, version), deps) in acc {
         // De-duplicate dep names while preserving first-seen order.
@@ -252,7 +379,7 @@ fn parse_v1(text: &str, source_path: &str) -> Vec<PackageDbEntry> {
         if alias_count > 0 {
             unique = super::alias_mapping::rewrite_dep_names(&unique, &alias_map);
         }
-        if let Some(mut entry) = build_entry(&name, &version, source_path, unique) {
+        if let Some(mut entry) = build_entry(&name, &version, source_path, unique, &optional_names) {
             // Milestone 159 FR-006 — attach `mikebom:yarn-alias`
             // annotation on aliased components. Single local-name
             // emits Value::String; multi-alias (FR-012) emits
@@ -363,8 +490,29 @@ fn build_entry(
     version: &str,
     source_path: &str,
     depends: Vec<String>,
+    // Milestone 181 T005 — m181 classifier input. When the name is
+    // in the set, the entry gets `LifecycleScope::Optional` + the
+    // `mikebom:optional-derivation = "npm-optional-dependencies"`
+    // annotation. When absent (or when the set is empty), pre-m181
+    // behavior is preserved verbatim: `lifecycle_scope: None` +
+    // empty `extra_annotations` — this is the SC-008 byte-identity
+    // guard for the m106 US5 baseline + m159 alias regression tests.
+    optional_names: &std::collections::HashSet<String>,
 ) -> Option<PackageDbEntry> {
     let purl = build_npm_purl(name, version)?;
+    let (lifecycle_scope, extra_annotations): (
+        Option<mikebom_common::resolution::LifecycleScope>,
+        BTreeMap<String, serde_json::Value>,
+    ) = if optional_names.contains(name) {
+        let mut ann: BTreeMap<String, serde_json::Value> = Default::default();
+        ann.insert(
+            "mikebom:optional-derivation".to_string(),
+            serde_json::Value::String("npm-optional-dependencies".to_string()),
+        );
+        (Some(mikebom_common::resolution::LifecycleScope::Optional), ann)
+    } else {
+        (None, Default::default())
+    };
     Some(PackageDbEntry {
         build_inclusion: None,
         purl,
@@ -375,7 +523,7 @@ fn build_entry(
         depends,
         maintainer: None,
         licenses: Vec::new(),
-        lifecycle_scope: None,
+        lifecycle_scope,
         requirement_range: None,
         source_type: None,
         buildinfo_status: None,
@@ -393,7 +541,7 @@ fn build_entry(
         hashes: Vec::new(),
         sbom_tier: Some("source".to_string()),
         shade_relocation: None,
-        extra_annotations: Default::default(),
+        extra_annotations,
         binary_role: None,
     })
 }
@@ -425,7 +573,7 @@ mod tests {
   version "2.3.4"
   resolved "https://example.invalid/mikebom-fixture-other/-/mikebom-fixture-other-2.3.4.tgz"
 "#;
-        let entries = parse_yarn_lock(text, "yarn.lock");
+        let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         assert_eq!(entries.len(), 2);
         let purls: Vec<&str> = entries.iter().map(|e| e.purl.as_str()).collect();
         assert!(purls.contains(&"pkg:npm/mikebom-fixture-lib@1.2.3"));
@@ -440,7 +588,7 @@ mod tests {
 "@mikebom-fixture/types-pkg@^4.0.0":
   version "4.5.6"
 "#;
-        let entries = parse_yarn_lock(text, "yarn.lock");
+        let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "@mikebom-fixture/types-pkg");
         assert_eq!(entries[0].version, "4.5.6");
@@ -459,7 +607,7 @@ mod tests {
 "mikebom-fixture-alias@^1.0.0", "mikebom-fixture-alias@^1.1.0":
   version "1.5.0"
 "#;
-        let entries = parse_yarn_lock(text, "yarn.lock");
+        let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "mikebom-fixture-alias");
         assert_eq!(entries[0].version, "1.5.0");
@@ -479,7 +627,7 @@ mod tests {
 "mikebom-fixture-child@^2.0.0":
   version "2.0.0"
 "#;
-        let entries = parse_yarn_lock(text, "yarn.lock");
+        let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         let parent = entries
             .iter()
             .find(|e| e.name == "mikebom-fixture-parent")
@@ -511,7 +659,7 @@ __metadata:
   version: 4.5.6
   resolution: "@mikebom-fixture/types-pkg@npm:4.5.6"
 "#;
-        let entries = parse_yarn_lock(text, "yarn.lock");
+        let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         assert_eq!(entries.len(), 2);
         let purls: Vec<&str> = entries.iter().map(|e| e.purl.as_str()).collect();
         assert!(purls.contains(&"pkg:npm/mikebom-fixture-lib@1.2.3"));
@@ -536,7 +684,7 @@ __metadata:
   version: 2.0.0
   resolution: "mikebom-fixture-child@npm:2.0.0"
 "#;
-        let entries = parse_yarn_lock(text, "yarn.lock");
+        let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         let parent = entries
             .iter()
             .find(|e| e.name == "mikebom-fixture-parent")
@@ -555,14 +703,14 @@ __metadata:
         let text = r#"__metadata:
   version: 8
 "#;
-        let entries = parse_yarn_lock(text, "yarn.lock");
+        let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         assert!(entries.is_empty());
     }
 
     #[test]
     fn malformed_returns_empty_no_panic() {
         let text = "this is { not a real } yarn lockfile";
-        let entries = parse_yarn_lock(text, "yarn.lock");
+        let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         assert!(entries.is_empty());
     }
 
@@ -592,7 +740,7 @@ __metadata:
     "@cosmograph/cosmos" "^1.1.1"
     express "^4.18.0"
 "#;
-        let entries = parse_yarn_lock(text, "yarn.lock");
+        let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         let by_name: std::collections::HashMap<String, &PackageDbEntry> =
             entries.iter().map(|e| (e.name.clone(), e)).collect();
 
@@ -634,7 +782,7 @@ __metadata:
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#abc"
   integrity sha512-aaaa
 "#;
-        let entries = parse_yarn_lock(text, "yarn.lock");
+        let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         for entry in &entries {
             assert!(
                 !entry.extra_annotations.contains_key("mikebom:yarn-alias"),
@@ -642,5 +790,306 @@ __metadata:
                 entry.name
             );
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Milestone 181 — optional-dep classification tests.
+    // Contract: specs/181-yarn-optional-dep/contracts/
+    //           yarn-classifier-extension.md +
+    //           yarn-peer-precedence-guard.md
+    // ------------------------------------------------------------------
+
+    fn find_entry<'a>(entries: &'a [PackageDbEntry], name: &str) -> Option<&'a PackageDbEntry> {
+        entries.iter().find(|e| e.name == name)
+    }
+
+    // --- Phase 3 US1: yarn v1 unit tests ---
+
+    #[test]
+    fn v1_optional_dep_populates_lifecycle_scope_optional() {
+        // Milestone 181 T006 — flagship US1: a v1 yarn.lock where a
+        // parent declares `optionalDependencies:` naming `optional-child`
+        // MUST classify the child as LifecycleScope::Optional + emit
+        // the m180-shared `mikebom:optional-derivation` annotation.
+        let text = r#"# yarn lockfile v1
+
+
+"parent-pkg@^1.0.0":
+  version "1.0.0"
+  optionalDependencies:
+    optional-child "^2"
+
+"optional-child@^2":
+  version "2.3.4"
+"#;
+        let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
+        let child = find_entry(&entries, "optional-child").expect("optional-child emitted");
+        assert_eq!(
+            child.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Optional)
+        );
+        assert_eq!(
+            child.extra_annotations.get("mikebom:optional-derivation"),
+            Some(&serde_json::Value::String(
+                "npm-optional-dependencies".to_string()
+            ))
+        );
+    }
+
+    #[test]
+    fn v1_diamond_regular_wins_over_optional() {
+        // Milestone 181 T007 / FR-007 — when the SAME child appears
+        // in one parent's `optionalDependencies:` AND another parent's
+        // regular `dependencies:` sub-block, Runtime wins (non-optional
+        // beats optional per npm's own resolver semantic).
+        let text = r#"# yarn lockfile v1
+
+
+"parent-a@^1.0.0":
+  version "1.0.0"
+  optionalDependencies:
+    shared-child "^2"
+
+"parent-b@^1.0.0":
+  version "1.0.0"
+  dependencies:
+    shared-child "^2"
+
+"shared-child@^2":
+  version "2.0.0"
+"#;
+        let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
+        let child = find_entry(&entries, "shared-child").expect("shared-child emitted");
+        assert_eq!(
+            child.lifecycle_scope, None,
+            "diamond: regular (Runtime) MUST win over optional per FR-007"
+        );
+        assert!(
+            !child
+                .extra_annotations
+                .contains_key("mikebom:optional-derivation"),
+            "diamond: no optional-derivation annotation when Runtime wins"
+        );
+    }
+
+    #[test]
+    fn v1_no_optional_sub_blocks_stays_none() {
+        // Milestone 181 T008 / SC-008 — regression guard: a v1 fixture
+        // with only `dependencies:` sub-blocks MUST emit every
+        // component with `lifecycle_scope: None` (pre-m181 behavior
+        // preserved byte-identically).
+        let text = r#"# yarn lockfile v1
+
+
+"parent@^1.0.0":
+  version "1.0.0"
+  dependencies:
+    child "^2"
+
+"child@^2":
+  version "2.0.0"
+"#;
+        let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
+        for e in &entries {
+            assert_eq!(
+                e.lifecycle_scope, None,
+                "SC-008: v1 fixture with no optionalDependencies MUST preserve pre-m181 `lifecycle_scope: None` for `{}`",
+                e.name
+            );
+            assert!(
+                !e.extra_annotations
+                    .contains_key("mikebom:optional-derivation"),
+                "SC-008: no derivation annotation on pre-m181-shape fixture"
+            );
+        }
+    }
+
+    #[test]
+    fn v1_dep_only_in_regular_stays_none() {
+        // Milestone 181 T009 / SC-008 — when a child appears ONLY in
+        // a regular `dependencies:` sub-block, it MUST stay
+        // `lifecycle_scope: None` (regression pin against future
+        // reader-behavior drift).
+        let text = r#"# yarn lockfile v1
+
+
+"parent@^1.0.0":
+  version "1.0.0"
+  dependencies:
+    only-regular-child "^2"
+
+"only-regular-child@^2":
+  version "2.0.0"
+"#;
+        let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
+        let child =
+            find_entry(&entries, "only-regular-child").expect("only-regular-child emitted");
+        assert_eq!(child.lifecycle_scope, None);
+    }
+
+    // --- Phase 4 US2: yarn Berry unit tests ---
+
+    #[test]
+    fn berry_dependencies_meta_populates_lifecycle_scope_optional() {
+        // Milestone 181 T013 — flagship US2: a Berry yarn.lock with a
+        // matching `dependenciesMeta.<name>.optional = true` entry in
+        // the root package.json MUST classify the target as
+        // LifecycleScope::Optional.
+        let text = r#"# This file is generated by running "yarn install"
+# Manual changes might be lost - proceed with caution!
+
+__metadata:
+  version: 8
+
+"optional-foo@npm:^1.0.0":
+  version: 1.2.3
+  resolution: "optional-foo@npm:1.2.3"
+
+"lodash@npm:^4":
+  version: 4.17.21
+  resolution: "lodash@npm:4.17.21"
+"#;
+        let pkg_json = serde_json::json!({
+            "dependenciesMeta": {
+                "optional-foo": { "optional": true }
+            }
+        });
+        let entries = parse_yarn_lock(text, "yarn.lock", &pkg_json);
+        let foo = find_entry(&entries, "optional-foo").expect("optional-foo emitted");
+        assert_eq!(
+            foo.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Optional)
+        );
+        assert_eq!(
+            foo.extra_annotations.get("mikebom:optional-derivation"),
+            Some(&serde_json::Value::String(
+                "npm-optional-dependencies".to_string()
+            ))
+        );
+        // Regression guard: lodash (no dependenciesMeta entry) stays None.
+        let lodash = find_entry(&entries, "lodash").expect("lodash emitted");
+        assert_eq!(lodash.lifecycle_scope, None);
+    }
+
+    #[test]
+    fn berry_no_dependencies_meta_stays_none() {
+        // Milestone 181 T014 / SC-008 — regression guard: a Berry
+        // fixture with no `dependenciesMeta` in package.json MUST
+        // emit every component with `lifecycle_scope: None`.
+        let text = r#"# This file is generated by running "yarn install"
+
+__metadata:
+  version: 8
+
+"child@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "child@npm:1.0.0"
+"#;
+        let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
+        for e in &entries {
+            assert_eq!(
+                e.lifecycle_scope, None,
+                "SC-008: Berry fixture without dependenciesMeta MUST preserve pre-m181 None for `{}`",
+                e.name
+            );
+        }
+    }
+
+    #[test]
+    fn berry_dependencies_meta_optional_false_stays_runtime() {
+        // Milestone 181 T015 — defensive check on the `optional` field
+        // parsing: an explicit `optional: false` MUST NOT trigger the
+        // classifier.
+        let text = r#"# This file is generated by running "yarn install"
+
+__metadata:
+  version: 8
+
+"regular-child@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "regular-child@npm:1.0.0"
+"#;
+        let pkg_json = serde_json::json!({
+            "dependenciesMeta": {
+                "regular-child": { "optional": false }
+            }
+        });
+        let entries = parse_yarn_lock(text, "yarn.lock", &pkg_json);
+        let child = find_entry(&entries, "regular-child").expect("regular-child emitted");
+        assert_eq!(child.lifecycle_scope, None);
+    }
+
+    // --- Phase 5 US3: peer-precedence guard tests ---
+
+    #[test]
+    fn v1_peer_optional_stays_peer_not_optional() {
+        // Milestone 181 T019 / FR-005 — a v1 fixture where the child
+        // is BOTH in `optionalDependencies:` AND declared as peer-
+        // optional in the root package.json MUST short-circuit the
+        // Optional classification. m178's PROVIDED_DEPENDENCY_OF wins
+        // via the m147 peer-edge-targets flow (unchanged here — this
+        // test only verifies the m180+m181 guard).
+        let text = r#"# yarn lockfile v1
+
+
+"parent@^1.0.0":
+  version "1.0.0"
+  optionalDependencies:
+    react "^18"
+
+"react@^18":
+  version "18.3.1"
+"#;
+        let pkg_json = serde_json::json!({
+            "peerDependencies": { "react": "^18" },
+            "peerDependenciesMeta": { "react": { "optional": true } }
+        });
+        let entries = parse_yarn_lock(text, "yarn.lock", &pkg_json);
+        let react = find_entry(&entries, "react").expect("react emitted");
+        assert_ne!(
+            react.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Optional),
+            "FR-005: peer-optional react MUST NOT be classified as Optional (m178 wins)"
+        );
+        assert!(
+            !react
+                .extra_annotations
+                .contains_key("mikebom:optional-derivation"),
+            "FR-005: peer-optional react MUST NOT carry mikebom:optional-derivation"
+        );
+    }
+
+    #[test]
+    fn berry_peer_optional_stays_peer_not_optional() {
+        // Milestone 181 T020 / FR-005 — Berry variant of T019: BOTH
+        // `dependenciesMeta.<name>.optional = true` AND
+        // `peerDependenciesMeta.<name>.optional = true` on react.
+        // Peer wins per FR-005.
+        let text = r#"# This file is generated by running "yarn install"
+
+__metadata:
+  version: 8
+
+"react@npm:^18":
+  version: 18.3.1
+  resolution: "react@npm:18.3.1"
+"#;
+        let pkg_json = serde_json::json!({
+            "dependenciesMeta": { "react": { "optional": true } },
+            "peerDependencies": { "react": "^18" },
+            "peerDependenciesMeta": { "react": { "optional": true } }
+        });
+        let entries = parse_yarn_lock(text, "yarn.lock", &pkg_json);
+        let react = find_entry(&entries, "react").expect("react emitted");
+        assert_ne!(
+            react.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Optional),
+            "FR-005: Berry peer-optional react MUST NOT be classified as Optional"
+        );
+        assert!(
+            !react
+                .extra_annotations
+                .contains_key("mikebom:optional-derivation")
+        );
     }
 }

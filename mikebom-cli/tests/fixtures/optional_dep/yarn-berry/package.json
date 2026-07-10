@@ -1,0 +1,14 @@
+{
+  "name": "m181-yarn-berry-optional-fixture",
+  "version": "0.1.0",
+  "description": "Milestone 181 US2 fixture — yarn Berry project with `dependenciesMeta.<name>.optional = true` on fsevents. Berry stores the optional flag out-of-band in package.json (not in yarn.lock), so mikebom's classifier reads it via the FR-004 package.json cross-reference plumbed in T003.",
+  "private": true,
+  "packageManager": "yarn@4.0.0",
+  "dependencies": {
+    "fsevents": "^2",
+    "lodash": "^4"
+  },
+  "dependenciesMeta": {
+    "fsevents": { "optional": true }
+  }
+}

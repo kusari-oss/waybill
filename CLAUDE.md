@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-07-09
+Auto-generated from all feature plans. Last updated: 2026-07-10
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -228,6 +228,7 @@ Auto-generated from all feature plans. Last updated: 2026-07-09
 - N/A — all state in-process per scan; persisted only inside the emitted SBOM via the extended `lifecycle_scope` field + `extra_annotations` entries. Matches every milestone since 002. (179-spdx23-transitive-devscope)
 - Rust stable (workspace toolchain inherited from milestones 001–179; no nightly required). + Existing only — `serde_json` (JSON parsing for package-lock.json + package.json + bun.lock), `serde_yaml` (already used for pnpm-lock.yaml + yarn.lock parsing), `regex` (already used for yarn v1 line-format extraction), `tracing` (info/debug logs at classifier decisions), `anyhow`/`thiserror` (error propagation). Reuses m179's `LifecycleScope::Optional` variant + `RelationshipType::OptionalDependsOn` + `SpdxRelationshipType::OptionalDependencyOf` + `mikebom:optional-derivation` C122 parity catalog row — no new enum extensions needed. **Zero new Cargo dependencies.** (180-npm-optional-dep-reader)
 - N/A — all state in-process per scan; persisted only inside the emitted SBOM. Matches every milestone since 002. (180-npm-optional-dep-reader)
+- Rust stable (workspace toolchain inherited from milestones 001–180; no nightly required). + Existing only — `serde_json` (package.json parsing; already used at `yarn_lock.rs:265+` for m159 alias annotations), `serde_yaml` (already used for Berry yarn.lock parsing), `tracing` (info/debug logs), `anyhow`/`thiserror` (error propagation). Reuses m179's `LifecycleScope::Optional` variant + `RelationshipType::OptionalDependsOn` + `SpdxRelationshipType::OptionalDependencyOf` + m180's C122 parity catalog row + m180's `peer_optional::is_peer_optional` helper. **Zero new Cargo dependencies.** (181-yarn-optional-dep)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -290,9 +291,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 181-yarn-optional-dep: Added Rust stable (workspace toolchain inherited from milestones 001–180; no nightly required). + Existing only — `serde_json` (package.json parsing; already used at `yarn_lock.rs:265+` for m159 alias annotations), `serde_yaml` (already used for Berry yarn.lock parsing), `tracing` (info/debug logs), `anyhow`/`thiserror` (error propagation). Reuses m179's `LifecycleScope::Optional` variant + `RelationshipType::OptionalDependsOn` + `SpdxRelationshipType::OptionalDependencyOf` + m180's C122 parity catalog row + m180's `peer_optional::is_peer_optional` helper. **Zero new Cargo dependencies.**
 - 180-npm-optional-dep-reader: Added Rust stable (workspace toolchain inherited from milestones 001–179; no nightly required). + Existing only — `serde_json` (JSON parsing for package-lock.json + package.json + bun.lock), `serde_yaml` (already used for pnpm-lock.yaml + yarn.lock parsing), `regex` (already used for yarn v1 line-format extraction), `tracing` (info/debug logs at classifier decisions), `anyhow`/`thiserror` (error propagation). Reuses m179's `LifecycleScope::Optional` variant + `RelationshipType::OptionalDependsOn` + `SpdxRelationshipType::OptionalDependencyOf` + `mikebom:optional-derivation` C122 parity catalog row — no new enum extensions needed. **Zero new Cargo dependencies.**
 - 179-spdx23-transitive-devscope: Added Rust stable (workspace toolchain inherited from milestones 001–178; no nightly required for this user-space-only work). + Existing only — `serde`/`serde_json` (JSON I/O across all emitters), `toml = "0.8"` (Cargo.toml + pyproject.toml parsing, already used pervasively), `quick-xml = "0.31"` (Maven pom.xml parsing, already used by `maven.rs`), `regex` (line-format extraction; already a workspace dep), `tracing` (info/warn logs on classifier decisions), `anyhow`/`thiserror` (error propagation). Reuses milestone-052 `apply_lifecycle_scope_to_edges` at `mikebom-cli/src/scan_fs/mod.rs:1261`, milestone-112 `BuildInclusion::NotNeeded` at `mikebom-common/src/resolution.rs:456`, milestone-178 `SpdxRelationshipType` enum extension pattern at `mikebom-cli/src/generate/spdx/relationships.rs`. Milestone-071 parity extractor infrastructure carries the new `mikebom:optional-derivation` annotation as a `SymmetricEqual` catalog entry alongside the existing `mikebom:build-inclusion-derivation`. **Zero new Cargo dependencies.**
-- 178-spdx23-peer-provided: Added Rust stable (workspace toolchain inherited from milestones 001–177; local + CI both on 1.97). No nightly required. + Existing only — `serde_json` (already used pervasively; here for parsing the peer-edge-targets annotation), `std::collections::HashSet` (peer-edge lookup set), existing `mikebom_common::resolution::{RelationshipType, ResolvedComponent}` types. **Zero new Cargo dependencies.** No subprocess calls. No network access.
 
 
 <!-- MANUAL ADDITIONS START -->

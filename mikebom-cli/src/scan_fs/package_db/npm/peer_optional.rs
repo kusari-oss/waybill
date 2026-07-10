@@ -33,14 +33,23 @@ use serde_json::Value;
 /// Milestone 180 T003. Contract: see
 /// `specs/180-npm-optional-dep-reader/contracts/peer-precedence-guard.md`.
 ///
-/// **Reader usage note**: npm and pnpm short-circuit the peer-optional
-/// case using the per-entry `peer: true` lockfile flag (npm sets this
-/// on entries installed to satisfy a peerDependencies declaration);
-/// they don't need this helper because their lockfiles already reflect
-/// the parent's manifest declaration. This helper is the fallback for
-/// readers whose lockfiles do NOT carry a per-entry `peer` flag —
-/// primarily yarn v1 / Berry (US3, arriving post-US1/US2).
-#[allow(dead_code)] // Used by US3 yarn reader; the m180 US1/US2 readers use lockfile `peer` flag directly.
+/// **Reader usage note** (m180 + m181):
+///
+/// - **npm** (`package_lock.rs`) and **pnpm** (`pnpm_lock.rs`) do NOT
+///   call this helper. They short-circuit the peer-optional case using
+///   the per-entry `peer: true` lockfile flag — npm/pnpm set that flag
+///   on entries installed to satisfy a `peerDependencies` declaration,
+///   so their lockfiles already reflect the parent's manifest.
+///
+/// - **yarn v1 + Berry** (`yarn_lock.rs`) DO call this helper. Yarn's
+///   Plug'n'Play resolver moves peer metadata into `.pnp.cjs` or into
+///   the source package.json declaration — `yarn.lock` does NOT carry
+///   `peer: true` on lockfile entries the way npm/pnpm do. So yarn's
+///   parsers cross-reference the root `package.json` via this helper
+///   to identify peer-optional deps at reader time.
+///
+/// Milestone 180 introduced the helper; milestone 181 wired yarn to
+/// consume it (removing the earlier `#[allow(dead_code)]` marker).
 pub(crate) fn is_peer_optional(entry_name: &str, parent_pkg_json: &Value) -> bool {
     let has_peer_dep = parent_pkg_json
         .get("peerDependencies")

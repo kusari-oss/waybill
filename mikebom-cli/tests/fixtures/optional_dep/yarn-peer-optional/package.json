@@ -1,0 +1,16 @@
+{
+  "name": "m181-yarn-peer-optional-fixture",
+  "version": "0.1.0",
+  "description": "Milestone 181 US3 fixture — root declares react as peer-optional AND (Berry-style) also as `dependenciesMeta.<name>.optional = true`. The reader-time peer-precedence guard MUST short-circuit m181's Optional classification so m178's PROVIDED_DEPENDENCY_OF wins for the react edge per FR-005.",
+  "private": true,
+  "packageManager": "yarn@4.0.0",
+  "peerDependencies": {
+    "react": "^18"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": true }
+  },
+  "dependenciesMeta": {
+    "react": { "optional": true }
+  }
+}
