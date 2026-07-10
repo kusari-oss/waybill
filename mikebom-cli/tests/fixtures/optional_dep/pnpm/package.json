@@ -1,0 +1,12 @@
+{
+  "name": "m180-pnpm-optional-fixture",
+  "version": "0.1.0",
+  "description": "Milestone 180 US2 fixture — pnpm project with optionalDependencies + a hand-authored pnpm-lock.yaml v9 carrying the `optional: true` marker on the target entry.",
+  "private": true,
+  "dependencies": {
+    "lodash": "^4"
+  },
+  "optionalDependencies": {
+    "fsevents": "^2"
+  }
+}

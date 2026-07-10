@@ -1,0 +1,12 @@
+{
+  "name": "m180-npm-optional-fixture",
+  "version": "0.1.0",
+  "description": "Milestone 180 US1 fixture — exercises optionalDependencies in package.json + hydrated package-lock.json v3. `fsevents` is optional (native binary, common real-world optionalDependencies use case); `lodash` is a plain runtime dep for contrast (regression guard that runtime edges stay Runtime).",
+  "private": true,
+  "dependencies": {
+    "lodash": "^4"
+  },
+  "optionalDependencies": {
+    "fsevents": "^2"
+  }
+}
