@@ -66,26 +66,28 @@ fn find_property<'a>(component: &'a Value, name: &str) -> Option<&'a Value> {
 }
 
 #[test]
-fn t022_yarn_peer_optional_react_stays_peer_not_optional() {
-    // FR-005 flagship — react is BOTH `dependenciesMeta` optional AND
-    // peer-optional. The reader-time guard MUST short-circuit the
-    // Optional classification: no `mikebom:optional-derivation`, no
-    // `scope: "excluded"` on the react component.
+fn t022_yarn_peer_optional_stays_peer_not_optional() {
+    // FR-005 flagship — peer-framework is BOTH `dependenciesMeta`
+    // optional AND peer-optional. The reader-time guard MUST short-
+    // circuit the Optional classification: no `mikebom:optional-
+    // derivation`, no `scope: "excluded"` on the peer-framework
+    // component.
     let cdx = run_scan(&fixture_path());
 
-    let react = find_component_by_name(&cdx, "react").expect("react component in CDX");
+    let peer_framework = find_component_by_name(&cdx, "peer-framework")
+        .expect("peer-framework component in CDX");
 
-    // (a) react MUST NOT carry the m181 derivation annotation.
+    // (a) peer-framework MUST NOT carry the m181 derivation annotation.
     assert!(
-        find_property(react, "mikebom:optional-derivation").is_none(),
-        "FR-005: peer-optional react MUST NOT carry mikebom:optional-derivation"
+        find_property(peer_framework, "mikebom:optional-derivation").is_none(),
+        "FR-005: peer-optional peer-framework MUST NOT carry mikebom:optional-derivation"
     );
 
-    // (b) react MUST NOT be marked `scope: "excluded"` — its
+    // (b) peer-framework MUST NOT be marked `scope: "excluded"` — its
     // lifecycle stays None/Runtime because the guard short-circuited
     // the Optional classification.
     assert!(
-        react.get("scope").and_then(|v| v.as_str()) != Some("excluded"),
-        "FR-005: peer-optional react MUST NOT be marked scope: \"excluded\" (lifecycle stays Runtime/None)"
+        peer_framework.get("scope").and_then(|v| v.as_str()) != Some("excluded"),
+        "FR-005: peer-optional peer-framework MUST NOT be marked scope: \"excluded\" (lifecycle stays Runtime/None)"
     );
 }

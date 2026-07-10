@@ -67,25 +67,26 @@ fn find_property<'a>(component: &'a Value, name: &str) -> Option<&'a Value> {
 fn t017_yarn_berry_optional_full_mode_end_to_end() {
     let (cdx, spdx23) = run_scan(&fixture_path());
 
-    let fsevents_cdx =
-        find_component_by_name(&cdx, "fsevents").expect("fsevents component in CDX");
+    let optional_lib = find_component_by_name(&cdx, "optional-lib")
+        .expect("optional-lib component in CDX");
     assert_eq!(
-        fsevents_cdx.get("scope").and_then(|v| v.as_str()),
+        optional_lib.get("scope").and_then(|v| v.as_str()),
         Some("excluded"),
         "Berry-classified Optional MUST emit CDX scope: \"excluded\""
     );
     assert_eq!(
-        find_property(fsevents_cdx, "mikebom:optional-derivation")
+        find_property(optional_lib, "mikebom:optional-derivation")
             .and_then(|v| v.as_str()),
         Some("npm-optional-dependencies"),
         "Berry-classified Optional MUST carry mikebom:optional-derivation"
     );
 
-    // Regression guard: lodash (regular runtime dep) stays Runtime.
-    let lodash_cdx = find_component_by_name(&cdx, "lodash").expect("lodash component in CDX");
+    // Regression guard: runtime-util (regular runtime dep) stays Runtime.
+    let runtime = find_component_by_name(&cdx, "runtime-util")
+        .expect("runtime-util component in CDX");
     assert!(
-        lodash_cdx.get("scope").and_then(|v| v.as_str()) != Some("excluded"),
-        "lodash MUST NOT be marked excluded"
+        runtime.get("scope").and_then(|v| v.as_str()) != Some("excluded"),
+        "runtime-util MUST NOT be marked excluded"
     );
 
     // SPDX 2.3 (Full mode default) — expect at least one OPTIONAL_DEPENDENCY_OF.

@@ -77,29 +77,30 @@ fn t011_yarn_v1_optional_full_mode_end_to_end() {
     let (cdx, spdx23) = run_scan(&fixture_path(), &[]);
 
     // ---- CDX 1.6 ----
-    let fsevents_cdx =
-        find_component_by_name(&cdx, "fsevents").expect("fsevents component in CDX");
+    let optional_child = find_component_by_name(&cdx, "optional-child-lib")
+        .expect("optional-child-lib component in CDX");
     assert_eq!(
-        fsevents_cdx.get("scope").and_then(|v| v.as_str()),
+        optional_child.get("scope").and_then(|v| v.as_str()),
         Some("excluded"),
-        "yarn v1 optional-classified fsevents MUST emit CDX scope: \"excluded\""
+        "yarn v1 optional-classified optional-child-lib MUST emit CDX scope: \"excluded\""
     );
     assert_eq!(
-        find_property(fsevents_cdx, "mikebom:optional-derivation")
+        find_property(optional_child, "mikebom:optional-derivation")
             .and_then(|v| v.as_str()),
         Some("npm-optional-dependencies"),
-        "yarn v1 optional-classified fsevents MUST carry mikebom:optional-derivation"
+        "yarn v1 optional-classified optional-child-lib MUST carry mikebom:optional-derivation"
     );
 
-    // Regression guard: lodash (runtime) MUST stay Runtime.
-    let lodash_cdx = find_component_by_name(&cdx, "lodash").expect("lodash component in CDX");
+    // Regression guard: runtime-util (runtime) MUST stay Runtime.
+    let runtime = find_component_by_name(&cdx, "runtime-util")
+        .expect("runtime-util component in CDX");
     assert!(
-        lodash_cdx.get("scope").and_then(|v| v.as_str()) != Some("excluded"),
-        "lodash MUST NOT be marked excluded (regular runtime dep)"
+        runtime.get("scope").and_then(|v| v.as_str()) != Some("excluded"),
+        "runtime-util MUST NOT be marked excluded (regular runtime dep)"
     );
     assert!(
-        find_property(lodash_cdx, "mikebom:optional-derivation").is_none(),
-        "lodash MUST NOT carry mikebom:optional-derivation"
+        find_property(runtime, "mikebom:optional-derivation").is_none(),
+        "runtime-util MUST NOT carry mikebom:optional-derivation"
     );
 
     // ---- SPDX 2.3 (Full mode) ----
@@ -125,17 +126,17 @@ fn t011b_yarn_v1_optional_basic_mode_collapses() {
     let (cdx, spdx23) = run_scan(&fixture_path(), &["--spdx2-relationship-compat=basic"]);
 
     // CDX side unchanged — scope: "excluded" still emitted.
-    let fsevents_cdx =
-        find_component_by_name(&cdx, "fsevents").expect("fsevents component in CDX");
+    let optional_child = find_component_by_name(&cdx, "optional-child-lib")
+        .expect("optional-child-lib component in CDX");
     assert_eq!(
-        fsevents_cdx.get("scope").and_then(|v| v.as_str()),
+        optional_child.get("scope").and_then(|v| v.as_str()),
         Some("excluded"),
         "CDX scope emission is INDEPENDENT of --spdx2-relationship-compat"
     );
 
     // Annotation still present (orthogonal).
     assert!(
-        find_property(fsevents_cdx, "mikebom:optional-derivation").is_some(),
+        find_property(optional_child, "mikebom:optional-derivation").is_some(),
         "mikebom:optional-derivation MUST be present in CDX regardless of compat mode"
     );
 
