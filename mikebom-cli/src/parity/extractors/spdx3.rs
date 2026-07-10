@@ -664,6 +664,8 @@ spdx3_anno!(c119_spdx3, "mikebom:go-cache-warming-failed",          document);
 spdx3_anno!(c120_spdx3, "mikebom:workspace-member",                 component);
 // Milestone 176: C121 document-scope workspaces-detected aggregate.
 spdx3_anno!(c121_spdx3, "mikebom:workspaces-detected",              document);
+// Milestone 179: C122 per-component optional-dep derivation source.
+spdx3_anno!(c122_spdx3, "mikebom:optional-derivation",              component);
 
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-component
 // graph-element annotation carrying the JSON-encoded array of

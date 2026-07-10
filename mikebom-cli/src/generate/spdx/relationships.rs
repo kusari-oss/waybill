@@ -44,6 +44,19 @@ pub enum SpdxRelationshipType {
     /// peer edges fall through to the existing catch-all Basic arm
     /// (natural-direction `DEPENDS_ON`) per m228 escape hatch.
     ProvidedDependencyOf,
+    /// Milestone 179 — SPDX 2.3 §11.1 native semantic for
+    /// declared-optional dependencies. Emitted reversed-direction per
+    /// m228 convention: internal `A OptionalDependsOn B` (A declares
+    /// B as optional per its manifest) → SPDX `B OPTIONAL_DEPENDENCY_OF
+    /// A` under `Spdx2RelationshipCompat::Full`. Under `Basic` mode,
+    /// optional edges collapse to natural-direction `DEPENDS_ON` via
+    /// the catch-all Basic arm (m228 escape hatch). Populated by
+    /// ecosystem readers that detect first-class optional-dep
+    /// manifest constructs: Cargo `optional = true`, npm
+    /// `optionalDependencies`, pip extras, Maven `<optional>`, Gradle
+    /// `compileOnly`, Erlang `optional_applications`. See
+    /// specs/179-spdx23-transitive-devscope for full context.
+    OptionalDependencyOf,
     Contains,
     ContainedBy,
     /// Milestone 072 / T012 — SPDX 2.3 §11.1 native semantic for
@@ -275,6 +288,20 @@ pub fn build_relationships(
                 // "A needs B for tests" → SPDX
                 // `(B) TEST_DEPENDENCY_OF (A)` "B is a test dep of A".
                 (to_id, from_id, SpdxRelationshipType::TestDependencyOf)
+            }
+            (
+                crate::generate::Spdx2RelationshipCompat::Full,
+                RelationshipType::OptionalDependsOn,
+            ) => {
+                // Milestone 179 — same reversed-direction convention.
+                // Internal `(A) OptionalDependsOn (B)` "A declares B as
+                // optional per manifest" → SPDX
+                // `(B) OPTIONAL_DEPENDENCY_OF (A)` "B is an optional
+                // dep of A". Populated by Cargo `optional = true`,
+                // npm `optionalDependencies`, etc. Basic-mode
+                // catch-all above collapses it to natural DEPENDS_ON
+                // per m228 escape hatch.
+                (to_id, from_id, SpdxRelationshipType::OptionalDependencyOf)
             }
         };
         out.push(SpdxRelationship {
@@ -692,6 +719,82 @@ mod tests {
             .expect("CONTAINS edge present after alias rewrite");
         assert_eq!(contains.source, synth_root);
         assert_eq!(contains.target, SpdxId::for_purl(&comps[0].purl));
+    }
+
+    #[test]
+    fn spdx_relationship_type_optional_wire_value() {
+        // Milestone 179 T005 — verify the serde SCREAMING_SNAKE_CASE
+        // rename produces the SPDX 2.3 §11.1 wire-format value.
+        let json = serde_json::to_string(&SpdxRelationshipType::OptionalDependencyOf)
+            .expect("serialize optional-dependency-of");
+        assert_eq!(json, "\"OPTIONAL_DEPENDENCY_OF\"");
+    }
+
+    #[test]
+    fn optional_depends_on_reverses_to_optional_dependency_of() {
+        // Milestone 179 T007 — Full-mode arm: internal
+        // `A OptionalDependsOn B` "A declares B as optional" → SPDX
+        // `B OPTIONAL_DEPENDENCY_OF A` (reversed direction, matching
+        // the m052 convention).
+        let a = mk_component("pkg:cargo/my-app@1", "my-app", "1");
+        let b = mk_component("pkg:cargo/foo@1", "foo", "1");
+        let rel = Relationship {
+            from: a.purl.as_str().to_string(),
+            to: b.purl.as_str().to_string(),
+            relationship_type: RelationshipType::OptionalDependsOn,
+            provenance: prov(),
+        };
+        let integ = empty_integrity();
+        let comps = vec![a, b];
+        let rels_arr = [rel];
+        let arts = mk_artifacts(&comps, &rels_arr, &integ);
+        let root = SpdxId::for_purl(&comps[0].purl);
+        let rels = build_relationships(&arts, std::slice::from_ref(&root), &[]);
+        let opt = rels
+            .iter()
+            .find(|r| r.kind == SpdxRelationshipType::OptionalDependencyOf)
+            .expect("OPTIONAL_DEPENDENCY_OF edge present");
+        // Internal A OptionalDependsOn B → SPDX B OPTIONAL_DEPENDENCY_OF A.
+        assert_eq!(opt.source, SpdxId::for_purl(&comps[1].purl));
+        assert_eq!(opt.target, SpdxId::for_purl(&comps[0].purl));
+    }
+
+    #[test]
+    fn optional_depends_on_collapses_to_depends_on_in_basic_mode() {
+        // Milestone 179 T007 — Basic-mode escape hatch: every typed
+        // dep variant collapses to natural-direction DEPENDS_ON per
+        // m228's contract. Verified against the same input as the
+        // Full-mode test above.
+        let a = mk_component("pkg:cargo/my-app@1", "my-app", "1");
+        let b = mk_component("pkg:cargo/foo@1", "foo", "1");
+        let rel = Relationship {
+            from: a.purl.as_str().to_string(),
+            to: b.purl.as_str().to_string(),
+            relationship_type: RelationshipType::OptionalDependsOn,
+            provenance: prov(),
+        };
+        let integ = empty_integrity();
+        let comps = vec![a, b];
+        let rels_arr = [rel];
+        let arts = mk_artifacts_basic(&comps, &rels_arr, &integ);
+        let root = SpdxId::for_purl(&comps[0].purl);
+        let rels = build_relationships(&arts, std::slice::from_ref(&root), &[]);
+        // No OPTIONAL_DEPENDENCY_OF; the dep collapses to DEPENDS_ON
+        // in natural direction (source = my-app, target = foo).
+        assert!(
+            !rels
+                .iter()
+                .any(|r| r.kind == SpdxRelationshipType::OptionalDependencyOf),
+            "basic mode MUST NOT emit any OPTIONAL_DEPENDENCY_OF edges"
+        );
+        let dep = rels
+            .iter()
+            .find(|r| {
+                r.kind == SpdxRelationshipType::DependsOn && r.source != SpdxId::document()
+            })
+            .expect("DEPENDS_ON edge present in natural direction");
+        assert_eq!(dep.source, SpdxId::for_purl(&comps[0].purl));
+        assert_eq!(dep.target, SpdxId::for_purl(&comps[1].purl));
     }
 
     #[test]

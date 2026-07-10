@@ -870,6 +870,51 @@ jq '.relationships[]
     | { provided: .spdxElementId, consumer: .relatedSpdxElement }' your.spdx.json
 ```
 
+#### `mikebom:optional-derivation`
+
+> **What it is**: derivation-source string on a component classified as `LifecycleScope::Optional`. Value is drawn from an open enum naming which ecosystem-reader mechanism populated the classification:
+> - `cargo-optional-true` — Cargo `[dependencies]` entry with `optional = true`
+> - `npm-optional-dependencies` — npm `optionalDependencies` (m180+; not shipped in m179)
+> - `pip-extras-require` — Python `[project.optional-dependencies.<extra>]` / `extras_require` / `[options.extras_require]` (m181+)
+> - `maven-optional-element` — Maven `<dependency>` with `<optional>true</optional>` (m182+)
+> - `gradle-compile-only` — Gradle `compileOnly` configuration (m182+)
+> - `erlang-optional-applications` — Erlang `.app.src` `optional_applications` list (m183+)
+>
+> **Where it lives**:
+> - **CDX 1.6**: `components[].properties[]` entry — value is the derivation string.
+> - **SPDX 2.3**: annotation envelope on the Package.
+> - **SPDX 3**: annotation envelope on the `software_Package`.
+>
+> **Milestone 179 — SPDX 2.3 native primary signal**: post-m179, optional-declared deps in SPDX 2.3 output carry `relationshipType: "OPTIONAL_DEPENDENCY_OF"` (reversed direction — reads as "B is an optional dependency of A" when A declares B as optional per its manifest) under the default `--spdx2-relationship-compat=full`. Consumers walking SPDX 2.3 typed relationship types can filter every "not-in-production" component in one query — closing the pico filter-parity gap where CDX `scope: "excluded"` used to catch 23 components but SPDX 2.3 only caught 13 via `TEST_DEPENDENCY_OF`. Under `--spdx2-relationship-compat=basic` (m228 escape hatch), optional edges collapse to natural-direction `DEPENDS_ON`. The annotation itself remains present in **both** compat modes with byte-identical value — it's the "which mechanism populated the classification" supplement (Principle V's "carry information the standard doesn't natively express" carve-out).
+>
+> **Milestone 179 also closes the m112 Go transitive gap**: components with `mikebom:build-inclusion = "not-needed"` (from `go mod why -m`) whose `lifecycle_scope` was `None` now emit as `TEST_DEPENDENCY_OF` in SPDX 2.3 under Full mode. This is a semantic overloading (some m112 not-needed components are declared-but-truly-unused, not test-only) accepted as a pragmatic first delivery — a follow-up milestone MAY refine the dispatch once m112 carries granular reason codes.
+>
+> **CDX 1.6 unchanged**: CDX `component.scope = "excluded"` is the native primary on the CDX side (automatic via `LifecycleScope::is_non_runtime()`); the annotation is the derivation-source supplement.
+>
+> **SPDX 3.0.1 unchanged**: SPDX 3's `LifecycleScopeType` enum has no `optional` value at spec 3.0.1 (verified via the m078 conformance harness). SPDX 3 emits the annotation only — parity-bridge for the missing native construct, matching the m147/m178 pattern for CDX peer-edges.
+>
+> **What to do with it**: filter not-in-production components identically across CDX and SPDX 2.3 formats:
+
+```jq
+# CDX — filter every not-in-production component
+jq '[.components[] | select(.scope == "excluded") | .purl] | sort | unique' your.cdx.json
+
+# SPDX 2.3 — same PURL set via native typed dep-scope verbs
+# (works under default --spdx2-relationship-compat=full)
+jq '
+  ( [ .packages[] | { key: .SPDXID, value: (.externalRefs[]? | select(.referenceType == "purl") | .referenceLocator) } ] | from_entries ) as $purl_by_ref |
+  [ .relationships[]
+    | select(.relationshipType | test("^(TEST|DEV|BUILD|OPTIONAL)_DEPENDENCY_OF$"))
+    | $purl_by_ref[.spdxElementId]
+  ] | sort | unique
+' your.spdx.json
+```
+
+> Both recipes MUST return the same sorted PURL set (contract: `specs/179-spdx23-transitive-devscope/contracts/pico-filter-parity.md` — SC-001 + SC-002 gate).
+
+> **Milestone**: 179 — introduced `LifecycleScope::Optional` variant + `OPTIONAL_DEPENDENCY_OF` SPDX 2.3 native signal + this annotation + Go m112 NotNeeded fallthrough → `TEST_DEPENDENCY_OF`. Cargo reader wires the annotation in m179 (US3); npm / pip / Maven / Gradle / Erlang wire it in m180–m183.
+> **Catalog**: [C122](sbom-format-mapping.md)
+
 #### `mikebom:depends-unresolved` + `mikebom:rdepends-unresolved`
 
 > **What they are**: paired closure-gap markers naming components that mikebom KNOWS were declared as dependencies but couldn't pin to concrete components in the scan output. `mikebom:depends-unresolved` covers build-time / runtime DEPENDS-style declarations; `mikebom:rdepends-unresolved` covers the runtime-only RDEPENDS variant. The VALUE is a JSON-encoded array of unresolved dep names. Per Constitution Principle X (Transparency), the SBOM emits these markers rather than silently dropping the declarations — auditors can see exactly which deps mikebom failed to resolve.

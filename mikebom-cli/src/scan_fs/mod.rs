@@ -1262,11 +1262,25 @@ fn apply_lifecycle_scope_to_edges(
     components: &[mikebom_common::resolution::ResolvedComponent],
     relationships: &mut [mikebom_common::resolution::Relationship],
 ) {
-    use mikebom_common::resolution::{LifecycleScope, RelationshipType};
+    use mikebom_common::resolution::{BuildInclusion, LifecycleScope, RelationshipType};
     let scope_by_purl: std::collections::HashMap<&str, LifecycleScope> = components
         .iter()
         .filter_map(|c| c.lifecycle_scope.map(|s| (c.purl.as_str(), s)))
         .collect();
+    // Milestone 179 T006 — companion lookup for the m112 fallthrough
+    // (Pass 2 below). Same shape as `scope_by_purl` but populated
+    // from `build_inclusion` instead. The two lookups are independent
+    // and consulted in strict precedence order: Pass 1 (lifecycle)
+    // wins over Pass 2 (build-inclusion) whenever both are set (per
+    // FR-014 and the m112 "never downgrade an existing test tag"
+    // invariant at `scan_fs/package_db/mod.rs:1201-1204`).
+    let inclusion_by_purl: std::collections::HashMap<&str, BuildInclusion> = components
+        .iter()
+        .filter_map(|c| c.build_inclusion.map(|b| (c.purl.as_str(), b)))
+        .collect();
+    // Pass 1: manifest-declared lifecycle scope. Existing m052/part-2
+    // pass plus the new `Optional` arm (m179 FR-002 dispatch table
+    // row 4).
     let mut rewrites = 0usize;
     for rel in relationships.iter_mut() {
         // Only rewrite edges that haven't already been typed by a
@@ -1283,13 +1297,58 @@ fn apply_lifecycle_scope_to_edges(
             LifecycleScope::Development => RelationshipType::DevDependsOn,
             LifecycleScope::Build => RelationshipType::BuildDependsOn,
             LifecycleScope::Test => RelationshipType::TestDependsOn,
+            LifecycleScope::Optional => RelationshipType::OptionalDependsOn,
         };
         rewrites += 1;
     }
     if rewrites > 0 {
         tracing::info!(
             rewrites,
-            "rewrote DependsOn → typed (Dev|Build|Test)DependsOn edges based on target lifecycle_scope",
+            "rewrote DependsOn → typed (Dev|Build|Test|Optional)DependsOn edges based on target lifecycle_scope",
+        );
+    }
+    // Pass 2 (milestone 179 US1 flagship): m112 `build_inclusion =
+    // NotNeeded` targets that were NOT also lifecycle-scope-classified
+    // by Pass 1. This closes the pico filter-parity gap by ensuring
+    // Go `go mod why`-flagged not-in-production transitives emit as
+    // SPDX 2.3 `TEST_DEPENDENCY_OF` (via the internal `TestDependsOn`
+    // variant) rather than generic `DEPENDS_ON`. The `lifecycle_scope
+    // = None` guard on the Pass 1 lookup enforces FR-014's precedence:
+    // if a target has both signals set, Pass 1's typed rewrite already
+    // happened and this pass has no `DependsOn` left to rewrite.
+    // Semantic overload note: emitting `TEST_DEPENDENCY_OF` for every
+    // m112 NotNeeded is a deliberate simplification (spec.md Assumption
+    // 4) because m112 doesn't currently carry a "why NotNeeded" reason
+    // code; a follow-up milestone MAY refine the dispatch once it does.
+    let mut not_needed_rewrites = 0usize;
+    for rel in relationships.iter_mut() {
+        if !matches!(rel.relationship_type, RelationshipType::DependsOn) {
+            continue;
+        }
+        // Guard: skip if Pass 1 would have typed this (or already did).
+        // Since Pass 1 runs first, any target with `lifecycle_scope =
+        // Some(non-Runtime)` is no longer `DependsOn` here. Targets
+        // with `lifecycle_scope = Some(Runtime)` are runtime and MUST
+        // NOT be reclassified. So this guard specifically skips the
+        // `Runtime` case; the `None` case falls through to Pass 2.
+        if matches!(
+            scope_by_purl.get(rel.to.as_str()),
+            Some(LifecycleScope::Runtime)
+        ) {
+            continue;
+        }
+        let Some(inclusion) = inclusion_by_purl.get(rel.to.as_str()) else {
+            continue;
+        };
+        if matches!(inclusion, BuildInclusion::NotNeeded) {
+            rel.relationship_type = RelationshipType::TestDependsOn;
+            not_needed_rewrites += 1;
+        }
+    }
+    if not_needed_rewrites > 0 {
+        tracing::info!(
+            not_needed_rewrites,
+            "milestone 179: rewrote DependsOn → TestDependsOn for m112 NotNeeded transitives (SPDX 2.3 TEST_DEPENDENCY_OF)",
         );
     }
 }
@@ -1646,6 +1705,158 @@ mod external_refs_tests {
 pub enum ScanError {
     #[error("{0}")]
     PackageDb(#[from] package_db::PackageDbError),
+}
+
+/// Milestone 179 dispatch-table tests for
+/// [`apply_lifecycle_scope_to_edges`] — the classifier extended to
+/// (a) rewrite `DependsOn` → `OptionalDependsOn` for the new
+/// `LifecycleScope::Optional` variant (US3 dispatch) and (b) rewrite
+/// `DependsOn` → `TestDependsOn` for m112 `NotNeeded` transitives
+/// when `lifecycle_scope = None` (US1 flagship semantic). Three
+/// dispatch outcomes exercised: pure Optional, pure NotNeeded
+/// fallthrough, and the FR-14 precedence path where both signals are
+/// set on the same target.
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod m179_dispatch_tests {
+    use super::apply_lifecycle_scope_to_edges;
+    use mikebom_common::resolution::{
+        BuildInclusion, LifecycleScope, Relationship, RelationshipType, ResolutionEvidence,
+        ResolutionTechnique, ResolvedComponent,
+    };
+    use mikebom_common::types::purl::Purl;
+
+    fn mk_component(purl_str: &str, name: &str, version: &str) -> ResolvedComponent {
+        ResolvedComponent {
+            purl: Purl::new(purl_str).unwrap(),
+            name: name.to_string(),
+            version: version.to_string(),
+            evidence: ResolutionEvidence {
+                technique: ResolutionTechnique::UrlPattern,
+                confidence: 0.9,
+                source_connection_ids: Vec::new(),
+                source_file_paths: Vec::new(),
+                deps_dev_match: None,
+            },
+            licenses: Vec::new(),
+            concluded_licenses: Vec::new(),
+            hashes: Vec::new(),
+            supplier: None,
+            cpes: Vec::new(),
+            advisories: Vec::new(),
+            occurrences: Vec::new(),
+            lifecycle_scope: None,
+            build_inclusion: None,
+            requirement_range: None,
+            source_type: None,
+            sbom_tier: None,
+            buildinfo_status: None,
+            evidence_kind: None,
+            binary_class: None,
+            binary_stripped: None,
+            linkage_kind: None,
+            detected_go: None,
+            confidence: None,
+            binary_packed: None,
+            npm_role: None,
+            raw_version: None,
+            parent_purl: None,
+            co_owned_by: None,
+            shade_relocation: None,
+            external_references: Vec::new(),
+            extra_annotations: Default::default(),
+            binary_role: None,
+        }
+    }
+
+    fn mk_rel(from: &str, to: &str) -> Relationship {
+        Relationship {
+            from: from.to_string(),
+            to: to.to_string(),
+            relationship_type: RelationshipType::DependsOn,
+            provenance: mikebom_common::resolution::EnrichmentProvenance {
+                source: "test".to_string(),
+                data_type: "relationship".to_string(),
+            },
+        }
+    }
+
+    #[test]
+    fn optional_dispatch_rewrites_depends_on_to_optional_depends_on() {
+        // Milestone 179 US3 dispatch — target with `lifecycle_scope =
+        // Some(Optional)` rewrites the incoming `DependsOn` edge to
+        // `OptionalDependsOn`.
+        let a = mk_component("pkg:cargo/my-app@1", "my-app", "1");
+        let mut b = mk_component("pkg:cargo/foo@1", "foo", "1");
+        b.lifecycle_scope = Some(LifecycleScope::Optional);
+        let mut rels = vec![mk_rel(a.purl.as_str(), b.purl.as_str())];
+        apply_lifecycle_scope_to_edges(&[a, b], &mut rels);
+        assert_eq!(rels.len(), 1);
+        assert!(matches!(
+            rels[0].relationship_type,
+            RelationshipType::OptionalDependsOn
+        ));
+    }
+
+    #[test]
+    fn not_needed_fallthrough_rewrites_depends_on_to_test_depends_on() {
+        // Milestone 179 US1 flagship — target with `build_inclusion =
+        // Some(NotNeeded)` and `lifecycle_scope = None` gets the
+        // incoming `DependsOn` edge rewritten to `TestDependsOn`,
+        // which then emits SPDX 2.3 `TEST_DEPENDENCY_OF` per T007.
+        // This is the pico yaml.v3 → check.v1 case.
+        let a = mk_component("pkg:golang/yaml.v3@3.0.1", "yaml.v3", "3.0.1");
+        let mut b = mk_component("pkg:golang/check.v1@0.0.0-20200902074654", "check.v1", "1.0");
+        b.build_inclusion = Some(BuildInclusion::NotNeeded);
+        // b.lifecycle_scope stays None (m112 invariant).
+        let mut rels = vec![mk_rel(a.purl.as_str(), b.purl.as_str())];
+        apply_lifecycle_scope_to_edges(&[a, b], &mut rels);
+        assert_eq!(rels.len(), 1);
+        assert!(matches!(
+            rels[0].relationship_type,
+            RelationshipType::TestDependsOn
+        ));
+    }
+
+    #[test]
+    fn precedence_optional_wins_over_not_needed() {
+        // Milestone 179 FR-14 precedence — when a target has BOTH
+        // `lifecycle_scope = Some(Optional)` AND `build_inclusion =
+        // Some(NotNeeded)`, the manifest-declared Optional wins over
+        // the build-graph-inferred NotNeeded. Pass 1 rewrites to
+        // OptionalDependsOn; Pass 2's guard on `RelationshipType::
+        // DependsOn` skips this edge (already typed).
+        let a = mk_component("pkg:cargo/my-app@1", "my-app", "1");
+        let mut b = mk_component("pkg:cargo/foo@1", "foo", "1");
+        b.lifecycle_scope = Some(LifecycleScope::Optional);
+        b.build_inclusion = Some(BuildInclusion::NotNeeded);
+        let mut rels = vec![mk_rel(a.purl.as_str(), b.purl.as_str())];
+        apply_lifecycle_scope_to_edges(&[a, b], &mut rels);
+        assert_eq!(rels.len(), 1);
+        assert!(matches!(
+            rels[0].relationship_type,
+            RelationshipType::OptionalDependsOn
+        ));
+    }
+
+    #[test]
+    fn runtime_target_with_not_needed_stays_depends_on() {
+        // Milestone 179 Pass 2 guard — a target explicitly classified
+        // as Runtime by a reader MUST NOT be reclassified even if
+        // build_inclusion says NotNeeded. This defends against future
+        // m112 changes that might tag components that are actually
+        // runtime.
+        let a = mk_component("pkg:cargo/my-app@1", "my-app", "1");
+        let mut b = mk_component("pkg:cargo/foo@1", "foo", "1");
+        b.lifecycle_scope = Some(LifecycleScope::Runtime);
+        b.build_inclusion = Some(BuildInclusion::NotNeeded);
+        let mut rels = vec![mk_rel(a.purl.as_str(), b.purl.as_str())];
+        apply_lifecycle_scope_to_edges(&[a, b], &mut rels);
+        assert!(matches!(
+            rels[0].relationship_type,
+            RelationshipType::DependsOn
+        ));
+    }
 }
 
 #[cfg(test)]
