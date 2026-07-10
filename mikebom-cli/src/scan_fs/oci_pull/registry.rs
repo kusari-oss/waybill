@@ -24,6 +24,7 @@ use oci_spec::image::{ImageIndex, ImageManifest};
 use super::auth::Credential;
 use super::cache::Cache;
 use super::reference::ImageReference;
+use super::tls_config::RegistryTlsConfig;
 
 /// Manifest media types we accept (sent on the `Accept` header
 /// for the manifest fetch + dispatched on the response
@@ -61,6 +62,12 @@ pub(super) struct RegistryClient {
     /// When set, [`Self::fetch_blob`] consults the cache first and
     /// inserts on miss.
     cache: Option<Cache>,
+    /// Milestone 182 — TLS/transport configuration consulted at
+    /// URL-scheme decision time (`manifest_url` / `blob_url`) and
+    /// during `reqwest::Client` construction (`add_root_certificate` +
+    /// `danger_accept_invalid_certs`). Default state is byte-identical
+    /// to pre-m182 behavior.
+    tls_config: RegistryTlsConfig,
 }
 
 impl RegistryClient {
@@ -80,9 +87,34 @@ impl RegistryClient {
         reference: &ImageReference,
         cache: Option<Cache>,
         creds_dir: Option<&std::path::Path>,
+        // Milestone 182 — TLS/transport configuration surfaced by the
+        // three m182 flags. Consumed at client-build time (CA bundle
+        // additions + skip-verify) and stored for later scheme
+        // selection in manifest_url / blob_url.
+        tls_config: &RegistryTlsConfig,
     ) -> Result<Self> {
-        let http = reqwest::Client::builder()
-            .user_agent(concat!("mikebom/", env!("CARGO_PKG_VERSION")))
+        let mut builder = reqwest::Client::builder()
+            .user_agent(concat!("mikebom/", env!("CARGO_PKG_VERSION")));
+
+        // m182 CA bundle: additive to webpki-roots — nothing removed.
+        for cert in &tls_config.ca_bundle {
+            builder = builder.add_root_certificate(cert.clone());
+        }
+
+        // m182 skip-verify: dangerous — emit the FR-007 WARN log
+        // per Constitution Principle X (operator-visible audit trail).
+        if tls_config.skip_verify {
+            builder = builder.danger_accept_invalid_certs(true);
+            tracing::warn!(
+                registry = %reference.registry,
+                "TLS verification DISABLED via --insecure-tls-skip-verify — \
+                 cert chain, hostname, and expiry checks are skipped for this scan. \
+                 Use only for CI/dev against self-signed or hostname-mismatched certs. \
+                 For production private-CA registries, use --registry-ca-cert instead."
+            );
+        }
+
+        let http = builder
             .build()
             .context("building reqwest::Client for OCI registry")?;
         let credentials = super::auth::resolve_credentials_layered(
@@ -99,6 +131,7 @@ impl RegistryClient {
             http,
             credentials,
             cache,
+            tls_config: tls_config.clone(),
         })
     }
 
@@ -109,7 +142,7 @@ impl RegistryClient {
         &self,
         reference: &ImageReference,
     ) -> Result<ManifestOrIndex> {
-        let url = manifest_url(reference);
+        let url = manifest_url(reference, &self.tls_config);
         let body = self.fetch_with_auth_retry(&url, MANIFEST_MEDIA_TYPES).await?;
         let content_type = body.content_type;
         let bytes = body.bytes;
@@ -145,7 +178,7 @@ impl RegistryClient {
                 return Ok(bytes);
             }
         }
-        let url = blob_url(reference, digest);
+        let url = blob_url(reference, digest, &self.tls_config);
         // Blob endpoint accepts any media type; we send `*/*`.
         let body = self.fetch_with_auth_retry(&url, &["*/*"]).await?;
         verify_sha256(&body.bytes, digest)
@@ -173,13 +206,16 @@ impl RegistryClient {
         accept: &[&str],
     ) -> Result<ResponseBody> {
         let accept_header = accept.join(", ");
-        let first = self
+        let first = match self
             .http
             .get(url)
             .header("Accept", &accept_header)
             .send()
             .await
-            .with_context(|| format!("sending GET {url}"))?;
+        {
+            Ok(resp) => resp,
+            Err(err) => return Err(classify_transport_error(url, err)),
+        };
         let status = first.status();
         if status.is_success() {
             return ResponseBody::from_response(first).await;
@@ -449,19 +485,21 @@ fn is_index_media_type(content_type: &str) -> bool {
     )
 }
 
-fn manifest_url(reference: &ImageReference) -> String {
+fn manifest_url(reference: &ImageReference, tls_config: &RegistryTlsConfig) -> String {
     let registry = resolve_registry_for_url(&reference.registry);
+    let scheme = scheme_for_registry(&reference.registry, tls_config);
     format!(
-        "https://{registry}/v2/{}/manifests/{}",
+        "{scheme}://{registry}/v2/{}/manifests/{}",
         reference.repository,
         reference.resolved_reference()
     )
 }
 
-fn blob_url(reference: &ImageReference, digest: &str) -> String {
+fn blob_url(reference: &ImageReference, digest: &str, tls_config: &RegistryTlsConfig) -> String {
     let registry = resolve_registry_for_url(&reference.registry);
+    let scheme = scheme_for_registry(&reference.registry, tls_config);
     format!(
-        "https://{registry}/v2/{}/blobs/{}",
+        "{scheme}://{registry}/v2/{}/blobs/{}",
         reference.repository, digest
     )
 }
@@ -475,6 +513,143 @@ fn resolve_registry_for_url(registry: &str) -> &str {
     } else {
         registry
     }
+}
+
+/// Milestone 182 — pick `http` or `https` per the m182
+/// `--insecure-registry` matcher.
+///
+/// Matches on the *user-facing* registry name (FR-005) — the same
+/// string the operator typed in `--image`. `docker.io` in the flag
+/// does NOT auto-expand to `registry-1.docker.io`.
+fn scheme_for_registry(user_facing_registry: &str, tls_config: &RegistryTlsConfig) -> &'static str {
+    let (host, port) = split_host_port(user_facing_registry);
+    if tls_config.is_insecure_registry(host, port) {
+        "http"
+    } else {
+        "https"
+    }
+}
+
+/// Split `"host:port"` into `("host", Some(port))` or `"host"` into
+/// `("host", None)`. Falls back to `(input, None)` on invalid port
+/// (e.g. IPv6 literals without brackets — mikebom does not currently
+/// scan IPv6-literal registry hosts).
+fn split_host_port(hostport: &str) -> (&str, Option<u16>) {
+    match hostport.rsplit_once(':') {
+        Some((host, port_str)) => match port_str.parse::<u16>() {
+            Ok(port) => (host, Some(port)),
+            Err(_) => (hostport, None),
+        },
+        None => (hostport, None),
+    }
+}
+
+/// Milestone 182 — classify a `reqwest` transport error into an
+/// actionable message per FR-014.
+///
+/// Two specific TLS shapes name the fix flag:
+///
+///   * Chain / hostname / expiry validation failure → Case 2
+///     (points at `--registry-ca-cert` + `--insecure-tls-skip-verify`).
+///     Fires when the registry uses a private CA or self-signed cert
+///     and the operator didn't supply either flag.
+///
+///   * TLS handshake failure (usually plain-HTTP served on the TLS
+///     port, or an unreachable-over-TLS listener) → Case 1 (points at
+///     `--insecure-registry`). Fires against Harbor devenv-style
+///     deployments.
+///
+/// Everything else falls through to the pre-m182 message shape so we
+/// don't over-fit the diagnostic. Chain-error is checked BEFORE
+/// handshake-error because chain-invalid is more specific.
+fn classify_transport_error(url: &str, err: reqwest::Error) -> anyhow::Error {
+    if is_tls_chain_error(&err) {
+        let host_display = url_host_display(url);
+        return anyhow!(
+            "TLS certificate chain validation failed for GET {url}. \
+             For private-CA registries, pass --registry-ca-cert <path-to-ca.pem>. \
+             For self-signed dev/CI certs, pass --insecure-tls-skip-verify \
+             (unsafe for production). {host_hint}Underlying error: {err}",
+            host_hint = if host_display.is_empty() {
+                String::new()
+            } else {
+                format!("(host `{host_display}`) ")
+            }
+        );
+    }
+    if is_tls_handshake_error(&err) {
+        let host_display = url_host_display(url);
+        return anyhow!(
+            "TLS handshake failed for GET {url}. If this registry uses plain HTTP, \
+             pass --insecure-registry {host_display}. Underlying error: {err}"
+        );
+    }
+    // Unchanged path — carries the pre-m182 shape.
+    anyhow::Error::new(err).context(format!("sending GET {url}"))
+}
+
+/// Extract `host[:port]` from a URL string for display in the FR-014
+/// error hint. Falls back to `""` on parse failure — the message is
+/// still actionable without it (it's only supplementary).
+fn url_host_display(url: &str) -> String {
+    match reqwest::Url::parse(url) {
+        Ok(u) => match (u.host_str(), u.port()) {
+            (Some(host), Some(port)) => format!("{host}:{port}"),
+            (Some(host), None) => host.to_string(),
+            _ => String::new(),
+        },
+        Err(_) => String::new(),
+    }
+}
+
+/// True iff `err`'s chain contains a signal that the peer's TLS
+/// certificate chain / hostname / expiry check failed. Uses substring
+/// matching over the whole error-chain display — reqwest 0.12's error
+/// enum does NOT surface rustls internals via a stable pattern-match
+/// API, so this is the documented fallback tactic.
+fn is_tls_chain_error(err: &reqwest::Error) -> bool {
+    let chain_text = format_error_chain(err);
+    // rustls error text patterns for cert-verify failures.
+    chain_text.contains("certificate verify failed")
+        || chain_text.contains("UnknownIssuer")
+        || chain_text.contains("unknown issuer")
+        || chain_text.contains("invalid certificate")
+        || chain_text.contains("InvalidCertificate")
+        || chain_text.contains("BadSignature")
+        || chain_text.contains("NotValidForName")
+        || chain_text.contains("not valid for name")
+        // rustls 0.23 hostname-mismatch variant.
+        || chain_text.contains("CertNotValidForName")
+}
+
+/// True iff `err`'s chain contains a signal that the TLS handshake
+/// itself failed (not that a chain check rejected a valid handshake).
+/// Fires against plain-HTTP-on-TLS-port scenarios (Harbor devenv).
+fn is_tls_handshake_error(err: &reqwest::Error) -> bool {
+    let chain_text = format_error_chain(err);
+    chain_text.contains("handshake")
+        || chain_text.contains("HandshakeFailure")
+        // reqwest bubbles rustls messages like "received corrupt message"
+        // when a plain-HTTP server responds to a TLS ClientHello.
+        || chain_text.contains("received corrupt message")
+        || chain_text.contains("CorruptMessage")
+        // Some Linux stacks surface plain-HTTP-on-TLS as ECONNRESET.
+        || chain_text.contains("connection closed via error")
+}
+
+/// Format `err` plus its `source()` chain into a single lowercase-
+/// safe string for substring matching. `Debug` is used because
+/// `Display` on `reqwest::Error` often omits the underlying rustls
+/// text.
+fn format_error_chain(err: &(dyn std::error::Error + 'static)) -> String {
+    let mut out = format!("{err} {err:?}");
+    let mut cur: Option<&(dyn std::error::Error + 'static)> = err.source();
+    while let Some(s) = cur {
+        out.push(' ');
+        out.push_str(&format!("{s} {s:?}"));
+        cur = s.source();
+    }
+    out
 }
 
 fn verify_sha256(bytes: &[u8], expected_digest: &str) -> Result<()> {
@@ -668,7 +843,8 @@ mod tests {
     #[test]
     fn manifest_url_uses_registry_1_for_docker_io() {
         let reference = super::super::reference::parse_reference("alpine:3.19").unwrap();
-        let url = manifest_url(&reference);
+        let cfg = RegistryTlsConfig::default();
+        let url = manifest_url(&reference, &cfg);
         assert_eq!(
             url,
             "https://registry-1.docker.io/v2/library/alpine/manifests/3.19"
@@ -680,7 +856,8 @@ mod tests {
         let reference =
             super::super::reference::parse_reference("gcr.io/distroless/static-debian12:latest")
                 .unwrap();
-        let url = manifest_url(&reference);
+        let cfg = RegistryTlsConfig::default();
+        let url = manifest_url(&reference, &cfg);
         assert_eq!(
             url,
             "https://gcr.io/v2/distroless/static-debian12/manifests/latest"
@@ -690,7 +867,8 @@ mod tests {
     #[test]
     fn blob_url_uses_digest_directly() {
         let reference = super::super::reference::parse_reference("alpine:3.19").unwrap();
-        let url = blob_url(&reference, "sha256:abc123");
+        let cfg = RegistryTlsConfig::default();
+        let url = blob_url(&reference, "sha256:abc123", &cfg);
         assert_eq!(
             url,
             "https://registry-1.docker.io/v2/library/alpine/blobs/sha256:abc123"
@@ -747,6 +925,7 @@ mod tests {
                 secret: "hunter2".to_string(),
             }),
             cache: None,
+            tls_config: RegistryTlsConfig::default(),
         };
         let challenge = BearerChallenge {
             realm: format!("http://{addr}/token"),
@@ -806,6 +985,7 @@ mod tests {
             http: reqwest::Client::new(),
             credentials: None,
             cache: None,
+            tls_config: RegistryTlsConfig::default(),
         };
         let challenge = BearerChallenge {
             realm: format!("http://{addr}/token"),
@@ -903,6 +1083,7 @@ mod tests {
                 secret: "ecr-token-d34db33f".to_string(),
             }),
             cache: None,
+            tls_config: RegistryTlsConfig::default(),
         };
 
         let url = format!("http://{addr}/v2/foo/bar/manifests/latest");
@@ -965,6 +1146,7 @@ mod tests {
             http: reqwest::Client::new(),
             credentials: None,
             cache: None,
+            tls_config: RegistryTlsConfig::default(),
         };
 
         let url = format!("http://{addr}/v2/foo/bar/manifests/latest");
@@ -1013,6 +1195,7 @@ mod tests {
             http: reqwest::Client::new(),
             credentials: None,
             cache: Some(cache),
+            tls_config: RegistryTlsConfig::default(),
         };
 
         let got = client.fetch_blob(&reference, &digest).await.unwrap();
@@ -1021,5 +1204,77 @@ mod tests {
             "cache hit should return the previously-inserted bytes \
              without making a network call"
         );
+    }
+
+    // ── Milestone 182 — scheme-selection tests ────────────────────
+
+    fn make_reference(registry: &str) -> ImageReference {
+        ImageReference {
+            registry: registry.to_string(),
+            repository: "library/foo".to_string(),
+            tag: Some("1.0".to_string()),
+            digest: None,
+        }
+    }
+
+    #[test]
+    fn manifest_url_uses_https_by_default() {
+        let cfg = RegistryTlsConfig::default();
+        let r = make_reference("ghcr.io");
+        assert_eq!(
+            manifest_url(&r, &cfg),
+            "https://ghcr.io/v2/library/foo/manifests/1.0"
+        );
+    }
+
+    #[test]
+    fn manifest_url_uses_http_when_insecure_matches() {
+        let cfg = RegistryTlsConfig::from_args(
+            &["127.0.0.1:5000".to_string()],
+            &[],
+            false,
+        )
+        .unwrap();
+        let r = make_reference("127.0.0.1:5000");
+        assert_eq!(
+            manifest_url(&r, &cfg),
+            "http://127.0.0.1:5000/v2/library/foo/manifests/1.0"
+        );
+    }
+
+    #[test]
+    fn blob_url_uses_http_when_insecure_matches() {
+        let cfg = RegistryTlsConfig::from_args(
+            &["dev-registry".to_string()],
+            &[],
+            false,
+        )
+        .unwrap();
+        let r = make_reference("dev-registry");
+        let digest = "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+        assert_eq!(
+            blob_url(&r, digest, &cfg),
+            format!("http://dev-registry/v2/library/foo/blobs/{digest}")
+        );
+    }
+
+    #[test]
+    fn scheme_for_registry_ignores_docker_io_endpoint_expansion() {
+        // FR-005 regression pin: --insecure-registry docker.io does NOT
+        // match registry-1.docker.io (the resolved endpoint). The
+        // matcher fires on the user-facing name (docker.io) — but the
+        // URL uses the resolved endpoint (registry-1.docker.io). This
+        // proves the scheme decision is made pre-resolve, on the
+        // user-facing name, per FR-005.
+        let cfg = RegistryTlsConfig::from_args(
+            &["docker.io".to_string()],
+            &[],
+            false,
+        )
+        .unwrap();
+        // docker.io is what the operator typed → matches, so http.
+        assert_eq!(scheme_for_registry("docker.io", &cfg), "http");
+        // registry-1.docker.io is the resolved endpoint → does not match, so https.
+        assert_eq!(scheme_for_registry("registry-1.docker.io", &cfg), "https");
     }
 }

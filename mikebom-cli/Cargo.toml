@@ -211,6 +211,12 @@ jsonschema = { version = "0.46", default-features = false }
 # integrates with tokio. Dev-only — never ships in the production
 # binary. See specs/055-go-transitive-edges/research.md R9.
 wiremock = "0.6"
+# Milestone 182 — self-signed CA + server cert generation for OCI
+# registry TLS integration tests (US2 private-CA, US3 skip-verify)
+# plus the `tls_config.rs` multi-cert-bundle unit test. Pure Rust,
+# no openssl/C dep. Dev-only. See specs/182-oci-registry-tls-flex/
+# research.md Decision 5.
+rcgen = "0.13"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # Activated by the `ebpf-tracing` feature. Combined with the target

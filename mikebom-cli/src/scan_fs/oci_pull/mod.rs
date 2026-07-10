@@ -54,6 +54,12 @@ mod platform;
 mod reference;
 mod registry;
 mod tarball;
+// Milestone 182 — TLS/transport configuration surfaced by the three
+// `--insecure-registry`, `--registry-ca-cert`, `--insecure-tls-skip-verify`
+// flags. Threaded through `pull_to_tarball` into `RegistryClient::new`.
+mod tls_config;
+
+pub(crate) use tls_config::RegistryTlsConfig;
 
 use std::path::Path;
 
@@ -89,6 +95,10 @@ pub async fn pull_to_tarball(
     image_platform: Option<&str>,
     cache_size_cap: Option<u64>,
     creds_dir: Option<&Path>,
+    // Milestone 182 — TLS/transport configuration (insecure-registry
+    // matcher, additional CA bundle, skip-verify boolean). Passed
+    // unmodified into `RegistryClient::new`. Zero-cost when default.
+    tls_config: &RegistryTlsConfig,
 ) -> Result<tempfile::TempDir> {
     let mut reference = reference::parse_reference(image_ref)
         .with_context(|| format!("parsing OCI image reference `{image_ref}`"))?;
@@ -125,7 +135,7 @@ pub async fn pull_to_tarball(
     // etc.) returns None and we fall through to no-cache mode. The
     // user's scan completes either way.
     let cache_handle = cache_size_cap.and_then(cache::Cache::open);
-    let client = RegistryClient::new(&reference, cache_handle, creds_dir)?;
+    let client = RegistryClient::new(&reference, cache_handle, creds_dir, tls_config)?;
 
     // Step 1: fetch the manifest. If it's an image index
     // (manifest list), resolve the platform-specific manifest and

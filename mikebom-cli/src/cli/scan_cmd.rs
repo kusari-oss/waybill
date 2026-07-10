@@ -171,6 +171,58 @@ pub struct ScanArgs {
     #[arg(long = "registry-credentials-dir", value_name = "PATH")]
     pub registry_credentials_dir: Option<std::path::PathBuf>,
 
+    /// `--insecure-registry <HOST[:PORT]>` — repeatable. When set, mikebom
+    /// pulls from the named host over `http://` instead of `https://`.
+    /// Host-only form matches any port; explicit `<host>:<port>` matches
+    /// only that port. Match target is the user-facing registry name
+    /// typed in `--image` — NOT any resolved endpoint (docker.io does
+    /// not auto-expand to registry-1.docker.io).
+    ///
+    /// Milestone 182 / FR-001. Consumers: Harbor devenv
+    /// (`--insecure-registry core:8080`), air-gapped mirrors, local dev
+    /// registries.
+    ///
+    /// **Security**: only enable for registries you trust. Plain-HTTP
+    /// exposes credentials + blobs to network observers.
+    #[arg(
+        long = "insecure-registry",
+        value_name = "HOST[:PORT]",
+        action = clap::ArgAction::Append
+    )]
+    pub insecure_registry: Vec<String>,
+
+    /// `--registry-ca-cert <PATH>` — repeatable. Additional CA
+    /// certificate(s) to trust for HTTPS registry pulls, on top of the
+    /// webpki root set. Each file may be a PEM bundle (multiple
+    /// concatenated `-----BEGIN CERTIFICATE-----` blocks); ALL
+    /// certificates in each file are added.
+    ///
+    /// Milestone 182 / FR-002 / FR-006. Consumers: private-CA Harbor
+    /// deployments, corporate Nexus / JFrog, self-hosted GHCR mirrors.
+    ///
+    /// **Failure modes** (fail-fast at scan startup, before any network
+    /// call): file not found, empty file, non-PEM content, malformed
+    /// PEM. All surface actionable errors naming the offending path.
+    #[arg(
+        long = "registry-ca-cert",
+        value_name = "PATH",
+        action = clap::ArgAction::Append
+    )]
+    pub registry_ca_cert: Vec<std::path::PathBuf>,
+
+    /// `--insecure-tls-skip-verify` — disable TLS certificate chain /
+    /// hostname / expiry verification for ALL HTTPS registry pulls in
+    /// this scan. Emits a WARN-level structured log at scan start
+    /// (Constitution Principle X + FR-007).
+    ///
+    /// Milestone 182 / FR-003. **Security**: extremely dangerous in
+    /// production. Use ONLY for CI/dev against self-signed or
+    /// hostname-mismatched certs where fetching the CA is impractical.
+    /// For private-CA production registries, prefer
+    /// `--registry-ca-cert <path>` instead.
+    #[arg(long = "insecure-tls-skip-verify")]
+    pub insecure_tls_skip_verify: bool,
+
     /// Output path override. Two forms are accepted:
     ///
     /// * Bare `--output <path>` — applies to the single requested
@@ -1723,11 +1775,21 @@ async fn resolve_image_ref(
                                 .unwrap_or(10 * 1024 * 1024 * 1024),
                         )
                     };
+                    // Milestone 182 — build the TLS/transport config
+                    // once up-front. Fails fast (before any network) on
+                    // malformed --insecure-registry values or bad CA
+                    // paths per FR-014.
+                    let tls_config = scan_fs::oci_pull::RegistryTlsConfig::from_args(
+                        &args.insecure_registry,
+                        &args.registry_ca_cert,
+                        args.insecure_tls_skip_verify,
+                    )?;
                     let td = scan_fs::oci_pull::pull_to_tarball(
                         arg_str,
                         args.image_platform.as_deref(),
                         cache_size_cap,
                         args.registry_credentials_dir.as_deref(),
+                        &tls_config,
                     )
                     .await?;
                     let tarball = td.path().join("image.tar");
@@ -3564,6 +3626,85 @@ mod tests {
         );
     }
 
+    // ── Milestone 182 — TLS/transport flag parse tests ────────────
+
+    #[test]
+    fn insecure_registry_flag_repeatable_parses() {
+        let parsed = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan",
+            "--path",
+            ".",
+            "--insecure-registry",
+            "core:8080",
+            "--insecure-registry",
+            "dev-registry",
+        ])
+        .unwrap();
+        assert_eq!(
+            parsed.inner.insecure_registry,
+            vec!["core:8080".to_string(), "dev-registry".to_string()]
+        );
+    }
+
+    #[test]
+    fn registry_ca_cert_flag_repeatable_parses() {
+        let parsed = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan",
+            "--path",
+            ".",
+            "--registry-ca-cert",
+            "/etc/ssl/ca1.pem",
+            "--registry-ca-cert",
+            "/etc/ssl/ca2.pem",
+        ])
+        .unwrap();
+        assert_eq!(
+            parsed.inner.registry_ca_cert,
+            vec![
+                std::path::PathBuf::from("/etc/ssl/ca1.pem"),
+                std::path::PathBuf::from("/etc/ssl/ca2.pem"),
+            ]
+        );
+    }
+
+    #[test]
+    fn insecure_tls_skip_verify_bool_defaults_false() {
+        let default = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan", "--path", ".",
+        ])
+        .unwrap();
+        assert!(!default.inner.insecure_tls_skip_verify);
+        let with_flag = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan",
+            "--path",
+            ".",
+            "--insecure-tls-skip-verify",
+        ])
+        .unwrap();
+        assert!(with_flag.inner.insecure_tls_skip_verify);
+    }
+
+    #[test]
+    fn all_three_flags_combined_parse_ok() {
+        let parsed = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan",
+            "--path",
+            ".",
+            "--insecure-registry",
+            "core:8080",
+            "--registry-ca-cert",
+            "/etc/ssl/ca.pem",
+            "--insecure-tls-skip-verify",
+        ])
+        .unwrap();
+        assert_eq!(parsed.inner.insecure_registry, vec!["core:8080".to_string()]);
+        assert_eq!(
+            parsed.inner.registry_ca_cert,
+            vec![std::path::PathBuf::from("/etc/ssl/ca.pem")]
+        );
+        assert!(parsed.inner.insecure_tls_skip_verify);
+    }
+
     // ── Enrichment-control flag tests ─────────────────────────────
 
     #[test]
@@ -3691,6 +3832,12 @@ mod tests {
             no_oci_cache: false,
             oci_cache_size: None,
             registry_credentials_dir: None,
+            // Milestone 182 — test helper defaults preserve pre-m182
+            // behavior (no insecure registries, no additional CAs,
+            // full TLS verification). Byte-identity SC-004.
+            insecure_registry: vec![],
+            registry_ca_cert: vec![],
+            insecure_tls_skip_verify: false,
             output: vec![],
             format: vec![],
             max_file_size: 256 * 1024 * 1024,
