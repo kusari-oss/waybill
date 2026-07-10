@@ -682,6 +682,16 @@ pub(crate) struct CargoTomlSections {
     pub prod_deps: HashSet<String>,
     pub dev_deps: HashSet<String>,
     pub build_deps: HashSet<String>,
+    /// Milestone 179 US3 — names declared in `[dependencies]` (or
+    /// `[target.<cfg>.dependencies]`) with `optional = true`. These
+    /// are feature-gated: they only participate in a build when a
+    /// `[features]` entry activates them via `dep:<name>`. mikebom
+    /// tags matching resolved components with
+    /// [`LifecycleScope::Optional`] so SPDX 2.3 emits
+    /// `OPTIONAL_DEPENDENCY_OF` and CDX emits `scope: "excluded"`.
+    /// Companion annotation: `mikebom:optional-derivation =
+    /// cargo-optional-true`.
+    pub optional_deps: HashSet<String>,
 }
 
 impl CargoTomlSections {
@@ -692,6 +702,7 @@ impl CargoTomlSections {
         self.prod_deps.extend(other.prod_deps.iter().cloned());
         self.dev_deps.extend(other.dev_deps.iter().cloned());
         self.build_deps.extend(other.build_deps.iter().cloned());
+        self.optional_deps.extend(other.optional_deps.iter().cloned());
     }
 }
 
@@ -717,15 +728,58 @@ pub(crate) fn parse_cargo_toml(path: &Path) -> Option<CargoTomlSections> {
     collect_section_keys(&parsed, "dependencies", &mut out.prod_deps);
     collect_section_keys(&parsed, "dev-dependencies", &mut out.dev_deps);
     collect_section_keys(&parsed, "build-dependencies", &mut out.build_deps);
+    // Milestone 179 US3 — track `optional = true` entries within
+    // `[dependencies]`. Only the runtime table can carry the flag;
+    // Cargo disallows it (or ignores it) in `[dev-dependencies]` and
+    // `[build-dependencies]`. This is FR-015 precedence enforced at
+    // the reader boundary: if the manifest already classified the dep
+    // as dev/build, the optional flag inside that table doesn't
+    // reclassify it.
+    collect_optional_dep_keys(&parsed, "dependencies", &mut out.optional_deps);
     // Walk every `target.<cfg>` table for its three section variants.
     if let Some(target_table) = parsed.get("target").and_then(|v| v.as_table()) {
         for (_cfg, target_value) in target_table {
             collect_section_keys(target_value, "dependencies", &mut out.prod_deps);
             collect_section_keys(target_value, "dev-dependencies", &mut out.dev_deps);
             collect_section_keys(target_value, "build-dependencies", &mut out.build_deps);
+            collect_optional_dep_keys(target_value, "dependencies", &mut out.optional_deps);
         }
     }
     Some(out)
+}
+
+/// Milestone 179 US3 — variant of [`collect_section_keys`] that
+/// records only entries with `optional = true`. Called against the
+/// `[dependencies]` and `[target.<cfg>.dependencies]` tables (the
+/// runtime dep tables); dev/build tables are excluded per FR-015.
+fn collect_optional_dep_keys(parsed: &toml::Value, section: &str, out: &mut HashSet<String>) {
+    let Some(table) = parsed.get(section).and_then(|v| v.as_table()) else {
+        return;
+    };
+    for (key, value) in table {
+        // A dep is optional iff its value is an inline table
+        // containing `optional = true`. The short `foo = "1.0.0"`
+        // string form and inline tables without the flag are
+        // regular runtime deps.
+        let is_optional = value
+            .as_table()
+            .and_then(|t| t.get("optional"))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        if !is_optional {
+            continue;
+        }
+        // Honor the `package = "..."` rename same as
+        // collect_section_keys — the resolved lockfile name is what
+        // downstream tags against.
+        let resolved_name = value
+            .as_table()
+            .and_then(|t| t.get("package"))
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| key.clone());
+        out.insert(resolved_name);
+    }
 }
 
 fn collect_section_keys(parsed: &toml::Value, section: &str, out: &mut HashSet<String>) {
@@ -946,6 +1000,7 @@ fn parse_lockfile(
     path: &Path,
     prod_set: &HashSet<(String, String)>,
     build_set: &HashSet<(String, String)>,
+    optional_names: &HashSet<String>,
 ) -> Result<Vec<PackageDbEntry>, CargoError> {
     let text = match std::fs::read_to_string(path) {
         Ok(t) => t,
@@ -1015,7 +1070,24 @@ fn parse_lockfile(
             if !prod_set.is_empty() {
                 use mikebom_common::resolution::LifecycleScope;
                 let key = (pkg.name.clone(), pkg.version.clone());
-                if prod_set.contains(&key) {
+                // Milestone 179 US3 — Optional wins over Runtime for
+                // direct optional-declared deps. The name-only match
+                // scopes to direct deps (name matches a manifest
+                // `[dependencies].<name>` with `optional = true`);
+                // transitives-of-optional-deps stay Runtime because
+                // Cargo resolves them regardless of feature flags.
+                // Precedence per FR-015: manifest-declared dev/build
+                // scope still wins (Cargo disallows `optional = true`
+                // inside `[dev-dependencies]` / `[build-dependencies]`
+                // per the reader-boundary guard in
+                // `collect_optional_dep_keys`).
+                if prod_set.contains(&key) && optional_names.contains(&pkg.name) {
+                    entry.lifecycle_scope = Some(LifecycleScope::Optional);
+                    entry.extra_annotations.insert(
+                        "mikebom:optional-derivation".to_string(),
+                        serde_json::Value::String("cargo-optional-true".to_string()),
+                    );
+                } else if prod_set.contains(&key) {
                     entry.lifecycle_scope = Some(LifecycleScope::Runtime);
                 } else if build_set.contains(&key) {
                     entry.lifecycle_scope = Some(LifecycleScope::Build);
@@ -1113,7 +1185,12 @@ pub fn read(
             }
             _ => (HashSet::new(), HashSet::new()),
         };
-        let entries = parse_lockfile(&lock_path, &prod_set, &build_set)?;
+        let entries = parse_lockfile(
+            &lock_path,
+            &prod_set,
+            &build_set,
+            &workspace_sections.optional_deps,
+        )?;
         for entry in entries {
             let purl_key = entry.purl.as_str().to_string();
             // Drop dev entries when --include-dev is off.
@@ -1527,6 +1604,87 @@ mod tests {
     use super::*;
 
     #[test]
+    fn cargo_optional_true_populates_optional_deps() {
+        // Milestone 179 US3 (T023) — `optional = true` in the
+        // `[dependencies]` table populates the new `optional_deps`
+        // set on `CargoTomlSections`. Downstream this drives
+        // `LifecycleScope::Optional` + `mikebom:optional-derivation
+        // = "cargo-optional-true"` on the resolved component.
+        let text = r#"
+[package]
+name = "my-app"
+version = "0.1.0"
+
+[dependencies]
+serde = "1"
+foo = { version = "1", optional = true }
+
+[features]
+foo-support = ["dep:foo"]
+"#;
+        let tmp = tempfile::NamedTempFile::new().unwrap();
+        std::fs::write(tmp.path(), text).unwrap();
+        let sections = parse_cargo_toml(tmp.path()).expect("parse succeeds");
+        assert!(sections.prod_deps.contains("foo"));
+        assert!(sections.prod_deps.contains("serde"));
+        // FR-008: only `foo` is optional; `serde` is a regular runtime dep.
+        assert!(sections.optional_deps.contains("foo"));
+        assert!(!sections.optional_deps.contains("serde"));
+        assert!(sections.dev_deps.is_empty());
+        assert!(sections.build_deps.is_empty());
+    }
+
+    #[test]
+    fn cargo_dev_dependencies_with_optional_stays_development() {
+        // Milestone 179 US3 (T024 / FR-015) — a dep declared inside
+        // `[dev-dependencies]` with `optional = true` MUST stay
+        // classified as Development at the reader boundary. The
+        // `collect_optional_dep_keys` helper only scans
+        // `[dependencies]` (and `[target.<cfg>.dependencies]`), not
+        // the dev/build tables — enforcing the manifest-scope
+        // precedence in FR-015 before it reaches the classifier at
+        // parse_lockfile.
+        let text = r#"
+[package]
+name = "my-app"
+version = "0.1.0"
+
+[dev-dependencies]
+baz = { version = "1", optional = true }
+"#;
+        let tmp = tempfile::NamedTempFile::new().unwrap();
+        std::fs::write(tmp.path(), text).unwrap();
+        let sections = parse_cargo_toml(tmp.path()).expect("parse succeeds");
+        // baz is dev-scope; NOT tagged as optional (FR-015 precedence).
+        assert!(sections.dev_deps.contains("baz"));
+        assert!(!sections.optional_deps.contains("baz"));
+        assert!(sections.prod_deps.is_empty());
+    }
+
+    #[test]
+    fn cargo_optional_with_package_rename_uses_resolved_name() {
+        // Milestone 179 US3 — Cargo allows `foo = { package = "real-foo",
+        // version = "1", optional = true }`. The lockfile records the
+        // resolved name (`real-foo`), not the manifest key. The
+        // `optional_deps` set MUST use the resolved name so the
+        // downstream `optional_names.contains(&pkg.name)` check in
+        // parse_lockfile matches the lockfile entry.
+        let text = r#"
+[package]
+name = "my-app"
+version = "0.1.0"
+
+[dependencies]
+foo = { package = "real-foo", version = "1", optional = true }
+"#;
+        let tmp = tempfile::NamedTempFile::new().unwrap();
+        std::fs::write(tmp.path(), text).unwrap();
+        let sections = parse_cargo_toml(tmp.path()).expect("parse succeeds");
+        assert!(sections.optional_deps.contains("real-foo"));
+        assert!(!sections.optional_deps.contains("foo"));
+    }
+
+    #[test]
     fn parse_authors_from_cargo_toml_joins_array() {
         let text = r#"
 [package]
@@ -1618,7 +1776,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0000000000000000000000000000000000000000000000000000000000000001"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 2);
         assert!(entries.iter().any(|e| e.name == "serde"));
         let serde = entries.iter().find(|e| e.name == "serde").unwrap();
@@ -1640,7 +1798,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ad32ce52e4161730f7098c077cd2ed6229b5804ccf99e5366be1ab72a98b4e1"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "anyhow");
     }
@@ -1657,7 +1815,7 @@ version = "0.1.0"
 source = "git+https://github.com/me/my-fork?branch=main#abc123"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].source_type.as_deref(), Some("git"));
     }
@@ -1673,7 +1831,7 @@ version = "0.1.0"
 dependencies = []
 "#;
         let path = write_lockfile(dir.path(), body);
-        match parse_lockfile(&path, &HashSet::new(), &HashSet::new()) {
+        match parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new()) {
             Err(CargoError::LockfileUnsupportedVersion { version, .. }) => {
                 assert_eq!(version, 1);
             }
@@ -1693,7 +1851,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0000000000000000000000000000000000000000000000000000000000000000"
 "#;
         let path = write_lockfile(dir.path(), body);
-        match parse_lockfile(&path, &HashSet::new(), &HashSet::new()) {
+        match parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new()) {
             Err(CargoError::LockfileUnsupportedVersion { version, .. }) => {
                 assert_eq!(version, 2);
             }

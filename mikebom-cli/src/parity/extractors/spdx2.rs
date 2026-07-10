@@ -597,6 +597,8 @@ spdx23_anno!(c119_spdx23, "mikebom:go-cache-warming-failed",          document);
 spdx23_anno!(c120_spdx23, "mikebom:workspace-member",                 component);
 // Milestone 176: C121 document-scope workspaces-detected aggregate.
 spdx23_anno!(c121_spdx23, "mikebom:workspaces-detected",              document);
+// Milestone 179: C122 per-component optional-dep derivation source.
+spdx23_anno!(c122_spdx23, "mikebom:optional-derivation",              component);
 
 // C67 — `mikebom:assertion-conflict` (milestone 119). Per-Package
 // envelope carrying the JSON-encoded array of conflict records.

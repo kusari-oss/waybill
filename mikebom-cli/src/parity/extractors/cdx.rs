@@ -860,6 +860,17 @@ cdx_anno!(c120_cdx, "mikebom:workspace-member",                 component);
 // when zero workspaces are detected.
 cdx_anno!(c121_cdx, "mikebom:workspaces-detected",              document);
 
+// C122 — `mikebom:optional-derivation` (milestone 179). Records
+// which ecosystem-reader mechanism populated the
+// `LifecycleScope::Optional` classification (`cargo-optional-true`,
+// `npm-optional-dependencies`, `pip-extras-require`,
+// `maven-optional-element`, `gradle-compile-only`,
+// `erlang-optional-applications`). KEEP-BOTH polarity per m178:
+// the native SPDX 2.3 `OPTIONAL_DEPENDENCY_OF` relationship type is
+// the primary signal; this annotation carries derivation source
+// that the standard doesn't natively express (Principle V carve-out).
+cdx_anno!(c122_cdx, "mikebom:optional-derivation",              component);
+
 // ============================================================
 // Section D — Evidence (D1, D2 — CDX-native shape)
 // ============================================================

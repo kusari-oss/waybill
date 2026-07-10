@@ -19,7 +19,25 @@ const FIXTURE_SUBPATH: &str = "cargo";
 /// the cargo workspace-member version-disambiguation fix landed in
 /// this baseline). Bump per quickstart.md Recipe 3 only when a
 /// deliberate per-ecosystem-reader change shifts the count.
-const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 317;
+///
+/// Milestone 179: 317 → 316. The clap fixture declares
+/// `clap_derive = { path = "./clap_derive", version = "=4.5.18",
+/// optional = true }` in its `[dependencies]` table. Post-m179 the
+/// cargo reader classifies `clap_derive` as `LifecycleScope::Optional`;
+/// the SPDX 2.3 emitter reversed-direction-emits the `clap →
+/// clap_derive` edge as `clap_derive OPTIONAL_DEPENDENCY_OF clap`.
+/// The transitive-parity extractor at `transitive_parity_common/mod.rs`
+/// counts only generic `DEPENDS_ON` / `DEPENDENCY_OF` verbs (the
+/// cross-tool lingua franca — trivy/syft don't emit typed dep-scope
+/// verbs at all), so the m179 downgrade drops this edge from
+/// mikebom's audited edge set. The clap_derive component itself
+/// remains present in the SBOM; its outgoing edges (to heck,
+/// proc-macro2, quote, syn per m088 pin) also remain since they're
+/// declared with regular runtime scope. This is the pico filter-
+/// parity fix landing on a real fixture: consumers walking the SPDX
+/// 2.3 typed dep-scope verbs now correctly identify clap_derive as
+/// not-in-production-build.
+const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 316;
 
 /// Representative edges that mikebom **actually emits** today — pinning
 /// current behavior so future milestones can't silently regress.

@@ -230,6 +230,7 @@ pub fn annotate_component(
             LifecycleScope::Development => Some("development"),
             LifecycleScope::Build => Some("build"),
             LifecycleScope::Test => Some("test"),
+            LifecycleScope::Optional => Some("optional"), // milestone 179
             LifecycleScope::Runtime => None, // runtime is the default; no annotation
         };
         if let Some(s) = scope_str {

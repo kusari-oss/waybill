@@ -372,6 +372,18 @@ pub enum LifecycleScope {
     Development,
     Build,
     Test,
+    /// Milestone 179 — declared-optional dependency (Cargo `optional =
+    /// true`, npm `optionalDependencies`, pip extras, Maven
+    /// `<optional>true</optional>`, Gradle `compileOnly`, Erlang
+    /// `optional_applications`). May or may not appear in a
+    /// production build. Emits CDX `scope: "excluded"` (via
+    /// `is_non_runtime()`) + SPDX 2.3 `OPTIONAL_DEPENDENCY_OF`
+    /// (reversed direction, m052 convention). SPDX 3.0.1's
+    /// `LifecycleScopeType` enum has no `optional` value at spec
+    /// 3.0.1; SPDX 3 emits classification via the
+    /// `mikebom:optional-derivation` component annotation instead
+    /// (Principle V KEEP-BOTH carve-out).
+    Optional,
 }
 
 impl LifecycleScope {
@@ -385,6 +397,7 @@ impl LifecycleScope {
             LifecycleScope::Development => "development",
             LifecycleScope::Build => "build",
             LifecycleScope::Test => "test",
+            LifecycleScope::Optional => "optional",
         }
     }
 
@@ -489,6 +502,12 @@ pub enum RelationshipType {
     DevDependsOn,
     BuildDependsOn,
     TestDependsOn,
+    /// Milestone 179 — target is declared-optional (see
+    /// [`LifecycleScope::Optional`]). Emits SPDX 2.3
+    /// `OPTIONAL_DEPENDENCY_OF` (reversed direction, m052 convention)
+    /// under `--spdx2-relationship-compat=full`; collapses to
+    /// natural-direction `DEPENDS_ON` under `basic` per m228.
+    OptionalDependsOn,
 }
 
 /// Provenance tracking for enriched data (Constitution Principle X).
@@ -582,6 +601,50 @@ mod tests {
 
         assert_eq!(BuildInclusion::Unknown.as_str(), "unknown");
         assert_eq!(BuildInclusion::NotNeeded.as_str(), "not-needed");
+    }
+
+    #[test]
+    fn lifecycle_scope_optional_serde_roundtrip() {
+        let scope = LifecycleScope::Optional;
+        let json = serde_json::to_string(&scope).expect("serialize optional");
+        assert_eq!(json, "\"optional\"");
+        let back: LifecycleScope = serde_json::from_str(&json).expect("deserialize optional");
+        assert_eq!(back, scope);
+    }
+
+    #[test]
+    fn lifecycle_scope_optional_is_non_runtime() {
+        // Milestone 179 FR-006: `Optional` drives CDX `scope:
+        // "excluded"` via the existing `is_non_runtime()` helper.
+        assert!(LifecycleScope::Optional.is_non_runtime());
+    }
+
+    #[test]
+    fn lifecycle_scope_optional_as_str() {
+        assert_eq!(LifecycleScope::Optional.as_str(), "optional");
+    }
+
+    #[test]
+    fn lifecycle_scope_legacy_dev_excludes_optional() {
+        // Milestone 179 data-model.md §1.1: `Optional` is NOT a
+        // legacy-dev variant. The m052 compat bridge (which pre-052
+        // callers use to check "was this an `is_dev == Some(true)`
+        // component?") MUST continue to return false for the new
+        // variant so it doesn't accidentally inherit dev-scope
+        // semantics via the compat shim.
+        assert!(!lifecycle_scope_is_legacy_dev(&Some(
+            LifecycleScope::Optional
+        )));
+    }
+
+    #[test]
+    fn relationship_type_optional_serde_roundtrip() {
+        let rt = RelationshipType::OptionalDependsOn;
+        let json = serde_json::to_string(&rt).expect("serialize optional_depends_on");
+        assert_eq!(json, "\"optional_depends_on\"");
+        let back: RelationshipType =
+            serde_json::from_str(&json).expect("deserialize optional_depends_on");
+        assert_eq!(back, rt);
     }
 
     #[test]

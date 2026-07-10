@@ -97,11 +97,19 @@ pub fn build_dependency_relationships(
         // branch. Maven (milestone 070 + 085) is the first
         // ecosystem whose fixture has a TestDependsOn edge AND a
         // SPDX 3 conformance check; surfaced the type-mismatch.
+        // Milestone 179 FR-017: `OptionalDependsOn` intentionally maps
+        // to `None` — SPDX 3.0.1's `LifecycleScopeType` enum has no
+        // `optional` value at spec version 3.0.1. The classification
+        // information rides on the `mikebom:optional-derivation`
+        // component-level annotation instead (Principle V KEEP-BOTH
+        // carve-out for the SPDX 3 side). If a future SPDX 3 minor
+        // (3.1, 3.2, ...) adds an `optional` value, a follow-up
+        // milestone can add it here.
         if let Some(scope) = match rel.relationship_type {
             RelationshipType::DevDependsOn => Some("development"),
             RelationshipType::BuildDependsOn => Some("build"),
             RelationshipType::TestDependsOn => Some("test"),
-            RelationshipType::DependsOn => None,
+            RelationshipType::DependsOn | RelationshipType::OptionalDependsOn => None,
         } {
             element["type"] = json!("LifecycleScopedRelationship");
             element["scope"] = json!(scope);
@@ -188,4 +196,64 @@ fn hash_prefix(input: &[u8], chars: usize) -> String {
     let digest = Sha256::digest(input);
     let encoded = BASE32_NOPAD.encode(&digest);
     encoded[..chars].to_string()
+}
+
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod tests {
+    use super::*;
+    use mikebom_common::resolution::{EnrichmentProvenance, Relationship, RelationshipType};
+
+    fn mk_rel(from: &str, to: &str, rt: RelationshipType) -> Relationship {
+        Relationship {
+            from: from.to_string(),
+            to: to.to_string(),
+            relationship_type: rt,
+            provenance: EnrichmentProvenance {
+                source: "test".to_string(),
+                data_type: "relationship".to_string(),
+            },
+        }
+    }
+
+    fn mk_iri_map() -> BTreeMap<String, String> {
+        let mut m = BTreeMap::new();
+        m.insert(
+            "pkg:cargo/my-app@1".to_string(),
+            "spdx:MyApp".to_string(),
+        );
+        m.insert("pkg:cargo/foo@1".to_string(), "spdx:Foo".to_string());
+        m
+    }
+
+    #[test]
+    fn optional_depends_on_emits_no_lifecycle_scope_on_spdx3() {
+        // Milestone 179 T008 / FR-017 — SPDX 3.0.1's
+        // `LifecycleScopeType` enum has no `optional` value; the
+        // emission MUST NOT set `scope` on the relationship element
+        // (otherwise the `LifecycleScopedRelationship` subtype gets
+        // selected and the `optional` value fails JSON-Schema
+        // validation via the m078 conformance gate).
+        let rels = vec![mk_rel(
+            "pkg:cargo/my-app@1",
+            "pkg:cargo/foo@1",
+            RelationshipType::OptionalDependsOn,
+        )];
+        let iri = mk_iri_map();
+        let out = build_dependency_relationships(&rels, &iri, "spdx:Doc", "_:ci");
+        assert_eq!(out.len(), 1);
+        assert!(
+            out[0].get("scope").is_none(),
+            "SPDX 3 OptionalDependsOn MUST NOT emit a `scope` field: {}",
+            out[0]
+        );
+        // Confirm the element stays a plain `Relationship`, not the
+        // LifecycleScopedRelationship subtype.
+        assert_eq!(
+            out[0].get("type").and_then(|v| v.as_str()),
+            Some("Relationship"),
+            "OptionalDependsOn stays plain Relationship (no lifecycleScope): {}",
+            out[0]
+        );
+    }
 }
