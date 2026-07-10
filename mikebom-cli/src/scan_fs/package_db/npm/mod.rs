@@ -668,6 +668,7 @@ mod bun_lock;
 mod enrich;
 mod jsonc;
 mod package_lock;
+mod peer_optional;
 mod pnpm_lock;
 mod walk;
 mod yarn_lock;

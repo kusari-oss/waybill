@@ -277,7 +277,28 @@ pub(crate) fn parse_pnpm_lock(
             .get(serde_yaml::Value::String("dev".to_string()))
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
-        if !include_dev && is_dev {
+        // Milestone 180 T012 — extract the per-entry `optional: true`
+        // marker (pnpm sets this on entries reachable only through
+        // optional edges; parallel to npm's `optional` flag). Currently
+        // unused as a filter — the m179 `--include-dev` gating rides
+        // through the m179 `is_non_runtime()` helper which applies to
+        // any Optional-classified component.
+        let is_optional = tbl
+            .get(serde_yaml::Value::String("optional".to_string()))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        // Milestone 180 T012 — peer-precedence guard input. pnpm's
+        // packages entries carry `peer: true` when the entry was
+        // installed as a peer (parallel to npm's `peer` flag). Combined
+        // with `optional: true` the entry is peer-optional; per FR-006
+        // the m178 PROVIDED_DEPENDENCY_OF classification wins over
+        // m180's OPTIONAL_DEPENDENCY_OF, so we short-circuit Optional
+        // in the classifier below.
+        let is_peer = tbl
+            .get(serde_yaml::Value::String("peer".to_string()))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        if !include_dev && (is_dev || is_optional) {
             continue;
         }
 
@@ -338,6 +359,29 @@ pub(crate) fn parse_pnpm_lock(
             )
         };
 
+        // Milestone 180 T013 + T014 — three-way lifecycle classifier
+        // (same shape as npm US1). Precedence:
+        //   1. `dev: true`  → Development (m179 FR-015)
+        //   2. `optional: true` AND NOT peer-optional → Optional (m180 US2)
+        //      + emit `mikebom:optional-derivation = "npm-optional-dependencies"`
+        //   3. otherwise → Runtime
+        // Peer-optional (`peer && optional`) short-circuits Optional
+        // per FR-006 — m178's PROVIDED_DEPENDENCY_OF wins.
+        use mikebom_common::resolution::LifecycleScope;
+        let mut m180_annotations: std::collections::BTreeMap<String, serde_json::Value> =
+            std::collections::BTreeMap::new();
+        let lifecycle_scope = if is_dev {
+            Some(LifecycleScope::Development)
+        } else if is_optional && !is_peer {
+            m180_annotations.insert(
+                "mikebom:optional-derivation".to_string(),
+                serde_json::Value::String("npm-optional-dependencies".to_string()),
+            );
+            Some(LifecycleScope::Optional)
+        } else {
+            Some(LifecycleScope::Runtime)
+        };
+
         out.push(PackageDbEntry {
             build_inclusion: None,
             purl,
@@ -348,7 +392,7 @@ pub(crate) fn parse_pnpm_lock(
             depends,
             maintainer: None,
             licenses: Vec::new(),
-            lifecycle_scope: if is_dev { Some(mikebom_common::resolution::LifecycleScope::Development) } else { Some(mikebom_common::resolution::LifecycleScope::Runtime) },
+            lifecycle_scope,
             requirement_range: None,
             source_type: None,
             buildinfo_status: None,
@@ -366,7 +410,7 @@ pub(crate) fn parse_pnpm_lock(
             hashes,
             sbom_tier: Some("source".to_string()),
             shade_relocation: None,
-            extra_annotations: Default::default(),
+            extra_annotations: m180_annotations,
             binary_role: None,
         });
     }
@@ -1195,5 +1239,93 @@ packages:
                 "v6/v7 dep `{dep}` MUST NOT contain space — versioned form leaked from m164 path"
             );
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Milestone 180 US2 — optional-dep classification for pnpm reader.
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn pnpm_optional_true_populates_lifecycle_scope_optional() {
+        // Milestone 180 T015 — pnpm v9 packages entry with
+        // `optional: true` gets LifecycleScope::Optional + the m180
+        // derivation annotation.
+        let yaml = r#"
+lockfileVersion: '9.0'
+packages:
+  /fsevents@2.3.3:
+    resolution: {integrity: sha512-testtest}
+    optional: true
+"#;
+        let root: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+        let out = parse_pnpm_lock(&root, "/test.yaml", true);
+        let fsevents = entry_by_name(&out, "fsevents").expect("fsevents emitted");
+        assert_eq!(
+            fsevents.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Optional)
+        );
+        assert_eq!(
+            fsevents
+                .extra_annotations
+                .get("mikebom:optional-derivation"),
+            Some(&serde_json::Value::String(
+                "npm-optional-dependencies".to_string()
+            ))
+        );
+    }
+
+    #[test]
+    fn pnpm_dev_true_wins_over_optional() {
+        // Milestone 180 T015 / FR-015 — dev wins over optional even
+        // when both flags are set on the same pnpm entry.
+        let yaml = r#"
+lockfileVersion: '9.0'
+packages:
+  /some-dev-opt@1.0.0:
+    resolution: {integrity: sha512-devopt}
+    dev: true
+    optional: true
+"#;
+        let root: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+        let out = parse_pnpm_lock(&root, "/test.yaml", true);
+        let entry = entry_by_name(&out, "some-dev-opt").expect("entry emitted");
+        assert_eq!(
+            entry.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Development)
+        );
+        assert!(
+            !entry
+                .extra_annotations
+                .contains_key("mikebom:optional-derivation")
+        );
+    }
+
+    #[test]
+    fn pnpm_peer_optional_stays_peer_not_optional() {
+        // Milestone 180 T015 / FR-006 — pnpm entry with BOTH `peer:
+        // true` AND `optional: true` short-circuits to Runtime; m178's
+        // PROVIDED_DEPENDENCY_OF fires separately.
+        let yaml = r#"
+lockfileVersion: '9.0'
+packages:
+  /react@18.3.1:
+    resolution: {integrity: sha512-reactint}
+    peer: true
+    optional: true
+"#;
+        let root: serde_yaml::Value = serde_yaml::from_str(yaml).unwrap();
+        let out = parse_pnpm_lock(&root, "/test.yaml", true);
+        let react = entry_by_name(&out, "react").expect("react emitted");
+        assert_ne!(
+            react.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Optional),
+            "peer-optional entry MUST NOT be classified as Optional (FR-006)"
+        );
+        assert!(
+            !react
+                .extra_annotations
+                .contains_key("mikebom:optional-derivation"),
+            "peer-optional entry MUST NOT carry mikebom:optional-derivation (FR-006)"
+        );
     }
 }

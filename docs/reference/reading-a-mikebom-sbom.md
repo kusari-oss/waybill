@@ -874,7 +874,7 @@ jq '.relationships[]
 
 > **What it is**: derivation-source string on a component classified as `LifecycleScope::Optional`. Value is drawn from an open enum naming which ecosystem-reader mechanism populated the classification:
 > - `cargo-optional-true` — Cargo `[dependencies]` entry with `optional = true`
-> - `npm-optional-dependencies` — npm `optionalDependencies` (m180+; not shipped in m179)
+> - `npm-optional-dependencies` — npm `optionalDependencies` (`package-lock.json` v2/v3 per-entry `optional: true` flag) OR pnpm `optionalDependencies` (`pnpm-lock.yaml` v9 per-package `optional: true` marker). Shared across npm/yarn/pnpm/bun ecosystems by design — see the m180 ecosystem-survey research artifact at `specs/180-npm-optional-dep-reader/research.md` for the per-lockfile mapping. **Peer-optional guard**: when a dep is BOTH `peerDependencies.<name>` AND `peerDependenciesMeta.<name>.optional = true`, m178's `PROVIDED_DEPENDENCY_OF` classification wins — the m180 optional emission is short-circuited at reader time so the dep emits as peer (not optional). Shipped in m180 for npm + pnpm; yarn (m181) and bun (m182) follow.
 > - `pip-extras-require` — Python `[project.optional-dependencies.<extra>]` / `extras_require` / `[options.extras_require]` (m181+)
 > - `maven-optional-element` — Maven `<dependency>` with `<optional>true</optional>` (m182+)
 > - `gradle-compile-only` — Gradle `compileOnly` configuration (m182+)

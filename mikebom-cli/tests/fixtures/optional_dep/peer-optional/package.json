@@ -1,0 +1,9 @@
+{
+  "name": "m180-peer-optional-fixture",
+  "version": "0.1.0",
+  "description": "Milestone 180 US4 fixture — root depends on some-lib; some-lib declares react as peer-optional. In the lockfile the react entry carries BOTH `peer: true` AND `optional: true`. The peer-precedence guard MUST short-circuit m180's Optional classification so m178's PROVIDED_DEPENDENCY_OF wins per FR-006. The m178 peer-edge-targets annotation stamps on some-lib (the parent that declared the peer-optional dep).",
+  "private": true,
+  "dependencies": {
+    "some-lib": "1.0.0"
+  }
+}

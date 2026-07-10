@@ -90,12 +90,27 @@ pub(crate) fn parse_package_lock(
 
         // `dev: true` / `optional: true` propagate through the nested
         // tree. Filter at source before the caller's dedup pass.
+        //
+        // Milestone 180 T004: also extract `peer: true` — npm's
+        // package-lock v2/v3 sets this on entries installed to satisfy
+        // a peerDependencies declaration. Combined with `optional:
+        // true` it identifies a peer-optional entry
+        // (peerDependenciesMeta.<name>.optional = true) — per FR-006,
+        // m178's PROVIDED_DEPENDENCY_OF classification wins over
+        // m180's OPTIONAL_DEPENDENCY_OF for such entries, so we
+        // short-circuit the Optional classification below.
         let is_dev = tbl
             .get("dev")
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
         let is_optional = tbl
             .get("optional")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        // Milestone 180 T004 — peer-precedence guard input. See the
+        // block-header comment above for FR-006 rationale.
+        let is_peer = tbl
+            .get("peer")
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
         if !include_dev && (is_dev || is_optional) {
@@ -288,6 +303,31 @@ pub(crate) fn parse_package_lock(
             );
         }
 
+        // Milestone 180 T004 + T005 — three-way lifecycle classifier.
+        // Precedence (highest wins):
+        //   1. `dev: true`     → Development (m179 FR-015)
+        //   2. `optional: true` AND NOT peer-optional → Optional (m180 US1)
+        //      + emit `mikebom:optional-derivation = "npm-optional-dependencies"`
+        //   3. otherwise → Runtime (unchanged)
+        // The `is_peer && is_optional` combo identifies a peer-optional
+        // entry per FR-006 — the m178 PROVIDED_DEPENDENCY_OF classification
+        // wins over m180's OPTIONAL_DEPENDENCY_OF, so we short-circuit the
+        // Optional lifecycle. m178's peer-edge emission fires separately
+        // via the m147 `peer_edge_targets` state on the SOURCE (parent)
+        // component — that path is unchanged by m180.
+        use mikebom_common::resolution::LifecycleScope;
+        let lifecycle_scope = if is_dev {
+            Some(LifecycleScope::Development)
+        } else if is_optional && !is_peer {
+            extra_annotations.insert(
+                "mikebom:optional-derivation".to_string(),
+                serde_json::Value::String("npm-optional-dependencies".to_string()),
+            );
+            Some(LifecycleScope::Optional)
+        } else {
+            Some(LifecycleScope::Runtime)
+        };
+
         out.push(PackageDbEntry {
             build_inclusion: None,
             purl,
@@ -305,7 +345,7 @@ pub(crate) fn parse_package_lock(
                 })
                 .into_iter()
                 .collect(),
-            lifecycle_scope: if is_dev { Some(mikebom_common::resolution::LifecycleScope::Development) } else { Some(mikebom_common::resolution::LifecycleScope::Runtime) },
+            lifecycle_scope,
             requirement_range: None,
             source_type: None,
             buildinfo_status: None,
@@ -1100,5 +1140,138 @@ mod tests {
             .find(|e| e.name == "pkg-c" && e.version == "3.0.0")
             .expect("pkg-c at v3");
         assert!(c.depends.is_empty(), "leaf entry has no deps");
+    }
+
+    // ------------------------------------------------------------------
+    // Milestone 180 US1 — optional-dep classification for npm reader.
+    // Contract: specs/180-npm-optional-dep-reader/contracts/
+    //           reader-classifier-extension.md
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn npm_optional_true_populates_lifecycle_scope_optional() {
+        // Milestone 180 T006 — the flagship US1 assertion. An entry
+        // with `optional: true, dev: false, peer: false` gets
+        // `LifecycleScope::Optional` + the derivation annotation.
+        let src = serde_json::json!({
+            "lockfileVersion": 3,
+            "packages": {
+                "node_modules/fsevents": {
+                    "version": "2.3.3",
+                    "optional": true
+                }
+            }
+        });
+        let out = parse_package_lock(&src, "/package-lock.json", true);
+        assert_eq!(out.len(), 1);
+        let fsevents = &out[0];
+        assert_eq!(fsevents.name, "fsevents");
+        assert_eq!(
+            fsevents.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Optional)
+        );
+        assert_eq!(
+            fsevents
+                .extra_annotations
+                .get("mikebom:optional-derivation"),
+            Some(&serde_json::Value::String(
+                "npm-optional-dependencies".to_string()
+            ))
+        );
+    }
+
+    #[test]
+    fn npm_dev_true_wins_over_optional() {
+        // Milestone 180 T007 / m179 FR-015 precedence — an entry with
+        // BOTH `dev: true` AND `optional: true` gets Development, not
+        // Optional. Belt-and-suspenders for the precedence rule.
+        let src = serde_json::json!({
+            "lockfileVersion": 3,
+            "packages": {
+                "node_modules/some-dev-optional": {
+                    "version": "1.0.0",
+                    "dev": true,
+                    "optional": true
+                }
+            }
+        });
+        let out = parse_package_lock(&src, "/package-lock.json", true);
+        assert_eq!(out.len(), 1);
+        let entry = &out[0];
+        assert_eq!(
+            entry.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Development)
+        );
+        // Development scope MUST NOT carry the m180 optional annotation.
+        assert!(
+            !entry
+                .extra_annotations
+                .contains_key("mikebom:optional-derivation"),
+            "Development-classified entries MUST NOT carry mikebom:optional-derivation"
+        );
+    }
+
+    #[test]
+    fn npm_peer_optional_stays_peer_not_optional() {
+        // Milestone 180 T008 / FR-006 — an entry with BOTH `peer: true`
+        // AND `optional: true` is peer-optional (
+        // peerDependenciesMeta.<name>.optional = true). The m178
+        // PROVIDED_DEPENDENCY_OF classification wins over m180's
+        // OPTIONAL_DEPENDENCY_OF, so the reader MUST NOT set the
+        // Optional lifecycle and MUST NOT emit the derivation annotation.
+        // m178's peer-edge-targets emission fires separately on the
+        // SOURCE component via the existing m147 path — that's not
+        // this test's concern.
+        let src = serde_json::json!({
+            "lockfileVersion": 3,
+            "packages": {
+                "node_modules/react": {
+                    "version": "18.3.1",
+                    "peer": true,
+                    "optional": true
+                }
+            }
+        });
+        let out = parse_package_lock(&src, "/package-lock.json", true);
+        assert_eq!(out.len(), 1);
+        let react = &out[0];
+        assert_ne!(
+            react.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Optional),
+            "peer-optional entry MUST NOT be classified as Optional (FR-006)"
+        );
+        assert!(
+            !react
+                .extra_annotations
+                .contains_key("mikebom:optional-derivation"),
+            "peer-optional entry MUST NOT carry mikebom:optional-derivation (FR-006)"
+        );
+    }
+
+    #[test]
+    fn npm_dep_without_optional_flag_stays_runtime() {
+        // Milestone 180 T007b / FR-007 — a dep listed in BOTH
+        // `dependencies` and `optionalDependencies` at the same
+        // package.json level results in npm's resolver setting
+        // `optional: false` in the lockfile (non-optional wins in
+        // npm's own semantic). mikebom respects the resolver's output
+        // verbatim. This test pins the invariant: an entry with
+        // `optional: false` explicitly stays Runtime.
+        let src = serde_json::json!({
+            "lockfileVersion": 3,
+            "packages": {
+                "node_modules/lodash": {
+                    "version": "4.17.21",
+                    "optional": false
+                }
+            }
+        });
+        let out = parse_package_lock(&src, "/package-lock.json", true);
+        assert_eq!(out.len(), 1);
+        assert_eq!(
+            out[0].lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Runtime),
+            "explicit optional:false stays Runtime"
+        );
     }
 }

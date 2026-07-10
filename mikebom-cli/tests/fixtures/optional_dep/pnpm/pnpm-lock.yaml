@@ -1,0 +1,35 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      lodash:
+        specifier: ^4
+        version: 4.17.21
+    optionalDependencies:
+      fsevents:
+        specifier: ^2
+        version: 2.3.3
+
+packages:
+
+  '/fsevents@2.3.3':
+    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
+    engines: {node: '^8.16.0 || ^10.6.0 || >=11.0.0'}
+    os: [darwin]
+    optional: true
+
+  '/lodash@4.17.21':
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+snapshots:
+
+  '/fsevents@2.3.3':
+    optional: true
+
+  '/lodash@4.17.21': {}
