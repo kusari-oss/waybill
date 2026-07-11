@@ -604,23 +604,43 @@ fn filename_fallback_entry(
 
 /// Parse an ipk filename into `(name, version, arch)` triple per the
 /// canonical `<name>_<version>_<arch>.ipk` convention. Returns None
-/// for non-conforming filenames. Note: version may contain `-<release>`
-/// (e.g., `1.36.1-r0`); we split only on `_`, never `-`.
+/// for non-conforming filenames.
+///
+/// Milestone 185 US1 (#538) — the version field itself may legally
+/// contain `_` when produced by BitBake's `SRCPV` expansion for
+/// git-sourced upstream recipes (e.g., Yocto kernel modules with
+/// versions like `6.6.127+git0+45f69741c7_70af2998be-r0`). To
+/// preserve the version-internal underscore, the parser splits
+/// asymmetrically:
+///   1. `split_once('_')` from the LEFT → peels off the name at the
+///      first underscore (name never contains `_`).
+///   2. `rsplit_once('_')` from the RIGHT on the remainder → peels
+///      off the arch at the last underscore; version is everything
+///      in between (may include underscores).
+///
+/// Known limitation: if the arch itself contains an underscore
+/// (e.g., Yocto's `qemux86_64` for `qemux86-64` machine), the last
+/// segment of the arch bleeds into the arch field's tail while the
+/// preceding segment lands in the version field. This produces a
+/// syntactically-valid PURL with a truncated arch — better than
+/// pre-m185's null PURL. Handling the arch-with-underscore case
+/// perfectly requires an arch-name whitelist, which is out of m185
+/// scope (documented in spec.md Deferred to Future Milestones).
 fn parse_ipk_filename(filename: &str) -> Option<(String, String, String)> {
     // Strip `.ipk` extension.
     let stem = filename.strip_suffix(".ipk")?;
-    // Split on `_` into exactly 3 segments — canonical layout.
-    let parts: Vec<&str> = stem.split('_').collect();
-    if parts.len() != 3 {
-        return None;
-    }
-    let name = parts[0].to_string();
-    let version = parts[1].to_string();
-    let arch = parts[2].to_string();
+    // Peel name from the LEFT (first `_` is the name/version boundary
+    // per ipk-spec — name is opaque but never contains `_`).
+    let (name, rest) = stem.split_once('_')?;
+    // Peel arch from the RIGHT of the remainder (last `_` in the
+    // rest string is the version/arch boundary). Anything in between
+    // is the version, including any internal underscores from
+    // BitBake SRCPV expansion.
+    let (version, arch) = rest.rsplit_once('_')?;
     if name.is_empty() || version.is_empty() || arch.is_empty() {
         return None;
     }
-    Some((name, version, arch))
+    Some((name.to_string(), version.to_string(), arch.to_string()))
 }
 
 /// Build a `pkg:opkg/<name>@<version>?arch=<arch>[&distro=<tag>]` PURL
@@ -1020,5 +1040,87 @@ mod tests {
                 "PURL {s:?} MUST NOT carry `distro=` when os-release is absent"
             );
         }
+    }
+
+    // ── Milestone 185 US1 — parse_ipk_filename multi-underscore fix (#538) ──
+
+    #[test]
+    fn parse_ipk_filename_canonical_2underscore_still_parses() {
+        // Row 1 of contracts/parser-decision-matrix.md — canonical
+        // 2-underscore case MUST be byte-identical to pre-m185.
+        let out = parse_ipk_filename("test-pkg_1.0-r0_all.ipk");
+        assert_eq!(
+            out,
+            Some(("test-pkg".to_string(), "1.0-r0".to_string(), "all".to_string()))
+        );
+    }
+
+    #[test]
+    fn parse_ipk_filename_multi_underscore_version_now_parses() {
+        // Row 3 — the m185 fix. Pre-m185 returned None because
+        // split('_').len() == 4.
+        let out = parse_ipk_filename("test-pkg_1.0+git0+abc_def-r0_all.ipk");
+        assert_eq!(
+            out,
+            Some((
+                "test-pkg".to_string(),
+                "1.0+git0+abc_def-r0".to_string(),
+                "all".to_string()
+            ))
+        );
+    }
+
+    #[test]
+    fn parse_ipk_filename_yocto_kernel_module_shape() {
+        // Row 4 — real BitBake SRCPV shape from issue #538 reproducer.
+        // Pre-m185 emitted the whole basename as `name` with
+        // empty `version` and null PURL.
+        //
+        // Post-m185: name is extracted correctly (split at first `_`).
+        // Version captures the multi-underscore SRCPV span. Arch is
+        // the LAST underscore-delimited segment — for the kernel
+        // fixture the "real" arch is `qemux86_64` (with internal
+        // underscore per Yocto's dash-to-underscore machine-name
+        // convention). Pure syntactic parsing cannot recover the
+        // arch-with-underscore case without a whitelist; the parser
+        // instead emits `arch = "64"` with the leading `qemux86`
+        // absorbed into the version-tail. This is a KNOWN LIMITATION
+        // (documented in the docstring + spec.md Deferred section) —
+        // strictly better than pre-m185's null PURL emission.
+        let filename = "kernel-module-nf-conntrack-tftp-6.6.127-yocto-standard_6.6.127+git0+45f69741c7_70af2998be-r0_qemux86_64.ipk";
+        let out = parse_ipk_filename(filename);
+        assert_eq!(
+            out,
+            Some((
+                "kernel-module-nf-conntrack-tftp-6.6.127-yocto-standard".to_string(),
+                "6.6.127+git0+45f69741c7_70af2998be-r0_qemux86".to_string(),
+                "64".to_string(),
+            ))
+        );
+        // Regardless of the arch truncation, mikebom now emits a
+        // valid non-null PURL — closes the primary issue-#538 bug.
+    }
+
+    #[test]
+    fn parse_ipk_filename_no_ipk_suffix_still_none() {
+        // Row 7 — extension guard preserved.
+        assert_eq!(parse_ipk_filename("test-pkg_1.0-r0_all"), None);
+        assert_eq!(parse_ipk_filename("test-pkg_1.0-r0_all.deb"), None);
+        assert_eq!(parse_ipk_filename("just-a-file.txt"), None);
+    }
+
+    #[test]
+    fn parse_ipk_filename_no_underscores_still_none() {
+        // Rows 5-6 — need at least 2 underscores to extract 3 fields.
+        assert_eq!(parse_ipk_filename("no-underscores.ipk"), None);
+        assert_eq!(parse_ipk_filename("single_underscore.ipk"), None);
+    }
+
+    #[test]
+    fn parse_ipk_filename_empty_field_still_none() {
+        // Rows 8-10 — empty-field guard preserved.
+        assert_eq!(parse_ipk_filename("_1.0-r0_all.ipk"), None); // empty name
+        assert_eq!(parse_ipk_filename("test-pkg__all.ipk"), None); // empty version
+        assert_eq!(parse_ipk_filename("test-pkg_1.0-r0_.ipk"), None); // empty arch
     }
 }

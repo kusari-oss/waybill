@@ -612,7 +612,11 @@ fn percent_encode_purl_qualifier(s: &str) -> String {
 /// contains a literal `&` or `|`. Idempotent: re-running on already-
 /// canonical input returns the input unchanged. Non-allocating no-op
 /// when the input contains neither operator.
-fn normalize_bitbake_license_operators(raw: &str) -> String {
+/// Milestone 185 US2 (#539): promoted from private `fn` to
+/// `pub(crate) fn` so `opkg.rs::build_entry` can reuse this helper
+/// for its own License-field normalization pipeline. Zero behavior
+/// change on the rpm.rs call site.
+pub(crate) fn normalize_bitbake_license_operators(raw: &str) -> String {
     if !raw.contains(" & ") && !raw.contains(" | ") {
         return raw.to_string();
     }
@@ -767,7 +771,11 @@ fn is_recognized_spdx_operand(s: &str) -> bool {
 /// | `"!@#$"`          | `None`                  |
 /// | `""`              | `None`                  |
 /// | `"---"`           | `None`                  |
-fn sanitize_to_license_ref_idstring(s: &str) -> Option<String> {
+/// Milestone 185 US2 (#539): promoted from private `fn` to
+/// `pub(crate) fn` so `opkg.rs::build_entry` can reuse this helper
+/// for its m185 4th-pass wholesale-wrap fallback. Zero behavior
+/// change on the rpm.rs call site.
+pub(crate) fn sanitize_to_license_ref_idstring(s: &str) -> Option<String> {
     let mut out = String::with_capacity(s.len());
     let mut prev_was_dash = false;
     for c in s.chars() {
@@ -829,7 +837,11 @@ fn sanitize_to_license_ref_idstring(s: &str) -> Option<String> {
 /// Idempotent: feeding wrapped output back as input produces the same
 /// output unchanged — `LicenseRef-`/`DocumentRef-`-prefixed tokens are
 /// detected and passed through.
-fn preserve_known_operands_with_license_ref(raw: &str) -> Option<String> {
+/// Milestone 185 US2 (#539): promoted from private `fn` to
+/// `pub(crate) fn` so `opkg.rs::build_entry` can reuse this helper
+/// for its own License-field normalization pipeline. Zero behavior
+/// change on the rpm.rs call site.
+pub(crate) fn preserve_known_operands_with_license_ref(raw: &str) -> Option<String> {
     let tokens = tokenize(raw);
     // Empty / whitespace-only inputs cannot produce a LicenseRef expression.
     if tokens
