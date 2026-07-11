@@ -32,6 +32,40 @@ use super::super::PackageDbEntry;
 
 const BUILDSCRIPT_FILENAME: &str = "buildscript-gradle.lockfile";
 
+/// Milestone 184 US2 — detect the "compile-only shape" per lockfile
+/// entry. A Gradle dep is classified as `LifecycleScope::Optional` iff
+/// it appears on any `*compileClasspath` configuration AND is absent
+/// from any `*runtimeClasspath` configuration.
+///
+/// Per Gradle's naming convention, the main source set uses lowercase
+/// (`compileClasspath` / `runtimeClasspath`) while every other source
+/// set concatenates with a capital `C`/`R` — `testCompileClasspath`,
+/// `debugCompileClasspath` (Android), `main_CompileClasspath`
+/// (multi-source-set custom names), etc. Both spellings must be
+/// recognized. The check on each config name is: exact match on the
+/// lowercase main-set spelling OR suffix match on the capitalized
+/// compound-set spelling.
+///
+/// Per research.md Decision 3 this covers:
+///   * `compileClasspath` (main source set)
+///   * `testCompileClasspath` (test source set)
+///   * `<sourceSet>CompileClasspath` (multi-source-set projects —
+///     Kotlin `main`/`test`, Android `debug`/`release`, etc.)
+///
+/// The check runs on the raw `<config1>,<config2>,...` string that
+/// follows the `=` in a lockfile line. Falls out to `false` for empty
+/// input.
+fn is_compile_only_shape(configs: &str) -> bool {
+    let items: Vec<&str> = configs.split(',').map(|s| s.trim()).collect();
+    let is_compile_config =
+        |c: &&str| *c == "compileClasspath" || c.ends_with("CompileClasspath");
+    let is_runtime_config =
+        |c: &&str| *c == "runtimeClasspath" || c.ends_with("RuntimeClasspath");
+    let has_compile = items.iter().any(is_compile_config);
+    let has_runtime = items.iter().any(is_runtime_config);
+    has_compile && !has_runtime
+}
+
 /// Parse a single Gradle lockfile and return one `PackageDbEntry` per
 /// resolved coordinate. Returns empty on read failure or when the file
 /// contains no resolvable entries (e.g. only the header lines).
@@ -53,11 +87,6 @@ pub(super) fn read_gradle_lockfile(path: &Path) -> Vec<PackageDbEntry> {
         .and_then(|s| s.to_str())
         .map(|n| n == BUILDSCRIPT_FILENAME)
         .unwrap_or(false);
-    let lifecycle_scope = if is_buildscript {
-        Some(LifecycleScope::Build)
-    } else {
-        None
-    };
 
     let mut out = Vec::new();
     for raw_line in text.lines() {
@@ -120,6 +149,25 @@ pub(super) fn read_gradle_lockfile(path: &Path) -> Vec<PackageDbEntry> {
                 serde_json::Value::String(configs_value.to_string()),
             );
         }
+
+        // Milestone 184 US2 — per-entry classification. Buildscript
+        // classification (m106) wins over compile-only shape per
+        // Decision 2 buildscript-wins-over-optional. Non-buildscript
+        // entries with the compile-only shape (compileClasspath
+        // present + runtimeClasspath absent, suffix-matched per
+        // Decision 3) classify as `LifecycleScope::Optional` +
+        // `mikebom:optional-derivation = "gradle-compile-only"`.
+        let lifecycle_scope = if is_buildscript {
+            Some(LifecycleScope::Build)
+        } else if is_compile_only_shape(configs_value) {
+            extra_annotations.insert(
+                "mikebom:optional-derivation".to_string(),
+                serde_json::Value::String("gradle-compile-only".to_string()),
+            );
+            Some(LifecycleScope::Optional)
+        } else {
+            None
+        };
 
         out.push(PackageDbEntry {
             build_inclusion: None,
@@ -293,5 +341,170 @@ com.google.guava:guava:32.1.3-jre=runtimeClasspath
         let entries = read_gradle_lockfile(&path);
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "guava");
+    }
+
+    // ── Milestone 184 US2 — is_compile_only_shape helper tests ──────
+
+    #[test]
+    fn is_compile_only_shape_detects_compile_only() {
+        assert!(is_compile_only_shape(
+            "compileClasspath,testCompileClasspath"
+        ));
+    }
+
+    #[test]
+    fn is_compile_only_shape_rejects_compile_and_runtime() {
+        // Presence on BOTH classpaths → transitive dep, not compile-only.
+        assert!(!is_compile_only_shape("compileClasspath,runtimeClasspath"));
+    }
+
+    #[test]
+    fn is_compile_only_shape_rejects_runtime_only() {
+        // Runtime-only shape (Gradle `runtimeOnly` config) is semantic
+        // Runtime, not Optional.
+        assert!(!is_compile_only_shape(
+            "runtimeClasspath,testRuntimeClasspath"
+        ));
+    }
+
+    #[test]
+    fn is_compile_only_shape_detects_test_compile_only() {
+        // Suffix-match per Decision 3 — testCompileClasspath alone
+        // still counts as compile-only.
+        assert!(is_compile_only_shape("testCompileClasspath"));
+    }
+
+    #[test]
+    fn is_compile_only_shape_detects_source_set_variants() {
+        // Custom source sets use Gradle's `<name>CompileClasspath`
+        // CamelCase compound convention (Android debug/release, Kotlin
+        // main/test, user-declared sets like `integrationTest`).
+        // Suffix-match on `"CompileClasspath"` covers all of them.
+        assert!(is_compile_only_shape(
+            "debugCompileClasspath,releaseCompileClasspath"
+        ));
+        assert!(is_compile_only_shape("integrationTestCompileClasspath"));
+        // Mix compile-only classpaths with annotation processor —
+        // still classifies (Edge Cases: annotation-processor + compile
+        // is compile-only in m184's initial delivery).
+        assert!(is_compile_only_shape("annotationProcessor,compileClasspath"));
+        // A source-set with BOTH compile + runtime → NOT compile-only.
+        assert!(!is_compile_only_shape(
+            "debugCompileClasspath,debugRuntimeClasspath"
+        ));
+    }
+
+    // ── Milestone 184 US2 — classifier integration tests ────────────
+
+    #[test]
+    fn read_gradle_lockfile_compile_only_classifies_as_optional() {
+        // US2 acceptance 1+2 end-to-end. The dep appears on compile-
+        // only classpaths → LifecycleScope::Optional + derivation
+        // annotation. The existing `mikebom:gradle-configurations`
+        // annotation is preserved.
+        let tmp = tempfile::tempdir().unwrap();
+        let body = format!(
+            "{HEADER}\
+com.example:lombok:1.18.30=compileClasspath,testCompileClasspath
+"
+        );
+        let path = write_lockfile(tmp.path(), "gradle.lockfile", &body);
+        let entries = read_gradle_lockfile(&path);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].name, "lombok");
+        assert_eq!(
+            entries[0].lifecycle_scope,
+            Some(LifecycleScope::Optional),
+        );
+        assert_eq!(
+            entries[0]
+                .extra_annotations
+                .get("mikebom:optional-derivation"),
+            Some(&serde_json::Value::String(
+                "gradle-compile-only".to_string()
+            )),
+        );
+        // Existing `mikebom:gradle-configurations` annotation preserved.
+        assert_eq!(
+            entries[0]
+                .extra_annotations
+                .get("mikebom:gradle-configurations"),
+            Some(&serde_json::Value::String(
+                "compileClasspath,testCompileClasspath".to_string()
+            )),
+        );
+    }
+
+    #[test]
+    fn read_gradle_lockfile_buildscript_compile_only_stays_build() {
+        // US2 acceptance 5 + Decision 2 buildscript-wins pin: same
+        // compile-only shape but the file is `buildscript-gradle.lockfile`
+        // — classification stays `Build`, NO derivation annotation.
+        let tmp = tempfile::tempdir().unwrap();
+        let body = format!(
+            "{HEADER}\
+com.example:build-tool:1.0=compileClasspath,testCompileClasspath
+"
+        );
+        let path = write_lockfile(tmp.path(), "buildscript-gradle.lockfile", &body);
+        let entries = read_gradle_lockfile(&path);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].lifecycle_scope, Some(LifecycleScope::Build));
+        assert!(!entries[0]
+            .extra_annotations
+            .contains_key("mikebom:optional-derivation"));
+    }
+
+    #[test]
+    fn m184_optional_classified_entry_is_filtered_by_include_dev_false() {
+        // FR-008 boundary pin (per /speckit-analyze R2 remediation for U1):
+        // an m184-Optional-classified Gradle entry MUST expose
+        // `LifecycleScope::Optional.is_non_runtime() == true` so the
+        // emitter-layer `--include-dev=false` filter (m179 extension)
+        // drops it alongside Test/Dev/Build entries.
+        //
+        // This test verifies the boundary between the classifier
+        // (gradle/lockfile.rs — reader-level) and the emitter filter
+        // (m179 is_non_runtime() extension — emitter-level). If m179's
+        // is_non_runtime() were ever changed to exclude Optional, this
+        // test would fail loudly.
+        let tmp = tempfile::tempdir().unwrap();
+        let body = format!(
+            "{HEADER}\
+com.example:lombok:1.18.30=compileClasspath,testCompileClasspath
+"
+        );
+        let path = write_lockfile(tmp.path(), "gradle.lockfile", &body);
+        let entries = read_gradle_lockfile(&path);
+        assert_eq!(entries.len(), 1);
+        let scope = entries[0].lifecycle_scope.expect("classified");
+        assert_eq!(scope, LifecycleScope::Optional);
+        assert!(
+            scope.is_non_runtime(),
+            "LifecycleScope::Optional must return true from \
+             is_non_runtime() so the emitter's --include-dev=false \
+             filter drops m184-classified entries alongside Test/Dev/Build"
+        );
+    }
+
+    #[test]
+    fn read_gradle_lockfile_runtime_stays_none() {
+        // Regression pin: pre-m184 behavior for a non-buildscript entry
+        // with the transitive shape (compile + runtime both present)
+        // MUST be byte-identical — lifecycle_scope stays None, NO
+        // derivation annotation.
+        let tmp = tempfile::tempdir().unwrap();
+        let body = format!(
+            "{HEADER}\
+com.example:transitive-dep:1.0=compileClasspath,runtimeClasspath
+"
+        );
+        let path = write_lockfile(tmp.path(), "gradle.lockfile", &body);
+        let entries = read_gradle_lockfile(&path);
+        assert_eq!(entries.len(), 1);
+        assert!(entries[0].lifecycle_scope.is_none());
+        assert!(!entries[0]
+            .extra_annotations
+            .contains_key("mikebom:optional-derivation"));
     }
 }

@@ -584,6 +584,17 @@ pub(crate) struct PomDependency {
     /// (`<type>pom</type><scope>import</scope>`) from regular deps.
     /// `None` means the element was absent (Maven default is `jar`).
     pub dep_type: Option<String>,
+    /// Milestone 184 US1 — `<optional>` child element on the dep.
+    /// POM 4.0.0 semantic: `true` means the dep is used at compile
+    /// time by this artifact but is NOT transitively exposed to
+    /// consumers. Feeds `pom_dep_to_entry`'s classifier to emit
+    /// `LifecycleScope::Optional` + `mikebom:optional-derivation
+    /// = "maven-optional-element"` when the dep's `<scope>` is
+    /// runtime-default (compile / runtime / system / import /
+    /// absent). Test / provided scopes win over Optional per
+    /// Decision 2. Defaults to `false` when `<optional>` is absent
+    /// or its text is not `"true"` (case-insensitive parse).
+    pub optional: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -708,6 +719,10 @@ pub(crate) fn parse_pom_xml(bytes: &[u8]) -> PomXmlDocument {
     let mut dep_v: Option<String> = None;
     let mut dep_scope: Option<String> = None;
     let mut dep_type: Option<String> = None;
+    // Milestone 184 US1 — `<optional>` child element of `<dependency>`.
+    // Extracted per the `dep_type` pattern. Converted to `bool` when
+    // the `<dependency>` block closes (`.eq_ignore_ascii_case("true")`).
+    let mut dep_optional: Option<String> = None;
     // Milestone 131 US2b — `<project>/<licenses>/<license>/<name>`.
     let mut license_name: Option<String> = None;
 
@@ -764,6 +779,8 @@ pub(crate) fn parse_pom_xml(bytes: &[u8]) -> PomXmlDocument {
                         "version" => dep_v = Some(current_text.clone()),
                         "scope" => dep_scope = Some(current_text.clone()),
                         "type" => dep_type = Some(current_text.clone()),
+                        // Milestone 184 US1 — <optional> child element.
+                        "optional" => dep_optional = Some(current_text.clone()),
                         _ => {}
                     }
                 }
@@ -795,12 +812,22 @@ pub(crate) fn parse_pom_xml(bytes: &[u8]) -> PomXmlDocument {
                         .map(|s| s == "dependencyManagement")
                         .unwrap_or(false);
                     if let (Some(g), Some(a)) = (dep_g.take(), dep_a.take()) {
+                        // Milestone 184 US1 — parse the <optional> text.
+                        // POM 4.0.0 spec: literal `"true"` (case-
+                        // insensitive) is the truthy sentinel; any
+                        // other value (including whitespace, empty
+                        // string, or `"false"`) resolves to false.
+                        let optional = dep_optional
+                            .take()
+                            .map(|v| v.trim().eq_ignore_ascii_case("true"))
+                            .unwrap_or(false);
                         let entry = PomDependency {
                             group_id: g,
                             artifact_id: a,
                             version: dep_v.take(),
                             scope: dep_scope.take(),
                             dep_type: dep_type.take(),
+                            optional,
                         };
                         if inside_dep_mgmt {
                             doc.dependency_management.push(entry);
@@ -811,6 +838,10 @@ pub(crate) fn parse_pom_xml(bytes: &[u8]) -> PomXmlDocument {
                         dep_v = None;
                         dep_scope = None;
                         dep_type = None;
+                        // Milestone 184 US1 — reset alongside other
+                        // per-dep fields when the `<dependency>` block
+                        // is malformed (missing groupId or artifactId).
+                        dep_optional = None;
                     }
                 }
                 current_text.clear();
@@ -2379,6 +2410,39 @@ fn pom_dep_to_entry(
     let hashes = cache
         .map(|c| c.read_artifact_hash(&dep.group_id, &dep.artifact_id, &resolved_version))
         .unwrap_or_default();
+
+    // Milestone 184 US1 — apply the scope-vs-optional decision matrix
+    // (data-model.md §3 US1). Test / Build classifications win over
+    // Optional per Decision 2 (scope-wins-over-optional); default-
+    // Runtime + `<optional>true</optional>` upgrades to Optional.
+    use mikebom_common::resolution::LifecycleScope;
+    let base_scope = lifecycle_scope_from_maven(dep.scope.as_deref());
+    let (lifecycle_scope, is_m184_optional) = match (base_scope, dep.optional) {
+        // Test / Build wins over Optional — no annotation.
+        (Some(LifecycleScope::Test), _) => (Some(LifecycleScope::Test), false),
+        (Some(LifecycleScope::Build), _) => (Some(LifecycleScope::Build), false),
+        // Runtime + optional=true → Optional (new m184 behavior).
+        (Some(LifecycleScope::Runtime), true) => (Some(LifecycleScope::Optional), true),
+        // Runtime + optional=false → Runtime (unchanged).
+        (Some(LifecycleScope::Runtime), false) => (Some(LifecycleScope::Runtime), false),
+        // Unrecognized scope + optional=true → Optional.
+        (None, true) => (Some(LifecycleScope::Optional), true),
+        // Unrecognized scope + optional=false → None (unchanged).
+        (None, false) => (None, false),
+        // Defensive fallthrough: any other LifecycleScope variant
+        // returned by `lifecycle_scope_from_maven` (none exist today,
+        // but this keeps the match honest against future extensions).
+        (other, _) => (other, false),
+    };
+    let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
+        Default::default();
+    if is_m184_optional {
+        extra_annotations.insert(
+            "mikebom:optional-derivation".to_string(),
+            serde_json::Value::String("maven-optional-element".to_string()),
+        );
+    }
+
     Some(PackageDbEntry {
         build_inclusion: None,
         purl,
@@ -2396,7 +2460,13 @@ fn pom_dep_to_entry(
         // bundled at runtime — SPDX 2.3 BUILD_DEPENDENCY_OF;
         // SPDX 3 lifecycleScope:build); `compile`, `runtime`,
         // `system`, `import`, or absent → Runtime.
-        lifecycle_scope: lifecycle_scope_from_maven(dep.scope.as_deref()),
+        //
+        // Milestone 184 US1: overlay `<optional>true</optional>` per
+        // the data-model.md §3 US1 decision matrix — the m184 optional
+        // classification only fires when the base scope is default-
+        // Runtime OR unrecognized. Test/Build classifications win over
+        // Optional per Decision 2 (scope-wins-over-optional).
+        lifecycle_scope,
         requirement_range,
         // Mark as workspace to distinguish from BFS-inferred transitive
         // coords (source_type = "transitive"). `app` (the scanned
@@ -2417,7 +2487,7 @@ fn pom_dep_to_entry(
         hashes,
         sbom_tier: Some(tier),
         shade_relocation: None,
-        extra_annotations: Default::default(),
+        extra_annotations,
         binary_role: None,
     })
 }
@@ -7245,5 +7315,168 @@ mod tests {
             "no <licenses> in pom.xml MUST mean no annotation; got: {:?}",
             nested.extra_annotations
         );
+    }
+
+    // ── Milestone 184 US1 — <optional> parser + classifier tests ─────
+
+    #[test]
+    fn parse_pom_xml_extracts_optional_true() {
+        let pom = r#"<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.example</groupId>
+  <artifactId>app</artifactId>
+  <version>1.0</version>
+  <dependencies>
+    <dependency>
+      <groupId>org.example</groupId>
+      <artifactId>optional-dep</artifactId>
+      <version>1.0</version>
+      <optional>true</optional>
+    </dependency>
+  </dependencies>
+</project>"#;
+        let doc = parse_pom_xml(pom.as_bytes());
+        assert_eq!(doc.dependencies.len(), 1);
+        assert!(doc.dependencies[0].optional, "expected optional == true");
+    }
+
+    #[test]
+    fn parse_pom_xml_optional_false_or_absent_stays_false() {
+        let pom = r#"<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.example</groupId>
+  <artifactId>app</artifactId>
+  <version>1.0</version>
+  <dependencies>
+    <dependency>
+      <groupId>org.example</groupId>
+      <artifactId>explicit-false</artifactId>
+      <version>1.0</version>
+      <optional>false</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.example</groupId>
+      <artifactId>absent-optional</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.example</groupId>
+      <artifactId>whitespace-optional</artifactId>
+      <version>1.0</version>
+      <optional>  </optional>
+    </dependency>
+  </dependencies>
+</project>"#;
+        let doc = parse_pom_xml(pom.as_bytes());
+        assert_eq!(doc.dependencies.len(), 3);
+        for d in &doc.dependencies {
+            assert!(
+                !d.optional,
+                "dep `{}` should have optional == false, got true",
+                d.artifact_id
+            );
+        }
+    }
+
+    // ── Classifier tests — pom_dep_to_entry ──────────────────────────
+
+    fn m184_test_dep(scope: Option<&str>, optional: bool) -> PomDependency {
+        PomDependency {
+            group_id: "org.example".to_string(),
+            artifact_id: "some-artifact".to_string(),
+            version: Some("1.0".to_string()),
+            scope: scope.map(|s| s.to_string()),
+            dep_type: None,
+            optional,
+        }
+    }
+
+    #[test]
+    fn pom_dep_to_entry_optional_true_default_scope_classifies_as_optional() {
+        let dep = m184_test_dep(None, /*optional=*/ true);
+        let doc = PomXmlDocument::default();
+        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", true, None)
+            .expect("entry constructed");
+        assert_eq!(
+            entry.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Optional),
+        );
+        assert_eq!(
+            entry
+                .extra_annotations
+                .get("mikebom:optional-derivation"),
+            Some(&serde_json::Value::String(
+                "maven-optional-element".to_string()
+            )),
+        );
+    }
+
+    #[test]
+    fn pom_dep_to_entry_optional_true_scope_test_stays_test() {
+        // Decision 2 test-wins-over-optional pin: <scope>test</scope>
+        // MUST classify as Test regardless of <optional>true</optional>;
+        // the derivation annotation MUST NOT be emitted.
+        let dep = m184_test_dep(Some("test"), /*optional=*/ true);
+        let doc = PomXmlDocument::default();
+        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", /*include_dev=*/ true, None)
+            .expect("entry constructed");
+        assert_eq!(
+            entry.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Test),
+        );
+        assert!(!entry
+            .extra_annotations
+            .contains_key("mikebom:optional-derivation"));
+    }
+
+    #[test]
+    fn pom_dep_to_entry_optional_true_scope_provided_stays_build() {
+        // Decision 2 provided-wins-over-optional pin.
+        let dep = m184_test_dep(Some("provided"), /*optional=*/ true);
+        let doc = PomXmlDocument::default();
+        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", true, None)
+            .expect("entry constructed");
+        assert_eq!(
+            entry.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Build),
+        );
+        assert!(!entry
+            .extra_annotations
+            .contains_key("mikebom:optional-derivation"));
+    }
+
+    #[test]
+    fn pom_dep_to_entry_optional_false_stays_runtime() {
+        let dep = m184_test_dep(None, /*optional=*/ false);
+        let doc = PomXmlDocument::default();
+        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", true, None)
+            .expect("entry constructed");
+        assert_eq!(
+            entry.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Runtime),
+        );
+        assert!(!entry
+            .extra_annotations
+            .contains_key("mikebom:optional-derivation"));
+    }
+
+    #[test]
+    fn pom_dep_to_entry_optional_absent_stays_runtime() {
+        // Regression pin: pre-m184 behavior for a default-scope dep
+        // with `optional: false` MUST be byte-identical (Runtime, no
+        // annotation).
+        let dep = m184_test_dep(Some("compile"), /*optional=*/ false);
+        let doc = PomXmlDocument::default();
+        let entry = pom_dep_to_entry(&dep, &doc, "/pom.xml", true, None)
+            .expect("entry constructed");
+        assert_eq!(
+            entry.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Runtime),
+        );
+        assert!(!entry
+            .extra_annotations
+            .contains_key("mikebom:optional-derivation"));
     }
 }

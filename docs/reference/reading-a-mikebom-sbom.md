@@ -887,8 +887,8 @@ jq '.relationships[]
 >   - **uv.lock** `[[package.optional-dependencies]].<extra>` sub-tables (uv 0.5+) — m183
 >
 > When both a `poetry.lock` (or `uv.lock`) AND a `pyproject.toml` are present in the same project root, the lockfile classification takes precedence for any component appearing in both (m183 Decision 3 lockfile-precedence). `setup.py`'s `extras_require` and `requirements.txt` are OUT OF SCOPE — no first-class optional-deps syntax exists in `requirements.txt`, and mikebom does not shell out to a Python interpreter to evaluate `setup.py`.
-> - `maven-optional-element` — Maven `<dependency>` with `<optional>true</optional>` (m184+)
-> - `gradle-compile-only` — Gradle `compileOnly` configuration (m184+)
+> - `maven-optional-element` — Maven `<dependency>` with `<optional>true</optional>` in `pom.xml` (POM 4.0.0 spec: transitive-exposure control — the enclosing artifact uses the dep at compile time but does NOT expose it to consumers). Extracted per-`<dependency>` at parse time; scope-derived classifications (`<scope>test</scope>` → `Development`; `<scope>provided</scope>` → `Build`) win over Optional per m184 Decision 2, so a test-scope or provided-scope dep with `<optional>true</optional>` does NOT emit this annotation. `<dependencyManagement>` entries are ignored (m184 classifies only real `<dependencies>` blocks). Inherited-`<optional>` via parent POM `<dependencyManagement>` is deferred to a follow-up milestone. — m184
+> - `gradle-compile-only` — Gradle `compileOnly` deps detected via lockfile shape inference: entries appearing on any `*compileClasspath` configuration (main, `testCompileClasspath`, custom source sets like `debugCompileClasspath` for Android or `<name>CompileClasspath` for Kotlin/user-declared sets) AND absent from any `*runtimeClasspath` configuration. `buildscript-gradle.lockfile` entries with the same shape stay classified as `Build` per Decision 2 buildscript-wins. The pre-existing `mikebom:gradle-configurations` annotation is PRESERVED alongside — operators can audit the raw configs list that produced the classification. — m184
 > - `erlang-optional-applications` — Erlang `.app.src` `optional_applications` list (m185+)
 >
 > **Where it lives**:
@@ -923,7 +923,7 @@ jq '
 
 > Both recipes MUST return the same sorted PURL set (contract: `specs/179-spdx23-transitive-devscope/contracts/pico-filter-parity.md` — SC-001 + SC-002 gate).
 
-> **Milestone**: 179 — introduced `LifecycleScope::Optional` variant + `OPTIONAL_DEPENDENCY_OF` SPDX 2.3 native signal + this annotation + Go m112 NotNeeded fallthrough → `TEST_DEPENDENCY_OF`. Cargo reader wires the annotation in m179 (US3); npm + pnpm in m180; yarn v1 + Berry in m181; pip / poetry / uv in m183; Maven / Gradle / Erlang deferred to m184+.
+> **Milestone**: 179 — introduced `LifecycleScope::Optional` variant + `OPTIONAL_DEPENDENCY_OF` SPDX 2.3 native signal + this annotation + Go m112 NotNeeded fallthrough → `TEST_DEPENDENCY_OF`. Cargo reader wires the annotation in m179 (US3); npm + pnpm in m180; yarn v1 + Berry in m181; pip / poetry / uv in m183; Maven + Gradle in m184; Erlang deferred to m185+.
 > **Catalog**: [C122](sbom-format-mapping.md)
 
 #### `mikebom:depends-unresolved` + `mikebom:rdepends-unresolved`
