@@ -83,6 +83,49 @@ pub(crate) fn parse_uv_lock(
     // emit a synthetic workspace-root above them.
     let workspace_info = detect_workspace(rootfs);
 
+    // Milestone 183 US3 — accumulate the set of extras-gated child
+    // names declared under any `[package.optional-dependencies].<extra>`
+    // sub-table. Diamond-shape (FR-005) is per-package: a name that
+    // ALSO appears in the same package's `dependencies = [...]` array
+    // is excluded (Runtime wins). Applied via the shared post-pass
+    // helper `super::apply_optional_derivation_annotation` after the
+    // main emission loop — this ensures the classification only fires
+    // for entries the loop actually emitted (workspace members with
+    // a matching top-level `[[package]]` block).
+    let mut optional_child_names: std::collections::HashSet<String> =
+        std::collections::HashSet::new();
+    for pkg in packages {
+        let Some(tbl) = pkg.as_table() else {
+            continue;
+        };
+        let primary_dep_names: std::collections::HashSet<&str> = tbl
+            .get("dependencies")
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|dep| dep.as_table()?.get("name")?.as_str())
+                    .collect()
+            })
+            .unwrap_or_default();
+        if let Some(opt_table) = tbl.get("optional-dependencies").and_then(|v| v.as_table()) {
+            for (_extra_name, arr) in opt_table {
+                if let Some(deps_arr) = arr.as_array() {
+                    for dep in deps_arr {
+                        if let Some(child_name) = dep
+                            .as_table()
+                            .and_then(|t| t.get("name"))
+                            .and_then(|v| v.as_str())
+                        {
+                            if !primary_dep_names.contains(child_name) {
+                                optional_child_names.insert(child_name.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     for pkg in packages {
         let Some(tbl) = pkg.as_table() else {
             continue;
@@ -122,6 +165,7 @@ pub(crate) fn parse_uv_lock(
                     .collect()
             })
             .unwrap_or_default();
+
 
         // Build the PyPI PURL. Workspace members and PyPI packages
         // both use this form per the data-model; the difference is
@@ -196,6 +240,16 @@ pub(crate) fn parse_uv_lock(
             out.push(root_entry);
         }
     }
+
+    // Milestone 183 US3 — apply the shared post-pass. Marks every
+    // emitted entry whose name is in `optional_child_names` AND whose
+    // `lifecycle_scope.is_none()` (Decision 3 lockfile-precedence
+    // guard: since uv.lock is itself a lockfile, entries typically
+    // reach the post-pass with `None` and get classified here; the
+    // guard is a defense-in-depth pin) with `LifecycleScope::Optional`
+    // + the `mikebom:optional-derivation = "pip-optional-dependencies"`
+    // annotation.
+    super::apply_optional_derivation_annotation(&mut out, &optional_child_names);
 
     out
 }
@@ -521,5 +575,136 @@ source = { editable = "bar" }
             "bar MUST NOT depend on foo (no declared edge); got: {:?}",
             bar.depends,
         );
+    }
+
+    // ── Milestone 183 US3 — uv.lock optional-dependencies classification ──
+
+    #[test]
+    fn optional_dependencies_sub_table_classifies() {
+        // A `[package.optional-dependencies].dev = [{ name = "pytest" }]`
+        // sub-table must cause the pytest [[package]] entry (also
+        // present as a top-level [[package]] block) to classify as
+        // Optional + carry the derivation annotation.
+        let src = r#"
+version = 1
+requires-python = ">=3.11"
+
+[[package]]
+name = "my-app"
+version = "0.1.0"
+source = { virtual = "." }
+
+[package.optional-dependencies]
+dev = [{ name = "pytest" }]
+
+[[package]]
+name = "pytest"
+version = "7.4.0"
+source = { registry = "https://pypi.org/simple" }
+"#;
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        let out = parse_uv_lock(&parsed, "/uv.lock", Path::new("/tmp/nonexistent"));
+        let pytest = out
+            .iter()
+            .find(|e| e.name == "pytest")
+            .expect("pytest emitted");
+        assert_eq!(
+            pytest.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Optional)
+        );
+        assert_eq!(
+            pytest.extra_annotations.get("mikebom:optional-derivation"),
+            Some(&serde_json::Value::String("pip-optional-dependencies".to_string()))
+        );
+
+        // Regression pin: my-app itself stays unclassified (main-module
+        // shape). Not classified by the post-pass because its name
+        // isn't in `optional_child_names`.
+        let my_app = out
+            .iter()
+            .find(|e| e.name == "my-app")
+            .expect("my-app emitted");
+        assert!(!my_app
+            .extra_annotations
+            .contains_key("mikebom:optional-derivation"));
+    }
+
+    #[test]
+    fn uv_lock_diamond_shape_runtime_wins() {
+        // FR-005: pytest in BOTH the primary `dependencies` array AND
+        // an `optional-dependencies.<extra>` array of the same package
+        // — Runtime wins, no derivation annotation.
+        let src = r#"
+version = 1
+
+[[package]]
+name = "my-app"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [{ name = "pytest" }]
+
+[package.optional-dependencies]
+test = [{ name = "pytest" }]
+
+[[package]]
+name = "pytest"
+version = "7.4.0"
+source = { registry = "https://pypi.org/simple" }
+"#;
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        let out = parse_uv_lock(&parsed, "/uv.lock", Path::new("/tmp/nonexistent"));
+        let pytest = out
+            .iter()
+            .find(|e| e.name == "pytest")
+            .expect("pytest emitted");
+        assert!(
+            pytest.lifecycle_scope
+                != Some(mikebom_common::resolution::LifecycleScope::Optional),
+            "diamond-shape violated: pytest classified as Optional"
+        );
+        assert!(!pytest
+            .extra_annotations
+            .contains_key("mikebom:optional-derivation"));
+    }
+
+    #[test]
+    fn uv_lock_optional_absent_stays_none() {
+        // Regression pin: no `[package.optional-dependencies]` sub-table
+        // anywhere → no classification, no annotation. Pre-m183 behavior
+        // preserved for byte-identity per SC-005.
+        let src = r#"
+version = 1
+
+[[package]]
+name = "my-app"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [{ name = "httpx" }]
+
+[[package]]
+name = "httpx"
+version = "0.27.2"
+source = { registry = "https://pypi.org/simple" }
+"#;
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        let out = parse_uv_lock(&parsed, "/uv.lock", Path::new("/tmp/nonexistent"));
+        for entry in &out {
+            assert!(
+                !entry
+                    .extra_annotations
+                    .contains_key("mikebom:optional-derivation"),
+                "unexpected derivation annotation on {}: {:?}",
+                entry.name,
+                entry.extra_annotations
+            );
+            // Also: lifecycle_scope stays None (pre-m183 behavior for
+            // uv.lock's Tier-2 emission).
+            assert!(
+                entry.lifecycle_scope.is_none(),
+                "unexpected lifecycle_scope on {}: {:?}",
+                entry.name,
+                entry.lifecycle_scope
+            );
+        }
     }
 }

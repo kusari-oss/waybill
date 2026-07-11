@@ -881,10 +881,15 @@ jq '.relationships[]
 >   - **yarn Berry (v2+)** `dependenciesMeta.<name>.optional = true` in `package.json` (out-of-band from `yarn.lock`) — m181
 >   - **bun** — deferred to m182
 > See the m179 ecosystem-survey research artifact at `specs/179-spdx23-transitive-devscope/research.md` for the per-lockfile mapping. **Peer-optional guard** (FR-005): when a dep is BOTH `peerDependencies.<name>` AND `peerDependenciesMeta.<name>.optional = true`, m178's `PROVIDED_DEPENDENCY_OF` classification wins — the optional emission is short-circuited at reader time so the dep emits as peer (not optional). npm + pnpm short-circuit via per-entry lockfile `peer: true` flags (m180); yarn short-circuits via a `package.json` cross-reference because yarn.lock doesn't carry `peer: true` (m181 — yarn's Plug'n'Play resolver moves peer metadata into `.pnp.cjs` or the source manifest).
-> - `pip-extras-require` — Python `[project.optional-dependencies.<extra>]` / `extras_require` / `[options.extras_require]` (m181+)
-> - `maven-optional-element` — Maven `<dependency>` with `<optional>true</optional>` (m182+)
-> - `gradle-compile-only` — Gradle `compileOnly` configuration (m182+)
-> - `erlang-optional-applications` — Erlang `.app.src` `optional_applications` list (m183+)
+> - `pip-optional-dependencies` — Python pip-family family, shared across three sources by design; the same value covers:
+>   - **poetry.lock** per-package `optional = true` (`category = "main"` or `groups = ["main"]`; dev-groups classify as `Development` and do NOT emit this annotation per m183 Decision 2) — m183
+>   - **pyproject.toml** `[project.optional-dependencies].<extra>` arrays (PEP 621) — m183
+>   - **uv.lock** `[[package.optional-dependencies]].<extra>` sub-tables (uv 0.5+) — m183
+>
+> When both a `poetry.lock` (or `uv.lock`) AND a `pyproject.toml` are present in the same project root, the lockfile classification takes precedence for any component appearing in both (m183 Decision 3 lockfile-precedence). `setup.py`'s `extras_require` and `requirements.txt` are OUT OF SCOPE — no first-class optional-deps syntax exists in `requirements.txt`, and mikebom does not shell out to a Python interpreter to evaluate `setup.py`.
+> - `maven-optional-element` — Maven `<dependency>` with `<optional>true</optional>` (m184+)
+> - `gradle-compile-only` — Gradle `compileOnly` configuration (m184+)
+> - `erlang-optional-applications` — Erlang `.app.src` `optional_applications` list (m185+)
 >
 > **Where it lives**:
 > - **CDX 1.6**: `components[].properties[]` entry — value is the derivation string.
@@ -918,7 +923,7 @@ jq '
 
 > Both recipes MUST return the same sorted PURL set (contract: `specs/179-spdx23-transitive-devscope/contracts/pico-filter-parity.md` — SC-001 + SC-002 gate).
 
-> **Milestone**: 179 — introduced `LifecycleScope::Optional` variant + `OPTIONAL_DEPENDENCY_OF` SPDX 2.3 native signal + this annotation + Go m112 NotNeeded fallthrough → `TEST_DEPENDENCY_OF`. Cargo reader wires the annotation in m179 (US3); npm / pip / Maven / Gradle / Erlang wire it in m180–m183.
+> **Milestone**: 179 — introduced `LifecycleScope::Optional` variant + `OPTIONAL_DEPENDENCY_OF` SPDX 2.3 native signal + this annotation + Go m112 NotNeeded fallthrough → `TEST_DEPENDENCY_OF`. Cargo reader wires the annotation in m179 (US3); npm + pnpm in m180; yarn v1 + Berry in m181; pip / poetry / uv in m183; Maven / Gradle / Erlang deferred to m184+.
 > **Catalog**: [C122](sbom-format-mapping.md)
 
 #### `mikebom:depends-unresolved` + `mikebom:rdepends-unresolved`

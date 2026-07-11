@@ -863,7 +863,7 @@ cdx_anno!(c121_cdx, "mikebom:workspaces-detected",              document);
 // C122 — `mikebom:optional-derivation` (milestone 179). Records
 // which ecosystem-reader mechanism populated the
 // `LifecycleScope::Optional` classification (`cargo-optional-true`,
-// `npm-optional-dependencies`, `pip-extras-require`,
+// `npm-optional-dependencies`, `pip-optional-dependencies`,
 // `maven-optional-element`, `gradle-compile-only`,
 // `erlang-optional-applications`). KEEP-BOTH polarity per m178:
 // the native SPDX 2.3 `OPTIONAL_DEPENDENCY_OF` relationship type is

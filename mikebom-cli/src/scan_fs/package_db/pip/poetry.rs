@@ -62,12 +62,37 @@ pub(crate) fn parse_poetry_lock(
         // v1: `category = "main"` (prod) / `"dev"` (dev)
         // v2+: `groups = ["main", ...]` — prod if "main" is present.
         // Milestone 052 rename: poetry_is_dev returns the legacy
-        // boolean; map to LifecycleScope below.
+        // boolean.
+        //
+        // Milestone 183 US1 — also consult the per-package `optional`
+        // flag. Poetry's `optional = true` means the package is
+        // extras-gated (`poetry install --extras <name>` required).
+        // Semantically maps to `LifecycleScope::Optional` per m179.
+        //
+        // Precedence (Decision 2 dev-wins-over-optional): if the
+        // package is dev-classified, the dev classification wins and
+        // the `mikebom:optional-derivation` annotation is NOT emitted
+        // (one-derivation-per-component invariant).
         let legacy_is_dev = poetry_is_dev(tbl);
-        let lifecycle_scope = match legacy_is_dev {
-            Some(true) => Some(mikebom_common::resolution::LifecycleScope::Development),
-            Some(false) => Some(mikebom_common::resolution::LifecycleScope::Runtime),
-            None => None,
+        let is_optional = poetry_is_optional(tbl);
+        let (lifecycle_scope, is_m183_optional) = match (legacy_is_dev, is_optional) {
+            // Dev wins over optional — no annotation.
+            (Some(true), _) => (
+                Some(mikebom_common::resolution::LifecycleScope::Development),
+                false,
+            ),
+            // Non-dev + optional = true → LifecycleScope::Optional.
+            (Some(false), true) | (None, true) => (
+                Some(mikebom_common::resolution::LifecycleScope::Optional),
+                true,
+            ),
+            // Non-dev + optional = false → Runtime (unchanged).
+            (Some(false), false) => (
+                Some(mikebom_common::resolution::LifecycleScope::Runtime),
+                false,
+            ),
+            // Unclassifiable + not optional → None (unchanged).
+            (None, false) => (None, false),
         };
 
         // Honour the dev filter at source.
@@ -100,6 +125,18 @@ pub(crate) fn parse_poetry_lock(
             continue;
         };
 
+        // Milestone 183 US1 — emit the C122 derivation annotation
+        // when the classification came from the poetry `optional = true`
+        // path (i.e., dev-wins-over-optional did NOT fire).
+        let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
+            Default::default();
+        if is_m183_optional {
+            extra_annotations.insert(
+                "mikebom:optional-derivation".to_string(),
+                serde_json::Value::String("pip-optional-dependencies".to_string()),
+            );
+        }
+
         out.push(PackageDbEntry {
             build_inclusion: None,
             purl,
@@ -131,7 +168,7 @@ pub(crate) fn parse_poetry_lock(
             hashes: Vec::new(),
             sbom_tier: Some("source".to_string()),
             shade_relocation: None,
-            extra_annotations: Default::default(),
+            extra_annotations,
             binary_role: None,
         });
         // `hashes` currently collected but not wired into ContentHash;
@@ -142,6 +179,25 @@ pub(crate) fn parse_poetry_lock(
     }
 
     out
+}
+
+/// Milestone 183 US1 — determine the `optional` flag for a
+/// `poetry.lock` `[[package]]` entry.
+///
+/// Poetry surfaces extras-gated packages via a per-package boolean:
+///
+/// ```toml
+/// [[package]]
+/// name = "foo"
+/// version = "1.0"
+/// optional = true
+/// ```
+///
+/// A missing or non-boolean field returns `false` (default: not
+/// optional). This preserves pre-m183 behavior for every entry that
+/// doesn't declare the field.
+fn poetry_is_optional(tbl: &toml::value::Table) -> bool {
+    tbl.get("optional").and_then(|v| v.as_bool()).unwrap_or(false)
 }
 
 /// Determine the dev-flag for a `poetry.lock` `[[package]]` entry.
@@ -266,5 +322,177 @@ lock-version = "1.1"
         let e = &out[0];
         assert!(e.depends.contains(&"urllib3".to_string()));
         assert!(e.depends.contains(&"certifi".to_string()));
+    }
+
+    // ── Milestone 183 US1 — poetry.lock `optional = true` classification ──
+
+    #[test]
+    fn optional_true_non_dev_classifies_as_optional() {
+        let src = r#"
+[[package]]
+name = "extras-only-pkg"
+version = "1.0.0"
+category = "main"
+optional = true
+
+[metadata]
+lock-version = "1.1"
+"#;
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        let out = parse_poetry_lock(&parsed, "/poetry.lock", true);
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].name, "extras-only-pkg");
+        assert_eq!(
+            out[0].lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Optional)
+        );
+    }
+
+    #[test]
+    fn optional_true_annotation_carries_pip_optional_dependencies() {
+        let src = r#"
+[[package]]
+name = "extras-only-pkg"
+version = "1.0.0"
+groups = ["main"]
+optional = true
+
+[metadata]
+lock-version = "2.0"
+"#;
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        let out = parse_poetry_lock(&parsed, "/poetry.lock", true);
+        assert_eq!(out.len(), 1);
+        assert_eq!(
+            out[0].extra_annotations.get("mikebom:optional-derivation"),
+            Some(&serde_json::Value::String("pip-optional-dependencies".to_string())),
+        );
+    }
+
+    #[test]
+    fn dev_classified_package_still_dev_ignoring_optional_flag() {
+        // US1 acceptance 4 + Decision 2: dev-wins-over-optional. A
+        // package with BOTH `category = "dev"` AND `optional = true`
+        // must classify as Development, NOT Optional; the derivation
+        // annotation MUST NOT appear.
+        let src = r#"
+[[package]]
+name = "dev-and-optional"
+version = "1.0.0"
+category = "dev"
+optional = true
+
+[metadata]
+lock-version = "1.1"
+"#;
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        let out = parse_poetry_lock(&parsed, "/poetry.lock", true);
+        assert_eq!(out.len(), 1);
+        assert_eq!(
+            out[0].lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Development)
+        );
+        assert!(!out[0]
+            .extra_annotations
+            .contains_key("mikebom:optional-derivation"));
+    }
+
+    #[test]
+    fn optional_false_stays_runtime() {
+        let src = r#"
+[[package]]
+name = "regular-pkg"
+version = "1.0.0"
+category = "main"
+optional = false
+
+[metadata]
+lock-version = "1.1"
+"#;
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        let out = parse_poetry_lock(&parsed, "/poetry.lock", true);
+        assert_eq!(out.len(), 1);
+        assert_eq!(
+            out[0].lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Runtime)
+        );
+        assert!(!out[0]
+            .extra_annotations
+            .contains_key("mikebom:optional-derivation"));
+    }
+
+    #[test]
+    fn optional_true_stays_in_reader_output_when_include_dev_false() {
+        // Milestone 183 FR-008 boundary pin (R1 remediation from
+        // /speckit-analyze U1):
+        //
+        // The `--include-dev=false` CLI flag filters `is_non_runtime()`
+        // targets at EMITTER time via m179's `LifecycleScope::Optional.
+        // is_non_runtime() == true` extension. The poetry.rs READER
+        // does NOT filter Optional entries at collection time — only
+        // Development entries (per the include_dev guard at line 98+).
+        //
+        // This test documents that boundary: with `include_dev=false`,
+        // an `optional = true, category = "main"` entry IS returned by
+        // `parse_poetry_lock`, and its `LifecycleScope::Optional`
+        // classification lets the downstream emitter apply the
+        // `is_non_runtime()` filter as designed.
+        let src = r#"
+[[package]]
+name = "extras-only-pkg"
+version = "1.0.0"
+category = "main"
+optional = true
+
+[[package]]
+name = "dev-pkg"
+version = "1.0.0"
+category = "dev"
+
+[metadata]
+lock-version = "1.1"
+"#;
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        let out = parse_poetry_lock(&parsed, "/poetry.lock", /*include_dev=*/ false);
+        // Development entries ARE filtered at reader level.
+        assert!(
+            out.iter().all(|e| e.name != "dev-pkg"),
+            "dev-pkg should be filtered by include_dev=false"
+        );
+        // Optional entries are NOT filtered at reader level — deferred
+        // to emitter via m179's is_non_runtime() extension.
+        let optional_entry = out
+            .iter()
+            .find(|e| e.name == "extras-only-pkg")
+            .expect("Optional entry retained at reader level");
+        assert_eq!(
+            optional_entry.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Optional),
+            "the retained Optional entry MUST carry the classification so the \
+             emitter's is_non_runtime() filter can drop it downstream"
+        );
+    }
+
+    #[test]
+    fn optional_field_absent_stays_runtime() {
+        let src = r#"
+[[package]]
+name = "regular-pkg"
+version = "1.0.0"
+category = "main"
+
+[metadata]
+lock-version = "1.1"
+"#;
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        let out = parse_poetry_lock(&parsed, "/poetry.lock", true);
+        assert_eq!(out.len(), 1);
+        assert_eq!(
+            out[0].lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Runtime)
+        );
+        assert!(!out[0]
+            .extra_annotations
+            .contains_key("mikebom:optional-derivation"));
     }
 }

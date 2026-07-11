@@ -174,7 +174,16 @@ pub fn read(
     // hashes, Phase A adds the C40 tag + parent_purl: None.
     let mut main_modules_emitted = 0usize;
     let mut poetry_skips = 0usize;
+    // Milestone 183 US2 — accumulate the union of optional direct-dep
+    // names across every project root's pyproject.toml. Applied via
+    // `apply_optional_derivation_annotation` at the end of `read`. The
+    // helper's `is_none()` guard enforces Decision 3 lockfile-precedence
+    // — pyproject-based classification never overrides a lockfile
+    // classification.
+    let mut optional_names_from_manifests: std::collections::HashSet<String> =
+        std::collections::HashSet::new();
     for project_root in candidate_python_project_roots(rootfs, exclude_set) {
+        optional_names_from_manifests.extend(optional_deps_from_pyproject(&project_root));
         let (synthesized, was_poetry_only) =
             build_pip_main_module_entry(&project_root);
         if was_poetry_only {
@@ -259,6 +268,14 @@ pub fn read(
             "pip: emitted main-module components",
         );
     }
+
+    // Milestone 183 US2 — final classifier pass. Marks every entry
+    // whose name is in the manifest-collected optional-name set AND
+    // whose `lifecycle_scope.is_none()` (Decision 3 lockfile-precedence
+    // guard) with `LifecycleScope::Optional` + the C122 derivation
+    // annotation. No-op when the manifest never declared any optional
+    // deps (byte-identity SC-005 for non-optional projects).
+    apply_optional_derivation_annotation(&mut entries, &optional_names_from_manifests);
 
     entries
 }
@@ -708,6 +725,119 @@ fn marker_probably_matches(marker: &str) -> bool {
     true
 }
 
+/// Milestone 183 US2 — collect the set of direct-dep names declared
+/// under any `[project.optional-dependencies].<extra>` array of the
+/// project's `pyproject.toml`, MINUS any name that also appears in
+/// `[project.dependencies]` (diamond-shape: Runtime wins per FR-005).
+///
+/// Returns an empty HashSet when:
+///   * `pyproject.toml` is absent
+///   * pyproject.toml is unparseable
+///   * `[project.optional-dependencies]` table is absent
+///
+/// The name-extraction rules match `build_pip_main_module_entry`'s
+/// `take_first_token` closure (PEP 508 first-token split) so the
+/// returned names align with what the graph resolver will see when
+/// building edges from the main-module's `depends` list.
+fn optional_deps_from_pyproject(
+    project_root: &std::path::Path,
+) -> std::collections::HashSet<String> {
+    let manifest_path = project_root.join("pyproject.toml");
+    let Ok(text) = std::fs::read_to_string(&manifest_path) else {
+        return std::collections::HashSet::new();
+    };
+    let Ok(parsed) = toml::from_str::<toml::Value>(&text) else {
+        return std::collections::HashSet::new();
+    };
+    let Some(project) = parsed.get("project") else {
+        return std::collections::HashSet::new();
+    };
+
+    // PEP 508 first-token extractor — mirror the closure in
+    // `build_pip_main_module_entry` for consistency.
+    let take_first_token = |s: &str| -> String {
+        s.chars()
+            .take_while(|c| {
+                !matches!(c, ' ' | '\t' | '[' | ']' | '<' | '>' | '=' | ';' | '~' | '!')
+            })
+            .collect::<String>()
+            .trim()
+            .to_string()
+    };
+
+    let mut regular: std::collections::HashSet<String> = std::collections::HashSet::new();
+    if let Some(deps) = project.get("dependencies").and_then(|v| v.as_array()) {
+        for d in deps.iter().filter_map(|v| v.as_str()) {
+            let token = take_first_token(d);
+            if !token.is_empty() {
+                regular.insert(token);
+            }
+        }
+    }
+
+    let mut optional: std::collections::HashSet<String> = std::collections::HashSet::new();
+    if let Some(opt_table) = project
+        .get("optional-dependencies")
+        .and_then(|v| v.as_table())
+    {
+        for (_extra_name, deps) in opt_table {
+            if let Some(arr) = deps.as_array() {
+                for d in arr.iter().filter_map(|v| v.as_str()) {
+                    let token = take_first_token(d);
+                    if !token.is_empty() {
+                        optional.insert(token);
+                    }
+                }
+            }
+        }
+    }
+
+    // FR-005 diamond-shape: Runtime wins. Remove any name that also
+    // appears in `[project.dependencies]`.
+    optional.retain(|name| !regular.contains(name));
+    optional
+}
+
+/// Milestone 183 (US2 + US3) — apply `LifecycleScope::Optional` +
+/// `mikebom:optional-derivation = "pip-optional-dependencies"` to each
+/// entry whose name is in `optional_names` AND whose `lifecycle_scope`
+/// is currently `None`.
+///
+/// The `is_none()` guard enforces Decision 3 lockfile-precedence: any
+/// entry already classified by a lockfile reader (Runtime, Development,
+/// or Optional) is left untouched. This prevents the manifest-based
+/// (pyproject.toml) or downstream-reader (uv.lock) classification from
+/// overriding a lockfile's ground-truth classification.
+///
+/// Called at the end of `read` after all lockfile / manifest readers
+/// have run. Reused by US2 (pyproject.toml classifier) and US3 (uv.lock
+/// classifier).
+fn apply_optional_derivation_annotation(
+    entries: &mut [PackageDbEntry],
+    optional_names: &std::collections::HashSet<String>,
+) {
+    if optional_names.is_empty() {
+        return;
+    }
+    for entry in entries.iter_mut() {
+        if !optional_names.contains(&entry.name) {
+            continue;
+        }
+        if entry.lifecycle_scope.is_some() {
+            // Lockfile-precedence per Decision 3: skip already-classified
+            // entries (Runtime, Development, Optional). The lockfile's
+            // ground-truth wins over the manifest-based classification.
+            continue;
+        }
+        entry.lifecycle_scope =
+            Some(mikebom_common::resolution::LifecycleScope::Optional);
+        entry.extra_annotations.insert(
+            "mikebom:optional-derivation".to_string(),
+            serde_json::Value::String("pip-optional-dependencies".to_string()),
+        );
+    }
+}
+
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
@@ -1106,5 +1236,219 @@ dependencies = [
         assert_eq!(entries[0].source_path, "/tmp/proj/pyproject.toml");
         assert_eq!(drops.len(), 1);
         assert_eq!(drops[0].dropped_path, "/tmp/proj/vendor/pyproject.toml");
+    }
+
+    // ── Milestone 183 T004 — apply_optional_derivation_annotation ────
+
+    #[test]
+    fn apply_annotation_marks_matching_and_unclassified_entries() {
+        let a = make_main_module_entry("foo", "1.0", "/tmp/foo/pyproject.toml");
+        let b = make_main_module_entry("bar", "2.0", "/tmp/bar/pyproject.toml");
+        // Both have `lifecycle_scope: None` and no derivation annotation.
+        assert!(a.lifecycle_scope.is_none());
+        assert!(b.lifecycle_scope.is_none());
+
+        let mut entries = vec![a.clone(), b.clone()];
+        let mut optional_names = std::collections::HashSet::new();
+        optional_names.insert("foo".to_string());
+        apply_optional_derivation_annotation(&mut entries, &optional_names);
+
+        // `foo` is classified + annotated; `bar` is untouched.
+        assert_eq!(
+            entries[0].lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Optional)
+        );
+        assert_eq!(
+            entries[0].extra_annotations.get("mikebom:optional-derivation"),
+            Some(&serde_json::Value::String("pip-optional-dependencies".to_string()))
+        );
+        assert!(entries[1].lifecycle_scope.is_none());
+        assert!(!entries[1]
+            .extra_annotations
+            .contains_key("mikebom:optional-derivation"));
+
+        // Clone the shadowed originals to silence unused warnings + prove
+        // the helper mutated `entries`, not `a`/`b`.
+        let _ = (a, b);
+    }
+
+    // ── Milestone 183 T008 — optional_deps_from_pyproject helper ────
+
+    #[test]
+    fn optional_deps_from_pyproject_extracts_names() {
+        // Single-extra + multi-extra: names from `dev` AND `test` extras
+        // both surface. PEP 508 markers/versions stripped.
+        let tempdir = tempfile::tempdir().unwrap();
+        let manifest = r#"
+[project]
+name = "sample-app"
+version = "1.0"
+dependencies = ["requests>=2.0", "urllib3; python_version < '3.10'"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "black"]
+test = ["pytest-cov[toml]"]
+docs = ["sphinx"]
+"#;
+        std::fs::write(tempdir.path().join("pyproject.toml"), manifest).unwrap();
+        let out = optional_deps_from_pyproject(tempdir.path());
+        // Everything from `[project.optional-dependencies]` shows up.
+        assert!(out.contains("pytest"), "expected pytest, got: {out:?}");
+        assert!(out.contains("black"), "expected black, got: {out:?}");
+        assert!(out.contains("pytest-cov"), "expected pytest-cov, got: {out:?}");
+        assert!(out.contains("sphinx"), "expected sphinx, got: {out:?}");
+        // Nothing from `[project.dependencies]` sneaks in.
+        assert!(!out.contains("requests"), "requests leaked as optional: {out:?}");
+        assert!(!out.contains("urllib3"), "urllib3 leaked as optional: {out:?}");
+    }
+
+    #[test]
+    fn optional_deps_diamond_shape_runtime_wins() {
+        // FR-005: a name in BOTH `[project.dependencies]` AND
+        // `[project.optional-dependencies].<extra>` must NOT be
+        // classified as optional. Runtime wins.
+        let tempdir = tempfile::tempdir().unwrap();
+        let manifest = r#"
+[project]
+name = "sample-app"
+version = "1.0"
+dependencies = ["pytest"]
+
+[project.optional-dependencies]
+test = ["pytest", "pytest-cov"]
+"#;
+        std::fs::write(tempdir.path().join("pyproject.toml"), manifest).unwrap();
+        let out = optional_deps_from_pyproject(tempdir.path());
+        // `pytest` is in `[project.dependencies]` → removed.
+        assert!(!out.contains("pytest"), "diamond-shape violated: {out:?}");
+        // `pytest-cov` is optional-only → kept.
+        assert!(out.contains("pytest-cov"), "expected pytest-cov, got: {out:?}");
+    }
+
+    #[test]
+    fn main_module_dep_split_records_optional_names_and_applies_post_pass() {
+        // US2 end-to-end: after `read` runs on a pyproject-only project
+        // (no lockfile), extras-gated deps must show up as
+        // `LifecycleScope::Optional` + carry the C122 derivation
+        // annotation. Regular deps stay untouched.
+        //
+        // The test fixture needs BOTH the pyproject.toml AND matching
+        // dist-info / lockfile / requirements entries to instantiate a
+        // component that the post-pass can classify. Since we only have
+        // pyproject.toml here, we instead check that the `read` function
+        // returns a `Vec<PackageDbEntry>` that includes the main-module
+        // component + verifies the optional-name-set collection reaches
+        // the post-pass. We do this by seeding a synthetic entry for
+        // `pytest` in a co-located requirements.txt (which reads as a
+        // Tier-3 source with `lifecycle_scope: None`) and confirming
+        // the post-pass upgrades it.
+        let tempdir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tempdir.path().join("pyproject.toml"),
+            r#"
+[project]
+name = "sample-app"
+version = "1.0.0"
+dependencies = ["requests>=2.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+"#,
+        )
+        .unwrap();
+        std::fs::write(
+            tempdir.path().join("requirements.txt"),
+            "requests==2.31.0\npytest==7.4.0\n",
+        )
+        .unwrap();
+
+        let exclude_set = crate::scan_fs::package_db::exclude_path::ExclusionSet::new_empty();
+        let entries = read(tempdir.path(), /*include_dev=*/ true, &exclude_set);
+
+        let pytest = entries
+            .iter()
+            .find(|e| e.name == "pytest")
+            .expect("pytest entry from requirements.txt");
+        assert_eq!(
+            pytest.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Optional),
+            "pytest should be Optional per [project.optional-dependencies].dev"
+        );
+        assert_eq!(
+            pytest.extra_annotations.get("mikebom:optional-derivation"),
+            Some(&serde_json::Value::String("pip-optional-dependencies".to_string())),
+        );
+
+        // Regression pin per FR-005: requests is in
+        // `[project.dependencies]` — must NOT get the Optional
+        // classification via the post-pass.
+        let requests = entries
+            .iter()
+            .find(|e| e.name == "requests")
+            .expect("requests entry from requirements.txt");
+        assert_ne!(
+            requests.lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Optional),
+            "requests must not be classified as Optional"
+        );
+        assert!(!requests
+            .extra_annotations
+            .contains_key("mikebom:optional-derivation"));
+    }
+
+    #[test]
+    fn optional_deps_absent_returns_empty() {
+        // Regression pin: no `[project.optional-dependencies]` table →
+        // empty HashSet, no panics.
+        let tempdir = tempfile::tempdir().unwrap();
+        let manifest = r#"
+[project]
+name = "sample-app"
+version = "1.0"
+dependencies = ["requests"]
+"#;
+        std::fs::write(tempdir.path().join("pyproject.toml"), manifest).unwrap();
+        let out = optional_deps_from_pyproject(tempdir.path());
+        assert!(out.is_empty(), "expected empty, got: {out:?}");
+
+        // Also: missing pyproject.toml altogether → empty HashSet.
+        let tempdir2 = tempfile::tempdir().unwrap();
+        assert!(optional_deps_from_pyproject(tempdir2.path()).is_empty());
+    }
+
+    #[test]
+    fn apply_annotation_skips_already_classified_entries() {
+        // Decision 3 lockfile-precedence: an entry with `Some(_)`
+        // lifecycle_scope MUST NOT be re-classified by the post-pass.
+        let mut runtime_entry =
+            make_main_module_entry("locked-runtime", "1.0", "/tmp/proj/poetry.lock");
+        runtime_entry.lifecycle_scope =
+            Some(mikebom_common::resolution::LifecycleScope::Runtime);
+        let mut dev_entry =
+            make_main_module_entry("locked-dev", "1.0", "/tmp/proj/poetry.lock");
+        dev_entry.lifecycle_scope =
+            Some(mikebom_common::resolution::LifecycleScope::Development);
+
+        let mut entries = vec![runtime_entry, dev_entry];
+        let mut optional_names = std::collections::HashSet::new();
+        optional_names.insert("locked-runtime".to_string());
+        optional_names.insert("locked-dev".to_string());
+        apply_optional_derivation_annotation(&mut entries, &optional_names);
+
+        // Both remain in their pre-existing classifications; no annotation
+        // is added by the post-pass.
+        assert_eq!(
+            entries[0].lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Runtime)
+        );
+        assert_eq!(
+            entries[1].lifecycle_scope,
+            Some(mikebom_common::resolution::LifecycleScope::Development)
+        );
+        for e in &entries {
+            assert!(!e
+                .extra_annotations
+                .contains_key("mikebom:optional-derivation"));
+        }
     }
 }
