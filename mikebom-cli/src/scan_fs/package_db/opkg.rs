@@ -27,6 +27,7 @@ use std::path::Path;
 
 use anyhow::Result;
 use mikebom_common::resolution::LifecycleScope;
+use mikebom_common::types::license::SpdxExpression;
 use mikebom_common::types::purl::{encode_purl_segment, Purl};
 
 use super::yocto::context::{detect_scan_context, ScanContext};
@@ -277,6 +278,50 @@ fn build_entry(
         );
     }
 
+    // Milestone 185 US2 (#539) — extract License from the stanza and
+    // normalize through the same pipeline the rpm reader uses, PLUS
+    // an m185 4th-pass wholesale-wrap fallback (per FR-014 / Q1
+    // clarification). See specs/185-ipk-reader-fixes/contracts/
+    // license-pipeline.md for the full pass-by-pass decision matrix.
+    let licenses: Vec<SpdxExpression> = stanza
+        .license()
+        .filter(|l| !l.trim().is_empty())
+        .and_then(|raw| {
+            // Pass 1: normalize BitBake `&`/`|` → SPDX `AND`/`OR`.
+            let normalized = super::rpm_file::normalize_bitbake_license_operators(raw);
+            // Pass 2: strict SPDX try_canonical.
+            if let Ok(e) = SpdxExpression::try_canonical(&normalized) {
+                return Some(e);
+            }
+            // Pass 3: preserve_known_operands_with_license_ref (rpm's
+            // #481 per-operand LicenseRef wrap) + re-canonicalize.
+            if let Some(wrapped) =
+                super::rpm_file::preserve_known_operands_with_license_ref(&normalized)
+            {
+                if let Ok(e) = SpdxExpression::try_canonical(&wrapped) {
+                    return Some(e);
+                }
+            }
+            // Pass 4 (m185 US2 wholesale-wrap, opkg-only per research
+            // Decision 3) — wrap the WHOLE original string as a single
+            // LicenseRef-<sanitized> operand. Preserves raw data for
+            // downstream license auditors instead of dropping to
+            // NOASSERTION.
+            let sanitized = super::rpm_file::sanitize_to_license_ref_idstring(raw)?;
+            let wrapped = format!("LicenseRef-{sanitized}");
+            tracing::warn!(
+                source_path = %source_path,
+                package = %name,
+                raw_license = %raw,
+                wrapped = %wrapped,
+                "opkg License string failed strict + per-operand SPDX parse; \
+                 wholesale-wrapped as LicenseRef per m185 FR-014"
+            );
+            SpdxExpression::try_canonical(&wrapped).ok()
+        })
+        .into_iter()
+        .collect();
+
     Some(PackageDbEntry {
         build_inclusion: None,
         purl,
@@ -286,7 +331,7 @@ fn build_entry(
         source_path: source_path.to_string(),
         depends,
         maintainer,
-        licenses: Vec::new(),
+        licenses,
         lifecycle_scope,
         requirement_range: None,
         source_type: None,
@@ -676,6 +721,138 @@ mod tests {
                 .and_then(|v| v.as_str()),
             Some("libssl3"),
             "libssl3 recorded as fallback under libmbedtls-12 key"
+        );
+    }
+
+    // ── Milestone 185 US2 — opkg License extraction (#539) ──────────
+
+    /// Helper for m185 US2 tests — writes an opkg-status file with a
+    /// single stanza carrying a specified License field (or none), then
+    /// returns the emitted entry for that stanza.
+    fn m185_entry_for_license(rootfs: &Path, license_field: Option<&str>) -> PackageDbEntry {
+        let body = match license_field {
+            Some(l) => format!(
+                "Package: m185-pkg\n\
+                 Version: 1.0-r0\n\
+                 Architecture: mikebom-fixture-arch\n\
+                 License: {l}\n\
+                 Status: install user installed\n",
+            ),
+            None => "Package: m185-pkg\n\
+                     Version: 1.0-r0\n\
+                     Architecture: mikebom-fixture-arch\n\
+                     Status: install user installed\n"
+                .to_string(),
+        };
+        write_status(rootfs, &body);
+        let (entries, _ctx) = read(rootfs);
+        assert_eq!(entries.len(), 1, "expected exactly one stanza emitted");
+        entries.into_iter().next().unwrap()
+    }
+
+    #[test]
+    fn build_entry_extracts_canonical_spdx_license() {
+        // US2 acceptance 1 — Pass 2 (strict SPDX) success path.
+        let tmp = tempfile::tempdir().unwrap();
+        let entry = m185_entry_for_license(tmp.path(), Some("GPL-2.0-only"));
+        assert_eq!(entry.licenses.len(), 1);
+        assert_eq!(entry.licenses[0].as_str(), "GPL-2.0-only");
+    }
+
+    #[test]
+    fn build_entry_bitbake_operator_normalizes_and_wraps_unknown_operand() {
+        // US2 acceptance 2 — Pass 1 + Pass 3 success path.
+        // `GPL-2.0-only & bzip2-1.0.4` → normalize `&` to `AND`, wrap
+        // unknown bzip2 operand as LicenseRef-. Uses canonical
+        // `GPL-2.0-only` because the rpm reader's normalization
+        // pipeline treats non-canonical synonyms (like Yocto's
+        // legacy `GPLv2`) as unknown operands and wraps them as
+        // LicenseRef- rather than substituting to canonical form.
+        let tmp = tempfile::tempdir().unwrap();
+        let entry =
+            m185_entry_for_license(tmp.path(), Some("GPL-2.0-only & bzip2-1.0.4"));
+        assert_eq!(entry.licenses.len(), 1);
+        assert_eq!(
+            entry.licenses[0].as_str(),
+            "GPL-2.0-only AND LicenseRef-bzip2-1.0.4"
+        );
+    }
+
+    #[test]
+    fn build_entry_yocto_synonym_wraps_both_operands() {
+        // Yocto's legacy recipes emit non-canonical `GPLv2` (the
+        // pre-SPDX-list synonym). The pipeline wraps it as
+        // LicenseRef-GPLv2 rather than substituting to GPL-2.0-only.
+        // This is intentional — no synonym normalization dictionary
+        // in mikebom. Documented behavior; operators who want the
+        // canonical form should update the recipe LICENSE variable.
+        let tmp = tempfile::tempdir().unwrap();
+        let entry = m185_entry_for_license(tmp.path(), Some("GPLv2 & bzip2-1.0.4"));
+        assert_eq!(entry.licenses.len(), 1);
+        assert_eq!(
+            entry.licenses[0].as_str(),
+            "LicenseRef-GPLv2 AND LicenseRef-bzip2-1.0.4"
+        );
+    }
+
+    #[test]
+    fn build_entry_absent_license_stays_empty() {
+        // FR-007 regression pin — absent License emits Vec::new(),
+        // SPDX 2.3 falls through to NOASSERTION.
+        let tmp = tempfile::tempdir().unwrap();
+        let entry = m185_entry_for_license(tmp.path(), None);
+        assert!(
+            entry.licenses.is_empty(),
+            "expected empty licenses for absent License field, got: {:?}",
+            entry.licenses
+        );
+    }
+
+    #[test]
+    fn build_entry_whitespace_only_license_treated_as_absent() {
+        // Edge case per Assumptions — whitespace-only License is
+        // filtered at Pass 0 as if absent.
+        let tmp = tempfile::tempdir().unwrap();
+        let entry = m185_entry_for_license(tmp.path(), Some("   "));
+        assert!(
+            entry.licenses.is_empty(),
+            "expected empty licenses for whitespace-only License, got: {:?}",
+            entry.licenses
+        );
+    }
+
+    #[test]
+    fn build_entry_unparseable_license_wholesale_wraps() {
+        // FR-014 m185 wholesale-wrap fallback — Pass 4 fires for
+        // wholly unparseable strings. Emits a single LicenseRef-
+        // operand preserving the sanitized raw data.
+        let tmp = tempfile::tempdir().unwrap();
+        let entry = m185_entry_for_license(tmp.path(), Some("!!! bad syntax &&& random"));
+        assert_eq!(entry.licenses.len(), 1);
+        let s = entry.licenses[0].as_str();
+        assert!(
+            s.starts_with("LicenseRef-"),
+            "expected wholesale-wrapped LicenseRef-, got: {s}"
+        );
+        // Sanitized form should contain the alphanumeric fragments of
+        // the raw input (per sanitize_to_license_ref_idstring's regex).
+        assert!(
+            s.contains("bad") && s.contains("syntax") && s.contains("random"),
+            "sanitized form should preserve alphanumeric content, got: {s}"
+        );
+    }
+
+    #[test]
+    fn build_entry_unsanitizable_license_falls_through_to_empty() {
+        // FR-014 defensive edge — a purely-symbol License produces
+        // None from sanitize_to_license_ref_idstring and falls
+        // through to licenses: Vec::new() (matches FR-007 shape).
+        let tmp = tempfile::tempdir().unwrap();
+        let entry = m185_entry_for_license(tmp.path(), Some("!!!"));
+        assert!(
+            entry.licenses.is_empty(),
+            "expected empty licenses for unsanitizable License (all symbols), got: {:?}",
+            entry.licenses
         );
     }
 }
