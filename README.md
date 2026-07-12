@@ -414,6 +414,33 @@ Authenticated registries are supported via `~/.docker/config.json`
 `aws ecr get-login-password | docker login --username AWS …` for ECR)
 once and mikebom picks up the credentials.
 
+**OCI Referrers API (milestone 186 / #442).** When a registry
+publishes a pre-generated SBOM via the OCI Distribution Spec v1.1
+Referrers API (e.g., `docker buildx --sbom=true` output), the
+`--sbom-source` flag lets mikebom prefer it over re-scanning the
+image bytes:
+
+```bash
+# Prefer a referrer if published, fall through to scan otherwise.
+mikebom sbom scan --image ghcr.io/example/app:v1 \
+    --sbom-source either \
+    --format cyclonedx-json --output app.cdx.json
+
+# Compliance: require a matching upstream SBOM (fail if absent).
+mikebom sbom scan --image ghcr.io/example/app:v1 \
+    --sbom-source referrer \
+    --format cyclonedx-json --output app.cdx.json
+
+# Default (`scan`) preserves pre-m186 behavior byte-identically —
+# no network activity on the Referrers endpoint.
+mikebom sbom scan --image ghcr.io/example/app:v1 \
+    --format cyclonedx-json --output app.cdx.json
+```
+
+Referrer content is emitted byte-identically to preserve any
+upstream signer's Cosign / in-toto DSSE contracts. Full flag
+reference: `specs/186-oci-referrers-sbom/quickstart.md`.
+
 **3. Scan a package cache.** Treats cached bytes as present-on-disk;
 useful for CI cache audits.
 

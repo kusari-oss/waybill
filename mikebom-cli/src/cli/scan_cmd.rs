@@ -61,6 +61,62 @@ pub enum ImageSource {
     Remote,
 }
 
+/// Milestone 186 (#442) — where mikebom should get the SBOM: scan the image
+/// bytes or fetch a pre-existing SBOM via the OCI Distribution Spec v1.1
+/// Referrers API.
+///
+/// Applies only to registry-pull scans (`--image <oci-ref>`). Rejected
+/// (non-zero exit) against `--image <local-path>` and `--path <dir>` inputs
+/// per FR-011.
+#[derive(ValueEnum, Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[clap(rename_all = "kebab-case")]
+pub enum SbomSourceMode {
+    /// Default. Always scan the image bytes; never query the Referrers API.
+    /// Preserves pre-m186 behavior byte-identically per FR-015 / SC-004.
+    #[default]
+    Scan,
+    /// Query the Referrers API and REQUIRE that an SBOM referrer be found.
+    /// Exit non-zero with an actionable error if absent per FR-009 / SC-003.
+    /// Use for compliance workflows requiring upstream-published SBOMs only.
+    Referrer,
+    /// Query the Referrers API and prefer any matching SBOM referrer; fall
+    /// through to scan silently if none available (or if any fetch step
+    /// fails) per FR-008 / SC-002.
+    Either,
+}
+
+/// Milestone 186 — wire-format string for the `--sbom-source` value used in
+/// FR-011 error messages. Matches the `#[clap(rename_all = "kebab-case")]`
+/// convention on `SbomSourceMode`.
+fn sbom_source_mode_wire_str(mode: SbomSourceMode) -> &'static str {
+    match mode {
+        SbomSourceMode::Scan => "scan",
+        SbomSourceMode::Referrer => "referrer",
+        SbomSourceMode::Either => "either",
+    }
+}
+
+/// Milestone 186 — map a requested `--format` value to the referrer
+/// descriptor media type mikebom expects to see for byte-identical emission.
+/// Returns `None` for `--format` values without a canonical referrer media
+/// type mapping (SPDX 3 currently — the ecosystem hasn't converged on a
+/// stable media type registration as of m186's landing). Used at emission
+/// time to detect format-vs-media-type mismatch and emit the FR-004 WARN log.
+///
+/// This helper is a local mirror of
+/// `scan_fs::oci_pull::referrers::media_type_for_mikebom_format` because that
+/// function is `pub(super)`-scoped inside the oci_pull submodule and not
+/// reachable from `cli`. Keeping the two in-sync is a static invariant —
+/// any new mapping added in one must be added in the other (small enough
+/// surface that duplication is cheaper than exposing an entire helper API).
+fn referrer_media_type_for_format(fmt: &str) -> Option<&'static str> {
+    match fmt {
+        "cyclonedx-json" => Some("application/vnd.cyclonedx+json"),
+        "spdx-2.3-json" => Some("application/spdx+json"),
+        _ => None,
+    }
+}
+
 #[derive(Args, Debug)]
 pub struct ScanArgs {
     /// Directory to walk for package artifacts.
@@ -222,6 +278,24 @@ pub struct ScanArgs {
     /// `--registry-ca-cert <path>` instead.
     #[arg(long = "insecure-tls-skip-verify")]
     pub insecure_tls_skip_verify: bool,
+
+    /// Milestone 186 (#442) — where mikebom should get the SBOM: scan the
+    /// image bytes, or fetch a pre-existing SBOM via the OCI Distribution
+    /// Spec v1.1 Referrers API.
+    ///
+    /// - `scan` (default): Always scan the image bytes. Preserves pre-m186
+    ///   behavior byte-identically. No network activity on the Referrers
+    ///   endpoint.
+    /// - `referrer`: REQUIRE a matching SBOM referrer. Exit non-zero if
+    ///   absent. Use for compliance workflows requiring upstream-published
+    ///   SBOMs only.
+    /// - `either`: Prefer a referrer if available; fall through to scan
+    ///   silently if none. Cost-effective for images that publish SBOMs.
+    ///
+    /// Applies only to registry-pull scans. Rejected when used against
+    /// `--image <local-tarball-path>` or `--path` scans.
+    #[arg(long = "sbom-source", value_enum, default_value_t = SbomSourceMode::Scan)]
+    pub sbom_source: SbomSourceMode,
 
     /// Output path override. Two forms are accepted:
     ///
@@ -1983,6 +2057,168 @@ pub async fn execute(
     // abort without having paid for a scan.
     let registry = SerializerRegistry::with_defaults();
     let plan = resolve_dispatch(&registry, &args.format, &args.output)?;
+
+    // Milestone 186 (#442) — OCI Referrers API SBOM discovery.
+    //
+    // FR-011 input-type guard: the `--sbom-source` flag applies ONLY to
+    // registry-pull scans. Reject with an actionable error when combined
+    // with `--path` (filesystem scan) or a local tarball path.
+    if matches!(
+        args.sbom_source,
+        SbomSourceMode::Referrer | SbomSourceMode::Either
+    ) {
+        if args.path.is_some() {
+            anyhow::bail!(
+                "--sbom-source {mode} is only valid for registry-pull scans (--image <oci-ref>). \
+                 Use --sbom-source scan (or omit) to scan a local tarball or filesystem path.",
+                mode = sbom_source_mode_wire_str(args.sbom_source),
+            );
+        }
+        if let Some(archive) = args.image.as_ref() {
+            if archive.is_file() {
+                anyhow::bail!(
+                    "--sbom-source {mode} is only valid for registry-pull scans (--image <oci-ref>). \
+                     Use --sbom-source scan (or omit) to scan a local tarball or filesystem path.",
+                    mode = sbom_source_mode_wire_str(args.sbom_source),
+                );
+            }
+        }
+    }
+
+    // FR-002 / US1 / US2 dispatch — attempt the Referrers-API path when the
+    // operator opted in via `--sbom-source referrer|either` AND the input is
+    // a registry OCI reference. On success, write the referrer bytes verbatim
+    // to the resolved output path + emit the FR-007 audit-log line + exit.
+    // On fall-through under `Either`, continue to the existing scan pipeline.
+    // On fall-through under `Referrer`, bail with an actionable error.
+    if matches!(
+        args.sbom_source,
+        SbomSourceMode::Referrer | SbomSourceMode::Either
+    ) {
+        #[cfg(feature = "oci-registry")]
+        {
+            if let Some(image_arg) = args.image.as_ref() {
+                let arg_str = image_arg.to_str().context(
+                    "--image argument is not valid UTF-8 — required for --sbom-source referrer|either OCI ref parsing",
+                )?;
+                // Skip if the arg happens to be a local file — the FR-011
+                // guard above already rejects this, but a defensive re-check
+                // preserves the invariant if the guard is refactored.
+                let archive_path = std::path::Path::new(arg_str);
+                if !archive_path.is_file() {
+                    let tls_config = scan_fs::oci_pull::RegistryTlsConfig::from_args(
+                        &args.insecure_registry,
+                        &args.registry_ca_cert,
+                        args.insecure_tls_skip_verify,
+                    )?;
+                    let max_bytes = scan_fs::oci_pull::resolve_referrer_max_bytes();
+                    let requested: Vec<&str> =
+                        plan.formats.iter().map(|s| s.as_str()).collect();
+                    let outcome = scan_fs::oci_pull::try_fetch_referrer_sbom(
+                        arg_str,
+                        args.image_platform.as_deref(),
+                        args.registry_credentials_dir.as_deref(),
+                        &tls_config,
+                        &requested,
+                        max_bytes,
+                    )
+                    .await;
+                    match (outcome, args.sbom_source) {
+                        (Ok(Some(sbom)), _) => {
+                            // Resolved output path for the FIRST requested format.
+                            let first_fmt = plan.formats.first().ok_or_else(|| {
+                                anyhow::anyhow!("no --format resolved for SBOM referrer emission")
+                            })?;
+                            let output_path = plan
+                                .overrides
+                                .get(first_fmt)
+                                .cloned()
+                                .unwrap_or_else(|| {
+                                    let default_name = registry
+                                        .get(first_fmt)
+                                        .map(|s| s.default_filename())
+                                        .unwrap_or("mikebom.sbom");
+                                    std::path::PathBuf::from(default_name)
+                                });
+                            std::fs::write(&output_path, &sbom.bytes).with_context(|| {
+                                format!(
+                                    "writing SBOM referrer bytes to {}",
+                                    output_path.display()
+                                )
+                            })?;
+                            // FR-007 / SC-005 audit log — operators consuming
+                            // mikebom logs identify referrer-sourced emissions
+                            // from log content alone. Keys named to match the
+                            // strings asserted by the m186 integration tests.
+                            tracing::info!(
+                                image = %arg_str,
+                                sbom_source = "referrer",
+                                descriptor_digest = %sbom.descriptor_digest,
+                                media_type = %sbom.media_type,
+                                output_path = %output_path.display(),
+                                bytes = sbom.bytes.len(),
+                                "emitted SBOM from OCI Referrers API"
+                            );
+                            // Format-mismatch WARN: the operator requested a
+                            // specific `--format` but the referrer we picked
+                            // is a different media type (per FR-004 edge case).
+                            if let Some(expected_mt) =
+                                referrer_media_type_for_format(first_fmt)
+                            {
+                                if expected_mt != sbom.media_type {
+                                    tracing::warn!(
+                                        image = %arg_str,
+                                        requested_format = %first_fmt,
+                                        got_media_type = %sbom.media_type,
+                                        "SBOM referrer emitted with media type differing from --format request (byte-identity preserved; consider --sbom-source scan or --sbom-source either for transcoded output — deferred to a follow-up milestone)"
+                                    );
+                                }
+                            }
+                            return Ok(());
+                        }
+                        (Ok(None), SbomSourceMode::Referrer) => {
+                            anyhow::bail!(
+                                "no matching SBOM referrer found for {arg_str} on registry \
+                                 (or registry does not support the OCI Referrers API HTTP 404). \
+                                 Use --sbom-source scan or --sbom-source either to scan the image bytes instead."
+                            );
+                        }
+                        (Err(e), SbomSourceMode::Referrer) => {
+                            return Err(e).with_context(|| {
+                                format!("SBOM referrer fetch failed for {arg_str} under --sbom-source referrer")
+                            });
+                        }
+                        (Ok(None), SbomSourceMode::Either) => {
+                            tracing::info!(
+                                image = %arg_str,
+                                "no matching SBOM referrer found; falling through to scan"
+                            );
+                            // fall through to scan pipeline
+                        }
+                        (Err(e), SbomSourceMode::Either) => {
+                            tracing::warn!(
+                                image = %arg_str,
+                                error = %e,
+                                "SBOM referrer fetch failed under --sbom-source either; falling through to scan"
+                            );
+                            // fall through to scan pipeline
+                        }
+                        (_, SbomSourceMode::Scan) => {
+                            // unreachable — outer `matches!` gate excludes Scan
+                            unreachable!("SbomSourceMode::Scan handled by outer match")
+                        }
+                    }
+                }
+            }
+        }
+        #[cfg(not(feature = "oci-registry"))]
+        {
+            anyhow::bail!(
+                "--sbom-source referrer|either requires the `oci-registry` Cargo feature (on by default). \
+                 This build was compiled with --no-default-features. Rebuild with the default feature set."
+            );
+        }
+    }
 
     // FR-002 / research.md §R2: when the deprecated SPDX 3 alias is
     // in the resolved format list, print a two-line stderr notice
@@ -3838,6 +4074,9 @@ mod tests {
             insecure_registry: vec![],
             registry_ca_cert: vec![],
             insecure_tls_skip_verify: false,
+            // Milestone 186 — test helper defaults preserve pre-m186
+            // behavior (no Referrers-API query; byte-identity SC-004).
+            sbom_source: SbomSourceMode::Scan,
             output: vec![],
             format: vec![],
             max_file_size: 256 * 1024 * 1024,
