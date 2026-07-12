@@ -53,6 +53,10 @@ mod cache;
 mod platform;
 mod reference;
 mod registry;
+// Milestone 186 (#442) — OCI Distribution Spec v1.1 Referrers API SBOM
+// discovery. Media-type filter + priority-ordering picker for
+// `try_fetch_referrer_sbom`.
+mod referrers;
 mod tarball;
 // Milestone 182 — TLS/transport configuration surfaced by the three
 // `--insecure-registry`, `--registry-ca-cert`, `--insecure-tls-skip-verify`
@@ -215,6 +219,176 @@ pub async fn pull_to_tarball(
     tarball::assemble_docker_save_tarball(&config_bytes, &layers, image_ref, &tarball_path)
         .context("assembling docker-save-format tarball from pulled image")?;
     Ok(tempdir)
+}
+
+// -----------------------------------------------------------------
+// Milestone 186 (#442) — OCI Referrers API SBOM discovery.
+// -----------------------------------------------------------------
+
+/// Milestone 186 — the fetched SBOM referrer + provenance markers, ready for
+/// the caller to (a) write `bytes` verbatim to `--output` and (b) emit the
+/// FR-007 INFO audit-log line naming the source descriptor.
+///
+/// `bytes` is the byte-identical blob body — no re-parse, no re-encode.
+/// `descriptor_digest` is the SHA-256 digest mikebom already verified against
+/// the descriptor's declared digest. `media_type` is the descriptor's
+/// declared media type (used in the audit log + FR-004 format-mismatch WARN).
+pub struct ReferrerSbom {
+    pub bytes: Vec<u8>,
+    pub descriptor_digest: String,
+    pub media_type: String,
+}
+
+/// Default per-referrer content size cap (100 MiB) — matches spec.md FR-014.
+/// Override via the `MIKEBOM_REFERRER_MAX_BYTES` env var (research Decision 4).
+pub const DEFAULT_REFERRER_MAX_BYTES: u64 = 100 * 1024 * 1024;
+
+/// Read `MIKEBOM_REFERRER_MAX_BYTES` (default 100 MiB) — the descriptor-level
+/// cap consulted by [`referrers::pick_sbom_descriptor`] BEFORE any blob fetch,
+/// preventing a malicious/misconfigured registry from DoSing mikebom via an
+/// oversize declared size (research Decision 4).
+pub fn resolve_referrer_max_bytes() -> u64 {
+    std::env::var("MIKEBOM_REFERRER_MAX_BYTES")
+        .ok()
+        .and_then(|s| s.parse::<u64>().ok())
+        .unwrap_or(DEFAULT_REFERRER_MAX_BYTES)
+}
+
+/// Milestone 186 (#442) — attempt to fetch an SBOM from the OCI Distribution
+/// Spec v1.1 Referrers API for the given image reference.
+///
+/// Pipeline (see `specs/186-oci-referrers-sbom/contracts/referrers-pipeline.md`):
+///   1. Parse the image reference + resolve platform (reuses the same code
+///      path as [`pull_to_tarball`]).
+///   2. Fetch the manifest → capture the resolved single-platform manifest
+///      digest (used as the `<digest>` in `/v2/<repo>/referrers/<digest>`).
+///   3. Query the Referrers endpoint → parse into `ImageIndex`.
+///   4. Filter + pick the best SBOM descriptor via
+///      [`referrers::pick_sbom_descriptor`].
+///   5. Fetch + SHA-256-verify the descriptor's blob body.
+///
+/// Returns:
+///   * `Ok(Some(sbom))` — a matching referrer was fetched + verified.
+///     Caller writes `sbom.bytes` verbatim to `--output`.
+///   * `Ok(None)` — the endpoint returned HTTP 404 (no v1.1 support), OR the
+///     ImageIndex contained zero SBOM-shaped descriptors, OR every candidate
+///     exceeded `max_bytes`. Caller falls through to scan under `either`
+///     mode; caller errors out under `referrer` mode.
+///   * `Err(_)` — HTTP or SHA-256-verify failure. Caller decides how to
+///     surface based on `SbomSourceMode`.
+///
+/// `requested_formats` is passed through to `pick_sbom_descriptor` for the
+/// format-match preference (research Decision 2 tier 1). Callers pass their
+/// `--format` values in operator-specified order.
+#[allow(dead_code)] // Wired into scan_cmd.rs dispatch in T018+T024+T029.
+pub async fn try_fetch_referrer_sbom(
+    image_ref: &str,
+    image_platform: Option<&str>,
+    creds_dir: Option<&Path>,
+    tls_config: &RegistryTlsConfig,
+    requested_formats: &[&str],
+    max_bytes: u64,
+) -> Result<Option<ReferrerSbom>> {
+    // Step 1: parse reference + resolve platform.
+    let mut reference = reference::parse_reference(image_ref)
+        .with_context(|| format!("parsing OCI image reference `{image_ref}`"))?;
+    let (target_arch, target_variant): (String, Option<String>) = match image_platform {
+        Some(s) => {
+            let parsed = platform::parse_platform_string(s)
+                .with_context(|| format!("parsing --image-platform `{s}`"))?;
+            (parsed.architecture, parsed.variant)
+        }
+        None => (
+            host_oci_arch()
+                .context("mapping host architecture to OCI platform name")?
+                .to_string(),
+            None,
+        ),
+    };
+
+    let client = RegistryClient::new(&reference, None, creds_dir, tls_config)?;
+
+    // Step 2: fetch manifest → resolve single-platform digest.
+    match client.fetch_manifest(&reference).await? {
+        ManifestOrIndex::Manifest(_) => {
+            // Reference was already a single-platform manifest; its digest is
+            // whatever the operator supplied (or a tag we need to re-resolve).
+            // Fetch by tag returns no explicit digest via this path; we
+            // re-fetch with the digest header captured for the referrer query.
+        }
+        ManifestOrIndex::Index(idx) => {
+            let mapped: Vec<platform::ManifestListEntry> = idx
+                .manifests()
+                .iter()
+                .filter_map(|d| {
+                    let plat = d.platform().as_ref()?;
+                    Some(platform::ManifestListEntry {
+                        digest: d.digest().to_string(),
+                        architecture: plat.architecture().to_string(),
+                        os: plat.os().to_string(),
+                        variant: plat.variant().clone(),
+                    })
+                })
+                .collect();
+            let chosen_digest = platform::resolve_manifest_list_to_linux(
+                mapped,
+                &target_arch,
+                target_variant.as_deref(),
+            )?;
+            reference.digest = Some(chosen_digest);
+            reference.tag = None;
+        }
+    };
+
+    // For a tag-only reference resolved to a single-platform manifest, we
+    // need the manifest's own digest for the Referrers query. If the caller
+    // supplied a `@sha256:...` digest, use it as-is; otherwise fetch the
+    // manifest by tag and hash the response body to derive the digest.
+    let manifest_digest = match reference.digest.clone() {
+        Some(d) => d,
+        None => {
+            let body = client.fetch_manifest_body(&reference).await?;
+            format!("sha256:{}", sha2_hex(&body))
+        }
+    };
+
+    // Step 3: query the Referrers endpoint.
+    let index = match client.fetch_referrers(&reference, &manifest_digest).await? {
+        Some(idx) => idx,
+        None => return Ok(None),
+    };
+
+    // Step 4: filter + pick the best SBOM descriptor.
+    let descriptor = match referrers::pick_sbom_descriptor(&index, requested_formats, max_bytes) {
+        Some(d) => d,
+        None => return Ok(None),
+    };
+    let descriptor_digest = descriptor.digest().to_string();
+    let media_type = descriptor.media_type().as_ref().to_string();
+
+    // Step 5: fetch + SHA-256-verify the referrer blob.
+    let bytes = client
+        .fetch_blob(&reference, &descriptor_digest)
+        .await
+        .with_context(|| {
+            format!("fetching SBOM referrer blob {descriptor_digest} for {image_ref}")
+        })?;
+
+    Ok(Some(ReferrerSbom {
+        bytes,
+        descriptor_digest,
+        media_type,
+    }))
+}
+
+/// SHA-256 hex digest of `bytes` for the manifest-digest derivation path.
+/// Kept local to the m186 code path so we don't perturb `verify_sha256`'s
+/// return-shape.
+fn sha2_hex(bytes: &[u8]) -> String {
+    use sha2::Digest as _;
+    let mut hasher = sha2::Sha256::new();
+    hasher.update(bytes);
+    format!("{:x}", hasher.finalize())
 }
 
 /// Distinguish a `--image` argument as either a path on disk

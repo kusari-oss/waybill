@@ -159,6 +159,87 @@ impl RegistryClient {
         Ok(ManifestOrIndex::Manifest(manifest))
     }
 
+    /// Milestone 186 (#442) — fetch the raw manifest body (bytes only,
+    /// without the manifest-vs-index dispatch step) for the referenced image.
+    ///
+    /// Used by [`super::try_fetch_referrer_sbom`] to derive the manifest's
+    /// SHA-256 digest when the operator supplied a tag reference (not a
+    /// pinned `@sha256:...` reference). The `Docker-Content-Digest` response
+    /// header would be authoritative per OCI Distribution Spec §manifest-get,
+    /// but not every registry emits it consistently; hashing the body is the
+    /// portable fallback and matches OCI Distribution Spec §Content Verification.
+    pub(super) async fn fetch_manifest_body(
+        &self,
+        reference: &ImageReference,
+    ) -> Result<Vec<u8>> {
+        let url = manifest_url(reference, &self.tls_config);
+        let body = self.fetch_with_auth_retry(&url, MANIFEST_MEDIA_TYPES).await?;
+        Ok(body.bytes)
+    }
+
+    /// Milestone 186 (#442) — GET `/v2/<repo>/referrers/<manifest-digest>`
+    /// per OCI Distribution Spec v1.1 §Referrers.
+    ///
+    /// Reuses [`Self::fetch_with_auth_retry`] for the same bearer/basic
+    /// auth-retry semantics as manifest / blob fetches.
+    ///
+    /// Returns:
+    ///   * `Ok(Some(index))` — the endpoint responded HTTP 200 with a valid
+    ///     `ImageIndex` body (may contain zero descriptors).
+    ///   * `Ok(None)` — the endpoint returned HTTP 404, signaling
+    ///     "registry does not support Referrers API (pre-v1.1)". Distinct
+    ///     from the auth-retry-then-fail branch which returns `Err`.
+    ///   * `Err(_)` — HTTP / auth / body-parse failure. `fetch_with_auth_retry`
+    ///     bails on non-2xx non-401, so we detect 404 by pre-checking the
+    ///     response status inline.
+    ///
+    /// The `manifest_digest` is `sha256:<hex>` — the resolved single-platform
+    /// manifest's digest (NOT the multi-arch index digest).
+    pub(super) async fn fetch_referrers(
+        &self,
+        reference: &ImageReference,
+        manifest_digest: &str,
+    ) -> Result<Option<ImageIndex>> {
+        let url = referrers_url(reference, manifest_digest, &self.tls_config);
+        // Distribution Spec v1.1 mandates the OCI Image Index media type for
+        // the Referrers response.
+        let accept = &["application/vnd.oci.image.index.v1+json"][..];
+        // We pre-check for HTTP 404 (which is a spec-blessed signal, not an
+        // error) before delegating to fetch_with_auth_retry (which treats
+        // 404 as a hard error). Send an unauthenticated GET first; if it
+        // returns 404, short-circuit; otherwise let the shared retry helper
+        // handle 401 challenges + 2xx bodies.
+        let accept_header = accept.join(", ");
+        let probe = match self
+            .http
+            .get(&url)
+            .header("Accept", &accept_header)
+            .send()
+            .await
+        {
+            Ok(resp) => resp,
+            Err(err) => return Err(classify_transport_error(&url, err)),
+        };
+        if probe.status().as_u16() == 404 {
+            tracing::info!(
+                registry = %reference.registry,
+                repository = %reference.repository,
+                %url,
+                "Referrers endpoint returned HTTP 404 — registry does not support OCI Distribution Spec v1.1 Referrers API",
+            );
+            return Ok(None);
+        }
+        // Fall through to the shared auth-retry path. This re-issues the GET
+        // (a small duplicate cost on 200 responses; on 401 the probe already
+        // paid for the challenge round-trip). We prefer this over duplicating
+        // fetch_with_auth_retry's ~90 lines of Bearer/Basic logic.
+        drop(probe);
+        let body = self.fetch_with_auth_retry(&url, accept).await?;
+        let index: ImageIndex = serde_json::from_slice(&body.bytes)
+            .with_context(|| format!("parsing Referrers response at {url}"))?;
+        Ok(Some(index))
+    }
+
     /// Fetch a blob (config or layer) and verify its SHA-256
     /// matches the declared `digest`. The digest is the
     /// `<algorithm>:<hex>` form straight from the descriptor.
@@ -501,6 +582,22 @@ fn blob_url(reference: &ImageReference, digest: &str, tls_config: &RegistryTlsCo
     format!(
         "{scheme}://{registry}/v2/{}/blobs/{}",
         reference.repository, digest
+    )
+}
+
+/// Milestone 186 (#442) — Referrers-endpoint URL per OCI Distribution Spec
+/// v1.1 §Referrers. Composes with the m182 `is_insecure_registry` matcher
+/// (plain HTTP for local dev / kind-mirror registries).
+fn referrers_url(
+    reference: &ImageReference,
+    manifest_digest: &str,
+    tls_config: &RegistryTlsConfig,
+) -> String {
+    let registry = resolve_registry_for_url(&reference.registry);
+    let scheme = scheme_for_registry(&reference.registry, tls_config);
+    format!(
+        "{scheme}://{registry}/v2/{}/referrers/{}",
+        reference.repository, manifest_digest
     )
 }
 
