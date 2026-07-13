@@ -402,7 +402,7 @@ pub fn collect_claimed_paths(
                 continue;
             };
             let file_list =
-                walk_data_tar_file_list(&data_member.data, data_member.name.ends_with(".gz"));
+                list_data_tar_paths(&data_member.data, data_member.name.ends_with(".gz"));
             for cleaned in file_list {
                 let target = rootfs.join(&cleaned);
                 #[cfg(unix)]
@@ -637,7 +637,7 @@ fn parse_ipk_from_ar_members(
     let data_file_list = members
         .iter()
         .find(|m| m.name == "data.tar.gz" || m.name == "data.tar")
-        .map(|m| walk_data_tar_file_list(&m.data, m.name.ends_with(".gz")))
+        .map(|m| list_data_tar_paths(&m.data, m.name.ends_with(".gz")))
         .unwrap_or_default();
 
     // debian-binary is optional per spec.md Edge Cases; log if absent
@@ -674,7 +674,7 @@ fn parse_ipk_from_ar_members(
 /// Milestone 187 (#543) — walk an inner tar (optionally gzipped) and
 /// return its file-list. Shared between the ar-format branch (T010)
 /// and the m169-era `collect_claimed_paths` gzip-tar branch (T014).
-fn walk_data_tar_file_list(data_bytes: &[u8], gzipped: bool) -> Vec<String> {
+fn list_data_tar_paths(data_bytes: &[u8], gzipped: bool) -> Vec<String> {
     let mut out = Vec::new();
     if gzipped {
         let gz = GzDecoder::new(std::io::Cursor::new(data_bytes));
