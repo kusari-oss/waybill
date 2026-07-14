@@ -478,13 +478,58 @@ impl CycloneDxBuilder {
                 effective_components,
             );
 
-        let metadata_relationships_augmented: Vec<Relationship> = relationships
+        // Milestone 192 — pre-rewrite dropped-main-module relationships
+        // BEFORE the classifier runs. When operator-override drops a
+        // native main-module (e.g., `--root-name X` on a Go source scan
+        // that had `pkg:golang/github.com/example/foo` as its detected
+        // mainmod), the mainmod's outgoing DependsOn edges are still in
+        // `relationships` with `.from = <dropped-purl>`. The m086 rewrite
+        // block below re-anchors those edges onto `target_ref`; without
+        // running that rewrite here, `compute_graph_completeness` sees
+        // stale edges pointing FROM components that no longer exist in
+        // `effective_components`, and BFS from the operator's synthetic
+        // target_ref can't reach the transitive Go/npm/etc. deps that
+        // used to hang off the dropped mainmod. Pre-m192 this manifested
+        // as `partial: multi-ecosystem-partial-root: <eco>`; post-m192
+        // (post-bfs.rs fix) it manifested as `partial: orphaned-
+        // components-detected: N` because the m192 synthesis empties
+        // ecosystems_without_root but doesn't rebuild the transitive
+        // reachability from target_ref.
+        //
+        // Fix: apply the m086 rewrite eagerly so the classifier operates
+        // on the same edge topology that build_dependencies (line 626)
+        // will emit. Reuse `dropped_main_module_purls` computed above.
+        let m192_prerewritten_relationships: Vec<Relationship> =
+            if !dropped_main_module_purls.is_empty() {
+                let dropped: std::collections::HashSet<&str> = dropped_main_module_purls
+                    .iter()
+                    .map(|s| s.as_str())
+                    .collect();
+                relationships
+                    .iter()
+                    .map(|r| {
+                        if dropped.contains(r.from.as_str()) {
+                            Relationship {
+                                from: target_ref.clone(),
+                                to: r.to.clone(),
+                                relationship_type: r.relationship_type.clone(),
+                                provenance: r.provenance.clone(),
+                            }
+                        } else {
+                            r.clone()
+                        }
+                    })
+                    .collect()
+            } else {
+                relationships.to_vec()
+            };
+        let metadata_relationships_augmented: Vec<Relationship> = m192_prerewritten_relationships
             .iter()
             .cloned()
             .chain(m158_workspace_peer_edges.iter().cloned())
             .collect();
 
-        // FR-008 multi-root BFS on the AUGMENTED graph.
+        // FR-008 multi-root BFS on the AUGMENTED + REWRITTEN graph.
         let graph_completeness =
             crate::generate::graph_completeness::compute_graph_completeness(
                 effective_components,
