@@ -820,16 +820,22 @@ fn build_entry_from_control(
         alternates_by_source,
     } = parse_depends_field_with_alternatives(depends_field);
 
-    // FR-008: license field routes through m152/153/154 SPDX pipeline.
+    // FR-008 (m152): license field routes through SPDX canonicalization
+    // + LicenseRef fallback. Milestone 190 (#550): pre-normalize BitBake
+    // operators (`&`, `&&`, `|`, `||`) to SPDX (`AND`, `OR`) BEFORE
+    // try_canonical so real-world Yocto license expressions (e.g.,
+    // `GPL-2.0-only & MIT`) canonicalize instead of falling to the
+    // LicenseRef-<hex> hashed form.
     let licenses = match stanza.get("license") {
         Some(raw) if !raw.trim().is_empty() => {
-            match mikebom_common::types::license::SpdxExpression::try_canonical(raw) {
+            let normalized = normalize_bitbake_license_operators(raw);
+            match mikebom_common::types::license::SpdxExpression::try_canonical(&normalized) {
                 Ok(e) => vec![e],
                 Err(_) => {
                     // m152 LicenseRef escape hatch — preserve non-
                     // canonical expressions as `LicenseRef-<hex>`
                     // (best-effort via lenient constructor).
-                    match mikebom_common::types::license::SpdxExpression::new(raw) {
+                    match mikebom_common::types::license::SpdxExpression::new(&normalized) {
                         Ok(e) => vec![e],
                         Err(_) => Vec::new(),
                     }
@@ -839,7 +845,13 @@ fn build_entry_from_control(
         _ => Vec::new(),
     };
 
-    let purl = build_opkg_purl(&name, &version, &arch, distro_tag)?;
+    // Milestone 190 (#552): epoch extraction. Debian/opkg version
+    // strings encode epoch as `<digits>:<upstream-version>-<release>`;
+    // the purl-spec ` opkg` type carries epoch as a `?epoch=<N>`
+    // qualifier, NOT inline in the version. Mirror the rpm reader
+    // pattern at `rpm_file.rs:397-411`.
+    let (epoch, version) = parse_opkg_version_with_epoch(&version);
+    let purl = build_opkg_purl(&name, &version, &arch, distro_tag, epoch)?;
 
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
@@ -949,7 +961,13 @@ fn filename_fallback_entry(
         .and_then(|p| p.file_name())
         .and_then(|s| s.to_str());
     let parsed = parse_ipk_filename(filename, parent_dir_name)?;
-    let purl = build_opkg_purl(&parsed.name, &parsed.version, &parsed.arch, distro_tag)?;
+    // Milestone 190 (#552, FR-012): epoch on the filename-fallback path.
+    // The filename may encode epoch as `pkg_<epoch>:<version>-<release>_<arch>.ipk`
+    // (pre-2015 opkg-build style). Extract before PURL construction so
+    // the emitted PURL carries `?epoch=<N>` instead of embedding the
+    // epoch inline in the version segment.
+    let (epoch, naked_version) = parse_opkg_version_with_epoch(&parsed.version);
+    let purl = build_opkg_purl(&parsed.name, &naked_version, &parsed.arch, distro_tag, epoch)?;
 
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
@@ -967,7 +985,7 @@ fn filename_fallback_entry(
         build_inclusion: None,
         purl,
         name: parsed.name,
-        version: parsed.version,
+        version: naked_version,
         arch: Some(parsed.arch),
         source_path: path.to_string_lossy().into_owned(),
         depends: Vec::new(),
@@ -1084,19 +1102,28 @@ fn parse_ipk_filename(
     })
 }
 
-/// Build a `pkg:opkg/<name>@<version>?arch=<arch>[&distro=<tag>]` PURL
+/// Build a `pkg:opkg/<name>@<version>?arch=<arch>[&distro=<tag>][&epoch=<N>]` PURL
 /// per FR-004 + FR-010 + purl-spec's opkg type. Mirrors
 /// `opkg::build_opkg_purl`.
 ///
 /// Milestone 169 T033 (US5): `distro_tag` — when `Some`, is appended as
 /// a `&distro=<tag>` qualifier (encoded via `encode_purl_segment`). When
-/// `None`, the qualifier is omitted entirely. Qualifier ordering matches
-/// PURL-spec's alphabetical convention (`arch` before `distro`).
+/// `None`, the qualifier is omitted entirely.
+///
+/// Milestone 190 (#552): `epoch` — when `Some(v)` with `v != 0`, appended
+/// as `&epoch=<v>` qualifier. When `None` or `Some(0)`, the qualifier is
+/// omitted (matches purl-spec convention where `epoch=0` is implicit and
+/// mirrors `rpm_file.rs:410-411`).
+///
+/// Qualifier ordering follows the PURL-spec alphabetical convention:
+/// `arch` (a) < `distro` (d) < `epoch` (e). Empty-epoch-and-empty-distro
+/// path is byte-identical to pre-m190 output — enforces FR-011 / SC-006.
 fn build_opkg_purl(
     name: &str,
     version: &str,
     arch: &str,
     distro_tag: Option<&str>,
+    epoch: Option<u32>,
 ) -> Option<Purl> {
     let mut purl_str = if version.is_empty() {
         format!(
@@ -1118,7 +1145,77 @@ fn build_opkg_purl(
             purl_str.push_str(&encode_purl_segment(tag));
         }
     }
+    // Milestone 190: epoch qualifier — omitted when None or Some(0)
+    // per purl-spec convention (see rpm_file.rs:410-411 for the
+    // canonical reference). Emitted after distro to preserve alphabetical
+    // key ordering.
+    if let Some(v) = epoch {
+        if v != 0 {
+            purl_str.push_str(&format!("&epoch={v}"));
+        }
+    }
     Purl::new(&purl_str).ok()
+}
+
+/// Milestone 190 (#550): normalize BitBake license operators to their
+/// SPDX equivalents so the raw ipk `License:` field can be passed to
+/// `SpdxExpression::try_canonical` without falling to the LicenseRef
+/// hashed fallback.
+///
+/// Real-world Yocto recipes use BitBake's operator dialect (`&`, `|`)
+/// which the `spdx` crate's expression parser does NOT recognize as
+/// valid SPDX operators. Substitute BEFORE canonicalization so all
+/// three format emitters (CDX 1.6, SPDX 2.3, SPDX 3) transitively
+/// receive an SPDX-canonical value through the existing shared
+/// `component.licenses` field.
+///
+/// Ordering invariant: long-form (`&&`, `||`) MUST be substituted
+/// before single-form (`&`, `|`) to avoid partial-token overlap.
+/// The four `str::replace` calls below encode this order; do NOT
+/// reorder without re-reading spec §Q1 + research §R1.
+///
+/// Idempotent: applying twice equals applying once (since the SPDX
+/// operators `AND`/`OR` contain no `&`/`|` characters and the
+/// whitespace-collapsing step is stable).
+fn normalize_bitbake_license_operators(raw: &str) -> String {
+    let substituted = raw
+        .replace("&&", " AND ")
+        .replace("||", " OR ")
+        .replace('&', " AND ")
+        .replace('|', " OR ");
+    // Collapse runs of whitespace to single spaces + trim ends so the
+    // emitted expression is clean regardless of input spacing. Safe
+    // for SPDX expressions (no significant multi-whitespace tokens).
+    substituted.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// Milestone 190 (#552): parse the raw ipk `Version:` field into
+/// (optional epoch, naked-version) per the Debian/opkg convention
+/// where `<digits>:<version>-<release>` embeds the epoch inline.
+///
+/// Returns `(None, raw.to_string())` when no `<digits>:` prefix is
+/// present, preserving byte-identity for non-epoch inputs (SC-006).
+/// Non-digit prefixes (e.g., `abc:1.0-r0`) are treated as literal
+/// version text; only ASCII-digit prefixes match the epoch pattern.
+///
+/// Multi-colon input (`1:2.0-r0:beta`): only the FIRST `<digits>:`
+/// prefix is treated as epoch; the rest of the string is preserved
+/// verbatim in the returned naked-version.
+///
+/// Guards against `u32` overflow: on `parse::<u32>` failure the input
+/// is treated as if it had no epoch prefix.
+fn parse_opkg_version_with_epoch(raw: &str) -> (Option<u32>, String) {
+    // Locate the first `:` and verify the prefix is all ASCII digits.
+    if let Some(colon_pos) = raw.find(':') {
+        let (prefix, rest) = raw.split_at(colon_pos);
+        if !prefix.is_empty() && prefix.chars().all(|c| c.is_ascii_digit()) {
+            if let Ok(v) = prefix.parse::<u32>() {
+                // rest starts with `:`; skip it.
+                return (Some(v), rest[1..].to_string());
+            }
+        }
+    }
+    (None, raw.to_string())
 }
 
 #[cfg(test)]
@@ -1701,5 +1798,229 @@ mod tests {
         assert_eq!(out.version, "1.0");
         assert_eq!(out.arch, "arm");
         assert_eq!(out.arch_source, ArchSource::FilenameHeuristic);
+    }
+
+    // ── Milestone 190 (#550) — normalize_bitbake_license_operators ──
+
+    #[test]
+    fn normalize_bitbake_single_and_becomes_spdx_and() {
+        let out = normalize_bitbake_license_operators("GPL-2.0-only & MIT");
+        assert!(
+            out.contains(" AND "),
+            "expected ` AND ` in normalized output; got: {out:?}"
+        );
+        assert!(!out.contains('&'), "single & must be substituted: {out:?}");
+        // Round-trip through try_canonical to prove SPDX validity.
+        let canon = mikebom_common::types::license::SpdxExpression::try_canonical(&out)
+            .expect("normalized expression must canonicalize");
+        assert_eq!(canon.as_str(), "GPL-2.0-only AND MIT");
+    }
+
+    #[test]
+    fn normalize_bitbake_single_or_becomes_spdx_or() {
+        let out = normalize_bitbake_license_operators("MIT | Apache-2.0");
+        assert!(out.contains(" OR "), "expected ` OR `; got: {out:?}");
+        assert!(!out.contains('|'), "single | must be substituted: {out:?}");
+        let canon = mikebom_common::types::license::SpdxExpression::try_canonical(&out).unwrap();
+        assert_eq!(canon.as_str(), "MIT OR Apache-2.0");
+    }
+
+    #[test]
+    fn normalize_bitbake_double_and_becomes_spdx_and() {
+        let out = normalize_bitbake_license_operators("MIT && Apache-2.0");
+        let canon = mikebom_common::types::license::SpdxExpression::try_canonical(&out).unwrap();
+        assert_eq!(canon.as_str(), "MIT AND Apache-2.0");
+        assert!(!out.contains("&&"));
+        assert!(!out.contains('&'));
+    }
+
+    #[test]
+    fn normalize_bitbake_double_or_becomes_spdx_or() {
+        let out = normalize_bitbake_license_operators("MIT || Apache-2.0");
+        let canon = mikebom_common::types::license::SpdxExpression::try_canonical(&out).unwrap();
+        assert_eq!(canon.as_str(), "MIT OR Apache-2.0");
+        assert!(!out.contains("||"));
+        assert!(!out.contains('|'));
+    }
+
+    #[test]
+    fn normalize_bitbake_no_operator_is_noop_on_operators() {
+        // No BitBake operators → normalization changes nothing observable
+        // for a single-operand license.
+        let out = normalize_bitbake_license_operators("MIT");
+        let canon = mikebom_common::types::license::SpdxExpression::try_canonical(&out).unwrap();
+        assert_eq!(canon.as_str(), "MIT");
+    }
+
+    #[test]
+    fn normalize_bitbake_no_whitespace_still_normalizes() {
+        // Real-world Yocto recipe shape: no whitespace around the
+        // operator. The helper inserts whitespace around SPDX operators
+        // so try_canonical can tokenize.
+        let out = normalize_bitbake_license_operators("MIT&&Apache-2.0");
+        let canon = mikebom_common::types::license::SpdxExpression::try_canonical(&out).unwrap();
+        assert_eq!(canon.as_str(), "MIT AND Apache-2.0");
+    }
+
+    #[test]
+    fn normalize_bitbake_grouped_expression_preserves_parens() {
+        let out = normalize_bitbake_license_operators("(GPL-2.0-only & MIT) | Apache-2.0");
+        // Grouping preserved verbatim — only operator tokens change.
+        assert!(out.contains('('));
+        assert!(out.contains(')'));
+        let canon = mikebom_common::types::license::SpdxExpression::try_canonical(&out).unwrap();
+        // spdx crate normalizes the canonical form; either form of
+        // grouping is acceptable as long as it parses cleanly.
+        assert!(canon.as_str().contains("GPL-2.0-only"));
+        assert!(canon.as_str().contains("MIT"));
+        assert!(canon.as_str().contains("Apache-2.0"));
+    }
+
+    #[test]
+    fn normalize_bitbake_with_clause_preserved() {
+        // `WITH` is SPDX-native and MUST survive normalization.
+        let out = normalize_bitbake_license_operators(
+            "GPL-2.0-only WITH Classpath-exception-2.0 & MIT",
+        );
+        let canon = mikebom_common::types::license::SpdxExpression::try_canonical(&out).unwrap();
+        assert!(canon.as_str().contains("WITH"));
+        assert!(canon.as_str().contains("Classpath-exception-2.0"));
+        assert!(canon.as_str().contains("MIT"));
+    }
+
+    #[test]
+    fn normalize_bitbake_is_idempotent() {
+        let once = normalize_bitbake_license_operators("GPL-2.0-only & MIT");
+        let twice = normalize_bitbake_license_operators(&once);
+        assert_eq!(once, twice);
+    }
+
+    // ── Milestone 190 (#552) — parse_opkg_version_with_epoch ──
+
+    #[test]
+    fn parse_opkg_version_no_epoch_prefix() {
+        // Baseline: unchanged input → no epoch, verbatim naked version.
+        assert_eq!(
+            parse_opkg_version_with_epoch("2.0-r0"),
+            (None, "2.0-r0".to_string())
+        );
+    }
+
+    #[test]
+    fn parse_opkg_version_nonzero_epoch() {
+        assert_eq!(
+            parse_opkg_version_with_epoch("1:2.0-r0"),
+            (Some(1), "2.0-r0".to_string())
+        );
+    }
+
+    #[test]
+    fn parse_opkg_version_zero_epoch_preserves_zero() {
+        // Zero-epoch is preserved by the parser; the PURL builder is
+        // responsible for treating Some(0) as "no qualifier" per
+        // purl-spec convention. Test at build_opkg_purl level.
+        assert_eq!(
+            parse_opkg_version_with_epoch("0:1.0-r0"),
+            (Some(0), "1.0-r0".to_string())
+        );
+    }
+
+    #[test]
+    fn parse_opkg_version_multi_colon_only_first_treated_as_epoch() {
+        assert_eq!(
+            parse_opkg_version_with_epoch("1:2.0-r0:beta"),
+            (Some(1), "2.0-r0:beta".to_string())
+        );
+    }
+
+    #[test]
+    fn parse_opkg_version_non_digit_prefix_is_not_epoch() {
+        // Non-digit prefix → parser must NOT treat it as epoch.
+        assert_eq!(
+            parse_opkg_version_with_epoch("abc:1.0-r0"),
+            (None, "abc:1.0-r0".to_string())
+        );
+    }
+
+    #[test]
+    fn parse_opkg_version_leading_colon_is_not_epoch() {
+        // Colon with no prefix → not an epoch.
+        assert_eq!(
+            parse_opkg_version_with_epoch(":1.0-r0"),
+            (None, ":1.0-r0".to_string())
+        );
+    }
+
+    #[test]
+    fn parse_opkg_version_overflow_falls_back_to_no_epoch() {
+        // Value that overflows u32 — must not panic; return input verbatim.
+        let raw = "99999999999999999999:1.0-r0";
+        assert_eq!(
+            parse_opkg_version_with_epoch(raw),
+            (None, raw.to_string())
+        );
+    }
+
+    #[test]
+    fn parse_opkg_version_empty_input() {
+        assert_eq!(
+            parse_opkg_version_with_epoch(""),
+            (None, "".to_string())
+        );
+    }
+
+    #[test]
+    fn parse_opkg_version_large_valid_epoch() {
+        // u32::MAX is a valid epoch value per purl-spec (no upper bound
+        // in practice, but our type limits us; guard boundary condition).
+        let raw = format!("{}:1.0", u32::MAX);
+        assert_eq!(
+            parse_opkg_version_with_epoch(&raw),
+            (Some(u32::MAX), "1.0".to_string())
+        );
+    }
+
+    // ── Milestone 190 — build_opkg_purl epoch qualifier ──
+
+    #[test]
+    fn build_opkg_purl_omits_epoch_when_none() {
+        let p = build_opkg_purl("netbase", "6.4", "all", None, None).unwrap();
+        assert_eq!(p.as_str(), "pkg:opkg/netbase@6.4?arch=all");
+    }
+
+    #[test]
+    fn build_opkg_purl_omits_epoch_when_zero() {
+        // FR-010 — Some(0) MUST NOT emit &epoch=0 per purl-spec.
+        let p = build_opkg_purl("netbase", "6.4", "all", None, Some(0)).unwrap();
+        assert_eq!(p.as_str(), "pkg:opkg/netbase@6.4?arch=all");
+    }
+
+    #[test]
+    fn build_opkg_purl_emits_epoch_qualifier_when_nonzero() {
+        // FR-009 — Some(1) → &epoch=1 qualifier appended alphabetically
+        // after arch=.
+        let p = build_opkg_purl("netbase", "6.4", "all", None, Some(1)).unwrap();
+        assert_eq!(p.as_str(), "pkg:opkg/netbase@6.4?arch=all&epoch=1");
+    }
+
+    #[test]
+    fn build_opkg_purl_alphabetical_qualifier_ordering() {
+        // arch < distro < epoch alphabetically. Verifies research §R4
+        // ordering claim.
+        let p = build_opkg_purl("netbase", "6.4", "all", Some("nodistro-1"), Some(3)).unwrap();
+        assert_eq!(
+            p.as_str(),
+            "pkg:opkg/netbase@6.4?arch=all&distro=nodistro-1&epoch=3"
+        );
+    }
+
+    #[test]
+    fn build_opkg_purl_no_epoch_no_distro_byte_identical_to_pre_m190() {
+        // FR-011 / SC-006 — the (name, version, arch, None, None) path
+        // MUST produce the exact same output as the pre-m190
+        // signature. Regression guard for byte-identity of existing
+        // goldens.
+        let p = build_opkg_purl("6in4", "28", "all", None, None).unwrap();
+        assert_eq!(p.as_str(), "pkg:opkg/6in4@28?arch=all");
     }
 }

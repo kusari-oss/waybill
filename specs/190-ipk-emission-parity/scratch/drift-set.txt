@@ -1,0 +1,14 @@
+m190 Golden Drift Set (T003)
+Captured: 2026-07-13
+
+grep 1 — CDX raw BitBake operators in "expression" fields:
+  grep -rEl '"expression":\s*"[^"]*[&|][^"]*"' mikebom-cli/tests/fixtures/
+  → Zero hits.
+
+grep 2 — inline-epoch PURLs (pkg:opkg/name@<digits>:...):
+  grep -rEl 'pkg:opkg/[^"]*@[0-9]+:' mikebom-cli/tests/fixtures/
+  → Zero hits.
+
+Conclusion: NO existing golden fixtures need regeneration for either the license-normalization fix (US1) or the epoch-qualifier fix (US3). Phase 6 T032 regen step is effectively a no-op — the m190 changes affect only NEW fixtures introduced by this milestone (T008, T022) and any snapshot goldens they carry.
+
+Verified: SC-006 (byte-identity for no-epoch, single-license paths) is trivially satisfied because there are no pre-existing goldens in the drift-relevant classes.
