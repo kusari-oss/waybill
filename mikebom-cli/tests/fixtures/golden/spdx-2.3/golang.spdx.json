@@ -17,13 +17,7 @@
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
       "annotator": "Tool: mikebom-0.1.0-alpha.61",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"partial\"}"
-    },
-    {
-      "annotationDate": "1970-01-01T00:00:00Z",
-      "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.61",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 1 component(s) not reachable from root\"}"
+      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"complete\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
@@ -1103,12 +1097,6 @@
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.61",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:orphan-reason\",\"value\":\"unresolved-indirect-require\"}"
-        },
-        {
-          "annotationDate": "1970-01-01T00:00:00Z",
-          "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.61",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -1190,6 +1178,11 @@
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-OPPLTPJ24FIGRUY2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-5Z5YTQKEFAEY7U56",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-4BC3TYO5L6QI7GXM"
     }

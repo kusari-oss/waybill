@@ -1215,9 +1215,12 @@ fn scan_go_documentdescribes_targets_main_module() {
 
 #[test]
 fn scan_go_zero_requires_emits_main_module_no_edges() {
-    // US1 AS#3: a Go fixture with `module x\ngo 1.22\n` and no
-    // requires emits the main-module component but no DEPENDS_ON
-    // edges. Verifies the zero-require case is handled cleanly.
+    // US1 AS#3 (m194 update): a Go fixture with `module x\ngo 1.22\n`
+    // and no requires emits the main-module component with EXACTLY
+    // ONE DEPENDS_ON edge: to the pkg:golang/stdlib@v* component
+    // synthesized from the go.mod's `go` directive. m194 US1 (issue
+    // #571) closes the stdlib-orphan gap by attaching the Go
+    // mainmod to its stdlib entry via a synthetic edge.
     let tmp = tempfile::tempdir().expect("tempdir");
     let project = tmp.path().join("project");
     std::fs::create_dir_all(&project).expect("mkdir");
@@ -1258,7 +1261,7 @@ fn scan_go_zero_requires_emits_main_module_no_edges() {
     let main = spdx_main_module_package(&spdx);
     assert_eq!(main["name"].as_str(), Some("example.com/empty"));
     let main_id = main["SPDXID"].as_str().expect("SPDXID");
-    let depends_on_count = spdx["relationships"]
+    let depends_on_targets: Vec<String> = spdx["relationships"]
         .as_array()
         .expect("relationships array")
         .iter()
@@ -1266,10 +1269,38 @@ fn scan_go_zero_requires_emits_main_module_no_edges() {
             r["relationshipType"].as_str() == Some("DEPENDS_ON")
                 && r["spdxElementId"].as_str() == Some(main_id)
         })
-        .count();
+        .filter_map(|r| r["relatedSpdxElement"].as_str().map(str::to_string))
+        .collect();
     assert_eq!(
-        depends_on_count, 0,
-        "US1 AS#3: zero-require go.mod must produce zero DEPENDS_ON \
-         edges from main-module. got: {depends_on_count}",
+        depends_on_targets.len(),
+        1,
+        "m194 US1 (updated AS#3): zero-require go.mod must produce \
+         exactly one DEPENDS_ON edge from main-module — to stdlib. \
+         got: {} targets: {depends_on_targets:?}",
+        depends_on_targets.len(),
+    );
+    // Locate the stdlib Package element to confirm the target IRI.
+    let stdlib_pkg = spdx["packages"]
+        .as_array()
+        .expect("packages array")
+        .iter()
+        .find(|p| {
+            p["externalRefs"]
+                .as_array()
+                .map(|refs| {
+                    refs.iter().any(|r| {
+                        r["referenceLocator"]
+                            .as_str()
+                            .is_some_and(|s| s.starts_with("pkg:golang/stdlib@"))
+                    })
+                })
+                .unwrap_or(false)
+        })
+        .expect("m194 US1: stdlib Package must be emitted alongside Go mainmod");
+    let stdlib_id = stdlib_pkg["SPDXID"].as_str().expect("stdlib SPDXID");
+    assert_eq!(
+        depends_on_targets[0], stdlib_id,
+        "m194 US1: the single DEPENDS_ON target must be the stdlib \
+         Package's SPDXID"
     );
 }

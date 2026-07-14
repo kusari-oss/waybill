@@ -1,0 +1,54 @@
+m194 Golden Drift Set + Code-Shape Verification
+Captured: 2026-07-14
+Tasks: T002, T003, T004, T005
+
+## T002 — US1 drift (stdlib orphan)
+
+grep -rEln '"purl":\s*"pkg:golang/stdlib@' mikebom-cli/tests/fixtures/
+→ 1 hit: mikebom-cli/tests/fixtures/golden/cyclonedx/golang.cdx.json
+
+Expected drift post-US1: this golden gains a new edge from the Go mainmod
+to `pkg:golang/stdlib@v*` in `.dependencies[]`. Also affects the SPDX 2.3
+and SPDX 3 versions of the same fixture. Regen at T015.
+
+## T003 — US2 drift (nameless-nested-npm orphan)
+
+Zero nameless package.json + package-lock.json pairs found in the
+existing fixture corpus. US2 fix is a no-op on all existing goldens.
+
+## T004 — apply_main_module_drop_or_demote multi-mainmod handling (Q2 answer B verification)
+
+Verified at `mikebom-cli/src/generate/root_selector.rs:528+`. The
+function iterates ALL components via `for c in components` and drops
+every `is_main_module(c)`. Multi-mainmod drops correctly per m149. No
+extension needed. Nested mainmods synthesized by US2 will drop
+alongside top-level mainmods; m192/m193 pre-rewrite handles the
+re-anchoring.
+
+## T005 — name → PURL resolution multi-version stdlib disambiguation
+
+Verified at `mikebom-cli/src/scan_fs/mod.rs:498-548` + resolution at
+line 756-772. `name_to_purl: HashMap<(String, String), String>` keyed
+by (ecosystem, name). For multi-Go-version scans (multi-binary image
+where 2 Go binaries use different Go stdlib versions), both stdlib
+entries have name="stdlib" + ecosystem="golang" → second insert
+overwrites the first. Only ONE stdlib PURL is resolvable via name-
+lookup.
+
+Decision: accept degraded behavior for the multi-Go-version edge case
+(all Go mainmods link to whichever stdlib entry name_to_purl happens
+to hold at emission time). Single-version scans (pico's case + the
+common case) work correctly. Multi-version disambiguation is out of
+scope for m194; if it surfaces as a real customer issue, follow-up
+fix would extend `name_to_purl` value type from `String` → `Vec<String>`
+or use `(ecosystem, name, version)` as the composite key.
+
+FR-003 acceptance test in the spec explicitly permits "if only one
+stdlib is emitted, all Go mainmods link to it" — my implementation
+matches this.
+
+## Regen scope
+
+1 golden file (golang.cdx.json) + its SPDX 2.3 + SPDX 3 companions.
+Zero other drift. FR-012 byte-identity gate: all other goldens must
+pass identically.

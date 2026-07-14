@@ -33,7 +33,9 @@ const FIXTURE_SUBPATH: &str = "go";
 ///   inter-transitive cache hits).
 /// - Post-091: 109 edges (~24 direct deps + ~85 root → transitive
 ///   edges synthesized from go.sum's flat closure via step 5).
-const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 109;
+/// - Post-194 US1 (issue #571): 110 edges (+1: main-module →
+///   pkg:golang/stdlib@v* edge closing the stdlib-orphan gap).
+const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 110;
 
 const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
     // Direct deps from go.mod `require` block — synthesized into edges

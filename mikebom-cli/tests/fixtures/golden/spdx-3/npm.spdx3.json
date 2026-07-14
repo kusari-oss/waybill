@@ -216,7 +216,7 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G7YY5CH4DY5SYXVK5HCU752Q/anno-5ER335RP2DLB2WWC",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"partial\"}",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"complete\"}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-G7YY5CH4DY5SYXVK5HCU752Q",
       "type": "Annotation"
     },
@@ -242,14 +242,6 @@
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G7YY5CH4DY5SYXVK5HCU752Q/anno-D3P7TSBZ7F26PTRV",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"node_modules/express/package.json\"]}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-G7YY5CH4DY5SYXVK5HCU752Q/pkg-TXLIZUEJRNELTNPP",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-G7YY5CH4DY5SYXVK5HCU752Q/anno-DZQ5VVM6OW6YVZSC",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 1 component(s) not reachable from root\"}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-G7YY5CH4DY5SYXVK5HCU752Q",
       "type": "Annotation"
     },
     {

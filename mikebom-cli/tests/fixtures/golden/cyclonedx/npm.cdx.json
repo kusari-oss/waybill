@@ -269,11 +269,7 @@
       },
       {
         "name": "mikebom:graph-completeness",
-        "value": "partial"
-      },
-      {
-        "name": "mikebom:graph-completeness-reason",
-        "value": "orphaned-components-detected: 1 component(s) not reachable from root"
+        "value": "complete"
       },
       {
         "name": "mikebom:workspaces-detected",

@@ -499,30 +499,16 @@ impl CycloneDxBuilder {
         // Fix: apply the m086 rewrite eagerly so the classifier operates
         // on the same edge topology that build_dependencies (line 626)
         // will emit. Reuse `dropped_main_module_purls` computed above.
+        // Extracted to `graph_completeness::rewrite_dropped_mainmod_edges`
+        // in m194 US4 so SPDX 2.3 + SPDX 3 emitters share the same
+        // pre-rewrite and reach classifier `complete` on operator-
+        // override scans (SC-005).
         let m192_prerewritten_relationships: Vec<Relationship> =
-            if !dropped_main_module_purls.is_empty() {
-                let dropped: std::collections::HashSet<&str> = dropped_main_module_purls
-                    .iter()
-                    .map(|s| s.as_str())
-                    .collect();
-                relationships
-                    .iter()
-                    .map(|r| {
-                        if dropped.contains(r.from.as_str()) {
-                            Relationship {
-                                from: target_ref.clone(),
-                                to: r.to.clone(),
-                                relationship_type: r.relationship_type.clone(),
-                                provenance: r.provenance.clone(),
-                            }
-                        } else {
-                            r.clone()
-                        }
-                    })
-                    .collect()
-            } else {
-                relationships.to_vec()
-            };
+            crate::generate::graph_completeness::rewrite_dropped_mainmod_edges(
+                relationships,
+                &dropped_main_module_purls,
+                &target_ref,
+            );
         let metadata_relationships_augmented: Vec<Relationship> = m192_prerewritten_relationships
             .iter()
             .cloned()

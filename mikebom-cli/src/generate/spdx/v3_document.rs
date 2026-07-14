@@ -624,12 +624,50 @@ pub fn build_document(
             &m158_selection,
             scan.components,
         );
+    // Milestone 194 US4 — compute target_ref eagerly so we can pre-
+    // rewrite dropped-mainmod edges (via `rewrite_dropped_mainmod_edges`)
+    // BEFORE the classifier runs, mirroring the CDX path (#570) and
+    // the SPDX 2.3 path. Fixes the format-parity gap where SPDX 3
+    // over-fires `partial: orphaned-components-detected: N` on
+    // operator-override scans that CDX classifies `complete`.
+    let m158_target_ref: String = match &m158_selection.subject {
+        crate::generate::root_selector::ResolvedRootSubject::MainModule(idx) => scan
+            .components
+            .get(*idx)
+            .map(|c| c.purl.as_str().to_string())
+            .unwrap_or_default(),
+        crate::generate::root_selector::ResolvedRootSubject::MavenCoord => scan
+            .scan_target_coord
+            .map(|c| format!("pkg:maven/{}/{}@{}", c.group, c.artifact, c.version))
+            .unwrap_or_default(),
+        crate::generate::root_selector::ResolvedRootSubject::SyntheticPlaceholder { name, version } => {
+            format!("pkg:generic/{name}@{version}")
+        }
+        crate::generate::root_selector::ResolvedRootSubject::OperatorOverride => {
+            scan.target_name.to_string()
+        }
+    };
+    // Existing augmentation feeds the DOWNSTREAM emit path unchanged
+    // (SPDX 3's `build_dependency_relationships` + issue-#229 alias
+    // at line ~322 handle dropped-mainmod re-anchoring at IRI-resolve
+    // time). Only the classifier gets the pre-rewritten set.
     let m158_augmented_relationships: Vec<mikebom_common::resolution::Relationship> = scan
         .relationships
         .iter()
         .cloned()
         .chain(m158_workspace_peer_edges.iter().cloned())
         .collect();
+    let m194_classifier_relationships: Vec<mikebom_common::resolution::Relationship> = {
+        let prerewritten = crate::generate::graph_completeness::rewrite_dropped_mainmod_edges(
+            scan.relationships,
+            &dropped_main_module_purls,
+            &m158_target_ref,
+        );
+        prerewritten
+            .into_iter()
+            .chain(m158_workspace_peer_edges.iter().cloned())
+            .collect()
+    };
 
     // 7. Relationship elements — dependency edges, containment edges,
     //    license/agent edges, document-describes edge. Combined into
@@ -723,31 +761,12 @@ pub fn build_document(
     // Milestone 158 US2 — compute the multi-root BFS reachability
     // pass on the AUGMENTED SPDX 3 graph and pass into
     // `build_document_annotations` for the two document-scope
-    // annotations. Independently computed per format (each has its
-    // own emission flow); result is deterministic across formats.
-    // Milestone 158 — mirror the emitter's primary-dep-fallback by
-    // seeding BFS with the emitted root's identity.
-    let m158_target_ref: String = match &m158_selection.subject {
-        crate::generate::root_selector::ResolvedRootSubject::MainModule(idx) => scan
-            .components
-            .get(*idx)
-            .map(|c| c.purl.as_str().to_string())
-            .unwrap_or_default(),
-        crate::generate::root_selector::ResolvedRootSubject::MavenCoord => scan
-            .scan_target_coord
-            .map(|c| format!("pkg:maven/{}/{}@{}", c.group, c.artifact, c.version))
-            .unwrap_or_default(),
-        crate::generate::root_selector::ResolvedRootSubject::SyntheticPlaceholder { name, version } => {
-            format!("pkg:generic/{name}@{version}")
-        }
-        crate::generate::root_selector::ResolvedRootSubject::OperatorOverride => {
-            scan.target_name.to_string()
-        }
-    };
+    // annotations. `m158_target_ref` was computed earlier (moved up
+    // for m194 US4 to feed the m192 pre-rewrite before augmentation).
     let m158_graph_completeness =
         crate::generate::graph_completeness::compute_graph_completeness(
             scan.components,
-            &m158_augmented_relationships,
+            &m194_classifier_relationships,
             &m158_selection,
             &m158_target_ref,
         );

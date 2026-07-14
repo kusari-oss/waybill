@@ -754,10 +754,6 @@
           "value": "source"
         },
         {
-          "name": "mikebom:orphan-reason",
-          "value": "unresolved-indirect-require"
-        },
-        {
           "name": "mikebom:workspace-member",
           "value": "[\".\"]"
         }
@@ -827,7 +823,8 @@
         "pkg:golang/github.com/stretchr/testify@v1.11.1",
         "pkg:golang/golang.org/x/sys@v0.28.0",
         "pkg:golang/gopkg.in/check.v1@v0.0.0-20161208181325-20d25e280405",
-        "pkg:golang/gopkg.in/yaml.v3@v3.0.1"
+        "pkg:golang/gopkg.in/yaml.v3@v3.0.1",
+        "pkg:golang/stdlib@v1.26.1"
       ],
       "ref": "pkg:golang/example.com/simple@v0.0.0-unknown"
     },
@@ -978,11 +975,7 @@
       },
       {
         "name": "mikebom:graph-completeness",
-        "value": "partial"
-      },
-      {
-        "name": "mikebom:graph-completeness-reason",
-        "value": "orphaned-components-detected: 1 component(s) not reachable from root"
+        "value": "complete"
       },
       {
         "name": "mikebom:workspaces-detected",

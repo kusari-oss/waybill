@@ -2255,6 +2255,33 @@ pub fn read(
         };
         if let Some(entry) = build_stdlib_entry(bare, &source_path_for_evidence) {
             out.push(entry);
+            // Milestone 194 US1 (issue #571) — link the Go primary
+            // main-module for THIS project_root to the emitted stdlib
+            // by appending "stdlib" to its `.depends` list. The
+            // existing name → PURL Relationship emitter at
+            // `scan_fs/mod.rs:756-772` picks up "stdlib" and produces
+            // a DependsOn edge to the corresponding
+            // `pkg:golang/stdlib@v<version>` component (registered in
+            // `name_to_purl` under `("golang", "stdlib")`).
+            //
+            // Match the mainmod by (a) golang ecosystem, (b) the
+            // main-module role annotation, and (c) source_path in
+            // this project_root's directory tree (the mainmod's
+            // source_path is either `<project_root>/go.mod` or
+            // `<project_root>/go.sum`, so a starts_with check on the
+            // canonicalized project_root path is sufficient).
+            let project_root_str = project_root.to_string_lossy();
+            for e in out.iter_mut() {
+                let is_go_mainmod = e.purl.as_str().starts_with("pkg:golang/")
+                    && e.extra_annotations
+                        .get("mikebom:component-role")
+                        .and_then(|v| v.as_str())
+                        == Some("main-module")
+                    && e.source_path.starts_with(project_root_str.as_ref());
+                if is_go_mainmod && !e.depends.iter().any(|d| d == "stdlib") {
+                    e.depends.push("stdlib".to_string());
+                }
+            }
         }
     }
 

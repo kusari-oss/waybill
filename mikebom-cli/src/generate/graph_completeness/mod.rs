@@ -143,6 +143,26 @@ pub fn compute_graph_completeness(
     selection: &RootSelectionResult,
     target_ref: &str,
 ) -> GraphCompletenessResult {
+    // Milestone 194 US3: file-tier components (m133) carry
+    // `mikebom:component-tier: file` and have no dep-graph edges by
+    // design — they represent unattributed file inventory (SHA-256-
+    // hashed blobs), not package-graph participants. Excluding them
+    // from reachability accounting prevents them from perma-triggering
+    // OrphanedComponentsDetected on scans that emit file-tier
+    // components (per SC-005: pico corpus must report `complete`).
+    // File-tier components remain in the emitted SBOM verbatim; this
+    // filter only affects the classifier's total/reachable counts.
+    let non_file_tier: Vec<ResolvedComponent> = components
+        .iter()
+        .filter(|c| {
+            c.extra_annotations
+                .get(crate::scan_fs::file_tier::COMPONENT_TIER_KEY)
+                .and_then(|v| v.as_str())
+                != Some(crate::scan_fs::file_tier::COMPONENT_TIER_FILE_VALUE)
+        })
+        .cloned()
+        .collect();
+    let components: &[ResolvedComponent] = non_file_tier.as_slice();
     let total_count = components.len();
 
     // Empty SBOM = trivially complete (nothing to reach, nothing
@@ -417,6 +437,54 @@ pub fn build_workspace_peer_edges(
                 source: "milestone-158-workspace-peer-linkage".to_string(),
                 data_type: "dependency-graph".to_string(),
             },
+        })
+        .collect()
+}
+
+/// Milestone 192 pre-rewrite: re-anchor DependsOn edges whose `.from`
+/// is a dropped-main-module PURL onto `target_ref`. Called from the
+/// three format emitters BEFORE `compute_graph_completeness` runs, so
+/// the classifier sees the same edge topology that the emitters will
+/// later serialize (via the m086 rewrite at build_dependencies /
+/// build_relationships time).
+///
+/// Without this, operator-override scans (`--root-name X`) that drop
+/// a native main-module leave stale `.from = <dropped-purl>` edges in
+/// the relationships vec; BFS from the synthetic target_ref then
+/// can't reach the transitive deps that used to hang off the dropped
+/// mainmod, and the classifier over-fires
+/// `partial: orphaned-components-detected: N`.
+///
+/// Extracted in milestone 194 US4 from `cyclonedx/builder.rs` (added
+/// by #570) so SPDX 2.3 + SPDX 3 emitters get the same pre-rewrite,
+/// closing the format-parity gap for graph-completeness on operator-
+/// override scans (SC-005: pico corpus SBOMs → `complete` across all
+/// three formats).
+pub fn rewrite_dropped_mainmod_edges(
+    relationships: &[Relationship],
+    dropped_main_module_purls: &[String],
+    target_ref: &str,
+) -> Vec<Relationship> {
+    if dropped_main_module_purls.is_empty() {
+        return relationships.to_vec();
+    }
+    let dropped: HashSet<&str> = dropped_main_module_purls
+        .iter()
+        .map(|s| s.as_str())
+        .collect();
+    relationships
+        .iter()
+        .map(|r| {
+            if dropped.contains(r.from.as_str()) {
+                Relationship {
+                    from: target_ref.to_string(),
+                    to: r.to.clone(),
+                    relationship_type: r.relationship_type.clone(),
+                    provenance: r.provenance.clone(),
+                }
+            } else {
+                r.clone()
+            }
         })
         .collect()
 }

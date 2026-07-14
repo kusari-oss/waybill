@@ -567,6 +567,16 @@
     },
     {
       "creationInfo": "_:creation-info",
+      "from": "https://mikebom.kusari.dev/spdx3/doc-TAHDIMJT5RHXXI5QH25XWRGE/pkg-4BC3TYO5L6QI7GXM",
+      "relationshipType": "dependsOn",
+      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-TAHDIMJT5RHXXI5QH25XWRGE/rel-P6GZYNUIWPO3VOK2",
+      "to": [
+        "https://mikebom.kusari.dev/spdx3/doc-TAHDIMJT5RHXXI5QH25XWRGE/pkg-5Z5YTQKEFAEY7U56"
+      ],
+      "type": "Relationship"
+    },
+    {
+      "creationInfo": "_:creation-info",
       "from": "https://mikebom.kusari.dev/spdx3/doc-TAHDIMJT5RHXXI5QH25XWRGE",
       "relationshipType": "describes",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-TAHDIMJT5RHXXI5QH25XWRGE/rel-Z2G3TPPU76UADXRX",
@@ -811,16 +821,8 @@
       "annotationType": "other",
       "creationInfo": "_:creation-info",
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-TAHDIMJT5RHXXI5QH25XWRGE/anno-CNXEJVETSCQXIZNT",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"partial\"}",
+      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"complete\"}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-TAHDIMJT5RHXXI5QH25XWRGE",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-TAHDIMJT5RHXXI5QH25XWRGE/anno-DUJY3HKXKR2IVSIY",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:orphan-reason\",\"value\":\"unresolved-indirect-require\"}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-TAHDIMJT5RHXXI5QH25XWRGE/pkg-5Z5YTQKEFAEY7U56",
       "type": "Annotation"
     },
     {
@@ -1309,14 +1311,6 @@
       "spdxId": "https://mikebom.kusari.dev/spdx3/doc-TAHDIMJT5RHXXI5QH25XWRGE/anno-S3CRECJ7GN55FMXG",
       "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:github.com\\\\/stretchr\\\\/testify:github.com\\\\/stretchr\\\\/testify:v1.11.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:github.com\\\\/stretchr:github.com\\\\/stretchr\\\\/testify:v1.11.1:*:*:*:*:*:*:*\"]}",
       "subject": "https://mikebom.kusari.dev/spdx3/doc-TAHDIMJT5RHXXI5QH25XWRGE/pkg-FQD3O6TFIGWWRCL5",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://mikebom.kusari.dev/spdx3/doc-TAHDIMJT5RHXXI5QH25XWRGE/anno-SAWXED5KYI3I4DR4",
-      "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 1 component(s) not reachable from root\"}",
-      "subject": "https://mikebom.kusari.dev/spdx3/doc-TAHDIMJT5RHXXI5QH25XWRGE",
       "type": "Annotation"
     },
     {

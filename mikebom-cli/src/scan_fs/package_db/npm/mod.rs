@@ -301,6 +301,16 @@ pub fn read(
     // cross-format parity guarantees on source-manifest.
     apply_nameless_secondary_umbrella(rootfs, include_dev, &mut entries, exclude_set);
 
+    // Milestone 194 US2 (issue #572) — synthesize a nested mainmod
+    // for each nameless `package.json` that has an adjacent
+    // `package-lock.json`, using the directory's basename as the
+    // PURL name (versionless per m191). The umbrella pass above
+    // empirically fails to reach some nested nameless workspaces
+    // (e.g., pico's `pkg/db/integrationtest/schemalint/`); this
+    // pass ensures every lockfile-anchored nameless workspace gets
+    // a graph anchor, so its transitive deps aren't orphaned.
+    synthesize_nameless_nested_mainmods(rootfs, &mut entries, exclude_set);
+
     // Milestone 066 same-PURL dedup. Collapses same-PURL collisions
     // (rare for npm given `node_modules/` exclusion in
     // should_skip_descent, but defensive). Non-main-module entries
@@ -337,6 +347,170 @@ pub fn read(
     }
 
     Ok(entries)
+}
+
+/// Milestone 194 US2 (issue #572) — synthesize a mainmod component
+/// for each nameless `package.json` alongside a `package-lock.json`,
+/// using the directory basename as the PURL name (versionless per
+/// m191). Rationale: the umbrella pass (`apply_nameless_secondary_
+/// umbrella`) empirically fails to reach nested nameless workspaces
+/// (e.g., pico's `pkg/db/integrationtest/schemalint/`), leaving the
+/// lockfile's transitive components as orphans. Synthesizing a
+/// per-workspace mainmod gives BFS a graph anchor without relying on
+/// the umbrella's parent-scan heuristic.
+///
+/// Skips directories that either (a) have no adjacent
+/// `package-lock.json`, (b) have a `name` field (already handled by
+/// the m066 loop), or (c) already have an entry at the same PURL in
+/// `entries` (dedup safety — the umbrella pass may have populated it).
+///
+/// Uses `mikebom:component-role: main-module` so the m127 root-
+/// selector treats the synthesized mainmod as a workspace peer, and
+/// so `apply_main_module_drop_or_demote` correctly drops it under
+/// operator-override (`--root-name X`). The m192/m193 pre-rewrite
+/// re-anchors its outgoing DependsOn edges onto the operator's
+/// synthetic root, keeping the graph connected.
+fn synthesize_nameless_nested_mainmods(
+    rootfs: &Path,
+    entries: &mut Vec<PackageDbEntry>,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) {
+    let existing_purls: std::collections::HashSet<String> = entries
+        .iter()
+        .map(|e| e.purl.as_str().to_string())
+        .collect();
+    let mut synthesized = 0usize;
+    for project_root in candidate_project_roots(rootfs, exclude_set) {
+        let manifest_path = project_root.join("package.json");
+        let lock_path = project_root.join("package-lock.json");
+        if !manifest_path.is_file() || !lock_path.is_file() {
+            continue;
+        }
+        let Ok(manifest_text) = std::fs::read_to_string(&manifest_path) else {
+            continue;
+        };
+        let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&manifest_text) else {
+            continue;
+        };
+        // Skip if named — m066 already emitted it (or will).
+        if parsed.get("name").and_then(|v| v.as_str()).is_some() {
+            continue;
+        }
+        let Some(basename) = project_root
+            .file_name()
+            .and_then(|s| s.to_str())
+            .filter(|s| !s.is_empty())
+        else {
+            continue;
+        };
+        let Some(purl) = build_npm_purl(basename, "") else {
+            continue;
+        };
+        if existing_purls.contains(purl.as_str()) {
+            continue;
+        }
+        // Collect direct-dep names from the manifest's dep sections,
+        // and resolve each to its lockfile-pinned version so the
+        // `.depends` entry uses the m087/npm disambiguation key
+        // (`"{name} {version}"`) at `scan_fs/mod.rs:547`. Without the
+        // version qualifier, the versionless-name key collides with
+        // our own synthesized entry (`pkg:npm/<basename>`) in
+        // `name_to_purl` and the resolver picks a self-loop (silently
+        // dropped), leaving the transitives orphaned. Fixes the
+        // self-loop bug found on pico's `schemalint` case.
+        let lock_versions: std::collections::HashMap<String, String> =
+            match std::fs::read_to_string(&lock_path)
+                .ok()
+                .and_then(|t| serde_json::from_str::<serde_json::Value>(&t).ok())
+            {
+                Some(lock) => lock
+                    .get("packages")
+                    .and_then(|v| v.as_object())
+                    .map(|pkgs| {
+                        let mut m = std::collections::HashMap::new();
+                        for (key, val) in pkgs {
+                            if let Some(name) = key.strip_prefix("node_modules/") {
+                                // Only take TOP-LEVEL node_modules
+                                // entries (no nested `.../node_modules/`).
+                                if name.contains("/node_modules/") {
+                                    continue;
+                                }
+                                if let Some(v) = val.get("version").and_then(|v| v.as_str()) {
+                                    m.insert(name.to_string(), v.to_string());
+                                }
+                            }
+                        }
+                        m
+                    })
+                    .unwrap_or_default(),
+                None => std::collections::HashMap::new(),
+            };
+        let mut depends: Vec<String> = Vec::new();
+        for section in ["dependencies", "devDependencies", "optionalDependencies"] {
+            if let Some(obj) = parsed.get(section).and_then(|v| v.as_object()) {
+                for name in obj.keys() {
+                    // Prefer the disambiguated form when lockfile has a
+                    // pinned version; fall back to bare name (name_to_purl
+                    // will pick whichever version was last inserted).
+                    let dep_str = match lock_versions.get(name) {
+                        Some(v) => format!("{name} {v}"),
+                        None => name.clone(),
+                    };
+                    if !depends.iter().any(|d| d == &dep_str) {
+                        depends.push(dep_str);
+                    }
+                }
+            }
+        }
+        let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
+            Default::default();
+        extra_annotations.insert(
+            "mikebom:component-role".to_string(),
+            serde_json::Value::String("main-module".to_string()),
+        );
+        extra_annotations.insert(
+            "mikebom:synthesized-from".to_string(),
+            serde_json::Value::String("nameless-nested-workspace".to_string()),
+        );
+        entries.push(PackageDbEntry {
+            build_inclusion: None,
+            purl,
+            name: basename.to_string(),
+            version: String::new(),
+            arch: None,
+            source_path: format!("path+file://{}", project_root.display()),
+            depends,
+            maintainer: None,
+            licenses: Vec::new(),
+            lifecycle_scope: None,
+            requirement_range: None,
+            source_type: None,
+            buildinfo_status: None,
+            evidence_kind: None,
+            binary_class: None,
+            binary_stripped: None,
+            linkage_kind: None,
+            detected_go: None,
+            confidence: None,
+            binary_packed: None,
+            raw_version: None,
+            parent_purl: None,
+            npm_role: None,
+            co_owned_by: None,
+            hashes: Vec::new(),
+            sbom_tier: Some("source".to_string()),
+            shade_relocation: None,
+            extra_annotations,
+            binary_role: None,
+        });
+        synthesized += 1;
+    }
+    if synthesized > 0 {
+        tracing::info!(
+            synthesized_count = synthesized,
+            "npm: synthesized nested nameless-workspace mainmods (m194 US2 / issue #572)"
+        );
+    }
 }
 
 /// Issue #256: for each nameless secondary `package.json` (one

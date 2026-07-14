@@ -653,12 +653,6 @@ pub fn build_document(
     // each format has its own emission flow — the result is
     // deterministic (same select_root ladder, same seed set, same
     // edges) so both emissions agree byte-equally on the value.
-    let m158_augmented_relationships: Vec<mikebom_common::resolution::Relationship> = artifacts
-        .relationships
-        .iter()
-        .cloned()
-        .chain(m158_workspace_peer_edges.iter().cloned())
-        .collect();
     // Milestone 158 — pass the emitted SPDX root's PURL (or empty when
     // the synthetic-root fallback fired without a Package ref) as the
     // target_ref so BFS mirrors the emitter's primary-dep-fallback.
@@ -679,10 +673,28 @@ pub fn build_document(
             artifacts.target_name.to_string()
         }
     };
+    // Milestone 194 US4 — apply the m192 pre-rewrite ONLY for the
+    // classifier input (mirroring CDX's separation: emit uses
+    // `effective_relationships`; classifier uses the pre-rewritten
+    // set). Without this isolation, downstream SPDX 2.3 emit
+    // machinery double-rewrites via the existing dropped-mainmod
+    // alias in `spdx/relationships.rs` and produces empty
+    // `.dependsOn` on the synthesized root.
+    let m194_classifier_relationships: Vec<mikebom_common::resolution::Relationship> = {
+        let prerewritten = crate::generate::graph_completeness::rewrite_dropped_mainmod_edges(
+            artifacts.relationships,
+            &dropped_main_module_purls,
+            &m158_target_ref,
+        );
+        prerewritten
+            .into_iter()
+            .chain(m158_workspace_peer_edges.iter().cloned())
+            .collect()
+    };
     let m158_graph_completeness =
         crate::generate::graph_completeness::compute_graph_completeness(
             artifacts.components,
-            &m158_augmented_relationships,
+            &m194_classifier_relationships,
             &selection,
             &m158_target_ref,
         );
