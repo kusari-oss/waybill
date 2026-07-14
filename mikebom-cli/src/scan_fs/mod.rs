@@ -804,7 +804,15 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // is final by the time edges are typed.
     apply_lifecycle_scope_to_edges(&components, &mut relationships);
 
-    let mut components = deduplicate(components);
+    let components = deduplicate(components);
+    // Milestone 191 (#560): design-tier / source-tier reconciliation.
+    // Runs immediately after dedup so downstream steps (graph-completeness,
+    // emission) see the collapsed component set. Rewrites any Relationship
+    // edges pointing at removed design-tier PURLs to target the surviving
+    // source-tier PURLs (FR-005). Silent no-op for scans with zero
+    // design-tier components (byte-identity guarantee for pre-m191 shapes).
+    let mut components =
+        crate::resolve::reconciler::reconcile_design_source_tiers(components, &mut relationships);
     // Milestone 148: cross-PURL canonicalization. Some ecosystems (Maven
     // nested-coord case at scan_fs/package_db/maven.rs:3429-3457, Cargo
     // workspace vendoring, Go vendored modules) intentionally retain

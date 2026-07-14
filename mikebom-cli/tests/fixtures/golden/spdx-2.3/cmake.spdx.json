@@ -205,7 +205,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "openssl",
-      "versionInfo": ""
+      "versionInfo": "NOASSERTION"
     },
     {
       "SPDXID": "SPDXRef-Package-3ECZZDDDHD3O6FKS",

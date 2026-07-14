@@ -110,12 +110,20 @@ fn build_cargo_purl(name: &str, version: &str) -> Option<Purl> {
     // purl-spec § Character encoding: name + version are
     // percent-encoded strings. `+` in semver build metadata (e.g.
     // `1.0.0+build.123`) MUST encode to `%2B`.
-    Purl::new(&format!(
-        "pkg:cargo/{}@{}",
-        encode_purl_segment(name),
-        encode_purl_segment(version),
-    ))
-    .ok()
+    //
+    // Milestone 191 (#558): when version is empty (design-tier
+    // component with no source-tier resolution), emit a versionless
+    // PURL per purl-spec canonical form — no trailing `@`.
+    let purl_str = if version.is_empty() {
+        format!("pkg:cargo/{}", encode_purl_segment(name))
+    } else {
+        format!(
+            "pkg:cargo/{}@{}",
+            encode_purl_segment(name),
+            encode_purl_segment(version),
+        )
+    };
+    Purl::new(&purl_str).ok()
 }
 
 fn package_to_entry(pkg: &CargoPackage, source_path: &str) -> Option<PackageDbEntry> {
@@ -2761,5 +2769,19 @@ version = "0.1.0-alpha.11"
                 "baz 2.0.0".to_string(),
             ],
         );
+    }
+
+    // ── Milestone 191 (#558) — build_cargo_purl versionless shape ──
+
+    #[test]
+    fn build_cargo_purl_empty_version_emits_versionless_shape() {
+        let p = build_cargo_purl("serde", "").expect("empty-version permitted");
+        assert_eq!(p.as_str(), "pkg:cargo/serde");
+    }
+
+    #[test]
+    fn build_cargo_purl_nonempty_version_byte_identical_to_pre_m191() {
+        let p = build_cargo_purl("serde", "1.0.203").expect("non-empty");
+        assert_eq!(p.as_str(), "pkg:cargo/serde@1.0.203");
     }
 }

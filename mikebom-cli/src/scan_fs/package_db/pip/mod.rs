@@ -1451,4 +1451,20 @@ dependencies = ["requests"]
                 .contains_key("mikebom:optional-derivation"));
         }
     }
+
+    // ── Milestone 191 (#558) — build_pypi_purl_str versionless shape ──
+    // NOTE: pip already had the empty-version branch pre-m191; these
+    // tests lock the behavior in per FR-011 / SC-006.
+
+    #[test]
+    fn build_pypi_purl_str_empty_version_emits_versionless_shape() {
+        let s = build_pypi_purl_str("requests", "");
+        assert_eq!(s, "pkg:pypi/requests");
+    }
+
+    #[test]
+    fn build_pypi_purl_str_nonempty_version_byte_identical_to_pre_m191() {
+        let s = build_pypi_purl_str("requests", "2.31.0");
+        assert_eq!(s, "pkg:pypi/requests@2.31.0");
+    }
 }

@@ -674,14 +674,30 @@ mod walk;
 mod yarn_lock;
 
 fn build_npm_purl(name: &str, version: &str) -> Option<Purl> {
+    // Milestone 191 (#558): when version is empty (design-tier
+    // package.json declaration with no resolved lockfile entry —
+    // e.g., an `optionalDependencies` entry that failed to install,
+    // or a freshly-added dep before lockfile refresh), emit a
+    // versionless PURL per purl-spec canonical form — no trailing
+    // `@`. Scoped-name segment (`%40scope/name`) is preserved.
     let purl_str = if let Some(rest) = name.strip_prefix('@') {
         let (scope, bare_name) = rest.split_once('/')?;
-        format!(
-            "pkg:npm/%40{}/{}@{}",
-            encode_purl_segment(scope),
-            encode_purl_segment(bare_name),
-            encode_purl_segment(version),
-        )
+        if version.is_empty() {
+            format!(
+                "pkg:npm/%40{}/{}",
+                encode_purl_segment(scope),
+                encode_purl_segment(bare_name),
+            )
+        } else {
+            format!(
+                "pkg:npm/%40{}/{}@{}",
+                encode_purl_segment(scope),
+                encode_purl_segment(bare_name),
+                encode_purl_segment(version),
+            )
+        }
+    } else if version.is_empty() {
+        format!("pkg:npm/{}", encode_purl_segment(name))
     } else {
         format!(
             "pkg:npm/{}@{}",
@@ -752,12 +768,36 @@ mod tests {
     }
 
     #[test]
-    fn build_npm_purl_empty_version_is_permitted_for_design_tier() {
-        // Design-tier root-package.json fallback entries have no resolved
-        // version yet — they carry the range spec as a property. The PURL
-        // must still be constructible.
+    fn build_npm_purl_empty_version_emits_versionless_shape() {
+        // Milestone 191 (#558) — design-tier root-package.json fallback
+        // entries have no resolved version. Pre-m191 the PURL was
+        // `pkg:npm/foo@` (trailing `@`, spec-non-canonical). Post-m191
+        // the emitted shape is the versionless `pkg:npm/foo` per purl-
+        // spec canonical form.
         let p = build_npm_purl("foo", "").expect("empty-version permitted");
-        assert_eq!(p.as_str(), "pkg:npm/foo@");
+        assert_eq!(p.as_str(), "pkg:npm/foo");
+    }
+
+    #[test]
+    fn build_npm_purl_scoped_empty_version_emits_versionless_shape() {
+        // Scoped equivalent of the above — `%40scope/name` prefix
+        // preserved, no `@` before the empty version segment.
+        let p = build_npm_purl("@angular/core", "").expect("scoped empty-version permitted");
+        assert_eq!(p.as_str(), "pkg:npm/%40angular/core");
+    }
+
+    #[test]
+    fn build_npm_purl_nonempty_version_byte_identical_to_pre_m191() {
+        // FR-011 / SC-006 — byte-identity for the non-empty-version
+        // path. Pre-m191 output was `pkg:npm/lodash@4.17.21`.
+        let p = build_npm_purl("lodash", "4.17.21").expect("non-empty");
+        assert_eq!(p.as_str(), "pkg:npm/lodash@4.17.21");
+    }
+
+    #[test]
+    fn build_npm_purl_scoped_nonempty_version_byte_identical_to_pre_m191() {
+        let p = build_npm_purl("@angular/core", "16.0.0").expect("scoped non-empty");
+        assert_eq!(p.as_str(), "pkg:npm/%40angular/core@16.0.0");
     }
 
     #[test]

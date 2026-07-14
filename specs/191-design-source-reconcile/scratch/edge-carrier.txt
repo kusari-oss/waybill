@@ -1,0 +1,46 @@
+m191 Edge-Carrier Decision Record
+Captured: 2026-07-14 (T007)
+
+## Fact (a) — canonical field carrying dep edges
+
+`mikebom_common::resolution::Relationship` at `mikebom-common/src/resolution.rs:337`:
+
+  pub struct Relationship {
+      pub from: String,             // PURL string of the depender
+      pub to: String,               // PURL string of the depended
+      pub relationship_type: RelationshipType,
+      pub provenance: EnrichmentProvenance,
+  }
+
+Stored in `ScanResult.relationships: Vec<Relationship>` at
+`mikebom-cli/src/scan_fs/mod.rs:78`. Available as a local `relationships`
+variable at both dedup sites (scan_fs/mod.rs:284 constructor; cli/scan_cmd.rs
+scope). Threaded through the pipeline as a mutable Vec.
+
+Key insight: edge endpoints are PURL STRINGS (not bom-refs). Reconciliation
+needs a `HashMap<String /* design PURL string */, String /* source PURL
+string */>` and MUST walk `relationships` rewriting both `.from` and `.to`
+when they appear in the map.
+
+## Fact (b) — decision: CENTRAL-REWRITE
+
+Chosen: **central-rewrite**. The reconciler takes `&mut Vec<Relationship>`
+alongside the components Vec, walks both, and rewrites in place. Signature:
+
+  pub fn reconcile_design_source_tiers(
+      components: Vec<ResolvedComponent>,
+      relationships: &mut Vec<Relationship>,
+  ) -> Vec<ResolvedComponent>
+
+Rejected: per-format-rewrite. Would require 3× duplication of the rewrite
+walk (CDX emitter + SPDX 2.3 emitter + SPDX 3 emitter), each looking up
+its own bom-ref/SPDXID convention. Central-rewrite happens once against
+canonical PURL strings; every downstream emitter sees the pre-rewritten
+edge and translates to its native ID format normally.
+
+Post-rewrite dedup: if the source-tier component was already an edge target
+before reconciliation AND the reconciled design-tier's edge also lands on
+it, deduplicate to preserve edge uniqueness (avoid double-edges after
+rewrite). Cheap `HashSet<(from, to, relationship_type)>` pass.
+
+T033 implements this per the above signature.

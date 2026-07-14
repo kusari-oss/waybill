@@ -385,12 +385,20 @@ fn parse_spec_line(line: &str) -> Option<(&str, &str)> {
 fn build_gem_purl(name: &str, version: &str) -> Option<Purl> {
     // purl-spec § Character encoding: `+` and other non-allowed
     // chars must be percent-encoded in both name and version.
-    Purl::new(&format!(
-        "pkg:gem/{}@{}",
-        encode_purl_segment(name),
-        encode_purl_segment(version),
-    ))
-    .ok()
+    //
+    // Milestone 191 (#558): when version is empty (design-tier
+    // Gemfile declaration with no resolved Gemfile.lock entry), emit
+    // a versionless PURL per purl-spec canonical form — no trailing `@`.
+    let purl_str = if version.is_empty() {
+        format!("pkg:gem/{}", encode_purl_segment(name))
+    } else {
+        format!(
+            "pkg:gem/{}@{}",
+            encode_purl_segment(name),
+            encode_purl_segment(version),
+        )
+    };
+    Purl::new(&purl_str).ok()
 }
 
 /// Milestone 162 (T006): build a **versionless** PURL for a synthetic
@@ -2678,5 +2686,19 @@ DEPENDENCIES
         }
         // Verify we actually have 3 entries: 2 real + 1 synthetic.
         assert_eq!(out.len(), 3);
+    }
+
+    // ── Milestone 191 (#558) — build_gem_purl versionless shape ──
+
+    #[test]
+    fn build_gem_purl_empty_version_emits_versionless_shape() {
+        let p = build_gem_purl("rails", "").expect("empty-version permitted");
+        assert_eq!(p.as_str(), "pkg:gem/rails");
+    }
+
+    #[test]
+    fn build_gem_purl_nonempty_version_byte_identical_to_pre_m191() {
+        let p = build_gem_purl("rails", "7.1.3").expect("non-empty");
+        assert_eq!(p.as_str(), "pkg:gem/rails@7.1.3");
     }
 }

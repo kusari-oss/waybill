@@ -2366,13 +2366,25 @@ fn build_maven_purl(group: &str, artifact: &str, version: &str) -> Option<Purl> 
     // purl-spec § Character encoding: all three segments are
     // percent-encoded strings. Debian-packaged Maven artifacts carry
     // versions like `1.0+dfsg` → `1.0%2Bdfsg`.
-    Purl::new(&format!(
-        "pkg:maven/{}/{}@{}",
-        encode_purl_segment(group),
-        encode_purl_segment(artifact),
-        encode_purl_segment(version),
-    ))
-    .ok()
+    //
+    // Milestone 191 (#558): when version is empty (design-tier
+    // pom.xml declaration with no resolved lockfile entry), emit
+    // a versionless PURL per purl-spec canonical form — no trailing `@`.
+    let purl_str = if version.is_empty() {
+        format!(
+            "pkg:maven/{}/{}",
+            encode_purl_segment(group),
+            encode_purl_segment(artifact),
+        )
+    } else {
+        format!(
+            "pkg:maven/{}/{}@{}",
+            encode_purl_segment(group),
+            encode_purl_segment(artifact),
+            encode_purl_segment(version),
+        )
+    };
+    Purl::new(&purl_str).ok()
 }
 
 fn pom_dep_to_entry(
@@ -7478,5 +7490,24 @@ mod tests {
         assert!(!entry
             .extra_annotations
             .contains_key("mikebom:optional-derivation"));
+    }
+
+    // ── Milestone 191 (#558) — build_maven_purl versionless shape ──
+
+    #[test]
+    fn build_maven_purl_empty_version_emits_versionless_shape() {
+        let p = build_maven_purl("org.apache.commons", "commons-lang3", "")
+            .expect("empty-version permitted");
+        assert_eq!(p.as_str(), "pkg:maven/org.apache.commons/commons-lang3");
+    }
+
+    #[test]
+    fn build_maven_purl_nonempty_version_byte_identical_to_pre_m191() {
+        let p = build_maven_purl("org.apache.commons", "commons-lang3", "3.14.0")
+            .expect("non-empty");
+        assert_eq!(
+            p.as_str(),
+            "pkg:maven/org.apache.commons/commons-lang3@3.14.0"
+        );
     }
 }

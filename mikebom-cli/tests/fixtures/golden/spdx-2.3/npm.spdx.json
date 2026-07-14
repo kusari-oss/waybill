@@ -273,7 +273,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "package.json",
-      "versionInfo": ""
+      "versionInfo": "NOASSERTION"
     }
   ],
   "relationships": [

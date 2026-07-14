@@ -2748,6 +2748,15 @@ pub async fn execute(
         );
     }
 
+    // Milestone 191 (#560): second-pass reconciliation, mirroring the
+    // scan_fs/mod.rs:807 site. Post-dedup + post-enrichment: any design-
+    // tier components that survived the deduplicate() fold pass are now
+    // matched against source-tier siblings. Rewrites Relationship edges.
+    components = crate::resolve::reconciler::reconcile_design_source_tiers(
+        components,
+        &mut relationships,
+    );
+
     // Milestone 052/part-3: apply the `--exclude-scope` opt-out
     // filter as the final step before serialization. Drops
     // components whose lifecycle_scope matches any element in the

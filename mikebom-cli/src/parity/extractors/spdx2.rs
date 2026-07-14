@@ -73,7 +73,14 @@ pub(super) fn spdx23_version(doc: &Value) -> BTreeSet<String> {
         // Milestone 133 US1.C: drop empty-string versions for parity
         // with SPDX 3 (which omits `software_packageVersion` when
         // empty). See parity/extractors/cdx.rs::cdx_version comment.
-        .filter(|s| !s.is_empty())
+        //
+        // Milestone 191 (#558): also drop SPDX 2.3's spec-legal
+        // "NOASSERTION" / "NONE" sentinels — CDX omits the version
+        // field entirely for the same absent-version case, and SPDX 3
+        // omits `software_packageVersion`. Treating the SPDX 2.3
+        // sentinels as "absent" for parity purposes keeps A3 in sync
+        // across all three formats.
+        .filter(|s| !s.is_empty() && s != "NOASSERTION" && s != "NONE")
         .collect()
 }
 

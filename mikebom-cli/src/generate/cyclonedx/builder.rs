@@ -807,19 +807,41 @@ impl CycloneDxBuilder {
                     "evidence": build_evidence(&component.evidence, &component.occurrences, None, &[])
                 })
             } else {
-                json!({
-                    "type": binary_role_to_cdx_type(component.binary_role),
-                    "name": component.name,
-                    "version": component.version,
-                    "purl": component.purl.as_str(),
-                    "bom-ref": bom_ref,
-                    // Milestone 105 phase 2E: extra (None, &[]) params are
-                    // the cross-reader-dedup emission slots. Wired through
-                    // by US1-US6 reader phases — until then the call shape
-                    // produces byte-identical output to the pre-milestone-
-                    // 105 builder.
-                    "evidence": build_evidence(&component.evidence, &component.occurrences, None, &[])
-                })
+                // Milestone 105 phase 2E: extra (None, &[]) params are
+                // the cross-reader-dedup emission slots. Wired through
+                // by US1-US6 reader phases — until then the call shape
+                // produces byte-identical output to the pre-milestone-
+                // 105 builder.
+                //
+                // Milestone 191 (#558): omit `version` field entirely
+                // when component.version is empty (design-tier
+                // component with no source-tier resolution). Matches
+                // purl-spec convention where the versionless PURL is
+                // the canonical shape. Build the entry via
+                // `serde_json::Map` so the version key can be
+                // conditionally absent (vs `json!({...})` which always
+                // materializes every listed key).
+                let mut base = serde_json::Map::new();
+                base.insert(
+                    "type".to_string(),
+                    json!(binary_role_to_cdx_type(component.binary_role)),
+                );
+                base.insert("name".to_string(), json!(component.name));
+                if !component.version.is_empty() {
+                    base.insert("version".to_string(), json!(component.version));
+                }
+                base.insert("purl".to_string(), json!(component.purl.as_str()));
+                base.insert("bom-ref".to_string(), json!(bom_ref));
+                base.insert(
+                    "evidence".to_string(),
+                    build_evidence(
+                        &component.evidence,
+                        &component.occurrences,
+                        None,
+                        &[],
+                    ),
+                );
+                serde_json::Value::Object(base)
             };
 
             // Milestone 052/part-2: native CDX `scope` field. Per

@@ -96,8 +96,7 @@
         }
       ],
       "purl": "pkg:generic/openssl",
-      "type": "library",
-      "version": ""
+      "type": "library"
     },
     {
       "bom-ref": "pkg:generic/zlib@1.3.1",

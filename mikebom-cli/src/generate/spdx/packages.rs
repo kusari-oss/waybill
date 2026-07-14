@@ -622,10 +622,20 @@ fn component_to_package(
             .map(|_| SpdxPrimaryPackagePurpose::Application),
     };
 
+    // Milestone 191 (#558 / FR-011): SPDX 2.3 versionInfo MUST be
+    // "NOASSERTION" when the component has no concrete version
+    // (design-tier component with no source-tier resolution). Empty
+    // string is not spec-legal — the SPDX 2.3 vocab requires either
+    // a real version, "NOASSERTION", or "NONE".
+    let version_info = if c.version.is_empty() {
+        "NOASSERTION".to_string()
+    } else {
+        c.version.clone()
+    };
     let pkg = SpdxPackage {
         spdx_id,
         name: c.name.clone(),
-        version_info: c.version.clone(),
+        version_info,
         download_location: "NOASSERTION".to_string(),
         supplier,
         originator: None,

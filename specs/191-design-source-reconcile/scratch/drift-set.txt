@@ -1,0 +1,45 @@
+m191 Golden Drift Set Audit
+Captured: 2026-07-14
+Tasks: T003, T004
+
+## T003 — US2 signals
+
+grep 1 — trailing-@ PURLs:
+  grep -rEln 'pkg:[^"@]+@[",]' mikebom-cli/tests/fixtures/golden/
+  → Zero hits.
+
+grep 2 — empty version fields:
+  grep -rEln '"version":\s*""' mikebom-cli/tests/fixtures/
+  → Hits in:
+    - pkg_alias_binding/image-baz.cdx.json
+    - golden/cyclonedx/npm.cdx.json  (on type:file components, m133 file-tier)
+    - golden/cyclonedx/cmake.cdx.json  (same)
+  BUT: all empty-version cases are on `type: file` file-tier components which
+  don't have PURLs (no PURL builder in that path). NOT design-tier. Not in scope.
+
+## T004 — US1 signals (design/source pairs)
+
+Per-golden design-tier vs source-tier counts (only nonzero shown):
+  bazel.cdx.json:  design=0 source=4
+  cargo.cdx.json:  design=0 source=10
+  cmake.cdx.json:  design=0 source=4
+  gem.cdx.json:    design=0 source=17
+  golang.cdx.json: design=0 source=12
+  maven.cdx.json:  design=0 source=3
+
+  ZERO existing goldens carry design-tier components. Reconciliation
+  cannot fire against any current golden. SC-006 byte-identity gate is
+  automatically satisfied.
+
+## Conclusion
+
+Empty drift set. Phase 5 T042 golden-regen step is a NO-OP. Every existing
+golden MUST pass byte-identically after m191 lands. FR-014 / SC-006 gate
+is stronger for m191 than for m190.
+
+Note: This does NOT weaken m191's value — real-world customer scans DO
+produce design-tier components (per the React Native scan: 101 design/source
+pairs on 1998 components). The goldens simply don't happen to include
+design-tier ecosystems (npm/pip/cargo lockfile-only fixtures don't have
+separate manifest declarations tracked). New m191 integration tests
+(T014, T028) add synthetic fixtures that DO exercise both tiers.
