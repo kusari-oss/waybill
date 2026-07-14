@@ -156,7 +156,24 @@ fn reduce_license_vec(items: &[SpdxExpression]) -> Option<String> {
 fn canonicalize_or_raw(expr: &str) -> String {
     match SpdxExpression::try_canonical(expr) {
         Ok(canon) => canon.as_str().to_string(),
-        Err(_) => expr.to_string(),
+        Err(_) => {
+            // Milestone 190 (#551): unknown/vendor licenses must hash to
+            // a stable `LicenseRef-<idstring>` token so the m154
+            // CustomLicense sweep at `sweep_custom_licenses` fires and
+            // emits a matching `simplelicensing_CustomLicense` element.
+            // Mirrors the SPDX 2.3 packages.rs:264 pattern verbatim.
+            // Pre-m190: raw text preserved; the sweep found no
+            // LicenseRef-* tokens and never emitted CustomLicense for
+            // any ecosystem. Passthrough exception: if the raw text
+            // already contains a LicenseRef-* token (e.g., an operand
+            // authored as such by the reader), keep it verbatim — the
+            // sweep will handle it directly.
+            if expr.contains("LicenseRef-") {
+                expr.to_string()
+            } else {
+                super::ids::SpdxId::for_license_ref(expr).as_str().to_string()
+            }
+        }
     }
 }
 
