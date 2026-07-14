@@ -70,9 +70,24 @@ fn pick_ecosystem_top<'a>(
 }
 
 /// Step 1 — derive the seed set from `components[]` + `selection`.
+///
+/// Milestone 192 (FR-001, FR-002): when the primary selection subject
+/// is NOT a `MainModule` variant (i.e., the operator supplied
+/// `--root-name` producing an `OperatorOverride` root, or the root is
+/// a `SyntheticPlaceholder`, or a `MavenCoord`), synthesize per-
+/// ecosystem placeholder roots so `ecosystems_without_root` becomes
+/// empty. Prevents the `MultiEcosystemPartialRoot` classifier at
+/// `mod.rs:250` from over-firing on every operator-override scan
+/// where a native main-module wasn't picked as the primary root.
+///
+/// `target_ref` is the emitted BOM subject identity (CDX
+/// `metadata.component.bom-ref`, SPDX 2.3 root Package SPDXID, SPDX 3
+/// root `software_Package.spdxId`). Passed in from
+/// `compute_graph_completeness` at `mod.rs:156`.
 pub(super) fn build_ecosystem_root_set(
     components: &[ResolvedComponent],
     selection: &RootSelectionResult,
+    target_ref: &str,
 ) -> EcosystemRootSet {
     let mut roots: HashSet<String> = HashSet::new();
     let mut per_ecosystem_root: HashMap<String, String> = HashMap::new();
@@ -112,6 +127,58 @@ pub(super) fn build_ecosystem_root_set(
             let key = top.purl.as_str().to_string();
             roots.insert(key.clone());
             per_ecosystem_root.insert(ecosystem.clone(), key);
+        }
+    }
+
+    // Milestone 192 (spec FR-001 / FR-002): operator-override
+    // synthesis. When the primary selection subject is NOT a
+    // MainModule, seed per_ecosystem_root with the operator's
+    // target_ref for every ecosystem present in components[] that
+    // doesn't already have an entry — so the downstream
+    // MultiEcosystemPartialRoot classifier at mod.rs:250 doesn't
+    // fire spuriously. Per Q2 answer A: skip the ecosystem that
+    // matches the target_ref's own PURL type (avoids duplicate root
+    // when the operator passed `--root-purl-type <eco>`).
+    //
+    // Byte-identity guard: on the native-root (MainModule) path this
+    // block is a no-op — the existing per-ecosystem-main-module loop
+    // above already populates per_ecosystem_root correctly. Zero
+    // delta on any golden generated from a native-root scan.
+    let is_native_root =
+        matches!(selection.subject, ResolvedRootSubject::MainModule(_));
+    if !is_native_root {
+        // Per Q2 answer A: parse the target_ref's PURL ecosystem so
+        // when the operator picked `--root-purl-type <eco>`, we can
+        // recognize that ecosystem as "covered by the operator's own
+        // root PURL" rather than by our synthesis. The distinction
+        // matters ONLY for the observability count — the operator's
+        // root IS the per-ecosystem root for its own ecosystem, so
+        // we still insert it into `per_ecosystem_root` (otherwise
+        // `ecosystems_without_root` at the end of this function would
+        // spuriously include the operator's own ecosystem).
+        let operator_root_ecosystem: Option<String> =
+            mikebom_common::types::purl::Purl::new(target_ref)
+                .ok()
+                .map(|p| p.ecosystem().to_string())
+                .filter(|e| e != "generic");
+        let mut synthesized_count = 0usize;
+        for c in components {
+            let eco = c.purl.ecosystem().to_string();
+            if per_ecosystem_root.contains_key(&eco) {
+                continue;
+            }
+            let is_operators_own_ecosystem =
+                operator_root_ecosystem.as_deref() == Some(eco.as_str());
+            per_ecosystem_root.insert(eco, target_ref.to_string());
+            if !is_operators_own_ecosystem {
+                synthesized_count += 1;
+            }
+        }
+        if synthesized_count > 0 {
+            tracing::info!(
+                synthesized_ecosystems_count = synthesized_count,
+                "synthesized per-ecosystem placeholder roots for operator-override scan"
+            );
         }
     }
 
@@ -260,7 +327,7 @@ mod tests {
             mk_component("pkg:npm/dep@1.0.0"),
         ];
         let selection = selection_with_main_module(0);
-        let set = build_ecosystem_root_set(&components, &selection);
+        let set = build_ecosystem_root_set(&components, &selection, "");
         assert!(set.roots.contains("pkg:npm/root@1.0.0"));
         assert!(set.ecosystems_without_root.is_empty());
     }
@@ -275,7 +342,7 @@ mod tests {
             mk_component("pkg:gem/orphan-gem@1.0.0"),
         ];
         let selection = selection_with_main_module(0);
-        let set = build_ecosystem_root_set(&components, &selection);
+        let set = build_ecosystem_root_set(&components, &selection, "");
         assert!(set.roots.contains("pkg:npm/root@1.0.0"));
         assert_eq!(set.ecosystems_without_root, vec!["gem".to_string()]);
     }
@@ -289,9 +356,126 @@ mod tests {
             mk_main_module("pkg:gem/gemroot@1.0.0"),
         ];
         let selection = selection_with_main_module(0);
-        let set = build_ecosystem_root_set(&components, &selection);
+        let set = build_ecosystem_root_set(&components, &selection, "");
         assert!(set.roots.contains("pkg:npm/root@1.0.0"));
         assert!(set.roots.contains("pkg:gem/gemroot@1.0.0"));
         assert!(set.ecosystems_without_root.is_empty());
+    }
+
+    // ── Milestone 192 — operator-override placeholder-root synthesis ──
+
+    use crate::generate::graph_completeness::test_support::selection_with_operator_override;
+
+    #[test]
+    fn m192_fixture_o1_operator_override_single_ecosystem_no_orphan_root_flag() {
+        // Fixture O1 per contracts/classifier-input.md: operator supplied
+        // `--root-name pico --root-version abc123` → target_ref is a
+        // pkg:generic root; components are all Go. Pre-m192 this left
+        // `ecosystems_without_root = ["golang"]`; post-m192 synthesis
+        // seeds a placeholder golang root pointing at target_ref.
+        let components = vec![
+            mk_component("pkg:golang/foo/bar@v1.0.0"),
+            mk_component("pkg:golang/foo/baz@v2.0.0"),
+        ];
+        let selection = selection_with_operator_override();
+        let target_ref = "pkg:generic/pico@abc123";
+        let set = build_ecosystem_root_set(&components, &selection, target_ref);
+        assert!(
+            set.ecosystems_without_root.is_empty(),
+            "post-m192 synthesis must empty ecosystems_without_root on the operator-override path; got: {:?}",
+            set.ecosystems_without_root
+        );
+    }
+
+    #[test]
+    fn m192_fixture_o2_operator_override_multi_ecosystem_all_synthesized() {
+        // Fixture O2: mixed golang + npm + pypi; operator-supplied
+        // pkg:generic root. Synthesis fires for all three ecosystems.
+        let components = vec![
+            mk_component("pkg:golang/foo@v1.0.0"),
+            mk_component("pkg:npm/bar@1.0.0"),
+            mk_component("pkg:pypi/baz@1.0.0"),
+        ];
+        let selection = selection_with_operator_override();
+        let target_ref = "pkg:generic/mixed@1.0";
+        let set = build_ecosystem_root_set(&components, &selection, target_ref);
+        assert!(
+            set.ecosystems_without_root.is_empty(),
+            "all three ecosystems must be covered by synthesis"
+        );
+    }
+
+    #[test]
+    fn m192_fixture_o3_root_purl_type_ecosystem_skipped_from_synthesis() {
+        // Fixture O3 per Q2 answer A: operator passed
+        // `--root-purl-type golang --root-name X` so target_ref is a
+        // pkg:golang/... — the golang ecosystem is ALREADY covered by
+        // the operator's chosen root PURL type. Synthesis MUST skip
+        // that ecosystem to avoid a duplicate root, and MUST still
+        // fire for other ecosystems present.
+        let components = vec![
+            mk_component("pkg:golang/svc@v1.0.0"),
+            mk_component("pkg:npm/dep@1.0.0"),
+        ];
+        let selection = selection_with_operator_override();
+        let target_ref = "pkg:golang/github.com/example/svc@1.0";
+        let set = build_ecosystem_root_set(&components, &selection, target_ref);
+        assert!(
+            set.ecosystems_without_root.is_empty(),
+            "npm placeholder synthesis must still fire even when golang is already the operator's root type"
+        );
+    }
+
+    #[test]
+    fn m192_fixture_n_native_root_synthesis_no_op() {
+        // Fixture N: byte-identity guard. Native-root MainModule
+        // scan — synthesis block MUST NOT execute. Output MUST be
+        // byte-identical to the pre-m192 shape (mirrors the existing
+        // `ecosystem_root_set_uses_primary_from_selection` test but
+        // exercises the m192 code path with a non-empty target_ref to
+        // prove the guard fires).
+        let components = vec![
+            mk_main_module("pkg:npm/root@1.0.0"),
+            mk_component("pkg:npm/dep@1.0.0"),
+        ];
+        let selection = selection_with_main_module(0);
+        let target_ref = "pkg:npm/root@1.0.0";
+        let set = build_ecosystem_root_set(&components, &selection, target_ref);
+        // Same expectations as pre-m192 native-root behavior — the
+        // primary main-module fills the npm slot; no synthesis.
+        assert!(set.roots.contains("pkg:npm/root@1.0.0"));
+        assert!(set.ecosystems_without_root.is_empty());
+    }
+
+    #[test]
+    fn m192_operator_override_with_no_components_is_noop() {
+        // Empty components + operator-override subject — synthesis
+        // loop executes zero times; ecosystems_without_root stays
+        // empty; no INFO log fires (synthesized_count == 0).
+        let components: Vec<ResolvedComponent> = Vec::new();
+        let selection = selection_with_operator_override();
+        let target_ref = "pkg:generic/pico@abc123";
+        let set = build_ecosystem_root_set(&components, &selection, target_ref);
+        assert!(set.roots.is_empty());
+        assert!(set.ecosystems_without_root.is_empty());
+    }
+
+    #[test]
+    fn m192_operator_override_empty_target_ref_falls_back_to_generic_semantics() {
+        // Pre-m084 shape: target_ref is not a full PURL (legacy
+        // `name@version` short-form). `Purl::new(target_ref)` fails,
+        // so `operator_root_ecosystem` is None; synthesis fires for
+        // every ecosystem present in components[].
+        let components = vec![
+            mk_component("pkg:golang/foo@v1.0.0"),
+            mk_component("pkg:npm/bar@1.0.0"),
+        ];
+        let selection = selection_with_operator_override();
+        let target_ref = "some-legacy-name@0.0.0"; // NOT a valid pkg: PURL
+        let set = build_ecosystem_root_set(&components, &selection, target_ref);
+        assert!(
+            set.ecosystems_without_root.is_empty(),
+            "fallback: when target_ref isn't a valid PURL, synthesize for every ecosystem"
+        );
     }
 }

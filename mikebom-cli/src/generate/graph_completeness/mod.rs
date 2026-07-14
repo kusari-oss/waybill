@@ -153,7 +153,13 @@ pub fn compute_graph_completeness(
     }
 
     // Step 1 + Step 2 — seed set.
-    let mut root_set = bfs::build_ecosystem_root_set(components, selection);
+    // Milestone 192: `target_ref` is threaded through so
+    // `build_ecosystem_root_set` can synthesize per-ecosystem
+    // placeholder roots when the primary selection subject is NOT
+    // a MainModule (operator-override / synthetic-placeholder /
+    // maven-coord roots). Prevents the MultiEcosystemPartialRoot
+    // classifier below from over-firing on operator-supplied roots.
+    let mut root_set = bfs::build_ecosystem_root_set(components, selection, target_ref);
     // Also seed with the EMITTED `metadata.component` / SPDX root ref
     // (target_ref) — for the SyntheticPlaceholder / MavenCoord /
     // OperatorOverride cases where the emitted root doesn't map back

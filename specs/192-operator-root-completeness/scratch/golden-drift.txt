@@ -1,0 +1,50 @@
+m192 Golden Drift Set Audit
+Captured: 2026-07-14
+Tasks: T002, T003
+
+## CDX golden mikebom:graph-completeness values
+
+apk.cdx.json:    complete
+bazel.cdx.json:  complete
+cargo.cdx.json:  complete
+cmake.cdx.json:  complete
+deb.cdx.json:    complete
+gem.cdx.json:    complete
+golang.cdx.json: partial + reason=orphaned-components-detected: 1 component(s) not reachable from root
+maven.cdx.json:  complete
+npm.cdx.json:    partial + reason=orphaned-components-detected: 1 component(s) not reachable from root
+pip.cdx.json:    complete
+rpm.cdx.json:    complete
+
+## Analysis
+
+Two goldens report `partial` — golang and npm. BOTH have reason
+`orphaned-components-detected`, NOT `multi-ecosystem-partial-root`. That
+means:
+
+- Those `partial` values are REAL orphan detections (a Go/npm component
+  with no incoming AND no outgoing edge in the assembled Relationships).
+- m192 preserves this signal per FR-007 (real orphans still surface via
+  `OrphanedComponentsDetected` classifier).
+- Neither golden exercises the m192 false-positive path
+  (`multi-ecosystem-partial-root`).
+
+## Conclusion
+
+**Empty drift set for m192.** Zero existing goldens will flip from
+`partial` → `complete` after the fix. Zero goldens will drift.
+SC-004 byte-identity gate is trivially satisfied — no regen needed at
+Phase 4 T012.
+
+The m192 fix is a POST-RELEASE behavior improvement whose observable
+impact is ONLY visible when consumers run mikebom with `--root-name`
+against source repos (the Kusari pico scenario). No in-repo test fixtures
+currently exercise that code path — the m192 integration test T006
+introduces the first such fixture.
+
+## SPDX 2.3 goldens
+
+All 11 SPDX 2.3 goldens carry a `mikebom:graph-completeness` annotation.
+No `partial` values need investigation on the SPDX side either (the
+signal is computed once and threaded to all three formats identically
+per plan.md::Emitter-side interaction).

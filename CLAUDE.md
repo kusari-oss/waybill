@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-07-13
+Auto-generated from all feature plans. Last updated: 2026-07-14
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -246,6 +246,8 @@ Auto-generated from all feature plans. Last updated: 2026-07-13
 - N/A — all state is in-process for the duration of a single scan. Matches every ipk-reader milestone since 002. (190-ipk-emission-parity)
 - Rust stable (workspace toolchain inherited from milestones 001–190; no nightly required for this user-space-only work). + Existing only — `serde` / `serde_json` (annotation values), `tracing` (INFO summary + DEBUG per-component logs per FR-020 / Q4), `anyhow` / `thiserror` (error propagation), `mikebom_common::types::purl::Purl` (PURL construction + validation), `mikebom_common::resolution::ResolvedComponent` (the type being reconciled), `std::collections::HashMap` / `BTreeMap` (grouping). **Zero new Cargo dependencies.** No subprocess calls. No network access. (191-design-source-reconcile)
 - N/A — the reconciliation pass is a pure in-memory transformation over a `Vec<ResolvedComponent>` executed once per scan. No caches, no persistence. Matches every milestone since 002. (191-design-source-reconcile)
+- Rust stable (workspace toolchain inherited from milestones 001–191; no nightly required for this user-space-only work). + Existing only — `std::collections::{HashMap, HashSet}` (already pervasive in the graph-completeness module), `tracing::info!` (the INFO-level log line per FR-009), `mikebom_common::resolution::ResolvedComponent` (existing type), `mikebom_common::types::purl::Purl` (existing type; the fix reads `.ecosystem()` from a parsed PURL string built from `target_ref`). **Zero new Cargo dependencies.** No subprocess calls. No network access. (192-operator-root-completeness)
+- N/A — the fix is a pure in-memory transformation over the existing `EcosystemRootSet` struct built once per scan. No caches, no persistence. (192-operator-root-completeness)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -308,9 +310,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 192-operator-root-completeness: Added Rust stable (workspace toolchain inherited from milestones 001–191; no nightly required for this user-space-only work). + Existing only — `std::collections::{HashMap, HashSet}` (already pervasive in the graph-completeness module), `tracing::info!` (the INFO-level log line per FR-009), `mikebom_common::resolution::ResolvedComponent` (existing type), `mikebom_common::types::purl::Purl` (existing type; the fix reads `.ecosystem()` from a parsed PURL string built from `target_ref`). **Zero new Cargo dependencies.** No subprocess calls. No network access.
 - 191-design-source-reconcile: Added Rust stable (workspace toolchain inherited from milestones 001–190; no nightly required for this user-space-only work). + Existing only — `serde` / `serde_json` (annotation values), `tracing` (INFO summary + DEBUG per-component logs per FR-020 / Q4), `anyhow` / `thiserror` (error propagation), `mikebom_common::types::purl::Purl` (PURL construction + validation), `mikebom_common::resolution::ResolvedComponent` (the type being reconciled), `std::collections::HashMap` / `BTreeMap` (grouping). **Zero new Cargo dependencies.** No subprocess calls. No network access.
 - 190-ipk-emission-parity: Added Rust stable (workspace toolchain inherited from milestones 001–189; no nightly required for this user-space-only work). + Existing only — `spdx = "0.10"` (already at `mikebom-common/src/types/license.rs`; used for `SpdxExpression::try_canonical`), `regex = "1"` (workspace; already used by cmake/vcpkg/alpm/brew/yocto/cocoapods/elixir/erlang/scala/haskell/ipk readers for line-format and DSL extraction), `serde`/`serde_json` (JSON emission), `tracing` (info/warn/debug logs on classifier decisions), `anyhow`/`thiserror` (error propagation), `mikebom_common::types::purl::Purl` (PURL construction + validation; the `opkg` type is purl-spec-blessed). **Zero new Cargo dependencies.** No subprocess calls. No network access.
-- 188-helm-chart-scanning: Added Rust stable (workspace toolchain inherited from milestones 001–187; no nightly required for this user-space-only work). + Existing only — `serde_yaml = "0.9"` (workspace; already used by `dart.rs`, `cocoapods.rs`, `haskell.rs`, `pnpm_lock.rs`, `yarn_lock.rs`), `tar = "0.4"` (workspace; already used by `ipk_file.rs`), `flate2` (workspace; gzip decompression), `regex = "1"` (workspace; already used by cmake, vcpkg, alpm, brew, elixir, erlang, cocoapods readers), `mikebom_common::types::purl::{Purl, encode_purl_segment}` (workspace type), `tracing` (WARN/INFO logs), `anyhow` / `thiserror` (error propagation), `serde` / `serde_json` (annotation values), `tempfile` (workspace; used by every tarball-extraction reader), `std::process::Command` (opt-in `--helm-render` shell-out; matches m053 + m055 patterns). **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

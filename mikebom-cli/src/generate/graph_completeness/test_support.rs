@@ -95,3 +95,14 @@ pub(crate) fn selection_with_main_module(idx: usize) -> RootSelectionResult {
         losers: Vec::new(),
     }
 }
+
+/// Milestone 192 test helper — build a `RootSelectionResult` for the
+/// operator-override branch. Used by tests that exercise the m192
+/// per-ecosystem placeholder synthesis path.
+pub(crate) fn selection_with_operator_override() -> RootSelectionResult {
+    RootSelectionResult {
+        subject: ResolvedRootSubject::OperatorOverride,
+        heuristic: None,
+        losers: Vec::new(),
+    }
+}
