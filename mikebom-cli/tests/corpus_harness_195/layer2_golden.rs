@@ -148,7 +148,7 @@ fn walk_mask(v: &mut serde_json::Value) {
             // ProtocolsIO API key on PR #576). Masking eliminates both
             // classes of noise while preserving the shape and file paths
             // that make the annotation useful for regression detection.
-            for key in ["statement", "comment", "value"] {
+            for key in ["statement", "comment", "value", "additionalContext"] {
                 if let Some(v) = map.get_mut(key) {
                     if let Some(s) = v.as_str() {
                         let masked = mask_content_hashes_in_string(s);
