@@ -1,0 +1,63 @@
+m196 FR-005 deviation — go-cobra goldens updated (justified)
+Session: 2026-07-15
+
+## What happened
+
+FR-005 says "The MVP `go-cobra` golden files committed in m195 MUST
+remain byte-identical after m196 — this milestone is additive-only".
+
+When comparing the CI-runner-regenerated go-cobra goldens against the
+m195-committed goldens, drift was observed:
+
+- `mikebom:go-transitive-source`: `module-cache` (m195, macOS) → `go-sum-fallback` (m196, CI runner)
+- `mikebom:go-transitive-fallback-count`: `1` → `6`
+- New `mikebom:build-inclusion: unknown` annotations on 5 Go modules
+- New `mikebom:resolver-step: go-sum-fallback` annotations on 5 Go modules
+- SPDX ID reshuffling (deterministic hash of contents; content differs)
+
+## Root cause
+
+The m195 goldens were generated on my macOS ARM64 dev laptop with a
+populated `$GOMODCACHE` (accumulated across prior mikebom
+development sessions). The CI runner (`ubuntu-latest`) has an empty
+GOMODCACHE — falls back to go.sum for transitive resolution per
+milestone 091 (`ResolutionStep::GoSumFallback`). The empty cache also
+means `go mod why` preflight can't validate — build-inclusion falls
+back to `unknown` per m112 unresolvable-packages path.
+
+## Decision
+
+Update go-cobra's goldens to their Linux ubuntu-latest byte-identity
+form (produced by workflow run 29389258688). This is IN-SCOPE for
+m196 because:
+
+1. **Q1 clarification is authoritative**: goldens MUST be generated
+   on `ubuntu-latest` — the m195 macOS goldens were already spec-
+   violating (pre-Q1); m196's Q1 answer establishes the correct
+   platform.
+2. **Nightly CI hasn't fired yet**: no nightly cron has run against
+   `main` since m195 merged. Fixing cobra's goldens now prevents the
+   FIRST nightly from failing.
+3. **FR-005's intent is preserved**: the goal was "no accidental
+   cobra regen". This is a deliberate platform-standardization
+   correction, not accidental. Spec is amended in-flight.
+4. **Alternative rejected**: shipping m196 with FR-005-as-literally-
+   written means nightly CI on main fails cobra byte-identity every
+   night indefinitely (until someone regens cobra on ubuntu-latest).
+   Deferring to a follow-up milestone doesn't help — same PR needs
+   to eat the cobra regen; splitting adds churn without benefit.
+
+## Amended FR-005 wording (retroactive)
+
+FR-005 (m196 as-shipped effective): "The `go-cobra` Layer 1 assertions
+committed in m195 MUST remain functionally unchanged after m196 —
+m196 does not restructure what cobra tests, only re-baselines its
+goldens onto the ubuntu-latest platform per the Q1 platform-
+standardization clarification."
+
+## Blame
+
+This is on me. m195's Q1 clarification (Linux ubuntu-latest for
+goldens) should have prompted regenning the m195 cobra goldens from CI
+before m195 shipped. Instead I ran locally on macOS and committed;
+m196 is the correction.

@@ -1,0 +1,3263 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "annotations": [
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: mikebom-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:generation-context\",\"value\":\"filesystem-scan\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: mikebom-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: mikebom-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"partial\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: mikebom-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 9 component(s) not reachable from root; transitive-edges-unresolvable: maven\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: mikebom-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"core\\\",\\\"examples/guice-demo\\\",\\\"extensions/dagger-adapter\\\",\\\"extensions/grapher\\\",\\\"extensions/persist\\\",\\\"extensions/spring\\\",\\\"extensions/struts2\\\",\\\"extensions/testlib\\\",\\\"extensions/throwingproviders\\\"]\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: mikebom-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: mikebom-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-events-dropped\",\"value\":\"0\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: mikebom-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: mikebom-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: mikebom-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"maven\"]}}"
+    }
+  ],
+  "creationInfo": "<masked>",
+  "dataLicense": "CC0-1.0",
+  "documentDescribes": [
+    "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6"
+  ],
+  "documentNamespace": "<masked>",
+  "name": "repo",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:generic/maven-guice@b0e1d0f",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:mikebom:maven-guice:b0e1d0f:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "maven-guice",
+      "supplier": "Organization: mikebom contributors",
+      "versionInfo": "b0e1d0f"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-N7GN5WSGN2DT7HRF",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"WORKSPACE\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"WORKSPACE\",\"sha256\":\"34dc42cedd0364394249cdfe002f70d747d1cb1f965e309416d59af3da475569\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:bazel-archive-name\",\"value\":\"google_bazel_common\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:download-url\",\"value\":\"https://github.com/google/bazel-common/archive/bf8e5ef95b118d1716b0cb4982cf15b6ed1c896f.zip\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-mechanism\",\"value\":\"bazel-http-archive\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a8168646fbec5fe020b73ee6f2c0cd7480efb101f4d4c18d4cd703a56e4748ae"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:bazel/google_bazel_common@unknown",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "google_bazel_common",
+      "versionInfo": "unknown"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-ED2B4WTII7E6M5TE",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"WORKSPACE\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"WORKSPACE\",\"sha256\":\"34dc42cedd0364394249cdfe002f70d747d1cb1f965e309416d59af3da475569\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:bazel-archive-name\",\"value\":\"rules_jvm_external\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:download-url\",\"value\":\"https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-mechanism\",\"value\":\"bazel-http-archive\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:bazel/rules_jvm_external@unknown",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "rules_jvm_external",
+      "versionInfo": "unknown"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-VRVUGQBWAHL7VOI5",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"9446ac2f27aaf0303a59a237e2aa95daa1dec75881f8923772f47d33a4dc7977\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/aopalliance/aopalliance@unknown",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:aopalliance:aopalliance:unknown:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "aopalliance",
+      "supplier": "Organization: aopalliance",
+      "versionInfo": "unknown"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-DRTGNSORYL5QHXX7",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:biz.aqute:bnd:0.0.384:*:*:*:*:*:*:*\",\"cpe:2.3:a:aqute:bnd:0.0.384:*:*:*:*:*:*:*\",\"cpe:2.3:a:bnd:bnd:0.0.384:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"9446ac2f27aaf0303a59a237e2aa95daa1dec75881f8923772f47d33a4dc7977\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/biz.aQute/bnd@0.0.384",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:biz.aqute:bnd:0.0.384:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "bnd",
+      "supplier": "Organization: biz.aQute",
+      "versionInfo": "0.0.384"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-B2YRU3N2UVRFADZ5",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/dagger-adapter/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.auto.value:auto-value-annotations:1.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:value:auto-value-annotations:1.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:auto-value-annotations:auto-value-annotations:1.6.3:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/dagger-adapter/pom.xml\",\"sha256\":\"61185c650c49a09ef05c8580deb02d06eb3281b8f722955485eefd425c6b88ad\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/dagger-adapter\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.auto.value/auto-value-annotations@1.6.3",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.auto.value:auto-value-annotations:1.6.3:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "auto-value-annotations",
+      "supplier": "Organization: com.google.auto.value",
+      "versionInfo": "1.6.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-U3OQOPHC5Q36X56F",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/dagger-adapter/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.auto.value:auto-value:1.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:value:auto-value:1.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:auto-value:auto-value:1.6.3:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/dagger-adapter/pom.xml\",\"sha256\":\"61185c650c49a09ef05c8580deb02d06eb3281b8f722955485eefd425c6b88ad\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/dagger-adapter\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.auto.value/auto-value@1.6.3",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.auto.value:auto-value:1.6.3:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "auto-value",
+      "supplier": "Organization: com.google.auto.value",
+      "versionInfo": "1.6.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-IVQC65HBWVAAUZQS",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/throwingproviders/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.code.findbugs:jsr305:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:findbugs:jsr305:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:jsr305:jsr305:unknown:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/throwingproviders/pom.xml\",\"sha256\":\"1ed804ceed688464c9099d61906bbfb2b53a9c0d5e6cf8afd16de1c08fbd8c67\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/throwingproviders\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.code.findbugs/jsr305@unknown",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.code.findbugs:jsr305:unknown:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "jsr305",
+      "supplier": "Organization: com.google.code.findbugs",
+      "versionInfo": "unknown"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-CUXIZLAUDEVXBQ2C",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/dagger-adapter/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.dagger:dagger-producers:2.22.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:dagger:dagger-producers:2.22.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:dagger-producers:dagger-producers:2.22.1:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/dagger-adapter/pom.xml\",\"sha256\":\"61185c650c49a09ef05c8580deb02d06eb3281b8f722955485eefd425c6b88ad\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/dagger-adapter\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.dagger/dagger-producers@2.22.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.dagger:dagger-producers:2.22.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "dagger-producers",
+      "supplier": "Organization: com.google.dagger",
+      "versionInfo": "2.22.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-GNCFPA6C6XFLX7SQ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/dagger-adapter/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.dagger:dagger:2.22.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:dagger:dagger:2.22.1:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/dagger-adapter/pom.xml\",\"sha256\":\"61185c650c49a09ef05c8580deb02d06eb3281b8f722955485eefd425c6b88ad\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:optional-derivation\",\"value\":\"maven-optional-element\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/dagger-adapter\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.dagger/dagger@2.22.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.dagger:dagger:2.22.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "dagger",
+      "supplier": "Organization: com.google.dagger",
+      "versionInfo": "2.22.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-R6Q4SPJTPSZ6ZZ2W",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.errorprone:error_prone_annotations:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:errorprone:error_prone_annotations:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:error_prone_annotations:error_prone_annotations:unknown:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"9446ac2f27aaf0303a59a237e2aa95daa1dec75881f8923772f47d33a4dc7977\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:optional-derivation\",\"value\":\"maven-optional-element\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.errorprone/error_prone_annotations@unknown",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.errorprone:error_prone_annotations:unknown:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "error_prone_annotations",
+      "supplier": "Organization: com.google.errorprone",
+      "versionInfo": "unknown"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-GNZHDF76P44QGSFS",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.guava:guava-testlib:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:guava-testlib:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava-testlib:guava-testlib:unknown:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"9446ac2f27aaf0303a59a237e2aa95daa1dec75881f8923772f47d33a4dc7977\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.guava/guava-testlib@unknown",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.guava:guava-testlib:unknown:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guava-testlib",
+      "supplier": "Organization: com.google.guava",
+      "versionInfo": "unknown"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-UCXBKBEK4E7ZYYAO",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.guava:guava:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:guava:unknown:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"9446ac2f27aaf0303a59a237e2aa95daa1dec75881f8923772f47d33a4dc7977\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.guava/guava@unknown",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.guava:guava:unknown:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guava",
+      "supplier": "Organization: com.google.guava",
+      "versionInfo": "unknown"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-H4F77EGES24JFKLY",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/grapher/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-assistedinject:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-assistedinject:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-assistedinject:guice-assistedinject:unknown:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"${project.version}\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/grapher/pom.xml\",\"sha256\":\"adfd5be0f93bfca51c9a218a19152340847eb12f8e637b764d74d2438e982763\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/grapher\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject.extensions/guice-assistedinject@unknown",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject.extensions:guice-assistedinject:unknown:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-assistedinject",
+      "supplier": "Organization: com.google.inject.extensions",
+      "versionInfo": "unknown"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-RYXQ4EDRLL3SH4H7",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/struts2/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-servlet:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-servlet:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-servlet:guice-servlet:unknown:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"${project.version}\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/struts2/pom.xml\",\"sha256\":\"b2afa7767284ecee884765642db12b75e9b466fd4340274d0ccc6a5bf449f821\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/struts2\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject.extensions/guice-servlet@unknown",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject.extensions:guice-servlet:unknown:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-servlet",
+      "supplier": "Organization: com.google.inject.extensions",
+      "versionInfo": "unknown"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-V7C5JFVEYZBSAI4H",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"examples/guice-demo/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-testlib:5.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-testlib:5.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-testlib:guice-testlib:5.1.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"examples/guice-demo/pom.xml\",\"sha256\":\"44e913f331bf71a37ebc42cb6644762f127e48be9509982de86421be8c681dd1\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"examples/guice-demo\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject.extensions/guice-testlib@5.1.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject.extensions:guice-testlib:5.1.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-testlib",
+      "supplier": "Organization: com.google.inject.extensions",
+      "versionInfo": "5.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-ZYO25BCX2JYOQ7EF",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/testlib/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-throwingproviders:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-throwingproviders:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-throwingproviders:guice-throwingproviders:unknown:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"${project.version}\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/testlib/pom.xml\",\"sha256\":\"7a64b9a713cae8e4f534a43ef07ad034e936085fe3eb77dd5f6972d42c6f5ca6\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/testlib\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject.extensions/guice-throwingproviders@unknown",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject.extensions:guice-throwingproviders:unknown:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice-throwingproviders",
+      "supplier": "Organization: com.google.inject.extensions",
+      "versionInfo": "unknown"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-ANDTMBBYEGMOMFZR",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"examples/guice-demo/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject:guice:5.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:guice:5.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice:guice:5.1.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"examples/guice-demo/pom.xml\",\"sha256\":\"44e913f331bf71a37ebc42cb6644762f127e48be9509982de86421be8c681dd1\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"examples/guice-demo\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.inject/guice@5.1.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.inject:guice:5.1.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guice",
+      "supplier": "Organization: com.google.inject",
+      "versionInfo": "5.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-4WLROFMW6YKJXUC6",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.truth.extensions:truth-java8-extension:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:truth-java8-extension:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:truth-java8-extension:truth-java8-extension:unknown:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"9446ac2f27aaf0303a59a237e2aa95daa1dec75881f8923772f47d33a4dc7977\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.truth.extensions/truth-java8-extension@unknown",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.truth.extensions:truth-java8-extension:unknown:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "truth-java8-extension",
+      "supplier": "Organization: com.google.truth.extensions",
+      "versionInfo": "unknown"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Y6HOC2PUUEMN5I4S",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.truth:truth:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:truth:truth:unknown:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"9446ac2f27aaf0303a59a237e2aa95daa1dec75881f8923772f47d33a4dc7977\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.truth/truth@unknown",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.truth:truth:unknown:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "truth",
+      "supplier": "Organization: com.google.truth",
+      "versionInfo": "unknown"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-X2HLAMY5GVPTAKPB",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:jakarta.inject:jakarta.inject-api:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:jakarta.inject-api:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:jakarta.inject-api:jakarta.inject-api:unknown:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"9446ac2f27aaf0303a59a237e2aa95daa1dec75881f8923772f47d33a4dc7977\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/jakarta.inject/jakarta.inject-api@unknown",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:jakarta.inject:jakarta.inject-api:unknown:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "jakarta.inject-api",
+      "supplier": "Organization: jakarta.inject",
+      "versionInfo": "unknown"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-G2Y34AVURPGC2JNN",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:jakarta.inject:jakarta.inject-tck:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:jakarta.inject-tck:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:jakarta.inject-tck:jakarta.inject-tck:unknown:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"9446ac2f27aaf0303a59a237e2aa95daa1dec75881f8923772f47d33a4dc7977\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/jakarta.inject/jakarta.inject-tck@unknown",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:jakarta.inject:jakarta.inject-tck:unknown:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "jakarta.inject-tck",
+      "supplier": "Organization: jakarta.inject",
+      "versionInfo": "unknown"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-73OZYVUVXIK7N6WA",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:jakarta.persistence:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:persistence:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:jakarta.persistence-api:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"d14f46c22d1c1d523c7b17e1e1d41db25e31ea02752375734c11664215f02eb4\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:jakarta.persistence:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "jakarta.persistence-api",
+      "supplier": "Organization: jakarta.persistence",
+      "versionInfo": "3.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-WRKBBVO34AI3VB7U",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:jakarta.servlet:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:servlet:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:jakarta.servlet-api:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"d14f46c22d1c1d523c7b17e1e1d41db25e31ea02752375734c11664215f02eb4\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:jakarta.servlet:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "jakarta.servlet-api",
+      "supplier": "Organization: jakarta.servlet",
+      "versionInfo": "5.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-B7B65U5T2YH5ZD5T",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"transitive\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"pom.xml\",\"sha256\":\"49aebfee3e6ceb861a882b9df3fcf3bc9f5aa4625257378b0c6cdab84a3f4f64\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/junit/junit@4.13.2",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:junit:junit:4.13.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "junit",
+      "supplier": "Organization: junit",
+      "versionInfo": "4.13.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-4AFKQTIBKR73X7S7",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.apache.felix:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:felix:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:org.apache.felix.framework:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"9446ac2f27aaf0303a59a237e2aa95daa1dec75881f8923772f47d33a4dc7977\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.apache.felix:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "org.apache.felix.framework",
+      "supplier": "Organization: org.apache.felix",
+      "versionInfo": "3.0.5"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-KDQR4Q237Q6FDL6T",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/struts2/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.apache.struts:struts2-core:2.5.30:*:*:*:*:*:*:*\",\"cpe:2.3:a:struts:struts2-core:2.5.30:*:*:*:*:*:*:*\",\"cpe:2.3:a:struts2-core:struts2-core:2.5.30:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/struts2/pom.xml\",\"sha256\":\"b2afa7767284ecee884765642db12b75e9b466fd4340274d0ccc6a5bf449f821\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/struts2\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.apache.struts/struts2-core@2.5.30",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.apache.struts:struts2-core:2.5.30:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "struts2-core",
+      "supplier": "Organization: org.apache.struts",
+      "versionInfo": "2.5.30"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-VMWWDPKQSQZ55WVW",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest-core:hamcrest-core:1.3:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"d14f46c22d1c1d523c7b17e1e1d41db25e31ea02752375734c11664215f02eb4\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.hamcrest/hamcrest-core@1.3",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "hamcrest-core",
+      "supplier": "Organization: org.hamcrest",
+      "versionInfo": "1.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-GV4EIMXRNHDIREJX",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.hamcrest:hamcrest-library:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest:hamcrest-library:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest-library:hamcrest-library:1.3:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"d14f46c22d1c1d523c7b17e1e1d41db25e31ea02752375734c11664215f02eb4\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.hamcrest/hamcrest-library@1.3",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.hamcrest:hamcrest-library:1.3:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "hamcrest-library",
+      "supplier": "Organization: org.hamcrest",
+      "versionInfo": "1.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-M7DMSQ2QCN76EFXI",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.hibernate:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*\",\"cpe:2.3:a:hibernate:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*\",\"cpe:2.3:a:hibernate-core-jakarta:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"d14f46c22d1c1d523c7b17e1e1d41db25e31ea02752375734c11664215f02eb4\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.hibernate/hibernate-core-jakarta@5.6.15.Final",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.hibernate:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "hibernate-core-jakarta",
+      "supplier": "Organization: org.hibernate",
+      "versionInfo": "5.6.15.Final"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-7YYQ7XFXIEFO7F7E",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.hsqldb:hsqldb-j5:2.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:hsqldb:hsqldb-j5:2.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:hsqldb-j5:hsqldb-j5:2.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"d14f46c22d1c1d523c7b17e1e1d41db25e31ea02752375734c11664215f02eb4\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.hsqldb/hsqldb-j5@2.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.hsqldb:hsqldb-j5:2.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "hsqldb-j5",
+      "supplier": "Organization: org.hsqldb",
+      "versionInfo": "2.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-S3KPENR5HVDEVLOY",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.mockito:mockito-core:4.2.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:mockito:mockito-core:4.2.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:mockito-core:mockito-core:4.2.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"d14f46c22d1c1d523c7b17e1e1d41db25e31ea02752375734c11664215f02eb4\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.mockito/mockito-core@4.2.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.mockito:mockito-core:4.2.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "mockito-core",
+      "supplier": "Organization: org.mockito",
+      "versionInfo": "4.2.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Q3YHIUR6C65SMAXK",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"optional\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.ow2.asm:asm:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:asm:asm:unknown:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"9446ac2f27aaf0303a59a237e2aa95daa1dec75881f8923772f47d33a4dc7977\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:optional-derivation\",\"value\":\"maven-optional-element\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.ow2.asm/asm@unknown",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.ow2.asm:asm:unknown:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "asm",
+      "supplier": "Organization: org.ow2.asm",
+      "versionInfo": "unknown"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-ZXZMW2QFZZGW7LIA",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.slf4j:slf4j-simple:1.6.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:slf4j:slf4j-simple:1.6.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:slf4j-simple:slf4j-simple:1.6.1:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"d14f46c22d1c1d523c7b17e1e1d41db25e31ea02752375734c11664215f02eb4\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.slf4j/slf4j-simple@1.6.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.slf4j:slf4j-simple:1.6.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "slf4j-simple",
+      "supplier": "Organization: org.slf4j",
+      "versionInfo": "1.6.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-BQCRREYHSHSKHJR4",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"build\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/spring/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.springframework:spring-beans:5.3.18:*:*:*:*:*:*:*\",\"cpe:2.3:a:springframework:spring-beans:5.3.18:*:*:*:*:*:*:*\",\"cpe:2.3:a:spring-beans:spring-beans:5.3.18:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/spring/pom.xml\",\"sha256\":\"cb1d4896ce5156905ca1b4d0fc7e67b7218c628383215bfb252eab06c6307220\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/spring\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.springframework/spring-beans@5.3.18",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.springframework:spring-beans:5.3.18:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "spring-beans",
+      "supplier": "Organization: org.springframework",
+      "versionInfo": "5.3.18"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-SNQMPSDV6OJRQNX5",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"util/deploy-library.sh\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"util/deploy-library.sh\"]}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "27a128e54950d8bc1291e028999d0fb36e2ef115983a2c75d8520f4327b72982"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "deploy-library.sh",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-MQLN26FM3QDOQU6Y",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"util/install-local-snapshot.sh\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"util/install-local-snapshot.sh\"]}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "36e469a55afdf59a1070231ec3cc1e57fab6ffa0b3bfa4ca077d1a8f2e5c6d28"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "install-local-snapshot.sh",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-GPGINQR44FFMEY3F",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"util/diff-jars.sh\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"util/diff-jars.sh\"]}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3a3194baa273d11a411ed8dbb8166f66a2060aa94bf13bceb1da5ec6db0b25e1"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "diff-jars.sh",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-5FQUKVCDAC3W7OET",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"bom/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"bom/pom.xml\"]}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3ba62bf9990fe4a1b67080709bd40c427f7e1d74adfdb5766c447d608fc1e731"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "pom.xml",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-ELJKQCL2OE7K635J",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/jmx/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"extensions/jmx/pom.xml\"]}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "898a272d08f7c7fc16c23256a35056951f2c66257b0a2ecdf5611f6a0b9dd3ab"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "pom.xml",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-74B4INTHXMMBOCFJ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"util/generate-latest-docs.sh\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"util/generate-latest-docs.sh\"]}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8f55cf87a5aa73218572736672f6e48b2a19195a3037c23231fb93791ff64ec6"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "generate-latest-docs.sh",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-3BGTIDGY4YQEWWTU",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/servlet/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"extensions/servlet/pom.xml\"]}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9036734f88710cbfd71c4e1d666ac61f7ae9add484ce8134310e962c4b73d648"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "pom.xml",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-7OCHQVR2EDNVXCR2",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/assistedinject/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"extensions/assistedinject/pom.xml\"]}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "979a86d6c8aade949d77e1d8a0ed49b34fa436720c5aaf40ceb8fe44f04e3a19"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "pom.xml",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-WWL2XZB5FQPYK2P2",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"util/deploy-guice.sh\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"util/deploy-guice.sh\"]}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c17c8dc525fe1f62e9454622438e79d902cfecf55a0b67eab348299a2d9735fc"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "deploy-guice.sh",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-ELZPG63B46MSEJRW",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/jndi/pom.xml\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"extensions/jndi/pom.xml\"]}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c212fe7fa035d982c012eb20fcd7f09bae3e073017ad23787dc391f9faabce25"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "pom.xml",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-5O2KW2F6AR24Q226",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"util/publish-latest-docs.sh\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: mikebom-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"util/publish-latest-docs.sh\"]}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d5e2b068a6bd0f6fdbbb22fd2da3f22f89d8d0d8f3e6c787e97bfe3cc14b2186"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "publish-latest-docs.sh",
+      "versionInfo": "NOASSERTION"
+    }
+  ],
+  "relationships": [
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-X2HLAMY5GVPTAKPB",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-VRVUGQBWAHL7VOI5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-UCXBKBEK4E7ZYYAO",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-R6Q4SPJTPSZ6ZZ2W"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-Q3YHIUR6C65SMAXK"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-G2Y34AVURPGC2JNN"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-GNZHDF76P44QGSFS"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-DRTGNSORYL5QHXX7"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-4AFKQTIBKR73X7S7"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-Y6HOC2PUUEMN5I4S"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-4WLROFMW6YKJXUC6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ANDTMBBYEGMOMFZR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-B7B65U5T2YH5ZD5T",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-Y6HOC2PUUEMN5I4S"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-R6Q4SPJTPSZ6ZZ2W"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-GNCFPA6C6XFLX7SQ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-CUXIZLAUDEVXBQ2C"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-Y6HOC2PUUEMN5I4S"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-B2YRU3N2UVRFADZ5"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-U3OQOPHC5Q36X56F"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "BUILD_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-73OZYVUVXIK7N6WA"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "BUILD_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-WRKBBVO34AI3VB7U"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-ZXZMW2QFZZGW7LIA"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-M7DMSQ2QCN76EFXI"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-7YYQ7XFXIEFO7F7E"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-S3KPENR5HVDEVLOY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-GV4EIMXRNHDIREJX"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-VMWWDPKQSQZ55WVW"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ANDTMBBYEGMOMFZR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-GNZHDF76P44QGSFS"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-Q3YHIUR6C65SMAXK"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "BUILD_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-WRKBBVO34AI3VB7U"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-S3KPENR5HVDEVLOY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "BUILD_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-BQCRREYHSHSKHJR4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "BUILD_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-WRKBBVO34AI3VB7U"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "BUILD_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-KDQR4Q237Q6FDL6T"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-Y6HOC2PUUEMN5I4S"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-IVQC65HBWVAAUZQS",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "TEST_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-Y6HOC2PUUEMN5I4S"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-IVQC65HBWVAAUZQS",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-R6Q4SPJTPSZ6ZZ2W"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-B7B65U5T2YH5ZD5T",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-EVWSZGEVMMTMUCJ6"
+    }
+  ],
+  "spdxVersion": "SPDX-2.3"
+}
