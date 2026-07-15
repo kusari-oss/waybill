@@ -1299,7 +1299,16 @@ fn build_main_module_component(
         return None;
     }
     let lc_name = manifest.app_name.to_lowercase();
-    let purl_str = format!("pkg:hex/{lc_name}@{version}", version = manifest.version);
+    // Milestone 197 US3 (#567): emit versionless canonical PURL per
+    // purl-spec when the .app.src has no `{vsn, "..."}` — matches m191
+    // fix pattern. The parse_app_src path at line 1210 sets
+    // manifest.version to `"0.0.0-unknown"` as a display placeholder;
+    // detect that here to decide between versionless / versioned PURL.
+    let purl_str = if manifest.version == "0.0.0-unknown" || manifest.version.is_empty() {
+        format!("pkg:hex/{lc_name}")
+    } else {
+        format!("pkg:hex/{lc_name}@{version}", version = manifest.version)
+    };
     let purl = Purl::new(&purl_str).ok()?;
 
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();

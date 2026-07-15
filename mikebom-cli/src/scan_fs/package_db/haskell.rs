@@ -1112,12 +1112,19 @@ fn build_main_module(
     if name.is_empty() {
         return None;
     }
-    let version = manifest
-        .version
+    // Milestone 197 US3 (#567): emit versionless canonical PURL per
+    // purl-spec when the .cabal / stack.yaml manifest has no `version:` —
+    // matches m191 fix pattern.
+    let raw_version = manifest.version.clone();
+    let version = raw_version
         .clone()
         .unwrap_or_else(|| "0.0.0-unknown".to_string());
 
-    let purl_str = format!("pkg:hackage/{name}@{version}");
+    let purl_str = if raw_version.as_deref().unwrap_or("").is_empty() {
+        format!("pkg:hackage/{name}")
+    } else {
+        format!("pkg:hackage/{name}@{version}")
+    };
     let purl = Purl::new(&purl_str).ok()?;
 
     // Filter union_dep_names to exclude self-ref (the main-module's own name).

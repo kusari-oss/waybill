@@ -180,7 +180,7 @@ fn main_module_version_fallback() {
     let (doc, _) = run_scan(dir.path());
     let main = all_components(&doc)
         .into_iter()
-        .find(|c| c.get("purl").and_then(|v| v.as_str()) == Some("pkg:hex/my_app@0.0.0-unknown"))
+        .find(|c| c.get("purl").and_then(|v| v.as_str()) == Some("pkg:hex/my_app"))
         .expect("main-module with version fallback");
     assert_eq!(main.get("name").and_then(|v| v.as_str()), Some("my_app"));
 }

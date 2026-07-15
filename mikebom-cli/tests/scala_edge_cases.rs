@@ -160,7 +160,7 @@ scalaVersion := "2.13.12"
         .into_iter()
         .find(|c| {
             c.get("purl").and_then(|v| v.as_str())
-                == Some("pkg:maven/com.example/my-app_2.13@0.0.0-unknown")
+                == Some("pkg:maven/com.example/my-app_2.13")
         })
         .expect("main-module with version fallback");
     assert_eq!(main.get("name").and_then(|v| v.as_str()), Some("my-app"));

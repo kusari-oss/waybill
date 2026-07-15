@@ -1079,8 +1079,11 @@ fn build_main_module_component(
         .name_setting
         .clone()
         .unwrap_or_else(|| subproj.name.clone());
-    let version = main
-        .version_setting
+    // Milestone 197 US3 (#567): emit versionless canonical PURL per
+    // purl-spec when the sbt build has no `version := "..."` — matches
+    // m191 fix pattern.
+    let raw_version = main.version_setting.clone();
+    let version = raw_version
         .clone()
         .unwrap_or_else(|| "0.0.0-unknown".to_string());
 
@@ -1093,7 +1096,11 @@ fn build_main_module_component(
     // Main-modules use %% semantics (Scala-published artifacts are suffixed).
     let artifactid = apply_scala_suffix(DeclKind::DoublePercent, &name, scala_version.as_deref());
 
-    let purl_str = format!("pkg:maven/{organization}/{artifactid}@{version}");
+    let purl_str = if raw_version.as_deref().unwrap_or("").is_empty() {
+        format!("pkg:maven/{organization}/{artifactid}")
+    } else {
+        format!("pkg:maven/{organization}/{artifactid}@{version}")
+    };
     let purl = match Purl::new(&purl_str) {
         Ok(p) => p,
         Err(err) => {

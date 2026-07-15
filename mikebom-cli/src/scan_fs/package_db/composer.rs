@@ -413,12 +413,23 @@ fn emit_main_module(
         );
         return None;
     }
-    let version = manifest
-        .version
+    // Milestone 197 US3 (#567): when the manifest carries no `version:`
+    // (common for `require`-only application manifests), emit a
+    // versionless canonical PURL (`pkg:composer/<name>`) per purl-spec
+    // instead of the pre-m197 placeholder `pkg:composer/<name>@0.0.0-unknown`
+    // — matches the m191 fix pattern applied to npm/cargo/maven/gem/pip.
+    // The `PackageDbEntry.version` field still stores the placeholder
+    // for `component.version` display in emitted SBOMs.
+    let raw_version = manifest.version.clone();
+    let version = raw_version
         .clone()
         .unwrap_or_else(|| "0.0.0-unknown".to_string());
     let lc_name = name.to_lowercase();
-    let purl_str = format!("pkg:composer/{lc_name}@{version}");
+    let purl_str = if raw_version.as_deref().unwrap_or("").is_empty() {
+        format!("pkg:composer/{lc_name}")
+    } else {
+        format!("pkg:composer/{lc_name}@{version}")
+    };
     let purl = Purl::new(&purl_str).ok()?;
 
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();

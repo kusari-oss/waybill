@@ -149,11 +149,11 @@ fn multi_target_podfile_emits_first_target_as_main_module() {
     .unwrap();
     let (doc, _) = run_scan(tmp.path());
     assert!(
-        component_with_purl(&doc, "pkg:cocoapods/AppMain@0.0.0-unknown").is_some(),
+        component_with_purl(&doc, "pkg:cocoapods/AppMain").is_some(),
         "first-target wins for main-module name",
     );
     assert!(
-        component_with_purl(&doc, "pkg:cocoapods/AppTests@0.0.0-unknown").is_none(),
+        component_with_purl(&doc, "pkg:cocoapods/AppTests").is_none(),
         "second target should NOT emit as separate main-module",
     );
 }
@@ -235,7 +235,7 @@ fn empty_pods_block_emits_only_main_module() {
     let (doc, stderr) = run_scan(tmp.path());
     let purls = cocoapods_purls(&doc);
     assert_eq!(purls.len(), 1, "only main-module emits; got {purls:?}");
-    assert_eq!(purls[0], "pkg:cocoapods/EmptyApp@0.0.0-unknown");
+    assert_eq!(purls[0], "pkg:cocoapods/EmptyApp");
     assert!(
         !stderr.contains("cocoapods: failed"),
         "no warnings expected; got: {stderr}",

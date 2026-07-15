@@ -252,7 +252,7 @@ fn lockfile_only_main_module_from_dir_basename() {
     .unwrap();
     let doc = run_scan(tmp.path());
     assert!(
-        component_with_purl(&doc, "pkg:cocoapods/MyContainerApp@0.0.0-unknown").is_some(),
+        component_with_purl(&doc, "pkg:cocoapods/MyContainerApp").is_some(),
         "main-module must use dir-basename fallback per Q1",
     );
 }

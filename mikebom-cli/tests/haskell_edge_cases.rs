@@ -189,7 +189,7 @@ fn main_module_version_fallback() {
     )
     .unwrap();
     let (doc, _) = run_scan(dir.path());
-    let main = component_with_purl(&doc, "pkg:hackage/my-app@0.0.0-unknown")
+    let main = component_with_purl(&doc, "pkg:hackage/my-app")
         .expect("main-module with version fallback");
     assert_eq!(main.get("name").and_then(|v| v.as_str()), Some("my-app"));
 }
@@ -208,9 +208,12 @@ fn main_module_name_fallback_to_dir_basename() {
     let orphan = component_with_name(&doc, "orphaned-pkg")
         .expect("orphaned-pkg main-module from dir basename fallback");
     let purl = orphan.get("purl").and_then(|v| v.as_str()).unwrap();
+    // m197 US3 (#567): versionless canonical form (no trailing `@`)
+    // when the `.cabal` has no `version:` field. Pre-m197 this test
+    // asserted `starts_with("pkg:hackage/orphaned-pkg@")`.
     assert!(
-        purl.starts_with("pkg:hackage/orphaned-pkg@"),
-        "main-module PURL should contain dir-basename: {purl}",
+        purl == "pkg:hackage/orphaned-pkg" || purl.starts_with("pkg:hackage/orphaned-pkg@"),
+        "main-module PURL should be `pkg:hackage/orphaned-pkg` (versionless) or start with `pkg:hackage/orphaned-pkg@`: {purl}",
     );
 }
 

@@ -161,7 +161,7 @@ fn ios_app_baseline_emits_pods_count_plus_main_module() {
         "pkg:cocoapods/Firebase@10.20.0#Core",
         "pkg:cocoapods/FirebaseCore@10.20.0",
         "pkg:cocoapods/GoogleUtilities@7.13.0#Environment",
-        "pkg:cocoapods/MyApp@0.0.0-unknown",
+        "pkg:cocoapods/MyApp",
     ] {
         assert!(
             purls.contains(&expected.to_string()),
@@ -173,11 +173,11 @@ fn ios_app_baseline_emits_pods_count_plus_main_module() {
 #[test]
 fn main_module_emission_from_target_block() {
     // SC-008: Podfile `target 'MyApp' do` produces main-module
-    // `pkg:cocoapods/MyApp@0.0.0-unknown` with component-role annotation.
+    // `pkg:cocoapods/MyApp` with component-role annotation.
     let tmp = tempfile::tempdir().unwrap();
     write_ios_app_fixture(tmp.path());
     let doc = run_scan(tmp.path());
-    let main = component_with_purl(&doc, "pkg:cocoapods/MyApp@0.0.0-unknown")
+    let main = component_with_purl(&doc, "pkg:cocoapods/MyApp")
         .expect("main-module component must exist");
     assert_eq!(
         property_value(main, "mikebom:component-role"),
@@ -192,7 +192,7 @@ fn main_module_depends_lists_direct_deps() {
     let tmp = tempfile::tempdir().unwrap();
     write_ios_app_fixture(tmp.path());
     let doc = run_scan(tmp.path());
-    let main = component_with_purl(&doc, "pkg:cocoapods/MyApp@0.0.0-unknown").unwrap();
+    let main = component_with_purl(&doc, "pkg:cocoapods/MyApp").unwrap();
     let main_ref = main.get("bom-ref").and_then(|v| v.as_str()).unwrap();
     let deps = doc.get("dependencies").and_then(|v| v.as_array()).unwrap();
     let main_deps = deps

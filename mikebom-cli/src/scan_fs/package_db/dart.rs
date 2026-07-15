@@ -296,11 +296,18 @@ fn emit_main_module(
     parsed_lockfile: Option<&PubspecLock>,
     include_dev: bool,
 ) -> Option<PackageDbEntry> {
-    let version = pubspec_yaml
-        .version
+    // Milestone 197 US3 (#567): emit versionless canonical PURL per
+    // purl-spec when pubspec.yaml has no `version:` — matches m191
+    // fix pattern (npm/cargo/maven/gem/pip).
+    let raw_version = pubspec_yaml.version.clone();
+    let version = raw_version
         .clone()
         .unwrap_or_else(|| "0.0.0-unknown".to_string());
-    let purl_str = format!("pkg:pub/{}@{}", pubspec_yaml.name, version);
+    let purl_str = if raw_version.as_deref().unwrap_or("").is_empty() {
+        format!("pkg:pub/{}", pubspec_yaml.name)
+    } else {
+        format!("pkg:pub/{}@{}", pubspec_yaml.name, version)
+    };
     let purl = Purl::new(&purl_str).ok()?;
 
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();

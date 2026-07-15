@@ -497,7 +497,12 @@ fn emit_main_module(
         );
         return None;
     }
-    let purl_str = format!("pkg:cocoapods/{app_name}@0.0.0-unknown");
+    // Milestone 197 US3 (#567): emit versionless canonical PURL per
+    // purl-spec — the cocoapods main-module has no meaningful version
+    // (derived from Podfile target name, not a versioned artifact).
+    // Pre-m197 emitted `pkg:cocoapods/<name>@0.0.0-unknown` (placeholder);
+    // post-m197 emits `pkg:cocoapods/<name>` (canonical).
+    let purl_str = format!("pkg:cocoapods/{app_name}");
     let purl = Purl::new(&purl_str).ok()?;
 
     let source_path = podfile_path

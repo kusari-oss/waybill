@@ -247,7 +247,7 @@ fn missing_version_falls_back_to_unknown_placeholder() {
 
     let (doc, _) = run_scan(tmp.path());
     assert!(
-        component_with_purl(&doc, "pkg:composer/acme/library-in-development@0.0.0-unknown").is_some(),
+        component_with_purl(&doc, "pkg:composer/acme/library-in-development").is_some(),
         "missing-version main-module must emit with 0.0.0-unknown placeholder",
     );
 }
