@@ -259,12 +259,18 @@ fn parse_stanza(
         }
     }
     let name = name?;
-    let version = version?;
-    if name.is_empty() || version.is_empty() {
+    let raw_version = version?;
+    if name.is_empty() || raw_version.is_empty() {
         return None;
     }
 
-    let purl_str = build_apk_purl(&name, &version, arch.as_deref(), distro_version);
+    // Milestone 197 US2 (#563): split epoch prefix out of the raw
+    // `V:` field before PURL construction, mirroring the m190 opkg
+    // / m197 US1 dpkg fix pattern. Epoch flows into the PURL as
+    // `?epoch=<N>` qualifier per purl-spec.
+    let (epoch, version) = parse_apk_version_with_epoch(&raw_version);
+
+    let purl_str = build_apk_purl(&name, &version, arch.as_deref(), distro_version, epoch);
     let purl = Purl::new(&purl_str).ok()?;
 
     let depends = depends_raw
@@ -327,6 +333,7 @@ fn build_apk_purl(
     version: &str,
     arch: Option<&str>,
     distro_version: Option<&str>,
+    epoch: Option<u32>,
 ) -> String {
     // purl-spec § Character encoding: name and version are
     // percent-encoded strings. `+` in apk names (e.g. `libxml++`) and
@@ -348,9 +355,34 @@ fn build_apk_purl(
             s.push(if qualifier_open { '&' } else { '?' });
             s.push_str("distro=alpine-");
             s.push_str(dv);
+            qualifier_open = true;
+        }
+    }
+    // Milestone 197 US2 (#563): epoch qualifier per purl-spec —
+    // omitted when None or Some(0) per m190 opkg convention.
+    if let Some(e) = epoch {
+        if e != 0 {
+            s.push(if qualifier_open { '&' } else { '?' });
+            s.push_str(&format!("epoch={e}"));
         }
     }
     s
+}
+
+/// Milestone 197 US2 (#563): extract an optional epoch prefix from a
+/// raw apk `V:` version string. Same shape as dpkg / opkg:
+/// `<digits>:<upstream-version>-<release>`. Mirrors
+/// `dpkg::parse_deb_version_with_epoch`.
+fn parse_apk_version_with_epoch(raw: &str) -> (Option<u32>, String) {
+    if let Some(colon_pos) = raw.find(':') {
+        let (prefix, rest) = raw.split_at(colon_pos);
+        if !prefix.is_empty() && prefix.chars().all(|c| c.is_ascii_digit()) {
+            if let Ok(v) = prefix.parse::<u32>() {
+                return (Some(v), rest[1..].to_string());
+            }
+        }
+    }
+    (None, raw.to_string())
 }
 
 /// Tokenise apk's `D:` field. Format is whitespace-separated; tokens
@@ -512,19 +544,19 @@ D:so:libc.musl-aarch64.so.1
 
     #[test]
     fn build_apk_purl_stamps_distro_qualifier_after_arch() {
-        let p = build_apk_purl("busybox", "1.36.1-r31", Some("aarch64"), Some("3.20.9"));
+        let p = build_apk_purl("busybox", "1.36.1-r31", Some("aarch64"), Some("3.20.9"), None);
         assert_eq!(p, "pkg:apk/alpine/busybox@1.36.1-r31?arch=aarch64&distro=alpine-3.20.9");
     }
 
     #[test]
     fn build_apk_purl_stamps_distro_when_no_arch() {
-        let p = build_apk_purl("busybox", "1.36.1-r31", None, Some("3.20.9"));
+        let p = build_apk_purl("busybox", "1.36.1-r31", None, Some("3.20.9"), None);
         assert_eq!(p, "pkg:apk/alpine/busybox@1.36.1-r31?distro=alpine-3.20.9");
     }
 
     #[test]
     fn build_apk_purl_without_distro_unchanged() {
-        let p = build_apk_purl("busybox", "1.36.1-r31", Some("aarch64"), None);
+        let p = build_apk_purl("busybox", "1.36.1-r31", Some("aarch64"), None, None);
         assert_eq!(p, "pkg:apk/alpine/busybox@1.36.1-r31?arch=aarch64");
     }
 
@@ -730,6 +762,56 @@ D:so:libc.musl-aarch64.so.1
         assert_eq!(
             foo[0].sha1, None,
             "Q2-prefixed scheme is unknown → sha1 must be None"
+        );
+    }
+
+    // ---------------------------------------------------------------
+    // Milestone 197 US2 (#563): epoch qualifier emission tests
+    // ---------------------------------------------------------------
+
+    #[test]
+    fn parse_apk_version_with_epoch_extracts_epoch() {
+        assert_eq!(parse_apk_version_with_epoch("1:2.0-r0"), (Some(1), "2.0-r0".to_string()));
+    }
+
+    #[test]
+    fn parse_apk_version_with_epoch_preserves_explicit_zero() {
+        assert_eq!(parse_apk_version_with_epoch("0:1.0"), (Some(0), "1.0".to_string()));
+    }
+
+    #[test]
+    fn parse_apk_version_with_epoch_no_epoch_returns_raw() {
+        assert_eq!(parse_apk_version_with_epoch("1.36.1-r31"), (None, "1.36.1-r31".to_string()));
+    }
+
+    #[test]
+    fn parse_apk_version_with_epoch_graceful_on_non_digit_prefix() {
+        assert_eq!(parse_apk_version_with_epoch("not:1.0"), (None, "not:1.0".to_string()));
+    }
+
+    #[test]
+    fn build_apk_purl_emits_epoch_qualifier_when_nonzero() {
+        let p = build_apk_purl("test-pkg", "2.0-r0", Some("amd64"), Some("3.20.9"), Some(1));
+        assert_eq!(p, "pkg:apk/alpine/test-pkg@2.0-r0?arch=amd64&distro=alpine-3.20.9&epoch=1");
+    }
+
+    #[test]
+    fn build_apk_purl_omits_epoch_qualifier_when_zero() {
+        let p = build_apk_purl("test-pkg", "1.0", Some("amd64"), Some("3.20.9"), Some(0));
+        assert_eq!(p, "pkg:apk/alpine/test-pkg@1.0?arch=amd64&distro=alpine-3.20.9");
+    }
+
+    #[test]
+    fn scan_epoch_versioned_apk_stanza_emits_qualifier_purl() {
+        // Full parse-path integration: synthetic apk stanza with
+        // V:1:2.0-r0 must emit pkg:apk/alpine/test-pkg@2.0-r0?arch=amd64&distro=alpine-3.20.9&epoch=1.
+        // Regression test for m197 US2 / #563.
+        let text = "P:test-pkg\nV:1:2.0-r0\nA:amd64\n";
+        let entries = parse(text, SOURCE, Some("3.20.9"));
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            entries[0].purl.as_str(),
+            "pkg:apk/alpine/test-pkg@2.0-r0?arch=amd64&distro=alpine-3.20.9&epoch=1"
         );
     }
 }

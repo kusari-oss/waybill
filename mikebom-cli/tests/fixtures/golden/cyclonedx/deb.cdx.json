@@ -45,8 +45,8 @@
       "version": "2.36-9"
     },
     {
-      "bom-ref": "pkg:deb/debian/zlib1g@1:1.2.13.dfsg-1?arch=amd64&distro=debian-12",
-      "cpe": "cpe:2.3:a:debian:zlib1g:1\\:1.2.13.dfsg-1:*:*:*:*:*:*:*",
+      "bom-ref": "pkg:deb/debian/zlib1g@1.2.13.dfsg-1?arch=amd64&distro=debian-12&epoch=1",
+      "cpe": "cpe:2.3:a:debian:zlib1g:1.2.13.dfsg-1:*:*:*:*:*:*:*",
       "evidence": {
         "identity": [
           {
@@ -65,7 +65,7 @@
       "properties": [
         {
           "name": "mikebom:cpe-candidates",
-          "value": "cpe:2.3:a:debian:zlib1g:1\\:1.2.13.dfsg-1:*:*:*:*:*:*:* | cpe:2.3:a:zlib1g:zlib1g:1\\:1.2.13.dfsg-1:*:*:*:*:*:*:*"
+          "value": "cpe:2.3:a:debian:zlib1g:1.2.13.dfsg-1:*:*:*:*:*:*:* | cpe:2.3:a:zlib1g:zlib1g:1.2.13.dfsg-1:*:*:*:*:*:*:*"
         },
         {
           "name": "mikebom:source-files",
@@ -80,12 +80,12 @@
           "value": "[\"var/lib/dpkg\"]"
         }
       ],
-      "purl": "pkg:deb/debian/zlib1g@1:1.2.13.dfsg-1?arch=amd64&distro=debian-12",
+      "purl": "pkg:deb/debian/zlib1g@1.2.13.dfsg-1?arch=amd64&distro=debian-12&epoch=1",
       "supplier": {
         "name": "Debian <debian@example.org>"
       },
       "type": "library",
-      "version": "1:1.2.13.dfsg-1"
+      "version": "1.2.13.dfsg-1"
     }
   ],
   "compositions": [
@@ -93,11 +93,11 @@
       "aggregate": "complete",
       "assemblies": [
         "pkg:deb/debian/libc6@2.36-9?arch=amd64&distro=debian-12",
-        "pkg:deb/debian/zlib1g@1:1.2.13.dfsg-1?arch=amd64&distro=debian-12"
+        "pkg:deb/debian/zlib1g@1.2.13.dfsg-1?arch=amd64&distro=debian-12&epoch=1"
       ],
       "dependencies": [
         "pkg:deb/debian/libc6@2.36-9?arch=amd64&distro=debian-12",
-        "pkg:deb/debian/zlib1g@1:1.2.13.dfsg-1?arch=amd64&distro=debian-12"
+        "pkg:deb/debian/zlib1g@1.2.13.dfsg-1?arch=amd64&distro=debian-12&epoch=1"
       ]
     },
     {
@@ -120,12 +120,12 @@
     },
     {
       "dependsOn": [],
-      "ref": "pkg:deb/debian/zlib1g@1:1.2.13.dfsg-1?arch=amd64&distro=debian-12"
+      "ref": "pkg:deb/debian/zlib1g@1.2.13.dfsg-1?arch=amd64&distro=debian-12&epoch=1"
     },
     {
       "dependsOn": [
         "pkg:deb/debian/libc6@2.36-9?arch=amd64&distro=debian-12",
-        "pkg:deb/debian/zlib1g@1:1.2.13.dfsg-1?arch=amd64&distro=debian-12"
+        "pkg:deb/debian/zlib1g@1.2.13.dfsg-1?arch=amd64&distro=debian-12&epoch=1"
       ],
       "ref": "synthetic@0.0.0"
     }

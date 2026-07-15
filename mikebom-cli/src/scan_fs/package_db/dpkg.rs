@@ -267,13 +267,19 @@ fn parse_stanza_inner(
     }
 
     let name = get("package")?.to_string();
-    let version = get("version")?.to_string();
+    let raw_version = get("version")?.to_string();
     let arch = get("architecture").map(|s| s.to_string());
-    if name.is_empty() || version.is_empty() {
+    if name.is_empty() || raw_version.is_empty() {
         return None;
     }
 
-    let purl_str = build_deb_purl(&name, &version, arch.as_deref(), namespace, distro_version);
+    // Milestone 197 US1 (#562): split epoch prefix out of the raw
+    // `Version:` field before PURL construction. Epoch flows into the
+    // PURL as `?epoch=<N>` qualifier per purl-spec; naked version
+    // (without the `<N>:` prefix) becomes the PURL version segment.
+    let (epoch, version) = parse_deb_version_with_epoch(&raw_version);
+
+    let purl_str = build_deb_purl(&name, &version, arch.as_deref(), namespace, distro_version, epoch);
     let purl = Purl::new(&purl_str).ok()?;
 
     let depends = get("depends")
@@ -346,6 +352,7 @@ fn build_deb_purl(
     arch: Option<&str>,
     namespace: &str,
     distro_version: Option<&str>,
+    epoch: Option<u32>,
 ) -> String {
     // Encode `+` in the name too (e.g. `libstdc++6` → `libstdc%2B%2B6`)
     // and in the version — both use the same rules per reference impl.
@@ -366,9 +373,39 @@ fn build_deb_purl(
             s.push_str(namespace);
             s.push('-');
             s.push_str(v);
+            have_qualifier = true;
+        }
+    }
+    // Milestone 197 US1 (#562): epoch qualifier — omitted when None or
+    // Some(0) per purl-spec convention (mirrors the m190 opkg-side fix
+    // pattern at `ipk_file.rs::build_opkg_purl`).
+    if let Some(e) = epoch {
+        if e != 0 {
+            s.push(if have_qualifier { '&' } else { '?' });
+            s.push_str(&format!("epoch={e}"));
         }
     }
     s
+}
+
+/// Milestone 197 US1 (#562): extract an optional epoch prefix from a
+/// Debian-style version string. `<digits>:<upstream-version>-<release>`
+/// splits to `(Some(digits), <upstream-version>-<release>)`; strings
+/// without a leading digit-run + `:` return `(None, raw)`.
+///
+/// Mirrors the m190 opkg-side helper at
+/// `ipk_file.rs::parse_opkg_version_with_epoch` — the deb / opkg /
+/// apk version grammars all inherit the same epoch shape.
+fn parse_deb_version_with_epoch(raw: &str) -> (Option<u32>, String) {
+    if let Some(colon_pos) = raw.find(':') {
+        let (prefix, rest) = raw.split_at(colon_pos);
+        if !prefix.is_empty() && prefix.chars().all(|c| c.is_ascii_digit()) {
+            if let Ok(v) = prefix.parse::<u32>() {
+                return (Some(v), rest[1..].to_string());
+            }
+        }
+    }
+    (None, raw.to_string())
 }
 
 /// Tokenise a `Depends:` field value into plain package names.
@@ -836,7 +873,7 @@ Architecture: arm64
     /// qualifier when both are present.
     #[test]
     fn build_deb_purl_stamps_id_version_qualifier() {
-        let purl = build_deb_purl("libc6", "2.36-9", Some("amd64"), "debian", Some("12"));
+        let purl = build_deb_purl("libc6", "2.36-9", Some("amd64"), "debian", Some("12"), None);
         assert_eq!(
             purl,
             "pkg:deb/debian/libc6@2.36-9?arch=amd64&distro=debian-12"
@@ -846,7 +883,7 @@ Architecture: arm64
     /// T029 — `distro_version = None` means no qualifier at all.
     #[test]
     fn build_deb_purl_omits_qualifier_when_distro_version_none() {
-        let purl = build_deb_purl("libc6", "2.36-9", Some("amd64"), "debian", None);
+        let purl = build_deb_purl("libc6", "2.36-9", Some("amd64"), "debian", None, None);
         assert_eq!(purl, "pkg:deb/debian/libc6@2.36-9?arch=amd64");
     }
 
@@ -854,7 +891,7 @@ Architecture: arm64
     /// shouldn't produce `distro=debian-` with a trailing dash).
     #[test]
     fn build_deb_purl_omits_qualifier_when_distro_version_empty() {
-        let purl = build_deb_purl("libc6", "2.36-9", Some("amd64"), "debian", Some(""));
+        let purl = build_deb_purl("libc6", "2.36-9", Some("amd64"), "debian", Some(""), None);
         assert_eq!(purl, "pkg:deb/debian/libc6@2.36-9?arch=amd64");
     }
 
@@ -864,7 +901,7 @@ Architecture: arm64
     #[test]
     fn build_deb_purl_uses_namespace_parameter() {
         let purl =
-            build_deb_purl("libssl3", "3.0.13", Some("amd64"), "ubuntu", Some("24.04"));
+            build_deb_purl("libssl3", "3.0.13", Some("amd64"), "ubuntu", Some("24.04"), None);
         assert_eq!(
             purl,
             "pkg:deb/ubuntu/libssl3@3.0.13?arch=amd64&distro=ubuntu-24.04"
@@ -878,10 +915,81 @@ Architecture: arm64
     #[test]
     fn build_deb_purl_preserves_raw_id_no_lookup_rewrite() {
         let purl =
-            build_deb_purl("foo", "1.0", Some("amd64"), "kali", Some("2024.1"));
+            build_deb_purl("foo", "1.0", Some("amd64"), "kali", Some("2024.1"), None);
         assert_eq!(
             purl,
             "pkg:deb/kali/foo@1.0?arch=amd64&distro=kali-2024.1"
+        );
+    }
+
+    // -----------------------------------------------------------------
+    // Milestone 197 US1 (#562): epoch qualifier emission tests
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn parse_deb_version_with_epoch_extracts_epoch() {
+        assert_eq!(parse_deb_version_with_epoch("1:2.0-r0"), (Some(1), "2.0-r0".to_string()));
+        assert_eq!(parse_deb_version_with_epoch("2:1.6-2.1+deb12u1"), (Some(2), "1.6-2.1+deb12u1".to_string()));
+    }
+
+    #[test]
+    fn parse_deb_version_with_epoch_preserves_explicit_zero() {
+        // Explicit `0:` is unusual but valid Debian syntax; preserved
+        // faithfully (build_deb_purl drops the qualifier when epoch=0).
+        assert_eq!(parse_deb_version_with_epoch("0:1.0"), (Some(0), "1.0".to_string()));
+    }
+
+    #[test]
+    fn parse_deb_version_with_epoch_no_epoch_returns_raw() {
+        assert_eq!(parse_deb_version_with_epoch("1.0-r0"), (None, "1.0-r0".to_string()));
+        assert_eq!(parse_deb_version_with_epoch("2.36-9"), (None, "2.36-9".to_string()));
+    }
+
+    #[test]
+    fn parse_deb_version_with_epoch_graceful_on_non_digit_prefix() {
+        // `foo:bar` is not epoch syntax — return raw.
+        assert_eq!(parse_deb_version_with_epoch("not-a-number:1.0"), (None, "not-a-number:1.0".to_string()));
+    }
+
+    #[test]
+    fn build_deb_purl_emits_epoch_qualifier_when_nonzero() {
+        let purl = build_deb_purl("test-pkg", "2.0-r0", Some("amd64"), "debian", Some("12"), Some(1));
+        assert_eq!(purl, "pkg:deb/debian/test-pkg@2.0-r0?arch=amd64&distro=debian-12&epoch=1");
+    }
+
+    #[test]
+    fn build_deb_purl_omits_epoch_qualifier_when_zero() {
+        // Per purl-spec convention (mirrored from m190 opkg): explicit
+        // epoch=0 is dropped from the emitted PURL.
+        let purl = build_deb_purl("test-pkg", "1.0", Some("amd64"), "debian", Some("12"), Some(0));
+        assert_eq!(purl, "pkg:deb/debian/test-pkg@1.0?arch=amd64&distro=debian-12");
+    }
+
+    #[test]
+    fn build_deb_purl_omits_epoch_qualifier_when_none() {
+        // Non-epoch packages are unchanged from pre-m197 output.
+        let purl = build_deb_purl("test-pkg", "1.0", Some("amd64"), "debian", Some("12"), None);
+        assert_eq!(purl, "pkg:deb/debian/test-pkg@1.0?arch=amd64&distro=debian-12");
+    }
+
+    #[test]
+    fn scan_epoch_versioned_dpkg_stanza_emits_qualifier_purl() {
+        // Full parse-path integration: synthetic dpkg stanza with
+        // Version: 1:2.0-r0 must emit `pkg:deb/debian/test-pkg@2.0-r0?arch=amd64&distro=debian-12&epoch=1`.
+        // Regression test for m197 US1 / #562.
+        let text = "\
+Package: test-pkg
+Status: install ok installed
+Version: 1:2.0-r0
+Architecture: amd64
+Maintainer: Test <test@example.com>
+Description: epoch-versioned test package
+";
+        let entries = parse(text, SOURCE, "debian", Some("12"));
+        assert_eq!(entries.len(), 1);
+        assert_eq!(
+            entries[0].purl.as_str(),
+            "pkg:deb/debian/test-pkg@2.0-r0?arch=amd64&distro=debian-12&epoch=1"
         );
     }
 }

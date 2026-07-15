@@ -60,13 +60,13 @@
   },
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-HAMLQZOFLKT6T7IV"
+    "SPDXRef-DocumentRoot-AVQPPOHJPQR4FNI6"
   ],
-  "documentNamespace": "https://mikebom.kusari.dev/spdx/LJ4GZIMOJE2DVTPO6QJ7MPE5CFMT7NYH",
+  "documentNamespace": "https://mikebom.kusari.dev/spdx/DAPPOD3B6KK6A6MZLKZPHWXJN6XGDAC2",
   "name": "synthetic",
   "packages": [
     {
-      "SPDXID": "SPDXRef-DocumentRoot-HAMLQZOFLKT6T7IV",
+      "SPDXID": "SPDXRef-DocumentRoot-AVQPPOHJPQR4FNI6",
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
@@ -142,7 +142,7 @@
       "versionInfo": "2.36-9"
     },
     {
-      "SPDXID": "SPDXRef-Package-FBZUYFQKGJMH6COB",
+      "SPDXID": "SPDXRef-Package-B4LWOOIZZFVGZUVY",
       "annotations": [
         {
           "annotationDate": "1970-01-01T00:00:00Z",
@@ -160,7 +160,7 @@
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:debian:zlib1g:1\\\\:1.2.13.dfsg-1:*:*:*:*:*:*:*\",\"cpe:2.3:a:zlib1g:zlib1g:1\\\\:1.2.13.dfsg-1:*:*:*:*:*:*:*\"]}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:debian:zlib1g:1.2.13.dfsg-1:*:*:*:*:*:*:*\",\"cpe:2.3:a:zlib1g:zlib1g:1.2.13.dfsg-1:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
@@ -179,12 +179,12 @@
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:deb/debian/zlib1g@1:1.2.13.dfsg-1?arch=amd64&distro=debian-12",
+          "referenceLocator": "pkg:deb/debian/zlib1g@1.2.13.dfsg-1?arch=amd64&distro=debian-12&epoch=1",
           "referenceType": "purl"
         },
         {
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:debian:zlib1g:1\\:1.2.13.dfsg-1:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:debian:zlib1g:1.2.13.dfsg-1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -193,24 +193,24 @@
       "licenseDeclared": "NOASSERTION",
       "name": "zlib1g",
       "supplier": "Organization: Debian <debian@example.org>",
-      "versionInfo": "1:1.2.13.dfsg-1"
+      "versionInfo": "1.2.13.dfsg-1"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-HAMLQZOFLKT6T7IV",
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-AVQPPOHJPQR4FNI6",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-ZKB4GX3JBL66K2UG",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-HAMLQZOFLKT6T7IV"
+      "spdxElementId": "SPDXRef-DocumentRoot-AVQPPOHJPQR4FNI6"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-FBZUYFQKGJMH6COB",
+      "relatedSpdxElement": "SPDXRef-Package-B4LWOOIZZFVGZUVY",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-HAMLQZOFLKT6T7IV"
+      "spdxElementId": "SPDXRef-DocumentRoot-AVQPPOHJPQR4FNI6"
     }
   ],
   "spdxVersion": "SPDX-2.3"
