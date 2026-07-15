@@ -137,6 +137,27 @@ fn walk_mask(v: &mut serde_json::Value) {
                     }
                 }
             }
+            // m196: mask SHA256 / MD5 content hashes embedded inside
+            // annotation `statement:` / `comment:` / `value:` JSON-in-
+            // string values (chiefly the `evidence.occurrences[]` shape
+            // in image-tier scans). These hashes are (a) noisy in golden
+            // diffs — they rotate with any upstream re-publish of the
+            // pinned image, adding drift with no regression-detection
+            // signal, and (b) false-positive fodder for secret-scanners
+            // (Kusari Inspector flagged `/etc/protocols` SHA256 as a
+            // ProtocolsIO API key on PR #576). Masking eliminates both
+            // classes of noise while preserving the shape and file paths
+            // that make the annotation useful for regression detection.
+            for key in ["statement", "comment", "value", "additionalContext"] {
+                if let Some(v) = map.get_mut(key) {
+                    if let Some(s) = v.as_str() {
+                        let masked = mask_content_hashes_in_string(s);
+                        if masked != s {
+                            *v = serde_json::Value::String(masked);
+                        }
+                    }
+                }
+            }
             for (_, child) in map.iter_mut() {
                 walk_mask(child);
             }
@@ -148,6 +169,34 @@ fn walk_mask(v: &mut serde_json::Value) {
         }
         _ => {}
     }
+}
+
+/// Replace 64-hex sha256 and 32-hex md5 values inside JSON-in-string
+/// annotation payloads with a stable placeholder. Preserves the
+/// enclosing structure (field names, paths, JSON braces) — only the
+/// hex payload itself rotates.
+fn mask_content_hashes_in_string(s: &str) -> String {
+    // Only bother if the string plausibly contains `sha256` or `md5`
+    // as a JSON field. Cheap prefilter avoids regex work on 99% of
+    // annotations.
+    if !s.contains("sha256") && !s.contains("md5") {
+        return s.to_string();
+    }
+    // Field-scoped mask: `"sha256":"<64-hex>"` → `"sha256":"<masked-sha256>"`
+    // (same for md5). Handles both inside JSON-in-string annotation
+    // payloads and top-level JSON fields when the walker recurses.
+    use std::sync::OnceLock;
+    static SHA256_RE: OnceLock<regex::Regex> = OnceLock::new();
+    static MD5_RE: OnceLock<regex::Regex> = OnceLock::new();
+    let sha256_re = SHA256_RE.get_or_init(|| {
+        regex::Regex::new(r#""sha256":"[0-9a-fA-F]{64}""#).expect("valid regex")
+    });
+    let md5_re = MD5_RE.get_or_init(|| {
+        regex::Regex::new(r#""md5":"[0-9a-fA-F]{32}""#).expect("valid regex")
+    });
+    let a = sha256_re.replace_all(s, r#""sha256":"<masked-sha256>""#);
+    let b = md5_re.replace_all(&a, r#""md5":"<masked-md5>""#);
+    b.into_owned()
 }
 
 fn mask_doc_prefix(s: &str) -> String {

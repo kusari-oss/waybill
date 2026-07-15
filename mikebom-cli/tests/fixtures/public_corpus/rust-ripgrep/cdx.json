@@ -1,0 +1,3793 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:cargo/aho-corasick@1.1.3",
+      "cpe": "cpe:2.3:a:aho-corasick:aho-corasick:1.1.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/aho-corasick/1.1.3"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8e60d3430d3a69478ad0993f19238d2df97c507009a52b3c10addcd7f6bcb916"
+        }
+      ],
+      "name": "aho-corasick",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/aho-corasick@1.1.3",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "1.1.3"
+    },
+    {
+      "bom-ref": "pkg:cargo/anyhow@1.0.87",
+      "cpe": "cpe:2.3:a:anyhow:anyhow:1.0.87:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/anyhow/1.0.87"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "10f00e1f6e58a40e807377c75c6a7f97bf9044fab57816f2414e6f5f4499d7b8"
+        }
+      ],
+      "name": "anyhow",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/anyhow@1.0.87",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "1.0.87"
+    },
+    {
+      "bom-ref": "pkg:cargo/bstr@1.10.0",
+      "cpe": "cpe:2.3:a:bstr:bstr:1.10.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/bstr/1.10.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "40723b8fb387abc38f4f4a37c09073622e41dd12327033091ef8950659e6dc0c"
+        }
+      ],
+      "name": "bstr",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/bstr@1.10.0",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "1.10.0"
+    },
+    {
+      "bom-ref": "pkg:cargo/cc@1.1.18",
+      "cpe": "cpe:2.3:a:cc:cc:1.1.18:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/cc/1.1.18"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b62ac837cdb5cb22e10a256099b4fc502b1dfe560cb282963a974d7abd80e476"
+        }
+      ],
+      "name": "cc",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/cc@1.1.18",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "1.1.18"
+    },
+    {
+      "bom-ref": "pkg:cargo/cfg-if@1.0.0",
+      "cpe": "cpe:2.3:a:cfg-if:cfg-if:1.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/cfg-if/1.0.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+        }
+      ],
+      "name": "cfg-if",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/cfg-if@1.0.0",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "bom-ref": "pkg:cargo/crossbeam-channel@0.5.13",
+      "cpe": "cpe:2.3:a:crossbeam-channel:crossbeam-channel:0.5.13:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/crossbeam-channel/0.5.13"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "33480d6946193aa8033910124896ca395333cae7e2d1113d1fef6c3272217df2"
+        }
+      ],
+      "name": "crossbeam-channel",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/crossbeam-channel@0.5.13",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.5.13"
+    },
+    {
+      "bom-ref": "pkg:cargo/crossbeam-deque@0.8.5",
+      "cpe": "cpe:2.3:a:crossbeam-deque:crossbeam-deque:0.8.5:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/crossbeam-deque/0.8.5"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "613f8cc01fe9cf1a3eb3d7f488fd2fa8388403e97039e2f73692932e291a770d"
+        }
+      ],
+      "name": "crossbeam-deque",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/crossbeam-deque@0.8.5",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.8.5"
+    },
+    {
+      "bom-ref": "pkg:cargo/crossbeam-epoch@0.9.18",
+      "cpe": "cpe:2.3:a:crossbeam-epoch:crossbeam-epoch:0.9.18:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/crossbeam-epoch/0.9.18"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "5b82ac4a3c2ca9c3460964f020e1402edd5753411d7737aa39c3714ad1b5420e"
+        }
+      ],
+      "name": "crossbeam-epoch",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/crossbeam-epoch@0.9.18",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.9.18"
+    },
+    {
+      "bom-ref": "pkg:cargo/crossbeam-utils@0.8.20",
+      "cpe": "cpe:2.3:a:crossbeam-utils:crossbeam-utils:0.8.20:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/crossbeam-utils/0.8.20"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "22ec99545bb0ed0ea7bb9b8e1e9122ea386ff8a48c0922e43f36d45ab09e0e80"
+        }
+      ],
+      "name": "crossbeam-utils",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/crossbeam-utils@0.8.20",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.8.20"
+    },
+    {
+      "bom-ref": "pkg:cargo/encoding_rs@0.8.34",
+      "cpe": "cpe:2.3:a:encoding_rs:encoding_rs:0.8.34:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/encoding_rs/0.8.34"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b45de904aa0b010bce2ab45264d0631681847fa7b6f2eaa7dab7619943bc4f59"
+        }
+      ],
+      "name": "encoding_rs",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/encoding_rs@0.8.34",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.8.34"
+    },
+    {
+      "bom-ref": "pkg:cargo/encoding_rs_io@0.1.7",
+      "cpe": "cpe:2.3:a:encoding_rs_io:encoding_rs_io:0.1.7:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/encoding_rs_io/0.1.7"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1cc3c5651fb62ab8aa3103998dade57efdd028544bd300516baa31840c252a83"
+        }
+      ],
+      "name": "encoding_rs_io",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/encoding_rs_io@0.1.7",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.1.7"
+    },
+    {
+      "bom-ref": "pkg:cargo/glob@0.3.1",
+      "cpe": "cpe:2.3:a:glob:glob:0.3.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/glob/0.3.1"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "d2fabcfbdc87f4758337ca535fb41a6d701b65693ce38287d856d1674551ec9b"
+        }
+      ],
+      "name": "glob",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/glob@0.3.1",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.3.1"
+    },
+    {
+      "bom-ref": "pkg:cargo/itoa@1.0.11",
+      "cpe": "cpe:2.3:a:itoa:itoa:1.0.11:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/itoa/1.0.11"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "49f1f14873335454500d59611f1cf4a4b0f786f9ac11f4312a78e4cf2566695b"
+        }
+      ],
+      "name": "itoa",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/itoa@1.0.11",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "1.0.11"
+    },
+    {
+      "bom-ref": "pkg:cargo/jemalloc-sys@0.5.4%2B5.3.0-patched",
+      "cpe": "cpe:2.3:a:jemalloc-sys:jemalloc-sys:0.5.4\\+5.3.0-patched:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/jemalloc-sys/0.5.4+5.3.0-patched"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ac6c1946e1cea1788cbfde01c993b52a10e2da07f4bac608228d1bed20bfebf2"
+        }
+      ],
+      "name": "jemalloc-sys",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/jemalloc-sys@0.5.4%2B5.3.0-patched",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.5.4+5.3.0-patched"
+    },
+    {
+      "bom-ref": "pkg:cargo/jemallocator@0.5.4",
+      "cpe": "cpe:2.3:a:jemallocator:jemallocator:0.5.4:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/jemallocator/0.5.4"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a0de374a9f8e63150e6f5e8a60cc14c668226d7a347d8aee1a45766e3c4dd3bc"
+        }
+      ],
+      "name": "jemallocator",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/jemallocator@0.5.4",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.5.4"
+    },
+    {
+      "bom-ref": "pkg:cargo/jobserver@0.1.32",
+      "cpe": "cpe:2.3:a:jobserver:jobserver:0.1.32:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/jobserver/0.1.32"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "48d1dbcbbeb6a7fec7e059840aa538bd62aaccf972c7346c4d9d2059312853d0"
+        }
+      ],
+      "name": "jobserver",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/jobserver@0.1.32",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.1.32"
+    },
+    {
+      "bom-ref": "pkg:cargo/lexopt@0.3.0",
+      "cpe": "cpe:2.3:a:lexopt:lexopt:0.3.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/lexopt/0.3.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "baff4b617f7df3d896f97fe922b64817f6cd9a756bb81d40f8883f2f66dcb401"
+        }
+      ],
+      "name": "lexopt",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/lexopt@0.3.0",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.3.0"
+    },
+    {
+      "bom-ref": "pkg:cargo/libc@0.2.158",
+      "cpe": "cpe:2.3:a:libc:libc:0.2.158:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/libc/0.2.158"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "d8adc4bb1803a324070e64a98ae98f38934d91957a99cfb3a43dcbc01bc56439"
+        }
+      ],
+      "name": "libc",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/libc@0.2.158",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.2.158"
+    },
+    {
+      "bom-ref": "pkg:cargo/log@0.4.22",
+      "cpe": "cpe:2.3:a:log:log:0.4.22:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/log/0.4.22"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a7a70ba024b9dc04c27ea2f0c0548feb474ec5c54bba33a7f72f873a39d07b24"
+        }
+      ],
+      "name": "log",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "optional"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:optional-derivation",
+          "value": "cargo-optional-true"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/log@0.4.22",
+      "scope": "excluded",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.4.22"
+    },
+    {
+      "bom-ref": "pkg:cargo/memchr@2.7.4",
+      "cpe": "cpe:2.3:a:memchr:memchr:2.7.4:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/memchr/2.7.4"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
+        }
+      ],
+      "name": "memchr",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/memchr@2.7.4",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "2.7.4"
+    },
+    {
+      "bom-ref": "pkg:cargo/memmap2@0.9.4",
+      "cpe": "cpe:2.3:a:memmap2:memmap2:0.9.4:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/memmap2/0.9.4"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "fe751422e4a8caa417e13c3ea66452215d7d63e19e604f4980461212f3ae1322"
+        }
+      ],
+      "name": "memmap2",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/memmap2@0.9.4",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.9.4"
+    },
+    {
+      "bom-ref": "pkg:cargo/pcre2-sys@0.2.9",
+      "cpe": "cpe:2.3:a:pcre2-sys:pcre2-sys:0.2.9:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/pcre2-sys/0.2.9"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "550f5d18fb1b90c20b87e161852c10cde77858c3900c5059b5ad2a1449f11d8a"
+        }
+      ],
+      "name": "pcre2-sys",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/pcre2-sys@0.2.9",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.2.9"
+    },
+    {
+      "bom-ref": "pkg:cargo/pcre2@0.2.9",
+      "cpe": "cpe:2.3:a:pcre2:pcre2:0.2.9:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/pcre2/0.2.9"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "3be55c43ac18044541d58d897e8f4c55157218428953ebd39d86df3ba0286b2b"
+        }
+      ],
+      "name": "pcre2",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/pcre2@0.2.9",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.2.9"
+    },
+    {
+      "bom-ref": "pkg:cargo/pkg-config@0.3.30",
+      "cpe": "cpe:2.3:a:pkg-config:pkg-config:0.3.30:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/pkg-config/0.3.30"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "d231b230927b5e4ad203db57bbcbee2802f6bce620b1e4a9024a07d94e2907ec"
+        }
+      ],
+      "name": "pkg-config",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/pkg-config@0.3.30",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.3.30"
+    },
+    {
+      "bom-ref": "pkg:cargo/proc-macro2@1.0.86",
+      "cpe": "cpe:2.3:a:proc-macro2:proc-macro2:1.0.86:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/proc-macro2/1.0.86"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "5e719e8df665df0d1c8fbfd238015744736151d4445ec0836b8e628aae103b77"
+        }
+      ],
+      "name": "proc-macro2",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/proc-macro2@1.0.86",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "1.0.86"
+    },
+    {
+      "bom-ref": "pkg:cargo/quote@1.0.37",
+      "cpe": "cpe:2.3:a:quote:quote:1.0.37:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/quote/1.0.37"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b5b9d34b8991d19d98081b46eacdd8eb58c6f2b201139f7c5f643cc155a633af"
+        }
+      ],
+      "name": "quote",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/quote@1.0.37",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "1.0.37"
+    },
+    {
+      "bom-ref": "pkg:cargo/regex-automata@0.4.7",
+      "cpe": "cpe:2.3:a:regex-automata:regex-automata:0.4.7:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/regex-automata/0.4.7"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "38caf58cc5ef2fed281f89292ef23f6365465ed9a41b7a7754eb4e26496c92df"
+        }
+      ],
+      "name": "regex-automata",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/regex-automata@0.4.7",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.4.7"
+    },
+    {
+      "bom-ref": "pkg:cargo/regex-syntax@0.8.4",
+      "cpe": "cpe:2.3:a:regex-syntax:regex-syntax:0.8.4:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/regex-syntax/0.8.4"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "7a66a03ae7c801facd77a29370b4faec201768915ac14a721ba36f20bc9c209b"
+        }
+      ],
+      "name": "regex-syntax",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/regex-syntax@0.8.4",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.8.4"
+    },
+    {
+      "bom-ref": "pkg:cargo/regex@1.10.6",
+      "cpe": "cpe:2.3:a:regex:regex:1.10.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/regex/1.10.6"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "4219d74c6b67a3654a9fbebc4b419e22126d13d2f3c4a07ee0cb61ff79a79619"
+        }
+      ],
+      "name": "regex",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/regex@1.10.6",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "1.10.6"
+    },
+    {
+      "bom-ref": "pkg:cargo/ryu@1.0.18",
+      "cpe": "cpe:2.3:a:ryu:ryu:1.0.18:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/ryu/1.0.18"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f3cb5ba0dc43242ce17de99c180e96db90b235b8a9fdc9543c96d2209116bd9f"
+        }
+      ],
+      "name": "ryu",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/ryu@1.0.18",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "1.0.18"
+    },
+    {
+      "bom-ref": "pkg:cargo/same-file@1.0.6",
+      "cpe": "cpe:2.3:a:same-file:same-file:1.0.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/same-file/1.0.6"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "93fc1dc3aaa9bfed95e02e6eadabb4baf7e3078b0bd1b4d7b6b0b68378900502"
+        }
+      ],
+      "name": "same-file",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/same-file@1.0.6",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "1.0.6"
+    },
+    {
+      "bom-ref": "pkg:cargo/serde@1.0.210",
+      "cpe": "cpe:2.3:a:serde:serde:1.0.210:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/serde/1.0.210"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "c8e3592472072e6e22e0a54d5904d9febf8508f65fb8552499a1abc7d1078c3a"
+        }
+      ],
+      "name": "serde",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "optional"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:optional-derivation",
+          "value": "cargo-optional-true"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/serde@1.0.210",
+      "scope": "excluded",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "1.0.210"
+    },
+    {
+      "bom-ref": "pkg:cargo/serde_derive@1.0.210",
+      "cpe": "cpe:2.3:a:serde_derive:serde_derive:1.0.210:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/serde_derive/1.0.210"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "243902eda00fad750862fc144cea25caca5e20d615af0a81bee94ca738f1df1f"
+        }
+      ],
+      "name": "serde_derive",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/serde_derive@1.0.210",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "1.0.210"
+    },
+    {
+      "bom-ref": "pkg:cargo/serde_json@1.0.128",
+      "cpe": "cpe:2.3:a:serde_json:serde_json:1.0.128:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/serde_json/1.0.128"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "6ff5456707a1de34e7e37f2a6fd3d3f808c318259cbd01ab6377795054b483d8"
+        }
+      ],
+      "name": "serde_json",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "optional"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:optional-derivation",
+          "value": "cargo-optional-true"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/serde_json@1.0.128",
+      "scope": "excluded",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "1.0.128"
+    },
+    {
+      "bom-ref": "pkg:cargo/shlex@1.3.0",
+      "cpe": "cpe:2.3:a:shlex:shlex:1.3.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/shlex/1.3.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
+        }
+      ],
+      "name": "shlex",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/shlex@1.3.0",
+      "supplier": {
+        "name": "comex <comexk@gmail.com>, Fenhl <fenhl@fenhl.net>, Adrian Taylor <adetaylor@chromium.org>, Alex Touchet <alextouchet@outlook.com>, Daniel Parks <dp+git@oxidized.org>, Garrett Berg <googberg@gmail.com>"
+      },
+      "type": "library",
+      "version": "1.3.0"
+    },
+    {
+      "bom-ref": "pkg:cargo/syn@2.0.77",
+      "cpe": "cpe:2.3:a:syn:syn:2.0.77:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/syn/2.0.77"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9f35bcdf61fd8e7be6caf75f429fdca8beb3ed76584befb503b1569faee373ed"
+        }
+      ],
+      "name": "syn",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/syn@2.0.77",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "2.0.77"
+    },
+    {
+      "bom-ref": "pkg:cargo/termcolor@1.4.1",
+      "cpe": "cpe:2.3:a:termcolor:termcolor:1.4.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/termcolor/1.4.1"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "06794f8f6c5c898b3275aebefa6b8a1cb24cd2c6c79397ab15774837a0bc5755"
+        }
+      ],
+      "name": "termcolor",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/termcolor@1.4.1",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "1.4.1"
+    },
+    {
+      "bom-ref": "pkg:cargo/textwrap@0.16.1",
+      "cpe": "cpe:2.3:a:textwrap:textwrap:0.16.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/textwrap/0.16.1"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "23d434d3f8967a09480fb04132ebe0a3e088c173e6d0ee7897abbdf4eab0f8b9"
+        }
+      ],
+      "name": "textwrap",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/textwrap@0.16.1",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.16.1"
+    },
+    {
+      "bom-ref": "pkg:cargo/unicode-ident@1.0.12",
+      "cpe": "cpe:2.3:a:unicode-ident:unicode-ident:1.0.12:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/unicode-ident/1.0.12"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
+        }
+      ],
+      "name": "unicode-ident",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/unicode-ident@1.0.12",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "1.0.12"
+    },
+    {
+      "bom-ref": "pkg:cargo/walkdir@2.5.0",
+      "cpe": "cpe:2.3:a:walkdir:walkdir:2.5.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/walkdir/2.5.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "29790946404f91d9c5d06f9874efddea1dc06c5efe94541a7d6863108e3a5e4b"
+        }
+      ],
+      "name": "walkdir",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/walkdir@2.5.0",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "2.5.0"
+    },
+    {
+      "bom-ref": "pkg:cargo/winapi-util@0.1.9",
+      "cpe": "cpe:2.3:a:winapi-util:winapi-util:0.1.9:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/winapi-util/0.1.9"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
+        }
+      ],
+      "name": "winapi-util",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/winapi-util@0.1.9",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.1.9"
+    },
+    {
+      "bom-ref": "pkg:cargo/windows-sys@0.59.0",
+      "cpe": "cpe:2.3:a:windows-sys:windows-sys:0.59.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/windows-sys/0.59.0"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1e38bc4d79ed67fd075bcc251a1c39b32a1776bbe92e5bef1f0bf1f8c531853b"
+        }
+      ],
+      "name": "windows-sys",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/windows-sys@0.59.0",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.59.0"
+    },
+    {
+      "bom-ref": "pkg:cargo/windows-targets@0.52.6",
+      "cpe": "cpe:2.3:a:windows-targets:windows-targets:0.52.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/windows-targets/0.52.6"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9b724f72796e036ab90c1021d4780d4d3d648aca59e491e6b98e725b84e99973"
+        }
+      ],
+      "name": "windows-targets",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/windows-targets@0.52.6",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.52.6"
+    },
+    {
+      "bom-ref": "pkg:cargo/windows_aarch64_gnullvm@0.52.6",
+      "cpe": "cpe:2.3:a:windows_aarch64_gnullvm:windows_aarch64_gnullvm:0.52.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/windows_aarch64_gnullvm/0.52.6"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "32a4622180e7a0ec044bb555404c800bc9fd9ec262ec147edd5989ccd0c02cd3"
+        }
+      ],
+      "name": "windows_aarch64_gnullvm",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/windows_aarch64_gnullvm@0.52.6",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.52.6"
+    },
+    {
+      "bom-ref": "pkg:cargo/windows_aarch64_msvc@0.52.6",
+      "cpe": "cpe:2.3:a:windows_aarch64_msvc:windows_aarch64_msvc:0.52.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/windows_aarch64_msvc/0.52.6"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "09ec2a7bb152e2252b53fa7803150007879548bc709c039df7627cabbd05d469"
+        }
+      ],
+      "name": "windows_aarch64_msvc",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/windows_aarch64_msvc@0.52.6",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.52.6"
+    },
+    {
+      "bom-ref": "pkg:cargo/windows_i686_gnu@0.52.6",
+      "cpe": "cpe:2.3:a:windows_i686_gnu:windows_i686_gnu:0.52.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/windows_i686_gnu/0.52.6"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8e9b5ad5ab802e97eb8e295ac6720e509ee4c243f69d781394014ebfe8bbfa0b"
+        }
+      ],
+      "name": "windows_i686_gnu",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/windows_i686_gnu@0.52.6",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.52.6"
+    },
+    {
+      "bom-ref": "pkg:cargo/windows_i686_gnullvm@0.52.6",
+      "cpe": "cpe:2.3:a:windows_i686_gnullvm:windows_i686_gnullvm:0.52.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/windows_i686_gnullvm/0.52.6"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "0eee52d38c090b3caa76c563b86c3a4bd71ef1a819287c19d586d7334ae8ed66"
+        }
+      ],
+      "name": "windows_i686_gnullvm",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/windows_i686_gnullvm@0.52.6",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.52.6"
+    },
+    {
+      "bom-ref": "pkg:cargo/windows_i686_msvc@0.52.6",
+      "cpe": "cpe:2.3:a:windows_i686_msvc:windows_i686_msvc:0.52.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/windows_i686_msvc/0.52.6"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "240948bc05c5e7c6dabba28bf89d89ffce3e303022809e73deaefe4f6ec56c66"
+        }
+      ],
+      "name": "windows_i686_msvc",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/windows_i686_msvc@0.52.6",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.52.6"
+    },
+    {
+      "bom-ref": "pkg:cargo/windows_x86_64_gnu@0.52.6",
+      "cpe": "cpe:2.3:a:windows_x86_64_gnu:windows_x86_64_gnu:0.52.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/windows_x86_64_gnu/0.52.6"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "147a5c80aabfbf0c7d901cb5895d1de30ef2907eb21fbbab29ca94c5b08b1a78"
+        }
+      ],
+      "name": "windows_x86_64_gnu",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/windows_x86_64_gnu@0.52.6",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.52.6"
+    },
+    {
+      "bom-ref": "pkg:cargo/windows_x86_64_gnullvm@0.52.6",
+      "cpe": "cpe:2.3:a:windows_x86_64_gnullvm:windows_x86_64_gnullvm:0.52.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/windows_x86_64_gnullvm/0.52.6"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "24d5b23dc417412679681396f2b49f3de8c1473deb516bd34410872eff51ed0d"
+        }
+      ],
+      "name": "windows_x86_64_gnullvm",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/windows_x86_64_gnullvm@0.52.6",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.52.6"
+    },
+    {
+      "bom-ref": "pkg:cargo/windows_x86_64_msvc@0.52.6",
+      "cpe": "cpe:2.3:a:windows_x86_64_msvc:windows_x86_64_msvc:0.52.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "Cargo.lock"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://crates.io/crates/windows_x86_64_msvc/0.52.6"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
+        }
+      ],
+      "name": "windows_x86_64_msvc",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"Cargo.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:cargo/windows_x86_64_msvc@0.52.6",
+      "supplier": {
+        "name": "crates.io"
+      },
+      "type": "library",
+      "version": "0.52.6"
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=0a2632e085b2f2a4bca4024320010fb756d9782e26809efd0c243b4265530e1f",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "0a2632e085b2f2a4bca4024320010fb756d9782e26809efd0c243b4265530e1f"
+        }
+      ],
+      "name": "utils.sh",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"ci/utils.sh\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"ci/utils.sh\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=16adf87d146eadcc68bd2f45aa432599218baa0acabd7125c868794bd9cf42b7",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "16adf87d146eadcc68bd2f45aa432599218baa0acabd7125c868794bd9cf42b7"
+        }
+      ],
+      "name": "copy-examples",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"scripts/copy-examples\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"scripts/copy-examples\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=249652b82c5094612032bd6efc21602fcfbaf61f453b78b17f34344d6e12f567",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "249652b82c5094612032bd6efc21602fcfbaf61f453b78b17f34344d6e12f567"
+        }
+      ],
+      "name": "ubuntu-install-packages",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"ci/ubuntu-install-packages\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"ci/ubuntu-install-packages\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=2e79c554b9d43f234fe36916cda1744130abc38f1e66eb4d1b741ec900c2e02b",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "2e79c554b9d43f234fe36916cda1744130abc38f1e66eb4d1b741ec900c2e02b"
+        }
+      ],
+      "name": "benchsuite",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"benchsuite/benchsuite\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"benchsuite/benchsuite\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=77f61ae7aa9bcfcce1bfaaf83c437746ab55fecbcf49d79869582806f1ee242c",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "77f61ae7aa9bcfcce1bfaaf83c437746ab55fecbcf49d79869582806f1ee242c"
+        }
+      ],
+      "name": "sha256-releases",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"ci/sha256-releases\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"ci/sha256-releases\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=a557fe3db38d2db915095b4bcc6289d32352546282168c4e911bf429f090c767",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a557fe3db38d2db915095b4bcc6289d32352546282168c4e911bf429f090c767"
+        }
+      ],
+      "name": "build-and-publish-m2",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"ci/build-and-publish-m2\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"ci/build-and-publish-m2\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=c9c0aee7d2a89342045c6aaa4eaa406cee850a734125f06d320fc125af45c68d",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "c9c0aee7d2a89342045c6aaa4eaa406cee850a734125f06d320fc125af45c68d"
+        }
+      ],
+      "name": "test-complete",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"ci/test-complete\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"ci/test-complete\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "complete",
+      "assemblies": [
+        "pkg:cargo/aho-corasick@1.1.3",
+        "pkg:cargo/anyhow@1.0.87",
+        "pkg:cargo/bstr@1.10.0",
+        "pkg:cargo/cc@1.1.18",
+        "pkg:cargo/cfg-if@1.0.0",
+        "pkg:cargo/crossbeam-channel@0.5.13",
+        "pkg:cargo/crossbeam-deque@0.8.5",
+        "pkg:cargo/crossbeam-epoch@0.9.18",
+        "pkg:cargo/crossbeam-utils@0.8.20",
+        "pkg:cargo/encoding_rs@0.8.34",
+        "pkg:cargo/encoding_rs_io@0.1.7",
+        "pkg:cargo/glob@0.3.1",
+        "pkg:cargo/itoa@1.0.11",
+        "pkg:cargo/jemalloc-sys@0.5.4%2B5.3.0-patched",
+        "pkg:cargo/jemallocator@0.5.4",
+        "pkg:cargo/jobserver@0.1.32",
+        "pkg:cargo/lexopt@0.3.0",
+        "pkg:cargo/libc@0.2.158",
+        "pkg:cargo/log@0.4.22",
+        "pkg:cargo/memchr@2.7.4",
+        "pkg:cargo/memmap2@0.9.4",
+        "pkg:cargo/pcre2-sys@0.2.9",
+        "pkg:cargo/pcre2@0.2.9",
+        "pkg:cargo/pkg-config@0.3.30",
+        "pkg:cargo/proc-macro2@1.0.86",
+        "pkg:cargo/quote@1.0.37",
+        "pkg:cargo/regex-automata@0.4.7",
+        "pkg:cargo/regex-syntax@0.8.4",
+        "pkg:cargo/regex@1.10.6",
+        "pkg:cargo/ryu@1.0.18",
+        "pkg:cargo/same-file@1.0.6",
+        "pkg:cargo/serde@1.0.210",
+        "pkg:cargo/serde_derive@1.0.210",
+        "pkg:cargo/serde_json@1.0.128",
+        "pkg:cargo/shlex@1.3.0",
+        "pkg:cargo/syn@2.0.77",
+        "pkg:cargo/termcolor@1.4.1",
+        "pkg:cargo/textwrap@0.16.1",
+        "pkg:cargo/unicode-ident@1.0.12",
+        "pkg:cargo/walkdir@2.5.0",
+        "pkg:cargo/winapi-util@0.1.9",
+        "pkg:cargo/windows-sys@0.59.0",
+        "pkg:cargo/windows-targets@0.52.6",
+        "pkg:cargo/windows_aarch64_gnullvm@0.52.6",
+        "pkg:cargo/windows_aarch64_msvc@0.52.6",
+        "pkg:cargo/windows_i686_gnu@0.52.6",
+        "pkg:cargo/windows_i686_gnullvm@0.52.6",
+        "pkg:cargo/windows_i686_msvc@0.52.6",
+        "pkg:cargo/windows_x86_64_gnu@0.52.6",
+        "pkg:cargo/windows_x86_64_gnullvm@0.52.6",
+        "pkg:cargo/windows_x86_64_msvc@0.52.6"
+      ],
+      "dependencies": [
+        "pkg:cargo/aho-corasick@1.1.3",
+        "pkg:cargo/anyhow@1.0.87",
+        "pkg:cargo/bstr@1.10.0",
+        "pkg:cargo/cc@1.1.18",
+        "pkg:cargo/cfg-if@1.0.0",
+        "pkg:cargo/crossbeam-channel@0.5.13",
+        "pkg:cargo/crossbeam-deque@0.8.5",
+        "pkg:cargo/crossbeam-epoch@0.9.18",
+        "pkg:cargo/crossbeam-utils@0.8.20",
+        "pkg:cargo/encoding_rs@0.8.34",
+        "pkg:cargo/encoding_rs_io@0.1.7",
+        "pkg:cargo/glob@0.3.1",
+        "pkg:cargo/itoa@1.0.11",
+        "pkg:cargo/jemalloc-sys@0.5.4%2B5.3.0-patched",
+        "pkg:cargo/jemallocator@0.5.4",
+        "pkg:cargo/jobserver@0.1.32",
+        "pkg:cargo/lexopt@0.3.0",
+        "pkg:cargo/libc@0.2.158",
+        "pkg:cargo/log@0.4.22",
+        "pkg:cargo/memchr@2.7.4",
+        "pkg:cargo/memmap2@0.9.4",
+        "pkg:cargo/pcre2-sys@0.2.9",
+        "pkg:cargo/pcre2@0.2.9",
+        "pkg:cargo/pkg-config@0.3.30",
+        "pkg:cargo/proc-macro2@1.0.86",
+        "pkg:cargo/quote@1.0.37",
+        "pkg:cargo/regex-automata@0.4.7",
+        "pkg:cargo/regex-syntax@0.8.4",
+        "pkg:cargo/regex@1.10.6",
+        "pkg:cargo/ryu@1.0.18",
+        "pkg:cargo/same-file@1.0.6",
+        "pkg:cargo/serde@1.0.210",
+        "pkg:cargo/serde_derive@1.0.210",
+        "pkg:cargo/serde_json@1.0.128",
+        "pkg:cargo/shlex@1.3.0",
+        "pkg:cargo/syn@2.0.77",
+        "pkg:cargo/termcolor@1.4.1",
+        "pkg:cargo/textwrap@0.16.1",
+        "pkg:cargo/unicode-ident@1.0.12",
+        "pkg:cargo/walkdir@2.5.0",
+        "pkg:cargo/winapi-util@0.1.9",
+        "pkg:cargo/windows-sys@0.59.0",
+        "pkg:cargo/windows-targets@0.52.6",
+        "pkg:cargo/windows_aarch64_gnullvm@0.52.6",
+        "pkg:cargo/windows_aarch64_msvc@0.52.6",
+        "pkg:cargo/windows_i686_gnu@0.52.6",
+        "pkg:cargo/windows_i686_gnullvm@0.52.6",
+        "pkg:cargo/windows_i686_msvc@0.52.6",
+        "pkg:cargo/windows_x86_64_gnu@0.52.6",
+        "pkg:cargo/windows_x86_64_gnullvm@0.52.6",
+        "pkg:cargo/windows_x86_64_msvc@0.52.6"
+      ]
+    },
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "rust-ripgrep@0e8390a"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "rust-ripgrep@0e8390a"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [
+        "pkg:cargo/memchr@2.7.4"
+      ],
+      "ref": "pkg:cargo/aho-corasick@1.1.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/anyhow@1.0.87"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/memchr@2.7.4",
+        "pkg:cargo/regex-automata@0.4.7",
+        "pkg:cargo/serde@1.0.210"
+      ],
+      "ref": "pkg:cargo/bstr@1.10.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/jobserver@0.1.32",
+        "pkg:cargo/libc@0.2.158",
+        "pkg:cargo/shlex@1.3.0"
+      ],
+      "ref": "pkg:cargo/cc@1.1.18"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/cfg-if@1.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/crossbeam-utils@0.8.20"
+      ],
+      "ref": "pkg:cargo/crossbeam-channel@0.5.13"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/crossbeam-epoch@0.9.18",
+        "pkg:cargo/crossbeam-utils@0.8.20"
+      ],
+      "ref": "pkg:cargo/crossbeam-deque@0.8.5"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/crossbeam-utils@0.8.20"
+      ],
+      "ref": "pkg:cargo/crossbeam-epoch@0.9.18"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/crossbeam-utils@0.8.20"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/cfg-if@1.0.0"
+      ],
+      "ref": "pkg:cargo/encoding_rs@0.8.34"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/encoding_rs@0.8.34"
+      ],
+      "ref": "pkg:cargo/encoding_rs_io@0.1.7"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/glob@0.3.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/itoa@1.0.11"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/cc@1.1.18",
+        "pkg:cargo/libc@0.2.158"
+      ],
+      "ref": "pkg:cargo/jemalloc-sys@0.5.4%2B5.3.0-patched"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/jemalloc-sys@0.5.4%2B5.3.0-patched",
+        "pkg:cargo/libc@0.2.158"
+      ],
+      "ref": "pkg:cargo/jemallocator@0.5.4"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/libc@0.2.158"
+      ],
+      "ref": "pkg:cargo/jobserver@0.1.32"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/lexopt@0.3.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/libc@0.2.158"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/log@0.4.22"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/memchr@2.7.4"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/libc@0.2.158"
+      ],
+      "ref": "pkg:cargo/memmap2@0.9.4"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/cc@1.1.18",
+        "pkg:cargo/libc@0.2.158",
+        "pkg:cargo/pkg-config@0.3.30"
+      ],
+      "ref": "pkg:cargo/pcre2-sys@0.2.9"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/libc@0.2.158",
+        "pkg:cargo/log@0.4.22",
+        "pkg:cargo/pcre2-sys@0.2.9"
+      ],
+      "ref": "pkg:cargo/pcre2@0.2.9"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/pkg-config@0.3.30"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/unicode-ident@1.0.12"
+      ],
+      "ref": "pkg:cargo/proc-macro2@1.0.86"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/proc-macro2@1.0.86"
+      ],
+      "ref": "pkg:cargo/quote@1.0.37"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/aho-corasick@1.1.3",
+        "pkg:cargo/memchr@2.7.4",
+        "pkg:cargo/regex-syntax@0.8.4"
+      ],
+      "ref": "pkg:cargo/regex-automata@0.4.7"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/regex-syntax@0.8.4"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/aho-corasick@1.1.3",
+        "pkg:cargo/memchr@2.7.4",
+        "pkg:cargo/regex-automata@0.4.7",
+        "pkg:cargo/regex-syntax@0.8.4"
+      ],
+      "ref": "pkg:cargo/regex@1.10.6"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/ryu@1.0.18"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/winapi-util@0.1.9"
+      ],
+      "ref": "pkg:cargo/same-file@1.0.6"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/serde_derive@1.0.210"
+      ],
+      "ref": "pkg:cargo/serde@1.0.210"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/proc-macro2@1.0.86",
+        "pkg:cargo/quote@1.0.37",
+        "pkg:cargo/syn@2.0.77"
+      ],
+      "ref": "pkg:cargo/serde_derive@1.0.210"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/itoa@1.0.11",
+        "pkg:cargo/memchr@2.7.4",
+        "pkg:cargo/ryu@1.0.18",
+        "pkg:cargo/serde@1.0.210"
+      ],
+      "ref": "pkg:cargo/serde_json@1.0.128"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/shlex@1.3.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/proc-macro2@1.0.86",
+        "pkg:cargo/quote@1.0.37",
+        "pkg:cargo/unicode-ident@1.0.12"
+      ],
+      "ref": "pkg:cargo/syn@2.0.77"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/winapi-util@0.1.9"
+      ],
+      "ref": "pkg:cargo/termcolor@1.4.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/textwrap@0.16.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/unicode-ident@1.0.12"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/same-file@1.0.6",
+        "pkg:cargo/winapi-util@0.1.9"
+      ],
+      "ref": "pkg:cargo/walkdir@2.5.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/windows-sys@0.59.0"
+      ],
+      "ref": "pkg:cargo/winapi-util@0.1.9"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/windows-targets@0.52.6"
+      ],
+      "ref": "pkg:cargo/windows-sys@0.59.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/windows_aarch64_gnullvm@0.52.6",
+        "pkg:cargo/windows_aarch64_msvc@0.52.6",
+        "pkg:cargo/windows_i686_gnu@0.52.6",
+        "pkg:cargo/windows_i686_gnullvm@0.52.6",
+        "pkg:cargo/windows_i686_msvc@0.52.6",
+        "pkg:cargo/windows_x86_64_gnu@0.52.6",
+        "pkg:cargo/windows_x86_64_gnullvm@0.52.6",
+        "pkg:cargo/windows_x86_64_msvc@0.52.6"
+      ],
+      "ref": "pkg:cargo/windows-targets@0.52.6"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/windows_aarch64_gnullvm@0.52.6"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/windows_aarch64_msvc@0.52.6"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/windows_i686_gnu@0.52.6"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/windows_i686_gnullvm@0.52.6"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/windows_i686_msvc@0.52.6"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/windows_x86_64_gnu@0.52.6"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/windows_x86_64_gnullvm@0.52.6"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:cargo/windows_x86_64_msvc@0.52.6"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=0a2632e085b2f2a4bca4024320010fb756d9782e26809efd0c243b4265530e1f"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=16adf87d146eadcc68bd2f45aa432599218baa0acabd7125c868794bd9cf42b7"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=249652b82c5094612032bd6efc21602fcfbaf61f453b78b17f34344d6e12f567"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=2e79c554b9d43f234fe36916cda1744130abc38f1e66eb4d1b741ec900c2e02b"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=77f61ae7aa9bcfcce1bfaaf83c437746ab55fecbcf49d79869582806f1ee242c"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=a557fe3db38d2db915095b4bcc6289d32352546282168c4e911bf429f090c767"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=c9c0aee7d2a89342045c6aaa4eaa406cee850a734125f06d320fc125af45c68d"
+    },
+    {
+      "dependsOn": [
+        "pkg:cargo/aho-corasick@1.1.3",
+        "pkg:cargo/anyhow@1.0.87",
+        "pkg:cargo/bstr@1.10.0",
+        "pkg:cargo/crossbeam-channel@0.5.13",
+        "pkg:cargo/crossbeam-deque@0.8.5",
+        "pkg:cargo/encoding_rs@0.8.34",
+        "pkg:cargo/encoding_rs_io@0.1.7",
+        "pkg:cargo/glob@0.3.1",
+        "pkg:cargo/globset@0.4.15",
+        "pkg:cargo/grep-cli@0.1.11",
+        "pkg:cargo/grep-matcher@0.1.7",
+        "pkg:cargo/grep-pcre2@0.1.8",
+        "pkg:cargo/grep-printer@0.2.2",
+        "pkg:cargo/grep-regex@0.1.13",
+        "pkg:cargo/grep-searcher@0.1.14",
+        "pkg:cargo/grep@0.3.2",
+        "pkg:cargo/ignore@0.4.23",
+        "pkg:cargo/jemallocator@0.5.4",
+        "pkg:cargo/lexopt@0.3.0",
+        "pkg:cargo/libc@0.2.158",
+        "pkg:cargo/log@0.4.22",
+        "pkg:cargo/memchr@2.7.4",
+        "pkg:cargo/memmap2@0.9.4",
+        "pkg:cargo/pcre2@0.2.9",
+        "pkg:cargo/regex-automata@0.4.7",
+        "pkg:cargo/regex-syntax@0.8.4",
+        "pkg:cargo/regex@1.10.6",
+        "pkg:cargo/same-file@1.0.6",
+        "pkg:cargo/serde@1.0.210",
+        "pkg:cargo/serde_derive@1.0.210",
+        "pkg:cargo/serde_json@1.0.128",
+        "pkg:cargo/termcolor@1.4.1",
+        "pkg:cargo/textwrap@0.16.1",
+        "pkg:cargo/walkdir@2.5.0",
+        "pkg:cargo/winapi-util@0.1.9"
+      ],
+      "ref": "rust-ripgrep@0e8390a"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "mikebom"
+      }
+    ],
+    "component": {
+      "bom-ref": "rust-ripgrep@0e8390a",
+      "cpe": "cpe:2.3:a:mikebom:rust-ripgrep:0e8390a:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "comment": "auto-detected from git remote `origin`",
+          "type": "vcs",
+          "url": "https://github.com/BurntSushi/ripgrep"
+        }
+      ],
+      "name": "rust-ripgrep",
+      "purl": "pkg:generic/rust-ripgrep@0e8390a",
+      "type": "application",
+      "version": "0e8390a"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "properties": [
+      {
+        "name": "mikebom:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "mikebom:os-release-missing-fields",
+        "value": "ID,VERSION_ID"
+      },
+      {
+        "name": "mikebom:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "mikebom:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "mikebom:trace-integrity-uprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "mikebom:trace-integrity-kprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "mikebom:graph-completeness",
+        "value": "partial"
+      },
+      {
+        "name": "mikebom:graph-completeness-reason",
+        "value": "orphaned-components-detected: 5 component(s) not reachable from root"
+      },
+      {
+        "name": "mikebom:workspaces-detected",
+        "value": "[\".\"]"
+      }
+    ],
+    "supplier": {
+      "name": "mikebom contributors"
+    },
+    "timestamp": "<masked>",
+    "tools": {
+      "components": [
+        {
+          "name": "mikebom",
+          "publisher": "mikebom contributors",
+          "type": "application",
+          "version": "0.1.0-alpha.62"
+        }
+      ]
+    }
+  },
+  "serialNumber": "<masked>",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

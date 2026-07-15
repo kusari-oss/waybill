@@ -107,9 +107,15 @@ pub const TARGETS: &[CorpusTarget] = &[
             image_ref: "docker.io/library/postgres:16",
         },
         pinned: PinnedRef::Digest {
-            // Resolved at implementation via `docker manifest inspect
-            // postgres:16` — pinned to freeze the exact bytes.
-            algo_hex: "sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+            // m196 US2 — resolved 2026-07-15 via:
+            //   docker manifest inspect --verbose docker.io/library/postgres:16 \
+            //     | jq -r '.[] | select(.Descriptor.platform.architecture == "amd64"
+            //         and .Descriptor.platform.os == "linux"
+            //         and (.Descriptor.platform.variant // "") == "") | .Descriptor.digest'
+            // linux/amd64-specific digest — the nightly runner is ubuntu-latest
+            // (amd64), so pinning the amd64 platform descriptor guarantees
+            // reproducibility. Multi-arch top-level manifest would drift per-runner.
+            algo_hex: "sha256:4c9405bdf36a7a96c5637acec4b39545681f0d2154a7b1e622890607aad6bf56",
         },
         ecosystem: Ecosystem::PolyglotImage,
         exercises: "deb reader + Go BuildInfo (gosu bin) + m177 TransitiveEdgesUnresolvable classifier",

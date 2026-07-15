@@ -1,0 +1,4 @@
+amd64 digest resolved 2026-07-15 via:
+docker manifest inspect --verbose docker.io/library/postgres:16 | jq -r '.[] | select(.Descriptor.platform.architecture == "amd64" and .Descriptor.platform.os == "linux" and (.Descriptor.platform.variant // "") == "") | .Descriptor.digest'
+
+Result: sha256:4c9405bdf36a7a96c5637acec4b39545681f0d2154a7b1e622890607aad6bf56

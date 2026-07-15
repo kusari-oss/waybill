@@ -1,0 +1,6183 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:pypi/alabaster@0.7.16",
+      "cpe": "cpe:2.3:a:alabaster:alabaster:0.7.16:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "alabaster",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:alabaster:alabaster:0.7.16:*:*:*:*:*:*:* | cpe:2.3:a:python-alabaster:alabaster:0.7.16:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/alabaster@0.7.16",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.7.16"
+    },
+    {
+      "bom-ref": "pkg:pypi/alabaster@1.0.0",
+      "cpe": "cpe:2.3:a:alabaster:alabaster:1.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "alabaster",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:alabaster:alabaster:1.0.0:*:*:*:*:*:*:* | cpe:2.3:a:python-alabaster:alabaster:1.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/alabaster@1.0.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.0.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/amqp@5.1.1",
+      "cpe": "cpe:2.3:a:amqp:amqp:5.1.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "amqp",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:amqp:amqp:5.1.1:*:*:*:*:*:*:* | cpe:2.3:a:python-amqp:amqp:5.1.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "amqp==5.1.1"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/amqp@5.1.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "5.1.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/anyio@4.10.0",
+      "cpe": "cpe:2.3:a:anyio:anyio:4.10.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "anyio",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:anyio:anyio:4.10.0:*:*:*:*:*:*:* | cpe:2.3:a:python-anyio:anyio:4.10.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/anyio@4.10.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "4.10.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/asgiref@3.9.1",
+      "cpe": "cpe:2.3:a:asgiref:asgiref:3.9.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "asgiref",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:asgiref:asgiref:3.9.1:*:*:*:*:*:*:* | cpe:2.3:a:python-asgiref:asgiref:3.9.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "optional"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:optional-derivation",
+          "value": "pip-optional-dependencies"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/asgiref@3.9.1",
+      "scope": "excluded",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.9.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/async-timeout@4.0.2",
+      "cpe": "cpe:2.3:a:async-timeout:async-timeout:4.0.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "async-timeout",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:async-timeout:async-timeout:4.0.2:*:*:*:*:*:*:* | cpe:2.3:a:python-async-timeout:async-timeout:4.0.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "async-timeout==4.0.2"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/async-timeout@4.0.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "4.0.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/babel@2.17.0",
+      "cpe": "cpe:2.3:a:babel:babel:2.17.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "babel",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:babel:babel:2.17.0:*:*:*:*:*:*:* | cpe:2.3:a:python-babel:babel:2.17.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/babel@2.17.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.17.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/billiard@3.6.4.0",
+      "cpe": "cpe:2.3:a:billiard:billiard:3.6.4.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "billiard",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:billiard:billiard:3.6.4.0:*:*:*:*:*:*:* | cpe:2.3:a:python-billiard:billiard:3.6.4.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "billiard==3.6.4.0"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/billiard@3.6.4.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.6.4.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/blinker@1.6.2",
+      "cpe": "cpe:2.3:a:blinker:blinker:1.6.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "blinker",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:blinker:blinker:1.6.2:*:*:*:*:*:*:* | cpe:2.3:a:python-blinker:blinker:1.6.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "blinker==1.6.2"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/blinker@1.6.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.6.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/blinker@1.9.0",
+      "cpe": "cpe:2.3:a:blinker:blinker:1.9.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "blinker",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:blinker:blinker:1.9.0:*:*:*:*:*:*:* | cpe:2.3:a:python-blinker:blinker:1.9.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/blinker@1.9.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.9.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/cachetools@6.1.0",
+      "cpe": "cpe:2.3:a:cachetools:cachetools:6.1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "cachetools",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:cachetools:cachetools:6.1.0:*:*:*:*:*:*:* | cpe:2.3:a:python-cachetools:cachetools:6.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/cachetools@6.1.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "6.1.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/celery@5.2.7",
+      "cpe": "cpe:2.3:a:celery:celery:5.2.7:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "celery",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:celery:celery:5.2.7:*:*:*:*:*:*:* | cpe:2.3:a:python-celery:celery:5.2.7:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "celery[redis]==5.2.7"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/celery@5.2.7",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "5.2.7"
+    },
+    {
+      "bom-ref": "pkg:pypi/certifi@2025.8.3",
+      "cpe": "cpe:2.3:a:certifi:certifi:2025.8.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "certifi",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:certifi:certifi:2025.8.3:*:*:*:*:*:*:* | cpe:2.3:a:python-certifi:certifi:2025.8.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/certifi@2025.8.3",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2025.8.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/cffi@1.17.1",
+      "cpe": "cpe:2.3:a:cffi:cffi:1.17.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "cffi",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:cffi:cffi:1.17.1:*:*:*:*:*:*:* | cpe:2.3:a:python-cffi:cffi:1.17.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/cffi@1.17.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.17.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/cfgv@3.4.0",
+      "cpe": "cpe:2.3:a:cfgv:cfgv:3.4.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "cfgv",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:cfgv:cfgv:3.4.0:*:*:*:*:*:*:* | cpe:2.3:a:python-cfgv:cfgv:3.4.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/cfgv@3.4.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.4.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/chardet@5.2.0",
+      "cpe": "cpe:2.3:a:chardet:chardet:5.2.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "chardet",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:chardet:chardet:5.2.0:*:*:*:*:*:*:* | cpe:2.3:a:python-chardet:chardet:5.2.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/chardet@5.2.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "5.2.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/charset-normalizer@3.4.3",
+      "cpe": "cpe:2.3:a:charset-normalizer:charset-normalizer:3.4.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "charset-normalizer",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:charset-normalizer:charset-normalizer:3.4.3:*:*:*:*:*:*:* | cpe:2.3:a:python-charset-normalizer:charset-normalizer:3.4.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/charset-normalizer@3.4.3",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.4.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/click-didyoumean@0.3.0",
+      "cpe": "cpe:2.3:a:click-didyoumean:click-didyoumean:0.3.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "click-didyoumean",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:click-didyoumean:click-didyoumean:0.3.0:*:*:*:*:*:*:* | cpe:2.3:a:python-click-didyoumean:click-didyoumean:0.3.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "click-didyoumean==0.3.0"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/click-didyoumean@0.3.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.3.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/click-plugins@1.1.1",
+      "cpe": "cpe:2.3:a:click-plugins:click-plugins:1.1.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "click-plugins",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:click-plugins:click-plugins:1.1.1:*:*:*:*:*:*:* | cpe:2.3:a:python-click-plugins:click-plugins:1.1.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "click-plugins==1.1.1"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/click-plugins@1.1.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.1.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/click-repl@0.2.0",
+      "cpe": "cpe:2.3:a:click-repl:click-repl:0.2.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "click-repl",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:click-repl:click-repl:0.2.0:*:*:*:*:*:*:* | cpe:2.3:a:python-click-repl:click-repl:0.2.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "click-repl==0.2.0"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/click-repl@0.2.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.2.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/click@8.1.3",
+      "cpe": "cpe:2.3:a:click:click:8.1.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "click",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:click:click:8.1.3:*:*:*:*:*:*:* | cpe:2.3:a:python-click:click:8.1.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "click==8.1.3"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/click@8.1.3",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "8.1.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/click@8.1.8",
+      "cpe": "cpe:2.3:a:click:click:8.1.8:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "click",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:click:click:8.1.8:*:*:*:*:*:*:* | cpe:2.3:a:python-click:click:8.1.8:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/click@8.1.8",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "8.1.8"
+    },
+    {
+      "bom-ref": "pkg:pypi/click@8.2.1",
+      "cpe": "cpe:2.3:a:click:click:8.2.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "click",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:click:click:8.2.1:*:*:*:*:*:*:* | cpe:2.3:a:python-click:click:8.2.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/click@8.2.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "8.2.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/colorama@0.4.6",
+      "cpe": "cpe:2.3:a:colorama:colorama:0.4.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "colorama",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:colorama:colorama:0.4.6:*:*:*:*:*:*:* | cpe:2.3:a:python-colorama:colorama:0.4.6:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/colorama@0.4.6",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.4.6"
+    },
+    {
+      "bom-ref": "pkg:pypi/cryptography@45.0.6",
+      "cpe": "cpe:2.3:a:cryptography:cryptography:45.0.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "cryptography",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:cryptography:cryptography:45.0.6:*:*:*:*:*:*:* | cpe:2.3:a:python-cryptography:cryptography:45.0.6:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/cryptography@45.0.6",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "45.0.6"
+    },
+    {
+      "bom-ref": "pkg:pypi/distlib@0.4.0",
+      "cpe": "cpe:2.3:a:distlib:distlib:0.4.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "distlib",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:distlib:distlib:0.4.0:*:*:*:*:*:*:* | cpe:2.3:a:python-distlib:distlib:0.4.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/distlib@0.4.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.4.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/docutils@0.21.2",
+      "cpe": "cpe:2.3:a:docutils:docutils:0.21.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "docutils",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:docutils:docutils:0.21.2:*:*:*:*:*:*:* | cpe:2.3:a:python-docutils:docutils:0.21.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/docutils@0.21.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.21.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/exceptiongroup@1.3.0",
+      "cpe": "cpe:2.3:a:exceptiongroup:exceptiongroup:1.3.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "exceptiongroup",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:exceptiongroup:exceptiongroup:1.3.0:*:*:*:*:*:*:* | cpe:2.3:a:python-exceptiongroup:exceptiongroup:1.3.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/exceptiongroup@1.3.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.3.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/filelock@3.19.1",
+      "cpe": "cpe:2.3:a:filelock:filelock:3.19.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "filelock",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:filelock:filelock:3.19.1:*:*:*:*:*:*:* | cpe:2.3:a:python-filelock:filelock:3.19.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/filelock@3.19.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.19.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/flask@2.3.2",
+      "cpe": "cpe:2.3:a:flask:flask:2.3.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "flask",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:flask:flask:2.3.2:*:*:*:*:*:*:* | cpe:2.3:a:python-flask:flask:2.3.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "flask==2.3.2"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/flask@2.3.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.3.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/gha-update@0.2.0",
+      "cpe": "cpe:2.3:a:gha-update:gha-update:0.2.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "gha-update",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:gha-update:gha-update:0.2.0:*:*:*:*:*:*:* | cpe:2.3:a:python-gha-update:gha-update:0.2.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/gha-update@0.2.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.2.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/greenlet@3.2.4",
+      "cpe": "cpe:2.3:a:greenlet:greenlet:3.2.4:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "greenlet",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:greenlet:greenlet:3.2.4:*:*:*:*:*:*:* | cpe:2.3:a:python-greenlet:greenlet:3.2.4:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/greenlet@3.2.4",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.2.4"
+    },
+    {
+      "bom-ref": "pkg:pypi/h11@0.16.0",
+      "cpe": "cpe:2.3:a:h11:h11:0.16.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "h11",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:h11:h11:0.16.0:*:*:*:*:*:*:* | cpe:2.3:a:python-h11:h11:0.16.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/h11@0.16.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.16.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/httpcore@1.0.9",
+      "cpe": "cpe:2.3:a:httpcore:httpcore:1.0.9:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "httpcore",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:httpcore:httpcore:1.0.9:*:*:*:*:*:*:* | cpe:2.3:a:python-httpcore:httpcore:1.0.9:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/httpcore@1.0.9",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.0.9"
+    },
+    {
+      "bom-ref": "pkg:pypi/httpx@0.28.1",
+      "cpe": "cpe:2.3:a:httpx:httpx:0.28.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "httpx",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:httpx:httpx:0.28.1:*:*:*:*:*:*:* | cpe:2.3:a:python-httpx:httpx:0.28.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/httpx@0.28.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.28.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/identify@2.6.13",
+      "cpe": "cpe:2.3:a:identify:identify:2.6.13:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "identify",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:identify:identify:2.6.13:*:*:*:*:*:*:* | cpe:2.3:a:python-identify:identify:2.6.13:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/identify@2.6.13",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.6.13"
+    },
+    {
+      "bom-ref": "pkg:pypi/idna@3.10",
+      "cpe": "cpe:2.3:a:idna:idna:3.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "idna",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:idna:idna:3.10:*:*:*:*:*:*:* | cpe:2.3:a:python-idna:idna:3.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/idna@3.10",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.10"
+    },
+    {
+      "bom-ref": "pkg:pypi/imagesize@1.4.1",
+      "cpe": "cpe:2.3:a:imagesize:imagesize:1.4.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "imagesize",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:imagesize:imagesize:1.4.1:*:*:*:*:*:*:* | cpe:2.3:a:python-imagesize:imagesize:1.4.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/imagesize@1.4.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.4.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/importlib-metadata@8.7.0",
+      "cpe": "cpe:2.3:a:importlib-metadata:importlib-metadata:8.7.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "importlib-metadata",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:importlib-metadata:importlib-metadata:8.7.0:*:*:*:*:*:*:* | cpe:2.3:a:python-importlib-metadata:importlib-metadata:8.7.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/importlib-metadata@8.7.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "8.7.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/iniconfig@2.1.0",
+      "cpe": "cpe:2.3:a:iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "iniconfig",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:* | cpe:2.3:a:python-iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/iniconfig@2.1.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.1.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/itsdangerous@2.1.2",
+      "cpe": "cpe:2.3:a:itsdangerous:itsdangerous:2.1.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "itsdangerous",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:itsdangerous:itsdangerous:2.1.2:*:*:*:*:*:*:* | cpe:2.3:a:python-itsdangerous:itsdangerous:2.1.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "itsdangerous==2.1.2"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/itsdangerous@2.1.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.1.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/itsdangerous@2.2.0",
+      "cpe": "cpe:2.3:a:itsdangerous:itsdangerous:2.2.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "itsdangerous",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:itsdangerous:itsdangerous:2.2.0:*:*:*:*:*:*:* | cpe:2.3:a:python-itsdangerous:itsdangerous:2.2.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/itsdangerous@2.2.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.2.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/jinja2@3.1.2",
+      "cpe": "cpe:2.3:a:jinja2:jinja2:3.1.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "jinja2",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:jinja2:jinja2:3.1.2:*:*:*:*:*:*:* | cpe:2.3:a:python-jinja2:jinja2:3.1.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "jinja2==3.1.2"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/jinja2@3.1.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.1.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/jinja2@3.1.6",
+      "cpe": "cpe:2.3:a:jinja2:jinja2:3.1.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "jinja2",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:jinja2:jinja2:3.1.6:*:*:*:*:*:*:* | cpe:2.3:a:python-jinja2:jinja2:3.1.6:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/jinja2@3.1.6",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.1.6"
+    },
+    {
+      "bom-ref": "pkg:pypi/kombu@5.2.4",
+      "cpe": "cpe:2.3:a:kombu:kombu:5.2.4:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "kombu",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:kombu:kombu:5.2.4:*:*:*:*:*:*:* | cpe:2.3:a:python-kombu:kombu:5.2.4:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "kombu==5.2.4"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/kombu@5.2.4",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "5.2.4"
+    },
+    {
+      "bom-ref": "pkg:pypi/markupsafe@2.1.2",
+      "cpe": "cpe:2.3:a:markupsafe:markupsafe:2.1.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "markupsafe",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:markupsafe:markupsafe:2.1.2:*:*:*:*:*:*:* | cpe:2.3:a:python-markupsafe:markupsafe:2.1.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "markupsafe==2.1.2"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/markupsafe@2.1.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.1.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/markupsafe@3.0.2",
+      "cpe": "cpe:2.3:a:markupsafe:markupsafe:3.0.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "markupsafe",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:markupsafe:markupsafe:3.0.2:*:*:*:*:*:*:* | cpe:2.3:a:python-markupsafe:markupsafe:3.0.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/markupsafe@3.0.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.0.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/mypy-extensions@1.1.0",
+      "cpe": "cpe:2.3:a:mypy-extensions:mypy-extensions:1.1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "mypy-extensions",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:mypy-extensions:mypy-extensions:1.1.0:*:*:*:*:*:*:* | cpe:2.3:a:python-mypy-extensions:mypy-extensions:1.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/mypy-extensions@1.1.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.1.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/mypy@1.17.1",
+      "cpe": "cpe:2.3:a:mypy:mypy:1.17.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "mypy",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:mypy:mypy:1.17.1:*:*:*:*:*:*:* | cpe:2.3:a:python-mypy:mypy:1.17.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/mypy@1.17.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.17.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/nodeenv@1.9.1",
+      "cpe": "cpe:2.3:a:nodeenv:nodeenv:1.9.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "nodeenv",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:nodeenv:nodeenv:1.9.1:*:*:*:*:*:*:* | cpe:2.3:a:python-nodeenv:nodeenv:1.9.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/nodeenv@1.9.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.9.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/packaging@25.0",
+      "cpe": "cpe:2.3:a:packaging:packaging:25.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "packaging",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:packaging:packaging:25.0:*:*:*:*:*:*:* | cpe:2.3:a:python-packaging:packaging:25.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/packaging@25.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "25.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/pallets-sphinx-themes@2.3.0",
+      "cpe": "cpe:2.3:a:pallets-sphinx-themes:pallets-sphinx-themes:2.3.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "pallets-sphinx-themes",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:pallets-sphinx-themes:pallets-sphinx-themes:2.3.0:*:*:*:*:*:*:* | cpe:2.3:a:python-pallets-sphinx-themes:pallets-sphinx-themes:2.3.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pallets-sphinx-themes@2.3.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.3.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/pathspec@0.12.1",
+      "cpe": "cpe:2.3:a:pathspec:pathspec:0.12.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "pathspec",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:pathspec:pathspec:0.12.1:*:*:*:*:*:*:* | cpe:2.3:a:python-pathspec:pathspec:0.12.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pathspec@0.12.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.12.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/platformdirs@4.3.8",
+      "cpe": "cpe:2.3:a:platformdirs:platformdirs:4.3.8:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "platformdirs",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:platformdirs:platformdirs:4.3.8:*:*:*:*:*:*:* | cpe:2.3:a:python-platformdirs:platformdirs:4.3.8:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/platformdirs@4.3.8",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "4.3.8"
+    },
+    {
+      "bom-ref": "pkg:pypi/pluggy@1.6.0",
+      "cpe": "cpe:2.3:a:pluggy:pluggy:1.6.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "pluggy",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:pluggy:pluggy:1.6.0:*:*:*:*:*:*:* | cpe:2.3:a:python-pluggy:pluggy:1.6.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pluggy@1.6.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.6.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/pre-commit-uv@4.1.4",
+      "cpe": "cpe:2.3:a:pre-commit-uv:pre-commit-uv:4.1.4:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "pre-commit-uv",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:pre-commit-uv:pre-commit-uv:4.1.4:*:*:*:*:*:*:* | cpe:2.3:a:python-pre-commit-uv:pre-commit-uv:4.1.4:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pre-commit-uv@4.1.4",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "4.1.4"
+    },
+    {
+      "bom-ref": "pkg:pypi/pre-commit@4.3.0",
+      "cpe": "cpe:2.3:a:pre-commit:pre-commit:4.3.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "pre-commit",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:pre-commit:pre-commit:4.3.0:*:*:*:*:*:*:* | cpe:2.3:a:python-pre-commit:pre-commit:4.3.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pre-commit@4.3.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "4.3.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/prompt-toolkit@3.0.38",
+      "cpe": "cpe:2.3:a:prompt-toolkit:prompt-toolkit:3.0.38:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "prompt-toolkit",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:prompt-toolkit:prompt-toolkit:3.0.38:*:*:*:*:*:*:* | cpe:2.3:a:python-prompt-toolkit:prompt-toolkit:3.0.38:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "prompt-toolkit==3.0.38"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/prompt-toolkit@3.0.38",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.0.38"
+    },
+    {
+      "bom-ref": "pkg:pypi/pycparser@2.22",
+      "cpe": "cpe:2.3:a:pycparser:pycparser:2.22:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "pycparser",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:pycparser:pycparser:2.22:*:*:*:*:*:*:* | cpe:2.3:a:python-pycparser:pycparser:2.22:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pycparser@2.22",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.22"
+    },
+    {
+      "bom-ref": "pkg:pypi/pygments@2.19.2",
+      "cpe": "cpe:2.3:a:pygments:pygments:2.19.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "pygments",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:pygments:pygments:2.19.2:*:*:*:*:*:*:* | cpe:2.3:a:python-pygments:pygments:2.19.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pygments@2.19.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.19.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/pyproject-api@1.9.1",
+      "cpe": "cpe:2.3:a:pyproject-api:pyproject-api:1.9.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "pyproject-api",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:pyproject-api:pyproject-api:1.9.1:*:*:*:*:*:*:* | cpe:2.3:a:python-pyproject-api:pyproject-api:1.9.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pyproject-api@1.9.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.9.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/pyright@1.1.403",
+      "cpe": "cpe:2.3:a:pyright:pyright:1.1.403:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "pyright",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:pyright:pyright:1.1.403:*:*:*:*:*:*:* | cpe:2.3:a:python-pyright:pyright:1.1.403:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pyright@1.1.403",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.1.403"
+    },
+    {
+      "bom-ref": "pkg:pypi/pytest@8.4.1",
+      "cpe": "cpe:2.3:a:pytest:pytest:8.4.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "pytest",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:pytest:pytest:8.4.1:*:*:*:*:*:*:* | cpe:2.3:a:python-pytest:pytest:8.4.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "optional"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:optional-derivation",
+          "value": "pip-optional-dependencies"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pytest@8.4.1",
+      "scope": "excluded",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "8.4.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/python-dotenv@1.1.1",
+      "cpe": "cpe:2.3:a:python-dotenv:python-dotenv:1.1.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "python-dotenv",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:python-dotenv:python-dotenv:1.1.1:*:*:*:*:*:*:* | cpe:2.3:a:python-python-dotenv:python-dotenv:1.1.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "optional"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:optional-derivation",
+          "value": "pip-optional-dependencies"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/python-dotenv@1.1.1",
+      "scope": "excluded",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.1.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/pytz@2023.3",
+      "cpe": "cpe:2.3:a:pytz:pytz:2023.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "pytz",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:pytz:pytz:2023.3:*:*:*:*:*:*:* | cpe:2.3:a:python-pytz:pytz:2023.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "pytz==2023.3"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pytz@2023.3",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2023.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/pyyaml@6.0.2",
+      "cpe": "cpe:2.3:a:pyyaml:pyyaml:6.0.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "pyyaml",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:pyyaml:pyyaml:6.0.2:*:*:*:*:*:*:* | cpe:2.3:a:python-pyyaml:pyyaml:6.0.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pyyaml@6.0.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "6.0.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/redis@4.5.4",
+      "cpe": "cpe:2.3:a:redis:redis:4.5.4:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "redis",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:redis:redis:4.5.4:*:*:*:*:*:*:* | cpe:2.3:a:python-redis:redis:4.5.4:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "redis==4.5.4"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/redis@4.5.4",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "4.5.4"
+    },
+    {
+      "bom-ref": "pkg:pypi/requests@2.32.5",
+      "cpe": "cpe:2.3:a:requests:requests:2.32.5:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "requests",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:requests:requests:2.32.5:*:*:*:*:*:*:* | cpe:2.3:a:python-requests:requests:2.32.5:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/requests@2.32.5",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.32.5"
+    },
+    {
+      "bom-ref": "pkg:pypi/roman-numerals-py@3.1.0",
+      "cpe": "cpe:2.3:a:roman-numerals-py:roman-numerals-py:3.1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "roman-numerals-py",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:roman-numerals-py:roman-numerals-py:3.1.0:*:*:*:*:*:*:* | cpe:2.3:a:python-roman-numerals-py:roman-numerals-py:3.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/roman-numerals-py@3.1.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.1.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/ruff@0.12.9",
+      "cpe": "cpe:2.3:a:ruff:ruff:0.12.9:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "ruff",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:ruff:ruff:0.12.9:*:*:*:*:*:*:* | cpe:2.3:a:python-ruff:ruff:0.12.9:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/ruff@0.12.9",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.12.9"
+    },
+    {
+      "bom-ref": "pkg:pypi/six@1.16.0",
+      "cpe": "cpe:2.3:a:six:six:1.16.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "six",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:six:six:1.16.0:*:*:*:*:*:*:* | cpe:2.3:a:python-six:six:1.16.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "six==1.16.0"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/six@1.16.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.16.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/sniffio@1.3.1",
+      "cpe": "cpe:2.3:a:sniffio:sniffio:1.3.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "sniffio",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:sniffio:sniffio:1.3.1:*:*:*:*:*:*:* | cpe:2.3:a:python-sniffio:sniffio:1.3.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/sniffio@1.3.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.3.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/snowballstemmer@3.0.1",
+      "cpe": "cpe:2.3:a:snowballstemmer:snowballstemmer:3.0.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "snowballstemmer",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:snowballstemmer:snowballstemmer:3.0.1:*:*:*:*:*:*:* | cpe:2.3:a:python-snowballstemmer:snowballstemmer:3.0.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/snowballstemmer@3.0.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.0.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/sphinx-autobuild@2024.10.3",
+      "cpe": "cpe:2.3:a:sphinx-autobuild:sphinx-autobuild:2024.10.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "sphinx-autobuild",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:sphinx-autobuild:sphinx-autobuild:2024.10.3:*:*:*:*:*:*:* | cpe:2.3:a:python-sphinx-autobuild:sphinx-autobuild:2024.10.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/sphinx-autobuild@2024.10.3",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2024.10.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/sphinx-notfound-page@1.1.0",
+      "cpe": "cpe:2.3:a:sphinx-notfound-page:sphinx-notfound-page:1.1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "sphinx-notfound-page",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:sphinx-notfound-page:sphinx-notfound-page:1.1.0:*:*:*:*:*:*:* | cpe:2.3:a:python-sphinx-notfound-page:sphinx-notfound-page:1.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/sphinx-notfound-page@1.1.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.1.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/sphinx-tabs@3.4.7",
+      "cpe": "cpe:2.3:a:sphinx-tabs:sphinx-tabs:3.4.7:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "sphinx-tabs",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:sphinx-tabs:sphinx-tabs:3.4.7:*:*:*:*:*:*:* | cpe:2.3:a:python-sphinx-tabs:sphinx-tabs:3.4.7:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/sphinx-tabs@3.4.7",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.4.7"
+    },
+    {
+      "bom-ref": "pkg:pypi/sphinx@7.4.7",
+      "cpe": "cpe:2.3:a:sphinx:sphinx:7.4.7:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "sphinx",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:sphinx:sphinx:7.4.7:*:*:*:*:*:*:* | cpe:2.3:a:python-sphinx:sphinx:7.4.7:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/sphinx@7.4.7",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "7.4.7"
+    },
+    {
+      "bom-ref": "pkg:pypi/sphinx@8.1.3",
+      "cpe": "cpe:2.3:a:sphinx:sphinx:8.1.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "sphinx",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:sphinx:sphinx:8.1.3:*:*:*:*:*:*:* | cpe:2.3:a:python-sphinx:sphinx:8.1.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/sphinx@8.1.3",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "8.1.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/sphinx@8.2.3",
+      "cpe": "cpe:2.3:a:sphinx:sphinx:8.2.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "sphinx",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:sphinx:sphinx:8.2.3:*:*:*:*:*:*:* | cpe:2.3:a:python-sphinx:sphinx:8.2.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/sphinx@8.2.3",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "8.2.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/sphinxcontrib-applehelp@2.0.0",
+      "cpe": "cpe:2.3:a:sphinxcontrib-applehelp:sphinxcontrib-applehelp:2.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "sphinxcontrib-applehelp",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:sphinxcontrib-applehelp:sphinxcontrib-applehelp:2.0.0:*:*:*:*:*:*:* | cpe:2.3:a:python-sphinxcontrib-applehelp:sphinxcontrib-applehelp:2.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/sphinxcontrib-applehelp@2.0.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.0.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/sphinxcontrib-devhelp@2.0.0",
+      "cpe": "cpe:2.3:a:sphinxcontrib-devhelp:sphinxcontrib-devhelp:2.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "sphinxcontrib-devhelp",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:sphinxcontrib-devhelp:sphinxcontrib-devhelp:2.0.0:*:*:*:*:*:*:* | cpe:2.3:a:python-sphinxcontrib-devhelp:sphinxcontrib-devhelp:2.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/sphinxcontrib-devhelp@2.0.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.0.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/sphinxcontrib-htmlhelp@2.1.0",
+      "cpe": "cpe:2.3:a:sphinxcontrib-htmlhelp:sphinxcontrib-htmlhelp:2.1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "sphinxcontrib-htmlhelp",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:sphinxcontrib-htmlhelp:sphinxcontrib-htmlhelp:2.1.0:*:*:*:*:*:*:* | cpe:2.3:a:python-sphinxcontrib-htmlhelp:sphinxcontrib-htmlhelp:2.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/sphinxcontrib-htmlhelp@2.1.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.1.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/sphinxcontrib-jsmath@1.0.1",
+      "cpe": "cpe:2.3:a:sphinxcontrib-jsmath:sphinxcontrib-jsmath:1.0.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "sphinxcontrib-jsmath",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:sphinxcontrib-jsmath:sphinxcontrib-jsmath:1.0.1:*:*:*:*:*:*:* | cpe:2.3:a:python-sphinxcontrib-jsmath:sphinxcontrib-jsmath:1.0.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/sphinxcontrib-jsmath@1.0.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.0.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/sphinxcontrib-log-cabinet@1.0.1",
+      "cpe": "cpe:2.3:a:sphinxcontrib-log-cabinet:sphinxcontrib-log-cabinet:1.0.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "sphinxcontrib-log-cabinet",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:sphinxcontrib-log-cabinet:sphinxcontrib-log-cabinet:1.0.1:*:*:*:*:*:*:* | cpe:2.3:a:python-sphinxcontrib-log-cabinet:sphinxcontrib-log-cabinet:1.0.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/sphinxcontrib-log-cabinet@1.0.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.0.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/sphinxcontrib-qthelp@2.0.0",
+      "cpe": "cpe:2.3:a:sphinxcontrib-qthelp:sphinxcontrib-qthelp:2.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "sphinxcontrib-qthelp",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:sphinxcontrib-qthelp:sphinxcontrib-qthelp:2.0.0:*:*:*:*:*:*:* | cpe:2.3:a:python-sphinxcontrib-qthelp:sphinxcontrib-qthelp:2.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/sphinxcontrib-qthelp@2.0.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.0.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/sphinxcontrib-serializinghtml@2.0.0",
+      "cpe": "cpe:2.3:a:sphinxcontrib-serializinghtml:sphinxcontrib-serializinghtml:2.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "sphinxcontrib-serializinghtml",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:sphinxcontrib-serializinghtml:sphinxcontrib-serializinghtml:2.0.0:*:*:*:*:*:*:* | cpe:2.3:a:python-sphinxcontrib-serializinghtml:sphinxcontrib-serializinghtml:2.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/sphinxcontrib-serializinghtml@2.0.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.0.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/starlette@0.47.2",
+      "cpe": "cpe:2.3:a:starlette:starlette:0.47.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "starlette",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:starlette:starlette:0.47.2:*:*:*:*:*:*:* | cpe:2.3:a:python-starlette:starlette:0.47.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/starlette@0.47.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.47.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/tomli@2.2.1",
+      "cpe": "cpe:2.3:a:tomli:tomli:2.2.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "tomli",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:tomli:tomli:2.2.1:*:*:*:*:*:*:* | cpe:2.3:a:python-tomli:tomli:2.2.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/tomli@2.2.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.2.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/tox-uv@1.28.0",
+      "cpe": "cpe:2.3:a:tox-uv:tox-uv:1.28.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "tox-uv",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:tox-uv:tox-uv:1.28.0:*:*:*:*:*:*:* | cpe:2.3:a:python-tox-uv:tox-uv:1.28.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/tox-uv@1.28.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.28.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/tox@4.28.4",
+      "cpe": "cpe:2.3:a:tox:tox:4.28.4:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "tox",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:tox:tox:4.28.4:*:*:*:*:*:*:* | cpe:2.3:a:python-tox:tox:4.28.4:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/tox@4.28.4",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "4.28.4"
+    },
+    {
+      "bom-ref": "pkg:pypi/types-contextvars@2.4.7.3",
+      "cpe": "cpe:2.3:a:types-contextvars:types-contextvars:2.4.7.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "types-contextvars",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:types-contextvars:types-contextvars:2.4.7.3:*:*:*:*:*:*:* | cpe:2.3:a:python-types-contextvars:types-contextvars:2.4.7.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/types-contextvars@2.4.7.3",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.4.7.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/types-dataclasses@0.6.6",
+      "cpe": "cpe:2.3:a:types-dataclasses:types-dataclasses:0.6.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "types-dataclasses",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:types-dataclasses:types-dataclasses:0.6.6:*:*:*:*:*:*:* | cpe:2.3:a:python-types-dataclasses:types-dataclasses:0.6.6:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/types-dataclasses@0.6.6",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.6.6"
+    },
+    {
+      "bom-ref": "pkg:pypi/typing-extensions@4.14.1",
+      "cpe": "cpe:2.3:a:typing-extensions:typing-extensions:4.14.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "typing-extensions",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:typing-extensions:typing-extensions:4.14.1:*:*:*:*:*:*:* | cpe:2.3:a:python-typing-extensions:typing-extensions:4.14.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/typing-extensions@4.14.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "4.14.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/urllib3@2.5.0",
+      "cpe": "cpe:2.3:a:urllib3:urllib3:2.5.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "urllib3",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:urllib3:urllib3:2.5.0:*:*:*:*:*:*:* | cpe:2.3:a:python-urllib3:urllib3:2.5.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/urllib3@2.5.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.5.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/uv@0.8.12",
+      "cpe": "cpe:2.3:a:uv:uv:0.8.12:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "uv",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:uv:uv:0.8.12:*:*:*:*:*:*:* | cpe:2.3:a:python-uv:uv:0.8.12:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/uv@0.8.12",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.8.12"
+    },
+    {
+      "bom-ref": "pkg:pypi/uvicorn@0.35.0",
+      "cpe": "cpe:2.3:a:uvicorn:uvicorn:0.35.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "uvicorn",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:uvicorn:uvicorn:0.35.0:*:*:*:*:*:*:* | cpe:2.3:a:python-uvicorn:uvicorn:0.35.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/uvicorn@0.35.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.35.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/vine@5.0.0",
+      "cpe": "cpe:2.3:a:vine:vine:5.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "vine",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:vine:vine:5.0.0:*:*:*:*:*:*:* | cpe:2.3:a:python-vine:vine:5.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "vine==5.0.0"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/vine@5.0.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "5.0.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/virtualenv@20.34.0",
+      "cpe": "cpe:2.3:a:virtualenv:virtualenv:20.34.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "virtualenv",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:virtualenv:virtualenv:20.34.0:*:*:*:*:*:*:* | cpe:2.3:a:python-virtualenv:virtualenv:20.34.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/virtualenv@20.34.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "20.34.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/watchfiles@1.1.0",
+      "cpe": "cpe:2.3:a:watchfiles:watchfiles:1.1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "watchfiles",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:watchfiles:watchfiles:1.1.0:*:*:*:*:*:*:* | cpe:2.3:a:python-watchfiles:watchfiles:1.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/watchfiles@1.1.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.1.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/wcwidth@0.2.6",
+      "cpe": "cpe:2.3:a:wcwidth:wcwidth:0.2.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "wcwidth",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:wcwidth:wcwidth:0.2.6:*:*:*:*:*:*:* | cpe:2.3:a:python-wcwidth:wcwidth:0.2.6:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "wcwidth==0.2.6"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/wcwidth@0.2.6",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.2.6"
+    },
+    {
+      "bom-ref": "pkg:pypi/websockets@15.0.1",
+      "cpe": "cpe:2.3:a:websockets:websockets:15.0.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "websockets",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:websockets:websockets:15.0.1:*:*:*:*:*:*:* | cpe:2.3:a:python-websockets:websockets:15.0.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/websockets@15.0.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "15.0.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/werkzeug@2.3.3",
+      "cpe": "cpe:2.3:a:werkzeug:werkzeug:2.3.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/celery/requirements.txt"
+          }
+        ]
+      },
+      "name": "werkzeug",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:werkzeug:werkzeug:2.3.3:*:*:*:*:*:*:* | cpe:2.3:a:python-werkzeug:werkzeug:2.3.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/celery/requirements.txt\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "werkzeug==2.3.3"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/celery\"]"
+        }
+      ],
+      "purl": "pkg:pypi/werkzeug@2.3.3",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.3.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/werkzeug@3.1.3",
+      "cpe": "cpe:2.3:a:werkzeug:werkzeug:3.1.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "werkzeug",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:werkzeug:werkzeug:3.1.3:*:*:*:*:*:*:* | cpe:2.3:a:python-werkzeug:werkzeug:3.1.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/werkzeug@3.1.3",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.1.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/zipp@3.23.0",
+      "cpe": "cpe:2.3:a:zipp:zipp:3.23.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "uv.lock"
+          }
+        ]
+      },
+      "name": "zipp",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:zipp:zipp:3.23.0:*:*:*:*:*:*:* | cpe:2.3:a:python-zipp:zipp:3.23.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"uv.lock\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/zipp@3.23.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.23.0"
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=b863a4cb17ddda2276b26ca97949e480a04fdd89000d8b3a292a95907cd0dafa",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b863a4cb17ddda2276b26ca97949e480a04fdd89000d8b3a292a95907cd0dafa"
+        }
+      ],
+      "name": "on-create-command.sh",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\".devcontainer/on-create-command.sh\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\".devcontainer/on-create-command.sh\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "complete",
+      "assemblies": [
+        "pkg:pypi/alabaster@0.7.16",
+        "pkg:pypi/alabaster@1.0.0",
+        "pkg:pypi/amqp@5.1.1",
+        "pkg:pypi/anyio@4.10.0",
+        "pkg:pypi/asgiref@3.9.1",
+        "pkg:pypi/async-timeout@4.0.2",
+        "pkg:pypi/babel@2.17.0",
+        "pkg:pypi/billiard@3.6.4.0",
+        "pkg:pypi/blinker@1.6.2",
+        "pkg:pypi/blinker@1.9.0",
+        "pkg:pypi/cachetools@6.1.0",
+        "pkg:pypi/celery@5.2.7",
+        "pkg:pypi/certifi@2025.8.3",
+        "pkg:pypi/cffi@1.17.1",
+        "pkg:pypi/cfgv@3.4.0",
+        "pkg:pypi/chardet@5.2.0",
+        "pkg:pypi/charset-normalizer@3.4.3",
+        "pkg:pypi/click-didyoumean@0.3.0",
+        "pkg:pypi/click-plugins@1.1.1",
+        "pkg:pypi/click-repl@0.2.0",
+        "pkg:pypi/click@8.1.3",
+        "pkg:pypi/click@8.1.8",
+        "pkg:pypi/click@8.2.1",
+        "pkg:pypi/colorama@0.4.6",
+        "pkg:pypi/cryptography@45.0.6",
+        "pkg:pypi/distlib@0.4.0",
+        "pkg:pypi/docutils@0.21.2",
+        "pkg:pypi/exceptiongroup@1.3.0",
+        "pkg:pypi/filelock@3.19.1",
+        "pkg:pypi/flask@2.3.2",
+        "pkg:pypi/gha-update@0.2.0",
+        "pkg:pypi/greenlet@3.2.4",
+        "pkg:pypi/h11@0.16.0",
+        "pkg:pypi/httpcore@1.0.9",
+        "pkg:pypi/httpx@0.28.1",
+        "pkg:pypi/identify@2.6.13",
+        "pkg:pypi/idna@3.10",
+        "pkg:pypi/imagesize@1.4.1",
+        "pkg:pypi/importlib-metadata@8.7.0",
+        "pkg:pypi/iniconfig@2.1.0",
+        "pkg:pypi/itsdangerous@2.1.2",
+        "pkg:pypi/itsdangerous@2.2.0",
+        "pkg:pypi/jinja2@3.1.2",
+        "pkg:pypi/jinja2@3.1.6",
+        "pkg:pypi/kombu@5.2.4",
+        "pkg:pypi/markupsafe@2.1.2",
+        "pkg:pypi/markupsafe@3.0.2",
+        "pkg:pypi/mypy-extensions@1.1.0",
+        "pkg:pypi/mypy@1.17.1",
+        "pkg:pypi/nodeenv@1.9.1",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pallets-sphinx-themes@2.3.0",
+        "pkg:pypi/pathspec@0.12.1",
+        "pkg:pypi/platformdirs@4.3.8",
+        "pkg:pypi/pluggy@1.6.0",
+        "pkg:pypi/pre-commit-uv@4.1.4",
+        "pkg:pypi/pre-commit@4.3.0",
+        "pkg:pypi/prompt-toolkit@3.0.38",
+        "pkg:pypi/pycparser@2.22",
+        "pkg:pypi/pygments@2.19.2",
+        "pkg:pypi/pyproject-api@1.9.1",
+        "pkg:pypi/pyright@1.1.403",
+        "pkg:pypi/pytest@8.4.1",
+        "pkg:pypi/python-dotenv@1.1.1",
+        "pkg:pypi/pytz@2023.3",
+        "pkg:pypi/pyyaml@6.0.2",
+        "pkg:pypi/redis@4.5.4",
+        "pkg:pypi/requests@2.32.5",
+        "pkg:pypi/roman-numerals-py@3.1.0",
+        "pkg:pypi/ruff@0.12.9",
+        "pkg:pypi/six@1.16.0",
+        "pkg:pypi/sniffio@1.3.1",
+        "pkg:pypi/snowballstemmer@3.0.1",
+        "pkg:pypi/sphinx-autobuild@2024.10.3",
+        "pkg:pypi/sphinx-notfound-page@1.1.0",
+        "pkg:pypi/sphinx-tabs@3.4.7",
+        "pkg:pypi/sphinx@7.4.7",
+        "pkg:pypi/sphinx@8.1.3",
+        "pkg:pypi/sphinx@8.2.3",
+        "pkg:pypi/sphinxcontrib-applehelp@2.0.0",
+        "pkg:pypi/sphinxcontrib-devhelp@2.0.0",
+        "pkg:pypi/sphinxcontrib-htmlhelp@2.1.0",
+        "pkg:pypi/sphinxcontrib-jsmath@1.0.1",
+        "pkg:pypi/sphinxcontrib-log-cabinet@1.0.1",
+        "pkg:pypi/sphinxcontrib-qthelp@2.0.0",
+        "pkg:pypi/sphinxcontrib-serializinghtml@2.0.0",
+        "pkg:pypi/starlette@0.47.2",
+        "pkg:pypi/tomli@2.2.1",
+        "pkg:pypi/tox-uv@1.28.0",
+        "pkg:pypi/tox@4.28.4",
+        "pkg:pypi/types-contextvars@2.4.7.3",
+        "pkg:pypi/types-dataclasses@0.6.6",
+        "pkg:pypi/typing-extensions@4.14.1",
+        "pkg:pypi/urllib3@2.5.0",
+        "pkg:pypi/uv@0.8.12",
+        "pkg:pypi/uvicorn@0.35.0",
+        "pkg:pypi/vine@5.0.0",
+        "pkg:pypi/virtualenv@20.34.0",
+        "pkg:pypi/watchfiles@1.1.0",
+        "pkg:pypi/wcwidth@0.2.6",
+        "pkg:pypi/websockets@15.0.1",
+        "pkg:pypi/werkzeug@2.3.3",
+        "pkg:pypi/werkzeug@3.1.3",
+        "pkg:pypi/zipp@3.23.0"
+      ],
+      "dependencies": [
+        "pkg:pypi/alabaster@0.7.16",
+        "pkg:pypi/alabaster@1.0.0",
+        "pkg:pypi/amqp@5.1.1",
+        "pkg:pypi/anyio@4.10.0",
+        "pkg:pypi/asgiref@3.9.1",
+        "pkg:pypi/async-timeout@4.0.2",
+        "pkg:pypi/babel@2.17.0",
+        "pkg:pypi/billiard@3.6.4.0",
+        "pkg:pypi/blinker@1.6.2",
+        "pkg:pypi/blinker@1.9.0",
+        "pkg:pypi/cachetools@6.1.0",
+        "pkg:pypi/celery@5.2.7",
+        "pkg:pypi/certifi@2025.8.3",
+        "pkg:pypi/cffi@1.17.1",
+        "pkg:pypi/cfgv@3.4.0",
+        "pkg:pypi/chardet@5.2.0",
+        "pkg:pypi/charset-normalizer@3.4.3",
+        "pkg:pypi/click-didyoumean@0.3.0",
+        "pkg:pypi/click-plugins@1.1.1",
+        "pkg:pypi/click-repl@0.2.0",
+        "pkg:pypi/click@8.1.3",
+        "pkg:pypi/click@8.1.8",
+        "pkg:pypi/click@8.2.1",
+        "pkg:pypi/colorama@0.4.6",
+        "pkg:pypi/cryptography@45.0.6",
+        "pkg:pypi/distlib@0.4.0",
+        "pkg:pypi/docutils@0.21.2",
+        "pkg:pypi/exceptiongroup@1.3.0",
+        "pkg:pypi/filelock@3.19.1",
+        "pkg:pypi/flask@2.3.2",
+        "pkg:pypi/gha-update@0.2.0",
+        "pkg:pypi/greenlet@3.2.4",
+        "pkg:pypi/h11@0.16.0",
+        "pkg:pypi/httpcore@1.0.9",
+        "pkg:pypi/httpx@0.28.1",
+        "pkg:pypi/identify@2.6.13",
+        "pkg:pypi/idna@3.10",
+        "pkg:pypi/imagesize@1.4.1",
+        "pkg:pypi/importlib-metadata@8.7.0",
+        "pkg:pypi/iniconfig@2.1.0",
+        "pkg:pypi/itsdangerous@2.1.2",
+        "pkg:pypi/itsdangerous@2.2.0",
+        "pkg:pypi/jinja2@3.1.2",
+        "pkg:pypi/jinja2@3.1.6",
+        "pkg:pypi/kombu@5.2.4",
+        "pkg:pypi/markupsafe@2.1.2",
+        "pkg:pypi/markupsafe@3.0.2",
+        "pkg:pypi/mypy-extensions@1.1.0",
+        "pkg:pypi/mypy@1.17.1",
+        "pkg:pypi/nodeenv@1.9.1",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pallets-sphinx-themes@2.3.0",
+        "pkg:pypi/pathspec@0.12.1",
+        "pkg:pypi/platformdirs@4.3.8",
+        "pkg:pypi/pluggy@1.6.0",
+        "pkg:pypi/pre-commit-uv@4.1.4",
+        "pkg:pypi/pre-commit@4.3.0",
+        "pkg:pypi/prompt-toolkit@3.0.38",
+        "pkg:pypi/pycparser@2.22",
+        "pkg:pypi/pygments@2.19.2",
+        "pkg:pypi/pyproject-api@1.9.1",
+        "pkg:pypi/pyright@1.1.403",
+        "pkg:pypi/pytest@8.4.1",
+        "pkg:pypi/python-dotenv@1.1.1",
+        "pkg:pypi/pytz@2023.3",
+        "pkg:pypi/pyyaml@6.0.2",
+        "pkg:pypi/redis@4.5.4",
+        "pkg:pypi/requests@2.32.5",
+        "pkg:pypi/roman-numerals-py@3.1.0",
+        "pkg:pypi/ruff@0.12.9",
+        "pkg:pypi/six@1.16.0",
+        "pkg:pypi/sniffio@1.3.1",
+        "pkg:pypi/snowballstemmer@3.0.1",
+        "pkg:pypi/sphinx-autobuild@2024.10.3",
+        "pkg:pypi/sphinx-notfound-page@1.1.0",
+        "pkg:pypi/sphinx-tabs@3.4.7",
+        "pkg:pypi/sphinx@7.4.7",
+        "pkg:pypi/sphinx@8.1.3",
+        "pkg:pypi/sphinx@8.2.3",
+        "pkg:pypi/sphinxcontrib-applehelp@2.0.0",
+        "pkg:pypi/sphinxcontrib-devhelp@2.0.0",
+        "pkg:pypi/sphinxcontrib-htmlhelp@2.1.0",
+        "pkg:pypi/sphinxcontrib-jsmath@1.0.1",
+        "pkg:pypi/sphinxcontrib-log-cabinet@1.0.1",
+        "pkg:pypi/sphinxcontrib-qthelp@2.0.0",
+        "pkg:pypi/sphinxcontrib-serializinghtml@2.0.0",
+        "pkg:pypi/starlette@0.47.2",
+        "pkg:pypi/tomli@2.2.1",
+        "pkg:pypi/tox-uv@1.28.0",
+        "pkg:pypi/tox@4.28.4",
+        "pkg:pypi/types-contextvars@2.4.7.3",
+        "pkg:pypi/types-dataclasses@0.6.6",
+        "pkg:pypi/typing-extensions@4.14.1",
+        "pkg:pypi/urllib3@2.5.0",
+        "pkg:pypi/uv@0.8.12",
+        "pkg:pypi/uvicorn@0.35.0",
+        "pkg:pypi/vine@5.0.0",
+        "pkg:pypi/virtualenv@20.34.0",
+        "pkg:pypi/watchfiles@1.1.0",
+        "pkg:pypi/wcwidth@0.2.6",
+        "pkg:pypi/websockets@15.0.1",
+        "pkg:pypi/werkzeug@2.3.3",
+        "pkg:pypi/werkzeug@3.1.3",
+        "pkg:pypi/zipp@3.23.0"
+      ]
+    },
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "python-flask@80be49b"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "python-flask@80be49b"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=b863a4cb17ddda2276b26ca97949e480a04fdd89000d8b3a292a95907cd0dafa"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/alabaster@0.7.16"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/alabaster@1.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/amqp@5.1.1"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/exceptiongroup@1.3.0",
+        "pkg:pypi/idna@3.10",
+        "pkg:pypi/sniffio@1.3.1",
+        "pkg:pypi/typing-extensions@4.14.1"
+      ],
+      "ref": "pkg:pypi/anyio@4.10.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/typing-extensions@4.14.1"
+      ],
+      "ref": "pkg:pypi/asgiref@3.9.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/async-timeout@4.0.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/babel@2.17.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/billiard@3.6.4.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/blinker@1.6.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/blinker@1.9.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/cachetools@6.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/celery@5.2.7"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/certifi@2025.8.3"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/pycparser@2.22"
+      ],
+      "ref": "pkg:pypi/cffi@1.17.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/cfgv@3.4.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/chardet@5.2.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/charset-normalizer@3.4.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/click-didyoumean@0.3.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/click-plugins@1.1.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/click-repl@0.2.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/click@8.1.3"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/colorama@0.4.6"
+      ],
+      "ref": "pkg:pypi/click@8.1.8"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/colorama@0.4.6"
+      ],
+      "ref": "pkg:pypi/click@8.2.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/colorama@0.4.6"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/cffi@1.17.1"
+      ],
+      "ref": "pkg:pypi/cryptography@45.0.6"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/distlib@0.4.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/docutils@0.21.2"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/typing-extensions@4.14.1"
+      ],
+      "ref": "pkg:pypi/exceptiongroup@1.3.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/filelock@3.19.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/flask@2.3.2"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/click@8.1.3",
+        "pkg:pypi/httpx@0.28.1"
+      ],
+      "ref": "pkg:pypi/gha-update@0.2.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/greenlet@3.2.4"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/h11@0.16.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/certifi@2025.8.3",
+        "pkg:pypi/h11@0.16.0"
+      ],
+      "ref": "pkg:pypi/httpcore@1.0.9"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/anyio@4.10.0",
+        "pkg:pypi/certifi@2025.8.3",
+        "pkg:pypi/httpcore@1.0.9",
+        "pkg:pypi/idna@3.10"
+      ],
+      "ref": "pkg:pypi/httpx@0.28.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/identify@2.6.13"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/idna@3.10"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/imagesize@1.4.1"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/zipp@3.23.0"
+      ],
+      "ref": "pkg:pypi/importlib-metadata@8.7.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/iniconfig@2.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/itsdangerous@2.1.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/itsdangerous@2.2.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/jinja2@3.1.2"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/markupsafe@2.1.2"
+      ],
+      "ref": "pkg:pypi/jinja2@3.1.6"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/kombu@5.2.4"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/markupsafe@2.1.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/markupsafe@3.0.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/mypy-extensions@1.1.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/mypy-extensions@1.1.0",
+        "pkg:pypi/pathspec@0.12.1",
+        "pkg:pypi/tomli@2.2.1",
+        "pkg:pypi/typing-extensions@4.14.1"
+      ],
+      "ref": "pkg:pypi/mypy@1.17.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/nodeenv@1.9.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/packaging@25.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/sphinx-notfound-page@1.1.0",
+        "pkg:pypi/sphinx@8.2.3"
+      ],
+      "ref": "pkg:pypi/pallets-sphinx-themes@2.3.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/pathspec@0.12.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/platformdirs@4.3.8"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/pluggy@1.6.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/pre-commit@4.3.0",
+        "pkg:pypi/uv@0.8.12"
+      ],
+      "ref": "pkg:pypi/pre-commit-uv@4.1.4"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/cfgv@3.4.0",
+        "pkg:pypi/identify@2.6.13",
+        "pkg:pypi/nodeenv@1.9.1",
+        "pkg:pypi/pyyaml@6.0.2",
+        "pkg:pypi/virtualenv@20.34.0"
+      ],
+      "ref": "pkg:pypi/pre-commit@4.3.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/prompt-toolkit@3.0.38"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/pycparser@2.22"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/pygments@2.19.2"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/tomli@2.2.1"
+      ],
+      "ref": "pkg:pypi/pyproject-api@1.9.1"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/nodeenv@1.9.1",
+        "pkg:pypi/typing-extensions@4.14.1"
+      ],
+      "ref": "pkg:pypi/pyright@1.1.403"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/colorama@0.4.6",
+        "pkg:pypi/exceptiongroup@1.3.0",
+        "pkg:pypi/iniconfig@2.1.0",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pluggy@1.6.0",
+        "pkg:pypi/pygments@2.19.2",
+        "pkg:pypi/tomli@2.2.1"
+      ],
+      "ref": "pkg:pypi/pytest@8.4.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/python-dotenv@1.1.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/pytz@2023.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/pyyaml@6.0.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/redis@4.5.4"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/certifi@2025.8.3",
+        "pkg:pypi/charset-normalizer@3.4.3",
+        "pkg:pypi/idna@3.10",
+        "pkg:pypi/urllib3@2.5.0"
+      ],
+      "ref": "pkg:pypi/requests@2.32.5"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/roman-numerals-py@3.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/ruff@0.12.9"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/six@1.16.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/sniffio@1.3.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/snowballstemmer@3.0.1"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/colorama@0.4.6",
+        "pkg:pypi/sphinx@8.2.3",
+        "pkg:pypi/starlette@0.47.2",
+        "pkg:pypi/uvicorn@0.35.0",
+        "pkg:pypi/watchfiles@1.1.0",
+        "pkg:pypi/websockets@15.0.1"
+      ],
+      "ref": "pkg:pypi/sphinx-autobuild@2024.10.3"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/sphinx@8.2.3"
+      ],
+      "ref": "pkg:pypi/sphinx-notfound-page@1.1.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/docutils@0.21.2",
+        "pkg:pypi/pygments@2.19.2",
+        "pkg:pypi/sphinx@8.2.3"
+      ],
+      "ref": "pkg:pypi/sphinx-tabs@3.4.7"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/alabaster@1.0.0",
+        "pkg:pypi/babel@2.17.0",
+        "pkg:pypi/colorama@0.4.6",
+        "pkg:pypi/docutils@0.21.2",
+        "pkg:pypi/imagesize@1.4.1",
+        "pkg:pypi/importlib-metadata@8.7.0",
+        "pkg:pypi/jinja2@3.1.2",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pygments@2.19.2",
+        "pkg:pypi/requests@2.32.5",
+        "pkg:pypi/snowballstemmer@3.0.1",
+        "pkg:pypi/sphinxcontrib-applehelp@2.0.0",
+        "pkg:pypi/sphinxcontrib-devhelp@2.0.0",
+        "pkg:pypi/sphinxcontrib-htmlhelp@2.1.0",
+        "pkg:pypi/sphinxcontrib-jsmath@1.0.1",
+        "pkg:pypi/sphinxcontrib-qthelp@2.0.0",
+        "pkg:pypi/sphinxcontrib-serializinghtml@2.0.0",
+        "pkg:pypi/tomli@2.2.1"
+      ],
+      "ref": "pkg:pypi/sphinx@7.4.7"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/alabaster@1.0.0",
+        "pkg:pypi/babel@2.17.0",
+        "pkg:pypi/colorama@0.4.6",
+        "pkg:pypi/docutils@0.21.2",
+        "pkg:pypi/imagesize@1.4.1",
+        "pkg:pypi/jinja2@3.1.2",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pygments@2.19.2",
+        "pkg:pypi/requests@2.32.5",
+        "pkg:pypi/snowballstemmer@3.0.1",
+        "pkg:pypi/sphinxcontrib-applehelp@2.0.0",
+        "pkg:pypi/sphinxcontrib-devhelp@2.0.0",
+        "pkg:pypi/sphinxcontrib-htmlhelp@2.1.0",
+        "pkg:pypi/sphinxcontrib-jsmath@1.0.1",
+        "pkg:pypi/sphinxcontrib-qthelp@2.0.0",
+        "pkg:pypi/sphinxcontrib-serializinghtml@2.0.0",
+        "pkg:pypi/tomli@2.2.1"
+      ],
+      "ref": "pkg:pypi/sphinx@8.1.3"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/alabaster@1.0.0",
+        "pkg:pypi/babel@2.17.0",
+        "pkg:pypi/colorama@0.4.6",
+        "pkg:pypi/docutils@0.21.2",
+        "pkg:pypi/imagesize@1.4.1",
+        "pkg:pypi/jinja2@3.1.2",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pygments@2.19.2",
+        "pkg:pypi/requests@2.32.5",
+        "pkg:pypi/roman-numerals-py@3.1.0",
+        "pkg:pypi/snowballstemmer@3.0.1",
+        "pkg:pypi/sphinxcontrib-applehelp@2.0.0",
+        "pkg:pypi/sphinxcontrib-devhelp@2.0.0",
+        "pkg:pypi/sphinxcontrib-htmlhelp@2.1.0",
+        "pkg:pypi/sphinxcontrib-jsmath@1.0.1",
+        "pkg:pypi/sphinxcontrib-qthelp@2.0.0",
+        "pkg:pypi/sphinxcontrib-serializinghtml@2.0.0"
+      ],
+      "ref": "pkg:pypi/sphinx@8.2.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/sphinxcontrib-applehelp@2.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/sphinxcontrib-devhelp@2.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/sphinxcontrib-htmlhelp@2.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/sphinxcontrib-jsmath@1.0.1"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/sphinx@8.2.3"
+      ],
+      "ref": "pkg:pypi/sphinxcontrib-log-cabinet@1.0.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/sphinxcontrib-qthelp@2.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/sphinxcontrib-serializinghtml@2.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/anyio@4.10.0",
+        "pkg:pypi/typing-extensions@4.14.1"
+      ],
+      "ref": "pkg:pypi/starlette@0.47.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/tomli@2.2.1"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/tomli@2.2.1",
+        "pkg:pypi/tox@4.28.4",
+        "pkg:pypi/typing-extensions@4.14.1",
+        "pkg:pypi/uv@0.8.12"
+      ],
+      "ref": "pkg:pypi/tox-uv@1.28.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/cachetools@6.1.0",
+        "pkg:pypi/chardet@5.2.0",
+        "pkg:pypi/colorama@0.4.6",
+        "pkg:pypi/filelock@3.19.1",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/platformdirs@4.3.8",
+        "pkg:pypi/pluggy@1.6.0",
+        "pkg:pypi/pyproject-api@1.9.1",
+        "pkg:pypi/tomli@2.2.1",
+        "pkg:pypi/typing-extensions@4.14.1",
+        "pkg:pypi/virtualenv@20.34.0"
+      ],
+      "ref": "pkg:pypi/tox@4.28.4"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/types-contextvars@2.4.7.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/types-dataclasses@0.6.6"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/typing-extensions@4.14.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/urllib3@2.5.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/uv@0.8.12"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/click@8.1.3",
+        "pkg:pypi/h11@0.16.0",
+        "pkg:pypi/typing-extensions@4.14.1"
+      ],
+      "ref": "pkg:pypi/uvicorn@0.35.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/vine@5.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/distlib@0.4.0",
+        "pkg:pypi/filelock@3.19.1",
+        "pkg:pypi/platformdirs@4.3.8",
+        "pkg:pypi/typing-extensions@4.14.1"
+      ],
+      "ref": "pkg:pypi/virtualenv@20.34.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/anyio@4.10.0"
+      ],
+      "ref": "pkg:pypi/watchfiles@1.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/wcwidth@0.2.6"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/websockets@15.0.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/werkzeug@2.3.3"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/markupsafe@2.1.2"
+      ],
+      "ref": "pkg:pypi/werkzeug@3.1.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/zipp@3.23.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/asgiref@3.9.1",
+        "pkg:pypi/blinker@1.6.2",
+        "pkg:pypi/celery@5.2.7",
+        "pkg:pypi/click@8.1.3",
+        "pkg:pypi/flask@2.3.2",
+        "pkg:pypi/importlib-metadata@8.7.0",
+        "pkg:pypi/itsdangerous@2.1.2",
+        "pkg:pypi/jinja2@3.1.2",
+        "pkg:pypi/markupsafe@2.1.2",
+        "pkg:pypi/pytest@8.4.1",
+        "pkg:pypi/python-dotenv@1.1.1",
+        "pkg:pypi/werkzeug@2.3.3"
+      ],
+      "ref": "python-flask@80be49b"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "mikebom"
+      }
+    ],
+    "component": {
+      "bom-ref": "python-flask@80be49b",
+      "cpe": "cpe:2.3:a:mikebom:python-flask:80be49b:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "comment": "auto-detected from git remote `origin`",
+          "type": "vcs",
+          "url": "https://github.com/pallets/flask"
+        }
+      ],
+      "name": "python-flask",
+      "purl": "pkg:generic/python-flask@80be49b",
+      "type": "application",
+      "version": "80be49b"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "properties": [
+      {
+        "name": "mikebom:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "mikebom:os-release-missing-fields",
+        "value": "ID,VERSION_ID"
+      },
+      {
+        "name": "mikebom:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "mikebom:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "mikebom:trace-integrity-uprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "mikebom:trace-integrity-kprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "mikebom:graph-completeness",
+        "value": "partial"
+      },
+      {
+        "name": "mikebom:graph-completeness-reason",
+        "value": "orphaned-components-detected: 94 component(s) not reachable from root"
+      },
+      {
+        "name": "mikebom:workspaces-detected",
+        "value": "[\".\",\"examples/celery\"]"
+      }
+    ],
+    "supplier": {
+      "name": "mikebom contributors"
+    },
+    "timestamp": "<masked>",
+    "tools": {
+      "components": [
+        {
+          "name": "mikebom",
+          "publisher": "mikebom contributors",
+          "type": "application",
+          "version": "0.1.0-alpha.62"
+        }
+      ]
+    }
+  },
+  "serialNumber": "<masked>",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

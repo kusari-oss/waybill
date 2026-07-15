@@ -1,0 +1,2825 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:bazel/google_bazel_common@unknown",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "WORKSPACE"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a8168646fbec5fe020b73ee6f2c0cd7480efb101f4d4c18d4cd703a56e4748ae"
+        }
+      ],
+      "name": "google_bazel_common",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"WORKSPACE\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:bazel-archive-name",
+          "value": "google_bazel_common"
+        },
+        {
+          "name": "mikebom:download-url",
+          "value": "https://github.com/google/bazel-common/archive/bf8e5ef95b118d1716b0cb4982cf15b6ed1c896f.zip"
+        },
+        {
+          "name": "mikebom:source-mechanism",
+          "value": "bazel-http-archive"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:bazel/google_bazel_common@unknown",
+      "type": "library",
+      "version": "unknown"
+    },
+    {
+      "bom-ref": "pkg:bazel/rules_jvm_external@unknown",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "WORKSPACE"
+          }
+        ]
+      },
+      "name": "rules_jvm_external",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"WORKSPACE\"]"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:bazel-archive-name",
+          "value": "rules_jvm_external"
+        },
+        {
+          "name": "mikebom:download-url",
+          "value": "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip"
+        },
+        {
+          "name": "mikebom:source-mechanism",
+          "value": "bazel-http-archive"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:bazel/rules_jvm_external@unknown",
+      "type": "library",
+      "version": "unknown"
+    },
+    {
+      "bom-ref": "pkg:maven/aopalliance/aopalliance@unknown",
+      "cpe": "cpe:2.3:a:aopalliance:aopalliance:unknown:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/pom.xml"
+          }
+        ]
+      },
+      "name": "aopalliance",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"core/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": ""
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"core\"]"
+        }
+      ],
+      "purl": "pkg:maven/aopalliance/aopalliance@unknown",
+      "supplier": {
+        "name": "aopalliance"
+      },
+      "type": "library",
+      "version": "unknown"
+    },
+    {
+      "bom-ref": "pkg:maven/biz.aQute/bnd@0.0.384",
+      "cpe": "cpe:2.3:a:biz.aqute:bnd:0.0.384:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/pom.xml"
+          }
+        ]
+      },
+      "name": "bnd",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:biz.aqute:bnd:0.0.384:*:*:*:*:*:*:* | cpe:2.3:a:aqute:bnd:0.0.384:*:*:*:*:*:*:* | cpe:2.3:a:bnd:bnd:0.0.384:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"core/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"core\"]"
+        }
+      ],
+      "purl": "pkg:maven/biz.aQute/bnd@0.0.384",
+      "scope": "excluded",
+      "supplier": {
+        "name": "biz.aQute"
+      },
+      "type": "library",
+      "version": "0.0.384"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.auto.value/auto-value-annotations@1.6.3",
+      "cpe": "cpe:2.3:a:com.google.auto.value:auto-value-annotations:1.6.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/dagger-adapter/pom.xml"
+          }
+        ]
+      },
+      "name": "auto-value-annotations",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.auto.value:auto-value-annotations:1.6.3:*:*:*:*:*:*:* | cpe:2.3:a:value:auto-value-annotations:1.6.3:*:*:*:*:*:*:* | cpe:2.3:a:auto-value-annotations:auto-value-annotations:1.6.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/dagger-adapter/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/dagger-adapter\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.auto.value/auto-value-annotations@1.6.3",
+      "scope": "excluded",
+      "supplier": {
+        "name": "com.google.auto.value"
+      },
+      "type": "library",
+      "version": "1.6.3"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.auto.value/auto-value@1.6.3",
+      "cpe": "cpe:2.3:a:com.google.auto.value:auto-value:1.6.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/dagger-adapter/pom.xml"
+          }
+        ]
+      },
+      "name": "auto-value",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.auto.value:auto-value:1.6.3:*:*:*:*:*:*:* | cpe:2.3:a:value:auto-value:1.6.3:*:*:*:*:*:*:* | cpe:2.3:a:auto-value:auto-value:1.6.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/dagger-adapter/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/dagger-adapter\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.auto.value/auto-value@1.6.3",
+      "scope": "excluded",
+      "supplier": {
+        "name": "com.google.auto.value"
+      },
+      "type": "library",
+      "version": "1.6.3"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.code.findbugs/jsr305@unknown",
+      "cpe": "cpe:2.3:a:com.google.code.findbugs:jsr305:unknown:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/throwingproviders/pom.xml"
+          }
+        ]
+      },
+      "name": "jsr305",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.code.findbugs:jsr305:unknown:*:*:*:*:*:*:* | cpe:2.3:a:findbugs:jsr305:unknown:*:*:*:*:*:*:* | cpe:2.3:a:jsr305:jsr305:unknown:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/throwingproviders/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": ""
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/throwingproviders\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.code.findbugs/jsr305@unknown",
+      "supplier": {
+        "name": "com.google.code.findbugs"
+      },
+      "type": "library",
+      "version": "unknown"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.dagger/dagger-producers@2.22.1",
+      "cpe": "cpe:2.3:a:com.google.dagger:dagger-producers:2.22.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/dagger-adapter/pom.xml"
+          }
+        ]
+      },
+      "name": "dagger-producers",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.dagger:dagger-producers:2.22.1:*:*:*:*:*:*:* | cpe:2.3:a:dagger:dagger-producers:2.22.1:*:*:*:*:*:*:* | cpe:2.3:a:dagger-producers:dagger-producers:2.22.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/dagger-adapter/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/dagger-adapter\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.dagger/dagger-producers@2.22.1",
+      "scope": "excluded",
+      "supplier": {
+        "name": "com.google.dagger"
+      },
+      "type": "library",
+      "version": "2.22.1"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.dagger/dagger@2.22.1",
+      "cpe": "cpe:2.3:a:com.google.dagger:dagger:2.22.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/dagger-adapter/pom.xml"
+          }
+        ]
+      },
+      "name": "dagger",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.dagger:dagger:2.22.1:*:*:*:*:*:*:* | cpe:2.3:a:dagger:dagger:2.22.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/dagger-adapter/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "optional"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:optional-derivation",
+          "value": "maven-optional-element"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/dagger-adapter\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.dagger/dagger@2.22.1",
+      "scope": "excluded",
+      "supplier": {
+        "name": "com.google.dagger"
+      },
+      "type": "library",
+      "version": "2.22.1"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.errorprone/error_prone_annotations@unknown",
+      "cpe": "cpe:2.3:a:com.google.errorprone:error_prone_annotations:unknown:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/pom.xml"
+          }
+        ]
+      },
+      "name": "error_prone_annotations",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.errorprone:error_prone_annotations:unknown:*:*:*:*:*:*:* | cpe:2.3:a:errorprone:error_prone_annotations:unknown:*:*:*:*:*:*:* | cpe:2.3:a:error_prone_annotations:error_prone_annotations:unknown:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"core/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "optional"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": ""
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "mikebom:optional-derivation",
+          "value": "maven-optional-element"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"core\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.errorprone/error_prone_annotations@unknown",
+      "scope": "excluded",
+      "supplier": {
+        "name": "com.google.errorprone"
+      },
+      "type": "library",
+      "version": "unknown"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.guava/guava-testlib@unknown",
+      "cpe": "cpe:2.3:a:com.google.guava:guava-testlib:unknown:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/pom.xml"
+          }
+        ]
+      },
+      "name": "guava-testlib",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.guava:guava-testlib:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guava:guava-testlib:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guava-testlib:guava-testlib:unknown:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"core/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": ""
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"core\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.guava/guava-testlib@unknown",
+      "scope": "excluded",
+      "supplier": {
+        "name": "com.google.guava"
+      },
+      "type": "library",
+      "version": "unknown"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.guava/guava@unknown",
+      "cpe": "cpe:2.3:a:com.google.guava:guava:unknown:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/pom.xml"
+          }
+        ]
+      },
+      "name": "guava",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.guava:guava:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guava:guava:unknown:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"core/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": ""
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"core\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.guava/guava@unknown",
+      "supplier": {
+        "name": "com.google.guava"
+      },
+      "type": "library",
+      "version": "unknown"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-assistedinject@unknown",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-assistedinject:unknown:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/grapher/pom.xml"
+          }
+        ]
+      },
+      "name": "guice-assistedinject",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject.extensions:guice-assistedinject:unknown:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-assistedinject:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guice-assistedinject:guice-assistedinject:unknown:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/grapher/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "${project.version}"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/grapher\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject.extensions/guice-assistedinject@unknown",
+      "supplier": {
+        "name": "com.google.inject.extensions"
+      },
+      "type": "library",
+      "version": "unknown"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-servlet@unknown",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-servlet:unknown:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/struts2/pom.xml"
+          }
+        ]
+      },
+      "name": "guice-servlet",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject.extensions:guice-servlet:unknown:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-servlet:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guice-servlet:guice-servlet:unknown:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/struts2/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "${project.version}"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/struts2\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject.extensions/guice-servlet@unknown",
+      "supplier": {
+        "name": "com.google.inject.extensions"
+      },
+      "type": "library",
+      "version": "unknown"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-testlib@5.1.0",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-testlib:5.1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/guice-demo/pom.xml"
+          }
+        ]
+      },
+      "name": "guice-testlib",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject.extensions:guice-testlib:5.1.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-testlib:5.1.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-testlib:guice-testlib:5.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/guice-demo/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/guice-demo\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject.extensions/guice-testlib@5.1.0",
+      "scope": "excluded",
+      "supplier": {
+        "name": "com.google.inject.extensions"
+      },
+      "type": "library",
+      "version": "5.1.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject.extensions/guice-throwingproviders@unknown",
+      "cpe": "cpe:2.3:a:com.google.inject.extensions:guice-throwingproviders:unknown:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/testlib/pom.xml"
+          }
+        ]
+      },
+      "name": "guice-throwingproviders",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject.extensions:guice-throwingproviders:unknown:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-throwingproviders:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guice-throwingproviders:guice-throwingproviders:unknown:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/testlib/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": "${project.version}"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/testlib\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject.extensions/guice-throwingproviders@unknown",
+      "supplier": {
+        "name": "com.google.inject.extensions"
+      },
+      "type": "library",
+      "version": "unknown"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.inject/guice@5.1.0",
+      "cpe": "cpe:2.3:a:com.google.inject:guice:5.1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "examples/guice-demo/pom.xml"
+          }
+        ]
+      },
+      "name": "guice",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.inject:guice:5.1.0:*:*:*:*:*:*:* | cpe:2.3:a:inject:guice:5.1.0:*:*:*:*:*:*:* | cpe:2.3:a:guice:guice:5.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"examples/guice-demo/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"examples/guice-demo\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.inject/guice@5.1.0",
+      "supplier": {
+        "name": "com.google.inject"
+      },
+      "type": "library",
+      "version": "5.1.0"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.truth.extensions/truth-java8-extension@unknown",
+      "cpe": "cpe:2.3:a:com.google.truth.extensions:truth-java8-extension:unknown:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/pom.xml"
+          }
+        ]
+      },
+      "name": "truth-java8-extension",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.truth.extensions:truth-java8-extension:unknown:*:*:*:*:*:*:* | cpe:2.3:a:extensions:truth-java8-extension:unknown:*:*:*:*:*:*:* | cpe:2.3:a:truth-java8-extension:truth-java8-extension:unknown:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"core/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": ""
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"core\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.truth.extensions/truth-java8-extension@unknown",
+      "scope": "excluded",
+      "supplier": {
+        "name": "com.google.truth.extensions"
+      },
+      "type": "library",
+      "version": "unknown"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.truth/truth@unknown",
+      "cpe": "cpe:2.3:a:com.google.truth:truth:unknown:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/pom.xml"
+          }
+        ]
+      },
+      "name": "truth",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.truth:truth:unknown:*:*:*:*:*:*:* | cpe:2.3:a:truth:truth:unknown:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"core/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": ""
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"core\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.truth/truth@unknown",
+      "scope": "excluded",
+      "supplier": {
+        "name": "com.google.truth"
+      },
+      "type": "library",
+      "version": "unknown"
+    },
+    {
+      "bom-ref": "pkg:maven/jakarta.inject/jakarta.inject-api@unknown",
+      "cpe": "cpe:2.3:a:jakarta.inject:jakarta.inject-api:unknown:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/pom.xml"
+          }
+        ]
+      },
+      "name": "jakarta.inject-api",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:jakarta.inject:jakarta.inject-api:unknown:*:*:*:*:*:*:* | cpe:2.3:a:inject:jakarta.inject-api:unknown:*:*:*:*:*:*:* | cpe:2.3:a:jakarta.inject-api:jakarta.inject-api:unknown:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"core/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": ""
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"core\"]"
+        }
+      ],
+      "purl": "pkg:maven/jakarta.inject/jakarta.inject-api@unknown",
+      "supplier": {
+        "name": "jakarta.inject"
+      },
+      "type": "library",
+      "version": "unknown"
+    },
+    {
+      "bom-ref": "pkg:maven/jakarta.inject/jakarta.inject-tck@unknown",
+      "cpe": "cpe:2.3:a:jakarta.inject:jakarta.inject-tck:unknown:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/pom.xml"
+          }
+        ]
+      },
+      "name": "jakarta.inject-tck",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:jakarta.inject:jakarta.inject-tck:unknown:*:*:*:*:*:*:* | cpe:2.3:a:inject:jakarta.inject-tck:unknown:*:*:*:*:*:*:* | cpe:2.3:a:jakarta.inject-tck:jakarta.inject-tck:unknown:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"core/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": ""
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"core\"]"
+        }
+      ],
+      "purl": "pkg:maven/jakarta.inject/jakarta.inject-tck@unknown",
+      "scope": "excluded",
+      "supplier": {
+        "name": "jakarta.inject"
+      },
+      "type": "library",
+      "version": "unknown"
+    },
+    {
+      "bom-ref": "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.0.0",
+      "cpe": "cpe:2.3:a:jakarta.persistence:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/persist/pom.xml"
+          }
+        ]
+      },
+      "name": "jakarta.persistence-api",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:jakarta.persistence:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:* | cpe:2.3:a:persistence:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:* | cpe:2.3:a:jakarta.persistence-api:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/persist/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "build"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/persist\"]"
+        }
+      ],
+      "purl": "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.0.0",
+      "scope": "excluded",
+      "supplier": {
+        "name": "jakarta.persistence"
+      },
+      "type": "library",
+      "version": "3.0.0"
+    },
+    {
+      "bom-ref": "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0",
+      "cpe": "cpe:2.3:a:jakarta.servlet:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/persist/pom.xml"
+          }
+        ]
+      },
+      "name": "jakarta.servlet-api",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:jakarta.servlet:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:* | cpe:2.3:a:servlet:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:* | cpe:2.3:a:jakarta.servlet-api:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/persist/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "build"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/persist\"]"
+        }
+      ],
+      "purl": "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0",
+      "scope": "excluded",
+      "supplier": {
+        "name": "jakarta.servlet"
+      },
+      "type": "library",
+      "version": "5.0.0"
+    },
+    {
+      "bom-ref": "pkg:maven/junit/junit@4.13.2",
+      "cpe": "cpe:2.3:a:junit:junit:4.13.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "pom.xml"
+          }
+        ]
+      },
+      "name": "junit",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"pom.xml\"]"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "transitive"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": ""
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:maven/junit/junit@4.13.2",
+      "supplier": {
+        "name": "junit"
+      },
+      "type": "library",
+      "version": "4.13.2"
+    },
+    {
+      "bom-ref": "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5",
+      "cpe": "cpe:2.3:a:org.apache.felix:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/pom.xml"
+          }
+        ]
+      },
+      "name": "org.apache.felix.framework",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:org.apache.felix:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:* | cpe:2.3:a:felix:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:* | cpe:2.3:a:org.apache.felix.framework:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"core/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"core\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5",
+      "scope": "excluded",
+      "supplier": {
+        "name": "org.apache.felix"
+      },
+      "type": "library",
+      "version": "3.0.5"
+    },
+    {
+      "bom-ref": "pkg:maven/org.apache.struts/struts2-core@2.5.30",
+      "cpe": "cpe:2.3:a:org.apache.struts:struts2-core:2.5.30:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/struts2/pom.xml"
+          }
+        ]
+      },
+      "name": "struts2-core",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:org.apache.struts:struts2-core:2.5.30:*:*:*:*:*:*:* | cpe:2.3:a:struts:struts2-core:2.5.30:*:*:*:*:*:*:* | cpe:2.3:a:struts2-core:struts2-core:2.5.30:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/struts2/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "build"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/struts2\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.apache.struts/struts2-core@2.5.30",
+      "scope": "excluded",
+      "supplier": {
+        "name": "org.apache.struts"
+      },
+      "type": "library",
+      "version": "2.5.30"
+    },
+    {
+      "bom-ref": "pkg:maven/org.hamcrest/hamcrest-core@1.3",
+      "cpe": "cpe:2.3:a:org.hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/persist/pom.xml"
+          }
+        ]
+      },
+      "name": "hamcrest-core",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:org.hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:* | cpe:2.3:a:hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:* | cpe:2.3:a:hamcrest-core:hamcrest-core:1.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/persist/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/persist\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.hamcrest/hamcrest-core@1.3",
+      "scope": "excluded",
+      "supplier": {
+        "name": "org.hamcrest"
+      },
+      "type": "library",
+      "version": "1.3"
+    },
+    {
+      "bom-ref": "pkg:maven/org.hamcrest/hamcrest-library@1.3",
+      "cpe": "cpe:2.3:a:org.hamcrest:hamcrest-library:1.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/persist/pom.xml"
+          }
+        ]
+      },
+      "name": "hamcrest-library",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:org.hamcrest:hamcrest-library:1.3:*:*:*:*:*:*:* | cpe:2.3:a:hamcrest:hamcrest-library:1.3:*:*:*:*:*:*:* | cpe:2.3:a:hamcrest-library:hamcrest-library:1.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/persist/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/persist\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.hamcrest/hamcrest-library@1.3",
+      "scope": "excluded",
+      "supplier": {
+        "name": "org.hamcrest"
+      },
+      "type": "library",
+      "version": "1.3"
+    },
+    {
+      "bom-ref": "pkg:maven/org.hibernate/hibernate-core-jakarta@5.6.15.Final",
+      "cpe": "cpe:2.3:a:org.hibernate:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/persist/pom.xml"
+          }
+        ]
+      },
+      "name": "hibernate-core-jakarta",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:org.hibernate:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:* | cpe:2.3:a:hibernate:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:* | cpe:2.3:a:hibernate-core-jakarta:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/persist/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/persist\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.hibernate/hibernate-core-jakarta@5.6.15.Final",
+      "scope": "excluded",
+      "supplier": {
+        "name": "org.hibernate"
+      },
+      "type": "library",
+      "version": "5.6.15.Final"
+    },
+    {
+      "bom-ref": "pkg:maven/org.hsqldb/hsqldb-j5@2.0.0",
+      "cpe": "cpe:2.3:a:org.hsqldb:hsqldb-j5:2.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/persist/pom.xml"
+          }
+        ]
+      },
+      "name": "hsqldb-j5",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:org.hsqldb:hsqldb-j5:2.0.0:*:*:*:*:*:*:* | cpe:2.3:a:hsqldb:hsqldb-j5:2.0.0:*:*:*:*:*:*:* | cpe:2.3:a:hsqldb-j5:hsqldb-j5:2.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/persist/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/persist\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.hsqldb/hsqldb-j5@2.0.0",
+      "scope": "excluded",
+      "supplier": {
+        "name": "org.hsqldb"
+      },
+      "type": "library",
+      "version": "2.0.0"
+    },
+    {
+      "bom-ref": "pkg:maven/org.mockito/mockito-core@4.2.0",
+      "cpe": "cpe:2.3:a:org.mockito:mockito-core:4.2.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/persist/pom.xml"
+          }
+        ]
+      },
+      "name": "mockito-core",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:org.mockito:mockito-core:4.2.0:*:*:*:*:*:*:* | cpe:2.3:a:mockito:mockito-core:4.2.0:*:*:*:*:*:*:* | cpe:2.3:a:mockito-core:mockito-core:4.2.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/persist/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/persist\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.mockito/mockito-core@4.2.0",
+      "scope": "excluded",
+      "supplier": {
+        "name": "org.mockito"
+      },
+      "type": "library",
+      "version": "4.2.0"
+    },
+    {
+      "bom-ref": "pkg:maven/org.ow2.asm/asm@unknown",
+      "cpe": "cpe:2.3:a:org.ow2.asm:asm:unknown:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "core/pom.xml"
+          }
+        ]
+      },
+      "name": "asm",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:org.ow2.asm:asm:unknown:*:*:*:*:*:*:* | cpe:2.3:a:asm:asm:unknown:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"core/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "optional"
+        },
+        {
+          "name": "mikebom:requirement-range",
+          "value": ""
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "mikebom:optional-derivation",
+          "value": "maven-optional-element"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"core\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.ow2.asm/asm@unknown",
+      "scope": "excluded",
+      "supplier": {
+        "name": "org.ow2.asm"
+      },
+      "type": "library",
+      "version": "unknown"
+    },
+    {
+      "bom-ref": "pkg:maven/org.slf4j/slf4j-simple@1.6.1",
+      "cpe": "cpe:2.3:a:org.slf4j:slf4j-simple:1.6.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/persist/pom.xml"
+          }
+        ]
+      },
+      "name": "slf4j-simple",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:org.slf4j:slf4j-simple:1.6.1:*:*:*:*:*:*:* | cpe:2.3:a:slf4j:slf4j-simple:1.6.1:*:*:*:*:*:*:* | cpe:2.3:a:slf4j-simple:slf4j-simple:1.6.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/persist/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "test"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/persist\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.slf4j/slf4j-simple@1.6.1",
+      "scope": "excluded",
+      "supplier": {
+        "name": "org.slf4j"
+      },
+      "type": "library",
+      "version": "1.6.1"
+    },
+    {
+      "bom-ref": "pkg:maven/org.springframework/spring-beans@5.3.18",
+      "cpe": "cpe:2.3:a:org.springframework:spring-beans:5.3.18:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "extensions/spring/pom.xml"
+          }
+        ]
+      },
+      "name": "spring-beans",
+      "properties": [
+        {
+          "name": "mikebom:cpe-candidates",
+          "value": "cpe:2.3:a:org.springframework:spring-beans:5.3.18:*:*:*:*:*:*:* | cpe:2.3:a:springframework:spring-beans:5.3.18:*:*:*:*:*:*:* | cpe:2.3:a:spring-beans:spring-beans:5.3.18:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/spring/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:lifecycle-scope",
+          "value": "build"
+        },
+        {
+          "name": "mikebom:source-type",
+          "value": "workspace"
+        },
+        {
+          "name": "mikebom:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "mikebom:workspace-member",
+          "value": "[\"extensions/spring\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.springframework/spring-beans@5.3.18",
+      "scope": "excluded",
+      "supplier": {
+        "name": "org.springframework"
+      },
+      "type": "library",
+      "version": "5.3.18"
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=27a128e54950d8bc1291e028999d0fb36e2ef115983a2c75d8520f4327b72982",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "27a128e54950d8bc1291e028999d0fb36e2ef115983a2c75d8520f4327b72982"
+        }
+      ],
+      "name": "deploy-library.sh",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"util/deploy-library.sh\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"util/deploy-library.sh\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=36e469a55afdf59a1070231ec3cc1e57fab6ffa0b3bfa4ca077d1a8f2e5c6d28",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "36e469a55afdf59a1070231ec3cc1e57fab6ffa0b3bfa4ca077d1a8f2e5c6d28"
+        }
+      ],
+      "name": "install-local-snapshot.sh",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"util/install-local-snapshot.sh\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"util/install-local-snapshot.sh\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=3a3194baa273d11a411ed8dbb8166f66a2060aa94bf13bceb1da5ec6db0b25e1",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "3a3194baa273d11a411ed8dbb8166f66a2060aa94bf13bceb1da5ec6db0b25e1"
+        }
+      ],
+      "name": "diff-jars.sh",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"util/diff-jars.sh\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"util/diff-jars.sh\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=3ba62bf9990fe4a1b67080709bd40c427f7e1d74adfdb5766c447d608fc1e731",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "3ba62bf9990fe4a1b67080709bd40c427f7e1d74adfdb5766c447d608fc1e731"
+        }
+      ],
+      "name": "pom.xml",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"bom/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"bom/pom.xml\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=898a272d08f7c7fc16c23256a35056951f2c66257b0a2ecdf5611f6a0b9dd3ab",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "898a272d08f7c7fc16c23256a35056951f2c66257b0a2ecdf5611f6a0b9dd3ab"
+        }
+      ],
+      "name": "pom.xml",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/jmx/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"extensions/jmx/pom.xml\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=8f55cf87a5aa73218572736672f6e48b2a19195a3037c23231fb93791ff64ec6",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8f55cf87a5aa73218572736672f6e48b2a19195a3037c23231fb93791ff64ec6"
+        }
+      ],
+      "name": "generate-latest-docs.sh",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"util/generate-latest-docs.sh\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"util/generate-latest-docs.sh\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=9036734f88710cbfd71c4e1d666ac61f7ae9add484ce8134310e962c4b73d648",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9036734f88710cbfd71c4e1d666ac61f7ae9add484ce8134310e962c4b73d648"
+        }
+      ],
+      "name": "pom.xml",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/servlet/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"extensions/servlet/pom.xml\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=979a86d6c8aade949d77e1d8a0ed49b34fa436720c5aaf40ceb8fe44f04e3a19",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "979a86d6c8aade949d77e1d8a0ed49b34fa436720c5aaf40ceb8fe44f04e3a19"
+        }
+      ],
+      "name": "pom.xml",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/assistedinject/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"extensions/assistedinject/pom.xml\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=c17c8dc525fe1f62e9454622438e79d902cfecf55a0b67eab348299a2d9735fc",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "c17c8dc525fe1f62e9454622438e79d902cfecf55a0b67eab348299a2d9735fc"
+        }
+      ],
+      "name": "deploy-guice.sh",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"util/deploy-guice.sh\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"util/deploy-guice.sh\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=c212fe7fa035d982c012eb20fcd7f09bae3e073017ad23787dc391f9faabce25",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "c212fe7fa035d982c012eb20fcd7f09bae3e073017ad23787dc391f9faabce25"
+        }
+      ],
+      "name": "pom.xml",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"extensions/jndi/pom.xml\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"extensions/jndi/pom.xml\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=d5e2b068a6bd0f6fdbbb22fd2da3f22f89d8d0d8f3e6c787e97bfe3cc14b2186",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "d5e2b068a6bd0f6fdbbb22fd2da3f22f89d8d0d8f3e6c787e97bfe3cc14b2186"
+        }
+      ],
+      "name": "publish-latest-docs.sh",
+      "properties": [
+        {
+          "name": "mikebom:source-files",
+          "value": "[\"util/publish-latest-docs.sh\"]"
+        },
+        {
+          "name": "mikebom:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "mikebom:file-paths",
+          "value": "[\"util/publish-latest-docs.sh\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "complete",
+      "assemblies": [
+        "pkg:maven/aopalliance/aopalliance@unknown",
+        "pkg:maven/biz.aQute/bnd@0.0.384",
+        "pkg:maven/com.google.auto.value/auto-value-annotations@1.6.3",
+        "pkg:maven/com.google.auto.value/auto-value@1.6.3",
+        "pkg:maven/com.google.code.findbugs/jsr305@unknown",
+        "pkg:maven/com.google.dagger/dagger-producers@2.22.1",
+        "pkg:maven/com.google.dagger/dagger@2.22.1",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@unknown",
+        "pkg:maven/com.google.guava/guava-testlib@unknown",
+        "pkg:maven/com.google.guava/guava@unknown",
+        "pkg:maven/com.google.inject.extensions/guice-assistedinject@unknown",
+        "pkg:maven/com.google.inject.extensions/guice-servlet@unknown",
+        "pkg:maven/com.google.inject.extensions/guice-testlib@5.1.0",
+        "pkg:maven/com.google.inject.extensions/guice-throwingproviders@unknown",
+        "pkg:maven/com.google.inject/guice@5.1.0",
+        "pkg:maven/com.google.truth.extensions/truth-java8-extension@unknown",
+        "pkg:maven/com.google.truth/truth@unknown",
+        "pkg:maven/jakarta.inject/jakarta.inject-api@unknown",
+        "pkg:maven/jakarta.inject/jakarta.inject-tck@unknown",
+        "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.0.0",
+        "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0",
+        "pkg:maven/junit/junit@4.13.2",
+        "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5",
+        "pkg:maven/org.apache.struts/struts2-core@2.5.30",
+        "pkg:maven/org.hamcrest/hamcrest-core@1.3",
+        "pkg:maven/org.hamcrest/hamcrest-library@1.3",
+        "pkg:maven/org.hibernate/hibernate-core-jakarta@5.6.15.Final",
+        "pkg:maven/org.hsqldb/hsqldb-j5@2.0.0",
+        "pkg:maven/org.mockito/mockito-core@4.2.0",
+        "pkg:maven/org.ow2.asm/asm@unknown",
+        "pkg:maven/org.slf4j/slf4j-simple@1.6.1",
+        "pkg:maven/org.springframework/spring-beans@5.3.18"
+      ],
+      "dependencies": [
+        "pkg:maven/aopalliance/aopalliance@unknown",
+        "pkg:maven/biz.aQute/bnd@0.0.384",
+        "pkg:maven/com.google.auto.value/auto-value-annotations@1.6.3",
+        "pkg:maven/com.google.auto.value/auto-value@1.6.3",
+        "pkg:maven/com.google.code.findbugs/jsr305@unknown",
+        "pkg:maven/com.google.dagger/dagger-producers@2.22.1",
+        "pkg:maven/com.google.dagger/dagger@2.22.1",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@unknown",
+        "pkg:maven/com.google.guava/guava-testlib@unknown",
+        "pkg:maven/com.google.guava/guava@unknown",
+        "pkg:maven/com.google.inject.extensions/guice-assistedinject@unknown",
+        "pkg:maven/com.google.inject.extensions/guice-servlet@unknown",
+        "pkg:maven/com.google.inject.extensions/guice-testlib@5.1.0",
+        "pkg:maven/com.google.inject.extensions/guice-throwingproviders@unknown",
+        "pkg:maven/com.google.inject/guice@5.1.0",
+        "pkg:maven/com.google.truth.extensions/truth-java8-extension@unknown",
+        "pkg:maven/com.google.truth/truth@unknown",
+        "pkg:maven/jakarta.inject/jakarta.inject-api@unknown",
+        "pkg:maven/jakarta.inject/jakarta.inject-tck@unknown",
+        "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.0.0",
+        "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0",
+        "pkg:maven/junit/junit@4.13.2",
+        "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5",
+        "pkg:maven/org.apache.struts/struts2-core@2.5.30",
+        "pkg:maven/org.hamcrest/hamcrest-core@1.3",
+        "pkg:maven/org.hamcrest/hamcrest-library@1.3",
+        "pkg:maven/org.hibernate/hibernate-core-jakarta@5.6.15.Final",
+        "pkg:maven/org.hsqldb/hsqldb-j5@2.0.0",
+        "pkg:maven/org.mockito/mockito-core@4.2.0",
+        "pkg:maven/org.ow2.asm/asm@unknown",
+        "pkg:maven/org.slf4j/slf4j-simple@1.6.1",
+        "pkg:maven/org.springframework/spring-beans@5.3.18"
+      ]
+    },
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "maven-guice@b0e1d0f"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "maven-guice@b0e1d0f"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [
+        "pkg:maven/aopalliance/aopalliance@unknown",
+        "pkg:maven/biz.aQute/bnd@0.0.384",
+        "pkg:maven/com.google.auto.value/auto-value-annotations@1.6.3",
+        "pkg:maven/com.google.auto.value/auto-value@1.6.3",
+        "pkg:maven/com.google.code.findbugs/jsr305@unknown",
+        "pkg:maven/com.google.dagger/dagger-producers@2.22.1",
+        "pkg:maven/com.google.dagger/dagger@2.22.1",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@unknown",
+        "pkg:maven/com.google.guava/guava-testlib@unknown",
+        "pkg:maven/com.google.guava/guava@unknown",
+        "pkg:maven/com.google.inject.extensions/guice-assistedinject@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-servlet@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-testlib@7.0.0",
+        "pkg:maven/com.google.inject.extensions/guice-throwingproviders@7.0.0",
+        "pkg:maven/com.google.inject/guice@5.1.0",
+        "pkg:maven/com.google.truth.extensions/truth-java8-extension@unknown",
+        "pkg:maven/com.google.truth/truth@unknown",
+        "pkg:maven/jakarta.inject/jakarta.inject-api@unknown",
+        "pkg:maven/jakarta.inject/jakarta.inject-tck@unknown",
+        "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.0.0",
+        "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0",
+        "pkg:maven/junit/junit@4.13.2",
+        "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5",
+        "pkg:maven/org.apache.struts/struts2-core@2.5.30",
+        "pkg:maven/org.hamcrest/hamcrest-core@1.3",
+        "pkg:maven/org.hamcrest/hamcrest-library@1.3",
+        "pkg:maven/org.hibernate/hibernate-core-jakarta@5.6.15.Final",
+        "pkg:maven/org.hsqldb/hsqldb-j5@2.0.0",
+        "pkg:maven/org.mockito/mockito-core@4.2.0",
+        "pkg:maven/org.ow2.asm/asm@unknown",
+        "pkg:maven/org.slf4j/slf4j-simple@1.6.1",
+        "pkg:maven/org.springframework/spring-beans@5.3.18"
+      ],
+      "ref": "maven-guice@b0e1d0f"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:bazel/google_bazel_common@unknown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:bazel/rules_jvm_external@unknown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=27a128e54950d8bc1291e028999d0fb36e2ef115983a2c75d8520f4327b72982"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=36e469a55afdf59a1070231ec3cc1e57fab6ffa0b3bfa4ca077d1a8f2e5c6d28"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=3a3194baa273d11a411ed8dbb8166f66a2060aa94bf13bceb1da5ec6db0b25e1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=3ba62bf9990fe4a1b67080709bd40c427f7e1d74adfdb5766c447d608fc1e731"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=898a272d08f7c7fc16c23256a35056951f2c66257b0a2ecdf5611f6a0b9dd3ab"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=8f55cf87a5aa73218572736672f6e48b2a19195a3037c23231fb93791ff64ec6"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=9036734f88710cbfd71c4e1d666ac61f7ae9add484ce8134310e962c4b73d648"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=979a86d6c8aade949d77e1d8a0ed49b34fa436720c5aaf40ceb8fe44f04e3a19"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=c17c8dc525fe1f62e9454622438e79d902cfecf55a0b67eab348299a2d9735fc"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=c212fe7fa035d982c012eb20fcd7f09bae3e073017ad23787dc391f9faabce25"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=d5e2b068a6bd0f6fdbbb22fd2da3f22f89d8d0d8f3e6c787e97bfe3cc14b2186"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/aopalliance/aopalliance@unknown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/biz.aQute/bnd@0.0.384"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.auto.value/auto-value-annotations@1.6.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.auto.value/auto-value@1.6.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.code.findbugs/jsr305@unknown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.dagger/dagger-producers@2.22.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.dagger/dagger@2.22.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.errorprone/error_prone_annotations@unknown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.guava/guava-testlib@unknown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.guava/guava@unknown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.inject.extensions/guice-assistedinject@unknown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.inject.extensions/guice-servlet@unknown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.inject.extensions/guice-testlib@5.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.inject.extensions/guice-throwingproviders@unknown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.inject/guice@5.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.truth.extensions/truth-java8-extension@unknown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.truth/truth@unknown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/jakarta.inject/jakarta.inject-api@unknown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/jakarta.inject/jakarta.inject-tck@unknown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/jakarta.persistence/jakarta.persistence-api@3.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/jakarta.servlet/jakarta.servlet-api@5.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/junit/junit@4.13.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/org.apache.felix/org.apache.felix.framework@3.0.5"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/org.apache.struts/struts2-core@2.5.30"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/org.hamcrest/hamcrest-core@1.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/org.hamcrest/hamcrest-library@1.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/org.hibernate/hibernate-core-jakarta@5.6.15.Final"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/org.hsqldb/hsqldb-j5@2.0.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/org.mockito/mockito-core@4.2.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/org.ow2.asm/asm@unknown"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/org.slf4j/slf4j-simple@1.6.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/org.springframework/spring-beans@5.3.18"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "mikebom"
+      }
+    ],
+    "component": {
+      "bom-ref": "maven-guice@b0e1d0f",
+      "cpe": "cpe:2.3:a:mikebom:maven-guice:b0e1d0f:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "comment": "auto-detected from git remote `origin`",
+          "type": "vcs",
+          "url": "https://github.com/google/guice"
+        }
+      ],
+      "name": "maven-guice",
+      "purl": "pkg:generic/maven-guice@b0e1d0f",
+      "type": "application",
+      "version": "b0e1d0f"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "design"
+      },
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "properties": [
+      {
+        "name": "mikebom:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "mikebom:os-release-missing-fields",
+        "value": "ID,VERSION_ID"
+      },
+      {
+        "name": "mikebom:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "mikebom:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "mikebom:trace-integrity-uprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "mikebom:trace-integrity-kprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "mikebom:graph-completeness",
+        "value": "partial"
+      },
+      {
+        "name": "mikebom:graph-completeness-reason",
+        "value": "orphaned-components-detected: 9 component(s) not reachable from root; transitive-edges-unresolvable: maven"
+      },
+      {
+        "name": "mikebom:workspaces-detected",
+        "value": "[\".\",\"core\",\"examples/guice-demo\",\"extensions/dagger-adapter\",\"extensions/grapher\",\"extensions/persist\",\"extensions/spring\",\"extensions/struts2\",\"extensions/testlib\",\"extensions/throwingproviders\"]"
+      }
+    ],
+    "supplier": {
+      "name": "mikebom contributors"
+    },
+    "timestamp": "<masked>",
+    "tools": {
+      "components": [
+        {
+          "name": "mikebom",
+          "publisher": "mikebom contributors",
+          "type": "application",
+          "version": "0.1.0-alpha.62"
+        }
+      ]
+    }
+  },
+  "serialNumber": "<masked>",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

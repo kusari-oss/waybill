@@ -19,7 +19,7 @@
         ],
         "occurrences": [
           {
-            "additionalContext": "{\"sha256\":\"593ec876c2e81922320a3425f652bb77a8e943760b2e069fb6ca9a8751840199\"}",
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "go.sum"
           }
         ]
@@ -47,12 +47,20 @@
           "value": "[\"go.sum\"]"
         },
         {
+          "name": "mikebom:build-inclusion",
+          "value": "unknown"
+        },
+        {
           "name": "mikebom:sbom-tier",
           "value": "source"
         },
         {
           "name": "mikebom:go-transitive-source",
-          "value": "module-cache"
+          "value": "go-sum-fallback"
+        },
+        {
+          "name": "mikebom:resolver-step",
+          "value": "go-sum-fallback"
         },
         {
           "name": "mikebom:workspace-member",
@@ -84,7 +92,7 @@
         ],
         "occurrences": [
           {
-            "additionalContext": "{\"sha256\":\"593ec876c2e81922320a3425f652bb77a8e943760b2e069fb6ca9a8751840199\"}",
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "go.sum"
           }
         ]
@@ -112,12 +120,20 @@
           "value": "[\"go.sum\"]"
         },
         {
+          "name": "mikebom:build-inclusion",
+          "value": "unknown"
+        },
+        {
           "name": "mikebom:sbom-tier",
           "value": "source"
         },
         {
           "name": "mikebom:go-transitive-source",
-          "value": "module-cache"
+          "value": "go-sum-fallback"
+        },
+        {
+          "name": "mikebom:resolver-step",
+          "value": "go-sum-fallback"
         },
         {
           "name": "mikebom:workspace-member",
@@ -149,7 +165,7 @@
         ],
         "occurrences": [
           {
-            "additionalContext": "{\"sha256\":\"593ec876c2e81922320a3425f652bb77a8e943760b2e069fb6ca9a8751840199\"}",
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "go.sum"
           }
         ]
@@ -177,12 +193,20 @@
           "value": "[\"go.sum\"]"
         },
         {
+          "name": "mikebom:build-inclusion",
+          "value": "unknown"
+        },
+        {
           "name": "mikebom:sbom-tier",
           "value": "source"
         },
         {
           "name": "mikebom:go-transitive-source",
-          "value": "module-cache"
+          "value": "go-sum-fallback"
+        },
+        {
+          "name": "mikebom:resolver-step",
+          "value": "go-sum-fallback"
         },
         {
           "name": "mikebom:workspace-member",
@@ -214,7 +238,7 @@
         ],
         "occurrences": [
           {
-            "additionalContext": "{\"sha256\":\"593ec876c2e81922320a3425f652bb77a8e943760b2e069fb6ca9a8751840199\"}",
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "go.sum"
           }
         ]
@@ -287,7 +311,7 @@
         ],
         "occurrences": [
           {
-            "additionalContext": "{\"sha256\":\"593ec876c2e81922320a3425f652bb77a8e943760b2e069fb6ca9a8751840199\"}",
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "go.sum"
           }
         ]
@@ -309,12 +333,20 @@
           "value": "[\"go.sum\"]"
         },
         {
+          "name": "mikebom:build-inclusion",
+          "value": "unknown"
+        },
+        {
           "name": "mikebom:sbom-tier",
           "value": "source"
         },
         {
           "name": "mikebom:go-transitive-source",
-          "value": "module-cache"
+          "value": "go-sum-fallback"
+        },
+        {
+          "name": "mikebom:resolver-step",
+          "value": "go-sum-fallback"
         },
         {
           "name": "mikebom:workspace-member",
@@ -346,7 +378,7 @@
         ],
         "occurrences": [
           {
-            "additionalContext": "{\"sha256\":\"593ec876c2e81922320a3425f652bb77a8e943760b2e069fb6ca9a8751840199\"}",
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "go.sum"
           }
         ]
@@ -368,12 +400,20 @@
           "value": "[\"go.sum\"]"
         },
         {
+          "name": "mikebom:build-inclusion",
+          "value": "unknown"
+        },
+        {
           "name": "mikebom:sbom-tier",
           "value": "source"
         },
         {
           "name": "mikebom:go-transitive-source",
-          "value": "module-cache"
+          "value": "go-sum-fallback"
+        },
+        {
+          "name": "mikebom:resolver-step",
+          "value": "go-sum-fallback"
         },
         {
           "name": "mikebom:workspace-member",
@@ -405,7 +445,7 @@
         ],
         "occurrences": [
           {
-            "additionalContext": "{\"sha256\":\"593ec876c2e81922320a3425f652bb77a8e943760b2e069fb6ca9a8751840199\"}",
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
             "location": "go.sum"
           }
         ]
@@ -470,16 +510,16 @@
       "dependsOn": [
         "pkg:golang/github.com/cpuguy83/go-md2man/v2@v2.0.6",
         "pkg:golang/github.com/inconshreveable/mousetrap@v1.1.0",
+        "pkg:golang/github.com/russross/blackfriday/v2@v2.1.0",
         "pkg:golang/github.com/spf13/pflag@v1.0.6",
+        "pkg:golang/gopkg.in/check.v1@v0.0.0-20161208181325-20d25e280405",
         "pkg:golang/gopkg.in/yaml.v3@v3.0.1",
         "pkg:golang/stdlib@v1.15"
       ],
       "ref": "go-cobra@a655097"
     },
     {
-      "dependsOn": [
-        "pkg:golang/github.com/russross/blackfriday/v2@v2.1.0"
-      ],
+      "dependsOn": [],
       "ref": "pkg:golang/github.com/cpuguy83/go-md2man/v2@v2.0.6"
     },
     {
@@ -499,9 +539,7 @@
       "ref": "pkg:golang/gopkg.in/check.v1@v0.0.0-20161208181325-20d25e280405"
     },
     {
-      "dependsOn": [
-        "pkg:golang/gopkg.in/check.v1@v0.0.0-20161208181325-20d25e280405"
-      ],
+      "dependsOn": [],
       "ref": "pkg:golang/gopkg.in/yaml.v3@v3.0.1"
     },
     {
@@ -589,7 +627,7 @@
       },
       {
         "name": "mikebom:go-transitive-fallback-count",
-        "value": "1"
+        "value": "6"
       }
     ],
     "supplier": {
