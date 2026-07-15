@@ -15,6 +15,10 @@ on:
         description: 'Branch to run the corpus against (defaults to main).'
         type: string
         default: main
+      regen_goldens:
+        description: 'Regenerate public-corpus goldens in-place (writes to fixtures/, uploads as artifact).'
+        type: boolean
+        default: false
 
 concurrency:
   group: public-corpus-${{ github.ref }}
@@ -58,6 +62,11 @@ jobs:
       - name: Run public corpus
         env:
           MIKEBOM_RUN_PUBLIC_CORPUS: '1'
+          # m196: conditional regen mode. When the maintainer dispatches
+          # with `regen_goldens=true`, the m195 harness writes goldens
+          # instead of comparing (see layer2_golden::compare_golden).
+          # Nightly cron never sets this — remains empty string = verify mode.
+          MIKEBOM_UPDATE_PUBLIC_CORPUS_GOLDENS: ${{ inputs.regen_goldens == true && '1' || '' }}
         run: |
           cargo test --test public_corpus --release -- --nocapture --test-threads=3
 
@@ -94,5 +103,19 @@ jobs:
         with:
           name: corpus-emitted-sboms
           path: ~/.cache/mikebom/corpus/*/emitted/*.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      # m196: upload the regenerated goldens as an artifact when the
+      # maintainer dispatched with `regen_goldens=true`. Regardless of
+      # pass/fail — regen mode writes goldens on Layer 1 pass; Layer 1
+      # failures still surface useful state via the emitted-SBOMs
+      # artifact above.
+      - name: Upload regenerated goldens
+        if: ${{ inputs.regen_goldens == true }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: corpus-goldens-regen
+          path: mikebom-cli/tests/fixtures/public_corpus/
           if-no-files-found: warn
           retention-days: 14
