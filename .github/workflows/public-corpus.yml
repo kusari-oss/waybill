@@ -25,6 +25,11 @@ jobs:
     name: Run public corpus (${{ github.event.inputs.branch || github.ref_name }})
     runs-on: ubuntu-latest
     timeout-minutes: 45   # SC-005: cold-cache < 30 min; 15-min buffer
+    permissions:
+      # This job only reads sources and uploads artifacts — no writes to
+      # the repo, no package publishing, no PR-comment mutation. Locked
+      # down to minimum per Kusari Inspector guidance.
+      contents: read
 
     steps:
       - name: Checkout
@@ -32,6 +37,10 @@ jobs:
         with:
           ref: ${{ github.event.inputs.branch || github.ref }}
           fetch-depth: 0
+          # Do NOT leave GITHUB_TOKEN persisted in git config — the
+          # emitted-SBOM artifact upload on failure could otherwise
+          # exfiltrate the token via .git/config leakage.
+          persist-credentials: false
 
       - name: Install Rust (stable)
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
@@ -54,12 +63,18 @@ jobs:
 
       - name: Capture summary
         if: always()
+        env:
+          # Route user-controllable inputs through env vars so they
+          # can't be evaluated as shell code inside the run: block
+          # (per Kusari Inspector template-injection finding).
+          BRANCH_REF: ${{ github.event.inputs.branch || github.ref }}
+          COMMIT_SHA: ${{ github.sha }}
         run: |
           mkdir -p corpus-artifacts
           {
-            echo "# Public corpus run — ${{ github.event.inputs.branch || github.ref }}"
+            echo "# Public corpus run — ${BRANCH_REF}"
             echo ""
-            echo "Commit: ${{ github.sha }}"
+            echo "Commit: ${COMMIT_SHA}"
             echo "Date:   $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             echo ""
             echo "See workflow log for per-target diagnostic blocks."
