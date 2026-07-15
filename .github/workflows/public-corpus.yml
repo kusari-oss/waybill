@@ -102,7 +102,11 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: corpus-emitted-sboms
-          path: ~/.cache/mikebom/corpus/*/emitted/*.json
+          # Cache layout per m195 cache.rs is
+          # `~/.cache/mikebom/corpus/<source-id>/<pin>/{repo/emitted,emitted}/*.json`
+          # — depth varies (git targets nest under `repo/`, OCI targets don't).
+          # `**` handles both cases.
+          path: ~/.cache/mikebom/corpus/**/emitted/*.json
           if-no-files-found: warn
           retention-days: 14
 
