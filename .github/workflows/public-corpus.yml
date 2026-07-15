@@ -1,0 +1,98 @@
+name: Public corpus regression
+
+# Milestone 195 — Public SBOM Regression Corpus.
+# Nightly UTC schedule + manual dispatch on any branch per spec Q2
+# clarification. Never runs on the default per-PR lane (default lane
+# is `ci.yml`; corpus wall-clock ~30 min cold-cache violates SC-004).
+
+on:
+  schedule:
+    # Nightly at 06:17 UTC (offset from top-of-hour per project_ci_timing).
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run the corpus against (defaults to main).'
+        type: string
+        default: main
+
+concurrency:
+  group: public-corpus-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  corpus:
+    name: Run public corpus (${{ github.event.inputs.branch || github.ref_name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45   # SC-005: cold-cache < 30 min; 15-min buffer
+    permissions:
+      # This job only reads sources and uploads artifacts — no writes to
+      # the repo, no package publishing, no PR-comment mutation. Locked
+      # down to minimum per Kusari Inspector guidance.
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
+          fetch-depth: 0
+          # Do NOT leave GITHUB_TOKEN persisted in git config — the
+          # emitted-SBOM artifact upload on failure could otherwise
+          # exfiltrate the token via .git/config leakage.
+          persist-credentials: false
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
+        with:
+          toolchain: stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
+        with:
+          shared-key: public-corpus
+
+      - name: Build mikebom (release)
+        run: cargo build --release -p mikebom --bin mikebom
+
+      - name: Run public corpus
+        env:
+          MIKEBOM_RUN_PUBLIC_CORPUS: '1'
+        run: |
+          cargo test --test public_corpus --release -- --nocapture --test-threads=3
+
+      - name: Capture summary
+        if: always()
+        env:
+          # Route user-controllable inputs through env vars so they
+          # can't be evaluated as shell code inside the run: block
+          # (per Kusari Inspector template-injection finding).
+          BRANCH_REF: ${{ github.event.inputs.branch || github.ref }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          mkdir -p corpus-artifacts
+          {
+            echo "# Public corpus run — ${BRANCH_REF}"
+            echo ""
+            echo "Commit: ${COMMIT_SHA}"
+            echo "Date:   $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo ""
+            echo "See workflow log for per-target diagnostic blocks."
+          } > corpus-artifacts/corpus-run-summary.md
+
+      - name: Upload summary
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: corpus-run-summary
+          path: corpus-artifacts/corpus-run-summary.md
+          retention-days: 30
+
+      - name: Upload emitted SBOMs on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: corpus-emitted-sboms
+          path: ~/.cache/mikebom/corpus/*/emitted/*.json
+          if-no-files-found: warn
+          retention-days: 14
