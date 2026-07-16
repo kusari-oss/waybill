@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-07-15
+Auto-generated from all feature plans. Last updated: 2026-07-16
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -259,6 +259,8 @@ Auto-generated from all feature plans. Last updated: 2026-07-15
 - N/A — all state is in-process per scan; matches every reader milestone since 002. (197-purl-reconciler-followups)
 - Rust stable (workspace toolchain inherited from milestones 001–197; no nightly). + Existing only — `mikebom_common::types::purl::Purl` (the type under test). No `proptest`, no `quickcheck`, no `libfuzzer-sys` per spec FR-005 zero-new-Cargo-deps constraint. (198-purl-fuzz-test)
 - Rust stable (workspace toolchain inherited from milestones 001–198; no nightly). + Existing only — `mikebom_common::resolution::ResolvedComponent` (survivor type), `serde_json::Value` (annotation array construction), the m159 `AliasResolution` struct at `mikebom-cli/src/scan_fs/package_db/npm/alias_mapping.rs:37` with `local_name` (alias) + `aliased_name` (resolved) fields already distinct. Zero new crates. (199-reconciler-array-alias)
+- Rust stable (workspace toolchain inherited from milestones 001–199; no nightly). + Existing only — `toml = "0.8"` (already used pervasively by cargo.rs), `std::collections::HashSet` (already used), `serde`/`serde_json` (annotation values), `tracing` (existing parse-error warn logs), `anyhow`/`thiserror`. **No new crates.** No subprocess calls. No network access. (200-cargo-workspace-root-scope)
+- N/A — all state in-process per scan; matches every reader milestone since 002. (200-cargo-workspace-root-scope)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -321,9 +323,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 200-cargo-workspace-root-scope: Added Rust stable (workspace toolchain inherited from milestones 001–199; no nightly). + Existing only — `toml = "0.8"` (already used pervasively by cargo.rs), `std::collections::HashSet` (already used), `serde`/`serde_json` (annotation values), `tracing` (existing parse-error warn logs), `anyhow`/`thiserror`. **No new crates.** No subprocess calls. No network access.
 - 199-reconciler-array-alias: Added Rust stable (workspace toolchain inherited from milestones 001–198; no nightly). + Existing only — `mikebom_common::resolution::ResolvedComponent` (survivor type), `serde_json::Value` (annotation array construction), the m159 `AliasResolution` struct at `mikebom-cli/src/scan_fs/package_db/npm/alias_mapping.rs:37` with `local_name` (alias) + `aliased_name` (resolved) fields already distinct. Zero new crates.
 - 198-purl-fuzz-test: Added Rust stable (workspace toolchain inherited from milestones 001–197; no nightly). + Existing only — `mikebom_common::types::purl::Purl` (the type under test). No `proptest`, no `quickcheck`, no `libfuzzer-sys` per spec FR-005 zero-new-Cargo-deps constraint.
-- 197-purl-reconciler-followups: Added Rust stable (workspace toolchain inherited from milestones 001–196; no nightly required for this user-space-only work). + Existing only — the `mikebom_common::types::purl::Purl` type (m005+; reused by all 11 emitters), the m191 reconciler at `mikebom-cli/src/resolve/reconciler.rs`, the m190 opkg-side epoch helpers at `mikebom-cli/src/scan_fs/package_db/ipk_file.rs` (`parse_opkg_version_with_epoch` + `build_opkg_purl(..., epoch)` — the pattern US1/US2/US2b copy). `serde_json` for annotation value construction (already pervasive). No new crates. Fuzz test uses a hand-rolled catalog-driven generator per spec Assumption 3 — NOT `proptest` or `quickcheck`.
 
 
 <!-- MANUAL ADDITIONS START -->
