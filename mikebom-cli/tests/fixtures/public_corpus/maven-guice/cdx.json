@@ -143,8 +143,8 @@
           "value": "[\"core/pom.xml\"]"
         },
         {
-          "name": "mikebom:requirement-range",
-          "value": ""
+          "name": "mikebom:requirement-ranges",
+          "value": "[\"\"]"
         },
         {
           "name": "mikebom:source-type",
@@ -374,8 +374,8 @@
           "value": "[\"extensions/throwingproviders/pom.xml\"]"
         },
         {
-          "name": "mikebom:requirement-range",
-          "value": ""
+          "name": "mikebom:requirement-ranges",
+          "value": "[\"\"]"
         },
         {
           "name": "mikebom:source-type",
@@ -555,8 +555,8 @@
           "value": "optional"
         },
         {
-          "name": "mikebom:requirement-range",
-          "value": ""
+          "name": "mikebom:requirement-ranges",
+          "value": "[\"\"]"
         },
         {
           "name": "mikebom:source-type",
@@ -621,8 +621,8 @@
           "value": "test"
         },
         {
-          "name": "mikebom:requirement-range",
-          "value": ""
+          "name": "mikebom:requirement-ranges",
+          "value": "[\"\"]"
         },
         {
           "name": "mikebom:source-type",
@@ -679,8 +679,8 @@
           "value": "[\"core/pom.xml\"]"
         },
         {
-          "name": "mikebom:requirement-range",
-          "value": ""
+          "name": "mikebom:requirement-ranges",
+          "value": "[\"\"]"
         },
         {
           "name": "mikebom:source-type",
@@ -736,8 +736,8 @@
           "value": "[\"extensions/grapher/pom.xml\"]"
         },
         {
-          "name": "mikebom:requirement-range",
-          "value": "${project.version}"
+          "name": "mikebom:requirement-ranges",
+          "value": "[\"${project.version}\"]"
         },
         {
           "name": "mikebom:source-type",
@@ -793,8 +793,8 @@
           "value": "[\"extensions/struts2/pom.xml\"]"
         },
         {
-          "name": "mikebom:requirement-range",
-          "value": "${project.version}"
+          "name": "mikebom:requirement-ranges",
+          "value": "[\"${project.version}\"]"
         },
         {
           "name": "mikebom:source-type",
@@ -908,8 +908,8 @@
           "value": "[\"extensions/testlib/pom.xml\"]"
         },
         {
-          "name": "mikebom:requirement-range",
-          "value": "${project.version}"
+          "name": "mikebom:requirement-ranges",
+          "value": "[\"${project.version}\"]"
         },
         {
           "name": "mikebom:source-type",
@@ -1022,8 +1022,8 @@
           "value": "test"
         },
         {
-          "name": "mikebom:requirement-range",
-          "value": ""
+          "name": "mikebom:requirement-ranges",
+          "value": "[\"\"]"
         },
         {
           "name": "mikebom:source-type",
@@ -1084,8 +1084,8 @@
           "value": "test"
         },
         {
-          "name": "mikebom:requirement-range",
-          "value": ""
+          "name": "mikebom:requirement-ranges",
+          "value": "[\"\"]"
         },
         {
           "name": "mikebom:source-type",
@@ -1142,8 +1142,8 @@
           "value": "[\"core/pom.xml\"]"
         },
         {
-          "name": "mikebom:requirement-range",
-          "value": ""
+          "name": "mikebom:requirement-ranges",
+          "value": "[\"\"]"
         },
         {
           "name": "mikebom:source-type",
@@ -1203,8 +1203,8 @@
           "value": "test"
         },
         {
-          "name": "mikebom:requirement-range",
-          "value": ""
+          "name": "mikebom:requirement-ranges",
+          "value": "[\"\"]"
         },
         {
           "name": "mikebom:source-type",
@@ -1379,10 +1379,6 @@
         {
           "name": "mikebom:sbom-tier",
           "value": "source"
-        },
-        {
-          "name": "mikebom:requirement-range",
-          "value": ""
         },
         {
           "name": "mikebom:workspace-member",
@@ -1840,8 +1836,8 @@
           "value": "optional"
         },
         {
-          "name": "mikebom:requirement-range",
-          "value": ""
+          "name": "mikebom:requirement-ranges",
+          "value": "[\"\"]"
         },
         {
           "name": "mikebom:source-type",

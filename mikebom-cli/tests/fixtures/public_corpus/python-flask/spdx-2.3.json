@@ -237,7 +237,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"amqp==5.1.1\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"amqp==5.1.1\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -435,7 +435,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"async-timeout==4.0.2\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"async-timeout==4.0.2\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -561,7 +561,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"billiard==3.6.4.0\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"billiard==3.6.4.0\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -627,7 +627,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"blinker==1.6.2\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"blinker==1.6.2\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -813,7 +813,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"celery[redis]==5.2.7\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"celery[redis]==5.2.7\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1179,7 +1179,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"click-didyoumean==0.3.0\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"click-didyoumean==0.3.0\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1245,7 +1245,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"click-plugins==1.1.1\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"click-plugins==1.1.1\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1311,7 +1311,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"click-repl==0.2.0\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"click-repl==0.2.0\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1377,7 +1377,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"click==8.1.3\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"click==8.1.3\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -1923,7 +1923,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"flask==2.3.2\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"flask==2.3.2\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2589,7 +2589,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"itsdangerous==2.1.2\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"itsdangerous==2.1.2\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2715,7 +2715,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"jinja2==3.1.2\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"jinja2==3.1.2\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2841,7 +2841,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"kombu==5.2.4\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"kombu==5.2.4\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -2907,7 +2907,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"markupsafe==2.1.2\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"markupsafe==2.1.2\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -3633,7 +3633,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"prompt-toolkit==3.0.38\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"prompt-toolkit==3.0.38\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4083,7 +4083,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"pytz==2023.3\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"pytz==2023.3\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4209,7 +4209,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"redis==4.5.4\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"redis==4.5.4\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -4455,7 +4455,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"six==1.16.0\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"six==1.16.0\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -6021,7 +6021,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"vine==5.0.0\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"vine==5.0.0\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -6207,7 +6207,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"wcwidth==0.2.6\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"wcwidth==0.2.6\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -6333,7 +6333,7 @@
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
           "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-range\",\"value\":\"werkzeug==2.3.3\"}"
+          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"werkzeug==2.3.3\"]}"
         },
         {
           "annotationDate": "<masked>",
@@ -7348,9 +7348,9 @@
       "spdxElementId": "SPDXRef-DocumentRoot-A7POWLLYKOCQC2JP"
     },
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-A7POWLLYKOCQC2JP",
-      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
-      "spdxElementId": "SPDXRef-Package-RQQY5T4254RIL2OG"
+      "relatedSpdxElement": "SPDXRef-Package-NVRGFWHNTTHKJZDV",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-A7POWLLYKOCQC2JP"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-E4V5BJ6OLPTANZIS",
@@ -7358,9 +7358,9 @@
       "spdxElementId": "SPDXRef-DocumentRoot-A7POWLLYKOCQC2JP"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-NVRGFWHNTTHKJZDV",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-A7POWLLYKOCQC2JP"
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-A7POWLLYKOCQC2JP",
+      "relationshipType": "OPTIONAL_DEPENDENCY_OF",
+      "spdxElementId": "SPDXRef-Package-RQQY5T4254RIL2OG"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-E4V5BJ6OLPTANZIS",
