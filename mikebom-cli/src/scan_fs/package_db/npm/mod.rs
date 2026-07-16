@@ -175,6 +175,14 @@ pub fn read(
             }
         }
 
+        // Milestone 199 US2 — stamp `mikebom:declared-as` on lockfile-
+        // resolved entries whose declaration in the local `package.json`
+        // used the `npm:<actual>@<ver>` alias syntax. Runs regardless of
+        // which tier (A / B / C) produced the entries, since aliases can
+        // reference either a lockfile-resolved component (Tier A) or a
+        // design-tier phantom (Tier C).
+        stamp_alias_declared_as(&project_root, &mut project_entries);
+
         for entry in project_entries {
             let purl_key = entry.purl.as_str().to_string();
             if seen_purls.insert(purl_key) {
@@ -370,6 +378,73 @@ pub fn read(
 /// operator-override (`--root-name X`). The m192/m193 pre-rewrite
 /// re-anchors its outgoing DependsOn edges onto the operator's
 /// synthetic root, keeping the graph connected.
+/// Milestone 199 US2 — stamp `mikebom:declared-as` on lockfile-
+/// resolved entries whose declaration in `project_root/package.json`
+/// used the `"my-alias": "npm:actual-pkg@1.0.0"` alias syntax.
+///
+/// Runs once per project root, iterating the local `package.json` deps
+/// (and devDependencies) for the `npm:` prefix pattern. For each
+/// detected alias, finds the corresponding entry in `entries` by name
+/// (aliased_name) and stamps `mikebom:declared-as: [alias_name]` on it.
+///
+/// If an entry already has `mikebom:declared-as`, appends the new alias
+/// into the existing array + sorts + dedupes (matches m199 data-model E1
+/// validation rules — alias-count is not provenance).
+///
+/// No-op when the package.json isn't found, has no aliases, or when
+/// no entry matches the resolved name.
+fn stamp_alias_declared_as(project_root: &Path, entries: &mut [PackageDbEntry]) {
+    let pkg_json_path = project_root.join("package.json");
+    let Ok(text) = std::fs::read_to_string(&pkg_json_path) else {
+        return;
+    };
+    let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&text) else {
+        return;
+    };
+    for section in ["dependencies", "devDependencies", "optionalDependencies"] {
+        let Some(obj) = parsed.get(section).and_then(|v| v.as_object()) else {
+            continue;
+        };
+        for (dep_name, dep_ver) in obj {
+            let Some(dep_ver_str) = dep_ver.as_str() else {
+                continue;
+            };
+            let Some(alias) = alias_mapping::parse_package_json_alias(dep_name, dep_ver_str)
+            else {
+                continue;
+            };
+            // Find matching entry by resolved name. There may be multiple
+            // entries with the same name (different parent_purls) — stamp
+            // ALL of them to be safe.
+            for e in entries.iter_mut() {
+                if e.name != alias.aliased_name {
+                    continue;
+                }
+                // Only stamp npm entries.
+                if !e.purl.as_str().starts_with("pkg:npm/") {
+                    continue;
+                }
+                let existing = e
+                    .extra_annotations
+                    .get("mikebom:declared-as")
+                    .and_then(|v| v.as_array())
+                    .cloned()
+                    .unwrap_or_default();
+                let mut aliases: std::collections::BTreeSet<String> = existing
+                    .into_iter()
+                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect();
+                aliases.insert(alias.local_name.clone());
+                let sorted: Vec<String> = aliases.into_iter().collect();
+                e.extra_annotations.insert(
+                    "mikebom:declared-as".to_string(),
+                    serde_json::json!(sorted),
+                );
+            }
+        }
+    }
+}
+
 fn synthesize_nameless_nested_mainmods(
     rootfs: &Path,
     entries: &mut Vec<PackageDbEntry>,
@@ -483,7 +558,7 @@ fn synthesize_nameless_nested_mainmods(
             maintainer: None,
             licenses: Vec::new(),
             lifecycle_scope: None,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             buildinfo_status: None,
             evidence_kind: None,
@@ -675,9 +750,15 @@ fn apply_nameless_secondary_umbrella(
             if entry.purl.as_str().starts_with("pkg:npm/")
                 && declared_set.contains(entry.name.as_str())
             {
+                // Milestone 199: always-array shape (FR-001). Design-tier
+                // stamp writes plural annotation with a 1-element array;
+                // the reconciler at emission time either transfers this
+                // to a source-tier survivor (accumulating with other
+                // matches) or leaves the standalone design-tier's
+                // annotation as-is (still plural, still 1-element array).
                 entry.extra_annotations.insert(
-                    "mikebom:source-manifest".to_string(),
-                    serde_json::Value::String(relative_manifest.clone()),
+                    "mikebom:source-manifests".to_string(),
+                    serde_json::json!([relative_manifest.clone()]),
                 );
             }
         }
@@ -1326,16 +1407,21 @@ mod tests {
             .find(|e| e.name == "schemalint")
             .expect("schemalint must be emitted as a component");
 
-        // schemalint carries the source-manifest annotation pointing at the
-        // nameless secondary's relative path.
-        let annot = schemalint
+        // Milestone 199 always-array shape: schemalint carries the
+        // source-manifests annotation pointing at the nameless secondary's
+        // relative path as a JSON array (1-element for single-manifest).
+        let annot_val = schemalint
             .extra_annotations
-            .get("mikebom:source-manifest")
-            .and_then(|v| v.as_str())
-            .expect("schemalint must have mikebom:source-manifest annotation");
+            .get("mikebom:source-manifests")
+            .expect("schemalint must have mikebom:source-manifests annotation");
+        let arr = annot_val
+            .as_array()
+            .expect("mikebom:source-manifests must be a JSON array");
+        assert_eq!(arr.len(), 1, "1-element for single-manifest design-tier");
+        let annot = arr[0].as_str().expect("array entry must be string");
         assert!(
             annot.ends_with("pkg/db/integrationtest/schemalint/package.json"),
-            "source-manifest annotation should point at the nameless secondary; got: {annot}"
+            "source-manifests annotation should point at the nameless secondary; got: {annot}"
         );
 
         // repro-root main-module entry's `.depends` includes BOTH axios
@@ -1397,8 +1483,13 @@ mod tests {
             .find(|e| e.name == "axios")
             .expect("axios must be emitted as a component");
         assert!(
+            !axios.extra_annotations.contains_key("mikebom:source-manifests"),
+            "no anchor → no umbrella → no source-manifests annotation (m199 plural)"
+        );
+        // Also assert m191 singular scalar is gone post-m199.
+        assert!(
             !axios.extra_annotations.contains_key("mikebom:source-manifest"),
-            "no anchor → no umbrella → no source-manifest annotation"
+            "m191 singular scalar must not be written by m199-era npm reader"
         );
     }
 
@@ -1443,7 +1534,7 @@ mod tests {
         assert!(
             !schemalint
                 .extra_annotations
-                .contains_key("mikebom:source-manifest"),
+                .contains_key("mikebom:source-manifests"),
             "named secondary's deps should NOT get the umbrella annotation; got: {:?}",
             schemalint.extra_annotations
         );
@@ -1620,13 +1711,13 @@ mod tests {
     #[test]
     fn nameless_secondary_annotation_contract_naming_stable() {
         // Contract test: the annotation key for nameless-secondary
-        // umbrella deps is `mikebom:source-manifest`. Any accidental
-        // rename should be caught here before it ships and breaks
-        // downstream consumer policy.
-        const ANNOTATION_KEY: &str = "mikebom:source-manifest";
-        assert_eq!(ANNOTATION_KEY, "mikebom:source-manifest");
-        // If you rename this, update consumer-side policy AND any
-        // future parity-catalog row for the annotation slot.
+        // umbrella deps is `mikebom:source-manifests` (m199 always-array).
+        // Any accidental rename should be caught here before it ships and
+        // breaks downstream consumer policy.
+        const ANNOTATION_KEY: &str = "mikebom:source-manifests";
+        assert_eq!(ANNOTATION_KEY, "mikebom:source-manifests");
+        // If you rename this, update consumer-side policy AND the
+        // parity-catalog C20 row.
     }
 
     // --- issue #262: nested-node_modules version-pinning end-to-end ---------

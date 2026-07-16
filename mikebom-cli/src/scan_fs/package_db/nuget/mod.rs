@@ -255,7 +255,7 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
             maintainer: None,
             licenses: Vec::new(),
             lifecycle_scope: acc_entry.lifecycle_scope,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: acc_entry.source_type,
             buildinfo_status: None,
             evidence_kind: None,

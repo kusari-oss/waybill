@@ -117,9 +117,10 @@ end
         assert_eq!(property_value(c, "mikebom:sbom-tier"), Some("design"));
     }
     let phx = find_by_name(&comps, "phoenix").unwrap();
+    // Milestone 199: always-array shape — JSON-array-in-string value.
     assert_eq!(
-        property_value(phx, "mikebom:requirement-range"),
-        Some("~> 1.7"),
+        property_value(phx, "mikebom:requirement-ranges"),
+        Some(r#"["~> 1.7"]"#),
     );
 }
 

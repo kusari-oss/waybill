@@ -104,7 +104,7 @@ impl JdkCollapser {
                     maintainer: None,
                     licenses: vec![],
                     lifecycle_scope: None,
-                    requirement_range: None,
+                    requirement_ranges: Vec::new(),
                     source_type: None,
                     sbom_tier: Some("analyzed".to_string()),
                     shade_relocation: None,

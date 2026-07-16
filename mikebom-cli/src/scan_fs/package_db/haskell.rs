@@ -925,7 +925,7 @@ fn build_freeze_component(entry: &CabalFreezeEntry) -> PackageDbEntry {
                 maintainer: None,
                 licenses: Vec::new(),
                 lifecycle_scope: Some(LifecycleScope::Runtime),
-                requirement_range: None,
+                requirement_ranges: Vec::new(),
                 source_type: Some("hackage-freeze".to_string()),
                 buildinfo_status: None,
                 sbom_tier: Some("source".to_string()),
@@ -963,7 +963,7 @@ fn build_freeze_component(entry: &CabalFreezeEntry) -> PackageDbEntry {
                 maintainer: None,
                 licenses: Vec::new(),
                 lifecycle_scope: Some(LifecycleScope::Runtime),
-                requirement_range: Some(range.clone()),
+                requirement_ranges: vec![range.clone()],
                 source_type: Some("hackage-freeze".to_string()),
                 buildinfo_status: None,
                 sbom_tier: Some("design".to_string()),
@@ -1003,7 +1003,7 @@ fn build_stack_lock_component(entry: &StackLockEntry) -> PackageDbEntry {
         maintainer: None,
         licenses: Vec::new(),
         lifecycle_scope: Some(LifecycleScope::Runtime),
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: Some("hackage-stack-lock".to_string()),
         buildinfo_status: None,
         sbom_tier: Some("source".to_string()),
@@ -1069,7 +1069,7 @@ fn build_snapshot_placeholder(snapshot: &StackSnapshot) -> PackageDbEntry {
         maintainer: None,
         licenses: Vec::new(),
         lifecycle_scope: Some(LifecycleScope::Runtime),
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: Some("hackage-snapshot".to_string()),
         buildinfo_status: None,
         sbom_tier: Some(sbom_tier.to_string()),
@@ -1155,7 +1155,7 @@ fn build_main_module(
         maintainer: None,
         licenses: Vec::new(),
         lifecycle_scope: None,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: Some("hackage-main-module".to_string()),
         buildinfo_status: None,
         sbom_tier: Some(sbom_tier.to_string()),
@@ -1198,9 +1198,12 @@ fn build_design_tier_components(
             Err(_) => continue,
         };
         let mut extra_annotations = base_annotations("hackage-cabal-design");
+        // Milestone 199: always-array shape. Haskell design-tier writes
+        // plural (1-element for its own single-dep case); reconciler may
+        // later accumulate onto a survivor if a source-tier match exists.
         extra_annotations.insert(
-            "mikebom:requirement-range".to_string(),
-            serde_json::Value::String(dep.range.clone().unwrap_or_default()),
+            "mikebom:requirement-ranges".to_string(),
+            serde_json::json!([dep.range.clone().unwrap_or_default()]),
         );
         apply_ghc_stdlib_annotation(&mut extra_annotations, &dep.name);
         out.push(PackageDbEntry {
@@ -1213,7 +1216,7 @@ fn build_design_tier_components(
             maintainer: None,
             licenses: Vec::new(),
             lifecycle_scope: Some(scope),
-            requirement_range: dep.range.clone(),
+            requirement_ranges: dep.range.clone().into_iter().collect(),
             source_type: Some("hackage-cabal-design".to_string()),
             buildinfo_status: None,
             sbom_tier: Some("design".to_string()),

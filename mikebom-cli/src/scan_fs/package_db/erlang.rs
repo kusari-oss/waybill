@@ -1333,7 +1333,7 @@ fn build_main_module_component(
         maintainer: None,
         licenses: Vec::new(),
         lifecycle_scope: None,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: Some("erlang-main-module".to_string()),
         buildinfo_status: None,
         sbom_tier: Some(sbom_tier.to_string()),
@@ -1460,7 +1460,7 @@ fn build_lock_entry_component(
         maintainer: None,
         licenses: Vec::new(),
         lifecycle_scope: Some(LifecycleScope::Runtime),
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: Some(source_type.to_string()),
         buildinfo_status: None,
         sbom_tier: Some("source".to_string()),
@@ -1525,7 +1525,7 @@ fn build_otp_runtime_placeholder(
         maintainer: None,
         licenses: Vec::new(),
         lifecycle_scope: Some(LifecycleScope::Runtime),
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: Some("erlang-otp-runtime".to_string()),
         buildinfo_status: None,
         sbom_tier: Some("source".to_string()),
@@ -1624,7 +1624,7 @@ fn build_design_tier_component(decl: &DeclaredDep, config_dir: &Path) -> Option<
         _ => LifecycleScope::Runtime,
     };
 
-    let requirement_range = decl.constraint.clone();
+    let requirement_ranges: Vec<String> = decl.constraint.clone().into_iter().collect();
     let version_field = match &decl.source_kind {
         DeclaredDepSource::Hex => sanitized,
         _ => "unspecified".to_string(),
@@ -1640,7 +1640,7 @@ fn build_design_tier_component(decl: &DeclaredDep, config_dir: &Path) -> Option<
         maintainer: None,
         licenses: Vec::new(),
         lifecycle_scope: Some(lifecycle_scope),
-        requirement_range,
+        requirement_ranges,
         source_type: Some(source_type.to_string()),
         buildinfo_status: None,
         sbom_tier: Some("design".to_string()),

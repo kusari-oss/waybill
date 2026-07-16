@@ -446,7 +446,7 @@ spdx3_anno!(c16_spdx3, "mikebom:confidence", component);
 spdx3_anno!(c17_spdx3, "mikebom:raw-version", component);
 spdx3_anno!(c18_spdx3, "mikebom:source-files", component);
 spdx3_anno!(c19_spdx3, "mikebom:cpe-candidates", component);
-spdx3_anno!(c20_spdx3, "mikebom:requirement-range", component);
+spdx3_anno!(c20_spdx3, "mikebom:requirement-ranges", component);
 spdx3_anno!(c21_spdx3, "mikebom:generation-context", document);
 spdx3_anno!(c22_spdx3, "mikebom:os-release-missing-fields", document);
 spdx3_anno!(c23_spdx3, "mikebom:trace-integrity-ring-buffer-overflows", document);

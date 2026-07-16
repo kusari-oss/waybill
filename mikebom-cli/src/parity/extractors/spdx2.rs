@@ -373,7 +373,7 @@ spdx23_anno!(c16_spdx23, "mikebom:confidence", component);
 spdx23_anno!(c17_spdx23, "mikebom:raw-version", component);
 spdx23_anno!(c18_spdx23, "mikebom:source-files", component);
 spdx23_anno!(c19_spdx23, "mikebom:cpe-candidates", component);
-spdx23_anno!(c20_spdx23, "mikebom:requirement-range", component);
+spdx23_anno!(c20_spdx23, "mikebom:requirement-ranges", component);
 spdx23_anno!(c21_spdx23, "mikebom:generation-context", document);
 spdx23_anno!(c22_spdx23, "mikebom:os-release-missing-fields", document);
 // C23 actually expands into 4 sub-fields; canary is ring-buffer-overflows.

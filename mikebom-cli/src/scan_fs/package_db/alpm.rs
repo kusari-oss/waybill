@@ -345,7 +345,7 @@ fn stanza_to_entry(
         depends: dep_names,
         maintainer: stanza.packager,
         lifecycle_scope: None,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: Some("alpm".to_string()),
         licenses,
         buildinfo_status: None,

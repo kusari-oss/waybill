@@ -74,7 +74,7 @@ pub(crate) fn parse_pipfile_lock(
                 maintainer: None,
                 licenses: Vec::new(),
                 lifecycle_scope: if is_dev { Some(mikebom_common::resolution::LifecycleScope::Development) } else { Some(mikebom_common::resolution::LifecycleScope::Runtime) },
-                requirement_range: None,
+                requirement_ranges: Vec::new(),
                 source_type: None,
                 buildinfo_status: None,
                 evidence_kind: None,

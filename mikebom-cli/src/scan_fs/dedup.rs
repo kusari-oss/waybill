@@ -318,7 +318,7 @@ mod tests {
                 depends: Vec::new(),
                 maintainer: None,
                 lifecycle_scope: None,
-                requirement_range: None,
+                requirement_ranges: Vec::new(),
                 source_type: None,
                 licenses: Vec::new(),
                 buildinfo_status: None,

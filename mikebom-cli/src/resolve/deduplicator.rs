@@ -112,10 +112,16 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
                 }
                 _ => None,
             };
-            // Prefer an existing requirement_range / source_type /
-            // sbom_tier; only adopt from `other` when best's is None.
-            if best.requirement_range.is_none() {
-                best.requirement_range = other.requirement_range;
+            // Milestone 199: preserve first-wins for `requirement_ranges`
+            // at dedup time. Multi-declaration accumulation happens at the
+            // reconciler layer instead, where the reconciler sees distinct
+            // design-tier components (kept separate because they typically
+            // differ by `parent_purl` when declared under different
+            // workspace-packages). Extending here risks losing the 1:1
+            // range↔manifest correspondence when `evidence.source_file_paths`
+            // dedupes but `requirement_ranges` doesn't.
+            if best.requirement_ranges.is_empty() {
+                best.requirement_ranges = other.requirement_ranges;
             }
             // Capture `other.source_type` once — it drives both
             // the "adopt when None" rule and the "is other a
@@ -538,7 +544,7 @@ mod tests {
             advisories: vec![],
             occurrences: vec![],
             lifecycle_scope: None,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,
             buildinfo_status: None,

@@ -297,7 +297,7 @@ fn parse_stanza(
         maintainer: maintainer.filter(|s| !s.is_empty()),
         licenses,
         lifecycle_scope: None,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: None,
         buildinfo_status: None,
         evidence_kind: None,

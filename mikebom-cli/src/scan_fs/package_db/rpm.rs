@@ -625,7 +625,7 @@ fn assemble_entry(
         maintainer,
         licenses,
         lifecycle_scope: None,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: None,
         buildinfo_status: None,
         sbom_tier: Some("deployed".to_string()),

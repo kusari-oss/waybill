@@ -174,9 +174,10 @@ fn range_constraint_in_freeze_emits_design_tier() {
     let (doc, _) = run_scan(dir.path());
     let text = component_with_name(&doc, "text").expect("text range component");
     assert_eq!(property_value(text, "mikebom:sbom-tier"), Some("design"));
+    // Milestone 199: always-array shape — JSON-array-in-string value.
     assert_eq!(
-        property_value(text, "mikebom:requirement-range"),
-        Some(">=2.0 && <2.1"),
+        property_value(text, "mikebom:requirement-ranges"),
+        Some(r#"[">=2.0 && <2.1"]"#),
     );
 }
 

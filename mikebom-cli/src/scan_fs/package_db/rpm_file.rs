@@ -503,7 +503,7 @@ fn parse_rpm_file(
         maintainer,
         licenses,
         lifecycle_scope: None,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: None,
         sbom_tier: Some("source".to_string()),
         shade_relocation: None,

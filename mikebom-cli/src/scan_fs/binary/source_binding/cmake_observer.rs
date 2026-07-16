@@ -199,7 +199,7 @@ mod tests {
             maintainer: None,
             licenses: vec![],
             lifecycle_scope: None,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,
             shade_relocation: None,

@@ -1076,10 +1076,13 @@ impl CycloneDxBuilder {
                     "value": inclusion.as_str()
                 }));
             }
-            if let Some(ref range) = component.requirement_range {
+            // Milestone 199 — always-array shape. CDX `properties[].value`
+            // is a string; the JSON array is serialized-into-string per
+            // the m197 contracts/annotation-shapes.md wire contract.
+            if !component.requirement_ranges.is_empty() {
                 properties.push(json!({
-                    "name": "mikebom:requirement-range",
-                    "value": range
+                    "name": "mikebom:requirement-ranges",
+                    "value": serde_json::to_string(&component.requirement_ranges).unwrap_or_default(),
                 }));
             }
             if let Some(ref src_type) = component.source_type {
@@ -1547,7 +1550,7 @@ mod tests {
             advisories: vec![],
             occurrences: vec![],
             lifecycle_scope: None,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,
             buildinfo_status: None,

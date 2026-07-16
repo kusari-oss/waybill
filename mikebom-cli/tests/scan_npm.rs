@@ -244,7 +244,7 @@ fn package_json_only_emits_design_tier_and_source_type() {
             c["name"]
         );
         assert!(
-            prop_value(c, "mikebom:requirement-range").is_some(),
+            prop_value(c, "mikebom:requirement-ranges").is_some(),
             "{}: must carry requirement-range",
             c["name"]
         );
@@ -567,5 +567,188 @@ fn scan_npm_private_no_version_skips_main_module() {
     assert!(
         !any_npm_main_module,
         "private + no version: no pkg:npm/private-app main-module should appear in components[]"
+    );
+}
+
+// ============================================================
+// Milestone 199 — always-array shape (US1) + npm-alias
+// resolved-identity matching (US2). Fixtures inline via
+// tempfile per the existing scan_npm.rs convention.
+// ============================================================
+
+/// US1 (m199) — multi-declaration: two workspace packages declare the
+/// same dep with different ranges; the lockfile resolves both to a
+/// single version. The reconciler-survivor MUST carry both ranges +
+/// both manifest paths as JSON arrays (always-array shape per FR-001).
+#[test]
+fn scan_npm_multi_declaration_preserves_all_ranges_m199() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let root = dir.path();
+    std::fs::create_dir_all(root.join("packages/foo")).unwrap();
+    std::fs::create_dir_all(root.join("packages/bar")).unwrap();
+    std::fs::write(
+        root.join("package.json"),
+        r#"{"name":"root","version":"1.0.0","workspaces":["packages/*"]}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("packages/foo/package.json"),
+        r#"{"name":"foo","version":"1.0.0","dependencies":{"commander":"^11.0"}}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("packages/bar/package.json"),
+        r#"{"name":"bar","version":"1.0.0","dependencies":{"commander":"^11.1.0"}}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("package-lock.json"),
+        r#"{
+          "name":"root","version":"1.0.0","lockfileVersion":3,
+          "packages":{
+            "":{"name":"root","version":"1.0.0","workspaces":["packages/*"]},
+            "packages/foo":{"name":"foo","version":"1.0.0","dependencies":{"commander":"^11.0"}},
+            "packages/bar":{"name":"bar","version":"1.0.0","dependencies":{"commander":"^11.1.0"}},
+            "node_modules/commander":{"version":"11.1.0"}
+          }
+        }"#,
+    )
+    .unwrap();
+    let sbom = scan_path(root);
+    let raw = serde_json::to_string(&sbom).unwrap();
+    assert!(
+        !raw.contains(r#""mikebom:requirement-range""#),
+        "m199 SC-002: singular scalar mikebom:requirement-range MUST NOT appear anywhere in emitted SBOM"
+    );
+    assert!(
+        !raw.contains(r#""mikebom:source-manifest""#),
+        "m199 SC-002: singular scalar mikebom:source-manifest MUST NOT appear anywhere in emitted SBOM"
+    );
+}
+
+/// US2 (m199) basic case — npm-alias declaration reconciles by resolved
+/// identity, stamps `mikebom:declared-as: [alias]` on the survivor,
+/// emits NO phantom under the alias name.
+#[test]
+fn scan_npm_alias_reconciles_by_resolved_identity_m199() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let root = dir.path();
+    std::fs::write(
+        root.join("package.json"),
+        r#"{
+          "name":"my-app","version":"1.0.0",
+          "dependencies":{"my-alias":"npm:actual-pkg@1.0.0"}
+        }"#,
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("package-lock.json"),
+        r#"{
+          "name":"my-app","version":"1.0.0","lockfileVersion":3,
+          "packages":{
+            "":{"name":"my-app","version":"1.0.0",
+                 "dependencies":{"my-alias":"npm:actual-pkg@1.0.0"}},
+            "node_modules/my-alias":{"name":"actual-pkg","version":"1.0.0"}
+          }
+        }"#,
+    )
+    .unwrap();
+    let sbom = scan_path(root);
+    let comps = npm_components(&sbom);
+    // No phantom `pkg:npm/my-alias` component.
+    let phantom_count = comps
+        .iter()
+        .filter(|c| c["purl"].as_str().is_some_and(|p| p.starts_with("pkg:npm/my-alias")))
+        .count();
+    assert_eq!(phantom_count, 0, "no phantom pkg:npm/my-alias component (FR-005)");
+    // At least one `actual-pkg` component MUST carry `mikebom:declared-as`.
+    let actual_pkgs: Vec<&&serde_json::Value> = comps
+        .iter()
+        .filter(|c| {
+            c["purl"]
+                .as_str()
+                .is_some_and(|p| p.starts_with("pkg:npm/actual-pkg"))
+        })
+        .collect();
+    assert!(
+        !actual_pkgs.is_empty(),
+        "at least one pkg:npm/actual-pkg component must exist"
+    );
+    let has_declared_as = actual_pkgs
+        .iter()
+        .any(|c| prop_value(c, "mikebom:declared-as").is_some());
+    assert!(
+        has_declared_as,
+        "at least one actual-pkg component MUST carry mikebom:declared-as (FR-006)"
+    );
+}
+
+/// US2 (m199) negative guardrail — a project with NO alias declarations
+/// MUST NOT stamp `mikebom:declared-as` on any component (FR-006).
+#[test]
+fn scan_npm_no_alias_no_declared_as_annotation_m199() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let root = dir.path();
+    std::fs::write(
+        root.join("package.json"),
+        r#"{"name":"plain","version":"1.0.0","dependencies":{"commander":"^11.0.0"}}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("package-lock.json"),
+        r#"{
+          "name":"plain","version":"1.0.0","lockfileVersion":3,
+          "packages":{
+            "":{"name":"plain","version":"1.0.0","dependencies":{"commander":"^11.0.0"}},
+            "node_modules/commander":{"version":"11.0.0"}
+          }
+        }"#,
+    )
+    .unwrap();
+    let sbom = scan_path(root);
+    let raw = serde_json::to_string(&sbom).unwrap();
+    assert!(
+        !raw.contains(r#""mikebom:declared-as""#),
+        "FR-006: no alias declarations → no mikebom:declared-as anywhere"
+    );
+}
+
+/// US2 (m199) scoped-package edge — `"my-alias": "npm:@scope/actual@1.0.0"`
+/// resolves to `@scope/actual` (not just `actual`).
+#[test]
+fn scan_npm_alias_scoped_package_resolved_identity_m199() {
+    let dir = tempfile::tempdir().expect("tempdir");
+    let root = dir.path();
+    std::fs::write(
+        root.join("package.json"),
+        r#"{
+          "name":"my-app","version":"1.0.0",
+          "dependencies":{"my-alias":"npm:@scope/actual@1.0.0"}
+        }"#,
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("package-lock.json"),
+        r#"{
+          "name":"my-app","version":"1.0.0","lockfileVersion":3,
+          "packages":{
+            "":{"name":"my-app","version":"1.0.0",
+                 "dependencies":{"my-alias":"npm:@scope/actual@1.0.0"}},
+            "node_modules/my-alias":{"name":"@scope/actual","version":"1.0.0"}
+          }
+        }"#,
+    )
+    .unwrap();
+    let sbom = scan_path(root);
+    let raw = serde_json::to_string(&sbom).unwrap();
+    // The scoped-package PURL uses URL-encoded `@` in the name segment.
+    assert!(
+        raw.contains(r#""pkg:npm/%40scope/actual"#),
+        "scoped alias must resolve to @scope/actual PURL; got SBOM containing no @scope/actual PURL"
+    );
+    // Ensure no `pkg:npm/my-alias` phantom.
+    assert!(
+        !raw.contains(r#""pkg:npm/my-alias"#),
+        "no phantom pkg:npm/my-alias component"
     );
 }

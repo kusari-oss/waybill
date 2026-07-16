@@ -128,15 +128,16 @@ fn design_tier_no_lockfile_emits_constraints() {
         );
     }
     let http = find_by_name(&dart, "http").expect("http component must exist");
+    // Milestone 199: always-array shape — JSON-array-in-string value.
     assert_eq!(
-        property_value(http, "mikebom:requirement-range"),
-        Some("^1.0.0"),
-        "http design-tier component must preserve constraint string verbatim",
+        property_value(http, "mikebom:requirement-ranges"),
+        Some(r#"["^1.0.0"]"#),
+        "http design-tier component must preserve constraint string verbatim (m199 plural)",
     );
     let provider = find_by_name(&dart, "provider").expect("provider component must exist");
     assert_eq!(
-        property_value(provider, "mikebom:requirement-range"),
-        Some("^6.1.0"),
+        property_value(provider, "mikebom:requirement-ranges"),
+        Some(r#"["^6.1.0"]"#),
     );
 }
 

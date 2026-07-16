@@ -309,7 +309,7 @@ mod tests {
             advisories: vec![],
             occurrences: vec![],
             lifecycle_scope: None,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: tier.map(|s| s.to_string()),
             buildinfo_status: None,

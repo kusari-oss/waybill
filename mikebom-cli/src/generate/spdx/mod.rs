@@ -330,7 +330,7 @@ mod tests {
             advisories,
             occurrences: vec![],
             lifecycle_scope: None,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,
             buildinfo_status: None,

@@ -1812,7 +1812,7 @@ pub(crate) fn emit_shade_relocation_entries(
             maintainer: None,
             licenses,
             lifecycle_scope: None,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             buildinfo_status: None,
             evidence_kind: None,
@@ -2399,20 +2399,20 @@ fn pom_dep_to_entry(
         return None;
     }
     let raw_version = dep.version.clone().unwrap_or_default();
-    let (resolved_version, tier, requirement_range) = match resolve_maven_property(&raw_version, doc) {
-        MavenVersion::Resolved(v) if !v.is_empty() => (v, "source".to_string(), None),
+    let (resolved_version, tier, requirement_ranges): (String, String, Vec<String>) = match resolve_maven_property(&raw_version, doc) {
+        MavenVersion::Resolved(v) if !v.is_empty() => (v, "source".to_string(), Vec::new()),
         MavenVersion::Resolved(_) => {
             // Empty version — demote to design tier.
             (
                 String::from("unknown"),
                 "design".to_string(),
-                Some(raw_version.clone()),
+                vec![raw_version.clone()],
             )
         }
         MavenVersion::Placeholder(raw) => (
             String::from("unknown"),
             "design".to_string(),
-            Some(raw),
+            vec![raw],
         ),
     };
     let purl = build_maven_purl(&dep.group_id, &dep.artifact_id, &resolved_version)?;
@@ -2479,7 +2479,7 @@ fn pom_dep_to_entry(
         // Runtime OR unrecognized. Test/Build classifications win over
         // Optional per Decision 2 (scope-wins-over-optional).
         lifecycle_scope,
-        requirement_range,
+        requirement_ranges,
         // Mark as workspace to distinguish from BFS-inferred transitive
         // coords (source_type = "transitive"). `app` (the scanned
         // project itself) also gets this tag.
@@ -2742,7 +2742,7 @@ fn build_transitive_entry(
         maintainer: None,
         licenses: Vec::new(),
         lifecycle_scope: None,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: Some("transitive".to_string()),
         buildinfo_status: None,
         evidence_kind: None,
@@ -2837,7 +2837,7 @@ fn jar_pom_to_entry(
         maintainer: None,
         licenses,
         lifecycle_scope: None,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: None,
         buildinfo_status: None,
         evidence_kind: None,
@@ -4131,7 +4131,7 @@ fn build_maven_main_module_entry(
         maintainer: None,
         licenses: Vec::new(),
         lifecycle_scope: None,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: None,
         buildinfo_status: None,
         evidence_kind: None,
@@ -6026,8 +6026,8 @@ mod tests {
         let sibling = entries.iter().find(|e| e.name == "sibling").unwrap();
         assert_eq!(sibling.sbom_tier.as_deref(), Some("design"));
         assert_eq!(
-            sibling.requirement_range.as_deref(),
-            Some("${unresolved.version}")
+            sibling.requirement_ranges.as_slice(),
+            &["${unresolved.version}".to_string()],
         );
     }
 

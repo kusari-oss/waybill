@@ -219,7 +219,7 @@ impl PipDistInfoEntry {
             maintainer: supplier,
             licenses,
             lifecycle_scope: None, // venv dist-info doesn't carry a dev/prod marker
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             buildinfo_status: None,
             evidence_kind: None,

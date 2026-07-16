@@ -221,7 +221,7 @@ fn mk_component(purl_str: &str, name: &str, version: &str) -> ResolvedComponent 
         occurrences: Vec::new(),
         lifecycle_scope: None,
         build_inclusion: None,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: None,
         sbom_tier: None,
         buildinfo_status: None,

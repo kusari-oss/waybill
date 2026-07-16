@@ -270,7 +270,7 @@ fn requirements_only_emits_mixed_tier_components() {
     );
     for c in &pypi {
         assert!(
-            prop_value(c, "mikebom:requirement-range").is_some(),
+            prop_value(c, "mikebom:requirement-ranges").is_some(),
             "{}: must carry requirement-range",
             c["name"]
         );

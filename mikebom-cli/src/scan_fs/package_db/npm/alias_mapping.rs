@@ -54,6 +54,13 @@ pub(crate) struct AliasResolution {
 pub(crate) enum AliasEcosystem {
     Pnpm,
     YarnV1,
+    /// Milestone 199 US2 — package.json inline alias declarations of the
+    /// form `"my-alias": "npm:actual-pkg@1.0.0"`. Detected at design-tier
+    /// emission time in `walk.rs::parse_root_package_json` via
+    /// [`parse_package_json_alias`]. Emits a `mikebom:declared-as`
+    /// annotation carrying the alias name so downstream consumers can
+    /// map back to the source-manifest declaration.
+    NpmPackageJson,
 }
 
 #[allow(dead_code)]
@@ -65,6 +72,7 @@ impl AliasEcosystem {
         match self {
             Self::Pnpm => "mikebom:pnpm-alias",
             Self::YarnV1 => "mikebom:yarn-alias",
+            Self::NpmPackageJson => "mikebom:declared-as",
         }
     }
 
@@ -74,8 +82,47 @@ impl AliasEcosystem {
         match self {
             Self::Pnpm => "pnpm",
             Self::YarnV1 => "yarn",
+            Self::NpmPackageJson => "npm-package-json",
         }
     }
+}
+
+/// Milestone 199 US2 — parse a package.json alias declaration.
+///
+/// Grammar: `"<alias>": "npm:<actual>@<version>"` where `<actual>` may
+/// be unscoped (`actual-pkg`) or scoped (`@scope/actual-pkg`). The `@`
+/// separating name from version is the LAST `@` (since scope prefixes
+/// also use `@`), matching npm's own parser semantics.
+///
+/// Returns `Some(AliasResolution)` when `dep_ver_raw` starts with the
+/// `npm:` prefix and parses cleanly. Returns `None` otherwise (regular
+/// dep like `"^1.0.0"`, or malformed alias like `"npm:"`).
+///
+/// Called from `walk.rs::parse_root_package_json` at design-tier emit
+/// time. The caller keys the emitted `PackageDbEntry.purl` on
+/// `aliased_name` (resolved identity) and stamps
+/// `mikebom:declared-as: [local_name]` on the entry.
+pub(crate) fn parse_package_json_alias(
+    dep_name: &str,
+    dep_ver_raw: &str,
+) -> Option<AliasResolution> {
+    let rest = dep_ver_raw.strip_prefix("npm:")?;
+    // Find LAST `@` after any scope prefix. Scope-prefix `@` at index 0
+    // is name-syntax, not version-separator.
+    let search_start = if rest.starts_with('@') { 1 } else { 0 };
+    let at_idx = rest[search_start..].rfind('@').map(|i| i + search_start)?;
+    let aliased_name = rest[..at_idx].to_string();
+    let aliased_version = rest[at_idx + 1..].to_string();
+    if aliased_name.is_empty() {
+        return None;
+    }
+    Some(AliasResolution {
+        local_name: dep_name.to_string(),
+        aliased_name,
+        aliased_version,
+        pnpm_peer_suffix: None,
+        ecosystem: AliasEcosystem::NpmPackageJson,
+    })
 }
 
 /// Per-lockfile alias-resolution table used during the second-pass
@@ -349,6 +396,48 @@ pub(crate) fn rewrite_dep_names(dep_names: &[String], alias_map: &AliasMap) -> V
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    // ─── Milestone 199 US2 — parse_package_json_alias unit tests ───
+    #[test]
+    fn parse_package_json_alias_unscoped() {
+        let r = parse_package_json_alias("my-alias", "npm:actual-pkg@1.0.0")
+            .expect("unscoped alias detected");
+        assert_eq!(r.local_name, "my-alias");
+        assert_eq!(r.aliased_name, "actual-pkg");
+        assert_eq!(r.aliased_version, "1.0.0");
+        assert_eq!(r.ecosystem, AliasEcosystem::NpmPackageJson);
+    }
+
+    #[test]
+    fn parse_package_json_alias_scoped() {
+        let r = parse_package_json_alias("my-alias", "npm:@scope/actual@1.0.0")
+            .expect("scoped alias detected");
+        assert_eq!(r.local_name, "my-alias");
+        assert_eq!(r.aliased_name, "@scope/actual");
+        assert_eq!(r.aliased_version, "1.0.0");
+    }
+
+    #[test]
+    fn parse_package_json_alias_range_not_pinned() {
+        let r = parse_package_json_alias("my-alias", "npm:actual@^1.0")
+            .expect("range-form alias detected");
+        assert_eq!(r.aliased_name, "actual");
+        assert_eq!(r.aliased_version, "^1.0");
+    }
+
+    #[test]
+    fn parse_package_json_alias_returns_none_for_regular_dep() {
+        assert!(parse_package_json_alias("commander", "^11.0.0").is_none());
+        assert!(parse_package_json_alias("commander", "11.1.0").is_none());
+        assert!(parse_package_json_alias("commander", "").is_none());
+    }
+
+    #[test]
+    fn parse_package_json_alias_rejects_malformed() {
+        // Missing version-separator `@`.
+        assert!(parse_package_json_alias("my-alias", "npm:").is_none());
+        assert!(parse_package_json_alias("my-alias", "npm:actual").is_none());
+    }
 
     // ─── T1 (SC-007 a/c/d): pnpm quoted-form alias, scoped aliased-name ───
     #[test]

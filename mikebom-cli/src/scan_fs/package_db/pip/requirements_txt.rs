@@ -94,7 +94,7 @@ impl RequirementsTxtEntry {
             maintainer: None,
             licenses: Vec::new(),
             lifecycle_scope: None,
-            requirement_range: Some(self.range_spec),
+            requirement_ranges: vec![self.range_spec],
             source_type: self.source_type,
             buildinfo_status: None,
             evidence_kind: None,
@@ -482,7 +482,7 @@ urllib3>=2 \\
         };
         let pdb = entry.into_package_db_entry("/req.txt").expect("converts");
         assert_eq!(pdb.sbom_tier.as_deref(), Some("source"));
-        assert_eq!(pdb.requirement_range.as_deref(), Some("requests==2.31.0"));
+        assert_eq!(pdb.requirement_ranges.as_slice(), &["requests==2.31.0".to_string()]);
     }
 
     #[test]

@@ -714,8 +714,9 @@ fn scan_maven_placeholder_version_becomes_design_tier() {
         .expect("sibling component present");
     let tier = prop_value(sibling, "mikebom:sbom-tier").unwrap_or("");
     assert_eq!(tier, "design");
-    let range = prop_value(sibling, "mikebom:requirement-range").unwrap_or("");
-    assert_eq!(range, "${sibling.version}");
+    // Milestone 199: always-array shape — JSON-array-in-string value.
+    let range = prop_value(sibling, "mikebom:requirement-ranges").unwrap_or("");
+    assert_eq!(range, r#"["${sibling.version}"]"#);
 }
 
 // ---------------------------------------------------------------------------

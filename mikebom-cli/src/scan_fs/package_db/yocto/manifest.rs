@@ -175,7 +175,7 @@ fn build_entry(name: &str, arch: &str, version: &str, source_path: &str) -> Opti
         maintainer: None,
         licenses: Vec::new(),
         lifecycle_scope,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: None,
         buildinfo_status: None,
         evidence_kind: None,

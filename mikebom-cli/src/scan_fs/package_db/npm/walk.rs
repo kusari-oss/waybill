@@ -270,7 +270,7 @@ fn walk_node_modules(
             maintainer,
             licenses: license,
             lifecycle_scope: None, // flat walk can't recover dev scope
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             buildinfo_status: None,
             evidence_kind: None,
@@ -389,13 +389,43 @@ pub(crate) fn parse_root_package_json(
 
             // Pre-163 backward-compat path: emit design-tier phantom.
             let source_type = classify_npm_source(&range);
-            let Some(purl) = build_npm_purl(name, "") else {
+            // Milestone 199 US2 — package.json inline alias detection.
+            // `"my-alias": "npm:actual-pkg@1.0.0"` → emit ONE component
+            // keyed on the resolved identity (aliased_name) + stamp
+            // `mikebom:declared-as: [my-alias]`. When no alias is
+            // detected, keep the pre-m199 behavior verbatim.
+            let alias =
+                super::alias_mapping::parse_package_json_alias(name, &range);
+            let (emit_name, emit_range, alias_local_name) = match &alias {
+                Some(a) => (
+                    a.aliased_name.clone(),
+                    // The design-tier component preserves the FULL declared
+                    // value in requirement_ranges (`npm:actual@1.0.0`) so
+                    // downstream consumers can reconstruct the original
+                    // declaration; `mikebom:declared-as` carries the alias
+                    // name for the resolved-identity mapping.
+                    range.clone(),
+                    Some(a.local_name.clone()),
+                ),
+                None => (name.to_string(), range.clone(), None),
+            };
+            let Some(purl) = build_npm_purl(&emit_name, "") else {
                 continue;
             };
+            let mut extra_annotations: std::collections::BTreeMap<
+                String,
+                serde_json::Value,
+            > = Default::default();
+            if let Some(local) = alias_local_name {
+                extra_annotations.insert(
+                    "mikebom:declared-as".to_string(),
+                    serde_json::json!([local]),
+                );
+            }
             out.push(PackageDbEntry {
                 build_inclusion: None,
                 purl,
-                name: name.to_string(),
+                name: emit_name,
                 version: String::new(),
                 arch: None,
                 source_path: source_path.to_string(),
@@ -403,7 +433,7 @@ pub(crate) fn parse_root_package_json(
                 maintainer: None,
                 licenses: Vec::new(),
                 lifecycle_scope: if is_dev { Some(mikebom_common::resolution::LifecycleScope::Development) } else { Some(mikebom_common::resolution::LifecycleScope::Runtime) },
-                requirement_range: Some(range),
+                requirement_ranges: vec![emit_range],
                 source_type,
                 buildinfo_status: None,
                 evidence_kind: None,
@@ -420,7 +450,7 @@ pub(crate) fn parse_root_package_json(
                 hashes: Vec::new(),
                 sbom_tier: Some("design".to_string()),
                 shade_relocation: None,
-                extra_annotations: Default::default(),
+                extra_annotations,
                 binary_role: None,
             });
         }
@@ -626,7 +656,7 @@ pub(crate) fn build_npm_main_module_entry(
         maintainer: None,
         licenses: Vec::new(),
         lifecycle_scope: None,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: None,
         buildinfo_status: None,
         evidence_kind: None,
@@ -716,7 +746,7 @@ mod tests {
         assert_eq!(out.len(), 2);
         for c in &out {
             assert_eq!(c.sbom_tier.as_deref(), Some("design"));
-            assert!(c.requirement_range.is_some());
+            assert!(!c.requirement_ranges.is_empty());
             assert!(c.version.is_empty());
         }
     }
@@ -823,7 +853,7 @@ mod tests {
             maintainer: None,
             licenses: Vec::new(),
             lifecycle_scope: None,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             buildinfo_status: None,
             evidence_kind: None,
@@ -1010,7 +1040,7 @@ mod tests {
         assert_eq!(out.len(), 1, "pre-163 emits one design-tier phantom");
         assert!(out[0].version.is_empty());
         assert_eq!(out[0].sbom_tier.as_deref(), Some("design"));
-        assert_eq!(out[0].requirement_range.as_deref(), Some("^1.0.0"));
+        assert_eq!(out[0].requirement_ranges.as_slice(), &["^1.0.0".to_string()]);
         assert!(acc.resolved_deps.is_empty());
         assert!(acc.unresolved_deps.is_empty());
     }

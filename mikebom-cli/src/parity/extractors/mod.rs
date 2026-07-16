@@ -161,7 +161,7 @@ pub static EXTRACTORS: &[ParityExtractor] = &[
     // honest about the shared emission across formats without
     // tripping on the cosmetic escaping difference.
     ParityExtractor { row_id: "C19", label: "mikebom:cpe-candidates",  cdx: c19_cdx, spdx23: c19_spdx23, spdx3: c19_spdx3, directional: Directionality::PresenceOnly, order_sensitive: false },
-    ParityExtractor { row_id: "C20", label: "mikebom:requirement-range", cdx: c20_cdx, spdx23: c20_spdx23, spdx3: c20_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
+    ParityExtractor { row_id: "C20", label: "mikebom:requirement-ranges", cdx: c20_cdx, spdx23: c20_spdx23, spdx3: c20_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     ParityExtractor { row_id: "C21", label: "mikebom:generation-context", cdx: c21_cdx, spdx23: c21_spdx23, spdx3: c21_spdx3, directional: Directionality::SymmetricEqual, order_sensitive: false },
     // C22: CDX serializes the missing-field set as a comma-joined
     // string property; SPDX serializes as an annotation with a

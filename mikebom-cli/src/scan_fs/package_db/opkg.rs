@@ -333,7 +333,7 @@ fn build_entry(
         maintainer,
         licenses,
         lifecycle_scope,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: None,
         buildinfo_status: None,
         // Milestone 169 T019 (FR-015): opkg installed-DB is the sibling

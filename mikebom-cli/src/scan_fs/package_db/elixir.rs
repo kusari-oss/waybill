@@ -963,7 +963,7 @@ fn emit_main_module(
         maintainer: None,
         licenses: Vec::new(),
         lifecycle_scope: None,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: Some("hex-main-module".to_string()),
         buildinfo_status: None,
         sbom_tier: Some(sbom_tier.to_string()),
@@ -1062,7 +1062,7 @@ fn emit_lockfile_components(
             maintainer: None,
             licenses: Vec::new(),
             lifecycle_scope: Some(lifecycle_scope),
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: Some(source_type_value.to_string()),
             buildinfo_status: None,
             sbom_tier: Some("source".to_string()),
@@ -1172,12 +1172,12 @@ fn emit_design_tier_components(
             );
         }
 
-        let (version_field, requirement_range) = match &decl.source_kind {
+        let (version_field, requirement_ranges) = match &decl.source_kind {
             DeclaredDepSource::Hex => (
                 sanitized.clone(),
-                Some(decl.constraint.clone().unwrap_or_default()),
+                vec![decl.constraint.clone().unwrap_or_default()],
             ),
-            _ => ("unspecified".to_string(), None),
+            _ => ("unspecified".to_string(), Vec::new()),
         };
 
         let lifecycle_scope = if decl.dev_scope {
@@ -1196,7 +1196,7 @@ fn emit_design_tier_components(
             maintainer: None,
             licenses: Vec::new(),
             lifecycle_scope: Some(lifecycle_scope),
-            requirement_range,
+            requirement_ranges,
             source_type: Some(source_type_value.to_string()),
             buildinfo_status: None,
             sbom_tier: Some("design".to_string()),

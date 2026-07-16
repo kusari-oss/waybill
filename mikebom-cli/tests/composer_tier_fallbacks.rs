@@ -144,14 +144,15 @@ fn design_tier_no_lockfile_emits_constraints() {
         );
     }
     let console = find_by_name(&dart, "symfony/console").unwrap();
+    // Milestone 199: always-array shape — JSON-array-in-string value.
     assert_eq!(
-        property_value(console, "mikebom:requirement-range"),
-        Some("^7.0"),
+        property_value(console, "mikebom:requirement-ranges"),
+        Some(r#"["^7.0"]"#),
     );
     let monolog = find_by_name(&dart, "monolog/monolog").unwrap();
     assert_eq!(
-        property_value(monolog, "mikebom:requirement-range"),
-        Some("^3.5"),
+        property_value(monolog, "mikebom:requirement-ranges"),
+        Some(r#"["^3.5"]"#),
     );
 }
 

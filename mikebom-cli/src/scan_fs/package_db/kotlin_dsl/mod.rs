@@ -253,7 +253,7 @@ fn synthesize_workspace_root(s: &SettingsScript) -> PackageDbEntry {
         maintainer: None,
         licenses: Vec::new(),
         lifecycle_scope: None,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: None,
         buildinfo_status: None,
         evidence_kind: None,

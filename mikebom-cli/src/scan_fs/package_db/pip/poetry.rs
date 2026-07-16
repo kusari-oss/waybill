@@ -148,7 +148,7 @@ pub(crate) fn parse_poetry_lock(
             maintainer: None,
             licenses: Vec::new(),
             lifecycle_scope,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             // Lockfile entries are pre-build declarations of what WILL
             // be installed, not what IS installed. Tier = "source" per

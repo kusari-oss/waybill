@@ -94,11 +94,12 @@ pub struct PackageDbEntry {
     /// distinction (dpkg, apk, venv `.dist-info`,
     /// `requirements.txt`).
     pub lifecycle_scope: Option<mikebom_common::resolution::LifecycleScope>,
-    /// Original unresolved requirement specification for fallback-tier
+    /// Original unresolved requirement specifications for fallback-tier
     /// entries (`requirements.txt` lines, root `package.json`
-    /// dependencies). `None` for authoritative sources.
-    /// Drives the `mikebom:requirement-range` property at serialization.
-    pub requirement_range: Option<String>,
+    /// dependencies). Empty `Vec` for authoritative sources.
+    /// Milestone 199: always-array shape. Drives the
+    /// `mikebom:requirement-ranges` property at serialization.
+    pub requirement_ranges: Vec<String>,
     /// Source-kind marker for non-registry dependencies: `"local"`
     /// (file:), `"git"` (git+...), `"url"` (http(s)://...). `None`
     /// for normal registry-sourced components. Drives the
@@ -2129,7 +2130,7 @@ Architecture: arm64
             maintainer: None,
             licenses: Vec::new(),
             lifecycle_scope: None,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             buildinfo_status: None,
             evidence_kind: None,
@@ -3008,7 +3009,7 @@ Architecture: arm64
             maintainer: None,
             licenses: Vec::new(),
             lifecycle_scope: None,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             buildinfo_status: None,
             evidence_kind: evidence_kind.map(str::to_string),

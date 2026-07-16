@@ -329,9 +329,9 @@ fn push_component_fields(
     if c.cpes.len() > 1 {
         push(out, "mikebom:cpe-candidates", json!(c.cpes));
     }
-    // C20 requirement-range
-    if let Some(ref v) = c.requirement_range {
-        push(out, "mikebom:requirement-range", json!(v));
+    // C20 requirement-ranges (milestone 199 — always-array shape).
+    if !c.requirement_ranges.is_empty() {
+        push(out, "mikebom:requirement-ranges", json!(c.requirement_ranges));
     }
 
     // D1 evidence.identity — unconditional.
@@ -765,7 +765,7 @@ mod tests {
             advisories: vec![],
             occurrences: vec![],
             lifecycle_scope,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,
             buildinfo_status: None,

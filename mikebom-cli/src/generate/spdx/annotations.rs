@@ -314,9 +314,10 @@ pub fn annotate_component(
     if c.cpes.len() > 1 {
         push(&mut out, "mikebom:cpe-candidates", json!(c.cpes));
     }
-    // C20 requirement-range
-    if let Some(ref v) = c.requirement_range {
-        push(&mut out, "mikebom:requirement-range", json!(v));
+    // C20 requirement-ranges (milestone 199 — always-array shape;
+    // supersedes the m191 singular `mikebom:requirement-range` scalar).
+    if !c.requirement_ranges.is_empty() {
+        push(&mut out, "mikebom:requirement-ranges", json!(c.requirement_ranges));
     }
 
     // D1 evidence.identity — technique + confidence. Emit
@@ -991,7 +992,7 @@ mod tests {
             advisories: vec![],
             occurrences: vec![],
             lifecycle_scope: scope,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,
             buildinfo_status: None,

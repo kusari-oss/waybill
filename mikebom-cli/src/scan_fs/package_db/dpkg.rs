@@ -309,7 +309,7 @@ fn parse_stanza_inner(
         // registry (never local/git/url).
         licenses: Vec::new(),
         lifecycle_scope: None,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type: None,
         buildinfo_status: None,
         evidence_kind: None,

@@ -468,7 +468,7 @@ pub(super) fn c19_cdx(doc: &Value) -> BTreeSet<String> {
         .collect()
 }
 
-cdx_anno!(c20_cdx, "mikebom:requirement-range", component);
+cdx_anno!(c20_cdx, "mikebom:requirement-ranges", component);
 
 // C21-C23 (document-level).
 cdx_anno!(c21_cdx, "mikebom:generation-context", document);

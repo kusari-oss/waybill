@@ -225,7 +225,7 @@ fn project_to_package_db_entry(
         maintainer: None,
         licenses: Vec::new(),
         lifecycle_scope: None,
-        requirement_range: None,
+        requirement_ranges: Vec::new(),
         source_type,
         buildinfo_status: None,
         evidence_kind: None,

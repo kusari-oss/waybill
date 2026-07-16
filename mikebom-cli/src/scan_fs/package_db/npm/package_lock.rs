@@ -346,7 +346,7 @@ pub(crate) fn parse_package_lock(
                 .into_iter()
                 .collect(),
             lifecycle_scope,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             buildinfo_status: None,
             evidence_kind: None,

@@ -73,13 +73,18 @@ pub struct ResolvedComponent {
     /// has a native excluded-scope construct).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub build_inclusion: Option<BuildInclusion>,
-    /// Original unresolved requirement specification for fallback-tier
+    /// Original unresolved requirement specifications for fallback-tier
     /// entries (`requirements.txt` range specs, root `package.json`
-    /// dependency declarations without a lockfile). The string is
-    /// preserved verbatim so consumers can see what the original
-    /// declaration was. Drives the `mikebom:requirement-range` property.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub requirement_range: Option<String>,
+    /// dependency declarations without a lockfile). Strings preserved
+    /// verbatim so consumers can see the original declaration(s).
+    /// Milestone 199: always-array shape — a single-declaration case
+    /// yields a 1-element `Vec`; multi-manifest cases (m191 reconciler
+    /// survivors) yield N-element `Vec` sorted lex-ascending 1:1 with
+    /// `mikebom:source-manifests`. Drives the `mikebom:requirement-ranges`
+    /// property; the singular `mikebom:requirement-range` was removed
+    /// in m199 in favor of uniform array shape.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub requirement_ranges: Vec<String>,
     /// Source-kind marker for non-registry dependencies: `"local"`
     /// (`file:` URIs), `"git"` (`git+...`), `"url"` (`http(s)://...`).
     /// `None` for normal registry-sourced components. Drives the
@@ -556,7 +561,7 @@ mod tests {
             occurrences: vec![],
             lifecycle_scope: None,
             build_inclusion: None,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,
             buildinfo_status: None,
@@ -677,7 +682,7 @@ mod tests {
             occurrences: vec![],
             lifecycle_scope: None,
             build_inclusion: None,
-            requirement_range: None,
+            requirement_ranges: Vec::new(),
             source_type: None,
             sbom_tier: None,
             buildinfo_status: None,

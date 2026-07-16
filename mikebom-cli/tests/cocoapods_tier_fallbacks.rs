@@ -114,9 +114,10 @@ fn design_tier_podfile_only_emits_constraints() {
         );
     }
     let af = find_by_name(&comps, "AFNetworking").unwrap();
+    // Milestone 199: always-array shape — JSON-array-in-string value.
     assert_eq!(
-        property_value(af, "mikebom:requirement-range"),
-        Some("~> 4.0"),
+        property_value(af, "mikebom:requirement-ranges"),
+        Some(r#"["~> 4.0"]"#),
     );
 }
 
