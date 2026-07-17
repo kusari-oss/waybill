@@ -21,8 +21,8 @@ description: "Task list for m207 — fix --no-deps-dev flag UX (aggregate disabl
 
 **Purpose**: Verify plan.md / data-model.md line-numbers still match the current tree + establish baseline for SC-006 pre-PR delta.
 
-- [ ] T001 Verify pre-m207 baseline pre-PR is green: run `./scripts/pre-pr.sh` on branch `207-no-deps-dev-aggregate` HEAD (post-checkout, pre-implementation) and capture wall-clock time to `/tmp/m207-prepr-baseline.txt` for SC-006 delta measurement.
-- [ ] T002 [P] Recon: run quickstart.md `Empirical re-verification at implement time` block. Concretely:
+- [X] T001 Verify pre-m207 baseline pre-PR is green: run `./scripts/pre-pr.sh` on branch `207-no-deps-dev-aggregate` HEAD (post-checkout, pre-implementation) and capture wall-clock time to `/tmp/m207-prepr-baseline.txt` for SC-006 delta measurement.
+- [X] T002 [P] Recon: run quickstart.md `Empirical re-verification at implement time` block. Concretely:
   - `grep -n "pub no_deps_dev:\|pub no_deps_dev_graph:\|fn resolve_enrich_sources\|deps_dev_graph: !args.no_deps_dev_graph" mikebom-cli/src/cli/scan_cmd.rs | head` — expect `pub no_deps_dev:` at line 599, `pub no_deps_dev_graph:` at 636, `fn resolve_enrich_sources` at 1631, `deps_dev_graph: !args.no_deps_dev_graph,` at 1642.
   - Record output to `/tmp/m207-recon.txt`.
 
@@ -30,8 +30,8 @@ description: "Task list for m207 — fix --no-deps-dev flag UX (aggregate disabl
 
 **Purpose**: Land the entire behavioral change. Both US1 (aggregate) and US2 (fine-grained) are satisfied by the same three edits: (a) new flag, (b) semantic change in `resolve_enrich_sources`, (c) doc-comment updates + migration INFO log.
 
-- [ ] T003 Add `pub no_deps_dev_license: bool` field to `ScanArgs` in `mikebom-cli/src/cli/scan_cmd.rs` adjacent to the existing `pub no_deps_dev: bool` (line 599) per data-model E1. Include the full doc-comment from data-model E1 verbatim (mentions m207 (#596), migration path from pre-m207 `--no-deps-dev`, composition with `--offline` and `--enrich-sources`).
-- [ ] T004 Modify `resolve_enrich_sources` in `mikebom-cli/src/cli/scan_cmd.rs:1631-1645` per data-model E2. In the default-mode branch (lines 1638-1644), change:
+- [X] T003 Add `pub no_deps_dev_license: bool` field to `ScanArgs` in `mikebom-cli/src/cli/scan_cmd.rs` adjacent to the existing `pub no_deps_dev: bool` (line 599) per data-model E1. Include the full doc-comment from data-model E1 verbatim (mentions m207 (#596), migration path from pre-m207 `--no-deps-dev`, composition with `--offline` and `--enrich-sources`).
+- [X] T004 Modify `resolve_enrich_sources` in `mikebom-cli/src/cli/scan_cmd.rs:1631-1645` per data-model E2. In the default-mode branch (lines 1638-1644), change:
   ```rust
   deps_dev: !args.no_deps_dev,
   clearly_defined: !args.no_clearly_defined,
@@ -44,8 +44,8 @@ description: "Task list for m207 — fix --no-deps-dev flag UX (aggregate disabl
   deps_dev_graph: !args.no_deps_dev && !args.no_deps_dev_graph,
   ```
   Add doc-comment explaining the m207 aggregate semantic. Allowlist-mode branch (lines 1632-1637) UNCHANGED per FR-004.
-- [ ] T005 [P] Update `--no-deps-dev` flag doc-comment at `mikebom-cli/src/cli/scan_cmd.rs:587-593` per data-model E4. Post-m207 text explains aggregate semantic + migration path (`--no-deps-dev-license` for pre-m207 behavior) + composition with `--offline` and `--enrich-sources`. Also update `--no-deps-dev-graph` doc-comment at line 625-630 to add the companion note about `--no-deps-dev-license`.
-- [ ] T006 [P] Add FR-006 migration INFO log per data-model E3. Insert immediately after `let enrich_cfg = resolve_enrich_sources(&args);` (around scan_cmd.rs:2714):
+- [X] T005 [P] Update `--no-deps-dev` flag doc-comment at `mikebom-cli/src/cli/scan_cmd.rs:587-593` per data-model E4. Post-m207 text explains aggregate semantic + migration path (`--no-deps-dev-license` for pre-m207 behavior) + composition with `--offline` and `--enrich-sources`. Also update `--no-deps-dev-graph` doc-comment at line 625-630 to add the companion note about `--no-deps-dev-license`.
+- [X] T006 [P] Add FR-006 migration INFO log per data-model E3. Insert immediately after `let enrich_cfg = resolve_enrich_sources(&args);` (around scan_cmd.rs:2714):
   ```rust
   if args.no_deps_dev && !args.no_deps_dev_license && !args.no_deps_dev_graph {
       tracing::info!(
@@ -56,8 +56,8 @@ description: "Task list for m207 — fix --no-deps-dev flag UX (aggregate disabl
   }
   ```
   Fires ONCE per scan.
-- [ ] T007 Post-T003/T004/T005/T006 sanity: run `CARGO_TARGET_DIR=/tmp/m207-c cargo +stable check --workspace --tests 2>&1 | tail -20`. Expected clean compile.
-- [ ] T008 Add unit tests to `mikebom-cli/src/cli/scan_cmd.rs::tests` covering the `resolve_enrich_sources` truth table (data-model E2). All are pure-function tests constructing synthetic `ScanArgs` structs:
+- [X] T007 Post-T003/T004/T005/T006 sanity: run `CARGO_TARGET_DIR=/tmp/m207-c cargo +stable check --workspace --tests 2>&1 | tail -20`. Expected clean compile.
+- [X] T008 Add unit tests to `mikebom-cli/src/cli/scan_cmd.rs::tests` covering the `resolve_enrich_sources` truth table (data-model E2). All are pure-function tests constructing synthetic `ScanArgs` structs:
   - `resolve_enrich_no_flags_default_all_on_m207` — no flags → `EnrichConfig { deps_dev: true, clearly_defined: true, deps_dev_graph: true }`.
   - `resolve_enrich_no_deps_dev_disables_both_paths_m207` — `no_deps_dev = true` → `EnrichConfig { deps_dev: false, clearly_defined: true, deps_dev_graph: false }` (**US1 acceptance**).
   - `resolve_enrich_no_deps_dev_license_disables_license_only_m207` — `no_deps_dev_license = true` → `EnrichConfig { deps_dev: false, clearly_defined: true, deps_dev_graph: true }` (**US2 acceptance**).
@@ -67,7 +67,7 @@ description: "Task list for m207 — fix --no-deps-dev flag UX (aggregate disabl
   - `resolve_enrich_sources_allowlist_overrides_no_deps_dev_m207` — `enrich_sources = [DepsDev]` AND `no_deps_dev = true` → `EnrichConfig { deps_dev: true, ... }` (allowlist wins per FR-004).
   - `resolve_enrich_no_clearly_defined_unaffected_by_no_deps_dev_m207` — `no_deps_dev = true` alone leaves `clearly_defined: true` (regression guard).
   - **F4 remediation** `no_deps_dev_help_mentions_enrich_sources_m207` — invoke `<ScanArgsForTest as clap::CommandFactory>::command().debug_assert()` (or fetch the `--no-deps-dev` arg's `long_help`/`help` via clap's introspection API) and assert the help text contains the substring `"enrich-sources"`. Pins FR-008 — operators reading `mikebom sbom scan --help` see the composition hint next to the flag they're setting.
-- [ ] T009 **F6 remediation** — locate the existing default-flags-off test via `grep -n "!parsed.inner.no_deps_dev\b" mikebom-cli/src/cli/scan_cmd.rs` (avoids brittle hard-coded line numbers per m199-m206 lesson). Extend the found assertion to ALSO assert `!parsed.inner.no_deps_dev_license` (new default: OFF).
+- [X] T009 **F6 remediation** — locate the existing default-flags-off test via `grep -n "!parsed.inner.no_deps_dev\b" mikebom-cli/src/cli/scan_cmd.rs` (avoids brittle hard-coded line numbers per m199-m206 lesson). Extend the found assertion to ALSO assert `!parsed.inner.no_deps_dev_license` (new default: OFF).
 
 ## Phase 3: User Story 1 — Aggregate disable "just works" (Priority: P1)
 
@@ -75,17 +75,17 @@ description: "Task list for m207 — fix --no-deps-dev flag UX (aggregate disabl
 
 **Independent Test Criterion**: SC-001. Scan any project with `--no-deps-dev`; assert `grep deps.dev` on the emitted SBOM returns zero component-provenance hits.
 
-- [ ] T010 [US1] **F1+F2 remediation** — network-content assertion under `--offline` is untestable (both pre-m207 and post-m207 produce identical output because `--offline` short-circuits every deps.dev enrichment path regardless of `--no-deps-dev`). Reduce T010 to a scan-succeeds smoke test in a NEW file `mikebom-cli/tests/scan_no_deps_dev.rs`. SC-001 content verification (reporter's exact invocation → zero deps.dev-provenance components) moves to the PR-body manual reproducer per quickstart.md Reproducer 1 (network-required). Task body:
+- [X] T010 [US1] **F1+F2 remediation** — network-content assertion under `--offline` is untestable (both pre-m207 and post-m207 produce identical output because `--offline` short-circuits every deps.dev enrichment path regardless of `--no-deps-dev`). Reduce T010 to a scan-succeeds smoke test in a NEW file `mikebom-cli/tests/scan_no_deps_dev.rs`. SC-001 content verification (reporter's exact invocation → zero deps.dev-provenance components) moves to the PR-body manual reproducer per quickstart.md Reproducer 1 (network-required). Task body:
   - Add test `us1_no_deps_dev_scan_succeeds_and_fires_migration_log_m207` to `mikebom-cli/tests/scan_no_deps_dev.rs`.
   - Scan any pre-existing non-image fixture (`mikebom-cli/tests/fixtures/public_corpus/npm-express`) with `--offline --no-deps-dev`.
   - Assertions:
     - (a) Scan exits 0 (FR-007 no new failure modes).
     - (b) stderr contains the substring `"m207 aggregate semantic"` — FR-006 migration signal fires. (T011 pins the same assertion in a dedicated stderr-only test; T010 asserts it alongside the scan-succeeds guarantee to ensure the log is emitted from a real end-to-end scan, not just a synthesized invocation.)
   - Behavioral proof of the semantic change lives in T008's truth table (unit tests) + the manual quickstart Reproducer 1 verification captured in T016's PR body checklist.
-- [ ] T011 [P] [US1] Add stderr-assertion helper test `fr006_migration_info_log_fires_when_aggregate_flag_used_alone_m207` in `mikebom-cli/tests/scan_no_deps_dev.rs`:
+- [X] T011 [P] [US1] Add stderr-assertion helper test `fr006_migration_info_log_fires_when_aggregate_flag_used_alone_m207` in `mikebom-cli/tests/scan_no_deps_dev.rs`:
   - Scan a non-image `--path` fixture (e.g., npm-express from public_corpus) with `--offline --no-deps-dev`.
   - Assert stderr contains `"m207 aggregate semantic"` exactly once.
-- [ ] T012 [P] [US1] Add negative test `fr006_migration_info_log_suppressed_when_fine_grained_flag_also_set_m207` in `mikebom-cli/tests/scan_no_deps_dev.rs`:
+- [X] T012 [P] [US1] Add negative test `fr006_migration_info_log_suppressed_when_fine_grained_flag_also_set_m207` in `mikebom-cli/tests/scan_no_deps_dev.rs`:
   - Scan with `--offline --no-deps-dev --no-deps-dev-license` (aggregate PLUS fine-grained escape hatch).
   - Assert stderr does NOT contain `"m207 aggregate semantic"` (fine-grained-aware operators aren't spammed with the migration signal per data-model E3 rationale).
 
@@ -95,7 +95,7 @@ description: "Task list for m207 — fix --no-deps-dev flag UX (aggregate disabl
 
 **Independent Test Criterion**: Passing `--no-deps-dev-license` alone leaves the dep-graph enrichment active; passing `--no-deps-dev-graph` alone leaves the license enrichment active. Verified via T008's truth-table unit tests (`_disables_license_only` and `_disables_graph_only`).
 
-- [ ] T013 [US2] **F3 remediation** — network-free stderr-only assertion (same pattern as T011/T012). Add test `us2_no_deps_dev_license_alone_does_not_fire_aggregate_migration_log_m207` to `mikebom-cli/tests/scan_no_deps_dev.rs`:
+- [X] T013 [US2] **F3 remediation** — network-free stderr-only assertion (same pattern as T011/T012). Add test `us2_no_deps_dev_license_alone_does_not_fire_aggregate_migration_log_m207` to `mikebom-cli/tests/scan_no_deps_dev.rs`:
   - Scan any pre-existing non-image fixture (`mikebom-cli/tests/fixtures/public_corpus/npm-express`) with `--offline --no-deps-dev-license` (aggregate flag NOT set; only fine-grained license flag).
   - Assertions:
     - (a) Scan exits 0.
@@ -106,7 +106,7 @@ description: "Task list for m207 — fix --no-deps-dev flag UX (aggregate disabl
 
 **Purpose**: Verification, PR body.
 
-- [ ] T014 [P] Run every existing enrichment-related test to confirm zero regression: `cargo +stable test --manifest-path mikebom-cli/Cargo.toml --bin mikebom -- cli::scan_cmd::tests --no-fail-fast 2>&1 | tail -5` (expected `ok. N passed; 0 failed`). Verify T008's 8 new tests are included in the count.
+- [X] T014 [P] Run every existing enrichment-related test to confirm zero regression: `cargo +stable test --manifest-path mikebom-cli/Cargo.toml --bin mikebom -- cli::scan_cmd::tests --no-fail-fast 2>&1 | tail -5` (expected `ok. N passed; 0 failed`). Verify T008's 8 new tests are included in the count.
 - [ ] T015 Run `./scripts/pre-pr.sh` post-implementation. Capture wall-clock time; compute delta vs T001 baseline; MUST be ≤ 5s per SC-006. On failure, enumerate every `^---- .+ stdout ----` line per `feedback_prepr_gate_bails_on_first_failure` memory.
 - [ ] T016 Draft PR body with `Closes #596` per SC-007. Include:
   - (a) 1-paragraph summary: root cause (name-vs-semantic mismatch), fix (1-line semantic change at scan_cmd.rs:1642 + new `--no-deps-dev-license` fine-grained flag + FR-006 migration INFO log).
