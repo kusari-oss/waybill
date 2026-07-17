@@ -45,6 +45,14 @@ const FIXTURE_SUBPATH: &str = "cargo";
 // that were previously scope-filtered as dev-tier now surface as
 // runtime edges. Verified deterministic across 3 consecutive runs.
 // See FR-002 / FR-003 in specs/200-*/spec.md.
+//
+// Milestone 205 (#593): count stays 321. The audit fixture is a
+// truncated clap workspace (no src/ dirs) — `cargo metadata` fails
+// with "can't find library" errors → m205's FR-004 fallback fires →
+// pre-m205 name-only optional classification preserved for this
+// scenario. Real clap workspaces with source trees would activate the
+// feature-resolved path and MAY show +1 edge for one feature-activated
+// optional dep; the audit fixture doesn't exercise that.
 const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 321;
 
 /// Representative edges that mikebom **actually emits** today — pinning

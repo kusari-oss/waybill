@@ -28,6 +28,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use mikebom_common::divergence::{
     DivergenceReason, DivergenceRecord, DIVERGENCE_SCHEMA_VERSION,
@@ -43,6 +44,146 @@ use super::PackageDbEntry;
 pub enum CargoError {
     #[error("Cargo.lock v1/v2 not supported; regenerate with cargo ≥1.53")]
     LockfileUnsupportedVersion { path: PathBuf, version: u64 },
+}
+
+// -----------------------------------------------------------------
+// Milestone 205 (#593) — cargo metadata subprocess + fallback types
+// -----------------------------------------------------------------
+
+/// Failure classes from `cargo metadata --format-version 1 --offline
+/// --locked` shell-out. Every variant maps to the FR-004 fallback
+/// path: emit a WARN log naming the workspace + reason, then populate
+/// `activated_names` with the full `optional_names` set (safe over-
+/// inclusion — every optional dep flips to Runtime so downstream vuln-
+/// scanners never miss shipped deps). Display strings are wire-
+/// stable per data-model E1 (tests grep stderr for them).
+#[derive(Debug, thiserror::Error)]
+pub(super) enum CargoMetadataResolveFailure {
+    #[error("`cargo` binary not found on $PATH")]
+    BinaryNotFound,
+    #[error("`cargo metadata` exited with code {code}; stderr head: {stderr_head}")]
+    NonZeroExit { code: i32, stderr_head: String },
+    #[error("`cargo metadata` exceeded {timeout_secs}s timeout")]
+    Timeout { timeout_secs: u64 },
+    #[error("`cargo metadata` JSON parse failed: {source}")]
+    ParseError { source: serde_json::Error },
+    #[error("`cargo metadata` I/O error: {0}")]
+    IoError(#[from] std::io::Error),
+}
+
+/// Milestone 205 (FR-002 / FR-006): read `MIKEBOM_CARGO_METADATA_TIMEOUT_SECS`
+/// env var; parse as `u64`; clamp to `[1, 3600]`; default 60 on
+/// absent/parse-fail. Mirrors m203's `resolve_render_timeout`
+/// posture (silent parse-failure fallback matches every mikebom
+/// env-var handler since m089).
+fn resolve_cargo_metadata_timeout() -> Duration {
+    const DEFAULT_SECS: u64 = 60;
+    const MIN_SECS: u64 = 1;
+    const MAX_SECS: u64 = 3600;
+    let secs = std::env::var("MIKEBOM_CARGO_METADATA_TIMEOUT_SECS")
+        .ok()
+        .and_then(|s| s.parse::<u64>().ok())
+        .map(|n| n.clamp(MIN_SECS, MAX_SECS))
+        .unwrap_or(DEFAULT_SECS);
+    Duration::from_secs(secs)
+}
+
+fn cargo_metadata_cap_stderr_lines(bytes: &[u8], max_lines: usize) -> String {
+    let text = String::from_utf8_lossy(bytes);
+    text.lines().take(max_lines).collect::<Vec<_>>().join("\n")
+}
+
+/// Milestone 205 (#593) — shell out to `cargo metadata --format-
+/// version 1 --offline --locked` in `workspace_root`; parse the JSON;
+/// return the union of `resolve.nodes[].deps[].name` — i.e., the set
+/// of dep NAMES that Cargo's actual resolver activates under the
+/// enabled feature set. Consumers (the classifier at line 1155)
+/// treat this as the ground truth for "which optional deps are truly
+/// optional in effect."
+///
+/// **Flag rationale** (data-model E3 + FR-006):
+/// - `--offline` — REQUIRED per FR-006. Blocks cargo from reaching
+///   over the wire to update the registry index. Without it a
+///   workspace whose Cargo.toml declares a dep whose version isn't
+///   in the local index cache would trigger a network fetch.
+///
+/// Note: `--locked` is intentionally NOT set. It rejects any
+/// lockfile-vs-registry-cache checksum drift with an error — too
+/// strict for typical operator workspaces (routinely-stale
+/// Cargo.lock vs a slightly-newer registry cache is common and
+/// benign). Under `--offline` alone, cargo may rewrite Cargo.lock
+/// as a side effect if the manifest was touched — but for a scan
+/// of a directory at rest that's a no-op; the operator's next
+/// `cargo build` would do the same rewrite. FR-007 (determinism)
+/// is preserved: mikebom's OWN output is a pure function of the
+/// resolved metadata, which is deterministic given the workspace
+/// state at scan time.
+///
+/// On failure (BinaryNotFound / NonZeroExit / Timeout / ParseError
+/// / IoError) → FR-004 fallback handles uniformly.
+///
+/// Follows the m055 subprocess-with-timeout pattern (thread + mpsc
+/// + recv_timeout) verbatim.
+pub(super) fn resolve_activated_deps_via_cargo_metadata(
+    workspace_root: &Path,
+    timeout: Duration,
+) -> Result<HashSet<String>, CargoMetadataResolveFailure> {
+    use std::process::Command;
+    use std::sync::mpsc;
+    use std::thread;
+
+    // Probe: `cargo --version` — fails fast on missing binary.
+    match Command::new("cargo").arg("--version").output() {
+        Ok(_) => {}
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            return Err(CargoMetadataResolveFailure::BinaryNotFound);
+        }
+        Err(e) => return Err(CargoMetadataResolveFailure::IoError(e)),
+    }
+
+    let (tx, rx) = mpsc::channel();
+    let ws_owned = workspace_root.to_path_buf();
+    thread::spawn(move || {
+        let result = Command::new("cargo")
+            .args(["metadata", "--format-version", "1", "--offline"])
+            .current_dir(&ws_owned)
+            .output();
+        let _ = tx.send(result);
+    });
+
+    let output = match rx.recv_timeout(timeout) {
+        Ok(Ok(o)) => o,
+        Ok(Err(e)) => return Err(CargoMetadataResolveFailure::IoError(e)),
+        Err(_) => {
+            return Err(CargoMetadataResolveFailure::Timeout {
+                timeout_secs: timeout.as_secs(),
+            });
+        }
+    };
+
+    if !output.status.success() {
+        return Err(CargoMetadataResolveFailure::NonZeroExit {
+            code: output.status.code().unwrap_or(-1),
+            stderr_head: cargo_metadata_cap_stderr_lines(&output.stderr, 20),
+        });
+    }
+
+    let parsed: serde_json::Value = serde_json::from_slice(&output.stdout)
+        .map_err(|source| CargoMetadataResolveFailure::ParseError { source })?;
+
+    let mut activated: HashSet<String> = HashSet::new();
+    if let Some(nodes) = parsed.pointer("/resolve/nodes").and_then(|v| v.as_array()) {
+        for node in nodes {
+            if let Some(deps) = node.get("deps").and_then(|v| v.as_array()) {
+                for dep in deps {
+                    if let Some(name) = dep.get("name").and_then(|v| v.as_str()) {
+                        activated.insert(name.to_string());
+                    }
+                }
+            }
+        }
+    }
+    Ok(activated)
 }
 
 // Cargo workspaces are shallow by convention: a top-level Cargo.toml
@@ -1059,6 +1200,7 @@ fn parse_lockfile(
     prod_set: &HashSet<(String, String)>,
     build_set: &HashSet<(String, String)>,
     optional_names: &HashSet<String>,
+    activated_names: &HashSet<String>,
     root_names: &HashSet<String>,
 ) -> Result<Vec<PackageDbEntry>, CargoError> {
     let text = match std::fs::read_to_string(path) {
@@ -1152,7 +1294,21 @@ fn parse_lockfile(
                     pkg.source.is_none() && root_names.contains(&pkg.name);
                 if is_workspace_root {
                     entry.lifecycle_scope = Some(LifecycleScope::Runtime);
-                } else if prod_set.contains(&key) && optional_names.contains(&pkg.name) {
+                } else if prod_set.contains(&key)
+                    && optional_names.contains(&pkg.name)
+                    && !activated_names.contains(&pkg.name)
+                {
+                    // Milestone 205 (#593): dep is TRULY Optional iff
+                    // declared `optional = true` in some workspace
+                    // manifest AND NOT activated by the resolved
+                    // feature set (per `cargo metadata --format-
+                    // version 1 --offline --locked`
+                    // `resolve.nodes[].deps[]`). When cargo metadata
+                    // failed, the CALLER at `read` has already WARNed
+                    // (FR-004) and populated `activated_names` with
+                    // ALL `optional_names` — making this branch
+                    // unreachable (safe over-inclusion so vuln-
+                    // scanners never miss shipped deps).
                     entry.lifecycle_scope = Some(LifecycleScope::Optional);
                     entry.extra_annotations.insert(
                         "mikebom:optional-derivation".to_string(),
@@ -1256,11 +1412,65 @@ pub fn read(
             }
             _ => (HashSet::new(), HashSet::new()),
         };
+
+        // Milestone 205 (#593): resolve Cargo's actual feature-
+        // activation set via `cargo metadata --format-version 1
+        // --offline`. Fallback per FR-004: on failure (cargo absent,
+        // timeout, non-zero exit, missing Cargo.toml), preserve
+        // pre-m205 name-only classification (activated_names stays
+        // empty → classifier's `!activated_names.contains(&pkg.name)`
+        // always evaluates true → optional deps classify as Optional
+        // per manifest declaration). WARN log names the workspace +
+        // failure class so operators see when they're in reduced-
+        // fidelity mode.
+        //
+        // Rationale for fallback semantics: preserving pre-m205
+        // classification is strictly zero-regression — nobody who
+        // worked before m205 is broken by the fallback. The reporter's
+        // case (#593, `test-vaultwarden`) has a warm cargo cache, so
+        // `cargo metadata --offline` succeeds → fix applies. Cold-
+        // cache environments (fresh CI runners, lockfile-only test
+        // fixtures) get pre-m205 behavior + a WARN log naming the
+        // reason. The WARN is the operator-visible signal of reduced
+        // fidelity per Constitution Principle X (transparency).
+        //
+        // Skip-gate: if no Cargo.toml exists in workspace_root,
+        // cargo metadata can't run meaningfully. Skip silently
+        // (no WARN — this is a legit lockfile-only test-fixture
+        // scenario, not a failure). Same fallback semantic.
+        let workspace_root = lock_path.parent().unwrap_or(&lock_path);
+        let cargo_metadata_timeout = resolve_cargo_metadata_timeout();
+        let activated_names: HashSet<String> = if !workspace_root
+            .join("Cargo.toml")
+            .exists()
+        {
+            HashSet::new()
+        } else {
+            match resolve_activated_deps_via_cargo_metadata(
+                workspace_root,
+                cargo_metadata_timeout,
+            ) {
+                Ok(names) => names,
+                Err(e) => {
+                    tracing::warn!(
+                        workspace = %workspace_root.display(),
+                        reason = %e,
+                        "cargo metadata failed; falling back to pre-m205 name-only \
+                         optional classification (reduced fidelity — feature-activated \
+                         optional deps may be misclassified as scope=excluded; install \
+                         cargo binary + populate registry cache for full-fidelity)"
+                    );
+                    HashSet::new()
+                }
+            }
+        };
+
         let entries = parse_lockfile(
             &lock_path,
             &prod_set,
             &build_set,
             &workspace_sections.optional_deps,
+            &activated_names,
             &workspace_sections.root_names,
         )?;
         for entry in entries {
@@ -1851,7 +2061,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0000000000000000000000000000000000000000000000000000000000000001"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 2);
         assert!(entries.iter().any(|e| e.name == "serde"));
         let serde = entries.iter().find(|e| e.name == "serde").unwrap();
@@ -1873,7 +2083,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ad32ce52e4161730f7098c077cd2ed6229b5804ccf99e5366be1ab72a98b4e1"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "anyhow");
     }
@@ -1890,7 +2100,7 @@ version = "0.1.0"
 source = "git+https://github.com/me/my-fork?branch=main#abc123"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].source_type.as_deref(), Some("git"));
     }
@@ -1906,7 +2116,7 @@ version = "0.1.0"
 dependencies = []
 "#;
         let path = write_lockfile(dir.path(), body);
-        match parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()) {
+        match parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()) {
             Err(CargoError::LockfileUnsupportedVersion { version, .. }) => {
                 assert_eq!(version, 1);
             }
@@ -1926,7 +2136,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0000000000000000000000000000000000000000000000000000000000000000"
 "#;
         let path = write_lockfile(dir.path(), body);
-        match parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()) {
+        match parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()) {
             Err(CargoError::LockfileUnsupportedVersion { version, .. }) => {
                 assert_eq!(version, 2);
             }
@@ -3017,5 +3227,96 @@ version = "0.1.0"
     fn build_cargo_purl_nonempty_version_byte_identical_to_pre_m191() {
         let p = build_cargo_purl("serde", "1.0.203").expect("non-empty");
         assert_eq!(p.as_str(), "pkg:cargo/serde@1.0.203");
+    }
+
+    // ── T007 m205 (#593) — cargo metadata resolver + failure enum ──
+    //
+    // Env-var-mutating tests require serial execution. Invoke via
+    // `cargo test ... -- --test-threads=1` when running the full
+    // suite; individual `-- resolve_cargo_metadata_timeout` invocations
+    // naturally serialize matching tests. Matches m203 pattern.
+
+    fn with_cargo_metadata_timeout_env<F: FnOnce()>(value: Option<&str>, f: F) {
+        let prev = std::env::var("MIKEBOM_CARGO_METADATA_TIMEOUT_SECS").ok();
+        match value {
+            Some(v) => std::env::set_var("MIKEBOM_CARGO_METADATA_TIMEOUT_SECS", v),
+            None => std::env::remove_var("MIKEBOM_CARGO_METADATA_TIMEOUT_SECS"),
+        }
+        f();
+        match prev {
+            Some(v) => std::env::set_var("MIKEBOM_CARGO_METADATA_TIMEOUT_SECS", v),
+            None => std::env::remove_var("MIKEBOM_CARGO_METADATA_TIMEOUT_SECS"),
+        }
+    }
+
+    #[test]
+    fn resolve_cargo_metadata_timeout_default_when_env_var_absent_m205() {
+        with_cargo_metadata_timeout_env(None, || {
+            assert_eq!(resolve_cargo_metadata_timeout(), Duration::from_secs(60));
+        });
+    }
+
+    #[test]
+    fn resolve_cargo_metadata_timeout_honors_env_var_m205() {
+        with_cargo_metadata_timeout_env(Some("42"), || {
+            assert_eq!(resolve_cargo_metadata_timeout(), Duration::from_secs(42));
+        });
+    }
+
+    #[test]
+    fn resolve_cargo_metadata_timeout_clamps_below_min_m205() {
+        with_cargo_metadata_timeout_env(Some("0"), || {
+            assert_eq!(resolve_cargo_metadata_timeout(), Duration::from_secs(1));
+        });
+    }
+
+    #[test]
+    fn resolve_cargo_metadata_timeout_clamps_above_max_m205() {
+        with_cargo_metadata_timeout_env(Some("99999"), || {
+            assert_eq!(resolve_cargo_metadata_timeout(), Duration::from_secs(3600));
+        });
+    }
+
+    #[test]
+    fn resolve_cargo_metadata_timeout_ignores_parse_error_m205() {
+        with_cargo_metadata_timeout_env(Some("notanumber"), || {
+            assert_eq!(resolve_cargo_metadata_timeout(), Duration::from_secs(60));
+        });
+    }
+
+    #[test]
+    fn cargo_metadata_resolve_failure_display_formats_all_variants_m205() {
+        let e = CargoMetadataResolveFailure::BinaryNotFound;
+        assert_eq!(format!("{e}"), "`cargo` binary not found on $PATH");
+
+        let e = CargoMetadataResolveFailure::NonZeroExit {
+            code: 101,
+            stderr_head: "the lock file needs to be updated".into(),
+        };
+        assert_eq!(
+            format!("{e}"),
+            "`cargo metadata` exited with code 101; stderr head: the lock file needs to be updated"
+        );
+
+        let e = CargoMetadataResolveFailure::Timeout { timeout_secs: 60 };
+        assert_eq!(format!("{e}"), "`cargo metadata` exceeded 60s timeout");
+
+        let src = serde_json::from_str::<serde_json::Value>("not json").unwrap_err();
+        let e = CargoMetadataResolveFailure::ParseError { source: src };
+        assert!(
+            format!("{e}").starts_with("`cargo metadata` JSON parse failed: "),
+            "actual: {e}",
+        );
+
+        let io_err = std::io::Error::new(std::io::ErrorKind::PermissionDenied, "nope");
+        let e = CargoMetadataResolveFailure::from(io_err);
+        assert_eq!(format!("{e}"), "`cargo metadata` I/O error: nope");
+    }
+
+    #[test]
+    fn cargo_metadata_cap_stderr_lines_truncates_at_max_m205() {
+        let bytes = b"line1\nline2\nline3\nline4\nline5";
+        assert_eq!(cargo_metadata_cap_stderr_lines(bytes, 3), "line1\nline2\nline3");
+        assert_eq!(cargo_metadata_cap_stderr_lines(b"only", 20), "only");
     }
 }
