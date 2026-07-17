@@ -135,3 +135,82 @@ fn scan_cargo_workspace_root_wins_root_election_m200() {
         "metadata.component.purl must be a pkg:cargo/app@... variant; got {meta_purl:?}"
     );
 }
+
+// ============================================================
+// Milestone 201 (issue #587) — root-selector disambiguation via
+// `mikebom:is-cargo-workspace-toplevel` positive-identifier signal.
+// The extended fixture (sub/package.json + sub/index.js) introduces
+// a 3rd main-module candidate (npm) alongside the existing cargo-
+// root `app` + cargo-member `helper`. Post-m201 the RepoRoot ladder
+// picks `app` as metadata.component via the positive-identifier
+// short-circuit, sidestepping the shared-Cargo.lock-path collision
+// that fools the filesystem-based is_workspace_root check.
+// ============================================================
+
+/// FR-002 + SC-001 + SC-002: with 3 main-module candidates (cargo-root,
+/// cargo-member, npm-nested), the RepoRoot ladder correctly picks the
+/// cargo workspace-toplevel `app` as `metadata.component`, AND reports
+/// the root-selection heuristic as `"repo-root"` (was `"ecosystem-
+/// priority"` pre-m201). The heuristic assertion is the LOAD-BEARING
+/// part: `app` happens to win the alphabetical tie-break even pre-m201
+/// in this fixture (a-p-p < h-e-l-p-e-r < s-u-b), so checking meta_name
+/// alone doesn't prove the fix. Only heuristic name proves the RepoRoot
+/// ladder branch fired (post-m201) rather than falling through to
+/// ecosystem-priority (pre-m201).
+#[test]
+fn scan_cargo_workspace_root_wins_multi_ecosystem_m201() {
+    let sbom = scan_path(&fixture_root());
+    let meta_name = sbom["metadata"]["component"]["name"].as_str();
+    let meta_purl = sbom["metadata"]["component"]["purl"].as_str();
+    assert_eq!(
+        meta_name,
+        Some("app"),
+        "multi-main-module root election must pick 'app' (cargo workspace toplevel), \
+         not 'helper' (cargo member) or 'sub' (nested npm); got name={meta_name:?}"
+    );
+    assert!(
+        meta_purl.is_some_and(|p| p.starts_with("pkg:cargo/app@")),
+        "metadata.component.purl must be a pkg:cargo/app@... variant; got {meta_purl:?}"
+    );
+    // LOAD-BEARING: verify the RepoRoot ladder actually fired (post-m201
+    // positive-identifier signal), NOT ecosystem-priority (pre-m201
+    // fallback that happened to also pick 'app' alphabetically in this
+    // fixture layout). The heuristic annotation lives at
+    // metadata.properties[] as a JSON-envelope-in-string carrying
+    // {"heuristic": "...", "confidence": N} per the m127 wire contract.
+    let heuristic_annot = sbom["metadata"]["properties"]
+        .as_array()
+        .and_then(|arr| {
+            arr.iter()
+                .find(|p| p["name"].as_str() == Some("mikebom:root-selection-heuristic"))
+        })
+        .and_then(|p| p["value"].as_str())
+        .expect("root-selection-heuristic annotation must be present on metadata");
+    let envelope: serde_json::Value =
+        serde_json::from_str(heuristic_annot).expect("valid JSON envelope");
+    let heuristic_name = envelope["value"]["heuristic"].as_str();
+    // Heuristic name is `"repo-root-main-module"` per
+    // `RootSelectionHeuristic::RepoRoot::name()` at root_selector.rs:77
+    // (confidence 0.95). Pre-m201 was `"ecosystem-priority"` conf 0.7.
+    assert_eq!(
+        heuristic_name,
+        Some("repo-root-main-module"),
+        "post-m201 the multi-main-module root election MUST use the RepoRoot ladder \
+         (heuristic=\"repo-root-main-module\") — was \"ecosystem-priority\" pre-m201. \
+         Full annotation envelope: {heuristic_annot}"
+    );
+}
+
+/// FR-007: the new internal-only annotation `mikebom:is-cargo-workspace-toplevel`
+/// MUST NOT appear anywhere in emitted SBOM output (filtered by extended
+/// `is_internal_emission_key` at root_selector.rs).
+#[test]
+fn scan_cargo_new_internal_annotation_is_filtered_from_output_m201() {
+    let sbom = scan_path(&fixture_root());
+    let raw = serde_json::to_string(&sbom).unwrap();
+    assert!(
+        !raw.contains("mikebom:is-cargo-workspace-toplevel"),
+        "internal-only annotation MUST NOT leak into emitted SBOM (FR-007); \
+         found in serialized output"
+    );
+}

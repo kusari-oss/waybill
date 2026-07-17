@@ -378,6 +378,23 @@ fn build_cargo_main_module_entry(
         serde_json::Value::String("main-module".to_string()),
     );
 
+    // Milestone 201 (FR-001, closes #587): stamp the workspace-toplevel
+    // positive-identifier annotation when this manifest has BOTH a
+    // [package] block (already checked above via package.get("name"))
+    // AND a [workspace] block. Consumed downstream by scan_fs/mod.rs's
+    // is_workspace_root stamping to distinguish workspace-ROOT crates
+    // from workspace-MEMBER crates — cargo m064's augment-in-place
+    // makes both types share the workspace Cargo.lock path in
+    // evidence.source_file_paths, defeating the filesystem-based
+    // check. Internal-emission-only: filtered from CDX/SPDX output
+    // via is_internal_emission_key at root_selector.rs.
+    if parsed.get("workspace").is_some() {
+        extra_annotations.insert(
+            "mikebom:is-cargo-workspace-toplevel".to_string(),
+            serde_json::Value::Bool(true),
+        );
+    }
+
     // Milestone 116 — produces-binaries extraction per FR-005 (Cargo).
     // Three sources per Cargo's implicit-binary convention:
     //   (a) Explicit `[[bin]]` table entries.
@@ -2606,6 +2623,85 @@ version = "0.1.0-alpha.11"
         // Pre-release and build-metadata SemVer parts pass through PURL
         // segment encoding intact (`-` and `.` are unreserved).
         assert!(entry.purl.as_str().contains("0.1.0-alpha.11"));
+    }
+
+    // ---- Milestone 201 (issue #587) — `mikebom:is-cargo-workspace-toplevel` ----
+
+    /// FR-001: cargo m064 stamps the workspace-toplevel positive-
+    /// identifier annotation when the manifest has BOTH [package] AND
+    /// [workspace] blocks. This is the signal the m201 fix propagates
+    /// through to scan_fs/mod.rs's is_workspace_root stamping.
+    #[test]
+    fn build_cargo_main_module_entry_stamps_workspace_toplevel_annotation_m201() {
+        let tmp = tempfile::tempdir().unwrap();
+        let manifest = write_manifest(
+            tmp.path(),
+            r#"
+[package]
+name = "app"
+version = "0.1.0"
+
+[workspace]
+members = ["helper"]
+"#,
+        );
+        let ctx = WorkspaceContext::default();
+        let entry = build_cargo_main_module_entry(&manifest, &ctx).unwrap();
+        let annot = entry
+            .extra_annotations
+            .get("mikebom:is-cargo-workspace-toplevel")
+            .and_then(|v| v.as_bool());
+        assert_eq!(annot, Some(true));
+    }
+
+    /// FR-001 corollary: workspace MEMBER Cargo.tomls (only `[package]`,
+    /// no `[workspace]`) MUST NOT get the annotation. This is what
+    /// distinguishes root from member post-m201.
+    #[test]
+    fn build_cargo_main_module_entry_omits_workspace_toplevel_for_member_crate_m201() {
+        let tmp = tempfile::tempdir().unwrap();
+        let manifest = write_manifest(
+            tmp.path(),
+            r#"
+[package]
+name = "helper"
+version = "0.1.0"
+"#,
+        );
+        let ctx = WorkspaceContext::default();
+        let entry = build_cargo_main_module_entry(&manifest, &ctx).unwrap();
+        assert!(
+            !entry
+                .extra_annotations
+                .contains_key("mikebom:is-cargo-workspace-toplevel"),
+            "workspace-member Cargo.toml MUST NOT get the toplevel annotation"
+        );
+    }
+
+    /// FR-004 preservation: standalone single-crate cargo projects (no
+    /// `[workspace]` block) MUST NOT get the annotation. Their root
+    /// election falls through to a different m127 ladder branch that
+    /// still picks the single crate as metadata.component.
+    #[test]
+    fn build_cargo_main_module_entry_omits_workspace_toplevel_for_single_crate_m201() {
+        let tmp = tempfile::tempdir().unwrap();
+        let manifest = write_manifest(
+            tmp.path(),
+            r#"
+[package]
+name = "single"
+version = "0.1.0"
+"#,
+        );
+        let ctx = WorkspaceContext::default();
+        let entry = build_cargo_main_module_entry(&manifest, &ctx).unwrap();
+        assert!(
+            !entry
+                .extra_annotations
+                .contains_key("mikebom:is-cargo-workspace-toplevel"),
+            "single-crate cargo project MUST NOT get the toplevel annotation \
+             (would over-stamp if [workspace] absence isn't checked)"
+        );
     }
 
     fn make_main_module_entry(

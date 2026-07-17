@@ -922,23 +922,79 @@ fn tag_main_modules_with_workspace_root(
         let manifest_path: Option<String> = from_evidence.or(from_annotation);
         let manifest_path = manifest_path.as_deref();
 
-        let is_workspace_root = match (manifest_path, canonical_root.as_ref()) {
-            (Some(p), Some(canon_root)) => {
-                // Milestone 133 US2.1 (FR-012): post-normalization, manifest
-                // paths in `evidence.source_file_paths` are rootfs-relative
-                // (e.g. `sub/go.mod`) rather than absolute. Re-join against
-                // `scan_root` so `canonicalize` resolves the right
-                // filesystem location. Absolute paths (legacy / annotation-
-                // sourced) join correctly because `Path::join` returns the
-                // absolute when given one.
-                let abs_path = scan_root.join(p);
-                let manifest_parent = abs_path.parent();
-                manifest_parent
-                    .and_then(|parent| std::fs::canonicalize(parent).ok())
-                    .map(|canon_manifest_parent| canon_manifest_parent == *canon_root)
-                    .unwrap_or(false)
+        // Milestone 201 (FR-001, closes #587): positive-identifier
+        // short-circuit for cargo workspace-toplevel crates. When the
+        // cargo reader stamped `mikebom:is-cargo-workspace-toplevel:
+        // true` (its Cargo.toml has both [package] AND [workspace]
+        // blocks), skip the filesystem-based check below — which
+        // cannot distinguish workspace-ROOT from workspace-MEMBER
+        // cargo crates because m064's augment-in-place makes both
+        // types share the workspace Cargo.lock path in
+        // evidence.source_file_paths. Non-cargo main-modules (and
+        // cargo single-crate + workspace-member crates that lack the
+        // annotation) fall through to the existing filesystem-based
+        // logic unchanged, preserving FR-003 + FR-004.
+        // Milestone 201 (FR-001, closes #587): positive-identifier
+        // short-circuit for cargo workspace-toplevel crates + negative
+        // guard for cargo workspace-members.
+        //
+        // Why both branches: cargo m064's augment-in-place populates
+        // `evidence.source_file_paths` with the SHARED workspace
+        // `Cargo.lock` path for EVERY cargo main-module in the scan
+        // (root + members). The filesystem-based parent-dir check
+        // below therefore returns TRUE for both root AND members —
+        // the collision that broke root-election pre-m201.
+        //
+        // Two-part fix:
+        //   (a) Cargo TOPLEVEL: annotation stamped by cargo reader →
+        //       short-circuit is_workspace_root = true.
+        //   (b) Cargo MEMBER: annotation absent + PURL is pkg:cargo/
+        //       → short-circuit is_workspace_root = false (workspace
+        //       members are never workspace roots, no matter what the
+        //       shared-lockfile filesystem check says).
+        //
+        // Non-cargo main-modules skip both short-circuits and fall
+        // through to the existing filesystem check (preserving FR-003
+        // + FR-004 for npm/python/maven/etc.). Cargo single-crate
+        // projects (no [workspace] block, so no annotation, but their
+        // manifest IS at rootfs) get is_workspace_root = false from
+        // branch (b) — but they typically only produce ONE main-
+        // module, so the m127 RepoRoot ladder's `workspace_root_modules
+        // .len() == 1` check falls through to the LCP or synthetic-
+        // placeholder branch, which selects the single-crate main-
+        // module anyway. Verified via existing single-crate integration
+        // tests (FR-004 regression guard).
+        let is_cargo_workspace_toplevel = c
+            .extra_annotations
+            .get("mikebom:is-cargo-workspace-toplevel")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+        let is_cargo_purl = c.purl.as_str().starts_with("pkg:cargo/");
+        let is_workspace_root = if is_cargo_workspace_toplevel {
+            true
+        } else if is_cargo_purl {
+            // Cargo main-module without the toplevel annotation = workspace
+            // member. Never a workspace root; skip filesystem check.
+            false
+        } else {
+            match (manifest_path, canonical_root.as_ref()) {
+                (Some(p), Some(canon_root)) => {
+                    // Milestone 133 US2.1 (FR-012): post-normalization, manifest
+                    // paths in `evidence.source_file_paths` are rootfs-relative
+                    // (e.g. `sub/go.mod`) rather than absolute. Re-join against
+                    // `scan_root` so `canonicalize` resolves the right
+                    // filesystem location. Absolute paths (legacy / annotation-
+                    // sourced) join correctly because `Path::join` returns the
+                    // absolute when given one.
+                    let abs_path = scan_root.join(p);
+                    let manifest_parent = abs_path.parent();
+                    manifest_parent
+                        .and_then(|parent| std::fs::canonicalize(parent).ok())
+                        .map(|canon_manifest_parent| canon_manifest_parent == *canon_root)
+                        .unwrap_or(false)
+                }
+                _ => false,
             }
-            _ => false,
         };
 
         c.extra_annotations.insert(
@@ -2283,5 +2339,89 @@ Architecture: amd64
         let mut comps = vec![comp];
         tag_components_with_layer_digest(&mut comps, Some(&map));
         assert!(!comps[0].extra_annotations.contains_key("mikebom:layer-digest"));
+    }
+
+    // ---- Milestone 201 (issue #587) — is_workspace_root disambiguation ----
+
+    /// FR-003: non-cargo main-modules retain the existing filesystem-based
+    /// is_workspace_root stamping. The m201 positive-identifier short-
+    /// circuit fires ONLY for cargo mainmods with the toplevel annotation;
+    /// non-cargo mainmods (npm, python, etc.) fall through unchanged.
+    /// This test constructs a synthetic npm main-module with manifest_path
+    /// pointing at rootfs (no is-cargo-workspace-toplevel annotation),
+    /// invokes tag_main_modules_with_workspace_root, and asserts the
+    /// resulting is_workspace_root == true — proving the filesystem-based
+    /// fallback path continues to fire correctly for non-cargo cases.
+    #[test]
+    fn tag_main_modules_with_workspace_root_falls_back_to_filesystem_for_non_cargo_m201() {
+        use mikebom_common::resolution::{
+            EnrichmentProvenance, ResolutionEvidence, ResolutionTechnique, ResolvedComponent,
+        };
+        use mikebom_common::types::purl::Purl;
+        use std::collections::BTreeMap;
+
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        // Create a package.json at rootfs so canonicalize resolves.
+        std::fs::write(root.join("package.json"), b"{}").unwrap();
+
+        let mut extra: BTreeMap<String, serde_json::Value> = BTreeMap::new();
+        extra.insert(
+            "mikebom:component-role".to_string(),
+            serde_json::Value::String("main-module".to_string()),
+        );
+        // No mikebom:is-cargo-workspace-toplevel annotation (npm case).
+        let component = ResolvedComponent {
+            purl: Purl::new("pkg:npm/foo@1.0.0").unwrap(),
+            name: "foo".to_string(),
+            version: "1.0.0".to_string(),
+            supplier: None,
+            licenses: Vec::new(),
+            concluded_licenses: Vec::new(),
+            cpes: Vec::new(),
+            advisories: Vec::new(),
+            evidence: ResolutionEvidence {
+                technique: ResolutionTechnique::PackageDatabase,
+                confidence: 0.85,
+                deps_dev_match: None,
+                source_connection_ids: Vec::new(),
+                source_file_paths: vec!["package.json".to_string()],
+            },
+            hashes: Vec::new(),
+            occurrences: Vec::new(),
+            lifecycle_scope: None,
+            build_inclusion: None,
+            requirement_ranges: Vec::new(),
+            source_type: None,
+            sbom_tier: None,
+            buildinfo_status: None,
+            evidence_kind: None,
+            binary_class: None,
+            binary_stripped: None,
+            linkage_kind: None,
+            detected_go: None,
+            confidence: None,
+            binary_packed: None,
+            npm_role: None,
+            raw_version: None,
+            parent_purl: None,
+            co_owned_by: None,
+            shade_relocation: None,
+            external_references: Vec::new(),
+            extra_annotations: extra,
+            binary_role: None,
+        };
+        let mut components = vec![component];
+        tag_main_modules_with_workspace_root(&mut components, root);
+        let stamped = components[0]
+            .extra_annotations
+            .get("mikebom:is-workspace-root")
+            .and_then(|v| v.as_bool());
+        assert_eq!(
+            stamped,
+            Some(true),
+            "non-cargo main-module at rootfs MUST still get is_workspace_root=true via filesystem fallback (FR-003)"
+        );
+        let _ = EnrichmentProvenance { source: String::new(), data_type: String::new() };
     }
 }
