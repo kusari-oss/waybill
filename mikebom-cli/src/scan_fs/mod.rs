@@ -130,6 +130,16 @@ pub struct ScanResult {
     /// `GOWORK=off` (C112 annotation absent per SC-003).
     pub go_workspace_mode:
         Option<crate::scan_fs::package_db::golang::gowork::WorkspaceMode>,
+    /// Milestone 204 (#554): document-scope Helm image-extraction-mode
+    /// signal driving the C123 `mikebom:image-extraction-completeness`
+    /// annotation. `None` when no helm reader ran during the scan
+    /// (byte-identity per FR-004). `Some(Unrendered)` → wire value
+    /// `"partial"`. `Some(Rendered)` → wire value `"full"`. Set by the
+    /// helm reader at `package_db/helm.rs::read` (m188 landed the
+    /// diagnostic; m203 wired the `Rendered` branch). Mirrored from
+    /// `scan_result.diagnostics.helm_extraction_mode` below.
+    pub helm_extraction_mode:
+        Option<crate::scan_fs::package_db::HelmExtractionMode>,
     /// M3 — Maven scan-subject coord identified during the JAR walk,
     /// promoted from the `PackageDbEntry` layer to drive CDX
     /// `metadata.component`. `None` when no Maven fat-jar matched
@@ -310,6 +320,11 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // C112 doc-scope annotation.
     let mut go_workspace_mode:
         Option<package_db::golang::gowork::WorkspaceMode> = None;
+    // Milestone 204 (#554): doc-scope helm-extraction-mode signal for
+    // the C123 `mikebom:image-extraction-completeness` annotation.
+    // `None` on non-Helm scans (byte-identity per FR-004).
+    let mut helm_extraction_mode:
+        Option<package_db::HelmExtractionMode> = None;
     let mut scan_target_coord: Option<package_db::maven::ScanTargetCoord> = None;
     // Milestone 134 — divergent-PURL collision records collected by
     // per-ecosystem dedup. Routed into ScanResult.divergence_records
@@ -350,6 +365,10 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // ScanDiagnostics into the local for the ScanResult return.
         go_cache_warming = scan_result.diagnostics.go_cache_warming.clone();
         go_workspace_mode = scan_result.diagnostics.go_workspace_mode.clone();
+        // Milestone 204 (#554): mirror helm-extraction-mode from
+        // ScanDiagnostics into the local for the ScanResult return.
+        // `HelmExtractionMode` is `Copy` — no clone needed.
+        helm_extraction_mode = scan_result.diagnostics.helm_extraction_mode;
         scan_target_coord = scan_result.scan_target_coord.clone();
         divergence_records = scan_result.diagnostics.divergence_records.clone();
         let mut db_entries = scan_result.entries;
@@ -862,6 +881,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         go_transitive_fallback_count,
         go_cache_warming,
         go_workspace_mode,
+        helm_extraction_mode,
         scan_target_coord,
         divergence_records,
     })

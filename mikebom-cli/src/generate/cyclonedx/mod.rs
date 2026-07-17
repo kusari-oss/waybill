@@ -72,6 +72,11 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // Go-workspace-mode signal from ScanArtifacts into the
             // builder for the C112 metadata property.
             .with_go_workspace_mode(scan.go_workspace_mode.cloned())
+            // Milestone 204 (#554) — propagate the doc-scope helm
+            // image-extraction-mode signal from ScanArtifacts into the
+            // builder for the C123
+            // `mikebom:image-extraction-completeness` metadata property.
+            .with_helm_extraction_mode(scan.helm_extraction_mode.copied())
             // Milestone 072 / T010 — propagate the source-tier SBOM
             // identifier so the metadata builder can emit the
             // standards-native `externalReferences[type:bom]` row.

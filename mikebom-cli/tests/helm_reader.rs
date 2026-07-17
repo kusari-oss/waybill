@@ -723,3 +723,217 @@ fn m203_us1_helm_render_extracts_rendered_image_ref() {
         "us1 rendered scan MUST NOT emit unresolved-placeholder components"
     );
 }
+
+// ─────────────────────────────────────────────────────────────────
+// Milestone 204 (#554) — mikebom:image-extraction-completeness
+// document-scope annotation tests. C123 parity catalog row.
+// ─────────────────────────────────────────────────────────────────
+
+/// Scan a directory with mikebom in the specified format, returning
+/// the parsed JSON. Panics if the scan doesn't exit successfully.
+fn scan_dir_with_format(scan_root: &Path, format: &str) -> serde_json::Value {
+    let tempdir = tempfile::tempdir().unwrap();
+    let out = tempdir.path().join(format!("out.{format}.json"));
+    let cmd_out = Command::new(mikebom_bin())
+        .args([
+            "sbom",
+            "scan",
+            "--path",
+            scan_root.to_str().unwrap(),
+            "--offline",
+            "--format",
+            format,
+            "--output",
+            out.to_str().unwrap(),
+        ])
+        .output()
+        .expect("spawn mikebom binary");
+    assert!(
+        cmd_out.status.success(),
+        "mikebom {format} exit={:?} stderr:\n{}",
+        cmd_out.status.code(),
+        String::from_utf8_lossy(&cmd_out.stderr),
+    );
+    serde_json::from_slice(&std::fs::read(&out).unwrap())
+        .unwrap_or_else(|e| panic!("output {format} is valid JSON: {e}"))
+}
+
+/// Extract the m204 `mikebom:image-extraction-completeness` value from
+/// a CDX document, or None if the annotation is absent.
+fn m204_extract_cdx_value(cdx: &serde_json::Value) -> Option<String> {
+    cdx.pointer("/metadata/properties")?
+        .as_array()?
+        .iter()
+        .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("mikebom:image-extraction-completeness"))
+        .and_then(|p| p.get("value").and_then(|v| v.as_str()).map(String::from))
+}
+
+/// Extract the m204 annotation from SPDX 2.3, decoding the m071
+/// MikebomAnnotationCommentV1 envelope in `.comment`.
+fn m204_extract_spdx23_value(spdx: &serde_json::Value) -> Option<String> {
+    let annos = spdx.get("annotations")?.as_array()?;
+    for anno in annos {
+        let comment = anno.get("comment").and_then(|v| v.as_str())?;
+        let env: serde_json::Value = serde_json::from_str(comment).ok()?;
+        if env.get("field").and_then(|v| v.as_str()) == Some("mikebom:image-extraction-completeness") {
+            return env.get("value").and_then(|v| v.as_str()).map(String::from);
+        }
+    }
+    None
+}
+
+/// Extract the m204 annotation from SPDX 3 JSON-LD graph. `statement`
+/// is a JSON-in-string carrying the m071 envelope (verified via
+/// `build_annotation` at v3_annotations.rs:156).
+fn m204_extract_spdx3_value(spdx3: &serde_json::Value) -> Option<String> {
+    let graph = spdx3.get("@graph")?.as_array()?;
+    for elem in graph {
+        if elem.get("type").and_then(|v| v.as_str()) != Some("Annotation") {
+            continue;
+        }
+        let statement = elem.get("statement").and_then(|v| v.as_str())?;
+        let env: serde_json::Value = serde_json::from_str(statement).ok()?;
+        if env.get("field").and_then(|v| v.as_str()) == Some("mikebom:image-extraction-completeness") {
+            return env.get("value").and_then(|v| v.as_str()).map(String::from);
+        }
+    }
+    None
+}
+
+fn m204_make_helm_chart(chart_dir: &Path) {
+    write_chart_yaml(chart_dir, "name: m204-test\nversion: 0.1.0\n");
+    write_template(
+        chart_dir,
+        "deployment.yaml",
+        "\
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+      - image: nginx:1.27.0
+",
+    );
+}
+
+#[test]
+fn m204_us1_partial_annotation_present_on_unrendered_helm_scan() {
+    let tempdir = tempfile::tempdir().unwrap();
+    let chart_dir = tempdir.path().join("mychart");
+    m204_make_helm_chart(&chart_dir);
+
+    let cdx = scan_dir_with_format(&chart_dir, "cyclonedx-json");
+    assert_eq!(
+        m204_extract_cdx_value(&cdx).as_deref(),
+        Some("partial"),
+        "CDX MUST carry mikebom:image-extraction-completeness = partial. cdx: {cdx:#}"
+    );
+
+    let spdx = scan_dir_with_format(&chart_dir, "spdx-2.3-json");
+    assert_eq!(
+        m204_extract_spdx23_value(&spdx).as_deref(),
+        Some("partial"),
+        "SPDX 2.3 MUST carry mikebom:image-extraction-completeness = partial. spdx: {spdx:#}"
+    );
+
+    let spdx3 = scan_dir_with_format(&chart_dir, "spdx-3-json");
+    assert_eq!(
+        m204_extract_spdx3_value(&spdx3).as_deref(),
+        Some("partial"),
+        "SPDX 3 MUST carry mikebom:image-extraction-completeness = partial. spdx3: {spdx3:#}"
+    );
+}
+
+#[test]
+#[cfg(unix)]
+fn m204_us2_fallback_still_partial_when_helm_render_fails_m204() {
+    // FR-005 regression guard: --helm-render + PATH="" forces the
+    // BinaryNotFound fallback. m203's ScanDiagnostics.helm_extraction_mode
+    // stays Unrendered → m204 emits "partial", NOT "full".
+    let tempdir = tempfile::tempdir().unwrap();
+    let chart_dir = tempdir.path().join("mychart");
+    m204_make_helm_chart(&chart_dir);
+
+    let (cdx, stderr, ok) = scan_dir_with_env(&chart_dir, true, Some(""), None);
+    assert!(ok, "fallback scan should succeed: stderr:\n{stderr}");
+    assert_eq!(
+        m204_extract_cdx_value(&cdx).as_deref(),
+        Some("partial"),
+        "fallback path MUST emit 'partial' not 'full'. cdx: {cdx:#}"
+    );
+}
+
+#[test]
+fn m204_us3_annotation_absent_on_non_helm_scan() {
+    let tempdir = tempfile::tempdir().unwrap();
+    let scan_root = tempdir.path().join("random-dir");
+    std::fs::create_dir_all(&scan_root).unwrap();
+    std::fs::write(scan_root.join("readme.txt"), b"hello world").unwrap();
+
+    for format in ["cyclonedx-json", "spdx-2.3-json", "spdx-3-json"] {
+        let doc = scan_dir_with_format(&scan_root, format);
+        let raw = serde_json::to_string(&doc).unwrap();
+        assert!(
+            !raw.contains("image-extraction-completeness"),
+            "{format} non-Helm scan MUST NOT emit mikebom:image-extraction-completeness \
+             (byte-identity FR-004). raw: {}",
+            &raw[..raw.len().min(500)],
+        );
+    }
+}
+
+#[test]
+#[cfg_attr(
+    not(any()),
+    ignore = "gated behind MIKEBOM_HELM_INTEGRATION=1 (requires real helm binary)"
+)]
+fn m204_us2_full_annotation_present_on_rendered_helm_scan() {
+    if std::env::var("MIKEBOM_HELM_INTEGRATION").ok().as_deref() != Some("1") {
+        eprintln!("skipping: MIKEBOM_HELM_INTEGRATION!=1");
+        return;
+    }
+    let tempdir = tempfile::tempdir().unwrap();
+    let chart_dir = tempdir.path().join("mychart");
+    m204_make_helm_chart(&chart_dir);
+
+    // Manual mikebom invocation with --helm-render.
+    let out_dir = tempfile::tempdir().unwrap();
+    for format in ["cyclonedx-json", "spdx-2.3-json", "spdx-3-json"] {
+        let out = out_dir.path().join(format!("out.{format}.json"));
+        let cmd_out = Command::new(mikebom_bin())
+            .args([
+                "sbom",
+                "scan",
+                "--helm-render",
+                "--path",
+                chart_dir.to_str().unwrap(),
+                "--offline",
+                "--format",
+                format,
+                "--output",
+                out.to_str().unwrap(),
+            ])
+            .output()
+            .expect("spawn mikebom binary");
+        assert!(
+            cmd_out.status.success(),
+            "helm-render {format} exit={:?} stderr:\n{}",
+            cmd_out.status.code(),
+            String::from_utf8_lossy(&cmd_out.stderr),
+        );
+        let doc: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&out).unwrap()).unwrap();
+        let value = match format {
+            "cyclonedx-json" => m204_extract_cdx_value(&doc),
+            "spdx-2.3-json" => m204_extract_spdx23_value(&doc),
+            "spdx-3-json" => m204_extract_spdx3_value(&doc),
+            _ => unreachable!(),
+        };
+        assert_eq!(
+            value.as_deref(),
+            Some("full"),
+            "{format} MUST carry mikebom:image-extraction-completeness = full"
+        );
+    }
+}

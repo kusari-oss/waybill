@@ -638,6 +638,17 @@ pub fn annotate_document(
         }
     }
 
+    // Milestone 204 (#554): C123 doc-scope helm image-extraction
+    // completeness annotation. Emitted iff helm reader ran. Wire
+    // value derived from HelmExtractionMode::as_wire_str().
+    if let Some(mode) = artifacts.helm_extraction_mode {
+        push(
+            &mut out,
+            "mikebom:image-extraction-completeness",
+            json!(mode.as_wire_str()),
+        );
+    }
+
     // Milestone 134 (closes #125, catalog row C100): document-scope
     // `mikebom:purl-collisions-detected` summary annotation. Omitted
     // entirely when no collisions were detected so clean scans stay

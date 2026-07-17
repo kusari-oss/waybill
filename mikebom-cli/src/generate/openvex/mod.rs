@@ -247,6 +247,7 @@ mod tests {
             go_transitive_fallback_count: None,
             go_cache_warming: None,
             go_workspace_mode: None,
+            helm_extraction_mode: None,
             scan_target_coord: None,
             generation_context: GenerationContext::FilesystemScan,
             include_dev: false,

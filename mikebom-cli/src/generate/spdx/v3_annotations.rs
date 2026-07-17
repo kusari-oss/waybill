@@ -600,6 +600,14 @@ fn push_document_fields(
         }
     }
 
+    // Milestone 204 (#554): C123 doc-scope helm image-extraction
+    // completeness annotation (SPDX 3). Same emission semantics as
+    // the CDX + SPDX 2.3 emitters. Byte-identity preserved for
+    // non-Helm scans per FR-004 (annotation absent when `None`).
+    if let Some(mode) = scan.helm_extraction_mode {
+        push(out, "mikebom:image-extraction-completeness", json!(mode.as_wire_str()));
+    }
+
     // Milestone 134 (closes #125, catalog row C100): document-scope
     // `mikebom:purl-collisions-detected` summary. Omitted when no
     // collisions were detected so clean scans stay byte-identical to

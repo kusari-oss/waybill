@@ -430,10 +430,22 @@ pub enum HelmExtractionMode {
     /// `mikebom:image-ref-unresolved = "true"` markers.
     Unrendered,
     /// US3 opt-in — `helm template` shell-out succeeded. All Values
-    /// placeholders resolved to concrete image strings. Wired in a
-    /// follow-up milestone (m188 delivers Unrendered path only).
-    #[allow(dead_code)]
+    /// placeholders resolved to concrete image strings. Wired by
+    /// milestone 203 (#553).
     Rendered,
+}
+
+impl HelmExtractionMode {
+    /// Wire-format string for the `mikebom:image-extraction-completeness`
+    /// document-scope annotation across CDX 1.6 / SPDX 2.3 / SPDX 3.
+    /// Milestone 204 (#554). Determinism-critical — MUST match the
+    /// values in the m071 parity catalog row C123 exactly.
+    pub fn as_wire_str(&self) -> &'static str {
+        match self {
+            HelmExtractionMode::Unrendered => "partial",
+            HelmExtractionMode::Rendered => "full",
+        }
+    }
 }
 
 /// Document-level completeness classification for the Go ecosystem

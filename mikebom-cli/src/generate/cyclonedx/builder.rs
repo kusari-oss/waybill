@@ -73,6 +73,11 @@ pub struct CycloneDxBuilder {
     /// `None` ⇒ no `go.work` at scanned root (C112 absent).
     go_workspace_mode:
         Option<crate::scan_fs::package_db::golang::gowork::WorkspaceMode>,
+    /// Milestone 204 (#554): doc-scope helm image-extraction-mode
+    /// signal for the C123 `mikebom:image-extraction-completeness`
+    /// annotation. `None` ⇒ no helm reader ran (C123 absent).
+    helm_extraction_mode:
+        Option<crate::scan_fs::package_db::HelmExtractionMode>,
     /// Milestone 072 / T010: source-tier SBOM identity for the
     /// document-level cross-document reference
     /// (`metadata.component.externalReferences[type:bom]`). `None`
@@ -147,6 +152,7 @@ impl CycloneDxBuilder {
             go_transitive_fallback_count: None,
             go_cache_warming: None,
             go_workspace_mode: None,
+            helm_extraction_mode: None,
             source_document_binding: None,
             identifiers: Vec::new(),
             component_identifiers: Vec::new(),
@@ -340,6 +346,19 @@ impl CycloneDxBuilder {
         mode: Option<crate::scan_fs::package_db::golang::gowork::WorkspaceMode>,
     ) -> Self {
         self.go_workspace_mode = mode;
+        self
+    }
+
+    /// Milestone 204 (#554) — record the doc-scope helm image-extraction
+    /// mode signal per FR-005. Drives the C123
+    /// `mikebom:image-extraction-completeness` document-scope
+    /// annotation. `None` ⇒ no helm reader ran (annotation absent per
+    /// FR-004 / SC-004 byte-identity for non-Helm scans).
+    pub fn with_helm_extraction_mode(
+        mut self,
+        mode: Option<crate::scan_fs::package_db::HelmExtractionMode>,
+    ) -> Self {
+        self.helm_extraction_mode = mode;
         self
     }
 
@@ -556,6 +575,7 @@ impl CycloneDxBuilder {
             self.go_workspace_mode.as_ref(),
             self.go_transitive_fallback_count,
             self.go_cache_warming.as_ref(),
+            self.helm_extraction_mode.as_ref(),
         );
         // Milestone 076 — track per-component identifier matches so
         // we can emit a warn for any selector that matched zero

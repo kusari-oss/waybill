@@ -2513,6 +2513,7 @@ pub async fn execute(
         go_transitive_fallback_count,
         go_cache_warming,
         go_workspace_mode,
+        helm_extraction_mode,
         scan_target_coord,
         divergence_records,
     } = scan_fs::scan_path(
@@ -3185,6 +3186,9 @@ pub async fn execute(
         // Milestone 161 (T014): doc-scope Go-workspace-mode signal
         // for the C112 annotation.
         go_workspace_mode: go_workspace_mode.as_ref(),
+        // Milestone 204 (#554): doc-scope helm image-extraction-mode
+        // signal for the C123 annotation.
+        helm_extraction_mode: helm_extraction_mode.as_ref(),
         // Milestone 072 / T010-T014: when --bind-to-source was set
         // AND the scan target is image-tier, expose the source-doc
         // identifier so each format's metadata builder can emit the

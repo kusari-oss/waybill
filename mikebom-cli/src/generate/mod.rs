@@ -106,6 +106,17 @@ pub struct ScanArtifacts<'a> {
     pub go_workspace_mode: Option<
         &'a crate::scan_fs::package_db::golang::gowork::WorkspaceMode,
     >,
+    /// Milestone 204 (#554): document-scope Helm image-extraction-mode
+    /// signal driving the C123 `mikebom:image-extraction-completeness`
+    /// annotation. `None` when no helm reader ran during the scan
+    /// (byte-identity per FR-004). `Some(Unrendered)` → wire value
+    /// `"partial"`. `Some(Rendered)` → wire value `"full"`. Consumed by
+    /// each format's document-scope emit code (CDX
+    /// `metadata.properties[]`, SPDX 2.3 doc-scope `Annotation`, SPDX 3
+    /// `Annotation` element).
+    pub helm_extraction_mode: Option<
+        &'a crate::scan_fs::package_db::HelmExtractionMode,
+    >,
     /// Milestone 072 / T010-T014: when the scan was invoked with
     /// `--bind-to-source <path>` AND the source SBOM was loaded
     /// successfully, this field carries the source SBOM's stable
