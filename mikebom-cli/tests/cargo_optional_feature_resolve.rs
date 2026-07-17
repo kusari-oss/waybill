@@ -278,23 +278,35 @@ default = ["serde"]
          found on $PATH'. stderr:\n{stderr}"
     );
 
-    // (d) Safe over-inclusion: serde is Runtime (or absent → runtime),
-    // NOT excluded. Without cargo, mikebom can't verify feature
-    // activation, so every optional dep flips to Runtime — vuln-
-    // scanners never miss shipped deps.
+    // (d) FR-004 fallback preserves pre-m205 name-only classification.
+    // Under fallback, mikebom can't verify feature activation via cargo,
+    // so it defers to the manifest's `optional = true` declaration.
+    // For `serde = { optional = true }` + `default = ["serde"]`, this
+    // means serde is classified Optional (scope: excluded) — this is
+    // the same behavior alpha.63 (pre-m205) would produce for this
+    // workspace. Zero regression from pre-m205.
+    //
+    // The correctness improvement (serde → Runtime) applies ONLY when
+    // cargo metadata succeeds. The WARN log above tells the operator
+    // to install cargo + warm the registry cache for the full-fidelity
+    // path.
     let serde_comp = find_component_by_name(&cdx, "serde")
         .unwrap_or_else(|| panic!("serde component present. cdx: {cdx:#}"));
-    let scope = component_scope(serde_comp);
-    assert!(
-        scope.is_none() || scope == Some("runtime"),
-        "FR-004 safe over-inclusion: serde MUST be scope=runtime (or absent), \
-         got {scope:?}. cdx: {cdx:#}"
+    assert_eq!(
+        component_scope(serde_comp),
+        Some("excluded"),
+        "FR-004 pre-m205-preservation: serde MUST be scope=excluded under \
+         cargo-metadata-fallback (same as alpha.63 behavior). cdx: {cdx:#}"
     );
 
-    // (e) The Optional branch was unreachable → no derivation annotation.
-    assert!(
-        component_property(serde_comp, "mikebom:optional-derivation").is_none(),
-        "FR-004 fallback: serde MUST NOT carry mikebom:optional-derivation \
-         (Optional branch unreachable). cdx: {cdx:#}"
+    // (e) The `mikebom:optional-derivation` annotation IS still emitted
+    // under fallback — it's set by the classifier's Optional branch,
+    // which now fires because activated_names is empty. This matches
+    // pre-m205 behavior.
+    assert_eq!(
+        component_property(serde_comp, "mikebom:optional-derivation"),
+        Some("cargo-optional-true"),
+        "FR-004 fallback: serde MUST carry mikebom:optional-derivation \
+         (same as alpha.63 behavior). cdx: {cdx:#}"
     );
 }

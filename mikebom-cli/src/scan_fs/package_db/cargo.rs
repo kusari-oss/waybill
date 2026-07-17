@@ -1415,23 +1415,29 @@ pub fn read(
 
         // Milestone 205 (#593): resolve Cargo's actual feature-
         // activation set via `cargo metadata --format-version 1
-        // --offline --locked`. Fallback per FR-004: on failure
-        // (cargo absent, timeout, non-zero exit), populate
-        // `activated_names` with ALL manifest-declared optional
-        // deps → every one flips to Runtime (safe over-inclusion;
-        // vuln-scanners never miss shipped deps). WARN log names
-        // the workspace + failure class.
+        // --offline`. Fallback per FR-004: on failure (cargo absent,
+        // timeout, non-zero exit, missing Cargo.toml), preserve
+        // pre-m205 name-only classification (activated_names stays
+        // empty → classifier's `!activated_names.contains(&pkg.name)`
+        // always evaluates true → optional deps classify as Optional
+        // per manifest declaration). WARN log names the workspace +
+        // failure class so operators see when they're in reduced-
+        // fidelity mode.
+        //
+        // Rationale for fallback semantics: preserving pre-m205
+        // classification is strictly zero-regression — nobody who
+        // worked before m205 is broken by the fallback. The reporter's
+        // case (#593, `test-vaultwarden`) has a warm cargo cache, so
+        // `cargo metadata --offline` succeeds → fix applies. Cold-
+        // cache environments (fresh CI runners, lockfile-only test
+        // fixtures) get pre-m205 behavior + a WARN log naming the
+        // reason. The WARN is the operator-visible signal of reduced
+        // fidelity per Constitution Principle X (transparency).
         //
         // Skip-gate: if no Cargo.toml exists in workspace_root,
-        // cargo metadata can't run meaningfully — no manifest to
-        // resolve features from. This is a legit scenario for
-        // lockfile-only test fixtures (m179's `lockfile-v3/`
-        // fixture is the canonical example). Return empty
-        // `activated_names` silently → classifier's
-        // `!activated_names.contains(&pkg.name)` always evaluates
-        // true → pre-m205 name-only classification preserved for
-        // this bounded case. Every real Cargo project has a
-        // Cargo.toml; the reporter's case (#593) is unaffected.
+        // cargo metadata can't run meaningfully. Skip silently
+        // (no WARN — this is a legit lockfile-only test-fixture
+        // scenario, not a failure). Same fallback semantic.
         let workspace_root = lock_path.parent().unwrap_or(&lock_path);
         let cargo_metadata_timeout = resolve_cargo_metadata_timeout();
         let activated_names: HashSet<String> = if !workspace_root
@@ -1449,11 +1455,12 @@ pub fn read(
                     tracing::warn!(
                         workspace = %workspace_root.display(),
                         reason = %e,
-                        "cargo metadata failed; falling back to name-only optional \
-                         classification (safe over-inclusion — deps marked Runtime \
-                         instead of Optional so vuln-scanners never miss shipped deps)"
+                        "cargo metadata failed; falling back to pre-m205 name-only \
+                         optional classification (reduced fidelity — feature-activated \
+                         optional deps may be misclassified as scope=excluded; install \
+                         cargo binary + populate registry cache for full-fidelity)"
                     );
-                    workspace_sections.optional_deps.clone()
+                    HashSet::new()
                 }
             }
         };
