@@ -56,6 +56,12 @@ pub enum ImageSource {
     /// Local docker daemon: shell out to `docker image inspect` to
     /// probe, then `docker save` to materialize a tarball.
     Docker,
+    /// Milestone 206 (#440) — local podman image cache. Filesystem-only
+    /// (no daemon/REST API). Requires the target image be pre-pulled
+    /// via `podman pull` or `podman build`. Rootless preferred;
+    /// rootful supported when mikebom has read access to
+    /// `/var/lib/containers/storage/`. Linux-only per spec Assumption 1.
+    Podman,
     /// OCI distribution-spec registry pull (the milestone-031+
     /// `oci_pull` path).
     Remote,
@@ -231,7 +237,7 @@ pub struct ScanArgs {
     #[arg(
         long,
         value_delimiter = ',',
-        default_value = "docker,remote",
+        default_value = "docker,podman,remote",
         value_name = "SRC[,SRC...]",
     )]
     pub image_src: Vec<ImageSource>,
@@ -1892,6 +1898,7 @@ async fn resolve_image_ref(
     arg_str: &str,
     args: &ScanArgs,
     tempdir: &mut Option<tempfile::TempDir>,
+    selected_source: &mut Option<ImageSource>,
 ) -> anyhow::Result<PathBuf> {
     #[cfg(feature = "oci-registry")]
     {
@@ -1931,6 +1938,7 @@ async fn resolve_image_ref(
                         let tarball = td.path().join("image.tar");
                         scan_fs::docker_daemon::save(arg_str, &tarball)?;
                         *tempdir = Some(td);
+                        *selected_source = Some(ImageSource::Docker);
                         return Ok(tarball);
                     }
                     scan_fs::docker_daemon::InspectOutcome::Absent => {
@@ -1943,6 +1951,41 @@ async fn resolve_image_ref(
                         tracing::info!(
                             image_ref = arg_str,
                             "local docker daemon not available; trying next source"
+                        );
+                    }
+                }
+            }
+            ImageSource::Podman => {
+                tried.push("podman");
+                // Milestone 206 (#440) — filesystem-only read of
+                // c/storage overlay layout (FR-009: no daemon/REST
+                // API). On any PodmanSourceError, WARN + continue
+                // to the next --image-src entry per FR-007.
+                if args.image_platform.is_some() {
+                    tracing::info!(
+                        image_ref = arg_str,
+                        "--image-platform set; skipping local podman source (only registry pulls honor platform)"
+                    );
+                    continue;
+                }
+                let td = tempfile::tempdir()
+                    .context("creating tempdir for podman-source tarball")?;
+                let tarball = td.path().join("image.tar");
+                match scan_fs::podman_source::resolve_and_pack(arg_str, &tarball) {
+                    Ok(()) => {
+                        tracing::info!(
+                            image_ref = arg_str,
+                            "found image in local podman storage; packed docker-save tarball"
+                        );
+                        *tempdir = Some(td);
+                        *selected_source = Some(ImageSource::Podman);
+                        return Ok(tarball);
+                    }
+                    Err(e) => {
+                        tracing::info!(
+                            image_ref = arg_str,
+                            error = %e,
+                            "podman source failed; trying next --image-src entry"
                         );
                     }
                 }
@@ -1985,6 +2028,7 @@ async fn resolve_image_ref(
                     .await?;
                     let tarball = td.path().join("image.tar");
                     *tempdir = Some(td);
+                    *selected_source = Some(ImageSource::Remote);
                     return Ok(tarball);
                 }
                 #[cfg(not(feature = "oci-registry"))]
@@ -2397,6 +2441,10 @@ pub async fn execute(
     // docker-save and remote-pull branches can both populate it
     // without conflict.
     let mut _image_tempdir: Option<tempfile::TempDir> = None;
+    // Milestone 206 (#440) — track which --image-src won the
+    // dispatch, so the C124 `mikebom:image-source` annotation
+    // can be emitted (conditional per FR-005 byte-identity).
+    let mut selected_image_source: Option<ImageSource> = None;
 
     let (root_path, target_name, generation_context, auto_codename, _extracted) =
         if let Some(archive) = args.image.as_ref() {
@@ -2423,7 +2471,8 @@ pub async fn execute(
                 let arg_str = archive.to_str().context(
                     "--image argument is not valid UTF-8 — required for OCI ref parsing",
                 )?;
-                resolve_image_ref(arg_str, &args, &mut _image_tempdir).await?
+                resolve_image_ref(arg_str, &args, &mut _image_tempdir, &mut selected_image_source)
+                    .await?
             };
             tracing::info!(archive = %archive_path.display(), "extracting docker image");
             let extracted = scan_fs::docker_image::extract(&archive_path)?;
@@ -3189,6 +3238,10 @@ pub async fn execute(
         // Milestone 204 (#554): doc-scope helm image-extraction-mode
         // signal for the C123 annotation.
         helm_extraction_mode: helm_extraction_mode.as_ref(),
+        // Milestone 206 (#440): doc-scope image-source signal for
+        // the C124 annotation. Conditional emission (podman-only)
+        // preserves FR-005 byte-identity for docker/remote scans.
+        image_source: selected_image_source.as_ref(),
         // Milestone 072 / T010-T014: when --bind-to-source was set
         // AND the scan target is image-tier, expose the source-doc
         // identifier so each format's metadata builder can emit the
@@ -3957,14 +4010,18 @@ mod tests {
     }
 
     #[test]
-    fn image_src_defaults_to_docker_then_remote() {
+    fn image_src_defaults_to_docker_podman_remote_m206() {
+        // Milestone 206 (#440): default order bumped from
+        // `[Docker, Remote]` to `[Docker, Podman, Remote]` per FR-006.
+        // Docker-first preserves backward compat; Podman inserted
+        // before Remote so local podman wins over network fetches.
         let parsed = <ScanArgsForTest as clap::Parser>::try_parse_from([
             "scan", "--path", ".",
         ])
         .unwrap();
         assert_eq!(
             parsed.inner.image_src,
-            vec![ImageSource::Docker, ImageSource::Remote]
+            vec![ImageSource::Docker, ImageSource::Podman, ImageSource::Remote]
         );
     }
 
@@ -3998,13 +4055,28 @@ mod tests {
     }
 
     #[test]
+    fn image_src_accepts_podman_value_m206() {
+        // Milestone 206 (#440): `podman` is now a valid --image-src value.
+        // Pre-m206 this was rejected as unknown.
+        let parsed = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan",
+            "--path",
+            ".",
+            "--image-src",
+            "podman",
+        ])
+        .unwrap();
+        assert_eq!(parsed.inner.image_src, vec![ImageSource::Podman]);
+    }
+
+    #[test]
     fn image_src_rejects_unknown_value() {
         let err = <ScanArgsForTest as clap::Parser>::try_parse_from([
             "scan",
             "--path",
             ".",
             "--image-src",
-            "podman",
+            "definitely-not-a-source",
         ])
         .unwrap_err()
         .to_string();

@@ -77,6 +77,10 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // builder for the C123
             // `mikebom:image-extraction-completeness` metadata property.
             .with_helm_extraction_mode(scan.helm_extraction_mode.copied())
+            // Milestone 206 (#440) — propagate the doc-scope
+            // image-source signal from ScanArtifacts for the C124
+            // metadata property.
+            .with_image_source(scan.image_source.copied())
             // Milestone 072 / T010 — propagate the source-tier SBOM
             // identifier so the metadata builder can emit the
             // standards-native `externalReferences[type:bom]` row.

@@ -736,6 +736,7 @@ mod tests {
             go_cache_warming: None,
             go_workspace_mode: None,
             helm_extraction_mode: None,
+            image_source: None,
             scan_target_coord: None,
             generation_context: GenerationContext::FilesystemScan,
             include_dev: false,

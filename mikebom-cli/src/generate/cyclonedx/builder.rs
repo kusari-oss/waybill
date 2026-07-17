@@ -78,6 +78,11 @@ pub struct CycloneDxBuilder {
     /// annotation. `None` ⇒ no helm reader ran (C123 absent).
     helm_extraction_mode:
         Option<crate::scan_fs::package_db::HelmExtractionMode>,
+    /// Milestone 206 (#440): doc-scope image-source signal for the
+    /// C124 `mikebom:image-source` annotation. Conditional emission
+    /// (podman-only) preserves FR-005 byte-identity for docker/remote
+    /// scans.
+    image_source: Option<crate::cli::scan_cmd::ImageSource>,
     /// Milestone 072 / T010: source-tier SBOM identity for the
     /// document-level cross-document reference
     /// (`metadata.component.externalReferences[type:bom]`). `None`
@@ -153,6 +158,7 @@ impl CycloneDxBuilder {
             go_cache_warming: None,
             go_workspace_mode: None,
             helm_extraction_mode: None,
+            image_source: None,
             source_document_binding: None,
             identifiers: Vec::new(),
             component_identifiers: Vec::new(),
@@ -359,6 +365,18 @@ impl CycloneDxBuilder {
         mode: Option<crate::scan_fs::package_db::HelmExtractionMode>,
     ) -> Self {
         self.helm_extraction_mode = mode;
+        self
+    }
+
+    /// Milestone 206 (#440) — record the doc-scope image-source signal
+    /// per FR-014. Drives the C124 `mikebom:image-source` annotation.
+    /// Conditional emission (podman-only in MVP) preserves FR-005
+    /// byte-identity for docker/remote/path scans.
+    pub fn with_image_source(
+        mut self,
+        source: Option<crate::cli::scan_cmd::ImageSource>,
+    ) -> Self {
+        self.image_source = source;
         self
     }
 
@@ -576,6 +594,7 @@ impl CycloneDxBuilder {
             self.go_transitive_fallback_count,
             self.go_cache_warming.as_ref(),
             self.helm_extraction_mode.as_ref(),
+            self.image_source.as_ref(),
         );
         // Milestone 076 — track per-component identifier matches so
         // we can emit a warn for any selector that matched zero
