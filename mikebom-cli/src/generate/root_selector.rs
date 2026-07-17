@@ -435,7 +435,16 @@ fn longest_common_path_prefix(paths: &[PathBuf]) -> PathBuf {
 /// pre-milestone-127 emission for every fixture in
 /// `mikebom-cli/tests/fixtures/golden/`.
 pub fn is_internal_emission_key(key: &str) -> bool {
-    key == IS_WORKSPACE_ROOT_KEY
+    // Milestone 201 (FR-007, closes #587): m201's new positive-
+    // identifier annotation `mikebom:is-cargo-workspace-toplevel`
+    // (stamped by cargo m064 emission, consumed by scan_fs/mod.rs's
+    // is_workspace_root stamping) is internal-only — same treatment
+    // as `mikebom:is-workspace-root`. It never appears in emitted
+    // CDX/SPDX SBOMs.
+    matches!(
+        key,
+        IS_WORKSPACE_ROOT_KEY | "mikebom:is-cargo-workspace-toplevel"
+    )
 }
 
 /// Milestone 145 US3 (FR-009 + research §C/§C.1): annotation keys that
@@ -645,6 +654,19 @@ mod tests {
         assert!(!is_field_owned_annotation_key("mikebom:lifecycle-scope"));
         assert!(!is_field_owned_annotation_key("mikebom:cpe-candidates"));
         assert!(!is_field_owned_annotation_key("mikebom:file-paths"));
+    }
+
+    /// Milestone 201 (FR-007, closes #587): the m201 positive-identifier
+    /// annotation `mikebom:is-cargo-workspace-toplevel` MUST be internal-
+    /// emission-only (filtered from CDX/SPDX output), matching the
+    /// existing treatment of `mikebom:is-workspace-root`.
+    #[test]
+    fn is_internal_emission_key_filters_workspace_toplevel_annotation_m201() {
+        assert!(is_internal_emission_key("mikebom:is-cargo-workspace-toplevel"));
+        assert!(is_internal_emission_key(IS_WORKSPACE_ROOT_KEY));
+        // Guardrail: filter must not over-broaden.
+        assert!(!is_internal_emission_key("mikebom:some-other-annotation"));
+        assert!(!is_internal_emission_key("mikebom:lifecycle-scope"));
     }
 
     fn make_main_module(
