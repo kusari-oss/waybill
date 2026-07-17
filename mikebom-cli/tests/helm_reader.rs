@@ -455,3 +455,271 @@ fn default_scan_without_chart_yaml_is_byte_identical() {
         );
     }
 }
+
+// ─────────────────────────────────────────────────────────────────
+// Milestone 203 (#553) — `--helm-render` subprocess + fallback tests
+// ─────────────────────────────────────────────────────────────────
+//
+// US2 fallback classes exercised via `PATH` scrubbing + stub shell
+// scripts (research §R3 Approach A). Each test overrides `PATH` when
+// invoking mikebom so `Command::new("helm")` resolves to either
+// (a) nothing (`BinaryNotFound`) or (b) a stub script (NonZeroExit /
+// Timeout). Zero real `helm` binary required.
+//
+// US1 success test is gated behind `MIKEBOM_HELM_INTEGRATION=1`
+// (matches m188 precedent) — nightly-only, requires real `helm`.
+
+#[cfg(unix)]
+fn write_stub_helm(dir: &Path, body: &str) {
+    use std::os::unix::fs::PermissionsExt;
+    std::fs::create_dir_all(dir).unwrap();
+    let script = dir.join("helm");
+    std::fs::write(&script, body).unwrap();
+    let mut perms = std::fs::metadata(&script).unwrap().permissions();
+    perms.set_mode(0o755);
+    std::fs::set_permissions(&script, perms).unwrap();
+}
+
+fn scan_dir_with_env(
+    scan_root: &Path,
+    helm_render: bool,
+    path_env: Option<&str>,
+    render_timeout_secs: Option<&str>,
+) -> (serde_json::Value, String, bool) {
+    let tempdir = tempfile::tempdir().unwrap();
+    let out = tempdir.path().join("out.cdx.json");
+    let mut cmd = Command::new(mikebom_bin());
+    cmd.args([
+        "sbom",
+        "scan",
+        "--path",
+        scan_root.to_str().unwrap(),
+        "--offline",
+        "--format",
+        "cyclonedx-json",
+        "--output",
+        out.to_str().unwrap(),
+    ]);
+    if helm_render {
+        cmd.arg("--helm-render");
+    }
+    if let Some(p) = path_env {
+        cmd.env("PATH", p);
+    }
+    if let Some(t) = render_timeout_secs {
+        cmd.env("MIKEBOM_HELM_RENDER_TIMEOUT_SECS", t);
+    }
+    let cmd_out = cmd.output().expect("spawn mikebom binary");
+    let stderr = String::from_utf8_lossy(&cmd_out.stderr).to_string();
+    let success = cmd_out.status.success();
+    let json = if success {
+        serde_json::from_slice::<serde_json::Value>(&std::fs::read(&out).unwrap())
+            .expect("output is valid JSON")
+    } else {
+        serde_json::Value::Null
+    };
+    (json, stderr, success)
+}
+
+fn make_chart_with_templated_image(chart_dir: &Path) {
+    write_chart_yaml(chart_dir, "name: mychart\nversion: 1.0.0\n");
+    std::fs::write(
+        chart_dir.join("values.yaml"),
+        "image:\n  repository: nginx\n  tag: 1.27.0\n",
+    )
+    .unwrap();
+    write_template(
+        chart_dir,
+        "deployment.yaml",
+        "\
+apiVersion: apps/v1
+kind: Deployment
+spec:
+  template:
+    spec:
+      containers:
+        - name: app
+          image: \"{{ .Values.image.repository }}:{{ .Values.image.tag }}\"
+",
+    );
+}
+
+#[test]
+#[cfg(unix)]
+fn m203_us2_1_missing_helm_binary_falls_back_to_unrendered() {
+    let tempdir = tempfile::tempdir().unwrap();
+    let chart_dir = tempdir.path().join("mychart");
+    make_chart_with_templated_image(&chart_dir);
+
+    let (cdx, stderr, ok) = scan_dir_with_env(&chart_dir, true, Some(""), None);
+    assert!(ok, "scan should succeed despite missing helm: stderr:\n{stderr}");
+    // Fallback path emitted the unresolved-template component.
+    let generic = components_by_purl_prefix(&cdx, "pkg:generic/");
+    assert!(
+        generic.iter().any(|c| get_property(c, "mikebom:image-ref-unresolved").as_deref()
+            == Some("true")),
+        "expected fallback to unrendered extraction. cdx: {cdx:#}"
+    );
+    assert!(
+        stderr.contains("BinaryNotFound") || stderr.contains("not found on $PATH"),
+        "expected BinaryNotFound WARN log; got stderr:\n{stderr}"
+    );
+    assert!(
+        stderr.contains("falling back"),
+        "expected 'falling back' WARN log; got stderr:\n{stderr}"
+    );
+}
+
+#[test]
+#[cfg(unix)]
+fn m203_us2_2_nonzero_exit_falls_back_to_unrendered() {
+    let tempdir = tempfile::tempdir().unwrap();
+    let chart_dir = tempdir.path().join("mychart");
+    make_chart_with_templated_image(&chart_dir);
+    let stub_dir = tempdir.path().join("stubs");
+    write_stub_helm(&stub_dir, "#!/bin/sh\necho 'stub failure' >&2\nexit 1\n");
+
+    let path_env = format!("{}:/usr/bin:/bin", stub_dir.display());
+    let (cdx, stderr, ok) = scan_dir_with_env(&chart_dir, true, Some(&path_env), None);
+    assert!(ok, "scan should succeed despite helm exit=1: stderr:\n{stderr}");
+    let generic = components_by_purl_prefix(&cdx, "pkg:generic/");
+    assert!(
+        generic.iter().any(|c| get_property(c, "mikebom:image-ref-unresolved").as_deref()
+            == Some("true")),
+        "expected fallback to unrendered extraction. cdx: {cdx:#}"
+    );
+    assert!(
+        stderr.contains("NonZeroExit") || stderr.contains("exited with code 1"),
+        "expected NonZeroExit WARN log; got stderr:\n{stderr}"
+    );
+    assert!(
+        stderr.contains("falling back"),
+        "expected 'falling back' WARN log; got stderr:\n{stderr}"
+    );
+}
+
+#[test]
+#[cfg(unix)]
+fn m203_us2_3_timeout_falls_back_to_unrendered() {
+    let tempdir = tempfile::tempdir().unwrap();
+    let chart_dir = tempdir.path().join("mychart");
+    make_chart_with_templated_image(&chart_dir);
+    let stub_dir = tempdir.path().join("stubs");
+    // First invocation is `helm version --short` (probe). We make that
+    // succeed instantly, then the second invocation (`helm template`)
+    // sleeps to trigger the timeout. Distinguish by presence of
+    // `template` in $@.
+    write_stub_helm(
+        &stub_dir,
+        "#!/bin/sh\ncase \"$1\" in\n  template) sleep 30 ;;\n  *) echo 'v3.stub' ;;\nesac\n",
+    );
+
+    let path_env = format!("{}:/usr/bin:/bin", stub_dir.display());
+    let (cdx, stderr, ok) =
+        scan_dir_with_env(&chart_dir, true, Some(&path_env), Some("1"));
+    assert!(ok, "scan should succeed despite helm timeout: stderr:\n{stderr}");
+    let generic = components_by_purl_prefix(&cdx, "pkg:generic/");
+    assert!(
+        generic.iter().any(|c| get_property(c, "mikebom:image-ref-unresolved").as_deref()
+            == Some("true")),
+        "expected fallback to unrendered extraction. cdx: {cdx:#}"
+    );
+    assert!(
+        stderr.contains("Timeout") || stderr.contains("exceeded"),
+        "expected Timeout WARN log; got stderr:\n{stderr}"
+    );
+    assert!(
+        stderr.contains("falling back"),
+        "expected 'falling back' WARN log; got stderr:\n{stderr}"
+    );
+}
+
+#[test]
+#[cfg(unix)]
+fn m203_us2_4_default_flow_without_helm_render_does_not_invoke_helm() {
+    // FR-006 regression guard: WITHOUT `--helm-render`, scan must not
+    // shell out to `helm` even when a chart is present. If it did,
+    // and helm was absent, the m188 default path would still succeed
+    // — but we want zero mention of BinaryNotFound / falling back.
+    let tempdir = tempfile::tempdir().unwrap();
+    let chart_dir = tempdir.path().join("mychart");
+    make_chart_with_templated_image(&chart_dir);
+
+    let (cdx, stderr, ok) = scan_dir_with_env(&chart_dir, false, Some(""), None);
+    assert!(ok, "default-flow scan must succeed: stderr:\n{stderr}");
+    let generic = components_by_purl_prefix(&cdx, "pkg:generic/");
+    assert!(
+        !generic.is_empty(),
+        "default flow should still extract the templated placeholder"
+    );
+    // NO subprocess invocation → NO WARN log about falling back.
+    assert!(
+        !stderr.contains("BinaryNotFound") && !stderr.contains("falling back"),
+        "default-flow scan MUST NOT invoke helm subprocess. stderr:\n{stderr}"
+    );
+}
+
+#[test]
+#[cfg(unix)]
+fn m203_us2_5_env_var_override_shortens_timeout() {
+    // Sanity: setting `MIKEBOM_HELM_RENDER_TIMEOUT_SECS=1` while the
+    // stub sleeps 5s must still produce a Timeout classification —
+    // i.e., the env var actually reduces the effective timeout.
+    let tempdir = tempfile::tempdir().unwrap();
+    let chart_dir = tempdir.path().join("mychart");
+    make_chart_with_templated_image(&chart_dir);
+    let stub_dir = tempdir.path().join("stubs");
+    write_stub_helm(
+        &stub_dir,
+        "#!/bin/sh\ncase \"$1\" in\n  template) sleep 5 ;;\n  *) echo 'v3.stub' ;;\nesac\n",
+    );
+
+    let path_env = format!("{}:/usr/bin:/bin", stub_dir.display());
+    let start = std::time::Instant::now();
+    let (_cdx, stderr, ok) =
+        scan_dir_with_env(&chart_dir, true, Some(&path_env), Some("1"));
+    let elapsed = start.elapsed();
+    assert!(ok, "scan should succeed on timeout fallback: stderr:\n{stderr}");
+    assert!(
+        elapsed.as_secs() < 5,
+        "1s timeout should preempt the 5s stub sleep; observed {}s",
+        elapsed.as_secs_f64(),
+    );
+    assert!(
+        stderr.contains("Timeout") || stderr.contains("exceeded 1s"),
+        "expected Timeout WARN log with 1s value; got stderr:\n{stderr}"
+    );
+}
+
+#[test]
+#[cfg_attr(
+    not(any()),
+    ignore = "gated behind MIKEBOM_HELM_INTEGRATION=1 (requires real helm binary)"
+)]
+fn m203_us1_helm_render_extracts_rendered_image_ref() {
+    if std::env::var("MIKEBOM_HELM_INTEGRATION").ok().as_deref() != Some("1") {
+        eprintln!("skipping: MIKEBOM_HELM_INTEGRATION!=1");
+        return;
+    }
+    let tempdir = tempfile::tempdir().unwrap();
+    let chart_dir = tempdir.path().join("mychart");
+    make_chart_with_templated_image(&chart_dir);
+
+    let (cdx, stderr, ok) = scan_dir_with_env(&chart_dir, true, None, None);
+    assert!(ok, "us1 scan should succeed: stderr:\n{stderr}");
+    // Rendered path resolves the placeholder to nginx:1.27.0 →
+    // pkg:docker/library/nginx@1.27.0. NO unresolved placeholder.
+    let docker = components_by_purl_prefix(&cdx, "pkg:docker/");
+    assert!(
+        docker
+            .iter()
+            .any(|c| c.get("purl").and_then(|p| p.as_str()).map(|s| s.contains("nginx")).unwrap_or(false)),
+        "expected pkg:docker/.../nginx from rendered chart. cdx: {cdx:#}"
+    );
+    let generic = components_by_purl_prefix(&cdx, "pkg:generic/");
+    assert!(
+        !generic.iter().any(|c| get_property(c, "mikebom:image-ref-unresolved").as_deref()
+            == Some("true")),
+        "us1 rendered scan MUST NOT emit unresolved-placeholder components"
+    );
+}

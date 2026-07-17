@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-07-16
+Auto-generated from all feature plans. Last updated: 2026-07-17
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -263,6 +263,7 @@ Auto-generated from all feature plans. Last updated: 2026-07-16
 - N/A — all state in-process per scan; matches every reader milestone since 002. (200-cargo-workspace-root-scope)
 - Rust stable (workspace toolchain inherited from milestones 001–200; no nightly). + Existing only — `toml = "0.8"` (already used pervasively by cargo.rs; needed to detect `[workspace]` block presence in a Cargo.toml), `std::collections::HashSet` / `HashMap` (already used), `serde`/`serde_json` (annotation values), `tracing`, `anyhow`/`thiserror`. **No new crates.** No subprocess calls. No network access. (201-root-selector-workspace-root-fix)
 - Rust stable (workspace toolchain inherited from milestones 001–201; no nightly). + Existing only — `spdx = "0.10"` (already used by `SpdxExpression::try_canonical` at `mikebom-common/src/types/license.rs`), `serde_json` (already pervasive in the CDX builder). **No new crates.** No subprocess calls. No network access. (202-cdx-license-id-slot-fix)
+- Rust stable (workspace toolchain inherited from milestones 001–202; no nightly). + Existing only — `std::process::Command`, `std::thread`, `std::sync::mpsc`, `std::time::Duration` (all stdlib), `tracing` (existing WARN log dep), `anyhow`/`thiserror` (existing error propagation). **No new crates.** External-tool runtime dep: `helm` binary on `$PATH`, OPT-IN via `--helm-render` flag or `MIKEBOM_HELM_RENDER=1` env var. Absent by default; scan works without it. (203-helm-render-subprocess)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -325,9 +326,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 203-helm-render-subprocess: Added Rust stable (workspace toolchain inherited from milestones 001–202; no nightly). + Existing only — `std::process::Command`, `std::thread`, `std::sync::mpsc`, `std::time::Duration` (all stdlib), `tracing` (existing WARN log dep), `anyhow`/`thiserror` (existing error propagation). **No new crates.** External-tool runtime dep: `helm` binary on `$PATH`, OPT-IN via `--helm-render` flag or `MIKEBOM_HELM_RENDER=1` env var. Absent by default; scan works without it.
 - 202-cdx-license-id-slot-fix: Added Rust stable (workspace toolchain inherited from milestones 001–201; no nightly). + Existing only — `spdx = "0.10"` (already used by `SpdxExpression::try_canonical` at `mikebom-common/src/types/license.rs`), `serde_json` (already pervasive in the CDX builder). **No new crates.** No subprocess calls. No network access.
 - 201-root-selector-workspace-root-fix: Added Rust stable (workspace toolchain inherited from milestones 001–200; no nightly). + Existing only — `toml = "0.8"` (already used pervasively by cargo.rs; needed to detect `[workspace]` block presence in a Cargo.toml), `std::collections::HashSet` / `HashMap` (already used), `serde`/`serde_json` (annotation values), `tracing`, `anyhow`/`thiserror`. **No new crates.** No subprocess calls. No network access.
-- 200-cargo-workspace-root-scope: Added Rust stable (workspace toolchain inherited from milestones 001–199; no nightly). + Existing only — `toml = "0.8"` (already used pervasively by cargo.rs), `std::collections::HashSet` (already used), `serde`/`serde_json` (annotation values), `tracing` (existing parse-error warn logs), `anyhow`/`thiserror`. **No new crates.** No subprocess calls. No network access.
 
 
 <!-- MANUAL ADDITIONS START -->

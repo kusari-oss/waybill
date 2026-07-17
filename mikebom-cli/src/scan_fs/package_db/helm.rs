@@ -37,6 +37,7 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::OnceLock;
+use std::time::Duration;
 
 use flate2::read::GzDecoder;
 use regex::Regex;
@@ -45,6 +46,137 @@ use serde::Deserialize;
 use mikebom_common::types::purl::Purl;
 
 use super::{HelmExtractionMode, PackageDbEntry, ScanDiagnostics};
+
+// -----------------------------------------------------------------
+// Milestone 203 (#553) — `--helm-render` subprocess types + helper.
+// -----------------------------------------------------------------
+
+/// Failure classes for the `helm template` subprocess path (m203 US3).
+/// Every variant triggers a WARN-log + fallback to unrendered extraction
+/// at the `helm::read` branch site. Scan never aborts due to helm-render
+/// issues (FR-007 + Constitution Principle III fail-graceful posture).
+#[derive(Debug, thiserror::Error)]
+pub(super) enum HelmRenderError {
+    #[error("`helm` binary not found on $PATH")]
+    BinaryNotFound,
+
+    #[error("`helm template` exited with code {code}; stderr head: {stderr_head}")]
+    NonZeroExit { code: i32, stderr_head: String },
+
+    #[error("`helm template` exceeded {timeout_secs}s timeout")]
+    Timeout { timeout_secs: u64 },
+
+    #[error("`helm template` I/O error: {0}")]
+    IoError(#[from] std::io::Error),
+}
+
+/// Milestone 203 (FR-002): read `MIKEBOM_HELM_RENDER_TIMEOUT_SECS` env
+/// var, parse as `u64`, clamp to `[1, 3600]`, default to 60. Silent
+/// clamp semantics per research R4 — matches m173/m089 env-var handling
+/// posture (parse-fail or out-of-range value silently falls back to
+/// default rather than aborting the scan for an operator override
+/// experiment).
+fn resolve_render_timeout() -> Duration {
+    const DEFAULT_SECS: u64 = 60;
+    const MIN_SECS: u64 = 1;
+    const MAX_SECS: u64 = 3600;
+    let secs = std::env::var("MIKEBOM_HELM_RENDER_TIMEOUT_SECS")
+        .ok()
+        .and_then(|s| s.parse::<u64>().ok())
+        .map(|n| n.clamp(MIN_SECS, MAX_SECS))
+        .unwrap_or(DEFAULT_SECS);
+    Duration::from_secs(secs)
+}
+
+/// Cap the first `max_lines` lines of a UTF-8-lossy stderr byte buffer
+/// per m188 FR-018 (secrets guard). Prevents kubeconfig / secret leakage
+/// in WARN logs from `helm template` subprocess stderr.
+fn cap_stderr_lines(bytes: &[u8], max_lines: usize) -> String {
+    let text = String::from_utf8_lossy(bytes);
+    text.lines()
+        .take(max_lines)
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// Milestone 203 (FR-001, closes #553): shell out to `helm template
+/// <chart-dir>` and extract image refs from the fully-rendered stdout.
+/// Reuses the m055 `run_go_mod_graph` subprocess-with-timeout pattern:
+/// probe binary → spawn worker thread → main-thread `recv_timeout`.
+/// Same pattern as m053 (`git describe`) + m173 (warm-go-cache).
+///
+/// Returns `Ok(refs)` on successful helm template + regex extraction.
+/// Returns `Err(HelmRenderError::*)` on any failure class; caller
+/// WARN-logs + falls back to `extract_image_refs_unrendered`.
+pub(super) fn extract_image_refs_rendered(
+    chart_dir: &Path,
+    timeout: Duration,
+) -> Result<Vec<ImageRef>, HelmRenderError> {
+    use std::process::Command;
+    use std::sync::mpsc;
+    use std::thread;
+
+    // Probe: `helm version --short` — fails fast on missing binary.
+    match Command::new("helm").arg("version").arg("--short").output() {
+        Ok(_) => {}
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            return Err(HelmRenderError::BinaryNotFound);
+        }
+        Err(e) => return Err(HelmRenderError::IoError(e)),
+    }
+
+    // Spawn `helm template` in a worker thread so main can enforce
+    // timeout via `recv_timeout`. Worker leaks on timeout (documented
+    // per m055 comment at go_mod_graph.rs:117-118) — subprocess reaped
+    // by the OS eventually.
+    let (tx, rx) = mpsc::channel();
+    let chart_dir_owned = chart_dir.to_path_buf();
+    thread::spawn(move || {
+        let result = Command::new("helm")
+            .args(["template", &chart_dir_owned.to_string_lossy()])
+            .output();
+        let _ = tx.send(result);
+    });
+
+    let output = match rx.recv_timeout(timeout) {
+        Ok(Ok(o)) => o,
+        Ok(Err(e)) => return Err(HelmRenderError::IoError(e)),
+        Err(_) => {
+            return Err(HelmRenderError::Timeout {
+                timeout_secs: timeout.as_secs(),
+            });
+        }
+    };
+
+    if !output.status.success() {
+        return Err(HelmRenderError::NonZeroExit {
+            code: output.status.code().unwrap_or(-1),
+            stderr_head: cap_stderr_lines(&output.stderr, 20),
+        });
+    }
+
+    // Success: apply the existing IMAGE_REGEX to the rendered stdout.
+    // Use a synthetic path "helm-template-rendered" for the source_path
+    // field since the ref came from post-render stdout, not a specific
+    // template file.
+    let stdout_str = String::from_utf8_lossy(&output.stdout);
+    let mut refs = Vec::new();
+    for caps in image_regex().captures_iter(&stdout_str) {
+        if let Some(m) = caps.get(1) {
+            let raw = m.as_str().trim().to_string();
+            if raw.is_empty() {
+                continue;
+            }
+            let kind = classify_image_ref(&raw);
+            refs.push(ImageRef {
+                raw,
+                kind,
+                source_path: "helm-template-rendered".to_string(),
+            });
+        }
+    }
+    Ok(refs)
+}
 
 /// Depth cap for recursive `charts/*.tgz` descent per FR-005. Matches
 /// m114 filesystem walker's depth ceiling.
@@ -294,17 +426,42 @@ pub fn read(
     // Phase A — chart-level enumeration.
     let mut components = read_chart_at(rootfs, 0)?;
 
-    // Phase B — line-based image-ref extraction from templates + crds.
-    // US3 (`HelmRenderMode::OptIn`) is a follow-up; for now, always
-    // unrendered.
-    let _ = render_mode; // future US3 hook
-    let image_refs = extract_image_refs_unrendered(rootfs);
+    // Phase B or C — line-based OR rendered image-ref extraction per
+    // m188 contracts/extraction-pipeline.md §Phase C flow diagram.
+    // Milestone 203 (#553): `HelmRenderMode::OptIn` triggers the
+    // rendered subprocess path via `extract_image_refs_rendered`.
+    // Every failure class (BinaryNotFound, NonZeroExit, Timeout,
+    // IoError) falls back to `extract_image_refs_unrendered` with a
+    // WARN log per FR-007 + Constitution Principle III.
+    let (image_refs, extraction_mode) = match render_mode {
+        HelmRenderMode::OptIn => {
+            let timeout = resolve_render_timeout();
+            match extract_image_refs_rendered(rootfs, timeout) {
+                Ok(refs) => (refs, HelmExtractionMode::Rendered),
+                Err(e) => {
+                    tracing::warn!(
+                        error = %e,
+                        chart_dir = %rootfs.display(),
+                        "helm-render failed; falling back to unrendered extraction"
+                    );
+                    (
+                        extract_image_refs_unrendered(rootfs),
+                        HelmExtractionMode::Unrendered,
+                    )
+                }
+            }
+        }
+        HelmRenderMode::Off => (
+            extract_image_refs_unrendered(rootfs),
+            HelmExtractionMode::Unrendered,
+        ),
+    };
     components.extend(image_refs.into_iter().map(|r| HelmComponent::Image {
         image_ref: r,
     }));
 
     // Phase D — mark ScanDiagnostics for document-scope annotation.
-    diagnostics.helm_extraction_mode = Some(HelmExtractionMode::Unrendered);
+    diagnostics.helm_extraction_mode = Some(extraction_mode);
 
     Ok(components_to_package_db_entries(components))
 }
@@ -1093,5 +1250,99 @@ dependencies:
         } else {
             panic!("expected Tagged");
         }
+    }
+
+    // ── T007 m203 (#553) — HelmRenderError + resolve_render_timeout ──
+    //
+    // These tests mutate the process-wide `MIKEBOM_HELM_RENDER_TIMEOUT_SECS`
+    // env var. Run with `cargo test ... -- --test-threads=1` when the full
+    // suite is invoked, or scope invocation to this file via
+    // `cargo test -- resolve_render_timeout` (which naturally serializes
+    // matching tests). We avoid a `serial_test` dep per plan Technical
+    // Context (zero-new-Cargo-deps).
+
+    fn with_helm_render_timeout_env<F: FnOnce()>(value: Option<&str>, f: F) {
+        let prev = std::env::var("MIKEBOM_HELM_RENDER_TIMEOUT_SECS").ok();
+        match value {
+            Some(v) => std::env::set_var("MIKEBOM_HELM_RENDER_TIMEOUT_SECS", v),
+            None => std::env::remove_var("MIKEBOM_HELM_RENDER_TIMEOUT_SECS"),
+        }
+        f();
+        match prev {
+            Some(v) => std::env::set_var("MIKEBOM_HELM_RENDER_TIMEOUT_SECS", v),
+            None => std::env::remove_var("MIKEBOM_HELM_RENDER_TIMEOUT_SECS"),
+        }
+    }
+
+    #[test]
+    fn resolve_render_timeout_default_when_env_var_absent_m203() {
+        with_helm_render_timeout_env(None, || {
+            assert_eq!(resolve_render_timeout(), Duration::from_secs(60));
+        });
+    }
+
+    #[test]
+    fn resolve_render_timeout_honors_env_var_m203() {
+        with_helm_render_timeout_env(Some("42"), || {
+            assert_eq!(resolve_render_timeout(), Duration::from_secs(42));
+        });
+    }
+
+    #[test]
+    fn resolve_render_timeout_clamps_below_min_m203() {
+        with_helm_render_timeout_env(Some("0"), || {
+            assert_eq!(resolve_render_timeout(), Duration::from_secs(1));
+        });
+    }
+
+    #[test]
+    fn resolve_render_timeout_clamps_above_max_m203() {
+        with_helm_render_timeout_env(Some("99999"), || {
+            assert_eq!(resolve_render_timeout(), Duration::from_secs(3600));
+        });
+    }
+
+    #[test]
+    fn resolve_render_timeout_ignores_parse_error_m203() {
+        with_helm_render_timeout_env(Some("notanumber"), || {
+            assert_eq!(resolve_render_timeout(), Duration::from_secs(60));
+        });
+    }
+
+    #[test]
+    fn helm_render_error_display_formats_all_variants_m203() {
+        let e = HelmRenderError::BinaryNotFound;
+        assert_eq!(format!("{e}"), "`helm` binary not found on $PATH");
+
+        let e = HelmRenderError::NonZeroExit {
+            code: 42,
+            stderr_head: "boom".into(),
+        };
+        assert_eq!(
+            format!("{e}"),
+            "`helm template` exited with code 42; stderr head: boom"
+        );
+
+        let e = HelmRenderError::Timeout { timeout_secs: 7 };
+        assert_eq!(format!("{e}"), "`helm template` exceeded 7s timeout");
+
+        // T016a (CG1): IoError variant unit test.
+        let io_err = std::io::Error::new(std::io::ErrorKind::PermissionDenied, "nope");
+        let e = HelmRenderError::from(io_err);
+        assert_eq!(format!("{e}"), "`helm template` I/O error: nope");
+    }
+
+    #[test]
+    fn cap_stderr_lines_truncates_at_max_m203() {
+        let bytes = b"line1\nline2\nline3\nline4\nline5";
+        let capped = cap_stderr_lines(bytes, 3);
+        assert_eq!(capped, "line1\nline2\nline3");
+    }
+
+    #[test]
+    fn cap_stderr_lines_handles_shorter_input_m203() {
+        let bytes = b"only";
+        let capped = cap_stderr_lines(bytes, 20);
+        assert_eq!(capped, "only");
     }
 }
