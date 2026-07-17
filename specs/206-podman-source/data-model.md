@@ -87,23 +87,28 @@ impl PodmanImageRef {
 
 **Location**: `mikebom-cli/src/scan_fs/podman_source.rs`.
 
-**Signature**:
+**Signature** (F5-remediated — dropped dead `storage_root` param):
 
 ```rust
 pub fn resolve_and_pack(
     image_ref: &str,
     out_tarball: &Path,
-    storage_root: Option<&Path>,
 ) -> Result<(), PodmanSourceError>
 ```
 
+Prior draft included a `storage_root: Option<&Path>` param earmarked as a Phase-2 escape-hatch hook. It was only ever called with `None` in m206 MVP → dead code from day 1. Deferred: re-add the param + a `--podman-storage-root` CLI flag together in a future milestone if operators surface a need.
+
 **Body flow** (5 phases):
 
-1. **Discover storage root** (R2): if `storage_root` param is `Some(_)` use it verbatim (Phase-2 escape-hatch hook, unused in m206 MVP); else read `containers.conf` → detect `graphroot` OR fall back to default per rootless/rootful. Return `StorageRootUnreachable` on failure.
+1. **Discover storage root** (R2): read `containers.conf` → detect `graphroot` OR fall back to default per rootless/rootful. Return `StorageRootUnreachable` on failure.
 2. **Detect storage driver** (R3): check directory presence at `<graphroot>/overlay/` vs `vfs/` vs `btrfs/`. Non-overlay → `UnsupportedDriver`.
 3. **Resolve image ref**: parse via `PodmanImageRef::parse`, load `<graphroot>/overlay-images/images.json`, match against the ref's tag/digest/short-ID form. Return `ImageNotFound` on miss.
-4. **Load OCI metadata**: read `<graphroot>/overlay-images/<image-id>/manifest` (OCI ImageManifest) + `<graphroot>/overlay-images/<image-id>/config` (OCI ImageConfiguration). Reuses `oci_spec::image` types from the workspace `oci-spec` dep (already used by m031's `oci_pull`).
-5. **Re-tar + assemble**: for each layer in the manifest's layer chain, resolve `<graphroot>/overlay/<layer-id>/diff/` (map manifest digest → c/storage internal layer ID via `<graphroot>/overlay-layers/layers.json`), walk with `walkdir` + write into a `tar::Builder<GzEncoder<Vec<u8>>>`, verify the compressed digest matches the manifest declaration (per FR-012 integrity), then hand `[PulledLayer { blob, digest, media_type }]` + `config_bytes` + `image_ref` + `out_tarball` to `oci_pull::tarball::assemble_docker_save_tarball` (reused verbatim).
+4. **Load OCI content** via the F1-remediated multi-arch helper `resolve_manifest_for_host_arch(graphroot, image_id)`:
+   - First try `serde_json::from_slice::<oci_spec::image::ImageIndex>(&<graphroot>/overlay-images/<image-id>/manifest bytes)`. On success (multi-arch case), filter `manifests[]` by `platform.architecture == host_oci_arch` AND `platform.os == host_os`; 0 matches → `NoArchMatch { image_ref, host, available }`; 1 match → recurse: read `<graphroot>/overlay-images/<matched-digest>/manifest`, parse as `ImageManifest`, return. ≥2 matches → return first + WARN.
+   - On ImageIndex parse failure, fall back to `ImageManifest` parse (single-arch case).
+   - `host_oci_arch` is computed via an `ARCH_ALIAS` helper mapping Rust `std::env::consts::ARCH` names to OCI-canonical strings ("x86_64" → "amd64", "aarch64" → "arm64", "arm" → "arm"; unknown → passthrough).
+   - Also load `<graphroot>/overlay-images/<image-id>/config` (OCI ImageConfiguration).
+5. **Re-tar + assemble**: for each layer in the resolved manifest's layer chain, resolve `<graphroot>/overlay/<layer-id>/diff/` (map manifest digest → c/storage internal layer ID via `<graphroot>/overlay-layers/layers.json`), walk with `walkdir` + write into a `tar::Builder<GzEncoder<Vec<u8>>>` with `HeaderMode::Deterministic`, verify the compressed digest matches the manifest declaration (per FR-012 integrity), then hand `[PulledLayer { blob, digest, media_type }]` + `config_bytes` + `image_ref` + `out_tarball` to `oci_pull::tarball::assemble_docker_save_tarball` (reused verbatim).
 
 **Post-condition on success**: `out_tarball` is a docker-save-format `.tar` (or `.tar.gz` per convention — inspect the assembler's output shape) that `docker_image::extract` consumes with zero modifications.
 

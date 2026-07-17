@@ -29,6 +29,7 @@ description: "Task list for m206 — scan local podman images (issue #440)"
   - `grep -n "fn extract" mikebom-cli/src/scan_fs/docker_image.rs | head` — confirm extract fn at line 96.
   - `grep -oE 'row_id: "C1[0-9]+"' mikebom-cli/src/parity/extractors/mod.rs | sort -u | tail` — confirm C123 highest → C124 free.
   - Podman availability probe: `command -v podman && podman --version 2>&1 | head`. If absent, tag T010 (US1 gated integration test) as skip-locally + note in the PR body.
+  - **F7 remediation**: `grep "oci-spec" mikebom-cli/Cargo.toml` — verify features include `["distribution", "image"]`. `ImageIndex`, `ImageManifest`, `ImageConfiguration` types come from the `image` feature. If features are narrower, add them here (bookkeeping) so downstream tasks compile without churn.
   - Record all outputs to `/tmp/m206-recon.txt`.
 
 ## Phase 2: Foundational (Prerequisites for ALL user stories)
@@ -70,13 +71,23 @@ description: "Task list for m206 — scan local podman images (issue #440)"
 
 **Independent Test Criterion**: `podman pull alpine:3.19` + `mikebom sbom scan --image alpine:3.19 --image-src podman --format cyclonedx-json --output out.cdx.json` produces a CDX SBOM where (a) at least 10 `pkg:apk/` components appear (alpine base packages), (b) `metadata.properties[]` contains `mikebom:image-source = "podman"`, (c) exit code 0.
 
-- [ ] T009 [US1] Implement `pub fn resolve_and_pack(image_ref: &str, out_tarball: &Path, storage_root: Option<&Path>) -> Result<(), PodmanSourceError>` in `mikebom-cli/src/scan_fs/podman_source.rs` per data-model E3's 5-phase flow:
-  1. Discover storage root (T006 `discover_storage_root`; honor `storage_root` param if `Some(_)`).
+- [ ] T009 [US1] Implement `pub fn resolve_and_pack(image_ref: &str, out_tarball: &Path) -> Result<(), PodmanSourceError>` in `mikebom-cli/src/scan_fs/podman_source.rs` per data-model E3's 5-phase flow. **F5 remediation**: signature drops the `storage_root: Option<&Path>` param — it was dead code (only ever called with `None` in m206). Re-add when a future `--podman-storage-root` flag lands.
+  1. Discover storage root (T006 `discover_storage_root`).
   2. Detect storage driver (T006 `detect_storage_driver`).
   3. Parse image index + resolve image ref (T005 + T006).
-  4. Load OCI manifest + config from `<graphroot>/overlay-images/<image-id>/{manifest,config}` via `serde_json::from_slice` into `oci_spec::image::ImageManifest` + `ImageConfiguration`.
-  5. For each layer in the OCI manifest's `layers[]` chain: locate the c/storage internal layer ID via `layers_json` reverse lookup on `diff-digest` OR `compressed-diff-digest`; walk `<graphroot>/overlay/<layer-id>/diff/` with `walkdir::WalkDir` sorted lexicographically; write into `tar::Builder<GzEncoder<Vec<u8>>>` with `HeaderMode::Deterministic` per contracts/podman-storage-layout.md §Layer Content note on reproducibility; verify computed SHA-256 matches OCI manifest's declared digest per FR-012 → return `PodmanSourceError::LayerDigestMismatch` on mismatch.
+  4. Load OCI content from `<graphroot>/overlay-images/<image-id>/manifest` — see T009a for multi-arch dispatch — plus config from `<graphroot>/overlay-images/<image-id>/config` via `serde_json::from_slice` into `oci_spec::image::ImageConfiguration`.
+  5. For each layer in the resolved OCI ImageManifest's `layers[]` chain: locate the c/storage internal layer ID via `layers_json` reverse lookup on `diff-digest` OR `compressed-diff-digest`; walk `<graphroot>/overlay/<layer-id>/diff/` with `walkdir::WalkDir` sorted lexicographically; write into `tar::Builder<GzEncoder<Vec<u8>>>` with `HeaderMode::Deterministic` per contracts/podman-storage-layout.md §Layer Content note on reproducibility; verify computed SHA-256 matches OCI manifest's declared digest per FR-012 → return `PodmanSourceError::LayerDigestMismatch` on mismatch.
   6. Assemble via `crate::scan_fs::oci_pull::tarball::assemble_docker_save_tarball(&config_bytes, &pulled_layers, image_ref, out_tarball)`. Bubble any error.
+- [ ] T009a [US1] **F1 remediation** — multi-arch handling per FR-011. Add helper `resolve_manifest_for_host_arch(graphroot: &Path, image_id: &str) -> Result<oci_spec::image::ImageManifest, PodmanSourceError>` used by T009 phase 4:
+  - Read `<graphroot>/overlay-images/<image_id>/manifest` bytes ONCE.
+  - Try `serde_json::from_slice::<oci_spec::image::ImageIndex>(&bytes)`. On success, filter `.manifests[]` by `platform.architecture == std::env::consts::ARCH_ALIAS(*)` AND `platform.os == std::env::consts::OS`. If 0 matches → return `PodmanSourceError::NoArchMatch { image_ref, host: <formatted>, available: <collected platforms> }`. If 1 match → recurse: read the sub-manifest from `<graphroot>/overlay-images/<matched-digest>/manifest` (podman stores per-arch manifests separately indexed by digest); parse as `ImageManifest`; return. If ≥2 matches → return the first (shouldn't happen in practice; log WARN).
+  - If ImageIndex parse fails, fall back to `serde_json::from_slice::<ImageManifest>(&bytes)`; single-arch or non-multi-arch image. Return the parsed manifest.
+  - `(*)` Cargo `std::env::consts::ARCH` returns Rust arch names (`"x86_64"`, `"aarch64"`, `"arm"`); OCI uses Go arch names (`"amd64"`, `"arm64"`, `"arm"`). Add a small `ARCH_ALIAS` helper mapping Rust → OCI-canonical strings ("x86_64" → "amd64", "aarch64" → "arm64", "arm" → "arm"; unknown arch → return as-is). Documented mapping in the helper's doc-comment.
+  - Add unit tests to `podman_source.rs::tests`:
+    - `resolve_manifest_single_arch_returns_verbatim` — synthetic manifest bytes (single ImageManifest); assert returned identically.
+    - `resolve_manifest_multi_arch_picks_host_arch` — synthetic ImageIndex with 2 platform entries (one matching host, one not); assert host-arch match returned.
+    - `resolve_manifest_multi_arch_no_match_errors` — synthetic ImageIndex with only `s390x`; assert `NoArchMatch` variant with `available: ["linux/s390x"]`.
+    - `arch_alias_maps_rust_names_to_oci` — cover `x86_64→amd64`, `aarch64→arm64`, unmapped passthrough.
 - [ ] T010 [US1] Add `ImageSource::Podman` variant to `mikebom-cli/src/cli/scan_cmd.rs:54-62` per data-model E4. Include doc-comment citing m206 (#440) + spec Assumption 1 (Linux-only). ALSO update the `default_value` string at scan_cmd.rs:234 from `"docker,remote"` to `"docker,podman,remote"` per FR-006.
 - [ ] T011 [US1] Add Podman dispatch branch to `resolve_image_ref` in `mikebom-cli/src/cli/scan_cmd.rs:1908+` per data-model E5. Analogous to the Docker branch at lines 1910-1948. Calls `scan_fs::podman_source::resolve_and_pack(arg_str, &tarball_path, None)`. On success: `selected_source = Some(ImageSource::Podman)`, break with the tarball path. On error: WARN log naming the error, `continue` to next `--image-src` entry.
 - [ ] T012 [US1] Wire `ScanResult.image_source` + `ScanArtifacts.image_source` field per data-model E6 (mirrors m204 helm_extraction_mode 8-hop plumbing pattern):
@@ -114,6 +125,7 @@ description: "Task list for m206 — scan local podman images (issue #440)"
       - (a) Exit code 0.
       - (b) `.components[]` contains ≥ 10 entries with `.purl` starting with `pkg:apk/` (alpine base pkgs).
       - (c) `.metadata.properties[]` contains `{name: "mikebom:image-source", value: "podman"}`.
+      - (d) **F2 remediation** — SC-004: `.metadata.component.name` contains the substring `"alpine"` (verifies operator-supplied `--image` ref propagates through to the subject-component identity).
 
 ## Phase 4: User Story 2 — Rootful podman image scan (Priority: P2)
 
@@ -125,11 +137,12 @@ description: "Task list for m206 — scan local podman images (issue #440)"
   - `#[cfg(target_os = "linux")]` + `require_podman_integration()` gate + additional `MIKEBOM_PODMAN_ROOTFUL_INTEGRATION=1` gate (rootful test requires root privileges — skip unless explicitly opted in; matches m188 nightly-lane pattern).
   - Detect `geteuid() == 0` at test entry; skip cleanly if not root.
   - Runs `podman pull` as root then invokes mikebom — same assertions as T019 but against `/var/lib/containers/storage/`.
-- [ ] T021 [US2] Add integration test `us2_podman_source_permission_denied_names_actionable_error` (unix-only, no-root guard):
-  - Skip if running as root (this test exercises the non-root user hitting rootful storage).
-  - Create a synthetic tempdir mimicking `/var/lib/containers/storage/` layout but with `chmod 0700` (unreadable by non-root).
-  - Invoke mikebom `--image alpine:3.19 --image-src podman` with the env var `MIKEBOM_PODMAN_STORAGE_ROOT_OVERRIDE=<tempdir>` (or pass the storage_root param path if the CLI exposes an escape hatch — otherwise skip this test and note in code comment that Phase-2 escape-hatch flag would enable this).
-  - Assert: exit code non-zero, stderr WARN contains "permission" OR "unreadable" AND mentions the specific path.
+- [ ] T021 [US2] **F6 remediation** — reduce to unit-test scope. Add unit test `discover_storage_root_returns_unreachable_when_directory_unreadable_m206` to `mikebom-cli/src/scan_fs/podman_source.rs::tests`:
+  - `#[cfg(unix)]` gate + skip cleanly if running as root (chmod-based unreadable-dir test needs a non-root euid).
+  - Create tempdir; `chmod 0000` on it (unreadable by owner).
+  - Call `discover_storage_root(true)` with env-masked `$HOME` pointing at the tempdir — assert returned `Err(PodmanStorageError::StorageRootUnreachable { .. })`.
+  - Restore permissions before teardown so tempdir cleanup works: `chmod 0700` before drop.
+  - Rationale: original T021 required a `MIKEBOM_PODMAN_STORAGE_ROOT` escape-hatch flag that we explicitly deferred (F5). Unit-testing `discover_storage_root` in isolation covers FR-007's permission-error branch without scope creep.
 
 ## Phase 5: User Story 3 — Auto-detection between docker + podman sources (Priority: P2)
 
@@ -145,6 +158,12 @@ description: "Task list for m206 — scan local podman images (issue #440)"
     - (a) Exit 0.
     - (b) stderr contains "docker source failed" OR "trying next" (WARN fired but scan proceeded).
     - (c) `.metadata.properties[]` contains `mikebom:image-source = "podman"` (winning source).
+- [ ] T022a [US3] **F3 remediation** — FR-005 ordering-respected explicit test. Add `us3b_explicit_image_src_podman_first_wins_over_docker` to `mikebom-cli/tests/scan_image_podman_source.rs`:
+  - Full gate: `#[cfg(target_os = "linux")]` + `require_podman_integration()` + probe for `docker` binary.
+  - Setup: `docker pull alpine:3.19` (idempotent — ensures docker HAS the image) + `podman pull alpine:3.19`.
+  - Invoke mikebom with EXPLICIT `--image alpine:3.19 --image-src podman,docker`.
+  - Assert: `.metadata.properties[]` contains `mikebom:image-source = "podman"` (podman wins per operator-supplied order, not the default docker-first order).
+  - This pins FR-005: "`--image-src` ordering respected verbatim — operator's stated preference is not overridden by mikebom heuristics."
 
 ## Phase 6: Polish & Delivery
 
@@ -153,14 +172,21 @@ description: "Task list for m206 — scan local podman images (issue #440)"
 - [ ] T023 FR-005 byte-identity regression test `fr005_non_image_scan_omits_image_source_annotation` in a NEW file `mikebom-cli/tests/podman_source_byte_identity.rs` (default CI, cross-platform):
   - Scan an existing non-image public_corpus fixture (`mikebom-cli/tests/fixtures/public_corpus/npm-express/`) via the mikebom binary.
   - Assert emitted CDX contains NO `.metadata.properties[]` entry with `.name == "mikebom:image-source"` (image_source is None for --path scans → conditional annotation absent).
-- [ ] T024 [P] Add C124 row to `docs/reference/sbom-format-mapping.md` immediately after C123 following the C108 shape:
+- [ ] T024 [P] **F8-expanded** — Add C124 row to `docs/reference/sbom-format-mapping.md` immediately after C123 following the C108 shape:
   - Label: `mikebom:image-source`.
-  - Per-emitter mapping (CDX `metadata.properties[]`, SPDX 2.3 doc-scope Annotation with `MikebomAnnotationCommentV1` envelope, SPDX 3 Annotation element).
-  - **KEEP-NO-NATIVE** verdict with rejected-alternatives list per Constitution Principle V audit (plan.md §V):
-    - CDX `metadata.tools[]` — names SBOM-producing tool, not image-caching tool. Semantic mismatch.
-    - SPDX 2.3 `creationInfo.tools[]` — same rejection.
-    - SPDX 3 `SoftwareArtifact.software_downloadLocation` — WHERE the artifact was fetched from, not WHICH local tool serves it. Rejected.
-    - SPDX 3 `Element.originatedBy` — upstream-supplier metadata, not local-tool metadata. Rejected.
+  - Emission gate: present ONLY when scan winning-source was Podman (conditional per FR-005 byte-identity guardrail). Value: closed enum, currently `"podman"` (docker + remote emit nothing; extensible to `"docker"` / `"registry"` in a future milestone if operators surface a need).
+  - Per-emitter mapping:
+    - CDX 1.6: `metadata.properties[]` entry with `name = "mikebom:image-source"`, `value = "podman"`.
+    - SPDX 2.3: doc-scope `Annotation` with `MikebomAnnotationCommentV1` envelope carrying `k = "mikebom:image-source"`, `v = "podman"`.
+    - SPDX 3.0.1: `Annotation` element in the JSON-LD `@graph[]` with `subject = <SpdxDocument IRI>`, `statement = <envelope>`.
+  - **KEEP-NO-NATIVE** verdict with fully-cited rejected-alternatives list per Constitution Principle V audit (plan.md §V):
+    - **CDX 1.6 `metadata.tools[]` / `metadata.tools.components[]`** (per CDX 1.6 spec §7.7 "metadata.tools property"): names the SBOM-producing tool + version. mikebom already occupies this slot as the SBOM producer; using it to ALSO carry "which local tool served the image" would conflate two orthogonal concerns and break the CDX-spec contract that `tools[]` = generator identity. Rejected.
+    - **SPDX 2.3 `creationInfo.creators[]`** (per SPDX 2.3 §6.8): names entities that created the SPDX document itself. Same rejection as CDX `tools[]` — semantic mismatch (document-creator vs image-cache-tool).
+    - **SPDX 3.0.1 `SoftwareArtifact.software_downloadLocation`** (per SPDX 3 model §Software profile): the URL from which the artifact was originally fetched. Different concept from "which local tool serves this image copy" — downloadLocation is upstream-supplier metadata; a podman-cached alpine and a docker-cached alpine both have `downloadLocation = "docker.io/library/alpine"`. Rejected.
+    - **SPDX 3.0.1 `Element.originatedBy`**: upstream-supplier metadata (who produced the software originally). Not local-cache-tool metadata. Rejected.
+    - **SPDX 3.0.1 `Element.suppliedBy`**: analogous supplier concept. Rejected on same grounds.
+    - **Free-text carriers** (CDX `metadata.tools.components[].description`, SPDX 2.3 `creationInfo.comment`, SPDX 3 `Element.description`): all lose machine-parseability. Rejected — the m206 use case (downstream vuln-scanners inspecting scan provenance) needs a stable machine-readable enum value.
+  - Standards-native precedence per Constitution Principle V explicitly acknowledged: if either standard adopts a doc-scope "image-cache-source" enum, m206's spec (FR-014 fine-print) codifies migration to the native slot with the `mikebom:image-source` annotation as fallback for pre-adoption SBOMs.
 - [ ] T025 [P] Run every existing image-source integration test to confirm zero regression:
   - `cargo +stable test --manifest-path mikebom-cli/Cargo.toml --test scan_image_docker_daemon --no-fail-fast 2>&1 | tail -3` (m031 docker-source; MUST stay green post-m206).
   - `cargo +stable test --manifest-path mikebom-cli/Cargo.toml --test parity_synthetic_drift --test holistic_parity --no-fail-fast 2>&1 | tail -5` (m071 parity suite; must exercise C124 automatically post-registration).
