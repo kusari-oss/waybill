@@ -700,6 +700,18 @@ pub(crate) struct CargoTomlSections {
     /// Companion annotation: `mikebom:optional-derivation =
     /// cargo-optional-true`.
     pub optional_deps: HashSet<String>,
+    /// Milestone 200 (FR-001, closes #585) — root `[package].name`
+    /// values collected from every parseable workspace `Cargo.toml`.
+    /// Used at the classifier cascade to short-circuit workspace-root
+    /// [[package]] entries to `LifecycleScope::Runtime` regardless of
+    /// prod-set BFS membership. NOT added to `prod_deps` because
+    /// Cargo.lock's per-[[package]] `dependencies = [...]` list
+    /// unifies runtime + dev + build deps — walking BFS from the root's
+    /// name would pull dev/build deps into `prod_set`, violating
+    /// FR-003. The classifier check `pkg.source.is_none() && pkg.name
+    /// ∈ root_names` targets the workspace-root [[package]] itself
+    /// without affecting its transitive closure.
+    pub root_names: HashSet<String>,
 }
 
 impl CargoTomlSections {
@@ -711,6 +723,7 @@ impl CargoTomlSections {
         self.dev_deps.extend(other.dev_deps.iter().cloned());
         self.build_deps.extend(other.build_deps.iter().cloned());
         self.optional_deps.extend(other.optional_deps.iter().cloned());
+        self.root_names.extend(other.root_names.iter().cloned());
     }
 }
 
@@ -752,6 +765,26 @@ pub(crate) fn parse_cargo_toml(path: &Path) -> Option<CargoTomlSections> {
             collect_section_keys(target_value, "build-dependencies", &mut out.build_deps);
             collect_optional_dep_keys(target_value, "dependencies", &mut out.optional_deps);
         }
+    }
+    // Milestone 200 (FR-001, closes #585): record the manifest's root
+    // `[package].name` in the `root_names` set for later classifier
+    // short-circuit. This is DELIBERATELY separate from `prod_deps` —
+    // seeding the prod-set BFS from `[package].name` would over-reach
+    // because Cargo.lock's per-[[package]] `dependencies = [...]` list
+    // unifies runtime + dev + build deps, so BFS-walking the root
+    // would pull dev/build deps into `prod_set` (FR-003 violation).
+    // The classifier at cargo.rs:1099+ checks `pkg.source.is_none() &&
+    // pkg.name ∈ root_names` and short-circuits to Runtime WITHOUT
+    // affecting the BFS closure. Virtual workspaces (no [package] block)
+    // no-op via the None arm; single-crate projects and multi-crate
+    // workspace roots both get their name recorded here.
+    if let Some(root_name) = parsed
+        .get("package")
+        .and_then(|v| v.as_table())
+        .and_then(|t| t.get("name"))
+        .and_then(|v| v.as_str())
+    {
+        out.root_names.insert(root_name.to_string());
     }
     Some(out)
 }
@@ -1009,6 +1042,7 @@ fn parse_lockfile(
     prod_set: &HashSet<(String, String)>,
     build_set: &HashSet<(String, String)>,
     optional_names: &HashSet<String>,
+    root_names: &HashSet<String>,
 ) -> Result<Vec<PackageDbEntry>, CargoError> {
     let text = match std::fs::read_to_string(path) {
         Ok(t) => t,
@@ -1089,7 +1123,19 @@ fn parse_lockfile(
                 // inside `[dev-dependencies]` / `[build-dependencies]`
                 // per the reader-boundary guard in
                 // `collect_optional_dep_keys`).
-                if prod_set.contains(&key) && optional_names.contains(&pkg.name) {
+                // Milestone 200 (FR-002, closes #585): workspace-root
+                // [[package]] entries — those with `source = None` AND
+                // whose name matches a manifest `[package].name` — get
+                // Runtime unconditionally. They ARE the workspace's
+                // deliverable, never build-plumbing. This short-circuit
+                // targets ONLY the root entry itself; the BFS closure is
+                // untouched, so dev/build classification of other entries
+                // remains correct per FR-003.
+                let is_workspace_root =
+                    pkg.source.is_none() && root_names.contains(&pkg.name);
+                if is_workspace_root {
+                    entry.lifecycle_scope = Some(LifecycleScope::Runtime);
+                } else if prod_set.contains(&key) && optional_names.contains(&pkg.name) {
                     entry.lifecycle_scope = Some(LifecycleScope::Optional);
                     entry.extra_annotations.insert(
                         "mikebom:optional-derivation".to_string(),
@@ -1198,6 +1244,7 @@ pub fn read(
             &prod_set,
             &build_set,
             &workspace_sections.optional_deps,
+            &workspace_sections.root_names,
         )?;
         for entry in entries {
             let purl_key = entry.purl.as_str().to_string();
@@ -1667,6 +1714,9 @@ baz = { version = "1", optional = true }
         assert!(sections.dev_deps.contains("baz"));
         assert!(!sections.optional_deps.contains("baz"));
         assert!(sections.prod_deps.is_empty());
+        // Milestone 200: [package].name = "my-app" recorded in root_names
+        // (separate set — dev/build classification of baz is unaffected).
+        assert!(sections.root_names.contains("my-app"));
     }
 
     #[test]
@@ -1784,7 +1834,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0000000000000000000000000000000000000000000000000000000000000001"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 2);
         assert!(entries.iter().any(|e| e.name == "serde"));
         let serde = entries.iter().find(|e| e.name == "serde").unwrap();
@@ -1806,7 +1856,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ad32ce52e4161730f7098c077cd2ed6229b5804ccf99e5366be1ab72a98b4e1"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "anyhow");
     }
@@ -1823,7 +1873,7 @@ version = "0.1.0"
 source = "git+https://github.com/me/my-fork?branch=main#abc123"
 "#;
         let path = write_lockfile(dir.path(), body);
-        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
+        let entries = parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].source_type.as_deref(), Some("git"));
     }
@@ -1839,7 +1889,7 @@ version = "0.1.0"
 dependencies = []
 "#;
         let path = write_lockfile(dir.path(), body);
-        match parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new()) {
+        match parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()) {
             Err(CargoError::LockfileUnsupportedVersion { version, .. }) => {
                 assert_eq!(version, 1);
             }
@@ -1859,7 +1909,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0000000000000000000000000000000000000000000000000000000000000000"
 "#;
         let path = write_lockfile(dir.path(), body);
-        match parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new()) {
+        match parse_lockfile(&path, &HashSet::new(), &HashSet::new(), &HashSet::new(), &HashSet::new()) {
             Err(CargoError::LockfileUnsupportedVersion { version, .. }) => {
                 assert_eq!(version, 2);
             }
@@ -2048,6 +2098,10 @@ cc = "1"
         assert_eq!(sections.prod_deps.len(), 2);
         assert_eq!(sections.dev_deps.len(), 2);
         assert_eq!(sections.build_deps.len(), 1);
+        // Milestone 200 (FR-001): [package].name recorded in root_names
+        // (NOT prod_deps — separate set avoids over-reaching the BFS
+        // closure per data-model E2 regression risk).
+        assert!(sections.root_names.contains("demo"));
     }
 
     #[test]
@@ -2073,6 +2127,8 @@ winres = "0.1"
         assert!(sections.dev_deps.contains("nix"));
         assert!(sections.build_deps.contains("winres"));
         assert!(sections.prod_deps.is_empty());
+        // Milestone 200: [package].name recorded in root_names.
+        assert!(sections.root_names.contains("demo"));
     }
 
     #[test]
@@ -2096,6 +2152,88 @@ winres = "0.1"
         assert!(sections.prod_deps.is_empty());
         assert!(sections.dev_deps.is_empty());
         assert!(sections.build_deps.is_empty());
+        // Milestone 200: [package].name = "x" recorded in root_names.
+        assert!(sections.root_names.contains("x"));
+    }
+
+    // ---- Milestone 200 (issue #585) — workspace-root [package] seed ----
+
+    /// FR-001: `parse_cargo_toml` records the root `[package].name` into
+    /// `CargoTomlSections.root_names` (separate from `prod_deps` to avoid
+    /// over-reaching the BFS closure). The classifier at `parse_lockfile`
+    /// short-circuits workspace-root [[package]] entries to Runtime by
+    /// checking `pkg.source.is_none() && pkg.name ∈ root_names`.
+    #[test]
+    fn parse_cargo_toml_seeds_root_package_name_into_root_names_m200() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("Cargo.toml");
+        std::fs::write(
+            &path,
+            r#"
+[package]
+name = "myapp"
+version = "0.1.0"
+
+[dependencies]
+foo = "1.0"
+"#,
+        )
+        .unwrap();
+        let sections = parse_cargo_toml(&path).expect("parsed");
+        // Existing behavior preserved: [dependencies] key in prod_deps.
+        assert!(sections.prod_deps.contains("foo"));
+        // Milestone 200 new behavior: [package].name in root_names only.
+        assert!(sections.root_names.contains("myapp"));
+        assert!(
+            !sections.prod_deps.contains("myapp"),
+            "root name MUST NOT leak into prod_deps — that would over-reach BFS closure (FR-003)"
+        );
+    }
+
+    /// FR-004: virtual workspace (no `[package]` block, only `[workspace]`)
+    /// MUST NOT synthetic-seed any name into root_names or prod_deps.
+    #[test]
+    fn parse_cargo_toml_virtual_workspace_omits_root_package_seed_m200() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("Cargo.toml");
+        std::fs::write(&path, "[workspace]\nmembers = [\"a\", \"b\"]\n").unwrap();
+        let sections = parse_cargo_toml(&path).expect("parsed");
+        assert!(
+            sections.prod_deps.is_empty(),
+            "virtual workspace must NOT synthetic-seed prod_deps; got {:?}",
+            sections.prod_deps
+        );
+        assert!(
+            sections.root_names.is_empty(),
+            "virtual workspace must NOT synthetic-seed root_names; got {:?}",
+            sections.root_names
+        );
+    }
+
+    /// FR-005: two independent workspace-root Cargo.toml files parsed via
+    /// separate `parse_cargo_toml` invocations MUST NOT cross-seed each
+    /// other's `[package].name`. Verifies per-manifest boundary isolation.
+    #[test]
+    fn parse_cargo_toml_isolates_root_package_across_independent_workspaces_m200() {
+        let dir = tempfile::tempdir().unwrap();
+        let path_a = dir.path().join("app-a.toml");
+        let path_b = dir.path().join("app-b.toml");
+        std::fs::write(
+            &path_a,
+            "[package]\nname = \"app-a\"\nversion = \"0.1.0\"\n",
+        )
+        .unwrap();
+        std::fs::write(
+            &path_b,
+            "[package]\nname = \"app-b\"\nversion = \"0.1.0\"\n",
+        )
+        .unwrap();
+        let sections_a = parse_cargo_toml(&path_a).expect("parsed a");
+        let sections_b = parse_cargo_toml(&path_b).expect("parsed b");
+        assert!(sections_a.root_names.contains("app-a"));
+        assert!(!sections_a.root_names.contains("app-b"));
+        assert!(sections_b.root_names.contains("app-b"));
+        assert!(!sections_b.root_names.contains("app-a"));
     }
 
     #[test]

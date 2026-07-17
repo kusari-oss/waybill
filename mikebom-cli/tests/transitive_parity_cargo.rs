@@ -37,7 +37,15 @@ const FIXTURE_SUBPATH: &str = "cargo";
 /// parity fix landing on a real fixture: consumers walking the SPDX
 /// 2.3 typed dep-scope verbs now correctly identify clap_derive as
 /// not-in-production-build.
-const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 316;
+// Milestone 200 (#585): bumped from 316 → 321 (delta +5). The workspace-
+// root [package] classification fix promotes the clap workspace-member
+// roots (`clap`, `clap_builder`, `clap_derive`, etc.) from Development
+// to Runtime; the test invocation runs with include_dev=true so the
+// entries themselves were already present, but a handful of graph edges
+// that were previously scope-filtered as dev-tier now surface as
+// runtime edges. Verified deterministic across 3 consecutive runs.
+// See FR-002 / FR-003 in specs/200-*/spec.md.
+const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 321;
 
 /// Representative edges that mikebom **actually emits** today — pinning
 /// current behavior so future milestones can't silently regress.
