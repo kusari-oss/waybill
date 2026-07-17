@@ -127,6 +127,8 @@ if let Some(mode) = artifacts.helm_extraction_mode {
 
 **Function signature**: unchanged — `annotate_document` takes `&ScanArtifacts<'_>`, and the new field is already accessible via `artifacts.helm_extraction_mode` after E3 lands.
 
+**Metadata fields** (`annotator`, `annotationType`, `annotationDate` per spec FR-002): handled by the m071 `push()` → `build_annotation` helper at `mikebom-cli/src/generate/spdx/annotations.rs:126`. Callers only supply the `k`/`v` pair; the helper wraps them in the `MikebomAnnotationCommentV1` envelope and sets `annotator = "Tool: mikebom-<version>"`, `annotationType = "OTHER"`, `annotationDate = <emission-timestamp>` uniformly. No m204 change to those fields.
+
 ## E6: SPDX 3 emit branch in `v3_annotations.rs` (MODIFIED)
 
 **Location**: `mikebom-cli/src/generate/spdx/v3_annotations.rs` (analog to E5; C112 emit at line 599-601).
