@@ -608,6 +608,15 @@ fn push_document_fields(
         push(out, "mikebom:image-extraction-completeness", json!(mode.as_wire_str()));
     }
 
+    // Milestone 206 (#440): C124 doc-scope image-source annotation
+    // (SPDX 3). Same emission semantics as CDX + SPDX 2.3 emitters.
+    if matches!(
+        scan.image_source,
+        Some(crate::cli::scan_cmd::ImageSource::Podman)
+    ) {
+        push(out, "mikebom:image-source", json!("podman"));
+    }
+
     // Milestone 134 (closes #125, catalog row C100): document-scope
     // `mikebom:purl-collisions-detected` summary. Omitted when no
     // collisions were detected so clean scans stay byte-identical to

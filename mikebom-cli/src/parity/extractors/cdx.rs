@@ -818,6 +818,11 @@ cdx_anno!(c112_cdx, "mikebom:go-workspace-mode",                document);
 // extraction; `"full"` for m203 `--helm-render` success.
 cdx_anno!(c123_cdx, "mikebom:image-extraction-completeness",    document);
 
+// Milestone 206 (closes #440): C124 document-scope image-source
+// annotation. Wire value: closed enum `"podman"` in MVP (docker + remote
+// emit nothing per FR-005 byte-identity guardrail).
+cdx_anno!(c124_cdx, "mikebom:image-source",                     document);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 cdx_anno!(c113_cdx, "mikebom:synthetic-built-in",               component);

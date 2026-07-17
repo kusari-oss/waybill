@@ -646,6 +646,9 @@ spdx3_anno!(c112_spdx3, "mikebom:go-workspace-mode",                document);
 // extraction-completeness annotation.
 spdx3_anno!(c123_spdx3, "mikebom:image-extraction-completeness",    document);
 
+// Milestone 206 (closes #440): C124 doc-scope image-source annotation.
+spdx3_anno!(c124_spdx3, "mikebom:image-source",                     document);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 spdx3_anno!(c113_spdx3, "mikebom:synthetic-built-in",               component);

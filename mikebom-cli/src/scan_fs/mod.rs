@@ -13,6 +13,9 @@ pub mod binary;
 pub mod dedup;
 pub mod docker_daemon;
 pub mod docker_image;
+// Milestone 206 (#440) — local podman image scanning via
+// filesystem read of the c/storage overlay layout.
+pub mod podman_source;
 // Milestone 133 US1.A scaffolding — orphan file-tier walker,
 // content-shape classifier, hybrid dedupe. The submodules are
 // pub(crate) and their entry points are reachable from inside

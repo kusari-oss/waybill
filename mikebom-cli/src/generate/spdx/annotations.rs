@@ -649,6 +649,17 @@ pub fn annotate_document(
         );
     }
 
+    // Milestone 206 (#440): C124 doc-scope image-source annotation.
+    // Emitted iff artifacts.image_source == Some(Podman) — conditional
+    // emission preserves FR-005 byte-identity for docker/remote/path
+    // scans.
+    if matches!(
+        artifacts.image_source,
+        Some(crate::cli::scan_cmd::ImageSource::Podman)
+    ) {
+        push(&mut out, "mikebom:image-source", json!("podman"));
+    }
+
     // Milestone 134 (closes #125, catalog row C100): document-scope
     // `mikebom:purl-collisions-detected` summary annotation. Omitted
     // entirely when no collisions were detected so clean scans stay
