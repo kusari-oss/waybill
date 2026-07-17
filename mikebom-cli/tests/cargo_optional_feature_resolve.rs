@@ -25,19 +25,32 @@ fn require_cargo() -> bool {
 }
 
 /// Create a minimal Cargo workspace at `ws_root` with the given
-/// Cargo.toml text. Runs `cargo generate-lockfile` to produce Cargo.lock.
+/// Cargo.toml text. Runs `cargo fetch` (NOT `cargo generate-lockfile`)
+/// to produce Cargo.lock AND unpack `.crate` files into
+/// `$CARGO_HOME/registry/src/`. This is CRITICAL for cold-cache
+/// environments (fresh CI runners): `cargo metadata --offline`
+/// (invoked by mikebom's classifier) reads dep manifests from
+/// unpacked crates in registry/src/. Bare `cargo generate-lockfile`
+/// fetches the index + creates Cargo.lock but does NOT unpack — so
+/// `cargo metadata --offline` fails with "failed to download …"
+/// even though Cargo.lock exists and the index has the crate.
+///
+/// This mismatch caused m205's initial US1 test to pass locally
+/// (warm ~/.cargo/registry from years of use) and fail on CI (cold
+/// cache). Post-`cargo fetch`, cargo metadata --offline succeeds
+/// deterministically across all environments.
 fn build_synthetic_workspace(ws_root: &Path, cargo_toml: &str) {
     std::fs::create_dir_all(ws_root.join("src")).unwrap();
     std::fs::write(ws_root.join("Cargo.toml"), cargo_toml).unwrap();
     std::fs::write(ws_root.join("src/main.rs"), "fn main() {}\n").unwrap();
     let out = Command::new("cargo")
-        .args(["generate-lockfile"])
+        .args(["fetch"])
         .current_dir(ws_root)
         .output()
-        .expect("spawn cargo generate-lockfile");
+        .expect("spawn cargo fetch");
     assert!(
         out.status.success(),
-        "cargo generate-lockfile failed: stderr:\n{}",
+        "cargo fetch failed: stderr:\n{}",
         String::from_utf8_lossy(&out.stderr),
     );
 }
