@@ -270,6 +270,8 @@ Auto-generated from all feature plans. Last updated: 2026-07-17
 - N/A — all state in-process per scan; the activated-deps set is computed once per workspace and lives for the classifier decision only. (205-cargo-optional-feature-resolve)
 - Rust stable (workspace toolchain inherited from milestones 001–205; no nightly). + Existing only — (206-podman-source)
 - N/A — all state in-process per scan; scratch tarball lives in a `tempfile::tempdir()` for the duration of the scan and is dropped at return. (206-podman-source)
+- Rust stable (workspace toolchain inherited from milestones 001–206; no nightly). + Existing only — `clap` (workspace, `Args` derive picks up the new flag), `tracing` (workspace, FR-006 WARN log). **Zero new Cargo dependencies.** (207-no-deps-dev-aggregate)
+- N/A — CLI-flag semantic change; no state, no persistence. (207-no-deps-dev-aggregate)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -332,9 +334,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 207-no-deps-dev-aggregate: Added Rust stable (workspace toolchain inherited from milestones 001–206; no nightly). + Existing only — `clap` (workspace, `Args` derive picks up the new flag), `tracing` (workspace, FR-006 WARN log). **Zero new Cargo dependencies.**
 - 206-podman-source: Added Rust stable (workspace toolchain inherited from milestones 001–205; no nightly). + Existing only —
 - 205-cargo-optional-feature-resolve: Added Rust stable (workspace toolchain inherited from milestones 001–204; no nightly). + Existing only — `serde` / `serde_json` (parsing cargo metadata JSON output; workspace-pervasive), `std::process::Command` (subprocess spawn, same pattern as m053 / m055 / m173 / m203), `tracing` (WARN log per FR-004), `anyhow` / `thiserror` (error propagation). **Zero new Cargo dependencies.** No new subprocess types beyond the existing `Command`-with-timeout pattern; no network access; no filesystem writes beyond emitted SBOM output.
-- 204-helm-completeness-annotation: Added Rust stable (workspace toolchain inherited from milestones 001–203; no nightly). + Existing only — `serde`/`serde_json` (annotation values + m071 envelope construction), `tracing`, `anyhow`. **Zero new Cargo dependencies.** No subprocess calls. No network access. No filesystem writes beyond emitted SBOM output.
 
 
 <!-- MANUAL ADDITIONS START -->

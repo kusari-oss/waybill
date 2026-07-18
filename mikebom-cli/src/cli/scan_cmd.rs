@@ -590,13 +590,35 @@ pub struct ScanArgs {
     #[arg(long)]
     pub no_clearly_defined: bool,
 
-    /// Skip deps.dev license enrichment. Keeps ClearlyDefined and
-    /// dep-graph enrichment active. This is the fastest enrichment
-    /// source and rarely needs skipping; the allowlist via
-    /// `--enrich-sources` is the alternative for full control.
-    /// Has no effect when `--offline` is set.
+    /// Milestone 207 (#596): AGGREGATE disable — skip BOTH the
+    /// deps.dev license enrichment AND the deps.dev transitive
+    /// dep-graph enrichment. Combines `--no-deps-dev-license` and
+    /// `--no-deps-dev-graph` semantics per operator expectation.
+    ///
+    /// Pre-m207 this flag disabled only the license path (keeping
+    /// the dep-graph active). Scripts that relied on that behavior
+    /// can migrate by renaming to `--no-deps-dev-license`.
+    ///
+    /// Composition: `--no-deps-dev` (aggregate) OR
+    /// `--no-deps-dev-license` (license only) OR
+    /// `--no-deps-dev-graph` (graph only). Fine-grained flags allow
+    /// surgical control. `--enrich-sources <list>` (allowlist mode)
+    /// overrides all `--no-*` flags. `--offline` suppresses all
+    /// enrichment paths regardless of `--no-*` flags.
     #[arg(long)]
     pub no_deps_dev: bool,
+
+    /// Milestone 207 (#596) — skip deps.dev LICENSE enrichment
+    /// only. Keeps the deps.dev transitive dep-graph enrichment
+    /// active. This is the pre-m207 semantic of `--no-deps-dev`;
+    /// scripts that relied on that behavior can migrate by
+    /// renaming `--no-deps-dev` → `--no-deps-dev-license`.
+    ///
+    /// Has no effect when `--offline` is set (offline suppresses
+    /// all enrichment paths). Overridden by `--enrich-sources`
+    /// allowlist mode when the operator supplies that flag.
+    #[arg(long)]
+    pub no_deps_dev_license: bool,
 
     /// Milestone 102 (FR-016/FR-017): include vendored C/C++
     /// dependencies declared via CMake `add_subdirectory(third_party/...)`
@@ -628,10 +650,14 @@ pub struct ScanArgs {
     #[arg(long)]
     pub cmake_third_party_recursive: bool,
 
-    /// Skip the deps.dev transitive dep-graph enrichment step.
+    /// Skip the deps.dev transitive dep-graph enrichment step ONLY.
     /// Keeps deps.dev license enrichment and ClearlyDefined active.
-    /// Useful when the graph response is large or unneeded. Has no
-    /// effect when `--offline` is set.
+    ///
+    /// Companion to `--no-deps-dev-license` (m207 #596) which does
+    /// the reverse (skip license, keep graph). Use `--no-deps-dev`
+    /// for the aggregate "skip both" semantic.
+    ///
+    /// Has no effect when `--offline` is set.
     #[arg(long)]
     pub no_deps_dev_graph: bool,
 
@@ -1636,10 +1662,16 @@ fn resolve_enrich_sources(args: &ScanArgs) -> EnrichConfig {
             deps_dev_graph: args.enrich_sources.contains(&EnrichSource::DepsDevGraph),
         }
     } else {
+        // Milestone 207 (#596): `--no-deps-dev` is now an aggregate
+        // disable — suppresses BOTH the deps.dev license path AND
+        // the deps.dev transitive dep-graph path. Pre-m207 it
+        // suppressed only the license path. Fine-grained control
+        // preserved via `--no-deps-dev-license` (license only) and
+        // `--no-deps-dev-graph` (graph only).
         EnrichConfig {
-            deps_dev: !args.no_deps_dev,
+            deps_dev: !args.no_deps_dev && !args.no_deps_dev_license,
             clearly_defined: !args.no_clearly_defined,
-            deps_dev_graph: !args.no_deps_dev_graph,
+            deps_dev_graph: !args.no_deps_dev && !args.no_deps_dev_graph,
         }
     }
 }
@@ -2712,6 +2744,21 @@ pub async fn execute(
     // "skipped (disabled by flags)" messages when the operative cause
     // is offline mode.
     let enrich_cfg = resolve_enrich_sources(&args);
+
+    // Milestone 207 (#596): FR-006 migration signal. When the
+    // operator uses the aggregate `--no-deps-dev` flag WITHOUT any
+    // fine-grained escape hatch, emit a one-shot INFO log line
+    // explaining the m207 semantic change + linking to the escape
+    // hatch. Fine-grained-aware operators (who also set
+    // `--no-deps-dev-license` or `--no-deps-dev-graph`) are NOT
+    // spammed — they already know what they're doing.
+    if args.no_deps_dev && !args.no_deps_dev_license && !args.no_deps_dev_graph {
+        tracing::info!(
+            "--no-deps-dev now disables ALL deps.dev enrichment paths \
+             (m207 aggregate semantic per #596). For the pre-m207 \"license \
+             only\" behavior, use --no-deps-dev-license instead."
+        );
+    }
 
     // deps.dev enrichment runs after the local scan so it only sees the
     // deduped component set. Components in unsupported ecosystems
@@ -4177,6 +4224,9 @@ mod tests {
         assert!(parsed.inner.no_clearly_defined);
         assert!(!parsed.inner.no_deps_dev);
         assert!(!parsed.inner.no_deps_dev_graph);
+        // Milestone 207 (#596): new `--no-deps-dev-license` flag
+        // defaults to OFF (enrichment on).
+        assert!(!parsed.inner.no_deps_dev_license);
     }
 
     #[test]
@@ -4283,6 +4333,7 @@ mod tests {
         no_deps_dev: bool,
         no_clearly_defined: bool,
         no_deps_dev_graph: bool,
+        no_deps_dev_license: bool,
         enrich_sources: Vec<EnrichSource>,
     ) -> ScanArgs {
         ScanArgs {
@@ -4330,6 +4381,7 @@ mod tests {
             no_clearly_defined,
             no_deps_dev,
             no_deps_dev_graph,
+            no_deps_dev_license,
             enrich_sources,
             bind_to_source: None,
             repo: None,
@@ -4381,7 +4433,7 @@ mod tests {
 
     #[test]
     fn resolve_defaults_all_enabled() {
-        let args = enrich_args(false, false, false, vec![]);
+        let args = enrich_args(false, false, false, false, vec![]);
         let cfg = resolve_enrich_sources(&args);
         assert_eq!(cfg, EnrichConfig {
             deps_dev: true,
@@ -4392,7 +4444,7 @@ mod tests {
 
     #[test]
     fn resolve_no_clearly_defined_disables_cd() {
-        let args = enrich_args(false, true, false, vec![]);
+        let args = enrich_args(false, true, false, false, vec![]);
         let cfg = resolve_enrich_sources(&args);
         assert!(cfg.deps_dev);
         assert!(!cfg.clearly_defined);
@@ -4400,17 +4452,121 @@ mod tests {
     }
 
     #[test]
-    fn resolve_no_deps_dev_disables_license_enrichment() {
-        let args = enrich_args(true, false, false, vec![]);
+    fn resolve_enrich_no_deps_dev_disables_both_paths_m207() {
+        // Milestone 207 (#596) US1 acceptance — `--no-deps-dev` is
+        // now an aggregate disable: BOTH the license AND dep-graph
+        // paths turn off. Pre-m207 this test asserted deps_dev_graph
+        // stayed true.
+        let args = enrich_args(true, false, false, false, vec![]);
         let cfg = resolve_enrich_sources(&args);
-        assert!(!cfg.deps_dev);
+        assert_eq!(
+            cfg,
+            EnrichConfig {
+                deps_dev: false,
+                clearly_defined: true,
+                deps_dev_graph: false,
+            }
+        );
+    }
+
+    #[test]
+    fn resolve_enrich_no_deps_dev_license_disables_license_only_m207() {
+        // Milestone 207 (#596) US2 acceptance — new fine-grained
+        // flag `--no-deps-dev-license` restores the pre-m207
+        // `--no-deps-dev` semantic (license only).
+        let args = enrich_args(false, false, false, true, vec![]);
+        let cfg = resolve_enrich_sources(&args);
+        assert_eq!(
+            cfg,
+            EnrichConfig {
+                deps_dev: false,
+                clearly_defined: true,
+                deps_dev_graph: true,
+            }
+        );
+    }
+
+    #[test]
+    fn resolve_enrich_no_deps_dev_wins_over_no_deps_dev_graph_m207() {
+        // Composition sanity — `--no-deps-dev` combined with
+        // `--no-deps-dev-graph` produces the same aggregate result.
+        let args = enrich_args(true, false, true, false, vec![]);
+        let cfg = resolve_enrich_sources(&args);
+        assert_eq!(
+            cfg,
+            EnrichConfig {
+                deps_dev: false,
+                clearly_defined: true,
+                deps_dev_graph: false,
+            }
+        );
+    }
+
+    #[test]
+    fn resolve_enrich_no_deps_dev_license_and_graph_equals_aggregate_m207() {
+        // Composition sanity — setting both fine-grained flags is
+        // equivalent to setting the aggregate `--no-deps-dev`.
+        let args = enrich_args(false, false, true, true, vec![]);
+        let cfg = resolve_enrich_sources(&args);
+        assert_eq!(
+            cfg,
+            EnrichConfig {
+                deps_dev: false,
+                clearly_defined: true,
+                deps_dev_graph: false,
+            }
+        );
+    }
+
+    #[test]
+    fn resolve_enrich_sources_allowlist_overrides_no_deps_dev_m207() {
+        // FR-004 regression guard — allowlist mode ignores every
+        // `--no-*` flag, including the aggregate `--no-deps-dev`.
+        let args = enrich_args(
+            true, false, false, false,
+            vec![EnrichSource::DepsDev],
+        );
+        let cfg = resolve_enrich_sources(&args);
+        assert!(cfg.deps_dev, "allowlist wins per FR-004");
+    }
+
+    #[test]
+    fn resolve_enrich_no_clearly_defined_unaffected_by_no_deps_dev_m207() {
+        // Regression guard — `--no-deps-dev` doesn't affect the
+        // ClearlyDefined path.
+        let args = enrich_args(true, false, false, false, vec![]);
+        let cfg = resolve_enrich_sources(&args);
         assert!(cfg.clearly_defined);
-        assert!(cfg.deps_dev_graph);
+    }
+
+    #[test]
+    fn no_deps_dev_help_mentions_enrich_sources_m207() {
+        // FR-008 — operators reading `mikebom sbom scan --help`
+        // see the composition hint next to the flag they're setting.
+        // `ScanArgsForTest` flattens `ScanArgs` at the top level (no
+        // subcommand nesting), so args are directly discoverable via
+        // `get_arguments`.
+        let cmd = <ScanArgsForTest as clap::CommandFactory>::command();
+        let arg = cmd
+            .get_arguments()
+            .find(|a| a.get_id().as_str() == "no_deps_dev")
+            .expect("--no-deps-dev arg present");
+        // long_help includes the multi-line doc-comment; short help
+        // is just the first line. Combine both to search.
+        let help_text = format!(
+            "{}\n{}",
+            arg.get_help().map(|s| s.to_string()).unwrap_or_default(),
+            arg.get_long_help().map(|s| s.to_string()).unwrap_or_default(),
+        );
+        assert!(
+            help_text.contains("enrich-sources"),
+            "FR-008: --no-deps-dev help text must mention `--enrich-sources`. Got:\n{help_text}"
+        );
     }
 
     #[test]
     fn resolve_no_deps_dev_graph_disables_graph() {
-        let args = enrich_args(false, false, true, vec![]);
+        let args = enrich_args(false, false, true, false, vec![]);
         let cfg = resolve_enrich_sources(&args);
         assert!(cfg.deps_dev);
         assert!(cfg.clearly_defined);
@@ -4419,7 +4575,7 @@ mod tests {
 
     #[test]
     fn resolve_all_no_flags_disables_everything() {
-        let args = enrich_args(true, true, true, vec![]);
+        let args = enrich_args(true, true, true, false, vec![]);
         let cfg = resolve_enrich_sources(&args);
         assert_eq!(cfg, EnrichConfig {
             deps_dev: false,
@@ -4436,6 +4592,7 @@ mod tests {
             false,
             true,  // --no-clearly-defined
             true,  // --no-deps-dev-graph
+            false, // --no-deps-dev-license (m207)
             vec![EnrichSource::ClearlyDefined],
         );
         let cfg = resolve_enrich_sources(&args);
@@ -4447,7 +4604,7 @@ mod tests {
     #[test]
     fn resolve_allowlist_subset_only_enables_listed() {
         let args = enrich_args(
-            false, false, false,
+            false, false, false, false,
             vec![EnrichSource::DepsDev, EnrichSource::DepsDevGraph],
         );
         let cfg = resolve_enrich_sources(&args);
@@ -4666,7 +4823,7 @@ mod tests {
 
     #[test]
     fn assemble_manual_identifiers_repo_only_emits_repo_scheme() {
-        let mut args = enrich_args(false, false, false, vec![]);
+        let mut args = enrich_args(false, false, false, false, vec![]);
         args.repo = Some("git@github.com:foo/bar.git".to_string());
         let ids = assemble_manual_identifiers(&args);
         assert_eq!(ids.len(), 1);
@@ -4677,7 +4834,7 @@ mod tests {
     fn assemble_manual_identifiers_repo_plus_git_ref_emits_git_only() {
         // --repo + --git-ref → ONE git: identifier (supersedes repo:),
         // not two entries.
-        let mut args = enrich_args(false, false, false, vec![]);
+        let mut args = enrich_args(false, false, false, false, vec![]);
         args.repo = Some("https://github.com/foo/bar".to_string());
         args.git_ref = Some("abc1234567890".to_string());
         let ids = assemble_manual_identifiers(&args);
@@ -4690,7 +4847,7 @@ mod tests {
 
     #[test]
     fn assemble_manual_identifiers_image_attestation_id_in_supply_order() {
-        let mut args = enrich_args(false, false, false, vec![]);
+        let mut args = enrich_args(false, false, false, false, vec![]);
         args.image_id = Some("docker.io/foo/bar:v1".to_string());
         args.attestation = Some("https://example.org/att/1".to_string());
         args.id = vec![
@@ -4936,7 +5093,7 @@ mod tests {
     #[test]
     fn build_pkg_alias_map_empty_when_no_input() {
         let _g = pkg_alias_env_lock();
-        let mut args = enrich_args(false, false, false, vec![]);
+        let mut args = enrich_args(false, false, false, false, vec![]);
         args.pkg_alias = vec![];
         unsafe {
             std::env::remove_var("MIKEBOM_PKG_ALIAS");
@@ -4948,7 +5105,7 @@ mod tests {
     #[test]
     fn build_pkg_alias_map_collects_cli_flags() {
         let _g = pkg_alias_env_lock();
-        let mut args = enrich_args(false, false, false, vec![]);
+        let mut args = enrich_args(false, false, false, false, vec![]);
         args.pkg_alias =
             vec![make_alias("pkg:generic/baz", "pkg:cargo/baz@1.0.0")];
         unsafe {
@@ -4961,7 +5118,7 @@ mod tests {
     #[test]
     fn build_pkg_alias_map_unions_cli_and_env_var_entries() {
         let _g = pkg_alias_env_lock();
-        let mut args = enrich_args(false, false, false, vec![]);
+        let mut args = enrich_args(false, false, false, false, vec![]);
         args.pkg_alias =
             vec![make_alias("pkg:generic/baz", "pkg:cargo/baz@1.0.0")];
         unsafe {
@@ -4980,7 +5137,7 @@ mod tests {
     #[test]
     fn build_pkg_alias_map_skips_blank_env_entries() {
         let _g = pkg_alias_env_lock();
-        let mut args = enrich_args(false, false, false, vec![]);
+        let mut args = enrich_args(false, false, false, false, vec![]);
         args.pkg_alias = vec![];
         unsafe {
             std::env::set_var(
@@ -4998,7 +5155,7 @@ mod tests {
     #[test]
     fn build_pkg_alias_map_rejects_conflicting_lhs_across_cli_and_env() {
         let _g = pkg_alias_env_lock();
-        let mut args = enrich_args(false, false, false, vec![]);
+        let mut args = enrich_args(false, false, false, false, vec![]);
         args.pkg_alias =
             vec![make_alias("pkg:generic/baz", "pkg:cargo/baz@1.0.0")];
         unsafe {
