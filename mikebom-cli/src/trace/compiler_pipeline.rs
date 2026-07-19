@@ -288,8 +288,20 @@ impl CompilerPipelineAggregator {
     }
 
     fn handle_exec(&mut self, event: &CompilerExecEvent) {
-        let invocation_id = self.next_invocation_id;
-        self.next_invocation_id += 1;
+        // Milestone 210: invocation_id = kernel-assigned bpf_ktime_get_ns
+        // at exec time (research R1 note — unique + monotonically
+        // increasing within a boot). Reuses the event's timestamp_ns
+        // field for dual purpose.
+        let invocation_id = if event.timestamp_ns != 0 {
+            event.timestamp_ns
+        } else {
+            // Fallback for test-crafted events (or future kernel
+            // versions that don't populate the timestamp): use a
+            // monotonic counter.
+            let id = self.next_invocation_id;
+            self.next_invocation_id += 1;
+            id
+        };
 
         // Parent-invocation lookup — if the ppid is in our pid map,
         // this is a child compiler invocation.
@@ -530,14 +542,19 @@ fn content_hash_from_bytes(bytes: &[u8; 32]) -> ContentHash {
 mod tests {
     use super::*;
 
-    fn make_exec_event(pid: u32, ppid: u32, comm: &str) -> CompilerExecEvent {
+    fn make_exec_event_ts(
+        pid: u32,
+        ppid: u32,
+        comm: &str,
+        timestamp_ns: u64,
+    ) -> CompilerExecEvent {
         let mut comm_bytes = [0u8; 16];
         let cb = comm.as_bytes();
         let n = std::cmp::min(cb.len(), 16);
         comm_bytes[..n].copy_from_slice(&cb[..n]);
         CompilerExecEvent {
             kind: CompilerExecEventKind::Exec,
-            timestamp_ns: 1_000_000_000,
+            timestamp_ns,
             pid,
             ppid,
             cgroup_id: 42,
@@ -547,6 +564,14 @@ mod tests {
             exit_code: 0,
             _padding: [0u8; 2],
         }
+    }
+
+    fn make_exec_event(pid: u32, ppid: u32, comm: &str) -> CompilerExecEvent {
+        // Default helper — timestamp_ns = 0 triggers the userspace
+        // fallback monotonic counter path in handle_exec (see the
+        // TS!=0 branch there). Preserves the pre-kernel-integration
+        // test contract where invocation_ids started at 1.
+        make_exec_event_ts(pid, ppid, comm, 0)
     }
 
     fn make_file_event(

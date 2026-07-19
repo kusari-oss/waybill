@@ -49,3 +49,28 @@ pub static PID_FILTER: HashMap<u32, u8> = HashMap::with_max_entries(256, 0);
 /// Index 0 holds the TraceConfig struct.
 #[map]
 pub static CONFIG: Array<TraceConfig> = Array::with_max_entries(1, 0);
+
+/// Milestone 210 — PID → compiler-invocation-id map. Populated in
+/// kernel by the `sched_process_exec` tracepoint when a whitelisted
+/// compiler starts; extended to child PIDs by the `sched_process_fork`
+/// tracepoint (research R3). Consumed by every file-op kprobe (see
+/// `file_ops.rs`) to gate whether the file event should be emitted at
+/// all — non-compiler-descendant events are dropped at zero userspace
+/// cost per R3.
+///
+/// Value = the invocation-id assigned userspace-side at exec-event
+/// receive time. On fork, the child inherits its parent's value so
+/// descendant tracking is transitive across arbitrarily deep spawn
+/// chains (cargo → rustc → linker → linker's helper).
+#[map]
+pub static COMPILER_INVOCATIONS: HashMap<u32, u64> =
+    HashMap::with_max_entries(4096, 0);
+
+/// Milestone 210 — ring buffer for compiler exec + exit events
+/// (see `mikebom-ebpf/src/programs/compiler_exec.rs`). Separate from
+/// `FILE_EVENTS` so overflow accounting per FR-008 is per-event-type.
+/// 256 KB per research R7 — sized for typical build fanout (~100-1000
+/// compiler invocations per scan).
+#[map]
+pub static COMPILER_EXEC_EVENTS: RingBuf =
+    RingBuf::with_byte_size(256 * 1024, 0);

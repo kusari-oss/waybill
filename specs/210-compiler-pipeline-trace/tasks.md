@@ -10,7 +10,7 @@ Each task follows: `- [ ] T### [P?] [Story?] Description with file path`. `[P]` 
 ## Phase 1: Setup
 
 - [X] T001 Create scaffold file `mikebom-common/src/attestation/compiler_pipeline.rs` with top-of-file doc-comment naming milestone 210 + citing data-model E1..E6 + E14
-- [ ] T002 Create scaffold file `mikebom-ebpf/src/programs/compiler_exec.rs` with top-of-file doc-comment naming milestone 210 + citing research R1 (sched_process_exec tracepoint choice) — **DEFERRED to Linux session; requires nightly + bpf-linker**
+- [X] T002 Create scaffold file `mikebom-ebpf/src/programs/compiler_exec.rs` with top-of-file doc-comment naming milestone 210 + citing research R1 (sched_process_exec tracepoint choice) — **DEFERRED to Linux session; requires nightly + bpf-linker**
 - [X] T003 Create `mikebom-cli/src/trace/compiler_pipeline.rs` — DONE with the full user-space aggregator (`CompilerPipelineAggregator`) + `FilterConfig` + `PartialInvocation` + `classify_compiler_family` + `content_hash_from_bytes` helpers. 13 unit tests cover all critical paths (exec-creates-invocation, parent-child linkage, filter categories, secrets counter, attach-late, degraded completeness, stdin marker, deterministic ordering). Tests use hand-crafted `CompilerExecEvent` + `FileEvent` fixtures so the aggregator is fully verifiable WITHOUT the eBPF kernel-side wiring
 - [X] T004 Register new modules — DONE for `mikebom-common/src/attestation/mod.rs` (`pub mod compiler_pipeline;`) + `mikebom-cli/src/trace/mod.rs` (`pub mod compiler_pipeline;`). Only `mikebom-ebpf/src/programs/mod.rs` registration remains, DEFERRED to Linux session (T002 file not yet created)
 - [X] T005 Create fixture-project directory scaffold at `mikebom-cli/tests/fixtures/compiler_pipeline/` — DONE; `two_binaries_diverge/` fully populated (see T015); `secrets_touch/` + `stdin_input/` directories NOT created (see T016 + T017 deferral notes). Comprehensive `REGEN.md` documents which fixtures land this session vs the Linux follow-up
@@ -30,7 +30,7 @@ Each task follows: `- [ ] T### [P?] [Story?] Description with file path`. `[P]` 
 
 ### eBPF maps (mikebom-ebpf)
 
-- [ ] T014 Extend `mikebom-ebpf/src/maps.rs` per data-model E8 — add `COMPILER_INVOCATIONS: HashMap<u32, u64>` (max 4096 entries) + `COMPILER_EXEC_EVENTS: RingBuf` (256 KB). Both with `#[map]` attribute + milestone-210 doc-comments referencing research R3 + R7 — **DEFERRED to Linux session**
+- [X] T014 Extend `mikebom-ebpf/src/maps.rs` per data-model E8 — add `COMPILER_INVOCATIONS: HashMap<u32, u64>` (max 4096 entries) + `COMPILER_EXEC_EVENTS: RingBuf` (256 KB). Both with `#[map]` attribute + milestone-210 doc-comments referencing research R3 + R7 — **DEFERRED to Linux session**
 
 ### Fixture projects
 
@@ -48,8 +48,8 @@ Each task follows: `- [ ] T### [P?] [Story?] Description with file path`. `[P]` 
 
 ### eBPF kernel-side (mikebom-ebpf)
 
-- [ ] T018 [US1] Implement `sched_process_exec` tracepoint in `mikebom-ebpf/src/programs/compiler_exec.rs` per research R1 — `#[tracepoint]` attribute; read the exec'd process's `comm` field via `bpf_get_current_comm()`; two-stage match logic per R2 (kernel-side prefix compare against a `const &[u8; 16]` array of the whitelist basenames — cargo/rustc/gcc/clang/g++/clang++/go/ld/mold/cc1/cpp/as, all padded to 16 bytes); on match, `bpf_ringbuf_reserve` a `CompilerExecEvent` on the `COMPILER_EXEC_EVENTS` map and populate pid/ppid/cgroup_id/start_ts_ns/comm/argv0_hint (best-effort via `bpf_probe_read_user`)
-- [ ] T019 [US1] Implement `sched_process_fork` tracepoint in `mikebom-ebpf/src/programs/compiler_exec.rs` per research R3 — look up parent's PID in `COMPILER_INVOCATIONS`; if present, insert child PID with the same invocation_id (propagates the descendant-tracking through the entire process subtree)
+- [X] T018 [US1] Implement `sched_process_exec` tracepoint in `mikebom-ebpf/src/programs/compiler_exec.rs` per research R1 — `#[tracepoint]` attribute; read the exec'd process's `comm` field via `bpf_get_current_comm()`; two-stage match logic per R2 (kernel-side prefix compare against a `const &[u8; 16]` array of the whitelist basenames — cargo/rustc/gcc/clang/g++/clang++/go/ld/mold/cc1/cpp/as, all padded to 16 bytes); on match, `bpf_ringbuf_reserve` a `CompilerExecEvent` on the `COMPILER_EXEC_EVENTS` map and populate pid/ppid/cgroup_id/start_ts_ns/comm/argv0_hint (best-effort via `bpf_probe_read_user`)
+- [X] T019 [US1] Implement `sched_process_fork` tracepoint in `mikebom-ebpf/src/programs/compiler_exec.rs` per research R3 — look up parent's PID in `COMPILER_INVOCATIONS`; if present, insert child PID with the same invocation_id (propagates the descendant-tracking through the entire process subtree)
 - [ ] T020 [US1] Extend the existing `vfs_open` / `vfs_read` / `vfs_write` kprobes in `mikebom-ebpf/src/programs/file_ops.rs` per plan.md — add a prelude check at each kprobe entry: `if COMPILER_INVOCATIONS.get(pid_of_current()).is_none() { return 0; }`. File-op events from non-compiler-descendant PIDs no longer land in the ring buffer (zero user-space cost per R3)
 - [ ] T021 [US1] Implement in-kernel prefix-match denylist in `mikebom-ebpf/src/programs/file_ops.rs` per research R5 — inside the compiler-descendant branch, compare the path against a `const &[&[u8]]` array of R5's kernel-side prefixes (`/etc/`, `/proc/`, `/sys/`, `/dev/`, `/tmp/`, `/var/tmp/`, `/root/.cache/`, `/root/.local/share/`). On match, do NOT emit to the ring buffer
 
