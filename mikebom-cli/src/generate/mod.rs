@@ -20,6 +20,7 @@
 //!   - any `HashMap` use is forbidden on the serialization path —
 //!     use `BTreeMap` or an explicitly sorted `Vec`.
 
+pub mod compiler_pipeline_annotation;
 pub mod cpe;
 pub mod cyclonedx;
 pub mod divergence_annotation;

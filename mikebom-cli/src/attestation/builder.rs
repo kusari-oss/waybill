@@ -8,6 +8,7 @@
 
 use std::collections::BTreeMap;
 
+use mikebom_common::attestation::compiler_pipeline::CompilerPipelineData;
 use mikebom_common::attestation::metadata::{
     GenerationContext, HostInfo, ProcessInfo, ToolInfo, TraceMetadata,
 };
@@ -37,11 +38,18 @@ pub struct AttestationConfig {
 }
 
 /// Build an InTotoStatement from aggregated trace results.
+///
+/// Milestone 210: `compiler_pipeline` carries the compiler-invocation
+/// DAG + per-invocation read/write sets when the trace observed
+/// compiler execs (via `sched_process_exec` tracepoint). `None`
+/// when the trace ran without eBPF compiler-pipeline data OR the
+/// operator's command didn't invoke a whitelisted compiler.
 pub fn build_attestation(
     trace: AggregatedTrace,
     cfg: &AttestationConfig,
     trace_start: Timestamp,
     trace_end: Timestamp,
+    compiler_pipeline: Option<CompilerPipelineData>,
 ) -> anyhow::Result<InTotoStatement> {
     let host = detect_host_info();
 
@@ -66,11 +74,12 @@ pub fn build_attestation(
         network_trace: trace.network_trace,
         file_access: trace.file_access,
         trace_integrity: trace.trace_integrity,
-        // Milestone 210 — compiler-pipeline data isn't wired into the
-        // AttestationConfig-based path yet (that's a future task in
-        // the m210 US1 phase). Pre-m210 attestations preserved
-        // byte-identically here via the additive Option field.
-        compiler_pipeline: None,
+        // Milestone 210 — compiler-pipeline data threaded through from
+        // scan.rs's `CompilerPipelineAggregator::finalize()`. `None`
+        // when the trace didn't run under `--features ebpf-tracing`
+        // OR the operator's command didn't invoke a whitelisted
+        // compiler.
+        compiler_pipeline,
     };
 
     // Subject array per FR-007 / FR-010. When a resolver is attached,
@@ -189,6 +198,7 @@ mod tests {
             &cfg,
             Timestamp::now(),
             Timestamp::now(),
+            None, // m210 compiler-pipeline — test doesn't exercise it
         )
         .expect("should build attestation");
 

@@ -1,0 +1,48 @@
+# Container-based eBPF integration test harness for m210.
+#
+# Runs mikebom trace against the two_binaries_diverge fixture INSIDE
+# the container and asserts the emitted attestation carries the
+# expected compiler-pipeline metadata. The container needs CAP_BPF
+# + CAP_PERFMON when run, so invocation is:
+#
+#   docker run --rm --privileged mikebom-ebpf-test
+#
+# `--privileged` is required for eBPF; `--rm` cleans up after.
+#
+# The image bakes in the full m210 build + fixture; the entrypoint
+# script runs the trace + assertion. Exits 0 on success, non-zero
+# on any failure.
+
+FROM rust:1.88-bookworm
+
+# eBPF build deps + runtime tools the trace-run needs (gcc for the
+# fixture's compiler-invocation traffic; jq for the assertion script).
+RUN apt-get update && apt-get install -y \
+    clang \
+    llvm \
+    libelf-dev \
+    linux-headers-generic \
+    pkg-config \
+    libssl-dev \
+    gcc \
+    jq \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN rustup toolchain install nightly --profile minimal \
+    && rustup component add rust-src --toolchain nightly \
+    && cargo +nightly install bpf-linker
+
+WORKDIR /mikebom
+COPY . .
+
+# Build eBPF kernel bytecode + userspace binary with ebpf-tracing on.
+# The two-stage build lets Docker cache the eBPF layer independently
+# of the userspace changes.
+RUN cargo run --package xtask -- ebpf
+RUN cargo build --release --features ebpf-tracing --bin mikebom
+
+# Copy the runnable assertion script into the image.
+COPY scripts/ebpf-integration-test.sh /usr/local/bin/ebpf-integration-test.sh
+RUN chmod +x /usr/local/bin/ebpf-integration-test.sh
+
+ENTRYPOINT ["/usr/local/bin/ebpf-integration-test.sh"]

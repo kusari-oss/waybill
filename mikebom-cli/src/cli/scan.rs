@@ -176,9 +176,12 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     use crate::attestation::serializer;
     use crate::error::MikebomError;
     use crate::trace::aggregator::EventAggregator;
+    use crate::trace::compiler_pipeline::{
+        CompilerPipelineAggregator, FilterConfig as CompilerFilterConfig,
+    };
     use crate::trace::loader::{self, LoaderConfig};
     use crate::trace::processor::TraceStats;
-    use mikebom_common::events::{FileEvent, NetworkEvent};
+    use mikebom_common::events::{CompilerExecEvent, FileEvent, NetworkEvent};
     use mikebom_common::types::timestamp::Timestamp;
 
     let trace_start = Timestamp::now();
@@ -225,6 +228,17 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
 
     // Poll ring buffers while child runs
     let mut agg = EventAggregator::with_boot_offset(boot_offset_ns);
+    // Milestone 210 — compiler-pipeline aggregator. Populated by the
+    // sched_process_exec + sched_process_fork + sched_process_exit
+    // tracepoints via the COMPILER_EXEC_EVENTS ring buffer + the
+    // existing FILE_EVENTS ring buffer (stamped in userspace against
+    // pid_to_invocation_id). `home_dir` seeds the FR-016 secrets
+    // denylist glob expansion for `~/.ssh/*`, `~/.aws/*`, etc.
+    let mut compiler_agg = CompilerPipelineAggregator::new(CompilerFilterConfig {
+        include_system_reads: args.include_system_reads,
+        home_dir: std::env::var("HOME").ok().map(std::path::PathBuf::from),
+    });
+    let mut compiler_count: u64 = 0;
     let mut net_count: u64 = 0;
     let mut file_count: u64 = 0;
     let start = Instant::now();
@@ -290,6 +304,45 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         n
     }
 
+    /// Milestone 210 — drain the compiler-pipeline ring buffer. Feeds
+    /// events into the CompilerPipelineAggregator + the file-op
+    /// events into the file-aggregator via the existing pid map.
+    /// When the COMPILER_EXEC_EVENTS map is unavailable (older eBPF
+    /// object, tracepoint attach failed), returns 0 no-op.
+    fn drain_compiler(
+        bpf: &mut aya::Ebpf,
+        compiler_agg: &mut CompilerPipelineAggregator,
+        count: &mut u64,
+        max: usize,
+    ) -> usize {
+        let Some(map) = bpf.map_mut("COMPILER_EXEC_EVENTS") else {
+            return 0;
+        };
+        let Ok(mut rb) = RingBuf::try_from(map) else {
+            return 0;
+        };
+        let mut n = 0;
+        while n < max {
+            match rb.next() {
+                Some(item) => {
+                    let data: &[u8] = item.as_ref();
+                    if data.len() >= core::mem::size_of::<CompilerExecEvent>() {
+                        let ev = unsafe {
+                            core::ptr::read_unaligned(
+                                data.as_ptr() as *const CompilerExecEvent,
+                            )
+                        };
+                        compiler_agg.handle_compiler_event(&ev);
+                        *count += 1;
+                        n += 1;
+                    }
+                }
+                None => break,
+            }
+        }
+        n
+    }
+
     fn drain_file(
         bpf: &mut aya::Ebpf,
         agg: &mut EventAggregator,
@@ -339,6 +392,12 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
 
         drain_network(&mut handle.bpf, &mut agg, &mut net_count, MAX_PER_ITER, active_filter);
         drain_file(&mut handle.bpf, &mut agg, &mut file_count, MAX_PER_ITER, active_filter);
+        drain_compiler(
+            &mut handle.bpf,
+            &mut compiler_agg,
+            &mut compiler_count,
+            MAX_PER_ITER,
+        );
 
         if done {
             // Settling drain: pull remaining events with a hard deadline so
@@ -346,7 +405,13 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
             let deadline = Instant::now() + Duration::from_millis(250);
             while Instant::now() < deadline {
                 let n = drain_network(&mut handle.bpf, &mut agg, &mut net_count, MAX_PER_ITER, active_filter)
-                    + drain_file(&mut handle.bpf, &mut agg, &mut file_count, MAX_PER_ITER, active_filter);
+                    + drain_file(&mut handle.bpf, &mut agg, &mut file_count, MAX_PER_ITER, active_filter)
+                    + drain_compiler(
+                        &mut handle.bpf,
+                        &mut compiler_agg,
+                        &mut compiler_count,
+                        MAX_PER_ITER,
+                    );
                 if n == 0 {
                     break;
                 }
@@ -500,6 +565,25 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         return Ok(());
     }
 
+    // Milestone 210 — finalize the compiler-pipeline aggregator.
+    // Returns `None` for cases where the trace captured zero compiler
+    // invocations (older kernels without sched_process_exec,
+    // tracepoint attach failed, operator's command didn't invoke a
+    // whitelisted compiler). None-elision preserves pre-m210
+    // attestation byte-identity per research R6.
+    let compiler_pipeline_data = if compiler_count > 0 {
+        Some(compiler_agg.finalize())
+    } else {
+        None
+    };
+    if let Some(ref data) = compiler_pipeline_data {
+        tracing::info!(
+            invocations = data.invocations.len(),
+            secrets_filtered = data.secrets_read_filtered,
+            "compiler-pipeline data captured"
+        );
+    }
+
     let stmt = builder::build_attestation(
         trace,
         &AttestationConfig {
@@ -512,6 +596,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         },
         trace_start,
         trace_end,
+        compiler_pipeline_data,
     )?;
 
     // Feature 006 — write signed DSSE envelope when a signing identity
