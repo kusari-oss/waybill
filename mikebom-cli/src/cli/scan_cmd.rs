@@ -1191,6 +1191,25 @@ pub struct ScanArgs {
     /// warming defeats the ergonomics purpose.
     #[arg(long, default_value_t = 4, value_name = "N")]
     pub warm_go_cache_concurrency: u32,
+
+    /// Milestone 210: bypass the FR-016 trace-noise denylist that
+    /// normally filters system paths (`/etc`, `/proc`), user caches
+    /// (`~/.cache`), ephemeral paths (`/tmp`), and secret-adjacent
+    /// paths (`/var/run/secrets`, `~/.ssh`, `~/.aws`, `*.key`,
+    /// `*_rsa` etc.) from the emitted `mikebom:source-read-set`
+    /// annotation.
+    ///
+    /// When set, EVERY observed read on a compiler-invocation
+    /// descendant lands in the read-set — including any secret
+    /// paths the compiler touched. Intended for auditing use cases
+    /// where the operator explicitly wants full visibility. NOT
+    /// recommended for SBOMs shared beyond the operator's own
+    /// audit trail.
+    ///
+    /// No-op when the compiler-pipeline trace didn't run (default
+    /// features / non-Linux host / no `--features ebpf-tracing`).
+    #[arg(long)]
+    pub include_system_reads: bool,
 }
 
 /// Milestone 173: CLI-side cache-warming mode. Two variants;
@@ -4428,6 +4447,10 @@ mod tests {
             // Milestone 173 — test helper defaults match CLI defaults.
             warm_go_cache: WarmGoCacheMode::Off,
             warm_go_cache_concurrency: 4,
+            // Milestone 210 — trace-noise filter escape hatch off
+            // by default. Individual tests flip on when auditing
+            // secret paths in fixtures.
+            include_system_reads: false,
         }
     }
 

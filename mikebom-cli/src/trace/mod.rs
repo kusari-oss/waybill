@@ -11,6 +11,7 @@
 //! - **pid_tracker**: Process tree tracking for child PID isolation
 
 pub mod aggregator;
+pub mod compiler_pipeline;
 pub mod hasher;
 pub mod http_parser;
 pub mod loader;

@@ -48,6 +48,14 @@ pub const PRODUCT_TYPE: &str = "https://witness.dev/attestations/product/v0.1";
 /// Vyom-Yadav fork network-trace attestor type.
 pub const NETWORK_TRACE_TYPE: &str = "https://witness.dev/attestations/network-trace/v0.1";
 
+/// Milestone 210 — mikebom-owned compiler-invocation attestor type.
+/// Locked per Clarifications Q3 + `contracts/attestor-predicate.md` C-1.
+/// Future version bumps (v0.2, v1, ...) MUST retain the
+/// `/compiler-invocation/` path prefix so URI-alias migration
+/// preserves downstream-consumer parsing.
+pub const COMPILER_INVOCATION_TYPE: &str =
+    "https://mikebom.dev/attestation/compiler-invocation/v0.1";
+
 // ---------------------------------------------------------------------
 // Statement + Collection
 // ---------------------------------------------------------------------
@@ -298,6 +306,29 @@ pub fn sha256_digest(hex: impl Into<String>) -> DigestSet {
     m
 }
 
+/// Milestone 210 — build a `CollectionEntry` carrying the
+/// mikebom-owned `compiler-invocation/v0.1` attestor payload per
+/// `contracts/attestor-predicate.md` C-2. Called from the trace-end
+/// wiring in `mikebom-cli/src/trace/*` when the trace produced
+/// compiler-pipeline data.
+///
+/// `payload` is the JSON-serialized `CompilerPipelineData` (from
+/// `mikebom_common::attestation::compiler_pipeline`) — passed as
+/// `serde_json::Value` to keep this function agnostic of the exact
+/// struct shape (future data-model additions are source-compatible).
+pub fn build_compiler_invocation_entry(
+    payload: serde_json::Value,
+    starttime: DateTime<Utc>,
+    endtime: DateTime<Utc>,
+) -> CollectionEntry {
+    CollectionEntry {
+        attestor_type: COMPILER_INVOCATION_TYPE.to_string(),
+        attestation: payload,
+        starttime,
+        endtime,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -525,5 +556,33 @@ mod tests {
         let json = serde_json::to_string(&stmt).unwrap();
         let back: WitnessStatement = serde_json::from_str(&json).unwrap();
         assert_eq!(stmt, back);
+    }
+
+    #[test]
+    fn compiler_invocation_type_uri_locked_per_clarifications_q3() {
+        // Contract lock — this URI is documented in
+        // specs/210-compiler-pipeline-trace/contracts/attestor-predicate.md
+        // C-1 and MUST NOT change without a URI bump (v0.2, etc.).
+        assert_eq!(
+            COMPILER_INVOCATION_TYPE,
+            "https://mikebom.dev/attestation/compiler-invocation/v0.1"
+        );
+    }
+
+    #[test]
+    fn build_compiler_invocation_entry_wraps_payload_correctly() {
+        let payload = serde_json::json!({
+            "invocations": [],
+            "dag_edges": [],
+            "completeness": { "state": "complete" },
+            "secrets_read_filtered": 0,
+            "include_system_reads_flag": false,
+            "filter_categories_applied": []
+        });
+        let entry = build_compiler_invocation_entry(payload.clone(), t(0), t(100));
+        assert_eq!(entry.attestor_type, COMPILER_INVOCATION_TYPE);
+        assert_eq!(entry.attestation, payload);
+        assert_eq!(entry.starttime, t(0));
+        assert_eq!(entry.endtime, t(100));
     }
 }
