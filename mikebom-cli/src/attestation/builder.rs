@@ -66,6 +66,11 @@ pub fn build_attestation(
         network_trace: trace.network_trace,
         file_access: trace.file_access,
         trace_integrity: trace.trace_integrity,
+        // Milestone 210 — compiler-pipeline data isn't wired into the
+        // AttestationConfig-based path yet (that's a future task in
+        // the m210 US1 phase). Pre-m210 attestations preserved
+        // byte-identically here via the additive Option field.
+        compiler_pipeline: None,
     };
 
     // Subject array per FR-007 / FR-010. When a resolver is attached,

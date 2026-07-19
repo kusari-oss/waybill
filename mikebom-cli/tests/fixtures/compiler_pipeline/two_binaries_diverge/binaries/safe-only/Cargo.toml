@@ -1,0 +1,11 @@
+[package]
+name = "safe-only"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+libsafe = { path = "../../libsafe" }
+
+[[bin]]
+name = "safe-only"
+path = "src/main.rs"

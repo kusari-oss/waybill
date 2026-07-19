@@ -124,6 +124,7 @@ mod tests {
                     bloom_filter_capacity: 100_000,
                     bloom_filter_false_positive_rate: 0.01,
                 },
+                compiler_pipeline: None,
             },
         }
     }

@@ -1,0 +1,17 @@
+# SC-001 fixture — two binary targets sharing libsafe, diverging on libvuln.
+#
+# `safe-only` depends on libsafe only → its source-read-set MUST NOT
+# contain any libvuln source path.
+# `vuln-included` depends on libsafe + libvuln → its source-read-set
+# MUST contain paths from both.
+#
+# See specs/210-compiler-pipeline-trace/tasks.md T015 + T035.
+
+[workspace]
+resolver = "2"
+members = [
+    "libsafe",
+    "libvuln",
+    "binaries/safe-only",
+    "binaries/vuln-included",
+]

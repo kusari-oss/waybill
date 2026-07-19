@@ -1,3 +1,4 @@
+pub mod compiler_pipeline;
 pub mod envelope;
 pub mod file;
 pub mod integrity;

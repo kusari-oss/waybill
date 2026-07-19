@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
+use super::compiler_pipeline::CompilerPipelineData;
 use super::file::FileAccess;
 use super::integrity::TraceIntegrity;
 use super::metadata::TraceMetadata;
@@ -34,6 +35,21 @@ pub struct BuildTracePredicate {
     pub network_trace: NetworkTrace,
     pub file_access: FileAccess,
     pub trace_integrity: TraceIntegrity,
+    /// Milestone 210 — compiler-pipeline data captured via
+    /// `sched_process_exec` + descendant file-op tracing. `None`
+    /// when the trace ran without `--features ebpf-tracing` OR the
+    /// host wasn't Linux OR the operator didn't invoke a compiler.
+    /// When `Some(_)`, downstream emitters populate per-component
+    /// `mikebom:source-read-set` annotations per FR-006.
+    ///
+    /// Backward compatibility: pre-m210 attestation consumers
+    /// deserialize this field as `None` (via `serde` default-Option
+    /// behavior for missing fields). Golden fixtures generated
+    /// pre-m210 remain byte-identical because
+    /// `#[serde(skip_serializing_if = "Option::is_none")]` elides
+    /// the field from the emitted JSON when it's `None`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub compiler_pipeline: Option<CompilerPipelineData>,
 }
 
 impl InTotoStatement {
@@ -118,6 +134,7 @@ mod tests {
                     bloom_filter_capacity: 100_000,
                     bloom_filter_false_positive_rate: 0.01,
                 },
+                compiler_pipeline: None,
             },
         }
     }

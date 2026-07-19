@@ -1,0 +1,12 @@
+[package]
+name = "vuln-included"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+libsafe = { path = "../../libsafe" }
+libvuln = { path = "../../libvuln" }
+
+[[bin]]
+name = "vuln-included"
+path = "src/main.rs"
