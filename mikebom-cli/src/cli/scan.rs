@@ -279,7 +279,19 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     //                       wget, a single binary that links libssl).
     let mut target_pids: std::collections::HashSet<u32> = std::collections::HashSet::new();
     target_pids.insert(child_pid);
-    let filter_by_pid = !args.trace_children;
+    // Milestone 211 (issue #611) — pid-filter now applies ONLY when the
+    // operator explicitly attached to an existing pid via `--target-pid`.
+    // The "run a command and trace it" path (`mikebom trace run -- ...`)
+    // ALWAYS wants to see events from the entire process subtree —
+    // cargo builds fan out to rustc / cc / ld / etc., all of which are
+    // legitimate build activity the SBOM depends on. Pre-m211, the
+    // default filter dropped every child-process event silently,
+    // producing empty `file_access.operations[]` on every build trace
+    // even when the kprobes were firing. `--trace-children` is now
+    // implicitly always-true for command-execute mode; the flag stays
+    // for backwards compat + as an explicit opt-in for --target-pid
+    // scenarios where descendant tracking is desired.
+    let filter_by_pid = args.target_pid.is_some() && !args.trace_children;
 
     fn drain_network(
         bpf: &mut aya::Ebpf,

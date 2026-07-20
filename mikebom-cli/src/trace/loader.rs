@@ -121,14 +121,13 @@ mod inner {
         if let Err(e) = attach_kprobe(&mut bpf, "do_filp_open_entry", "do_filp_open") {
             warn!("could not attach do_filp_open kprobe: {e}");
         }
-        // vfs_open fires after successful open with the fully-resolved
-        // `struct path *`. Hooking here and calling `bpf_d_path` yields a
-        // canonical pathname even for opens that the other two probes
-        // miss (observed with curl's -O output file and cargo's .crate
-        // writes — root cause of the "Rust SBOM has zero components" bug).
-        if let Err(e) = attach_kprobe(&mut bpf, "vfs_open_entry", "vfs_open") {
-            warn!("could not attach vfs_open kprobe: {e}");
-        }
+        // Milestone 211 (issue #611): the vfs_open kprobe was retired
+        // — see mikebom-ebpf/src/programs/file_ops.rs for the full
+        // explanation. Its intended fallback role for paths that
+        // do_filp_open + openat2 miss was never realized because
+        // bpf_d_path (which vfs_open used to resolve paths) is
+        // restricted to LSM/fentry/fexit programs at the kernel API
+        // level. do_filp_open in practice covers every relevant open.
 
         // Milestone 210 — compiler-pipeline tracepoints. Best-effort:
         // if any of the three fail to attach (missing symbol, kernel

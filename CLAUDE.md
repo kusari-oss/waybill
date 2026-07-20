@@ -1,6 +1,6 @@
 # mikebom Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-07-18
+Auto-generated from all feature plans. Last updated: 2026-07-20
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -276,6 +276,8 @@ Auto-generated from all feature plans. Last updated: 2026-07-18
 - N/A — pipeline state lives on the stack for the duration of a single `resolve()` call. Matches every resolver milestone. (209-resolver-trait-chain)
 - Rust stable for user-space (workspace toolchain inherited from milestones 001–209); Rust nightly for the eBPF target via `aya-ebpf` (already required per m020). No new nightly features needed on top of what m020 pins. + Existing only — `aya` (user-space eBPF loader; already in the dep graph behind the `ebpf-tracing` feature per m020), `aya-ebpf` (kernel-space; already in `mikebom-ebpf`), `aya-log` (logging; already), `sha2` (SHA-256 hashing at close-time; already pervasive), `serde`/`serde_json` (attestation serialization), `tracing`/`anyhow`/`thiserror` (error propagation + logs). **Zero new Cargo dependencies.** (210-compiler-pipeline-trace)
 - N/A — compiler-invocation records + per-invocation read/write sets live in-process for the duration of a single trace. Emitted into the attestation JSON at trace-end. Matches every trace-mode milestone since 001. (210-compiler-pipeline-trace)
+- Rust nightly (eBPF target via `aya-ebpf`) + Rust stable (workspace toolchain inherited from milestones 001–210; no new nightly features required beyond what m020 pinned). + Existing only — `aya-ebpf = 0.1.1` (kernel-side; `helpers::{bpf_d_path, bpf_probe_read_kernel, bpf_probe_read_kernel_str_bytes, bpf_probe_read_user_str_bytes, bpf_ktime_get_ns}`), `aya = 0.13` (user-space eBPF loader; already at workspace); `mikebom-common` `FileEvent` type (unchanged per FR-003). **No new Cargo dependencies.** No changes to Rust MSRV. No changes to `bpf-linker` version pin. (211-vfs-open-verifier-fix)
+- N/A — in-process per scan; file events flow via the existing `FILE_EVENTS` ring buffer (`mikebom-ebpf/src/maps.rs:19`, 128 MB capacity, unchanged). (211-vfs-open-verifier-fix)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -338,9 +340,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 211-vfs-open-verifier-fix: Added Rust nightly (eBPF target via `aya-ebpf`) + Rust stable (workspace toolchain inherited from milestones 001–210; no new nightly features required beyond what m020 pinned). + Existing only — `aya-ebpf = 0.1.1` (kernel-side; `helpers::{bpf_d_path, bpf_probe_read_kernel, bpf_probe_read_kernel_str_bytes, bpf_probe_read_user_str_bytes, bpf_ktime_get_ns}`), `aya = 0.13` (user-space eBPF loader; already at workspace); `mikebom-common` `FileEvent` type (unchanged per FR-003). **No new Cargo dependencies.** No changes to Rust MSRV. No changes to `bpf-linker` version pin.
 - 210-compiler-pipeline-trace: Added Rust stable for user-space (workspace toolchain inherited from milestones 001–209); Rust nightly for the eBPF target via `aya-ebpf` (already required per m020). No new nightly features needed on top of what m020 pins. + Existing only — `aya` (user-space eBPF loader; already in the dep graph behind the `ebpf-tracing` feature per m020), `aya-ebpf` (kernel-space; already in `mikebom-ebpf`), `aya-log` (logging; already), `sha2` (SHA-256 hashing at close-time; already pervasive), `serde`/`serde_json` (attestation serialization), `tracing`/`anyhow`/`thiserror` (error propagation + logs). **Zero new Cargo dependencies.**
 - 209-resolver-trait-chain: Added Rust stable (workspace toolchain inherited from milestones 001–207). Requires the RPITIT (return-position `impl Trait` in trait) feature stabilized in Rust 1.75. + Existing only — `tokio`, `anyhow`/`thiserror`, `tracing`, `std::panic::catch_unwind`. **Zero new Cargo dependencies.** No `async-trait` crate needed (RPITIT covers it).
-- 207-no-deps-dev-aggregate: Added Rust stable (workspace toolchain inherited from milestones 001–206; no nightly). + Existing only — `clap` (workspace, `Args` derive picks up the new flag), `tracing` (workspace, FR-006 WARN log). **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

@@ -3,7 +3,10 @@ use aya_ebpf::{
     macros::kprobe,
     programs::ProbeContext,
 };
-use aya_ebpf::helpers::gen::bpf_d_path;
+// Milestone 211 — `bpf_d_path` import removed alongside the retired
+// vfs_open kprobe. The kernel only allows this helper in LSM/fentry/
+// fexit/tracing programs; a kprobe on vfs_open failed with `unknown
+// func bpf_d_path#147` on every kernel we tested.
 
 use mikebom_common::events::{FileEvent, FileEventType};
 
@@ -187,75 +190,16 @@ pub fn do_filp_open_entry(ctx: ProbeContext) -> u32 {
     }
 }
 
-/// kprobe on vfs_open — the canonical place to observe every successful
-/// file open, after the kernel has resolved the final path. `vfs_open`'s
-/// first argument is `const struct path *`, which is exactly what
-/// `bpf_d_path` takes to produce a full canonical pathname regardless of
-/// the syscall wrapper the userspace program used (open, openat, openat2,
-/// creat, io_uring open, …). This is the authoritative fallback for paths
-/// that `do_filp_open_entry`'s struct-filename read misses — notably
-/// curl's `-O` output file and cargo's `.crate` writes.
-///
-/// int vfs_open(const struct path *path, struct file *file)
-#[kprobe]
-pub fn vfs_open_entry(ctx: ProbeContext) -> u32 {
-    match try_vfs_open(&ctx) {
-        Ok(0) => 0,
-        _ => 0,
-    }
-}
-
-fn try_vfs_open(ctx: &ProbeContext) -> Result<u32, i64> {
-    if !should_trace() {
-        return Ok(0);
-    }
-
-    let path_ptr: u64 = ctx.arg(0).ok_or(1i64)?;
-    if path_ptr == 0 {
-        return Ok(0);
-    }
-
-    let pid = current_pid();
-    let tid = current_tid();
-    let comm = current_comm();
-    let timestamp = unsafe { bpf_ktime_get_ns() };
-
-    if let Some(mut buf) = FILE_EVENTS.reserve::<FileEvent>(0) {
-        let event = buf.as_mut_ptr();
-        unsafe {
-            (*event).event_type = FileEventType::Open;
-            (*event).timestamp_ns = timestamp;
-            (*event).pid = pid;
-            (*event).tid = tid;
-            (*event).comm = comm;
-            (*event).path = [0u8; 256];
-            (*event).path_truncated = 0;
-            (*event)._path_padding = [0; 3];
-            (*event).flags = 0;
-            (*event).bytes_transferred = 0;
-            (*event).content_hash = [0; 32];
-            (*event).inode = 0;
-
-            // bpf_d_path writes the canonical pathname (with embedded NUL)
-            // into the path buffer. Returns the byte count written or a
-            // negative errno. We simply skip submission if the helper
-            // fails — it is allow-listed by the kernel for a short set of
-            // function hooks and may refuse on others.
-            let n = bpf_d_path(
-                path_ptr as *mut _,
-                (*event).path.as_mut_ptr() as *mut _,
-                256,
-            );
-            if n <= 0 {
-                // Not an error; just nothing useful to record.
-                return Ok(0);
-            }
-        }
-        buf.submit(0);
-    }
-
-    Ok(0)
-}
+// Milestone 211 (issue #611) — vfs_open kprobe RETIRED. It called
+// `bpf_d_path` which the kernel restricts to LSM/fentry/fexit/tracing
+// program types only (`unknown func bpf_d_path#147` from the verifier
+// when loaded as a kprobe). This was a design flaw from day one; the
+// program never loaded on any kernel we've tested. `do_filp_open_entry`
+// + `openat2_entry` cover every real open path — the "curl -O" +
+// "cargo .crate writes" cases the retired kprobe was supposedly for
+// go through do_filp_open just like every other open. If a future
+// operator surfaces a real miss, convert vfs_open to a fentry program
+// (fentry IS on bpf_d_path's allowlist) as a follow-up milestone.
 
 fn try_do_filp_open(ctx: &ProbeContext) -> Result<u32, i64> {
     if !should_trace() {

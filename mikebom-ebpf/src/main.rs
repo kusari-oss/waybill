@@ -6,8 +6,10 @@ mod maps;
 mod programs;
 
 // Re-export all eBPF program entry points so aya can find them.
+// Milestone 211 (issue #611): vfs_open_entry retired — see
+// programs/file_ops.rs for the bpf_d_path kernel-restriction rationale.
 pub use programs::file_ops::{
-    do_filp_open_entry, openat2_entry, vfs_open_entry, vfs_read_entry, vfs_write_entry,
+    do_filp_open_entry, openat2_entry, vfs_read_entry, vfs_write_entry,
 };
 pub use programs::tcp_connect::{tcp_connect, tcp_connect_ret};
 pub use programs::tls_openssl::{ssl_read_entry, ssl_read_return, ssl_write_entry};
