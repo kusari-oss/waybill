@@ -823,6 +823,20 @@ cdx_anno!(c123_cdx, "mikebom:image-extraction-completeness",    document);
 // emit nothing per FR-005 byte-identity guardrail).
 cdx_anno!(c124_cdx, "mikebom:image-source",                     document);
 
+// Milestone 210: per-component compiler-pipeline attribution — C130
+// carries the merged `read_set` payload for traced components;
+// C131 carries the closed-enum source label (`traced` | `unknown`).
+// See contracts/annotations.md A-1 / A-2.
+cdx_anno!(c130_cdx, "mikebom:source-read-set",                  component);
+cdx_anno!(c131_cdx, "mikebom:read-set-source",                  component);
+
+// Milestone 210: document-scope compiler-pipeline transparency
+// (C132 completeness + C133 secrets-filtered count) + per-component
+// C134 attach-late marker. See contracts/annotations.md A-3 / A-4 / A-5.
+cdx_anno!(c132_cdx, "mikebom:compiler-pipeline-completeness",   document);
+cdx_anno!(c133_cdx, "mikebom:secrets-read-filtered",            document);
+cdx_anno!(c134_cdx, "mikebom:trace-attach-late",                component);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 cdx_anno!(c113_cdx, "mikebom:synthetic-built-in",               component);

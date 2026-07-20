@@ -154,6 +154,27 @@ impl CompilerPipelineAggregator {
         }
         let path = PathBuf::from(path_str);
 
+        // FR-018 — compiler CLIs treat `"-"` (e.g. `gcc -x c -`) and
+        // `/dev/stdin` as reading from stdin. Detect BEFORE the FR-016
+        // denylist so `/dev/stdin` isn't swallowed by the `/dev/`
+        // system-prefix filter (which would silently drop the stdin
+        // signal). Detect BEFORE the `&mut invocation` borrow so we
+        // can delegate to `record_stdin_input` (itself `&mut self`)
+        // without fighting the borrow checker. Only redirects on
+        // Read/Open — Write events on `/dev/stdin` are ignored per
+        // FR-018 (stdin is input-only in the compiler-invocation model).
+        if matches!(event.event_type, FileEventType::Read | FileEventType::Open) {
+            let ps = path.to_string_lossy();
+            if ps == "-" || ps == "/dev/stdin" {
+                // `bytes_read` is 0 pending future eBPF read-syscall
+                // byte counters (spec: "tracked via subsequent read
+                // syscall counters"); the sentinel value is stable +
+                // honest today.
+                self.record_stdin_input(invocation_id, 0);
+                return;
+            }
+        }
+
         // FR-016 denylist check — categorize + drop if matched
         // (unless include_system_reads bypass is set).
         if let Some(category) = self.classify_filter_category(&path) {
@@ -559,7 +580,7 @@ mod tests {
             ppid,
             cgroup_id: 42,
             comm: comm_bytes,
-            argv0_hint: [0u8; 128],
+            argv0_hint: [0u8; 16],
             argv0_hint_len: 0,
             exit_code: 0,
             _padding: [0u8; 2],
@@ -760,6 +781,61 @@ mod tests {
         assert_eq!(
             inv.read_set[0].kind,
             ReadKind::StdinInput { bytes_read: 1234 }
+        );
+    }
+
+    #[test]
+    fn stdin_dash_read_event_lands_as_stdin_input_not_regular_file() {
+        // FR-018 — `gcc -x c -` opens/reads path `"-"` as its input;
+        // the aggregator must divert this to the synthetic `<stdin>`
+        // entry with `ReadKind::StdinInput`, not treat it as a real
+        // file (which would produce `read_set = [{path: "-", kind:
+        // "file", sha256: "0000..."}]` — misleading + non-portable).
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "gcc"));
+        agg.handle_file_event(&make_file_event(FileEventType::Read, 100, "-"));
+        let data = agg.finalize();
+        let inv = &data.invocations[0];
+        assert_eq!(inv.read_set.len(), 1, "exactly one read-set entry");
+        assert_eq!(inv.read_set[0].path, PathBuf::from("<stdin>"));
+        assert!(
+            matches!(inv.read_set[0].kind, ReadKind::StdinInput { .. }),
+            "expected StdinInput, got {:?}",
+            inv.read_set[0].kind
+        );
+    }
+
+    #[test]
+    fn stdin_dev_stdin_path_lands_as_stdin_input() {
+        // FR-018 — POSIX `/dev/stdin` is the fd-0 symlink; some
+        // compilers/toolchains open it explicitly instead of taking
+        // the `-` CLI arg. Both paths must be normalized to the
+        // synthetic `<stdin>` entry so consumers can query one shape.
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "gcc"));
+        agg.handle_file_event(&make_file_event(FileEventType::Open, 100, "/dev/stdin"));
+        let data = agg.finalize();
+        let inv = &data.invocations[0];
+        assert_eq!(inv.read_set.len(), 1);
+        assert_eq!(inv.read_set[0].path, PathBuf::from("<stdin>"));
+        assert!(matches!(inv.read_set[0].kind, ReadKind::StdinInput { .. }));
+    }
+
+    #[test]
+    fn stdin_write_event_is_ignored_not_treated_as_stdin_input() {
+        // FR-018 — stdin is input-only. A write event on `/dev/stdin`
+        // (impossible for a compiler in practice but defense in depth)
+        // must NOT produce a `<stdin>` read-set entry. The event drops
+        // silently through the write arm's placeholder handler.
+        let mut agg = CompilerPipelineAggregator::new(FilterConfig::default());
+        agg.handle_compiler_event(&make_exec_event(100, 50, "gcc"));
+        agg.handle_file_event(&make_file_event(FileEventType::Write, 100, "/dev/stdin"));
+        let data = agg.finalize();
+        let inv = &data.invocations[0];
+        assert_eq!(
+            inv.read_set.len(),
+            0,
+            "write event on /dev/stdin must NOT populate read_set"
         );
     }
 

@@ -1,10 +1,3 @@
-// Consumed by the per-format emitter augmentation (T030-T032) which
-// hasn't landed yet — the module compiles + tests exercise every
-// public function but nothing in the production code path calls into
-// it until the emitters are wired. Same shape as the m208 ingest
-// scaffolds which had this attribute until the emitters caught up.
-#![allow(dead_code)]
-
 //! Milestone 210 — write-set → SBOM component mapping (task T029).
 //!
 //! Given a `ResolvedComponent` and a `CompilerPipelineData`, produce
@@ -36,7 +29,7 @@ use serde_json::{json, Value};
 /// Per contracts/annotations.md A-2 — MVP only emits `Traced` or
 /// `Unknown`; `CacheHit` + `TraceAttachLate` are follow-up work.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub(crate) enum ReadSetSource {
+pub enum ReadSetSource {
     /// Component's file path intersects at least one compiler
     /// invocation's write-set — a genuine attribution.
     Traced,
@@ -48,7 +41,7 @@ pub(crate) enum ReadSetSource {
 }
 
 impl ReadSetSource {
-    pub(crate) fn as_wire_str(self) -> &'static str {
+    pub fn as_wire_str(self) -> &'static str {
         match self {
             ReadSetSource::Traced => "traced",
             ReadSetSource::Unknown => "unknown",
@@ -57,20 +50,20 @@ impl ReadSetSource {
 }
 
 /// Result of the mapping pass for one component.
-pub(crate) struct ComponentReadSet {
-    pub(crate) source: ReadSetSource,
+pub struct ComponentReadSet {
+    pub source: ReadSetSource,
     /// `Some(payload_value)` when `source == Traced` — the deterministic
     /// `mikebom:source-read-set` annotation payload.
     /// `None` when `source == Unknown` (per A-2: C130 is OMITTED for
     /// non-traced components; C131 alone signals the state).
-    pub(crate) payload: Option<Value>,
+    pub payload: Option<Value>,
 }
 
 /// Compute the source-read-set for a single component per Q1.
 ///
 /// Returns `Traced { payload }` when at least one compiler invocation's
 /// write-set intersects the component's file paths; `Unknown` otherwise.
-pub(crate) fn map_component_to_source_read_set(
+pub fn map_component_to_source_read_set(
     component: &ResolvedComponent,
     pipeline: &CompilerPipelineData,
 ) -> ComponentReadSet {

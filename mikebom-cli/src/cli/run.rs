@@ -317,6 +317,13 @@ pub struct RunArgs {
     #[arg(long = "attestation-format", value_name = "FORMAT", default_value = "witness-v0.1")]
     pub attestation_format: String,
 
+    /// Milestone 210 — see `sbom scan --include-system-reads`. Threads
+    /// through to the trace phase's compiler-pipeline aggregator when
+    /// the compound `mikebom run` is used instead of the two-step
+    /// `mikebom sbom scan → mikebom sbom generate` flow.
+    #[arg(long)]
+    pub include_system_reads: bool,
+
     /// Build command to trace
     #[arg(last = true, required = true)]
     pub command: Vec<String>,
@@ -372,6 +379,12 @@ pub async fn execute(args: RunArgs) -> anyhow::Result<()> {
         require_signing: args.require_signing,
         subject: args.subject.clone(),
         attestation_format: args.attestation_format.clone(),
+        // Milestone 210 — `mikebom run` is a shortcut for trace + generate;
+        // pass through the include-system-reads override if the operator
+        // asked for it via the compound command's arg surface. Default is
+        // false (denylist active) so `mikebom run` behaves identically to
+        // pre-m210 for existing operators.
+        include_system_reads: args.include_system_reads,
         command: args.command.clone(),
     };
     super::scan::execute(scan_args).await?;

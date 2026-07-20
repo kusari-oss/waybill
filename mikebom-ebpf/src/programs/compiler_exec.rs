@@ -51,59 +51,67 @@ use crate::maps::{COMPILER_EXEC_EVENTS, COMPILER_INVOCATIONS};
 ///
 /// Order matters only for readability — all entries are checked
 /// unconditionally.
-const COMPILER_WHITELIST: &[&[u8]] = &[
-    b"rustc",
-    b"gcc",
-    b"g++",
-    b"clang",
-    b"clang++",
-    b"go",
-    b"ld",
-    b"ld.lld",
-    b"ld.gold",
-    b"ld.bfd",
-    b"mold",
-    b"cc1",
-    b"cc1plus",
-    b"cpp",
-    b"as",
+/// Whitelist stored as fixed-size `[[u8; 16]; N]`.
+///
+/// Rationale: an earlier `const COMPILER_WHITELIST: &[&[u8]]` version
+/// was rejected by the eBPF verifier on aarch64. The inner
+/// `entry[j]` deref requires the verifier to prove the fat pointer's
+/// data ptr is a valid pointer, which it can't reason about — it sees
+/// the loaded value as a plain scalar and refuses the load
+/// (`R0 invalid mem access 'scalar'`).
+///
+/// Storing each entry inline as a 16-byte array means indexing is
+/// direct constant-offset arithmetic against the array's flat memory
+/// layout — no fat-pointer deref, no `.len()` load. Entries are
+/// NUL-padded to 16 bytes so byte-wise compare works against the
+/// kernel's NUL-padded 16-byte `comm` field.
+const COMPILER_WHITELIST: [[u8; 16]; 15] = [
+    *b"rustc\0\0\0\0\0\0\0\0\0\0\0",
+    *b"gcc\0\0\0\0\0\0\0\0\0\0\0\0\0",
+    *b"g++\0\0\0\0\0\0\0\0\0\0\0\0\0",
+    *b"clang\0\0\0\0\0\0\0\0\0\0\0",
+    *b"clang++\0\0\0\0\0\0\0\0\0",
+    *b"go\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
+    *b"ld\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
+    *b"ld.lld\0\0\0\0\0\0\0\0\0\0",
+    *b"ld.gold\0\0\0\0\0\0\0\0\0",
+    *b"ld.bfd\0\0\0\0\0\0\0\0\0\0",
+    *b"mold\0\0\0\0\0\0\0\0\0\0\0\0",
+    *b"cc1\0\0\0\0\0\0\0\0\0\0\0\0\0",
+    *b"cc1plus\0\0\0\0\0\0\0\0\0",
+    *b"cpp\0\0\0\0\0\0\0\0\0\0\0\0\0",
+    *b"as\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
 ];
 
 /// Check whether the current process's comm-field matches any
-/// entry in the whitelist. Compares up to the first NUL byte (comm
-/// is NUL-terminated when shorter than 16 bytes).
+/// entry in the whitelist.
+///
+/// Compares 16-byte `comm` against 16-byte whitelist entries as TWO
+/// `u64` word loads per entry (2 branches per entry × 15 entries = 30
+/// branches). The earlier byte-by-byte version blew the verifier's 1M
+/// instruction budget because each `comm[j] != entry[j]` in the nested
+/// loop created a state fork the verifier had to symbolically track
+/// through 240 iterations. Word-wide compare collapses that to 30
+/// branches which the verifier accepts trivially.
+///
+/// SAFETY: `comm` is `#[repr(C, align(_))]`-adjacent within the
+/// tracepoint context; the u64 read is aligned by convention (aya
+/// exposes `comm` from `bpf_get_current_comm()` which returns a
+/// 16-byte-aligned buffer). Whitelist entries are `#[repr(C)]` array
+/// literals with natural u64 alignment.
 #[inline(always)]
 fn matches_whitelist(comm: &[u8; 16]) -> bool {
-    // Determine actual comm length (up to first NUL, max 16).
-    let mut len = 16usize;
-    let mut i = 0;
-    while i < 16 {
-        if comm[i] == 0 {
-            len = i;
-            break;
-        }
-        i += 1;
-    }
+    let c_ptr = comm.as_ptr() as *const u64;
+    let c0 = unsafe { core::ptr::read_unaligned(c_ptr) };
+    let c1 = unsafe { core::ptr::read_unaligned(c_ptr.add(1)) };
 
-    // Bounded exhaustive compare against the whitelist. eBPF verifier
-    // requires bounded loops; 15 whitelist entries × 16-byte compare
-    // stays well under the complexity limit.
     let mut w = 0;
     while w < COMPILER_WHITELIST.len() {
-        let entry = COMPILER_WHITELIST[w];
-        if entry.len() == len {
-            let mut j = 0;
-            let mut all_match = true;
-            while j < len && j < 16 {
-                if comm[j] != entry[j] {
-                    all_match = false;
-                    break;
-                }
-                j += 1;
-            }
-            if all_match {
-                return true;
-            }
+        let e_ptr = COMPILER_WHITELIST[w].as_ptr() as *const u64;
+        let e0 = unsafe { core::ptr::read_unaligned(e_ptr) };
+        let e1 = unsafe { core::ptr::read_unaligned(e_ptr.add(1)) };
+        if c0 == e0 && c1 == e1 {
+            return true;
         }
         w += 1;
     }
@@ -170,7 +178,7 @@ fn try_sched_process_exec(_ctx: &TracePointContext) -> Result<u32, i64> {
             (*ev).ppid = ppid;
             (*ev).cgroup_id = 0; // TODO: bpf_get_current_cgroup_id() in follow-up
             (*ev).comm = comm;
-            (*ev).argv0_hint = [0u8; 128]; // TODO: read argv[0] via bpf_probe_read_user
+            (*ev).argv0_hint = [0u8; 16]; // TODO: read argv[0] via bpf_probe_read_user
             (*ev).argv0_hint_len = 0;
             (*ev).exit_code = 0;
             (*ev)._padding = [0u8; 2];
@@ -243,7 +251,7 @@ fn try_sched_process_exit(_ctx: &TracePointContext) -> Result<u32, i64> {
             (*ev).ppid = 0;
             (*ev).cgroup_id = 0;
             (*ev).comm = bpf_get_current_comm().unwrap_or([0u8; 16]);
-            (*ev).argv0_hint = [0u8; 128];
+            (*ev).argv0_hint = [0u8; 16];
             (*ev).argv0_hint_len = 0;
             // TODO: read the actual exit_code from ctx in a follow-up.
             (*ev).exit_code = 0;

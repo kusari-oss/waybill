@@ -111,3 +111,47 @@ Scan mode stamps one of three `GenerationContext` values on the output:
 This value lands at the top of the CycloneDX BOM under
 `metadata.component.properties.mikebom:generation-context` so downstream
 consumers know what kind of evidence produced the SBOM.
+
+## Trace-mode compiler-pipeline enrichment (milestone 210)
+
+When the trace captures compiler invocations, the SBOM projection gains a
+per-component source attribution layer independent of the ecosystem-
+reader path above:
+
+1. **In-kernel capture** — three eBPF tracepoints on
+   `sched_process_{exec,fork,exit}` recognize whitelisted compilers,
+   assign monotonic `invocation_id`s via `bpf_ktime_get_ns`, and
+   propagate PID ancestry through the `COMPILER_INVOCATIONS` HashMap so
+   `rustc` invocations spawned by `cargo` inherit the cargo parent's
+   invocation id.
+2. **User-space aggregation** — `mikebom-cli/src/trace/compiler_pipeline.rs`
+   drains the ring buffer, buckets file-open events per invocation into
+   `read_set` + `write_set` bags, applies FR-016 trace-noise filters
+   (system dirs, user cache, ephemeral tmp, secrets-adjacent paths), and
+   assembles the finalized `CompilerPipelineData` at scan-end.
+3. **Attestation injection** — the aggregated data lands as an additive
+   `Option<CompilerPipelineData>` field on `BuildTracePredicate`; the
+   `Option` shape guarantees byte-identity for pre-m210 attestation
+   goldens when the field is absent (scan-mode + traces without any
+   compiler exec).
+4. **Per-component annotation** — at SBOM emission time,
+   `mikebom-cli/src/generate/compiler_pipeline_annotation.rs::map_component_to_source_read_set`
+   walks each `ResolvedComponent`'s known file paths (m133 evidence +
+   `occurrences[].location`) and intersects them against every
+   invocation's write-set. Matches produce C130
+   `mikebom:source-read-set` (transitive-closed union of the matched +
+   ancestor read-sets, deterministically sorted) + C131
+   `mikebom:read-set-source = "traced"`. Non-matching components get
+   C131 = `"unknown"` only.
+5. **Document-scope transparency** — three companion annotations ride
+   along per contracts/annotations.md: C132
+   `mikebom:compiler-pipeline-completeness` (always emitted; carries the
+   `CompletenessState` shape), C133 `mikebom:secrets-read-filtered`
+   (emitted when non-zero), and C134 `mikebom:trace-attach-late` (per-
+   component when the doc-scope state is `Partial(AttachLate)`).
+
+The end-to-end data flow: eBPF program → `COMPILER_INVOCATIONS` map →
+ring buffer → user-space aggregator → `CompilerPipelineAggregator` →
+`BuildTracePredicate.compiler_pipeline` → per-component + doc-scope
+annotations on all three SBOM formats. Complete details live in
+[attestations.md](attestations.md#compiler_pipeline-compilerpipelinedata-milestone-210).

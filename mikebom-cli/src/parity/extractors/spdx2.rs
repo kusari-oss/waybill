@@ -589,6 +589,20 @@ spdx23_anno!(c123_spdx23, "mikebom:image-extraction-completeness",    document);
 // Milestone 206 (closes #440): C124 doc-scope image-source annotation.
 spdx23_anno!(c124_spdx23, "mikebom:image-source",                     document);
 
+// Milestone 210: per-component compiler-pipeline attribution — C130
+// carries the merged `read_set` payload for traced components;
+// C131 carries the closed-enum source label (`traced` | `unknown`).
+// See contracts/annotations.md A-1 / A-2.
+spdx23_anno!(c130_spdx23, "mikebom:source-read-set",                  component);
+spdx23_anno!(c131_spdx23, "mikebom:read-set-source",                  component);
+
+// Milestone 210: document-scope compiler-pipeline transparency
+// (C132 completeness + C133 secrets-filtered count) + per-component
+// C134 attach-late marker. See contracts/annotations.md A-3 / A-4 / A-5.
+spdx23_anno!(c132_spdx23, "mikebom:compiler-pipeline-completeness",   document);
+spdx23_anno!(c133_spdx23, "mikebom:secrets-read-filtered",            document);
+spdx23_anno!(c134_spdx23, "mikebom:trace-attach-late",                component);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 spdx23_anno!(c113_spdx23, "mikebom:synthetic-built-in",               component);

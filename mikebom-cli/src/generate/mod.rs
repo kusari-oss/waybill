@@ -267,6 +267,16 @@ pub struct ScanArtifacts<'a> {
     /// `annotations` via the standard envelope plumbing.
     pub collisions_summary:
         Option<&'a mikebom_common::divergence::CollisionsSummary>,
+    /// Milestone 210 — compiler-pipeline data captured from the
+    /// eBPF trace (`sched_process_exec` tracepoint + descendant
+    /// file-op tracking). `None` when the trace ran without
+    /// eBPF (default features) OR the operator's build didn't
+    /// invoke a whitelisted compiler. When `Some(_)`, each per-
+    /// format emitter walks `components` + emits per-component
+    /// `mikebom:source-read-set` (C130) and `mikebom:read-set-source`
+    /// (C131) annotations per contracts/annotations.md A-1/A-2.
+    pub compiler_pipeline:
+        Option<&'a mikebom_common::attestation::compiler_pipeline::CompilerPipelineData>,
 }
 
 /// Milestone 077 — operator-supplied overrides for the root component

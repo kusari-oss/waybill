@@ -144,7 +144,16 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // `None` when no collisions were detected (FR-009 — no
             // annotation in clean SBOMs; bytes stay identical to
             // alpha.51 emissions).
-            .with_collisions_summary(scan.collisions_summary.cloned());
+            .with_collisions_summary(scan.collisions_summary.cloned())
+            // Milestone 210 — propagate compiler-pipeline data
+            // captured from the eBPF trace so `build_components`
+            // can emit per-component `mikebom:source-read-set` (C130)
+            // + `mikebom:read-set-source` (C131) properties per
+            // contracts/annotations.md A-1/A-2. `None` when scan
+            // ran without eBPF (default features) OR the trace
+            // captured zero compiler invocations — either case
+            // preserves scan-mode byte-identity.
+            .with_compiler_pipeline(scan.compiler_pipeline.cloned());
         let bom = builder.build(
             scan.components,
             scan.relationships,

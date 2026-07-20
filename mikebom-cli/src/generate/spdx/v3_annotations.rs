@@ -41,6 +41,9 @@ pub fn build_component_annotations(
     creation_info_id: &str,
     _include_dev: bool,
     include_source_files: bool,
+    compiler_pipeline: Option<
+        &mikebom_common::attestation::compiler_pipeline::CompilerPipelineData,
+    >,
 ) -> Vec<Value> {
     let mut out: Vec<Value> = Vec::new();
     for c in components {
@@ -55,6 +58,7 @@ pub fn build_component_annotations(
             c,
             _include_dev,
             include_source_files,
+            compiler_pipeline,
         );
     }
     sort_by_spdx_id(&mut out);
@@ -196,6 +200,9 @@ fn push_component_fields(
     c: &ResolvedComponent,
     _include_dev: bool,
     include_source_files: bool,
+    compiler_pipeline: Option<
+        &mikebom_common::attestation::compiler_pipeline::CompilerPipelineData,
+    >,
 ) {
     let push = |out: &mut Vec<Value>, field: &str, value: serde_json::Value| {
         out.push(build_annotation(
@@ -390,6 +397,34 @@ fn push_component_fields(
             continue;
         }
         push(out, key, value.clone());
+    }
+
+    // Milestone 210 — per-component compiler-pipeline attribution.
+    // C130 + C131 + C134 per contracts/annotations.md A-1/A-2/A-5.
+    // Mirror of the SPDX 2.3 emission at
+    // `annotations.rs::annotate_component` — same match rule, same
+    // envelope, same wire strings, same C134 gate.
+    if let Some(pipeline) = compiler_pipeline {
+        let mapping = crate::generate::compiler_pipeline_annotation::map_component_to_source_read_set(
+            c,
+            pipeline,
+        );
+        if let Some(payload) = mapping.payload {
+            push(out, "mikebom:source-read-set", payload);
+        }
+        push(
+            out,
+            "mikebom:read-set-source",
+            json!(mapping.source.as_wire_str()),
+        );
+        if matches!(
+            pipeline.completeness,
+            mikebom_common::attestation::compiler_pipeline::CompletenessState::Partial {
+                reason: mikebom_common::attestation::compiler_pipeline::PartialReason::AttachLate,
+            }
+        ) {
+            push(out, "mikebom:trace-attach-late", json!("true"));
+        }
     }
 }
 
@@ -615,6 +650,24 @@ fn push_document_fields(
         Some(crate::cli::scan_cmd::ImageSource::Podman)
     ) {
         push(out, "mikebom:image-source", json!("podman"));
+    }
+
+    // Milestone 210: document-scope compiler-pipeline transparency
+    // (C132 + C133) per contracts/annotations.md A-3 / A-4. Same
+    // emission semantics as the CDX + SPDX 2.3 emitters. C132 always
+    // fires when `compiler_pipeline.is_some()`; C133 only when
+    // `secrets_read_filtered > 0`.
+    if let Some(pipeline) = scan.compiler_pipeline {
+        if let Ok(value) = serde_json::to_value(&pipeline.completeness) {
+            push(out, "mikebom:compiler-pipeline-completeness", value);
+        }
+        if pipeline.secrets_read_filtered > 0 {
+            push(
+                out,
+                "mikebom:secrets-read-filtered",
+                json!(pipeline.secrets_read_filtered.to_string()),
+            );
+        }
     }
 
     // Milestone 134 (closes #125, catalog row C100): document-scope
@@ -844,6 +897,7 @@ mod tests {
                 &c,
                 true,
                 true,
+                None,
             );
             let envs = envelopes_for_field(&out, "mikebom:lifecycle-scope");
             assert!(
@@ -886,6 +940,7 @@ mod tests {
             &c,
             /* include_dev = */ true,
             /* include_source_files = */ true,
+            None,
         );
         let envs = envelopes_for_field(&out, "mikebom:source-files");
         assert_eq!(

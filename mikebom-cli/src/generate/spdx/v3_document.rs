@@ -113,6 +113,7 @@ pub fn build_document(
             sbom_type_override: scan.sbom_type_override,
             spdx2_relationship_compat: scan.spdx2_relationship_compat,
             collisions_summary: scan.collisions_summary,
+            compiler_pipeline: scan.compiler_pipeline,
         };
         &view_scan_storage
     } else {
@@ -759,6 +760,7 @@ pub fn build_document(
             CREATION_INFO_ID,
             scan.include_dev,
             scan.include_source_files,
+            scan.compiler_pipeline,
         );
     // Milestone 158 US2 — compute the multi-root BFS reachability
     // pass on the AUGMENTED SPDX 3 graph and pass into

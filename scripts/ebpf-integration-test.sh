@@ -26,13 +26,21 @@ echo
 # shape with the `compiler_pipeline` field — witness-v0.1 wraps that
 # in the attestation-collection envelope which makes jq inspection
 # more indirect.
-cd "$FIXTURE"
+#
+# Stay at the mikebom workspace root so the loader's CWD-relative eBPF
+# object-path resolution (`mikebom-ebpf/target/bpfel-unknown-none/release/
+# mikebom-ebpf`) matches xtask's build output. Point cargo at the
+# fixture's manifest instead of cd'ing into it, and give it a scratch
+# target dir so we don't clobber mikebom's own compile cache.
+cd /mikebom
 
 set +e
 "$MIKEBOM" trace run \
     --attestation-format mikebom-v1 \
-    --output "$OUTPUT" \
-    -- cargo build --release
+    --attestation-output "$OUTPUT" \
+    -- cargo build --release \
+        --manifest-path "$FIXTURE/Cargo.toml" \
+        --target-dir /tmp/m210-fixture-target
 TRACE_STATUS=$?
 set -e
 

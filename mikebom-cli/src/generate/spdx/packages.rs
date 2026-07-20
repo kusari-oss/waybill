@@ -328,6 +328,7 @@ pub fn build_packages(
             artifacts.identifiers,
             artifacts.component_identifiers,
             &mut match_counts,
+            artifacts.compiler_pipeline,
         );
         packages.push(pkg);
         if let Some(info) = decl_extracted {
@@ -449,6 +450,9 @@ fn component_to_package(
     identifiers: &[mikebom::binding::identifiers::Identifier],
     component_identifiers: &[mikebom::binding::identifiers::component_id::ComponentIdentifierFlag],
     match_counts: &mut std::collections::BTreeMap<usize, usize>,
+    compiler_pipeline: Option<
+        &mikebom_common::attestation::compiler_pipeline::CompilerPipelineData,
+    >,
 ) -> (
     SpdxPackage,
     Option<super::document::SpdxExtractedLicensingInfo>,
@@ -581,6 +585,7 @@ fn component_to_package(
         c,
         include_dev,
         include_source_files,
+        compiler_pipeline,
     );
 
     let (license_declared, decl_extracted) = reduce_license_vec(&c.licenses);
@@ -754,6 +759,7 @@ mod tests {
             sbom_type_override: None,
             spdx2_relationship_compat: crate::generate::Spdx2RelationshipCompat::Full,
             collisions_summary: None,
+            compiler_pipeline: None,
         }
     }
 

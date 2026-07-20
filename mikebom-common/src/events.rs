@@ -135,8 +135,21 @@ pub struct CompilerExecEvent {
     pub comm: [u8; 16],
     /// Best-effort argv[0] path capture via `bpf_probe_read_user`.
     /// Populated on `Exec` events only; zero on `Exit`.
-    pub argv0_hint: [u8; 128],
-    /// Populated length of `argv0_hint`; may be less than 128.
+    ///
+    /// Sized at 16 bytes (matching `comm`) because the aarch64 eBPF
+    /// verifier rejected larger fixed-size zero-inits — the LLVM
+    /// backend emits a bounded store-loop that runs past the verifier's
+    /// per-program instruction budget when the array is 128 bytes.
+    /// Anything past the first 16 chars of `argv[0]` gets truncated;
+    /// full `/usr/local/cargo/bin/rustc` becomes `/usr/local/carg` which
+    /// is still enough for the whitelist-recognition heuristic since
+    /// `classify_compiler_family` at the userspace side falls back to
+    /// `comm` (the last 15 chars of the exec target's basename) when
+    /// `argv0_str` doesn't uniquely resolve. Grow this back once
+    /// milestone T047a rewrites the emit path to use a size-independent
+    /// memzero strategy that the verifier accepts.
+    pub argv0_hint: [u8; 16],
+    /// Populated length of `argv0_hint`; may be less than 16.
     pub argv0_hint_len: u16,
     /// `Exit` only — captured from `sched_process_exit`. Zero on
     /// `Exec` events.
@@ -153,9 +166,9 @@ impl CompilerExecEvent {
     }
 
     /// Extract the argv[0] hint as a string. Truncated to
-    /// `argv0_hint_len` bytes (max 128).
+    /// `argv0_hint_len` bytes (max 16).
     pub fn argv0_str(&self) -> &str {
-        let len = core::cmp::min(self.argv0_hint_len as usize, 128);
+        let len = core::cmp::min(self.argv0_hint_len as usize, 16);
         let bytes = &self.argv0_hint[..len];
         // Trim trailing nulls that in-kernel read may have left.
         let end = bytes.iter().position(|&b| b == 0).unwrap_or(len);

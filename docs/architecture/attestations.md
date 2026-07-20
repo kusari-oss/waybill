@@ -130,6 +130,99 @@ These counters surface on the CycloneDX output as `metadata.properties`
 (`mikebom:trace-integrity-*`) so an SBOM consumer can decide whether to
 trust the result.
 
+### `compiler_pipeline` (`CompilerPipelineData`, milestone 210)
+
+Optional field — present only when `mikebom trace` is invoked with a build
+command that spawns a whitelisted compiler (`rustc`, `cc`, `gcc`, `clang`,
+`c++`, `g++`, `ld`, `ld.lld`, `ld.gold`, `javac`, `go`). Absent on every
+scan-mode invocation and on any traced build that never spawned a
+compiler in the whitelist; consumers MUST treat absence as
+"attribution unavailable," not "no compilers ran."
+
+Captured entirely inside eBPF via three tracepoints on `sched_process_exec`
+(compiler-family recognition + invocation-id assignment via
+`bpf_ktime_get_ns`), `sched_process_fork` (PID-ancestry propagation
+through the `COMPILER_INVOCATIONS` HashMap so children of `cargo` are
+attributed to the parent `cargo` invocation), and `sched_process_exit`
+(bounded lifetime + drain-on-exit). Constitution Principle II —
+eBPF-Only Observation — is honored uniformly: mikebom never spawns nor
+LD_PRELOADs into the compiler.
+
+The predicate structure captures, per invocation:
+
+- **Invocation identity**: `invocation_id` (u64 kernel timestamp),
+  `compiler` family enum, `pid` + `ppid`, optional
+  `parent_invocation_id` linking children to parents in the compiler-
+  invocation DAG.
+- **Lifetime**: `start_timestamp` (unconditional) + `end_timestamp`
+  (present iff the invocation exited within the trace window).
+- **Command context**: `argv_full_path`, `argv`, `cwd` (all optional —
+  absent when the trace attached mid-execve).
+- **I/O sets**: `read_set` (every file the invocation `read`'d or
+  `openat`'d for read) + `write_set` (every file the invocation
+  `openat`'d for write, plus the closing-time content SHA-256 if the
+  file survived the trace window). Both are already trace-noise-
+  filtered per FR-016 (system directories, user cache, ephemeral tmp,
+  and secret-adjacent paths dropped before serialization).
+- **Diagnostic counters**: `events_dropped` per invocation.
+
+Per-scan aggregate signals ride alongside the invocations:
+
+- **`completeness`** — `Complete` / `Degraded { dropped,
+  affected_component_count }` / `Partial { reason: AttachLate }`. Surfaces
+  as C132 `mikebom:compiler-pipeline-completeness` at document scope on
+  every SBOM format.
+- **`secrets_read_filtered`** — u64 count of secret-adjacent paths
+  observed and dropped (auditable evidence that "the build touched
+  secrets" without leaking WHICH secrets). Surfaces as C133
+  `mikebom:secrets-read-filtered` when non-zero.
+- **`filter_categories_applied`** — sorted enum list identifying which
+  FR-016 filter groups fired (`System`, `UserCache`, `Ephemeral`,
+  `SecretsAdjacent`). Reserved for a future auditor-facing surface;
+  not annotated in the SBOM yet.
+
+The per-component attribution the SBOMs emit is derived post-trace by
+`mikebom-cli/src/generate/compiler_pipeline_annotation.rs::map_component_to_source_read_set`:
+for each `ResolvedComponent` with known file paths (from m133 evidence or
+`occurrences[]`), the classifier finds every invocation whose `write_set`
+intersects those paths, walks each match's ancestor chain via
+`parent_invocation_id`, and emits the transitive union of read-sets as
+C130 `mikebom:source-read-set` (plus C131 `mikebom:read-set-source =
+"traced"`). Components that don't intersect any write-set get C131 =
+`"unknown"` only; cache-served components fall into this bucket until a
+future milestone adds compiler-cache-server tracing.
+
+The `mikebom.dev/attestation/compiler-invocation/v0.1` witness-attestor
+URI is reserved for the shape above and locked per contracts/attestor-
+predicate.md (m210 spec Q3); version bumps MUST retain the
+`/compiler-invocation/` path segment.
+
+### Adding a new compiler to the whitelist
+
+The trace only recognizes compiler binaries whose `comm` field (first 16
+bytes of the argv[0] basename) matches an entry in the
+`COMPILER_WHITELIST` const at `mikebom-ebpf/src/programs/compiler_exec.rs`
+— that's the whitelist the `sched_process_exec` tracepoint checks in
+kernel-space. To add support for a new compiler family:
+
+1. Add the entry to `COMPILER_WHITELIST` (e.g., `b"ghc\0\0\0\0\0\0\0\0\0\0\0\0\0"`
+   for GHC — padded to 16 bytes because the kernel writes `comm` as a
+   fixed-size buffer).
+2. Extend the `CompilerFamily` enum at
+   `mikebom-common/src/attestation/compiler_pipeline.rs` with the new
+   variant + its serde rename.
+3. Wire the byte-array-to-`CompilerFamily` mapping in the
+   `mikebom-cli/src/trace/compiler_pipeline.rs::compiler_family_from_comm`
+   helper.
+4. Add a fixture under
+   `mikebom-cli/tests/fixtures/compiler_pipeline/<lang>_smoke/` that
+   invokes the new compiler once + expects one captured invocation.
+5. Update this section with the addition.
+
+No user-space eBPF program changes are needed — the whitelist is checked
+in-kernel via a `for` loop over the const array, and adding an entry
+recompiles automatically via the m090 `xtask ebpf` build.
+
 ## Why attestation-first
 
 Three reasons the attestation is the primary artifact:

@@ -145,6 +145,17 @@ pub struct CycloneDxBuilder {
     /// collisions ⇒ no document-scope annotation (FR-009).
     collisions_summary:
         Option<mikebom_common::divergence::CollisionsSummary>,
+    /// Milestone 210 — compiler-pipeline data captured from the
+    /// eBPF trace. When `Some(_)`, `build_components` walks each
+    /// component through `map_component_to_source_read_set` and
+    /// emits per-component `mikebom:source-read-set` (C130) +
+    /// `mikebom:read-set-source` (C131) `properties[]` entries
+    /// per contracts/annotations.md A-1/A-2. `None` ⇒ scan ran
+    /// without eBPF ⇒ neither property emitted (byte-identity
+    /// preserved for the non-trace code path per m208 defensive-
+    /// default pattern).
+    compiler_pipeline:
+        Option<mikebom_common::attestation::compiler_pipeline::CompilerPipelineData>,
 }
 
 impl CycloneDxBuilder {
@@ -169,7 +180,20 @@ impl CycloneDxBuilder {
             file_inventory_stats: None,
             file_inventory_mode: None,
             collisions_summary: None,
+            compiler_pipeline: None,
         }
+    }
+
+    /// Milestone 210 — record the compiler-pipeline data captured
+    /// from the eBPF trace so `build_components` can emit per-
+    /// component C130 + C131 properties. `None` ⇒ no trace ⇒ no
+    /// annotations (byte-identical to the pre-m210 code path).
+    pub fn with_compiler_pipeline(
+        mut self,
+        pipeline: Option<mikebom_common::attestation::compiler_pipeline::CompilerPipelineData>,
+    ) -> Self {
+        self.compiler_pipeline = pipeline;
+        self
     }
 
     /// Milestone 134 — record the document-scope `CollisionsSummary`
@@ -595,6 +619,7 @@ impl CycloneDxBuilder {
             self.go_cache_warming.as_ref(),
             self.helm_extraction_mode.as_ref(),
             self.image_source.as_ref(),
+            self.compiler_pipeline.as_ref(),
         );
         // Milestone 076 — track per-component identifier matches so
         // we can emit a warn for any selector that matched zero
@@ -1374,6 +1399,48 @@ impl CycloneDxBuilder {
                     "name": key,
                     "value": value_str,
                 }));
+            }
+
+            // Milestone 210: per-component compiler-pipeline attribution
+            // (C130 + C131 + C134). Only emitted when the scan was
+            // invoked via `mikebom trace` AND at least one compiler
+            // invocation was captured. Matched via write-set intersection
+            // with the component's known file paths per
+            // contracts/annotations.md A-1/A-2/A-5. `Traced` ⇒ both C130
+            // (source-read-set payload) + C131 (source label).
+            // `Unknown` ⇒ C131 only. C134 = `"true"` when the doc-scope
+            // completeness is `Partial(AttachLate)` — the trace attached
+            // mid-build so every captured component potentially has a
+            // partial read-set (best-effort per-component signal from
+            // doc-scope truth; per-invocation granularity is a future
+            // milestone). No pipeline ⇒ none of the three, preserving
+            // byte-identity for scan-mode consumers.
+            if let Some(ref pipeline) = self.compiler_pipeline {
+                let mapping = crate::generate::compiler_pipeline_annotation::map_component_to_source_read_set(
+                    component,
+                    pipeline,
+                );
+                if let Some(payload) = mapping.payload {
+                    properties.push(json!({
+                        "name": "mikebom:source-read-set",
+                        "value": serde_json::to_string(&payload).unwrap_or_default(),
+                    }));
+                }
+                properties.push(json!({
+                    "name": "mikebom:read-set-source",
+                    "value": mapping.source.as_wire_str(),
+                }));
+                if matches!(
+                    pipeline.completeness,
+                    mikebom_common::attestation::compiler_pipeline::CompletenessState::Partial {
+                        reason: mikebom_common::attestation::compiler_pipeline::PartialReason::AttachLate,
+                    }
+                ) {
+                    properties.push(json!({
+                        "name": "mikebom:trace-attach-late",
+                        "value": "true",
+                    }));
+                }
             }
 
             // Milestone 076: per-component user-defined identifiers

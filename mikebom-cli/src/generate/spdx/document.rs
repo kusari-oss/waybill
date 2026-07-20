@@ -476,6 +476,7 @@ pub fn build_document(
             sbom_type_override: artifacts.sbom_type_override,
             spdx2_relationship_compat: artifacts.spdx2_relationship_compat,
             collisions_summary: artifacts.collisions_summary,
+            compiler_pipeline: artifacts.compiler_pipeline,
         }
     } else {
         ScanArtifacts {
@@ -508,6 +509,7 @@ pub fn build_document(
             sbom_type_override: artifacts.sbom_type_override,
             spdx2_relationship_compat: artifacts.spdx2_relationship_compat,
             collisions_summary: artifacts.collisions_summary,
+            compiler_pipeline: artifacts.compiler_pipeline,
         }
     };
     let artifacts: &ScanArtifacts<'_> = &view_artifacts;
@@ -1205,6 +1207,7 @@ mod tests {
             sbom_type_override: None,
             spdx2_relationship_compat: crate::generate::Spdx2RelationshipCompat::Full,
             collisions_summary: None,
+            compiler_pipeline: None,
         }
     }
 

@@ -92,6 +92,17 @@ pub struct ScanArgs {
     #[arg(long = "attestation-format", value_name = "FORMAT", default_value = "witness-v0.1")]
     pub attestation_format: String,
 
+    /// Milestone 210 (FR-016) — bypass the compiler-pipeline aggregator's
+    /// default denylist for `/etc/`, `/proc/`, `/sys/`, `/dev/`, user
+    /// cache directories, `/tmp/`, and secret-adjacent paths. Off by
+    /// default so per-component `mikebom:source-read-set` annotations
+    /// stay signal-heavy (system reads dominate a build's read syscalls
+    /// but almost never disambiguate which SOURCE input produced a
+    /// binary). Turn on for kernel/toolchain SBOM audits where reads
+    /// under `/usr/include`, `/usr/lib`, or `/dev/urandom` are relevant.
+    #[arg(long)]
+    pub include_system_reads: bool,
+
     #[arg(last = true)]
     pub command: Vec<String>,
 }
@@ -484,8 +495,23 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
 
     if trace.network_trace.connections.is_empty()
         && trace.file_access.operations.is_empty()
+        && compiler_count == 0
     {
-        tracing::error!(net = net_count, file = file_count, "Zero aggregated");
+        // Milestone 210 — the "no dependency activity" bail-out is
+        // now a three-way OR: bail only when the network trace, the
+        // file-op trace, AND the compiler-pipeline observation ALL
+        // captured zero events. A hermetic offline build (cargo build
+        // against a vendored fixture) legitimately has zero network
+        // activity + zero file-op activity if the `vfs_open` kprobe
+        // failed to attach; when the compiler pipeline still recorded
+        // rustc/cc invocations we have real source→binary attribution
+        // and should proceed to emit the attestation.
+        tracing::error!(
+            net = net_count,
+            file = file_count,
+            compiler = compiler_count,
+            "Zero aggregated"
+        );
         return Err(MikebomError::NoDependencyActivity.into());
     }
 

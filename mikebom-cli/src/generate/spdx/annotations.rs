@@ -153,6 +153,9 @@ pub fn annotate_component(
     c: &ResolvedComponent,
     _include_dev: bool,
     include_source_files: bool,
+    compiler_pipeline: Option<
+        &mikebom_common::attestation::compiler_pipeline::CompilerPipelineData,
+    >,
 ) -> Vec<SpdxAnnotation> {
     use serde_json::json;
     let mut out: Vec<SpdxAnnotation> = Vec::new();
@@ -381,6 +384,40 @@ pub fn annotate_component(
             continue;
         }
         push(&mut out, key, value.clone());
+    }
+
+    // Milestone 210 — per-component compiler-pipeline attribution.
+    // C130 (`mikebom:source-read-set`) + C131 (`mikebom:read-set-source`)
+    // + C134 (`mikebom:trace-attach-late`) per contracts/annotations.md
+    // A-1/A-2/A-5. Only emitted when the scan ran with `mikebom trace`
+    // (eBPF) AND at least one compiler invocation was captured.
+    // Matching = component's file paths intersect at least one
+    // invocation's write-set. `Traced` ⇒ C130 + C131. `Unknown` ⇒
+    // C131 only. C134 fires when the doc-scope completeness is
+    // `Partial(AttachLate)` — the trace attached mid-build so every
+    // captured component potentially has a partial read-set. No
+    // pipeline ⇒ none — preserves byte-identity for scan-mode.
+    if let Some(pipeline) = compiler_pipeline {
+        let mapping = crate::generate::compiler_pipeline_annotation::map_component_to_source_read_set(
+            c,
+            pipeline,
+        );
+        if let Some(payload) = mapping.payload {
+            push(&mut out, "mikebom:source-read-set", payload);
+        }
+        push(
+            &mut out,
+            "mikebom:read-set-source",
+            json!(mapping.source.as_wire_str()),
+        );
+        if matches!(
+            pipeline.completeness,
+            mikebom_common::attestation::compiler_pipeline::CompletenessState::Partial {
+                reason: mikebom_common::attestation::compiler_pipeline::PartialReason::AttachLate,
+            }
+        ) {
+            push(&mut out, "mikebom:trace-attach-late", json!("true"));
+        }
     }
 
     out
@@ -658,6 +695,26 @@ pub fn annotate_document(
         Some(crate::cli::scan_cmd::ImageSource::Podman)
     ) {
         push(&mut out, "mikebom:image-source", json!("podman"));
+    }
+
+    // Milestone 210: document-scope compiler-pipeline transparency
+    // (C132 + C133) per contracts/annotations.md A-3 / A-4. C132
+    // is unconditional (always some `{state: ...}` value) — its
+    // Principle-X transparency purpose is defeated by skip-on-complete
+    // semantics. C133 fires only when the filtered count is non-zero.
+    // Both silent when `compiler_pipeline == None` (byte-identity
+    // preserved for scan-mode).
+    if let Some(pipeline) = artifacts.compiler_pipeline {
+        if let Ok(value) = serde_json::to_value(&pipeline.completeness) {
+            push(&mut out, "mikebom:compiler-pipeline-completeness", value);
+        }
+        if pipeline.secrets_read_filtered > 0 {
+            push(
+                &mut out,
+                "mikebom:secrets-read-filtered",
+                json!(pipeline.secrets_read_filtered.to_string()),
+            );
+        }
     }
 
     // Milestone 134 (closes #125, catalog row C100): document-scope
@@ -1052,7 +1109,7 @@ mod tests {
             "pkg:golang/example.com/testify@v1",
             Some(mikebom_common::resolution::LifecycleScope::Test),
         );
-        let annos = annotate_component("Tool: mikebom-test", "2026-05-23T00:00:00Z", &c, false, false);
+        let annos = annotate_component("Tool: mikebom-test", "2026-05-23T00:00:00Z", &c, false, false, None);
         let scope_annos: Vec<_> = annos
             .iter()
             .filter(|a| parse_envelope(a).field == "mikebom:lifecycle-scope")
@@ -1069,7 +1126,7 @@ mod tests {
             (mikebom_common::resolution::LifecycleScope::Build, "build"),
         ] {
             let c = mk_minimal_component("pkg:cargo/x@1", Some(scope));
-            let annos = annotate_component("Tool: mikebom-test", "2026-05-23T00:00:00Z", &c, false, false);
+            let annos = annotate_component("Tool: mikebom-test", "2026-05-23T00:00:00Z", &c, false, false, None);
             let found = annos
                 .iter()
                 .any(|a| {
@@ -1090,7 +1147,7 @@ mod tests {
             None,
         ] {
             let c = mk_minimal_component("pkg:deb/debian/libc6@2.36", scope);
-            let annos = annotate_component("Tool: mikebom-test", "2026-05-23T00:00:00Z", &c, false, false);
+            let annos = annotate_component("Tool: mikebom-test", "2026-05-23T00:00:00Z", &c, false, false, None);
             let leaked = annos
                 .iter()
                 .any(|a| parse_envelope(a).field == "mikebom:lifecycle-scope");

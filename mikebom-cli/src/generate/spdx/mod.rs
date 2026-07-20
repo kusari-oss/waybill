@@ -408,6 +408,7 @@ mod tests {
             sbom_type_override: None,
             spdx2_relationship_compat: crate::generate::Spdx2RelationshipCompat::Full,
             collisions_summary: None,
+            compiler_pipeline: None,
         }
     }
 

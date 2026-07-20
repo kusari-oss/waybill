@@ -3390,6 +3390,12 @@ pub async fn execute(
         // from `divergence_records`. `None` when no divergence
         // detected (FR-009: no annotation emitted on clean scans).
         collisions_summary: collisions_summary.as_ref(),
+        // Milestone 210 — scan-mode never populates the compiler-
+        // pipeline field; that data comes from `mikebom trace`
+        // (eBPF-observed) and reaches the SBOM emitter via the
+        // `sbom generate --attestation` code path. Preserving `None`
+        // here per m208 defensive-default pattern.
+        compiler_pipeline: None,
     };
     let output_cfg = OutputConfig {
         mikebom_version: env!("CARGO_PKG_VERSION"),
