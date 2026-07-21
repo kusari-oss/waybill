@@ -5,6 +5,14 @@
 **Status**: Draft
 **Input**: User description: "I am looking to rename EVERYTHING in Mikebom to the new name Waybill. We can keep historical stuff like: Waybill (formerly Mikebom) but anything functional including mikebom annotations should end up with the name waybill. No functionality change should happen in this change outside of that."
 
+## Clarifications
+
+### Session 2026-07-21
+
+- Q: Wire-shape back-compat window for `mikebom:*` annotations — hard break, one-alpha bridge, or bridge until v1.0? → A: Hard break — first post-rename release emits only `waybill:*` annotations. No dual-emit / no transition period. Downstream tooling does a mechanical `s/mikebom:/waybill:/g` at their input layer per the migration guide (FR-015).
+- Q: Version-bump semantic for the first post-rename release? → A: `0.1.0-alpha.66` (sequential alpha bump). Release-notes + PR body carry a prominent "BREAKING" callout linking to the migration guide. First alpha.66 ships as **waybill** — binary name `waybill`, release artifacts `waybill-v0.1.0-alpha.66-*`, Docker image `ghcr.io/kusari-oss/waybill:v0.1.0-alpha.66`. No workflow changes required (auto-tag-release.yml + release.yml already gate on the `v*-alpha.*` pattern).
+- Q: Any workspace crates currently published to crates.io? → A: No — confirmed. No `cargo publish` in release.yml; no `mikebom-*` entries on crates.io. Scope stays constrained to local + Docker + GHCR + binary artifacts; no crates.io deprecation steps needed.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Downstream SBOM consumer parses annotations under the new prefix (Priority: P1)
@@ -144,7 +152,7 @@ A pre-rename user of the tool (someone running mikebom v0.1.0-alpha.64 or v0.1.0
 - **Wire-shape hard break is acceptable**: The user has explicitly directed that "anything functional including mikebom annotations should end up with the name waybill" — this is a wire-shape change for downstream SBOM consumers, but the user's directive is that the annotation prefix rename IS part of the rename scope, not a separate compatibility concern. The rename ships as a **breaking release** for consumers of the annotation prefix, with a migration guide as mitigation. No dual-emit / bridge-release period is required. This is consistent with the project's alpha status.
 - **Repo already renamed on GitHub**: `github.com/kusari-oss/mikebom` has already redirected to `github.com/kusari-oss/waybill`. This rename spec picks up from that state and completes the source-tree side.
 - **Docker image namespace already aligned**: `ghcr.io/kusari-oss/waybill` is the natural target given the repo rename. Pre-rename image tags at `ghcr.io/kusari-oss/mikebom:v0.1.0-alpha.7` through `v0.1.0-alpha.65` remain available as historical artifacts.
-- **No crates.io publication currently**: Assumed the workspace crates are NOT currently published to crates.io. If they are, this spec's scope extends to publishing `waybill-cli` / `waybill-common` as new crates.io entries and marking the `mikebom-*` predecessors as deprecated. This assumption should be verified during planning; if wrong, the plan adds one FR.
+- **No crates.io publication currently** (confirmed 2026-07-21 clarification): No workspace crates are published to crates.io. Scope stays constrained to local build + Docker image + GHCR + release binaries. No `cargo publish` step exists in `release.yml`; no `waybill-cli` / `waybill-common` publication step is added by this rename.
 - **Historical spec docs stay unchanged**: `specs/001-*` through `specs/213-*` are historical artifacts of milestones authored under the old name. Rewriting all of them would create massive git churn for zero user value. Only current+future specs use the new name in prose.
 - **Golden regeneration cascades**: The 34+ golden test files will diff for the prefix-string rename via the same `MIKEBOM_UPDATE_*_GOLDENS` → `WAYBILL_UPDATE_*_GOLDENS` env-var pattern that release-bumps use today.
 - **All CI matrix lanes must pass**: linux-x86_64 (default features + ebpf-tracing), macOS, Windows. Plus Kusari Inspector + rootfs/language scanners. Any one lane red = rename bug.
