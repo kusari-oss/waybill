@@ -107,7 +107,7 @@ the first run but not the second.
 ### Edge Cases
 
 - **Verifier budget exhaustion**: The prefix-compare loops must fit inside the eBPF verifier's 1M instruction budget on every supported kernel (5.15, 6.1, 6.6, 6.8). Milestone 211 established that fixed-size arrays and word-wide compares survive; the plan must reuse those patterns and prove verifier acceptance via the existing Colima 6.8 harness before merge.
-- **Long paths**: The kernel scratch buffer used for path extraction is 4096 bytes today. Paths longer than that are truncated before the prefix compare — the filter must treat truncated paths as "unknown category" and let them through (so a malicious actor can't hide a `target/*/fingerprint/` file by prepending 4 KB of padding).
+- **Long paths**: The kernel scratch buffer used for path extraction is 256 bytes today (matches the `FileEvent.path` on-wire field). Paths longer than that are truncated before the prefix compare — the filter must treat truncated paths as "unknown category" and let them through (so a malicious actor can't hide a `target/*/fingerprint/` file by prepending 256 bytes of padding, and so legitimate long paths that don't match any pattern are never dropped by accident).
 - **Symlinks and bind mounts**: The filter operates on the path passed to the `open()` syscall, not the resolved inode. If the operator has bind-mounted `/proc/` at some other location, the filter will not catch reads through that alternate path. This is acceptable for v1 — bind-mount-hiding is an adversarial case, not a build-tool-noise case.
 - **Non-cargo Rust builds**: A build that invokes rustc directly (bazel, buck2, custom scripts) does not emit fingerprint-check noise, so the CargoFingerprint category simply doesn't fire. The other three categories still apply and behave identically.
 - **Non-Rust builds**: Any traced build (make, ninja, gradle, npm, bazel) benefits from the System, UserCache, and Ephemeral filters. CargoFingerprint is cargo-specific and simply doesn't match anything else; this is expected.
@@ -132,7 +132,7 @@ the first run but not the second.
 - **FR-013**: The filter MUST NOT increase the eBPF program's verifier-instruction cost beyond the 1M budget on any of the supported kernel versions (5.15, 6.1, 6.6, 6.8). Verifier rejection at load-time is a merge-blocker.
 - **FR-014**: On the m212 SC-001 fixture (`two_binaries_diverge` 4-crate cargo build), the reported `trace_integrity.ring_buffer_overflows` count MUST fall to at most 10 (down from the ≥100 baseline that m212 SC-001 currently asserts as a lower bound).
 - **FR-015**: On the same fixture, the emitted attestation's `file_access.operations` array MUST contain at least one operation whose owning process is rustc AND at least one whose owning process is a linker (ld, ld.lld, mold). Pre-fix baseline: zero of each.
-- **FR-016**: Paths longer than the eBPF program's path-extraction scratch buffer (currently 4096 bytes) MUST be treated as "unknown category" and forwarded to the ring buffer unfiltered, preventing an adversary from bypassing the filter by prepending padding.
+- **FR-016**: Paths longer than the eBPF program's path-extraction scratch buffer (256 bytes today, matching `FileEvent.path`) MUST be treated as "unknown category" and forwarded to the ring buffer unfiltered — prevents both (a) an adversary bypassing the filter by prepending padding and (b) accidentally dropping legitimate long paths that don't match any pattern.
 
 ### Key Entities
 
