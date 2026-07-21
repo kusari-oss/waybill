@@ -2,6 +2,65 @@
   ============================================================
   SYNC IMPACT REPORT
   ============================================================
+  Version change: 1.5.0 → 2.0.0
+  Bump rationale: MAJOR — project rename mikebom → Waybill
+  (milestone 214). The constitution's project-name identity
+  and every Principle heading refer to the project by name.
+  Per the constitution's own Amendment procedure at the bottom
+  of this file — "MAJOR: Principle removed, redefined, or made
+  incompatible with prior interpretation." — renaming the
+  project the constitution governs qualifies as redefinition.
+  Every prior reference to the "mikebom Constitution" is now
+  an artifact of the pre-rename name.
+
+  All Principles' NORMATIVE CONTENT is unchanged — this is
+  purely an identity update. No principle added, removed, or
+  reinterpreted.
+
+  Modified sections:
+    - Constitution title: `# mikebom Constitution` → `# Waybill
+      Constitution` (case-preserving prose pass earlier converted
+      the lowercase form; this bump also capitalizes the title
+      for proper-noun consistency).
+    - Preamble (added): one-line heritage note preserving the
+      naming history.
+    - Every Principle body paragraph: `mikebom` → `waybill` in
+      identifiers (`mikebom-cli`, `mikebom-common`, `mikebom-ebpf`,
+      `mikebom_common::`, `mikebom trace`, `mikebom scan`, etc.);
+      `Mikebom` → `Waybill` in prose where the project is referred
+      to by name.
+    - Historical SYNC IMPACT REPORT text (kept below in the log):
+      the case-preserving prose sweep rewrote `mikebom:*` → `waybill:*`
+      in the historical bump-descriptions. Some may argue that
+      historical descriptions should preserve pre-rename terminology
+      for accuracy; the decision here was to prioritize consistency
+      in the constitution's living-document identity. Historical
+      accuracy is preserved via `git blame` + spec docs at
+      specs/001-*..213-*.
+    - Version field: 1.5.0 → 2.0.0.
+    - Last Amended field: 2026-06-20 → 2026-07-21.
+
+  Added sections: heritage preamble sentence under the title.
+  Removed sections: none.
+
+  Templates requiring updates:
+    - .specify/templates/plan-template.md          ✅ no update needed
+    - .specify/templates/spec-template.md          ✅ no update needed
+    - .specify/templates/tasks-template.md         ✅ no update needed
+    - .specify/templates/agent-file-template.md    ✅ no update needed
+    - .specify/templates/checklist-template.md     ✅ no update needed
+    - CLAUDE.md                                    ✅ project name updated
+                                                    via prose pass
+    - README.md                                    ✅ project name +
+                                                    heritage sentence
+                                                    updated via prose pass
+
+  Follow-up TODOs: none. m214 rename is the sole bump content.
+
+  ============================================================
+  PRIOR SYNC IMPACT HISTORY (preserved below verbatim)
+  ============================================================
+
   Version change: 1.4.0 → 1.5.0
   Bump rationale: MINOR — new Strict Boundary §5 codifying
   "file-tier emission MUST NOT introduce duplicate components
@@ -75,7 +134,9 @@
   ============================================================
 -->
 
-# waybill Constitution
+# Waybill Constitution
+
+> **Waybill was previously known as Mikebom.** Historical spec docs at `specs/001-*/`..`specs/213-*/` retain the original `mikebom` terminology as authorship artifacts; that pre-rename vocabulary in past artifacts is preserved by convention, but every functional identifier in current source + emitted output uses the new `waybill` name (m214 rename, v0.1.0-alpha.66+).
 
 ## Core Principles
 
@@ -521,4 +582,4 @@ changes do not violate any principle. Violations require
 either a code fix or a constitution amendment — never silent
 deviation.
 
-**Version**: 1.5.0 | **Ratified**: 2026-04-15 | **Last Amended**: 2026-06-20
+**Version**: 2.0.0 | **Ratified**: 2026-04-15 | **Last Amended**: 2026-07-21
