@@ -113,8 +113,14 @@ mod inner {
             ) {
                 Ok(mut widen_map) => {
                     let widen_val: u8 = if config.include_system_reads { 1 } else { 0 };
-                    let nr_cpus = aya::util::nr_cpus()
-                        .context("failed to detect online CPU count for FILTER_WIDEN write")?;
+                    // `aya::util::nr_cpus()` returns `Result<usize, (&str, io::Error)>` — a
+                    // tuple error type, not something that implements `StdError`, so anyhow's
+                    // `.context()` extension trait doesn't apply. Convert to anyhow explicitly.
+                    let nr_cpus = aya::util::nr_cpus().map_err(|(msg, err)| {
+                        anyhow::anyhow!(
+                            "failed to detect online CPU count for FILTER_WIDEN write ({msg}): {err}"
+                        )
+                    })?;
                     let per_cpu_values: aya::maps::PerCpuValues<u8> =
                         aya::maps::PerCpuValues::try_from(vec![widen_val; nr_cpus])?;
                     if let Err(e) = widen_map.set(0, per_cpu_values, 0) {

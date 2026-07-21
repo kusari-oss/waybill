@@ -545,14 +545,17 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
 
     // Merge counter-map + filter-hits attach failures into a single
     // stats field. `aggregator.rs::finalize` sorts + dedups before
-    // writing into TraceIntegrity.kprobe_attach_failures[].
+    // writing into TraceIntegrity.kprobe_attach_failures[]. Compute
+    // `drops.total()` BEFORE moving `drops.attach_failures` out —
+    // otherwise `drops` is partially moved and can no longer be borrowed.
+    let overflows_total = drops.total();
     let mut counter_attach_failures = drops.attach_failures;
     counter_attach_failures.extend(filter_hits.attach_failures);
 
     let trace = agg.finalize(&TraceStats {
         network_events: net_count,
         file_events: file_count,
-        ring_buffer_overflows: drops.total(),
+        ring_buffer_overflows: overflows_total,
         events_dropped: 0,
         counter_attach_failures,
         filter_categories_applied,
