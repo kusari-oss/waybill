@@ -4,55 +4,55 @@
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"complete\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspaces-detected\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info\\\",\\\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info\\\",\\\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info\\\",\\\".venv/lib/python3.12/site-packages/idna-3.6.dist-info\\\",\\\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info\\\",\\\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info\\\",\\\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info\\\"]\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-events-dropped\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"pypi\"]}}"
     }
   ],
@@ -60,19 +60,19 @@
     "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: operations. Per-component scope detail in mikebom:sbom-tier annotations.",
     "created": "1970-01-01T00:00:00Z",
     "creators": [
-      "Tool: mikebom-0.1.0-alpha.64",
+      "Tool: mikebom-0.1.0-alpha.65",
       "Organization: mikebom contributors"
     ]
   },
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-GQRW7BLUUE7JTW4Y"
+    "SPDXRef-DocumentRoot-XD2KZL67RCCGYIFG"
   ],
-  "documentNamespace": "https://mikebom.kusari.dev/spdx/IMXVWZGFJ75K3FHJKFXE3JBQBRE3VNJ7",
+  "documentNamespace": "https://mikebom.kusari.dev/spdx/CBDDVM3QQDIZNC34O46FV2M2BZRTJUJ4",
   "name": "simple-venv",
   "packages": [
     {
-      "SPDXID": "SPDXRef-DocumentRoot-GQRW7BLUUE7JTW4Y",
+      "SPDXID": "SPDXRef-DocumentRoot-XD2KZL67RCCGYIFG",
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
@@ -99,37 +99,37 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info/METADATA\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:certifi:certifi:2023.7.22:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-certifi:certifi:2023.7.22:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info/METADATA\",\"sha256\":\"b909abaa5b9c22dfb8e2274c8f3f309ef1488b6ef74baa726fd7e7863bf97e8c\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info\\\"]\"}"
         }
       ],
@@ -159,37 +159,37 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info/METADATA\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:charset-normalizer:charset-normalizer:3.3.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-charset-normalizer:charset-normalizer:3.3.2:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info/METADATA\",\"sha256\":\"d5a184970c7ef9ceea049bcde19c58cab9c0979f48c2a3274d4f21db57b5dfdf\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info\\\"]\"}"
         }
       ],
@@ -219,37 +219,37 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info/METADATA\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:flask:flask:3.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-flask:flask:3.0.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info/METADATA\",\"sha256\":\"53e6c8feccc51ba487a150d1bbcbab039db9aedff2b4d9ffef1019ff568bc105\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info\\\"]\"}"
         }
       ],
@@ -279,37 +279,37 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/idna-3.6.dist-info/METADATA\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:idna:idna:3.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-idna:idna:3.6:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/idna-3.6.dist-info/METADATA\",\"sha256\":\"37bf632be18976af3f8dba1491b7544dd1237cae0aef99f07a43401d2a7b8108\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/idna-3.6.dist-info\\\"]\"}"
         }
       ],
@@ -339,37 +339,37 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info/METADATA\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:jinja2:jinja2:3.1.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-jinja2:jinja2:3.1.2:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info/METADATA\",\"sha256\":\"c61109515dd028b28580b694f1e30a2344c8f9d32076dbc22dab382b7dde14e9\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info\\\"]\"}"
         }
       ],
@@ -399,37 +399,37 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info/METADATA\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:requests:requests:2.31.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-requests:requests:2.31.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info/METADATA\",\"sha256\":\"73bca15fbb30049fa2ada6bff0900355dff44797764540ced790b3f7d99b8cd8\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info\\\"]\"}"
         }
       ],
@@ -459,37 +459,37 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info/METADATA\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:urllib3:urllib3:2.0.7:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-urllib3:urllib3:2.0.7:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info/METADATA\",\"sha256\":\"b8411ac5544b741fdd9e47cf56811c689c9c2030f711526ed97cc93aca77d65a\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info\\\"]\"}"
         }
       ],
@@ -516,7 +516,7 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-GQRW7BLUUE7JTW4Y",
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-XD2KZL67RCCGYIFG",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
@@ -543,17 +543,17 @@
     {
       "relatedSpdxElement": "SPDXRef-Package-ND26YIDZX2IHEVKH",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-GQRW7BLUUE7JTW4Y"
+      "spdxElementId": "SPDXRef-DocumentRoot-XD2KZL67RCCGYIFG"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-E7GW44NAPCTLSLSL",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-GQRW7BLUUE7JTW4Y"
+      "spdxElementId": "SPDXRef-DocumentRoot-XD2KZL67RCCGYIFG"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-6PK6TYQPA2QWXM26",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-GQRW7BLUUE7JTW4Y"
+      "spdxElementId": "SPDXRef-DocumentRoot-XD2KZL67RCCGYIFG"
     }
   ],
   "spdxVersion": "SPDX-2.3"

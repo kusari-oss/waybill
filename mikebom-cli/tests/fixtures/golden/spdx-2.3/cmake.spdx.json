@@ -4,49 +4,49 @@
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"complete\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"cmake\\\"]\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-events-dropped\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.64",
+      "annotator": "Tool: mikebom-0.1.0-alpha.65",
       "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
     }
   ],
@@ -54,19 +54,19 @@
     "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: pre-build. Per-component scope detail in mikebom:sbom-tier annotations.",
     "created": "1970-01-01T00:00:00Z",
     "creators": [
-      "Tool: mikebom-0.1.0-alpha.64",
+      "Tool: mikebom-0.1.0-alpha.65",
       "Organization: mikebom contributors"
     ]
   },
   "dataLicense": "CC0-1.0",
   "documentDescribes": [
-    "SPDXRef-DocumentRoot-UMG2DWXOVI6IBZFO"
+    "SPDXRef-DocumentRoot-KN3TF6LRN44LY77J"
   ],
-  "documentNamespace": "https://mikebom.kusari.dev/spdx/2UYWEAHGJ77AOHN4Q4X6XEFIVXRK2BTW",
+  "documentNamespace": "https://mikebom.kusari.dev/spdx/5YZYWDUJRDRMJEMGD3HXBJ2DIKX2BAIG",
   "name": "cmake",
   "packages": [
     {
-      "SPDXID": "SPDXRef-DocumentRoot-UMG2DWXOVI6IBZFO",
+      "SPDXID": "SPDXRef-DocumentRoot-KN3TF6LRN44LY77J",
       "downloadLocation": "NOASSERTION",
       "externalRefs": [
         {
@@ -93,43 +93,43 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"cmake/third_party.cmake\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"cmake/third_party.cmake\",\"sha256\":\"7352fc9bd0ca39c5efb4b1556e2104c08cc4b54ffa4da9df25b452975a67d8c7\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:download-url\",\"value\":\"https://boostorg.jfrog.io/artifactory/main/release/1.84.0/source/boost_1_84_0.tar.gz\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-mechanism\",\"value\":\"cmake-fetchcontent-url\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"cmake\\\"]\"}"
         }
       ],
@@ -153,43 +153,43 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"CMakeLists.txt\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"CMakeLists.txt\",\"sha256\":\"3ead8cde49fa2c3a749244f05c71fcc85fdee8bbc3248374622e663b3a76a8c9\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cmake-find-package-name\",\"value\":\"OpenSSL\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-mechanism\",\"value\":\"cmake-find-package\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -213,43 +213,43 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"CMakeLists.txt\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"CMakeLists.txt\",\"sha256\":\"3ead8cde49fa2c3a749244f05c71fcc85fdee8bbc3248374622e663b3a76a8c9\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:download-url\",\"value\":\"https://zlib.net/zlib-1.3.1.tar.gz\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-mechanism\",\"value\":\"cmake-externalproject\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -278,43 +278,43 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"CMakeLists.txt\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"CMakeLists.txt\",\"sha256\":\"3ead8cde49fa2c3a749244f05c71fcc85fdee8bbc3248374622e663b3a76a8c9\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:download-url\",\"value\":\"https://github.com/google/googletest.git\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-mechanism\",\"value\":\"cmake-fetchcontent-git\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.64",
+          "annotator": "Tool: mikebom-0.1.0-alpha.65",
           "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
@@ -335,29 +335,29 @@
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-DocumentRoot-UMG2DWXOVI6IBZFO",
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-KN3TF6LRN44LY77J",
       "relationshipType": "DESCRIBES",
       "spdxElementId": "SPDXRef-DOCUMENT"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-6JWGJCRVPGZ5RSBG",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-UMG2DWXOVI6IBZFO"
+      "spdxElementId": "SPDXRef-DocumentRoot-KN3TF6LRN44LY77J"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-JCUJXG5KKFFE45OL",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-UMG2DWXOVI6IBZFO"
+      "spdxElementId": "SPDXRef-DocumentRoot-KN3TF6LRN44LY77J"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-3ECZZDDDHD3O6FKS",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-UMG2DWXOVI6IBZFO"
+      "spdxElementId": "SPDXRef-DocumentRoot-KN3TF6LRN44LY77J"
     },
     {
       "relatedSpdxElement": "SPDXRef-Package-LXTPKDHC3UVRRT5J",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-DocumentRoot-UMG2DWXOVI6IBZFO"
+      "spdxElementId": "SPDXRef-DocumentRoot-KN3TF6LRN44LY77J"
     }
   ],
   "spdxVersion": "SPDX-2.3"
