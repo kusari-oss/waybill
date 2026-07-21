@@ -34,6 +34,16 @@ pub struct TraceStats {
     /// disambiguate "counter says zero drops" from "counter unavailable
     /// on this kernel; aggregate is a floor, not a total."
     pub counter_attach_failures: Vec<String>,
+    /// Milestone 213 (issue #616) — sorted-deduplicated names of the
+    /// noise-filter categories that fired during the trace
+    /// (`"System"`, `"UserCache"`, `"Ephemeral"`, `"CargoFingerprint"`).
+    /// Populated by
+    /// `mikebom-cli/src/trace/counters.rs::read_filter_category_hits`
+    /// at trace-end + threaded into `TraceIntegrity.filter_categories_applied`
+    /// via `aggregator.rs::finalize`. Empty when no category fired
+    /// (per FR-009 — MUST serialize as `[]` in the emitted JSON, never
+    /// null, never absent).
+    pub filter_categories_applied: Vec<String>,
 }
 
 /// Shared, atomically-updated counters for real-time stats access.
@@ -67,6 +77,11 @@ impl LiveStats {
             // separately (via the trace/counters.rs summary passed
             // directly into finalize). snapshot() returns empty here.
             counter_attach_failures: Vec::new(),
+            // Milestone 213: same rationale as counter_attach_failures
+            // above — filter-category hits are read once at trace-end
+            // via the counters.rs summary passed into finalize, not
+            // atomically tracked. snapshot() returns empty here.
+            filter_categories_applied: Vec::new(),
         }
     }
 }

@@ -124,6 +124,7 @@ mod tests {
             partial_captures: vec![],
             bloom_filter_capacity: 100_000,
             bloom_filter_false_positive_rate: 0.01,
+            filter_categories_applied: vec![],
         }
     }
 

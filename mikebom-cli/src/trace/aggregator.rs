@@ -475,6 +475,17 @@ impl EventAggregator {
         kprobe_attach_failures.sort();
         kprobe_attach_failures.dedup();
 
+        // Milestone 213 (issue #616) — thread the m213
+        // filter_categories_applied from stats through to the emitted
+        // TraceIntegrity. Sort + dedup for wire-shape stability per
+        // FR-006 (defensive — the source `FilterCategoryHitsSummary::
+        // applied_categories()` already sorts + dedups, but doing it
+        // again at the wire-shape boundary guards against future
+        // wire-up plumbing that bypasses the summary).
+        let mut filter_categories_applied = stats.filter_categories_applied.clone();
+        filter_categories_applied.sort();
+        filter_categories_applied.dedup();
+
         let trace_integrity = TraceIntegrity {
             ring_buffer_overflows: stats.ring_buffer_overflows,
             events_dropped: stats.events_dropped,
@@ -483,6 +494,7 @@ impl EventAggregator {
             partial_captures: Vec::new(),
             bloom_filter_capacity: 65536,
             bloom_filter_false_positive_rate: 0.01,
+            filter_categories_applied,
         };
 
         AggregatedTrace {

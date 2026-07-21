@@ -121,19 +121,25 @@ case "$COMPLETENESS" in
 esac
 
 # Milestone 212 (issue #615) — assert the real ring_buffer_overflows
-# counter is (a) present as a JSON number type and (b) non-zero on
-# this fixture. Pre-m212 the field was hardcoded to 0 at every emission
-# site, hiding a real drop-rate bug that #614 investigation surfaced.
-# Post-m212 the SC-001 fixture should report >100 drops.
+# counter is present as a JSON number type. Pre-m212 the field was
+# hardcoded to 0 at every emission site; post-m212 it carries real
+# per-CPU drop-counter values.
+#
+# Milestone 213 (issue #616) UPDATE: pre-m213 the SC-001 fixture
+# reported >100 drops (cargo fingerprint spam saturating the ring
+# buffer). Post-m213 the kernel-side noise filter drops that spam
+# BEFORE the ring buffer, so overflows should be ≤ 10 per SC-002.
+# The > 100 assertion is removed and replaced with the ≤ 10
+# assertion below.
 if ! jq -e '.predicate.trace_integrity.ring_buffer_overflows | type == "number"' "$OUTPUT" > /dev/null 2>&1; then
     echo "FAIL: predicate.trace_integrity.ring_buffer_overflows is not a JSON number type"
     exit 1
 fi
 OVERFLOWS=$(jq '.predicate.trace_integrity.ring_buffer_overflows' "$OUTPUT")
 echo "    ring_buffer_overflows: $OVERFLOWS"
-if [[ "$OVERFLOWS" -le 100 ]]; then
-    echo "FAIL: ring_buffer_overflows=$OVERFLOWS is <=100 on the SC-001 fixture (expected >100 per m212 SC-001)"
-    echo "      Either the counter regressed OR the fixture's drop signature changed materially."
+if [[ "$OVERFLOWS" -gt 10 ]]; then
+    echo "FAIL: ring_buffer_overflows=$OVERFLOWS is >10 on the SC-001 fixture (m213 SC-002 target: ≤10)"
+    echo "      Either the m213 kernel-side filter regressed OR the fixture generates NEW drop patterns not covered by any of the 4 filter categories."
     exit 1
 fi
 
@@ -176,6 +182,29 @@ if jq -e '.predicate.file_access.operations' "$OUTPUT" > /dev/null 2>&1; then
     fi
 else
     echo "WARN: no file_access.operations in attestation — cannot assert m213 SC-001"
+fi
+
+# Milestone 213 (issue #616) — SC-003 transparent-aggregate assertion.
+# TraceIntegrity.filter_categories_applied[] MUST be present as a JSON
+# array (never null, never absent — FR-009) AND MUST contain "CargoFingerprint"
+# on any cargo build (the fingerprint spam guaranteed to fire).
+if ! jq -e '.predicate.trace_integrity.filter_categories_applied | type == "array"' "$OUTPUT" > /dev/null 2>&1; then
+    echo "FAIL: predicate.trace_integrity.filter_categories_applied is not a JSON array (m213 FR-006/FR-009 violation)"
+    jq '.predicate.trace_integrity.filter_categories_applied' "$OUTPUT" || true
+    exit 1
+fi
+APPLIED=$(jq -r '.predicate.trace_integrity.filter_categories_applied | join(",")' "$OUTPUT")
+echo "    filter_categories_applied: [$APPLIED]"
+if ! jq -e '.predicate.trace_integrity.filter_categories_applied | index("CargoFingerprint") != null' "$OUTPUT" > /dev/null 2>&1; then
+    echo "FAIL: filter_categories_applied does NOT contain 'CargoFingerprint' on a cargo build (m213 US2 signal missing)"
+    exit 1
+fi
+# FR-008 defensive: every value in the array MUST be a pure alphabetic
+# category name — no filesystem paths (which would leak host info).
+if ! jq -e '.predicate.trace_integrity.filter_categories_applied | all(. | test("^[A-Za-z]+$"))' "$OUTPUT" > /dev/null 2>&1; then
+    echo "FAIL: filter_categories_applied contains non-alphabetic entries — possible path leakage (FR-008)"
+    jq '.predicate.trace_integrity.filter_categories_applied' "$OUTPUT"
+    exit 1
 fi
 
 echo
