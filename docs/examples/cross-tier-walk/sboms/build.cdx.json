@@ -9,7 +9,7 @@
       "components": [
         {
           "type": "application",
-          "name": "mikebom",
+          "name": "waybill",
           "version": "0.1.0-alpha.17"
         }
       ]
@@ -43,7 +43,7 @@
       ]
     },
     "properties": [
-      {"name": "mikebom:sbom-tier", "value": "build"}
+      {"name": "waybill:sbom-tier", "value": "build"}
     ]
   },
   "components": [

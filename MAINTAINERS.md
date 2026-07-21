@@ -1,6 +1,6 @@
 # Maintainers
 
-This document lists the maintainers for mikebom.
+This document lists the maintainers for waybill.
 
 ## Current Maintainers
 

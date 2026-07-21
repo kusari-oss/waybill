@@ -4,7 +4,7 @@ Stable recipes come first — they produce CycloneDX 1.6 / SPDX 2.3 / SPDX 3.0.1
 JSON SBOMs, work on any OS, and need no special privileges. Trace-mode
 (experimental, Linux only) follows at the bottom.
 
-Prereqs: [`mikebom` installed](installation.md) and on `$PATH`.
+Prereqs: [`waybill` installed](installation.md) and on `$PATH`.
 
 ---
 
@@ -13,10 +13,10 @@ Prereqs: [`mikebom` installed](installation.md) and on `$PATH`.
 Point at any directory that contains lockfiles or manifests. Works on any OS.
 
 ```bash
-mikebom sbom scan --path ./my-project --output project.cdx.json --json
+waybill sbom scan --path ./my-project --output project.cdx.json --json
 ```
 
-mikebom reads every supported lockfile (`Cargo.lock`, `package-lock.json`,
+waybill reads every supported lockfile (`Cargo.lock`, `package-lock.json`,
 `pnpm-lock.yaml`, `go.mod` + `go.sum`, `Gemfile.lock`, `pom.xml`,
 `poetry.lock`, `Pipfile.lock`, `requirements.txt`) plus Maven JAR
 `META-INF/maven/.../pom.xml`, per-module Go `.mod` files from the module
@@ -28,10 +28,10 @@ cache if present, and produces a CycloneDX with:
 - Strict PURL encoding round-trippable through `packageurl-python`
 
 For richer Go dep graphs, run `go mod download` (or let `go build` populate
-`$GOMODCACHE`) before the scan — per-module `.mod` files let mikebom walk the
+`$GOMODCACHE`) before the scan — per-module `.mod` files let waybill walk the
 transitive require graph.
 
-See [CLI reference: `mikebom sbom scan`](cli-reference.md) for the full flag
+See [CLI reference: `waybill sbom scan`](cli-reference.md) for the full flag
 list.
 
 ---
@@ -41,16 +41,16 @@ list.
 Works on any OS. No privilege, no eBPF.
 
 ```bash
-mikebom sbom scan --image alpine:3.19 --output alpine.cdx.json --json
+waybill sbom scan --image alpine:3.19 --output alpine.cdx.json --json
 ```
 
-For OCI references mikebom checks the local docker daemon's cache first then
+For OCI references waybill checks the local docker daemon's cache first then
 falls back to a registry pull on miss. Pass a `docker save` tarball if you'd
 rather feed bytes directly:
 
 ```bash
 docker save alpine:3.19 -o alpine.tar
-mikebom sbom scan --image alpine.tar --output alpine.cdx.json --json
+waybill sbom scan --image alpine.tar --output alpine.cdx.json --json
 ```
 
 `--image` extracts the layers (honouring OCI whiteouts), auto-reads
@@ -95,7 +95,7 @@ Trace `cargo install ripgrep` end-to-end, produce a signed attestation, then
 derive a CycloneDX SBOM from that attestation:
 
 ```bash
-mikebom trace run \
+waybill trace run \
   --sbom-output ripgrep.cdx.json \
   --attestation-output ripgrep.attestation.json \
   --signing-key ./signing.key \
@@ -104,8 +104,8 @@ mikebom trace run \
 ```
 
 To re-derive the SBOM later (or after enriching with different flags), use
-`mikebom sbom verify` with the attestation as input. On macOS, run
-trace-mode inside the `mikebom-dev` container or a Lima VM — see
+`waybill sbom verify` with the attestation as input. On macOS, run
+trace-mode inside the `waybill-dev` container or a Lima VM — see
 [installation](installation.md).
 
 ---
@@ -113,11 +113,11 @@ trace-mode inside the `mikebom-dev` container or a Lima VM — see
 ## Recipe 4 — Assert SBOM type with `--sbom-type`
 
 When your pipeline knows the SBOM should be classified as a single CISA SBOM
-Type regardless of mikebom's per-component auto-detection, override at the
+Type regardless of waybill's per-component auto-detection, override at the
 document level:
 
 ```bash
-mikebom sbom scan --path . \
+waybill sbom scan --path . \
     --sbom-type build \
     --format cyclonedx-json,spdx-2.3-json,spdx-3-json \
     --output cyclonedx-json=out.cdx.json \
@@ -139,7 +139,7 @@ jq '.["@graph"][] | select(.type == "software_Sbom") | .software_sbomType' out.s
 # ["build"]
 ```
 
-Per-component `mikebom:sbom-tier` annotations preserve their auto-detected
+Per-component `waybill:sbom-tier` annotations preserve their auto-detected
 values — the override is a CLAIM about document-level type, not a rewrite of
 per-component lineage.
 
@@ -155,7 +155,7 @@ operator-meaningful project identity, override `metadata.component.name`
 (and optionally `version`):
 
 ```bash
-mikebom sbom scan --path /tmp/extracted \
+waybill sbom scan --path /tmp/extracted \
     --root-name acme-platform \
     --root-version 2.4.1 \
     --output platform.cdx.json
@@ -186,7 +186,7 @@ Attach a stable identity (e.g., your internal asset-management ID) to a
 specific component in the emitted SBOM:
 
 ```bash
-mikebom sbom scan --path . \
+waybill sbom scan --path . \
     --component-id "pkg:cargo/serde@1.0.0=kusari-id:asset-shared-lib-v2" \
     --output project.cdx.json
 ```
@@ -196,7 +196,7 @@ bom-ref values), the identifier is attached to ALL matching components. If
 a selector matches zero components, the scan logs a warning and continues.
 
 CDX 1.6 lands the identifier in `components[].properties[]` as
-`mikebom:component-identifier`; SPDX 2.3 lands it as a per-package
+`waybill:component-identifier`; SPDX 2.3 lands it as a per-package
 `Annotation`; SPDX 3 carries it natively in
 `software_Package.externalIdentifier[]`.
 
@@ -214,12 +214,12 @@ Without this metadata embedded in the SBOM itself, the link between "this
 SBOM" and "this running workload" is lost once the file leaves the scanning
 context.
 
-mikebom doesn't ship dedicated `--cluster-id` / `--namespace` flags. Use the
+waybill doesn't ship dedicated `--cluster-id` / `--namespace` flags. Use the
 existing `--id <scheme>=<value>` flag (repeatable) to encode K8s workload
 identity:
 
 ```bash
-mikebom sbom scan --image ghcr.io/example/webapp:1.25 \
+waybill sbom scan --image ghcr.io/example/webapp:1.25 \
     --id k8s_cluster=prod-us-east \
     --id k8s_namespace=production \
     --id k8s_workload_name=webapp-v2 \
@@ -237,7 +237,7 @@ reserved for the dedicated flags.
 
 | Format | Carrier |
 |---|---|
-| CycloneDX 1.6 | `metadata.annotations[].text` inside the document-level `mikebom:identifiers` envelope |
+| CycloneDX 1.6 | `metadata.annotations[].text` inside the document-level `waybill:identifiers` envelope |
 | SPDX 2.3 | `annotations[]` at document level inside the `MikebomAnnotationCommentV1` envelope |
 | SPDX 3.0.1 | `Element.externalIdentifier[]` (native carrier, one entry per `--id`) |
 
@@ -258,7 +258,7 @@ WORKLOAD_NAME=$(kubectl get pod "$POD" -n "$NAMESPACE" \
 WORKLOAD_UID=$(kubectl get pod "$POD" -n "$NAMESPACE" \
     -o jsonpath='{.metadata.ownerReferences[0].uid}')
 
-mikebom sbom scan --image "$(kubectl get pod "$POD" -n "$NAMESPACE" \
+waybill sbom scan --image "$(kubectl get pod "$POD" -n "$NAMESPACE" \
     -o jsonpath='{.spec.containers[0].image}')" \
     --id k8s_cluster="$CLUSTER" \
     --id k8s_namespace="$NAMESPACE" \
@@ -305,7 +305,7 @@ cat >metadata.json <<'JSON'
 }
 JSON
 
-mikebom sbom scan --path . --metadata-file metadata.json --output project.cdx.json
+waybill sbom scan --path . --metadata-file metadata.json --output project.cdx.json
 ```
 
 `deny_unknown_fields` applies. Array fields merge additively with their flag
@@ -318,11 +318,11 @@ See [CLI reference: `--metadata-file`](cli-reference.md) for the schema.
 
 ## Recipe 9 — Verify a signed DSSE attestation
 
-Works on any OS. Accepts DSSE envelopes produced by mikebom, witness, or any
+Works on any OS. Accepts DSSE envelopes produced by waybill, witness, or any
 other SBOMit-compliant tool.
 
 ```bash
-mikebom sbom verify attest.dsse.json \
+waybill sbom verify attest.dsse.json \
   --public-key signer.pub \
   --expected-subject ./my-binary
 ```
@@ -336,7 +336,7 @@ PASS — verified with public_key sha256:...  subject digest matches on-disk bin
 For keyless verification, pass `--identity 'user@example.com'` or a glob
 instead of `--public-key`.
 
-See [CLI reference: `mikebom sbom verify`](cli-reference.md) for the full
+See [CLI reference: `waybill sbom verify`](cli-reference.md) for the full
 flag set including `--layout` (in-toto policy enforcement) and the
 `FailureMode` exit-code contract.
 
@@ -349,7 +349,7 @@ emitted with `--bind-to-source`, verify that the image-tier per-component
 binding annotations match the recompute against the source SBOM:
 
 ```bash
-mikebom sbom verify-binding \
+waybill sbom verify-binding \
     --image-sbom image.cdx.json \
     --source-sbom source.cdx.json \
     --format json
@@ -362,7 +362,7 @@ For triage of an unknown image-tier component, use the informational
 counterpart:
 
 ```bash
-mikebom sbom trace-binding \
+waybill sbom trace-binding \
     --component-purl "pkg:cargo/serde@1.0.0" \
     --image-sbom image.cdx.json \
     --candidate-sources-dir ./source-sboms
@@ -378,8 +378,8 @@ binding-hash algorithm and per-format carrier shapes.
 ## Recipe 11 — Generate an in-toto layout
 
 ```bash
-mikebom policy init --functionary-key ci.pub --step-name build --output layout.json
-mikebom sbom verify attest.dsse.json --layout layout.json
+waybill policy init --functionary-key ci.pub --step-name build --output layout.json
+waybill sbom verify attest.dsse.json --layout layout.json
 ```
 
 Layouts are standard in-toto — any in-toto-aware verifier accepts them. Use

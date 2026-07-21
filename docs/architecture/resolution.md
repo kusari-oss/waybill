@@ -6,22 +6,22 @@ into deduplicated `ResolvedComponent[]`. Two entry points, one deduplicator.
 ## The two entry points
 
 - **Trace mode** (`sbom generate`, `trace run`):
-  `mikebom-cli/src/resolve/pipeline.rs::ResolutionPipeline::resolve`. Reads
+  `waybill-cli/src/resolve/pipeline.rs::ResolutionPipeline::resolve`. Reads
   the in-toto attestation's `network_trace.connections` and
   `file_access.operations` and produces candidate components.
-- **Scan mode** (`sbom scan`): `mikebom-cli/src/scan_fs/mod.rs::scan_path`.
+- **Scan mode** (`sbom scan`): `waybill-cli/src/scan_fs/mod.rs::scan_path`.
   Each per-ecosystem module (`scan_fs/package_db/*.rs`) emits candidates
   directly; no `ResolutionPipeline` is invoked because the evidence is
   already ecosystem-typed.
 
 Both paths feed into the same deduplicator
-(`mikebom-cli/src/resolve/deduplicator.rs::deduplicate`) and produce the same
+(`waybill-cli/src/resolve/deduplicator.rs::deduplicate`) and produce the same
 `ResolvedComponent` shape, so the downstream enrichment and generation stages
 don't need to know which mode produced the input.
 
 ## Resolution techniques and confidence
 
-Defined in `mikebom-common/src/resolution.rs::ResolutionTechnique`:
+Defined in `waybill-common/src/resolution.rs::ResolutionTechnique`:
 
 | Technique | Confidence | When it fires |
 |---|---|---|

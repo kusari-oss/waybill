@@ -7,9 +7,9 @@ go-vendored, and monorepo-mixed fixtures. The extras are (1) the project's own
 module, and (2) test-only transitive deps of upstream libraries (spew,
 difflib, testify when scanning a logrus consumer).
 
-## What mikebom does today
+## What waybill does today
 
-`mikebom-cli/src/scan_fs/package_db/golang.rs::build_entries_from_go_module`
+`waybill-cli/src/scan_fs/package_db/golang.rs::build_entries_from_go_module`
 (lines 442-553):
 
 1. Emits the project's own `module` line from `go.mod` as a component, tagged
@@ -39,7 +39,7 @@ pruned module graphs already put upstream test deps into the consumer's go.mod
 as indirect requires, they appear in trivy's output (labeled Indirect).
 
 For Go ≤1.16 (mod.go:91-99) trivy merges go.sum entries too; this is the
-legacy case that matches mikebom's current behavior.
+legacy case that matches waybill's current behavior.
 
 ## What syft does
 
@@ -63,7 +63,7 @@ digest attachment, not for component enumeration.
 
 ## Comparison
 
-| Question | Trivy | Syft (default) | Syft (legacy) | mikebom today |
+| Question | Trivy | Syft (default) | Syft (legacy) | waybill today |
 |---|---|---|---|---|
 | Root module emitted? | Yes | Yes | No | Yes (tagged `workspace`) |
 | go.sum drives components? | Only Go ≤1.16 | No | No | Yes |
@@ -73,7 +73,7 @@ digest attachment, not for component enumeration.
 ## Recommendation
 
 **Keep emitting the root module.** Trivy and syft-default both do, and users
-scanning `logrus/` expect to see `logrus` as the scan subject. Mikebom's
+scanning `logrus/` expect to see `logrus` as the scan subject. Waybill's
 current `source_type = "workspace"` tag is already a reasonable distinguisher.
 A future refinement could set `sbom_tier = "subject"` or similar so conformance
 harnesses that want "dependencies only" can filter it easily. Low-cost, worth
@@ -93,7 +93,7 @@ for H1 hash attachment. This would drop the test-only transitives that aren't
 declared as consumer-level indirect requires, which is probably what the
 conformance harness expects.
 
-**Action for this milestone:** none in mikebom code. Updates to conformance
+**Action for this milestone:** none in waybill code. Updates to conformance
 fixture ground truth (accept root + declared indirect requires) are more
 consistent with trivy/syft than changing the scanner.
 
@@ -102,7 +102,7 @@ consistent with trivy/syft than changing the scanner.
 If the scan semantics change, also:
 - Update `docs/design-notes.md` ecosystem table to reflect go.mod Require vs
   go.sum as the primary source.
-- Update fixture tests in `mikebom-cli/tests/scan_go.rs` that assert on
+- Update fixture tests in `waybill-cli/tests/scan_go.rs` that assert on
   specific go.sum-derived entries.
 - Consider a `--go-scope=[runtime|full]` flag if someone files a real use case.
 

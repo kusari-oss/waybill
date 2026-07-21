@@ -1,34 +1,34 @@
 # Attestations
 
-mikebom is **attestation-first**: the attestation is the primary artifact,
+waybill is **attestation-first**: the attestation is the primary artifact,
 the SBOM is derived from it. This mirrors the SBOMit pattern — rather than
-shipping an SBOM whose origin is opaque, mikebom ships an in-toto attestation
+shipping an SBOM whose origin is opaque, waybill ships an in-toto attestation
 that says *exactly* what the build did, and an SBOM generated from that
 record.
 
 **Key files:**
 
-- `mikebom-common/src/attestation/` — the schema types.
+- `waybill-common/src/attestation/` — the schema types.
   - `statement.rs` — `InTotoStatement`, `BuildTracePredicate`, constants.
   - `metadata.rs` — `TraceMetadata`, `ToolInfo`, `HostInfo`, `ProcessInfo`,
     `GenerationContext`.
   - `network.rs` — `NetworkTrace`, `Connection`, `TlsInfo`.
   - `file.rs` — `FileAccess`, `FileOperation`.
   - `integrity.rs` — `TraceIntegrity`.
-- `mikebom-cli/src/attestation/builder.rs` — builds the statement from a
+- `waybill-cli/src/attestation/builder.rs` — builds the statement from a
   captured trace.
-- `mikebom-cli/src/attestation/serializer.rs` — JSON I/O.
-- `mikebom-cli/src/cli/scan.rs` — the eBPF capture path that produces the
+- `waybill-cli/src/attestation/serializer.rs` — JSON I/O.
+- `waybill-cli/src/cli/scan.rs` — the eBPF capture path that produces the
   trace events.
 
 ## Shape
 
 The attestation is an in-toto Statement v1. From
-`mikebom-cli/src/config.rs`:
+`waybill-cli/src/config.rs`:
 
 ```rust
 pub const INTOTO_STATEMENT_TYPE: &str = "https://in-toto.io/Statement/v1";
-pub const PREDICATE_TYPE: &str = "https://mikebom.dev/attestation/build-trace/v1";
+pub const PREDICATE_TYPE: &str = "https://waybill.dev/attestation/build-trace/v1";
 ```
 
 Skeleton:
@@ -39,7 +39,7 @@ Skeleton:
   "subject": [
     { "name": "build-output", "digest": { "sha256": "..." } }
   ],
-  "predicateType": "https://mikebom.dev/attestation/build-trace/v1",
+  "predicateType": "https://waybill.dev/attestation/build-trace/v1",
   "predicate": {
     "metadata": { ... },          // tool, timestamps, host, process, context
     "network_trace": { ... },     // TLS connections with SNI + URL + hashes
@@ -59,7 +59,7 @@ digest.
 
 ### `metadata` (`TraceMetadata`)
 
-- **`tool`**: `{ name: "mikebom", version: "<CARGO_PKG_VERSION>" }`.
+- **`tool`**: `{ name: "waybill", version: "<CARGO_PKG_VERSION>" }`.
 - **`trace_start` / `trace_end`**: RFC 3339 timestamps sampled at capture
   start and end.
 - **`target_process`**: `{ pid, command, cgroup_id }` of the traced command.
@@ -92,7 +92,7 @@ Captured via eBPF uprobes on `SSL_read` / `SSL_write` in libssl.
 Each `Connection.id` becomes the provenance marker on downstream components:
 a `ResolvedComponent` resolved via URL pattern from this connection gets
 `evidence.source_connection_ids = ["ssl_..."]`, which ends up as the
-`mikebom:source-connection-ids` property on the CycloneDX component. A
+`waybill:source-connection-ids` property on the CycloneDX component. A
 downstream consumer can correlate any SBOM component back to the specific
 TLS session that fetched it.
 
@@ -122,7 +122,7 @@ is:
   across all three ring buffers (`FILE_EVENTS`, `NETWORK_EVENTS`,
   `COMPILER_EXEC_EVENTS`) × all online CPUs, aggregated at trace end. Non-zero
   means the kernel-side kprobes fired faster than userspace could drain the
-  ring buffer, and some events were silently discarded before reaching mikebom.
+  ring buffer, and some events were silently discarded before reaching waybill.
   Under heavy cargo activity on a busy host, values in the tens of thousands
   are normal.
 - **`events_dropped`** — still `0` in m212; a separate follow-up milestone
@@ -144,8 +144,8 @@ is:
   deduplicated JSON array of the noise-filter categories that fired
   during the trace. Values are drawn from the closed set
   `{"System", "UserCache", "Ephemeral", "CargoFingerprint"}` and match
-  the `mikebom_common::events::FilterCategoryTag::name()` output verbatim
-  so downstream `jq` consumers can join across the two mikebom layers by
+  the `waybill_common::events::FilterCategoryTag::name()` output verbatim
+  so downstream `jq` consumers can join across the two waybill layers by
   byte-identity string comparison. **Always present as a JSON array**
   (empty `[]` when the filter ran but no category fired — the field's
   presence is the operator-visible signal that the kernel-side filter
@@ -159,12 +159,12 @@ is:
   open) rather than "no categories fired."
 
 These counters surface on the CycloneDX output as `metadata.properties`
-(`mikebom:trace-integrity-*`) so an SBOM consumer can decide whether to
+(`waybill:trace-integrity-*`) so an SBOM consumer can decide whether to
 trust the result.
 
 ### `compiler_pipeline` (`CompilerPipelineData`, milestone 210)
 
-Optional field — present only when `mikebom trace` is invoked with a build
+Optional field — present only when `waybill trace` is invoked with a build
 command that spawns a whitelisted compiler (`rustc`, `cc`, `gcc`, `clang`,
 `c++`, `g++`, `ld`, `ld.lld`, `ld.gold`, `javac`, `go`). Absent on every
 scan-mode invocation and on any traced build that never spawned a
@@ -177,7 +177,7 @@ Captured entirely inside eBPF via three tracepoints on `sched_process_exec`
 through the `COMPILER_INVOCATIONS` HashMap so children of `cargo` are
 attributed to the parent `cargo` invocation), and `sched_process_exit`
 (bounded lifetime + drain-on-exit). Constitution Principle II —
-eBPF-Only Observation — is honored uniformly: mikebom never spawns nor
+eBPF-Only Observation — is honored uniformly: waybill never spawns nor
 LD_PRELOADs into the compiler.
 
 The predicate structure captures, per invocation:
@@ -202,29 +202,29 @@ Per-scan aggregate signals ride alongside the invocations:
 
 - **`completeness`** — `Complete` / `Degraded { dropped,
   affected_component_count }` / `Partial { reason: AttachLate }`. Surfaces
-  as C132 `mikebom:compiler-pipeline-completeness` at document scope on
+  as C132 `waybill:compiler-pipeline-completeness` at document scope on
   every SBOM format.
 - **`secrets_read_filtered`** — u64 count of secret-adjacent paths
   observed and dropped (auditable evidence that "the build touched
   secrets" without leaking WHICH secrets). Surfaces as C133
-  `mikebom:secrets-read-filtered` when non-zero.
+  `waybill:secrets-read-filtered` when non-zero.
 - **`filter_categories_applied`** — sorted enum list identifying which
   FR-016 filter groups fired (`System`, `UserCache`, `Ephemeral`,
   `SecretsAdjacent`). Reserved for a future auditor-facing surface;
   not annotated in the SBOM yet.
 
 The per-component attribution the SBOMs emit is derived post-trace by
-`mikebom-cli/src/generate/compiler_pipeline_annotation.rs::map_component_to_source_read_set`:
+`waybill-cli/src/generate/compiler_pipeline_annotation.rs::map_component_to_source_read_set`:
 for each `ResolvedComponent` with known file paths (from m133 evidence or
 `occurrences[]`), the classifier finds every invocation whose `write_set`
 intersects those paths, walks each match's ancestor chain via
 `parent_invocation_id`, and emits the transitive union of read-sets as
-C130 `mikebom:source-read-set` (plus C131 `mikebom:read-set-source =
+C130 `waybill:source-read-set` (plus C131 `waybill:read-set-source =
 "traced"`). Components that don't intersect any write-set get C131 =
 `"unknown"` only; cache-served components fall into this bucket until a
 future milestone adds compiler-cache-server tracing.
 
-The `mikebom.dev/attestation/compiler-invocation/v0.1` witness-attestor
+The `waybill.dev/attestation/compiler-invocation/v0.1` witness-attestor
 URI is reserved for the shape above and locked per contracts/attestor-
 predicate.md (m210 spec Q3); version bumps MUST retain the
 `/compiler-invocation/` path segment.
@@ -233,7 +233,7 @@ predicate.md (m210 spec Q3); version bumps MUST retain the
 
 The trace only recognizes compiler binaries whose `comm` field (first 16
 bytes of the argv[0] basename) matches an entry in the
-`COMPILER_WHITELIST` const at `mikebom-ebpf/src/programs/compiler_exec.rs`
+`COMPILER_WHITELIST` const at `waybill-ebpf/src/programs/compiler_exec.rs`
 — that's the whitelist the `sched_process_exec` tracepoint checks in
 kernel-space. To add support for a new compiler family:
 
@@ -241,13 +241,13 @@ kernel-space. To add support for a new compiler family:
    for GHC — padded to 16 bytes because the kernel writes `comm` as a
    fixed-size buffer).
 2. Extend the `CompilerFamily` enum at
-   `mikebom-common/src/attestation/compiler_pipeline.rs` with the new
+   `waybill-common/src/attestation/compiler_pipeline.rs` with the new
    variant + its serde rename.
 3. Wire the byte-array-to-`CompilerFamily` mapping in the
-   `mikebom-cli/src/trace/compiler_pipeline.rs::compiler_family_from_comm`
+   `waybill-cli/src/trace/compiler_pipeline.rs::compiler_family_from_comm`
    helper.
 4. Add a fixture under
-   `mikebom-cli/tests/fixtures/compiler_pipeline/<lang>_smoke/` that
+   `waybill-cli/tests/fixtures/compiler_pipeline/<lang>_smoke/` that
    invokes the new compiler once + expects one captured invocation.
 5. Update this section with the addition.
 
@@ -274,19 +274,19 @@ Three reasons the attestation is the primary artifact:
 
 ## Relation to go-witness
 
-mikebom's schema is intentionally shaped to be compatible with the
+waybill's schema is intentionally shaped to be compatible with the
 [go-witness network trace attestor](https://github.com/in-toto/go-witness).
-If you know go-witness's network attestor shape, mikebom's `network_trace`
+If you know go-witness's network attestor shape, waybill's `network_trace`
 will look familiar — the field names and the Connection + TlsInfo structures
 align.
 
 ## Consumer workflow
 
-1. `mikebom trace capture` (or the `capture` phase of `trace run`) produces
+1. `waybill trace capture` (or the `capture` phase of `trace run`) produces
    `<foo>.attestation.json`.
 2. Either consume the attestation directly (vulnerability scanners,
    policy engines, SLSA verifiers), or derive an SBOM with
-   `mikebom sbom generate <foo>.attestation.json`.
+   `waybill sbom generate <foo>.attestation.json`.
 3. Re-deriving is idempotent and cheap — the attestation is the source of
    truth.
 
@@ -312,5 +312,5 @@ align.
 - **Attestation signing** is landing now under feature 006 (v006 in
   progress). DSSE envelope signing via local PEM key or keyless (OIDC →
   Fulcio → Rekor) using `sigstore-rs`. Verification exposed through
-  `mikebom sbom verify`. See
+  `waybill sbom verify`. See
   `specs/006-sbomit-suite/plan.md` for the detailed design.

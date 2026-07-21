@@ -1,6 +1,6 @@
 # PURLs and CPEs
 
-mikebom is uncompromising about PURL correctness and pragmatic about CPE
+waybill is uncompromising about PURL correctness and pragmatic about CPE
 coverage. The rules for each identifier are separate and the rationale is
 different.
 
@@ -10,11 +10,11 @@ PURL (Package URL) is the primary identifier on every component. Consumers
 that round-trip PURLs through the `packageurl-python` or `packageurl-go`
 reference implementations will either reject, silently rewrite, or
 mis-index PURLs that disagree with the reference canonical form. Once the
-hash changes, the SBOM's signature no longer verifies. So mikebom's ground
+hash changes, the SBOM's signature no longer verifies. So waybill's ground
 truth for PURL encoding is the behavior of those two reference libraries,
 not the prose of the purl-spec where it's ambiguous.
 
-**Key file:** `mikebom-common/src/types/purl.rs` (the `Purl` type performs
+**Key file:** `waybill-common/src/types/purl.rs` (the `Purl` type performs
 re-canonicalization at construction time) plus per-ecosystem PURL
 construction scattered across `scan_fs/package_db/*.rs`.
 
@@ -38,7 +38,7 @@ These apply uniformly across all ecosystems:
 
 3. **RPM `epoch=0` omitted.** RPM treats absent and 0 as equivalent for
    version comparison; `rpm -qa`'s default display omits; the purl-spec RPM
-   example never shows `epoch=0`. mikebom drops the qualifier when epoch is
+   example never shows `epoch=0`. waybill drops the qualifier when epoch is
    `Some(0)`. See
    [design-notes §PURL canonicalization](../design-notes.md#purl-canonicalization).
 
@@ -97,12 +97,12 @@ NVD matching.
 
 ## CPEs — multi-candidate emission
 
-NVD's CPE dictionary is the target. mikebom synthesizes CPEs locally using
+NVD's CPE dictionary is the target. waybill synthesizes CPEs locally using
 **syft-style heuristic vendor candidates**: each component gets multiple
 CPE candidates per component, not just one, because no single heuristic wins
 across all ecosystems.
 
-**Key file:** `mikebom-cli/src/generate/cpe.rs::synthesize_cpes`.
+**Key file:** `waybill-cli/src/generate/cpe.rs::synthesize_cpes`.
 
 ### Why multiple candidates
 
@@ -134,7 +134,7 @@ misses the match in a majority of cases.
 - The **first candidate** lands on `component.cpe` in the CycloneDX output
   (this is the field most tools look at).
 - The **full candidate list** lands on `component.properties` under
-  `mikebom:cpe-candidates`.
+  `waybill:cpe-candidates`.
 
 So a deb package always has two CPE candidates (`debian:<name>` plus
 `<name>:<name>`), a Maven package has up to three, a scoped npm package has
@@ -145,7 +145,7 @@ two, and so on.
 Per CPE 2.3 §6.2 formatted-string binding:
 
 - `cpe:2.3:a:<vendor>:<product>:<version>:*:*:*:*:*:*:*` for application
-  components (mikebom emits `a` — application — for every candidate; never
+  components (waybill emits `a` — application — for every candidate; never
   hardware (`h`) or OS (`o`) today).
 - Escape: `\`, `*`, `?`, `!`, `"`, `#`, `$`, `%`, `&`, `'`, `(`, `)`, `+`,
   `,`, `/`, `:`, `;`, `<`, `=`, `>`, `@`, `[`, `]`, `^`, backtick, `{`, `|`,
@@ -158,7 +158,7 @@ segments lowercase before escaping; version preserves case.
 ## Why the two rule-sets differ
 
 PURLs are uniquely canonical and machine-verifiable — the reference
-implementations define the one right answer. mikebom can and does insist
+implementations define the one right answer. waybill can and does insist
 on that.
 
 CPEs have no reference-canonical form. NVD's dictionary is hand-curated,

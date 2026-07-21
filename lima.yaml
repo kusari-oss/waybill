@@ -1,6 +1,6 @@
-# Lima VM configuration for mikebom eBPF development on macOS
+# Lima VM configuration for waybill eBPF development on macOS
 # Usage: limactl start ./lima.yaml
-# Shell: limactl shell mikebom
+# Shell: limactl shell waybill
 #
 # This VM provides a Linux environment with:
 # - Kernel 5.8+ (required for BPF ring buffers)

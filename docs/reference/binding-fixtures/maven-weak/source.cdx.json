@@ -10,15 +10,15 @@
       "bom-ref": "pkg:maven/com.example.demo/demo-app@0.1.0",
       "properties": [
         {
-          "name": "mikebom:component-role",
+          "name": "waybill:component-role",
           "value": "main-module"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:source-document-binding",
+          "name": "waybill:source-document-binding",
           "value": "{\"algo\":\"v1\",\"hash\":\"59eca409058785ed39170de1fca456872afef52a1af7d1070719a6e36f672c35\",\"source_doc_id\":{\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\"},\"strength\":\"weak\"}"
         }
       ]

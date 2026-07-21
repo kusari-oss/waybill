@@ -1,0 +1,33 @@
+{
+  "id": "sample-openssl-3.1.4",
+  "purl": "pkg:github/openssl/openssl@openssl-3.1.4",
+  "purl_aliases": [
+    "pkg:deb/debian/libssl3@3.1.4-1"
+  ],
+  "cpe_candidates": [
+    "cpe:2.3:a:openssl:openssl:3.1.4:*:*:*:*:*:*:*"
+  ],
+  "version_range": ">=3.1.4,<3.2.0",
+  "architectures": ["x86_64-linux-gnu"],
+  "indicators": {
+    "exported_symbols": {
+      "type": "symbol-set",
+      "required": ["SSL_CTX_new", "SSL_new", "SSL_free", "OPENSSL_init_ssl", "OPENSSL_init_crypto"],
+      "min_match": 3,
+      "confidence_baseline": 0.70
+    },
+    "version_string": {
+      "type": "rodata-literal",
+      "patterns": ["OpenSSL 3.1.4"],
+      "confidence_baseline": 0.95
+    }
+  },
+  "provenance": {
+    "tier": "manual-curation",
+    "extracted_from": "https://www.openssl.org/source/openssl-3.1.4.tar.gz",
+    "extracted_from_sha256": "840af5366ab9b522bde525826be3ef0fb0af81c6a9ebd84caa600fea1731eee3",
+    "extraction_toolchain": "waybill-corpus-builder@test-fixture",
+    "extracted_at": "2026-06-03T00:00:00Z"
+  },
+  "schema_version": 2
+}

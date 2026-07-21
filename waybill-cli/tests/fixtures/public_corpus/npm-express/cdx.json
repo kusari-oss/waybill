@@ -1,0 +1,2569 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:npm/accepts",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "accepts",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^2.0.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/accepts",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/after",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "after",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"0.8.2\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/after",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/body-parser",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "body-parser",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^2.2.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/body-parser",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/connect-redis",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "connect-redis",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^8.0.1\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/connect-redis",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/content-disposition",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "content-disposition",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^1.0.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/content-disposition",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/content-type",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "content-type",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^1.0.5\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/content-type",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/cookie",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "cookie",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^0.7.1\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/cookie",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/cookie-parser",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "cookie-parser",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"1.4.7\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/cookie-parser",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/cookie-session",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "cookie-session",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"2.1.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/cookie-session",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/cookie-signature",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "cookie-signature",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^1.2.1\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/cookie-signature",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/debug",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "debug",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^4.4.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/debug",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/ejs",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "ejs",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^3.1.10\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/ejs",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/encodeurl",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "encodeurl",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^2.0.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/encodeurl",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/escape-html",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "escape-html",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^1.0.3\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/escape-html",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/eslint",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "eslint",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"8.47.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/eslint",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/etag",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "etag",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^1.8.1\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/etag",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/express-session",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "express-session",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^1.18.1\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/express-session",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/finalhandler",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "finalhandler",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^2.1.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/finalhandler",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/fresh",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "fresh",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^2.0.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/fresh",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/hbs",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "hbs",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"4.2.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/hbs",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/http-errors",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "http-errors",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^2.0.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/http-errors",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/marked",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "marked",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^15.0.3\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/marked",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/merge-descriptors",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "merge-descriptors",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^2.0.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/merge-descriptors",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/method-override",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "method-override",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"3.0.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/method-override",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/mime-types",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "mime-types",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^3.0.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/mime-types",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/mocha",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "mocha",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^10.7.3\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/mocha",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/morgan",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "morgan",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"1.10.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/morgan",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/nyc",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "nyc",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^17.1.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/nyc",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/on-finished",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "on-finished",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^2.4.1\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/on-finished",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/once",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "once",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^1.4.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/once",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/parseurl",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "parseurl",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^1.3.3\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/parseurl",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/pbkdf2-password",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "pbkdf2-password",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"1.2.1\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/pbkdf2-password",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/proxy-addr",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "proxy-addr",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^2.0.7\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/proxy-addr",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/qs",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "qs",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^6.14.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/qs",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/range-parser",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "range-parser",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^1.2.1\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/range-parser",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/router",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "router",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^2.2.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/router",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/send",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "send",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^1.1.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/send",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/serve-static",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "serve-static",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^2.2.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/serve-static",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/statuses",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "statuses",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^2.0.1\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/statuses",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/supertest",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "supertest",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^6.3.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/supertest",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/type-is",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "type-is",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^2.0.1\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/type-is",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/vary",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "vary",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"^1.1.2\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/vary",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:npm/vhost",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "package.json"
+          }
+        ]
+      },
+      "name": "vhost",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"package.json\"]"
+        },
+        {
+          "name": "waybill:lifecycle-scope",
+          "value": "development"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"~3.0.2\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:npm/vhost",
+      "scope": "excluded",
+      "supplier": {
+        "name": "npmjs.com"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=aa8b520c40aa78e5a2ddd5f8c2fe610f95a5fcb6b7d9b5766a3a765d70ea9977",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "aa8b520c40aa78e5a2ddd5f8c2fe610f95a5fcb6b7d9b5766a3a765d70ea9977"
+        }
+      ],
+      "name": "run",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"benchmarks/run\"]"
+        },
+        {
+          "name": "waybill:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "waybill:file-paths",
+          "value": "[\"benchmarks/run\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "complete",
+      "assemblies": [
+        "pkg:npm/accepts",
+        "pkg:npm/after",
+        "pkg:npm/body-parser",
+        "pkg:npm/connect-redis",
+        "pkg:npm/content-disposition",
+        "pkg:npm/content-type",
+        "pkg:npm/cookie",
+        "pkg:npm/cookie-parser",
+        "pkg:npm/cookie-session",
+        "pkg:npm/cookie-signature",
+        "pkg:npm/debug",
+        "pkg:npm/ejs",
+        "pkg:npm/encodeurl",
+        "pkg:npm/escape-html",
+        "pkg:npm/eslint",
+        "pkg:npm/etag",
+        "pkg:npm/express-session",
+        "pkg:npm/finalhandler",
+        "pkg:npm/fresh",
+        "pkg:npm/hbs",
+        "pkg:npm/http-errors",
+        "pkg:npm/marked",
+        "pkg:npm/merge-descriptors",
+        "pkg:npm/method-override",
+        "pkg:npm/mime-types",
+        "pkg:npm/mocha",
+        "pkg:npm/morgan",
+        "pkg:npm/nyc",
+        "pkg:npm/on-finished",
+        "pkg:npm/once",
+        "pkg:npm/parseurl",
+        "pkg:npm/pbkdf2-password",
+        "pkg:npm/proxy-addr",
+        "pkg:npm/qs",
+        "pkg:npm/range-parser",
+        "pkg:npm/router",
+        "pkg:npm/send",
+        "pkg:npm/serve-static",
+        "pkg:npm/statuses",
+        "pkg:npm/supertest",
+        "pkg:npm/type-is",
+        "pkg:npm/vary",
+        "pkg:npm/vhost"
+      ],
+      "dependencies": [
+        "pkg:npm/accepts",
+        "pkg:npm/after",
+        "pkg:npm/body-parser",
+        "pkg:npm/connect-redis",
+        "pkg:npm/content-disposition",
+        "pkg:npm/content-type",
+        "pkg:npm/cookie",
+        "pkg:npm/cookie-parser",
+        "pkg:npm/cookie-session",
+        "pkg:npm/cookie-signature",
+        "pkg:npm/debug",
+        "pkg:npm/ejs",
+        "pkg:npm/encodeurl",
+        "pkg:npm/escape-html",
+        "pkg:npm/eslint",
+        "pkg:npm/etag",
+        "pkg:npm/express-session",
+        "pkg:npm/finalhandler",
+        "pkg:npm/fresh",
+        "pkg:npm/hbs",
+        "pkg:npm/http-errors",
+        "pkg:npm/marked",
+        "pkg:npm/merge-descriptors",
+        "pkg:npm/method-override",
+        "pkg:npm/mime-types",
+        "pkg:npm/mocha",
+        "pkg:npm/morgan",
+        "pkg:npm/nyc",
+        "pkg:npm/on-finished",
+        "pkg:npm/once",
+        "pkg:npm/parseurl",
+        "pkg:npm/pbkdf2-password",
+        "pkg:npm/proxy-addr",
+        "pkg:npm/qs",
+        "pkg:npm/range-parser",
+        "pkg:npm/router",
+        "pkg:npm/send",
+        "pkg:npm/serve-static",
+        "pkg:npm/statuses",
+        "pkg:npm/supertest",
+        "pkg:npm/type-is",
+        "pkg:npm/vary",
+        "pkg:npm/vhost"
+      ]
+    },
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "npm-express@e996498"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "npm-express@e996498"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [
+        "pkg:npm/accepts",
+        "pkg:npm/after",
+        "pkg:npm/body-parser",
+        "pkg:npm/connect-redis",
+        "pkg:npm/content-disposition",
+        "pkg:npm/content-type",
+        "pkg:npm/cookie",
+        "pkg:npm/cookie-parser",
+        "pkg:npm/cookie-session",
+        "pkg:npm/cookie-signature",
+        "pkg:npm/debug",
+        "pkg:npm/ejs",
+        "pkg:npm/encodeurl",
+        "pkg:npm/escape-html",
+        "pkg:npm/eslint",
+        "pkg:npm/etag",
+        "pkg:npm/express-session",
+        "pkg:npm/finalhandler",
+        "pkg:npm/fresh",
+        "pkg:npm/hbs",
+        "pkg:npm/http-errors",
+        "pkg:npm/marked",
+        "pkg:npm/merge-descriptors",
+        "pkg:npm/method-override",
+        "pkg:npm/mime-types",
+        "pkg:npm/mocha",
+        "pkg:npm/morgan",
+        "pkg:npm/nyc",
+        "pkg:npm/on-finished",
+        "pkg:npm/once",
+        "pkg:npm/parseurl",
+        "pkg:npm/pbkdf2-password",
+        "pkg:npm/proxy-addr",
+        "pkg:npm/qs",
+        "pkg:npm/range-parser",
+        "pkg:npm/router",
+        "pkg:npm/send",
+        "pkg:npm/serve-static",
+        "pkg:npm/statuses",
+        "pkg:npm/supertest",
+        "pkg:npm/type-is",
+        "pkg:npm/vary",
+        "pkg:npm/vhost"
+      ],
+      "ref": "npm-express@e996498"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=aa8b520c40aa78e5a2ddd5f8c2fe610f95a5fcb6b7d9b5766a3a765d70ea9977"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/accepts"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/after"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/body-parser"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/connect-redis"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/content-disposition"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/content-type"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/cookie"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/cookie-parser"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/cookie-session"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/cookie-signature"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/debug"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/ejs"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/encodeurl"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/escape-html"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/eslint"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/etag"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/express-session"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/finalhandler"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/fresh"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/hbs"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/http-errors"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/marked"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/merge-descriptors"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/method-override"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/mime-types"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/mocha"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/morgan"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/nyc"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/on-finished"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/once"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/parseurl"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/pbkdf2-password"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/proxy-addr"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/qs"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/range-parser"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/router"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/send"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/serve-static"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/statuses"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/supertest"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/type-is"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/vary"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:npm/vhost"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "waybill"
+      }
+    ],
+    "component": {
+      "bom-ref": "npm-express@e996498",
+      "cpe": "cpe:2.3:a:waybill:npm-express:e996498:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "comment": "auto-detected from git remote `origin`",
+          "type": "vcs",
+          "url": "https://github.com/expressjs/express"
+        }
+      ],
+      "name": "npm-express",
+      "purl": "pkg:generic/npm-express@e996498",
+      "type": "application",
+      "version": "e996498"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "design"
+      }
+    ],
+    "properties": [
+      {
+        "name": "waybill:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "waybill:os-release-missing-fields",
+        "value": "ID,VERSION_ID"
+      },
+      {
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "waybill:graph-completeness",
+        "value": "partial"
+      },
+      {
+        "name": "waybill:graph-completeness-reason",
+        "value": "transitive-edges-unresolvable: npm"
+      },
+      {
+        "name": "waybill:workspaces-detected",
+        "value": "[\".\"]"
+      }
+    ],
+    "supplier": {
+      "name": "waybill contributors"
+    },
+    "timestamp": "<masked>",
+    "tools": {
+      "components": [
+        {
+          "name": "waybill",
+          "publisher": "waybill contributors",
+          "type": "application",
+          "version": "0.1.0-alpha.62"
+        }
+      ]
+    }
+  },
+  "serialNumber": "<masked>",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

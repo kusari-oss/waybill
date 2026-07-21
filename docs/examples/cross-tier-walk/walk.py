@@ -2,8 +2,8 @@
 """
 Cross-tier SBOM correlation walker.
 
-Demonstrates content-addressable correlation across mikebom-emitted
-source / build / image SBOMs without invoking mikebom.
+Demonstrates content-addressable correlation across waybill-emitted
+source / build / image SBOMs without invoking waybill.
 
 Reads identifiers from each SBOM's standards-native carriers:
 - `metadata.component.externalReferences[]` for document-level identifiers
@@ -11,7 +11,7 @@ Reads identifiers from each SBOM's standards-native carriers:
 - `components[].hashes[]` for per-component content hashes
 
 Then walks: image SBOM → build SBOM (via subject digest match) →
-source SBOM (via `repo:` match). Pure string equality; no mikebom
+source SBOM (via `repo:` match). Pure string equality; no waybill
 dependency.
 
 Usage:
@@ -33,7 +33,7 @@ from typing import Any
 def parse_external_ref(ref: dict[str, Any]) -> tuple[str, str] | None:
     """Decode a CDX externalReferences[] entry into a (scheme, value) pair.
 
-    Mikebom-emitted identifiers carry the scheme implicitly through `type`
+    Waybill-emitted identifiers carry the scheme implicitly through `type`
     and the value through `url`. The `comment` field carries the
     `source_label` for human consumption.
     """
@@ -76,7 +76,7 @@ def load_sbom(path: Path) -> dict[str, Any]:
                 component_hashes.append((purl, alg, content))
     tier = "unknown"
     for prop in sbom.get("metadata", {}).get("properties", []):
-        if prop.get("name") == "mikebom:sbom-tier":
+        if prop.get("name") == "waybill:sbom-tier":
             tier = prop.get("value", "unknown")
     return {
         "path": path,

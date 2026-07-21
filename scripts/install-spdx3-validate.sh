@@ -15,10 +15,10 @@
 # This is the install step the .github/workflows/ci.yml `Lint + test
 # (linux-x86_64)` job invokes before `cargo test --workspace` runs the
 # `spdx3_conformance` integration test (with
-# MIKEBOM_REQUIRE_SPDX3_VALIDATOR=1 set so absent-binary is a hard
+# WAYBILL_REQUIRE_SPDX3_VALIDATOR=1 set so absent-binary is a hard
 # failure on CI). Local-dev callers can skip this step; the
 # integration test gracefully skips when the binary is absent and
-# MIKEBOM_REQUIRE_SPDX3_VALIDATOR is unset (research §5).
+# WAYBILL_REQUIRE_SPDX3_VALIDATOR is unset (research §5).
 
 set -euo pipefail
 
@@ -31,7 +31,7 @@ BIN_PATH="$VENV_DIR/bin/spdx3-validate"
 
 # Pinned version per research §2. Bumping requires a deliberate PR
 # with proof the new version doesn't surface false positives against
-# post-fix mikebom output (FR-008).
+# post-fix waybill output (FR-008).
 PINNED_VERSION="0.0.5"
 
 # Pick a Python interpreter. Prefer python3; fall back to python.

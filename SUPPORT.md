@@ -2,7 +2,7 @@
 
 ## Getting Help
 
-Thanks for using mikebom! Here are some ways to get help:
+Thanks for using waybill! Here are some ways to get help:
 
 ### Documentation
 
@@ -13,8 +13,8 @@ Thanks for using mikebom! Here are some ways to get help:
 ### Issues
 
 If you've found a bug or have a feature request:
-1. Search [existing issues](https://github.com/kusari-sandbox/mikebom/issues) first
-2. If not found, [open a new issue](https://github.com/kusari-sandbox/mikebom/issues/new)
+1. Search [existing issues](https://github.com/kusari-sandbox/waybill/issues) first
+2. If not found, [open a new issue](https://github.com/kusari-sandbox/waybill/issues/new)
 
 ### Security Issues
 
@@ -29,7 +29,7 @@ maintainer availability. We appreciate your patience!
 
 ## Contributing
 
-Want to help improve mikebom? See our [Contributing Guide](CONTRIBUTING.md).
+Want to help improve waybill? See our [Contributing Guide](CONTRIBUTING.md).
 
 ## Support Scope
 

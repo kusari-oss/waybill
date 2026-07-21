@@ -176,14 +176,14 @@ jobs:
             "${{ matrix.project.url }}" \
             "/tmp/realistic-fixtures/${{ matrix.project.name }}-${{ matrix.project.tag }}"
 
-      - name: Build mikebom
-        run: cargo +stable build -p mikebom
+      - name: Build waybill
+        run: cargo +stable build -p waybill
 
       - name: Scan ${{ matrix.project.name }}
         run: |
-          # `set -o pipefail` so the step exits non-zero when mikebom
+          # `set -o pipefail` so the step exits non-zero when waybill
           # fails — the trailing `tee` would otherwise mask the
-          # mikebom exit code.
+          # waybill exit code.
           set -o pipefail
           # Isolate HOME + GOMODCACHE so the scan doesn't pick up
           # the runner's own Go module cache; mirrors the milestone
@@ -192,7 +192,7 @@ jobs:
           # bound (no `timeout` shell binary needed; macOS doesn't
           # ship GNU coreutils' `timeout`).
           HOME=$(mktemp -d) GOMODCACHE=$(mktemp -d)/empty \
-            ./target/debug/mikebom --offline sbom scan \
+            ./target/debug/waybill --offline sbom scan \
               --path "/tmp/realistic-fixtures/${{ matrix.project.name }}-${{ matrix.project.tag }}" \
               --format spdx-2.3-json,cyclonedx-json \
               --output spdx-2.3-json=/tmp/${{ matrix.project.name }}.spdx.json \
@@ -224,7 +224,7 @@ jobs:
           # has 1000+ components and CD is ~87% of online wall-clock per
           # #137), this lane hits the 15-minute job timeout. Skipping
           # them keeps the assertion focused and the job under budget.
-          ./target/debug/mikebom sbom scan \
+          ./target/debug/waybill sbom scan \
             --path "/tmp/realistic-fixtures/${{ matrix.project.name }}-${{ matrix.project.tag }}" \
             --format cyclonedx-json \
             --output cyclonedx-json=/tmp/${{ matrix.project.name }}.online.cdx.json \
@@ -385,19 +385,19 @@ jobs:
           docker save "${{ matrix.image.tag }}" -o /tmp/${{ matrix.image.name }}.tar
           ls -lh /tmp/${{ matrix.image.name }}.tar
 
-      - name: Build mikebom
-        run: cargo +stable build -p mikebom
+      - name: Build waybill
+        run: cargo +stable build -p waybill
 
       - name: Scan ${{ matrix.image.name }}
         run: |
           set -o pipefail
-          # mikebom auto-detects the `--image` argument as a tarball
+          # waybill auto-detects the `--image` argument as a tarball
           # path (vs an OCI ref) when the value is an existing file
           # on disk. No `--image-src` needed for the archive path.
           # Isolate HOME so the scan doesn't pick up the runner's
           # own caches.
           HOME=$(mktemp -d) \
-            ./target/debug/mikebom --offline sbom scan \
+            ./target/debug/waybill --offline sbom scan \
               --image /tmp/${{ matrix.image.name }}.tar \
               --format spdx-2.3-json,cyclonedx-json \
               --output spdx-2.3-json=/tmp/${{ matrix.image.name }}.spdx.json \

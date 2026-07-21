@@ -1,4 +1,4 @@
-# mikebom design notes
+# waybill design notes
 
 Running reference for architectural decisions, tradeoffs, and known
 limitations across ecosystems. Intended as a pickup point for future
@@ -13,7 +13,7 @@ The authoritative per-ecosystem coverage matrix — OS-db vs. lockfile vs.
 manifest, dep-graph completeness, and known limitations — lives in
 [`docs/ecosystems.md`](ecosystems.md). This document captures the
 cross-cutting architectural decisions that span ecosystems; go there
-first if you're asking "can mikebom read X" or "what does it do with Y".
+first if you're asking "can waybill read X" or "what does it do with Y".
 
 ---
 
@@ -69,7 +69,7 @@ BuildInfo doesn't encode edges), but isn't today.
 
 ## Source-type markers glossary
 
-The `mikebom:source-type` property on each CycloneDX component
+The `waybill:source-type` property on each CycloneDX component
 distinguishes how a coord was discovered:
 
 | Value | Meaning |
@@ -80,15 +80,15 @@ distinguishes how a coord was discovered:
 | `analyzed` | JAR walker emitted this from `META-INF/maven/.../pom.properties`. Strong trust — the JAR is on disk. |
 | `git`, `path`, `workspace`, `local` | Cargo/Gem source-kind markers for non-registry packages. |
 
-`mikebom:sbom-tier` is a separate axis (`source` / `analyzed` / `deployed` / `design` / `build`) — see `mikebom-common/src/resolution.rs` for the full ladder.
+`waybill:sbom-tier` is a separate axis (`source` / `analyzed` / `deployed` / `design` / `build`) — see `waybill-common/src/resolution.rs` for the full ladder.
 
 ---
 
 ## Known limitations / sharp edges
 
 ### Maven
-- **`<exclusions>`** not parsed. If a project excludes a transitive via `<exclusions>` in its pom, mikebom still emits the excluded coord as a dep.
-- **Version ranges** (`[1.0,2.0)`) not resolved. Maven picks a specific version at build time; mikebom treats the range string as-is.
+- **`<exclusions>`** not parsed. If a project excludes a transitive via `<exclusions>` in its pom, waybill still emits the excluded coord as a dep.
+- **Version ranges** (`[1.0,2.0)`) not resolved. Maven picks a specific version at build time; waybill treats the range string as-is.
 - **`<profiles>`** ignored. Profile-conditional deps never emit.
 - **Plugin-section deps** (`<build><plugins>`) ignored — not runtime deps.
 - **POM-less JARs** (older Gradle outputs, OSGi bundles) can't be inspected via `META-INF/maven/` — coord + deps invisible.
@@ -107,7 +107,7 @@ Source-tree scans use a 4-step ladder to obtain each `(module, version)` pair's 
 | Step | Source | Available when |
 |------|--------|----------------|
 | 1 | `go mod graph` subprocess | `go` is on PATH AND `--offline` not set |
-| 2 | `$GOMODCACHE` walk (`cache/download/<escaped-mod>/@v/<ver>.mod`) | mikebom finds at least one cache root via `$GOMODCACHE` / `$GOPATH/pkg/mod` / `$HOME/go/pkg/mod` / rootfs scan |
+| 2 | `$GOMODCACHE` walk (`cache/download/<escaped-mod>/@v/<ver>.mod`) | waybill finds at least one cache root via `$GOMODCACHE` / `$GOPATH/pkg/mod` / `$HOME/go/pkg/mod` / rootfs scan |
 | 3 | HTTP fetch from `$GOPROXY` (default `proxy.golang.org`) | `--offline` not set AND `$GOPROXY != off` AND module not matched by `$GOPRIVATE` |
 | 4 | Empty fallthrough | always — emits the component with empty `depends`, increments `LadderSummary::missing_count` |
 
@@ -117,7 +117,7 @@ Per-scan operational visibility: `tracing::info!` summary line at scan end lists
 
 Sync, not async: the resolver is invoked from a sync chain (`scan_path` → `read_all` → `golang::read`). `reqwest::blocking::Client` (workspace `blocking` feature) is constructed and dropped on a dedicated `std::thread::spawn`'d worker so it never crosses an async runtime boundary. Concurrency for proxy fetches uses a 16-way `std::thread` worker pool with bounded `mpsc` queue (`parallel_fetch` in `graph_resolver.rs`).
 
-`--offline` plumbing is currently bridged via the `MIKEBOM_OFFLINE` env var (set in `main.rs` based on `cli.offline`). Future cleanup: thread an `offline: bool` parameter through `scan_path` → `read_all` → `golang::read` to remove the env-var bridge.
+`--offline` plumbing is currently bridged via the `WAYBILL_OFFLINE` env var (set in `main.rs` based on `cli.offline`). Future cleanup: thread an `offline: bool` parameter through `scan_path` → `read_all` → `golang::read` to remove the env-var bridge.
 
 Out of scope for milestone 055: `go.work` workspaces (multi-module), `vendor/` directory resolution, deps.dev as a data source, source-VCS (`GOPROXY=direct`) fallback, per-fetched-`.mod` SHA-256 verification against `go.sum`'s h1 hashes.
 
@@ -147,17 +147,17 @@ See `specs/055-go-transitive-edges/` for the full design + capability matrix.
 
 ### CycloneDX 1.6 serialization
 - **`evidence.identity` is an array** (added 2026-04-20 for sbomqs parse failure): the single-object form was deprecated in CDX 1.5→1.6. Every component emits `identity: [{...}]` with exactly one identity object.
-- **`evidence.identity[].tools` is never emitted**: per CDX 1.6 that field must contain bom-refs to items declared in the BOM (metadata/tools/services/formulation). mikebom's previous payload (TLS connection IDs + deps.dev markers) are not tools and don't exist elsewhere in the BOM. Both now land on the component as properties `mikebom:source-connection-ids` (comma-joined) and `mikebom:deps-dev-match` (`<system>:<name>@<version>`). The `pkg:generic/...` provenance semantics are preserved, just in the CDX-conformant location.
+- **`evidence.identity[].tools` is never emitted**: per CDX 1.6 that field must contain bom-refs to items declared in the BOM (metadata/tools/services/formulation). waybill's previous payload (TLS connection IDs + deps.dev markers) are not tools and don't exist elsewhere in the BOM. Both now land on the component as properties `waybill:source-connection-ids` (comma-joined) and `waybill:deps-dev-match` (`<system>:<name>@<version>`). The `pkg:generic/...` provenance semantics are preserved, just in the CDX-conformant location.
 - **License shape**: components emit `{"license": {"id": "<SPDX-id>"}}` for single-identifier licenses (via `SpdxExpression::as_spdx_id`) and `{"expression": "<expr>"}` for compound expressions. Required for sbomqs's `comp_with_valid_licenses` check.
 - **Component hashes from manifests**: npm's `package-lock.json::integrity` (sha256/sha384/sha512) and Cargo.lock's `checksum` (sha256) flow through `PackageDbEntry.hashes` → `ResolvedComponent.hashes` → `components[].hashes[]`. Other ecosystems (gem/maven/pypi/go) defer for now — see TODO.
-- **`metadata.component` carries synthetic `purl` + `cpe`**: scan subjects emit `pkg:generic/<name>@<version>` and `cpe:2.3:a:mikebom:<name>:<version>:*:*:*:*:*:*:*`. Required for sbomqs schema validity (the validator rejects empty cpe/purl on metadata.component even though the spec doesn't require them).
+- **`metadata.component` carries synthetic `purl` + `cpe`**: scan subjects emit `pkg:generic/<name>@<version>` and `cpe:2.3:a:waybill:<name>:<version>:*:*:*:*:*:*:*`. Required for sbomqs schema validity (the validator rejects empty cpe/purl on metadata.component even though the spec doesn't require them).
 - **`metadata.authors`, `metadata.supplier`, `metadata.licenses` (CC0-1.0)**: hardcoded SBOM-producer identity + dataLicense.
-- **Trace-integrity counters on `metadata.properties`**: `mikebom:trace-integrity-{ring-buffer-overflows,events-dropped,uprobe-attach-failures,kprobe-attach-failures}` instead of attached to a composition (CDX 1.6 compositions schema sets `additionalProperties: false`).
+- **Trace-integrity counters on `metadata.properties`**: `waybill:trace-integrity-{ring-buffer-overflows,events-dropped,uprobe-attach-failures,kprobe-attach-failures}` instead of attached to a composition (CDX 1.6 compositions schema sets `additionalProperties: false`).
 - **Compositions emit both `assemblies` and `dependencies`** for each `complete` ecosystem record. Plus a separate dep-completeness composition listing the primary's bom-ref under `dependencies` when no integrity issues — needed for sbomqs's `comp_with_dependencies` to credit the primary.
 - **Primary-dependency fallback in `build_dependencies`**: when the scanned project's root entry was filtered out (npm path_key=="", cargo source=None) and no explicit edges connect the metadata.component to anything, synthesize edges from the primary to every "root" component (those nothing else depends on). Without this, sbomqs reports "no dependency graph present" even when transitive edges are populated.
 
 ### sbomqs scoring baseline (2026-04-20, post-CD pass)
-After the ClearlyDefined enrichment integration, source-scan SBOMs reach **8.8/10 (Grade B)** on npm fixtures, **7.0–7.8 (C)** on cargo / gem / polyglot, **6.1 (D)** on RPM image scans (Integrity 0/10 still — rpmdb has no per-package hashes mikebom can use). Remaining deferred work (separate milestone):
+After the ClearlyDefined enrichment integration, source-scan SBOMs reach **8.8/10 (Grade B)** on npm fixtures, **7.0–7.8 (C)** on cargo / gem / polyglot, **6.1 (D)** on RPM image scans (Integrity 0/10 still — rpmdb has no per-package hashes waybill can use). Remaining deferred work (separate milestone):
 - `comp_with_strong_checksums` for gem/maven/pypi/go/rpm (need ecosystem-specific hash sources)
 - `comp_no_deprecated_licenses` / `comp_no_restrictive_licenses` (the spdx crate has the data; needs threading through)
 - `comp_with_supplier` (needs walking node_modules / .m2 cache for author info; lockfiles alone don't carry it)
@@ -166,8 +166,8 @@ After the ClearlyDefined enrichment integration, source-scan SBOMs reach **8.8/1
 - `sbom_completeness_declared` for gem (currently lockfile gem composition isn't tagged complete)
 
 ### ClearlyDefined enrichment (added 2026-04-20)
-- Post-scan enricher mirroring the `deps.dev` pattern. Lives at `mikebom-cli/src/enrich/clearly_defined_{client,coord,source}.rs`.
-- Queries `https://api.clearlydefined.io/definitions/{type}/{provider}/{ns}/{name}/{rev}` per supported component (npm, cargo, gem, pypi, maven, golang). CD's `licensed.declared` becomes mikebom's `acknowledgement: "concluded"` license entry.
+- Post-scan enricher mirroring the `deps.dev` pattern. Lives at `waybill-cli/src/enrich/clearly_defined_{client,coord,source}.rs`.
+- Queries `https://api.clearlydefined.io/definitions/{type}/{provider}/{ns}/{name}/{rev}` per supported component (npm, cargo, gem, pypi, maven, golang). CD's `licensed.declared` becomes waybill's `acknowledgement: "concluded"` license entry.
 - Honors the existing `--offline` flag (no HTTP when set).
 - In-memory cache (per-scan, not persistent). 5s timeout per request.
 - Sequential per-component (matches deps.dev). Bounded concurrency deferred until profiling shows it matters.
@@ -184,8 +184,8 @@ After the ClearlyDefined enrichment integration, source-scan SBOMs reach **8.8/1
 
 | Fixture type | Where | Shape |
 |---|---|---|
-| Unit tests | Inline in each `mikebom-cli/src/scan_fs/package_db/*.rs` | Synthetic via `tempfile::tempdir()`; helpers like `write_cached_pom`, `write_jar` |
-| Integration tests | `mikebom-cli/tests/scan_<ecosystem>.rs` | Shell out to the compiled binary via `CARGO_BIN_EXE_mikebom`; parse resulting JSON SBOM |
+| Unit tests | Inline in each `waybill-cli/src/scan_fs/package_db/*.rs` | Synthetic via `tempfile::tempdir()`; helpers like `write_cached_pom`, `write_jar` |
+| Integration tests | `waybill-cli/tests/scan_<ecosystem>.rs` | Shell out to the compiled binary via `CARGO_BIN_EXE_mikebom`; parse resulting JSON SBOM |
 | Real fixtures | `tests/fixtures/<ecosystem>/` | Real go.mod/go.sum + real Go binaries, real Gemfile.lock, hand-crafted rpmdb.sqlite (via Python sqlite3), synthetic JARs |
 | Cache-warm tests | Synthetic `<rootfs>/root/.m2/repository/...` inside tempdirs | Avoids dependency on user's host `~/.m2` |
 | Online tests | Unit tests involving deps.dev are unit-tested only for name-formatting / URL construction; no HTTP roundtrips in CI | Integration tests that would need network are gated behind env-present checks |
@@ -204,8 +204,8 @@ Full-suite regression: `cargo test --workspace` — 871 passing, 0 failed as of 
 
 | Surface | Where | Purpose | Gating |
 |---|---|---|---|
-| Structural correctness | `mikebom-cli/tests/triple_format_structural.rs` (and equivalents) | Asserts single-pass dispatch, byte-equivalence between dual-format + sequential-format outputs, no behavior drift across format combinations. Byte-stable, runs in milliseconds. | **Blocks PR merge.** Catches real regressions in the amortization logic without depending on wall-clock. |
-| Wall-clock trends | `mikebom-cli/tests/{dual,triple}_format_perf.rs`, marked `#[ignore]` | Wall-clock measurement of the dual/triple-format amortization. ≥25–30% reduction floor. Tracks regression *trends*. | **Does not block PR merge.** Runs in `.github/workflows/perf.yml` only on `perf` label, `workflow_dispatch`, or daily 06:00 UTC cron. 3-attempt retry per test absorbs runner-noise spikes. |
+| Structural correctness | `waybill-cli/tests/triple_format_structural.rs` (and equivalents) | Asserts single-pass dispatch, byte-equivalence between dual-format + sequential-format outputs, no behavior drift across format combinations. Byte-stable, runs in milliseconds. | **Blocks PR merge.** Catches real regressions in the amortization logic without depending on wall-clock. |
+| Wall-clock trends | `waybill-cli/tests/{dual,triple}_format_perf.rs`, marked `#[ignore]` | Wall-clock measurement of the dual/triple-format amortization. ≥25–30% reduction floor. Tracks regression *trends*. | **Does not block PR merge.** Runs in `.github/workflows/perf.yml` only on `perf` label, `workflow_dispatch`, or daily 06:00 UTC cron. 3-attempt retry per test absorbs runner-noise spikes. |
 
 The `macos-latest` runner additionally skips the strict assertion inside the test itself (still emits the measurement to stderr for visibility) because its variance distribution is wide enough that even 3-attempt retry doesn't reliably absorb it. Linux runners hold the strict gate.
 
@@ -226,7 +226,7 @@ Neither is required for the architecture to work; both are upside.
 
 ## Filesystem walking pattern (milestone 114)
 
-All ecosystem-reader filesystem walkers under `mikebom-cli/src/scan_fs/` go through the shared `scan_fs::walk::safe_walk` helper (introduced in milestone 114; closes issue #108). The helper centralizes canonicalize-keyed visited-set + depth-bound + milestone-113 directory-exclusion + skip-cause `tracing::debug!` emission in one place. Per the milestone-054 audit history, drift between per-walker implementations was a known hazard — every new ecosystem reader copy-pasted the closest existing walker and risked dropping a loop-protection invariant.
+All ecosystem-reader filesystem walkers under `waybill-cli/src/scan_fs/` go through the shared `scan_fs::walk::safe_walk` helper (introduced in milestone 114; closes issue #108). The helper centralizes canonicalize-keyed visited-set + depth-bound + milestone-113 directory-exclusion + skip-cause `tracing::debug!` emission in one place. Per the milestone-054 audit history, drift between per-walker implementations was a known hazard — every new ecosystem reader copy-pasted the closest existing walker and risked dropping a loop-protection invariant.
 
 ### Adding a new ecosystem reader
 
@@ -256,23 +256,23 @@ fn read(rootfs: &Path, exclude_set: &ExclusionSet) -> Vec<PackageDbEntry> {
 
 ### Audit pattern
 
-Run `grep -rEn --include='*.rs' 'fn walk[_(]' mikebom-cli/src/scan_fs/`. Acceptable matches fall into two categories documented in `mikebom-cli/src/scan_fs/walk.rs`'s comment block:
+Run `grep -rEn --include='*.rs' 'fn walk[_(]' waybill-cli/src/scan_fs/`. Acceptable matches fall into two categories documented in `waybill-cli/src/scan_fs/walk.rs`'s comment block:
 
 - **Filesystem ecosystem-discovery walkers** that delegate to `safe_walk` plus the documented known exceptions (`walker.rs` whole-FS deep-hash; `npm/walk.rs` `@scope`-aware; `cmake_observer.rs` stop-at-match descent; `maven_sidecar.rs` lstat-style M2 cache walker).
 - **Non-filesystem-walker false positives** that catch the regex but aren't walkers (`maven::walk_m2_jars`, `maven::walk_jar_maven_meta`, `MavenRepoCache::walk_rootfs_poms`, `rpmdb_sqlite::walk_schema_page`, and test functions named `walks_*` / `walk_jar_*` / `walk_fat_jar_*` / `walk_rootfs_poms_*`).
 
 Any match outside the union of those two lists is a regression: the contributor introduced a new hand-rolled filesystem walker bypassing `safe_walk`. Reviewer action: reject the PR or push back to either migrate the new walker to `safe_walk` OR add a new entry to the comment block at the top of `scan_fs/walk.rs` with a one-sentence reason. The exception list MUST stay short — five entries is the current state; ten is the abstraction failing and we should rethink.
 
-As of milestone 115, the audit pattern is enforced by CI — `.github/workflows/ci.yml`'s `Walker-audit allow-list check` step in the `Lint + test (linux-x86_64)` job diffs the live grep against `mikebom-cli/src/scan_fs/walk.audit-allowlist.txt` and fails the build on drift. The new-exception contributor workflow lives in [`CONTRIBUTING.md` § Walker-audit CI gate](../CONTRIBUTING.md#walker-audit-ci-gate); the spec + design rationale lives at `specs/115-walker-audit-ci/`.
+As of milestone 115, the audit pattern is enforced by CI — `.github/workflows/ci.yml`'s `Walker-audit allow-list check` step in the `Lint + test (linux-x86_64)` job diffs the live grep against `waybill-cli/src/scan_fs/walk.audit-allowlist.txt` and fails the build on drift. The new-exception contributor workflow lives in [`CONTRIBUTING.md` § Walker-audit CI gate](../CONTRIBUTING.md#walker-audit-ci-gate); the spec + design rationale lives at `specs/115-walker-audit-ci/`.
 
-See `mikebom-cli/src/scan_fs/walk.rs`'s module-level doc-comment for the authoritative audit-pattern + known-exception list. The milestone-114 spec lives at `specs/114-safe-walk-migration/`.
+See `waybill-cli/src/scan_fs/walk.rs`'s module-level doc-comment for the authoritative audit-pattern + known-exception list. The milestone-114 spec lives at `specs/114-safe-walk-migration/`.
 
 ---
 
 ## Key code landmarks
 
 ### Maven (most complex)
-- `mikebom-cli/src/scan_fs/package_db/maven.rs`
+- `waybill-cli/src/scan_fs/package_db/maven.rs`
   - `parse_pom_xml` — XML traversal; captures self/parent coords, properties, dependencies, dependencyManagement
   - `EffectivePom`, `build_effective_pom` — parent-chain walker with memo + cycle guard
   - `resolve_dep_version`, `resolve_dep_group` — use effective POM for placeholder resolution
@@ -281,26 +281,26 @@ See `mikebom-cli/src/scan_fs/walk.rs`'s module-level doc-comment for the authori
   - `MavenRepoCache::discover` — probes `$HOME/.m2`, `<rootfs>/root/.m2`, etc.
 
 ### deps.dev enrichment
-- `mikebom-cli/src/enrich/deps_dev_client.rs` — HTTP client; `get_dependency_graph` hits `:dependencies` endpoint
-- `mikebom-cli/src/enrich/deps_dev_system.rs` — PURL-ecosystem→system mapping + Maven-aware `deps_dev_package_name`
-- `mikebom-cli/src/enrich/deps_dev_graph.rs` — post-scan enricher; substitutes local versions, tags declared-not-cached
-- `mikebom-cli/src/enrich/depsdev_source.rs` — existing license enricher (now using the Maven-aware name format)
+- `waybill-cli/src/enrich/deps_dev_client.rs` — HTTP client; `get_dependency_graph` hits `:dependencies` endpoint
+- `waybill-cli/src/enrich/deps_dev_system.rs` — PURL-ecosystem→system mapping + Maven-aware `deps_dev_package_name`
+- `waybill-cli/src/enrich/deps_dev_graph.rs` — post-scan enricher; substitutes local versions, tags declared-not-cached
+- `waybill-cli/src/enrich/depsdev_source.rs` — existing license enricher (now using the Maven-aware name format)
 
 ### Go
-- `mikebom-cli/src/scan_fs/package_db/golang.rs`
+- `waybill-cli/src/scan_fs/package_db/golang.rs`
   - `GoModCache::discover` — cache-root discovery for source scans
   - `build_entries_from_go_module` + `cache_lookup_depends` — walks `<cache>/@v/*.mod` files
   - `escape_module_path` — capital letters → `!x` for cache path lookup
-- `mikebom-cli/src/scan_fs/package_db/go_binary.rs`
+- `waybill-cli/src/scan_fs/package_db/go_binary.rs`
   - `decode_buildinfo` — reads inline-format BuildInfo from Go 1.18+ binaries
   - `detect_is_go` — section lookup via `object` crate, fallback memmem for stripped binaries
 
 ### Cache / SQLite
-- `mikebom-cli/src/scan_fs/package_db/rpmdb_sqlite/` — pure-Rust SQLite subset reader
+- `waybill-cli/src/scan_fs/package_db/rpmdb_sqlite/` — pure-Rust SQLite subset reader
 
 ### Orchestration
-- `mikebom-cli/src/cli/scan_cmd.rs` — wires scan_fs → enrichment → SBOM serialization
-- `mikebom-cli/src/scan_fs/mod.rs` — `scan_path` entry, relationship resolution + dangling-target filter
+- `waybill-cli/src/cli/scan_cmd.rs` — wires scan_fs → enrichment → SBOM serialization
+- `waybill-cli/src/scan_fs/mod.rs` — `scan_path` entry, relationship resolution + dangling-target filter
 
 ---
 
@@ -325,13 +325,13 @@ Ordered rough priority (highest-value first):
 
 Three libraries deferred from milestone 026 (which shipped the easy-4 cohort: GnuTLS, LibreSSL, LLVM, OpenJDK) because they don't have clean self-identifying strings in the read-only string region (`.rodata` / `__TEXT,__cstring` / `.rdata`). Each needs a different detection mechanism than the curated string scanner:
 
-- **glibc** — version markers (`GLIBC_X.Y`) live in the ELF `.gnu.version_r` section (symbol-version table), NOT in `.rodata`. Detection requires walking `.gnu.version_r` entries via `object::read::elf::*` primitives (similar to how milestone 023's `extract_runpath_entries` walks `.dynamic`) and aggregating the maximum GLIBC version across all symbol references. Different mechanism than the string scanner — would emit `mikebom:glibc-required-version` (or similar) on the file-level component, not a separate `pkg:generic/glibc@X.Y` component. ELF-only signal.
+- **glibc** — version markers (`GLIBC_X.Y`) live in the ELF `.gnu.version_r` section (symbol-version table), NOT in `.rodata`. Detection requires walking `.gnu.version_r` entries via `object::read::elf::*` primitives (similar to how milestone 023's `extract_runpath_entries` walks `.dynamic`) and aggregating the maximum GLIBC version across all symbol references. Different mechanism than the string scanner — would emit `waybill:glibc-required-version` (or similar) on the file-level component, not a separate `pkg:generic/glibc@X.Y` component. ELF-only signal.
 
 - **musl** — typically doesn't self-identify in compiled output. Some bundled-musl binaries embed a `musl libc (x86_64)` banner via `__libc_get_version()` calls, but that path is rarely exercised in static binaries. Research milestone needed to find a reliable signature (control-set: try Alpine Linux's `/usr/bin/busybox`, `/usr/bin/curl`, etc.) or conclude there isn't one and document the gap.
 
 - **V8** — version strings live in stack-trace formatting code (e.g. `v8::internal::Version::GetString()` callers) and tend to be non-deterministic across builds + dependent on V8 build flags. Research milestone needed to find a reliable string-region signature; may end up needing an inline-data scan of V8's snapshot blob rather than a string scan. Control-set: try a Node.js binary, a Chromium content-shell, a `deno` binary — all embed V8 in different ways.
 
-Discoverable via `grep TODO\(milestone 026.x\) mikebom-cli/src/scan_fs/binary/version_strings.rs`.
+Discoverable via `grep TODO\(milestone 026.x\) waybill-cli/src/scan_fs/binary/version_strings.rs`.
 
 ### Deferred: sbomqs score lift
 
@@ -342,7 +342,7 @@ Tracked separately because each item has its own design depth. Current source-sc
 15. **Component VCS URL externalReferences** — emit `externalReferences[{type: "vcs", url: ...}]` from each ecosystem's manifest (cargo `repository`, npm `repository.url`, maven `<scm>`). Unlocks `comp_with_source_code` (2.2%). Most ecosystems have this in the manifest so it's mostly extraction work.
 16. **SBOM signature** (`sbom_signature` 1.8%) — sign the emitted CDX BOM in-place (CycloneDX defines a `signature` block). Needs key management story (CLI flag for key path? KMS?). Separate from this effort.
 17. ~~**Per-ecosystem manifest hashes** — gem/maven/pypi/go currently emit no per-component hashes.~~ **PARTIALLY DONE 2026-04-20**: maven sidecar (`.jar.sha512` > `.sha256` > `.sha1`) wired into `MavenRepoCache::read_artifact_hash` for both BFS-discovered transitives and direct deps. PyPI `requirements.txt --hash=alg:hex` flags wired through to `PackageDbEntry.hashes`. Remaining: (a) Maven-direct SHA-256 computation when `~/.m2` has the JAR but no SHA-256 sidecar (Maven Central mostly has SHA-1 only — sbomqs penalizes for `comp_with_strong_checksums`); (b) gem CHECKSUMS in bundler 2.5+ when adoption stabilizes; (c) Go: `go.sum` H1 hashes are Merkle trie roots (NOT file SHA-256), would need a custom CDX hash type or to hash the cached `<v>.zip` from `$GOMODCACHE/cache/download/`.
-18. **ClearlyDefined ecosystem expansion — deb (priority)** — current scope is npm/cargo/gem/pypi/maven/golang. The deb arm is the highest-value addition: when a container scan strips `/usr/share/doc/<pkg>/copyright` (common minimization practice), mikebom emits zero licenses even when `dpkg/status` is intact. CD's `deb` type pulls license data from Debian's upstream copyright-file server and would fill that gap. Shape: add a `"deb"` arm to `enrich/clearly_defined_coord.rs::build_cd_coord` (type=`deb`, provider=`debian`, namespace=`-`, name=`<pkg>`, revision=`<version>`). Works for both debian and ubuntu since ubuntu packages reuse Debian coords in CD. Other CD types (`composer`, `pod`, `conda`, `nuget`) are separate follow-ups; apk / rpm coverage in CD is thin and not worth the mapping work yet.
+18. **ClearlyDefined ecosystem expansion — deb (priority)** — current scope is npm/cargo/gem/pypi/maven/golang. The deb arm is the highest-value addition: when a container scan strips `/usr/share/doc/<pkg>/copyright` (common minimization practice), waybill emits zero licenses even when `dpkg/status` is intact. CD's `deb` type pulls license data from Debian's upstream copyright-file server and would fill that gap. Shape: add a `"deb"` arm to `enrich/clearly_defined_coord.rs::build_cd_coord` (type=`deb`, provider=`debian`, namespace=`-`, name=`<pkg>`, revision=`<version>`). Works for both debian and ubuntu since ubuntu packages reuse Debian coords in CD. Other CD types (`composer`, `pod`, `conda`, `nuget`) are separate follow-ups; apk / rpm coverage in CD is thin and not worth the mapping work yet.
 21. **Debian sources.debian.org copyright API (fallback)** — alternative to #18 for deb when CD returns a miss (CD doesn't curate every debian-unstable or backport version). `https://sources.debian.org/copyright/api/package/<name>/<version>/` returns structured copyright data parsed from upstream `debian/copyright`. More work than CD integration (new HTTP client, no existing pattern to copy) but covers versions CD misses. Only worth doing after #18 ships and we measure the actual miss rate on real fixtures; CD probably covers >90% of Debian stable / Ubuntu LTS packages that production scans encounter.
 19. **ClearlyDefined bounded concurrency** — current implementation is sequential per-component (matches `deps.dev`). For scans of 100+ components this can be 10–30 seconds. Concrete optimization: `tokio::task::JoinSet` with 8 in-flight + reqwest connection pool reuse. Deferred until profiling shows it dominates scan time.
 20. **ClearlyDefined harvest endpoint** — CD has `/notices`, `/curations`, search APIs that could enrich provenance further (license texts, attributions, copyright statements). Out of scope for this milestone but unlock more sbomqs categories if added.
@@ -370,13 +370,13 @@ either bare `<path>` (legacy single-format) or repeated `<fmt>=<path>`
 sidecar's path override (cannot be requested via `--format`). The
 canonical cross-format contract is
 `docs/reference/sbom-format-mapping.md`; CI guards it against drift
-(`sbom_format_mapping_coverage.rs`) so any new `mikebom:*` property
+(`sbom_format_mapping_coverage.rs`) so any new `waybill:*` property
 added anywhere in the scan pipeline breaks the build until it's
-mapped. **External conformance harness authors** consuming mikebom
+mapped. **External conformance harness authors** consuming waybill
 SBOMs should read `docs/reference/conformance-harness-guide.md`
 (milestone 071) for the per-format envelope decode rules + the 7
 inherent format-spec asymmetries that should NOT be flagged as
-cross-format-inequivalence findings. The CLI subcommand `mikebom
+cross-format-inequivalence findings. The CLI subcommand `waybill
 sbom parity-check` is post-071 the rigorous source of truth for
 in-process validation: it applies real `Directionality` invariants
 (set equality for `SymmetricEqual`, ⊆ for `CdxSubsetOfSpdx`,
@@ -388,7 +388,7 @@ and could miss real value-drift bugs.
 
 `PackageDbEntry` and `ResolvedComponent` carry an
 `extra_annotations: BTreeMap<String, serde_json::Value>` field. Each
-entry is emitted at SBOM-generation time as a `mikebom:<key>`
+entry is emitted at SBOM-generation time as a `waybill:<key>`
 annotation across all three formats — a CycloneDX `properties[]`
 entry, a SPDX 2.3 `annotations[]` envelope, and a SPDX 3
 graph-element `Annotation`. The emission code in
@@ -406,29 +406,29 @@ milestones — a new key is one `entry.extra_annotations.insert(...)`
 call.
 
 **Consumers shipped (6 — pattern fully validated):**
-- Milestone 023 — ELF identity (`mikebom:elf-build-id`,
-  `mikebom:elf-runpath`, `mikebom:elf-debuglink`) populated in
+- Milestone 023 — ELF identity (`waybill:elf-build-id`,
+  `waybill:elf-runpath`, `waybill:elf-debuglink`) populated in
   `binary/entry.rs::make_file_level_component` →
   `build_elf_identity_annotations`.
-- Milestone 024 — Mach-O identity (`mikebom:macho-uuid`,
-  `mikebom:macho-rpath`, `mikebom:macho-min-os`) populated in
+- Milestone 024 — Mach-O identity (`waybill:macho-uuid`,
+  `waybill:macho-rpath`, `waybill:macho-min-os`) populated in
   `binary/entry.rs::build_macho_identity_annotations`. Reads LC_UUID
   / LC_RPATH / LC_BUILD_VERSION (or LC_VERSION_MIN_*) via byte-level
   load-command parsing in `binary/macho.rs`. Fat / universal
   binaries report from the first slice's bytes.
 - Milestone 025 — Go BuildInfo VCS metadata
-  (`mikebom:go-vcs-revision`, `mikebom:go-vcs-time`,
-  `mikebom:go-vcs-modified`) populated in
+  (`waybill:go-vcs-revision`, `waybill:go-vcs-time`,
+  `waybill:go-vcs-modified`) populated in
   `package_db/go_binary.rs::build_vcs_annotations` on the main-module
   entry only (deps don't carry VCS info).
-- Milestone 028 — PE identity (`mikebom:pe-pdb-id`,
-  `mikebom:pe-machine`, `mikebom:pe-subsystem`) populated in
+- Milestone 028 — PE identity (`waybill:pe-pdb-id`,
+  `waybill:pe-machine`, `waybill:pe-subsystem`) populated in
   `binary/entry.rs::build_pe_identity_annotations`. Reads the
   CodeView Type-2 record + IMAGE_FILE_HEADER + IMAGE_OPTIONAL_HEADER
   via `object` 0.36's typed PE accessors in `binary/pe.rs`. PE32 vs
   PE32+ auto-dispatched by `IMAGE_OPTIONAL_HEADER.Magic`.
 - Milestone 029 — cargo-auditable cross-link
-  (`mikebom:detected-cargo-auditable = true`) populated in
+  (`waybill:detected-cargo-auditable = true`) populated in
   `binary/entry.rs::build_cargo_auditable_cross_link` when the binary
   carries a parsed `.dep-v0` manifest. Per-crate
   `pkg:cargo/<name>@<version>` components flow through a separate
@@ -436,12 +436,12 @@ call.
   `PackageDbEntry` channel, not the bag), with the cross-link
   annotation letting consumers find them without scanning every
   component. Optional bag annotations
-  `mikebom:cargo-auditable-source` and `mikebom:cargo-auditable-kind`
+  `waybill:cargo-auditable-source` and `waybill:cargo-auditable-kind`
   emit on the per-crate components when they carry non-default
   values (non-registry source / non-runtime kind).
 - Milestone 030 — Mach-O codesign metadata
-  (`mikebom:macho-codesign-identifier`,
-  `mikebom:macho-codesign-flags`, `mikebom:macho-codesign-team-id`)
+  (`waybill:macho-codesign-identifier`,
+  `waybill:macho-codesign-flags`, `waybill:macho-codesign-team-id`)
   added to the existing `build_macho_identity_annotations` helper.
   Reads `LC_CODE_SIGNATURE` (cmd `0x1D`) → big-endian SuperBlob
   (`0xfade0cc0`) → CodeDirectory blob (`0xfade0c02`) via byte-level
@@ -464,18 +464,18 @@ signals from 024 + the three codesign signals from 030).
 **Spec discipline:** typed fields stay typed. The bag is for NEW
 per-binary metadata; existing fields like `binary_class`,
 `evidence_kind`, `is_dev` don't migrate. If duplicate keys are
-inserted (a typed field's `mikebom:*` name and a bag entry with the
+inserted (a typed field's `waybill:*` name and a bag entry with the
 same name), the parity matrix' `holistic_parity` test catches the
 double-emit at PR time.
 
 **Bag amortization receipts:** six consecutive consumers (023, 024,
 025, 028, 029, 030) shipped with **zero diff** in `package_db/`,
-`mikebom-common/`, `cli/`, `resolve/`, `generate/`, and unrelated
+`waybill-common/`, `cli/`, `resolve/`, `generate/`, and unrelated
 binary-format modules. The 30+ `PackageDbEntry`-init sites are
 untouched by per-binary-metadata work.
 
 Future milestones inheriting the bag without schema churn: 027
-container layer attribution (`mikebom:layer-id`), the milestone 026.x
+container layer attribution (`waybill:layer-id`), the milestone 026.x
 hard-cohort version-string detectors (glibc / musl / V8 — when
 research clears the technical blockers documented in the deferred
 backlog), Mach-O entitlements XML extraction (CSMAGIC_EMBEDDED_ENTITLEMENTS,
@@ -548,14 +548,14 @@ All six emit through identical standards-native slots: CDX
 `metadata.component` (or super-root for multi-main-module projects
 per #127), SPDX 2.3 `primaryPackagePurpose: APPLICATION` +
 `documentDescribes`, SPDX 3.0.1 `software_primaryPurpose:
-application`. Each carries the `mikebom:component-role:
+application`. Each carries the `waybill:component-role:
 main-module` (C40) supplementary tag per Constitution Principle V.
 
 **The Go-specific origin of the pattern.** A `go.mod`'s `require`
 block is the only on-disk authoritative source of direct-dependency
 edges from the project to its immediate deps. Transitive edges live
 in each upstream module's own `go.mod` inside the local `GOMODCACHE`.
-On a fresh-clone repo with empty cache, mikebom had no `from` node
+On a fresh-clone repo with empty cache, waybill had no `from` node
 for `require`-based direct edges — they were silently dropped
 (issue #102). The fix: emit a synthetic main-module component,
 attach the direct-require edges to it. Other ecosystems' lockfiles
@@ -573,7 +573,7 @@ every main-module is emitted via each format's standards-native
 multi-main-module projects); SPDX 2.3 `primaryPackagePurpose:
 "APPLICATION"` plus `documentDescribes`; SPDX 3.0.1
 `software_primaryPurpose: "application"`. The
-`mikebom:component-role: main-module` (C40) annotation is
+`waybill:component-role: main-module` (C40) annotation is
 supplementary signal layered on top. Matches Trivy's pattern.
 
 **Cross-host determinism convention.** When name is parseable but
@@ -593,7 +593,7 @@ duplicates _differ_ in metadata.
 ## Filesystem walking pattern (milestone 054)
 
 Every `fn walk*` (or `fn walk_dir`) function in
-`mikebom-cli/src/scan_fs/` MUST detect symlink loops and bound
+`waybill-cli/src/scan_fs/` MUST detect symlink loops and bound
 recursion. Two valid protection mechanisms; pick whichever fits the
 walker's structure:
 
@@ -639,7 +639,7 @@ walker's structure:
    ```
 
 **Audit gate.** PR-review time check:
-`grep -rn "fn walk" mikebom-cli/src/scan_fs/` MUST find every match
+`grep -rn "fn walk" waybill-cli/src/scan_fs/` MUST find every match
 either using mechanism 1 (visible `HashSet<PathBuf>` parameter) OR
 mechanism 2 (inline `// SAFETY:` comment). Any walker matching
 neither is a blocking review finding. The milestone 054 audit
@@ -657,13 +657,13 @@ FR-003.
 walker hand-rolled visited-set logic to a single shared `safe_walk`
 helper. Until then the pattern above is the canonical reference for
 new ecosystem readers — copy it from the closest existing walker,
-not from a `walkdir` crate dependency (mikebom's Cargo.toml has a
+not from a `walkdir` crate dependency (waybill's Cargo.toml has a
 deliberate minimal-dependency posture).
 
 ## Cross-tier SBOM binding (milestone 072)
 
-Mikebom's image-tier and build-tier SBOMs carry a per-component
-`mikebom:source-document-binding` annotation that ties the
+Waybill's image-tier and build-tier SBOMs carry a per-component
+`waybill:source-document-binding` annotation that ties the
 component back to the source-tier SBOM (or earlier-tier SBOM)
 that describes its origin. The contract — a layered binding hash
 of `(vcs-commit, lockfile-sha256, manifest-sha256)` SHA-256'd over
@@ -685,7 +685,7 @@ published reference fixtures at `docs/reference/binding-fixtures/`.
 
 ### When to use `--bind-to-source`
 
-`mikebom sbom scan --image <ref> --bind-to-source <source-sbom>`
+`waybill sbom scan --image <ref> --bind-to-source <source-sbom>`
 emits per-component binding annotations on the resulting image-tier
 SBOM. Each component whose PURL matches a component in the source
 SBOM gets a `SourceDocumentBinding` carrying:
@@ -712,14 +712,14 @@ not the bound entity, and stay byte-identical to alpha.14.
 
 ### What `verify-binding` and `trace-binding` answer
 
-- `mikebom sbom verify-binding --image-sbom <p> --source-sbom <p>` —
+- `waybill sbom verify-binding --image-sbom <p> --source-sbom <p>` —
   the **consumer-side** validation. Walks the image SBOM's
-  components, decodes each `mikebom:source-document-binding`
+  components, decodes each `waybill:source-document-binding`
   annotation, recomputes the hash from the source SBOM's matching
   component's evidence, and reports per-component pass/fail. Exits
   **non-zero** on any verification failure per FR-005 / VR-005, so
   CI lanes can gate on cross-tier identity drift.
-- `mikebom sbom trace-binding --component-purl <purl> --image-sbom <p>
+- `waybill sbom trace-binding --component-purl <purl> --image-sbom <p>
   --candidate-sources-dir <d>` — the **operator-side** triage tool.
   Given an image component (e.g., a CVE-flagged transitive dep),
   reports each instance's binding state against every candidate
@@ -735,7 +735,7 @@ answers "where did this thing come from?" (triage). Use both in CI
 ### `--vex-propagation-mode` default flip — migration for
 operators using `--vex-overrides` today
 
-**Pre-072**: `mikebom sbom enrich --vex-overrides <path>` was a
+**Pre-072**: `waybill sbom enrich --vex-overrides <path>` was a
 documented no-op — the legacy flag did nothing. **Post-072**:
 the same flag combination triggers real propagation in `caveated`
 mode by default. The default flip from implicit-permissive to
@@ -747,7 +747,7 @@ mode by default. The default flip from implicit-permissive to
 1. **No action needed** if you accepted the pre-072 no-op
    behavior (i.e., your VEX statements weren't actually being
    propagated). Post-072 your statements ARE propagated, with
-   `mikebom:vex-binding-status: unverified` caveats on instances
+   `waybill:vex-binding-status: unverified` caveats on instances
    whose binding strength is not `verified`. The aggregate VEX
    state is **safer** by default — the C-3 aggregation rule
    surfaces unbound instances as `affected` rather than masking
@@ -761,14 +761,14 @@ mode by default. The default flip from implicit-permissive to
    gate on cross-tier binding strength (the command exits
    non-zero on any refused propagation). Refused
    (vulnerability, instance) pairs are recorded under a
-   document-level `mikebom:vex-propagation-refusals` property
+   document-level `waybill:vex-propagation-refusals` property
    for audit.
 
 The 27 alpha.14 byte-identity goldens stay byte-identical because
-the binding emission only fires on `mikebom:sbom-tier: build` or
+the binding emission only fires on `waybill:sbom-tier: build` or
 `deployed` SBOMs — source-tier SBOMs are unchanged. CI byte-
 identity guards confirm this in
-`mikebom-cli/tests/{cdx,spdx,spdx3}_regression.rs`.
+`waybill-cli/tests/{cdx,spdx,spdx3}_regression.rs`.
 
 ## Identifiers (milestone 073)
 
@@ -780,7 +780,7 @@ already calls this `Element.externalIdentifier[]`. Milestone-072's
 `SourceDocumentBinding` is a DIFFERENT concept (binding back to a
 source-tier SBOM document) and intentionally retains its name.
 
-**Operator-visible behavior** — `mikebom sbom scan` and `mikebom
+**Operator-visible behavior** — `waybill sbom scan` and `waybill
 trace run` accept dedicated flags per built-in scheme plus a generic
 `--id <scheme>=<value>` (repeatable) for user-defined schemes:
 
@@ -819,7 +819,7 @@ Principle V's native-first directive:
 
 **User-defined passthrough** — schemes matching the FR-004 regex
 (`^[a-z][a-z0-9_-]*$`) but not in the built-in registry pass through
-verbatim under a `mikebom:identifiers` document-level annotation
+verbatim under a `waybill:identifiers` document-level annotation
 (parity-catalog row C47). SPDX 3 carries them natively in
 `externalIdentifier[]` — no annotation needed there.
 
@@ -835,7 +835,7 @@ byte-identical (no auto-detection fires when no git remote
 present). The git-tracked fixtures (cargo-workspace, maven-multi-
 module-reactor) get one additive identifier slot per format — that's
 the FR-012 expected golden regen. CI byte-identity guards in
-`mikebom-cli/tests/{cdx,spdx,spdx3}_regression.rs` confirm this.
+`waybill-cli/tests/{cdx,spdx,spdx3}_regression.rs` confirm this.
 
 See `docs/reference/identifiers.md` for the published
 external-consumer guide (FR-010): per-format carrier table, decode

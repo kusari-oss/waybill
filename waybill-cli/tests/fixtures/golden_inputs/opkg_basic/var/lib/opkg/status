@@ -1,0 +1,42 @@
+Package: waybill-fixture-libcore
+Version: 1.2.3
+Architecture: waybill-fixture-arch
+Maintainer: Waybill Fixture <fixture@example.invalid>
+Section: base
+License: MIT
+Depends: waybill-fixture-libutil (>= 0.5)
+Description: Synthetic fixture core library.
+ Multi-line description that exercises the
+ RFC-822 continuation parser.
+Status: install user installed
+Installed-Time: 1700000000
+
+Package: waybill-fixture-libutil
+Version: 0.5.2
+Architecture: waybill-fixture-arch
+Section: base
+License: Apache-2.0
+Status: install user installed
+Installed-Time: 1700000001
+
+Package: waybill-fixture-app
+Version: 3.0.0
+Architecture: waybill-fixture-arch
+Depends: waybill-fixture-libcore (>= 1.2)
+License: BSD-3-Clause
+Status: install user installed
+Installed-Time: 1700000002
+
+Package: nativesdk-waybill-fixture-buildtool
+Version: 2.0.0
+Architecture: x86_64
+License: GPL-2.0-or-later
+Status: install user installed
+Installed-Time: 1700000003
+
+Package: waybill-fixture-kernel-modules
+Version: 5.15.0
+Architecture: waybill-fixture-arch
+License: GPL-2.0-only
+Status: install user installed
+Installed-Time: 1700000004

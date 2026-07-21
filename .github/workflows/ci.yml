@@ -53,8 +53,8 @@ jobs:
       # Milestone 115 — walker-audit allow-list gate (closes #342).
       # Codifies the milestone-114 `safe_walk` no-hand-rolled-walker
       # invariant as a CI check. The audit grep enumerates every
-      # `fn walk[_(]` match under `mikebom-cli/src/scan_fs/`; the
-      # committed allow-list at `mikebom-cli/src/scan_fs/walk.audit-allowlist.txt`
+      # `fn walk[_(]` match under `waybill-cli/src/scan_fs/`; the
+      # committed allow-list at `waybill-cli/src/scan_fs/walk.audit-allowlist.txt`
       # is the single source of truth for "intentional matches."
       # Drift in either direction (new walker without intent, or
       # stale exception left behind) fails the build.
@@ -69,7 +69,7 @@ jobs:
         shell: bash
         run: |
           set -u
-          ALLOWLIST="mikebom-cli/src/scan_fs/walk.audit-allowlist.txt"
+          ALLOWLIST="waybill-cli/src/scan_fs/walk.audit-allowlist.txt"
           # Milestone 117 (#347): strip the absolute line-number column from
           # both the live grep output AND the committed allow-list before
           # diffing, so unrelated insertions above an allow-listed walker
@@ -81,7 +81,7 @@ jobs:
           # per milestone 117 FR-002). BRE regex works identically on
           # GNU sed (Linux) and BSD sed (macOS).
           STRIP_LINE_NUMBERS='s/^\([^:]*\):[0-9]*:/\1:/'
-          FAIL_HEADLINE="[FAIL] Walker-audit allow-list mismatch — see mikebom-cli/src/scan_fs/walk.rs's module-level comment for the exception policy."
+          FAIL_HEADLINE="[FAIL] Walker-audit allow-list mismatch — see waybill-cli/src/scan_fs/walk.rs's module-level comment for the exception policy."
           FAIL_POINTER_NEW="If your PR intentionally adds a new walker exception, see CONTRIBUTING.md § Walker-audit CI gate."
           FAIL_POINTER_BAD="If your PR did NOT intend to add a walker, remove the new fn walk_* function and use scan_fs::walk::safe_walk instead."
 
@@ -131,7 +131,7 @@ jobs:
           # allow-list diff. Single sigil prefix per FR (issue body
           # acceptance criteria); the prefix matches whole-token
           # so `// walker-audit-elsewhere:` does NOT opt out.
-          LIVE=$(LC_ALL=C grep -rEn --include='*.rs' 'fn walk[_(]' mikebom-cli/src/scan_fs/ | while IFS=: read -r path line content; do
+          LIVE=$(LC_ALL=C grep -rEn --include='*.rs' 'fn walk[_(]' waybill-cli/src/scan_fs/ | while IFS=: read -r path line content; do
             prev=$((line - 1))
             if [ "$prev" -ge 1 ]; then
               prev_line=$(LC_ALL=C sed -n "${prev}p" "$path" 2>/dev/null)
@@ -151,14 +151,60 @@ jobs:
           else
             echo "$FAIL_HEADLINE" >&2
             echo "" >&2
-            echo "--- mikebom-cli/src/scan_fs/walk.audit-allowlist.txt (expected)" >&2
-            echo "+++ live: grep -rEn --include='*.rs' 'fn walk[_(]' mikebom-cli/src/scan_fs/ | sed -e 's/^\([^:]*\):[0-9]*:/\1:/' | sort -u (actual)" >&2
+            echo "--- waybill-cli/src/scan_fs/walk.audit-allowlist.txt (expected)" >&2
+            echo "+++ live: grep -rEn --include='*.rs' 'fn walk[_(]' waybill-cli/src/scan_fs/ | sed -e 's/^\([^:]*\):[0-9]*:/\1:/' | sort -u (actual)" >&2
             printf '%s\n' "$DIFF_OUT" | tail -n +3 >&2
             echo "" >&2
             echo "$FAIL_POINTER_NEW" >&2
             echo "$FAIL_POINTER_BAD" >&2
             exit 1
           fi
+
+      - name: "m214 rename-completeness grep gate (SC-001)"
+        shell: bash
+        run: |
+          # Milestone 214 project-name-rename SC-001 enforcement gate.
+          # Fails the build if the pre-rename identifier (see PATTERN
+          # variable below) appears in a functional-identifier position.
+          # Historical spec docs, docs/audits/, docs/migration/, README
+          # heritage sentences are allowlisted per contract. The sibling
+          # test-fixtures repo is out of rename scope; its cross-repo
+          # reference substring is excluded.
+          set -u
+          PATTERN='\bmikebom\b'
+          EXCLUDE='mikebom-test-fixtures'
+          IN_SCOPE=(
+            waybill-cli/src
+            waybill-common/src
+            waybill-ebpf/src
+            xtask/src
+            Cargo.toml
+            waybill-cli/Cargo.toml
+            waybill-common/Cargo.toml
+            waybill-ebpf/Cargo.toml
+            xtask/Cargo.toml
+            Dockerfile.ebpf-test
+            scripts
+          )
+          # NOTE: .github/workflows/*.yml is INTENTIONALLY OMITTED from
+          # IN_SCOPE — this gate's own comments reference the pre-rename
+          # identifier to describe what the gate checks; including
+          # workflows here would false-positive on this file itself.
+          # Workflow-file renames are covered by direct edit + PR review.
+          BADHITS=$(grep -rE "$PATTERN" "${IN_SCOPE[@]}" 2>/dev/null | \
+            grep -v '^Binary file' | \
+            grep -vE "$EXCLUDE" || true)
+          if [ -n "$BADHITS" ]; then
+            echo "::error::m214 rename gate — pre-rename identifier found in functional-identifier positions:"
+            echo "$BADHITS" | head -30
+            COUNT=$(echo "$BADHITS" | wc -l)
+            if [ "$COUNT" -gt 30 ]; then
+              echo "::error::… and $((COUNT - 30)) more hits (showing first 30)"
+            fi
+            echo "::error::Fix by renaming to the post-rename identifier or (if legitimately preserved) add path to allowlist in this workflow step."
+            exit 1
+          fi
+          echo "m214 rename gate: SC-001 satisfied (zero pre-rename identifier hits in functional-identifier paths)"
 
       - name: Install stable Rust
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
@@ -215,20 +261,20 @@ jobs:
           fi
           echo "rustup-init absent from \$HOME/.cargo/bin (good)."
 
-      # Milestone 090 — fixture-repo cache. mikebom-cli/build.rs
+      # Milestone 090 — fixture-repo cache. waybill-cli/build.rs
       # clones https://github.com/kusari-sandbox/mikebom-test-fixtures
       # at the SHA pinned by tests/fixtures.rev into
-      # ~/.cache/mikebom/fixtures/<sha>/. Cache key = SHA, so a pin
+      # ~/.cache/waybill/fixtures/<sha>/. Cache key = SHA, so a pin
       # bump cleanly invalidates. See specs/090-split-test-fixtures-repo/
       # contracts/fixture-path-helper.md for the full contract.
       - name: Cache fixture repo
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/.cache/mikebom/fixtures
-          key: mikebom-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
+          path: ~/.cache/waybill/fixtures
+          key: waybill-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
 
       # sbomqs is the cross-format SBOM-quality scorer that
-      # enforces spec SC-001: mikebom's SPDX output must meet or
+      # enforces spec SC-001: waybill's SPDX output must meet or
       # beat its CDX output on NTIA-minimum native features.
       # `tests/sbomqs_parity.rs` reads `$PATH` for the binary; it
       # exits with a visible skip if sbomqs isn't available, so
@@ -270,12 +316,12 @@ jobs:
       # a known noise vector — see plan.md project-structure decision).
       - name: Install spdx3-validate
         run: bash scripts/install-spdx3-validate.sh
-      - name: Set MIKEBOM_REQUIRE_SPDX3_VALIDATOR
-        run: echo "MIKEBOM_REQUIRE_SPDX3_VALIDATOR=1" >> "$GITHUB_ENV"
+      - name: Set WAYBILL_REQUIRE_SPDX3_VALIDATOR
+        run: echo "WAYBILL_REQUIRE_SPDX3_VALIDATOR=1" >> "$GITHUB_ENV"
 
       # Milestone 083 — install trivy + syft pinned at the audit's
       # comparison-baseline versions (research §1). These power the
-      # `transitive_parity_*` integration tests that compare mikebom's
+      # `transitive_parity_*` integration tests that compare waybill's
       # per-ecosystem edge emission against trivy + syft as oracle
       # tools. Linux is the authoritative gate; macOS lane skips
       # (matches the SPDX 3 conformance pattern + the dpkg/rpm/apk
@@ -310,8 +356,8 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh \
             | sh -s -- -b /usr/local/bin v1.27.0
           syft version
-      - name: Set MIKEBOM_REQUIRE_TRANSITIVE_PARITY
-        run: echo "MIKEBOM_REQUIRE_TRANSITIVE_PARITY=1" >> "$GITHUB_ENV"
+      - name: Set WAYBILL_REQUIRE_TRANSITIVE_PARITY
+        run: echo "WAYBILL_REQUIRE_TRANSITIVE_PARITY=1" >> "$GITHUB_ENV"
 
       # Pin `+stable` explicitly on clippy/test so these never fall through
       # to nightly even if something earlier changes the default.
@@ -339,7 +385,7 @@ jobs:
           trivy --quiet fs \
             --scanners vuln \
             --skip-dirs tests/fixtures \
-            --skip-dirs mikebom-cli/tests/fixtures \
+            --skip-dirs waybill-cli/tests/fixtures \
             --skip-dirs target \
             --severity HIGH \
             --format json \
@@ -415,12 +461,12 @@ jobs:
       - name: Cache fixture repo
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/.cache/mikebom/fixtures
-          key: mikebom-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
+          path: ~/.cache/waybill/fixtures
+          key: waybill-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
 
       # No eBPF / nightly / bpf-linker / sbomqs steps here — those are
       # all Linux-only. Cargo's target-metadata exclusion skips
-      # `mikebom-ebpf` automatically on non-Linux, and `sbomqs_parity`
+      # `waybill-ebpf` automatically on non-Linux, and `sbomqs_parity`
       # tests skip cleanly when sbomqs isn't on $PATH. The macOS job
       # exists to enforce the maintainer's local-dev experience: zero
       # warnings on Apple Silicon, all user-space tests pass.
@@ -435,7 +481,7 @@ jobs:
   # binary scanner compile and run cleanly on Windows. Linux-only
   # readers (dpkg/rpm/apk), Docker daemon scanning, OCI pull, and
   # eBPF are all `#[cfg(unix)]`-gated or feature-gated; cargo's
-  # target-metadata exclusion drops `mikebom-ebpf` on non-Linux.
+  # target-metadata exclusion drops `waybill-ebpf` on non-Linux.
   # See specs/100-windows-host-build/.
   lint-and-test-windows:
     name: Lint + test (windows-latest)
@@ -482,20 +528,20 @@ jobs:
           echo "rustup-init absent from \$HOME/.cargo/bin (good)."
 
       # Milestone 090 — fixture-repo cache. Windows uses the same
-      # ~/.cache/mikebom/fixtures path; the build.rs shells out to
+      # ~/.cache/waybill/fixtures path; the build.rs shells out to
       # `git` which is preinstalled on `windows-latest` runners.
       - name: Cache fixture repo
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/.cache/mikebom/fixtures
-          key: mikebom-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
+          path: ~/.cache/waybill/fixtures
+          key: waybill-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
 
       - name: Clippy
         run: cargo +stable clippy --workspace --all-targets -- -D warnings
 
       # Milestone 101 — Windows smoke test (blocking gate). Runs the
       # `scan_windows_smoke.rs` integration test which invokes
-      # `mikebom.exe sbom scan` against the cargo + polyglot fixtures
+      # `waybill.exe sbom scan` against the cargo + polyglot fixtures
       # and asserts CDX 1.6 envelope conformance, per-ecosystem PURL
       # coverage, forward-slash normalization, and a 60-second
       # per-scan timeout. Runs BEFORE the broader workspace test
@@ -522,8 +568,8 @@ jobs:
         run: cargo +stable test --workspace
 
   # Opt-in eBPF lane. Pays the nightly + bpf-linker + xtask ebpf cost
-  # so the user-space eBPF integration (mikebom-cli/src/trace/* +
-  # `mikebom trace` subcommand) keeps working. Default lanes above
+  # so the user-space eBPF integration (waybill-cli/src/trace/* +
+  # `waybill trace` subcommand) keeps working. Default lanes above
   # do not invoke this path — see specs/020-ebpf-feature-gate/.
   lint-and-test-ebpf:
     name: Lint + test (linux-x86_64, --features ebpf-tracing)
@@ -589,8 +635,8 @@ jobs:
       - name: Cache fixture repo
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/.cache/mikebom/fixtures
-          key: mikebom-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
+          path: ~/.cache/waybill/fixtures
+          key: waybill-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
 
       - name: Install bpf-linker
         run: |
@@ -613,8 +659,8 @@ jobs:
       # matrix entries.
       - name: Install spdx3-validate
         run: bash scripts/install-spdx3-validate.sh
-      - name: Set MIKEBOM_REQUIRE_SPDX3_VALIDATOR
-        run: echo "MIKEBOM_REQUIRE_SPDX3_VALIDATOR=1" >> "$GITHUB_ENV"
+      - name: Set WAYBILL_REQUIRE_SPDX3_VALIDATOR
+        run: echo "WAYBILL_REQUIRE_SPDX3_VALIDATOR=1" >> "$GITHUB_ENV"
 
       - name: Clippy (--features ebpf-tracing)
         run: cargo +stable clippy --workspace --all-targets --features ebpf-tracing -- -D warnings
@@ -630,7 +676,7 @@ jobs:
       # required for eBPF + tracepoint attach per m211 quickstart.
       - name: Container harness (m212 ring_buffer_overflows verification)
         run: |
-          docker build -f Dockerfile.ebpf-test -t mikebom-ebpf-test .
+          docker build -f Dockerfile.ebpf-test -t waybill-ebpf-test .
           docker run --rm --privileged \
             -v /sys/kernel/debug:/sys/kernel/debug \
-            mikebom-ebpf-test
+            waybill-ebpf-test

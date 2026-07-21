@@ -1,6 +1,8 @@
-# mikebom
+# Waybill
 
-**NOTE: mikebom is pre-1.0 alpha. The CLI surface, output formats, and per-ecosystem coverage are still being stabilized; expect breaking changes between alpha releases, and expect additional ecosystem readers + binary-analysis surface to keep landing release-over-release.**
+> **Waybill was previously known as Mikebom.** The project was renamed in v0.1.0-alpha.66. Historical release tags (`v0.1.0-alpha.7`..`v0.1.0-alpha.65`) and pre-rename SBOMs using `mikebom:*` annotations remain accessible; see [docs/migration/mikebom-to-waybill.md](docs/migration/mikebom-to-waybill.md) for the drop-in migration recipe.
+
+**NOTE: Waybill is pre-1.0 alpha. The CLI surface, output formats, and per-ecosystem coverage are still being stabilized; expect breaking changes between alpha releases, and expect additional ecosystem readers + binary-analysis surface to keep landing release-over-release.**
 
 A toolkit for working with software bills of materials end-to-end:
 
@@ -12,23 +14,23 @@ A toolkit for working with software bills of materials end-to-end:
 - **Analyzes SBOMs** — verifies DSSE-signed attestations against keys /
   Fulcio identities / in-toto layouts, and cross-checks already-emitted
   CycloneDX / SPDX 2.3 / SPDX 3.0.1 outputs for per-datum × per-format
-  coverage parity via `mikebom sbom parity-check`.
-- **Modifies and enriches SBOMs** — today, `mikebom sbom enrich`
+  coverage parity via `waybill sbom parity-check`.
+- **Modifies and enriches SBOMs** — today, `waybill sbom enrich`
   applies RFC 6902 JSON Patches with provenance metadata recorded as
-  `mikebom:enrichment-patch[N]` properties. Richer modification
+  `waybill:enrichment-patch[N]` properties. Richer modification
   workflows (license backfill, supplier resolution, VEX merging) are
   on the roadmap.
 
 > **Status: pre-1.0 alpha.** Pre-built binaries are published as GitHub
 > Release assets; no crates.io release yet.
 >
-> - **Stable** — `mikebom sbom scan`, `mikebom sbom verify`,
->   `mikebom sbom enrich`, `mikebom sbom parity-check`,
->   `mikebom sbom verify-binding`, `mikebom sbom trace-binding`,
->   `mikebom policy init`, and `mikebom attestation validate`.
+> - **Stable** — `waybill sbom scan`, `waybill sbom verify`,
+>   `waybill sbom enrich`, `waybill sbom parity-check`,
+>   `waybill sbom verify-binding`, `waybill sbom trace-binding`,
+>   `waybill policy init`, and `waybill attestation validate`.
 >   Cross-platform, no special privileges.
-> - **Experimental, Linux-only** — `mikebom trace capture` /
->   `mikebom trace run`. eBPF-based build-time capture that produces
+> - **Experimental, Linux-only** — `waybill trace capture` /
+>   `waybill trace run`. eBPF-based build-time capture that produces
 >   attestations bound to the actual build event. Requires CAP_BPF +
 >   CAP_PERFMON and adds ~2–3× wall-clock overhead on syscall-heavy
 >   builds.
@@ -58,33 +60,33 @@ build a proper CycloneDX with:
   `+` → `%2B` encoding across every ecosystem; `epoch=0` omission
   on RPM; lexicographic qualifier sort).
 - **Compiled-binary identity across Linux, macOS, and Windows** —
-  every binary mikebom scans carries a cross-platform identity in
+  every binary waybill scans carries a cross-platform identity in
   the SBOM:
   - **ELF (Linux):** `NT_GNU_BUILD_ID`, `DT_RPATH` / `DT_RUNPATH`,
-    `.gnu_debuglink` → `mikebom:elf-build-id` /
-    `mikebom:elf-runpath` / `mikebom:elf-debuglink`. The build-id is
+    `.gnu_debuglink` → `waybill:elf-build-id` /
+    `waybill:elf-runpath` / `waybill:elf-debuglink`. The build-id is
     the canonical Linux binary-identity field used by `eu-unstrip`,
     `coredumpctl`, `debuginfod`, and `*-dbgsym` packaging.
   - **Mach-O (macOS / iOS):** `LC_UUID`, `LC_RPATH`, and minimum-OS
     version (`LC_BUILD_VERSION` or `LC_VERSION_MIN_*`) →
-    `mikebom:macho-uuid` / `mikebom:macho-rpath` /
-    `mikebom:macho-min-os`. The UUID is what `dwarfdump`,
+    `waybill:macho-uuid` / `waybill:macho-rpath` /
+    `waybill:macho-min-os`. The UUID is what `dwarfdump`,
     `xcrun symbolicatecrash`, the macOS crash reporter, and every
     `*.dSYM` bundle key on for symbol matching. Fat / universal
     binaries report from the first slice.
 
     Plus codesign metadata from the `LC_CODE_SIGNATURE` SuperBlob's
-    CodeDirectory: `mikebom:macho-codesign-identifier` (e.g.
-    `com.apple.ls`), `mikebom:macho-codesign-flags` (decoded names
+    CodeDirectory: `waybill:macho-codesign-identifier` (e.g.
+    `com.apple.ls`), `waybill:macho-codesign-flags` (decoded names
     from the flags bitfield — `hardened-runtime`,
     `library-validation`, `adhoc`, etc.), and
-    `mikebom:macho-codesign-team-id` (10-char Apple Team ID for
+    `waybill:macho-codesign-team-id` (10-char Apple Team ID for
     developer-signed binaries). This is what `codesign -dvv` reads.
   - **PE (Windows):** CodeView pdb-id (`<guid>:<age>` from
     `IMAGE_DIRECTORY_ENTRY_DEBUG`), machine type
     (`IMAGE_FILE_HEADER.Machine`), and subsystem
-    (`IMAGE_OPTIONAL_HEADER.Subsystem`) → `mikebom:pe-pdb-id` /
-    `mikebom:pe-machine` / `mikebom:pe-subsystem`. The pdb-id is
+    (`IMAGE_OPTIONAL_HEADER.Subsystem`) → `waybill:pe-pdb-id` /
+    `waybill:pe-machine` / `waybill:pe-subsystem`. The pdb-id is
     what Microsoft Symbol Server, Mozilla / Chromium symbol stores,
     WinDbg, and drmingw use to locate matching `.pdb` files.
 
@@ -95,8 +97,8 @@ build a proper CycloneDX with:
 - **Go VCS provenance** — extracts `vcs.revision` (commit SHA),
   `vcs.time` (RFC 3339 build timestamp), and `vcs.modified` (dirty-tree
   flag) from every Go binary's BuildInfo. Surfaced as
-  `mikebom:go-vcs-revision` / `mikebom:go-vcs-time` /
-  `mikebom:go-vcs-modified` on the main-module entry. Same data
+  `waybill:go-vcs-revision` / `waybill:go-vcs-time` /
+  `waybill:go-vcs-modified` on the main-module entry. Same data
   `go version -m` shows, baked into the SBOM so consumers don't have
   to shell out.
 - **Rust crate-closure provenance** — extracts the full build-time
@@ -107,8 +109,8 @@ build a proper CycloneDX with:
   (build-time truth — distinct from `embedded-version-string`'s
   heuristic tier), `parent_purl` cross-linking back to the file-level
   binary. The binary itself gains a
-  `mikebom:detected-cargo-auditable = true` cross-link annotation
-  (the Rust analog of `mikebom:detected-go = true`). Cargo wrappers
+  `waybill:detected-cargo-auditable = true` cross-link annotation
+  (the Rust analog of `waybill:detected-go = true`). Cargo wrappers
   shipped with **Debian Trixie+, Fedora 40+, Alpine Edge, and the
   official Rust container images** auto-enable the embedding, so most
   Rust binaries built in those environments surface their full crate
@@ -116,7 +118,7 @@ build a proper CycloneDX with:
 - **Curated embedded-version-string detection** for **11
   high-CVE-volume native libraries** statically-linked into compiled
   binaries — the heuristic-tier counterpart to source-tree manifest
-  parsing. mikebom walks the binary's read-only string region
+  parsing. waybill walks the binary's read-only string region
   (`.rodata` / `__TEXT,__cstring` / `.rdata` — never the full image,
   to bound the false-positive surface) and recognises each library's
   canonical version banner anchored at a NUL boundary:
@@ -128,13 +130,13 @@ build a proper CycloneDX with:
     `21.0.1+12` and legacy Java-8 `8u362-b09`)
 
   Each detection emits a `pkg:generic/<library>@<version>` component
-  with `mikebom:evidence-kind = "embedded-version-string"` and
-  `mikebom:confidence = "heuristic"`, so downstream CVE matchers
+  with `waybill:evidence-kind = "embedded-version-string"` and
+  `waybill:confidence = "heuristic"`, so downstream CVE matchers
   (Vex / OSV / NVD / Kusari Inspector) have pre-resolved coordinates
   to query against — no need to know in advance which libraries a
   binary statically links.
 
-On top of scan-mode, mikebom adds:
+On top of scan-mode, waybill adds:
 
 - **Signed DSSE envelope attestations** via sigstore (local-key or
   keyless OIDC → Fulcio → Rekor).
@@ -142,18 +144,18 @@ On top of scan-mode, mikebom adds:
 - **Witness-collection v0.1** output compatible with `sbomit generate`
   and any go-witness-aware verifier.
 
-## What kind of SBOM does mikebom emit?
+## What kind of SBOM does waybill emit?
 
-A common question when comparing mikebom's component count to
+A common question when comparing waybill's component count to
 trivy's, syft's, or another scanner's: **are we counting the
 same thing?** Often the answer is no — and the gap is a scope
-choice, not a bug. mikebom self-describes its scope on every
+choice, not a bug. waybill self-describes its scope on every
 output so consumers can answer the question by reading the SBOM
 rather than reverse-engineering it from the component list.
 
 ### Two axes
 
-mikebom uses two orthogonal scope axes:
+waybill uses two orthogonal scope axes:
 
 **1. Document-level scope mode** — the answer to "what set of
 things is this SBOM trying to describe?"
@@ -168,7 +170,7 @@ The mode is controlled by `--include-declared-deps` (auto-on for
 
 **2. Per-component lifecycle tier** — the answer to "where in
 the build/deploy lifecycle was this component observed?"
-Annotated as `mikebom:sbom-tier` on every component, with five
+Annotated as `waybill:sbom-tier` on every component, with five
 values:
 
 | Tier | Meaning |
@@ -179,17 +181,17 @@ values:
 | `deployed` | Installed in the runtime image — dpkg, apk, rpm, populated `node_modules`, populated venv `dist-info`. |
 | `analyzed` | Artifact file on disk, identified by filename + content hash. |
 
-### How mikebom self-describes scope in each format
+### How waybill self-describes scope in each format
 
-mikebom ships scope information through native fields in every
-output format, not as `mikebom:`-prefixed extensions, so any
+waybill ships scope information through native fields in every
+output format, not as `waybill:`-prefixed extensions, so any
 spec-compliant SBOM reader picks it up:
 
 | Format | Document-level scope hint | Per-component tier |
 |---|---|---|
-| **CycloneDX 1.6** | `metadata.lifecycles[]` (aggregated from per-component tiers, deduplicated, sorted) + `compositions[].aggregate` | `properties[].name = "mikebom:sbom-tier"` |
-| **SPDX 2.3** | `creationInfo.comment` (free-text scope summary) | `packages[].annotations[]` with `mikebom:sbom-tier` |
-| **SPDX 3.0.1** | `SpdxDocument.comment` (free-text scope summary) + `software_Sbom.software_sbomType[]` (native enum) | top-level `annotations[]` with `mikebom:sbom-tier` |
+| **CycloneDX 1.6** | `metadata.lifecycles[]` (aggregated from per-component tiers, deduplicated, sorted) + `compositions[].aggregate` | `properties[].name = "waybill:sbom-tier"` |
+| **SPDX 2.3** | `creationInfo.comment` (free-text scope summary) | `packages[].annotations[]` with `waybill:sbom-tier` |
+| **SPDX 3.0.1** | `SpdxDocument.comment` (free-text scope summary) + `software_Sbom.software_sbomType[]` (native enum) | top-level `annotations[]` with `waybill:sbom-tier` |
 
 For the operator-facing **SBOM type** classification (CISA Design /
 Source / Build / Analyzed / Deployed / Runtime), per-format `jq`
@@ -199,21 +201,21 @@ recipes, the four-column equivalence table, and the
 
 ### Industry / consumer terminology bridge
 
-When operators compare mikebom's count to other scanners, the
+When operators compare waybill's count to other scanners, the
 delta usually traces back to a different scope choice rather
 than a real coverage gap. As a rule of thumb:
 
-- mikebom's `--image` output ≈ NTIA "deployed" SBOM. CDX phase
+- waybill's `--image` output ≈ NTIA "deployed" SBOM. CDX phase
   `operations` dominates. Tighter than tools that walk a build
   cache (e.g. trivy's `~/.m2/`) but more accurate for "what's
   actually running in this image."
-- mikebom's `--path` output ≈ NTIA "build" SBOM. CDX phases
+- waybill's `--path` output ≈ NTIA "build" SBOM. CDX phases
   `pre-build` (lockfile entries) and `build` (eBPF-traced
   events, when applicable) dominate. Closer to a manifest
   view; useful for license compliance and full transitive
   coverage.
 
-For the deeper rationale on why mikebom takes this stance — and
+For the deeper rationale on why waybill takes this stance — and
 why class-presence verification deliberately prunes Maven shade-
 relocation ancestors that *aren't actually in the JAR* — see
 [`docs/design-notes.md`](docs/design-notes.md)'s "Scope: artifact vs
@@ -225,11 +227,11 @@ Pre-built binaries are published with every release as GitHub Release
 assets. Discover the latest tag and download:
 
 ```bash
-TAG=$(gh release list -R kusari-sandbox/mikebom --limit 1 --json tagName --jq '.[0].tagName')
-gh release download "$TAG" -R kusari-sandbox/mikebom -p "mikebom-${TAG}-*-$(uname -m)-*.tar.gz"
-tar -xzf mikebom-*.tar.gz
-sudo install -m 0755 mikebom /usr/local/bin/mikebom
-mikebom --version
+TAG=$(gh release list -R kusari-sandbox/waybill --limit 1 --json tagName --jq '.[0].tagName')
+gh release download "$TAG" -R kusari-sandbox/waybill -p "waybill-${TAG}-*-$(uname -m)-*.tar.gz"
+tar -xzf waybill-*.tar.gz
+sudo install -m 0755 waybill /usr/local/bin/waybill
+waybill --version
 ```
 
 ### Via cargo binstall (Rust toolchain users)
@@ -238,22 +240,22 @@ If you already have [`cargo binstall`](https://github.com/cargo-bins/cargo-binst
 installed, you can skip the `gh release download` dance:
 
 ```bash
-cargo binstall --git https://github.com/kusari-sandbox/mikebom mikebom
+cargo binstall --git https://github.com/kusari-sandbox/waybill waybill
 ```
 
-`mikebom-cli`'s [`[package.metadata.binstall]`](mikebom-cli/Cargo.toml)
+`waybill-cli`'s [`[package.metadata.binstall]`](waybill-cli/Cargo.toml)
 block pins the URL template to the existing release-tarball naming so
-discovery is deterministic. Once mikebom is published to crates.io
-(planned for a future milestone), bare `cargo binstall mikebom` will
+discovery is deterministic. Once waybill is published to crates.io
+(planned for a future milestone), bare `cargo binstall waybill` will
 work without the `--git` flag.
 
 ### Or build from source
 
 ```bash
-git clone https://github.com/kusari-sandbox/mikebom.git
-cd mikebom
+git clone https://github.com/kusari-sandbox/waybill.git
+cd waybill
 cargo build --release
-# binary: ./target/release/mikebom
+# binary: ./target/release/waybill
 ```
 
 **Rust toolchain.** Scan, verify, enrich, parity-check, policy, and
@@ -269,9 +271,9 @@ eBPF target — see
 | Linux x86_64      | ✅ supported                         | ✅ kernel ≥ 5.8, CAP_BPF    |
 | Linux aarch64     | ✅ supported                         | ✅ kernel ≥ 5.8, CAP_BPF    |
 | macOS (Apple/Intel)| ✅ supported                        | ❌ use Lima/Docker (below)  |
-| Windows x86_64    | 🧪 experimental (milestone 100, [#210](https://github.com/kusari-sandbox/mikebom/issues/210)) | ❌ |
+| Windows x86_64    | 🧪 experimental (milestone 100, [#210](https://github.com/kusari-sandbox/waybill/issues/210)) | ❌ |
 
-On macOS, run tracing inside the `mikebom-dev` container
+On macOS, run tracing inside the `waybill-dev` container
 ([`Dockerfile.dev`](Dockerfile.dev)) or a Lima VM
 ([`lima.yaml`](lima.yaml)). Everything else runs natively.
 
@@ -283,16 +285,16 @@ On macOS, run tracing inside the `mikebom-dev` container
 > cache paths, OCI image cache atomic-rename, path-resolver pattern
 > matcher, and Python stdlib collapse. Full Windows runtime test
 > parity + production-code fixes are tracked in
-> [#210](https://github.com/kusari-sandbox/mikebom/issues/210).
+> [#210](https://github.com/kusari-sandbox/waybill/issues/210).
 > Do not rely on the Windows binary for production SBOM workflows
 > until #210 closes.
 
-Download `mikebom-v<version>-x86_64-pc-windows-msvc.zip` from the
-[latest release](https://github.com/kusari-sandbox/mikebom/releases),
-extract `mikebom.exe`, and place it on your `PATH`.
+Download `waybill-v<version>-x86_64-pc-windows-msvc.zip` from the
+[latest release](https://github.com/kusari-sandbox/waybill/releases),
+extract `waybill.exe`, and place it on your `PATH`.
 
 ```powershell
-mikebom.exe sbom scan --path C:\Users\dev\my-project --output out.cdx.json
+waybill.exe sbom scan --path C:\Users\dev\my-project --output out.cdx.json
 ```
 
 The Windows build covers the cross-platform readers (cargo, npm, pip,
@@ -331,34 +333,34 @@ milestone 102's second PR — alpha-status spec at
 [`specs/102-cpp-bazel-cmake-readers/`](specs/102-cpp-bazel-cmake-readers/).
 
 Maven fat-jars built with the shade-plugin are emitted as nested
-`components[].components[]` with a `mikebom:shade-relocation = true`
+`components[].components[]` with a `waybill:shade-relocation = true`
 property, gated on bytecode-presence verification so
 declared-but-not-relocated ancestors do not inflate the SBOM. See
 [`specs/009-maven-shade-deps/spec.md`](specs/009-maven-shade-deps/spec.md).
 
 **Go: build the binary for richer per-component classification.**
-A source-only scan (`mikebom sbom scan --path .` on a Go project
+A source-only scan (`waybill sbom scan --path .` on a Go project
 before `go build`) emits the full `go.sum` closure — every module
 the resolver ever fetched, including build-tag alternatives the
 linker DCE'd and test scaffolding never linked. With the binary
-present, mikebom keeps the same components but annotates each one
-the linker didn't embed with `mikebom:not-linked = true`, so
+present, waybill keeps the same components but annotates each one
+the linker didn't embed with `waybill:not-linked = true`, so
 consumers get both the broad lockfile view AND a precise
 "what shipped" filter on a single SBOM. On `apigatewayv2/config`
 (typical service): 65 modules with binary, 24 of them carrying
-`mikebom:not-linked`; consumers wanting the binary-tight view
+`waybill:not-linked`; consumers wanting the binary-tight view
 filter on the property and see ~41:
 
 ```bash
 go build .                                    # produces ./apigatewayv2-config
-mikebom sbom scan --path . --output app.cdx.json
-# → 65 components, 24 carrying mikebom:not-linked = true
-jq '[.components[] | select(.properties[]? | select(.name=="mikebom:not-linked") | not)]' app.cdx.json
+waybill sbom scan --path . --output app.cdx.json
+# → 65 components, 24 carrying waybill:not-linked = true
+jq '[.components[] | select(.properties[]? | select(.name=="waybill:not-linked") | not)]' app.cdx.json
 # → strict "what shipped" view (~41 components, no annotation noise)
 ```
 
-When no binary is found, mikebom emits a one-line `tracing::info`
-hint pointing you at this workflow — no `mikebom:not-linked` data
+When no binary is found, waybill emits a one-line `tracing::info`
+hint pointing you at this workflow — no `waybill:not-linked` data
 is computed in that case.
 
 ## Quickstart
@@ -366,7 +368,7 @@ is computed in that case.
 Produce a CycloneDX 1.6 SBOM from any source tree:
 
 ```bash
-./target/release/mikebom sbom scan \
+./target/release/waybill sbom scan \
   --path ./my-project \
   --output project.cdx.json
 
@@ -380,16 +382,16 @@ dep graph. `--path` defaults to *manifest scope*
 (`--include-declared-deps` is auto-on).
 
 ```bash
-mikebom sbom scan --path ./my-project --output project.cdx.json
+waybill sbom scan --path ./my-project --output project.cdx.json
 ```
 
 **2. Scan a container image.** Defaults to *artifact scope*
 (on-disk presence required). Pass `--include-declared-deps` for the
 manifest view. `--image` accepts either an OCI reference (`alpine:3.19`,
 `gcr.io/distroless/static-debian12:latest`, or any other registry path)
-or a `docker save` tarball on disk; mikebom auto-detects which.
+or a `docker save` tarball on disk; waybill auto-detects which.
 
-For OCI references, mikebom checks the **local docker daemon's cache
+For OCI references, waybill checks the **local docker daemon's cache
 first** and falls back to a registry pull on miss — matching `docker
 run` semantics and the trivy / syft default. So if you've already
 done `docker pull alpine:3.19` (or are scanning an image you just
@@ -397,43 +399,43 @@ built locally), no network round-trip happens.
 
 ```bash
 # OCI ref — local docker first, registry fallback.
-mikebom sbom scan --image alpine:3.19 --output alpine.cdx.json
+waybill sbom scan --image alpine:3.19 --output alpine.cdx.json
 
 # Force a fresh registry fetch (skip the local docker cache):
-mikebom sbom scan --image alpine:3.19 --image-src remote \
+waybill sbom scan --image alpine:3.19 --image-src remote \
     --output alpine.cdx.json
 
 # Pre-extracted tarball still works.
 docker save alpine:3.19 -o alpine.tar
-mikebom sbom scan --image alpine.tar --output alpine.cdx.json
+waybill sbom scan --image alpine.tar --output alpine.cdx.json
 ```
 
 Authenticated registries are supported via `~/.docker/config.json`
 (both `Bearer`-style — Docker Hub, GHCR, gcr.io — and `Basic`-style
 — AWS ECR — challenges). Run `docker login <registry>` (or
 `aws ecr get-login-password | docker login --username AWS …` for ECR)
-once and mikebom picks up the credentials.
+once and waybill picks up the credentials.
 
 **OCI Referrers API (milestone 186 / #442).** When a registry
 publishes a pre-generated SBOM via the OCI Distribution Spec v1.1
 Referrers API (e.g., `docker buildx --sbom=true` output), the
-`--sbom-source` flag lets mikebom prefer it over re-scanning the
+`--sbom-source` flag lets waybill prefer it over re-scanning the
 image bytes:
 
 ```bash
 # Prefer a referrer if published, fall through to scan otherwise.
-mikebom sbom scan --image ghcr.io/example/app:v1 \
+waybill sbom scan --image ghcr.io/example/app:v1 \
     --sbom-source either \
     --format cyclonedx-json --output app.cdx.json
 
 # Compliance: require a matching upstream SBOM (fail if absent).
-mikebom sbom scan --image ghcr.io/example/app:v1 \
+waybill sbom scan --image ghcr.io/example/app:v1 \
     --sbom-source referrer \
     --format cyclonedx-json --output app.cdx.json
 
 # Default (`scan`) preserves pre-m186 behavior byte-identically —
 # no network activity on the Referrers endpoint.
-mikebom sbom scan --image ghcr.io/example/app:v1 \
+waybill sbom scan --image ghcr.io/example/app:v1 \
     --format cyclonedx-json --output app.cdx.json
 ```
 
@@ -445,7 +447,7 @@ reference: `specs/186-oci-referrers-sbom/quickstart.md`.
 useful for CI cache audits.
 
 ```bash
-mikebom sbom scan --path ~/.cargo/registry/cache --output cargo.cdx.json
+waybill sbom scan --path ~/.cargo/registry/cache --output cargo.cdx.json
 ```
 
 **4. Scan a Maven fat-jar and see shaded ancestors.** With feature
@@ -453,13 +455,13 @@ mikebom sbom scan --path ~/.cargo/registry/cache --output cargo.cdx.json
 whose bytecode is actually in the JAR.
 
 ```bash
-mikebom sbom scan --path ./target/ --output app.cdx.json
+waybill sbom scan --path ./target/ --output app.cdx.json
 
 jq '
   .components[]
   | select(.purl | test("pkg:maven/"))
   | .components // []
-  | map(select(.properties // [] | any(.name == "mikebom:shade-relocation" and .value == "true")))
+  | map(select(.properties // [] | any(.name == "waybill:shade-relocation" and .value == "true")))
   | map({purl, bom_ref: ."bom-ref"})
 ' app.cdx.json
 ```
@@ -467,31 +469,31 @@ jq '
 **5. Verify a signed DSSE attestation.**
 
 ```bash
-mikebom sbom verify some.dsse.json --public-key signer.pub
+waybill sbom verify some.dsse.json --public-key signer.pub
 # → PASS — verified with public_key sha256:…
 ```
 
 **6. Generate a starter in-toto layout bound to a functionary key.**
 
 ```bash
-mikebom policy init --functionary-key signer.pub --output layout.json
-mikebom sbom verify some.dsse.json --layout layout.json
+waybill policy init --functionary-key signer.pub --output layout.json
+waybill sbom verify some.dsse.json --layout layout.json
 ```
 
 **7. Enrich an SBOM with an RFC 6902 JSON Patch.** Each patch is
-recorded as a `mikebom:enrichment-patch[N]` property on the BOM
+recorded as a `waybill:enrichment-patch[N]` property on the BOM
 metadata so the provenance of every change survives.
 
 ```bash
-mikebom sbom enrich project.cdx.json \
+waybill sbom enrich project.cdx.json \
   --patch add-supplier.json --author you@example.com
 ```
 
 **Common flags** across every `sbom *` subcommand: `--offline`,
 `--exclude-scope`, `--include-declared-deps`,
-`--include-legacy-rpmdb` (env: `MIKEBOM_INCLUDE_LEGACY_RPMDB=1`).
+`--include-legacy-rpmdb` (env: `WAYBILL_INCLUDE_LEGACY_RPMDB=1`).
 See [`docs/user-guide/cli-reference.md`](docs/user-guide/cli-reference.md)
-for the full per-flag reference and `mikebom sbom <verb> --help` for the
+for the full per-flag reference and `waybill sbom <verb> --help` for the
 canonical source.
 
 ## Cross-tier correlation
@@ -499,12 +501,12 @@ canonical source.
 When the same software produces multiple SBOMs across its lifecycle —
 a source SBOM scanned from the repo, a build SBOM captured during
 compilation, and an image SBOM scanned from the resulting container —
-external consumers need a way to tell *which goes with which*. mikebom
+external consumers need a way to tell *which goes with which*. waybill
 ships two complementary mechanisms.
 
 ### Stable identifiers (auto-detected)
 
-mikebom attaches scheme-prefixed identifiers to every SBOM it emits.
+waybill attaches scheme-prefixed identifiers to every SBOM it emits.
 The five built-in schemes (`repo:`, `git:`, `image:`, `attestation:`,
 `subject:`) are auto-detected when possible; any operator-defined
 scheme like `acme_corp_id:` rides through unchanged.
@@ -518,17 +520,17 @@ a commit-anchored `git:` from `git rev-parse HEAD`.
 cd ~/projects/my-rust-app  # any git checkout
 
 # Source-tier — auto-detects `repo:`
-mikebom sbom scan --path . --output source.cdx.json
+waybill sbom scan --path . --output source.cdx.json
 
 # Build-tier — auto-detects `repo:` and `git:<repo-url>#<sha>`
-mikebom trace run -- ./build.sh
+waybill trace run -- ./build.sh
 ```
 
 **Image-tier auto-detects `image:`** from the resolved registry
 reference + digest:
 
 ```bash
-mikebom sbom scan --image my-app:v1 --output image.cdx.json
+waybill sbom scan --image my-app:v1 --output image.cdx.json
 ```
 
 **External consumers correlate by reading identifier fields directly**
@@ -565,28 +567,28 @@ for the full wire format and per-format extraction recipes.
 ### Cross-tier handshake via `subject:`
 
 The build-tier `subject:` identifier completes the content-addressable
-correlation chain. When `mikebom trace run` produces an output binary
+correlation chain. When `waybill trace run` produces an output binary
 with hash `X`, the build SBOM body carries `subject:sha256:X` as a
 first-class identifier. When the resulting image is scanned with
-`mikebom sbom scan --image foo:v1`, the image SBOM carries
+`waybill sbom scan --image foo:v1`, the image SBOM carries
 `image:foo:v1@sha256:X` — the `X` portion matches by string.
 
 ```bash
 # Build (auto-detects subject:sha256:X from in-toto attestation subjects)
-mikebom trace run --signing-key ./key \
+waybill trace run --signing-key ./key \
     --sbom-output build.cdx.json \
     -- docker build -t my-app:v1 .
 
 # Image (auto-detects image:my-app:v1@sha256:X)
-mikebom sbom scan --image my-app:v1 --output image.cdx.json
+waybill sbom scan --image my-app:v1 --output image.cdx.json
 
 # External tool walks: image's image: digest matches build's subject: hex →
-# build SBOM is found by string match, no mikebom resolver needed.
+# build SBOM is found by string match, no waybill resolver needed.
 ```
 
 External SBOM-store consumers walk `image-SBOM.components[].hashes[].sha256
 == X → SBOM whose subject:sha256:X matches → that build SBOM's git: commit
-→ matching source SBOM` purely by string match — no mikebom-side resolver.
+→ matching source SBOM` purely by string match — no waybill-side resolver.
 
 ### Per-component user-defined identifiers
 
@@ -598,7 +600,7 @@ SPDX 3 `Element.externalIdentifier[]`) — any SBOM-aware tool reads
 them as ordinary first-class data.
 
 ```bash
-mikebom sbom scan --path . \
+waybill sbom scan --path . \
     --component-id "pkg:cargo/serde@1.0.0=kusari-id:asset-shared-lib-v2" \
     --component-id "pkg:cargo/myapp@0.5.1=acme-asset:myapp-prod-001"
 ```
@@ -617,27 +619,27 @@ SBOM file" without trusting filename heuristics.
 
 ```bash
 # Bind an image SBOM to the source SBOM it was built from.
-mikebom sbom scan --image my-app:v1 \
+waybill sbom scan --image my-app:v1 \
     --bind-to-source ./source.cdx.json \
     --output image.cdx.json
 
 # Verify a binding from anywhere — re-hashes the source SBOM and
 # checks against the embedded reference.
-mikebom sbom verify-binding \
+waybill sbom verify-binding \
     --image-sbom image.cdx.json \
     --source-sbom ./source.cdx.json
 # → PASS — source-document binding verified
 
 # Trace the chain across an arbitrary set of SBOMs without manual
 # lookups (matches by content hash + identifier overlap):
-mikebom sbom trace-binding \
+waybill sbom trace-binding \
     --component-purl "pkg:cargo/serde@1.0.0" \
     --image-sbom image.cdx.json \
     --candidate-sources-dir ./sboms/
 ```
 
 The binding annotation lives in standards-native carriers
-(`mikebom:source-document-binding`) so any SPDX/CDX-aware tool can
+(`waybill:source-document-binding`) so any SPDX/CDX-aware tool can
 extract it. See
 [`docs/reference/cross-tier-binding.md`](docs/reference/cross-tier-binding.md)
 for the full schema and verifier protocol.
@@ -654,14 +656,14 @@ for the full schema and verifier protocol.
 
 ```bash
 # Trace a cargo build and produce an SBOM + signed attestation in one pass.
-mikebom trace run \
+waybill trace run \
   --signing-key ./signing.key \
   --sbom-output ripgrep.cdx.json \
   --attestation-output ripgrep.attestation.dsse.json \
   -- cargo install ripgrep
 
 # Then verify from anywhere (works on macOS; verify is pure-scan):
-mikebom sbom verify ripgrep.attestation.dsse.json --public-key ./signing.pub
+waybill sbom verify ripgrep.attestation.dsse.json --public-key ./signing.pub
 ```
 
 See [`docs/architecture/signing.md`](docs/architecture/signing.md),
@@ -703,9 +705,9 @@ witness-v0.1 attestation format (compatible with `sbomit generate`).
 ## Workspace layout
 
 ```text
-mikebom-cli/      User-space CLI: scan, resolve, enrich, generate, verify, trace
-mikebom-common/   Shared types: PURL, attestation schema, resolution types
-mikebom-ebpf/     Kernel-side eBPF probes (uprobe on libssl, kprobe on file ops)
+waybill-cli/      User-space CLI: scan, resolve, enrich, generate, verify, trace
+waybill-common/   Shared types: PURL, attestation schema, resolution types
+waybill-ebpf/     Kernel-side eBPF probes (uprobe on libssl, kprobe on file ops)
 xtask/            Workspace build/dev tooling
 docs/             User guide, architecture, ecosystems, design notes
 specs/            Per-milestone planning specs
@@ -715,7 +717,7 @@ tests/fixtures/   Real + synthetic fixtures consumed by integration tests
 ## Reporting issues and contributing
 
 Open an issue or PR at
-[github.com/kusari-sandbox/mikebom](https://github.com/kusari-sandbox/mikebom).
+[github.com/kusari-sandbox/waybill](https://github.com/kusari-sandbox/waybill).
 CI enforces `cargo +stable clippy --workspace --all-targets` and
 `cargo +stable test --workspace` on every PR; run both locally before
 opening one.

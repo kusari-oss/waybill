@@ -8,17 +8,17 @@ events.
 
 **Key files:**
 
-- `mikebom-cli/src/scan_fs/mod.rs` — scan entry point (`scan_path`), ecosystem
+- `waybill-cli/src/scan_fs/mod.rs` — scan entry point (`scan_path`), ecosystem
   orchestration, relationship resolution, generation-context selection.
-- `mikebom-cli/src/scan_fs/walker.rs` — generic directory walker, per-file
+- `waybill-cli/src/scan_fs/walker.rs` — generic directory walker, per-file
   streaming SHA-256, artifact-suffix filtering, size cap.
-- `mikebom-cli/src/scan_fs/docker_image.rs` — `docker save` tarball extractor:
+- `waybill-cli/src/scan_fs/docker_image.rs` — `docker save` tarball extractor:
   layer merging, OCI whiteout handling, os-release reader.
-- `mikebom-cli/src/scan_fs/os_release.rs` — `/etc/os-release` + fallback
+- `waybill-cli/src/scan_fs/os_release.rs` — `/etc/os-release` + fallback
   `/usr/lib/os-release` parser. Reads `ID` + `VERSION_ID` and populates the
   `distro=<namespace>-<VERSION_ID>` PURL qualifier shared by deb, rpm, and
   apk (e.g., `distro=debian-12`, `distro=ubuntu-24.04`, `distro=alpine-3.19`).
-- `mikebom-cli/src/scan_fs/package_db/*.rs` — one module per ecosystem.
+- `waybill-cli/src/scan_fs/package_db/*.rs` — one module per ecosystem.
 
 ## The three evidence sources
 
@@ -27,7 +27,7 @@ Per-component evidence falls into one of three categories, ordered by trust:
 | Source | Technique | Confidence | Who knows it |
 |---|---|---|---|
 | **Installed-package DB** | `PackageDatabase` | 0.85 | dpkg, apk, rpm sqlite, npm lockfile, Cargo.lock, go.sum, Gemfile.lock, Poetry/Pipfile — the OS or package manager's authoritative record of what *is* installed (or should be per the lock). |
-| **Artifact file** | `FilePathPattern` / `filename` | 0.70 | mikebom, via directory walk + SHA-256. The file physically exists on disk with matching bytes. |
+| **Artifact file** | `FilePathPattern` / `filename` | 0.70 | waybill, via directory walk + SHA-256. The file physically exists on disk with matching bytes. |
 | **External lookup** | `HashMatch` (deps.dev) | 0.90 | deps.dev, consulted with a content hash pulled from an attestation's TLS response. Only active in `sbom generate` / trace mode. |
 
 The walker stream-hashes every file whose extension matches one of the
@@ -93,7 +93,7 @@ a post-pass over the combined relationship list to:
 `scan_cmd.rs` tracks a `ScanMode` enum (`Image` vs. `Path`) that flows down
 through the pipeline. The only feature currently gated on it is feature 005's
 npm internals filtering: inside an extracted image, `node_modules/npm/node_modules/**`
-entries are marked `mikebom:npm-role = internal`; in path mode they are
+entries are marked `waybill:npm-role = internal`; in path mode they are
 filtered out before resolution. Future scan-mode-aware logic (e.g. treating
 `node_modules/` as authoritative vs. derivable) hooks onto the same enum.
 
@@ -109,7 +109,7 @@ Scan mode stamps one of three `GenerationContext` values on the output:
   [generation.md](generation.md) for where this value comes from.
 
 This value lands at the top of the CycloneDX BOM under
-`metadata.component.properties.mikebom:generation-context` so downstream
+`metadata.component.properties.waybill:generation-context` so downstream
 consumers know what kind of evidence produced the SBOM.
 
 ## Trace-mode compiler-pipeline enrichment (milestone 210)
@@ -124,7 +124,7 @@ reader path above:
    propagate PID ancestry through the `COMPILER_INVOCATIONS` HashMap so
    `rustc` invocations spawned by `cargo` inherit the cargo parent's
    invocation id.
-2. **User-space aggregation** — `mikebom-cli/src/trace/compiler_pipeline.rs`
+2. **User-space aggregation** — `waybill-cli/src/trace/compiler_pipeline.rs`
    drains the ring buffer, buckets file-open events per invocation into
    `read_set` + `write_set` bags, applies FR-016 trace-noise filters
    (system dirs, user cache, ephemeral tmp, secrets-adjacent paths), and
@@ -135,19 +135,19 @@ reader path above:
    goldens when the field is absent (scan-mode + traces without any
    compiler exec).
 4. **Per-component annotation** — at SBOM emission time,
-   `mikebom-cli/src/generate/compiler_pipeline_annotation.rs::map_component_to_source_read_set`
+   `waybill-cli/src/generate/compiler_pipeline_annotation.rs::map_component_to_source_read_set`
    walks each `ResolvedComponent`'s known file paths (m133 evidence +
    `occurrences[].location`) and intersects them against every
    invocation's write-set. Matches produce C130
-   `mikebom:source-read-set` (transitive-closed union of the matched +
+   `waybill:source-read-set` (transitive-closed union of the matched +
    ancestor read-sets, deterministically sorted) + C131
-   `mikebom:read-set-source = "traced"`. Non-matching components get
+   `waybill:read-set-source = "traced"`. Non-matching components get
    C131 = `"unknown"` only.
 5. **Document-scope transparency** — three companion annotations ride
    along per contracts/annotations.md: C132
-   `mikebom:compiler-pipeline-completeness` (always emitted; carries the
-   `CompletenessState` shape), C133 `mikebom:secrets-read-filtered`
-   (emitted when non-zero), and C134 `mikebom:trace-attach-late` (per-
+   `waybill:compiler-pipeline-completeness` (always emitted; carries the
+   `CompletenessState` shape), C133 `waybill:secrets-read-filtered`
+   (emitted when non-zero), and C134 `waybill:trace-attach-late` (per-
    component when the doc-scope state is `Partial(AttachLate)`).
 
 The end-to-end data flow: eBPF program → `COMPILER_INVOCATIONS` map →

@@ -1,6 +1,6 @@
 # Architecture overview
 
-mikebom is organized as a four-stage pipeline. Evidence flows in at the left
+waybill is organized as a four-stage pipeline. Evidence flows in at the left
 — eBPF-captured events from a live build, or filesystem contents from a scan
 — and a CycloneDX 1.6 SBOM flows out at the right.
 
@@ -22,19 +22,19 @@ and the rules for combining them have to be explicit.
 
 | Stage | Input | Output | Key entry points |
 |---|---|---|---|
-| **Scan** | An attestation (for trace mode) **or** a directory / container image (for scan mode). | Raw, un-deduplicated candidate components + raw relationships. | `mikebom-cli/src/scan_fs/mod.rs` (scan-mode root), `mikebom-cli/src/resolve/pipeline.rs::ResolutionPipeline::resolve` (trace-mode root — resolves attestation events into components). |
-| **Resolve** | Candidate components from multiple sources (URL match, hash match, file path match, package DB). | Deduplicated `ResolvedComponent[]`. | `mikebom-cli/src/resolve/deduplicator.rs`, `mikebom-cli/src/resolve/pipeline.rs` |
-| **Enrich** | Resolved components. | Components with licenses / supplier / external references filled in, plus additional dependency relationships. | `mikebom-cli/src/enrich/pipeline.rs::EnrichmentPipeline` (for `sbom generate`), plus inline calls in `mikebom-cli/src/cli/scan_cmd.rs` (for `sbom scan`). |
-| **Generate** | `ResolvedComponent[]` + `Relationship[]` + trace integrity counters. | CycloneDX 1.6 JSON. | `mikebom-cli/src/generate/cyclonedx/builder.rs::CycloneDxBuilder::build` |
+| **Scan** | An attestation (for trace mode) **or** a directory / container image (for scan mode). | Raw, un-deduplicated candidate components + raw relationships. | `waybill-cli/src/scan_fs/mod.rs` (scan-mode root), `waybill-cli/src/resolve/pipeline.rs::ResolutionPipeline::resolve` (trace-mode root — resolves attestation events into components). |
+| **Resolve** | Candidate components from multiple sources (URL match, hash match, file path match, package DB). | Deduplicated `ResolvedComponent[]`. | `waybill-cli/src/resolve/deduplicator.rs`, `waybill-cli/src/resolve/pipeline.rs` |
+| **Enrich** | Resolved components. | Components with licenses / supplier / external references filled in, plus additional dependency relationships. | `waybill-cli/src/enrich/pipeline.rs::EnrichmentPipeline` (for `sbom generate`), plus inline calls in `waybill-cli/src/cli/scan_cmd.rs` (for `sbom scan`). |
+| **Generate** | `ResolvedComponent[]` + `Relationship[]` + trace integrity counters. | CycloneDX 1.6 JSON. | `waybill-cli/src/generate/cyclonedx/builder.rs::CycloneDxBuilder::build` |
 
 ## Where the stages live
 
-- **Scan mode** (`mikebom sbom scan`): `cli/scan_cmd.rs` orchestrates the
+- **Scan mode** (`waybill sbom scan`): `cli/scan_cmd.rs` orchestrates the
   pipeline. It walks the filesystem / extracts the image, calls `scan_fs`
   which invokes each per-ecosystem `package_db/*` module, then runs deps.dev
   + ClearlyDefined + deps.dev-graph enrichers inline, then hands the
   deduplicated component set to the CycloneDX builder.
-- **Trace mode** (`mikebom trace run` → `sbom generate`): `cli/run.rs` runs
+- **Trace mode** (`waybill trace run` → `sbom generate`): `cli/run.rs` runs
   the eBPF capture, writes the attestation, then delegates to
   `cli/generate.rs` which loads the attestation, runs `ResolutionPipeline` to
   turn connections + file ops into components, runs `EnrichmentPipeline`
@@ -42,7 +42,7 @@ and the rules for combining them have to be explicit.
   same CycloneDX builder.
 
 Both paths produce structurally identical CycloneDX output. The only
-user-visible difference is `metadata.component.properties.mikebom:generation-context`:
+user-visible difference is `metadata.component.properties.waybill:generation-context`:
 `build-time-trace` vs. `filesystem-scan` vs. `container-image-scan`.
 
 ## Why a four-stage pipeline
@@ -60,7 +60,7 @@ Three reasons the stages are separate:
    [resolution.md](resolution.md).
 3. **Enrichment is replaceable.** deps.dev and ClearlyDefined are external
    services with their own failure modes. They run *after* resolution so a
-   network outage can never cause mikebom to emit fewer components — just
+   network outage can never cause waybill to emit fewer components — just
    less-enriched ones.
 
 ## What each stage is *not* responsible for
@@ -89,18 +89,18 @@ Three reasons the stages are separate:
 These apply throughout the pipeline:
 
 - **Generation context** (`GenerationContext` in
-  `mikebom-common/src/attestation/metadata.rs`) is stamped on every component
+  `waybill-common/src/attestation/metadata.rs`) is stamped on every component
   and on the SBOM's `metadata.component.properties`. Values:
   `BuildTimeTrace`, `FilesystemScan`, `ContainerImageScan`. Downstream
   consumers use this to know how much to trust the result.
 - **Evidence technique** (`ResolutionTechnique` in
-  `mikebom-common/src/resolution.rs`) is stamped on every resolved component.
+  `waybill-common/src/resolution.rs`) is stamped on every resolved component.
   `UrlPattern` 0.95 (build-time), `HashMatch` 0.90 (deps.dev lookup),
   `PackageDatabase` 0.85 (installed-package DB), `FilePathPattern` 0.70
   (filesystem artifact), `HostnameHeuristic` 0.40 (logged only, never creates
   a component). Higher-confidence techniques win in the deduplicator.
 - **Provenance** (`EnrichmentProvenance` in
-  `mikebom-common/src/resolution.rs`) is attached to every enrichment-derived
+  `waybill-common/src/resolution.rs`) is attached to every enrichment-derived
   relationship: `source` identifies which enricher contributed the edge
   (`deps.dev`, `Cargo.lock`, `ClearlyDefined`), `data_type` identifies what
   kind of data (`dependency-graph`, `license`).

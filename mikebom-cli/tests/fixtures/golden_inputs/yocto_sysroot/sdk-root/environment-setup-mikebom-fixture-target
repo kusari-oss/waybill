@@ -1,3 +1,0 @@
-# Synthetic Yocto SDK environment-setup script for the milestone-107
-# US3 integration test fixture. Real Yocto SDKs write `export CC=...`
-# etc. here; mikebom only looks at filename presence — body unused.

@@ -1,0 +1,8 @@
+{
+  "name": "bun-basic-fixture",
+  "version": "0.1.0",
+  "dependencies": {
+    "waybill-fixture-lib": "1.2.3",
+    "@waybill-fixture/types-pkg": "4.5.6"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "m181-yarn-v1-optional-fixture",
+  "version": "0.1.0",
+  "description": "Milestone 181 US1 fixture — SYNTHETIC package names (non-vulnerable, non-real registry lookups) exercising yarn v1's optionalDependencies: sub-block classifier. The `parent-lib` entry in yarn.lock declares `optional-child-lib` as optional via a sub-block; waybill MUST classify optional-child-lib as LifecycleScope::Optional. `runtime-util` is a plain regular dep (regression guard).",
+  "private": true,
+  "dependencies": {
+    "parent-lib": "^1",
+    "runtime-util": "^1"
+  }
+}

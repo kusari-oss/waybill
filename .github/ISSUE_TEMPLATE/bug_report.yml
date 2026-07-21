@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a bug or unexpected behavior in mikebom
+description: Report a bug or unexpected behavior in waybill
 title: "[BUG] "
 labels: ["bug"]
 body:
@@ -11,7 +11,7 @@ body:
 
         If you've found a **security vulnerability**, please STOP and
         report it through GitHub Security Advisories instead — see
-        [SECURITY.md](https://github.com/kusari-sandbox/mikebom/blob/main/SECURITY.md).
+        [SECURITY.md](https://github.com/kusari-sandbox/waybill/blob/main/SECURITY.md).
 
   - type: dropdown
     id: platform
@@ -31,9 +31,9 @@ body:
   - type: input
     id: version
     attributes:
-      label: mikebom version
-      description: Output of `mikebom --version`
-      placeholder: e.g., mikebom 0.1.0-alpha.30
+      label: waybill version
+      description: Output of `waybill --version`
+      placeholder: e.g., waybill 0.1.0-alpha.30
     validations:
       required: true
 
@@ -43,7 +43,7 @@ body:
       label: Command + output
       description: Paste the exact command you ran and the full output (stdout + stderr).
       placeholder: |
-        $ mikebom sbom scan --path ./my-project --format spdx-2.3-json
+        $ waybill sbom scan --path ./my-project --format spdx-2.3-json
         ...
       render: shell
     validations:

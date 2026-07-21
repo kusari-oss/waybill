@@ -1,0 +1,172 @@
+//! CycloneDX 1.6 JSON serializer.
+//!
+//! Existing build logic lives in the per-section modules
+//! ([`builder`], [`metadata`], [`evidence`], [`compositions`],
+//! [`dependencies`], [`vex`]) — milestone 010 left that code
+//! untouched. [`CycloneDxJsonSerializer`] wraps those helpers behind
+//! the shared [`super::SbomSerializer`] trait so the CLI can dispatch
+//! to it alongside SPDX and future formats, without changing the
+//! output bytes (FR-022 / SC-006).
+
+pub mod builder;
+pub mod compositions;
+pub mod dependencies;
+pub mod evidence;
+pub mod metadata;
+pub mod serializer;
+pub mod services;
+pub mod vex;
+
+use std::path::PathBuf;
+
+use anyhow::Context;
+
+use super::{EmittedArtifact, OutputConfig, SbomSerializer, ScanArtifacts};
+use builder::{CycloneDxBuilder, CycloneDxConfig};
+
+/// CycloneDX 1.6 JSON serializer.
+///
+/// Delegates unchanged to [`CycloneDxBuilder`] and
+/// `serde_json::to_string_pretty`; byte-for-byte identical to
+/// pre-milestone-010 output for the same inputs (the inherently
+/// volatile `serialNumber` and `metadata.timestamp` fields remain
+/// generated internally, so cross-run byte-identity requires
+/// normalization — see `tests/cdx_regression.rs`).
+pub struct CycloneDxJsonSerializer;
+
+impl SbomSerializer for CycloneDxJsonSerializer {
+    fn id(&self) -> &'static str {
+        "cyclonedx-json"
+    }
+
+    fn default_filename(&self) -> &'static str {
+        "waybill.cdx.json"
+    }
+
+    fn serialize(
+        &self,
+        scan: &ScanArtifacts<'_>,
+        _cfg: &OutputConfig,
+    ) -> anyhow::Result<Vec<EmittedArtifact>> {
+        let cdx_config = CycloneDxConfig {
+            include_hashes: scan.include_hashes,
+            include_source_files: scan.include_source_files,
+            generation_context: scan.generation_context.clone(),
+            include_dev: scan.include_dev,
+        };
+        let builder = CycloneDxBuilder::new(cdx_config)
+            .with_os_release_missing_fields(scan.os_release_missing_fields.to_vec())
+            // Milestone 160 (T034/T035) — propagate the doc-scope
+            // Go-transitive coverage signal from ScanArtifacts into
+            // the builder for the C110/C111 metadata properties.
+            .with_go_transitive_coverage(scan.go_transitive_coverage.cloned())
+            // Milestone 172 — propagate the doc-scope Go step-5 fallback
+            // count from ScanArtifacts into the builder for the C117
+            // `waybill:go-transitive-fallback-count` metadata property.
+            .with_go_transitive_fallback_count(scan.go_transitive_fallback_count)
+            // Milestone 173 — propagate the doc-scope Go cache-warming
+            // outcome from ScanArtifacts into the builder for the
+            // C118 (mode) + C119 (failed) metadata properties.
+            .with_go_cache_warming(scan.go_cache_warming.cloned())
+            // Milestone 161 (T043) — propagate the doc-scope
+            // Go-workspace-mode signal from ScanArtifacts into the
+            // builder for the C112 metadata property.
+            .with_go_workspace_mode(scan.go_workspace_mode.cloned())
+            // Milestone 204 (#554) — propagate the doc-scope helm
+            // image-extraction-mode signal from ScanArtifacts into the
+            // builder for the C123
+            // `waybill:image-extraction-completeness` metadata property.
+            .with_helm_extraction_mode(scan.helm_extraction_mode.copied())
+            // Milestone 206 (#440) — propagate the doc-scope
+            // image-source signal from ScanArtifacts for the C124
+            // metadata property.
+            .with_image_source(scan.image_source.copied())
+            // Milestone 072 / T010 — propagate the source-tier SBOM
+            // identifier so the metadata builder can emit the
+            // standards-native `externalReferences[type:bom]` row.
+            .with_source_document_binding(scan.source_document_binding.cloned())
+            // Milestone 073 — propagate identifiers (built-in +
+            // user-defined). Built-in identifiers ride
+            // `metadata.component.externalReferences[]` per scheme;
+            // user-defined identifiers ride a single
+            // `metadata.properties[]` entry under
+            // `waybill:identifiers`. The Vec is already
+            // deduplicated and ordered by the resolution pipeline.
+            .with_identifiers(scan.identifiers.to_vec())
+            // Milestone 076 — propagate per-component user-defined
+            // identifiers from `--component-id <PURL>=<scheme>:<value>`
+            // flags. Matched against `components[].purl` byte-equally
+            // and appended as additional `properties[]` entries per
+            // research §2.
+            .with_component_identifiers(scan.component_identifiers.to_vec())
+            // Milestone 077 — propagate operator-supplied overrides
+            // for the root component's name + version. When active,
+            // replaces the auto-derived metadata.component identity
+            // and drops manifest-derived main-module components from
+            // the emitted components[] array (clean replacement).
+            .with_root_override(scan.root_override.clone())
+            // Milestone 149 (issue #151) — propagate the new
+            // `--preserve-manifest-main-module` flag to the helper that
+            // consolidates the drop logic across all three emitters.
+            .with_preserve_manifest_main_module(scan.preserve_manifest_main_module)
+            // Milestone 080 — propagate user-supplied SBOM metadata
+            // (`--creator`, `--annotator`/`--annotation-comment`,
+            // `--metadata-comment`, `--scan-target-name`,
+            // `--metadata-file`). The CDX builder routes each entry
+            // to its standards-native landing slot (research §2 +
+            // contracts/user-sbom-metadata.md) — `Tool` to
+            // `metadata.tools.components[]`, `Organization` to
+            // `metadata.manufacturer`, `Person` to `metadata.authors[]`,
+            // `--metadata-comment` and `--annotator`/`--annotation-comment`
+            // pairs to `bom.annotations[]`, `--scan-target-name` to
+            // `metadata.component.name`. SPDX 2.3 + SPDX 3 read
+            // `scan.user_metadata` directly off `ScanArtifacts`; the CDX
+            // builder mirrors that data into its own field so the
+            // existing `build_metadata` / `build_user_annotations`
+            // call sites (which were already wired to read
+            // `self.user_metadata`) get populated values.
+            .with_user_metadata(scan.user_metadata.clone())
+            // Milestone 081 — propagate the operator-asserted CISA
+            // SBOM Type override from `--sbom-type <type>`. When set,
+            // CDX `metadata.lifecycles[]` collapses to a single-
+            // element array via the equivalence table; per-component
+            // `waybill:sbom-tier` annotations preserve auto-detected
+            // values per research §4.
+            .with_sbom_type_override(scan.sbom_type_override)
+            // Milestone 133 US3 — file-tier walker diagnostic counters.
+            .with_file_inventory_stats(scan.file_inventory_stats.cloned())
+            // Milestone 133 US4 — propagate `--file-inventory` mode
+            // label so `metadata.properties[]` carries the
+            // `waybill:file-inventory-mode = "full"` override marker
+            // when the operator opted into the dedupe bypass.
+            .with_file_inventory_mode(scan.file_inventory_mode.map(String::from))
+            // Milestone 134 — document-scope divergent-PURL summary.
+            // `None` when no collisions were detected (FR-009 — no
+            // annotation in clean SBOMs; bytes stay identical to
+            // alpha.51 emissions).
+            .with_collisions_summary(scan.collisions_summary.cloned())
+            // Milestone 210 — propagate compiler-pipeline data
+            // captured from the eBPF trace so `build_components`
+            // can emit per-component `waybill:source-read-set` (C130)
+            // + `waybill:read-set-source` (C131) properties per
+            // contracts/annotations.md A-1/A-2. `None` when scan
+            // ran without eBPF (default features) OR the trace
+            // captured zero compiler invocations — either case
+            // preserves scan-mode byte-identity.
+            .with_compiler_pipeline(scan.compiler_pipeline.cloned());
+        let bom = builder.build(
+            scan.components,
+            scan.relationships,
+            scan.integrity,
+            scan.target_name,
+            scan.complete_ecosystems,
+            scan.scan_target_coord,
+        )?;
+        let json_str = serde_json::to_string_pretty(&bom)
+            .context("serializing CycloneDX BOM to JSON")?;
+        Ok(vec![EmittedArtifact {
+            relative_path: PathBuf::from(self.default_filename()),
+            bytes: json_str.into_bytes(),
+        }])
+    }
+}

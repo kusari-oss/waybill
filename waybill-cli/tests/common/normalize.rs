@@ -1,0 +1,369 @@
+//! Cross-host byte-identity discipline — shared normalization +
+//! fake-HOME isolation for golden-comparison tests.
+//!
+//! waybill emits byte-stable SBOMs in three formats (CycloneDX 1.6,
+//! SPDX 2.3, SPDX 3.0.1). Per-format regression tests pin a committed
+//! golden file and assert byte-equality against it on every CI run.
+//! Two classes of variability would defeat that guarantee unless
+//! actively normalized:
+//!
+//! 1. **Run-scoped fields** — UUIDs, wall-clock timestamps, and
+//!    content-derived hashes that legitimately differ between
+//!    invocations of the same scan. Each format has spec-mandated
+//!    fields with this property; this module masks them to fixed
+//!    placeholders before comparison.
+//!
+//! 2. **Host-scoped paths** — the absolute path of the workspace
+//!    leaks into several SBOM fields (CDX `waybill:source-files` /
+//!    `evidence.occurrences[].location`; SPDX `comment` and
+//!    annotation envelope payloads). On macOS dev that prefix is
+//!    `/Users/<user>/Projects/waybill/...`; on Linux CI it's
+//!    `/home/runner/work/waybill/waybill/...`. Both are rewritten
+//!    to `<WORKSPACE>` so a golden pinned on one host matches on
+//!    the other.
+//!
+//! See `specs/017-spdx-byte-identity-goldens/data-model.md` for the
+//! authoritative placeholder catalog and strip rules. See
+//! `specs/017-spdx-byte-identity-goldens/contracts/golden-regen.md`
+//! for the `WAYBILL_UPDATE_*_GOLDENS=1` regen contract.
+//!
+//! ## Masked fields by format
+//!
+//! - **CycloneDX**:
+//!   - `serialNumber` → `SERIAL_PLACEHOLDER` — top-level field, fresh
+//!     v4 UUID per invocation per the CDX 1.6 spec.
+//!   - `metadata.timestamp` → `TIMESTAMP_PLACEHOLDER` — `Utc::now()`
+//!     per the CDX 1.6 spec.
+//!
+//! - **SPDX 2.3**:
+//!   - `creationInfo.created` → `TIMESTAMP_PLACEHOLDER` — top-level
+//!     `creationInfo` field, wall-clock per the SPDX 2.3 spec.
+//!   - Every `annotations[].annotationDate` (document-level and
+//!     per-package) → `TIMESTAMP_PLACEHOLDER` — required field on
+//!     every annotation per the SPDX 2.3 spec; waybill emits one
+//!     wall-clock stamp per annotation at scan time.
+//!
+//! - **SPDX 3**:
+//!   - Every `@graph[]` element with `type == "CreationInfo"`:
+//!     `created` field → `TIMESTAMP_PLACEHOLDER` — wall-clock per
+//!     the SPDX 3 spec.
+//!
+//! ## Strip rules by format
+//!
+//! - **CycloneDX**: `components[].hashes[]` (recursively descending
+//!   into nested `components[].components[]` for shade-jar children
+//!   and image-layer-owned bundles). For several ecosystems the
+//!   scanner derives hashes from local package caches (Maven JARs
+//!   from `~/.m2/repository/`, Go module zips from `~/go/pkg/mod/`)
+//!   so per-host cache state varies the hash set; stripping makes
+//!   the goldens portable. Hash-set parity within a single scan is
+//!   still guarded by `spdx_cdx_parity.rs` (in-memory, same host).
+//! - **SPDX 2.3**: `packages[].checksums[]` — same reason as CDX
+//!   hash strip; the per-host cache state varies the checksum set.
+//! - **SPDX 3**: `verifiedUsing[]` on every `@graph[]` element with
+//!   `type == "Package"` (or `"software_Package"` for SPDX 3.0.1
+//!   typed-prefix shape) — same per-host hash variability reason.
+//!
+//! ## Fake-HOME isolation envvars
+//!
+//! `apply_fake_home_env` redirects six env vars, each to an
+//! (intentionally empty) sub-path under the per-test tempdir so the
+//! scanner's home-cache lookups uniformly hit nothing regardless of
+//! host:
+//!
+//! - `HOME` → `fake_home` itself. Generic per-user home dir; touched
+//!   by many tools when other env vars are unset.
+//! - `M2_REPO` → `fake_home/no-m2-repo`. Maven local-repo cache.
+//!   Without isolation, `~/.m2/repository/` on the dev machine seeds
+//!   the scanner with packages absent from CI runners (the
+//!   commons-text mismatch the user's memory tagged).
+//! - `MAVEN_HOME` → `fake_home/no-maven-home`. Maven settings dir.
+//! - `GOPATH` → `fake_home/no-gopath`. Go workspace; defaults to
+//!   `$HOME/go` when unset, but pinning explicitly insulates against
+//!   shells that export it.
+//! - `GOMODCACHE` → `fake_home/no-gomodcache`. Go module cache;
+//!   defaults to `$GOPATH/pkg/mod`. Module zip metadata seeds the
+//!   Go ecosystem reader.
+//! - `CARGO_HOME` → `fake_home/no-cargo-home`. Cargo registry +
+//!   git clone cache; defaults to `$HOME/.cargo`. Currently rarely
+//!   affects output but isolated for future-proofing.
+//!
+//! Additionally pins `WAYBILL_NO_GO_MOD_WHY=1` (milestone 112): the
+//! default-on `go mod why -m -vendor` classification would otherwise
+//! invoke the host's real `go` toolchain on every Go-fixture scan,
+//! making golden output depend on whether `go` is installed and on
+//! its module-resolution behavior. Tests that exercise the
+//! classification (`go_build_inclusion.rs`) opt back in by
+//! re-setting the var to `0` after calling this helper.
+
+#![allow(dead_code)]
+
+use std::path::Path;
+use std::process::Command;
+
+/// CycloneDX `serialNumber` placeholder. Top-level CDX field is a
+/// fresh v4 UUID per invocation; mask to a fixed value for
+/// byte-identity comparison.
+pub const SERIAL_PLACEHOLDER: &str = "urn:uuid:00000000-0000-0000-0000-000000000000";
+
+/// Wall-clock timestamp placeholder. Used for CDX `metadata.timestamp`,
+/// SPDX 2.3 `creationInfo.created`, and SPDX 3 `CreationInfo.created`
+/// — every format's "when was this generated" field gets the same
+/// epoch placeholder.
+pub const TIMESTAMP_PLACEHOLDER: &str = "1970-01-01T00:00:00Z";
+
+/// Stand-in for the absolute path of the workspace root. Macs emit
+/// `/Users/<user>/Projects/waybill/...`; CI Linux emits
+/// `/home/runner/work/waybill/waybill/...`; CI Windows emits
+/// `//?/D:/a/waybill/waybill/...` (extended-length-path form,
+/// forward-slashed via milestone-100 normalization); all three
+/// rewrite to this literal so a golden pinned on one host matches
+/// on the others.
+pub const WORKSPACE_PLACEHOLDER: &str = "<WORKSPACE>";
+
+/// Milestone 100: rewrite host-scoped path prefixes in `raw` so the
+/// CDX/SPDX-2.3/SPDX-3 normalizers can string-replace `workspace` and
+/// `WAYBILL_FIXTURES_DIR` against forward-slash, extended-prefix-free
+/// space regardless of host OS.
+///
+/// On Unix this is essentially a no-op (the input strings already use
+/// forward-slash and don't carry the Windows `\\?\` extended-length-
+/// path prefix). On Windows the SBOM emitter (per milestone 100)
+/// emits forward-slash paths but `std::fs::canonicalize` returns
+/// `\\?\C:\...` form which milestone 100 then forward-slashes to
+/// `//?/C:/...`. We strip that prefix here so the replace target
+/// matches the emitted strings.
+pub fn cross_host_align(raw: &str, workspace: &Path) -> (String, String, String) {
+    let ws_str = workspace.to_string_lossy().to_string();
+    let fixtures_cache: String = env!("WAYBILL_FIXTURES_DIR").into();
+    if cfg!(windows) {
+        // Milestone 100 already forward-slashes path strings in the
+        // emitted SBOM via `normalize_sbom_path_str`. The remaining
+        // Windows-specific drift is the `\\?\` extended-length-path
+        // prefix that `std::fs::canonicalize` prepends; milestone-100
+        // normalization converts `\\?\` → `//?/`. Strip that from raw
+        // so the prefix-less workspace + fixtures-cache strings (which
+        // we forward-slash-normalize below) match it.
+        //
+        // DO NOT replace every `\` in raw with `/` — JSON content can
+        // contain legitimate backslash escapes (CPE 2.3 strings use
+        // `\/` as the literal `/`-escape per the CPE spec, which
+        // serializes as `\\/` in JSON; rewriting those would corrupt
+        // them, e.g. `cpe:2.3:a:github.com\/foo` → `github.com///foo`).
+        let raw_aligned = raw.replace("//?/", "");
+        let ws_fs = ws_str
+            .replace('\\', "/")
+            .trim_start_matches("//?/")
+            .to_string();
+        let fc_fs = fixtures_cache
+            .replace('\\', "/")
+            .trim_start_matches("//?/")
+            .to_string();
+        (raw_aligned, ws_fs, fc_fs)
+    } else {
+        (raw.to_string(), ws_str, fixtures_cache)
+    }
+}
+
+/// Normalize a raw CycloneDX scan output for golden comparison.
+///
+/// Workspace-path replacement runs as a string-replace on the raw
+/// output (catches every leak vector without enumerating fields);
+/// UUID/timestamp masking runs on the parsed JSON; hash stripping
+/// descends recursively through nested components.
+///
+/// Returns the normalized JSON re-serialized as pretty-printed string
+/// with sorted keys (no trailing newline — matches the on-disk shape
+/// produced by `serde_json::to_string_pretty`, which is what every
+/// existing committed golden was written with).
+pub fn normalize_cdx_for_golden(raw: &str, workspace: &Path) -> String {
+    // Milestone 090: when fixtures resolve through WAYBILL_FIXTURES_DIR
+    // (`~/.cache/waybill/fixtures/<sha>/`), rewrite that prefix to
+    // `<WORKSPACE>/tests/fixtures` so existing pre-090 goldens (which
+    // recorded the in-repo fixture paths) match without regen.
+    //
+    // Milestone 100: forward-slash + extended-prefix-strip applied by
+    // `cross_host_align` so Windows runners can match the same goldens.
+    let (raw_aligned, ws_str, fixtures_cache) = cross_host_align(raw, workspace);
+    let pre_replace = raw_aligned.replace(
+        fixtures_cache.as_str(),
+        format!("{ws_str}/tests/fixtures").as_str(),
+    );
+    let replaced = pre_replace.replace(ws_str.as_str(), WORKSPACE_PLACEHOLDER);
+
+    let mut json: serde_json::Value = serde_json::from_str(&replaced)
+        .expect("produced SBOM is valid JSON after workspace-path rewrite");
+    if let Some(obj) = json.as_object_mut() {
+        if obj.contains_key("serialNumber") {
+            obj.insert(
+                "serialNumber".to_string(),
+                serde_json::Value::String(SERIAL_PLACEHOLDER.to_string()),
+            );
+        }
+        if let Some(md) = obj.get_mut("metadata").and_then(|v| v.as_object_mut()) {
+            if md.contains_key("timestamp") {
+                md.insert(
+                    "timestamp".to_string(),
+                    serde_json::Value::String(TIMESTAMP_PLACEHOLDER.to_string()),
+                );
+            }
+        }
+        if let Some(comps) = obj.get_mut("components").and_then(|v| v.as_array_mut()) {
+            for c in comps {
+                strip_cdx_component_hashes(c);
+            }
+        }
+    }
+    serde_json::to_string_pretty(&json).expect("re-serialize")
+}
+
+/// Recursively strip `hashes[]` from a CDX component and its nested
+/// `components[]` children (CDX 1.6 nests for shade-jar children and
+/// image-layer-owned bundles).
+fn strip_cdx_component_hashes(c: &mut serde_json::Value) {
+    let Some(obj) = c.as_object_mut() else { return };
+    obj.remove("hashes");
+    if let Some(nested) = obj.get_mut("components").and_then(|v| v.as_array_mut()) {
+        for nc in nested {
+            strip_cdx_component_hashes(nc);
+        }
+    }
+}
+
+/// Normalize a raw SPDX 2.3 scan output for golden comparison.
+///
+/// Same contract as `normalize_cdx_for_golden`: workspace-path
+/// string-replace runs on the raw output; `creationInfo.created`
+/// masking + `packages[].checksums[]` strip run on the parsed JSON;
+/// pretty-printed serialized string returned (no trailing newline).
+pub fn normalize_spdx23_for_golden(raw: &str, workspace: &Path) -> String {
+    // Milestone 090 + 100: see normalize_cdx_for_golden for the
+    // host-path-alignment rationale.
+    let (raw_aligned, ws_str, fixtures_cache) = cross_host_align(raw, workspace);
+    let pre_replace = raw_aligned.replace(
+        fixtures_cache.as_str(),
+        format!("{ws_str}/tests/fixtures").as_str(),
+    );
+    let replaced = pre_replace.replace(ws_str.as_str(), WORKSPACE_PLACEHOLDER);
+
+    let mut json: serde_json::Value = serde_json::from_str(&replaced)
+        .expect("produced SPDX 2.3 is valid JSON after workspace-path rewrite");
+    if let Some(obj) = json.as_object_mut() {
+        // Mask creationInfo.created — wall-clock per spec.
+        if let Some(ci) = obj.get_mut("creationInfo").and_then(|v| v.as_object_mut()) {
+            if ci.contains_key("created") {
+                ci.insert(
+                    "created".to_string(),
+                    serde_json::Value::String(TIMESTAMP_PLACEHOLDER.to_string()),
+                );
+            }
+        }
+        // Mask document-level annotations[].annotationDate.
+        if let Some(anns) = obj.get_mut("annotations").and_then(|v| v.as_array_mut()) {
+            mask_spdx23_annotation_dates(anns);
+        }
+        // Strip packages[].checksums[] (host-cache-derived) and mask
+        // per-package annotations[].annotationDate.
+        if let Some(pkgs) = obj.get_mut("packages").and_then(|v| v.as_array_mut()) {
+            for p in pkgs {
+                if let Some(p_obj) = p.as_object_mut() {
+                    p_obj.remove("checksums");
+                    if let Some(anns) =
+                        p_obj.get_mut("annotations").and_then(|v| v.as_array_mut())
+                    {
+                        mask_spdx23_annotation_dates(anns);
+                    }
+                }
+            }
+        }
+    }
+    serde_json::to_string_pretty(&json).expect("re-serialize SPDX 2.3")
+}
+
+/// Replace every `annotationDate` field in an `annotations[]` array
+/// with the timestamp placeholder. SPDX 2.3 makes `annotationDate`
+/// REQUIRED on every annotation, so every entry has the field; we
+/// just overwrite without checking presence.
+fn mask_spdx23_annotation_dates(annotations: &mut [serde_json::Value]) {
+    for a in annotations {
+        if let Some(obj) = a.as_object_mut() {
+            if obj.contains_key("annotationDate") {
+                obj.insert(
+                    "annotationDate".to_string(),
+                    serde_json::Value::String(TIMESTAMP_PLACEHOLDER.to_string()),
+                );
+            }
+        }
+    }
+}
+
+/// Normalize a raw SPDX 3 scan output for golden comparison.
+///
+/// Same contract as `normalize_spdx23_for_golden` but for the SPDX 3
+/// `@graph`-shaped document. Walks `@graph[]` for `CreationInfo`
+/// elements (mask `created`) and `Package` elements (strip
+/// `verifiedUsing[]`). Document IRI is content-derived (host-stable
+/// per `spdx3_determinism.rs:11-13`) so left alone.
+pub fn normalize_spdx3_for_golden(raw: &str, workspace: &Path) -> String {
+    // Milestone 090 + 100: see normalize_cdx_for_golden for the
+    // host-path-alignment rationale.
+    let (raw_aligned, ws_str, fixtures_cache) = cross_host_align(raw, workspace);
+    let pre_replace = raw_aligned.replace(
+        fixtures_cache.as_str(),
+        format!("{ws_str}/tests/fixtures").as_str(),
+    );
+    let replaced = pre_replace.replace(ws_str.as_str(), WORKSPACE_PLACEHOLDER);
+
+    let mut json: serde_json::Value = serde_json::from_str(&replaced)
+        .expect("produced SPDX 3 is valid JSON after workspace-path rewrite");
+    if let Some(graph) = json.get_mut("@graph").and_then(|v| v.as_array_mut()) {
+        for element in graph {
+            let Some(obj) = element.as_object_mut() else {
+                continue;
+            };
+            let kind = obj.get("type").and_then(|v| v.as_str()).map(String::from);
+            match kind.as_deref() {
+                Some("CreationInfo") if obj.contains_key("created") => {
+                    obj.insert(
+                        "created".to_string(),
+                        serde_json::Value::String(TIMESTAMP_PLACEHOLDER.to_string()),
+                    );
+                }
+                Some("Package" | "software_Package") => {
+                    obj.remove("verifiedUsing");
+                }
+                _ => {}
+            }
+        }
+    }
+    serde_json::to_string_pretty(&json).expect("re-serialize SPDX 3")
+}
+
+/// Apply the cross-host fake-HOME env-var isolation to a Command.
+///
+/// Redirects HOME, M2_REPO, MAVEN_HOME, GOPATH, GOMODCACHE,
+/// CARGO_HOME to subdirectories under `fake_home`. The subdirectories
+/// don't need to exist; the goal is to point cache lookups at empty
+/// paths so the scanner sees no cached metadata regardless of host.
+///
+/// Also pins `WAYBILL_FIXED_TIMESTAMP` to a known RFC 3339 value so
+/// SBOM `creationInfo.created` / `metadata.timestamp` is deterministic
+/// across multiple subprocess invocations within the same test. This
+/// closes the latent byte-identity flake where two `waybill sbom scan`
+/// runs could cross a second boundary on slow CI runners
+/// (`scan_cmd.rs::scan_created_timestamp` reads this env var).
+///
+/// Caller is responsible for ensuring `fake_home` outlives the
+/// Command's execution (typically by holding the source TempDir).
+pub fn apply_fake_home_env(cmd: &mut Command, fake_home: &Path) {
+    cmd.env("HOME", fake_home)
+        .env("M2_REPO", fake_home.join("no-m2-repo"))
+        .env("MAVEN_HOME", fake_home.join("no-maven-home"))
+        .env("GOPATH", fake_home.join("no-gopath"))
+        .env("GOMODCACHE", fake_home.join("no-gomodcache"))
+        .env("CARGO_HOME", fake_home.join("no-cargo-home"))
+        .env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
+        // Milestone 112: keep golden/byte-identity tests independent
+        // of the host's `go` toolchain (classification is default-on).
+        .env("WAYBILL_NO_GO_MOD_WHY", "1");
+}

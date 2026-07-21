@@ -1,7 +1,7 @@
 # Ecosystems
 
-Per-ecosystem coverage for all nine ecosystems mikebom supports. Use this
-page to answer *"does mikebom see my packages the way I expect"* before
+Per-ecosystem coverage for all nine ecosystems waybill supports. Use this
+page to answer *"does waybill see my packages the way I expect"* before
 diving into the [architecture docs](architecture/overview.md).
 
 ## Coverage matrix
@@ -47,14 +47,14 @@ Two entry forms:
   spans path separators. Patterns combine by union when the flag is
   repeated.
 
-Set via the CLI flag (repeatable) OR the `MIKEBOM_EXCLUDE_PATH` env-var
+Set via the CLI flag (repeatable) OR the `WAYBILL_EXCLUDE_PATH` env-var
 (platform path-list separator). When at least one entry is in effect,
-emitted SBOMs carry a `mikebom:exclude-path` transparency annotation
+emitted SBOMs carry a `waybill:exclude-path` transparency annotation
 listing every entry, and a scan-end `tracing::info!` line surfaces
 `excluded_entries=N excluded_literals=N excluded_patterns=N
 suppressed_dirs=N` for operator inspection (milestone 118 / #343).
 
-Built-in skip-list precedence: mikebom-internal skips (`.git`, `target`,
+Built-in skip-list precedence: waybill-internal skips (`.git`, `target`,
 `node_modules`, `.cargo`, `__pycache__`, `.venv`) take precedence; an
 operator cannot re-include them via `--exclude-path`. See
 [`docs/user-guide/cli-reference.md` § `--exclude-path`](user-guide/cli-reference.md#--exclude-path-path_or_pattern)
@@ -77,7 +77,7 @@ Three concrete use cases:
   emitted SBOM's `services[]` section — a CDX-native section the
   scanner never populates from on-disk evidence.
 - **Vendored libraries with no manifest** appear as regular components
-  tagged `mikebom:source-tier = "declared"` so downstream consumers
+  tagged `waybill:source-tier = "declared"` so downstream consumers
   can distinguish declared from observed.
 - **Metadata gaps** on scanner-discovered components are filled by
   the operator's declared values (licenses, supplier, copyright,
@@ -88,10 +88,10 @@ Safety property: the operator **cannot** suppress scanner detection of
 bytes-evident content. A supplement asserting "no openssl" against a
 fingerprint-detected openssl still produces an SBOM containing the
 openssl component; the assertion appears as an annotated conflict for
-audit (`mikebom:assertion-conflict`).
+audit (`waybill:assertion-conflict`).
 
 Provenance: when the flag is in effect, the emitted SBOM carries a
-document-scope `mikebom:supplement-cdx = "<path>@sha256:<hex>"`
+document-scope `waybill:supplement-cdx = "<path>@sha256:<hex>"`
 annotation so consumers can verify which supplement file fed the
 merge.
 
@@ -106,7 +106,7 @@ example, and troubleshooting matrix.
 
 ## apk
 
-**Module:** `mikebom-cli/src/scan_fs/package_db/apk.rs`
+**Module:** `waybill-cli/src/scan_fs/package_db/apk.rs`
 
 **Detection:** stanza parser over `/lib/apk/db/installed`. Reads `P:`
 (name), `V:` (version), `A:` (arch), `D:` (direct dependencies).
@@ -121,7 +121,7 @@ deb and rpm.
 transitive graph — it records only what each package declares.
 
 **Hashes:** none. apk's installed DB doesn't carry per-package content
-hashes mikebom can use.
+hashes waybill can use.
 
 **Enrichment:**
 - deps.dev: skipped (not in deps.dev's supported ecosystems).
@@ -137,7 +137,7 @@ hashes mikebom can use.
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
 
-**Module:** `mikebom-cli/src/scan_fs/package_db/cargo.rs`
+**Module:** `waybill-cli/src/scan_fs/package_db/cargo.rs`
 
 **Detection:** `Cargo.lock` v3 and v4 parser. v1/v2 are refused (they
 pre-date the reproducible-lockfile guarantee).
@@ -169,7 +169,7 @@ CycloneDX `components[].hashes[]`.
 
 ## deb
 
-**Module:** `mikebom-cli/src/scan_fs/package_db/dpkg.rs`, with DEP-5
+**Module:** `waybill-cli/src/scan_fs/package_db/dpkg.rs`, with DEP-5
 copyright parsing in `scan_fs/package_db/copyright.rs` and per-file deep
 hashing in `scan_fs/package_db/file_hashes.rs`.
 
@@ -233,7 +233,7 @@ base libs that ship license grants verbatim).
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
 
-**Module:** `mikebom-cli/src/scan_fs/package_db/gem.rs`
+**Module:** `waybill-cli/src/scan_fs/package_db/gem.rs`
 
 **Detection:** `Gemfile.lock` indent-structure parser + walker over
 `specifications/*.gemspec` files. The gemspec walker catches Ruby stdlib
@@ -272,8 +272,8 @@ work — see the sbomqs-score-lift items in
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
 
-**Modules:** `mikebom-cli/src/scan_fs/package_db/golang.rs` (source scans),
-`mikebom-cli/src/scan_fs/package_db/go_binary.rs` (binary scans).
+**Modules:** `waybill-cli/src/scan_fs/package_db/golang.rs` (source scans),
+`waybill-cli/src/scan_fs/package_db/go_binary.rs` (binary scans).
 
 ### Source scans
 
@@ -296,29 +296,29 @@ for the plan.
 
 **Build-inclusion clarity (milestone 112):** `go.sum` routinely retains
 entries for modules outside the final build list (test-only transitives,
-pruned graph leftovers). Modules that mikebom could only attach via the
+pruned graph leftovers). Modules that waybill could only attach via the
 lower-fidelity fallback paths (the milestone-091 `go.sum` flat fallback,
-recognizable by `mikebom:resolver-step: go-sum-fallback`) get two layers
+recognizable by `waybill:resolver-step: go-sum-fallback`) get two layers
 of treatment:
 
 1. **Always-on marker:** every fallback-attached module carries
-   `mikebom:build-inclusion: unknown` — an explicit "mikebom cannot
+   `waybill:build-inclusion: unknown` — an explicit "waybill cannot
    prove this module participates in the build" signal, instead of
    silently looking like a confirmed dependency. No native scope field
    is set (CDX `scope` absent ≠ `excluded`).
 2. **Default-on classification:** when a `go` toolchain is found on
-   PATH, mikebom runs `go mod why -m -vendor` against each main module
+   PATH, waybill runs `go mod why -m -vendor` against each main module
    (modules batched in chunks of 20, 60-second total budget shared
    across the scan) and upgrades the marker per verdict:
-   - outside the build graph → `mikebom:build-inclusion: not-needed` +
-     CDX `scope: "excluded"` + `mikebom:build-inclusion-derivation:
+   - outside the build graph → `waybill:build-inclusion: not-needed` +
+     CDX `scope: "excluded"` + `waybill:build-inclusion-derivation:
      go-mod-why`;
    - reachable only through `.test` packages → test lifecycle scope +
-     `mikebom:lifecycle-scope-derivation: go-mod-why`;
+     `waybill:lifecycle-scope-derivation: go-mod-why`;
    - needed by ANY main module in the scanned tree → no marker (a
      module needed by one of several main modules is never excluded).
 
-   Disable with `--no-go-mod-why` or `MIKEBOM_NO_GO_MOD_WHY=1`; see the
+   Disable with `--no-go-mod-why` or `WAYBILL_NO_GO_MOD_WHY=1`; see the
    [CLI reference](user-guide/cli-reference.md#--no-go-mod-why).
 
 **Degrade matrix:** classification never fails a scan — every failure
@@ -344,7 +344,7 @@ three annotations carry across CDX / SPDX 2.3 / SPDX 3.
 
 **Detection:** `runtime/debug.BuildInfo` inline-format decoder. Works for
 Go 1.18+ binaries. Pre-1.18 binaries are flagged with
-`mikebom:buildinfo-status = unsupported` and emit a file-level component
+`waybill:buildinfo-status = unsupported` and emit a file-level component
 only.
 
 **PURL format:** same as source scans.
@@ -357,19 +357,19 @@ at 0.70 confidence with file-level evidence); individual modules don't.
 
 **VCS metadata (milestone 025):** when the binary was built with
 `-buildvcs=true` (the Go default since 1.18), three additional
-annotations attach to the main-module entry: `mikebom:go-vcs-revision`
-(commit SHA from `vcs.revision`), `mikebom:go-vcs-time` (RFC 3339
-build timestamp from `vcs.time`), and `mikebom:go-vcs-modified`
+annotations attach to the main-module entry: `waybill:go-vcs-revision`
+(commit SHA from `vcs.revision`), `waybill:go-vcs-time` (RFC 3339
+build timestamp from `vcs.time`), and `waybill:go-vcs-modified`
 (dirty-tree boolean from `vcs.modified`, preserved as the literal
 `"true"` / `"false"` string per Go's wire format). Surfaced via the
 milestone 023 `extra_annotations` bag — same data `go version -m
 <binary>` shows. Dep entries don't carry VCS metadata; that's a
 main-module concern. Binaries built with `-buildvcs=false` or outside
-a VCS worktree emit no `mikebom:go-vcs-*` annotations.
+a VCS worktree emit no `waybill:go-vcs-*` annotations.
 
 **Known limitations:**
 - Stripped binaries where BuildInfo extraction fails get
-  `mikebom:buildinfo-status = missing` and emit only as a file-level
+  `waybill:buildinfo-status = missing` and emit only as a file-level
   component with hash-only PURL.
 - Scratch / distroless images with a single Go binary produce a flat
   component list. That's the accurate answer — the binary doesn't know the
@@ -389,7 +389,7 @@ a VCS worktree emit no `mikebom:go-vcs-*` annotations.
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
 
-**Module:** `mikebom-cli/src/scan_fs/package_db/maven.rs`
+**Module:** `waybill-cli/src/scan_fs/package_db/maven.rs`
 
 Maven is the most complex ecosystem. Transitive versions can live in
 parent POMs' `<dependencyManagement>` or be supplied by BOM imports. See
@@ -435,10 +435,10 @@ is deferred.
 
 **Shade-plugin fat-jars (feature 009):**
 When a JAR contains `META-INF/DEPENDENCIES` (the Apache
-`maven-dependency-plugin`'s declared-transitive manifest), mikebom
+`maven-dependency-plugin`'s declared-transitive manifest), waybill
 parses it into ancestor coords and emits one nested component per
 ancestor under the enclosing JAR's primary coord, tagged
-`mikebom:shade-relocation = true`. Emission is gated on
+`waybill:shade-relocation = true`. Emission is gated on
 **bytecode-presence verification**: an ancestor is retained only when a
 `.class` entry in the JAR matches either its original group path
 (UNSHADED) or a shade-relocated path containing the ancestor's
@@ -452,7 +452,7 @@ FR-002b.
 
 **Known limitations:**
 - `<exclusions>` not parsed. If a project excludes a transitive via
-  `<exclusions>`, mikebom still emits the excluded coord.
+  `<exclusions>`, waybill still emits the excluded coord.
 - Version ranges (`[1.0,2.0)`) not resolved.
 - `<profiles>` ignored — profile-conditional deps never emit.
 - Plugin-section deps (`<build><plugins>`) ignored — not runtime deps.
@@ -461,7 +461,7 @@ FR-002b.
 
 ### Gradle dependency-locking (milestone 106)
 
-**Module:** `mikebom-cli/src/scan_fs/package_db/gradle/`
+**Module:** `waybill-cli/src/scan_fs/package_db/gradle/`
 
 **Detection:** either `gradle.lockfile` (runtime classpath) or
 `buildscript-gradle.lockfile` (build-script / plugin classpath) found
@@ -480,7 +480,7 @@ emits `LifecycleScope::Build` (→ CDX `scope: "excluded"`, SPDX 2.3
 `BUILD_DEPENDENCY_OF`, SPDX 3 `lifecycleScope: "build"`).
 `gradle.lockfile` carries no scope (runtime default).
 
-**Annotations:** `mikebom:gradle-configurations` carries the raw
+**Annotations:** `waybill:gradle-configurations` carries the raw
 comma-joined configuration list (informational; downstream filterable
 by `compileClasspath` / `testRuntimeClasspath` / etc.).
 
@@ -493,7 +493,7 @@ edges; each row is an already-resolved coord.
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
 
-**Module:** `mikebom-cli/src/scan_fs/package_db/npm.rs`
+**Module:** `waybill-cli/src/scan_fs/package_db/npm.rs`
 
 **Detection:** `package-lock.json` v2/v3, `pnpm-lock.yaml`, or flat walk
 of `node_modules/` as tertiary fallback. `package-lock.json` v1 is
@@ -519,7 +519,7 @@ sha256, sha384, sha512; flows through to CycloneDX `components[].hashes[]`.
 **npm internals filtering (scope-by-mode, always on):**
 - In `--image` scans, components discovered inside npm's own bundled tree
   (`**/node_modules/npm/node_modules/**`) are marked
-  `mikebom:npm-role = internal` and retained — the image contains
+  `waybill:npm-role = internal` and retained — the image contains
   npm's own install, so those bytes are legitimately present.
 - In `--path` scans, internals are filtered out before resolution on
   the assumption that a path-mode scan targets the application's
@@ -529,7 +529,7 @@ sha256, sha384, sha512; flows through to CycloneDX `components[].hashes[]`.
 
 ### Bun lockfile (milestone 106)
 
-**Module:** `mikebom-cli/src/scan_fs/package_db/npm/bun_lock.rs`
+**Module:** `waybill-cli/src/scan_fs/package_db/npm/bun_lock.rs`
 
 **Detection:** `bun.lock` (Bun's JSONC lockfile format) at any
 project root in the scan tree. Bun-only projects (no
@@ -541,9 +541,9 @@ header comment is stripped before `serde_json::from_str` via the shared
 `npm/jsonc.rs` helper. Parses `lockfileVersion`, `workspaces`,
 `packages`, and `overrides` keys; unknown keys are silently ignored.
 
-**Workspace support:** when `workspaces` declares members, mikebom
+**Workspace support:** when `workspaces` declares members, waybill
 emits a synthetic workspace-root component (PURL: `pkg:generic/<name>`,
-`mikebom:component-role: "workspace-root"`) plus a `main-module`
+`waybill:component-role: "workspace-root"`) plus a `main-module`
 component per member. Intra-workspace edges are harvested when a
 member's `dependencies` declares `workspace:*` source-specs.
 
@@ -556,7 +556,7 @@ URL-encode the `@` (`@scope/name` → `pkg:npm/%40scope/name@version`).
 
 ### Yarn lockfile (milestone 106)
 
-**Module:** `mikebom-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
+**Module:** `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`
 
 **Detection:** `yarn.lock` at any project root in the scan tree.
 Yarn-only projects are picked up via the `has_npm_signal` marker.
@@ -601,7 +601,7 @@ yet — tracked as a follow-up.
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
 
-**Module:** `mikebom-cli/src/scan_fs/package_db/pip.rs`
+**Module:** `waybill-cli/src/scan_fs/package_db/pip.rs`
 
 **Detection:** three parallel paths:
 1. Installed venvs: walk `<venv>/lib/python*/site-packages/*.dist-info/METADATA`.
@@ -633,7 +633,7 @@ don't carry per-component hashes yet.
 
 ### uv lockfile (milestone 106)
 
-**Module:** `mikebom-cli/src/scan_fs/package_db/pip/uv_lock.rs`
+**Module:** `waybill-cli/src/scan_fs/package_db/pip/uv_lock.rs`
 
 **Detection:** `uv.lock` (TOML) at any project root in the scan tree.
 Sibling to the existing Poetry / Pipfile readers; uv-only projects
@@ -645,9 +645,9 @@ giving the resolved dep graph. Workspace projects additionally
 declare members under `[tool.uv.workspace]` in the root
 `pyproject.toml`.
 
-**Workspace support:** mikebom emits a synthetic workspace-root
+**Workspace support:** waybill emits a synthetic workspace-root
 component (PURL: `pkg:generic/<name>`,
-`mikebom:component-role: "workspace-root"`) plus a `main-module`
+`waybill:component-role: "workspace-root"`) plus a `main-module`
 per member. Intra-workspace dep edges are surfaced automatically
 when a member's `[[package.dependencies]]` names a sibling member.
 
@@ -662,7 +662,7 @@ name (lowercase, runs of non-alphanum collapsed to `-`).
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
 
-**Module:** `mikebom-cli/src/scan_fs/package_db/nuget/`
+**Module:** `waybill-cli/src/scan_fs/package_db/nuget/`
 
 **Detection:** walks the scan tree for `.csproj` / `.vbproj` /
 `.fsproj` files (max_depth=8). For each project file, applies a
@@ -680,7 +680,7 @@ four-step version-resolution ladder.
 
 **PURL format:** `pkg:nuget/<name>@<version>` — names case-preserved
 from the source (NuGet is case-insensitive on the registry but
-mikebom records what the source says; dedup handles cross-source
+waybill records what the source says; dedup handles cross-source
 collation).
 
 **Lifecycle scope:** driven by `PrivateAssets`, `IncludeAssets`,
@@ -693,7 +693,7 @@ recognized per MSBuild conventions.
 
 **Transitive emission:** packages.lock.json entries tagged
 `"type": "Transitive"` that don't appear in any `.csproj` are
-emitted with `mikebom:source-type: "transitive"`.
+emitted with `waybill:source-type: "transitive"`.
 
 **Dependency edges:** each lockfile entry's `dependencies` map
 populates `PackageDbEntry.depends`. The standard scan orchestrator
@@ -702,7 +702,7 @@ drops edges whose target isn't present in the same scan.
 **Source-files merging:** when multiple files contribute to the
 same canonical PURL (e.g. `.csproj` + `Directory.Packages.props`
 for CPM, or `.csproj` + `packages.lock.json` for direct deps), the
-file paths merge into a single comma-joined `mikebom:source-files`
+file paths merge into a single comma-joined `waybill:source-files`
 annotation. `BTreeSet<PathBuf>` keeps ordering deterministic.
 
 **Enrichment:**
@@ -720,8 +720,8 @@ annotation. `BTreeSet<PathBuf>` keeps ordering deterministic.
 
 ## rpm
 
-**Modules:** `mikebom-cli/src/scan_fs/package_db/rpm.rs`,
-`mikebom-cli/src/scan_fs/package_db/rpmdb_sqlite/`
+**Modules:** `waybill-cli/src/scan_fs/package_db/rpm.rs`,
+`waybill-cli/src/scan_fs/package_db/rpmdb_sqlite/`
 
 **Detection:** pure-Rust SQLite reader over
 `/var/lib/rpm/rpmdb.sqlite`. No C dependency on librpm (per the project
@@ -738,12 +738,12 @@ Canonicalization:
   [RPM canonicalization note in design-notes](design-notes.md#purl-canonicalization).
 
 **Evidence:** `PackageDatabase` / `manifest-analysis` at 0.85, with
-`mikebom:evidence-kind = rpmdb-sqlite`.
+`waybill:evidence-kind = rpmdb-sqlite`.
 
 **Dep graph:** full tree from rpmdb `REQUIRES` tags.
 
 **Hashes:** **none.** rpmdb doesn't record per-package content hashes
-mikebom can use. This is why rpm scans score 6.1/10 on sbomqs (Integrity
+waybill can use. This is why rpm scans score 6.1/10 on sbomqs (Integrity
 0/10) — the ecosystem itself doesn't provide the data.
 
 **Enrichment:**
@@ -754,7 +754,7 @@ mikebom can use. This is why rpm scans score 6.1/10 on sbomqs (Integrity
 - **Berkeley DB rpmdb** (`/var/lib/rpm/Packages`, pre-RHEL 8) is
   **detected but not parsed.** Diagnostic logged, zero rpm components
   emitted. The `--include-legacy-rpmdb` flag (or
-  `MIKEBOM_INCLUDE_LEGACY_RPMDB=1`) threads through to
+  `WAYBILL_INCLUDE_LEGACY_RPMDB=1`) threads through to
   `rpmdb_bdb::read`, which is a stub pending the concrete Hash/BTree
   page parser (milestone 004 US4 tasks T061–T065). Until those land,
   flipping the flag changes nothing about scan output.
@@ -770,11 +770,11 @@ mikebom can use. This is why rpm scans score 6.1/10 on sbomqs (Integrity
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
 
-**Module:** `mikebom-cli/src/scan_fs/package_db/opkg.rs`
-+ `mikebom-cli/src/scan_fs/package_db/yocto/{context,manifest,recipe}.rs`
+**Module:** `waybill-cli/src/scan_fs/package_db/opkg.rs`
++ `waybill-cli/src/scan_fs/package_db/yocto/{context,manifest,recipe}.rs`
 
 Yocto / OpenEmbedded coverage (milestone 107). Three complementary
-readers cover the embedded-Linux scan shapes that mikebom previously
+readers cover the embedded-Linux scan shapes that waybill previously
 emitted empty SBOMs for: device rootfs scans, build-directory scans,
 SDK sysroot scans, and layer-tree scans. Together they close the
 largest C/C++ source coverage gap that was deferred from milestone 105
@@ -809,7 +809,7 @@ tags every emitted entry accordingly:
 - Sysroot context (either signal fires) → every entry tagged
   `LifecycleScope::Build` → emits CDX `scope: "excluded"` / SPDX
   `BUILD_DEPENDENCY_OF`. Ambiguity (primary fires AND `/etc/init.d/`
-  is actively present) records a `mikebom:scan-ambiguity` annotation
+  is actively present) records a `waybill:scan-ambiguity` annotation
   on the SBOM metadata but still applies build-scope (primary wins).
 
 **Per-stanza FR-006 override:** `nativesdk-` prefixed packages OR
@@ -830,12 +830,12 @@ as the installed-DB reader. Cross-source dedup collapses identical
 coords via the milestone-105 pipeline (FR-010 precedence:
 `OpkgInstalled` > `YoctoImageManifest`, so when both readers fire on
 the same scan, installed-DB wins and the manifest's source-mechanism
-appears in `mikebom:also-detected-via`).
+appears in `waybill:also-detected-via`).
 
 **Lifecycle scope:** runtime by default. Per-line FR-006 override
 applies the same nativesdk/host-arch checks as the opkg reader.
 
-**Annotation:** `mikebom:image-name = <manifest-filename-stem>` so
+**Annotation:** `waybill:image-name = <manifest-filename-stem>` so
 downstream consumers can group components by image variant when
 multiple manifests exist alongside each other.
 
@@ -869,7 +869,7 @@ above the first `recipes-*/` directory.
   silently skipped (FR-008). Downstream consumers who care about
   which recipes were skipped can grep the scan logs.
 - `.bb` files with no `_<version>` segment → emitted with
-  `version: "unknown"` + `mikebom:version-status: "missing"`
+  `version: "unknown"` + `waybill:version-status: "missing"`
   annotation.
 
 ### Out of scope (this milestone)
@@ -900,7 +900,7 @@ format doesn't carry licenses, so those entries ship with empty
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
 
-mikebom's Kotlin DSL Gradle reader (milestone 122 US2) regex-extracts
+waybill's Kotlin DSL Gradle reader (milestone 122 US2) regex-extracts
 dependency declarations from `build.gradle.kts` files (the Android
 Studio / IntelliJ default since 2023) and resolves `libs.<alias>`
 references against the workspace's `gradle/libs.versions.toml` version
@@ -910,8 +910,8 @@ enrichment applies without changes.
 
 This reader complements (not replaces) the existing milestone-106
 `gradle.lockfile` reader: `gradle.lockfile`-locked components emit at
-source-tier (`mikebom:sbom-tier = "source"`); `build.gradle.kts`-only-
-discovered components emit at design-tier (`mikebom:sbom-tier =
+source-tier (`waybill:sbom-tier = "source"`); `build.gradle.kts`-only-
+discovered components emit at design-tier (`waybill:sbom-tier =
 "design"`) and are gated by the existing `--include-declared-deps`
 flag (auto-on for `--path` scans; opt-in for `--image` scans). When
 both readers find the same canonical PURL the milestone-105 dedup
@@ -938,11 +938,11 @@ declarations get a `tracing::debug!` and a degraded SBOM — adopting a
 full Kotlin parser would require either a tree-sitter Kotlin grammar
 (C code, Principle I violation) or shelling out to `kotlinc` (JVM
 dependency at scan time, Strict Boundary 3 violation), neither of
-which mikebom takes on.
+which waybill takes on.
 
 ### Dep-configuration → lifecycle-scope mapping
 
-| Configuration | `mikebom:lifecycle-scope` (CDX `scope`) |
+| Configuration | `waybill:lifecycle-scope` (CDX `scope`) |
 |---|---|
 | `implementation`, `api`, `runtimeOnly`, `compileOnly` | (omitted — runtime default) |
 | `testImplementation`, `androidTestImplementation`, `testRuntimeOnly`, `testCompileOnly` | `test` (`excluded`) |
@@ -954,15 +954,15 @@ Non-listed configurations capture as runtime (no annotation) with a
 
 ### Multi-module workspaces
 
-When mikebom finds a `settings.gradle.kts` declaring
+When waybill finds a `settings.gradle.kts` declaring
 `rootProject.name = "..."` + `include(":mod1", ":mod2")`, it
 synthesizes a workspace-root component:
 
 - PURL: `pkg:generic/<rootProject.name>@0.0.0` (falling back to the
   workspace directory name when `rootProject.name` is absent).
-- `mikebom:component-role = "workspace-root"`.
-- `mikebom:source-files = "<path>/settings.gradle.kts"`.
-- `mikebom:sbom-tier = "source"`.
+- `waybill:component-role = "workspace-root"`.
+- `waybill:source-files = "<path>/settings.gradle.kts"`.
+- `waybill:sbom-tier = "source"`.
 
 Only the OUTERMOST `settings.gradle.kts` per scan tree synthesizes a
 workspace-root — nested `settings.gradle.kts` files are walked for
@@ -974,7 +974,7 @@ edge case from spec).
 
 When a `build.gradle.kts` declares deps inside a
 `kotlin { sourceSets { <name> { dependencies { ... } } } }` block,
-mikebom stamps `mikebom:kmp-source-set` on the emitted component as a
+waybill stamps `waybill:kmp-source-set` on the emitted component as a
 JSON-encoded array of every source-set name that declared the dep
 (lex-sorted, deduped). Multiple source-sets declaring the same
 canonical PURL accumulate into one merged array — consumers reading
@@ -1007,12 +1007,12 @@ post-emission while preserving the merged annotation.
 
 | Annotation | When emitted |
 |---|---|
-| `mikebom:source-files` | always — path to the `build.gradle.kts` |
-| `mikebom:sbom-tier = "design"` | every kotlin_dsl-discovered dep |
-| `mikebom:lifecycle-scope` | per dep-config family (see table above); absent for runtime |
-| `mikebom:kmp-source-set` | KMP source-set deps only; JSON-encoded array |
+| `waybill:source-files` | always — path to the `build.gradle.kts` |
+| `waybill:sbom-tier = "design"` | every kotlin_dsl-discovered dep |
+| `waybill:lifecycle-scope` | per dep-config family (see table above); absent for runtime |
+| `waybill:kmp-source-set` | KMP source-set deps only; JSON-encoded array |
 
-Workspace-root entries additionally carry `mikebom:component-role =
+Workspace-root entries additionally carry `waybill:component-role =
 "workspace-root"`.
 
 ---
@@ -1021,7 +1021,7 @@ Workspace-root entries additionally carry `mikebom:component-role =
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
 
-mikebom's Swift Package Manager (SwiftPM) reader (milestone 122 US1)
+waybill's Swift Package Manager (SwiftPM) reader (milestone 122 US1)
 parses `Package.resolved` lockfiles at any directory in the scan tree
 and emits one component per `pins[]` entry. Schema versions 1, 2, and 3
 are dispatched on the lockfile's top-level `version` integer. The
@@ -1054,25 +1054,25 @@ PURLs emit as `pkg:swift/<host>/<namespace>/<name>@<version>` per the
 Commit-pinned mode (the SwiftPM "branch-tracking" lockfile shape — a
 `state.revision` without a `state.version`) emits the component with
 the FULL 40-char revision SHA as the PURL version segment AND a
-`mikebom:source-type = "git"` property AND a redundant
-`mikebom:source-revision` property for grep convenience. This matches
+`waybill:source-type = "git"` property AND a redundant
+`waybill:source-revision` property for grep convenience. This matches
 the existing Go reader's `pkg:golang/...@<sha>` convention and lets
 deps.dev / OSV consumers exact-match the commit.
 
 Per-component:
 
-- `mikebom:source-files = "<path>/Package.resolved"` — the path of the
+- `waybill:source-files = "<path>/Package.resolved"` — the path of the
   lockfile that emitted this component.
-- `mikebom:source-type = "git"` — set only on commit-pinned entries
+- `waybill:source-type = "git"` — set only on commit-pinned entries
   (no `state.version`).
-- `mikebom:source-revision = "<40-char sha>"` — set only on
+- `waybill:source-revision = "<40-char sha>"` — set only on
   commit-pinned entries.
-- `mikebom:sbom-tier = "source"` — every Swift lockfile-discovered
+- `waybill:sbom-tier = "source"` — every Swift lockfile-discovered
   component.
 
 Parse failures (malformed JSON, missing `pins[]`, unknown schema
 version) emit a `tracing::warn!` naming the file path + the specific
-failure; mikebom continues the walk on sibling files (per spec
+failure; waybill continues the walk on sibling files (per spec
 FR-009). Per-entry failures (invalid revision, unparseable URL,
 deep-namespace) emit a `tracing::warn!` naming the affected pin's
 identity; other entries in the same file still emit.
@@ -1102,38 +1102,38 @@ identity; other entries in the same file still emit.
 
 ## Binary analysis — symbol-fingerprint corpus (milestone 099 + 108)
 
-mikebom's binary scanner identifies statically-linked C libraries from
+waybill's binary scanner identifies statically-linked C libraries from
 their exported-symbol fingerprints (ELF `.dynsym` + Mach-O `LC_SYMTAB`
 externals — PE deferred). The bundled fallback corpus ships 7 libraries
 (openssl, zlib, libcurl, sqlite, pcre, pcre2, gnutls) and stays at
 that size as a stability floor; the source-of-truth corpus lives in
 the sibling repo
-[`kusari-sandbox/mikebom-fingerprints`](https://github.com/kusari-sandbox/mikebom-fingerprints)
-and grows independently of mikebom releases.
+[`kusari-sandbox/waybill-fingerprints`](https://github.com/kusari-sandbox/waybill-fingerprints)
+and grows independently of waybill releases.
 
 Operators opt into the external corpus per scan via
-`--fingerprints-corpus` (or `MIKEBOM_FINGERPRINTS_CORPUS=1`):
+`--fingerprints-corpus` (or `WAYBILL_FINGERPRINTS_CORPUS=1`):
 
 ```bash
-mikebom sbom scan --image ghcr.io/myorg/my-app:v1 --fingerprints-corpus
+waybill sbom scan --image ghcr.io/myorg/my-app:v1 --fingerprints-corpus
 ```
 
 The cache-first / fetch-on-miss flow, the
-`mikebom:fingerprint-corpus-sha` provenance annotation, the
-`mikebom fingerprints fetch/cache-clear/list` subcommands, and the
+`waybill:fingerprint-corpus-sha` provenance annotation, the
+`waybill fingerprints fetch/cache-clear/list` subcommands, and the
 4-step consumer lookup recipe are documented end-to-end in:
 
 - [`docs/reference/identifiers.md` §11](reference/identifiers.md#section-11--milestone-108-external-corpus-provenance-mikebomfingerprint-corpus-sha)
   — annotation value space + per-format carriers + lookup recipe.
 - [`specs/108-fingerprint-corpus/quickstart.md`](../specs/108-fingerprint-corpus/quickstart.md)
   — operator + air-gapped + hermetic-build scenarios.
-- [`kusari-sandbox/mikebom-cmake-demo`](https://github.com/kusari-sandbox/mikebom-cmake-demo)
+- [`kusari-sandbox/waybill-cmake-demo`](https://github.com/kusari-sandbox/waybill-cmake-demo)
   — runnable cmake + ninja demo that exercises both the source-tree
   reader AND the fingerprint matcher end-to-end.
 
 ### Milestone 109 — cross-tier PURL attribution for cmake projects
 
-When mikebom scans a cmake project root with `--fingerprints-corpus`
+When waybill scans a cmake project root with `--fingerprints-corpus`
 (alpha.45+), fingerprint matches in built binaries are attributed to
 the source-tier PURL the cmake reader emitted from
 `FetchContent_Declare` (`pkg:github/madler/zlib@v1.3.1`) instead of
@@ -1150,9 +1150,9 @@ the milestone-108 generic shadow (`pkg:generic/zlib`). The mechanism:
    source-tier value.
 4. The dedup pipeline then merges the source-tier + binary-tier
    components by shared PURL into ONE final component carrying both
-   sources' evidence (`mikebom:source-mechanism = cmake-fetchcontent-git`
-   AND `mikebom:fingerprint-corpus-sha = <sha>` AND
-   `mikebom:fingerprint-symbols-matched = "10/10"`).
+   sources' evidence (`waybill:source-mechanism = cmake-fetchcontent-git`
+   AND `waybill:fingerprint-corpus-sha = <sha>` AND
+   `waybill:fingerprint-symbols-matched = "10/10"`).
 
 Scope: `FetchContent_Declare` only (git + url forms). `ExternalProject_Add`,
 Bazel, Meson, and hand-written Makefiles are out of scope this

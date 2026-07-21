@@ -8,18 +8,18 @@ them.
 
 **Key files:**
 
-- `mikebom-cli/src/enrich/source.rs` — the `EnrichmentSource` trait.
-- `mikebom-cli/src/enrich/pipeline.rs` — `EnrichmentPipeline` with
+- `waybill-cli/src/enrich/source.rs` — the `EnrichmentSource` trait.
+- `waybill-cli/src/enrich/pipeline.rs` — `EnrichmentPipeline` with
   source-registration, per-source error tolerance, and the known-PURL guard
   rail.
-- `mikebom-cli/src/enrich/lockfile_source.rs` — `Cargo.lock` /
+- `waybill-cli/src/enrich/lockfile_source.rs` — `Cargo.lock` /
   `package-lock.json` / `go.sum` dependency-edge enricher.
-- `mikebom-cli/src/enrich/depsdev_source.rs` + `deps_dev_client.rs` +
+- `waybill-cli/src/enrich/depsdev_source.rs` + `deps_dev_client.rs` +
   `deps_dev_system.rs` — deps.dev `GetVersion` for declared licenses and
   external references.
-- `mikebom-cli/src/enrich/deps_dev_graph.rs` — deps.dev `:dependencies`
+- `waybill-cli/src/enrich/deps_dev_graph.rs` — deps.dev `:dependencies`
   endpoint for transitive edges (Maven-primary).
-- `mikebom-cli/src/enrich/clearly_defined_source.rs` +
+- `waybill-cli/src/enrich/clearly_defined_source.rs` +
   `clearly_defined_client.rs` + `clearly_defined_coord.rs` — ClearlyDefined
   curated concluded licenses.
 
@@ -88,7 +88,7 @@ Calls deps.dev's `GetVersion` endpoint per component. Fills in:
   `website`, `issue-tracker` from deps.dev's `VersionInfo.links`. A `vcs`
   entry drives sbomqs's `comp_with_source_code` metric.
 - **deps.dev match provenance** — stamped on the component as property
-  `mikebom:deps-dev-match = <system>:<name>@<version>` so downstream tools
+  `waybill:deps-dev-match = <system>:<name>@<version>` so downstream tools
   can see exactly which deps.dev record contributed.
 
 Supported ecosystems (deps.dev's own index):
@@ -116,7 +116,7 @@ endpoint and pulls the curated `licensed.declared` expression into
 
 Coordinate mapping in `clearly_defined_coord.rs` is per-ecosystem:
 
-| mikebom PURL ecosystem | CD type | provider | namespace | name | revision |
+| waybill PURL ecosystem | CD type | provider | namespace | name | revision |
 |---|---|---|---|---|---|
 | npm | `npm` | `npmjs` | scope (e.g. `@angular` stripped to `angular`) or `-` | name | version |
 | cargo | `crate` | `cratesio` | `-` | name | version |
@@ -144,7 +144,7 @@ Policy (see [design-notes §deps.dev policy
   `foo@1.0` and the local scan has `foo@1.5`, the emitted edge targets the
   local version.
 - When deps.dev names a coord that isn't present locally at any version,
-  mikebom emits it as a new component tagged
+  waybill emits it as a new component tagged
   `source_type = "declared-not-cached"` so downstream consumers can
   distinguish declared-but-not-installed from actually-installed.
 - Concurrency is capped at 8 in-flight requests via
@@ -160,7 +160,7 @@ structurally incomplete.
 
 ## Pipeline behavior
 
-`EnrichmentPipeline::enrich` in `mikebom-cli/src/enrich/pipeline.rs`:
+`EnrichmentPipeline::enrich` in `waybill-cli/src/enrich/pipeline.rs`:
 
 1. For each registered source in registration order:
    - Call `enrich_relationships` once; extend the accumulator on `Ok`, log
@@ -196,5 +196,5 @@ methods). Async sources (deps.dev, ClearlyDefined) are called from
 Every enrichment-derived relationship carries an `EnrichmentProvenance`
 (`source`, `data_type`). This is how the generator distinguishes
 lockfile-derived edges from deps.dev-derived edges in the output — it drives
-whether the edge gets surfaced with a `mikebom:declared-not-cached` marker
+whether the edge gets surfaced with a `waybill:declared-not-cached` marker
 and how compositions are annotated.

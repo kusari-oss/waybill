@@ -8,10 +8,10 @@
       }
     }
   ],
-  "predicateType": "https://mikebom.dev/attestation/build-trace/v1",
+  "predicateType": "https://waybill.dev/attestation/build-trace/v1",
   "predicate": {
     "metadata": {
-      "tool": { "name": "mikebom", "version": "0.1.0" },
+      "tool": { "name": "waybill", "version": "0.1.0" },
       "trace_start": "2026-04-15T10:00:00.000Z",
       "trace_end": "2026-04-15T10:02:30.000Z",
       "target_process": {

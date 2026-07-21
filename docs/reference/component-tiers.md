@@ -1,6 +1,6 @@
-# mikebom component tiers
+# waybill component tiers
 
-mikebom emits THREE component tiers in its SBOMs. Understanding the
+waybill emits THREE component tiers in its SBOMs. Understanding the
 tier distinction lets you query the SBOM efficiently and interpret
 what each component represents.
 
@@ -14,10 +14,10 @@ source of truth.
 > kind of *evidence* backs the component). The **`sbom_tier`
 > axis** (design / source / analyzed / deployed / build — how strongly
 > the resolved *version* is pinned) is orthogonal and documented at
-> [reading-a-mikebom-sbom.md → Design-tier components](reading-a-mikebom-sbom.md).
+> [reading-a-waybill-sbom.md → Design-tier components](reading-a-waybill-sbom.md).
 > Milestone 175 adds an INFO-level advisory log at scan time when the
 > scan produces ≥1 `sbom_tier = "design"` component; the advisory can
-> be suppressed in CI via `MIKEBOM_NO_DESIGN_TIER_ADVISORY=1`.
+> be suppressed in CI via `WAYBILL_NO_DESIGN_TIER_ADVISORY=1`.
 
 ## The three tiers
 
@@ -37,10 +37,10 @@ PyPI package, RubyGems gem, etc.) identified by its PURL.
 - **SPDX 2.3**: `Package` with `externalRefs[purl]`.
 - **SPDX 3**: `software_Package` with `software_packageUrl`.
 - **Properties** (milestone 133): every reader populates
-  `mikebom:source-files` (JSON-encoded array of rootfs-relative
+  `waybill:source-files` (JSON-encoded array of rootfs-relative
   paths) and the CDX-native `evidence.occurrences[].location` for
   cross-format consumers. Image scans additionally carry
-  `mikebom:layer-digest` (the OCI layer SHA-256 that wrote the
+  `waybill:layer-digest` (the OCI layer SHA-256 that wrote the
   component's primary source path).
 
 ### Tier 2: Binary-tier
@@ -73,7 +73,7 @@ package-tier and binary-tier reader. Identity is the file's SHA-256.
   `ResolvedComponent` carries a placeholder
   `pkg:generic/file-tier?content-sha256=<hex>` for type uniformity
   with the rest of the resolver pipeline; the per-format emitters
-  recognize the `mikebom:component-tier = "file"` annotation and
+  recognize the `waybill:component-tier = "file"` annotation and
   STRIP the PURL field at write time, so the wire shape honors
   FR-009.
 - **Discovery**: rootfs walker (`scan_fs::file_tier::walker`)
@@ -88,14 +88,14 @@ package-tier and binary-tier reader. Identity is the file's SHA-256.
 - **SPDX 3**: `software_File` (the native element type per the
   SPDX 3.0.1 Software profile).
 - **Annotation**: every file-tier component MUST carry
-  `mikebom:component-tier = "file"` for unambiguous
+  `waybill:component-tier = "file"` for unambiguous
   identification across formats. The SPDX 2.3 `Package` shape is
   otherwise indistinguishable from a package-tier `Package`; the
   annotation is the cross-format-symmetric tier signal.
 - **Paths**: every observed path is carried in
-  `mikebom:file-paths` as a JSON-encoded sorted array, capped at
+  `waybill:file-paths` as a JSON-encoded sorted array, capped at
   100 entries; truncation fires the companion
-  `mikebom:file-paths-truncated = "true"` annotation.
+  `waybill:file-paths-truncated = "true"` annotation.
 
 ## How the tiers compose
 
@@ -106,7 +106,7 @@ For a given file on a rootfs scan, the precedence is:
    package-tier component is emitted with its PURL identity.
    Every reader records the on-disk path it parsed via
    `evidence.occurrences[].location` (CDX-native + SPDX
-   annotation envelope) and `mikebom:source-files`.
+   annotation envelope) and `waybill:source-files`.
 
 2. **Binary-tier readers run second**. For files surviving step 1
    that pass binary-tier discovery criteria (ELF / PE / Mach-O
@@ -122,7 +122,7 @@ In `--file-inventory=full` mode, step 3 emits per-unique-hash
 file-tier components for every file passing the content-shape
 allowlist regardless of package or binary coverage. Duplicates
 with package-tier components are EXPECTED in this mode; the SBOM
-carries a document-level `mikebom:file-inventory-mode = "full"`
+carries a document-level `waybill:file-inventory-mode = "full"`
 annotation per Constitution Strict Boundary §5 (1.5.0) so
 consumers can detect the override at parse time and filter the
 file-tier set when the duplication is unwanted.
@@ -213,10 +213,10 @@ apply; hybrid dedupe is BYPASSED). Targeted use cases:
   hashes.
 - **Malware detection**: a shared "bad" file appearing across
   multiple package contexts shows up as ONE file-tier component
-  with all paths in `mikebom:file-paths`.
+  with all paths in `waybill:file-paths`.
 
 Full-mode SBOMs carry a document-level
-`mikebom:file-inventory-mode = "full"` annotation per
+`waybill:file-inventory-mode = "full"` annotation per
 Constitution Strict Boundary §5 (1.5.0). Consumers MAY use this
 annotation to detect that the SBOM contains duplicate
 (file-tier × package-tier) coverage of the same content.
@@ -230,9 +230,9 @@ any package DB and not matched by binary-tier fingerprinting.
 
 | Format | Wire shape |
 |---|---|
-| CDX 1.6 | `{ "type": "file", "name": "curl-vendored", "bom-ref": "...", "hashes": [{"alg":"SHA-256","content":"<hex>"}], "properties": [{"name":"mikebom:component-tier","value":"file"},{"name":"mikebom:file-paths","value":"[\"usr/local/bin/curl-vendored\"]"}] }` |
-| SPDX 2.3 | `{ "SPDXID":"SPDXRef-Package-...", "name":"curl-vendored", "versionInfo":"", "filesAnalyzed":false, "checksums":[{"algorithm":"SHA256","checksumValue":"<hex>"}], "annotations":[{"comment":"…\"mikebom:component-tier\"…\"file\"…"},{"comment":"…\"mikebom:file-paths\"…"}] }` |
-| SPDX 3 | `{ "type":"software_File", "spdxId":".../pkg-…", "name":"curl-vendored", "verifiedUsing":[{"type":"Hash","algorithm":"sha256","hashValue":"<hex>"}] }` + a paired `Annotation` element carrying `mikebom:component-tier` + `mikebom:file-paths`. |
+| CDX 1.6 | `{ "type": "file", "name": "curl-vendored", "bom-ref": "...", "hashes": [{"alg":"SHA-256","content":"<hex>"}], "properties": [{"name":"waybill:component-tier","value":"file"},{"name":"waybill:file-paths","value":"[\"usr/local/bin/curl-vendored\"]"}] }` |
+| SPDX 2.3 | `{ "SPDXID":"SPDXRef-Package-...", "name":"curl-vendored", "versionInfo":"", "filesAnalyzed":false, "checksums":[{"algorithm":"SHA256","checksumValue":"<hex>"}], "annotations":[{"comment":"…\"waybill:component-tier\"…\"file\"…"},{"comment":"…\"waybill:file-paths\"…"}] }` |
+| SPDX 3 | `{ "type":"software_File", "spdxId":".../pkg-…", "name":"curl-vendored", "verifiedUsing":[{"type":"Hash","algorithm":"sha256","hashValue":"<hex>"}] }` + a paired `Annotation` element carrying `waybill:component-tier` + `waybill:file-paths`. |
 
 ### Example: package-tier component (cargo crate)
 
@@ -240,9 +240,9 @@ any package DB and not matched by binary-tier fingerprinting.
 
 | Format | Wire shape (abridged) |
 |---|---|
-| CDX 1.6 | `{ "type":"library", "name":"serde", "version":"1.0.197", "purl":"pkg:cargo/serde@1.0.197", "evidence":{"occurrences":[{"location":"app/Cargo.lock","additionalContext":"{\"sha256\":\"<hex>\"}"}]}, "properties":[{"name":"mikebom:source-files","value":"[\"app/Cargo.lock\"]"}] }` |
-| SPDX 2.3 | `{ "name":"serde", "versionInfo":"1.0.197", "externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:cargo/serde@1.0.197"}], "annotations":[{"comment":"…mikebom:source-files…"}] }` |
-| SPDX 3 | `{ "type":"software_Package", "name":"serde", "software_packageVersion":"1.0.197", "software_packageUrl":"pkg:cargo/serde@1.0.197", "externalIdentifier":[{"externalIdentifierType":"packageUrl","identifier":"pkg:cargo/serde@1.0.197"}] }` + paired Annotation for `mikebom:source-files`. |
+| CDX 1.6 | `{ "type":"library", "name":"serde", "version":"1.0.197", "purl":"pkg:cargo/serde@1.0.197", "evidence":{"occurrences":[{"location":"app/Cargo.lock","additionalContext":"{\"sha256\":\"<hex>\"}"}]}, "properties":[{"name":"waybill:source-files","value":"[\"app/Cargo.lock\"]"}] }` |
+| SPDX 2.3 | `{ "name":"serde", "versionInfo":"1.0.197", "externalRefs":[{"referenceCategory":"PACKAGE-MANAGER","referenceType":"purl","referenceLocator":"pkg:cargo/serde@1.0.197"}], "annotations":[{"comment":"…waybill:source-files…"}] }` |
+| SPDX 3 | `{ "type":"software_Package", "name":"serde", "software_packageVersion":"1.0.197", "software_packageUrl":"pkg:cargo/serde@1.0.197", "externalIdentifier":[{"externalIdentifierType":"packageUrl","identifier":"pkg:cargo/serde@1.0.197"}] }` + paired Annotation for `waybill:source-files`. |
 
 ### Example: binary-tier component (cargo-auditable extract)
 
@@ -252,7 +252,7 @@ binary-tier component.
 
 | Format | Wire shape (abridged) |
 |---|---|
-| CDX 1.6 | `{ "type":"library", "name":"uv", "version":"0.4.27", "purl":"pkg:cargo/uv@0.4.27", "evidence":{"occurrences":[{"location":"usr/bin/uv","additionalContext":"…"}]}, "properties":[{"name":"mikebom:binary-class","value":"application"},{"name":"mikebom:cargo-auditable-kind","value":"runtime"}] }` |
+| CDX 1.6 | `{ "type":"library", "name":"uv", "version":"0.4.27", "purl":"pkg:cargo/uv@0.4.27", "evidence":{"occurrences":[{"location":"usr/bin/uv","additionalContext":"…"}]}, "properties":[{"name":"waybill:binary-class","value":"application"},{"name":"waybill:cargo-auditable-kind","value":"runtime"}] }` |
 | SPDX 2.3 | `Package` with the same purl externalRef + the binary-class / cargo-auditable annotations. |
 | SPDX 3 | `software_Package` with `software_primaryPurpose: "application"` set from the binary-role classifier. |
 
@@ -260,20 +260,20 @@ binary-tier component.
 
 This milestone takes an idea from trivy's design: every
 package-tier component identified from a rootfs path carries
-`mikebom:source-files` (the relative rootfs path) and, for image
-scans, `mikebom:layer-digest` (the OCI layer digest containing
+`waybill:source-files` (the relative rootfs path) and, for image
+scans, `waybill:layer-digest` (the OCI layer digest containing
 the path). Trivy proves these properties are low-cost /
 high-value for forensic / diff / supply-chain queries.
 
 This is a DIFFERENT choice than trivy's per-(package × path)
-component duplication. mikebom continues to dedupe package-tier
+component duplication. waybill continues to dedupe package-tier
 components by their PURL identity; when a package is identified
 from multiple paths in a single scan, the paths collapse into the
-`mikebom:source-files` array (sorted JSON array) and into the
+`waybill:source-files` array (sorted JSON array) and into the
 CDX-native `evidence.occurrences[]` list. Same shape as US1's
-file-tier `mikebom:file-paths` for symmetry.
+file-tier `waybill:file-paths` for symmetry.
 
-## Why mikebom rejected the alternative designs
+## Why waybill rejected the alternative designs
 
 Two adjacent industry designs were considered and rejected during
 milestone-132 close-out research. Their rationale lives here so
@@ -285,7 +285,7 @@ Syft emits one file-tier component per (path × hash) tuple — the
 same file at two paths shows up as two components. This achieves
 5★ Completeness on the sbom-comparison scorecard but pumps SBOM
 size up dramatically (27 006 file entries vs ~3 770 package
-entries on the milestone-132 audit baseline). mikebom chose
+entries on the milestone-132 audit baseline). waybill chose
 per-unique-hash with paths-as-property to preserve the
 malware / forensic query surface without the SBOM-bloat cost.
 
@@ -296,8 +296,8 @@ package when it's identified from multiple paths (581 components
 on the audit baseline; the same
 `@smithy/is-array-buffer@2.2.0` appears twice with different
 `FilePath` properties). Trivy bets that "the package is the unit
-of analysis"; mikebom chose to surface BOTH (package-tier with
-`mikebom:source-files` + `evidence.occurrences[]` collection,
+of analysis"; waybill chose to surface BOTH (package-tier with
+`waybill:source-files` + `evidence.occurrences[]` collection,
 plus file-tier for unattributed content) so consumers can query
 by either.
 

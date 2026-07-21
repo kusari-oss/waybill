@@ -1,19 +1,19 @@
 # Licenses
 
-mikebom tracks **two separate** license fields per component: what the
+waybill tracks **two separate** license fields per component: what the
 package author declared, and what a curated external analyzer concluded.
 Both are emitted in the CycloneDX output with distinct `acknowledgement`
 values so downstream tools can trust the right source for their use case.
 
 **Key files:**
 
-- `mikebom-common/src/resolution.rs` — `ResolvedComponent.licenses` and
+- `waybill-common/src/resolution.rs` — `ResolvedComponent.licenses` and
   `ResolvedComponent.concluded_licenses`.
-- `mikebom-common/src/types/license.rs` — `SpdxExpression`, SPDX
+- `waybill-common/src/types/license.rs` — `SpdxExpression`, SPDX
   canonicalization via the `spdx` crate.
-- `mikebom-cli/src/enrich/clearly_defined_source.rs` — concluded-license
+- `waybill-cli/src/enrich/clearly_defined_source.rs` — concluded-license
   enricher.
-- `mikebom-cli/src/enrich/depsdev_source.rs` — declared-license enricher.
+- `waybill-cli/src/enrich/depsdev_source.rs` — declared-license enricher.
 
 ## The two-bucket model
 

@@ -1,7 +1,7 @@
 # Identifiers — external SBOM consumer guide
 
 **Audience**: maintainers of external SBOM consumer / verifier tools
-that read mikebom-emitted CycloneDX 1.6, SPDX 2.3, or SPDX 3.0.1
+that read waybill-emitted CycloneDX 1.6, SPDX 2.3, or SPDX 3.0.1
 SBOMs and want to extract the document-level identifiers attached at
 scan time (`repo:`, `git:`, `image:`, `attestation:`, plus arbitrary
 operator-defined opaque schemes). Covers the wire format, per-format
@@ -9,7 +9,7 @@ carrier shapes, auto-detection paths, the determinism contract, and
 runnable `jq` decode recipes — everything an external implementer
 needs to write a working extractor from this document alone.
 
-**Status**: written 2026-05-05 against mikebom v0.1.0-alpha.16
+**Status**: written 2026-05-05 against waybill v0.1.0-alpha.16
 (milestone 073), updated for milestone 074 (build-tier identifier
 auto-detection, this milestone). Reflects the post-073 dedicated-flag
 CLI surface and the milestone 074 build-tier auto-detection
@@ -34,7 +34,7 @@ name — see `cross-tier-binding.md`.
   bindings carry per-component cross-tier provenance.
 - `docs/reference/conformance-harness-guide.md` — milestone 071
   per-format envelope-decode rules. Read first if you're new to
-  mikebom's emission model.
+  waybill's emission model.
 - `specs/073-source-identifiers/contracts/` — the source contracts
   this guide externalizes. The contracts are authoritative; this
   guide is the operator-facing presentation.
@@ -43,7 +43,7 @@ name — see `cross-tier-binding.md`.
 
 ## Section 1 — Wire format & CLI surface
 
-An identifier is a `(scheme, value)` pair. mikebom emits identifiers
+An identifier is a `(scheme, value)` pair. waybill emits identifiers
 into per-format carriers (Section 2 / 3) where the canonical
 representation is structured (e.g., CDX `externalReferences[]` rows,
 SPDX 3 `externalIdentifier[]` entries) — there is no single
@@ -60,8 +60,8 @@ built-in scheme + a generic `--id` flag for user-defined schemes.
 | `--attestation <iri>` | `attestation:` | In-toto attestation IRI. Manual only; no auto-detection. |
 | `--id <scheme>=<value>` (repeatable) | n/a — user-defined namespaces ONLY | `<scheme>` matches regex `^[a-z][a-z0-9_-]*$` (FR-004); `<value>` is everything after the first `=`. Built-in scheme names (`repo`, `git`, `image`, `attestation`) are REJECTED here at clap parse time with a message pointing at the dedicated flag. |
 
-The same flag set applies to `mikebom sbom scan --path`,
-`mikebom sbom scan --image`, and `mikebom trace run`.
+The same flag set applies to `waybill sbom scan --path`,
+`waybill sbom scan --image`, and `waybill trace run`.
 
 ### 1.2 Worked examples
 
@@ -69,33 +69,33 @@ The same flag set applies to `mikebom sbom scan --path`,
 # Source-tier scan with explicit repo override (auto-detect would
 # normally produce a repo: identifier from the .git/origin remote;
 # this flag wins per FR-006).
-mikebom sbom scan --path . --repo git@github.com:acme/foo.git
+waybill sbom scan --path . --repo git@github.com:acme/foo.git
 
 # Source-tier with git-ref → git: identifier (NOT a repo: identifier).
-mikebom sbom scan --path . \
+waybill sbom scan --path . \
     --repo https://github.com/acme/foo.git \
     --git-ref abc1234567890
 
-# User-defined identifiers ride the mikebom:identifiers annotation.
-mikebom sbom scan --path . \
+# User-defined identifiers ride the waybill:identifiers annotation.
+waybill sbom scan --path . \
     --id acme_corp_id=svc-alpha-123 \
     --id internal_ticket=PROJ-456
 
 # Image-tier with manual override + user-defined identifier.
-mikebom sbom scan --image foo.tar \
+waybill sbom scan --image foo.tar \
     --image-id docker.io/acme/foo:v1@sha256:abc... \
     --id acme_corp_id=svc-alpha-123
 
 # Build-tier (trace) — milestone 074: when invoked in a git
-# checkout, `mikebom trace run` auto-detects `repo:` from the same
+# checkout, `waybill trace run` auto-detects `repo:` from the same
 # git remote source-tier picks up, AND additionally a commit-anchored
 # `git:<repo-url>#<sha>` identifier from `git rev-parse HEAD`. No
 # flags required — symmetric with source-tier.
-mikebom trace run -- ./build.sh
+waybill trace run -- ./build.sh
 
 # Build-tier with manual override — manual flags win, same as
 # source-tier (FR-004).
-mikebom trace run --repo git@github.com:acme/override.git -- ./build.sh
+waybill trace run --repo git@github.com:acme/override.git -- ./build.sh
 ```
 
 ### 1.3 Migration from the pre-073 `--with-source` flag
@@ -109,7 +109,7 @@ merged, the CLI was refactored to dedicated flags per built-in scheme
    colons** — `repo:git@github.com:foo/bar.git`,
    `image:foo:v1@sha256:abc...`. First-`:`-split was mechanically
    correct but operator-hostile.
-2. **Dedicated flags are self-documenting** — `mikebom sbom scan
+2. **Dedicated flags are self-documenting** — `waybill sbom scan
    --help` shows the 4 built-in schemes by name without the operator
    needing to read prose.
 
@@ -122,7 +122,7 @@ past alpha.15.
 ## Section 2 — Built-in scheme registry
 
 Four built-in schemes are recognized + value-validated by
-mikebom alpha.16+. Built-in identifiers ride per-format
+waybill alpha.16+. Built-in identifiers ride per-format
 standards-native carriers per Constitution Principle V's
 native-first directive.
 
@@ -137,7 +137,7 @@ native-first directive.
 The SPDX 3 column reflects the milestone 079 mapping. SPDX 3
 defines `Core/externalIdentifierType` as a controlled vocabulary
 (`[other, cve, swhid, securityOther, cpe23, packageUrl, gitoid,
-cpe22, urlScheme, email, swid]`) — none of mikebom's built-in
+cpe22, urlScheme, email, swid]`) — none of waybill's built-in
 scheme names are in that set, so they map to `other` with the
 original scheme preserved in the `comment` field. See §6.3.2 below
 for the wire-mapping reference and §6.3.1 for milestone 078's
@@ -149,7 +149,7 @@ campaign.
 Validators are best-effort syntactic checks. A failure does NOT
 fail the scan — the identifier soft-fails to `IdentifierKind::User
 Defined` (research.md §1) and emits as opaque under the
-`mikebom:identifiers` annotation. A `tracing::warn!` log
+`waybill:identifiers` annotation. A `tracing::warn!` log
 records the validation failure for operator audit.
 
 - **`repo:`** accepts `https://...`, `http://...`, `ssh://...`,
@@ -175,14 +175,14 @@ main-module Package see the free-form text.
   `referenceCategory: "PERSISTENT-ID"`, `referenceType: <scheme-name>`,
   `referenceLocator: <value>`, optional `comment: <source_label>`.
 - **Free-form fallback**: `creationInfo.creators[]` text line
-  `"Tool: mikebom-<version> source: <full-identifier>"`. One line per
+  `"Tool: waybill-<version> source: <full-identifier>"`. One line per
   built-in identifier.
 
 ### 2.3 SPDX 2.3 `referenceType` enum note
 
 SPDX 2.3 spec doesn't enumerate `repo` / `git` / `image` /
 `attestation` under the `PERSISTENT-ID` category's `referenceType`
-registry. mikebom uses the scheme name as the `referenceType` value
+registry. waybill uses the scheme name as the `referenceType` value
 verbatim — consistent with how SPDX 2.3 implementations tolerate
 unregistered identifier types under `PERSISTENT-ID` (the category
 itself is the typed slot; the `referenceType` value is operator-
@@ -193,23 +193,23 @@ as `OTHER` — equivalent semantics, different `referenceCategory`.
 
 ---
 
-## Section 3 — User-defined schemes (`mikebom:identifiers`)
+## Section 3 — User-defined schemes (`waybill:identifiers`)
 
 Schemes matching the FR-004 regex but NOT in the built-in registry
 (`acme_corp_id:`, `internal_ticket:`, etc.) are treated as
 user-defined. They have no native carrier on CDX or SPDX 2.3 — the
 specs don't accept arbitrary operator-defined opaque namespaces. Per
 Constitution Principle V's documented-exception path, user-defined
-identifiers ride a single document-level `mikebom:identifiers`
+identifiers ride a single document-level `waybill:identifiers`
 annotation wrapped in milestone 071's `MikebomAnnotationCommentV1`
 envelope.
 
 ### 3.1 Justification clause (Principle V exception)
 
-The `mikebom:identifiers` annotation is the documented Principle V
+The `waybill:identifiers` annotation is the documented Principle V
 exception: no standards-native CDX or SPDX 2.3 carrier accepts
 arbitrary opaque-namespace identifiers, so user-defined schemes need
-a `mikebom:*` carve-out. SPDX 3's open-typed
+a `waybill:*` carve-out. SPDX 3's open-typed
 `Element.externalIdentifier[]` model handles BOTH built-in and
 user-defined identifiers natively, so the annotation is intentionally
 omitted on the SPDX 3 side.
@@ -226,8 +226,8 @@ of SPDX 3 over SPDX 2.3 for opaque-namespace identifiers.
 
 ```json
 {
-  "schema": "mikebom-annotation/v1",
-  "field": "mikebom:identifiers",
+  "schema": "waybill-annotation/v1",
+  "field": "waybill:identifiers",
   "value": [
     { "scheme": "acme_corp_id", "value": "abc123" },
     { "scheme": "internal_ticket", "value": "PROJ-456" }
@@ -250,7 +250,7 @@ envelope is JSON-encoded into a string:
   "metadata": {
     "properties": [
       {
-        "name": "mikebom:identifiers",
+        "name": "waybill:identifiers",
         "value": "[{\"scheme\":\"acme_corp_id\",\"value\":\"abc123\"}]"
       }
     ]
@@ -271,10 +271,10 @@ JSON lives inside `comment` as a string:
 {
   "annotations": [
     {
-      "annotator": "Tool: mikebom-0.1.0-alpha.16",
+      "annotator": "Tool: waybill-0.1.0-alpha.16",
       "annotationDate": "2026-05-05T12:00:00Z",
       "annotationType": "OTHER",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:identifiers\",\"value\":[{\"scheme\":\"acme_corp_id\",\"value\":\"abc123\"}]}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:identifiers\",\"value\":[{\"scheme\":\"acme_corp_id\",\"value\":\"abc123\"}]}"
     }
   ]
 }
@@ -287,7 +287,7 @@ walk `value`.
 
 ## Section 4 — Auto-detection
 
-mikebom auto-detects identifiers in two cases. Auto-detection is
+waybill auto-detects identifiers in two cases. Auto-detection is
 "best-effort, never failing" — when detection can't fire (no git
 remote, no resolved image), the scan emits without the auto-detected
 identifier and a `tracing::info!` log records why.
@@ -295,7 +295,7 @@ identifier and a `tracing::info!` log records why.
 ### 4.1 `repo:` from `--path` scans (3-step git-remote fallback)
 
 When the scan root is a git checkout (has `.git/` directory),
-mikebom runs `git remote get-url <name>` with a 3-step name
+waybill runs `git remote get-url <name>` with a 3-step name
 fallback per Q1 clarification:
 
 1. **`origin`** — try this first. Most common case.
@@ -357,8 +357,8 @@ flag-translation step.
 
 ### 4.4 Build-tier auto-detection (milestone 074)
 
-Build-tier scans (`mikebom trace run`) auto-detect symmetrically with
-source-tier. When the invocation cwd is a git checkout, mikebom
+Build-tier scans (`waybill trace run`) auto-detect symmetrically with
+source-tier. When the invocation cwd is a git checkout, waybill
 emits up to TWO auto-detected identifiers per invocation:
 
 1. A `repo:` identifier — same 3-step git-remote fallback algorithm
@@ -387,7 +387,7 @@ The `source_label` strings are distinguishable from source-tier:
 The `build-tier` substring lets a consumer scanning a flat list of
 identifiers (e.g., `jq` over emitted `externalReferences[]`) tell
 which tier the entry came from without having to consult the
-surrounding `mikebom:sbom-tier` annotation.
+surrounding `waybill:sbom-tier` annotation.
 
 When the invocation cwd is not a git checkout, OR has no remotes
 configured, OR `git rev-parse HEAD` fails (e.g., a freshly initialized
@@ -406,20 +406,20 @@ entries' schemes.
 ### 4.5 Cross-tier correlation recipe (milestone 074)
 
 The headline use case milestone 074 unlocks: an operator (or external
-tool) holding all three tier SBOMs — source from `mikebom sbom scan
---path`, build from `mikebom trace run`, image from
-`mikebom sbom scan --image` — can correlate them by reading
-identifier fields directly. No mikebom-side resolver, no index, no
+tool) holding all three tier SBOMs — source from `waybill sbom scan
+--path`, build from `waybill trace run`, image from
+`waybill sbom scan --image` — can correlate them by reading
+identifier fields directly. No waybill-side resolver, no index, no
 external registry call.
 
 ```bash
 # Three scans, all from the same git checkout at the same commit.
 cd ~/projects/my-rust-app
 
-mikebom sbom scan --path . --format cyclonedx-json \
+waybill sbom scan --path . --format cyclonedx-json \
     --output cyclonedx-json=/tmp/source.cdx.json
-mikebom trace run -- ./build.sh
-mikebom sbom scan --image my-app:v1 --format cyclonedx-json \
+waybill trace run -- ./build.sh
+waybill sbom scan --image my-app:v1 --format cyclonedx-json \
     --output cyclonedx-json=/tmp/image.cdx.json
 
 # Source `repo:` value
@@ -454,7 +454,7 @@ automatically.
 When the discovered remote URL carries RFC 3986 userinfo
 (`<user>[:<password>]@host` — common in CI runners using GitHub App
 tokens or HTTPS deploy tokens, e.g., `https://x-access-token:ghs_AAA
-@github.com/foo.git`), mikebom strips the userinfo before the URL
+@github.com/foo.git`), waybill strips the userinfo before the URL
 becomes an identifier value. SBOMs are typically published artifacts
 (release attachments, OCI registry referrers, signed attestations);
 the strip prevents accidental token disclosure.
@@ -494,7 +494,7 @@ appearing in the log.
 
 SSH-form URLs (`git@host:path` — the SCP-like syntax) carry no
 userinfo by construction; the `git@` is a fixed SSH username, not a
-credential. mikebom passes them through unchanged in both modes.
+credential. waybill passes them through unchanged in both modes.
 
 #### Manual flags emit verbatim
 
@@ -513,12 +513,12 @@ token, an internal-network-only HTTPS token with no value outside
 the corporate VPN) can preserve userinfo via:
 
 ```bash
-mikebom sbom scan --path . --keep-credentials-in-identifiers
-mikebom trace run --keep-credentials-in-identifiers -- ./build.sh
+waybill sbom scan --path . --keep-credentials-in-identifiers
+waybill trace run --keep-credentials-in-identifiers -- ./build.sh
 ```
 
 When set, the flag suppresses sanitization for all auto-detected
-identifiers in the scan. mikebom emits one info-level log line
+identifiers in the scan. waybill emits one info-level log line
 acknowledging the suppression so the audit trail records the
 operator's choice. The `(credentials stripped)` suffix does NOT
 appear on `source_label`s in this mode.
@@ -554,11 +554,11 @@ identifier carrier output across runs. Implementation rules:
    follows in supply order — NOT promoted.
 3. **Dedup**: by exact `(scheme, value)` match. Manual-vs-manual
    collisions resolve to first-supplied wins.
-4. **User-defined annotation order**: the `mikebom:identifiers`
+4. **User-defined annotation order**: the `waybill:identifiers`
    `value` array is sorted lexicographically by `(scheme, value)`
    before serialization (annotations have unordered semantics; lex
    sort gives a stable serialization).
-5. **Empty user-defined set**: the `mikebom:identifiers`
+5. **Empty user-defined set**: the `waybill:identifiers`
    annotation is OMITTED entirely when no user-defined identifiers
    are present (VR-007). Preserves cross-format byte-identity for
    non-user-defined-namespace scans.
@@ -567,7 +567,7 @@ identifier carrier output across runs. Implementation rules:
 
 ## Section 6 — Runnable decode recipes
 
-External consumers can extract identifiers without mikebom source-
+External consumers can extract identifiers without waybill source-
 code access using standard JSON tooling.
 
 ### 6.1 CDX 1.6 — `jq`
@@ -583,7 +583,7 @@ jq '
                  value: .url,
                  comment}]),
   user_defined: ([.metadata.properties[]?
-                   | select(.name == "mikebom:identifiers")
+                   | select(.name == "waybill:identifiers")
                    | .value | fromjson] | flatten)
 }
 ' /tmp/out.cdx.json
@@ -601,7 +601,7 @@ jq '
                  comment}]),
   user_defined: ([.annotations[]?
                    | .comment | fromjson?
-                   | select(.field == "mikebom:identifiers")
+                   | select(.field == "waybill:identifiers")
                    | .value] | flatten)
 }
 ' /tmp/out.spdx.json
@@ -629,14 +629,14 @@ External consumers that need to distinguish can filter on
 
 ### 6.3.1 SPDX 3.0.1 — CreationInfo wire-shape note (milestone 078)
 
-mikebom v0.1.0-alpha.16 through v0.1.0-alpha.18 (milestone 073 →
+waybill v0.1.0-alpha.16 through v0.1.0-alpha.18 (milestone 073 →
 milestone 077) emitted SPDX 3 `CreationInfo.createdBy[]` referencing
 the `Tool` element directly, which trips the SPDX 3 SHACL constraint
 `Core/createdBy` (range = `Core/Agent`; `Tool` is a sibling class,
 not a subclass). Post-milestone 078 emission corrects this:
 
 - `CreationInfo.createdBy[0]` now references an `Organization`
-  element with `name: "mikebom contributors"` (Agent subclass —
+  element with `name: "waybill contributors"` (Agent subclass —
   satisfies SHACL).
 - `CreationInfo.createdUsing[0]` is a NEW field referencing the
   same Tool element pre-fix emission carried in `createdBy`. The
@@ -666,16 +666,16 @@ as the source of truth.
 
 ### 6.3.2 SPDX 3.0.1 — externalIdentifierType wire-mapping (milestone 079)
 
-mikebom v0.1.0-alpha.16 through v0.1.0-alpha.19 (milestones 073/074/076/078)
+waybill v0.1.0-alpha.16 through v0.1.0-alpha.19 (milestones 073/074/076/078)
 emitted internal scheme names (`image`, `repo`, `git`, `subject`,
 `attestation`) directly into SPDX 3's
 `Core/externalIdentifierType` field. SPDX 3 defines that field as a
 SHACL-enumerated controlled vocabulary with exactly 11 allowed
 values: `[other, cve, swhid, securityOther, cpe23, packageUrl,
-gitoid, cpe22, urlScheme, email, swid]`. None of mikebom's
+gitoid, cpe22, urlScheme, email, swid]`. None of waybill's
 internal scheme names are in that set, so JPEWdev's
 `spdx3-validate` flagged every such SBOM as non-conformant
-(GitHub issue [#154](https://github.com/kusari-oss/mikebom/issues/154)).
+(GitHub issue [#154](https://github.com/kusari-oss/waybill/issues/154)).
 
 Milestone 079 corrects the emission per the table below. This
 corrects the alpha.16-alpha.19 emission shape (closes GitHub issue
@@ -693,7 +693,7 @@ corrects the alpha.16-alpha.19 emission shape (closes GitHub issue
 | `<vocab>` (e.g., `cve`, `cpe23`, `gitoid`, etc.) | any | the vocab value verbatim | (omitted) |
 | `<non-vocab user-defined>` (e.g., `jira`, `internal-ticket`) | any | `other` | `"original-scheme: <name>"` |
 
-**Recovery**: operators wanting to filter by the original mikebom
+**Recovery**: operators wanting to filter by the original waybill
 scheme can read the `comment` field's `original-scheme: ` prefix:
 
 ```bash
@@ -731,7 +731,7 @@ def extract_cdx(doc):
                             "comment": r.get("comment")})
     user_defined = []
     for p in doc.get("metadata", {}).get("properties", []):
-        if p.get("name") == "mikebom:identifiers":
+        if p.get("name") == "waybill:identifiers":
             for entry in json.loads(p.get("value", "[]")):
                 user_defined.append(entry)
     return {"builtin": builtin, "user_defined": user_defined}
@@ -752,7 +752,7 @@ def extract_spdx23(doc):
             envelope = json.loads(a.get("comment", ""))
         except json.JSONDecodeError:
             continue
-        if envelope.get("field") == "mikebom:identifiers":
+        if envelope.get("field") == "waybill:identifiers":
             user_defined.extend(envelope.get("value", []))
     return {"builtin": builtin, "user_defined": user_defined}
 
@@ -779,7 +779,7 @@ preserved.
 ## Section 7 — Stability commitment
 
 - The 4 built-in schemes (`repo:`, `git:`, `image:`, `attestation:`)
-  are stable across mikebom alpha versions post-073.
+  are stable across waybill alpha versions post-073.
 - The FR-004 scheme regex (`^[a-z][a-z0-9_-]*$`) is stable. Future
   schemes that don't match the regex (e.g., uppercase) require a
   contract-level change.
@@ -792,8 +792,8 @@ preserved.
 - The `image:` canonical Q3 shape is stable. Future image-reference
   conventions (e.g., OCI 1.x vs 2.x) accommodate via the validator's
   permissive regex; the emit-side keeps the documented shape.
-- The `mikebom:identifiers` envelope shape (JSON array of
-  `{scheme, value}` objects) is stable for `schema: "mikebom-
+- The `waybill:identifiers` envelope shape (JSON array of
+  `{scheme, value}` objects) is stable for `schema: "waybill-
   annotation/v1"`. Future fields are skip_serializing_if-gated; new
   envelope versions bump the `schema` value.
 - The C47 parity-catalog row directionality is `SymmetricEqual`.
@@ -833,9 +833,9 @@ hex chars), `sha512` (128 lowercase hex chars). Other algos and
 mixed/uppercase hex soft-fail to `IdentifierKind::UserDefined` per
 FR-005.
 
-**Auto-detection** (build-tier only): on `mikebom trace run`, the
+**Auto-detection** (build-tier only): on `waybill trace run`, the
 trace's in-toto attestation envelope captures `subject[]` entries
-with digest maps. mikebom emits one `subject:sha256:<hex>` identifier
+with digest maps. waybill emits one `subject:sha256:<hex>` identifier
 per subject that has a sha256 digest in its map, in input order.
 Subjects without sha256 are skipped with `tracing::info!`. Multi-digest
 subjects (sha256 AND sha512) auto-emit sha256 only — the 2026-05-06
@@ -843,7 +843,7 @@ clarification. Operators who need other algos pass
 `--subject-hash sha512:<hex>` manually.
 
 **Manual** (any tier): `--subject-hash <ALGO>:<HEX>` is repeatable on
-both `mikebom sbom scan` and `mikebom trace run`. Manual values
+both `waybill sbom scan` and `waybill trace run`. Manual values
 augment auto-detected entries (deduplicated by `(scheme, value)` per
 milestone 073's resolution pipeline).
 
@@ -874,7 +874,7 @@ image-SBOM.components[].hashes[].sha256 == X
             →   matching source SBOM
 ```
 
-No mikebom-side resolver. The `subject:` value's hex portion equals
+No waybill-side resolver. The `subject:` value's hex portion equals
 the digest portion of an `image:` value when they refer to the same
 artifact (FR-014).
 
@@ -883,7 +883,7 @@ artifact (FR-014).
 Attach an operator-defined identifier to a specific component:
 
 ```bash
-mikebom sbom scan --path . \
+waybill sbom scan --path . \
     --component-id "pkg:cargo/serde@1.0.0=kusari-id:asset-shared-lib-v2" \
     --output out.cdx.json
 ```
@@ -904,8 +904,8 @@ and the scan continues (FR-010).
 | SPDX 2.3 | `Package.externalRefs[]` | `{referenceCategory:"PERSISTENT-ID", referenceType:"<scheme>", referenceLocator:"<value>"}` |
 | SPDX 3 | `Element.externalIdentifier[]` | `{type:"ExternalIdentifier", externalIdentifierType:"<scheme>", identifier:"<value>"}` |
 
-Pre-existing per-component entries (`mikebom:not-linked`,
-`mikebom:shade-relocation`, the SPDX 2.3 `purl` externalRef, etc.)
+Pre-existing per-component entries (`waybill:not-linked`,
+`waybill:shade-relocation`, the SPDX 2.3 `purl` externalRef, etc.)
 preserve their original positions; new `--component-id` entries
 append after, lex-sorted by `(scheme, value)` per research §6.
 
@@ -926,7 +926,7 @@ Extract per-component user-defined identifiers from a CDX SBOM:
 jq '.components[]
     | {purl: .purl, ids: [.properties[]?
         | select(.name | test("^[a-z][a-z0-9_-]*$"))
-        | select(.name | startswith("mikebom:") | not)
+        | select(.name | startswith("waybill:") | not)
         | {(.name): .value}]}' out.cdx.json
 ```
 
@@ -979,7 +979,7 @@ Operators can stack the override with milestone 072–076 identifier
 flags freely — they're orthogonal slots:
 
 ```bash
-mikebom sbom scan --path . \
+waybill sbom scan --path . \
     --root-name widget-svc --root-version 1.2.3 \
     --repo git@github.com:acme/widget-svc.git \
     --subject-hash sha256:abc1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab \
@@ -993,7 +993,7 @@ mikebom sbom scan --path . \
 headline use case the milestone exists for.
 
 ```bash
-mikebom sbom scan --path /opt/builds/abc123-snapshot \
+waybill sbom scan --path /opt/builds/abc123-snapshot \
     --root-name widget-svc --root-version 1.2.3 \
     --output widget-svc.cdx.json
 
@@ -1003,7 +1003,7 @@ jq '.metadata.component | {name, version, "bom-ref", purl, cpe}' widget-svc.cdx.
 #   "version": "1.2.3",
 #   "bom-ref": "widget-svc@1.2.3",
 #   "purl": "pkg:generic/widget-svc@1.2.3",
-#   "cpe": "cpe:2.3:a:mikebom:widget-svc:1.2.3:*:*:*:*:*:*:*"
+#   "cpe": "cpe:2.3:a:waybill:widget-svc:1.2.3:*:*:*:*:*:*:*"
 # }
 ```
 
@@ -1015,7 +1015,7 @@ doesn't appear in `components[]` as a demoted library entry).
 
 ```bash
 cd ~/projects/foo-internal-cargo  # has [package].name = "foo-internal"
-mikebom sbom scan --path . \
+waybill sbom scan --path . \
     --root-name widget-svc --root-version 1.2.3 \
     --output out.cdx.json
 
@@ -1039,7 +1039,7 @@ image basename. The auto-detected `image:` identifier (milestone
 slot.
 
 ```bash
-mikebom sbom scan --image acme/internal-bld:v1 \
+waybill sbom scan --image acme/internal-bld:v1 \
     --root-name widget-svc-image --root-version 1.2.3 \
     --output image.cdx.json
 ```
@@ -1055,7 +1055,7 @@ mikebom sbom scan --image acme/internal-bld:v1 \
 | CPE | `metadata.component.cpe` | `Package.externalRefs[cpe23Type]` | Element `externalIdentifier[cpe23]` |
 
 When the override is active, manifest-derived main-module components
-(identified by `properties[mikebom:component-role=main-module]`) are
+(identified by `properties[waybill:component-role=main-module]`) are
 filtered OUT of:
 - CDX `components[]`
 - SPDX 2.3 `packages[]`
@@ -1077,7 +1077,7 @@ Error messages identify the offending character and its position so
 operators can pinpoint the violation:
 
 ```bash
-mikebom sbom scan --path . --root-name "my widget svc"
+waybill sbom scan --path . --root-name "my widget svc"
 # error: invalid value 'my widget svc' for '--root-name <NAME>':
 # --root-name contains whitespace at position 2 (character: ' ');
 # whitespace is not allowed
@@ -1118,21 +1118,21 @@ milestone 080 flag recipes.
 
 ---
 
-## Section 11 — Milestone 108: External corpus provenance (`mikebom:fingerprint-corpus-sha`)
+## Section 11 — Milestone 108: External corpus provenance (`waybill:fingerprint-corpus-sha`)
 
 Milestone 108 ships a per-component annotation that lets SBOM
 consumers trace a symbol-fingerprint identification back to the
 EXACT corpus snapshot that produced it. Unlike the document-level
 identifiers in sections 1–10 (which carry stable identity for the
-SBOM as a whole), `mikebom:fingerprint-corpus-sha` is a
+SBOM as a whole), `waybill:fingerprint-corpus-sha` is a
 per-component provenance marker — useful only on components whose
 identification came from the symbol-fingerprint matcher.
 
 ### 11.1 When the annotation appears
 
-Only on components carrying `mikebom:source-mechanism =
+Only on components carrying `waybill:source-mechanism =
 "symbol-fingerprint"` AND only when the operator passed
-`--fingerprints-corpus` (or `MIKEBOM_FINGERPRINTS_CORPUS=1`).
+`--fingerprints-corpus` (or `WAYBILL_FINGERPRINTS_CORPUS=1`).
 Without the opt-in, NO annotation is emitted (preserves
 byte-identity with pre-108 SBOMs — the SC-003 contract).
 
@@ -1145,7 +1145,7 @@ byte-identity with pre-108 SBOMs — the SC-003 contract).
 
 The 12-hex truncation matches `git rev-parse --short` default
 (GitHub's API resolves it). The full 40-hex SHA lives in the
-operator's per-host cache directory name (`~/.cache/mikebom/fingerprints/<full-sha>/`)
+operator's per-host cache directory name (`~/.cache/waybill/fingerprints/<full-sha>/`)
 — consumers don't need it for the lookup recipe in 11.4.
 
 ### 11.3 Per-format carriers
@@ -1155,8 +1155,8 @@ Constitution Principle V's documented-exception path):
 
 | Format       | Container                                                                |
 |--------------|--------------------------------------------------------------------------|
-| CDX 1.6      | `components[].properties[]` (name=`mikebom:fingerprint-corpus-sha`)       |
-| SPDX 2.3     | `packages[].annotations[]` (`annotator: "Tool: mikebom"`, comment carries the envelope) |
+| CDX 1.6      | `components[].properties[]` (name=`waybill:fingerprint-corpus-sha`)       |
+| SPDX 2.3     | `packages[].annotations[]` (`annotator: "Tool: waybill"`, comment carries the envelope) |
 | SPDX 3.0.1   | Annotation graph element targeting the component, `statement.value`      |
 
 ### 11.4 Consumer lookup recipe (CDX 1.6 example)
@@ -1164,36 +1164,36 @@ Constitution Principle V's documented-exception path):
 ```bash
 # Step 1 — pull the SHA prefix off the component
 SHA=$(jq -r '.components[]
-        | select((.properties // [])[] | (.name == "mikebom:fingerprint-corpus-sha"))
+        | select((.properties // [])[] | (.name == "waybill:fingerprint-corpus-sha"))
         | .properties[]
-        | select(.name == "mikebom:fingerprint-corpus-sha")
+        | select(.name == "waybill:fingerprint-corpus-sha")
         | .value' sbom.cdx.json | head -1)
 echo "annotation prefix: $SHA"
 
 # Step 2 — resolve to full SHA via GitHub's git-API
-FULL=$(curl -fsSL "https://api.github.com/repos/kusari-sandbox/mikebom-fingerprints/commits/$SHA" \
+FULL=$(curl -fsSL "https://api.github.com/repos/kusari-sandbox/waybill-fingerprints/commits/$SHA" \
        | jq -r '.sha')
 echo "full SHA: $FULL"
 
 # Step 3 — download the corpus snapshot at that SHA
-curl -fsSL "https://github.com/kusari-sandbox/mikebom-fingerprints/archive/$FULL.tar.gz" \
+curl -fsSL "https://github.com/kusari-sandbox/waybill-fingerprints/archive/$FULL.tar.gz" \
     | tar -xz -C /tmp
 
 # Step 4 — read the matching corpus record (one per identified library)
-jq '.' "/tmp/mikebom-fingerprints-$FULL/corpus/openssl.json"
+jq '.' "/tmp/waybill-fingerprints-$FULL/corpus/openssl.json"
 ```
 
 If `$SHA` is the literal `bundled`, skip steps 2-4 — the matching
-rules live in `mikebom-cli/src/scan_fs/binary/symbol_fingerprint.rs::FINGERPRINTS`
-at the same `mikebom-cli` version that emitted the SBOM (visible in
+rules live in `waybill-cli/src/scan_fs/binary/symbol_fingerprint.rs::FINGERPRINTS`
+at the same `waybill-cli` version that emitted the SBOM (visible in
 the SBOM's `creationInfo.creators` / `metadata.tools`).
 
-### 11.5 FR-013 collision: `mikebom:also-detected-via`
+### 11.5 FR-013 collision: `waybill:also-detected-via`
 
 When a binary's symbol set satisfies ≥2 corpus records with
 OVERLAPPING matched-symbol sets (e.g., LibreSSL + OpenSSL both
-match via shared `SSL_*` symbols), mikebom emits one component
-per record AND adds a `mikebom:also-detected-via` annotation
+match via shared `SSL_*` symbols), waybill emits one component
+per record AND adds a `waybill:also-detected-via` annotation
 listing the OTHER matching records' library names. Independent
 co-resident libraries (disjoint matched sets — e.g., OpenSSL +
 zlib in one binary) do NOT trigger this annotation.
@@ -1202,14 +1202,14 @@ Decode recipe:
 
 ```bash
 jq '.components[]
-    | select((.properties // [])[] | (.name == "mikebom:also-detected-via"))
+    | select((.properties // [])[] | (.name == "waybill:also-detected-via"))
     | {library: .name,
-       also_detected_via: (.properties[] | select(.name == "mikebom:also-detected-via").value)}' \
+       also_detected_via: (.properties[] | select(.name == "waybill:also-detected-via").value)}' \
    sbom.cdx.json
 ```
 
 A consumer triaging a CVE against `openssl` should check whether
-the same component carries `mikebom:also-detected-via:
+the same component carries `waybill:also-detected-via:
 ["libressl"]` — that's the signal to widen the triage to LibreSSL
 advisories too.
 
@@ -1226,7 +1226,7 @@ tarball).
 
 ### 11.7 Milestone 109 — source-tier PURL attribution
 
-The `mikebom:fingerprint-corpus-sha` annotation also surfaces on
+The `waybill:fingerprint-corpus-sha` annotation also surfaces on
 components whose PURL was REWRITTEN from the milestone-108 generic
 form (`pkg:generic/zlib`) to a source-tier PURL
 (`pkg:github/madler/zlib@v1.3.1`) by milestone-109's cmake build-
@@ -1237,17 +1237,17 @@ PURL changes.
 How to tell whether an emitted component's identity is source-tier
 or binary-tier:
 
-- **Source-tier PURL + `mikebom:source-mechanism = cmake-fetchcontent-git`**
-  (or `cmake-fetchcontent-url`) + `mikebom:fingerprint-corpus-sha`
+- **Source-tier PURL + `waybill:source-mechanism = cmake-fetchcontent-git`**
+  (or `cmake-fetchcontent-url`) + `waybill:fingerprint-corpus-sha`
   present: this component was DECLARED by the cmake source tree
   AND OBSERVED in a built binary. The fingerprint corroborated the
   source-tier identity claim. Consumers can treat this as a high-
   confidence dep identification (multi-evidence merge).
-- **Source-tier PURL + `mikebom:source-mechanism = cmake-fetchcontent-{git,url}`**
-  but NO `mikebom:fingerprint-corpus-sha`: declared but not linked
+- **Source-tier PURL + `waybill:source-mechanism = cmake-fetchcontent-{git,url}`**
+  but NO `waybill:fingerprint-corpus-sha`: declared but not linked
   into any scanned binary (declared-but-unused). Operator might
   want to investigate dead deps.
-- **Generic PURL `pkg:generic/<library>` + `mikebom:fingerprint-corpus-sha`
+- **Generic PURL `pkg:generic/<library>` + `waybill:fingerprint-corpus-sha`
   present**: fingerprint-only identification (no cmake declaration
   to attribute against). Operator was either scanning a single
   binary in isolation or the cmake project doesn't use FetchContent.
@@ -1264,12 +1264,12 @@ tier or binary-tier.
 - [Cross-tier binding](cross-tier-binding.md) — per-component cross-tier
   identity / verifier flow (milestone 072). Sibling concern.
 - [SBOM types](sbom-types.md) — the `--sbom-type` flag and the
-  four-column CISA ↔ mikebom tier ↔ CDX phase ↔ SPDX 3 SbomType
+  four-column CISA ↔ waybill tier ↔ CDX phase ↔ SPDX 3 SbomType
   equivalence table.
 - [Cross-format SBOM mapping](sbom-format-mapping.md) — authoritative
-  catalog of every cross-format datum (search `C47` for `mikebom:identifiers`).
+  catalog of every cross-format datum (search `C47` for `waybill:identifiers`).
 - [Conformance harness guide](conformance-harness-guide.md) — per-format
   envelope-decode rules and the 7 inherent format-spec asymmetries.
 - [External fingerprint corpus quickstart](../../specs/108-fingerprint-corpus/quickstart.md) —
   end-to-end operator + consumer recipes for the milestone-108
-  `mikebom:fingerprint-corpus-sha` annotation documented in §11.
+  `waybill:fingerprint-corpus-sha` annotation documented in §11.

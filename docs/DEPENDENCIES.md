@@ -2,7 +2,7 @@
 
 ## Policy
 
-mikebom manages dependencies with the following principles:
+waybill manages dependencies with the following principles:
 - Dependencies are kept to a minimum
 - All dependencies must have compatible licenses
 - Dependencies are regularly updated

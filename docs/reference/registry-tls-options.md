@@ -1,7 +1,7 @@
-# Registry TLS + transport options (mikebom sbom scan --image)
+# Registry TLS + transport options (waybill sbom scan --image)
 
-Milestone 182 adds three flags to `mikebom sbom scan` that control
-how mikebom contacts an OCI registry. All three are opt-in — the
+Milestone 182 adds three flags to `waybill sbom scan` that control
+how waybill contacts an OCI registry. All three are opt-in — the
 default behavior (webpki-only trust, HTTPS everywhere, full
 verification) is unchanged.
 
@@ -37,11 +37,11 @@ Harbor's local docker-compose devenv exposes its registry API at
 `http://core:8080`.
 
 ```bash
-mikebom sbom scan \
+waybill sbom scan \
     --image core:8080/library/my-app:1.0 \
     --insecure-registry core:8080 \
     --format cyclonedx-json \
-    --output mikebom.cdx.json
+    --output waybill.cdx.json
 ```
 
 The flag is repeatable — declare each host you want to reach over
@@ -56,11 +56,11 @@ signs its cert with a corporate root CA that's NOT in the webpki
 bundle.
 
 ```bash
-mikebom sbom scan \
+waybill sbom scan \
     --image harbor.internal.example.com/team-a/service:2.3.0 \
     --registry-ca-cert /etc/ssl/company-root-ca.pem \
     --format spdx-2.3-json \
-    --output mikebom.spdx.json
+    --output waybill.spdx.json
 ```
 
 The flag is repeatable and each file may contain multiple
@@ -75,16 +75,16 @@ CI pipeline scans an ephemeral Harbor instance with a self-signed
 (or expired, or hostname-mismatched) cert.
 
 ```bash
-mikebom sbom scan \
+waybill sbom scan \
     --image ci-registry:5000/nightly:abcdef1 \
     --insecure-tls-skip-verify \
     --format cyclonedx-json
 ```
 
-mikebom emits a **WARN log** at scan start:
+waybill emits a **WARN log** at scan start:
 
 ```
-WARN mikebom::scan_fs::oci_pull::registry: TLS verification DISABLED
+WARN waybill::scan_fs::oci_pull::registry: TLS verification DISABLED
   via --insecure-tls-skip-verify — cert chain, hostname, and expiry
   checks are skipped for this scan. Use only for CI/dev against
   self-signed or hostname-mismatched certs. For production private-CA
@@ -100,7 +100,7 @@ If one invocation touches multiple registries with different
 transport requirements:
 
 ```bash
-mikebom sbom scan \
+waybill sbom scan \
     --image core:8080/foo:1.0 \
     --image harbor.internal.example.com/bar:2.0 \
     --image ci-registry:5000/baz:3.0 \
@@ -120,7 +120,7 @@ in this invocation. If that's not what you want, run separate scans.
 
 ## Failure diagnostics
 
-mikebom's error messages point at the specific fix flag:
+waybill's error messages point at the specific fix flag:
 
 ### Case 1 — forgot `--insecure-registry`
 
@@ -173,14 +173,14 @@ Error: no PEM certificates found in --registry-ca-cert file `/etc/ssl/empty.pem`
 
 - **Never use `--insecure-tls-skip-verify` in production.** It
   bypasses cert chain, hostname, and expiry checks. An attacker with
-  MITM position can present any cert and mikebom will accept it.
+  MITM position can present any cert and waybill will accept it.
 - **Prefer `--registry-ca-cert`** over skip-verify whenever the CA
   material is available. It preserves cert validation while trusting
   your private CA.
 - **`--insecure-registry` exposes credentials** if the registry
   requires auth. Only use for registries that don't handle sensitive
   data (dev environments, air-gapped mirrors).
-- mikebom emits a WARN log every time verification is disabled, so
+- waybill emits a WARN log every time verification is disabled, so
   audit-trail workflows can catch unintended use.
 
 ## Extending: mTLS, per-image scoping, config files
@@ -189,7 +189,7 @@ Deferred to future milestones (see
 `specs/182-oci-registry-tls-flex/spec.md` §Deferred):
 
 - mTLS client-cert auth to the registry (`--registry-client-cert`)
-- Persistent config file (`~/.mikebom/registry.toml`)
+- Persistent config file (`~/.waybill/registry.toml`)
 - Per-image (vs. per-invocation) flag scoping
 - DER-format CA input (currently PEM only)
 
@@ -197,7 +197,7 @@ Deferred to future milestones (see
 
 - [`identifiers.md`](./identifiers.md) — SBOM identifier fields
   including `--registry-credentials-dir`
-- [`reading-a-mikebom-sbom.md`](./reading-a-mikebom-sbom.md) —
+- [`reading-a-waybill-sbom.md`](./reading-a-waybill-sbom.md) —
   general SBOM consumption guide
 - [`specs/182-oci-registry-tls-flex/`](../../specs/182-oci-registry-tls-flex/)
   — full milestone spec + design decisions

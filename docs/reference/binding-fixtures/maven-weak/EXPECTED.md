@@ -2,7 +2,7 @@
 
 Reference fixture for the milestone-072 binding-hash-v1 algorithm
 contract — Maven ecosystem variant. Maven has no canonical lockfile
-in mikebom's milestone-070 emission pattern, so the `lockfile` side
+in waybill's milestone-070 emission pattern, so the `lockfile` side
 is `null`; only VCS commit + `pom.xml` SHA-256 populate. Strength
 caps at `weak` per `contracts/binding-hash-v1.md` C-7 maven row.
 

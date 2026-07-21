@@ -1,0 +1,36 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "serialNumber": "urn:uuid:00000000-0000-0000-0000-000000000111",
+  "metadata": {
+    "timestamp": "2026-06-09T00:00:00Z",
+    "tools": [
+      {
+        "vendor": "kusari",
+        "name": "waybill",
+        "version": "test-fixture"
+      }
+    ],
+    "component": {
+      "type": "application",
+      "name": "baz",
+      "version": "1.0.0",
+      "purl": "pkg:cargo/baz@1.0.0"
+    }
+  },
+  "components": [
+    {
+      "type": "application",
+      "name": "baz",
+      "version": "1.0.0",
+      "purl": "pkg:cargo/baz@1.0.0",
+      "properties": [
+        {
+          "name": "waybill:source-document-binding",
+          "value": "{\"source_doc_id\":{\"sha256\":\"1111111111111111111111111111111111111111111111111111111111111111\"},\"hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"strength\":\"verified\",\"algo\":\"v1\"}"
+        }
+      ]
+    }
+  ]
+}

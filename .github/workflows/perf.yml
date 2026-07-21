@@ -7,7 +7,7 @@ name: Performance benchmarks
 # main. 3-attempt retry per test absorbs runner-noise spikes.
 #
 # NOT required for PR merge. Default-lane structural-correctness
-# coverage lives in mikebom-cli/tests/triple_format_structural.rs.
+# coverage lives in waybill-cli/tests/triple_format_structural.rs.
 #
 # See specs/094-deflake-perf-tests/ for the full rationale.
 

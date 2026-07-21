@@ -2,7 +2,7 @@
 
 ## Overview
 
-mikebom follows semantic versioning with an `-alpha.N` suffix during pre-1.0 development. Release cadence is 2-3 per week, driven by maintainer discretion — typically bundling a batch of milestones (m165-171 style) that have merged since the last release.
+waybill follows semantic versioning with an `-alpha.N` suffix during pre-1.0 development. Release cadence is 2-3 per week, driven by maintainer discretion — typically bundling a batch of milestones (m165-171 style) that have merged since the last release.
 
 Publishing a release involves two steps:
 1. Merge a "release: bump workspace to v..." PR.
@@ -31,24 +31,24 @@ Edit exactly ONE line in `Cargo.toml`:
 +version = "0.1.0-alpha.54"
 ```
 
-Then run `cargo update -p mikebom -p mikebom-common` to refresh `Cargo.lock` with the new version. Commit both together.
+Then run `cargo update -p waybill -p waybill-common` to refresh `Cargo.lock` with the new version. Commit both together.
 
 ### Golden regen (mandatory)
 
-The workspace version is embedded in every SBOM emitted by mikebom:
+The workspace version is embedded in every SBOM emitted by waybill:
 
 - **CDX 1.6**: `metadata.tools[0].version` — 2-line change per golden.
-- **SPDX 2.3**: `annotations[].annotator = "Tool: mikebom-0.1.0-alpha.<N>"` — dozens of lines per golden.
+- **SPDX 2.3**: `annotations[].annotator = "Tool: waybill-0.1.0-alpha.<N>"` — dozens of lines per golden.
 - **SPDX 3.0.1**: same annotator pattern + content-hashed SPDXIDs and `documentNamespace` cascade — hundreds of lines per golden.
 
 A release PR MUST regenerate all 33 goldens (11 per format × 3 formats):
 
 ```sh
-grep -rlE "0\.1\.0-alpha\.<PREV>" mikebom-cli/tests/fixtures/    # sweep-detect
-MIKEBOM_UPDATE_CDX_GOLDENS=1   cargo +stable test -p mikebom --test cdx_regression
-MIKEBOM_UPDATE_SPDX_GOLDENS=1  cargo +stable test -p mikebom --test spdx_regression
-MIKEBOM_UPDATE_SPDX3_GOLDENS=1 cargo +stable test -p mikebom --test spdx3_regression
-grep -rlE "0\.1\.0-alpha\.<PREV>" mikebom-cli/tests/fixtures/ | grep -v ".actual.json"   # re-sweep, MUST return empty
+grep -rlE "0\.1\.0-alpha\.<PREV>" waybill-cli/tests/fixtures/    # sweep-detect
+WAYBILL_UPDATE_CDX_GOLDENS=1   cargo +stable test -p waybill --test cdx_regression
+WAYBILL_UPDATE_SPDX_GOLDENS=1  cargo +stable test -p waybill --test spdx_regression
+WAYBILL_UPDATE_SPDX3_GOLDENS=1 cargo +stable test -p waybill --test spdx3_regression
+grep -rlE "0\.1\.0-alpha\.<PREV>" waybill-cli/tests/fixtures/ | grep -v ".actual.json"   # re-sweep, MUST return empty
 ```
 
 Any stray fixture that embeds the version stamp outside the standard `golden/` tree (e.g., `tests/fixtures/pkg_alias_binding/image-baz.cdx.json`) MUST also be regenerated per the sweep. Skipping this fires ~11 macOS-lane `cdx_regression` panics — the fail-diff (`- "version": "0.1.0-alpha.<PREV>"` vs `+ "version": "0.1.0-alpha.<NEW>"`) is the smoking gun.
@@ -72,12 +72,12 @@ Sequence when a release PR merges:
    - Parses the new version from `Cargo.toml`.
    - Idempotency check: if the tag already exists on origin, skips.
    - Creates an annotated tag pointing at the merge commit.
-   - Pushes to origin via `https://x-access-token:${GH_TOKEN}@github.com/kusari-oss/mikebom.git`.
+   - Pushes to origin via `https://x-access-token:${GH_TOKEN}@github.com/kusari-oss/waybill.git`.
 4. `release.yml` fires on the `push: tags: 'v*-alpha.*'` trigger.
 
 ### Secret ownership + rotation
 
-**`RELEASE_TAG_TOKEN` is a fine-grained PAT** scoped to `contents: write` on `kusari-oss/mikebom` ONLY. No other repos, no other permissions.
+**`RELEASE_TAG_TOKEN` is a fine-grained PAT** scoped to `contents: write` on `kusari-oss/waybill` ONLY. No other repos, no other permissions.
 
 **Current owner** (as of milestone 171 rollout, 2026-07-07): the token was provisioned as an interim on Michael Lieberman's (`mlieberman85`) personal account. A follow-up milestone will migrate ownership to a proper `kusari-oss-bot` service account once one is provisioned.
 
@@ -101,10 +101,10 @@ Commands to diagnose:
 git ls-remote --tags origin | grep v0.1.0-alpha.<N>
 
 # If not, what did auto-tag-release.yml say?
-gh run list --repo kusari-oss/mikebom --workflow auto-tag-release.yml --limit 5
+gh run list --repo kusari-oss/waybill --workflow auto-tag-release.yml --limit 5
 
 # View the failing log:
-gh run view <run-id> --repo kusari-oss/mikebom --log-failed
+gh run view <run-id> --repo kusari-oss/waybill --log-failed
 ```
 
 ### Manual recovery

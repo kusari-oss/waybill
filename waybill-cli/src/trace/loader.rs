@@ -1,0 +1,278 @@
+// Loader types are only constructed inside the Linux-only
+// `cli/scan.rs::execute_scan` flow; on macOS the file compiles but is
+// unreachable.
+#![allow(dead_code)]
+
+use std::path::PathBuf;
+
+pub struct LoaderConfig {
+    pub target_pid: u32,
+    pub libssl_path: Option<PathBuf>,
+    pub ring_buffer_size: u32,
+    pub trace_children: bool,
+    pub ebpf_object: Option<PathBuf>,
+    /// Milestone 213 (issue #616) — plumbs `ScanArgs.include_system_reads`
+    /// through to the kernel-side `FILTER_WIDEN[0]` slot per FR-010.
+    /// When `true`, the kernel-side classifier's System-category compare
+    /// short-circuits to `None` — System paths flow through to the ring
+    /// buffer instead of being dropped. UserCache/Ephemeral/CargoFingerprint
+    /// remain active regardless of this flag.
+    pub include_system_reads: bool,
+}
+
+#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
+mod inner {
+    use std::path::{Path, PathBuf};
+
+    use anyhow::{Context, Result};
+    use aya::programs::{KProbe, TracePoint, UProbe};
+    use aya::Ebpf;
+    use tracing::{debug, info, warn};
+
+    use waybill_common::maps::TraceConfig;
+
+    use super::LoaderConfig;
+
+    pub struct EbpfHandle {
+        pub bpf: Ebpf,
+    }
+
+    pub fn load_and_attach(config: &LoaderConfig) -> Result<EbpfHandle> {
+        info!(target_pid = config.target_pid, "Loading eBPF program");
+
+        let obj_path = config
+            .ebpf_object
+            .clone()
+            .unwrap_or_else(default_ebpf_path);
+
+        let data = std::fs::read(&obj_path).with_context(|| {
+            format!(
+                "failed to read eBPF object at {}. Run `cargo xtask ebpf` first.",
+                obj_path.display()
+            )
+        })?;
+
+        let mut bpf = Ebpf::load(&data).context("failed to load eBPF bytecode")?;
+
+        // Populate PID filter (even though kernel-side is disabled,
+        // keep the map populated for future use). Insertion failure
+        // is non-fatal here — the filter is defensive future-proofing —
+        // but log so operators can investigate if a future kernel-side
+        // change starts depending on it.
+        {
+            let mut pid_filter: aya::maps::HashMap<_, u32, u8> =
+                aya::maps::HashMap::try_from(
+                    bpf.map_mut("PID_FILTER").context("PID_FILTER map not found")?,
+                )?;
+            if let Err(e) = pid_filter.insert(config.target_pid, 1, 0) {
+                warn!(error = %e, target_pid = config.target_pid,
+                    "PID_FILTER insert failed; eBPF map populate is best-effort");
+            }
+        }
+
+        // Set runtime configuration. Failure here IS load-bearing —
+        // kernel-side eBPF reads tracer_pid / capture_file_content_hash /
+        // trace_children from this map; a silent failure means the
+        // kernel sees zeroed defaults and traces wrong / missing data.
+        // We currently propagate-as-best-effort to avoid breaking
+        // existing callers, but log loudly so the failure is visible.
+        {
+            let mut cfg_map: aya::maps::Array<_, TraceConfig> =
+                aya::maps::Array::try_from(
+                    bpf.map_mut("CONFIG").context("CONFIG map not found")?,
+                )?;
+            if let Err(e) = cfg_map.set(
+                0,
+                TraceConfig {
+                    max_payload_capture: 512,
+                    tracer_pid: std::process::id(),
+                    capture_file_content_hash: 1,
+                    trace_children: if config.trace_children { 1 } else { 0 },
+                    _padding: [0; 2],
+                },
+                0,
+            ) {
+                warn!(error = %e,
+                    "CONFIG map set failed; kernel-side will see zeroed TraceConfig defaults");
+            }
+        }
+
+        // Milestone 213 (issue #616) — write the widen-flag config
+        // (FILTER_WIDEN[0]) per FR-010. `1` disables the kernel-side
+        // System-category filter; `0` (default) leaves it active.
+        // On map-attach failure, log WARN + add to the caller's
+        // eventual kprobe_attach_failures[] surface via R9. The trace
+        // continues (fail-open) because the FILTER_WIDEN semantics
+        // are "the kernel-side classifier interprets a missing/absent
+        // FILTER_WIDEN as widen=false = filter active" — matches
+        // pre-m213 System-category filtering behavior.
+        {
+            match aya::maps::PerCpuArray::try_from(
+                bpf.map_mut("FILTER_WIDEN")
+                    .context("FILTER_WIDEN map not found")?,
+            ) {
+                Ok(mut widen_map) => {
+                    let widen_val: u8 = if config.include_system_reads { 1 } else { 0 };
+                    // `aya::util::nr_cpus()` returns `Result<usize, (&str, io::Error)>` — a
+                    // tuple error type, not something that implements `StdError`, so anyhow's
+                    // `.context()` extension trait doesn't apply. Convert to anyhow explicitly.
+                    let nr_cpus = aya::util::nr_cpus().map_err(|(msg, err)| {
+                        anyhow::anyhow!(
+                            "failed to detect online CPU count for FILTER_WIDEN write ({msg}): {err}"
+                        )
+                    })?;
+                    let per_cpu_values: aya::maps::PerCpuValues<u8> =
+                        aya::maps::PerCpuValues::try_from(vec![widen_val; nr_cpus])?;
+                    if let Err(e) = widen_map.set(0, per_cpu_values, 0) {
+                        warn!(error = %e,
+                            include_system_reads = config.include_system_reads,
+                            "FILTER_WIDEN set failed; kernel-side will see per-CPU-zero widen flag (System filter active)");
+                    } else {
+                        info!(
+                            include_system_reads = config.include_system_reads,
+                            "m213 widen flag written to FILTER_WIDEN[0]"
+                        );
+                    }
+                }
+                Err(e) => {
+                    warn!(error = %e,
+                        "FILTER_WIDEN map not usable on this kernel; System filter will always be active regardless of --include-system-reads");
+                }
+            }
+        }
+
+        // Attach uprobes to OpenSSL
+        let libssl = config
+            .libssl_path
+            .clone()
+            .or_else(find_libssl)
+            .context("could not find libssl.so — pass --libssl-path")?;
+
+        info!(path = %libssl.display(), "Attaching uprobes to libssl");
+        attach_uprobe(&mut bpf, "ssl_read_entry", &libssl, "SSL_read")?;
+        attach_uprobe(&mut bpf, "ssl_read_return", &libssl, "SSL_read")?;
+        attach_uprobe(&mut bpf, "ssl_write_entry", &libssl, "SSL_write")?;
+
+        // Attach kprobes
+        attach_kprobe(&mut bpf, "tcp_connect", "tcp_v4_connect")?;
+        attach_kprobe(&mut bpf, "tcp_connect_ret", "tcp_v4_connect")?;
+        // vfs_read/vfs_write are intentionally NOT attached. They fire on
+        // every read/write syscall system-wide but the current probe emits
+        // empty-path events (kernel path resolution for vfs_* is non-trivial).
+        // Every such event consumes ring-buffer space for no aggregator
+        // benefit — enough of them to push out the late opens (like curl's
+        // -o output file). File opens already carry the path via
+        // do_filp_open + openat2, so we rely on those alone.
+        if let Err(e) = attach_kprobe(&mut bpf, "openat2_entry", "do_sys_openat2") {
+            warn!("could not attach openat2 kprobe: {e}");
+        }
+        // do_filp_open catches every open-family syscall (open, openat,
+        // openat2, creat) and is the fallback for paths openat2 misses,
+        // e.g. glibc's default `open()` wrapper.
+        if let Err(e) = attach_kprobe(&mut bpf, "do_filp_open_entry", "do_filp_open") {
+            warn!("could not attach do_filp_open kprobe: {e}");
+        }
+        // Milestone 211 (issue #611): the vfs_open kprobe was retired
+        // — see waybill-ebpf/src/programs/file_ops.rs for the full
+        // explanation. Its intended fallback role for paths that
+        // do_filp_open + openat2 miss was never realized because
+        // bpf_d_path (which vfs_open used to resolve paths) is
+        // restricted to LSM/fentry/fexit programs at the kernel API
+        // level. do_filp_open in practice covers every relevant open.
+
+        // Milestone 210 — compiler-pipeline tracepoints. Best-effort:
+        // if any of the three fail to attach (missing symbol, kernel
+        // config nostops), warn + continue. The compiler-pipeline
+        // observation gracefully degrades to "no data" — the rest of
+        // the trace pipeline (network, file-ops for non-compiler
+        // pids) keeps working.
+        if let Err(e) =
+            attach_tracepoint(&mut bpf, "sched_process_exec", "sched", "sched_process_exec")
+        {
+            warn!("could not attach sched_process_exec tracepoint: {e}");
+        }
+        if let Err(e) =
+            attach_tracepoint(&mut bpf, "sched_process_fork", "sched", "sched_process_fork")
+        {
+            warn!("could not attach sched_process_fork tracepoint: {e}");
+        }
+        if let Err(e) =
+            attach_tracepoint(&mut bpf, "sched_process_exit", "sched", "sched_process_exit")
+        {
+            warn!("could not attach sched_process_exit tracepoint: {e}");
+        }
+
+        info!("All probes attached");
+        Ok(EbpfHandle { bpf })
+    }
+
+    fn attach_tracepoint(
+        bpf: &mut Ebpf,
+        prog: &str,
+        category: &str,
+        event: &str,
+    ) -> Result<()> {
+        let p: &mut TracePoint = bpf
+            .program_mut(prog)
+            .and_then(|p| p.try_into().ok())
+            .with_context(|| format!("program '{prog}' not found"))?;
+        p.load()?;
+        p.attach(category, event)?;
+        debug!(prog, category, event, "tracepoint attached");
+        Ok(())
+    }
+
+    fn attach_uprobe(bpf: &mut Ebpf, prog: &str, lib: &Path, fn_name: &str) -> Result<()> {
+        let p: &mut UProbe = bpf
+            .program_mut(prog)
+            .and_then(|p| p.try_into().ok())
+            .with_context(|| format!("program '{prog}' not found"))?;
+        p.load()?;
+        p.attach(Some(fn_name), 0, lib, None)?;
+        debug!(prog, fn_name, "uprobe attached");
+        Ok(())
+    }
+
+    fn attach_kprobe(bpf: &mut Ebpf, prog: &str, fn_name: &str) -> Result<()> {
+        let p: &mut KProbe = bpf
+            .program_mut(prog)
+            .and_then(|p| p.try_into().ok())
+            .with_context(|| format!("program '{prog}' not found"))?;
+        p.load()?;
+        p.attach(fn_name, 0)?;
+        debug!(prog, fn_name, "kprobe attached");
+        Ok(())
+    }
+
+    fn default_ebpf_path() -> PathBuf {
+        let p = PathBuf::from("waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf");
+        if p.exists() { return p; }
+        PathBuf::from("target/bpfel-unknown-none/release/waybill-ebpf")
+    }
+
+    fn find_libssl() -> Option<PathBuf> {
+        for p in &[
+            "/usr/lib/x86_64-linux-gnu/libssl.so",
+            "/usr/lib/aarch64-linux-gnu/libssl.so",
+            "/usr/lib/libssl.so",
+            "/usr/lib64/libssl.so",
+        ] {
+            let path = PathBuf::from(p);
+            if path.exists() { return Some(path); }
+        }
+        None
+    }
+}
+
+#[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
+pub use inner::load_and_attach;
+// `EbpfHandle` lives inside the inner Linux-only module and isn't used
+// by any external caller; left non-re-exported to keep clippy clean.
+
+#[cfg(not(all(target_os = "linux", feature = "ebpf-tracing")))]
+pub struct EbpfHandle;
+
+#[cfg(not(all(target_os = "linux", feature = "ebpf-tracing")))]
+pub fn load_and_attach(_: &LoaderConfig) -> anyhow::Result<EbpfHandle> {
+    anyhow::bail!("eBPF tracing requires Linux.")
+}

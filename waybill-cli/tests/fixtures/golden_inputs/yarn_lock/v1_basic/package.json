@@ -1,0 +1,8 @@
+{
+  "name": "yarn-v1-fixture",
+  "version": "0.1.0",
+  "dependencies": {
+    "waybill-fixture-lib": "^1.0.0",
+    "@waybill-fixture/types-pkg": "^4.0.0"
+  }
+}

@@ -1,0 +1,196 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:generic/baz?file-sha256=446db4a0be0f85cb27407792fd4ff3de0a60a92b1055dc14ee810483df82b5c9",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"446db4a0be0f85cb27407792fd4ff3de0a60a92b1055dc14ee810483df82b5c9\"}",
+            "location": "usr/local/bin/baz"
+          }
+        ]
+      },
+      "name": "baz",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"usr/local/bin/baz\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "analyzed"
+        },
+        {
+          "name": "waybill:binary-class",
+          "value": "elf"
+        },
+        {
+          "name": "waybill:binary-stripped",
+          "value": "true"
+        },
+        {
+          "name": "waybill:linkage-kind",
+          "value": "static"
+        },
+        {
+          "name": "waybill:binary-packed",
+          "value": "none"
+        },
+        {
+          "name": "waybill:layer-digest",
+          "value": "sha256:c175c9e34aca692d431c1460b2875bfe0e014a1c7614c7ac5023f549c8de87f9"
+        },
+        {
+          "name": "waybill:source-document-binding",
+          "value": "{\"algo\":\"v1\",\"reason\":\"source-not-found-in-bind-target\",\"source_doc_id\":{\"iri\":\"<WORKSPACE>/waybill-cli/tests/fixtures/pkg_alias_binding/source-baz.cdx.json\",\"sha256\":\"3f68e0f5c94b6af774801bdb3d2f466d3b67b4649be44c08bd1a1b2ce35bac30\"},\"strength\":\"unknown\"}"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"usr/local/bin\"]"
+        }
+      ],
+      "purl": "pkg:generic/baz?file-sha256=446db4a0be0f85cb27407792fd4ff3de0a60a92b1055dc14ee810483df82b5c9",
+      "type": "application"
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "waybill-test:latest@0.0.0"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "waybill-test:latest@0.0.0"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/baz?file-sha256=446db4a0be0f85cb27407792fd4ff3de0a60a92b1055dc14ee810483df82b5c9"
+    },
+    {
+      "dependsOn": [
+        "pkg:generic/baz?file-sha256=446db4a0be0f85cb27407792fd4ff3de0a60a92b1055dc14ee810483df82b5c9"
+      ],
+      "ref": "waybill-test:latest@0.0.0"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "waybill"
+      }
+    ],
+    "component": {
+      "bom-ref": "waybill-test:latest@0.0.0",
+      "cpe": "cpe:2.3:a:waybill:waybill-test_latest:0.0.0:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "comment": "auto-detected from resolved image reference",
+          "type": "distribution",
+          "url": "waybill-test:latest@sha256:13883c6ca07b46d00f98f78f721e62c66bc9a4e8304e19d5a58cde73067bbcf0"
+        },
+        {
+          "comment": "source-tier SBOM that produced this build/deployment",
+          "hashes": [
+            {
+              "alg": "SHA-256",
+              "content": "3f68e0f5c94b6af774801bdb3d2f466d3b67b4649be44c08bd1a1b2ce35bac30"
+            }
+          ],
+          "type": "bom",
+          "url": "<WORKSPACE>/waybill-cli/tests/fixtures/pkg_alias_binding/source-baz.cdx.json"
+        }
+      ],
+      "name": "waybill-test:latest",
+      "purl": "pkg:generic/waybill-test:latest@0.0.0",
+      "type": "application",
+      "version": "0.0.0"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "post-build"
+      }
+    ],
+    "properties": [
+      {
+        "name": "waybill:generation-context",
+        "value": "container-image-scan"
+      },
+      {
+        "name": "waybill:os-release-missing-fields",
+        "value": "ID,VERSION_ID"
+      },
+      {
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "waybill:graph-completeness",
+        "value": "partial"
+      },
+      {
+        "name": "waybill:graph-completeness-reason",
+        "value": "transitive-edges-unresolvable: generic"
+      },
+      {
+        "name": "waybill:workspaces-detected",
+        "value": "[\"usr/local/bin\"]"
+      }
+    ],
+    "supplier": {
+      "name": "waybill contributors"
+    },
+    "timestamp": "1970-01-01T00:00:00Z",
+    "tools": {
+      "components": [
+        {
+          "name": "waybill",
+          "publisher": "waybill contributors",
+          "type": "application",
+          "version": "0.1.0-alpha.65"
+        }
+      ]
+    }
+  },
+  "serialNumber": "urn:uuid:00000000-0000-0000-0000-000000000000",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

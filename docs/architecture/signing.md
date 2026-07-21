@@ -1,7 +1,7 @@
 # DSSE Signing & Verification
 
 Feature 006 (SBOMit compliance suite) added end-to-end signing and
-verification of mikebom-produced attestations using
+verification of waybill-produced attestations using
 [sigstore-rs](https://github.com/sigstore/sigstore-rs). All envelopes
 are DSSE-wrapped and carry enough identity material in-line for a
 downstream verifier to operate without any out-of-band trust
@@ -9,11 +9,11 @@ configuration.
 
 ## Layers
 
-### `mikebom_common::attestation::envelope`
+### `waybill_common::attestation::envelope`
 
 The shared types + DSSE PAE / canonical-JSON helpers. Consumed by
 both the CLI signer and verifier, plus any external Rust tool that
-wants to interop with mikebom's envelope shape.
+wants to interop with waybill's envelope shape.
 
 - `SignedEnvelope` — top-level DSSE shape: `payloadType`, base64
   `payload`, `signatures[]`
@@ -24,7 +24,7 @@ wants to interop with mikebom's envelope shape.
 - `canonical_json_bytes()` — deterministic key-ordered JSON
 - `dsse_pae()` — DSSE v1 Pre-Authenticated Encoding
 
-### `mikebom-cli::attestation::signer`
+### `waybill-cli::attestation::signer`
 
 - `SigningIdentity::{None, LocalKey, Keyless}`
 - `OidcProvider::{GitHubActions, Explicit, Interactive}` + `detect()`
@@ -34,7 +34,7 @@ wants to interop with mikebom's envelope shape.
   integration is a follow-on task
 - `sign(stmt, identity)` — unified entrypoint; `Ok(None)` = unsigned
 
-### `mikebom-cli::attestation::verifier`
+### `waybill-cli::attestation::verifier`
 
 - `parse_envelope()` — separates `NotSigned` / `MalformedEnvelope`
 - `verify_signature()` — sigstore-rs `CosignVerificationKey` + DSSE PAE
@@ -43,14 +43,14 @@ wants to interop with mikebom's envelope shape.
 - `verify_transparency_log()` — Rekor bundle presence check
 - `FailureMode` (closed set of 9 variants) → exit codes 1/2/3
 
-### `mikebom-cli::policy`
+### `waybill-cli::policy`
 
 In-toto layout support.
 
 - `layout::generate_starter_layout()` — minimal single-step layout
 - `apply::verify_against_layout()` — functionary-keyid check
 
-### `mikebom-cli::sbom::mutator`
+### `waybill-cli::sbom::mutator`
 
 RFC 6902 JSON Patch applier + provenance recorder for `sbom enrich`.
 
@@ -72,6 +72,6 @@ instances.
 sigstore-rs 0.10 chosen over 0.13+ because the latter force-depends on
 `aws-lc-rs` via the `cert` feature, violating the
 "pure Rust, zero C" principle. With 0.10 + rustls-tls features we stay
-C-clean on Linux targets (`cargo tree -p mikebom --target
+C-clean on Linux targets (`cargo tree -p waybill --target
 x86_64-unknown-linux-gnu -e normal` confirms zero `openssl-sys`,
 `libz-sys`, `aws-lc-rs`, `native-tls` hits).

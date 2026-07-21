@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest a new feature or improvement for mikebom
+description: Suggest a new feature or improvement for waybill
 title: "[FEATURE] "
 labels: ["enhancement"]
 body:
@@ -8,8 +8,8 @@ body:
       value: |
         Thanks for the suggestion! For non-trivial features please open
         an issue here first so we can align on direction before code is
-        written. mikebom uses the speckit lifecycle for feature work —
-        see [CONTRIBUTING.md](https://github.com/kusari-sandbox/mikebom/blob/main/CONTRIBUTING.md).
+        written. waybill uses the speckit lifecycle for feature work —
+        see [CONTRIBUTING.md](https://github.com/kusari-sandbox/waybill/blob/main/CONTRIBUTING.md).
 
   - type: textarea
     id: use-case
@@ -18,7 +18,7 @@ body:
       description: What are you trying to accomplish? Why is the current behavior insufficient?
       placeholder: |
         I want to scan ... so I can ...
-        Today mikebom does ... which doesn't ...
+        Today waybill does ... which doesn't ...
     validations:
       required: true
 
@@ -26,7 +26,7 @@ body:
     id: proposal
     attributes:
       label: Proposed solution
-      description: How would you like mikebom to handle this? A new flag, a new subcommand, a new ecosystem reader, a new output field?
+      description: How would you like waybill to handle this? A new flag, a new subcommand, a new ecosystem reader, a new output field?
     validations:
       required: true
 

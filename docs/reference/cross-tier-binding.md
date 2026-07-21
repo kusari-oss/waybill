@@ -1,7 +1,7 @@
 # Cross-tier SBOM binding — external verifier author guide
 
 **Audience**: maintainers of external verifier / auditor tools that
-consume mikebom-emitted CycloneDX 1.6, SPDX 2.3, or SPDX 3.0.1 SBOMs
+consume waybill-emitted CycloneDX 1.6, SPDX 2.3, or SPDX 3.0.1 SBOMs
 and want to verify that an image-tier (or build-tier) component
 traces back to a known source-tier SBOM. Covers the binding-hash
 algorithm, per-format carrier shapes, the OpenVEX 0.2.0
@@ -9,14 +9,14 @@ algorithm, per-format carrier shapes, the OpenVEX 0.2.0
 modes — everything an external implementer needs to write a
 compatible verifier from this document alone.
 
-**Status**: written 2026-05-05 against mikebom v0.1.0-alpha.15
+**Status**: written 2026-05-05 against waybill v0.1.0-alpha.15
 (milestone 072). Reflects the post-072 emit + verify contract.
 
 **Companion documents**:
 
 - `docs/reference/conformance-harness-guide.md` — milestone 071
   per-format envelope-decode rules + the 7 inherent format-spec
-  asymmetries. Read this first if you're new to mikebom's emission
+  asymmetries. Read this first if you're new to waybill's emission
   model.
 - `docs/reference/binding-fixtures/` — the published reference
   fixture set (SC-004). Three fixture pairs (`cargo-verified`,
@@ -108,7 +108,7 @@ recomputation).
 This vector is pinned at `docs/reference/binding-fixtures/cargo-verified/`
 and `docs/reference/binding-fixtures/golang-verified/`; it is also
 the `pinned_vec_all_three_sides` test in
-`mikebom-cli/src/binding/hash.rs::tests`.
+`waybill-cli/src/binding/hash.rs::tests`.
 
 #### `weak` (two sides populated — Maven case, no lockfile)
 
@@ -138,7 +138,7 @@ This vector is pinned at `docs/reference/binding-fixtures/maven-weak/`.
 
 #### `unknown` (fewer than two sides populated, OR any side fails verification)
 
-When `populated_count < 2`, mikebom does NOT emit a hash. The
+When `populated_count < 2`, waybill does NOT emit a hash. The
 binding annotation carries `hash: null` and a structured `reason`
 naming why the trace failed (e.g., `no-evidence`,
 `base-layer-system-package`).
@@ -152,9 +152,9 @@ emitter's strength label to `unknown` with `reason:
 ### 1.4 Determinism contract
 
 For byte-identical `(vcs, lockfile, manifest)` inputs, two distinct
-mikebom invocations on potentially different machines / different
+waybill invocations on potentially different machines / different
 alpha versions MUST produce byte-identical binding hashes.
-Determinism MUST hold across mikebom alpha versions for the same
+Determinism MUST hold across waybill alpha versions for the same
 `algo` value.
 
 Specifically:
@@ -174,7 +174,7 @@ requires a versioned binding scheme (V1 → V2) per Section 7.
 ## Section 2 — Per-ecosystem input table
 
 Per-ecosystem rules for extracting the `(vcs, lockfile, manifest)`
-triple. Mismatch with mikebom's emit-side mapping → false-negative
+triple. Mismatch with waybill's emit-side mapping → false-negative
 verification.
 
 | Ecosystem | `vcs` source | `lockfile` (SHA-256 input) | `manifest` (SHA-256 input) | Max strength |
@@ -184,12 +184,12 @@ verification.
 | **npm** | `git rev-parse HEAD` (no widespread binary-embed convention) | `package-lock.json` bytes; fallback to `yarn.lock` then `pnpm-lock.yaml` if the canonical lockfile is absent | top-level `package.json` bytes | `verified` |
 | **pip** | `git rev-parse HEAD` | `poetry.lock` (Poetry projects); fallback to `pdm.lock` (PDM); fallback to a SHA-256 of the concatenated `--hash=` lines from `requirements*.txt` (PEP 503, alphabetically sorted) | top-level `pyproject.toml` bytes | `verified` |
 | **gem** | `git rev-parse HEAD` | `Gemfile.lock` bytes | top-level `*.gemspec` bytes (project's own gemspec, NOT vendored gemspecs) | `verified` |
-| **maven** | `git rev-parse HEAD` (future: `<scm>` block in `pom.xml`) | NOT POPULATED — Maven has no canonical lockfile in mikebom's milestone 070 emission pattern | top-level `pom.xml` bytes (resolved form after parent inheritance + property substitution per milestone 070) | `weak` (capped — no lockfile) |
+| **maven** | `git rev-parse HEAD` (future: `<scm>` block in `pom.xml`) | NOT POPULATED — Maven has no canonical lockfile in waybill's milestone 070 emission pattern | top-level `pom.xml` bytes (resolved form after parent inheritance + property substitution per milestone 070) | `weak` (capped — no lockfile) |
 
 **Lockfile + manifest canonicalization rule**: SHA-256 the **raw
-bytes as on disk**. mikebom does NOT re-serialize / re-format
+bytes as on disk**. waybill does NOT re-serialize / re-format
 before hashing — bytes-on-disk is the contract. Rationale: avoids
-subtle whitespace + parser-version drift between mikebom and
+subtle whitespace + parser-version drift between waybill and
 external verifiers; the manifest's canonical form is "what the
 maintainer committed."
 
@@ -220,7 +220,7 @@ idiomatic mechanism. Per Constitution Principle V, **standards-native
 cross-document references are emitted alongside** the per-component
 binding annotation; only the per-component hash + strength label
 (which has no native equivalent) lives in the
-`mikebom:source-document-binding` annotation.
+`waybill:source-document-binding` annotation.
 
 ### 3.1 CycloneDX 1.6
 
@@ -254,12 +254,12 @@ binding annotation; only the per-component hash + strength label
 ```
 
 `externalReferences[].type: "bom"` is the CDX 1.6 native cross-document
-reference type — exactly the semantic mikebom needs.
+reference type — exactly the semantic waybill needs.
 
-#### Per-component `mikebom:source-document-binding` annotation
+#### Per-component `waybill:source-document-binding` annotation
 
 `components[].properties[]` entry where `name ==
-"mikebom:source-document-binding"` and `value` is the JSON-encoded
+"waybill:source-document-binding"` and `value` is the JSON-encoded
 `SourceDocumentBinding` (a string, single-line, no whitespace
 beyond what `serde_json::to_string` produces):
 
@@ -272,9 +272,9 @@ beyond what `serde_json::to_string` produces):
     "purl": "pkg:cargo/demo-cargo-project@0.1.0",
     "bom-ref": "pkg:cargo/demo-cargo-project@0.1.0?bomref=image-instance-1",
     "properties": [
-      { "name": "mikebom:sbom-tier", "value": "deployed" },
+      { "name": "waybill:sbom-tier", "value": "deployed" },
       {
-        "name": "mikebom:source-document-binding",
+        "name": "waybill:source-document-binding",
         "value": "{\"algo\":\"v1\",\"hash\":\"745289decaf84d67e5cc9b333b435e8cc341ac19f7ab16673f05133d459a6111\",\"source_doc_id\":{\"sha256\":\"<sha256-of-source-sbom>\"},\"strength\":\"verified\"}"
       }
     ]
@@ -287,8 +287,8 @@ beyond what `serde_json::to_string` produces):
 - `properties[].value` is a string per CDX 1.6 schema. The string
   contains a JSON-encoded `SourceDocumentBinding` object.
 - The annotation is emitted only on components carrying
-  `mikebom:sbom-tier: build` or `deployed`. Source-tier
-  (`mikebom:sbom-tier: source`) components do NOT carry it (they
+  `waybill:sbom-tier: build` or `deployed`. Source-tier
+  (`waybill:sbom-tier: source`) components do NOT carry it (they
   ARE the binding target, not the bound entity).
 - The component's `bom-ref` is the per-instance identifier (FR-008
   per-instance VEX uses this — see Section 4).
@@ -330,14 +330,14 @@ component to the source-tier main-module:
 ```
 
 `BUILT_FROM` (SPDX 2.3 §11.1) is the native binary-from-source
-relationship. mikebom emits this for every image/build → source
+relationship. waybill emits this for every image/build → source
 binding.
 
-#### Per-component `mikebom:source-document-binding` annotation
+#### Per-component `waybill:source-document-binding` annotation
 
 `Package.annotations[]` entry wrapped in the existing
 `MikebomAnnotationCommentV1` envelope (`schema:
-"mikebom-annotation/v1"`, `field`,
+"waybill-annotation/v1"`, `field`,
 `value`):
 
 ```json
@@ -346,10 +346,10 @@ binding.
     "name": "demo-cargo-project",
     "SPDXID": "SPDXRef-foo-binary",
     "annotations": [{
-      "annotator": "Tool: mikebom-0.1.0-alpha.15",
+      "annotator": "Tool: waybill-0.1.0-alpha.15",
       "annotationDate": "2026-05-05T12:00:00Z",
       "annotationType": "OTHER",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-document-binding\",\"value\":{\"algo\":\"v1\",\"hash\":\"745289decaf84d67e5cc9b333b435e8cc341ac19f7ab16673f05133d459a6111\",\"source_doc_id\":{\"sha256\":\"<sha256-of-source-sbom>\"},\"strength\":\"verified\"}}"
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-document-binding\",\"value\":{\"algo\":\"v1\",\"hash\":\"745289decaf84d67e5cc9b333b435e8cc341ac19f7ab16673f05133d459a6111\",\"source_doc_id\":{\"sha256\":\"<sha256-of-source-sbom>\"},\"strength\":\"verified\"}}"
     }]
   }]
 }
@@ -359,8 +359,8 @@ binding.
 
 1. For each `Package`, walk `annotations[]`.
 2. Parse `comment` as JSON (it's a JSON-encoded string).
-3. Verify `parsed.schema == "mikebom-annotation/v1"`.
-4. Match `parsed.field` against `"mikebom:source-document-binding"`.
+3. Verify `parsed.schema == "waybill-annotation/v1"`.
+4. Match `parsed.field` against `"waybill:source-document-binding"`.
 5. Extract `parsed.value` — a real JSON object (NOT a JSON-string).
 
 The envelope's `value` is the per-component `SourceDocumentBinding`
@@ -405,7 +405,7 @@ built_from` (lowercase per SPDX 3 convention):
 }
 ```
 
-#### Per-component `mikebom:source-document-binding` annotation
+#### Per-component `waybill:source-document-binding` annotation
 
 A graph-element `Annotation` whose `subject` is the Package's IRI
 and whose `statement` carries the same `MikebomAnnotationCommentV1`
@@ -415,7 +415,7 @@ envelope as SPDX 2.3:
 {
   "type": "Annotation",
   "subject": "https://example.org/spdx/foo-binary",
-  "statement": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-document-binding\",\"value\":{\"algo\":\"v1\",\"hash\":\"745289decaf84d67e5cc9b333b435e8cc341ac19f7ab16673f05133d459a6111\",\"source_doc_id\":{\"sha256\":\"<sha256-of-source-sbom>\"},\"strength\":\"verified\"}}"
+  "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-document-binding\",\"value\":{\"algo\":\"v1\",\"hash\":\"745289decaf84d67e5cc9b333b435e8cc341ac19f7ab16673f05133d459a6111\",\"source_doc_id\":{\"sha256\":\"<sha256-of-source-sbom>\"},\"strength\":\"verified\"}}"
 }
 ```
 
@@ -426,19 +426,19 @@ envelope as SPDX 2.3:
    element's `spdxId`.
 3. Parse `statement` as the same JSON envelope; extract `value`.
 
-### 3.4 Choosing between native fields and `mikebom:*` annotations
+### 3.4 Choosing between native fields and `waybill:*` annotations
 
 Per Constitution Principle V (named pattern: native-first,
-`mikebom:*` supplementary):
+`waybill:*` supplementary):
 
-| Datum | Native carrier | `mikebom:*` annotation |
+| Datum | Native carrier | `waybill:*` annotation |
 |---|---|---|
 | Source SBOM document identity (SHA-256, IRI) | YES — CDX `externalReferences[type:bom]`, SPDX 2.3 `externalDocumentRefs[]`, SPDX 3 `ExternalMap` | NO. The `source_doc_id` field inside the per-component annotation duplicates this for self-containment, but the document-level native field is the authoritative source. |
 | Build/source provenance edge | YES — SPDX 2.3 `BUILT_FROM` relationship, SPDX 3 `relationshipType: built_from`. CDX has no native per-edge "built-from" type, so the document-level `externalReferences[type:bom]` carries the cross-document signal alone. | NO. |
-| **Per-component binding hash + strength** | NO — no format has a native per-component "this binary was produced by inputs X, Y, Z with confidence W" construct. | YES (`mikebom:source-document-binding`). This is the exclusive carrier. |
+| **Per-component binding hash + strength** | NO — no format has a native per-component "this binary was produced by inputs X, Y, Z with confidence W" construct. | YES (`waybill:source-document-binding`). This is the exclusive carrier. |
 
 A correct verifier reads the document-level native fields to
-locate the source SBOM, then walks the per-component `mikebom:*`
+locate the source SBOM, then walks the per-component `waybill:*`
 annotations to recompute and compare hashes.
 
 ### 3.5 The `SourceDocumentBinding` shape
@@ -481,7 +481,7 @@ SPDX envelope's `value` field:
 
 ### 3.6 Common `reason` values
 
-The contract is open-ended (any string is allowed), but mikebom
+The contract is open-ended (any string is allowed), but waybill
 emits the following documented values:
 
 | Reason | Meaning |
@@ -502,7 +502,7 @@ benefit from seeing the original string.
 
 ## Section 4 — OpenVEX `Product.identifiers` per-instance extension
 
-Per FR-008, mikebom extends per-product VEX statements to carry
+Per FR-008, waybill extends per-product VEX statements to carry
 **per-instance** identifiers (CDX `bom-ref` / SPDX `SPDXID`)
 without forking the OpenVEX schema. This solves the worked-example
 case where the same PURL appears in an image via two independent
@@ -513,7 +513,7 @@ quietly mask the unbound instance's potential affectedness.
 ### 4.1 Wire shape
 
 OpenVEX 0.2.0's `Product` schema includes an open-ended
-`identifiers: { [identifier_type]: string }` field. mikebom
+`identifiers: { [identifier_type]: string }` field. waybill
 populates it with a documented set of identifier-type keys:
 
 | Key | Value | When emitted |
@@ -589,7 +589,7 @@ for product in statement["products"]:
 ### 4.4 Stability commitment
 
 - The identifier-type keys (`purl`, `cyclonedx-bom-ref`,
-  `spdx-spdxid`) are stable across mikebom alpha versions
+  `spdx-spdxid`) are stable across waybill alpha versions
   post-072.
 - Future identifier types (e.g., `sigstore-rekor-uuid`) MAY be
   added; readers MUST tolerate unknown keys (already required by
@@ -599,7 +599,7 @@ for product in statement["products"]:
 
 ## Section 5 — VEX propagation modes + the C-3 aggregation rule
 
-The `mikebom sbom enrich --vex-propagation-mode {permissive,
+The `waybill sbom enrich --vex-propagation-mode {permissive,
 caveated, strict}` flag controls how source-tier VEX statements
 are propagated to image-tier components when their bindings have
 varying strength.
@@ -607,8 +607,8 @@ varying strength.
 | Mode | Behavior |
 |---|---|
 | `permissive` | Pre-072 behavior — propagate by PURL match without binding check. Use for back-compat when a downstream tool is broken by post-072 caveats. |
-| `caveated` (default in milestone 072) | Propagate but tag binding-unverified statements with a structured `mikebom:vex-binding-status: unverified` caveat. Operators reading the SBOM see exactly which propagated statements lack a verified binding. |
-| `strict` | Refuse propagation when binding strength is not `verified`. The refused (vulnerability, instance) pair is NOT written to the target's `vulnerabilities[]` array; instead a refusal-rationale annotation is added under a top-level `mikebom:vex-propagation-refusals` property. The command exits non-zero per VR-006 so CI pipelines can gate. |
+| `caveated` (default in milestone 072) | Propagate but tag binding-unverified statements with a structured `waybill:vex-binding-status: unverified` caveat. Operators reading the SBOM see exactly which propagated statements lack a verified binding. |
+| `strict` | Refuse propagation when binding strength is not `verified`. The refused (vulnerability, instance) pair is NOT written to the target's `vulnerabilities[]` array; instead a refusal-rationale annotation is added under a top-level `waybill:vex-propagation-refusals` property. The command exits non-zero per VR-006 so CI pipelines can gate. |
 
 ### 5.1 The `affected ⊕ unbound-and-not-explicitly-vexed = affected` rule
 
@@ -637,10 +637,10 @@ This rule is the user's worked-example resolution — a verified
 potential affectedness. Pre-072 per-PURL consumers compute this
 aggregate and get the safe-by-default answer.
 
-### 5.2 The `mikebom:vex-binding-status` caveat shape
+### 5.2 The `waybill:vex-binding-status` caveat shape
 
 When `caveated` mode propagates onto a non-`verified` instance,
-the OpenVEX statement carries a sibling `mikebom:vex-binding-status`
+the OpenVEX statement carries a sibling `waybill:vex-binding-status`
 annotation (open-ended per OpenVEX 0.2.0's "additional fields
 tolerated" posture):
 
@@ -656,18 +656,18 @@ tolerated" posture):
   }],
   "status": "not_affected",
   "justification": "vulnerable_code_not_present",
-  "mikebom:vex-binding-status": {
+  "waybill:vex-binding-status": {
     "status": "unverified",
     "reason": "binding-strength-weak: lockfile + manifest match but no VCS commit recorded in source-tier scan",
     "source_statement_provenance": {
       "source_sbom_sha256": "e5f6...",
-      "propagated_by": "mikebom-0.1.0-alpha.15 sbom enrich --vex-propagation-mode caveated"
+      "propagated_by": "waybill-0.1.0-alpha.15 sbom enrich --vex-propagation-mode caveated"
     }
   }
 }
 ```
 
-When the binding IS `verified`, the `mikebom:vex-binding-status`
+When the binding IS `verified`, the `waybill:vex-binding-status`
 field is omitted entirely (clean post-072 output).
 
 The caveat ALSO appears on the CDX `vulnerabilities[].affects[]`
@@ -678,7 +678,7 @@ the OpenVEX sidecar) see the same signal.
 
 When `--vex-propagation-mode strict` refuses a propagation, the
 target SBOM's top-level `metadata.properties[]` array gains a
-`mikebom:vex-propagation-refusals` entry whose value is a
+`waybill:vex-propagation-refusals` entry whose value is a
 JSON-encoded array of per-refusal records:
 
 ```json
@@ -709,10 +709,10 @@ implementation against the published reference fixtures at
 
 ```python
 #!/usr/bin/env python3
-"""mikebom cross-tier binding verifier — Python reference.
+"""waybill cross-tier binding verifier — Python reference.
 
 Validates that an image-tier CDX 1.6 SBOM's per-component
-`mikebom:source-document-binding` annotations recompute correctly
+`waybill:source-document-binding` annotations recompute correctly
 against a source-tier CDX 1.6 SBOM. Mirrors the algorithm at
 `docs/reference/cross-tier-binding.md` Section 1.
 """
@@ -749,10 +749,10 @@ def compute_binding_hash(vcs: Optional[str],
 
 
 def find_binding_property(component: dict) -> Optional[dict]:
-    """Decode the per-component `mikebom:source-document-binding`
+    """Decode the per-component `waybill:source-document-binding`
     annotation per Section 3.1. Returns None when absent."""
     for prop in component.get("properties", []):
-        if prop.get("name") == "mikebom:source-document-binding":
+        if prop.get("name") == "waybill:source-document-binding":
             value = prop.get("value")
             if not isinstance(value, str):
                 return None
@@ -877,7 +877,7 @@ if __name__ == "__main__":
 2. Confirm `compute_binding_hash` against the worked vectors in
    Section 1.3. The cargo-verified vector should produce
    `745289decaf84d67e5cc9b333b435e8cc341ac19f7ab16673f05133d459a6111`.
-3. Spot-check on a few real mikebom-emitted SBOMs (run `mikebom
+3. Spot-check on a few real waybill-emitted SBOMs (run `waybill
    sbom scan --image <ref> --bind-to-source <source-sbom>` and
    feed the result into your verifier).
 
@@ -895,7 +895,7 @@ envelope instead of the CDX property string. The
 
 Once milestone 072 ships:
 
-- The annotation key `mikebom:source-document-binding` is stable.
+- The annotation key `waybill:source-document-binding` is stable.
 - The JSON shape (`{algo, hash, source_doc_id, strength, reason}`)
   is stable for `algo: "v1"`.
 - The canonical envelope shape (Section 1.1) is stable for `algo:
@@ -913,7 +913,7 @@ Future versions (V2, V3, ...) MUST:
 - Bump the `algo` value in the envelope to `"v2"` etc.
 - Be specified in a separate contract document
   (`binding-hash-v2.md`).
-- Be emitted in parallel with V1 for at least one mikebom milestone
+- Be emitted in parallel with V1 for at least one waybill milestone
   (so consumers have a deprecation window).
 - Treat unknown `algo` values from external sources as "cannot
   verify" (`strength: "unknown"`, `reason: "unsupported-algo"`)
@@ -952,17 +952,17 @@ outcomes:
 
 | Fixture | Strength | Notes |
 |---|---|---|
-| `cargo-verified/` | `verified` | All three input sides populated (vcs + lockfile + manifest). Pinned input substrate matches the `pinned_vec_all_three_sides` test in `mikebom-cli/src/binding/hash.rs::tests`. |
+| `cargo-verified/` | `verified` | All three input sides populated (vcs + lockfile + manifest). Pinned input substrate matches the `pinned_vec_all_three_sides` test in `waybill-cli/src/binding/hash.rs::tests`. |
 | `golang-verified/` | `verified` | Same canonical input substrate as cargo-verified — the binding hash is ecosystem-agnostic at the algorithm level; only the per-ecosystem extraction sites differ per Section 2. |
 | `maven-weak/` | `weak` | Maven case — no canonical lockfile, so `lockfile: null` in the envelope. Hash differs from the verified vector (different envelope bytes). |
 
 Each fixture directory contains:
 
 - `source.cdx.json` — the source-tier SBOM with the expected
-  `mikebom:source-document-binding` annotation pre-pinned on the
+  `waybill:source-document-binding` annotation pre-pinned on the
   main-module component.
 - `image.cdx.json` — the matching image-tier SBOM whose binding
-  asserts the same hash. Running `mikebom sbom verify-binding
+  asserts the same hash. Running `waybill sbom verify-binding
   --image-sbom image.cdx.json --source-sbom source.cdx.json`
   against any alpha.15+ build MUST produce a clean verify
   (exit 0).
@@ -970,7 +970,7 @@ Each fixture directory contains:
   manifest)` + the expected SHA-256 hex output.
 
 The pinned hex values match the `pinned_vec_*` unit tests in
-`mikebom-cli/src/binding/hash.rs::tests` — single source of
+`waybill-cli/src/binding/hash.rs::tests` — single source of
 truth. Future v2-bumps add fixtures under
 `docs/reference/binding-fixtures-v2/` in parallel with v1.
 
@@ -999,7 +999,7 @@ with zero failures.
 
 If anything in this guide is unclear or appears inconsistent with
 the source, the source wins — please file an issue against the
-mikebom repo with the specific ambiguity.
+waybill repo with the specific ambiguity.
 
 - **Source contract** (algorithm details, pinned vectors):
   `specs/072-cross-tier-sbom-binding/contracts/binding-hash-v1.md`.
@@ -1010,21 +1010,21 @@ mikebom repo with the specific ambiguity.
 - **Reference fixtures** (SC-004): `docs/reference/binding-fixtures/`.
 - **Spec + acceptance criteria**: `specs/072-cross-tier-sbom-binding/spec.md`.
 - **Reference Rust implementation** (entry points):
-  - `mikebom::binding::compute_binding_hash` —
-    `mikebom-cli/src/binding/hash.rs`.
-  - `mikebom::binding::extract_source_inputs` —
-    `mikebom-cli/src/binding/source_inputs.rs`.
-  - `mikebom::binding::verify_binding` —
-    `mikebom-cli/src/binding/verify.rs`.
+  - `waybill::binding::compute_binding_hash` —
+    `waybill-cli/src/binding/hash.rs`.
+  - `waybill::binding::extract_source_inputs` —
+    `waybill-cli/src/binding/source_inputs.rs`.
+  - `waybill::binding::verify_binding` —
+    `waybill-cli/src/binding/verify.rs`.
 - **CLI commands**:
-  - `mikebom sbom verify-binding --image-sbom <p> --source-sbom <p>` —
+  - `waybill sbom verify-binding --image-sbom <p> --source-sbom <p>` —
     consumer-side recompute + report (exits non-zero on failure).
-  - `mikebom sbom trace-binding --component-purl <purl>
+  - `waybill sbom trace-binding --component-purl <purl>
     --image-sbom <p> --candidate-sources-dir <d>` — operator
     triage (always exits 0; informational).
-  - `mikebom sbom scan --image <ref> --bind-to-source <source-sbom>` —
+  - `waybill sbom scan --image <ref> --bind-to-source <source-sbom>` —
     image-tier scan with binding-emission opt-in.
-  - `mikebom sbom enrich --vex-overrides <vex.json>
+  - `waybill sbom enrich --vex-overrides <vex.json>
     --vex-propagation-mode {permissive,caveated,strict}` —
     binding-aware VEX propagation.
 - **Companion guide**:
@@ -1042,4 +1042,4 @@ mikebom repo with the specific ambiguity.
   `--sbom-type` flag. Bindings are commonly inspected alongside SBOM-type
   filtering.
 - [Conformance harness guide](conformance-harness-guide.md) — per-format
-  envelope-decode rules for new mikebom emission consumers.
+  envelope-decode rules for new waybill emission consumers.

@@ -1,8 +1,0 @@
-{
-  "name": "bun-basic-fixture",
-  "version": "0.1.0",
-  "dependencies": {
-    "mikebom-fixture-lib": "1.2.3",
-    "@mikebom-fixture/types-pkg": "4.5.6"
-  }
-}

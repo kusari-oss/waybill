@@ -18,19 +18,19 @@ Three fixture pairs cover the three `BindingStrength` outcomes:
 Each fixture directory contains:
 
 - `source.cdx.json` — the source-tier SBOM (CDX 1.6 JSON) with the
-  expected `mikebom:source-document-binding` annotation pre-pinned on
+  expected `waybill:source-document-binding` annotation pre-pinned on
   the main-module component.
 - `image.cdx.json` — the matching image-tier SBOM whose binding asserts
-  the same hash. Running `mikebom sbom verify-binding --image-sbom
+  the same hash. Running `waybill sbom verify-binding --image-sbom
   image.cdx.json --source-sbom source.cdx.json` against any
   alpha.15+ build MUST produce a clean verify (exit 0).
 - `EXPECTED.md` — the canonical input triple `(vcs, lockfile, manifest)`
   + the expected SHA-256 hex output.
 
 The pinned hex values match the `pinned_vec_*` unit tests in
-`mikebom-cli/src/binding/hash.rs::tests` — single source of truth.
+`waybill-cli/src/binding/hash.rs::tests` — single source of truth.
 External verifier authors writing a compatibility implementation use
-these to validate against mikebom's emission per SC-004.
+these to validate against waybill's emission per SC-004.
 
 ## Algorithm version
 

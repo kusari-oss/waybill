@@ -1,6 +1,6 @@
 # SBOM Types — operator-facing reference
 
-**Audience**: operators consuming mikebom-emitted SBOMs who need to
+**Audience**: operators consuming waybill-emitted SBOMs who need to
 classify a document by **CISA SBOM Type** (Design / Source / Build
 / Analyzed / Deployed / Runtime) for downstream policy, compliance
 dashboards, or vulnerability-scanner pipelines that filter by SBOM
@@ -9,7 +9,7 @@ recipes, the four-column equivalence reference, mixed-type SBOM
 presentation, edge cases, and operator self-assertion via the new
 `--sbom-type` flag.
 
-**Status**: written 2026-05-06 against mikebom v0.1.0-alpha.21
+**Status**: written 2026-05-06 against waybill v0.1.0-alpha.21
 (milestone 081 — SBOM-type signaling clarity).
 
 **Companion documents**:
@@ -45,7 +45,7 @@ by these types so consumers can apply the correct policy.
 | **Deployed** | Components in a packaged, deployed system (installed-package databases, container layers). |
 | **Runtime** | Components observed by instrumenting the running system (loaded into memory, externally called). |
 
-mikebom's `mikebom:sbom-tier` per-component vocabulary maps 1:1
+waybill's `waybill:sbom-tier` per-component vocabulary maps 1:1
 to the CISA SBOM Types (lowercase short-names: `design`, `source`,
 `build`, `analyzed`, `deployed`, `runtime`).
 
@@ -54,19 +54,19 @@ to the CISA SBOM Types (lowercase short-names: `design`, `source`,
 ## Per-format field-position table
 
 The same conceptual SBOM-type signal lives at three different
-field positions across the three formats mikebom emits.
+field positions across the three formats waybill emits.
 
 | Format | Field path | Vocabulary | Notes |
 |---|---|---|---|
 | **CDX 1.6** | `metadata.lifecycles[].phase` | CDX 1.6 phase enum (`design`/`pre-build`/`build`/`post-build`/`operations`) | Standards-native enum. Aggregated lex-sorted from per-component tier values. |
-| **SPDX 2.3** | `creationInfo.comment` (parse-and-translate) | Free-text "Observed lifecycle phases: <CDX-phase>, ..." | SPDX 2.3 has NO native single-document SBOM-type enum. The Principle V escape clause applies — mikebom carries the same aggregated phase set as free-text in `creationInfo.comment`. Per the milestone 081 audit, no native promotion is possible. |
+| **SPDX 2.3** | `creationInfo.comment` (parse-and-translate) | Free-text "Observed lifecycle phases: <CDX-phase>, ..." | SPDX 2.3 has NO native single-document SBOM-type enum. The Principle V escape clause applies — waybill carries the same aggregated phase set as free-text in `creationInfo.comment`. Per the milestone 081 audit, no native promotion is possible. |
 | **SPDX 3** | `software_Sbom.software_sbomType[]` | SPDX 3 enum (`design`/`source`/`build`/`analyzed`/`deployed`/`runtime`) | **Standards-native** per milestone 081. The `software_Sbom` element lives in `@graph` alongside the `SpdxDocument` element (the `software_Sbom` element exists ONLY when the scan produced at least one mappable lifecycle tier). The `comment` field on `SpdxDocument` continues to carry the free-text aggregation as a backwards-compatible signal. |
 
 ---
 
 ## Per-format `jq` recipes
 
-Copy-pasteable extractors for an mikebom-emitted document on local
+Copy-pasteable extractors for an waybill-emitted document on local
 disk. Output values map to CISA SBOM Types via the equivalence
 table below.
 
@@ -91,7 +91,7 @@ equivalence table to the CISA SBOM Type (`pre-build` ↔ Source).
 ```bash
 jq -r '.creationInfo.comment' out.spdx.json
 # Sample output:
-# "Scope: manifest (declared transitives included). Observed lifecycle phases: pre-build. Per-component scope detail in mikebom:sbom-tier annotations."
+# "Scope: manifest (declared transitives included). Observed lifecycle phases: pre-build. Per-component scope detail in waybill:sbom-tier annotations."
 ```
 
 Parse the suffix after `Observed lifecycle phases:`. Map each CDX
@@ -128,7 +128,7 @@ vocabularies to/from the CISA SBOM Types canonical names. Validated
 against each spec's published vocabulary at milestone 081 audit
 time (research §2 in `specs/081-sbom-type-clarity/research.md`).
 
-| CISA SBOM Type | mikebom tier (`mikebom:sbom-tier`) | CDX 1.6 phase (`metadata.lifecycles[].phase`) | SPDX 3 SbomType (`software_Sbom.software_sbomType[]`) |
+| CISA SBOM Type | waybill tier (`waybill:sbom-tier`) | CDX 1.6 phase (`metadata.lifecycles[].phase`) | SPDX 3 SbomType (`software_Sbom.software_sbomType[]`) |
 |---|---|---|---|
 | **Design** | `design` | `design` | `design` |
 | **Source** | `source` | `pre-build` | `source` |
@@ -138,23 +138,23 @@ time (research §2 in `specs/081-sbom-type-clarity/research.md`).
 | **Runtime** | `runtime` *(operator-asserted only — see below)* | `operations` *(closest CDX equivalent — CDX has no `runtime` phase)* | `runtime` |
 
 **Naming-case note**: CISA's document uses Title Case
-(`Source`, `Build`); mikebom's emission uses lowercase
+(`Source`, `Build`); waybill's emission uses lowercase
 (`source`, `build`) to match the per-component
-`mikebom:sbom-tier` vocabulary AND the SPDX 3 schema enum
+`waybill:sbom-tier` vocabulary AND the SPDX 3 schema enum
 (`prop_software_Sbom_software_sbomType`). Operators normalizing
 back to Title Case for downstream-pipeline display do so at the
 consumer side.
 
 **CDX-vs-CISA naming**: CDX uses `pre-build` / `post-build` /
 `operations` for what CISA calls Source / Analyzed / Deployed.
-mikebom's `mikebom:sbom-tier` matches CISA exactly; CDX
+waybill's `waybill:sbom-tier` matches CISA exactly; CDX
 `metadata.lifecycles[].phase` matches the CDX spec enum. The
 equivalence table is the bridge.
 
 **Out-of-scope CDX phases**: CDX 1.6 defines two additional
 phases (`discovery`, `decommission`) that don't map to the CISA
-framework. mikebom doesn't emit them. Consumers seeing these
-values in non-mikebom CDX SBOMs should consult the CDX spec for
+framework. waybill doesn't emit them. Consumers seeing these
+values in non-waybill CDX SBOMs should consult the CDX spec for
 their semantics.
 
 ---
@@ -163,7 +163,7 @@ their semantics.
 
 A polyglot scan may produce some components tagged `source` (e.g.,
 manifest entries from a `Cargo.lock`) AND others tagged `build`
-(e.g., artifacts in a build cache). mikebom's `metadata.lifecycles[]`
+(e.g., artifacts in a build cache). waybill's `metadata.lifecycles[]`
 (CDX) and `software_sbomType[]` (SPDX 3) aggregate ALL observed
 tiers — the multi-element array is intentional.
 
@@ -180,7 +180,7 @@ jq '.["@graph"][] | select(.type == "software_Sbom") | .software_sbomType' out.s
 ```
 
 This is a **Mixed-type SBOM**: the document spans multiple CISA
-types simultaneously. mikebom does NOT invent a "dominant tier"
+types simultaneously. waybill does NOT invent a "dominant tier"
 heuristic to collapse this into a single type — the per-component
 data lineage is the source of truth.
 
@@ -192,7 +192,7 @@ primary type. The per-component data lineage stays accurate.
 
 Per the 2026-05-07 Q1 clarification on milestone 081's spec:
 operators wanting single-type assertion are pointed at
-`--sbom-type` as the documented escape hatch; mikebom does NOT
+`--sbom-type` as the documented escape hatch; waybill does NOT
 infer a single SBOM type from a multi-tier aggregation.
 
 ---
@@ -200,13 +200,13 @@ infer a single SBOM type from a multi-tier aggregation.
 ## Operator self-assertion via `--sbom-type`
 
 When your pipeline knows the SBOM should be classified as a single
-CISA type regardless of mikebom's per-component auto-detection
+CISA type regardless of waybill's per-component auto-detection
 (e.g., a CI/CD pipeline producing a Build SBOM where you want
 downstream policy tools to classify the entire document as Build,
 not as Mixed), pass `--sbom-type <type>`:
 
 ```bash
-mikebom sbom scan --path . --sbom-type build \
+waybill sbom scan --path . --sbom-type build \
     --format cyclonedx-json --output cyclonedx-json=out.cdx.json \
     --format spdx-2.3-json --output spdx-2.3-json=out.spdx.json \
     --format spdx-3-json --output spdx-3-json=out.spdx3.json
@@ -227,13 +227,13 @@ jq '.["@graph"][] | select(.type == "software_Sbom") | .software_sbomType' out.s
 
 **Important — document-level only**: the `--sbom-type` override
 applies at the document level. Per-component
-`mikebom:sbom-tier` annotations preserve their auto-detected
+`waybill:sbom-tier` annotations preserve their auto-detected
 values:
 
 ```bash
 jq '.["@graph"][] | select(.type == "software_Package") | {name, annotations}' out.spdx3.json
-# Per-component "mikebom:sbom-tier" annotations may still show
-# "source" / "build" / "analyzed" — whatever mikebom auto-detected
+# Per-component "waybill:sbom-tier" annotations may still show
+# "source" / "build" / "analyzed" — whatever waybill auto-detected
 # from the actual data lineage.
 ```
 
@@ -252,7 +252,7 @@ with:
 --sbom-type 'X' is not a valid CISA SBOM type; valid values are design/source/build/analyzed/deployed/runtime
 ```
 
-Available on both `mikebom sbom scan` and `mikebom trace run`.
+Available on both `waybill sbom scan` and `waybill trace run`.
 
 ---
 
@@ -260,10 +260,10 @@ Available on both `mikebom sbom scan` and `mikebom trace run`.
 
 ### Empty SBOM (no components emitted)
 
-mikebom may produce an SBOM with zero components (e.g., scan of an
+waybill may produce an SBOM with zero components (e.g., scan of an
 empty directory, or a manifest tree with no resolvable
 dependencies). When NO component carries a recognized
-`mikebom:sbom-tier` value:
+`waybill:sbom-tier` value:
 
 - **CDX**: `metadata.lifecycles[]` is OMITTED entirely (matches the
   milestone 047 `metadata_omits_lifecycles_when_no_tiers_present`
@@ -278,7 +278,7 @@ dependencies). When NO component carries a recognized
   signal.
 
 Operators interpreting absence-of-signal MUST distinguish "no
-components carry tiers" from "this is a mikebom-emitted but
+components carry tiers" from "this is a waybill-emitted but
 intentionally type-untagged SBOM" — both produce identical wire
 shapes. The recommended distinguishing signal is the presence of
 `@graph[].type == "software_Package"` entries (zero packages →
@@ -286,17 +286,17 @@ truly empty scan; non-zero packages but missing
 `software_Sbom` → packages all lack tier annotations, which is
 abnormal and should be filed as a bug).
 
-### mikebom version mismatch
+### waybill version mismatch
 
-Lifecycle aggregation was introduced in milestone 047 (mikebom
-v0.1.0-alpha.6). SBOMs emitted by **pre-047** mikebom versions
+Lifecycle aggregation was introduced in milestone 047 (waybill
+v0.1.0-alpha.6). SBOMs emitted by **pre-047** waybill versions
 have NO `metadata.lifecycles[]` (CDX) and NO mention of
 "Observed lifecycle phases:" in `creationInfo.comment` (SPDX 2.3 /
 SPDX 3 `comment`). Detect by absence of these fields.
 
 The SPDX 3 native `software_Sbom.software_sbomType[]` field was
-introduced in **milestone 081** (mikebom v0.1.0-alpha.22). SBOMs
-emitted by mikebom alpha.6 through alpha.21 have the
+introduced in **milestone 081** (waybill v0.1.0-alpha.22). SBOMs
+emitted by waybill alpha.6 through alpha.21 have the
 milestone 047 `comment` aggregation but NOT the new
 `software_Sbom` element. Detect by absence of
 `@graph[].type == "software_Sbom"`. Pre-alpha.22 SPDX 3 SBOMs
@@ -305,8 +305,8 @@ require the `creationInfo.comment` parse-and-translate path
 
 ### Per-component tier vs document-level type
 
-Per-component `mikebom:sbom-tier` annotations describe **the
-data lineage** for individual components (where mikebom learned
+Per-component `waybill:sbom-tier` annotations describe **the
+data lineage** for individual components (where waybill learned
 about each component). The document-level signal
 (`metadata.lifecycles[]` / `software_sbomType[]`) describes **the
 SBOM as a whole**.
@@ -316,7 +316,7 @@ source manifest + component B from build artifact has
 per-component tiers `["source", "build"]` AND document-level
 lifecycles `["build", "source"]` (lex-sorted) — the document is a
 "Mixed-type SBOM" spanning both. Per the milestone 081 Q1
-clarification, mikebom presents this transparently rather than
+clarification, waybill presents this transparently rather than
 collapsing to a single "dominant" type.
 
 If the operator passes `--sbom-type build` on a mixed-tier scan,
@@ -332,7 +332,7 @@ lineage record.
 
 This document is reachable from:
 
-- `README.md` — top-level project README, "What mikebom emits"
+- `README.md` — top-level project README, "What waybill emits"
   section.
 - `docs/reference/identifiers.md` — Section "SBOM types and
   lifecycle phases" cross-references this document.

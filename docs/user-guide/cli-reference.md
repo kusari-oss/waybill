@@ -1,6 +1,6 @@
 # CLI reference
 
-mikebom follows a strict `mikebom <noun> <verb>` pattern. This page is the canonical
+waybill follows a strict `waybill <noun> <verb>` pattern. This page is the canonical
 operator reference: every flag accepted at every level, with type, default, repeatable
 status, valid value vocab where applicable, a one-paragraph description, and at least
 one example invocation.
@@ -15,13 +15,13 @@ Top-level nouns:
 > **Experimental** means: the output formats are stable, but the trace-mode
 > pipeline adds ~2-3× wall-clock overhead on syscall-heavy builds, requires
 > CAP_BPF + CAP_PERFMON, and has coverage gaps on some syscall variants
-> (`openat2`, `io_uring`). For most SBOM use cases prefer `mikebom sbom scan` —
+> (`openat2`, `io_uring`). For most SBOM use cases prefer `waybill sbom scan` —
 > it produces richer output with no privilege requirements and runs on any OS.
 
 Global flags apply to every subcommand and must appear **before** the noun:
 
 ```bash
-mikebom --offline sbom scan --path .
+waybill --offline sbom scan --path .
 ```
 
 ## Documentation policy
@@ -46,10 +46,10 @@ noun on every subcommand (clap's flag-position-tolerant parser).
 | `--offline` | bool | off | Disable all outbound network calls (deps.dev, ClearlyDefined). |
 | `--exclude-scope <SCOPE>` | enum (repeatable, comma-separated) | (none) | Drop components whose lifecycle scope matches any listed value. Valid: `dev`, `build`, `test`. Runtime scope is always retained. |
 | `--include-declared-deps` | bool | off (`--image`) / on (`--path`) | Include declared-but-not-on-disk dependencies (manifest SBOM mode). |
-| `--include-legacy-rpmdb` | bool | off | Read legacy Berkeley-DB rpmdb on pre-RHEL-8 / CentOS-7 / Amazon-Linux-2 images. Also enabled via `MIKEBOM_INCLUDE_LEGACY_RPMDB=1`. |
-| `--timeout <SECONDS>` | u64 | disabled | Wall-clock time limit for the entire mikebom invocation. Exits with status 124 (POSIX `timeout(1)` convention) when exceeded. Set to `0` (or omit) to disable. |
-| `--no-go-mod-why` | bool | off | Disable Go build-graph classification via `go mod why`. Also via `MIKEBOM_NO_GO_MOD_WHY=1`. |
-| `--exclude-path <PATH_OR_PATTERN>` | string (repeatable) | (none) | Skip directory subtrees matching the given path or glob pattern during scan. Entries with `*`/`?`/`[` are patterns at any depth; otherwise literal paths anchored at scan root. Also via `MIKEBOM_EXCLUDE_PATH`. See [`--exclude-path`](#--exclude-path-path_or_pattern). |
+| `--include-legacy-rpmdb` | bool | off | Read legacy Berkeley-DB rpmdb on pre-RHEL-8 / CentOS-7 / Amazon-Linux-2 images. Also enabled via `WAYBILL_INCLUDE_LEGACY_RPMDB=1`. |
+| `--timeout <SECONDS>` | u64 | disabled | Wall-clock time limit for the entire waybill invocation. Exits with status 124 (POSIX `timeout(1)` convention) when exceeded. Set to `0` (or omit) to disable. |
+| `--no-go-mod-why` | bool | off | Disable Go build-graph classification via `go mod why`. Also via `WAYBILL_NO_GO_MOD_WHY=1`. |
+| `--exclude-path <PATH_OR_PATTERN>` | string (repeatable) | (none) | Skip directory subtrees matching the given path or glob pattern during scan. Entries with `*`/`?`/`[` are patterns at any depth; otherwise literal paths anchored at scan root. Also via `WAYBILL_EXCLUDE_PATH`. See [`--exclude-path`](#--exclude-path-path_or_pattern). |
 | `--supplement-cdx <PATH>` | path | (none) | Merge an operator-supplied CDX 1.6 (or 1.4 / 1.5) JSON document declaring ground truth the scanner cannot observe: SaaS dependencies, vendored libraries without manifests, license / supplier / copyright metadata. See [`--supplement-cdx`](#--supplement-cdx-path). |
 
 ### `--offline`
@@ -61,14 +61,14 @@ manifests). Useful for air-gapped scanners, reproducible-build environments, and
 CI lanes that can't reach the internet.
 
 ```bash
-mikebom --offline sbom scan --path . --output offline.cdx.json
+waybill --offline sbom scan --path . --output offline.cdx.json
 ```
 
 Accepts three equivalent forms:
 
 - `--offline` — alone, equivalent to `--offline=true`
 - `--offline=true` — explicit on (handy for scripts toggled by a boolean variable)
-- `--offline=false` — explicit off (overrides a `MIKEBOM_OFFLINE=1` environment
+- `--offline=false` — explicit off (overrides a `WAYBILL_OFFLINE=1` environment
   default for a single invocation)
 
 The `=` is required when a value is supplied; `--offline true` (with a space)
@@ -87,15 +87,15 @@ view. `--exclude-scope test` drops only test deps; `--exclude-scope dev,build`
 keeps test deps for security-audit workflows.
 
 ```bash
-mikebom sbom scan --path . --exclude-scope dev,build,test --output runtime.cdx.json
+waybill sbom scan --path . --exclude-scope dev,build,test --output runtime.cdx.json
 ```
 
-When omitted, mikebom emits all scopes (Runtime + Development + Build + Test).
+When omitted, waybill emits all scopes (Runtime + Development + Build + Test).
 
 ### `--include-declared-deps`
 
 Include declared-but-not-on-disk dependencies (manifest SBOM). By default,
-mikebom emits only components physically present in the scanned tree or image
+waybill emits only components physically present in the scanned tree or image
 ("artifact SBOM" — if it's in the image, it's in the SBOM). When set, also
 emits: deps.dev-reported transitives with no on-disk trace
 (`source_type = declared-not-cached`); Maven `pom.xml`-declared direct deps
@@ -112,25 +112,25 @@ See `docs/design-notes.md` for the full artifact-vs-manifest SBOM rationale.
 
 Enable reading of the legacy Berkeley-DB rpmdb (`/var/lib/rpm/Packages`) on
 pre-RHEL-8 / CentOS-7 / Amazon-Linux-2 images. Off by default. Also enabled
-via `MIKEBOM_INCLUDE_LEGACY_RPMDB=1`.
+via `WAYBILL_INCLUDE_LEGACY_RPMDB=1`.
 
 ```bash
-mikebom sbom scan --image centos7.tar --include-legacy-rpmdb --output centos7.cdx.json
+waybill sbom scan --image centos7.tar --include-legacy-rpmdb --output centos7.cdx.json
 ```
 
 Modern RHEL-8+ / Fedora / Amazon-Linux-2023 images use the SQLite rpmdb
-(`/var/lib/rpm/rpmdb.sqlite`) which mikebom reads by default; the BDB format
+(`/var/lib/rpm/rpmdb.sqlite`) which waybill reads by default; the BDB format
 is opt-in to keep the modern hot-path slim.
 
 ### `--timeout <SECONDS>`
 
-Wall-clock time limit for the entire mikebom invocation, in seconds. If
-exceeded, mikebom emits a `tracing::error` to stderr and exits with status
+Wall-clock time limit for the entire waybill invocation, in seconds. If
+exceeded, waybill emits a `tracing::error` to stderr and exits with status
 **124** (POSIX [`timeout(1)`](https://www.gnu.org/software/coreutils/manual/html_node/timeout-invocation.html)
 convention). Disabled when omitted or set to `0`.
 
 ```bash
-mikebom --timeout 600 sbom scan --image registry.example.com/big-image:latest --output big.cdx.json
+waybill --timeout 600 sbom scan --image registry.example.com/big-image:latest --output big.cdx.json
 echo "exit: $?"  # 124 if the scan ran longer than 600s, 0 otherwise
 ```
 
@@ -146,12 +146,12 @@ Use cases:
 
 | Flag | Scope | Default |
 |---|---|---|
-| `--timeout <SECONDS>` (this flag) | Wall-clock cap on the entire `mikebom` invocation | Disabled |
-| `mikebom trace run --timeout <SECONDS>` | Caps the SUBPROCESS being traced (not mikebom itself) | `0` (no timeout) |
+| `--timeout <SECONDS>` (this flag) | Wall-clock cap on the entire `waybill` invocation | Disabled |
+| `waybill trace run --timeout <SECONDS>` | Caps the SUBPROCESS being traced (not waybill itself) | `0` (no timeout) |
 | Internal per-fetch timeouts | OCI registry pulls, deps.dev HTTP requests, `go mod graph` subprocess | Hardcoded defaults |
 
 Whichever timeout fires first wins. The global `--timeout` is the only one
-that brings mikebom itself to a hard stop; the others are scoped to specific
+that brings waybill itself to a hard stop; the others are scoped to specific
 operations.
 
 #### Partial output
@@ -162,7 +162,7 @@ in-N-seconds" semantics should pair `--timeout` with `--output` to a specific
 path and check for that file's presence (and validity) after the run:
 
 ```bash
-mikebom --timeout 600 sbom scan --path . --output project.cdx.json
+waybill --timeout 600 sbom scan --path . --output project.cdx.json
 case $? in
   0)   echo "scan completed within the time limit" ;;
   124) echo "scan exceeded the time limit; partial output may not have been written" ;;
@@ -174,7 +174,7 @@ esac
 
 Skip directory subtrees matching the supplied path or glob pattern when
 scanning. Repeatable for multiple entries; an environment-variable form
-`MIKEBOM_EXCLUDE_PATH` accepts a list joined by the platform's path-list
+`WAYBILL_EXCLUDE_PATH` accepts a list joined by the platform's path-list
 separator (`:` on Unix, `;` on Windows). CLI flags and env-var entries
 combine by union.
 
@@ -182,7 +182,7 @@ combine by union.
 
 Some repositories carry throwaway fixture or sample projects in
 directories like `tests/fixtures/`, `examples/sample-projects/`, or
-`services/*/testdata/`. Out of the box, mikebom walks into those subtrees
+`services/*/testdata/`. Out of the box, waybill walks into those subtrees
 and emits their manifests as if they were real components — sometimes
 also recording synthetic dependency edges declared in fixture manifests.
 The Go ecosystem skips `testdata/` and `_`-prefixed directories
@@ -210,14 +210,14 @@ Each entry is classified at parse time:
 Single literal exclusion at repo root:
 
 ```bash
-mikebom sbom scan --path /path/to/repo --exclude-path tests/fixtures \
+waybill sbom scan --path /path/to/repo --exclude-path tests/fixtures \
   --format cyclonedx-json --output sbom.cdx.json
 ```
 
 Two repeated literal paths:
 
 ```bash
-mikebom sbom scan --path /path/to/repo \
+waybill sbom scan --path /path/to/repo \
   --exclude-path tests/fixtures \
   --exclude-path examples/sample-projects \
   --format cyclonedx-json --output sbom.cdx.json
@@ -226,26 +226,26 @@ mikebom sbom scan --path /path/to/repo \
 Glob pattern across a monorepo:
 
 ```bash
-mikebom sbom scan --path /path/to/monorepo --exclude-path '**/testdata' \
+waybill sbom scan --path /path/to/monorepo --exclude-path '**/testdata' \
   --format cyclonedx-json --output sbom.cdx.json
 ```
 
 Persistent exclusion list via env var (Unix):
 
 ```bash
-export MIKEBOM_EXCLUDE_PATH='tests/fixtures:**/testdata'
-mikebom sbom scan --path . --format cyclonedx-json --output sbom.cdx.json
+export WAYBILL_EXCLUDE_PATH='tests/fixtures:**/testdata'
+waybill sbom scan --path . --format cyclonedx-json --output sbom.cdx.json
 ```
 
 #### Transparency annotation
 
 When at least one exclusion entry is in effect, the emitted SBOM carries
-an envelope-level `mikebom:exclude-path` annotation listing the active
+an envelope-level `waybill:exclude-path` annotation listing the active
 entries verbatim (Constitution Principle X — Transparency). Consumers
 can detect this from the CDX `metadata.properties[]` entry, the SPDX 2.3
 `creationInfo.annotations[]` entry, or the SPDX 3 document-level
 `Annotation` element. When the flag is omitted the annotation is absent
-and the SBOM is byte-identical to a pre-feature mikebom build against
+and the SBOM is byte-identical to a pre-feature waybill build against
 the same inputs.
 
 #### Interaction with built-in skips
@@ -276,12 +276,12 @@ You cannot use `--exclude-path` to re-enable scanning of a built-in skip.
 
 Merge an operator-supplied CDX 1.6 JSON document into the emitted SBOM,
 declaring ground truth the scanner cannot observe. Single-occurrence in
-v0.1; CDX 1.4 / 1.5 files are also accepted (the fields mikebom reads are
+v0.1; CDX 1.4 / 1.5 files are also accepted (the fields waybill reads are
 unchanged across versions).
 
 #### When to use it
 
-mikebom is an evidence-extracting scanner: it only emits components for
+waybill is an evidence-extracting scanner: it only emits components for
 artifacts it can *observe* on disk (manifests, lockfiles, installed
 packages, binary fingerprints). Three common cases leave the scanner
 blind to dependencies the operator knows about:
@@ -352,7 +352,7 @@ Worked example: a Rust project that uses Stripe (SaaS) plus a vendored
 Invoke the scan:
 
 ```bash
-mikebom sbom scan --path . \
+waybill sbom scan --path . \
   --supplement-cdx supplement.cdx.json \
   --format cyclonedx-json --output sbom.cdx.json
 ```
@@ -402,14 +402,14 @@ partition into two sets:
   `externalReferences[]` (all types).
 - **Catch-all default**: scanner wins.
 
-Each disagreement is recorded as a `mikebom:assertion-conflict`
+Each disagreement is recorded as a `waybill:assertion-conflict`
 annotation on the merged component. Repeatable conflicts on one
 component accumulate into a single property whose JSON-encoded value
 is an ARRAY of conflict records:
 
 ```json
 {
-  "name": "mikebom:assertion-conflict",
+  "name": "waybill:assertion-conflict",
   "value": "[{\"field\":\"licenses\",\"scanner_value\":[],\"supplement_value\":[{\"license\":{\"id\":\"Apache-2.0\"}}],\"winner\":\"supplement\",\"justification\":\"developer-metadata-override\"}]"
 }
 ```
@@ -433,7 +433,7 @@ enrichment, not a discovery substitute.
 #### Source-tier marker
 
 Every supplement-introduced solo component carries
-`mikebom:source-tier = "declared"` so consumers can distinguish
+`waybill:source-tier = "declared"` so consumers can distinguish
 operator-declared entries from scanner-observed ones at a glance.
 Scanner-observed entries keep their existing tier value
 (`installed` / `analyzed` / `source`). Collisions don't add the
@@ -443,13 +443,13 @@ the supplement provided enrichment, not the original observation).
 #### Provenance annotation
 
 When `--supplement-cdx <PATH>` is in effect, the emitted SBOM carries
-a document-scope `mikebom:supplement-cdx` annotation on
+a document-scope `waybill:supplement-cdx` annotation on
 `metadata.properties[]` with the value `<path>@sha256:<hex>` —
 recording the operator's verbatim path argument plus a SHA-256 over
 the supplement file's raw bytes. Consumers can verify the supplement
 hasn't drifted from what fed the merge by recomputing the hash. When
 the flag is omitted, the annotation is absent and the SBOM is
-byte-identical to a pre-feature mikebom build.
+byte-identical to a pre-feature waybill build.
 
 #### Fail-closed behavior
 
@@ -467,34 +467,34 @@ so operators can diagnose without re-running with debug logs.
 | `error: supplement file '<path>' failed structural validation: ...` | The error message names the specific field: wrong `bomFormat`, unsupported `specVersion`, missing required `purl`, unparsable PURL, etc. |
 | `error: supplement file declares duplicate PURL '<purl>' across components[] / services[]` | The same canonical PURL appears twice. Remove the duplicate. |
 | `error: supplement file dependencies[] references unknown bom-ref or PURL '<ref>'` | A `dependsOn` entry doesn't match any supplement-internal `bom-ref` or any scanner-discovered PURL. Fix the reference or add the missing entry. |
-| Operator-declared license doesn't appear on a scanner-discovered component | Currently the supplement license override flows through `mikebom:supplement-licenses` annotation rather than overwriting the typed `licenses[]` field on Cargo main-module components emitted via `metadata.component`. End-to-end propagation onto `metadata.component` is tracked for milestone-119-phase-2. |
+| Operator-declared license doesn't appear on a scanner-discovered component | Currently the supplement license override flows through `waybill:supplement-licenses` annotation rather than overwriting the typed `licenses[]` field on Cargo main-module components emitted via `metadata.component`. End-to-end propagation onto `metadata.component` is tracked for milestone-119-phase-2. |
 | `services[]` section appears but operator wanted SPDX output | v0.1 emits services natively in CDX 1.6 only. SPDX 2.3 / SPDX 3 service projection is deferred to milestone-119-phase-2. |
 
 ### `--no-go-mod-why`
 
 Disable Go package-level build-graph classification (milestone 112).
 
-By default, when a Go source scan finds a `go` toolchain on PATH, mikebom
+By default, when a Go source scan finds a `go` toolchain on PATH, waybill
 runs `go mod why -m -vendor` against each main module (modules batched in
 chunks of 20, 60-second total budget shared across the scan) to classify
 `go.sum`-fallback modules that sit outside the build graph:
 
 - **not needed** → emitted with CDX `scope: "excluded"`,
-  `mikebom:build-inclusion: not-needed`, and
-  `mikebom:build-inclusion-derivation: go-mod-why`;
+  `waybill:build-inclusion: not-needed`, and
+  `waybill:build-inclusion-derivation: go-mod-why`;
 - **test-only** → emitted with test lifecycle scope and
-  `mikebom:lifecycle-scope-derivation: go-mod-why`;
+  `waybill:lifecycle-scope-derivation: go-mod-why`;
 - **needed by any main module** → emitted unchanged.
 
 With this flag set, the subprocess never runs and affected modules keep
-the conservative always-on `mikebom:build-inclusion: unknown` marker.
+the conservative always-on `waybill:build-inclusion: unknown` marker.
 
 ```bash
 # Disable via flag
-mikebom sbom scan --path . --output project.cdx.json --no-go-mod-why
+waybill sbom scan --path . --output project.cdx.json --no-go-mod-why
 
 # Disable via env var (any non-empty value other than "0")
-MIKEBOM_NO_GO_MOD_WHY=1 mikebom sbom scan --path . --output project.cdx.json
+WAYBILL_NO_GO_MOD_WHY=1 waybill sbom scan --path . --output project.cdx.json
 ```
 
 Classification degrades rather than failing: a missing toolchain, a
@@ -507,7 +507,7 @@ matrix. With `--offline`, the `go` children are pinned to `GOPROXY=off`,
 
 ---
 
-## `mikebom sbom scan`
+## `waybill sbom scan`
 
 Walk a directory or extracted container image and produce one or more SBOM
 formats from the package artifacts on disk. No eBPF required — runs anywhere
@@ -552,7 +552,7 @@ Exactly one of `--path` or `--image` is required.
 | `--root-version <VERSION>` | string | auto-derived | Override `metadata.component.version`. |
 | `--root-purl-type <TYPE>` | string | (none) | Override the type segment of the root PURL. Defaults to `generic` when `--root-name` is set; this flag replaces that default. REQUIRES `--root-name`. Mutually exclusive with `--no-root-purl`. See [`--root-purl-type`](#--root-purl-type-type). |
 | `--no-root-purl` | bool | off | Omit the root component's PURL entirely from the emitted SBOM. REQUIRES `--root-name`. Mutually exclusive with `--root-purl-type`. See [`--no-root-purl`](#--no-root-purl). |
-| `--preserve-manifest-main-module` | bool | off | When set together with `--root-name` / `--root-version` / `--root-purl`, preserve the manifest-derived main-module identity as a `library`-typed entry in `components[]` rather than dropping it per the milestone-077 clean-replacement default. The demoted entry carries a `mikebom:demoted-from-main-module = "true"` annotation per Constitution V parity-bridging audit (C102 row in `docs/reference/sbom-format-mapping.md`). No-op without an active root-override flag (silent + INFO log) and on multi-main-module scans (silent + INFO log). Milestone 149 / issue #151. |
+| `--preserve-manifest-main-module` | bool | off | When set together with `--root-name` / `--root-version` / `--root-purl`, preserve the manifest-derived main-module identity as a `library`-typed entry in `components[]` rather than dropping it per the milestone-077 clean-replacement default. The demoted entry carries a `waybill:demoted-from-main-module = "true"` annotation per Constitution V parity-bridging audit (C102 row in `docs/reference/sbom-format-mapping.md`). No-op without an active root-override flag (silent + INFO log) and on multi-main-module scans (silent + INFO log). Milestone 149 / issue #151. |
 | `--creator <TYPE: NAME>` | string (repeatable) | (none) | Attach a creator entry to the SBOM. |
 | `--annotator <TYPE: NAME>` | string (repeatable, paired) | (none) | Document-level annotator. Pair 1:1 with `--annotation-comment`. |
 | `--annotation-comment <TEXT>` | string (repeatable, paired) | (none) | Comment that pairs positionally with the preceding `--annotator`. |
@@ -569,7 +569,7 @@ package-artifact suffixes (`.deb`, `.crate`, `.whl`, `.tar.gz`, `.jar`, `.gem`,
 `.apk`, …) are stream-hashed and matched against the path resolver.
 
 ```bash
-mikebom sbom scan --path . --output project.cdx.json
+waybill sbom scan --path . --output project.cdx.json
 ```
 
 ### `--image <IMAGE>`
@@ -580,20 +580,20 @@ Container image to scan. Two accepted forms:
    tempdir (whiteouts honoured), then the resulting rootfs is scanned exactly
    like `--path`.
 2. An OCI image reference (e.g., `alpine:3.19` or `gcr.io/foo/bar@sha256:...`).
-   mikebom auto-detects which based on whether the path exists on disk.
+   waybill auto-detects which based on whether the path exists on disk.
 
 ```bash
-mikebom sbom scan --image alpine.tar --output alpine.cdx.json
-mikebom sbom scan --image alpine:3.19 --output alpine.cdx.json
+waybill sbom scan --image alpine.tar --output alpine.cdx.json
+waybill sbom scan --image alpine:3.19 --output alpine.cdx.json
 ```
 
-For OCI references mikebom checks the local docker daemon's cache first, then
+For OCI references waybill checks the local docker daemon's cache first, then
 falls back to a registry pull on miss (matches `docker run` semantics).
 Override the source-resolution order with `--image-src`.
 
 ### `--image-src <SRC[,SRC...]>`
 
-Image source-resolution order. Comma-separated; mikebom tries each source in
+Image source-resolution order. Comma-separated; waybill tries each source in
 order and stops at the first one that has the image. Default `docker,remote`
 matches trivy's `--image-src` and syft's auto-detection.
 
@@ -604,7 +604,7 @@ Possible values:
 - `remote` — OCI distribution-spec registry pull.
 
 ```bash
-mikebom sbom scan --image alpine:3.19 --image-src remote --output alpine.cdx.json
+waybill sbom scan --image alpine:3.19 --image-src remote --output alpine.cdx.json
 ```
 
 `--image-src remote` forces a fresh registry fetch; `--image-src docker` fails
@@ -622,7 +622,7 @@ Common values: `linux/amd64`, `linux/arm64`, `linux/arm/v7`, `linux/386`,
 `linux/<host-arch>`.
 
 ```bash
-mikebom sbom scan --image alpine:3.19 --image-platform linux/arm64 --output alpine-arm64.cdx.json
+waybill sbom scan --image alpine:3.19 --image-platform linux/arm64 --output alpine-arm64.cdx.json
 ```
 
 Use case: a macOS arm64 dev machine scanning a `linux/amd64` container deployed
@@ -631,7 +631,7 @@ to AWS, or Linux x86_64 CI scanning an arm64 image deployed to Graviton.
 ### `--no-oci-cache`
 
 Disable the OCI blob cache for registry pulls. Equivalent to
-`MIKEBOM_OCI_CACHE=0`. When set, every blob (config + layer) is fetched fresh
+`WAYBILL_OCI_CACHE=0`. When set, every blob (config + layer) is fetched fresh
 on every scan, even if the same digest is already cached. Cache files on disk
 are untouched.
 
@@ -642,7 +642,7 @@ registry-side regression.
 
 Cap (in bytes) for the on-disk OCI blob cache. When the cache exceeds this
 size, oldest-mtime entries are evicted until the total drops below the cap.
-Default 10 GB. Equivalent env var `MIKEBOM_OCI_CACHE_SIZE`.
+Default 10 GB. Equivalent env var `WAYBILL_OCI_CACHE_SIZE`.
 
 ### `--registry-credentials-dir <PATH>`
 
@@ -654,31 +654,31 @@ readable + parseable file wins. The file format is the standard Docker
 `config.json` shape (`auths`, `credsStore`, `credHelpers`); the existing
 credential-resolution precedence applies inside the loaded config.
 
-Use this when running mikebom in a container that mounts a K8s
+Use this when running waybill in a container that mounts a K8s
 `imagePullSecrets`-derived volume (typically at
 `/var/run/secrets/registry/`). For local/CI use with the standard Docker
-keychain, leave this unset — mikebom falls back to
+keychain, leave this unset — waybill falls back to
 `$DOCKER_CONFIG/config.json` or `$HOME/.docker/config.json` (issue #235).
 
 **Full credential-resolution priority chain** (highest to lowest):
 
-1. Per-registry env vars `MIKEBOM_REGISTRY_<HOST>_USERNAME` +
-   `MIKEBOM_REGISTRY_<HOST>_PASSWORD`, where `<HOST>` is the registry
+1. Per-registry env vars `WAYBILL_REGISTRY_<HOST>_USERNAME` +
+   `WAYBILL_REGISTRY_<HOST>_PASSWORD`, where `<HOST>` is the registry
    hostname normalized to uppercase with `[^A-Z0-9]` replaced by `_`
-   (e.g. `ghcr.io` → `MIKEBOM_REGISTRY_GHCR_IO_USERNAME`).
-2. Generic env vars `MIKEBOM_REGISTRY_USERNAME` + `MIKEBOM_REGISTRY_PASSWORD`
+   (e.g. `ghcr.io` → `WAYBILL_REGISTRY_GHCR_IO_USERNAME`).
+2. Generic env vars `WAYBILL_REGISTRY_USERNAME` + `WAYBILL_REGISTRY_PASSWORD`
    (applies to every registry).
 3. The `--registry-credentials-dir` path described above.
 4. `$DOCKER_CONFIG/config.json` or `$HOME/.docker/config.json`
    (legacy/default behavior, unchanged).
 
-If every source fails, mikebom falls through to anonymous registry access
+If every source fails, waybill falls through to anonymous registry access
 — which works for public registries hosting public images.
 
 ```bash
 # In-cluster CronJob pattern: K8s mounts an imagePullSecret-derived
-# volume; mikebom reads creds from there.
-mikebom sbom scan \
+# volume; waybill reads creds from there.
+waybill sbom scan \
   --image my-ecr.amazonaws.com/app:v1 \
   --image-src remote \
   --registry-credentials-dir /var/run/secrets/registry
@@ -694,14 +694,14 @@ Output path override. Two forms accepted:
   default filename for exactly one format id.
 
 ```bash
-mikebom sbom scan --path . \
+waybill sbom scan --path . \
     --format cyclonedx-json,spdx-2.3-json \
     --output cyclonedx-json=out.cdx.json \
     --output spdx-2.3-json=out.spdx.json
 ```
 
 When omitted, each format writes to its own default filename
-(`mikebom.cdx.json`, `mikebom.spdx.json`, `mikebom.spdx3.json`).
+(`waybill.cdx.json`, `waybill.spdx.json`, `waybill.spdx3.json`).
 
 ### `--format <FORMAT>`
 
@@ -712,12 +712,12 @@ Duplicates dedupe silently.
 
 Registered formats:
 
-- `cyclonedx-json` — CycloneDX 1.6 JSON. Default filename `mikebom.cdx.json`.
-- `spdx-2.3-json` — SPDX 2.3 JSON. Default filename `mikebom.spdx.json`.
-- `spdx-3-json` — SPDX 3.0.1 JSON-LD. Default filename `mikebom.spdx3.json`.
+- `cyclonedx-json` — CycloneDX 1.6 JSON. Default filename `waybill.cdx.json`.
+- `spdx-2.3-json` — SPDX 2.3 JSON. Default filename `waybill.spdx.json`.
+- `spdx-3-json` — SPDX 3.0.1 JSON-LD. Default filename `waybill.spdx3.json`.
 - `spdx-3-json-experimental` *(deprecated alias)* — byte-identical to
   `spdx-3-json`; emits a stderr deprecation notice. Set
-  `MIKEBOM_NO_DEPRECATION_NOTICE=1` to suppress.
+  `WAYBILL_NO_DEPRECATION_NOTICE=1` to suppress.
 
 See [SBOM types](../reference/sbom-types.md) for the per-format SBOM-type
 field positions and CISA SBOM Types vocab.
@@ -740,7 +740,7 @@ auto-derived from `<root>/etc/os-release` (`ID` + `VERSION_ID` →
 itself a rootfs (e.g., a bare directory of `.deb` files).
 
 ```bash
-mikebom sbom scan --path ./debs --deb-codename debian-12 --output debs.cdx.json
+waybill sbom scan --path ./debs --deb-codename debian-12 --output debs.cdx.json
 ```
 
 ### `--no-package-db`
@@ -759,17 +759,17 @@ include first-party `src/` and `tests/` sub-modules, so the gate requires
 an explicit opt-in to avoid false positives. The path-prefix check rejects
 anything that isn't under `third_party/` or `vendor/`.
 
-When enabled, mikebom emits one `pkg:generic/<name>` component per
-vendored entry with a `mikebom:vendored = true` property. The version
+When enabled, waybill emits one `pkg:generic/<name>` component per
+vendored entry with a `waybill:vendored = true` property. The version
 segment is backfilled from a co-located `version.txt` or `.version` file
 when present; otherwise the PURL has no version.
 
 ```bash
 # Opt in via flag
-mikebom sbom scan --path . --output project.cdx.json --include-vendored
+waybill sbom scan --path . --output project.cdx.json --include-vendored
 
 # Opt in via env var (accepts "1", "true", etc.)
-MIKEBOM_INCLUDE_VENDORED=1 mikebom sbom scan --path . --output project.cdx.json
+WAYBILL_INCLUDE_VENDORED=1 waybill sbom scan --path . --output project.cdx.json
 ```
 
 ### `--no-deep-hash`
@@ -787,7 +787,7 @@ full `debian`).
 Print a JSON summary to stdout after writing the SBOM.
 
 ```bash
-mikebom sbom scan --path . --output project.cdx.json --json
+waybill sbom scan --path . --output project.cdx.json --json
 ```
 
 ### `--no-clearly-defined`
@@ -821,14 +821,14 @@ Possible values:
 - `deps-dev-graph` — deps.dev transitive dep-graph edge enrichment.
 
 ```bash
-mikebom sbom scan --path . --enrich-sources deps-dev,clearly-defined --output project.cdx.json
+waybill sbom scan --path . --enrich-sources deps-dev,clearly-defined --output project.cdx.json
 ```
 
 ### `--bind-to-source <PATH>`
 
 Path to a source-tier SBOM document (CDX 1.6 / SPDX 2.3 / SPDX 3 JSON) that
-emitted components will be bound to. When set, mikebom emits a
-`mikebom:source-document-binding` annotation on each first-party component
+emitted components will be bound to. When set, waybill emits a
+`waybill:source-document-binding` annotation on each first-party component
 whose PURL appears in the source SBOM, plus a document-level cross-document
 reference.
 
@@ -836,8 +836,8 @@ Components whose PURL has no source-tier counterpart get an explicit
 `binding: unknown { reason: "source-not-found-in-bind-target" }` marker.
 
 ```bash
-mikebom sbom scan --image my-image:latest --bind-to-source source.cdx.json --output image.cdx.json
-mikebom sbom verify-binding --image-sbom image.cdx.json --source-sbom source.cdx.json
+waybill sbom scan --image my-image:latest --bind-to-source source.cdx.json --output image.cdx.json
+waybill sbom verify-binding --image-sbom image.cdx.json --source-sbom source.cdx.json
 ```
 
 See also: [Cross-tier binding](../reference/cross-tier-binding.md) for the
@@ -853,7 +853,7 @@ identifier (the `git:` identifier supersedes — no separate `repo:` is also
 emitted).
 
 ```bash
-mikebom sbom scan --path . --repo https://github.com/example/proj --git-ref v1.0.0 --output project.cdx.json
+waybill sbom scan --path . --repo https://github.com/example/proj --git-ref v1.0.0 --output project.cdx.json
 ```
 
 See also: [Identifiers](../reference/identifiers.md) for the full identity
@@ -887,13 +887,13 @@ built-in scheme (`repo`, `git`, `image`, `attestation`) — use the dedicated
 flags for those.
 
 ```bash
-mikebom sbom scan --path . \
+waybill sbom scan --path . \
     --id acme_corp_id=svc-alpha-123 \
     --id internal_ticket=PROJ-456 \
     --output project.cdx.json
 ```
 
-User-defined identifiers ride the `mikebom:identifiers` document-level
+User-defined identifiers ride the `waybill:identifiers` document-level
 annotation; SPDX 3 carries them natively in `Element.externalIdentifier[]`.
 
 See also: [Identifiers](../reference/identifiers.md) for the full per-format
@@ -902,7 +902,7 @@ carrier table and decode recipes.
 ### `--keep-credentials-in-identifiers`
 
 Preserve userinfo (e.g., `USER:TOKEN@host`) in auto-detected git remote URLs
-when constructing `repo:` and `git:` identifiers. By default, mikebom strips
+when constructing `repo:` and `git:` identifiers. By default, waybill strips
 userinfo to prevent accidental credential disclosure in published SBOMs.
 
 Use this flag only when the credentials are deliberately non-sensitive
@@ -920,10 +920,10 @@ with the given content hash." Format: `sha256:<64-lowercase-hex>` or
 `sha512:<128-lowercase-hex>`. Repeatable for multi-subject SBOMs.
 
 ```bash
-mikebom sbom scan --path . --subject-hash sha256:abc...def --output project.cdx.json
+waybill sbom scan --path . --subject-hash sha256:abc...def --output project.cdx.json
 ```
 
-On build-tier scans (`mikebom trace run`), subject identifiers are
+On build-tier scans (`waybill trace run`), subject identifiers are
 auto-detected from the in-toto attestation envelope's subject set; manual
 flags augment auto-detected entries (deduplicated by exact match). On
 source-tier and image-tier scans, no auto-detect runs; manual flags are the
@@ -937,7 +937,7 @@ non-built-in scheme name (built-in schemes `repo`, `git`, `image`,
 `attestation`, `subject` are reserved for document-level use). Repeatable.
 
 ```bash
-mikebom sbom scan --path . \
+waybill sbom scan --path . \
     --component-id "pkg:cargo/serde@1.0.0=kusari-id:asset-shared-lib-v2" \
     --component-id "pkg:cargo/myapp@0.5.1=acme-asset:myapp-prod-001" \
     --output project.cdx.json
@@ -959,7 +959,7 @@ whitespace, control characters, `?`, and `#`. URL-encoded automatically when
 emitted into the PURL `name` segment.
 
 ```bash
-mikebom sbom scan --path /tmp/extracted --root-name acme-platform --output platform.cdx.json
+waybill sbom scan --path /tmp/extracted --root-name acme-platform --output platform.cdx.json
 ```
 
 When this flag is set on a manifest-driven scan (Cargo, npm, pip, gem,
@@ -975,13 +975,13 @@ vice versa. When unset, falls through to the auto-derived version
 version for project scans).
 
 ```bash
-mikebom sbom scan --path . --root-name acme-platform --root-version 2.4.1 --output platform.cdx.json
+waybill sbom scan --path . --root-name acme-platform --root-version 2.4.1 --output platform.cdx.json
 ```
 
 ### `--root-purl-type <TYPE>`
 
 Override the type segment of the root component's PURL. By default,
-when `--root-name` is supplied, mikebom hardcodes the type to `generic`
+when `--root-name` is supplied, waybill hardcodes the type to `generic`
 (`pkg:generic/<name>@<version>`). This flag replaces that default so
 the BOM subject's PURL can carry an operator-chosen ecosystem type.
 
@@ -1002,12 +1002,12 @@ charset `^[a-z][a-z0-9.+-]*$` (lowercase ASCII alphanumeric plus
 clap-style error naming the flag.
 
 ```bash
-mikebom sbom scan --path . --root-name github.com/example/svc \
+waybill sbom scan --path . --root-name github.com/example/svc \
   --root-version v1.2.3 --root-purl-type golang \
   --output svc.cdx.json
 # → metadata.component.purl = "pkg:golang/github.com%2Fexample%2Fsvc@v1.2.3"
 
-mikebom sbom scan --path . --root-name "@scope/pkg" --root-version 1.0.0 \
+waybill sbom scan --path . --root-name "@scope/pkg" --root-version 1.0.0 \
   --root-purl-type npm --output pkg.cdx.json
 # → metadata.component.purl = "pkg:npm/%40scope%2Fpkg@1.0.0"
 ```
@@ -1040,7 +1040,7 @@ identity signal once the PURL is dropped). Mutually exclusive with
 `--root-purl-type`.
 
 ```bash
-mikebom sbom scan --path . --root-name my-svc --no-root-purl \
+waybill sbom scan --path . --root-name my-svc --no-root-purl \
   --output svc.cdx.json
 # → metadata.component.name = "my-svc"
 # → metadata.component.version = "..." (from --root-version or default)
@@ -1052,7 +1052,7 @@ component-name slot without PURL encoding — slashes and `@` in the
 name round-trip byte-for-byte, e.g.:
 
 ```bash
-mikebom sbom scan --path . \
+waybill sbom scan --path . \
   --root-name 767xxxxxxxxx.dkr.ecr.us-east-1.amazonaws.com/pico-server \
   --root-version 1.0.0 --no-root-purl --output image.cdx.json
 # → metadata.component.name preserves the full registry path verbatim
@@ -1060,13 +1060,13 @@ mikebom sbom scan --path . \
 
 ### `--preserve-manifest-main-module`
 
-**Milestone 149 (closes [issue #151](https://github.com/kusari-oss/mikebom/issues/151)).**
+**Milestone 149 (closes [issue #151](https://github.com/kusari-oss/waybill/issues/151)).**
 
 When set together with `--root-name` / `--root-version` / `--root-purl`,
 preserve the manifest-derived main-module identity as a `library`-typed
 entry in `components[]` rather than dropping it per the milestone-077
 clean-replacement default. The demoted entry carries a
-`mikebom:demoted-from-main-module = "true"` annotation per Constitution
+`waybill:demoted-from-main-module = "true"` annotation per Constitution
 Principle V parity-bridging audit (C102 row in
 `docs/reference/sbom-format-mapping.md`).
 
@@ -1083,7 +1083,7 @@ derived metadata.
 `version = "0.5.1"`):
 
 ```bash
-mikebom sbom scan --path . \
+waybill sbom scan --path . \
   --root-name widget-svc --root-version 1.2.3 \
   --preserve-manifest-main-module \
   --output svc.cdx.json
@@ -1094,7 +1094,7 @@ mikebom sbom scan --path . \
 #       "purl": "pkg:cargo/foo-internal@0.5.1",
 #       "type": "library",
 #       "properties": [
-#         { "name": "mikebom:demoted-from-main-module", "value": "true" }
+#         { "name": "waybill:demoted-from-main-module", "value": "true" }
 #       ]
 #     }
 ```
@@ -1153,11 +1153,11 @@ emitted format:
 - SPDX 2.3 `creationInfo.creators[]` (verbatim).
 - SPDX 3 `Tool` / `Organization` / `Person` element in `@graph`.
 
-mikebom's own auto-populated tool/organization entries are preserved
+waybill's own auto-populated tool/organization entries are preserved
 alongside.
 
 ```bash
-mikebom sbom scan --path . \
+waybill sbom scan --path . \
     --creator "Tool: trivy@0.50.0" \
     --creator "Organization: Acme Corp" \
     --creator "Person: alice@acme.example" \
@@ -1175,7 +1175,7 @@ exactly one `--annotation-comment`. Form: same `<Type>: <Name>` shape as
 `--creator`.
 
 ```bash
-mikebom sbom scan --path . \
+waybill sbom scan --path . \
     --annotator "Person: bob@acme.example" \
     --annotation-comment "Reviewed by security team 2026-04-15" \
     --output project.cdx.json
@@ -1191,7 +1191,7 @@ at SPDX 2.3 `creationInfo.comment`, SPDX 3 `Annotation` element of type
 `OTHER`, CDX 1.6 `bom.annotations[]`.
 
 ```bash
-mikebom sbom scan --path . --metadata-comment "Generated for SOC2 audit 2026-Q2" --output project.cdx.json
+waybill sbom scan --path . --metadata-comment "Generated for SOC2 audit 2026-Q2" --output project.cdx.json
 ```
 
 ### `--scan-target-name <NAME>`
@@ -1223,14 +1223,14 @@ counterparts (file values come first); single-valued fields fail with a
 conflict error if specified in both.
 
 ```bash
-mikebom sbom scan --path . --metadata-file metadata.json --output project.cdx.json
+waybill sbom scan --path . --metadata-file metadata.json --output project.cdx.json
 ```
 
 ### `--sbom-type <TYPE>`
 
 Override the auto-detected SBOM type with an operator-asserted CISA SBOM
 Type. Valid values: `design`, `source`, `build`, `analyzed`, `deployed`,
-`runtime`. Document-level only — per-component `mikebom:sbom-tier`
+`runtime`. Document-level only — per-component `waybill:sbom-tier`
 annotations preserve auto-detected values.
 
 When set, CDX `metadata.lifecycles[]`, SPDX 2.3 `creationInfo.comment`
@@ -1239,7 +1239,7 @@ When set, CDX `metadata.lifecycles[]`, SPDX 2.3 `creationInfo.comment`
 reflecting the asserted type.
 
 ```bash
-mikebom sbom scan --path . --sbom-type build --output build.cdx.json
+waybill sbom scan --path . --sbom-type build --output build.cdx.json
 ```
 
 See also: [SBOM types](../reference/sbom-types.md) for the four-column
@@ -1247,7 +1247,7 @@ equivalence reference and per-format field positions.
 
 ### `--spdx2-relationship-compat <PROFILE>`
 
-Selects the SPDX 2.3 relationship-type vocabulary mikebom uses for
+Selects the SPDX 2.3 relationship-type vocabulary waybill uses for
 scoped dependency edges (dev, build, test). Only affects the
 `spdx-2.3-json` format — CDX and SPDX 3 emission are unaffected.
 
@@ -1256,9 +1256,9 @@ SPDX 2.3 spec defines `DEV_DEPENDENCY_OF`, `BUILD_DEPENDENCY_OF`,
 and `TEST_DEPENDENCY_OF` for exactly the purpose of expressing
 dev/build/test scope on a dependency edge — the spec's intent is
 clearly that you should use the most specific field that applies.
-Constitution Principle X (Transparency) further requires mikebom to
+Constitution Principle X (Transparency) further requires waybill to
 default to the spec-native mechanism that preserves the most
-consumer-actionable signal. mikebom defaults to `full` for both
+consumer-actionable signal. waybill defaults to `full` for both
 reasons: we want more transparency in SBOM output, not less.
 
 `basic` is provided as an explicit downshift for compatibility with
@@ -1285,7 +1285,7 @@ Valid values:
   signal off the edge and onto the Package annotation.
 
 **Crucially, the scope distinction is preserved in BOTH modes via the
-`mikebom:lifecycle-scope` annotation on the target Package** (values
+`waybill:lifecycle-scope` annotation on the target Package** (values
 `development` / `build` / `test`; absent on runtime deps). This means
 the dev/build/test signal is always recoverable from the document
 itself — `full` puts it both on the edge and on the Package; `basic`
@@ -1296,10 +1296,10 @@ a test-only dep like `testify` or `junit`.
 
 ```bash
 # Default — full SPDX 2.3 relationship vocabulary (typed scoped variants).
-mikebom sbom scan --path . --format spdx-2.3-json --output project.spdx.json
+waybill sbom scan --path . --format spdx-2.3-json --output project.spdx.json
 
 # Basic vocabulary only — every dep emits as natural-direction DEPENDS_ON.
-mikebom sbom scan --path . \
+waybill sbom scan --path . \
   --spdx2-relationship-compat basic \
   --format spdx-2.3-json \
   --output project.spdx.json
@@ -1310,7 +1310,7 @@ rows B2 + C42 for the full cross-format consumer story.
 
 ---
 
-## `mikebom sbom verify`
+## `waybill sbom verify`
 
 Verify a signed attestation (DSSE envelope) against a key, identity, or
 in-toto layout.
@@ -1333,7 +1333,7 @@ in-toto layout.
 Path to a signed `.json` / `.dsse` attestation file.
 
 ```bash
-mikebom sbom verify build.attestation.json --public-key signer.pub
+waybill sbom verify build.attestation.json --public-key signer.pub
 ```
 
 ### `--public-key <PEM>`
@@ -1347,7 +1347,7 @@ Expected signer identity (email, URL, or glob) for keyless-signed
 attestations.
 
 ```bash
-mikebom sbom verify build.attestation.json --identity 'alice@acme.example'
+waybill sbom verify build.attestation.json --identity 'alice@acme.example'
 ```
 
 ### `--layout <PATH>`
@@ -1361,7 +1361,7 @@ Verify the on-disk SHA-256 of `<PATH>` matches one of the attestation's
 subjects. Repeatable for multi-subject envelopes.
 
 ```bash
-mikebom sbom verify build.attestation.json \
+waybill sbom verify build.attestation.json \
     --public-key signer.pub \
     --expected-subject ./my-binary
 ```
@@ -1383,7 +1383,7 @@ Emit a structured verification report to stdout. Non-zero exit codes:
 
 ---
 
-## `mikebom sbom enrich`
+## `waybill sbom enrich`
 
 Add license, VEX, and supplier data to an existing SBOM, applying RFC 6902
 JSON Patch ops with per-patch provenance recording.
@@ -1414,7 +1414,7 @@ RFC 6902 JSON Patch file. Repeatable: patches are applied in order (later
 ops see earlier ones). At least one patch is required.
 
 ```bash
-mikebom sbom enrich project.cdx.json \
+waybill sbom enrich project.cdx.json \
     --patch licenses.patch.json \
     --patch vex.patch.json \
     --author "alice@acme.example"
@@ -1438,7 +1438,7 @@ gets embedded so verifiers can walk back to the attested source.
 
 Path to a source-tier OpenVEX 0.2.0 document whose statements will be
 propagated onto components in `<SBOM_FILE>`. Each propagation is gated by
-the target component's `mikebom:source-document-binding` strength per
+the target component's `waybill:source-document-binding` strength per
 `--vex-propagation-mode`.
 
 ### `--vex-propagation-mode <MODE>`
@@ -1448,7 +1448,7 @@ VEX propagation mode. Possible values:
 - `permissive` — pre-072 behavior; propagate by PURL match without
   binding check.
 - `caveated` *(default)* — propagate but tag binding-unverified
-  statements with `mikebom:vex-binding-status: unverified`.
+  statements with `waybill:vex-binding-status: unverified`.
 - `strict` — refuse propagation when binding strength != Verified
   (exit non-zero).
 
@@ -1470,9 +1470,9 @@ Print a JSON summary to stdout.
 
 ---
 
-## `mikebom sbom verify-binding`
+## `waybill sbom verify-binding`
 
-Verify that an image-tier SBOM's per-component `mikebom:source-document-binding`
+Verify that an image-tier SBOM's per-component `waybill:source-document-binding`
 annotations match the recompute against a source-tier SBOM. Exits non-zero on
 any verification failure.
 
@@ -1500,7 +1500,7 @@ Output format. Possible values:
 - `json` — `VerifyReport` JSON for CI pipelines / machine consumption.
 
 ```bash
-mikebom sbom verify-binding \
+waybill sbom verify-binding \
     --image-sbom image.cdx.json \
     --source-sbom source.cdx.json \
     --format json
@@ -1511,7 +1511,7 @@ verification algorithm.
 
 ---
 
-## `mikebom sbom trace-binding`
+## `waybill sbom trace-binding`
 
 Trace an image-tier component back to its candidate source-tier SBOMs. For
 each instance of the supplied PURL in the image SBOM, reports the binding
@@ -1549,7 +1549,7 @@ Directory containing candidate source-tier SBOMs. Every `*.cdx.json`,
 and tested.
 
 ```bash
-mikebom sbom trace-binding \
+waybill sbom trace-binding \
     --component-purl "pkg:cargo/serde@1.0.0" \
     --image-sbom image.cdx.json \
     --candidate-sources-dir ./source-sboms
@@ -1567,11 +1567,11 @@ binding-state vocabulary.
 
 ---
 
-## `mikebom trace run`
+## `waybill trace run`
 
 > **Status: experimental.** Linux-only. Adds ~2-3× wall-clock overhead on
 > syscall-heavy builds; requires CAP_BPF + CAP_PERFMON; coverage gaps on
-> `openat2` and `io_uring`. Prefer `mikebom sbom scan` unless you need a
+> `openat2` and `io_uring`. Prefer `waybill sbom scan` unless you need a
 > trace-bound attestation.
 
 Capture a build trace and produce both an SBOM and an in-toto attestation
@@ -1582,8 +1582,8 @@ in one step.
 | Flag | Type | Default | Description |
 |---|---|---|---|
 | `<COMMAND>...` | positional (required) | — | Build command to trace (after `--`). |
-| `--sbom-output <PATH>` | path | `mikebom.cdx.json` | SBOM output path. |
-| `--attestation-output <PATH>` | path | `mikebom.attestation.json` | Attestation output path. |
+| `--sbom-output <PATH>` | path | `waybill.cdx.json` | SBOM output path. |
+| `--attestation-output <PATH>` | path | `waybill.attestation.json` | Attestation output path. |
 | `--format <FORMAT>` | enum | `cyclonedx-json` | SBOM output format. |
 | `--no-enrich` | bool | off | Skip enrichment step. |
 | `--include-source-files` | bool | off | Also include observed source files. |
@@ -1622,28 +1622,28 @@ in one step.
 | `--no-transparency-log` | bool | off | Skip Rekor upload (keyless mode). |
 | `--require-signing` | bool | off | Hard-fail if no signing identity is configured. |
 | `--subject <PATH>` | path (repeatable) | auto-detect | Explicit subject artifact path. |
-| `--attestation-format <FORMAT>` | enum (`witness-v0.1`, `mikebom-v1`) | `witness-v0.1` | Attestation output format. |
+| `--attestation-format <FORMAT>` | enum (`witness-v0.1`, `waybill-v1`) | `witness-v0.1` | Attestation output format. |
 
 ### `<COMMAND>...` (positional, required)
 
-Build command to trace. Pass after `--` to separate mikebom flags from the
+Build command to trace. Pass after `--` to separate waybill flags from the
 build command's flags.
 
 ```bash
-mikebom trace run --sbom-output build.cdx.json -- cargo install ripgrep
+waybill trace run --sbom-output build.cdx.json -- cargo install ripgrep
 ```
 
 ### `--sbom-output <PATH>`
 
-SBOM output path. Default `mikebom.cdx.json`.
+SBOM output path. Default `waybill.cdx.json`.
 
 ### `--attestation-output <PATH>`
 
-Attestation output path. Default `mikebom.attestation.json`.
+Attestation output path. Default `waybill.attestation.json`.
 
 ### `--format <FORMAT>`
 
-SBOM output format. Default `cyclonedx-json`. See `mikebom sbom scan
+SBOM output format. Default `cyclonedx-json`. See `waybill sbom scan
 --format` for the registered format set.
 
 ### `--no-enrich`
@@ -1687,14 +1687,14 @@ are logged and skipped.
 
 ### `--artifact-dir <DIR>` / `--auto-dirs`
 
-Post-trace artifact-directory scanning. See the `mikebom trace capture`
+Post-trace artifact-directory scanning. See the `waybill trace capture`
 section below for the full semantics — `trace run` forwards both flags
 verbatim to capture.
 
 ### `--repo <URL>`, `--git-ref <REVISION>`, `--image-id <REF>`, `--attestation <IRI>`, `--id <SCHEME=VALUE>`, `--keep-credentials-in-identifiers`, `--subject-hash <ALGO:HEX>`, `--component-id <PURL=SCHEME:VALUE>`, `--root-name <NAME>`, `--root-version <VERSION>`, `--creator <TYPE: NAME>`, `--annotator <TYPE: NAME>`, `--annotation-comment <TEXT>`, `--metadata-comment <TEXT>`, `--scan-target-name <NAME>`, `--metadata-file <PATH>`, `--sbom-type <TYPE>`
 
-These flags share semantics with their `mikebom sbom scan` counterparts —
-see the `mikebom sbom scan` section above for the full per-flag documentation.
+These flags share semantics with their `waybill sbom scan` counterparts —
+see the `waybill sbom scan` section above for the full per-flag documentation.
 
 Build-tier-specific notes:
 
@@ -1739,7 +1739,7 @@ unsigned + warn" behavior to a hard error.
 ### `--subject <PATH>`
 
 Explicit subject artifact path. Repeatable. When set, auto-detection is
-suppressed — mikebom signs exactly what you told it to.
+suppressed — waybill signs exactly what you told it to.
 
 ### `--attestation-format <FORMAT>`
 
@@ -1749,12 +1749,12 @@ Attestation output format. Possible values:
   witness attestation-collection (`material` + `command-run` + `product`
   + `network-trace` inner attestors). Directly consumable by `sbomit
   generate` and any go-witness-aware verifier.
-- `mikebom-v1` — mikebom's native `BuildTracePredicate` Statement v1.
-  Richer network-trace semantics but only mikebom understands it.
+- `waybill-v1` — waybill's native `BuildTracePredicate` Statement v1.
+  Richer network-trace semantics but only waybill understands it.
 
 ---
 
-## `mikebom trace capture`
+## `waybill trace capture`
 
 > **Status: experimental.** Same caveats as `trace run`.
 
@@ -1770,7 +1770,7 @@ exclusive).
 |---|---|---|---|
 | `[COMMAND]...` | positional | — | Build command to trace (after `--`). |
 | `--target-pid <PID>` | u32 | (none) | Existing PID to attach to. |
-| `--output <PATH>` | path | `mikebom.attestation.json` | Attestation output path. |
+| `--output <PATH>` | path | `waybill.attestation.json` | Attestation output path. |
 | `--trace-children` | bool | off | Follow forked children. |
 | `--libssl-path <PATH>` | path | auto-detect | Override libssl.so path. |
 | `--go-binary <PATH>` | path | (none) | Go binary for Go-specific instrumentation. |
@@ -1796,7 +1796,7 @@ Existing process ID to attach the trace to. Mutually exclusive with the
 
 ### `--output <PATH>`
 
-Attestation output path. Default `mikebom.attestation.json`.
+Attestation output path. Default `waybill.attestation.json`.
 
 ### `--artifact-dir <DIR>`
 
@@ -1826,15 +1826,15 @@ uprobes to the Go runtime's TLS internals (Go binaries don't link
 `--trace-children`, `--libssl-path`, `--ring-buffer-size`, `--timeout`,
 `--json`, `--signing-key`, `--signing-key-passphrase-env`, `--keyless`,
 `--fulcio-url`, `--rekor-url`, `--no-transparency-log`, `--require-signing`,
-`--subject`, `--attestation-format` — see the `mikebom trace run` section
+`--subject`, `--attestation-format` — see the `waybill trace run` section
 above; identical semantics.
 
 ---
 
-## `mikebom policy init`
+## `waybill policy init`
 
 Generate a starter in-toto layout bound to a functionary key. Use the emitted
-layout with `mikebom sbom verify --layout` to enforce functionary + step-name
+layout with `waybill sbom verify --layout` to enforce functionary + step-name
 policy on signed attestations. Layouts are standard in-toto — any
 in-toto-aware verifier accepts them.
 
@@ -1853,7 +1853,7 @@ in-toto-aware verifier accepts them.
 PEM-encoded public key of the expected signer. Required.
 
 ```bash
-mikebom policy init --functionary-key signer.pub --output layout.json
+waybill policy init --functionary-key signer.pub --output layout.json
 ```
 
 ### `--output <PATH>`
@@ -1882,13 +1882,13 @@ Default is `cyclonedx-json`. Duplicates dedupe silently.
 
 | Format id | Status | Default filename |
 |---|---|---|
-| `cyclonedx-json` | Stable. Default. CycloneDX 1.6 JSON. | `mikebom.cdx.json` |
-| `spdx-2.3-json` | Stable. SPDX 2.3 JSON. Validates against the official SPDX 2.3 JSON schema. | `mikebom.spdx.json` |
-| `spdx-3-json` | Stable. SPDX 3.0.1 JSON-LD. Production-grade output with native-field + annotation parity vs. CDX and SPDX 2.3. | `mikebom.spdx3.json` |
-| `spdx-3-json-experimental` *(deprecated)* | Byte-identical to `spdx-3-json`; emits a stderr deprecation notice. | `mikebom.spdx3-experimental.json` |
+| `cyclonedx-json` | Stable. Default. CycloneDX 1.6 JSON. | `waybill.cdx.json` |
+| `spdx-2.3-json` | Stable. SPDX 2.3 JSON. Validates against the official SPDX 2.3 JSON schema. | `waybill.spdx.json` |
+| `spdx-3-json` | Stable. SPDX 3.0.1 JSON-LD. Production-grade output with native-field + annotation parity vs. CDX and SPDX 2.3. | `waybill.spdx3.json` |
+| `spdx-3-json-experimental` *(deprecated)* | Byte-identical to `spdx-3-json`; emits a stderr deprecation notice. | `waybill.spdx3-experimental.json` |
 
 **OpenVEX sidecar** — when the scan produces VEX statements AND SPDX 2.3
-output is requested, mikebom co-emits an OpenVEX 0.2.0 JSON file alongside
+output is requested, waybill co-emits an OpenVEX 0.2.0 JSON file alongside
 the SPDX file. The SPDX document carries a `DocumentRef-OpenVEX` entry in
 `externalDocumentRefs` with a SHA-256 of the sidecar bytes. Use
 `--output openvex=<path>` to retarget the sidecar.
@@ -1902,9 +1902,9 @@ for the cross-format data-placement map.
 ## Authenticating to private registries
 
 When `--image <ref>` resolves to an OCI reference (rather than a tarball),
-mikebom uses the same Docker keychain that `docker pull` uses —
+waybill uses the same Docker keychain that `docker pull` uses —
 `~/.docker/config.json` (or `$DOCKER_CONFIG/config.json` if set). No
-mikebom-specific credential file or CLI flag is required.
+waybill-specific credential file or CLI flag is required.
 
 Credentials resolve in this priority order, matching Docker's:
 
@@ -1958,7 +1958,7 @@ Behavior notes:
 OCI distribution-spec blobs (image config + each layer) are content-addressed
 by SHA-256, so caching them on disk is correct by construction: a cache hit
 on a digest is identical-bytes to a fresh network fetch of that digest.
-mikebom caches every blob it pulls; subsequent scans of the same image
+waybill caches every blob it pulls; subsequent scans of the same image
 complete in seconds rather than tens of seconds.
 
 The image's manifest is intentionally NOT cached — a floating tag like
@@ -1966,21 +1966,21 @@ The image's manifest is intentionally NOT cached — a floating tag like
 
 **Cache location** (priority order):
 
-1. `$MIKEBOM_OCI_CACHE_DIR` (when set non-empty).
-2. `$XDG_CACHE_HOME/mikebom/oci-layers` (Linux convention).
-3. `$HOME/Library/Caches/mikebom/oci-layers` (macOS).
-4. `$HOME/.cache/mikebom/oci-layers` (fallback).
+1. `$WAYBILL_OCI_CACHE_DIR` (when set non-empty).
+2. `$XDG_CACHE_HOME/waybill/oci-layers` (Linux convention).
+3. `$HOME/Library/Caches/waybill/oci-layers` (macOS).
+4. `$HOME/.cache/waybill/oci-layers` (fallback).
 
 **Layout**: `<cache-dir>/sha256/<64-hex>` per blob.
 
 **Eviction**: default 10 GB cap. Override with `--oci-cache-size <bytes>`
-or `MIKEBOM_OCI_CACHE_SIZE=<bytes>`.
+or `WAYBILL_OCI_CACHE_SIZE=<bytes>`.
 
-**Disabling**: pass `--no-oci-cache` (or set `MIKEBOM_OCI_CACHE=0`) to skip
+**Disabling**: pass `--no-oci-cache` (or set `WAYBILL_OCI_CACHE=0`) to skip
 the cache entirely for one invocation.
 
-**Clearing**: `rm -rf "$XDG_CACHE_HOME/mikebom/oci-layers"` (or the macOS /
-fallback equivalent). mikebom doesn't ship a `--clear-oci-cache` command.
+**Clearing**: `rm -rf "$XDG_CACHE_HOME/waybill/oci-layers"` (or the macOS /
+fallback equivalent). waybill doesn't ship a `--clear-oci-cache` command.
 
 ---
 

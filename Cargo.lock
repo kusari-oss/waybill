@@ -2039,65 +2039,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a86d3146ed3995b5913c414f6664344b9617457320782e64f0bb44afd49d74"
 
 [[package]]
-name = "mikebom"
-version = "0.1.0-alpha.65"
-dependencies = [
- "anyhow",
- "aya",
- "aya-log",
- "base64 0.22.1",
- "chrono",
- "clap",
- "data-encoding",
- "flate2",
- "globset",
- "json-patch",
- "jsonschema",
- "libc",
- "mikebom-common",
- "object",
- "oci-spec 0.9.0",
- "pem",
- "quick-xml",
- "rcgen",
- "regex",
- "reqwest",
- "rpm",
- "serde",
- "serde_json",
- "serde_yaml",
- "sha2",
- "sigstore",
- "spdx",
- "tar",
- "tempfile",
- "thiserror 2.0.18",
- "tokio",
- "toml",
- "tracing",
- "tracing-subscriber",
- "url",
- "uuid",
- "wiremock",
- "x509-parser",
- "zip",
-]
-
-[[package]]
-name = "mikebom-common"
-version = "0.1.0-alpha.65"
-dependencies = [
- "aya",
- "base64 0.22.1",
- "chrono",
- "packageurl",
- "serde",
- "serde_json",
- "spdx",
- "thiserror 2.0.18",
-]
-
-[[package]]
 name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4546,6 +4487,65 @@ dependencies = [
  "hashbrown 0.15.5",
  "indexmap 2.14.0",
  "semver",
+]
+
+[[package]]
+name = "waybill"
+version = "0.1.0-alpha.65"
+dependencies = [
+ "anyhow",
+ "aya",
+ "aya-log",
+ "base64 0.22.1",
+ "chrono",
+ "clap",
+ "data-encoding",
+ "flate2",
+ "globset",
+ "json-patch",
+ "jsonschema",
+ "libc",
+ "object",
+ "oci-spec 0.9.0",
+ "pem",
+ "quick-xml",
+ "rcgen",
+ "regex",
+ "reqwest",
+ "rpm",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "sha2",
+ "sigstore",
+ "spdx",
+ "tar",
+ "tempfile",
+ "thiserror 2.0.18",
+ "tokio",
+ "toml",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "uuid",
+ "waybill-common",
+ "wiremock",
+ "x509-parser",
+ "zip",
+]
+
+[[package]]
+name = "waybill-common"
+version = "0.1.0-alpha.65"
+dependencies = [
+ "aya",
+ "base64 0.22.1",
+ "chrono",
+ "packageurl",
+ "serde",
+ "serde_json",
+ "spdx",
+ "thiserror 2.0.18",
 ]
 
 [[package]]

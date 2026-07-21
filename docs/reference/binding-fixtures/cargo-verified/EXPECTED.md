@@ -15,7 +15,7 @@ populated: VCS commit + lockfile SHA-256 + manifest SHA-256.
 The `lockfile` value is `SHA-256(b"lockfile-payload-1")`; the
 `manifest` value is `SHA-256(b"manifest-payload-1")`. These come from
 the `pinned_vec_all_three_sides` test in
-`mikebom-cli/src/binding/hash.rs::tests` — same input substrate so an
+`waybill-cli/src/binding/hash.rs::tests` — same input substrate so an
 external verifier can recreate the canonical envelope without needing
 the upstream source tree.
 

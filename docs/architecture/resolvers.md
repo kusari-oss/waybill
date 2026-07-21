@@ -1,16 +1,16 @@
 # Resolver Trait + Chain (m209)
 
 The trace-mode resolution pipeline
-(`mikebom-cli/src/resolve/pipeline.rs::ResolutionPipeline::resolve`) is
+(`waybill-cli/src/resolve/pipeline.rs::ResolutionPipeline::resolve`) is
 composed of a **chain of resolvers**, each an implementation of the
-`Resolver` trait at `mikebom-cli/src/resolve/resolver_trait.rs`. This
+`Resolver` trait at `waybill-cli/src/resolve/resolver_trait.rs`. This
 document is the contributor's reference for adding a new resolver.
 
 For the broader resolution flow, see `docs/architecture/resolution.md`.
 
 ## Chain composition
 
-Locked in `mikebom-cli/src/resolve/resolver_chain.rs::RESOLVER_REGISTRY`:
+Locked in `waybill-cli/src/resolve/resolver_chain.rs::RESOLVER_REGISTRY`:
 
 | Resolver | Priority | Technique | Confidence |
 |---|---|---|---|
@@ -36,15 +36,15 @@ Two file edits + one line addition to the registry.
 
 ### Step 1 — create the resolver file
 
-`mikebom-cli/src/resolve/resolvers/<name>.rs`. Use `cargo.rs` as the
+`waybill-cli/src/resolve/resolvers/<name>.rs`. Use `cargo.rs` as the
 template:
 
 ```rust
 use std::future::Future;
 use std::pin::Pin;
 
-use mikebom_common::resolution::{ResolutionTechnique, ResolvedComponent};
-use mikebom_common::types::purl::{encode_purl_segment, Purl};
+use waybill_common::resolution::{ResolutionTechnique, ResolvedComponent};
+use waybill_common::types::purl::{encode_purl_segment, Purl};
 
 use super::common::{build_url_component, hostname_and_path};
 use crate::resolve::resolver_trait::{
@@ -97,14 +97,14 @@ fn extract_nuget_purl(hostname: &str, path: &str) -> Option<Purl> {
 
 ### Step 2 — register the module + priority
 
-Add one line to `mikebom-cli/src/resolve/resolvers/mod.rs`:
+Add one line to `waybill-cli/src/resolve/resolvers/mod.rs`:
 
 ```rust
 pub(crate) mod nuget;
 ```
 
 Add one line to `RESOLVER_REGISTRY` at
-`mikebom-cli/src/resolve/resolver_chain.rs` (in priority-descending
+`waybill-cli/src/resolve/resolver_chain.rs` (in priority-descending
 order):
 
 ```rust
@@ -127,7 +127,7 @@ Box::new(resolvers::nuget::NugetResolver),
 ### Step 3 — verify
 
 ```sh
-cargo +stable build -p mikebom
+cargo +stable build -p waybill
 ```
 
 If you accidentally reused an existing priority, `cargo build` fails
@@ -136,7 +136,7 @@ and the panic message points at `resolver_chain.rs`. Pick an unused
 priority; try again.
 
 ```sh
-cargo +stable test -p mikebom -- resolve::resolvers::nuget
+cargo +stable test -p waybill -- resolve::resolvers::nuget
 ```
 
 Runs only your new resolver's unit tests in isolation.
@@ -194,7 +194,7 @@ new Cargo dependencies (no `async-trait` crate).
 - **Byte-identity (SC-001) harness**: `pipeline.rs::tests::sample_attestation_byte_identity_vs_legacy_oracle`
   compares chain output vs. the `#[cfg(test)]`-gated legacy oracle
   at `pipeline_legacy_reference.rs`. Rerun via
-  `cargo test -p mikebom --bin mikebom resolve::pipeline::tests`.
+  `cargo test -p waybill --bin waybill resolve::pipeline::tests`.
 
 ## Related documents
 

@@ -9,19 +9,19 @@ blocks, and serializes.
 
 **Key files:**
 
-- `mikebom-cli/src/generate/cyclonedx/builder.rs::CycloneDxBuilder` —
+- `waybill-cli/src/generate/cyclonedx/builder.rs::CycloneDxBuilder` —
   entry point. Takes a `CycloneDxConfig` and the scanner output, returns a
   BOM struct.
-- `mikebom-cli/src/generate/cyclonedx/metadata.rs` — `metadata.component`,
+- `waybill-cli/src/generate/cyclonedx/metadata.rs` — `metadata.component`,
   `metadata.authors`, `metadata.supplier`, trace-integrity properties.
-- `mikebom-cli/src/generate/cyclonedx/compositions.rs` — per-ecosystem
+- `waybill-cli/src/generate/cyclonedx/compositions.rs` — per-ecosystem
   compositions (`aggregate: complete`).
-- `mikebom-cli/src/generate/cyclonedx/dependencies.rs` — dependency graph
+- `waybill-cli/src/generate/cyclonedx/dependencies.rs` — dependency graph
   emission, primary-dependency fallback.
-- `mikebom-cli/src/generate/cyclonedx/evidence.rs` — `evidence.identity[]`
+- `waybill-cli/src/generate/cyclonedx/evidence.rs` — `evidence.identity[]`
   construction, technique mapping, occurrences.
-- `mikebom-cli/src/generate/cyclonedx/serializer.rs` — final JSON write.
-- `mikebom-cli/src/generate/cpe.rs` — CPE 2.3 multi-candidate synthesizer
+- `waybill-cli/src/generate/cyclonedx/serializer.rs` — final JSON write.
+- `waybill-cli/src/generate/cpe.rs` — CPE 2.3 multi-candidate synthesizer
   (see [purls-and-cpes.md](purls-and-cpes.md)).
 
 ## Output format
@@ -38,7 +38,7 @@ Every BOM has a synthetic primary component under `metadata.component` with
 both `purl` and `cpe` populated:
 
 - `purl`: `pkg:generic/<name>@<version>`
-- `cpe`: `cpe:2.3:a:mikebom:<name>:<version>:*:*:*:*:*:*:*`
+- `cpe`: `cpe:2.3:a:waybill:<name>:<version>:*:*:*:*:*:*:*`
 
 The empty-field case is explicitly handled: even when the scan target has
 no ecosystem of its own (a raw directory), a synthetic PURL is emitted. This
@@ -56,7 +56,7 @@ minimum-fields profile.
 
 Each component emits `evidence.identity[]` as an **array** of identity
 objects, not a single object. CDX 1.5 used a single-object form; 1.6
-deprecated it. mikebom always emits an array with exactly one entry:
+deprecated it. waybill always emits an array with exactly one entry:
 
 ```json
 "evidence": {
@@ -103,13 +103,13 @@ cross-reference; no other tool currently emits this.
 
 CDX 1.6 reserves `evidence.identity[].tools[]` for bom-refs to tools
 declared elsewhere in the BOM (`metadata.tools`, `services`, `formulation`).
-mikebom's original payload there (TLS connection IDs, deps.dev match
+waybill's original payload there (TLS connection IDs, deps.dev match
 markers) isn't a tool and doesn't exist elsewhere in the BOM, so the field
 is never emitted. Both payloads now land on the component as properties:
 
-- `mikebom:source-connection-ids` — comma-joined TLS connection IDs from the
+- `waybill:source-connection-ids` — comma-joined TLS connection IDs from the
   trace.
-- `mikebom:deps-dev-match` — `<system>:<name>@<version>`.
+- `waybill:deps-dev-match` — `<system>:<name>@<version>`.
 
 The provenance semantics are preserved; the location is CDX-conformant.
 
@@ -130,10 +130,10 @@ CDX 1.6 compositions have `additionalProperties: false`, so trace-integrity
 counters can't ride on the composition. They go under
 `metadata.properties` instead:
 
-- `mikebom:trace-integrity-ring-buffer-overflows`
-- `mikebom:trace-integrity-events-dropped`
-- `mikebom:trace-integrity-uprobe-attach-failures`
-- `mikebom:trace-integrity-kprobe-attach-failures`
+- `waybill:trace-integrity-ring-buffer-overflows`
+- `waybill:trace-integrity-events-dropped`
+- `waybill:trace-integrity-uprobe-attach-failures`
+- `waybill:trace-integrity-kprobe-attach-failures`
 
 ### Dependency graph
 
@@ -167,7 +167,7 @@ Compound expressions emit as:
 ```
 
 Both forms are required for sbomqs's `comp_with_valid_licenses` check.
-`SpdxExpression::as_spdx_id` in `mikebom-common` decides which shape to
+`SpdxExpression::as_spdx_id` in `waybill-common` decides which shape to
 emit. Free-form license strings never leak through; everything
 canonicalizes through the `spdx` crate.
 
@@ -197,10 +197,10 @@ item 17.
 - `include_hashes` — whether to emit `components[].hashes[]`.
 - `include_source_files` — whether to include the `evidence.occurrences[]`
   file-level additions (trace-mode `--scope source`).
-- `include_dev` — drives the `mikebom:dev-dependency` property filter.
+- `include_dev` — drives the `waybill:dev-dependency` property filter.
 
 The same builder runs for both scan mode and trace mode — the only
 difference is the `generation_context` value (`FilesystemScan`,
 `ContainerImageScan`, or `BuildTimeTrace`), which is stamped on
-`metadata.component.properties.mikebom:generation-context`. Downstream
+`metadata.component.properties.waybill:generation-context`. Downstream
 consumers use this to know what evidence produced the SBOM.

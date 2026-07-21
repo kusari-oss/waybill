@@ -1,0 +1,11 @@
+// bun: lockfileVersion: 1
+{
+  "lockfileVersion": 1,
+  "workspaces": {
+    "": { "name": "bun-basic-fixture" }
+  },
+  "packages": {
+    "waybill-fixture-lib": ["waybill-fixture-lib@1.2.3", "sha512-aaa"],
+    "@waybill-fixture/types-pkg": ["@waybill-fixture/types-pkg@4.5.6", "sha512-bbb"]
+  }
+}
