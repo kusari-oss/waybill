@@ -55,7 +55,7 @@
         },
         {
           "name": "waybill:source-document-binding",
-          "value": "{\"algo\":\"v1\",\"reason\":\"source-not-found-in-bind-target\",\"source_doc_id\":{\"iri\":\"<WORKSPACE>/waybill-cli/tests/fixtures/pkg_alias_binding/source-baz.cdx.json\",\"sha256\":\"b96cb3840829e5d70f814d9de5d730f5b2c72cab08c09ed4a73deeb3ad4250fb\"},\"strength\":\"unknown\"}"
+          "value": "{\"algo\":\"v1\",\"reason\":\"source-not-found-in-bind-target\",\"source_doc_id\":{\"iri\":\"<WORKSPACE>/waybill-cli/tests/fixtures/pkg_alias_binding/source-baz.cdx.json\",\"sha256\":\"3f68e0f5c94b6af774801bdb3d2f466d3b67b4649be44c08bd1a1b2ce35bac30\"},\"strength\":\"unknown\"}"
         },
         {
           "name": "waybill:workspace-member",
@@ -112,7 +112,7 @@
           "hashes": [
             {
               "alg": "SHA-256",
-              "content": "b96cb3840829e5d70f814d9de5d730f5b2c72cab08c09ed4a73deeb3ad4250fb"
+              "content": "3f68e0f5c94b6af774801bdb3d2f466d3b67b4649be44c08bd1a1b2ce35bac30"
             }
           ],
           "type": "bom",
