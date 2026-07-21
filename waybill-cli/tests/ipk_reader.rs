@@ -2,7 +2,7 @@
 //!
 //! Companion to the unit tests in `scan_fs::package_db::ipk_file::tests`
 //! and `scan_fs::package_db::opkg::tests`. This test invokes the
-//! `mikebom sbom scan --path <fixture>` binary against a synthesized
+//! `waybill sbom scan --path <fixture>` binary against a synthesized
 //! mixed-input directory containing:
 //!
 //! - 5 vendored real-world OpenWrt `.ipk` archives (well-formed path)
@@ -64,7 +64,7 @@ fn copy_dir_recursive(src: &Path, dst: &Path) {
     }
 }
 
-/// Emit a CDX 1.6 SBOM for `target_dir` via the mikebom binary.
+/// Emit a CDX 1.6 SBOM for `target_dir` via the waybill binary.
 /// Returns the parsed JSON. The `_out_dir` handle is dropped by the
 /// caller; the returned `PathBuf` is kept live in the meantime.
 fn emit_cdx(target_dir: &Path) -> serde_json::Value {
@@ -73,7 +73,7 @@ fn emit_cdx(target_dir: &Path) -> serde_json::Value {
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -86,10 +86,10 @@ fn emit_cdx(target_dir: &Path) -> serde_json::Value {
     ])
     .arg(format!("cyclonedx-json={}", out_path.to_string_lossy()))
     .arg("--no-deep-hash");
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
-        "mikebom sbom scan (CDX) failed: stderr={}",
+        "waybill sbom scan (CDX) failed: stderr={}",
         String::from_utf8_lossy(&output.stderr)
     );
     let bytes = std::fs::read(&out_path).expect("read emitted CDX");
@@ -102,7 +102,7 @@ fn emit_spdx23(target_dir: &Path) -> serde_json::Value {
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -115,10 +115,10 @@ fn emit_spdx23(target_dir: &Path) -> serde_json::Value {
     ])
     .arg(format!("spdx-2.3-json={}", out_path.to_string_lossy()))
     .arg("--no-deep-hash");
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
-        "mikebom sbom scan (SPDX 2.3) failed: stderr={}",
+        "waybill sbom scan (SPDX 2.3) failed: stderr={}",
         String::from_utf8_lossy(&output.stderr)
     );
     let bytes = std::fs::read(&out_path).expect("read emitted SPDX 2.3");
@@ -224,7 +224,7 @@ fn assert_dedup_installed_db_wins_over_archive_file(cdx: &serde_json::Value) {
         .as_array()
         .and_then(|arr| {
             arr.iter().find_map(|p| {
-                if p["name"].as_str() == Some("mikebom:evidence-kind") {
+                if p["name"].as_str() == Some("waybill:evidence-kind") {
                     p["value"].as_str()
                 } else {
                     None
@@ -249,7 +249,7 @@ fn assert_license_coverage_over_ipk_file(cdx: &serde_json::Value) {
                 .as_array()
                 .map(|arr| {
                     arr.iter().any(|p| {
-                        p["name"].as_str() == Some("mikebom:evidence-kind")
+                        p["name"].as_str() == Some("waybill:evidence-kind")
                             && p["value"].as_str() == Some("ipk-file")
                     })
                 })
@@ -287,7 +287,7 @@ fn assert_license_coverage_over_ipk_file(cdx: &serde_json::Value) {
 /// `uclient-fetch` that are NOT in this scan set, so CDX correctly
 /// drops those edges (target not resolvable). This assertion instead
 /// verifies the reader→emitter chain by extracting the per-source
-/// `mikebom:source-mechanism` annotation as a proxy: when 6in4 is
+/// `waybill:source-mechanism` annotation as a proxy: when 6in4 is
 /// present, it MUST carry an `ipk-file` source-mechanism annotation
 /// (proving `PackageDbEntry.depends` flowed through emission, even
 /// when the resolved graph edges dropped for target-absence). The
@@ -309,7 +309,7 @@ fn assert_dep_processing_wired(cdx: &serde_json::Value) {
         .as_array()
         .and_then(|arr| {
             arr.iter().find_map(|p| {
-                if p["name"].as_str() == Some("mikebom:source-mechanism") {
+                if p["name"].as_str() == Some("waybill:source-mechanism") {
                     p["value"].as_str()
                 } else {
                     None
@@ -319,7 +319,7 @@ fn assert_dep_processing_wired(cdx: &serde_json::Value) {
     assert_eq!(
         source_mechanism,
         Some("ipk-file"),
-        "SC-004 (dep-processing wired) violated: 6in4 MUST carry mikebom:source-mechanism=ipk-file; got {source_mechanism:?}"
+        "SC-004 (dep-processing wired) violated: 6in4 MUST carry waybill:source-mechanism=ipk-file; got {source_mechanism:?}"
     );
 }
 

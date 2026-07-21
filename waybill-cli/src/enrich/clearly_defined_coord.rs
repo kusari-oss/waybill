@@ -13,7 +13,7 @@
 //! ecosystem matches CD's published documentation:
 //! <https://docs.clearlydefined.io/docs/handbook/coordinates>
 //!
-//! Ecosystems mikebom maps:
+//! Ecosystems waybill maps:
 //!
 //! | PURL ecosystem | CD type | CD provider | namespace | name | revision |
 //! |---|---|---|---|---|---|
@@ -116,7 +116,7 @@ pub fn cd_coord_for(component: &ResolvedComponent) -> Option<CdCoord> {
             // provider=golang, namespace=URL-encoded prefix,
             // name=last segment, revision=v-prefixed semver.
             //
-            // `component.name` in mikebom is the FULL module path for
+            // `component.name` in waybill is the FULL module path for
             // Go (`github.com/sirupsen/logrus`), not just the last
             // segment, so we can't use it directly — that would double
             // the prefix into the URL and produce 404s. Read the short
@@ -284,7 +284,7 @@ mod tests {
 
     #[test]
     fn cd_coord_for_golang_adds_v_prefix() {
-        // mikebom emits Go PURLs with literal slashes in the namespace
+        // waybill emits Go PURLs with literal slashes in the namespace
         // (e.g. `pkg:golang/github.com/sirupsen/logrus@v1.9.3`); the
         // PURL parser accepts that form. Build the component manually
         // since `Purl::new` rejects multi-segment namespaces.

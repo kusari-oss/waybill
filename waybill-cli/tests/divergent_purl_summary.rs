@@ -1,6 +1,6 @@
 //! Milestone 134 US3 — three independent divergent-PURL collisions
 //! in one scan must produce a single document-scope
-//! `mikebom:purl-collisions-detected` annotation listing all three
+//! `waybill:purl-collisions-detected` annotation listing all three
 //! in deterministic sort order (by `purl`), AND each collision must
 //! also appear as a per-component property on its respective
 //! component (the redundancy invariant from
@@ -79,7 +79,7 @@ fn document_scope_summary(doc: &Value) -> Option<Value> {
         doc.get("metadata")?.get("properties")?.as_array()?;
     for p in metadata_properties {
         if p.get("name").and_then(|v| v.as_str())
-            == Some("mikebom:purl-collisions-detected")
+            == Some("waybill:purl-collisions-detected")
         {
             let raw = p.get("value")?.as_str()?;
             return serde_json::from_str(raw).ok();
@@ -99,7 +99,7 @@ fn per_component_purls(doc: &Value) -> HashSet<String> {
         };
         for p in properties {
             if p.get("name").and_then(|v| v.as_str())
-                == Some("mikebom:duplicate-purl-divergent")
+                == Some("waybill:duplicate-purl-divergent")
             {
                 found.insert(purl.to_string());
                 break;
@@ -160,7 +160,7 @@ fn three_divergent_collisions_emit_sorted_summary() {
         assert!(
             per_component.contains(*purl),
             "PURL {purl} in document-scope summary MUST also appear as a \
-             per-component mikebom:duplicate-purl-divergent property; \
+             per-component waybill:duplicate-purl-divergent property; \
              per_component={per_component:?}",
         );
     }

@@ -66,7 +66,7 @@ fn dual_scan(case: &EcosystemCase) -> Scan {
     if let Some(code) = case.deb_codename {
         cmd.arg("--deb-codename").arg(code);
     }
-    let out = cmd.output().expect("mikebom runs");
+    let out = cmd.output().expect("waybill runs");
     assert!(
         out.status.success(),
         "scan failed for {}: stderr={}",
@@ -96,7 +96,7 @@ fn walk_cdx_components(doc: &serde_json::Value) -> Vec<&serde_json::Value> {
     let mut out = Vec::new();
     recur(doc, &mut out);
     // Milestone 053: also include `metadata.component` when it's the
-    // Go main-module (carries `mikebom:component-role: main-module`).
+    // Go main-module (carries `waybill:component-role: main-module`).
     // The pre-053 metadata.component was a synthetic placeholder
     // without a real component identity; post-053 the main-module
     // lives there per FR-001a (Trivy's pattern) and MUST round-trip
@@ -108,7 +108,7 @@ fn walk_cdx_components(doc: &serde_json::Value) -> Vec<&serde_json::Value> {
             .map(|arr| {
                 arr.iter().any(|p| {
                     p.get("name").and_then(|v| v.as_str())
-                        == Some("mikebom:component-role")
+                        == Some("waybill:component-role")
                         && p.get("value").and_then(|v| v.as_str())
                             == Some("main-module")
                 })

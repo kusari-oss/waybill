@@ -25,7 +25,7 @@ use waybill_common::resolution::ResolvedComponent;
 /// `events_dropped`, attach-failure counts) used to live on the target
 /// composition record as `properties`. CDX 1.6's `compositions` schema
 /// sets `additionalProperties: false`, so they're now surfaced via
-/// [`super::metadata::build_metadata`] as `mikebom:trace-integrity-*`
+/// [`super::metadata::build_metadata`] as `waybill:trace-integrity-*`
 /// properties instead (sbomqs conformance fix).
 pub fn build_compositions(
     integrity: &TraceIntegrity,

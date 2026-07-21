@@ -94,7 +94,7 @@ impl RegistryClient {
         tls_config: &RegistryTlsConfig,
     ) -> Result<Self> {
         let mut builder = reqwest::Client::builder()
-            .user_agent(concat!("mikebom/", env!("CARGO_PKG_VERSION")));
+            .user_agent(concat!("waybill/", env!("CARGO_PKG_VERSION")));
 
         // m182 CA bundle: additive to webpki-roots — nothing removed.
         for cert in &tls_config.ca_bundle {
@@ -498,7 +498,7 @@ fn parse_auth_challenge(value: &str) -> Result<AuthChallenge> {
             realm: realm.unwrap_or_default(),
         });
     }
-    bail!("WWW-Authenticate uses an unsupported scheme (mikebom understands Bearer and Basic): {value}")
+    bail!("WWW-Authenticate uses an unsupported scheme (waybill understands Bearer and Basic): {value}")
 }
 
 /// Iterate `key="value"` pairs respecting double-quoted values
@@ -629,7 +629,7 @@ fn scheme_for_registry(user_facing_registry: &str, tls_config: &RegistryTlsConfi
 
 /// Split `"host:port"` into `("host", Some(port))` or `"host"` into
 /// `("host", None)`. Falls back to `(input, None)` on invalid port
-/// (e.g. IPv6 literals without brackets — mikebom does not currently
+/// (e.g. IPv6 literals without brackets — waybill does not currently
 /// scan IPv6-literal registry hosts).
 fn split_host_port(hostport: &str) -> (&str, Option<u16>) {
     match hostport.rsplit_once(':') {
@@ -1284,7 +1284,7 @@ mod tests {
         // Reference points at a nonexistent host; if the cache misses
         // the fetch will fail on connect.
         let reference = super::super::reference::parse_reference(
-            "registry.invalid.mikebom-test.example/foo/bar:tag",
+            "registry.invalid.waybill-test.example/foo/bar:tag",
         )
         .unwrap();
 

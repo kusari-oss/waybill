@@ -26,7 +26,7 @@
 //! Run:
 //!
 //! ```sh
-//! grep -rEn 'fn walk[_(]' mikebom-cli/src/scan_fs/
+//! grep -rEn 'fn walk[_(]' waybill-cli/src/scan_fs/
 //! ```
 //!
 //! Acceptable matches fall into two categories:
@@ -90,7 +90,7 @@
 //!
 //! ## Review policy
 //!
-//! Any `fn walk[_(]` match in `mikebom-cli/src/scan_fs/` OUTSIDE the
+//! Any `fn walk[_(]` match in `waybill-cli/src/scan_fs/` OUTSIDE the
 //! union of categories A and B above is a regression: a contributor
 //! introduced a new hand-rolled filesystem walker bypassing this
 //! helper. Reviewer action: reject the PR or push back to either

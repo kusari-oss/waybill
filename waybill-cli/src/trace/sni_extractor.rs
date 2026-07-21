@@ -1,7 +1,7 @@
 //! TLS ClientHello SNI extraction.
 //!
 //! Parses a TLS record to find the Server Name Indication (SNI)
-//! extension in a ClientHello handshake message. This lets mikebom
+//! extension in a ClientHello handshake message. This lets waybill
 //! correlate encrypted connections with their destination hostnames
 //! before any HTTP data is available.
 //!

@@ -4,7 +4,7 @@
 //! Regression test for the gRPC-discovered abort: a stray legacy
 //! npm v1 `package-lock.json` sitting deep inside a polyglot project
 //! (e.g., `third_party/<deep>/package-lock.json`) used to cause
-//! `mikebom sbom scan` to exit non-zero with the message
+//! `waybill sbom scan` to exit non-zero with the message
 //! "package-lock.json v1 not supported; regenerate with npm ≥7",
 //! preventing the C/C++ readers (and every other ecosystem reader)
 //! from contributing their components to the output.
@@ -88,7 +88,7 @@ fn v1_lockfile_does_not_abort_scan_or_block_other_readers() {
 
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -100,7 +100,7 @@ fn v1_lockfile_does_not_abort_scan_or_block_other_readers() {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
 
     // 1. Scan MUST succeed (zero exit code). Pre-T026, this asserted
     //    non-zero with the v1-unsupported message.

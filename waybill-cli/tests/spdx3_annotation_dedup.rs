@@ -1,11 +1,11 @@
 //! Milestone 166 (implements m166 SC-009) — SPDX 3 duplicate-Annotation-
-//! spdxId dedup integration test. Verifies that mikebom's emitted SPDX 3
+//! spdxId dedup integration test. Verifies that waybill's emitted SPDX 3
 //! document from a real end-to-end scan satisfies the universal
 //! uniqueness invariant: no two `@graph[]` elements share the same
 //! `spdxId`.
 //!
 //! Approach: invoke the release binary against a synthesized tempdir
-//! fixture with a `package.json` + minimal npm layout so mikebom emits
+//! fixture with a `package.json` + minimal npm layout so waybill emits
 //! a graph-completeness annotation (milestone 158) + component
 //! annotations (milestone 011 US2). Parse the emitted SPDX 3 document
 //! and assert (a) uniqueness, (b) that the emitted document parses as
@@ -50,7 +50,7 @@ fn scan_fixture(tmp: &std::path::Path) -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",

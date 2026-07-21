@@ -1,7 +1,7 @@
 //! Milestone 169 (issue #500) — ipk archive-file package-database reader.
 //!
 //! Closes the 0-component-cliff bug filed at
-//! <https://github.com/kusari-oss/mikebom/issues/500>: mikebom's
+//! <https://github.com/kusari-oss/waybill/issues/500>: waybill's
 //! file-tier walker skips every `.ipk` file it sees because the suffix
 //! isn't in the recognized-artifact allowlist. Post-169, `.ipk` files
 //! are handed to this reader; each well-formed archive emits one
@@ -28,7 +28,7 @@
 //!   filesystem payload
 //!
 //! Empirically verified against OpenWrt 23.05.5 x86_64 base feed
-//! fixtures at `mikebom-cli/tests/fixtures/ipk-files/`. Legacy ar-format
+//! fixtures at `waybill-cli/tests/fixtures/ipk-files/`. Legacy ar-format
 //! `.ipk` files (pre-2015 opkg-build) fall through to filename-only
 //! parsing per research §R2b.
 //!
@@ -62,7 +62,7 @@ const MAX_WALK_DEPTH: usize = 12;
 pub(crate) struct IpkReaderConfig {
     /// Cap on the uncompressed size of the inner `control.tar.gz` per
     /// FR-012. When exceeded, the ipk emits filename-only components
-    /// with a `mikebom:archive-size-skipped` annotation instead of
+    /// with a `waybill:archive-size-skipped` annotation instead of
     /// attempting full extraction. Default 16 MB — matches m069's
     /// rpm cap.
     pub(crate) max_control_size: u64,
@@ -103,7 +103,7 @@ pub(crate) enum IpkParseError {
     /// ar magic (`!<arch>\n`) AND the [`parse_ar_archive`] helper
     /// failed to enumerate members. Reasons: truncated header,
     /// non-ASCII size field, or size overrun. Ships as the primary
-    /// failure class for post-2015 opkg-build ipks (which mikebom
+    /// failure class for post-2015 opkg-build ipks (which waybill
     /// pre-m187 misclassified as "legacy ar-format" and never
     /// attempted to parse).
     ArMalformed(String),
@@ -277,7 +277,7 @@ fn parse_ar_archive(bytes: &[u8]) -> Result<Vec<ArMember>, ArError> {
 
 /// Milestone 187 US2 (#542) — the origin of the `?arch=` PURL
 /// qualifier when the filename-fallback path is taken. Emitted as
-/// `mikebom:arch-source` property on the component per FR-013.
+/// `waybill:arch-source` property on the component per FR-013.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ArchSource {
     /// Parent-directory name matched the filename's `_<arch>` suffix
@@ -288,7 +288,7 @@ enum ArchSource {
 }
 
 impl ArchSource {
-    /// Wire-format string for the `mikebom:arch-source` property.
+    /// Wire-format string for the `waybill:arch-source` property.
     fn as_wire_str(self) -> &'static str {
         match self {
             Self::ParentDirectory => "parent-directory",
@@ -507,12 +507,12 @@ fn is_ipk_candidate(path: &Path) -> bool {
 ///
 /// Milestone 187 (#543) — the ar-format is now the PRIMARY parse
 /// path (per FR-001). Detection is at magic-byte level (`!<arch>\n`
-/// at offset 0). On ar-format success, mikebom emits
-/// `mikebom:source-mechanism = "ipk-file-archive-extraction"` +
-/// `mikebom:arch-source = "control-file"`. Pre-2015
+/// at offset 0). On ar-format success, waybill emits
+/// `waybill:source-mechanism = "ipk-file-archive-extraction"` +
+/// `waybill:arch-source = "control-file"`. Pre-2015
 /// `gzip(tar)`-outer-envelope ipks are still handled by the
 /// SECONDARY path (unchanged wire format;
-/// `mikebom:source-mechanism = "ipk-file"`, no arch-source
+/// `waybill:source-mechanism = "ipk-file"`, no arch-source
 /// property per FR-014 / SC-005 byte-identity guarantee).
 fn parse_ipk_file(
     path: &Path,
@@ -661,7 +661,7 @@ fn parse_ipk_from_ar_members(
         &data_file_list,
         distro_tag,
         "ipk-file-archive-extraction",
-        true, // ar path: emit mikebom:arch-source = "control-file"
+        true, // ar path: emit waybill:arch-source = "control-file"
     )
     .ok_or_else(|| {
         IpkParseError::ArMalformed(
@@ -788,15 +788,15 @@ fn extract_control_from_plain_tar(control_tar_bytes: &[u8]) -> Result<String, Ip
 
 /// Build a `PackageDbEntry` from a parsed control file. Wires Q2
 /// alternative-list Depends handling + m152 SPDX license
-/// canonicalization + `mikebom:evidence-kind = "ipk-file"` (FR-009) +
+/// canonicalization + `waybill:evidence-kind = "ipk-file"` (FR-009) +
 /// `sbom_tier = "analyzed"` (archive-file tier per m106 convention).
 ///
 /// Milestone 187 (#543) — `source_mechanism_value` selects the
-/// `mikebom:source-mechanism` property value: `"ipk-file"` for the
+/// `waybill:source-mechanism` property value: `"ipk-file"` for the
 /// legacy `gzip(tar)` path (unchanged wire format), or
 /// `"ipk-file-archive-extraction"` for the new ar-format primary
 /// path. `emit_arch_source` controls whether the
-/// `mikebom:arch-source = "control-file"` property is emitted (true
+/// `waybill:arch-source = "control-file"` property is emitted (true
 /// for ar path; false for legacy path per FR-014 / SC-005
 /// byte-identity guarantee).
 fn build_entry_from_control(
@@ -856,7 +856,7 @@ fn build_entry_from_control(
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra_annotations.insert(
-        "mikebom:source-mechanism".to_string(),
+        "waybill:source-mechanism".to_string(),
         serde_json::Value::String(source_mechanism_value.to_string()),
     );
     // Milestone 187 US1 (FR-013) — emit arch-source ONLY for the ar
@@ -864,7 +864,7 @@ fn build_entry_from_control(
     // emit this property to preserve FR-014 / SC-005 byte-identity.
     if emit_arch_source {
         extra_annotations.insert(
-            "mikebom:arch-source".to_string(),
+            "waybill:arch-source".to_string(),
             serde_json::Value::String("control-file".to_string()),
         );
     }
@@ -882,7 +882,7 @@ fn build_entry_from_control(
             })
             .collect();
         extra_annotations.insert(
-            "mikebom:dep-alternative-alternates".to_string(),
+            "waybill:dep-alternative-alternates".to_string(),
             serde_json::Value::Object(json_map),
         );
     }
@@ -896,7 +896,7 @@ fn build_entry_from_control(
             .map(|s| serde_json::Value::String(s.clone()))
             .collect();
         extra_annotations.insert(
-            "mikebom:ipk-file-list".to_string(),
+            "waybill:ipk-file-list".to_string(),
             serde_json::Value::Array(arr),
         );
     }
@@ -947,9 +947,9 @@ fn build_entry_from_control(
 ///
 /// Milestone 187 US2 (#542) — consults the ipk's IMMEDIATE parent
 /// directory name for the authoritative `?arch=` source per FR-010
-/// suffix-match gate. On match, emits `mikebom:arch-source =
+/// suffix-match gate. On match, emits `waybill:arch-source =
 /// "parent-directory"`. On no-match, falls back to the pre-m187
-/// rsplit-based filename heuristic + emits `mikebom:arch-source =
+/// rsplit-based filename heuristic + emits `waybill:arch-source =
 /// "filename-heuristic"` per FR-012 / FR-013.
 fn filename_fallback_entry(
     path: &Path,
@@ -972,12 +972,12 @@ fn filename_fallback_entry(
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra_annotations.insert(
-        "mikebom:source-mechanism".to_string(),
+        "waybill:source-mechanism".to_string(),
         serde_json::Value::String("ipk-file-filename-fallback".to_string()),
     );
     // Milestone 187 US2 (FR-013) — arch-source diagnostic property.
     extra_annotations.insert(
-        "mikebom:arch-source".to_string(),
+        "waybill:arch-source".to_string(),
         serde_json::Value::String(parsed.arch_source.as_wire_str().to_string()),
     );
 
@@ -1352,7 +1352,7 @@ mod tests {
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:source-mechanism")
+                .get("waybill:source-mechanism")
                 .and_then(|v| v.as_str()),
             Some("ipk-file-filename-fallback")
         );
@@ -1427,7 +1427,7 @@ mod tests {
         assert_eq!(
             wellformed
                 .extra_annotations
-                .get("mikebom:source-mechanism")
+                .get("waybill:source-mechanism")
                 .and_then(|v| v.as_str()),
             Some("ipk-file"),
             "well-formed emission uses primary source-mechanism"
@@ -1447,7 +1447,7 @@ mod tests {
         assert_eq!(
             fallback
                 .extra_annotations
-                .get("mikebom:source-mechanism")
+                .get("waybill:source-mechanism")
                 .and_then(|v| v.as_str()),
             Some("ipk-file-filename-fallback"),
             "fallback emission carries distinct source-mechanism marker"

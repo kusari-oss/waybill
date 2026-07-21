@@ -18,7 +18,7 @@ use crate::generate::spdx::v3_id_type_map::map_scheme_to_vocab;
 use crate::generate::{OutputConfig, ScanArtifacts};
 
 const SPDX_3_CONTEXT: &str = "https://spdx.org/rdf/3.0.1/spdx-context.jsonld";
-const IRI_BASE: &str = "https://mikebom.kusari.dev/spdx3/";
+const IRI_BASE: &str = "https://waybill.kusari.dev/spdx3/";
 const CREATION_INFO_ID: &str = "_:creation-info";
 
 /// Build a complete SPDX 3.0.1 JSON-LD document from a scan.
@@ -122,11 +122,11 @@ pub fn build_document(
 
     let fingerprint = scan_fingerprint(scan, cfg);
     let doc_iri = format!("{IRI_BASE}doc-{fingerprint}");
-    let tool_iri = format!("{doc_iri}/tool/mikebom");
+    let tool_iri = format!("{doc_iri}/tool/waybill");
     // Milestone 078 — Organization Agent for `CreationInfo.createdBy`.
     // SPDX 3 SHACL constraint: `Core/createdBy` requires the IRI to
     // resolve to an `Agent` subclass (Person / Organization /
-    // SoftwareAgent). Pre-fix mikebom emission pointed at a `Tool`
+    // SoftwareAgent). Pre-fix waybill emission pointed at a `Tool`
     // (separate class hierarchy), tripping the SHACL validator and
     // the Java SPDX library's range check ("Incompatible type for
     // property Core/createdBy: class core.Agent"). Per spec
@@ -134,13 +134,13 @@ pub fn build_document(
     // `Organization` whose name matches the CDX
     // `metadata.tools[0].publisher` value, and move the existing
     // Tool reference to the new `createdUsing` field. Determinism
-    // contract per research §6: IRI is `{doc_iri}/agent/mikebom-
+    // contract per research §6: IRI is `{doc_iri}/agent/waybill-
     // contributors` (path-style, mirroring the Tool IRI scheme).
-    let org_iri = format!("{doc_iri}/agent/mikebom-contributors");
+    let org_iri = format!("{doc_iri}/agent/waybill-contributors");
     // Milestone 078 — `simplelicensing_LicenseExpression` element
     // for `SpdxDocument.dataLicense`. SPDX 3 SHACL constraint:
     // `Core/dataLicense` requires the IRI to resolve to a
-    // `SimpleLicensing/AnyLicenseInfo` subclass; pre-fix mikebom
+    // `SimpleLicensing/AnyLicenseInfo` subclass; pre-fix waybill
     // emitted a bare URI string. The IRI value is unchanged
     // (`https://spdx.org/licenses/CC0-1.0`) — what changes is the
     // graph now contains a typed element at that IRI. Reuses the
@@ -202,10 +202,10 @@ pub fn build_document(
         "type": "Organization",
         "spdxId": org_iri,
         "creationInfo": CREATION_INFO_ID,
-        "name": "mikebom contributors",
+        "name": "waybill contributors",
     }));
 
-    // 1b. CreationInfo. `createdBy` references the mikebom
+    // 1b. CreationInfo. `createdBy` references the waybill
     //     contributors Organization IRI (Agent subclass — satisfies
     //     SHACL); the existing Tool reference lives in `createdUsing`.
     //     Milestone 080 — append user-supplied Tool / Organization /
@@ -233,7 +233,7 @@ pub fn build_document(
         "type": "Tool",
         "spdxId": tool_iri,
         "creationInfo": CREATION_INFO_ID,
-        "name": format!("mikebom-{}", cfg.mikebom_version),
+        "name": format!("waybill-{}", cfg.mikebom_version),
     }));
 
     // 2b. Milestone 078 — `simplelicensing_LicenseExpression`
@@ -376,13 +376,13 @@ pub fn build_document(
     });
     // Milestone 081 — SPDX 3 native `software_Sbom.software_sbomType[]`
     // emission per Constitution Principle V (standards-native first).
-    // Aggregates from the same per-component `mikebom:sbom-tier`
+    // Aggregates from the same per-component `waybill:sbom-tier`
     // values that drive CDX `metadata.lifecycles[]`, via the new
     // `aggregate_spdx3_sbom_types` helper. When the operator passes
     // `--sbom-type <type>`, the aggregator returns a single-element
     // Vec with the asserted value (overriding per-component
     // aggregation per research §4); per-component
-    // `mikebom:sbom-tier` annotations preserve auto-detected values.
+    // `waybill:sbom-tier` annotations preserve auto-detected values.
     // Empty result (no components carry tiers, or tiers don't map to
     // known IRIs) → no `software_Sbom` element is added (matches the
     // milestone-047 `metadata_omits_lifecycles_when_no_tiers_present`
@@ -395,7 +395,7 @@ pub fn build_document(
     // `unevaluatedProperties: false` constraint on @graph items
     // rejects `software_sbomType` on a `SpdxDocument`-typed element
     // AND rejects `dataLicense`/`import`/`namespaceMap` on a
-    // `software_Sbom`-typed element. mikebom emits BOTH elements:
+    // `software_Sbom`-typed element. waybill emits BOTH elements:
     // the existing `SpdxDocument` retains `dataLicense` (milestone
     // 078) + `import` (milestone 072 binding) + `namespaceMap`; the
     // new `software_Sbom` element carries `software_sbomType[]` and
@@ -427,7 +427,7 @@ pub fn build_document(
                 "externalRefType": "vulnerabilityExploitabilityAssessment",
                 "contentType": "application/openvex+json",
                 "locator": [locator],
-                "comment": "OpenVEX 0.2.0 sidecar produced by mikebom",
+                "comment": "OpenVEX 0.2.0 sidecar produced by waybill",
             }
         ]);
     }
@@ -442,7 +442,7 @@ pub fn build_document(
         // Milestone 079 — the emitted `externalIdentifierType` value
         // MUST come from the SPDX 3 controlled vocabulary
         // (`Core/externalIdentifierType` SHACL enum). The mapping
-        // helper takes the internal mikebom scheme + identifier value
+        // helper takes the internal waybill scheme + identifier value
         // and returns the conformant vocab string + an optional
         // `comment` carrying the original scheme name (formatted as
         // `"original-scheme: <name>"`) when the mapping would
@@ -792,7 +792,7 @@ pub fn build_document(
     // --annotation-comment pairs land as Annotation elements pointed
     // at the SpdxDocument. Each annotator references the corresponding
     // user-creator element (added above) when one matches by
-    // (kind, name); otherwise mikebom synthesizes a fresh agent IRI on
+    // (kind, name); otherwise waybill synthesizes a fresh agent IRI on
     // the fly so the SHACL contract `Annotation.subject = Element` is
     // satisfied.
     if scan.user_metadata.metadata_comment.is_some()
@@ -911,7 +911,7 @@ fn pick_root_iri(
         // existing non-override path. CPE has its own escape rules
         // distinct from RFC 3986 percent-encoding.
         let synth_cpe = format!(
-            "cpe:2.3:a:mikebom:{}:{}:*:*:*:*:*:*:*",
+            "cpe:2.3:a:waybill:{}:{}:*:*:*:*:*:*:*",
             url_friendly(name),
             url_friendly(version),
         );
@@ -1006,7 +1006,7 @@ fn pick_root_iri(
         hash_prefix(synth_purl.as_bytes(), 16)
     );
     let synth_cpe = format!(
-        "cpe:2.3:a:mikebom:{}:0.0.0:*:*:*:*:*:*:*",
+        "cpe:2.3:a:waybill:{}:0.0.0:*:*:*:*:*:*:*",
         url_friendly(scan.target_name)
     );
     let synth_pkg = json!({

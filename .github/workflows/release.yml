@@ -59,7 +59,7 @@ jobs:
           key: ebpf-nightly
           workspaces: |
             .
-            mikebom-ebpf
+            waybill-ebpf
 
       # See ci.yml::lint-and-test for the rationale — dtolnay/rust-
       # toolchain leaves `rustup-init` on PATH alongside the real
@@ -99,8 +99,8 @@ jobs:
       - name: Upload eBPF artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: mikebom-ebpf-object
-          path: mikebom-ebpf/target/bpfel-unknown-none/release/mikebom-ebpf
+          name: waybill-ebpf-object
+          path: waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf
           if-no-files-found: error
           retention-days: 7
 
@@ -161,58 +161,58 @@ jobs:
       - name: Download eBPF artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: mikebom-ebpf-object
+          name: waybill-ebpf-object
           path: ebpf-download
 
       - name: Place eBPF at loader's expected path
         run: |
-          mkdir -p mikebom-ebpf/target/bpfel-unknown-none/release
-          cp ebpf-download/mikebom-ebpf mikebom-ebpf/target/bpfel-unknown-none/release/mikebom-ebpf
+          mkdir -p waybill-ebpf/target/bpfel-unknown-none/release
+          cp ebpf-download/waybill-ebpf waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf
 
       - name: Build userspace binary (cross)
-        run: cross build --release --target "$TARGET" --package mikebom
+        run: cross build --release --target "$TARGET" --package waybill
 
       - name: Package tarball
         run: |
           set -euo pipefail
-          stage="mikebom-${{ env.TAG_NAME }}-${TARGET}"
+          stage="waybill-${{ env.TAG_NAME }}-${TARGET}"
           # Lay out the tarball so the loader finds the eBPF object
           # relative to CWD at the path it already expects:
-          # mikebom-ebpf/target/bpfel-unknown-none/release/mikebom-ebpf.
+          # waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf.
           # This avoids any runtime mkdir/symlink shuffle in the wrapper
           # and eliminates the filename collision the previous design
-          # had (mikebom-ebpf as a sibling file vs. as a directory).
-          mkdir -p "$stage/mikebom-ebpf/target/bpfel-unknown-none/release"
-          cp "target/${TARGET}/release/mikebom" "$stage/mikebom"
-          cp ebpf-download/mikebom-ebpf "$stage/mikebom-ebpf/target/bpfel-unknown-none/release/mikebom-ebpf"
+          # had (waybill-ebpf as a sibling file vs. as a directory).
+          mkdir -p "$stage/waybill-ebpf/target/bpfel-unknown-none/release"
+          cp "target/${TARGET}/release/waybill" "$stage/waybill"
+          cp ebpf-download/waybill-ebpf "$stage/waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf"
           cp README.md "$stage/README.md"
           if [[ -f LICENSE ]]; then cp LICENSE "$stage/LICENSE"; fi
-          cat > "$stage/mikebom.sh" <<'WRAPPER'
+          cat > "$stage/waybill.sh" <<'WRAPPER'
           #!/usr/bin/env bash
-          # mikebom wrapper for trace mode. The loader resolves the eBPF
+          # waybill wrapper for trace mode. The loader resolves the eBPF
           # object relative to CWD at
-          # mikebom-ebpf/target/bpfel-unknown-none/release/mikebom-ebpf,
+          # waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf,
           # which this tarball ships in that exact layout. The wrapper
           # just cd's into the install dir so the relative path works
           # regardless of where the user invokes it from.
           #
           # For `sbom scan`, `sbom generate`, and other non-trace
-          # subcommands the loader is never invoked — `./mikebom` can
+          # subcommands the loader is never invoked — `./waybill` can
           # be run directly without this wrapper.
           set -euo pipefail
           here="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
           cd "$here"
-          exec "$here/mikebom" "$@"
+          exec "$here/waybill" "$@"
           WRAPPER
-          chmod +x "$stage/mikebom.sh"
+          chmod +x "$stage/waybill.sh"
           tar -czf "${stage}.tar.gz" "$stage"
           ls -la "${stage}.tar.gz"
 
       - name: Upload tarball artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: mikebom-${{ env.TAG_NAME }}-x86_64-unknown-linux-gnu
-          path: mikebom-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
+          name: waybill-${{ env.TAG_NAME }}-x86_64-unknown-linux-gnu
+          path: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
           if-no-files-found: error
 
   build-linux-aarch64:
@@ -267,45 +267,45 @@ jobs:
       - name: Download eBPF artifact
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: mikebom-ebpf-object
+          name: waybill-ebpf-object
           path: ebpf-download
 
       - name: Place eBPF at loader's expected path
         run: |
-          mkdir -p mikebom-ebpf/target/bpfel-unknown-none/release
-          cp ebpf-download/mikebom-ebpf mikebom-ebpf/target/bpfel-unknown-none/release/mikebom-ebpf
+          mkdir -p waybill-ebpf/target/bpfel-unknown-none/release
+          cp ebpf-download/waybill-ebpf waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf
 
       - name: Build userspace binary (cross)
-        run: cross build --release --target "$TARGET" --package mikebom
+        run: cross build --release --target "$TARGET" --package waybill
 
       - name: Package tarball
         run: |
           set -euo pipefail
-          stage="mikebom-${{ env.TAG_NAME }}-${TARGET}"
-          mkdir -p "$stage/mikebom-ebpf/target/bpfel-unknown-none/release"
-          cp "target/${TARGET}/release/mikebom" "$stage/mikebom"
-          cp ebpf-download/mikebom-ebpf "$stage/mikebom-ebpf/target/bpfel-unknown-none/release/mikebom-ebpf"
+          stage="waybill-${{ env.TAG_NAME }}-${TARGET}"
+          mkdir -p "$stage/waybill-ebpf/target/bpfel-unknown-none/release"
+          cp "target/${TARGET}/release/waybill" "$stage/waybill"
+          cp ebpf-download/waybill-ebpf "$stage/waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf"
           cp README.md "$stage/README.md"
           if [[ -f LICENSE ]]; then cp LICENSE "$stage/LICENSE"; fi
-          cat > "$stage/mikebom.sh" <<'WRAPPER'
+          cat > "$stage/waybill.sh" <<'WRAPPER'
           #!/usr/bin/env bash
           # Trace-mode wrapper: cd into the install dir so the loader's
-          # CWD-relative eBPF path (mikebom-ebpf/target/bpfel-unknown-none/release/mikebom-ebpf)
-          # resolves. Non-trace subcommands can call ./mikebom directly.
+          # CWD-relative eBPF path (waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf)
+          # resolves. Non-trace subcommands can call ./waybill directly.
           set -euo pipefail
           here="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
           cd "$here"
-          exec "$here/mikebom" "$@"
+          exec "$here/waybill" "$@"
           WRAPPER
-          chmod +x "$stage/mikebom.sh"
+          chmod +x "$stage/waybill.sh"
           tar -czf "${stage}.tar.gz" "$stage"
           ls -la "${stage}.tar.gz"
 
       - name: Upload tarball artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: mikebom-${{ env.TAG_NAME }}-aarch64-unknown-linux-gnu
-          path: mikebom-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
+          name: waybill-${{ env.TAG_NAME }}-aarch64-unknown-linux-gnu
+          path: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
           if-no-files-found: error
 
   build-macos-aarch64:
@@ -354,14 +354,14 @@ jobs:
           echo "rustup-init absent from \$HOME/.cargo/bin (good)."
 
       - name: Build userspace binary
-        run: cargo build --release --target "$TARGET" --package mikebom
+        run: cargo build --release --target "$TARGET" --package waybill
 
       - name: Package tarball
         run: |
           set -euo pipefail
-          stage="mikebom-${{ env.TAG_NAME }}-${TARGET}"
+          stage="waybill-${{ env.TAG_NAME }}-${TARGET}"
           mkdir -p "$stage"
-          cp "target/${TARGET}/release/mikebom" "$stage/mikebom"
+          cp "target/${TARGET}/release/waybill" "$stage/waybill"
           cp README.md "$stage/README.md"
           if [[ -f LICENSE ]]; then cp LICENSE "$stage/LICENSE"; fi
           tar -czf "${stage}.tar.gz" "$stage"
@@ -370,13 +370,13 @@ jobs:
       - name: Upload tarball artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: mikebom-${{ env.TAG_NAME }}-aarch64-apple-darwin
-          path: mikebom-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
+          name: waybill-${{ env.TAG_NAME }}-aarch64-apple-darwin
+          path: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
           if-no-files-found: error
 
   # Milestone 100 — Windows x86_64 release artifact. Produces a .zip
-  # containing mikebom.exe + README + (if present) LICENSE, matching
-  # the layout of the Linux/macOS tarballs. mikebom-ebpf is excluded
+  # containing waybill.exe + README + (if present) LICENSE, matching
+  # the layout of the Linux/macOS tarballs. waybill-ebpf is excluded
   # automatically via cargo's target-metadata exclusion.
   build-windows-x86_64:
     name: Build — windows-x86_64
@@ -424,7 +424,7 @@ jobs:
           echo "rustup-init absent from \$HOME/.cargo/bin (good)."
 
       - name: Build userspace binary
-        run: cargo build --release --target $env:TARGET --package mikebom
+        run: cargo build --release --target $env:TARGET --package waybill
         shell: pwsh
 
       - name: Package zip
@@ -432,9 +432,9 @@ jobs:
         env:
           REF_NAME: ${{ env.TAG_NAME }}
         run: |
-          $stage = "mikebom-$env:REF_NAME-$env:TARGET"
+          $stage = "waybill-$env:REF_NAME-$env:TARGET"
           New-Item -ItemType Directory -Path $stage | Out-Null
-          Copy-Item "target/$env:TARGET/release/mikebom.exe" "$stage/mikebom.exe"
+          Copy-Item "target/$env:TARGET/release/waybill.exe" "$stage/waybill.exe"
           Copy-Item README.md "$stage/README.md"
           if (Test-Path LICENSE) { Copy-Item LICENSE "$stage/LICENSE" }
           Compress-Archive -Path $stage -DestinationPath "$stage.zip"
@@ -443,8 +443,8 @@ jobs:
       - name: Upload zip artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: mikebom-${{ env.TAG_NAME }}-x86_64-pc-windows-msvc
-          path: mikebom-${{ env.TAG_NAME }}-${{ env.TARGET }}.zip
+          name: waybill-${{ env.TAG_NAME }}-x86_64-pc-windows-msvc
+          path: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.zip
           if-no-files-found: error
 
   # Issue #234 — multi-arch production container image. Reuses the
@@ -474,13 +474,13 @@ jobs:
       - name: Download linux-x86_64 tarball
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: mikebom-${{ env.TAG_NAME }}-x86_64-unknown-linux-gnu
+          name: waybill-${{ env.TAG_NAME }}-x86_64-unknown-linux-gnu
           path: ./image-context/amd64
 
       - name: Download linux-aarch64 tarball
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: mikebom-${{ env.TAG_NAME }}-aarch64-unknown-linux-gnu
+          name: waybill-${{ env.TAG_NAME }}-aarch64-unknown-linux-gnu
           path: ./image-context/arm64
 
       - name: Extract tarballs into per-arch staging dirs
@@ -493,15 +493,15 @@ jobs:
           # extract then rename to the stable `staging` symlink.
           for arch in amd64 arm64; do
             cd "./image-context/${arch}"
-            tarball=$(ls mikebom-*.tar.gz)
+            tarball=$(ls waybill-*.tar.gz)
             tar -xzf "$tarball"
-            # The tarball contains one directory named mikebom-<tag>-<target>;
+            # The tarball contains one directory named waybill-<tag>-<target>;
             # rename it to `staging` for the Dockerfile COPY. The glob
-            # `mikebom-*/` (trailing slash) restricts the match to the
+            # `waybill-*/` (trailing slash) restricts the match to the
             # extracted directory only, excluding the tarball file itself —
             # without the trailing slash, `mv` sees both as sources and
             # errors because the `staging` destination doesn't exist yet.
-            mv mikebom-*/ staging
+            mv waybill-*/ staging
             ls -la staging/
             cd ../..
           done
@@ -537,9 +537,9 @@ jobs:
           ver="${ref#v}"
           {
             echo "tags<<EOF"
-            echo "ghcr.io/${REPO_OWNER}/mikebom:${ref}"
-            echo "ghcr.io/${REPO_OWNER}/mikebom:${ver}"
-            echo "ghcr.io/${REPO_OWNER}/mikebom:latest"
+            echo "ghcr.io/${REPO_OWNER}/waybill:${ref}"
+            echo "ghcr.io/${REPO_OWNER}/waybill:${ver}"
+            echo "ghcr.io/${REPO_OWNER}/waybill:latest"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
@@ -565,8 +565,8 @@ jobs:
           OWNER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
-          cosign sign --yes "ghcr.io/${OWNER}/mikebom@${DIGEST}"
-          echo "Signed image: ghcr.io/${OWNER}/mikebom@${DIGEST}"
+          cosign sign --yes "ghcr.io/${OWNER}/waybill@${DIGEST}"
+          echo "Signed image: ghcr.io/${OWNER}/waybill@${DIGEST}"
 
   release:
     name: Create GitHub pre-release
@@ -578,13 +578,13 @@ jobs:
       - name: Download all tarball artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          pattern: mikebom-${{ env.TAG_NAME }}-*
+          pattern: waybill-${{ env.TAG_NAME }}-*
           merge-multiple: true
 
       - name: Generate SHA256SUMS
         run: |
           set -euo pipefail
-          sha256sum mikebom-*.tar.gz mikebom-*.zip > SHA256SUMS
+          sha256sum waybill-*.tar.gz waybill-*.zip > SHA256SUMS
           cat SHA256SUMS
 
       - name: Create GitHub release
@@ -597,6 +597,6 @@ jobs:
           prerelease: true
           generate_release_notes: true
           files: |
-            mikebom-*.tar.gz
-            mikebom-*.zip
+            waybill-*.tar.gz
+            waybill-*.zip
             SHA256SUMS

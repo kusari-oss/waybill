@@ -13,14 +13,14 @@
 //! per scan tree is treated as a workspace root (nested settings files
 //! are walked for sibling `build.gradle.kts` discovery only).
 //!
-//! KMP source-set provenance rides `mikebom:kmp-source-set` as a JSON-
+//! KMP source-set provenance rides `waybill:kmp-source-set` as a JSON-
 //! encoded array per clarification Q2 / FR-006. The reader emits one
 //! `PackageDbEntry` per `(dep × source-set)` tuple pre-dedup, each
 //! carrying the SAME merged source-set array; the milestone-105 dedup
 //! pipeline collapses them deterministically.
 //!
 //! `build.gradle.kts`-discovered components are design-tier
-//! (`mikebom:sbom-tier = "design"`) gated by the existing
+//! (`waybill:sbom-tier = "design"`) gated by the existing
 //! `--include-declared-deps` flag per clarification Q5. The dispatcher
 //! threads the `include_dev` parameter through to `read()`.
 
@@ -50,7 +50,7 @@ pub(super) struct KmpSourceSetTracker {
     /// by the string the canonical form provides via `Purl::as_str`).
     /// `BTreeSet` preserves lex order on source-set names for
     /// determinism — two scans of the same project produce byte-
-    /// identical `mikebom:kmp-source-set` values.
+    /// identical `waybill:kmp-source-set` values.
     map: BTreeMap<String, BTreeSet<String>>,
 }
 
@@ -68,7 +68,7 @@ impl KmpSourceSetTracker {
 
     /// Finalize the tracker into `(canonical-PURL-string, JSON-array)`
     /// pairs ready to stamp onto matching components' `extra_annotations`
-    /// under the `mikebom:kmp-source-set` key.
+    /// under the `waybill:kmp-source-set` key.
     pub(super) fn finalize(self) -> Vec<(String, JsonValue)> {
         self.map
             .into_iter()
@@ -195,7 +195,7 @@ pub fn read(
             if entry.purl.as_str() == purl_str {
                 entry
                     .extra_annotations
-                    .insert("mikebom:kmp-source-set".to_string(), arr.clone());
+                    .insert("waybill:kmp-source-set".to_string(), arr.clone());
             }
         }
     }
@@ -235,11 +235,11 @@ fn synthesize_workspace_root(s: &SettingsScript) -> PackageDbEntry {
     let source_path_str = s.source_path.to_string_lossy().into_owned();
     let mut extra_annotations: BTreeMap<String, JsonValue> = Default::default();
     extra_annotations.insert(
-        "mikebom:component-role".to_string(),
+        "waybill:component-role".to_string(),
         JsonValue::String("workspace-root".to_string()),
     );
     extra_annotations.insert(
-        "mikebom:source-files".to_string(),
+        "waybill:source-files".to_string(),
         JsonValue::String(source_path_str.clone()),
     );
     PackageDbEntry {

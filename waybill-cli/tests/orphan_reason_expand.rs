@@ -1,13 +1,13 @@
 //! Milestone 167 (T009, implements SC-009) — integration test for the
-//! emit-time `mikebom:orphan-reason` classifier vocabulary expansion.
+//! emit-time `waybill:orphan-reason` classifier vocabulary expansion.
 //!
 //! Verifies that a real end-to-end scan against a synthesized npm
 //! fixture (declared-only dep with no `node_modules/`) emits
-//! `mikebom:orphan-reason = hoisted-unused` on the orphaned component
+//! `waybill:orphan-reason = hoisted-unused` on the orphaned component
 //! across CDX 1.6, SPDX 2.3, and SPDX 3.0.1 formats (FR-007).
 //! Non-orphan components carry no such property/annotation (FR-006).
 //!
-//! Approach: invoke the built mikebom binary against a tempdir
+//! Approach: invoke the built waybill binary against a tempdir
 //! fixture with a `package.json` declaring `some-declared-only`
 //! but no `package-lock.json` or `node_modules/`. The declared-only
 //! dep is emitted at the design/manifest tier as a `pkg:npm/*`
@@ -36,7 +36,7 @@ fn build_fixture(tmp: &std::path::Path) {
 
     // `node_modules/declared-dep/` — the honest declared dep. BFS-
     // reachable via the manifest-derived edge. MUST NOT carry
-    // mikebom:orphan-reason.
+    // waybill:orphan-reason.
     let declared_dir = tmp.join("node_modules").join("declared-dep");
     std::fs::create_dir_all(&declared_dir).unwrap();
     std::fs::write(
@@ -76,7 +76,7 @@ fn scan_fixture(tmp: &std::path::Path, format: &str) -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed (format={format}): stderr={}",
@@ -112,7 +112,7 @@ fn t009_cdx_hoisted_unused_on_declared_only_npm_orphan() {
         if let Some(props) = c.get("properties").and_then(|p| p.as_array()) {
             for p in props {
                 let name = p.get("name").and_then(|n| n.as_str()).unwrap_or("");
-                if name == "mikebom:orphan-reason" {
+                if name == "waybill:orphan-reason" {
                     let value = p
                         .get("value")
                         .and_then(|v| v.as_str())
@@ -125,7 +125,7 @@ fn t009_cdx_hoisted_unused_on_declared_only_npm_orphan() {
     }
 
     // At least one npm component (the declared-only orphan) MUST carry
-    // `mikebom:orphan-reason=hoisted-unused`.
+    // `waybill:orphan-reason=hoisted-unused`.
     let hoisted_unused_npm: Vec<&(String, String)> = orphan_reasons
         .iter()
         .filter(|(purl, reason)| purl.starts_with("pkg:npm/") && reason == "hoisted-unused")
@@ -133,7 +133,7 @@ fn t009_cdx_hoisted_unused_on_declared_only_npm_orphan() {
     assert!(
         !hoisted_unused_npm.is_empty(),
         "expected at least 1 pkg:npm/* component with \
-         mikebom:orphan-reason=hoisted-unused; got orphan_reasons = {orphan_reasons:?}"
+         waybill:orphan-reason=hoisted-unused; got orphan_reasons = {orphan_reasons:?}"
     );
 
     // Sanity: every emitted orphan-reason must be one of the 5 valid
@@ -159,7 +159,7 @@ fn t009_cdx_hoisted_unused_on_declared_only_npm_orphan() {
 // ---------------------------------------------------------------------
 // T009 assertion 2 (FR-006 CDX 1.6) — non-npm components (e.g., the
 // `pkg:generic/test-fixture-167@1.0.0` root) carry NO
-// `mikebom:orphan-reason` property.
+// `waybill:orphan-reason` property.
 // ---------------------------------------------------------------------
 #[test]
 fn t009_cdx_non_npm_components_carry_no_orphan_reason() {
@@ -178,8 +178,8 @@ fn t009_cdx_non_npm_components_carry_no_orphan_reason() {
             for p in props {
                 let name = p.get("name").and_then(|n| n.as_str()).unwrap_or("");
                 assert_ne!(
-                    name, "mikebom:orphan-reason",
-                    "root component MUST NOT carry mikebom:orphan-reason \
+                    name, "waybill:orphan-reason",
+                    "root component MUST NOT carry waybill:orphan-reason \
                      (non-Go/npm ecosystem — FR-006/FR-001 scope)"
                 );
             }
@@ -203,9 +203,9 @@ fn t009_cdx_non_npm_components_carry_no_orphan_reason() {
                 for p in props {
                     let name = p.get("name").and_then(|n| n.as_str()).unwrap_or("");
                     assert_ne!(
-                        name, "mikebom:orphan-reason",
+                        name, "waybill:orphan-reason",
                         "non-Go/npm component {purl} MUST NOT carry \
-                         mikebom:orphan-reason (FR-001 ecosystem scope)"
+                         waybill:orphan-reason (FR-001 ecosystem scope)"
                     );
                 }
             }
@@ -257,7 +257,7 @@ fn t009_spdx23_hoisted_unused_on_declared_only_npm_orphan() {
                 if let Ok(env) = serde_json::from_str::<serde_json::Value>(comment) {
                     let field = env.get("field").and_then(|f| f.as_str()).unwrap_or("");
                     let value = env.get("value").and_then(|v| v.as_str()).unwrap_or("");
-                    if field == "mikebom:orphan-reason" && value == "hoisted-unused" {
+                    if field == "waybill:orphan-reason" && value == "hoisted-unused" {
                         found_hoisted_unused = true;
                     }
                 }
@@ -267,7 +267,7 @@ fn t009_spdx23_hoisted_unused_on_declared_only_npm_orphan() {
     assert!(
         found_hoisted_unused,
         "expected at least 1 npm Package with \
-         mikebom:orphan-reason=hoisted-unused in SPDX 2.3 annotations[].comment envelope"
+         waybill:orphan-reason=hoisted-unused in SPDX 2.3 annotations[].comment envelope"
     );
 }
 
@@ -304,7 +304,7 @@ fn t009_spdx3_hoisted_unused_on_declared_only_npm_orphan() {
         if let Ok(env) = serde_json::from_str::<serde_json::Value>(statement) {
             let field = env.get("field").and_then(|f| f.as_str()).unwrap_or("");
             let value = env.get("value").and_then(|v| v.as_str()).unwrap_or("");
-            if field == "mikebom:orphan-reason" && value == "hoisted-unused" {
+            if field == "waybill:orphan-reason" && value == "hoisted-unused" {
                 found_hoisted_unused = true;
             }
         }
@@ -313,6 +313,6 @@ fn t009_spdx3_hoisted_unused_on_declared_only_npm_orphan() {
         found_hoisted_unused,
         "expected at least 1 Annotation element in SPDX 3 @graph[] with \
          MikebomAnnotationCommentV1 envelope carrying \
-         field=mikebom:orphan-reason value=hoisted-unused"
+         field=waybill:orphan-reason value=hoisted-unused"
     );
 }

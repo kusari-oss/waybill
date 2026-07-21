@@ -1,7 +1,7 @@
 // Milestone 119 — supplement file parser + structural validator.
 //
 // Hand-rolled subset check (no `jsonschema` runtime dep per research
-// Decision 1). Asserts the CDX envelope keys mikebom actually consumes
+// Decision 1). Asserts the CDX envelope keys waybill actually consumes
 // during merge; ignores the broader CDX 1.6 surface (vulnerabilities,
 // formulation, evidence, signature, …) we have no opinion about.
 //

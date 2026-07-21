@@ -1,9 +1,9 @@
 //! Integration tests for the witness-v0.1 attestation format.
 //!
 //! Confirms that:
-//! 1. mikebom can produce a signed witness-compatible envelope end-to-end
+//! 1. waybill can produce a signed witness-compatible envelope end-to-end
 //!    (in-process — no Linux/eBPF needed)
-//! 2. `mikebom sbom verify` consumes the resulting envelope
+//! 2. `waybill sbom verify` consumes the resulting envelope
 //! 3. The wire shape matches go-witness + the Vyom-Yadav network-trace
 //!    attestor JSON schema (key naming, required fields)
 
@@ -163,7 +163,7 @@ fn cli_verifies_signed_witness_envelope() {
             "--json",
         ])
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     let code = out.status.code().unwrap_or(-1);
     let stdout = String::from_utf8_lossy(&out.stdout);
     let stderr = String::from_utf8_lossy(&out.stderr);
@@ -270,7 +270,7 @@ fn tampered_witness_payload_fails_verify() {
     let out = Command::new(bin())
         .args(["sbom", "verify", env_path.to_str().unwrap(), "--json"])
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     let code = out.status.code().unwrap_or(-1);
     assert!(
         code == 1 || code == 2,

@@ -1,6 +1,6 @@
-//! Milestone 108 US4 — `mikebom fingerprints list` integration test.
+//! Milestone 108 US4 — `waybill fingerprints list` integration test.
 //! Fully offline; uses `tempfile::TempDir` + the
-//! `MIKEBOM_FINGERPRINTS_CACHE_DIR` env override to point at a
+//! `WAYBILL_FINGERPRINTS_CACHE_DIR` env override to point at a
 //! synthetic cache without touching the operator's real cache.
 
 #![cfg(test)]
@@ -33,7 +33,7 @@ fn seed_cache_entry(cache_root: &std::path::Path, sha: &str, record_count: usize
 fn list_empty_cache_exits_zero_with_no_output() {
     let tmp = tempfile::tempdir().unwrap();
     let output = Command::new(binary_path())
-        .env("MIKEBOM_FINGERPRINTS_CACHE_DIR", tmp.path())
+        .env("WAYBILL_FINGERPRINTS_CACHE_DIR", tmp.path())
         .arg("fingerprints")
         .arg("list")
         .output()
@@ -49,7 +49,7 @@ fn list_two_cached_shas_prints_alphabetically_sorted() {
     seed_cache_entry(tmp.path(), SHA_A, 7);
     seed_cache_entry(tmp.path(), SHA_B, 12);
     let output = Command::new(binary_path())
-        .env("MIKEBOM_FINGERPRINTS_CACHE_DIR", tmp.path())
+        .env("WAYBILL_FINGERPRINTS_CACHE_DIR", tmp.path())
         .arg("fingerprints")
         .arg("list")
         .output()
@@ -81,7 +81,7 @@ fn list_skips_non_sha_directories() {
     // Leftover `.tmp-<uuid>/` staging dir from a crashed fetcher.
     std::fs::create_dir_all(tmp.path().join(".tmp-abc123")).unwrap();
     let output = Command::new(binary_path())
-        .env("MIKEBOM_FINGERPRINTS_CACHE_DIR", tmp.path())
+        .env("WAYBILL_FINGERPRINTS_CACHE_DIR", tmp.path())
         .arg("fingerprints")
         .arg("list")
         .output()

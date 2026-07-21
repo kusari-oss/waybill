@@ -11,7 +11,7 @@
 //! - `us1_as3_commit_pinned_uses_full_sha_as_version_segment` —
 //!   scanning the `swift_commit_pinned/` fixture emits the entry with
 //!   the full 40-char revision SHA as the version segment AND the
-//!   `mikebom:source-type = "git"` annotation.
+//!   `waybill:source-type = "git"` annotation.
 //! - `us1_as4_package_swift_without_resolved_warns_and_emits_zero` —
 //!   a tempdir with a `Package.swift` but no `Package.resolved` emits
 //!   zero Swift components AND surfaces the documented warn line.
@@ -52,15 +52,15 @@ fn run_scan(root: &Path) -> (serde_json::Value, Output) {
         .arg("--offline")
         .arg("--output")
         .arg(&out_path)
-        .env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
+        .env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
         .env("RUST_LOG", "warn")
-        .env_remove("MIKEBOM_EXCLUDE_PATH")
-        .env_remove("MIKEBOM_NO_GO_MOD_WHY")
+        .env_remove("WAYBILL_EXCLUDE_PATH")
+        .env_remove("WAYBILL_NO_GO_MOD_WHY")
         .output()
-        .expect("failed to invoke mikebom binary");
+        .expect("failed to invoke waybill binary");
     if !output.status.success() {
         panic!(
-            "mikebom exited non-zero:\nstdout: {}\nstderr: {}",
+            "waybill exited non-zero:\nstdout: {}\nstderr: {}",
             String::from_utf8_lossy(&output.stdout),
             String::from_utf8_lossy(&output.stderr),
         );
@@ -163,14 +163,14 @@ fn us1_as3_commit_pinned_uses_full_sha_as_version_segment() {
         Some(expected_sha)
     );
     assert_eq!(
-        component_property(swift_log, "mikebom:source-type"),
+        component_property(swift_log, "waybill:source-type"),
         Some("git"),
-        "commit-pinned mode must carry mikebom:source-type = git"
+        "commit-pinned mode must carry waybill:source-type = git"
     );
     assert_eq!(
-        component_property(swift_log, "mikebom:source-revision"),
+        component_property(swift_log, "waybill:source-revision"),
         Some(expected_sha),
-        "commit-pinned mode must carry the SHA on mikebom:source-revision"
+        "commit-pinned mode must carry the SHA on waybill:source-revision"
     );
 }
 

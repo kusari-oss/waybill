@@ -4,7 +4,7 @@
 //! the caller (`Identifier::parse`) downgrades the identifier's
 //! `kind` to `IdentifierKind::UserDefined` (research.md §1 soft-fail
 //! / VR-005). The identifier still emits — under the
-//! `mikebom:identifiers` annotation rather than the
+//! `waybill:identifiers` annotation rather than the
 //! standards-native carrier.
 //!
 //! Per Constitution Principle X (Transparency): warn-and-emit is more

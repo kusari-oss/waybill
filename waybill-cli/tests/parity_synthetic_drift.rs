@@ -1,5 +1,5 @@
 //! Milestone 071 — synthetic regression for the upgraded
-//! `mikebom sbom parity-check` value-equality logic.
+//! `waybill sbom parity-check` value-equality logic.
 //!
 //! Pre-071 the CLI subcommand only checked **presence parity**
 //! ("all 3 formats non-empty"), which silently missed real gaps
@@ -22,7 +22,7 @@ use std::collections::BTreeSet;
 use waybill::parity::{catalog, extractors};
 
 /// Build the same SBOM content in CDX 1.6 / SPDX 2.3 / SPDX 3
-/// shape, but vary the `mikebom:source-files` annotation value
+/// shape, but vary the `waybill:source-files` annotation value
 /// in the SPDX 2.3 document so set-equality is violated. The
 /// CDX and SPDX 3 sides agree; only SPDX 2.3 diverges.
 fn build_drift_triple() -> (serde_json::Value, serde_json::Value, serde_json::Value) {
@@ -39,7 +39,7 @@ fn build_drift_triple() -> (serde_json::Value, serde_json::Value, serde_json::Va
             "purl": "pkg:generic/test@1.0.0",
             "type": "library",
             "properties": [
-                { "name": "mikebom:source-files", "value": "go.sum" },
+                { "name": "waybill:source-files", "value": "go.sum" },
             ],
         }],
     });
@@ -57,10 +57,10 @@ fn build_drift_triple() -> (serde_json::Value, serde_json::Value, serde_json::Va
                   "referenceLocator": "pkg:generic/test@1.0.0" },
             ],
             "annotations": [{
-                "annotator": "Tool: mikebom-test",
+                "annotator": "Tool: waybill-test",
                 "annotationDate": "1970-01-01T00:00:00Z",
                 "annotationType": "OTHER",
-                "comment": r#"{"schema":"mikebom-annotation/v1","field":"mikebom:source-files","value":["DRIFTED.sum"]}"#,
+                "comment": r#"{"schema":"waybill-annotation/v1","field":"waybill:source-files","value":["DRIFTED.sum"]}"#,
             }],
         }],
     });
@@ -83,7 +83,7 @@ fn build_drift_triple() -> (serde_json::Value, serde_json::Value, serde_json::Va
             {
                 "type": "Annotation",
                 "subject": "https://example.org/spdx/pkg",
-                "statement": r#"{"schema":"mikebom-annotation/v1","field":"mikebom:source-files","value":["go.sum"]}"#,
+                "statement": r#"{"schema":"waybill-annotation/v1","field":"waybill:source-files","value":["go.sum"]}"#,
             },
         ],
     });
@@ -93,7 +93,7 @@ fn build_drift_triple() -> (serde_json::Value, serde_json::Value, serde_json::Va
 
 #[test]
 fn drift_in_symmetric_equal_row_is_caught() {
-    // Find the C18 (mikebom:source-files) extractor.
+    // Find the C18 (waybill:source-files) extractor.
     let extractor = extractors::EXTRACTORS
         .iter()
         .find(|e| e.row_id == "C18")
@@ -151,9 +151,9 @@ fn drift_in_symmetric_equal_row_is_caught() {
 #[test]
 fn no_drift_in_real_fixture_passes_post_071_check() {
     // Sanity inverse: the byte-identity goldens (which are the
-    // production output of `mikebom sbom scan`) MUST pass the
+    // production output of `waybill sbom scan`) MUST pass the
     // post-071 invariant for every row. If this test ever fails,
-    // there's a real cross-format parity bug in mikebom — the same
+    // there's a real cross-format parity bug in waybill — the same
     // assertion the integration test `holistic_parity.rs` makes,
     // restated against pinned goldens for fast smoke detection.
     let workspace_root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));

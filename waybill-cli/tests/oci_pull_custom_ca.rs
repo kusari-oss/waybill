@@ -29,7 +29,7 @@ fn us2_bad_ca_cert_path_actionable_error() {
     // caught at scan startup, before any network call. Error message
     // must name the flag AND the offending path so the operator can
     // spot the typo without re-reading the invocation.
-    let bad_path = "/nonexistent/mikebom-m182-test/ca-bundle.pem";
+    let bad_path = "/nonexistent/waybill-m182-test/ca-bundle.pem";
     let out = Command::new(mikebom_bin())
         .args([
             "sbom",
@@ -42,11 +42,11 @@ fn us2_bad_ca_cert_path_actionable_error() {
             bad_path,
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         !out.status.success(),
-        "expected mikebom to fail on bad --registry-ca-cert path. stderr:\n{stderr}",
+        "expected waybill to fail on bad --registry-ca-cert path. stderr:\n{stderr}",
     );
     assert!(
         stderr.contains(bad_path),
@@ -79,11 +79,11 @@ fn us2_empty_pem_file_actionable_error() {
             path.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         !out.status.success(),
-        "expected mikebom to fail on empty PEM file. stderr:\n{stderr}",
+        "expected waybill to fail on empty PEM file. stderr:\n{stderr}",
     );
     assert!(
         stderr.contains(path.to_str().unwrap()),
@@ -99,7 +99,7 @@ fn us2_empty_pem_file_actionable_error() {
 fn us2_valid_ca_bundle_passes_parse_stage() {
     // Regression pin: a well-formed PEM bundle (from rcgen) must NOT
     // trigger the FR-014 Case 4 parse error. This test does NOT
-    // attempt a network pull — it just verifies mikebom loads the
+    // attempt a network pull — it just verifies waybill loads the
     // bundle and reaches a *transport* failure (not a parse failure)
     // against a nonexistent host. Complements the
     // load_ca_bundle_multi_cert_bundle_loads_all unit test.
@@ -122,14 +122,14 @@ fn us2_valid_ca_bundle_passes_parse_stage() {
             tf.path().to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     // We expect FAILURE (network unreachable), but the failure MUST
     // NOT mention "--registry-ca-cert" as the cause — that would
     // indicate the parse stage rejected the valid bundle.
     assert!(
         !out.status.success(),
-        "expected mikebom to fail against unreachable host. stderr:\n{stderr}",
+        "expected waybill to fail against unreachable host. stderr:\n{stderr}",
     );
     assert!(
         !stderr.contains("no PEM certificates found"),

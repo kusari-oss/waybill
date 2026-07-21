@@ -4,7 +4,7 @@
 //! input MUST produce byte-identical SPDX 3 output after the
 //! run-scoped document IRI and creation timestamp are normalized.
 //!
-//! This test invokes `mikebom sbom scan --format spdx-3-json`
+//! This test invokes `waybill sbom scan --format spdx-3-json`
 //! twice against one fixture, parses both documents, strips the
 //! timestamp + IRI-hash variance, and asserts byte-equality of the
 //! remaining JSON. The SPDX 3 path uses a content-derived document
@@ -39,7 +39,7 @@ fn run_scan(fixture_rel: &str) -> serde_json::Value {
         .arg(format!("spdx-3-json={}", out_path.to_string_lossy()))
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom runs");
+        .expect("waybill runs");
     assert!(
         out.status.success(),
         "scan failed: stderr={}",
@@ -119,7 +119,7 @@ fn two_runs_against_deb_fixture_are_byte_identical() {
             .arg("--deb-codename")
             .arg("bookworm")
             .status()
-            .expect("mikebom runs");
+            .expect("waybill runs");
         assert!(st.success());
     }
     let a: serde_json::Value =

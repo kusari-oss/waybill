@@ -145,7 +145,7 @@ pub(super) fn read_gradle_lockfile(path: &Path) -> Vec<PackageDbEntry> {
         let configs_value = configs.trim();
         if !configs_value.is_empty() {
             extra_annotations.insert(
-                "mikebom:gradle-configurations".to_string(),
+                "waybill:gradle-configurations".to_string(),
                 serde_json::Value::String(configs_value.to_string()),
             );
         }
@@ -156,12 +156,12 @@ pub(super) fn read_gradle_lockfile(path: &Path) -> Vec<PackageDbEntry> {
         // entries with the compile-only shape (compileClasspath
         // present + runtimeClasspath absent, suffix-matched per
         // Decision 3) classify as `LifecycleScope::Optional` +
-        // `mikebom:optional-derivation = "gradle-compile-only"`.
+        // `waybill:optional-derivation = "gradle-compile-only"`.
         let lifecycle_scope = if is_buildscript {
             Some(LifecycleScope::Build)
         } else if is_compile_only_shape(configs_value) {
             extra_annotations.insert(
-                "mikebom:optional-derivation".to_string(),
+                "waybill:optional-derivation".to_string(),
                 serde_json::Value::String("gradle-compile-only".to_string()),
             );
             Some(LifecycleScope::Optional)
@@ -317,7 +317,7 @@ com.google.guava:guava:32.1.3-jre=compileClasspath,runtimeClasspath,testCompileC
         assert_eq!(entries.len(), 1);
         let configs = entries[0]
             .extra_annotations
-            .get("mikebom:gradle-configurations")
+            .get("waybill:gradle-configurations")
             .and_then(|v| v.as_str())
             .unwrap();
         assert_eq!(
@@ -400,7 +400,7 @@ com.google.guava:guava:32.1.3-jre=runtimeClasspath
     fn read_gradle_lockfile_compile_only_classifies_as_optional() {
         // US2 acceptance 1+2 end-to-end. The dep appears on compile-
         // only classpaths → LifecycleScope::Optional + derivation
-        // annotation. The existing `mikebom:gradle-configurations`
+        // annotation. The existing `waybill:gradle-configurations`
         // annotation is preserved.
         let tmp = tempfile::tempdir().unwrap();
         let body = format!(
@@ -419,16 +419,16 @@ com.example:lombok:1.18.30=compileClasspath,testCompileClasspath
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:optional-derivation"),
+                .get("waybill:optional-derivation"),
             Some(&serde_json::Value::String(
                 "gradle-compile-only".to_string()
             )),
         );
-        // Existing `mikebom:gradle-configurations` annotation preserved.
+        // Existing `waybill:gradle-configurations` annotation preserved.
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:gradle-configurations"),
+                .get("waybill:gradle-configurations"),
             Some(&serde_json::Value::String(
                 "compileClasspath,testCompileClasspath".to_string()
             )),
@@ -452,7 +452,7 @@ com.example:build-tool:1.0=compileClasspath,testCompileClasspath
         assert_eq!(entries[0].lifecycle_scope, Some(LifecycleScope::Build));
         assert!(!entries[0]
             .extra_annotations
-            .contains_key("mikebom:optional-derivation"));
+            .contains_key("waybill:optional-derivation"));
     }
 
     #[test]
@@ -505,6 +505,6 @@ com.example:transitive-dep:1.0=compileClasspath,runtimeClasspath
         assert!(entries[0].lifecycle_scope.is_none());
         assert!(!entries[0]
             .extra_annotations
-            .contains_key("mikebom:optional-derivation"));
+            .contains_key("waybill:optional-derivation"));
     }
 }

@@ -145,7 +145,7 @@ pub fn parse_subsystem<'a, Pe: ImageNtHeaders>(
 /// `MinorLinkerVersion` into the `<major>.<minor>` string per
 /// milestone-098 FR-003. Always-emit: even packed/obfuscated PEs with
 /// zeroed optional-header bytes get a meaningful `"0.0"` value
-/// (informative — correlates with `mikebom:binary-packed` for the
+/// (informative — correlates with `waybill:binary-packed` for the
 /// "linker version was redacted" signal).
 pub fn parse_linker_version<'a, Pe: ImageNtHeaders>(
     file: &PeFile<'a, Pe, &'a [u8]>,

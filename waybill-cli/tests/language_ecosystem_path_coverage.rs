@@ -18,7 +18,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR"))
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR"))
         .join("cargo")
         .join(sub)
 }
@@ -37,8 +37,8 @@ fn run_scan(path: &Path) -> (tempfile::TempDir, PathBuf) {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .status()
-        .expect("mikebom should run");
-    assert!(status.success(), "mikebom scan failed");
+        .expect("waybill should run");
+    assert!(status.success(), "waybill scan failed");
     (tmp, out_path)
 }
 

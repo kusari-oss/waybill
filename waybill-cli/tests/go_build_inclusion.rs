@@ -1,5 +1,5 @@
 //! Integration tests for milestone 112 US1 — always-on
-//! `mikebom:build-inclusion: unknown` markers on Go modules discovered
+//! `waybill:build-inclusion: unknown` markers on Go modules discovered
 //! via the lower-fidelity fallback paths (T009).
 //!
 //! Fixture shape (hermetic, no network, no `go` toolchain needed):
@@ -9,14 +9,14 @@
 //!   in a tempdir `GOMODCACHE`, so the milestone-055 graph resolver
 //!   resolves it via the cache walk (step 2). The other two are
 //!   reachable only through the milestone-091 go.sum flat fallback
-//!   (step 5) and therefore carry `mikebom:resolver-step:
+//!   (step 5) and therefore carry `waybill:resolver-step:
 //!   go-sum-fallback`.
 //! * No compiled binary → no BuildInfo → the marker pass treats every
 //!   fallback module as participation-unknown (spec FR-001).
 //!
 //! Expected emission (contracts/annotations.md):
 //!
-//! * fallback modules → `mikebom:build-inclusion: unknown` in all
+//! * fallback modules → `waybill:build-inclusion: unknown` in all
 //!   three formats; NO native scope field in CDX (FR-002).
 //! * cache-resolved module + main module → no marker.
 //! * component count is identical to the pre-feature scan (FR-011:
@@ -64,7 +64,7 @@ fn write_fixture(root: &Path) {
 /// Scan the fixture once, emitting all three formats. An isolated
 /// `HOME` and a fixture-local `GOMODCACHE` make the resolver outcome
 /// independent of the developer's real Go cache.
-/// `MIKEBOM_NO_GO_MOD_WHY=1` keeps the US1 markers toolchain-free once
+/// `WAYBILL_NO_GO_MOD_WHY=1` keeps the US1 markers toolchain-free once
 /// the milestone-112 US2 classification pass lands (inert before then).
 fn scan_three_formats() -> (serde_json::Value, serde_json::Value, serde_json::Value) {
     let fixture = tempfile::tempdir().expect("fixture tempdir");
@@ -79,7 +79,7 @@ fn scan_three_formats() -> (serde_json::Value, serde_json::Value, serde_json::Va
     let output = Command::new(bin)
         .env("HOME", fake_home.path())
         .env("GOMODCACHE", fixture.path().join("gomodcache"))
-        .env("MIKEBOM_NO_GO_MOD_WHY", "1")
+        .env("WAYBILL_NO_GO_MOD_WHY", "1")
         .arg("--offline")
         .arg("sbom")
         .arg("scan")
@@ -95,7 +95,7 @@ fn scan_three_formats() -> (serde_json::Value, serde_json::Value, serde_json::Va
         .arg(format!("spdx-3-json={}", spdx3_path.to_string_lossy()))
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -141,7 +141,7 @@ fn cdx_component_by_purl<'a>(
 }
 
 /// True when the SPDX 2.3 package carries a milestone-112
-/// `mikebom:build-inclusion` annotation envelope with the given value.
+/// `waybill:build-inclusion` annotation envelope with the given value.
 fn spdx23_has_build_inclusion(package: &serde_json::Value, value: &str) -> bool {
     package["annotations"]
         .as_array()
@@ -150,8 +150,8 @@ fn spdx23_has_build_inclusion(package: &serde_json::Value, value: &str) -> bool 
         .filter_map(|a| a["comment"].as_str())
         .filter_map(|c| serde_json::from_str::<serde_json::Value>(c).ok())
         .any(|env| {
-            env["schema"].as_str() == Some("mikebom-annotation/v1")
-                && env["field"].as_str() == Some("mikebom:build-inclusion")
+            env["schema"].as_str() == Some("waybill-annotation/v1")
+                && env["field"].as_str() == Some("waybill:build-inclusion")
                 && env["value"].as_str() == Some(value)
         })
 }
@@ -187,7 +187,7 @@ fn spdx3_package_id<'a>(graph: &'a [serde_json::Value], purl: &str) -> &'a str {
 }
 
 /// True when an SPDX 3 `Annotation` element targets `subject_id` with
-/// a `mikebom:build-inclusion` envelope carrying the given value.
+/// a `waybill:build-inclusion` envelope carrying the given value.
 fn spdx3_has_build_inclusion(
     graph: &[serde_json::Value],
     subject_id: &str,
@@ -200,8 +200,8 @@ fn spdx3_has_build_inclusion(
         .filter_map(|e| e["statement"].as_str())
         .filter_map(|s| serde_json::from_str::<serde_json::Value>(s).ok())
         .any(|env| {
-            env["schema"].as_str() == Some("mikebom-annotation/v1")
-                && env["field"].as_str() == Some("mikebom:build-inclusion")
+            env["schema"].as_str() == Some("waybill-annotation/v1")
+                && env["field"].as_str() == Some("waybill:build-inclusion")
                 && env["value"].as_str() == Some(value)
         })
 }
@@ -214,12 +214,12 @@ fn unknown_marker_in_all_three_formats() {
     for purl in FALLBACK_PURLS {
         let c = cdx_component_by_purl(&cdx, purl);
         assert_eq!(
-            cdx_property(c, "mikebom:build-inclusion"),
+            cdx_property(c, "waybill:build-inclusion"),
             Some("unknown"),
             "{purl}: fallback-discovered module must carry the unknown marker",
         );
         assert_eq!(
-            cdx_property(c, "mikebom:resolver-step"),
+            cdx_property(c, "waybill:resolver-step"),
             Some("go-sum-fallback"),
             "{purl}: fixture invariant — module must be fallback-discovered",
         );
@@ -234,12 +234,12 @@ fn unknown_marker_in_all_three_formats() {
     }
     let resolved = cdx_component_by_purl(&cdx, RESOLVED_PURL);
     assert_eq!(
-        cdx_property(resolved, "mikebom:build-inclusion"),
+        cdx_property(resolved, "waybill:build-inclusion"),
         None,
         "graph-resolved module must NOT carry a build-inclusion marker",
     );
     assert_eq!(
-        cdx_property(resolved, "mikebom:resolver-step"),
+        cdx_property(resolved, "waybill:resolver-step"),
         None,
         "fixture invariant — cache-resolved module is not fallback-discovered",
     );
@@ -333,7 +333,7 @@ mod stub_toolchain {
     }
 
     /// Scan `scan_path` (CDX only) with the stub dir prepended to PATH
-    /// and classification ENABLED (no `MIKEBOM_NO_GO_MOD_WHY`).
+    /// and classification ENABLED (no `WAYBILL_NO_GO_MOD_WHY`).
     fn scan_cdx_with_stub(scan_path: &Path, stub_dir: &Path) -> serde_json::Value {
         let out = tempfile::tempdir().expect("output tempdir");
         let cdx_path = out.path().join("out.cdx.json");
@@ -346,7 +346,7 @@ mod stub_toolchain {
             .env("PATH", format!("{}:{real_path}", stub_dir.to_string_lossy()))
             .env("HOME", fake_home.path())
             .env("GOMODCACHE", empty_cache.path().join("empty"))
-            .env_remove("MIKEBOM_NO_GO_MOD_WHY")
+            .env_remove("WAYBILL_NO_GO_MOD_WHY")
             .arg("--offline")
             .arg("sbom")
             .arg("scan")
@@ -356,7 +356,7 @@ mod stub_toolchain {
             .arg(&cdx_path)
             .arg("--no-deep-hash")
             .output()
-            .expect("mikebom should run");
+            .expect("waybill should run");
         assert!(
             output.status.success(),
             "scan failed: stderr={}",
@@ -443,27 +443,27 @@ exit 1
             "NotNeeded component must carry native scope: excluded",
         );
         assert_eq!(
-            cdx_property(not_needed, "mikebom:build-inclusion"),
+            cdx_property(not_needed, "waybill:build-inclusion"),
             Some("not-needed"),
         );
         assert_eq!(
-            cdx_property(not_needed, "mikebom:build-inclusion-derivation"),
+            cdx_property(not_needed, "waybill:build-inclusion-derivation"),
             Some("go-mod-why"),
         );
 
         // TestOnly: test-scoped with the go-mod-why derivation (FR-006).
         let test_only = cdx_component_by_purl(&cdx, TEST_ONLY_PURL);
         assert_eq!(
-            cdx_property(test_only, "mikebom:lifecycle-scope"),
+            cdx_property(test_only, "waybill:lifecycle-scope"),
             Some("test"),
             "TestOnly component must be test-scoped",
         );
         assert_eq!(
-            cdx_property(test_only, "mikebom:lifecycle-scope-derivation"),
+            cdx_property(test_only, "waybill:lifecycle-scope-derivation"),
             Some("go-mod-why"),
         );
         assert_eq!(
-            cdx_property(test_only, "mikebom:build-inclusion"),
+            cdx_property(test_only, "waybill:build-inclusion"),
             None,
             "TestOnly must not carry a build-inclusion marker",
         );
@@ -472,13 +472,13 @@ exit 1
         // unchanged from the pre-feature shape (FR-011).
         let prod = cdx_component_by_purl(&cdx, PROD_PURL);
         assert!(prod.get("scope").is_none(), "prod component must have no scope");
-        assert_eq!(cdx_property(prod, "mikebom:build-inclusion"), None);
+        assert_eq!(cdx_property(prod, "waybill:build-inclusion"), None);
         assert_eq!(
-            cdx_property(prod, "mikebom:build-inclusion-derivation"),
+            cdx_property(prod, "waybill:build-inclusion-derivation"),
             None,
         );
         assert_eq!(
-            cdx_property(prod, "mikebom:lifecycle-scope-derivation"),
+            cdx_property(prod, "waybill:lifecycle-scope-derivation"),
             None,
         );
 
@@ -486,7 +486,7 @@ exit 1
         // carries the unknown marker.
         for c in cdx["components"].as_array().expect("components array") {
             assert_ne!(
-                cdx_property(c, "mikebom:build-inclusion"),
+                cdx_property(c, "waybill:build-inclusion"),
                 Some("unknown"),
                 "no component may carry the unknown marker after full \
                  classification (SC-002): {}",
@@ -557,7 +557,7 @@ exit 1
             shared["scope"],
         );
         assert_eq!(
-            cdx_property(shared, "mikebom:build-inclusion"),
+            cdx_property(shared, "waybill:build-inclusion"),
             None,
             "needed-by-any module must carry no build-inclusion marker",
         );
@@ -567,7 +567,7 @@ exit 1
 // ---------------------------------------------------------------------
 // Milestone 112 US3 (T021) — degrade matrix. Every failure class must
 // (1) leave the scan exit status 0 with a valid SBOM (SC-003), (2) fall
-// back to `mikebom:build-inclusion: unknown` markers — never a false
+// back to `waybill:build-inclusion: unknown` markers — never a false
 // `excluded`/`not-needed` — and (3) surface the failure class via the
 // FR-013 observability lines on stderr
 // (contracts/go-toolchain-invocation.md).
@@ -605,7 +605,7 @@ mod degrade_matrix {
         cmd.env("PATH", path_value)
             .env("HOME", fake_home.path())
             .env("GOMODCACHE", empty_cache.path().join("empty"))
-            .env_remove("MIKEBOM_NO_GO_MOD_WHY")
+            .env_remove("WAYBILL_NO_GO_MOD_WHY")
             // The FR-013 lines are info/warn level; pin the default
             // filter regardless of the developer's RUST_LOG.
             .env_remove("RUST_LOG");
@@ -622,7 +622,7 @@ mod degrade_matrix {
             .arg(&cdx_path)
             .arg("--no-deep-hash")
             .output()
-            .expect("mikebom should run");
+            .expect("waybill should run");
         let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
         assert!(
             output.status.success(),
@@ -639,7 +639,7 @@ mod degrade_matrix {
         for purl in ALL_PURLS {
             let c = cdx_component_by_purl(cdx, purl);
             assert_eq!(
-                cdx_property(c, "mikebom:build-inclusion"),
+                cdx_property(c, "waybill:build-inclusion"),
                 Some("unknown"),
                 "{purl}: degraded analysis must fall back to the unknown marker",
             );
@@ -728,7 +728,7 @@ exit 1
 
     /// (c) `go mod why` outlives the shared budget → `budget-exhausted`
     /// skip; the test shortens the budget via the contract's
-    /// `MIKEBOM_GO_MOD_WHY_BUDGET_MS` override so it stays fast.
+    /// `WAYBILL_GO_MOD_WHY_BUDGET_MS` override so it stays fast.
     #[test]
     fn budget_exhaustion_degrades_to_unknown_markers() {
         let fixture = tempfile::tempdir().expect("fixture tempdir");
@@ -738,7 +738,7 @@ exit 1
         let (cdx, stderr) = scan_with_env(
             &fixture.path().join("app"),
             &format!("{}:{real_path}", stub.path().to_string_lossy()),
-            &[("MIKEBOM_GO_MOD_WHY_BUDGET_MS", "300")],
+            &[("WAYBILL_GO_MOD_WHY_BUDGET_MS", "300")],
         );
         assert_all_unknown(&cdx);
         assert!(
@@ -792,7 +792,7 @@ exit 1
         // The answered module is classified ProdNeeded: no marker.
         let prod = cdx_component_by_purl(&cdx, ALL_PURLS[2]);
         assert_eq!(
-            cdx_property(prod, "mikebom:build-inclusion"),
+            cdx_property(prod, "waybill:build-inclusion"),
             None,
             "answered module must keep its prod verdict (no marker)",
         );
@@ -802,7 +802,7 @@ exit 1
         for purl in &ALL_PURLS[..2] {
             let c = cdx_component_by_purl(&cdx, purl);
             assert_eq!(
-                cdx_property(c, "mikebom:build-inclusion"),
+                cdx_property(c, "waybill:build-inclusion"),
                 Some("unknown"),
                 "{purl}: unanswered module must fall back to unknown",
             );
@@ -851,7 +851,7 @@ exit 1
         assert_all_unknown(&cdx);
         for c in cdx["components"].as_array().expect("components array") {
             assert_ne!(
-                cdx_property(c, "mikebom:build-inclusion"),
+                cdx_property(c, "waybill:build-inclusion"),
                 Some("not-needed"),
                 "preflight failure must reject every not-needed verdict: {}",
                 c["purl"],
@@ -937,7 +937,7 @@ exit 1
 // milestone-112 pass to touch: the Part B marker pass finds no
 // fallback population and the classification pass has an empty query.
 // The emitted bytes must therefore be identical whether classification
-// is disabled (`MIKEBOM_NO_GO_MOD_WHY=1` — the pre-feature emission
+// is disabled (`WAYBILL_NO_GO_MOD_WHY=1` — the pre-feature emission
 // shape) or enabled with a working toolchain.
 // ---------------------------------------------------------------------
 
@@ -990,11 +990,11 @@ mod byte_identity {
         cmd.env("PATH", format!("{}:{real_path}", stub_dir.to_string_lossy()))
             .env("HOME", fake_home.path())
             .env("GOMODCACHE", fixture.join("gomodcache"))
-            .env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+            .env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
         if disable_classification {
-            cmd.env("MIKEBOM_NO_GO_MOD_WHY", "1");
+            cmd.env("WAYBILL_NO_GO_MOD_WHY", "1");
         } else {
-            cmd.env_remove("MIKEBOM_NO_GO_MOD_WHY");
+            cmd.env_remove("WAYBILL_NO_GO_MOD_WHY");
         }
         let output = cmd
             .arg("--offline")
@@ -1006,7 +1006,7 @@ mod byte_identity {
             .arg(&cdx_path)
             .arg("--no-deep-hash")
             .output()
-            .expect("mikebom should run");
+            .expect("waybill should run");
         assert!(
             output.status.success(),
             "scan failed: stderr={}",
@@ -1039,7 +1039,7 @@ mod byte_identity {
         let dep =
             cdx_component_by_purl(&cdx, "pkg:golang/github.com/graph-resolved/dep@v1.2.3");
         assert_eq!(
-            cdx_property(dep, "mikebom:resolver-step"),
+            cdx_property(dep, "waybill:resolver-step"),
             None,
             "fixture invariant — no module may be fallback-discovered",
         );
@@ -1068,7 +1068,7 @@ mod byte_identity {
 // ---------------------------------------------------------------------
 // Milestone 112 US3 (T024) — env-gated REAL-toolchain e2e. Skipped by
 // default (like the docker-daemon and OCI-network gates); opt in with
-// `MIKEBOM_GO_TOOLCHAIN_E2E=1` on a host with `go` installed.
+// `WAYBILL_GO_TOOLCHAIN_E2E=1` on a host with `go` installed.
 //
 // The fixture needs no network even against the real toolchain: a
 // stdlib-only main module plus a go.sum-only entry (the exact shape of
@@ -1084,9 +1084,9 @@ mod real_toolchain_e2e {
 
     #[test]
     fn real_go_toolchain_yields_not_needed_verdict() {
-        if std::env::var("MIKEBOM_GO_TOOLCHAIN_E2E").as_deref() != Ok("1") {
+        if std::env::var("WAYBILL_GO_TOOLCHAIN_E2E").as_deref() != Ok("1") {
             eprintln!(
-                "skipping: set MIKEBOM_GO_TOOLCHAIN_E2E=1 to run the \
+                "skipping: set WAYBILL_GO_TOOLCHAIN_E2E=1 to run the \
                  real-toolchain e2e test"
             );
             return;
@@ -1121,7 +1121,7 @@ mod real_toolchain_e2e {
         let output = Command::new(bin)
             .env("HOME", fake_home.path())
             .env("GOMODCACHE", fake_home.path().join("no-gomodcache"))
-            .env_remove("MIKEBOM_NO_GO_MOD_WHY")
+            .env_remove("WAYBILL_NO_GO_MOD_WHY")
             .arg("--offline")
             .arg("sbom")
             .arg("scan")
@@ -1131,7 +1131,7 @@ mod real_toolchain_e2e {
             .arg(&cdx_path)
             .arg("--no-deep-hash")
             .output()
-            .expect("mikebom should run");
+            .expect("waybill should run");
         let stderr = String::from_utf8_lossy(&output.stderr);
         assert!(output.status.success(), "scan must exit 0: stderr={stderr}");
 
@@ -1139,14 +1139,14 @@ mod real_toolchain_e2e {
         let cdx: serde_json::Value = serde_json::from_str(&raw).expect("valid cdx JSON");
         let yaml = cdx_component_by_purl(&cdx, "pkg:golang/gopkg.in/yaml.v3@v3.0.1");
         assert_eq!(
-            cdx_property(yaml, "mikebom:build-inclusion"),
+            cdx_property(yaml, "waybill:build-inclusion"),
             Some("not-needed"),
             "real toolchain must classify the go.sum-only module as \
              not-needed; stderr={stderr}",
         );
         assert_eq!(yaml["scope"].as_str(), Some("excluded"));
         assert_eq!(
-            cdx_property(yaml, "mikebom:build-inclusion-derivation"),
+            cdx_property(yaml, "waybill:build-inclusion-derivation"),
             Some("go-mod-why"),
         );
         assert!(

@@ -1,5 +1,5 @@
 # One-shot eBPF compile-verification image. Used during m210
-# development to catch bpf-linker errors on the mikebom-ebpf crate
+# development to catch bpf-linker errors on the waybill-ebpf crate
 # without paying the full-workspace release-build cost. Docker build
 # succeeds IFF the kernel-side eBPF code compiles cleanly.
 FROM rust:1.88-bookworm
@@ -17,7 +17,7 @@ RUN rustup toolchain install nightly --profile minimal \
     && rustup component add rust-src --toolchain nightly \
     && cargo +nightly install bpf-linker
 
-WORKDIR /mikebom
+WORKDIR /waybill
 COPY . .
 
 # eBPF-only compile check. Fails cleanly if the kernel-side code

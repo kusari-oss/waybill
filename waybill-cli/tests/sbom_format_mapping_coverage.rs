@@ -3,16 +3,16 @@
 //! SC-004: the committed CDX↔SPDX map at
 //! `specs/010-spdx-output-support/contracts/sbom-format-mapping.md`
 //! (canonical home `docs/reference/sbom-format-mapping.md` after
-//! Phase 4 T039 moves it) covers 100 % of the data elements mikebom
+//! Phase 4 T039 moves it) covers 100 % of the data elements waybill
 //! emits in CycloneDX today — with a non-empty entry in each of the
 //! three format columns (CycloneDX, SPDX 2.3, SPDX 3.0.1).
 //!
 //! Implementation:
 //!   (1) Walk the 9 pinned CDX goldens under
-//!       `mikebom-cli/tests/fixtures/golden/cyclonedx/`, collecting
-//!       every `mikebom:*` property name (components and metadata),
-//!       every mikebom-significant top-level doc key, and every
-//!       mikebom-significant per-component key.
+//!       `waybill-cli/tests/fixtures/golden/cyclonedx/`, collecting
+//!       every `waybill:*` property name (components and metadata),
+//!       every waybill-significant top-level doc key, and every
+//!       waybill-significant per-component key.
 //!   (2) Parse the markdown map into a list of `(cdx_column,
 //!       spdx23_column, spdx3_column)` triples.
 //!   (3) For each collected item, assert at least one triple's
@@ -20,7 +20,7 @@
 //!   (4) For each triple, assert the SPDX 2.3 and SPDX 3.0.1 columns
 //!       are non-empty and don't carry a TODO/TBD/`?` sentinel.
 //!
-//! A failure here means either a new `mikebom:*` property was added
+//! A failure here means either a new `waybill:*` property was added
 //! without a map row (add the row) OR the map file is malformed
 //! (fix the table). Neither case requires touching this test.
 
@@ -39,14 +39,14 @@ fn map_path() -> PathBuf {
     // Canonical home (per T039). A mirror copy lives under
     // specs/010-spdx-output-support/contracts/ for plan-review
     // purposes; this test reads the canonical version because
-    // that's the file consumers of mikebom read.
+    // that's the file consumers of waybill read.
     workspace_root().join("docs/reference/sbom-format-mapping.md")
 }
 
 /// Every item we expect to find named in the map's CDX column.
 ///
 /// Two flavors:
-///   - `Property(name)` — a `mikebom:*` property name, expected to
+///   - `Property(name)` — a `waybill:*` property name, expected to
 ///     appear as `name="<property>"` somewhere in a map row's CDX
 ///     column.
 ///   - `Path(path)` — a structural CDX path fragment, expected to
@@ -58,13 +58,13 @@ enum Expected {
 }
 
 /// Walk every pinned CDX golden and collect the `Expected` items
-/// mikebom actually emits today. This is the ground truth the map
+/// waybill actually emits today. This is the ground truth the map
 /// has to cover.
 fn collect_expected() -> BTreeSet<Expected> {
     let mut out: BTreeSet<Expected> = BTreeSet::new();
 
     // Structural paths the scanner emits unconditionally. These are
-    // the "mikebom-significant" envelope + component keys enumerated
+    // the "waybill-significant" envelope + component keys enumerated
     // in the spec's map Sections A + B + E; they must have rows.
     for p in [
         "/components/{i}/purl",
@@ -84,7 +84,7 @@ fn collect_expected() -> BTreeSet<Expected> {
     }
 
     // Dynamic paths observed in the goldens. Specifically every
-    // `mikebom:*` property that actually gets emitted somewhere —
+    // `waybill:*` property that actually gets emitted somewhere —
     // this is what catches "new property added without a map row."
     let entries = std::fs::read_dir(goldens_dir()).expect("read goldens dir");
     for ent in entries.flatten() {
@@ -127,7 +127,7 @@ fn collect_component_properties(
                         if let Some(name) =
                             p.get("name").and_then(|v| v.as_str())
                         {
-                            if name.starts_with("mikebom:") {
+                            if name.starts_with("waybill:") {
                                 out.insert(Expected::Property(name.to_string()));
                             }
                         }
@@ -162,7 +162,7 @@ fn collect_metadata_properties(
     };
     for p in props {
         if let Some(name) = p.get("name").and_then(|v| v.as_str()) {
-            if name.starts_with("mikebom:") {
+            if name.starts_with("waybill:") {
                 out.insert(Expected::Property(name.to_string()));
             }
         }
@@ -199,7 +199,7 @@ fn is_incomplete(cell: &str) -> bool {
 /// Parse the map file into a Vec of data rows. Rules:
 ///   - Only lines starting with `| ` and containing `|` at least 6
 ///     times are considered candidate rows.
-///   - The header row (`# | mikebom data | CycloneDX 1.6 location | …`)
+///   - The header row (`# | waybill data | CycloneDX 1.6 location | …`)
 ///     is skipped.
 ///   - Separator rows (`|---|---|…`) are skipped.
 ///   - Rows whose first cell is not a recognizable row-id (letter +
@@ -267,7 +267,7 @@ fn is_row_id(s: &str) -> bool {
 /// column or the CDX-location column — rows C5–C22 compress the CDX
 /// column to just `property` and the name itself lives in
 /// description, so a strict "CDX column only" match would false-fail.
-/// Row C23 uses a wildcard form (`mikebom:trace-integrity-*`) to
+/// Row C23 uses a wildcard form (`waybill:trace-integrity-*`) to
 /// cover a family of subkeys — we treat a trailing `*` as a glob
 /// that matches any suffix.
 /// For `Path(path)`, we search only the CDX column; description is
@@ -289,8 +289,8 @@ fn cell_names_property(cell: &str, name: &str) -> bool {
     if cell.contains(name) {
         return true;
     }
-    // Wildcard form: a token like `mikebom:trace-integrity-*` matches
-    // every `mikebom:trace-integrity-<suffix>`. Scan the cell for
+    // Wildcard form: a token like `waybill:trace-integrity-*` matches
+    // every `waybill:trace-integrity-<suffix>`. Scan the cell for
     // `<prefix>*` tokens and test prefix-match. A token can be
     // backticked so strip backticks too.
     for tok in cell.split([' ', ',', '`', '(', ')']) {
@@ -323,7 +323,7 @@ fn every_mikebom_emitted_field_has_a_map_row() {
     }
     assert!(
         missing.is_empty(),
-        "mikebom emits the following CDX data with NO row in \
+        "waybill emits the following CDX data with NO row in \
          `contracts/sbom-format-mapping.md`:\n  {}\n\nEither add rows \
          to the map or remove the emission. The map is the source of \
          truth for cross-format data placement.",

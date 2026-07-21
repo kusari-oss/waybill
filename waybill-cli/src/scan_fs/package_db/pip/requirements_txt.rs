@@ -50,7 +50,7 @@ pub(crate) struct RequirementsTxtEntry {
     /// ranges / unpinned / URL refs, left empty.
     pub version: String,
     /// Original raw line (including operators, extras, hash flags).
-    /// Emitted as `mikebom:requirement-range` on the component.
+    /// Emitted as `waybill:requirement-range` on the component.
     pub range_spec: String,
     /// Non-registry source kind: `"url"` for `https://...`, `"local"`
     /// for `file:...`, `"git"` for `git+...`. None for registry-named

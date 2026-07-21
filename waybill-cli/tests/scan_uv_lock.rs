@@ -2,7 +2,7 @@
 //!
 //! Companion to the unit tests in `scan_fs::package_db::pip::uv_lock::tests`
 //! (which exercise `parse_uv_lock` directly). This test invokes the
-//! `mikebom sbom scan --path <fixture>` binary against the in-repo
+//! `waybill sbom scan --path <fixture>` binary against the in-repo
 //! `uv_lock/basic/` fixture to verify the dispatcher integration —
 //! `pip::read` actually calls `uv_lock::read_uv_lock`, the emitted
 //! SBOM contains the expected `pkg:pypi/...` components, and the
@@ -43,7 +43,7 @@ fn uv_lock_basic_fixture_emits_pypi_components() {
 
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -55,7 +55,7 @@ fn uv_lock_basic_fixture_emits_pypi_components() {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "uv.lock scan unexpectedly failed: stderr={}",

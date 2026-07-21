@@ -3,7 +3,7 @@
 //! When `<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>`
 //! is set in a project file, `dotnet restore` writes a lockfile
 //! enumerating the resolved version of every direct and transitive
-//! dependency per target framework. mikebom prefers this lockfile over
+//! dependency per target framework. waybill prefers this lockfile over
 //! the `.csproj`'s `Version=` attribute (which is usually a range like
 //! `[13.0.3, )` while the lockfile gives the pinned version), and
 //! additionally emits transitive components the `.csproj` alone
@@ -14,7 +14,7 @@ use std::path::Path;
 
 use serde::Deserialize;
 
-/// `dependencies.<framework>.<name>` entry. Only the fields mikebom
+/// `dependencies.<framework>.<name>` entry. Only the fields waybill
 /// consumes are typed; everything else is dropped via `serde`'s default
 /// "ignore-unknown-fields" behavior.
 #[derive(Debug, Clone, Deserialize)]

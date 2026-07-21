@@ -71,16 +71,16 @@ pub(super) enum CargoMetadataResolveFailure {
     IoError(#[from] std::io::Error),
 }
 
-/// Milestone 205 (FR-002 / FR-006): read `MIKEBOM_CARGO_METADATA_TIMEOUT_SECS`
+/// Milestone 205 (FR-002 / FR-006): read `WAYBILL_CARGO_METADATA_TIMEOUT_SECS`
 /// env var; parse as `u64`; clamp to `[1, 3600]`; default 60 on
 /// absent/parse-fail. Mirrors m203's `resolve_render_timeout`
-/// posture (silent parse-failure fallback matches every mikebom
+/// posture (silent parse-failure fallback matches every waybill
 /// env-var handler since m089).
 fn resolve_cargo_metadata_timeout() -> Duration {
     const DEFAULT_SECS: u64 = 60;
     const MIN_SECS: u64 = 1;
     const MAX_SECS: u64 = 3600;
-    let secs = std::env::var("MIKEBOM_CARGO_METADATA_TIMEOUT_SECS")
+    let secs = std::env::var("WAYBILL_CARGO_METADATA_TIMEOUT_SECS")
         .ok()
         .and_then(|s| s.parse::<u64>().ok())
         .map(|n| n.clamp(MIN_SECS, MAX_SECS))
@@ -115,7 +115,7 @@ fn cargo_metadata_cap_stderr_lines(bytes: &[u8], max_lines: usize) -> String {
 /// as a side effect if the manifest was touched — but for a scan
 /// of a directory at rest that's a no-op; the operator's next
 /// `cargo build` would do the same rewrite. FR-007 (determinism)
-/// is preserved: mikebom's OWN output is a pure function of the
+/// is preserved: waybill's OWN output is a pure function of the
 /// resolved metadata, which is deterministic given the workspace
 /// state at scan time.
 ///
@@ -492,7 +492,7 @@ fn resolve_cargo_main_module_version(
 /// roots — FR-002) or when `name` cannot be resolved. Per FR-001 +
 /// FR-001a + FR-004 + FR-005 + FR-006, the entry carries:
 /// - PURL `pkg:cargo/<name>@<resolved-version>`
-/// - `mikebom:component-role: "main-module"` (C40, supplementary)
+/// - `waybill:component-role: "main-module"` (C40, supplementary)
 /// - `sbom_tier = Some("source")` (FR-006)
 /// - `parent_purl = None` (top-level — FR-001a)
 /// - `licenses = vec![]` (FR-005; license detection is #103 follow-up)
@@ -515,7 +515,7 @@ fn build_cargo_main_module_entry(
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra_annotations.insert(
-        "mikebom:component-role".to_string(),
+        "waybill:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
 
@@ -531,7 +531,7 @@ fn build_cargo_main_module_entry(
     // via is_internal_emission_key at root_selector.rs.
     if parsed.get("workspace").is_some() {
         extra_annotations.insert(
-            "mikebom:is-cargo-workspace-toplevel".to_string(),
+            "waybill:is-cargo-workspace-toplevel".to_string(),
             serde_json::Value::Bool(true),
         );
     }
@@ -696,7 +696,7 @@ pub(crate) fn dedup_main_modules_by_purl(
     for entry in std::mem::take(entries) {
         let is_main = entry
             .extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .and_then(|v| v.as_str())
             == Some("main-module");
         if !is_main {
@@ -721,7 +721,7 @@ pub(crate) fn dedup_main_modules_by_purl(
 
 /// Milestone 134 — compute divergence records over the per-manifest
 /// candidates collected during Phase A AND stamp the per-component
-/// `mikebom:duplicate-purl-divergent` annotation on the deduped
+/// `waybill:duplicate-purl-divergent` annotation on the deduped
 /// surviving entry.
 ///
 /// Runs independently of [`dedup_main_modules_by_purl`] because
@@ -824,7 +824,7 @@ pub(crate) fn detect_divergent_collisions(
             let value = serde_json::to_value(&record)
                 .expect("DivergenceRecord serializes infallibly");
             entry.extra_annotations.insert(
-                "mikebom:duplicate-purl-divergent".to_string(),
+                "waybill:duplicate-purl-divergent".to_string(),
                 value,
             );
         }
@@ -841,7 +841,7 @@ pub(crate) fn detect_divergent_collisions(
 /// sections (plus the `target.<cfg>.*` variants of each). Drives the
 /// milestone-051 dev-vs-prod classification: a crate appearing ONLY in
 /// `dev_deps` or `build_deps` (and not in `prod_deps`) is tagged
-/// `mikebom:dev-dependency = true` after BFS expansion through the
+/// `waybill:dev-dependency = true` after BFS expansion through the
 /// resolved Cargo.lock graph.
 #[derive(Debug, Default, Clone)]
 pub(crate) struct CargoTomlSections {
@@ -851,11 +851,11 @@ pub(crate) struct CargoTomlSections {
     /// Milestone 179 US3 — names declared in `[dependencies]` (or
     /// `[target.<cfg>.dependencies]`) with `optional = true`. These
     /// are feature-gated: they only participate in a build when a
-    /// `[features]` entry activates them via `dep:<name>`. mikebom
+    /// `[features]` entry activates them via `dep:<name>`. waybill
     /// tags matching resolved components with
     /// [`LifecycleScope::Optional`] so SPDX 2.3 emits
     /// `OPTIONAL_DEPENDENCY_OF` and CDX emits `scope: "excluded"`.
-    /// Companion annotation: `mikebom:optional-derivation =
+    /// Companion annotation: `waybill:optional-derivation =
     /// cargo-optional-true`.
     pub optional_deps: HashSet<String>,
     /// Milestone 200 (FR-001, closes #585) — root `[package].name`
@@ -1311,7 +1311,7 @@ fn parse_lockfile(
                     // scanners never miss shipped deps).
                     entry.lifecycle_scope = Some(LifecycleScope::Optional);
                     entry.extra_annotations.insert(
-                        "mikebom:optional-derivation".to_string(),
+                        "waybill:optional-derivation".to_string(),
                         serde_json::Value::String("cargo-optional-true".to_string()),
                     );
                 } else if prod_set.contains(&key) {
@@ -1360,10 +1360,10 @@ pub fn read(
     // Milestone 134 — gate per-manifest deep-hash via env var so the
     // candidate-accumulation loop doesn't add cost on the default path.
     // Plumbed in from `scan_fs::scan_path` (which reads the `--deep-hash`
-    // CLI flag) the same way `MIKEBOM_INCLUDE_VENDORED` is plumbed for
+    // CLI flag) the same way `WAYBILL_INCLUDE_VENDORED` is plumbed for
     // the C/C++ readers — avoids churning the 75-callsite `cargo::read`
     // signature for an opt-in observability feature.
-    let deep_hash_enabled = std::env::var("MIKEBOM_DEEP_HASH")
+    let deep_hash_enabled = std::env::var("WAYBILL_DEEP_HASH")
         .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
         .unwrap_or(false);
     let mut out: Vec<PackageDbEntry> = Vec::new();
@@ -1701,7 +1701,7 @@ pub fn read(
 /// via `safe_walk`, sorts by relative path, concatenates per-file
 /// SHA-256s, returns the SHA-256 of the concatenation as a hex string.
 ///
-/// Used ONLY when `--deep-hash` is set (the `MIKEBOM_DEEP_HASH=1`
+/// Used ONLY when `--deep-hash` is set (the `WAYBILL_DEEP_HASH=1`
 /// env-var gate). Returns `None` when the dir is unreadable or empty,
 /// so the calling code falls back to the dep-set-only divergence
 /// path. Excludes `target/` and dotfiles to stay deterministic across
@@ -1890,7 +1890,7 @@ mod tests {
         // Milestone 179 US3 (T023) — `optional = true` in the
         // `[dependencies]` table populates the new `optional_deps`
         // set on `CargoTomlSections`. Downstream this drives
-        // `LifecycleScope::Optional` + `mikebom:optional-derivation
+        // `LifecycleScope::Optional` + `waybill:optional-derivation
         // = "cargo-optional-true"` on the resolved component.
         let text = r#"
 [package]
@@ -2749,7 +2749,7 @@ edition = "2021"
         assert_eq!(
             entry
                 .extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("main-module"),
         );
@@ -2835,7 +2835,7 @@ version = "0.1.0-alpha.11"
         assert!(entry.purl.as_str().contains("0.1.0-alpha.11"));
     }
 
-    // ---- Milestone 201 (issue #587) — `mikebom:is-cargo-workspace-toplevel` ----
+    // ---- Milestone 201 (issue #587) — `waybill:is-cargo-workspace-toplevel` ----
 
     /// FR-001: cargo m064 stamps the workspace-toplevel positive-
     /// identifier annotation when the manifest has BOTH [package] AND
@@ -2859,7 +2859,7 @@ members = ["helper"]
         let entry = build_cargo_main_module_entry(&manifest, &ctx).unwrap();
         let annot = entry
             .extra_annotations
-            .get("mikebom:is-cargo-workspace-toplevel")
+            .get("waybill:is-cargo-workspace-toplevel")
             .and_then(|v| v.as_bool());
         assert_eq!(annot, Some(true));
     }
@@ -2883,7 +2883,7 @@ version = "0.1.0"
         assert!(
             !entry
                 .extra_annotations
-                .contains_key("mikebom:is-cargo-workspace-toplevel"),
+                .contains_key("waybill:is-cargo-workspace-toplevel"),
             "workspace-member Cargo.toml MUST NOT get the toplevel annotation"
         );
     }
@@ -2908,7 +2908,7 @@ version = "0.1.0"
         assert!(
             !entry
                 .extra_annotations
-                .contains_key("mikebom:is-cargo-workspace-toplevel"),
+                .contains_key("waybill:is-cargo-workspace-toplevel"),
             "single-crate cargo project MUST NOT get the toplevel annotation \
              (would over-stamp if [workspace] absence isn't checked)"
         );
@@ -2923,7 +2923,7 @@ version = "0.1.0"
         let mut extra: std::collections::BTreeMap<String, serde_json::Value> =
             Default::default();
         extra.insert(
-            "mikebom:component-role".to_string(),
+            "waybill:component-role".to_string(),
             serde_json::Value::String("main-module".to_string()),
         );
         PackageDbEntry {
@@ -3100,7 +3100,7 @@ version = "0.1.0"
         );
         assert!(entries[0]
             .extra_annotations
-            .contains_key("mikebom:duplicate-purl-divergent"));
+            .contains_key("waybill:duplicate-purl-divergent"));
     }
 
     #[test]
@@ -3128,7 +3128,7 @@ version = "0.1.0"
         assert!(divergences.is_empty());
         assert!(!entries[0]
             .extra_annotations
-            .contains_key("mikebom:duplicate-purl-divergent"));
+            .contains_key("waybill:duplicate-purl-divergent"));
     }
 
     #[test]
@@ -3237,15 +3237,15 @@ version = "0.1.0"
     // naturally serialize matching tests. Matches m203 pattern.
 
     fn with_cargo_metadata_timeout_env<F: FnOnce()>(value: Option<&str>, f: F) {
-        let prev = std::env::var("MIKEBOM_CARGO_METADATA_TIMEOUT_SECS").ok();
+        let prev = std::env::var("WAYBILL_CARGO_METADATA_TIMEOUT_SECS").ok();
         match value {
-            Some(v) => std::env::set_var("MIKEBOM_CARGO_METADATA_TIMEOUT_SECS", v),
-            None => std::env::remove_var("MIKEBOM_CARGO_METADATA_TIMEOUT_SECS"),
+            Some(v) => std::env::set_var("WAYBILL_CARGO_METADATA_TIMEOUT_SECS", v),
+            None => std::env::remove_var("WAYBILL_CARGO_METADATA_TIMEOUT_SECS"),
         }
         f();
         match prev {
-            Some(v) => std::env::set_var("MIKEBOM_CARGO_METADATA_TIMEOUT_SECS", v),
-            None => std::env::remove_var("MIKEBOM_CARGO_METADATA_TIMEOUT_SECS"),
+            Some(v) => std::env::set_var("WAYBILL_CARGO_METADATA_TIMEOUT_SECS", v),
+            None => std::env::remove_var("WAYBILL_CARGO_METADATA_TIMEOUT_SECS"),
         }
     }
 

@@ -2,7 +2,7 @@
 //! emission test (US1 happy path + 3-step fallback).
 //!
 //! Synthesizes a tempdir + `git init` + `git remote add origin …`
-//! fixture, runs `mikebom sbom scan --path <tempdir>` for each of the
+//! fixture, runs `waybill sbom scan --path <tempdir>` for each of the
 //! three formats, and asserts the emitted SBOM carries the
 //! auto-detected `repo:` identifier in the per-format standards-native
 //! carrier per `contracts/identifiers-annotation.md` C-1.
@@ -53,7 +53,7 @@ fn write_minimal_cargo_project(dir: &Path) {
     .unwrap();
 }
 
-/// Run `mikebom sbom scan --path` once, returning the parsed CDX
+/// Run `waybill sbom scan --path` once, returning the parsed CDX
 /// JSON output. Uses `--offline` for hermeticity.
 fn run_scan_cdx(path: &Path, fake_home: &Path, extra_args: &[&str]) -> serde_json::Value {
     let out_path = path.join("out.cdx.json");
@@ -82,7 +82,7 @@ fn run_scan_cdx(path: &Path, fake_home: &Path, extra_args: &[&str]) -> serde_jso
     serde_json::from_slice(&bytes).expect("parse CDX")
 }
 
-/// Run `mikebom sbom scan --path` for SPDX 2.3, returning parsed JSON.
+/// Run `waybill sbom scan --path` for SPDX 2.3, returning parsed JSON.
 fn run_scan_spdx23(path: &Path, fake_home: &Path) -> serde_json::Value {
     let out_path = path.join("out.spdx.json");
     let mut cmd = Command::new(bin());
@@ -103,7 +103,7 @@ fn run_scan_spdx23(path: &Path, fake_home: &Path) -> serde_json::Value {
     serde_json::from_slice(&bytes).unwrap()
 }
 
-/// Run `mikebom sbom scan --path` for SPDX 3, returning parsed JSON.
+/// Run `waybill sbom scan --path` for SPDX 3, returning parsed JSON.
 fn run_scan_spdx3(path: &Path, fake_home: &Path) -> serde_json::Value {
     let out_path = path.join("out.spdx3.json");
     let mut cmd = Command::new(bin());
@@ -184,7 +184,7 @@ fn auto_detect_origin_emits_repo_identifier_in_all_three_formats() {
     );
 
     // SPDX 3 — check Element.externalIdentifier[]. Per milestone
-    // 079, the `repo:` mikebom scheme maps to the SPDX 3
+    // 079, the `repo:` waybill scheme maps to the SPDX 3
     // controlled-vocab value `other` with the original scheme name
     // preserved on the `comment` field as `original-scheme: repo`.
     let spdx3 = run_scan_spdx3(td.path(), fake_home.path());

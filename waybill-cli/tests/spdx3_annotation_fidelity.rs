@@ -1,6 +1,6 @@
 //! Annotation-fidelity guard SPDX 2.3 ↔ SPDX 3 (milestone 011 T018).
 //!
-//! FR-018 / SC-005: every `mikebom:*` signal reachable in the
+//! FR-018 / SC-005: every `waybill:*` signal reachable in the
 //! SPDX 2.3 output for a given fixture MUST be reachable (by
 //! field name and value) in the SPDX 3 output for the same
 //! fixture — whether via a native SPDX 3 field or an Annotation
@@ -60,7 +60,7 @@ fn dual_scan(case: &EcosystemCase) -> Scan {
     if let Some(code) = case.deb_codename {
         cmd.arg("--deb-codename").arg(code);
     }
-    let out = cmd.output().expect("mikebom runs");
+    let out = cmd.output().expect("waybill runs");
     assert!(
         out.status.success(),
         "scan failed for {}: stderr={}",
@@ -75,7 +75,7 @@ fn dual_scan(case: &EcosystemCase) -> Scan {
     }
 }
 
-/// One mikebom envelope reachable in an SBOM document. `subject`
+/// One waybill envelope reachable in an SBOM document. `subject`
 /// is the PURL of the owning Package, or the literal string
 /// `"<document>"` for document-level annotations.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -88,7 +88,7 @@ struct MikebomEntry {
 fn parse_envelope(s: &str) -> Option<(String, String)> {
     let v: serde_json::Value = serde_json::from_str(s).ok()?;
     let schema = v.get("schema").and_then(|x| x.as_str())?;
-    if schema != "mikebom-annotation/v1" {
+    if schema != "waybill-annotation/v1" {
         return None;
     }
     let field = v.get("field").and_then(|x| x.as_str())?.to_string();
@@ -96,7 +96,7 @@ fn parse_envelope(s: &str) -> Option<(String, String)> {
     Some((field, value))
 }
 
-/// Collect every mikebom envelope from an SPDX 2.3 document.
+/// Collect every waybill envelope from an SPDX 2.3 document.
 /// Document-level entries: `annotations[].comment`.
 /// Package-level entries: `packages[].annotations[].comment`
 /// subject-keyed by the Package's PURL (via
@@ -144,14 +144,14 @@ fn collect_spdx23(doc: &serde_json::Value) -> BTreeSet<MikebomEntry> {
                     continue;
                 };
                 if let Some((field, value)) = parse_envelope(comment) {
-                    // Issue #228 — `mikebom:lifecycle-scope` is a
+                    // Issue #228 — `waybill:lifecycle-scope` is a
                     // SPDX-2.3-only parity-bridging annotation (C42 in
                     // sbom-format-mapping.md). SPDX 3 carries the same
                     // signal natively via `LifecycleScopedRelationship.scope`
                     // and intentionally does NOT emit the annotation,
                     // so the fidelity check skips it on the SPDX 2.3
                     // side to avoid a false-positive drift.
-                    if field == "mikebom:lifecycle-scope" {
+                    if field == "waybill:lifecycle-scope" {
                         continue;
                     }
                     out.insert(MikebomEntry {
@@ -180,7 +180,7 @@ fn package_purl_spdx23(pkg: &serde_json::Value) -> Option<String> {
     None
 }
 
-/// Collect every mikebom envelope from an SPDX 3 document.
+/// Collect every waybill envelope from an SPDX 3 document.
 /// Subject is the Package's `software_packageUrl` for package-
 /// level subjects, or the literal `"<document>"` when the subject
 /// is the SpdxDocument element.
@@ -263,7 +263,7 @@ fn assert_fidelity(case: &EcosystemCase) {
     let only_in_23: Vec<&MikebomEntry> = spdx23.difference(&spdx3).collect();
     let only_in_3: Vec<&MikebomEntry> = spdx3.difference(&spdx23).collect();
     panic!(
-        "{}: mikebom annotation fidelity drift between SPDX 2.3 and SPDX 3:\n\
+        "{}: waybill annotation fidelity drift between SPDX 2.3 and SPDX 3:\n\
          only in SPDX 2.3 ({} entries):\n{}\nonly in SPDX 3 ({} entries):\n{}",
         case.label,
         only_in_23.len(),

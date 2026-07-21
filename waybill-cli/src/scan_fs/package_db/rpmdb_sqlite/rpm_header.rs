@@ -9,7 +9,7 @@
 //!   offset-into-store + u32be count
 //! - data store: `hsize` bytes, accessed by offset
 //!
-//! We extract only the tags mikebom needs (package metadata + file
+//! We extract only the tags waybill needs (package metadata + file
 //! lists). The upstream `rpm = 0.22` crate parses full `.rpm` files
 //! (lead + signature + header), but its header-only `Header::parse`
 //! is `pub(crate)` and unreachable, so this selective reader lives
@@ -60,7 +60,7 @@ pub const TAG_DIRNAMES: u32 = 1118;
 /// entry is a hex-encoded digest string. The algorithm is named by
 /// [`TAG_FILEDIGESTALGO`]; when that tag is absent, MD5 is the
 /// rpm-spec-defined default. Populated by `rpmbuild` at package
-/// creation; mikebom uses it for the milestone-041 cross-ref on
+/// creation; waybill uses it for the milestone-041 cross-ref on
 /// per-file evidence.
 pub const TAG_FILEDIGESTS: u32 = 1035;
 /// IANA hash-algorithm code for [`TAG_FILEDIGESTS`]. Common values:
@@ -296,7 +296,7 @@ impl RpmHeader {
 
     /// Read the per-file FILEDIGESTS values + their algorithm.
     /// Returns `None` when FILEDIGESTS is absent, when the
-    /// FILEDIGESTALGO is set to a code mikebom doesn't recognize
+    /// FILEDIGESTALGO is set to a code waybill doesn't recognize
     /// (defensive — defer to a follow-on rather than emit a
     /// mis-prefixed cross-ref), or when the digest array is empty.
     ///

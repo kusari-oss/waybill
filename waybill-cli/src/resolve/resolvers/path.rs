@@ -1,6 +1,6 @@
 //! Milestone 209: file-path resolver.
 //!
-//! Wraps `mikebom-cli/src/resolve/path_resolver.rs::resolve_path_with_context`
+//! Wraps `waybill-cli/src/resolve/path_resolver.rs::resolve_path_with_context`
 //! per FR-004. Handles ONLY `ResolveInput::FileOp` variants — the
 //! path resolver operates on file-access events, not connection
 //! events (matches pre-refactor pipeline.rs:275-325 semantics).

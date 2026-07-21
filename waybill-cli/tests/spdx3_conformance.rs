@@ -10,7 +10,7 @@
 //! binary isn't installed locally).
 //!
 //! Behavior in absence of validator binary (research §5):
-//!   - `MIKEBOM_REQUIRE_SPDX3_VALIDATOR=1` → tests FAIL.
+//!   - `WAYBILL_REQUIRE_SPDX3_VALIDATOR=1` → tests FAIL.
 //!   - env var unset → tests gracefully skip with a clear stderr
 //!     diagnostic pointing at scripts/install-spdx3-validate.sh.
 //!
@@ -28,11 +28,11 @@ use common::{bin, workspace_root, CASES};
 
 /// Pinned validator version per research §2. Bumping is a deliberate
 /// PR with proof the new version doesn't surface false positives
-/// against post-fix mikebom output (FR-008).
+/// against post-fix waybill output (FR-008).
 const PINNED_VALIDATOR_VERSION: &str = "0.0.5";
 
 /// Process-wide env-var serialization lock. The two tests below that
-/// toggle `MIKEBOM_REQUIRE_SPDX3_VALIDATOR`
+/// toggle `WAYBILL_REQUIRE_SPDX3_VALIDATOR`
 /// (`validator_absence_graceful_skip_local` and
 /// `validator_absence_hard_fail_ci`) MUST hold this lock for the
 /// entire duration of their env-var manipulation, otherwise cargo's
@@ -59,7 +59,7 @@ enum ValidationResult {
     /// verbatim for failure diagnostics.
     Fail { combined_output: String },
     /// Validator binary is NOT installed AND
-    /// `MIKEBOM_REQUIRE_SPDX3_VALIDATOR` is unset. Caller should
+    /// `WAYBILL_REQUIRE_SPDX3_VALIDATOR` is unset. Caller should
     /// treat this as test-passes-with-skip-message per research §5.
     Skipped,
 }
@@ -74,12 +74,12 @@ fn run_validator(fixture_path: &Path) -> ValidationResult {
     if !bin_path.exists() {
         // Issue #221: serialize env-var read against the writer tests
         // (validator_absence_{graceful_skip_local,hard_fail_ci}) which
-        // briefly mutate MIKEBOM_REQUIRE_SPDX3_VALIDATOR under ENV_LOCK.
+        // briefly mutate WAYBILL_REQUIRE_SPDX3_VALIDATOR under ENV_LOCK.
         // Without this guard, a parallel scheduling overlap can make a
         // reader observe a writer's temporary "1" value.
         let require = {
             let _g = ENV_LOCK.lock().expect("env lock poisoned");
-            std::env::var("MIKEBOM_REQUIRE_SPDX3_VALIDATOR").ok().as_deref() == Some("1")
+            std::env::var("WAYBILL_REQUIRE_SPDX3_VALIDATOR").ok().as_deref() == Some("1")
         };
         if require {
             // Caller will fail the assertion downstream when it sees
@@ -88,7 +88,7 @@ fn run_validator(fixture_path: &Path) -> ValidationResult {
             // graceful-skip mode."
             return ValidationResult::Fail {
                 combined_output: format!(
-                    "spdx3-validate not found at {} and MIKEBOM_REQUIRE_SPDX3_VALIDATOR=1 is set; \
+                    "spdx3-validate not found at {} and WAYBILL_REQUIRE_SPDX3_VALIDATOR=1 is set; \
                      run scripts/install-spdx3-validate.sh on this host before re-running CI.",
                     bin_path.display()
                 ),
@@ -143,7 +143,7 @@ fn assert_validation_or_skip(fixture_path: &Path, label: &str) {
     }
 }
 
-/// Emit a fresh SPDX 3 SBOM via `mikebom sbom scan --path` against
+/// Emit a fresh SPDX 3 SBOM via `waybill sbom scan --path` against
 /// `target_dir`, returning the temp output path + its parsed JSON
 /// + the tempdir guard (held by caller to keep paths alive).
 struct EmittedSbom {
@@ -156,7 +156,7 @@ struct EmittedSbom {
 
 fn emit_spdx3_for_path(target_dir: &Path) -> EmittedSbom {
     let out_dir = tempfile::tempdir().expect("emit-output tempdir");
-    let out_path = out_dir.path().join("mikebom.spdx3.json");
+    let out_path = out_dir.path().join("waybill.spdx3.json");
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
@@ -170,10 +170,10 @@ fn emit_spdx3_for_path(target_dir: &Path) -> EmittedSbom {
         .arg("--output")
         .arg(format!("spdx-3-json={}", out_path.to_string_lossy()))
         .arg("--no-deep-hash");
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
-        "mikebom sbom scan failed: stderr={}",
+        "waybill sbom scan failed: stderr={}",
         String::from_utf8_lossy(&output.stderr)
     );
     let raw = std::fs::read_to_string(&out_path).expect("read produced sbom");
@@ -227,12 +227,12 @@ fn emit_minimal_source_tier_sbom() -> EmittedSbom {
     // Smallest cargo manifest pair that produces a valid SBOM.
     std::fs::write(
         project.path().join("Cargo.toml"),
-        b"[package]\nname = \"mikebom-conformance-fixture\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\n",
+        b"[package]\nname = \"waybill-conformance-fixture\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\n",
     )
     .unwrap();
     std::fs::write(
         project.path().join("Cargo.lock"),
-        b"version = 3\n\n[[package]]\nname = \"mikebom-conformance-fixture\"\nversion = \"0.1.0\"\n",
+        b"version = 3\n\n[[package]]\nname = \"waybill-conformance-fixture\"\nversion = \"0.1.0\"\n",
     )
     .unwrap();
     let emitted = emit_spdx3_for_path(project.path());
@@ -248,7 +248,7 @@ fn emit_minimal_source_tier_sbom() -> EmittedSbom {
 // ---------------------------------------------------------------------
 
 /// FR-001 / SC-003 — `CreationInfo.createdBy[0]` must resolve to an
-/// `Organization` element with `name: "mikebom contributors"`.
+/// `Organization` element with `name: "waybill contributors"`.
 #[test]
 fn created_by_references_organization_post_fix() {
     let emitted = emit_minimal_source_tier_sbom();
@@ -277,13 +277,13 @@ fn created_by_references_organization_post_fix() {
     );
     assert_eq!(
         org.get("name").and_then(|v| v.as_str()),
-        Some("mikebom contributors"),
+        Some("waybill contributors"),
         "Organization.name should match the CDX publisher value"
     );
 }
 
 /// FR-001 / SC-003 — `CreationInfo.createdUsing[0]` must resolve to
-/// a `Tool` element (the existing mikebom Tool, unchanged identity).
+/// a `Tool` element (the existing waybill Tool, unchanged identity).
 #[test]
 fn created_using_references_tool_post_fix() {
     let emitted = emit_minimal_source_tier_sbom();
@@ -315,8 +315,8 @@ fn created_using_references_tool_post_fix() {
         .and_then(|v| v.as_str())
         .expect("Tool.name");
     assert!(
-        name.starts_with("mikebom-"),
-        "Tool.name should start with 'mikebom-', got {name}"
+        name.starts_with("waybill-"),
+        "Tool.name should start with 'waybill-', got {name}"
     );
 }
 
@@ -379,7 +379,7 @@ fn every_existing_golden_passes_validator() {
 }
 
 /// FR-003 / SC-002 — fresh source-tier emission passes the validator.
-/// Source-tier here is `mikebom sbom scan --path <synthetic source
+/// Source-tier here is `waybill sbom scan --path <synthetic source
 /// tree>` — exactly the operator path that produces source-tier SBOMs.
 #[test]
 fn fresh_source_tier_emission_passes() {
@@ -466,7 +466,7 @@ fn fresh_image_tier_emission_passes() {
         .arg("--output")
         .arg(format!("spdx-3-json={}", out_path.to_string_lossy()))
         .arg("--no-deep-hash");
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "image-tier scan failed: stderr={}",
@@ -476,11 +476,11 @@ fn fresh_image_tier_emission_passes() {
 }
 
 /// FR-003 / SC-002 — fresh build-tier-flavored emission passes the
-/// validator. Driving `mikebom trace run` directly requires eBPF
+/// validator. Driving `waybill trace run` directly requires eBPF
 /// (Linux+nightly+feature-gated), which is out-of-scope for this
 /// test target. The validator-gate concern is the SPDX 3 wire
 /// format, which is independent of the generation context label;
-/// this test exercises a second `mikebom sbom scan --path`
+/// this test exercises a second `waybill sbom scan --path`
 /// emission against a different synthetic tree (cargo + a
 /// dependency) so the validator sees a non-trivial component
 /// graph distinct from `fresh_source_tier_emission_passes`.
@@ -491,7 +491,7 @@ fn fresh_synthetic_build_tier_emission_passes() {
     let project = tempfile::tempdir().expect("project tempdir");
     std::fs::write(
         project.path().join("Cargo.toml"),
-        b"[package]\nname = \"mikebom-build-tier-fixture\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\nlibc = \"0.2\"\n",
+        b"[package]\nname = \"waybill-build-tier-fixture\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[dependencies]\nlibc = \"0.2\"\n",
     )
     .unwrap();
     std::fs::write(
@@ -503,7 +503,7 @@ name = "libc"
 version = "0.2.155"
 
 [[package]]
-name = "mikebom-build-tier-fixture"
+name = "waybill-build-tier-fixture"
 version = "0.1.0"
 dependencies = ["libc"]
 "#,
@@ -519,7 +519,7 @@ dependencies = ["libc"]
 // ---------------------------------------------------------------------
 
 /// Edge case / FR-005 — local dev WITHOUT
-/// `MIKEBOM_REQUIRE_SPDX3_VALIDATOR` set + WITHOUT the validator
+/// `WAYBILL_REQUIRE_SPDX3_VALIDATOR` set + WITHOUT the validator
 /// binary installed: the helper returns `Skipped` and the test
 /// passes. Preserves the local pre-PR-gate experience for devs
 /// without Python configured.
@@ -527,11 +527,11 @@ dependencies = ["libc"]
 fn validator_absence_graceful_skip_local() {
     let _g = ENV_LOCK.lock().expect("env lock poisoned");
     // Remove the env var (and remember the prior value to restore).
-    let prior = std::env::var("MIKEBOM_REQUIRE_SPDX3_VALIDATOR").ok();
+    let prior = std::env::var("WAYBILL_REQUIRE_SPDX3_VALIDATOR").ok();
     // SAFETY: Tests serialized via ENV_LOCK; safe because no
     // concurrent test mutates env.
     unsafe {
-        std::env::remove_var("MIKEBOM_REQUIRE_SPDX3_VALIDATOR");
+        std::env::remove_var("WAYBILL_REQUIRE_SPDX3_VALIDATOR");
     }
     // Point at a definitely-non-existent binary path. We can't
     // safely uninstall the real venv (other tests need it); instead
@@ -545,7 +545,7 @@ fn validator_absence_graceful_skip_local() {
     let exists = nonexistent.exists();
     assert!(!exists, "test precondition: nonexistent path must not exist");
     let require =
-        std::env::var("MIKEBOM_REQUIRE_SPDX3_VALIDATOR").ok().as_deref() == Some("1");
+        std::env::var("WAYBILL_REQUIRE_SPDX3_VALIDATOR").ok().as_deref() == Some("1");
     assert!(!require, "env var should be unset for graceful-skip test");
     // The graceful-skip semantics: helper returns Skipped (verified
     // by behavior) — encoded here as a direct check that the
@@ -554,13 +554,13 @@ fn validator_absence_graceful_skip_local() {
     // Restore env var.
     if let Some(prev) = prior {
         unsafe {
-            std::env::set_var("MIKEBOM_REQUIRE_SPDX3_VALIDATOR", prev);
+            std::env::set_var("WAYBILL_REQUIRE_SPDX3_VALIDATOR", prev);
         }
     }
 }
 
 /// Edge case / research §5 — CI mode with
-/// `MIKEBOM_REQUIRE_SPDX3_VALIDATOR=1` AND the validator binary
+/// `WAYBILL_REQUIRE_SPDX3_VALIDATOR=1` AND the validator binary
 /// absent: the helper returns `Fail`. Asserted by direct call to
 /// `run_validator` against a fake fixture path with the env var
 /// set + a clearly-nonexistent binary path checked via the same
@@ -568,10 +568,10 @@ fn validator_absence_graceful_skip_local() {
 #[test]
 fn validator_absence_hard_fail_ci() {
     let _g = ENV_LOCK.lock().expect("env lock poisoned");
-    let prior = std::env::var("MIKEBOM_REQUIRE_SPDX3_VALIDATOR").ok();
+    let prior = std::env::var("WAYBILL_REQUIRE_SPDX3_VALIDATOR").ok();
     // SAFETY: Tests serialized via ENV_LOCK.
     unsafe {
-        std::env::set_var("MIKEBOM_REQUIRE_SPDX3_VALIDATOR", "1");
+        std::env::set_var("WAYBILL_REQUIRE_SPDX3_VALIDATOR", "1");
     }
     // Mirror the absence-check branch: a non-existent binary path +
     // env var set should produce the hard-fail branch.
@@ -581,7 +581,7 @@ fn validator_absence_hard_fail_ci() {
         "test precondition: nonexistent path must not exist"
     );
     let require =
-        std::env::var("MIKEBOM_REQUIRE_SPDX3_VALIDATOR").ok().as_deref() == Some("1");
+        std::env::var("WAYBILL_REQUIRE_SPDX3_VALIDATOR").ok().as_deref() == Some("1");
     assert!(require, "env var must be set for hard-fail test");
     // The hard-fail semantics: helper returns Fail when
     // env-var-set + missing-binary. Directly verified by the
@@ -590,8 +590,8 @@ fn validator_absence_hard_fail_ci() {
     // Restore env var.
     unsafe {
         match prior {
-            Some(prev) => std::env::set_var("MIKEBOM_REQUIRE_SPDX3_VALIDATOR", prev),
-            None => std::env::remove_var("MIKEBOM_REQUIRE_SPDX3_VALIDATOR"),
+            Some(prev) => std::env::set_var("WAYBILL_REQUIRE_SPDX3_VALIDATOR", prev),
+            None => std::env::remove_var("WAYBILL_REQUIRE_SPDX3_VALIDATOR"),
         }
     }
 }
@@ -607,11 +607,11 @@ fn validator_pinned_version_check() {
         // Issue #221: see comment in run_validator — same env-var race.
         let require = {
             let _g = ENV_LOCK.lock().expect("env lock poisoned");
-            std::env::var("MIKEBOM_REQUIRE_SPDX3_VALIDATOR").ok().as_deref() == Some("1")
+            std::env::var("WAYBILL_REQUIRE_SPDX3_VALIDATOR").ok().as_deref() == Some("1")
         };
         if require {
             panic!(
-                "MIKEBOM_REQUIRE_SPDX3_VALIDATOR=1 but validator binary missing at {}",
+                "WAYBILL_REQUIRE_SPDX3_VALIDATOR=1 but validator binary missing at {}",
                 bin_path.display()
             );
         }
@@ -641,8 +641,8 @@ fn validator_pinned_version_check() {
 // Milestone 079 — externalIdentifierType controlled-vocabulary
 // conformance tests (T006-T010).
 //
-// These tests verify that mikebom's SPDX 3 emission path maps every
-// non-vocab mikebom scheme to one of the 11 SPDX 3 controlled-vocab
+// These tests verify that waybill's SPDX 3 emission path maps every
+// non-vocab waybill scheme to one of the 11 SPDX 3 controlled-vocab
 // values (`Core/externalIdentifierType` SHACL constraint), preserving
 // the original scheme name on the `comment` field as
 // `original-scheme: <name>`. See:
@@ -675,7 +675,7 @@ fn collect_external_identifiers(json: &serde_json::Value) -> Vec<serde_json::Val
 /// the milestone-078 `fresh_image_tier_emission_passes` helper —
 /// the only variable here is the RepoTags content (which is what
 /// triggers the milestone-074 image-identifier auto-detect, the
-/// key mikebom-079 codepath).
+/// key waybill-079 codepath).
 fn build_image_tarball_with_repo_tags(
     tarball_path: &Path,
     repo_tags_json_array: &str,
@@ -755,7 +755,7 @@ fn image_tier_with_repo_tags_passes_validator() {
         .arg("--output")
         .arg(format!("spdx-3-json={}", out_path.to_string_lossy()))
         .arg("--no-deep-hash");
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "image-tier scan with RepoTags failed: stderr={}",
@@ -847,13 +847,13 @@ fn source_tier_in_git_repo_passes_validator() {
 
     // (2) Wire-format gate: repo: → (other, comment="original-scheme: repo")
     //
-    // Note re: FR-004 gitoid detection: mikebom's source-tier
+    // Note re: FR-004 gitoid detection: waybill's source-tier
     // `auto_detect_repo_identifier` emits ONLY the `repo:` identifier;
     // bare-SHA `git:` values are produced by milestone 074's
     // build-tier path (`auto_detect_build_tier_identifiers`, called
-    // from `mikebom trace run`), which requires Linux + nightly +
+    // from `waybill trace run`), which requires Linux + nightly +
     // the `ebpf-tracing` feature flag and isn't reachable from
-    // `mikebom sbom scan`. Even the build-tier path emits
+    // `waybill sbom scan`. Even the build-tier path emits
     // `git:<url>#<sha>` values (not bare SHAs), so the gitoid regex
     // only matches construct-time defensively. The unit test in
     // `v3_id_type_map::tests::git_sha_detected_as_gitoid` exercises
@@ -874,7 +874,7 @@ fn source_tier_in_git_repo_passes_validator() {
 
 /// T008 / SC-003 — build-tier-flavored emission with manual
 /// `--subject-hash` and `--attestation` flags. These exercise the
-/// `subject:` and `attestation:` mikebom built-in schemes — the
+/// `subject:` and `attestation:` waybill built-in schemes — the
 /// milestone-076 build-tier identifier surface — without requiring
 /// eBPF (which is feature-gated and out-of-scope for this test
 /// target). Both schemes must map to the SPDX 3 controlled-vocab
@@ -916,7 +916,7 @@ fn build_tier_with_subjects_passes_validator() {
         .arg(format!("sha256:{subject_hex}"))
         .arg("--attestation")
         .arg("https://example.com/build/attestation.json");
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "build-tier-flavored scan failed: stderr={}",
@@ -995,7 +995,7 @@ fn user_defined_scheme_passes_validator() {
         .arg("pkg:cargo/m079-user-scheme-fixture@0.1.0=jira:PROJ-1234")
         .arg("--component-id")
         .arg("pkg:cargo/m079-user-scheme-fixture@0.1.0=cve:CVE-2024-1234");
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan with user-defined --component-id flags failed: stderr={}",
@@ -1036,7 +1036,7 @@ fn user_defined_scheme_passes_validator() {
 }
 
 /// T010 / SC-005 + VR-079-002 + VR-079-003 — for every non-vocab
-/// mikebom scheme (5 built-ins + 1 user-defined), the comment field
+/// waybill scheme (5 built-ins + 1 user-defined), the comment field
 /// MUST start with the literal prefix `"original-scheme: "` followed
 /// by the original scheme name verbatim. Vocab-named schemes (e.g.,
 /// `cve`) MUST NOT carry a comment field (no info loss).
@@ -1121,7 +1121,7 @@ fn original_scheme_recoverable_from_comment() {
         .arg("pkg:cargo/m079-recoverability-fixture@0.1.0=jira:PROJ-1234")
         .arg("--component-id")
         .arg("pkg:cargo/m079-recoverability-fixture@0.1.0=cve:CVE-2024-1234");
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "recoverability scan failed: stderr={}",
@@ -1158,7 +1158,7 @@ fn original_scheme_recoverable_from_comment() {
         .arg("--output")
         .arg(format!("spdx-3-json={}", out_path_b.to_string_lossy()))
         .arg("--no-deep-hash");
-    let output_b = cmd_b.output().expect("mikebom should run");
+    let output_b = cmd_b.output().expect("waybill should run");
     assert!(
         output_b.status.success(),
         "image-tier scan for recoverability failed: stderr={}",
@@ -1200,7 +1200,7 @@ fn original_scheme_recoverable_from_comment() {
 
     // (f) git: SHA → gitoid (FR-004): the SOURCE-TIER source-tree
     //     scan path doesn't emit a bare-SHA `git:` identifier (only
-    //     the build-tier `mikebom trace run` path under nightly
+    //     the build-tier `waybill trace run` path under nightly
     //     eBPF does, and even that emits `git:<url>#<sha>` not
     //     bare SHAs). So this integration test cannot exercise the
     //     gitoid live-emission path; the unit test

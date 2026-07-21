@@ -73,7 +73,7 @@ fn composer_components(doc: &Value) -> Vec<&Value> {
                 .filter(|c| {
                     let purl = c.get("purl").and_then(|v| v.as_str()).unwrap_or("");
                     (purl.starts_with("pkg:composer/") || purl.starts_with("pkg:generic/"))
-                        && property_value(c, "mikebom:component-role") != Some("main-module")
+                        && property_value(c, "waybill:component-role") != Some("main-module")
                 })
                 .collect()
         })
@@ -139,19 +139,19 @@ fn design_tier_no_lockfile_emits_constraints() {
     );
     for &c in &dart {
         assert_eq!(
-            property_value(c, "mikebom:sbom-tier"),
+            property_value(c, "waybill:sbom-tier"),
             Some("design"),
         );
     }
     let console = find_by_name(&dart, "symfony/console").unwrap();
     // Milestone 199: always-array shape — JSON-array-in-string value.
     assert_eq!(
-        property_value(console, "mikebom:requirement-ranges"),
+        property_value(console, "waybill:requirement-ranges"),
         Some(r#"["^7.0"]"#),
     );
     let monolog = find_by_name(&dart, "monolog/monolog").unwrap();
     assert_eq!(
-        property_value(monolog, "mikebom:requirement-ranges"),
+        property_value(monolog, "waybill:requirement-ranges"),
         Some(r#"["^3.5"]"#),
     );
 }
@@ -198,7 +198,7 @@ fn design_tier_dev_deps_carry_lifecycle_scope() {
     let doc_with_dev = run_scan(tmp.path());
     let dart = composer_components(&doc_with_dev);
     let phpunit = find_by_name(&dart, "phpunit/phpunit").expect("dev dep phpunit must emit");
-    let lifecycle = property_value(phpunit, "mikebom:lifecycle-scope");
+    let lifecycle = property_value(phpunit, "waybill:lifecycle-scope");
     let cdx_scope = phpunit.get("scope").and_then(|v| v.as_str());
     assert!(
         lifecycle == Some("development")
@@ -259,13 +259,13 @@ fn deployed_tier_installed_json_only_emits_with_sbom_tier_deployed() {
     );
     for &c in &components {
         assert_eq!(
-            property_value(c, "mikebom:sbom-tier"),
+            property_value(c, "waybill:sbom-tier"),
             Some("deployed"),
             "every installed.json-derived component must carry sbom-tier=deployed",
         );
     }
     let phpunit = find_by_name(&components, "phpunit/phpunit").unwrap();
-    let lifecycle = property_value(phpunit, "mikebom:lifecycle-scope");
+    let lifecycle = property_value(phpunit, "waybill:lifecycle-scope");
     let cdx_scope = phpunit.get("scope").and_then(|v| v.as_str());
     assert!(
         lifecycle == Some("development")
@@ -279,7 +279,7 @@ fn lockfile_orphan_drift_detection() {
     // SC-010: composer.lock (1 package) + installed.json (2 packages,
     // 1 matching lockfile + 1 orphan); assert lockfile entry emits
     // WITHOUT orphan annotation AND orphan entry emits WITH
-    // mikebom:lockfile-orphan = "true" (string value per I3).
+    // waybill:lockfile-orphan = "true" (string value per I3).
     let tmp = tempfile::tempdir().unwrap();
     std::fs::write(
         tmp.path().join("composer.json"),
@@ -323,7 +323,7 @@ fn lockfile_orphan_drift_detection() {
     // Lockfile-pinned entry emits without orphan annotation.
     let console = component_with_purl(&doc, "pkg:composer/symfony/console@v7.0.4").unwrap();
     assert_eq!(
-        property_value(console, "mikebom:lockfile-orphan"),
+        property_value(console, "waybill:lockfile-orphan"),
         None,
         "lockfile-pinned entry must NOT carry orphan annotation",
     );
@@ -332,12 +332,12 @@ fn lockfile_orphan_drift_detection() {
     let orphan = component_with_purl(&doc, "pkg:composer/foo/orphan@1.5.2")
         .expect("orphan installed.json entry must emit");
     assert_eq!(
-        property_value(orphan, "mikebom:lockfile-orphan"),
+        property_value(orphan, "waybill:lockfile-orphan"),
         Some("true"),
-        "orphan entry must carry mikebom:lockfile-orphan = \"true\" (string value per I3 remediation)",
+        "orphan entry must carry waybill:lockfile-orphan = \"true\" (string value per I3 remediation)",
     );
     assert_eq!(
-        property_value(orphan, "mikebom:sbom-tier"),
+        property_value(orphan, "waybill:sbom-tier"),
         Some("deployed"),
     );
 }
@@ -368,11 +368,11 @@ fn deployed_tier_only_no_orphan_annotation() {
     let c = component_with_purl(&doc, "pkg:composer/foo/bar@1.0.0")
         .expect("deployed-tier-only entry must emit");
     assert_eq!(
-        property_value(c, "mikebom:sbom-tier"),
+        property_value(c, "waybill:sbom-tier"),
         Some("deployed"),
     );
     assert_eq!(
-        property_value(c, "mikebom:lockfile-orphan"),
+        property_value(c, "waybill:lockfile-orphan"),
         None,
         "deployed-tier-only scan (no sibling lockfile) must NOT carry orphan annotation \
          per C1 remediation — the lockfile-vs-disk comparison is undefined when no lockfile exists",

@@ -24,7 +24,7 @@ fn scan_path(path: &Path) -> (String, serde_json::Value) {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
     assert!(
         output.status.success(),

@@ -1,13 +1,13 @@
 //! Milestone 108 US5 — hermetic-build SHA-pin tests.
 //!
-//! Verifies the contract: two operators running the same mikebom-cli
+//! Verifies the contract: two operators running the same waybill-cli
 //! binary get byte-identical SBOMs regardless of local cache state,
 //! AND the runtime `--fingerprints-rev <SHA>` override flows through
 //! the CLI → env → `LoadOptions::from_env()` → `load_corpus()` chain
 //! to the cache key.
 //!
 //! Fully offline. Uses `tempfile::TempDir` + the
-//! `MIKEBOM_FINGERPRINTS_CACHE_DIR` env override to point at synthetic
+//! `WAYBILL_FINGERPRINTS_CACHE_DIR` env override to point at synthetic
 //! caches.
 //!
 //! What this test does NOT do: assert that the override SHA's value
@@ -29,7 +29,7 @@ fn binary_path() -> &'static str {
 }
 
 fn embedded_sha() -> &'static str {
-    env!("MIKEBOM_FINGERPRINTS_CORPUS_SHA")
+    env!("WAYBILL_FINGERPRINTS_CORPUS_SHA")
 }
 
 const OVERRIDE_SHA: &str = "0123456789abcdef0123456789abcdef01234567";
@@ -51,9 +51,9 @@ fn seed_cache_at(cache_root: &std::path::Path, sha: &str) {
     .unwrap();
 }
 
-/// Invoke `mikebom sbom scan --offline --fingerprints-corpus`
+/// Invoke `waybill sbom scan --offline --fingerprints-corpus`
 /// against `scan_target`, honoring an optional `--fingerprints-rev`
-/// override. `MIKEBOM_FIXED_TIMESTAMP` is set so the SBOM bytes are
+/// override. `WAYBILL_FIXED_TIMESTAMP` is set so the SBOM bytes are
 /// stable across invocations.
 fn run_scan(
     cache_root: &std::path::Path,
@@ -62,8 +62,8 @@ fn run_scan(
     fingerprints_rev: Option<&str>,
 ) -> std::process::Output {
     let mut cmd = Command::new(binary_path());
-    cmd.env("MIKEBOM_FINGERPRINTS_CACHE_DIR", cache_root)
-        .env("MIKEBOM_FIXED_TIMESTAMP", "2026-06-02T00:00:00Z")
+    cmd.env("WAYBILL_FINGERPRINTS_CACHE_DIR", cache_root)
+        .env("WAYBILL_FIXED_TIMESTAMP", "2026-06-02T00:00:00Z")
         .arg("--offline")
         .arg("sbom")
         .arg("scan")
@@ -108,8 +108,8 @@ fn fingerprints_rev_matching_embedded_is_byte_identical_to_no_override() {
     );
 
     // Structural compare modulo the always-randomized `serialNumber`
-    // (CDX requires it but mikebom has no fixed-uuid env knob today).
-    // `MIKEBOM_FIXED_TIMESTAMP` pins the timestamp; serialNumber is
+    // (CDX requires it but waybill has no fixed-uuid env knob today).
+    // `WAYBILL_FIXED_TIMESTAMP` pins the timestamp; serialNumber is
     // the only remaining per-run-volatile field. Strip it from both
     // SBOMs before comparing.
     let mut sbom_a: serde_json::Value =
@@ -187,7 +187,7 @@ fn fingerprints_rev_without_opt_in_warns_and_ignores() {
 
     let out = scan_target.path().join("out.cdx.json");
     let result = Command::new(binary_path())
-        .env("MIKEBOM_FINGERPRINTS_CACHE_DIR", cache.path())
+        .env("WAYBILL_FINGERPRINTS_CACHE_DIR", cache.path())
         .arg("--offline")
         .arg("sbom")
         .arg("scan")

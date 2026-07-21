@@ -1,12 +1,12 @@
 //! SPDX 3.0.1 JSON-Schema validation (milestone 011 T007 + T008).
 //!
-//! FR-016 / SC-002 — every SPDX 3 document mikebom emits MUST
+//! FR-016 / SC-002 — every SPDX 3 document waybill emits MUST
 //! validate against the bundled SPDX 3.0.1 JSON-Schema with zero
 //! errors. Schema is sourced from
 //! https://spdx.org/schema/3.0.1/spdx-json-schema.json (SHA-256
 //! `582c64e809d5b3ef9bd0c4de13a32391b47b0284a3e8d199569fb96f649234b1`,
 //! fetched 2026-04-24) and bundled at
-//! `mikebom-cli/tests/fixtures/schemas/spdx-3.0.1.json` so the
+//! `waybill-cli/tests/fixtures/schemas/spdx-3.0.1.json` so the
 //! test runs fully offline (research.md §R1).
 //!
 //! One `#[test]` per ecosystem (9 total). A failure names the
@@ -39,7 +39,7 @@ fn validator() -> &'static jsonschema::Validator {
             serde_json::from_str(&raw).expect("parse SPDX 3.0.1 schema");
         jsonschema::validator_for(&schema).expect("compile SPDX 3.0.1 schema")
     })
-}/// Run a `mikebom sbom scan --format spdx-3-json` against `fixture`
+}/// Run a `waybill sbom scan --format spdx-3-json` against `fixture`
 /// and return the parsed JSON document. Sandboxes HOME and the
 /// per-ecosystem cache envs so per-host installed packages don't
 /// leak into the document (cross-host byte-identity rules from
@@ -72,7 +72,7 @@ fn scan_to_spdx3(case: &EcosystemCase) -> serde_json::Value {
     if let Some(code) = case.deb_codename {
         cmd.arg("--deb-codename").arg(code);
     }
-    let out = cmd.output().expect("mikebom runs");
+    let out = cmd.output().expect("waybill runs");
     assert!(
         out.status.success(),
         "scan failed for {}: stderr={}",

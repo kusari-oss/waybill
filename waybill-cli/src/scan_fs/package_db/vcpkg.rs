@@ -165,7 +165,7 @@ fn build_entry(name: &str, version: &str, source_path: &str) -> Option<PackageDb
             let mut a: std::collections::BTreeMap<String, serde_json::Value> =
                 Default::default();
             a.insert(
-                "mikebom:source-mechanism".to_string(),
+                "waybill:source-mechanism".to_string(),
                 serde_json::json!("vcpkg-manifest"),
             );
             a
@@ -253,11 +253,11 @@ mod tests {
         for e in &entries {
             assert_eq!(
                 e.extra_annotations
-                    .get("mikebom:source-mechanism")
+                    .get("waybill:source-mechanism")
                     .and_then(|v| v.as_str()),
                 Some("vcpkg-manifest"),
                 "every vcpkg entry should carry source-mechanism: vcpkg-manifest; got: {:?}",
-                e.extra_annotations.get("mikebom:source-mechanism"),
+                e.extra_annotations.get("waybill:source-mechanism"),
             );
         }
     }

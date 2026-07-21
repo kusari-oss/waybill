@@ -35,7 +35,7 @@ fn cpe_sanitize(raw: &str) -> String {
 /// Build the CycloneDX `metadata` section.
 ///
 /// Includes:
-/// - Tool identity (mikebom with current version)
+/// - Tool identity (waybill with current version)
 /// - Generation timestamp
 /// - Component reference (the build target)
 /// - Properties indicating generation context
@@ -73,7 +73,7 @@ pub fn build_metadata(
     collisions_summary: Option<&waybill_common::divergence::CollisionsSummary>,
     // Milestone 158 (US2) — the multi-root BFS reachability pass
     // result. Drives the two document-scope annotations
-    // `mikebom:graph-completeness` + `mikebom:graph-completeness-reason`
+    // `waybill:graph-completeness` + `waybill:graph-completeness-reason`
     // per FR-003 + FR-004. Threaded from `builder::build()` after the
     // graph is fully assembled (post workspace-peer linkage).
     graph_completeness: &crate::generate::graph_completeness::GraphCompletenessResult,
@@ -90,14 +90,14 @@ pub fn build_metadata(
         &crate::scan_fs::package_db::golang::gowork::WorkspaceMode,
     >,
     // Milestone 172 — doc-scope Go step-5 fallback count. Drives the
-    // C117 `mikebom:go-transitive-fallback-count` annotation per FR-002
+    // C117 `waybill:go-transitive-fallback-count` annotation per FR-002
     // + Q1 clarification. `None` iff no Go scan happened (annotation
     // absent); `Some(N)` else — including `Some(0)` on healthy scans,
     // where the annotation is emitted with value `"0"` explicitly.
     go_transitive_fallback_count: Option<usize>,
     // Milestone 173 — doc-scope Go cache-warming outcome. Drives the
-    // C118 (`mikebom:go-cache-warming-mode`) unconditional annotation
-    // AND the C119 (`mikebom:go-cache-warming-failed`) conditional
+    // C118 (`waybill:go-cache-warming-mode`) unconditional annotation
+    // AND the C119 (`waybill:go-cache-warming-failed`) conditional
     // annotation. `None` iff no Go scan happened. When `Some(_)`, the
     // mode is emitted verbatim; failures (if non-empty) emit C119
     // with a JSON-encoded array value per contracts/annotation-wire-
@@ -106,7 +106,7 @@ pub fn build_metadata(
         &crate::scan_fs::package_db::golang::CacheWarmingResult,
     >,
     // Milestone 204 (#554) — doc-scope Helm image-extraction-mode
-    // signal. Drives the C123 `mikebom:image-extraction-completeness`
+    // signal. Drives the C123 `waybill:image-extraction-completeness`
     // annotation. `None` iff no helm reader ran (annotation absent
     // per FR-004 / SC-004 byte-identity for non-Helm scans).
     // `Some(Unrendered)` → `"partial"`. `Some(Rendered)` → `"full"`.
@@ -114,13 +114,13 @@ pub fn build_metadata(
         &crate::scan_fs::package_db::HelmExtractionMode,
     >,
     // Milestone 206 (#440) — doc-scope image-source signal for the
-    // C124 `mikebom:image-source` annotation. Conditional emission
+    // C124 `waybill:image-source` annotation. Conditional emission
     // (podman-only in MVP) preserves FR-005 byte-identity for
     // docker/remote/path scans.
     image_source: Option<&crate::cli::scan_cmd::ImageSource>,
     // Milestone 210 — compiler-pipeline data from the eBPF trace.
-    // Drives C132 (`mikebom:compiler-pipeline-completeness`, always
-    // emitted when `Some(_)`) + C133 (`mikebom:secrets-read-filtered`,
+    // Drives C132 (`waybill:compiler-pipeline-completeness`, always
+    // emitted when `Some(_)`) + C133 (`waybill:secrets-read-filtered`,
     // emitted only when `secrets_read_filtered > 0`). `None` ⇒ neither
     // annotation emitted (byte-identity preserved for scan-mode).
     compiler_pipeline: Option<
@@ -128,7 +128,7 @@ pub fn build_metadata(
     >,
 ) -> serde_json::Value {
     let version = env!("CARGO_PKG_VERSION");
-    // Determinism: honor `MIKEBOM_FIXED_TIMESTAMP` (same env-var
+    // Determinism: honor `WAYBILL_FIXED_TIMESTAMP` (same env-var
     // contract as `scan_cmd::scan_created_timestamp`) so two
     // back-to-back scans inside a test produce byte-identical
     // metadata.timestamp + annotations[].timestamp values. Without
@@ -140,7 +140,7 @@ pub fn build_metadata(
     // is treated as unset (defensive belt-and-braces, matching
     // scan_created_timestamp).
     let timestamp = {
-        let resolved = std::env::var("MIKEBOM_FIXED_TIMESTAMP")
+        let resolved = std::env::var("WAYBILL_FIXED_TIMESTAMP")
             .ok()
             .and_then(|s| chrono::DateTime::parse_from_rfc3339(&s).ok())
             .map(|dt| dt.with_timezone(&Utc))
@@ -169,7 +169,7 @@ pub fn build_metadata(
         .collect();
 
     let mut properties = vec![json!({
-        "name": "mikebom:generation-context",
+        "name": "waybill:generation-context",
         "value": context_str,
     })];
 
@@ -182,7 +182,7 @@ pub fn build_metadata(
     // identity on every default-mode SBOM).
     if let Some("full") = file_inventory_mode {
         properties.push(json!({
-            "name": "mikebom:file-inventory-mode",
+            "name": "waybill:file-inventory-mode",
             "value": "full",
         }));
     }
@@ -195,19 +195,19 @@ pub fn build_metadata(
     if let Some(stats) = file_inventory_stats {
         if stats.oversize_skipped > 0 {
             properties.push(json!({
-                "name": "mikebom:file-inventory-skipped-oversize",
+                "name": "waybill:file-inventory-skipped-oversize",
                 "value": stats.oversize_skipped.to_string(),
             }));
         }
         if stats.special_skipped > 0 {
             properties.push(json!({
-                "name": "mikebom:file-inventory-skipped-special-files",
+                "name": "waybill:file-inventory-skipped-special-files",
                 "value": stats.special_skipped.to_string(),
             }));
         }
         if stats.unreadable_skipped > 0 {
             properties.push(json!({
-                "name": "mikebom:file-inventory-unreadable",
+                "name": "waybill:file-inventory-unreadable",
                 "value": stats.unreadable_skipped.to_string(),
             }));
         }
@@ -219,7 +219,7 @@ pub fn build_metadata(
     // Omitted entirely when the list is empty (clean scan).
     if !os_release_missing_fields.is_empty() {
         properties.push(json!({
-            "name": "mikebom:os-release-missing-fields",
+            "name": "waybill:os-release-missing-fields",
             "value": os_release_missing_fields.join(","),
         }));
     }
@@ -233,7 +233,7 @@ pub fn build_metadata(
     {
         if !entries.is_empty() {
             properties.push(json!({
-                "name": "mikebom:exclude-path",
+                "name": "waybill:exclude-path",
                 "value": entries.join(","),
             }));
         }
@@ -243,10 +243,10 @@ pub fn build_metadata(
     // invoked with `--supplement-cdx <PATH>`, record the supplement
     // file's verbatim path + sha256 hash on the envelope so consumers
     // can verify which supplement file fed the merge. Absence
-    // preserves byte-identity with pre-119 mikebom output per FR-013.
+    // preserves byte-identity with pre-119 waybill output per FR-013.
     if let Some(prov) = crate::supplement::current_provenance() {
         properties.push(json!({
-            "name": "mikebom:supplement-cdx",
+            "name": "waybill:supplement-cdx",
             "value": crate::supplement::annotation::build_supplement_cdx_provenance_string(
                 &prov.source_path,
                 &prov.source_sha256,
@@ -255,14 +255,14 @@ pub fn build_metadata(
     }
 
     // Milestone 134 (closes #125, catalog row C100): document-scope
-    // `mikebom:purl-collisions-detected` summary annotation. Omitted
+    // `waybill:purl-collisions-detected` summary annotation. Omitted
     // entirely when `collisions_summary.is_none()` so clean scans
     // stay byte-identical to alpha.51 emissions (FR-009 / SC-002).
     // Per `contracts/document-scope-annotation.md`, `value` is a
     // JSON-encoded string of the `CollisionsSummary` envelope.
     if let Some(summary) = collisions_summary {
         properties.push(json!({
-            "name": "mikebom:purl-collisions-detected",
+            "name": "waybill:purl-collisions-detected",
             "value": serde_json::to_string(summary)
                 .unwrap_or_default(),
         }));
@@ -274,25 +274,25 @@ pub fn build_metadata(
     // Each counter is surfaced as a distinct property so downstream
     // consumers can filter on name.
     properties.push(json!({
-        "name": "mikebom:trace-integrity-ring-buffer-overflows",
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
         "value": integrity.ring_buffer_overflows.to_string(),
     }));
     properties.push(json!({
-        "name": "mikebom:trace-integrity-events-dropped",
+        "name": "waybill:trace-integrity-events-dropped",
         "value": integrity.events_dropped.to_string(),
     }));
     properties.push(json!({
-        "name": "mikebom:trace-integrity-uprobe-attach-failures",
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
         "value": integrity.uprobe_attach_failures.len().to_string(),
     }));
     properties.push(json!({
-        "name": "mikebom:trace-integrity-kprobe-attach-failures",
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
         "value": integrity.kprobe_attach_failures.len().to_string(),
     }));
 
     // Milestone 210 — document-scope compiler-pipeline transparency
     // (C132 + C133) per contracts/annotations.md A-3 / A-4. Only fires
-    // when `mikebom trace` captured pipeline data. C132 is
+    // when `waybill trace` captured pipeline data. C132 is
     // unconditional (always some `{state: "complete|degraded|partial"}`
     // value) — its transparency purpose is defeated by skip-on-complete
     // semantics. C133 is emitted only when the filtered count is
@@ -301,12 +301,12 @@ pub fn build_metadata(
         let completeness_value = serde_json::to_string(&pipeline.completeness)
             .unwrap_or_else(|_| "{\"state\":\"complete\"}".to_string());
         properties.push(json!({
-            "name": "mikebom:compiler-pipeline-completeness",
+            "name": "waybill:compiler-pipeline-completeness",
             "value": completeness_value,
         }));
         if pipeline.secrets_read_filtered > 0 {
             properties.push(json!({
-                "name": "mikebom:secrets-read-filtered",
+                "name": "waybill:secrets-read-filtered",
                 "value": pipeline.secrets_read_filtered.to_string(),
             }));
         }
@@ -323,7 +323,7 @@ pub fn build_metadata(
     // precise wins):
     //   1. Milestones 053 (Go) + 064 (cargo): any main-module component
     //      is present (any ResolvedComponent carrying
-    //      `mikebom:component-role: "main-module"` in its extra
+    //      `waybill:component-role: "main-module"` in its extra
     //      annotations) — use its real `pkg:<ecosystem>/...@<ver>`
     //      PURL. Per FR-001a this is the standards-native CDX
     //      placement (Trivy's pattern). The predicate is C40-tag-
@@ -473,7 +473,7 @@ pub fn build_metadata(
     };
 
     // Milestone 127 FR-006 — emit the document-scope
-    // `mikebom:root-selection-heuristic` property when a tiebreaker
+    // `waybill:root-selection-heuristic` property when a tiebreaker
     // fired AND the auto-pick actually fell through past at least one
     // detected main-module (losers non-empty). This matches FR-007's
     // warning gate exactly and preserves byte-identity on the 8
@@ -486,28 +486,28 @@ pub fn build_metadata(
     if let Some(h) = selection.heuristic {
         if !selection.losers.is_empty() {
             let envelope = json!({
-                "schema": "mikebom-annotation/v1",
-                "field": "mikebom:root-selection-heuristic",
+                "schema": "waybill-annotation/v1",
+                "field": "waybill:root-selection-heuristic",
                 "value": {
                     "heuristic": h.name(),
                     "confidence": h.confidence(),
                 }
             });
             properties.push(json!({
-                "name": "mikebom:root-selection-heuristic",
+                "name": "waybill:root-selection-heuristic",
                 "value": serde_json::to_string(&envelope).unwrap_or_default(),
             }));
         }
     }
 
-    // Milestone 158 US2 — always-emit `mikebom:graph-completeness`
+    // Milestone 158 US2 — always-emit `waybill:graph-completeness`
     // at document scope per FR-003 (universal presence). Value is
     // the three-way `complete|partial|unknown` string. The
-    // companion `mikebom:graph-completeness-reason` is emitted
+    // companion `waybill:graph-completeness-reason` is emitted
     // conditionally per FR-004/FR-005 (present iff value !=
     // complete AND reason codes exist).
     properties.push(json!({
-        "name": "mikebom:graph-completeness",
+        "name": "waybill:graph-completeness",
         "value": graph_completeness.value.as_str(),
     }));
     if graph_completeness.value
@@ -515,7 +515,7 @@ pub fn build_metadata(
         && !graph_completeness.reason_codes.is_empty()
     {
         properties.push(json!({
-            "name": "mikebom:graph-completeness-reason",
+            "name": "waybill:graph-completeness-reason",
             "value": crate::generate::graph_completeness::join_reason_codes(
                 &graph_completeness.reason_codes,
             ),
@@ -524,23 +524,23 @@ pub fn build_metadata(
 
     // Milestone 173 — C119 doc-scope Go cache-warming failed
     // annotation. Emitted BEFORE C118 for alphabetic sort:
-    // `mikebom:go-cache-warming-failed` sorts before
-    // `mikebom:go-cache-warming-mode`. Emission gated on Go presence
+    // `waybill:go-cache-warming-failed` sorts before
+    // `waybill:go-cache-warming-mode`. Emission gated on Go presence
     // (Some) AND at least one failing workspace. Value is a JSON-
     // encoded array per contracts/annotation-wire-shapes.md.
     if let Some(cw) = go_cache_warming {
         if !cw.failures.is_empty() {
             let value = serde_json::to_string(&cw.failures).unwrap_or_default();
             properties.push(json!({
-                "name": "mikebom:go-cache-warming-failed",
+                "name": "waybill:go-cache-warming-failed",
                 "value": value,
             }));
         }
     }
 
-    // Milestone 176 — C121 doc-scope `mikebom:workspaces-detected`
+    // Milestone 176 — C121 doc-scope `waybill:workspaces-detected`
     // annotation. Value is a JSON-encoded array of the sorted-
-    // deduplicated union of every per-component `mikebom:workspace-
+    // deduplicated union of every per-component `waybill:workspace-
     // member` value (FR-003 + FR-012). Emission gated on the union
     // being non-empty (FR-003: absent when zero workspaces detected).
     // Computed by the shared helper so all three formats guarantee
@@ -550,7 +550,7 @@ pub fn build_metadata(
         if !workspaces.is_empty() {
             let value = serde_json::to_string(&workspaces).unwrap_or_default();
             properties.push(json!({
-                "name": "mikebom:workspaces-detected",
+                "name": "waybill:workspaces-detected",
                 "value": value,
             }));
         }
@@ -562,7 +562,7 @@ pub fn build_metadata(
     // Go presence (Some).
     if let Some(cw) = go_cache_warming {
         properties.push(json!({
-            "name": "mikebom:go-cache-warming-mode",
+            "name": "waybill:go-cache-warming-mode",
             "value": cw.mode.as_wire_str(),
         }));
     }
@@ -573,12 +573,12 @@ pub fn build_metadata(
     // Per FR-004/FR-005 + Q1 reason-code-driven decision rule.
     if let Some(coverage) = go_transitive_coverage {
         properties.push(json!({
-            "name": "mikebom:go-transitive-coverage",
+            "name": "waybill:go-transitive-coverage",
             "value": coverage.value_wire_str(),
         }));
         if let Some(reason) = coverage.reason() {
             properties.push(json!({
-                "name": "mikebom:go-transitive-coverage-reason",
+                "name": "waybill:go-transitive-coverage-reason",
                 "value": reason,
             }));
         }
@@ -591,7 +591,7 @@ pub fn build_metadata(
     // differentiate "no Go here" from "Go scanned, no degradation".
     if let Some(count) = go_transitive_fallback_count {
         properties.push(json!({
-            "name": "mikebom:go-transitive-fallback-count",
+            "name": "waybill:go-transitive-fallback-count",
             "value": count.to_string(),
         }));
     }
@@ -605,7 +605,7 @@ pub fn build_metadata(
         use crate::scan_fs::package_db::golang::gowork::WorkspaceMode;
         if !matches!(mode, WorkspaceMode::Absent) {
             properties.push(json!({
-                "name": "mikebom:go-workspace-mode",
+                "name": "waybill:go-workspace-mode",
                 "value": mode.as_wire_str(),
             }));
         }
@@ -619,7 +619,7 @@ pub fn build_metadata(
     // for non-Helm scans per FR-004 (annotation absent when `None`).
     if let Some(mode) = helm_extraction_mode {
         properties.push(json!({
-            "name": "mikebom:image-extraction-completeness",
+            "name": "waybill:image-extraction-completeness",
             "value": mode.as_wire_str(),
         }));
     }
@@ -631,7 +631,7 @@ pub fn build_metadata(
     // closed enum `"podman"` in m206 MVP.
     if matches!(image_source, Some(crate::cli::scan_cmd::ImageSource::Podman)) {
         properties.push(json!({
-            "name": "mikebom:image-source",
+            "name": "waybill:image-source",
             "value": "podman",
         }));
     }
@@ -643,11 +643,11 @@ pub fn build_metadata(
     // `scan_fs/mod.rs::synthesize_cpes` from the PURL using the same
     // shape as every other component) so the BOM-subject CPE
     // round-trips identically to the SPDX 2.3 / SPDX 3 emission.
-    // Pre-053 the metadata.component used a `cpe:2.3:a:mikebom:…`
+    // Pre-053 the metadata.component used a `cpe:2.3:a:waybill:…`
     // synthetic shape that diverged from the SPDX side; post-053 the
     // shapes are identical for the main-module case.
     //
-    // Uses mikebom as the vendor for the placeholder fallback. Name
+    // Uses waybill as the vendor for the placeholder fallback. Name
     // and version segments are CPE-sanitized (lowercase, non-
     // alphanumerics → underscore). sbomqs's schema validator runs CPE
     // validation on metadata.component and flags empty/absent fields
@@ -655,10 +655,10 @@ pub fn build_metadata(
     let synthetic_component_cpe = if override_active {
         // Milestone 077 — operator-supplied identity drives the CPE
         // verbatim through the existing `cpe_sanitize` helper. Vendor
-        // stays hardcoded `mikebom` per spec assumption (out of scope
+        // stays hardcoded `waybill` per spec assumption (out of scope
         // for this milestone).
         format!(
-            "cpe:2.3:a:mikebom:{}:{}:*:*:*:*:*:*:*",
+            "cpe:2.3:a:waybill:{}:{}:*:*:*:*:*:*:*",
             cpe_sanitize(&subject_name),
             cpe_sanitize(&subject_version),
         )
@@ -668,14 +668,14 @@ pub fn build_metadata(
             .cloned()
             .unwrap_or_else(|| {
                 format!(
-                    "cpe:2.3:a:mikebom:{}:{}:*:*:*:*:*:*:*",
+                    "cpe:2.3:a:waybill:{}:{}:*:*:*:*:*:*:*",
                     cpe_sanitize(&subject_name),
                     cpe_sanitize(&subject_version),
                 )
             })
     } else {
         format!(
-            "cpe:2.3:a:mikebom:{}:{}:*:*:*:*:*:*:*",
+            "cpe:2.3:a:waybill:{}:{}:*:*:*:*:*:*:*",
             cpe_sanitize(&subject_name),
             cpe_sanitize(&subject_version),
         )
@@ -714,31 +714,31 @@ pub fn build_metadata(
 
     let mut tools_components_arr = vec![json!({
         "type": "application",
-        "name": "mikebom",
+        "name": "waybill",
         "version": version,
-        "publisher": "mikebom contributors"
+        "publisher": "waybill contributors"
     })];
     for c in user_tool_components {
         tools_components_arr.push(c);
     }
-    let mut authors_arr = vec![json!({ "name": "mikebom" })];
+    let mut authors_arr = vec![json!({ "name": "waybill" })];
     for a in user_authors {
         authors_arr.push(a);
     }
     let supplier_obj = match &user_manufacturer {
-        Some(_) => json!({ "name": "mikebom contributors" }),
-        None => json!({ "name": "mikebom contributors" }),
+        Some(_) => json!({ "name": "waybill contributors" }),
+        None => json!({ "name": "waybill contributors" }),
     };
     let mut metadata = json!({
         "timestamp": timestamp,
         // Top-level SBOM provenance: the list of individuals or
         // organizations responsible for creating THIS SBOM (not the
         // underlying project). Scored by sbomqs `sbom_authors` (2.9%
-        // in Provenance). Mikebom is always present; user-supplied
+        // in Provenance). Waybill is always present; user-supplied
         // `--creator "Person: ..."` entries append (milestone 080).
         "authors": authors_arr,
         // SBOM supplier: the organization providing the SBOM. Scored
-        // by sbomqs `sbom_supplier` (2.2%). Hardcoded to the mikebom
+        // by sbomqs `sbom_supplier` (2.2%). Hardcoded to the waybill
         // project identity.
         "supplier": supplier_obj,
         // SBOM content license. SPDX-SBOM convention uses CC0-1.0 so
@@ -816,11 +816,11 @@ pub fn build_metadata(
 
     // Milestone 053 FR-004: when the metadata.component is the Go
     // main-module (per the ladder above), surface the supplementary
-    // `mikebom:component-role: main-module` C40 annotation as a
+    // `waybill:component-role: main-module` C40 annotation as a
     // metadata.component-level property so consumers reading either
     // the native field (`type: "application"`) OR the supplementary
     // tag identify the main-module. Also surface
-    // `mikebom:sbom-tier: "source"` per FR-006.
+    // `waybill:sbom-tier: "source"` per FR-006.
     //
     // Milestone 077: when the override is active, the manifest main-
     // module is no longer the BOM subject — skip these supplementary
@@ -828,16 +828,16 @@ pub fn build_metadata(
     // identity (clean replacement per Q2 clarification).
     if let (Some(c), false) = (main_module, override_active) {
         let mut comp_props = vec![json!({
-            "name": "mikebom:component-role",
+            "name": "waybill:component-role",
             "value": "main-module",
         })];
         if let Some(tier) = c.sbom_tier.as_ref() {
             comp_props.push(json!({
-                "name": "mikebom:sbom-tier",
+                "name": "waybill:sbom-tier",
                 "value": tier,
             }));
         }
-        // Propagate `mikebom:source-files` (C18) from the main-module's
+        // Propagate `waybill:source-files` (C18) from the main-module's
         // evidence so the parity-extractor framework finds the go.mod
         // path on the CDX side, matching the SPDX `packages[]` emission.
         // Milestone 133 US2.1 (FR-012 Defect B): JSON-array serialization
@@ -847,20 +847,20 @@ pub fn build_metadata(
             &c.evidence.source_file_paths,
         ) {
             comp_props.push(json!({
-                "name": "mikebom:source-files",
+                "name": "waybill:source-files",
                 "value": value,
             }));
         }
-        // Propagate `mikebom:detected-go` (C14) — true for any Go
+        // Propagate `waybill:detected-go` (C14) — true for any Go
         // workspace's main-module per build_main_module_entry's
         // `detected_go: Some(true)`.
         if c.detected_go.unwrap_or(false) {
             comp_props.push(json!({
-                "name": "mikebom:detected-go",
+                "name": "waybill:detected-go",
                 "value": "true",
             }));
         }
-        // Milestone 176 — propagate `mikebom:workspace-member` (C120)
+        // Milestone 176 — propagate `waybill:workspace-member` (C120)
         // so the main-module's workspace annotation lands on
         // metadata.component's properties[] (parity with SPDX 2.3 +
         // SPDX 3 which emit the main-module as a Package with the
@@ -871,15 +871,15 @@ pub fn build_metadata(
         // C120 `SymmetricEqual` violation.
         if let Some(value) = c
             .extra_annotations
-            .get("mikebom:workspace-member")
+            .get("waybill:workspace-member")
             .and_then(|v| v.as_str())
         {
             comp_props.push(json!({
-                "name": "mikebom:workspace-member",
+                "name": "waybill:workspace-member",
                 "value": value,
             }));
         }
-        // Milestone 116 — propagate `mikebom:produces-binaries` (C64) so
+        // Milestone 116 — propagate `waybill:produces-binaries` (C64) so
         // single-package scans (which promote the manifest main-module to
         // `metadata.component`) carry the declaration where the cross-
         // tier binder will find it. Multi-member workspaces emit through
@@ -889,53 +889,53 @@ pub fn build_metadata(
         // needs explicit propagation.
         if let Some(value) = c
             .extra_annotations
-            .get("mikebom:produces-binaries")
+            .get("waybill:produces-binaries")
             .and_then(|v| v.as_array())
         {
             comp_props.push(json!({
-                "name": "mikebom:produces-binaries",
+                "name": "waybill:produces-binaries",
                 "value": serde_json::Value::Array(value.clone()).to_string(),
             }));
         }
-        // Milestone 134 — propagate `mikebom:duplicate-purl-divergent`
+        // Milestone 134 — propagate `waybill:duplicate-purl-divergent`
         // (C99) when the deduped main-module is promoted to
         // `metadata.component`. Single-crate workspaces hit this path;
         // multi-member workspaces emit via `components[]` and pick up
         // the property automatically through the general
         // extra_annotations → properties wiring in
         // `builder.rs`. Mirrors the milestone-116
-        // `mikebom:produces-binaries` propagation pattern above.
+        // `waybill:produces-binaries` propagation pattern above.
         if let Some(value) = c
             .extra_annotations
-            .get("mikebom:duplicate-purl-divergent")
+            .get("waybill:duplicate-purl-divergent")
         {
             let value_str = match value {
                 serde_json::Value::String(s) => s.clone(),
                 other => serde_json::to_string(other).unwrap_or_default(),
             };
             comp_props.push(json!({
-                "name": "mikebom:duplicate-purl-divergent",
+                "name": "waybill:duplicate-purl-divergent",
                 "value": value_str,
             }));
         }
-        // Milestone 140 — propagate `mikebom:umbrella-root` when the
+        // Milestone 140 — propagate `waybill:umbrella-root` when the
         // Elixir umbrella root main-module is promoted to
         // `metadata.component` (small umbrella scans with the root as
         // the dominant project). Multi-member umbrellas emit via
         // components[] and pick up the property automatically.
         // Mirrors the milestone-116 + milestone-134 propagation
         // patterns above.
-        if let Some(value) = c.extra_annotations.get("mikebom:umbrella-root") {
+        if let Some(value) = c.extra_annotations.get("waybill:umbrella-root") {
             let value_str = match value {
                 serde_json::Value::String(s) => s.clone(),
                 other => serde_json::to_string(other).unwrap_or_default(),
             };
             comp_props.push(json!({
-                "name": "mikebom:umbrella-root",
+                "name": "waybill:umbrella-root",
                 "value": value_str,
             }));
         }
-        // Milestone 142 (Scala/SBT) — propagate `mikebom:scala-version-source`
+        // Milestone 142 (Scala/SBT) — propagate `waybill:scala-version-source`
         // when the SBT main-module is promoted to `metadata.component`.
         // Required by the F6 remediation contract: operators must be
         // able to distinguish a `_2.13` suffix derived from explicit
@@ -943,14 +943,14 @@ pub fn build_metadata(
         // rung-3 fallback. Without this propagation, the annotation is
         // visible on the main-module ONLY in the components[] array path
         // (multi-subproject scans), not on the promoted subject path.
-        // Mirrors the milestone-140 `mikebom:umbrella-root` pattern above.
-        if let Some(value) = c.extra_annotations.get("mikebom:scala-version-source") {
+        // Mirrors the milestone-140 `waybill:umbrella-root` pattern above.
+        if let Some(value) = c.extra_annotations.get("waybill:scala-version-source") {
             let value_str = match value {
                 serde_json::Value::String(s) => s.clone(),
                 other => serde_json::to_string(other).unwrap_or_default(),
             };
             comp_props.push(json!({
-                "name": "mikebom:scala-version-source",
+                "name": "waybill:scala-version-source",
                 "value": value_str,
             }));
         }
@@ -1054,7 +1054,7 @@ pub fn build_metadata(
     }
 
     // Milestone 073 — user-defined identifiers ride a single
-    // `metadata.properties[]` entry under `mikebom:identifiers`
+    // `metadata.properties[]` entry under `waybill:identifiers`
     // per `contracts/identifiers-annotation.md` C-2 CDX 1.6.
     // The value is a JSON-encoded array sorted lex by `(scheme, value)`
     // for determinism (FR-009 / contract C-4). Emit ONLY when the
@@ -1090,7 +1090,7 @@ pub fn build_metadata(
         if let Some(props) = metadata.get_mut("properties").and_then(|v| v.as_array_mut())
         {
             props.push(json!({
-                "name": "mikebom:identifiers",
+                "name": "waybill:identifiers",
                 "value": json_str,
             }));
         }
@@ -1204,11 +1204,11 @@ pub fn build_user_annotations(
     use waybill::binding::user_metadata::CreatorKind;
     let mut out: Vec<serde_json::Value> = Vec::new();
 
-    // 1) --metadata-comment: annotator.organization.name = "mikebom contributors"
+    // 1) --metadata-comment: annotator.organization.name = "waybill contributors"
     if let Some(comment) = &user_metadata.metadata_comment {
         out.push(json!({
             "subjects": [root_bom_ref],
-            "annotator": { "organization": { "name": "mikebom contributors" } },
+            "annotator": { "organization": { "name": "waybill contributors" } },
             "timestamp": timestamp,
             "text": comment,
         }));
@@ -1266,12 +1266,12 @@ mod tests {
         let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None);
 
         assert!(meta["timestamp"].is_string());
-        assert_eq!(meta["tools"]["components"][0]["name"], "mikebom");
+        assert_eq!(meta["tools"]["components"][0]["name"], "waybill");
         assert_eq!(meta["component"]["name"], "myapp");
         assert_eq!(meta["component"]["version"], "0.1.0");
         assert_eq!(
             meta["properties"][0]["name"],
-            "mikebom:generation-context"
+            "waybill:generation-context"
         );
         assert_eq!(
             meta["properties"][0]["value"],
@@ -1314,7 +1314,7 @@ mod tests {
     #[test]
     fn metadata_component_has_synthetic_purl() {
         // sbomqs flags metadata.component as invalid without a purl.
-        // Mikebom synthesizes pkg:generic/<name>@<version>.
+        // Waybill synthesizes pkg:generic/<name>@<version>.
         let meta =
             build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None);
         assert_eq!(meta["component"]["purl"], "pkg:generic/myapp@0.1.0");
@@ -1323,12 +1323,12 @@ mod tests {
     #[test]
     fn metadata_component_has_synthetic_cpe() {
         // sbomqs flags empty/absent cpe on metadata.component as invalid.
-        // Mikebom emits cpe:2.3:a:mikebom:<name>:<version>:*:*:*:*:*:*:*.
+        // Waybill emits cpe:2.3:a:waybill:<name>:<version>:*:*:*:*:*:*:*.
         let meta =
             build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None);
         assert_eq!(
             meta["component"]["cpe"],
-            "cpe:2.3:a:mikebom:myapp:0.1.0:*:*:*:*:*:*:*"
+            "cpe:2.3:a:waybill:myapp:0.1.0:*:*:*:*:*:*:*"
         );
     }
 
@@ -1414,11 +1414,11 @@ mod tests {
             None,
         );
         let props = meta["properties"].as_array().expect("properties array");
-        let c110 = props.iter().find(|p| p["name"] == "mikebom:go-transitive-coverage");
+        let c110 = props.iter().find(|p| p["name"] == "waybill:go-transitive-coverage");
         assert!(c110.is_some(), "T037: C110 must be present when coverage is Some");
         assert_eq!(c110.unwrap()["value"], "complete");
         // C111 absent on Complete variant (Q1: reason is None).
-        let c111 = props.iter().find(|p| p["name"] == "mikebom:go-transitive-coverage-reason");
+        let c111 = props.iter().find(|p| p["name"] == "waybill:go-transitive-coverage-reason");
         assert!(c111.is_none(), "T037: C111 must be absent on Complete");
     }
 
@@ -1443,11 +1443,11 @@ mod tests {
         );
         let props = meta["properties"].as_array().expect("properties array");
         assert!(
-            props.iter().all(|p| p["name"] != "mikebom:go-transitive-coverage"),
+            props.iter().all(|p| p["name"] != "waybill:go-transitive-coverage"),
             "SC-003: C110 must be absent on Go-free scans"
         );
         assert!(
-            props.iter().all(|p| p["name"] != "mikebom:go-transitive-coverage-reason"),
+            props.iter().all(|p| p["name"] != "waybill:go-transitive-coverage-reason"),
             "SC-003: C111 must be absent on Go-free scans"
         );
     }
@@ -1476,9 +1476,9 @@ mod tests {
             None,
         );
         let props = meta["properties"].as_array().expect("properties array");
-        let c110 = props.iter().find(|p| p["name"] == "mikebom:go-transitive-coverage");
+        let c110 = props.iter().find(|p| p["name"] == "waybill:go-transitive-coverage");
         assert_eq!(c110.expect("C110 present").as_object().unwrap()["value"], "partial");
-        let c111 = props.iter().find(|p| p["name"] == "mikebom:go-transitive-coverage-reason");
+        let c111 = props.iter().find(|p| p["name"] == "waybill:go-transitive-coverage-reason");
         assert_eq!(
             c111.expect("C111 present").as_object().unwrap()["value"],
             "proxy-fetch-degraded: 45 of 300 modules unresolved"
@@ -1509,9 +1509,9 @@ mod tests {
             None,
         );
         let props = meta["properties"].as_array().expect("properties array");
-        let c110 = props.iter().find(|p| p["name"] == "mikebom:go-transitive-coverage");
+        let c110 = props.iter().find(|p| p["name"] == "waybill:go-transitive-coverage");
         assert_eq!(c110.expect("C110 present").as_object().unwrap()["value"], "unknown");
-        let c111 = props.iter().find(|p| p["name"] == "mikebom:go-transitive-coverage-reason");
+        let c111 = props.iter().find(|p| p["name"] == "waybill:go-transitive-coverage-reason");
         assert!(
             c111.expect("C111 present").as_object().unwrap()["value"]
                 .as_str().unwrap()
@@ -1547,7 +1547,7 @@ mod tests {
             None,
         );
         let props = meta["properties"].as_array().expect("properties array");
-        let c112 = props.iter().find(|p| p["name"] == "mikebom:go-workspace-mode");
+        let c112 = props.iter().find(|p| p["name"] == "waybill:go-workspace-mode");
         assert!(c112.is_some(), "T047: C112 must be present when workspace_mode is Detected");
         assert_eq!(c112.unwrap()["value"], "detected: 5 use-modules");
     }
@@ -1577,7 +1577,7 @@ mod tests {
         );
         let props = meta["properties"].as_array().expect("properties array");
         assert!(
-            props.iter().all(|p| p["name"] != "mikebom:go-workspace-mode"),
+            props.iter().all(|p| p["name"] != "waybill:go-workspace-mode"),
             "SC-003: C112 must be absent when WorkspaceMode is Absent"
         );
     }
@@ -1603,7 +1603,7 @@ mod tests {
         );
         let props = meta["properties"].as_array().expect("properties array");
         assert!(
-            props.iter().all(|p| p["name"] != "mikebom:go-workspace-mode"),
+            props.iter().all(|p| p["name"] != "waybill:go-workspace-mode"),
             "SC-003: C112 must be absent when go_workspace_mode is None"
         );
     }
@@ -1632,7 +1632,7 @@ mod tests {
             None,
         );
         let props = meta["properties"].as_array().expect("properties array");
-        let c112 = props.iter().find(|p| p["name"] == "mikebom:go-workspace-mode");
+        let c112 = props.iter().find(|p| p["name"] == "waybill:go-workspace-mode");
         assert_eq!(
             c112.expect("C112 present").as_object().unwrap()["value"],
             "malformed: missing-use-close-paren",
@@ -1938,8 +1938,8 @@ mod tests {
         let props = meta["properties"].as_array().expect("properties");
         let entry = props
             .iter()
-            .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("mikebom:identifiers"))
-            .expect("mikebom:identifiers entry present");
+            .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("waybill:identifiers"))
+            .expect("waybill:identifiers entry present");
         let value_str = entry["value"].as_str().unwrap();
         let parsed: serde_json::Value =
             serde_json::from_str(value_str).expect("value is JSON-encoded array");
@@ -1980,7 +1980,7 @@ mod tests {
         let props = meta["properties"].as_array().expect("properties");
         let found = props
             .iter()
-            .any(|p| p.get("name").and_then(|v| v.as_str()) == Some("mikebom:identifiers"));
+            .any(|p| p.get("name").and_then(|v| v.as_str()) == Some("waybill:identifiers"));
         assert!(!found, "annotation must be absent when no user-defined identifiers");
     }
 }

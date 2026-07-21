@@ -1,11 +1,11 @@
 //! Milestone 149 SC-004 — cross-format byte-equality of the
-//! `mikebom:demoted-from-main-module` annotation when the operator
+//! `waybill:demoted-from-main-module` annotation when the operator
 //! passes `--root-name` + `--root-version` + `--preserve-manifest-main-module`
 //! against a Cargo / npm / Go fixture.
 //!
 //! Per US1 acceptance scenarios 1+2 of `specs/149-demote-manifest-mainmod/spec.md`:
 //! the demoted manifest-derived main-module entry MUST carry the
-//! `mikebom:demoted-from-main-module = "true"` annotation in `components[]`
+//! `waybill:demoted-from-main-module = "true"` annotation in `components[]`
 //! across CDX 1.6 / SPDX 2.3 / SPDX 3 outputs, with byte-equivalent
 //! value. Issue #151.
 //!
@@ -23,7 +23,7 @@ use common::normalize::apply_fake_home_env;
 const ROOT_NAME: &str = "widget-svc";
 const ROOT_VERSION: &str = "1.2.3";
 
-/// Run `mikebom sbom scan` against `fixture` with the milestone-149
+/// Run `waybill sbom scan` against `fixture` with the milestone-149
 /// preserve flag set and milestone-077 root-override flags; return the
 /// emitted document as a parsed serde_json::Value.
 fn scan_with_demote(fixture: &Path, format: &str, output_file: &str) -> Value {
@@ -48,7 +48,7 @@ fn scan_with_demote(fixture: &Path, format: &str, output_file: &str) -> Value {
         .arg(ROOT_VERSION)
         .arg("--preserve-manifest-main-module")
         .arg("--no-deep-hash");
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed for fixture {}: stderr={}",
@@ -59,7 +59,7 @@ fn scan_with_demote(fixture: &Path, format: &str, output_file: &str) -> Value {
     serde_json::from_str(&text).expect("emitted SBOM is valid JSON")
 }
 
-/// Extract the `mikebom:demoted-from-main-module` annotation value
+/// Extract the `waybill:demoted-from-main-module` annotation value
 /// from a CDX 1.6 document for the component whose PURL prefix matches.
 /// Returns `Some("true")` when the annotation is present, `None`
 /// otherwise.
@@ -73,7 +73,7 @@ fn cdx_demote_value(doc: &Value, purl_prefix: &str) -> Option<String> {
         let props = c.get("properties")?.as_array()?;
         for p in props {
             let name = p.get("name").and_then(|v| v.as_str())?;
-            if name == "mikebom:demoted-from-main-module" {
+            if name == "waybill:demoted-from-main-module" {
                 return p.get("value").and_then(|v| v.as_str()).map(String::from);
             }
         }
@@ -81,7 +81,7 @@ fn cdx_demote_value(doc: &Value, purl_prefix: &str) -> Option<String> {
     None
 }
 
-/// Extract the `mikebom:demoted-from-main-module` annotation value
+/// Extract the `waybill:demoted-from-main-module` annotation value
 /// from an SPDX 2.3 document via the envelope annotation pattern.
 fn spdx23_demote_value(doc: &Value, purl_prefix: &str) -> Option<String> {
     let packages = doc.get("packages")?.as_array()?;
@@ -107,7 +107,7 @@ fn spdx23_demote_value(doc: &Value, purl_prefix: &str) -> Option<String> {
                     Err(_) => continue,
                 };
                 if env.get("field").and_then(|v| v.as_str())
-                    == Some("mikebom:demoted-from-main-module")
+                    == Some("waybill:demoted-from-main-module")
                 {
                     return env.get("value").and_then(|v| v.as_str()).map(String::from);
                 }
@@ -117,7 +117,7 @@ fn spdx23_demote_value(doc: &Value, purl_prefix: &str) -> Option<String> {
     None
 }
 
-/// Extract the `mikebom:demoted-from-main-module` annotation value
+/// Extract the `waybill:demoted-from-main-module` annotation value
 /// from an SPDX 3 document.
 ///
 /// **SPDX 3 subject-routing note**: per the C102 docs row in
@@ -149,7 +149,7 @@ fn spdx3_demote_value(doc: &Value, _purl_prefix: &str) -> Option<String> {
             Err(_) => continue,
         };
         if env.get("field").and_then(|v| v.as_str())
-            == Some("mikebom:demoted-from-main-module")
+            == Some("waybill:demoted-from-main-module")
         {
             return env.get("value").and_then(|v| v.as_str()).map(String::from);
         }
@@ -165,7 +165,7 @@ fn assert_cross_format_demote_annotation(fixture: &Path, purl_prefix: &str, ecos
 
     let cdx_v = cdx_demote_value(&cdx, purl_prefix).unwrap_or_else(|| {
         panic!(
-            "{ecosystem}: CDX MUST carry mikebom:demoted-from-main-module on component starting \
+            "{ecosystem}: CDX MUST carry waybill:demoted-from-main-module on component starting \
              with `{purl_prefix}`; emitted doc had no matching annotation. Components: {}",
             serde_json::to_string_pretty(cdx.get("components").unwrap_or(&Value::Null))
                 .unwrap_or_default()
@@ -173,13 +173,13 @@ fn assert_cross_format_demote_annotation(fixture: &Path, purl_prefix: &str, ecos
     });
     let spdx23_v = spdx23_demote_value(&spdx23, purl_prefix).unwrap_or_else(|| {
         panic!(
-            "{ecosystem}: SPDX 2.3 MUST carry mikebom:demoted-from-main-module on package with \
+            "{ecosystem}: SPDX 2.3 MUST carry waybill:demoted-from-main-module on package with \
              PURL starting `{purl_prefix}`; emitted doc had no matching annotation",
         )
     });
     let spdx3_v = spdx3_demote_value(&spdx3, purl_prefix).unwrap_or_else(|| {
         panic!(
-            "{ecosystem}: SPDX 3 MUST carry mikebom:demoted-from-main-module on software_Package \
+            "{ecosystem}: SPDX 3 MUST carry waybill:demoted-from-main-module on software_Package \
              with PURL starting `{purl_prefix}`; emitted doc had no matching annotation",
         )
     });
@@ -213,8 +213,8 @@ fn assert_cross_format_demote_annotation(fixture: &Path, purl_prefix: &str, ecos
 }
 
 fn fixture(subpath: &str) -> PathBuf {
-    let fixtures_dir = std::env::var("MIKEBOM_FIXTURES_DIR")
-        .expect("MIKEBOM_FIXTURES_DIR env var (set by build.rs from milestone 090)");
+    let fixtures_dir = std::env::var("WAYBILL_FIXTURES_DIR")
+        .expect("WAYBILL_FIXTURES_DIR env var (set by build.rs from milestone 090)");
     PathBuf::from(fixtures_dir).join(subpath)
 }
 

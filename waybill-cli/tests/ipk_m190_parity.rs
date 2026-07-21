@@ -104,7 +104,7 @@ fn ar_header(name: &str, size: u64) -> [u8; 60] {
 }
 
 // ---------------------------------------------------------------------
-// Scan helper — invoke mikebom against a fixture directory + return
+// Scan helper — invoke waybill against a fixture directory + return
 // parsed JSON for the requested format.
 // ---------------------------------------------------------------------
 
@@ -132,7 +132,7 @@ fn scan(dir: &Path, format: &str) -> Value {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "scan failed: format={format} stderr={}",
@@ -590,17 +590,17 @@ fn spdx3_validate_or_skip(spdx3_path: &Path) {
     let bin_path = workspace_root().join(".venv/spdx3-validate/bin/spdx3-validate");
     if !bin_path.exists() {
         let require =
-            std::env::var("MIKEBOM_REQUIRE_SPDX3_VALIDATOR").ok().as_deref() == Some("1");
+            std::env::var("WAYBILL_REQUIRE_SPDX3_VALIDATOR").ok().as_deref() == Some("1");
         if require {
             panic!(
-                "spdx3-validate not found at {} and MIKEBOM_REQUIRE_SPDX3_VALIDATOR=1 is set; \
+                "spdx3-validate not found at {} and WAYBILL_REQUIRE_SPDX3_VALIDATOR=1 is set; \
                  run scripts/install-spdx3-validate.sh on this host before re-running CI.",
                 bin_path.display()
             );
         }
         eprintln!(
             "[ipk_m190_parity] WARN: spdx3-validate not found at {}; skipping conformance gate \
-             (set MIKEBOM_REQUIRE_SPDX3_VALIDATOR=1 to fail hard in CI).",
+             (set WAYBILL_REQUIRE_SPDX3_VALIDATOR=1 to fail hard in CI).",
             bin_path.display()
         );
         return;
@@ -650,7 +650,7 @@ fn us2_spdx3_validate_accepts_compound_license_ipk() {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "spdx-3 emission failed: {}",

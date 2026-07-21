@@ -1,7 +1,7 @@
 //! Cross-host byte-identity discipline — shared normalization +
 //! fake-HOME isolation for golden-comparison tests.
 //!
-//! mikebom emits byte-stable SBOMs in three formats (CycloneDX 1.6,
+//! waybill emits byte-stable SBOMs in three formats (CycloneDX 1.6,
 //! SPDX 2.3, SPDX 3.0.1). Per-format regression tests pin a committed
 //! golden file and assert byte-equality against it on every CI run.
 //! Two classes of variability would defeat that guarantee unless
@@ -14,18 +14,18 @@
 //!    placeholders before comparison.
 //!
 //! 2. **Host-scoped paths** — the absolute path of the workspace
-//!    leaks into several SBOM fields (CDX `mikebom:source-files` /
+//!    leaks into several SBOM fields (CDX `waybill:source-files` /
 //!    `evidence.occurrences[].location`; SPDX `comment` and
 //!    annotation envelope payloads). On macOS dev that prefix is
-//!    `/Users/<user>/Projects/mikebom/...`; on Linux CI it's
-//!    `/home/runner/work/mikebom/mikebom/...`. Both are rewritten
+//!    `/Users/<user>/Projects/waybill/...`; on Linux CI it's
+//!    `/home/runner/work/waybill/waybill/...`. Both are rewritten
 //!    to `<WORKSPACE>` so a golden pinned on one host matches on
 //!    the other.
 //!
 //! See `specs/017-spdx-byte-identity-goldens/data-model.md` for the
 //! authoritative placeholder catalog and strip rules. See
 //! `specs/017-spdx-byte-identity-goldens/contracts/golden-regen.md`
-//! for the `MIKEBOM_UPDATE_*_GOLDENS=1` regen contract.
+//! for the `WAYBILL_UPDATE_*_GOLDENS=1` regen contract.
 //!
 //! ## Masked fields by format
 //!
@@ -40,7 +40,7 @@
 //!     `creationInfo` field, wall-clock per the SPDX 2.3 spec.
 //!   - Every `annotations[].annotationDate` (document-level and
 //!     per-package) → `TIMESTAMP_PLACEHOLDER` — required field on
-//!     every annotation per the SPDX 2.3 spec; mikebom emits one
+//!     every annotation per the SPDX 2.3 spec; waybill emits one
 //!     wall-clock stamp per annotation at scan time.
 //!
 //! - **SPDX 3**:
@@ -88,7 +88,7 @@
 //!   git clone cache; defaults to `$HOME/.cargo`. Currently rarely
 //!   affects output but isolated for future-proofing.
 //!
-//! Additionally pins `MIKEBOM_NO_GO_MOD_WHY=1` (milestone 112): the
+//! Additionally pins `WAYBILL_NO_GO_MOD_WHY=1` (milestone 112): the
 //! default-on `go mod why -m -vendor` classification would otherwise
 //! invoke the host's real `go` toolchain on every Go-fixture scan,
 //! making golden output depend on whether `go` is installed and on
@@ -113,9 +113,9 @@ pub const SERIAL_PLACEHOLDER: &str = "urn:uuid:00000000-0000-0000-0000-000000000
 pub const TIMESTAMP_PLACEHOLDER: &str = "1970-01-01T00:00:00Z";
 
 /// Stand-in for the absolute path of the workspace root. Macs emit
-/// `/Users/<user>/Projects/mikebom/...`; CI Linux emits
-/// `/home/runner/work/mikebom/mikebom/...`; CI Windows emits
-/// `//?/D:/a/mikebom/mikebom/...` (extended-length-path form,
+/// `/Users/<user>/Projects/waybill/...`; CI Linux emits
+/// `/home/runner/work/waybill/waybill/...`; CI Windows emits
+/// `//?/D:/a/waybill/waybill/...` (extended-length-path form,
 /// forward-slashed via milestone-100 normalization); all three
 /// rewrite to this literal so a golden pinned on one host matches
 /// on the others.
@@ -123,7 +123,7 @@ pub const WORKSPACE_PLACEHOLDER: &str = "<WORKSPACE>";
 
 /// Milestone 100: rewrite host-scoped path prefixes in `raw` so the
 /// CDX/SPDX-2.3/SPDX-3 normalizers can string-replace `workspace` and
-/// `MIKEBOM_FIXTURES_DIR` against forward-slash, extended-prefix-free
+/// `WAYBILL_FIXTURES_DIR` against forward-slash, extended-prefix-free
 /// space regardless of host OS.
 ///
 /// On Unix this is essentially a no-op (the input strings already use
@@ -135,7 +135,7 @@ pub const WORKSPACE_PLACEHOLDER: &str = "<WORKSPACE>";
 /// matches the emitted strings.
 pub fn cross_host_align(raw: &str, workspace: &Path) -> (String, String, String) {
     let ws_str = workspace.to_string_lossy().to_string();
-    let fixtures_cache: String = env!("MIKEBOM_FIXTURES_DIR").into();
+    let fixtures_cache: String = env!("WAYBILL_FIXTURES_DIR").into();
     if cfg!(windows) {
         // Milestone 100 already forward-slashes path strings in the
         // emitted SBOM via `normalize_sbom_path_str`. The remaining
@@ -177,8 +177,8 @@ pub fn cross_host_align(raw: &str, workspace: &Path) -> (String, String, String)
 /// produced by `serde_json::to_string_pretty`, which is what every
 /// existing committed golden was written with).
 pub fn normalize_cdx_for_golden(raw: &str, workspace: &Path) -> String {
-    // Milestone 090: when fixtures resolve through MIKEBOM_FIXTURES_DIR
-    // (`~/.cache/mikebom/fixtures/<sha>/`), rewrite that prefix to
+    // Milestone 090: when fixtures resolve through WAYBILL_FIXTURES_DIR
+    // (`~/.cache/waybill/fixtures/<sha>/`), rewrite that prefix to
     // `<WORKSPACE>/tests/fixtures` so existing pre-090 goldens (which
     // recorded the in-repo fixture paths) match without regen.
     //
@@ -346,10 +346,10 @@ pub fn normalize_spdx3_for_golden(raw: &str, workspace: &Path) -> String {
 /// don't need to exist; the goal is to point cache lookups at empty
 /// paths so the scanner sees no cached metadata regardless of host.
 ///
-/// Also pins `MIKEBOM_FIXED_TIMESTAMP` to a known RFC 3339 value so
+/// Also pins `WAYBILL_FIXED_TIMESTAMP` to a known RFC 3339 value so
 /// SBOM `creationInfo.created` / `metadata.timestamp` is deterministic
 /// across multiple subprocess invocations within the same test. This
-/// closes the latent byte-identity flake where two `mikebom sbom scan`
+/// closes the latent byte-identity flake where two `waybill sbom scan`
 /// runs could cross a second boundary on slow CI runners
 /// (`scan_cmd.rs::scan_created_timestamp` reads this env var).
 ///
@@ -362,8 +362,8 @@ pub fn apply_fake_home_env(cmd: &mut Command, fake_home: &Path) {
         .env("GOPATH", fake_home.join("no-gopath"))
         .env("GOMODCACHE", fake_home.join("no-gomodcache"))
         .env("CARGO_HOME", fake_home.join("no-cargo-home"))
-        .env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
+        .env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
         // Milestone 112: keep golden/byte-identity tests independent
         // of the host's `go` toolchain (classification is default-on).
-        .env("MIKEBOM_NO_GO_MOD_WHY", "1");
+        .env("WAYBILL_NO_GO_MOD_WHY", "1");
 }

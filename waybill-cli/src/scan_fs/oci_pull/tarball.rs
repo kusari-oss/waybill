@@ -168,7 +168,7 @@ mod tests {
 
         let layer_uncompressed = {
             let mut builder = tar::Builder::new(Vec::<u8>::new());
-            let body = b"ID=mikebom-test\nVERSION=0\n";
+            let body = b"ID=waybill-test\nVERSION=0\n";
             let mut header = tar::Header::new_gnu();
             header.set_path("etc/os-release").unwrap();
             header.set_size(body.len() as u64);
@@ -210,7 +210,7 @@ mod tests {
         );
         let body = std::fs::read_to_string(&os_release).unwrap();
         assert!(
-            body.contains("ID=mikebom-test"),
+            body.contains("ID=waybill-test"),
             "os-release body unexpected: {body:?}"
         );
 

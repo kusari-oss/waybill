@@ -2,7 +2,7 @@
 //! selection. Covers US1 (multi-module Go workspace picks the
 //! repo-root module), US2 (polyglot Go-vs-Maven-vs-npm prefers Go),
 //! the SC-006 operator-override regression, and verifies the
-//! `mikebom:root-selection-heuristic` annotation shape across all
+//! `waybill:root-selection-heuristic` annotation shape across all
 //! three formats.
 //!
 //! Fixtures are synthesized inline into `tempfile::tempdir()`
@@ -19,7 +19,7 @@ mod common;
 use common::bin;
 use common::normalize::apply_fake_home_env;
 
-/// Run `mikebom sbom scan --path <dir>` in offline mode against the
+/// Run `waybill sbom scan --path <dir>` in offline mode against the
 /// given format. Returns the parsed JSON output.
 fn run_scan_returning_json(
     fake_home: &Path,
@@ -227,7 +227,7 @@ fn us1_multi_module_go_workspace_picks_repo_root() {
 }
 
 /// US1 + US3 — multi-module Go workspace MUST also emit the
-/// `mikebom:root-selection-heuristic` annotation (since FR-002
+/// `waybill:root-selection-heuristic` annotation (since FR-002
 /// repo-root tiebreaker fired with losers > 0).
 #[test]
 fn us1_multi_module_emits_heuristic_annotation() {
@@ -252,7 +252,7 @@ fn us1_multi_module_emits_heuristic_annotation() {
     let props = cdx_metadata_properties(&cdx);
     let heuristic_prop = props
         .iter()
-        .find(|(name, _)| name == "mikebom:root-selection-heuristic");
+        .find(|(name, _)| name == "waybill:root-selection-heuristic");
     let (_, value_json) =
         heuristic_prop.expect("heuristic annotation present in CDX properties");
 
@@ -343,7 +343,7 @@ fn sc006_override_wins_over_heuristic() {
     assert!(
         !props
             .iter()
-            .any(|(name, _)| name == "mikebom:root-selection-heuristic"),
+            .any(|(name, _)| name == "waybill:root-selection-heuristic"),
         "operator override suppresses the heuristic annotation"
     );
 

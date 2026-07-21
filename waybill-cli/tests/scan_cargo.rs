@@ -5,8 +5,8 @@ use std::process::{Command, Output};
 
 fn fixture(sub: &str) -> PathBuf {
     // Milestone 090: cargo fixtures moved to mikebom-test-fixtures repo,
-    // resolved via build.rs's MIKEBOM_FIXTURES_DIR env var.
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR"))
+    // resolved via build.rs's WAYBILL_FIXTURES_DIR env var.
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR"))
         .join("cargo")
         .join(sub)
 }
@@ -24,7 +24,7 @@ fn run_scan(path: &Path) -> Output {
         .arg(tmp.path())
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run")
+        .expect("waybill should run")
 }
 
 fn run_scan_with_output(path: &Path) -> (Output, tempfile::TempDir, PathBuf) {
@@ -41,7 +41,7 @@ fn run_scan_with_output(path: &Path) -> (Output, tempfile::TempDir, PathBuf) {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     (output, tmp, out_path)
 }
 
@@ -121,8 +121,8 @@ fn scan_cargo_v3_git_source_carries_source_type_property() {
         .expect("properties array");
     let source_type = props
         .iter()
-        .find(|p| p["name"].as_str() == Some("mikebom:source-type"))
-        .expect("mikebom:source-type property present")
+        .find(|p| p["name"].as_str() == Some("waybill:source-type"))
+        .expect("waybill:source-type property present")
         .get("value")
         .and_then(|v| v.as_str())
         .unwrap_or("");
@@ -169,7 +169,7 @@ fn scan_cargo_v2_lockfile_refuses_with_actionable_error() {
 // Milestone 051 — cargo dev/build dep tagging
 // ---------------------------------------------------------------------------
 
-/// Run mikebom against `path` with optional extra args (e.g.
+/// Run waybill against `path` with optional extra args (e.g.
 /// `--exclude-scope dev,build,test`). Returns the parsed SBOM JSON.
 fn run_scan_args(path: &Path, extra_args: &[&str]) -> serde_json::Value {
     let bin = env!("CARGO_BIN_EXE_mikebom");
@@ -187,7 +187,7 @@ fn run_scan_args(path: &Path, extra_args: &[&str]) -> serde_json::Value {
     for a in extra_args {
         cmd.arg(a);
     }
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -206,7 +206,7 @@ fn cargo_component_named<'a>(sbom: &'a serde_json::Value, name: &str) -> Option<
 
 fn has_dev_property(component: &serde_json::Value) -> bool {
     // Milestone 052/part-2: native CDX `scope: "excluded"` is the
-    // primary signal; the new `mikebom:lifecycle-scope` property
+    // primary signal; the new `waybill:lifecycle-scope` property
     // carries the finer dev/build/test distinction. Either signal
     // proves the component is non-Runtime-scoped.
     if component["scope"].as_str() == Some("excluded") {
@@ -216,7 +216,7 @@ fn has_dev_property(component: &serde_json::Value) -> bool {
         .as_array()
         .map(|props| {
             props.iter().any(|p| {
-                p["name"].as_str() == Some("mikebom:lifecycle-scope")
+                p["name"].as_str() == Some("waybill:lifecycle-scope")
             })
         })
         .unwrap_or(false)
@@ -226,7 +226,7 @@ fn has_dev_property(component: &serde_json::Value) -> bool {
 fn scan_cargo_dev_dependency_is_tagged_and_droppable() {
     // Milestone 052 FR-001 / FR-002: a crate declared in
     // [dev-dependencies] emits in default mode tagged with native
-    // CDX scope: "excluded" + mikebom:lifecycle-scope: "development",
+    // CDX scope: "excluded" + waybill:lifecycle-scope: "development",
     // and is dropped under --exclude-scope dev,build,test.
     let dir = tempfile::tempdir().expect("tempdir");
     std::fs::write(
@@ -271,14 +271,14 @@ checksum = "f2b12d09"
 
     // Milestone 052/part-3: default scan now emits ALL scopes
     // (criterion present + tagged with native CDX scope: "excluded"
-    // and mikebom:lifecycle-scope: "development"). Pre-052 default
+    // and waybill:lifecycle-scope: "development"). Pre-052 default
     // dropped criterion silently.
     let sbom = run_scan_args(dir.path(), &[]);
     let criterion =
         cargo_component_named(&sbom, "criterion").expect("criterion present in default scan");
     assert!(
         has_dev_property(criterion),
-        "criterion must carry native CDX scope: \"excluded\" + mikebom:lifecycle-scope: {criterion:?}",
+        "criterion must carry native CDX scope: \"excluded\" + waybill:lifecycle-scope: {criterion:?}",
     );
     assert!(
         cargo_component_named(&sbom, "serde").is_some(),
@@ -341,7 +341,7 @@ checksum = "deadbeef"
     .unwrap();
 
     // Milestone 052/part-3: default scan emits cc with native
-    // CDX scope: "excluded" + mikebom:lifecycle-scope: "build".
+    // CDX scope: "excluded" + waybill:lifecycle-scope: "build".
     let sbom = run_scan_args(dir.path(), &[]);
     let cc = cargo_component_named(&sbom, "cc").expect("cc present in default scan");
     assert!(has_dev_property(cc), "cc must be tagged non-runtime: {cc:?}");
@@ -512,10 +512,10 @@ edition = "2021"
         .expect("metadata.component.properties array");
     let role = props
         .iter()
-        .find(|p| p["name"].as_str() == Some("mikebom:component-role"));
+        .find(|p| p["name"].as_str() == Some("waybill:component-role"));
     assert!(
         role.is_some(),
-        "C40 mikebom:component-role property missing from metadata.component"
+        "C40 waybill:component-role property missing from metadata.component"
     );
     assert_eq!(
         role.unwrap()["value"].as_str(),
@@ -539,7 +539,7 @@ edition = "2021"
 /// enclosing workspace root's `[workspace.package].version`.
 #[test]
 fn scan_cargo_workspace_inherited_version_resolves() {
-    let path = PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("cargo-workspace");
+    let path = PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("cargo-workspace");
     let (output, _tmp, sbom_path) = run_scan_with_output(&path);
     assert!(
         output.status.success(),
@@ -558,7 +558,7 @@ fn scan_cargo_workspace_inherited_version_resolves() {
                 .as_array()
                 .map(|p| {
                     p.iter().any(|prop| {
-                        prop["name"].as_str() == Some("mikebom:component-role")
+                        prop["name"].as_str() == Some("waybill:component-role")
                             && prop["value"].as_str() == Some("main-module")
                     })
                 })
@@ -594,7 +594,7 @@ fn scan_cargo_workspace_inherited_version_resolves() {
 /// main-module to `a`'s main-module.
 #[test]
 fn scan_cargo_workspace_path_dep_emits_main_module_to_main_module_edge() {
-    let path = PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("cargo-workspace");
+    let path = PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("cargo-workspace");
     let (_output, _tmp, sbom_path) = run_scan_with_output(&path);
     let raw = std::fs::read_to_string(&sbom_path).expect("read sbom");
     let sbom: serde_json::Value = serde_json::from_str(&raw).expect("valid JSON");
@@ -619,7 +619,7 @@ fn scan_cargo_workspace_path_dep_emits_main_module_to_main_module_edge() {
 /// a main-module for the root. Only members emit.
 #[test]
 fn scan_cargo_workspace_only_root_emits_no_main_module_for_root() {
-    let path = PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("cargo-workspace");
+    let path = PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("cargo-workspace");
     let (_output, _tmp, sbom_path) = run_scan_with_output(&path);
     let raw = std::fs::read_to_string(&sbom_path).expect("read sbom");
     let sbom: serde_json::Value = serde_json::from_str(&raw).expect("valid JSON");
@@ -636,7 +636,7 @@ fn scan_cargo_workspace_only_root_emits_no_main_module_for_root() {
                 .as_array()
                 .map(|p| {
                     p.iter().any(|prop| {
-                        prop["name"].as_str() == Some("mikebom:component-role")
+                        prop["name"].as_str() == Some("waybill:component-role")
                             && prop["value"].as_str() == Some("main-module")
                     })
                 })

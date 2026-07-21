@@ -1,4 +1,4 @@
-//! `mikebom policy` subcommands — feature 006 US4.
+//! `waybill policy` subcommands — feature 006 US4.
 
 use std::path::PathBuf;
 

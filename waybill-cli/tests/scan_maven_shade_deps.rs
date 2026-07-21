@@ -19,7 +19,7 @@ fn scan_path(path: &Path) -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -109,7 +109,7 @@ fn has_shade_relocation_property(c: &serde_json::Value) -> bool {
         .as_array()
         .map(|props| {
             props.iter().any(|p| {
-                p["name"].as_str() == Some("mikebom:shade-relocation")
+                p["name"].as_str() == Some("waybill:shade-relocation")
                     && p["value"].as_str() == Some("true")
             })
         })

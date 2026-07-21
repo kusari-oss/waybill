@@ -1,6 +1,6 @@
-//! Library-crate root for mikebom-cli.
+//! Library-crate root for waybill-cli.
 //!
-//! mikebom-cli is canonically a binary crate (`src/main.rs` is the
+//! waybill-cli is canonically a binary crate (`src/main.rs` is the
 //! entry point); this library exists **only** to share a small
 //! amount of code between the binary AND its integration tests
 //! under `tests/`. Rust integration tests live in their own crate
@@ -12,11 +12,11 @@
 //! * [`parity`] — milestone 013: the canonical cross-format datum
 //!   catalog parser (`parity::catalog`) + per-row extractor table
 //!   (`parity::extractors`). Consumed by:
-//!     * `src/cli/parity_cmd.rs` (US3 — the `mikebom sbom
+//!     * `src/cli/parity_cmd.rs` (US3 — the `waybill sbom
 //!       parity-check` diagnostic) via `crate::parity::*`
-//!     * `mikebom-cli/tests/holistic_parity.rs` (US1 holistic
+//!     * `waybill-cli/tests/holistic_parity.rs` (US1 holistic
 //!       parity test) via `waybill::parity::*`
-//!     * `mikebom-cli/tests/mapping_doc_bidirectional.rs` (US2
+//!     * `waybill-cli/tests/mapping_doc_bidirectional.rs` (US2
 //!       auto-discovery + reverse check) via `waybill::parity::*`
 //!
 //! Every other module (`cli`, `generate`, `resolve`, `enrich`,
@@ -32,16 +32,16 @@
 //! consumes via `mod scan_fs` in main.rs. Wiremock-backed integration
 //! tests for the resolver live alongside the resolver
 //! (`graph_resolver::wiremock_integration`), NOT under
-//! `mikebom-cli/tests/`, because exposing scan_fs here would
+//! `waybill-cli/tests/`, because exposing scan_fs here would
 //! cascade-require lib-exposing every binary-internal module
 //! (`trace`, `generate`, `resolve`, ...). See
-//! `mikebom-cli/tests/go_transitive_edges.rs` for the pointer.
+//! `waybill-cli/tests/go_transitive_edges.rs` for the pointer.
 
 pub mod parity;
 
 /// Milestone 072: cross-tier SBOM binding — pure-data + pure-function code
 /// for computing binding hashes, verifying bindings, and serializing the
-/// `mikebom:source-document-binding` annotation. Exposed at lib root so
+/// `waybill:source-document-binding` annotation. Exposed at lib root so
 /// integration tests under `tests/` can call `compute_binding_hash` and
 /// `verify_binding` directly. Per Constitution Principle VI, only pure-
 /// data + pure-function code lives here; the CLI subcommand wiring

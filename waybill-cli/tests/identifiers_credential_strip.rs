@@ -17,12 +17,12 @@
 //! Tests are organized by user story (3× P1, 1× P2):
 //!
 //! - **US1** — source-tier auto-detect strips credentials by default.
-//!   Drives `mikebom sbom scan --path` against a tempdir git fixture
+//!   Drives `waybill sbom scan --path` against a tempdir git fixture
 //!   with a credentialed origin URL; asserts the emitted JSON SBOM
 //!   contains zero literal-token occurrences and the
 //!   `(credentials stripped)` source_label suffix.
 //! - **US2** — build-tier auto-detect strips credentials by default.
-//!   `mikebom trace run` requires eBPF (Linux-only, not exercisable
+//!   `waybill trace run` requires eBPF (Linux-only, not exercisable
 //!   on macOS dev / unprivileged CI per milestone 074's policy
 //!   documented at `identifiers_build_tier_autodetect.rs:6-13`), so
 //!   we exercise `auto_detect_build_tier_identifiers` directly via
@@ -40,7 +40,7 @@
 //!
 //! ## Log-content assertions
 //!
-//! `mikebom-cli` does not currently install a project-wide tracing
+//! `waybill-cli` does not currently install a project-wide tracing
 //! capture pattern in its test suite. FR-006 / FR-007 log-line
 //! content is therefore asserted indirectly: the runtime side-effects
 //! (identifier value, source_label, identifier kind) are observable
@@ -159,7 +159,7 @@ fn make_non_git_fixture() -> tempfile::TempDir {
     td
 }
 
-/// Run `mikebom sbom scan --path <path>` and return the parsed
+/// Run `waybill sbom scan --path <path>` and return the parsed
 /// CDX 1.6 JSON document. Each invocation gets a fresh fake HOME
 /// to neutralize per-host config drift.
 fn run_scan_to_cdx(td: &Path, extra_args: &[&str]) -> serde_json::Value {

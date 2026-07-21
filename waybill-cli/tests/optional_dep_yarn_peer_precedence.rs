@@ -4,9 +4,9 @@
 //! **Contract**: when a dep name appears in BOTH `dependenciesMeta.
 //! <name>.optional = true` (m181 Optional-classification input) AND
 //! in `peerDependencies + peerDependenciesMeta.<name>.optional = true`
-//! (peer-optional), the peer classification wins. mikebom's yarn reader
+//! (peer-optional), the peer classification wins. waybill's yarn reader
 //! MUST NOT classify the dep as `LifecycleScope::Optional` — its
-//! lifecycle stays None/Runtime and the m180-shared `mikebom:optional-
+//! lifecycle stays None/Runtime and the m180-shared `waybill:optional-
 //! derivation` annotation MUST NOT be emitted.
 
 #![cfg(test)]
@@ -69,7 +69,7 @@ fn find_property<'a>(component: &'a Value, name: &str) -> Option<&'a Value> {
 fn t022_yarn_peer_optional_stays_peer_not_optional() {
     // FR-005 flagship — peer-framework is BOTH `dependenciesMeta`
     // optional AND peer-optional. The reader-time guard MUST short-
-    // circuit the Optional classification: no `mikebom:optional-
+    // circuit the Optional classification: no `waybill:optional-
     // derivation`, no `scope: "excluded"` on the peer-framework
     // component.
     let cdx = run_scan(&fixture_path());
@@ -79,8 +79,8 @@ fn t022_yarn_peer_optional_stays_peer_not_optional() {
 
     // (a) peer-framework MUST NOT carry the m181 derivation annotation.
     assert!(
-        find_property(peer_framework, "mikebom:optional-derivation").is_none(),
-        "FR-005: peer-optional peer-framework MUST NOT carry mikebom:optional-derivation"
+        find_property(peer_framework, "waybill:optional-derivation").is_none(),
+        "FR-005: peer-optional peer-framework MUST NOT carry waybill:optional-derivation"
     );
 
     // (b) peer-framework MUST NOT be marked `scope: "excluded"` — its

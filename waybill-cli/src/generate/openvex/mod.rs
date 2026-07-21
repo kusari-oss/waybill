@@ -5,7 +5,7 @@
 //! `externalDocumentRefs` with `SHA256`. Not emitted when the scan
 //! produces no VEX statements (FR-016a).
 //!
-//! Current status: mikebom's scan pipeline doesn't yet populate
+//! Current status: waybill's scan pipeline doesn't yet populate
 //! `ResolvedComponent.advisories` anywhere — AdvisoryRef exists as
 //! a data-model placeholder only. This emitter is therefore
 //! scaffolding that fires a no-op for every present-day scan. The
@@ -34,12 +34,12 @@ use statements::{
 /// Default sidecar filename. Kept in lockstep with the SPDX
 /// serializer's `externalDocumentRefs` entry so a consumer reading
 /// only the SPDX file can locate the sidecar.
-pub const OPENVEX_DEFAULT_FILENAME: &str = "mikebom.openvex.json";
+pub const OPENVEX_DEFAULT_FILENAME: &str = "waybill.openvex.json";
 
 /// Length of the base32 prefix used in the `@id` URI — same
 /// 160-bit budget as SPDX's `documentNamespace` (32 chars × 5 bits).
 const ID_HASH_PREFIX_LEN: usize = 32;
-const ID_BASE: &str = "https://mikebom.kusari.dev/openvex/";
+const ID_BASE: &str = "https://waybill.kusari.dev/openvex/";
 
 /// Build the OpenVEX sidecar for a scan. Returns `Ok(None)` when the
 /// scan has zero advisories across every component — no file is
@@ -83,7 +83,7 @@ pub fn serialize_openvex(
     }
 
     // One statement per advisory id, products[] deduped within.
-    // `under_investigation` is the status mikebom can honestly
+    // `under_investigation` is the status waybill can honestly
     // emit today — the scanner has discovered the advisory but
     // hasn't produced an impact analysis. A future milestone's VEX
     // enrichment pass will widen the status mapping.
@@ -107,7 +107,7 @@ pub fn serialize_openvex(
         })
         .collect();
 
-    let author = format!("mikebom-{}", cfg.mikebom_version);
+    let author = format!("waybill-{}", cfg.mikebom_version);
     let timestamp = cfg
         .created
         .to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
@@ -134,7 +134,7 @@ pub fn serialize_openvex(
 }
 
 /// Derive a stable `@id` URI from the same inputs the SPDX
-/// `documentNamespace` uses — target name + mikebom version + sorted
+/// `documentNamespace` uses — target name + waybill version + sorted
 /// component PURLs — plus a salt so the two IDs never collide.
 fn derive_openvex_id(artifacts: &ScanArtifacts<'_>, mikebom_version: &str) -> String {
     let mut hasher = Sha256::new();
@@ -308,7 +308,7 @@ mod tests {
         assert_eq!(doc["@context"], OPENVEX_CONTEXT_V0_2_0);
         assert!(doc["@id"].as_str().unwrap().starts_with(ID_BASE));
         assert_eq!(doc["version"], 1);
-        assert_eq!(doc["author"], "mikebom-0.0.0-test");
+        assert_eq!(doc["author"], "waybill-0.0.0-test");
         let stmts = doc["statements"].as_array().unwrap();
         assert_eq!(stmts.len(), 1);
         assert_eq!(stmts[0]["vulnerability"]["name"], "CVE-2024-1234");

@@ -1,10 +1,10 @@
-//! Milestone 158 — `mikebom:graph-completeness-reason` code vocabulary.
+//! Milestone 158 — `waybill:graph-completeness-reason` code vocabulary.
 //!
 //! The closed 8-code vocabulary per spec.md SC-005 + contracts/
 //! graph-completeness-vocabulary.md. Adding a new code is a spec/
 //! CHANGELOG event — not a silent code change.
 //!
-//! Under Q1 caution-first: mikebom MUST NOT emit `partial` with a
+//! Under Q1 caution-first: waybill MUST NOT emit `partial` with a
 //! reason-code outside this documented vocabulary. If a gap can't
 //! be classified into one of these 8 variants, callers emit
 //! `unknown` instead.

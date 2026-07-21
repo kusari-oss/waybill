@@ -18,8 +18,8 @@
 //!   file hashes; some package-tier readers also carry manifest-
 //!   level hashes — both flow into the same set).
 //!
-//! **`mikebom:component-paths` is NOT consulted**: the spec's
-//! original FR-011 references this property name, but mikebom has
+//! **`waybill:component-paths` is NOT consulted**: the spec's
+//! original FR-011 references this property name, but waybill has
 //! never emitted it. US2.3 ships standards-native `evidence.occurrences[]`
 //! instead; that's the source this index reads from.
 

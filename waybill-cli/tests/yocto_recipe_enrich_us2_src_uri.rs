@@ -109,25 +109,25 @@ fn us2_fr002a_github_git_uri_emits_host_typed_purl() {
 
     // Recipe-identity provenance preserved in annotations per FR-002a.
     assert_eq!(
-        cdx_property(widget, "mikebom:yocto-recipe-name"),
+        cdx_property(widget, "waybill:yocto-recipe-name"),
         Some("widget")
     );
     assert_eq!(
-        cdx_property(widget, "mikebom:yocto-recipe-version"),
+        cdx_property(widget, "waybill:yocto-recipe-version"),
         Some("1.0")
     );
 
-    // mikebom:srcrev annotation carries the full 40-hex SHA per FR-003.
+    // waybill:srcrev annotation carries the full 40-hex SHA per FR-003.
     assert_eq!(
-        cdx_property(widget, "mikebom:srcrev"),
+        cdx_property(widget, "waybill:srcrev"),
         Some("abc123def456abc123def456abc123def456abcd")
     );
 
-    // mikebom:src-uri preserves the raw SRC_URI entries (JSON-encoded array).
-    let src_uri = cdx_property(widget, "mikebom:src-uri").expect("mikebom:src-uri present");
+    // waybill:src-uri preserves the raw SRC_URI entries (JSON-encoded array).
+    let src_uri = cdx_property(widget, "waybill:src-uri").expect("waybill:src-uri present");
     assert!(
         src_uri.contains("github.com/example/widget.git"),
-        "mikebom:src-uri must carry the git URI verbatim, got: {src_uri}"
+        "waybill:src-uri must carry the git URI verbatim, got: {src_uri}"
     );
 }
 

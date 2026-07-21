@@ -5,7 +5,7 @@
 //! `/{group/path}/{artifact}/{version}/{artifact}-{version}.(jar|pom|aar)`.
 //!
 //! Extracted verbatim from the pre-refactor
-//! `mikebom-cli/src/resolve/url_resolver.rs::resolve_maven` per FR-002.
+//! `waybill-cli/src/resolve/url_resolver.rs::resolve_maven` per FR-002.
 
 use std::future::Future;
 use std::pin::Pin;

@@ -214,7 +214,7 @@ fn parse_dep_token(
             let mut a: std::collections::BTreeMap<String, serde_json::Value> =
                 Default::default();
             a.insert(
-                "mikebom:source-mechanism".to_string(),
+                "waybill:source-mechanism".to_string(),
                 serde_json::json!("conan-recipe"),
             );
             a
@@ -333,11 +333,11 @@ mod tests {
         for e in &entries {
             assert_eq!(
                 e.extra_annotations
-                    .get("mikebom:source-mechanism")
+                    .get("waybill:source-mechanism")
                     .and_then(|v| v.as_str()),
                 Some("conan-recipe"),
                 "every conan entry should carry source-mechanism: conan-recipe; got: {:?}",
-                e.extra_annotations.get("mikebom:source-mechanism"),
+                e.extra_annotations.get("waybill:source-mechanism"),
             );
         }
     }

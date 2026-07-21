@@ -527,7 +527,7 @@ pub fn resolve_and_pack(image_ref: &str, out_tarball: &Path) -> Result<(), Podma
                     expected = %expected,
                     computed = %compressed_digest,
                     "podman-source: re-tar layer digest differs from OCI manifest; \
-                     content is preserved (mikebom re-tars diff dirs; original blob \
+                     content is preserved (waybill re-tars diff dirs; original blob \
                      compression is not preserved)"
                 );
             }

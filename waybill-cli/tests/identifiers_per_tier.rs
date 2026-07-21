@@ -2,13 +2,13 @@
 //!
 //! Confirms the same identifier mechanism applies on:
 //!
-//! - `mikebom sbom scan --image <tarball>` — image-tier auto-detects
+//! - `waybill sbom scan --image <tarball>` — image-tier auto-detects
 //!   an `image:` identifier per the canonical Q3 shape, plus accepts
 //!   manual `--repo` / `--id` flags.
 //! - Cross-tier consistency — manual identifier flags ride the
 //!   same per-format carriers regardless of tier (path / image).
 //!
-//! The `mikebom trace` (build-tier) path is exercised via the unit-test
+//! The `waybill trace` (build-tier) path is exercised via the unit-test
 //! coverage in `cli/run.rs` and `cli/generate.rs` — running an actual
 //! trace requires Linux + eBPF kernel privileges and is gated behind
 //! the `ebpf-tracing` feature flag, so a hermetic integration test
@@ -189,7 +189,7 @@ fn image_scan_accepts_manual_identifier_flags_alongside_auto_detection() {
     let entry = props
         .iter()
         .find(|p| {
-            p.get("name").and_then(|v| v.as_str()) == Some("mikebom:identifiers")
+            p.get("name").and_then(|v| v.as_str()) == Some("waybill:identifiers")
         })
         .expect("user-defined annotation present");
     let raw = entry["value"].as_str().unwrap();

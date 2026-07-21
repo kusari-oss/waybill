@@ -4,14 +4,14 @@
 //!
 //! * **US1 (P1 MVP)**: `--warm-go-cache=per-workspace` runs
 //!   `go mod download` before the transitive resolver, flipping the
-//!   m172 C117 `mikebom:go-transitive-fallback-count` value to `"0"`
-//!   on a cold-cache Go scan. C118 `mikebom:go-cache-warming-mode`
+//!   m172 C117 `waybill:go-transitive-fallback-count` value to `"0"`
+//!   on a cold-cache Go scan. C118 `waybill:go-cache-warming-mode`
 //!   annotation emitted across all 3 formats.
 //! * **US2 (P2)**: advisory log line fires exactly once in the
 //!   default-flag / non-offline / fallback-count > 0 case; suppressed
 //!   otherwise (Phase 4).
 //! * **US3 (P2)**: cache-warming failures NEVER abort the scan; the
-//!   C119 `mikebom:go-cache-warming-failed` annotation surfaces the
+//!   C119 `waybill:go-cache-warming-failed` annotation surfaces the
 //!   failing workspaces (Phase 5).
 
 use std::path::{Path, PathBuf};
@@ -23,7 +23,7 @@ use common::bin;
 use common::normalize::apply_fake_home_env;
 
 fn go_fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR"))
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR"))
         .join("go")
         .join(sub)
 }
@@ -53,7 +53,7 @@ fn scan(path: &Path, warm_mode: Option<&str>, offline: bool) -> (serde_json::Val
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_NO_GO_MOD_WHY", "1");
+    cmd.env("WAYBILL_NO_GO_MOD_WHY", "1");
     // `--offline` is a top-level Cli option; comes BEFORE the
     // subcommand. `--warm-go-cache` is on the `scan` subcommand and
     // comes AFTER `sbom scan`.
@@ -70,7 +70,7 @@ fn scan(path: &Path, warm_mode: Option<&str>, offline: bool) -> (serde_json::Val
     if let Some(mode) = warm_mode {
         cmd.arg(format!("--warm-go-cache={mode}"));
     }
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed (exit={:?}): stderr={}",
@@ -122,7 +122,7 @@ fn t021_us1_healthy_go_scan_default_mode_off() {
     write_empty_go_project(tmp.path());
 
     let (sbom, _stderr) = scan(tmp.path(), None, /* offline */ false);
-    let mode = doc_property(&sbom, "mikebom:go-cache-warming-mode");
+    let mode = doc_property(&sbom, "waybill:go-cache-warming-mode");
     assert_eq!(
         mode,
         Some("off"),
@@ -137,7 +137,7 @@ fn t021_us1_explicit_off_matches_default() {
     write_empty_go_project(tmp.path());
 
     let (sbom, _stderr) = scan(tmp.path(), Some("off"), /* offline */ false);
-    let mode = doc_property(&sbom, "mikebom:go-cache-warming-mode");
+    let mode = doc_property(&sbom, "waybill:go-cache-warming-mode");
     assert_eq!(
         mode,
         Some("off"),
@@ -159,7 +159,7 @@ fn t021_us1_offline_inhibited_mode() {
     write_empty_go_project(tmp.path());
 
     let (sbom, stderr) = scan(tmp.path(), Some("per-workspace"), /* offline */ true);
-    let mode = doc_property(&sbom, "mikebom:go-cache-warming-mode");
+    let mode = doc_property(&sbom, "waybill:go-cache-warming-mode");
     assert_eq!(
         mode,
         Some("offline-inhibited"),
@@ -186,7 +186,7 @@ fn t021_us1_offline_inhibited_mode() {
 /// modules to fetch. The scan is NOT offline; warming runs
 /// against the operator's actual `$GOPROXY`. Network is required
 /// — the test is `#[ignore]` by default; run via
-/// `cargo test -p mikebom --test warm_go_cache -- --ignored
+/// `cargo test -p waybill --test warm_go_cache -- --ignored
 /// t021_us1_per_workspace_mode_annotation_present`.
 #[test]
 #[ignore = "requires network to fetch modules via $GOPROXY"]
@@ -201,7 +201,7 @@ fn t021_us1_per_workspace_mode_annotation_present() {
         /* offline */ false,
     );
 
-    let mode = doc_property(&sbom, "mikebom:go-cache-warming-mode");
+    let mode = doc_property(&sbom, "waybill:go-cache-warming-mode");
     assert_eq!(
         mode,
         Some("per-workspace"),
@@ -227,12 +227,12 @@ fn t021_us1_non_go_scan_omits_c118_annotation() {
     write_empty_rust_project(tmp.path());
 
     let (sbom, _stderr) = scan(tmp.path(), Some("per-workspace"), /* offline */ false);
-    let mode = doc_property(&sbom, "mikebom:go-cache-warming-mode");
+    let mode = doc_property(&sbom, "waybill:go-cache-warming-mode");
     assert_eq!(
         mode, None,
         "FR-011: non-Go scan MUST NOT emit C118 (annotation absent); got {mode:?}"
     );
-    let failed = doc_property(&sbom, "mikebom:go-cache-warming-failed");
+    let failed = doc_property(&sbom, "waybill:go-cache-warming-failed");
     assert_eq!(
         failed, None,
         "FR-007: non-Go scan MUST NOT emit C119; got {failed:?}"
@@ -248,7 +248,7 @@ fn t021_us1_non_go_scan_omits_c118_annotation() {
 /// annotation-name prefix is load-bearing so operators can tie the
 /// hint back to the C117 value they see in the SBOM.
 const ADVISORY_SUBSTRING: &str =
-    "mikebom:go-transitive-fallback-count > 0 detected. Prime the cache with --warm-go-cache=per-workspace";
+    "waybill:go-transitive-fallback-count > 0 detected. Prime the cache with --warm-go-cache=per-workspace";
 
 /// SC-002 + FR-004: default-flag + non-offline + C117>0 → exactly ONE
 /// advisory log line. Uses the m055 `simple-module` fixture in
@@ -270,7 +270,7 @@ const ADVISORY_SUBSTRING: &str =
 ///
 /// The setup for this test:
 ///   - Fake HOME → `$GOMODCACHE` empty
-///   - NO `--offline` → mikebom will try network fetches
+///   - NO `--offline` → waybill will try network fetches
 ///   - `simple-module`'s pinned modules are all real; `proxy.golang.org`
 ///     should return them → step 3 succeeds, C117 stays 0, no advisory
 ///
@@ -347,7 +347,7 @@ fn t025_us2_advisory_suppressed_when_c117_zero() {
     let (sbom, stderr) = scan(tmp.path(), None, /* offline */ false);
     // Sanity: C117 IS emitted (Go scan happened) but value is "0".
     assert_eq!(
-        doc_property(&sbom, "mikebom:go-transitive-fallback-count"),
+        doc_property(&sbom, "waybill:go-transitive-fallback-count"),
         Some("0"),
         "sanity: empty Go project must produce C117 = 0"
     );
@@ -377,7 +377,7 @@ fn scan_with_empty_path(
     // NotFound → warmer classifies every workspace as
     // `WarmingFailureReason::GoBinaryAbsent`.
     cmd.env("PATH", "/nonexistent-bin-dir-for-m173-test");
-    cmd.env("MIKEBOM_NO_GO_MOD_WHY", "1");
+    cmd.env("WAYBILL_NO_GO_MOD_WHY", "1");
     cmd.arg("sbom")
         .arg("scan")
         .arg("--path")
@@ -388,7 +388,7 @@ fn scan_with_empty_path(
     if let Some(mode) = warm_mode {
         cmd.arg(format!("--warm-go-cache={mode}"));
     }
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     let raw = std::fs::read_to_string(&out_path).unwrap_or_default();
     let sbom = if raw.is_empty() {
         serde_json::json!({})
@@ -405,7 +405,7 @@ fn scan_with_empty_path(
 /// workspace + a `subcommand-failed` reason class.
 ///
 /// Uses network. Marked `#[ignore]` — run via
-/// `cargo test -p mikebom --test warm_go_cache -- --ignored
+/// `cargo test -p waybill --test warm_go_cache -- --ignored
 /// t030_us3_unreachable_module_records_failure`.
 #[test]
 #[ignore = "requires network + guaranteed proxy 404 for the fake module path"]
@@ -415,13 +415,13 @@ fn t030_us3_unreachable_module_records_failure() {
     // try to resolve it via GOPROXY, hit 404, exit non-zero.
     std::fs::write(
         tmp.path().join("go.mod"),
-        "module example.com/m173test\n\ngo 1.21\n\nrequire example.com/definitely-not-a-real-module-mikebom-m173 v1.0.0\n",
+        "module example.com/m173test\n\ngo 1.21\n\nrequire example.com/definitely-not-a-real-module-waybill-m173 v1.0.0\n",
     )
     .expect("write go.mod");
 
     let (sbom, _stderr) = scan(tmp.path(), Some("per-workspace"), /* offline */ false);
 
-    let failed = doc_property(&sbom, "mikebom:go-cache-warming-failed")
+    let failed = doc_property(&sbom, "waybill:go-cache-warming-failed")
         .expect("C119 must be present when a workspace failed");
     let entries: serde_json::Value =
         serde_json::from_str(failed).expect("C119 value must be JSON-encoded array");
@@ -443,7 +443,7 @@ fn t030_us3_unreachable_module_records_failure() {
 /// Scan exits 0 (graceful degradation) and C119 names every discovered
 /// Go workspace.
 ///
-/// Note: mikebom's own resolver ladder ALSO shells out to `go` — with
+/// Note: waybill's own resolver ladder ALSO shells out to `go` — with
 /// no `go` binary the resolver silently degrades to step 5 (go.sum
 /// fallback). C117 will report a positive count for the workspace's
 /// go.sum entries. The scan still succeeds because both the warmer
@@ -472,7 +472,7 @@ fn t030_us3_go_binary_absent_degrades() {
     // but the probe `go version` fails → fan-out yields ONE
     // GoBinaryAbsent failure record for this single workspace. C119
     // must be present with that record.
-    let failed = doc_property(&sbom, "mikebom:go-cache-warming-failed")
+    let failed = doc_property(&sbom, "waybill:go-cache-warming-failed")
         .expect("C119 must be present when `go` binary is absent");
     let entries: serde_json::Value =
         serde_json::from_str(failed).expect("C119 value must decode as JSON");
@@ -486,7 +486,7 @@ fn t030_us3_go_binary_absent_degrades() {
 
     // C118 mode annotation is STILL emitted (Go was scanned).
     assert_eq!(
-        doc_property(&sbom, "mikebom:go-cache-warming-mode"),
+        doc_property(&sbom, "waybill:go-cache-warming-mode"),
         Some("per-workspace"),
         "C118 mode annotation must reflect the operator's request even on failure"
     );
@@ -519,13 +519,13 @@ fn t030_us3_c119_absent_on_healthy_scan() {
 
     // C118 mode = "per-workspace" (Go was scanned, warmer ran).
     assert_eq!(
-        doc_property(&sbom, "mikebom:go-cache-warming-mode"),
+        doc_property(&sbom, "waybill:go-cache-warming-mode"),
         Some("per-workspace"),
         "sanity: mode annotation must be present"
     );
     // C119 MUST NOT be emitted on a healthy scan.
     assert_eq!(
-        doc_property(&sbom, "mikebom:go-cache-warming-failed"),
+        doc_property(&sbom, "waybill:go-cache-warming-failed"),
         None,
         "FR-007: C119 MUST be absent when warming succeeds for every workspace"
     );

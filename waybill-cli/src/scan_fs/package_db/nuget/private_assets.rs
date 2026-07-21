@@ -17,7 +17,7 @@
 
 use waybill_common::resolution::LifecycleScope;
 
-/// Holder for the three asset-control attributes mikebom reads off a
+/// Holder for the three asset-control attributes waybill reads off a
 /// `<PackageReference>` element. Any field may be `None` if the
 /// attribute was absent on the element.
 #[derive(Clone, Debug, Default)]

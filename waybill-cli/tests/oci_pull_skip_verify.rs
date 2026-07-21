@@ -22,7 +22,7 @@ fn mikebom_bin() -> &'static str {
 #[test]
 fn us3_skip_verify_flag_emits_warn_log() {
     // FR-007 / Constitution Principle X: whenever the operator
-    // disables TLS verification, mikebom MUST emit a WARN log naming
+    // disables TLS verification, waybill MUST emit a WARN log naming
     // the flag and the affected image ref. This audit trail is
     // required by security-review workflows.
     //
@@ -41,7 +41,7 @@ fn us3_skip_verify_flag_emits_warn_log() {
         ])
         .env("RUST_LOG", "warn")
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     // The invocation WILL fail (unreachable host) — but the WARN log
     // must appear before the transport failure.
@@ -70,7 +70,7 @@ fn us3_no_flag_no_warn_log() {
         ])
         .env("RUST_LOG", "warn")
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         !stderr.contains("TLS verification DISABLED"),
@@ -102,18 +102,18 @@ fn us3_skip_verify_and_bad_ca_cert_both_set() {
             "remote",
             "--insecure-tls-skip-verify",
             "--registry-ca-cert",
-            "/nonexistent/mikebom-m182-us3.pem",
+            "/nonexistent/waybill-m182-us3.pem",
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         !out.status.success(),
-        "expected mikebom to fail on bad CA path even with skip-verify set. \
+        "expected waybill to fail on bad CA path even with skip-verify set. \
          stderr:\n{stderr}",
     );
     assert!(
-        stderr.contains("/nonexistent/mikebom-m182-us3.pem"),
+        stderr.contains("/nonexistent/waybill-m182-us3.pem"),
         "expected stderr to name the bad path. stderr:\n{stderr}",
     );
 }

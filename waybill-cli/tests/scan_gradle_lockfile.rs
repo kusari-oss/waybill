@@ -2,7 +2,7 @@
 //!
 //! Companion to the unit tests in `scan_fs::package_db::gradle::lockfile::tests`
 //! (which exercise `read_gradle_lockfile` directly). This test invokes the
-//! `mikebom sbom scan --path <fixture>` binary against the in-repo
+//! `waybill sbom scan --path <fixture>` binary against the in-repo
 //! `gradle_lockfile/runtime_only/` and `gradle_lockfile/buildscript_classpath/`
 //! fixtures to verify the dispatcher integration — `gradle::read` is called
 //! from `read_all`, the project-roots walker finds both lockfile filenames,
@@ -32,7 +32,7 @@ fn run_scan(path: &std::path::Path) -> serde_json::Value {
 
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -44,7 +44,7 @@ fn run_scan(path: &std::path::Path) -> serde_json::Value {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "gradle scan unexpectedly failed: stderr={}",

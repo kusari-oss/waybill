@@ -3,7 +3,7 @@
 //! Mirrors the wire format produced by [`go-witness`](https://github.com/in-toto/go-witness)
 //! plus the network-trace attestor from the Vyom-Yadav fork
 //! (branch `add-networktrace-attestor` @ `23a67367`). Emitting this
-//! shape makes mikebom attestations directly consumable by
+//! shape makes waybill attestations directly consumable by
 //! `sbomit generate` and any other witness-aware tool.
 //!
 //! Key constants:
@@ -48,13 +48,13 @@ pub const PRODUCT_TYPE: &str = "https://witness.dev/attestations/product/v0.1";
 /// Vyom-Yadav fork network-trace attestor type.
 pub const NETWORK_TRACE_TYPE: &str = "https://witness.dev/attestations/network-trace/v0.1";
 
-/// Milestone 210 — mikebom-owned compiler-invocation attestor type.
+/// Milestone 210 — waybill-owned compiler-invocation attestor type.
 /// Locked per Clarifications Q3 + `contracts/attestor-predicate.md` C-1.
 /// Future version bumps (v0.2, v1, ...) MUST retain the
 /// `/compiler-invocation/` path prefix so URI-alias migration
 /// preserves downstream-consumer parsing.
 pub const COMPILER_INVOCATION_TYPE: &str =
-    "https://mikebom.dev/attestation/compiler-invocation/v0.1";
+    "https://waybill.dev/attestation/compiler-invocation/v0.1";
 
 // ---------------------------------------------------------------------
 // Statement + Collection
@@ -111,7 +111,7 @@ pub struct CollectionEntry {
 /// `{algo -> hex}` — what `cryptoutil.DigestSet` marshals to in
 /// go-witness. Algorithm names per `cryptoutil/digestset.go:30-56`:
 /// `sha256`, `sha1`, `sha512`, `md5`, `gitoid:sha1`, `gitoid:sha256`,
-/// `dirHash`. mikebom emits `sha256` exclusively for v1 of the
+/// `dirHash`. waybill emits `sha256` exclusively for v1 of the
 /// witness-format support.
 pub type DigestSet = BTreeMap<String, String>;
 
@@ -307,9 +307,9 @@ pub fn sha256_digest(hex: impl Into<String>) -> DigestSet {
 }
 
 /// Milestone 210 — build a `CollectionEntry` carrying the
-/// mikebom-owned `compiler-invocation/v0.1` attestor payload per
+/// waybill-owned `compiler-invocation/v0.1` attestor payload per
 /// `contracts/attestor-predicate.md` C-2. Called from the trace-end
-/// wiring in `mikebom-cli/src/trace/*` when the trace produced
+/// wiring in `waybill-cli/src/trace/*` when the trace produced
 /// compiler-pipeline data.
 ///
 /// `payload` is the JSON-serialized `CompilerPipelineData` (from
@@ -565,7 +565,7 @@ mod tests {
         // C-1 and MUST NOT change without a URI bump (v0.2, etc.).
         assert_eq!(
             COMPILER_INVOCATION_TYPE,
-            "https://mikebom.dev/attestation/compiler-invocation/v0.1"
+            "https://waybill.dev/attestation/compiler-invocation/v0.1"
         );
     }
 

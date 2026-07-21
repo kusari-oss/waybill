@@ -1,5 +1,5 @@
 //! Milestone 004 US1 integration tests — standalone `.rpm` artefact
-//! scanning via `mikebom sbom scan --path <dir>`.
+//! scanning via `waybill sbom scan --path <dir>`.
 //!
 //! Fixtures are synthesised at test time via the `rpm` crate's
 //! `PackageBuilder` — no network, no checked-in binary blobs. This
@@ -39,7 +39,7 @@ fn write_synthetic_rpm(
     let mut b = rpm::PackageBuilder::new(name, version, license, arch, "synthetic test rpm");
     b.release(release)
         .vendor(vendor)
-        .packager("mikebom test builder")
+        .packager("waybill test builder")
         .description("fixture for milestone 004 US1 integration tests");
     for r in requires {
         b.requires(rpm::Dependency::any(*r));
@@ -48,7 +48,7 @@ fn write_synthetic_rpm(
     pkg.write_file(dest).unwrap();
 }
 
-/// Run `mikebom sbom scan --path <dir>` and return the parsed SBOM.
+/// Run `waybill sbom scan --path <dir>` and return the parsed SBOM.
 fn scan(dir: &Path) -> (Value, String) {
     let out_file = dir.join("out.cdx.json");
     let output = Command::new(binary_path())
@@ -60,10 +60,10 @@ fn scan(dir: &Path) -> (Value, String) {
         .arg(&out_file)
         .arg("--no-deep-hash")
         .output()
-        .expect("failed to invoke mikebom");
+        .expect("failed to invoke waybill");
     assert!(
         output.status.success(),
-        "mikebom sbom scan failed: stdout={} stderr={}",
+        "waybill sbom scan failed: stdout={} stderr={}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr),
     );
@@ -135,13 +135,13 @@ fn scan_rpm_file_fixture_emits_canonical_components() {
     // Every rpm component carries evidence-kind = rpm-file.
     for c in &rpms {
         assert_eq!(
-            property_value(c, "mikebom:evidence-kind").as_deref(),
+            property_value(c, "waybill:evidence-kind").as_deref(),
             Some("rpm-file"),
             "missing/wrong evidence-kind on {}",
             c["purl"]
         );
         assert_eq!(
-            property_value(c, "mikebom:sbom-tier").as_deref(),
+            property_value(c, "waybill:sbom-tier").as_deref(),
             Some("source"),
             "wrong sbom-tier on {}",
             c["purl"]

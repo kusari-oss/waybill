@@ -64,7 +64,7 @@ fn hex_purls(doc: &Value) -> Vec<String> {
                         .map(|arr| {
                             arr.iter().any(|p| {
                                 p.get("name").and_then(|v| v.as_str())
-                                    == Some("mikebom:source-type")
+                                    == Some("waybill:source-type")
                                     && p.get("value")
                                         .and_then(|v| v.as_str())
                                         .map(|s| s.starts_with("hex-"))
@@ -244,7 +244,7 @@ end
         .expect("custom apps_path value must still detect umbrella");
     let props = umbrella.get("properties").and_then(|v| v.as_array()).unwrap();
     let has_umbrella_root_annotation = props.iter().any(|p| {
-        p.get("name").and_then(|v| v.as_str()) == Some("mikebom:umbrella-root")
+        p.get("name").and_then(|v| v.as_str()) == Some("waybill:umbrella-root")
             && p.get("value").and_then(|v| v.as_str()) == Some("true")
     });
     assert!(

@@ -3,12 +3,12 @@
 //! When two or more readers identify the same library (e.g., gRPC's
 //! `abseil-cpp` matched by BOTH the `git-submodule` reader AND a
 //! `conan-recipe` reader scanning a third_party/abseil-cpp/conanfile.py),
-//! mikebom MUST emit exactly one SBOM component. This module is the
+//! waybill MUST emit exactly one SBOM component. This module is the
 //! arbiter: takes the union of per-reader `DetectionRecord`s, groups
 //! by canonical PURL string, selects a deterministic winner per group
 //! per the precedence table in `data-model.md`, and emits a
 //! `DedupResult` whose `also_detected_via` field records the losing
-//! readers' source-mechanism values for the `mikebom:also-detected-via`
+//! readers' source-mechanism values for the `waybill:also-detected-via`
 //! annotation (and the parallel CDX-native
 //! `evidence.identity[].methods[]` emission per research R1).
 //!
@@ -89,7 +89,7 @@ pub enum SourceMechanism {
 
 impl SourceMechanism {
     /// Returns the C55 canonical string for this source-mechanism. The
-    /// returned value MUST match the `mikebom:source-mechanism`
+    /// returned value MUST match the `waybill:source-mechanism`
     /// annotation value emitted in the SBOM exactly (for parity-catalog
     /// round-trip).
     #[allow(dead_code)]
@@ -142,7 +142,7 @@ pub struct DetectionRecord {
 
 /// The output of the dedup pipeline: one entry per unique canonical
 /// PURL, with the winning reader's record and the losing
-/// source-mechanisms listed for `mikebom:also-detected-via` emission.
+/// source-mechanisms listed for `waybill:also-detected-via` emission.
 #[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct DedupResult {
@@ -285,7 +285,7 @@ pub fn dedup(records: Vec<DetectionRecord>) -> DedupResult {
         let mut losers: Vec<SourceMechanism> =
             group.into_iter().map(|r| r.source_mechanism).collect();
         // Sort losers by enum order for the
-        // `mikebom:also-detected-via` annotation determinism.
+        // `waybill:also-detected-via` annotation determinism.
         losers.sort();
         winners.push(DedupedComponent {
             canonical_purl: purl,

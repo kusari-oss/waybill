@@ -26,7 +26,7 @@ fn run_scan_cdx(path: &Path, extra_args: &[&str]) -> serde_json::Value {
     for a in extra_args {
         cmd.arg(a);
     }
-    let status = cmd.status().expect("mikebom should run");
+    let status = cmd.status().expect("waybill should run");
     assert!(status.success(), "scan failed: {extra_args:?}");
     let raw = std::fs::read(&out_path).expect("read sbom");
     serde_json::from_slice(&raw).expect("valid JSON")
@@ -51,7 +51,7 @@ fn run_scan_spdx23(path: &Path, extra_args: &[&str]) -> serde_json::Value {
     for a in extra_args {
         cmd.arg(a);
     }
-    let status = cmd.status().expect("mikebom should run");
+    let status = cmd.status().expect("waybill should run");
     assert!(status.success(), "scan failed: {extra_args:?}");
     let raw = std::fs::read(&out_path).expect("read spdx");
     serde_json::from_slice(&raw).expect("valid JSON")
@@ -76,7 +76,7 @@ fn run_scan_spdx3(path: &Path, extra_args: &[&str]) -> serde_json::Value {
     for a in extra_args {
         cmd.arg(a);
     }
-    let status = cmd.status().expect("mikebom should run");
+    let status = cmd.status().expect("waybill should run");
     assert!(status.success(), "scan failed: {extra_args:?}");
     let raw = std::fs::read(&out_path).expect("read spdx3");
     serde_json::from_slice(&raw).expect("valid JSON")
@@ -174,7 +174,7 @@ fn root_purl_invalid_value_exits_nonzero_at_clap_parse() {
         .arg("--root-purl")
         .arg("not-a-valid-purl")
         .status()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         !status.success(),
         "invalid --root-purl value must fail at clap parse time"
@@ -200,7 +200,7 @@ fn root_purl_conflicts_with_root_name() {
         .arg("--root-name")
         .arg("other-name")
         .status()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         !status.success(),
         "--root-purl + --root-name MUST be clap-rejected (mutually exclusive)"
@@ -227,7 +227,7 @@ fn root_purl_conflicts_with_no_root_purl() {
         .arg("foo")
         .arg("--no-root-purl")
         .status()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         !status.success(),
         "--root-purl + --no-root-purl MUST be clap-rejected (mutually exclusive)"

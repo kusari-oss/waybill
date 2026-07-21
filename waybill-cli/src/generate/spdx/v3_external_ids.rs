@@ -44,7 +44,7 @@ pub fn build_external_identifiers_for(component: &ResolvedComponent) -> Vec<Valu
     // resolved" CPE 2.3 vector has no wildcards (`*` or `-`) in
     // any of the 11 required attribute slots: cpe:2.3:part:vendor:
     // product:version:update:edition:language:sw_edition:target_sw:
-    // target_hw:other. mikebom's `cpes` array contains the
+    // target_hw:other. waybill's `cpes` array contains the
     // synthesized candidate set; entries that pass the
     // resolution check land here, the rest go to the C19
     // Annotation (build_component_annotations in US2).
@@ -84,7 +84,7 @@ pub fn build_external_identifiers_for(component: &ResolvedComponent) -> Vec<Valu
 /// We enforce non-wildcard in the four required slots only; the
 /// remaining slots (update / edition / language / sw_edition /
 /// target_sw / target_hw / other) commonly carry legitimate `*`
-/// "any" markers in real-world CPE vectors — mikebom's synthesizer
+/// "any" markers in real-world CPE vectors — waybill's synthesizer
 /// routinely leaves `update=*` — and MUST NOT cause the vector to
 /// be dropped.
 ///
@@ -113,11 +113,11 @@ mod tests {
 
     #[test]
     fn synthesized_cpe_with_wildcard_update_passes() {
-        // Mikebom's CPE synthesizer routinely produces this shape —
+        // Waybill's CPE synthesizer routinely produces this shape —
         // required slots populated, update+ all wildcards. Pre-fix
         // this was rejected; post-fix it passes.
         assert!(is_fully_resolved_cpe23(
-            "cpe:2.3:a:mikebom:foo:1.0:*:*:*:*:*:*:*"
+            "cpe:2.3:a:waybill:foo:1.0:*:*:*:*:*:*:*"
         ));
     }
 
@@ -126,7 +126,7 @@ mod tests {
         // version=* makes the CPE a true candidate set, not a
         // resolved vector — must reject.
         assert!(!is_fully_resolved_cpe23(
-            "cpe:2.3:a:mikebom:foo:*:*:*:*:*:*:*:*"
+            "cpe:2.3:a:waybill:foo:*:*:*:*:*:*:*:*"
         ));
     }
 
@@ -136,7 +136,7 @@ mod tests {
         // Both are legitimate on non-required slots; non-required
         // slots may use either.
         assert!(is_fully_resolved_cpe23(
-            "cpe:2.3:a:mikebom:foo:1.0:-:*:*:*:*:*:*"
+            "cpe:2.3:a:waybill:foo:1.0:-:*:*:*:*:*:*"
         ));
     }
 
@@ -144,13 +144,13 @@ mod tests {
     fn cpe_too_short_fails() {
         // Less than 6 colon-separated parts means no complete
         // required-slot set.
-        assert!(!is_fully_resolved_cpe23("cpe:2.3:a:mikebom:foo"));
+        assert!(!is_fully_resolved_cpe23("cpe:2.3:a:waybill:foo"));
     }
 
     #[test]
     fn non_cpe_prefix_fails() {
-        assert!(!is_fully_resolved_cpe23("not:2.3:a:mikebom:foo:1.0"));
-        assert!(!is_fully_resolved_cpe23("cpe:2.2:a:mikebom:foo:1.0"));
+        assert!(!is_fully_resolved_cpe23("not:2.3:a:waybill:foo:1.0"));
+        assert!(!is_fully_resolved_cpe23("cpe:2.2:a:waybill:foo:1.0"));
     }
 
     #[test]
@@ -160,7 +160,7 @@ mod tests {
             "cpe:2.3:a:*:foo:1.0:*:*:*:*:*:*:*"
         ));
         assert!(!is_fully_resolved_cpe23(
-            "cpe:2.3:a:mikebom:*:1.0:*:*:*:*:*:*:*"
+            "cpe:2.3:a:waybill:*:1.0:*:*:*:*:*:*:*"
         ));
     }
 }

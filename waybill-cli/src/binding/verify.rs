@@ -1,12 +1,12 @@
 //! Milestone 072 T015 — consumer-side `verify_binding` subroutine.
 //!
 //! Reads two SBOMs (image-tier + source-tier), walks the image-tier
-//! components, decodes each component's `mikebom:source-document-binding`
+//! components, decodes each component's `waybill:source-document-binding`
 //! annotation, recomputes the binding hash from the matching source-tier
 //! component's evidence, and reports per-component pass/fail.
 //!
 //! The recompute side for PR-A: the source SBOM is expected to carry a
-//! sibling `mikebom:source-document-binding` annotation on the matching
+//! sibling `waybill:source-document-binding` annotation on the matching
 //! component (PURL match). When present, its hash is the recompute
 //! reference. When absent, the verifier returns `unknown` strength
 //! with reason `source-tier-binding-evidence-missing` per FR-003.
@@ -14,7 +14,7 @@
 //! Future PR-B work may walk the source-tier component's evidence
 //! directly off-disk to recompute lockfile + manifest hashes; the
 //! PR-A verify path is the metadata-only case and matches what
-//! `mikebom sbom verify-binding` operating purely on two SBOM files
+//! `waybill sbom verify-binding` operating purely on two SBOM files
 //! can answer.
 
 use std::path::Path;
@@ -64,7 +64,7 @@ pub struct VerifySummary {
 
 impl VerifyReport {
     /// `true` when every component verified cleanly. Drives the
-    /// `mikebom sbom verify-binding` exit code (non-zero when false)
+    /// `waybill sbom verify-binding` exit code (non-zero when false)
     /// per FR-005 / VR-005.
     pub fn is_clean(&self) -> bool {
         self.summary.verification_failures == 0
@@ -112,7 +112,7 @@ fn strength_label(s: &BindingStrength) -> &'static str {
 }
 
 /// Top-level entry: load two SBOMs from disk, verify, return a report.
-/// Currently parses JSON shapes only (every mikebom emission is JSON).
+/// Currently parses JSON shapes only (every waybill emission is JSON).
 pub fn verify_binding_from_paths(
     image_sbom_path: &Path,
     source_sbom_path: &Path,
@@ -140,7 +140,7 @@ pub fn verify_binding(image_sbom: &Value, source_sbom: &Value) -> VerifyReport {
     let source_bindings_by_purl = collect_source_bindings(source_sbom);
 
     // Walk image-tier components; for each, decode the
-    // `mikebom:source-document-binding` annotation and compare against
+    // `waybill:source-document-binding` annotation and compare against
     // the source-tier recompute.
     let mut rows: Vec<VerifyRow> = Vec::new();
     let image_components = walk_image_components(image_sbom);
@@ -258,7 +258,7 @@ struct ImageComponent {
     purl: String,
     bom_ref: Option<String>,
     binding: Option<SourceDocumentBinding>,
-    /// Milestone 116 — parsed value of the `mikebom:produces-binaries`
+    /// Milestone 116 — parsed value of the `waybill:produces-binaries`
     /// property, if present. Empty `Vec` when absent OR when the property
     /// failed to parse as a JSON array of strings. Used at bind-time to
     /// build the `SourceSbomContext.binary_name_to_purl` index.
@@ -324,9 +324,9 @@ fn decode_cdx_component(c: &Value) -> Option<ImageComponent> {
     })
 }
 
-/// Parse the JSON-encoded value of a `mikebom:produces-binaries` property.
+/// Parse the JSON-encoded value of a `waybill:produces-binaries` property.
 /// Returns an empty `Vec` on malformed input — backwards-compat with non-
-/// mikebom SBOMs and hand-edited values requires graceful degradation, NOT
+/// waybill SBOMs and hand-edited values requires graceful degradation, NOT
 /// panic (per FR-014 / SC-005).
 fn parse_produces_binaries_value(s: &str) -> Vec<String> {
     let v: Value = match serde_json::from_str(s) {
@@ -334,14 +334,14 @@ fn parse_produces_binaries_value(s: &str) -> Vec<String> {
         Err(e) => {
             tracing::warn!(
                 error = %e,
-                "mikebom:produces-binaries property value failed to parse as JSON; ignoring"
+                "waybill:produces-binaries property value failed to parse as JSON; ignoring"
             );
             return Vec::new();
         }
     };
     let Some(arr) = v.as_array() else {
         tracing::warn!(
-            "mikebom:produces-binaries value is not a JSON array; ignoring"
+            "waybill:produces-binaries value is not a JSON array; ignoring"
         );
         return Vec::new();
     };
@@ -403,7 +403,7 @@ fn decode_spdx_envelope_binding_from_annotations(
 
 fn decode_envelope_binding(serialized: &str) -> Option<SourceDocumentBinding> {
     let v: Value = serde_json::from_str(serialized).ok()?;
-    if v.get("schema").and_then(|x| x.as_str()) != Some("mikebom-annotation/v1") {
+    if v.get("schema").and_then(|x| x.as_str()) != Some("waybill-annotation/v1") {
         return None;
     }
     if v.get("field").and_then(|x| x.as_str()) != Some(BINDING_PROPERTY_NAME) {
@@ -432,7 +432,7 @@ fn decode_spdx_envelope_produces_binaries_from_annotations(
 
 fn decode_envelope_produces_binaries(serialized: &str) -> Option<Vec<String>> {
     let v: Value = serde_json::from_str(serialized).ok()?;
-    if v.get("schema").and_then(|x| x.as_str()) != Some("mikebom-annotation/v1") {
+    if v.get("schema").and_then(|x| x.as_str()) != Some("waybill-annotation/v1") {
         return None;
     }
     if v.get("field").and_then(|x| x.as_str()) != Some(PRODUCES_BINARIES_PROPERTY_NAME) {
@@ -507,7 +507,7 @@ fn walk_spdx3_components(doc: &Value) -> Vec<ImageComponent> {
 
 /// Build a PURL-keyed map of source-tier `SourceDocumentBinding`
 /// entries — the recompute-side lookup. Reads from the source SBOM's
-/// own annotation set (mikebom emits this when the source SBOM was
+/// own annotation set (waybill emits this when the source SBOM was
 /// itself produced via `--bind-to-source`).
 fn collect_source_bindings(
     doc: &Value,
@@ -548,7 +548,7 @@ pub struct SourceSbomContext {
     /// PURL → source-tier `SourceDocumentBinding` lookup, populated
     /// when the source SBOM ITSELF carries pre-existing bindings
     /// (i.e., the source-tier scan was run with `--bind-to-source`
-    /// against a still-earlier tier — typical of mikebom milestone
+    /// against a still-earlier tier — typical of waybill milestone
     /// 072+ build pipelines). Empty when source SBOM has no
     /// pre-existing bindings; then the bind-to-source flow computes
     /// fresh hashes from on-disk evidence.
@@ -556,7 +556,7 @@ pub struct SourceSbomContext {
         std::collections::BTreeMap<String, SourceDocumentBinding>,
     /// Milestone 116 — produced-binary-name → source-tier PURL(s) index.
     /// Built during `load()` by scanning each component for a
-    /// `mikebom:produces-binaries` property. Vec-valued because FR-013's
+    /// `waybill:produces-binaries` property. Vec-valued because FR-013's
     /// name-collision case (two source-tier components declaring the same
     /// binary name) MUST surface as `weak` with `multiple-source-candidates
     /// -for-binary-name` reason; the binder retains all candidates so the
@@ -626,7 +626,7 @@ impl SourceSbomContext {
             // Milestone 116 — auto-alias fallback per
             // specs/116-produces-binaries/contracts/binder.md. If the
             // incoming PURL is `pkg:generic/<name>` and the source SBOM
-            // declared `<name>` via `mikebom:produces-binaries`, alias
+            // declared `<name>` via `waybill:produces-binaries`, alias
             // to the declaring source-tier PURL. If multiple source
             // components declared the same name, return `Weak` with the
             // FR-013 multi-candidate reason. Otherwise return the

@@ -41,7 +41,7 @@
 //! transitively pulled in via rustls 0.23+. Milestone 032 (#65)
 //! swapped to the durable substrate above, removing the version-
 //! pin trap. The `no_c_dependencies_in_oci_registry_feature_tree`
-//! regression test in `mikebom-cli/tests/no_c_dependencies.rs`
+//! regression test in `waybill-cli/tests/no_c_dependencies.rs`
 //! locks the substrate decision in.
 
 mod auth;
@@ -80,7 +80,7 @@ use tarball::PulledLayer;
 ///
 /// Multi-arch image indexes resolve to `linux/<host-arch>` by
 /// default. Pass `Some("linux/<arch>[/<variant>]")` via
-/// `image_platform` to override (milestone 035 / #67). mikebom only
+/// `image_platform` to override (milestone 035 / #67). waybill only
 /// scans Linux containers regardless of the host OS, so non-linux
 /// platform requests are rejected upfront.
 ///
@@ -92,7 +92,7 @@ use tarball::PulledLayer;
 /// keyed on their SHA-256 digest. `None` disables caching for
 /// this pull (every blob is fetched from the network).
 ///
-/// Async by design — mikebom's CLI is `#[tokio::main]`-bootstrapped,
+/// Async by design — waybill's CLI is `#[tokio::main]`-bootstrapped,
 /// so callers `.await` this directly without bridging.
 pub async fn pull_to_tarball(
     image_ref: &str,
@@ -212,7 +212,7 @@ pub async fn pull_to_tarball(
 
     // Step 4: assemble the docker-save-format tarball.
     let tempdir = tempfile::Builder::new()
-        .prefix("mikebom-oci-pull-")
+        .prefix("waybill-oci-pull-")
         .tempdir()
         .context("creating tempdir for OCI pull tarball")?;
     let tarball_path = tempdir.path().join("image.tar");
@@ -230,7 +230,7 @@ pub async fn pull_to_tarball(
 /// FR-007 INFO audit-log line naming the source descriptor.
 ///
 /// `bytes` is the byte-identical blob body — no re-parse, no re-encode.
-/// `descriptor_digest` is the SHA-256 digest mikebom already verified against
+/// `descriptor_digest` is the SHA-256 digest waybill already verified against
 /// the descriptor's declared digest. `media_type` is the descriptor's
 /// declared media type (used in the audit log + FR-004 format-mismatch WARN).
 pub struct ReferrerSbom {
@@ -240,15 +240,15 @@ pub struct ReferrerSbom {
 }
 
 /// Default per-referrer content size cap (100 MiB) — matches spec.md FR-014.
-/// Override via the `MIKEBOM_REFERRER_MAX_BYTES` env var (research Decision 4).
+/// Override via the `WAYBILL_REFERRER_MAX_BYTES` env var (research Decision 4).
 pub const DEFAULT_REFERRER_MAX_BYTES: u64 = 100 * 1024 * 1024;
 
-/// Read `MIKEBOM_REFERRER_MAX_BYTES` (default 100 MiB) — the descriptor-level
+/// Read `WAYBILL_REFERRER_MAX_BYTES` (default 100 MiB) — the descriptor-level
 /// cap consulted by [`referrers::pick_sbom_descriptor`] BEFORE any blob fetch,
-/// preventing a malicious/misconfigured registry from DoSing mikebom via an
+/// preventing a malicious/misconfigured registry from DoSing waybill via an
 /// oversize declared size (research Decision 4).
 pub fn resolve_referrer_max_bytes() -> u64 {
-    std::env::var("MIKEBOM_REFERRER_MAX_BYTES")
+    std::env::var("WAYBILL_REFERRER_MAX_BYTES")
         .ok()
         .and_then(|s| s.parse::<u64>().ok())
         .unwrap_or(DEFAULT_REFERRER_MAX_BYTES)
@@ -444,7 +444,7 @@ pub fn host_oci_arch() -> Result<&'static str> {
         other => {
             anyhow::bail!(
                 "host architecture `{other}` not mapped to an OCI platform name. \
-                 mikebom recognizes x86_64/aarch64/arm/riscv64/powerpc64/s390x \
+                 waybill recognizes x86_64/aarch64/arm/riscv64/powerpc64/s390x \
                  for the host-default selection. To scan a different architecture, \
                  pass `--image-platform <linux/arch>` explicitly \
                  (e.g. `--image-platform linux/amd64`)."

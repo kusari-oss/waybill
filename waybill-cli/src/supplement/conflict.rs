@@ -13,7 +13,7 @@
 // Justification derivation is mechanical: each `ConflictField` maps to
 // exactly one `ConflictWinner` via `ConflictField::winner()`, which in
 // turn determines the minimal-enum `justification` value emitted on the
-// `mikebom:assertion-conflict` annotation. No separate decision logic.
+// `waybill:assertion-conflict` annotation. No separate decision logic.
 
 use waybill_common::resolution::ResolvedComponent;
 
@@ -134,7 +134,7 @@ impl ConflictRecord {
     }
 
     /// JSON object emitted as one element of the
-    /// `mikebom:assertion-conflict` annotation's value array.
+    /// `waybill:assertion-conflict` annotation's value array.
     pub(crate) fn as_json(&self) -> serde_json::Value {
         let winner = self.winner();
         serde_json::json!({
@@ -155,12 +155,12 @@ impl ConflictRecord {
 /// FR-006/FR-007 partition: if the developer side wins, replace the
 /// scanner's value with the developer's; otherwise, preserve the
 /// scanner's value and stash the developer's as a
-/// `mikebom:declared-<field>` annotation.
+/// `waybill:declared-<field>` annotation.
 ///
 /// In both directions, the losing side's value is preserved on the
 /// merged component's `extra_annotations` so consumers can audit. The
 /// caller (`merge::merge`) is responsible for stamping the
-/// `mikebom:assertion-conflict` array from the returned records.
+/// `waybill:assertion-conflict` array from the returned records.
 pub(crate) fn resolve_component(
     mut scanner: ResolvedComponent,
     supplement: &SupplementComponent,
@@ -181,11 +181,11 @@ pub(crate) fn resolve_component(
             // supplement's verbatim CDX-shape array as annotations so
             // consumers can audit both sides.
             scanner.extra_annotations.insert(
-                "mikebom:scanner-discovered-licenses".to_string(),
+                "waybill:scanner-discovered-licenses".to_string(),
                 scanner_licenses_json,
             );
             scanner.extra_annotations.insert(
-                "mikebom:supplement-licenses".to_string(),
+                "waybill:supplement-licenses".to_string(),
                 supplement_licenses_json,
             );
             // Project the supplement's CDX-shaped license entries into
@@ -222,7 +222,7 @@ pub(crate) fn resolve_component(
                 supplement_value: serde_json::Value::String(supp_supplier.clone()),
             });
             scanner.extra_annotations.insert(
-                "mikebom:scanner-discovered-supplier".to_string(),
+                "waybill:scanner-discovered-supplier".to_string(),
                 scanner_val,
             );
             scanner.supplier = Some(supp_supplier.clone());
@@ -238,7 +238,7 @@ pub(crate) fn resolve_component(
     if let Some(supp_copyright) = supplement.copyright.as_ref() {
         let scanner_val = scanner
             .extra_annotations
-            .get("mikebom:copyright")
+            .get("waybill:copyright")
             .cloned()
             .unwrap_or(serde_json::Value::Null);
         let supplement_val = serde_json::Value::String(supp_copyright.clone());
@@ -249,13 +249,13 @@ pub(crate) fn resolve_component(
                 supplement_value: supplement_val.clone(),
             });
             scanner.extra_annotations.insert(
-                "mikebom:scanner-discovered-copyright".to_string(),
+                "waybill:scanner-discovered-copyright".to_string(),
                 scanner_val,
             );
         }
         scanner
             .extra_annotations
-            .insert("mikebom:copyright".to_string(), supplement_val);
+            .insert("waybill:copyright".to_string(), supplement_val);
     }
 
     // name (display) — developer wins.
@@ -267,7 +267,7 @@ pub(crate) fn resolve_component(
                 supplement_value: serde_json::Value::String(supp_name.clone()),
             });
             scanner.extra_annotations.insert(
-                "mikebom:scanner-discovered-name".to_string(),
+                "waybill:scanner-discovered-name".to_string(),
                 serde_json::Value::String(scanner.name.clone()),
             );
             scanner.name = supp_name.clone();
@@ -278,7 +278,7 @@ pub(crate) fn resolve_component(
     if let Some(supp_description) = supplement.description.as_ref() {
         let scanner_val = scanner
             .extra_annotations
-            .get("mikebom:description")
+            .get("waybill:description")
             .cloned()
             .unwrap_or(serde_json::Value::Null);
         let supplement_val = serde_json::Value::String(supp_description.clone());
@@ -289,13 +289,13 @@ pub(crate) fn resolve_component(
                 supplement_value: supplement_val.clone(),
             });
             scanner.extra_annotations.insert(
-                "mikebom:scanner-discovered-description".to_string(),
+                "waybill:scanner-discovered-description".to_string(),
                 scanner_val,
             );
         }
         scanner
             .extra_annotations
-            .insert("mikebom:description".to_string(), supplement_val);
+            .insert("waybill:description".to_string(), supplement_val);
     }
 
     // externalReferences — developer wins (ALL types per F1 widening).
@@ -312,12 +312,12 @@ pub(crate) fn resolve_component(
                 supplement_value: supplement_val.clone(),
             });
             scanner.extra_annotations.insert(
-                "mikebom:scanner-discovered-externalReferences".to_string(),
+                "waybill:scanner-discovered-externalReferences".to_string(),
                 scanner_val,
             );
         }
         scanner.extra_annotations.insert(
-            "mikebom:supplement-externalReferences".to_string(),
+            "waybill:supplement-externalReferences".to_string(),
             supplement_val,
         );
     }
@@ -334,10 +334,10 @@ pub(crate) fn resolve_component(
                 supplement_value: supplement_val.clone(),
             });
             // Scanner wins: stash supplement's value as
-            // `mikebom:declared-hashes` annotation; keep scanner's
+            // `waybill:declared-hashes` annotation; keep scanner's
             // typed hashes Vec untouched.
             scanner.extra_annotations.insert(
-                "mikebom:declared-hashes".to_string(),
+                "waybill:declared-hashes".to_string(),
                 supplement_val,
             );
         } else if scanner.hashes.is_empty() {
@@ -346,7 +346,7 @@ pub(crate) fn resolve_component(
             // can't reverse-parse arbitrary alg into ContentHash
             // without losing FR-015 fail-closed semantics).
             scanner.extra_annotations.insert(
-                "mikebom:declared-hashes".to_string(),
+                "waybill:declared-hashes".to_string(),
                 supplement_val,
             );
         }
@@ -365,7 +365,7 @@ pub(crate) fn resolve_component(
             });
             scanner
                 .extra_annotations
-                .insert("mikebom:declared-cpe".to_string(), supplement_val);
+                .insert("waybill:declared-cpe".to_string(), supplement_val);
         }
     }
 
@@ -381,7 +381,7 @@ pub(crate) fn resolve_component(
                 supplement_value: serde_json::Value::String(supp_version.clone()),
             });
             scanner.extra_annotations.insert(
-                "mikebom:declared-version".to_string(),
+                "waybill:declared-version".to_string(),
                 serde_json::Value::String(supp_version.clone()),
             );
         }
@@ -431,7 +431,7 @@ fn project_supplement_licenses(
 /// Project the scanner's typed `licenses: Vec<SpdxExpression>` to a
 /// JSON-array shape comparable with the supplement's CDX-shaped
 /// licenses array. Used for the conflict-record `scanner_value` field
-/// and the `mikebom:scanner-discovered-licenses` annotation so
+/// and the `waybill:scanner-discovered-licenses` annotation so
 /// consumers can audit what the scanner observed pre-merge.
 fn licenses_to_json(
     licenses: &[waybill_common::types::license::SpdxExpression],
@@ -527,10 +527,10 @@ mod tests {
             conflicts[0].winner().justification(),
             "developer-metadata-override"
         );
-        // Developer-wins value is exposed via mikebom:supplement-licenses.
+        // Developer-wins value is exposed via waybill:supplement-licenses.
         assert!(merged
             .extra_annotations
-            .contains_key("mikebom:supplement-licenses"));
+            .contains_key("waybill:supplement-licenses"));
         // Follow-up: the supplement license now propagates into the
         // typed Vec<SpdxExpression> field so every emission path
         // (including Cargo's main-module → metadata.component
@@ -588,7 +588,7 @@ mod tests {
         // Scanner's typed hashes preserved untouched.
         assert_eq!(merged.hashes.len(), 1);
         // Supplement's declared value preserved as annotation.
-        assert!(merged.extra_annotations.contains_key("mikebom:declared-hashes"));
+        assert!(merged.extra_annotations.contains_key("waybill:declared-hashes"));
     }
 
     #[test]
@@ -602,7 +602,7 @@ mod tests {
         assert_eq!(merged.name, "BeautifulDisplayName");
         assert!(merged
             .extra_annotations
-            .contains_key("mikebom:scanner-discovered-name"));
+            .contains_key("waybill:scanner-discovered-name"));
     }
 
     #[test]

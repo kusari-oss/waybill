@@ -4,13 +4,13 @@
 //! documented in `docs/reference/identifiers.md` §11.4:
 //!
 //! 1. **Offline half** (always runs): the
-//!    `mikebom:fingerprint-corpus-sha` annotation value mikebom emits
+//!    `waybill:fingerprint-corpus-sha` annotation value waybill emits
 //!    is the 12-hex prefix of the build-time-embedded SHA from
-//!    `env!("MIKEBOM_FINGERPRINTS_CORPUS_SHA")` (set by `build.rs`
+//!    `env!("WAYBILL_FINGERPRINTS_CORPUS_SHA")` (set by `build.rs`
 //!    from `tests/fingerprints.rev`). This is the part consumers can
 //!    verify without network access.
 //!
-//! 2. **Network-gated half** (`MIKEBOM_FINGERPRINTS_NETWORK_TESTS=1`):
+//! 2. **Network-gated half** (`WAYBILL_FINGERPRINTS_NETWORK_TESTS=1`):
 //!    that the 12-hex prefix resolves to a real commit on the sibling
 //!    repo via GitHub's git-API. This is the part that's susceptible
 //!    to maintainer error (pin SHA → typo → no real commit) — a
@@ -26,11 +26,11 @@
 use std::process::Command;
 
 fn embedded_sha() -> &'static str {
-    env!("MIKEBOM_FINGERPRINTS_CORPUS_SHA")
+    env!("WAYBILL_FINGERPRINTS_CORPUS_SHA")
 }
 
 fn network_tests_enabled() -> bool {
-    std::env::var("MIKEBOM_FINGERPRINTS_NETWORK_TESTS").ok().as_deref() == Some("1")
+    std::env::var("WAYBILL_FINGERPRINTS_NETWORK_TESTS").ok().as_deref() == Some("1")
 }
 
 /// Offline half: the annotation prefix is the 12-hex truncation of
@@ -57,7 +57,7 @@ fn embedded_sha_truncates_to_12_hex_annotation_prefix() {
         "annotation prefix must be 12 chars"
     );
     // The 12-hex slice is the EXACT value the matcher stamps onto the
-    // `mikebom:fingerprint-corpus-sha` annotation per FR-005. Anything
+    // `waybill:fingerprint-corpus-sha` annotation per FR-005. Anything
     // else is a wire-format regression.
     assert!(
         full.starts_with(expected_prefix),
@@ -68,29 +68,29 @@ fn embedded_sha_truncates_to_12_hex_annotation_prefix() {
 /// Network half: the embedded SHA is a real commit on the sibling
 /// repo. Catches the maintainer-typo failure mode (someone bumps
 /// `tests/fingerprints.rev` to a SHA that doesn't exist in
-/// `kusari-sandbox/mikebom-fingerprints`) — the embedded SHA would
+/// `kusari-sandbox/waybill-fingerprints`) — the embedded SHA would
 /// compile + ship, but every `--fingerprints-corpus` scan would 404.
 ///
-/// Uses `curl` (already a hard dep for any mikebom dev setup) for
+/// Uses `curl` (already a hard dep for any waybill dev setup) for
 /// the GitHub API call; no new Cargo deps.
 #[test]
 fn embedded_sha_resolves_to_real_commit_on_sibling_repo() {
     if !network_tests_enabled() {
         println!(
-            "skipped: MIKEBOM_FINGERPRINTS_NETWORK_TESTS not set (offline CI lane)"
+            "skipped: WAYBILL_FINGERPRINTS_NETWORK_TESTS not set (offline CI lane)"
         );
         return;
     }
     let full = embedded_sha();
     let url = format!(
-        "https://api.github.com/repos/kusari-sandbox/mikebom-fingerprints/commits/{full}"
+        "https://api.github.com/repos/kusari-sandbox/waybill-fingerprints/commits/{full}"
     );
     let output = Command::new("curl")
         .arg("-fsSL")
         .arg("-H")
         .arg("Accept: application/vnd.github+json")
         .arg("-H")
-        .arg("User-Agent: mikebom-tests/annotation-provenance")
+        .arg("User-Agent: waybill-tests/annotation-provenance")
         .arg(&url)
         .output()
         .expect("curl must be installed");

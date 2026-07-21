@@ -1,4 +1,4 @@
-//! Milestone 167 — emit-time `mikebom:orphan-reason` classifier for
+//! Milestone 167 — emit-time `waybill:orphan-reason` classifier for
 //! Go + npm orphans.
 //!
 //! Extends the milestone-061 C45 vocabulary from 2 codes
@@ -35,9 +35,9 @@ use crate::generate::root_selector::{select_root, ResolvedRootSubject};
 use crate::generate::RootComponentOverride;
 use crate::scan_fs::package_db::maven::ScanTargetCoord;
 
-const ANNOTATION_KEY: &str = "mikebom:orphan-reason";
+const ANNOTATION_KEY: &str = "waybill:orphan-reason";
 
-/// The C45 `mikebom:orphan-reason` vocabulary after milestone 167 lands.
+/// The C45 `waybill:orphan-reason` vocabulary after milestone 167 lands.
 /// Total 5 codes: 2 preserved from m061 + 3 new.
 ///
 /// Priority order (most-specific to least-specific per FR-005):
@@ -57,7 +57,7 @@ pub enum OrphanReasonCode {
 }
 
 impl OrphanReasonCode {
-    /// Wire value for the `mikebom:orphan-reason` annotation. These
+    /// Wire value for the `waybill:orphan-reason` annotation. These
     /// literal strings are frozen — SBOM consumers key on them.
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -99,7 +99,7 @@ impl OrphanReasonCounts {
     }
 }
 
-/// Emit-time classifier — stamps `mikebom:orphan-reason` on BFS-
+/// Emit-time classifier — stamps `waybill:orphan-reason` on BFS-
 /// unreachable Go/npm components per FR-005 priority. Returns
 /// per-code counters for observability (FR-008).
 ///
@@ -114,7 +114,7 @@ impl OrphanReasonCounts {
 ///    lookup.
 /// 2. Iterate every Go/npm component. For each: (a) skip if PURL is in
 ///    `reachable_set` (not orphan); (b) skip if the component already
-///    carries `mikebom:orphan-reason=flat-attached-fallback` (set by
+///    carries `waybill:orphan-reason=flat-attached-fallback` (set by
 ///    the Go reader) — preserve + tally FlatAttachedFallback;
 ///    (c) compute `has_reachable_sibling` via the index; (d) pattern-
 ///    match on `(ecosystem, has_reachable_sibling)` — `(golang, true)`
@@ -232,7 +232,7 @@ pub fn classify_orphans(
 /// unused beyond the log).
 ///
 /// The per-format emitters continue to invoke `compute_graph_
-/// completeness` for their own document-scope `mikebom:graph-
+/// completeness` for their own document-scope `waybill:graph-
 /// completeness` annotation (C42). BFS is deterministic — the emitters
 /// re-compute the same reachable set — so per-component orphan-reason
 /// annotations agree with per-document graph-completeness signals

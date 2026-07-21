@@ -20,7 +20,7 @@
 //!   spec guess). Multi-level subspecs preserve `/` between segments.
 //! - **git**: `pkg:cocoapods/<pod>@<version>?vcs_url=git+<url>` — URL
 //!   from `EXTERNAL SOURCES{:git}`; resolved 40-char SHA from `CHECKOUT
-//!   OPTIONS{:commit}` flows into `mikebom:vcs-ref` annotation per Q2.
+//!   OPTIONS{:commit}` flows into `waybill:vcs-ref` annotation per Q2.
 //! - **path**: `pkg:generic/<flattened-pod>@<version>` — pod name with
 //!   any `/` flattened to `-` per I2 remediation (matches milestone-138
 //!   composer convention; avoids `pkg:generic/<namespace>/<name>`
@@ -512,11 +512,11 @@ fn emit_main_module(
 
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     extra_annotations.insert(
-        "mikebom:component-role".to_string(),
+        "waybill:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
     extra_annotations.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String("cocoapods-main-module".to_string()),
     );
 
@@ -685,7 +685,7 @@ fn emit_design_tier_components(
 
         let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
         extra_annotations.insert(
-            "mikebom:source-type".to_string(),
+            "waybill:source-type".to_string(),
             serde_json::Value::String("cocoapods-trunk".to_string()),
         );
 
@@ -850,7 +850,7 @@ fn build_extra_annotations(
 ) -> BTreeMap<String, serde_json::Value> {
     let mut out: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     out.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String(source_type_value.to_string()),
     );
     let external = external_sources
@@ -861,7 +861,7 @@ fn build_extra_annotations(
         "cocoapods-trunk" => {
             if let Some(sub) = entry.subpath() {
                 out.insert(
-                    "mikebom:subspec".to_string(),
+                    "waybill:subspec".to_string(),
                     serde_json::Value::String(sub.to_string()),
                 );
             }
@@ -877,7 +877,7 @@ fn build_extra_annotations(
                 {
                     if commit.len() == 40 && commit.chars().all(|c| c.is_ascii_hexdigit()) {
                         out.insert(
-                            "mikebom:vcs-ref".to_string(),
+                            "waybill:vcs-ref".to_string(),
                             serde_json::Value::String(commit.to_string()),
                         );
                     }
@@ -891,12 +891,12 @@ fn build_extra_annotations(
                         .and_then(|v| v.as_str())
                     {
                         let resolved = out
-                            .get("mikebom:vcs-ref")
+                            .get("waybill:vcs-ref")
                             .and_then(|x| x.as_str())
                             .unwrap_or("");
                         if v != resolved {
                             out.insert(
-                                "mikebom:vcs-declared-ref".to_string(),
+                                "waybill:vcs-declared-ref".to_string(),
                                 serde_json::Value::String(v.to_string()),
                             );
                         }
@@ -911,7 +911,7 @@ fn build_extra_annotations(
                     .and_then(|v| v.as_str())
                 {
                     out.insert(
-                        "mikebom:path".to_string(),
+                        "waybill:path".to_string(),
                         serde_json::Value::String(p.to_string()),
                     );
                 }
@@ -920,7 +920,7 @@ fn build_extra_annotations(
             // path for recovery per I2 remediation.
             if let Some(sub) = entry.subpath() {
                 out.insert(
-                    "mikebom:subspec".to_string(),
+                    "waybill:subspec".to_string(),
                     serde_json::Value::String(sub.to_string()),
                 );
             }
@@ -1108,7 +1108,7 @@ mod tests {
         let e = pods_entry("Firebase/Core", "10.20.0");
         let ann = build_extra_annotations(&e, "cocoapods-trunk", &empty_map(), &empty_map());
         assert_eq!(
-            ann.get("mikebom:subspec").and_then(|v| v.as_str()),
+            ann.get("waybill:subspec").and_then(|v| v.as_str()),
             Some("Core")
         );
     }
@@ -1121,11 +1121,11 @@ mod tests {
         let checkout = checkout_with_commit(sha);
         let ann = build_extra_annotations(&e, "cocoapods-git", &external, &checkout);
         assert_eq!(
-            ann.get("mikebom:vcs-ref").and_then(|v| v.as_str()),
+            ann.get("waybill:vcs-ref").and_then(|v| v.as_str()),
             Some(sha)
         );
         assert_eq!(
-            ann.get("mikebom:vcs-declared-ref").and_then(|v| v.as_str()),
+            ann.get("waybill:vcs-declared-ref").and_then(|v| v.as_str()),
             Some("main")
         );
     }
@@ -1138,11 +1138,11 @@ mod tests {
         external.insert("Firebase/Core".to_string(), val);
         let ann = build_extra_annotations(&e, "cocoapods-path", &external, &empty_map());
         assert_eq!(
-            ann.get("mikebom:path").and_then(|v| v.as_str()),
+            ann.get("waybill:path").and_then(|v| v.as_str()),
             Some("../firebase-core")
         );
         assert_eq!(
-            ann.get("mikebom:subspec").and_then(|v| v.as_str()),
+            ann.get("waybill:subspec").and_then(|v| v.as_str()),
             Some("Core")
         );
     }

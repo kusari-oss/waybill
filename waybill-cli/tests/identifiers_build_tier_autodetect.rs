@@ -3,13 +3,13 @@
 //!
 //! ## Test harness rationale
 //!
-//! `mikebom trace run` (the build-tier entry point) attaches eBPF
+//! `waybill trace run` (the build-tier entry point) attaches eBPF
 //! kprobes/uprobes and therefore requires a Linux kernel with
 //! `ebpf-tracing` feature flag enabled. On macOS — and on
 //! unprivileged Linux — actually invoking the binary's
 //! `trace run` subcommand against a real fixture is not feasible
 //! (matches the milestone-073 policy documented at
-//! `mikebom-cli/tests/identifiers_per_tier.rs:11-16`).
+//! `waybill-cli/tests/identifiers_per_tier.rs:11-16`).
 //!
 //! Instead this file exercises milestone 074's auto-detection at
 //! two levels:
@@ -23,7 +23,7 @@
 //!    directly covers the contract.
 //!
 //! 2. **Cross-tier correlation test** combining (a) the same
-//!    auto-detect helper with (b) the `mikebom sbom scan --path`
+//!    auto-detect helper with (b) the `waybill sbom scan --path`
 //!    binary's source-tier auto-detection over the SAME git fixture
 //!    — verifies that the `repo:` URL byte-for-byte matches across
 //!    tiers (SC-002), even though we cannot drive a live `trace run`
@@ -291,12 +291,12 @@ fn build_tier_autodetect_git_with_ssh_form_remote() {
 // SC-002 cross-tier correlation
 // ---------------------------------------------------------------------
 
-/// SC-002 cross-tier correlation. Source-tier `mikebom sbom scan
+/// SC-002 cross-tier correlation. Source-tier `waybill sbom scan
 /// --path` over the SAME git fixture must auto-detect the SAME
 /// `repo:` URL byte-for-byte. The build-tier `git:` identifier's
 /// commit SHA must match `git rev-parse HEAD` of the same fixture.
 ///
-/// We can't drive `mikebom trace run` directly on macOS, so we
+/// We can't drive `waybill trace run` directly on macOS, so we
 /// invoke the source-tier scan binary AND call the build-tier
 /// auto-detect helper on the same fixture — the two URLs are
 /// extracted from each tier's auto-detection and asserted equal.

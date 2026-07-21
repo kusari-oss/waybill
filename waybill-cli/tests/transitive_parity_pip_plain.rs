@@ -25,7 +25,7 @@ const FIXTURE_SUBPATH: &str = "pip_plain";
 /// upstream-limitation invariant is what `cross_tool_parity_check`
 /// warns on below.
 ///
-/// Issue #236 bumped the mikebom baseline from 0 → 13. mikebom's CDX
+/// Issue #236 bumped the waybill baseline from 0 → 13. waybill's CDX
 /// has emitted 13 `metadata.component → <each requirements.txt
 /// package>` edges via the primary-dependency fallback since
 /// milestone 084 (CDX's `cyclonedx/dependencies.rs:74-99`). Pre-fix
@@ -38,10 +38,10 @@ const FIXTURE_SUBPATH: &str = "pip_plain";
 /// are direct-dep edges (the project depends on each listed package),
 /// not synthesized transitive structure, so FR-008's spirit is
 /// preserved — what changed is that SPDX now agrees with CDX inside
-/// mikebom. mikebom continues to emit MORE edges than Trivy/Syft here
+/// waybill. waybill continues to emit MORE edges than Trivy/Syft here
 /// by design (they emit zero); the `cross_tool_parity_check` below
 /// surfaces that as a WARN.
-const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 13;
+const EXPECTED_WAYBILL_EDGE_COUNT: usize = 13;
 
 fn fixture() -> PathBuf {
     fixture_path(FIXTURE_SUBPATH)
@@ -58,8 +58,8 @@ fn transitive_edges_match_baseline() {
     let mikebom_edges = run_mikebom(&fixture());
     assert_eq!(
         mikebom_edges.len(),
-        EXPECTED_MIKEBOM_EDGE_COUNT,
-        "mikebom emitted edges from a plain requirements.txt fixture — \
+        EXPECTED_WAYBILL_EDGE_COUNT,
+        "waybill emitted edges from a plain requirements.txt fixture — \
          FR-008 expects zero. Investigate before bumping."
     );
 }
@@ -70,14 +70,14 @@ fn cross_tool_parity_check() {
         eprintln!("transitive_parity_pip_plain::cross_tool_parity_check skipped: {reason}");
         return;
     }
-    let mikebom = run_mikebom(&fixture());
+    let waybill = run_mikebom(&fixture());
     let trivy = run_trivy(&fixture());
     let syft = run_syft(&fixture());
-    let diff = compute_edge_diff(&mikebom, &trivy, &syft);
+    let diff = compute_edge_diff(&waybill, &trivy, &syft);
     eprintln!("\n=== pip-plain audit (synthetic 13-pkg requirements.txt) ===");
     eprintln!(
-        "edge counts: mikebom={} trivy={} syft={}",
-        mikebom.len(),
+        "edge counts: waybill={} trivy={} syft={}",
+        waybill.len(),
         trivy.len(),
         syft.len()
     );

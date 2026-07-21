@@ -1,9 +1,9 @@
-//! `mikebom sbom parity-check` subcommand (milestone 013 US3 /
+//! `waybill sbom parity-check` subcommand (milestone 013 US3 /
 //! T013–T017).
 //!
 //! Reads three already-emitted format outputs from a directory
-//! (`<dir>/mikebom.cdx.json`, `<dir>/mikebom.spdx.json`,
-//! `<dir>/mikebom.spdx3.json`) and renders a per-datum × per-
+//! (`<dir>/waybill.cdx.json`, `<dir>/waybill.spdx.json`,
+//! `<dir>/waybill.spdx3.json`) and renders a per-datum × per-
 //! format coverage table using the same catalog + extractor
 //! table as the holistic_parity test (US1). Exit codes:
 //!
@@ -27,12 +27,12 @@ use serde_json::Value;
 use waybill::parity::catalog::{parse_mapping_doc, CatalogRow, Format, FormatCoverage};
 use waybill::parity::extractors::{Directionality, ParityExtractor, EXTRACTORS};
 
-/// Args for `mikebom sbom parity-check`.
+/// Args for `waybill sbom parity-check`.
 #[derive(Args, Debug)]
 pub struct ParityCheckArgs {
     /// Directory containing the three previously-emitted format
-    /// files: `mikebom.cdx.json`, `mikebom.spdx.json`,
-    /// `mikebom.spdx3.json`. All three must be present.
+    /// files: `waybill.cdx.json`, `waybill.spdx.json`,
+    /// `waybill.spdx3.json`. All three must be present.
     #[arg(long)]
     pub scan_dir: PathBuf,
 
@@ -192,9 +192,9 @@ fn read_format_file(label: &str, path: &PathBuf) -> anyhow::Result<Value> {
 }
 
 pub async fn execute(args: ParityCheckArgs) -> anyhow::Result<ExitCode> {
-    let cdx_path = args.scan_dir.join("mikebom.cdx.json");
-    let spdx23_path = args.scan_dir.join("mikebom.spdx.json");
-    let spdx3_path = args.scan_dir.join("mikebom.spdx3.json");
+    let cdx_path = args.scan_dir.join("waybill.cdx.json");
+    let spdx23_path = args.scan_dir.join("waybill.spdx.json");
+    let spdx3_path = args.scan_dir.join("waybill.spdx3.json");
     for (label, p) in [
         ("CycloneDX output", &cdx_path),
         ("SPDX 2.3 output", &spdx23_path),
@@ -202,7 +202,7 @@ pub async fn execute(args: ParityCheckArgs) -> anyhow::Result<ExitCode> {
     ] {
         if !p.exists() {
             eprintln!(
-                "Error: {label} not found at {} — run `mikebom sbom scan ... --format cyclonedx-json,spdx-2.3-json,spdx-3-json` into this directory first.",
+                "Error: {label} not found at {} — run `waybill sbom scan ... --format cyclonedx-json,spdx-2.3-json,spdx-3-json` into this directory first.",
                 p.display()
             );
             return Ok(ExitCode::from(2));
@@ -233,7 +233,7 @@ pub async fn execute(args: ParityCheckArgs) -> anyhow::Result<ExitCode> {
     let mapping_doc = workspace_root_for_mapping_doc().join("docs/reference/sbom-format-mapping.md");
     if !mapping_doc.exists() {
         eprintln!(
-            "Error: catalog doc not found at {} — `mikebom sbom parity-check` must run from the mikebom workspace root (or with the doc bundled into the runtime).",
+            "Error: catalog doc not found at {} — `waybill sbom parity-check` must run from the waybill workspace root (or with the doc bundled into the runtime).",
             mapping_doc.display()
         );
         return Ok(ExitCode::from(2));
@@ -281,7 +281,7 @@ fn build_report(
         // formats. The integration test `tests/holistic_parity.rs`
         // already does the rigorous check; this CLI subcommand now
         // matches its semantics so external consumers running
-        // `mikebom sbom parity-check` get the same answer.
+        // `waybill sbom parity-check` get the same answer.
         let (cdx_set, spdx23_set, spdx3_set) = match extractor {
             Some(e) => (
                 if classification.is_checked(Format::Cdx) {

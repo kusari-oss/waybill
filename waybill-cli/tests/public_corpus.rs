@@ -2,11 +2,11 @@
 //!
 //! Opt-in cargo integration test suite that scans a set of public
 //! upstream repositories and container images with the released
-//! `mikebom` binary and asserts a hybrid two-layer invariant model
+//! `waybill` binary and asserts a hybrid two-layer invariant model
 //! per target: (1) coarse Rust-defined assertions with class-of-bug-
 //! oriented diagnostics; (2) full-SBOM byte-identity golden diff.
 //!
-//! Gated behind `MIKEBOM_RUN_PUBLIC_CORPUS=1` — the default
+//! Gated behind `WAYBILL_RUN_PUBLIC_CORPUS=1` — the default
 //! `cargo test` / `./scripts/pre-pr.sh` invocation MUST NOT clone
 //! corpus repos or pull corpus images. Nightly CI and manual
 //! `workflow_dispatch` are the primary invocation paths per Q2 spec
@@ -29,10 +29,10 @@ use corpus_harness_195::manifest::{Ecosystem, SourceKind, TARGETS};
 /// helper is wired.
 #[test]
 fn env_gate_skips_when_unset() {
-    // Paranoia test — if `MIKEBOM_RUN_PUBLIC_CORPUS` is not exactly
+    // Paranoia test — if `WAYBILL_RUN_PUBLIC_CORPUS` is not exactly
     // "1", the harness MUST NOT invoke `scan_target`. This test runs
     // even in the default cargo lane; it MUST NOT do any network I/O.
-    let expected_gated = std::env::var("MIKEBOM_RUN_PUBLIC_CORPUS").as_deref() == Ok("1");
+    let expected_gated = std::env::var("WAYBILL_RUN_PUBLIC_CORPUS").as_deref() == Ok("1");
     assert_eq!(env_gate(), expected_gated);
 }
 
@@ -49,13 +49,13 @@ fn find_target(name: &str) -> &'static corpus_harness_195::manifest::CorpusTarge
 
 fn run_target(name: &str) {
     if !env_gate() {
-        println!("skipping {name}: MIKEBOM_RUN_PUBLIC_CORPUS not set");
+        println!("skipping {name}: WAYBILL_RUN_PUBLIC_CORPUS not set");
         return;
     }
     let target = find_target(name);
-    // MIKEBOM_CORPUS_SKIP_OCI gate for image targets.
+    // WAYBILL_CORPUS_SKIP_OCI gate for image targets.
     if matches!(&target.source, SourceKind::OciImage { .. }) && skip_oci_gate() {
-        println!("skipping {name}: MIKEBOM_CORPUS_SKIP_OCI set");
+        println!("skipping {name}: WAYBILL_CORPUS_SKIP_OCI set");
         return;
     }
     let sboms = match scan_target(target) {
@@ -111,11 +111,11 @@ fn corpus_image_postgres16() {
 #[test]
 fn byte_identity_across_two_runs() {
     if !env_gate() {
-        println!("skipping: MIKEBOM_RUN_PUBLIC_CORPUS not set");
+        println!("skipping: WAYBILL_RUN_PUBLIC_CORPUS not set");
         return;
     }
-    if std::env::var("MIKEBOM_RUN_BYTE_IDENTITY_SUITE").as_deref() != Ok("1") {
-        println!("skipping: MIKEBOM_RUN_BYTE_IDENTITY_SUITE not set (this test doubles corpus wall-clock)");
+    if std::env::var("WAYBILL_RUN_BYTE_IDENTITY_SUITE").as_deref() != Ok("1") {
+        println!("skipping: WAYBILL_RUN_BYTE_IDENTITY_SUITE not set (this test doubles corpus wall-clock)");
         return;
     }
     // Pick one lightweight target (go-cobra) — running all 6 twice

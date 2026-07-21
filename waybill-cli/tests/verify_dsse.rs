@@ -1,12 +1,12 @@
-//! Integration tests for `mikebom sbom verify` — feature 006 US1 + US2.
+//! Integration tests for `waybill sbom verify` — feature 006 US1 + US2.
 //!
-//! These tests shell out to the compiled `mikebom` binary so they
+//! These tests shell out to the compiled `waybill` binary so they
 //! exercise clap parsing, exit-code propagation, and the full write →
 //! read → verify pipeline exactly as the operator would.
 //!
 //! Signing-side fixtures are produced via `sigstore::crypto` in-process
 //! (cheap + hermetic) and written as DSSE envelopes to temp files. The
-//! binary then verifies them via `mikebom sbom verify`.
+//! binary then verifies them via `waybill sbom verify`.
 
 #![cfg_attr(test, allow(clippy::unwrap_used))]
 
@@ -50,7 +50,7 @@ fn minimal_statement() -> InTotoStatement {
         predicate: BuildTracePredicate {
             metadata: TraceMetadata {
                 tool: ToolInfo {
-                    name: "mikebom".to_string(),
+                    name: "waybill".to_string(),
                     version: "0.1.0-test".to_string(),
                 },
                 trace_start: Timestamp::now(),
@@ -151,7 +151,7 @@ fn run_verify(attestation: &Path, extra_args: &[&str]) -> (i32, String, String) 
         .arg(attestation)
         .args(extra_args)
         .output()
-        .expect("mikebom binary should exist");
+        .expect("waybill binary should exist");
     let code = out.status.code().unwrap_or(-1);
     let stdout = String::from_utf8_lossy(&out.stdout).into_owned();
     let stderr = String::from_utf8_lossy(&out.stderr).into_owned();
@@ -320,7 +320,7 @@ fn cli_subject_array_can_hold_multiple_artifacts() {
     // Subject::Artifact entries simultaneously, each with its own
     // SHA-256 digest. We verify this by hand-crafting a signed
     // envelope whose Statement's subject[] has two entries and
-    // confirming `mikebom sbom verify --expected-subject ... --expected
+    // confirming `waybill sbom verify --expected-subject ... --expected
     // -subject ...` checks both against their on-disk SHA-256s.
     use base64::Engine as _;
     use waybill_common::attestation::statement::ResourceDescriptor;

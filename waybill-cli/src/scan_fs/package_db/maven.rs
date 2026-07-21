@@ -67,7 +67,7 @@ const MAX_JAR_ENTRY_BYTES: u64 = 64 * 1024 * 1024;
 /// scan target); `host_roots` come from the invoker's environment
 /// (`$HOME`, `$M2_REPO`, `$MAVEN_HOME`) and are used for per-coord
 /// BFS lookups but never enumerated wholesale — otherwise a developer
-/// running mikebom against a project fixture would drag every cached
+/// running waybill against a project fixture would drag every cached
 /// artifact on their laptop into the SBOM.
 /// Maven coord identified as the scan subject — either by
 /// artifactId match against `target_name` (Fix B) or by the fat-jar
@@ -588,7 +588,7 @@ pub(crate) struct PomDependency {
     /// POM 4.0.0 semantic: `true` means the dep is used at compile
     /// time by this artifact but is NOT transitively exposed to
     /// consumers. Feeds `pom_dep_to_entry`'s classifier to emit
-    /// `LifecycleScope::Optional` + `mikebom:optional-derivation
+    /// `LifecycleScope::Optional` + `waybill:optional-derivation
     /// = "maven-optional-element"` when the dep's `<scope>` is
     /// runtime-default (compile / runtime / system / import /
     /// absent). Test / provided scopes win over Optional per
@@ -1289,7 +1289,7 @@ pub(crate) fn parse_pom_properties(text: &str) -> Option<PomProperties> {
     })
 }
 
-/// Every Maven-metadata artefact mikebom can extract from one entry
+/// Every Maven-metadata artefact waybill can extract from one entry
 /// inside a JAR: the identity (`pom.properties`) and, when present, the
 /// full pom.xml declaring that artefact's own `<dependencies>`. Fat /
 /// shaded JARs yield one of these per vendored artefact.
@@ -1339,8 +1339,8 @@ pub(crate) struct EmbeddedMavenMeta {
     /// `BOOT-INF/lib/<dep>.jar` and similar fat-JAR shapes), this
     /// carries:
     ///
-    /// - `mikebom:source-mechanism = "maven-jar-nested"`
-    /// - `mikebom:source-files = "<outer-path>!<inner-path>!..."`
+    /// - `waybill:source-mechanism = "maven-jar-nested"`
+    /// - `waybill:source-files = "<outer-path>!<inner-path>!..."`
     ///   in the JAR-URL `!`-separator convention (FR-016)
     ///
     /// Consumed by `jar_pom_to_entry` to flow into the emitted
@@ -1595,7 +1595,7 @@ pub(crate) fn parse_dependencies_file(bytes: &[u8]) -> Vec<ShadeAncestor> {
 /// maven-dependency-plugin emits it into any JAR it's configured
 /// on. Emitting those ancestors would claim bytecode presence that
 /// isn't there, producing false positives for vulnerability
-/// scanners matching against mikebom's output.
+/// scanners matching against waybill's output.
 ///
 /// Detection: (1) enumerate every `.class` path in the JAR once;
 /// (2) for each ancestor, check for bytecode evidence — an UNSHADED
@@ -1753,7 +1753,7 @@ fn shares_group_namespace(ancestor_group_id: &str, primary_group_id: &str) -> bo
 /// coord. Applies the self-reference guard (spec FR-005) and the
 /// within-JAR dedup guard (FR-006) via `seen_ancestor_keys`. Each
 /// emitted entry carries `shade_relocation = Some(true)` so the CDX
-/// serializer emits the `mikebom:shade-relocation = true` property.
+/// serializer emits the `waybill:shade-relocation = true` property.
 pub(crate) fn emit_shade_relocation_entries(
     ancestors: Vec<ShadeAncestor>,
     enclosing_primary: &PomProperties,
@@ -2017,8 +2017,8 @@ pub(crate) fn walk_jar_maven_meta(archive_path: &Path) -> Vec<EmbeddedMavenMeta>
 // decompressed-size cap (FR-014). SHA-256-keyed visited set on
 // archive bytes for cycle protection (FR-013). Nested entries get
 // `is_primary = false` so they bypass the outer-JAR scan-target
-// heuristics + carry `mikebom:source-mechanism = "maven-jar-nested"`
-// + `mikebom:source-files = "<outer>!<inner>!..."` annotations
+// heuristics + carry `waybill:source-mechanism = "maven-jar-nested"`
+// + `waybill:source-files = "<outer>!<inner>!..."` annotations
 // per FR-015 + FR-016.
 // --------------------------------------------------------------
 
@@ -2268,32 +2268,32 @@ fn extract_nested_meta<R: std::io::Read + std::io::Seek>(
         let mut annotations: std::collections::BTreeMap<String, serde_json::Value> =
             std::collections::BTreeMap::new();
         annotations.insert(
-            "mikebom:source-mechanism".to_string(),
+            "waybill:source-mechanism".to_string(),
             serde_json::Value::String("maven-jar-nested".to_string()),
         );
         // Milestone 145 US3 (Option 2b): the nested-JAR URL notation
         // (`<outer>!<inner>!...`) lives under its OWN annotation key so
         // it doesn't collide with the field-derived
-        // `mikebom:source-files` (which carries the rootfs-relative JAR
+        // `waybill:source-files` (which carries the rootfs-relative JAR
         // path from `c.evidence.source_file_paths` via the milestone-
         // 133 normalization pipeline). Pre-145 both stamped the same
         // key and produced per-emitter value drift on the
         // polyglot-builder-image fixture (51 audit findings).
         //
-        // NOTE: `mikebom:source-files` has TWO emission sources — this
+        // NOTE: `waybill:source-files` has TWO emission sources — this
         // crate's `c.evidence.source_file_paths` field (canonical) AND
-        // `extra_annotations["mikebom:source-files"]` (legacy, dedup'd
+        // `extra_annotations["waybill:source-files"]` (legacy, dedup'd
         // at emit time via `root_selector::is_field_owned_annotation_key`).
         // DO NOT stamp the latter from a new reader; use a distinct key
-        // like `mikebom:<reader>-source-url` (this one is
-        // `mikebom:source-files-nested-url`).
+        // like `waybill:<reader>-source-url` (this one is
+        // `waybill:source-files-nested-url`).
         annotations.insert(
-            "mikebom:source-files-nested-url".to_string(),
+            "waybill:source-files-nested-url".to_string(),
             serde_json::Value::String(source_files_url.clone()),
         );
         // Milestone 131 US2b: stash nested-JAR <licenses> raw names
         // for downstream `jar_pom_to_entry` consumption. JSON array of
-        // strings under `mikebom:nested-licenses` — consistent with the
+        // strings under `waybill:nested-licenses` — consistent with the
         // milestone-130 extra_annotations plumbing pattern.
         if !nested_licenses.is_empty() {
             let json_arr = serde_json::Value::Array(
@@ -2302,7 +2302,7 @@ fn extract_nested_meta<R: std::io::Read + std::io::Seek>(
                     .map(serde_json::Value::String)
                     .collect(),
             );
-            annotations.insert("mikebom:nested-licenses".to_string(), json_arr);
+            annotations.insert("waybill:nested-licenses".to_string(), json_arr);
         }
         out.push(EmbeddedMavenMeta {
             coord,
@@ -2450,7 +2450,7 @@ fn pom_dep_to_entry(
         Default::default();
     if is_m184_optional {
         extra_annotations.insert(
-            "mikebom:optional-derivation".to_string(),
+            "waybill:optional-derivation".to_string(),
             serde_json::Value::String("maven-optional-element".to_string()),
         );
     }
@@ -2791,17 +2791,17 @@ fn jar_pom_to_entry(
     if co_owned_by.is_none() {
         hashes.extend(archive_sha256);
     }
-    // Milestone 131 US2b: consume the `mikebom:nested-licenses`
+    // Milestone 131 US2b: consume the `waybill:nested-licenses`
     // plumbing annotation (a JSON array of raw `<license>/<name>`
     // strings from the nested JAR's pom.xml) and canonicalize each
     // via `SpdxExpression::try_canonical`. Strip the plumbing
     // annotation from the output map (it's not a wire-format primary
     // — the canonical `licenses[]` field is). Add
-    // `mikebom:license-source = "pom-xml"` when at least one license
+    // `waybill:license-source = "pom-xml"` when at least one license
     // was successfully canonicalized.
     let mut walker_annotations = walker_annotations;
     let nested_licenses_raw = walker_annotations
-        .remove("mikebom:nested-licenses")
+        .remove("waybill:nested-licenses")
         .and_then(|v| match v {
             serde_json::Value::Array(a) => Some(a),
             _ => None,
@@ -2822,7 +2822,7 @@ fn jar_pom_to_entry(
     }
     if !licenses.is_empty() {
         walker_annotations.insert(
-            "mikebom:license-source".to_string(),
+            "waybill:license-source".to_string(),
             serde_json::Value::String("pom-xml".to_string()),
         );
     }
@@ -2964,7 +2964,7 @@ pub fn read_with_claims(
     // Claimed JARs get a third field in `jar_meta`: the ecosystem
     // ("rpm" / "deb" / "apk") that co-owns the bytes. This
     // eventually flows into `PackageDbEntry.co_owned_by` so the CDX
-    // emitter can tag the component with `mikebom:co-owned-by` for
+    // emitter can tag the component with `waybill:co-owned-by` for
     // provenance.
     //
     // The original conformance-bug-2b concern about empty versions
@@ -3170,7 +3170,7 @@ pub fn read_with_claims(
         // Also note: the workspace-root coord is often unqualified
         // (e.g. `1.0-SNAPSHOT`), which conformance frameworks flag as
         // false-positive dependency claims — see bug report
-        // `runs/mikebom-2026-04-21-comparison.md` §1 for the polyglot
+        // `runs/waybill-2026-04-21-comparison.md` §1 for the polyglot
         // fixture case.
         // Build the project's own effective POM so direct deps with
         // no inline version or `${foo}`-placeholder versions (both
@@ -3291,7 +3291,7 @@ pub fn read_with_claims(
     // Only rootfs-scoped roots are walked. Host-scoped roots
     // (`$HOME/.m2`, `$M2_REPO`, `$MAVEN_HOME`) are still used by
     // `read_pom` for BFS lookups but never walked wholesale — a dev
-    // running mikebom against a project fixture shouldn't drag every
+    // running waybill against a project fixture shouldn't drag every
     // artifact on their laptop into the output.
     // `cached_pom_coords` was populated earlier (before the pom.xml
     // loop) to build the on-disk coord index — reuse it as the BFS seed
@@ -3426,7 +3426,7 @@ pub fn read_with_claims(
                 // Gate on `co_owned_by.is_none()`: only unclaimed
                 // fat JARs are scan-subject candidates. Claimed fat
                 // JARs emit their primary normally (carrying the
-                // `mikebom:co-owned-by = rpm` tag PR #2 established).
+                // `waybill:co-owned-by = rpm` tag PR #2 established).
                 let is_unclaimed_fat_jar =
                     meta_list.len() >= 2 && co_owned_by.is_none();
                 // Feature 007 US4: broaden the heuristic to also
@@ -4081,7 +4081,7 @@ fn build_maven_main_module_entry(
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra_annotations.insert(
-        "mikebom:component-role".to_string(),
+        "waybill:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
 
@@ -4164,7 +4164,7 @@ pub(crate) fn dedup_maven_main_modules_by_purl(
     for entry in std::mem::take(entries) {
         let is_main = entry
             .extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .and_then(|v| v.as_str())
             == Some("main-module");
         if !is_main {
@@ -4917,7 +4917,7 @@ mod tests {
         // dependency.
         // Post-milestone-070: "app" IS emitted, but as the source-tree
         // main-module per FR-001 (NOT as a dependency). The
-        // C40-tag-driven `mikebom:component-role: main-module`
+        // C40-tag-driven `waybill:component-role: main-module`
         // annotation distinguishes it from real deps. The declared
         // dep "guava" is still emitted at source-tier.
         let app_entry = entries.iter().find(|e| e.name == "app");
@@ -4929,7 +4929,7 @@ mod tests {
             app_entry
                 .unwrap()
                 .extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("main-module"),
             "post-070: project-self entry MUST carry the C40 main-module tag"
@@ -6238,7 +6238,7 @@ mod tests {
         assert_eq!(
             out[0]
                 .extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("main-module"),
         );
@@ -7070,30 +7070,30 @@ mod tests {
         // Nested entries are never primary — bypasses outer-JAR
         // scan-target heuristics in the orchestrator.
         assert!(!nested.is_primary);
-        // mikebom:source-mechanism annotation per FR-015.
+        // waybill:source-mechanism annotation per FR-015.
         let mech = nested
             .extra_annotations
-            .get("mikebom:source-mechanism")
+            .get("waybill:source-mechanism")
             .and_then(|v| v.as_str());
         assert_eq!(mech, Some("maven-jar-nested"));
         // Milestone 145 US3 (T017 / Option 2b): the JAR-URL
         // `!`-separator value is stamped under the RENAMED key
-        // `mikebom:source-files-nested-url` to avoid colliding with
-        // the field-derived `mikebom:source-files` (which carries the
+        // `waybill:source-files-nested-url` to avoid colliding with
+        // the field-derived `waybill:source-files` (which carries the
         // rootfs-relative JAR path from `c.evidence.source_file_paths`).
-        // Pre-145 this assertion read `mikebom:source-files`.
+        // Pre-145 this assertion read `waybill:source-files`.
         let sf = nested
             .extra_annotations
-            .get("mikebom:source-files-nested-url")
+            .get("waybill:source-files-nested-url")
             .and_then(|v| v.as_str())
             .unwrap();
         assert!(sf.ends_with("!BOOT-INF/lib/depA-1.2.3.jar"), "got: {sf}");
         // Belt-and-suspenders: the OLD key MUST NOT appear post-145.
         assert!(
-            !nested.extra_annotations.contains_key("mikebom:source-files"),
+            !nested.extra_annotations.contains_key("waybill:source-files"),
             "FR-009 violation: nested-JAR reader still stamps the legacy \
-             `mikebom:source-files` key — should have moved to \
-             `mikebom:source-files-nested-url` per milestone 145 US3"
+             `waybill:source-files` key — should have moved to \
+             `waybill:source-files-nested-url` per milestone 145 US3"
         );
         // Top-level entry has NO walker annotations — byte-identity
         // preservation per SC-005. (We don't assert `is_primary` here
@@ -7142,7 +7142,7 @@ mod tests {
         // Milestone 145 US3 (T017): renamed key, see sibling test above.
         let sf = leaf_meta
             .extra_annotations
-            .get("mikebom:source-files-nested-url")
+            .get("waybill:source-files-nested-url")
             .and_then(|v| v.as_str())
             .unwrap();
         // Path uses the JAR-URL `!`-separator chain.
@@ -7298,9 +7298,9 @@ mod tests {
         // Plumbing annotation carries the raw <name> strings as JSON.
         let raw = nested
             .extra_annotations
-            .get("mikebom:nested-licenses")
+            .get("waybill:nested-licenses")
             .and_then(|v| v.as_array())
-            .expect("mikebom:nested-licenses array present");
+            .expect("waybill:nested-licenses array present");
         assert_eq!(raw.len(), 1);
         assert_eq!(raw[0].as_str(), Some("Apache-2.0"));
     }
@@ -7323,7 +7323,7 @@ mod tests {
         assert!(
             !nested
                 .extra_annotations
-                .contains_key("mikebom:nested-licenses"),
+                .contains_key("waybill:nested-licenses"),
             "no <licenses> in pom.xml MUST mean no annotation; got: {:?}",
             nested.extra_annotations
         );
@@ -7418,7 +7418,7 @@ mod tests {
         assert_eq!(
             entry
                 .extra_annotations
-                .get("mikebom:optional-derivation"),
+                .get("waybill:optional-derivation"),
             Some(&serde_json::Value::String(
                 "maven-optional-element".to_string()
             )),
@@ -7440,7 +7440,7 @@ mod tests {
         );
         assert!(!entry
             .extra_annotations
-            .contains_key("mikebom:optional-derivation"));
+            .contains_key("waybill:optional-derivation"));
     }
 
     #[test]
@@ -7456,7 +7456,7 @@ mod tests {
         );
         assert!(!entry
             .extra_annotations
-            .contains_key("mikebom:optional-derivation"));
+            .contains_key("waybill:optional-derivation"));
     }
 
     #[test]
@@ -7471,7 +7471,7 @@ mod tests {
         );
         assert!(!entry
             .extra_annotations
-            .contains_key("mikebom:optional-derivation"));
+            .contains_key("waybill:optional-derivation"));
     }
 
     #[test]
@@ -7489,7 +7489,7 @@ mod tests {
         );
         assert!(!entry
             .extra_annotations
-            .contains_key("mikebom:optional-derivation"));
+            .contains_key("waybill:optional-derivation"));
     }
 
     // ── Milestone 191 (#558) — build_maven_purl versionless shape ──

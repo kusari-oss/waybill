@@ -87,7 +87,7 @@ pub struct PackageDbEntry {
     /// `is_dev: Option<bool>` flag with a 4-variant typed enum
     /// (`Runtime`, `Development`, `Build`, `Test`). Maps directly
     /// to native fields per format: CDX `scope` + new
-    /// `mikebom:lifecycle-scope` property; SPDX 2.3 native
+    /// `waybill:lifecycle-scope` property; SPDX 2.3 native
     /// `DEV/BUILD/TEST_DEPENDENCY_OF` relationship types via the
     /// matching `RelationshipType` variant; SPDX 3 `lifecycleScope`
     /// on `dependsOn`. `None` = source doesn't carry the
@@ -98,12 +98,12 @@ pub struct PackageDbEntry {
     /// entries (`requirements.txt` lines, root `package.json`
     /// dependencies). Empty `Vec` for authoritative sources.
     /// Milestone 199: always-array shape. Drives the
-    /// `mikebom:requirement-ranges` property at serialization.
+    /// `waybill:requirement-ranges` property at serialization.
     pub requirement_ranges: Vec<String>,
     /// Source-kind marker for non-registry dependencies: `"local"`
     /// (file:), `"git"` (git+...), `"url"` (http(s)://...). `None`
     /// for normal registry-sourced components. Drives the
-    /// `mikebom:source-type` property at serialization.
+    /// `waybill:source-type` property at serialization.
     pub source_type: Option<String>,
     /// Licenses the source embedded directly on the entry (e.g. pypi's
     /// `dist-info/METADATA::License-Expression:`, npm's
@@ -118,7 +118,7 @@ pub struct PackageDbEntry {
     /// magic bytes were absent; `Some("unsupported")` means the format
     /// variant isn't implemented (pre-1.18 pointer-indirection). `None`
     /// for every non-diagnostic entry. Drives the
-    /// `mikebom:buildinfo-status` property at serialization.
+    /// `waybill:buildinfo-status` property at serialization.
     pub buildinfo_status: Option<String>,
     /// Traceability-ladder tier per research.md R13 (Milestone 002):
     /// `"deployed"` (installed-package-db entries — dpkg, apk, Python
@@ -131,7 +131,7 @@ pub struct PackageDbEntry {
     /// retrofitted yet. Trace-mode components carry `"build"` but
     /// don't flow through PackageDbEntry.
     pub sbom_tier: Option<String>,
-    /// Milestone 004: canonical `mikebom:evidence-kind` value per
+    /// Milestone 004: canonical `waybill:evidence-kind` value per
     /// `contracts/schema.md`. One of:
     /// - `rpm-file` — `.rpm` artefact reader
     /// - `rpmdb-sqlite` — milestone-003 sqlite rpmdb reader (retrofit Q7)
@@ -141,7 +141,7 @@ pub struct PackageDbEntry {
     /// - `embedded-version-string` — curated heuristic scanner
     ///
     /// `None` on readers not yet retrofitted (milestones 001–003 non-rpm
-    /// ecosystems). Drives the `mikebom:evidence-kind` property at
+    /// ecosystems). Drives the `waybill:evidence-kind` property at
     /// serialization; value space is enforced by a `debug_assert!` gate
     /// in `generate/cyclonedx/builder.rs`.
     pub evidence_kind: Option<String>,
@@ -167,7 +167,7 @@ pub struct PackageDbEntry {
     pub binary_packed: Option<String>,
     /// Feature 005 US4 — the raw `<VERSION>-<RELEASE>` string from the
     /// rpmdb header (or `.rpm` artefact), preserved verbatim before any
-    /// PURL encoding. Drives the `mikebom:raw-version` property at
+    /// PURL encoding. Drives the `waybill:raw-version` property at
     /// serialization. `None` on non-rpm readers.
     pub raw_version: Option<String>,
     /// Parent/container component's PURL, when this entry was extracted
@@ -182,7 +182,7 @@ pub struct PackageDbEntry {
     /// package-manager's own toolchain rather than an application
     /// dependency. Currently set to `Some("internal")` by the npm
     /// reader on packages under the canonical `**/node_modules/npm/node_modules/**`
-    /// glob. Drives the `mikebom:npm-role` CycloneDX component property.
+    /// glob. Drives the `waybill:npm-role` CycloneDX component property.
     pub npm_role: Option<String>,
     /// Ecosystem that claims the bytes this component's identity was
     /// extracted from, when the same on-disk artifact is also owned
@@ -194,7 +194,7 @@ pub struct PackageDbEntry {
     /// owned by a Fedora RPM). The Maven coord emits alongside the
     /// RPM/deb/apk component — same bytes, two valid identities for
     /// different downstream use cases. Drives the CDX property
-    /// `mikebom:co-owned-by` so consumers can filter to a single-
+    /// `waybill:co-owned-by` so consumers can filter to a single-
     /// identity view if they prefer. `None` on free-standing JARs.
     pub co_owned_by: Option<String>,
     /// Content hashes carried by the source manifest. npm
@@ -210,14 +210,14 @@ pub struct PackageDbEntry {
     /// relocated bytecode inside the enclosing JAR). Consumers can
     /// filter on this to separate "linkable direct deps" from
     /// "bytecode-present shaded ancestors." Surfaced via CDX
-    /// property `mikebom:shade-relocation = true`.
+    /// property `waybill:shade-relocation = true`.
     pub shade_relocation: Option<bool>,
     /// Milestone 023: generic per-component annotation bag. Each
-    /// entry is emitted at SBOM-generation time as `mikebom:<key>`:
+    /// entry is emitted at SBOM-generation time as `waybill:<key>`:
     /// a CycloneDX `properties[]` entry, a SPDX 2.3 `annotations[]`
     /// envelope, and a SPDX 3 graph-element Annotation. Used by the
-    /// binary scanner for fields like `mikebom:elf-build-id`,
-    /// `mikebom:elf-runpath`, `mikebom:elf-debuglink`; future
+    /// binary scanner for fields like `waybill:elf-build-id`,
+    /// `waybill:elf-runpath`, `waybill:elf-debuglink`; future
     /// per-binary-metadata milestones (024 Mach-O LC_UUID, 025 Go
     /// VCS, 026 version strings, 027 layer attribution) populate
     /// the same bag without requiring per-field schema migration.
@@ -239,7 +239,7 @@ pub struct PackageDbEntry {
     /// constructs entries with `None`. Propagates verbatim to
     /// `ResolvedComponent.build_inclusion` (same plumbing as
     /// `lifecycle_scope`) and drives CDX `scope: "excluded"` +
-    /// `mikebom:build-inclusion` property / SPDX annotations at
+    /// `waybill:build-inclusion` property / SPDX annotations at
     /// emission. `None` = production participation confirmed or
     /// assumed (pre-feature semantics, byte-identical emission).
     pub build_inclusion: Option<waybill_common::resolution::BuildInclusion>,
@@ -291,7 +291,7 @@ pub struct DbScanResult {
     /// M3 — Maven scan-subject coord identified during the JAR walk,
     /// either by `target_name` artifactId match or by the fat-jar
     /// heuristic (≥2 embedded `META-INF/maven/` entries in a
-    /// non-OS-claimed JAR). Populated when mikebom suppresses the
+    /// non-OS-claimed JAR). Populated when waybill suppresses the
     /// primary coord from `components[]` because it represents the
     /// SBOM subject, not a dependency. `None` when no Maven scan
     /// subject was identified (non-Java target or plain-JAR layout).
@@ -355,7 +355,7 @@ pub struct ScanDiagnostics {
     /// resolution step was the m091 step-5 go.sum flat fallback (steps
     /// 1-3 of the m055/m091 ladder failed and go.sum was consulted for
     /// flat root→transitive edges). Emitted as the
-    /// `mikebom:go-transitive-fallback-count` annotation across CDX 1.6,
+    /// `waybill:go-transitive-fallback-count` annotation across CDX 1.6,
     /// SPDX 2.3, SPDX 3.0.1. `None` iff no Go scan happened (annotation
     /// absent per FR-002). `Some(0)` on healthy Go scans (annotation
     /// emitted with value `"0"` per Q1 clarification). `Some(N > 0)` on
@@ -389,7 +389,7 @@ pub struct ScanDiagnostics {
     /// Yocto sysroot-vs-rootfs heuristic. Each entry is a free-form
     /// reason string explaining the conflict (e.g. "env-script present
     /// but filesystem shape suggests rootfs (init.d=true, ...)"). The
-    /// downstream format emitters surface this via `mikebom:scan-
+    /// downstream format emitters surface this via `waybill:scan-
     /// ambiguity` properties on SBOM metadata when populated.
     /// Deduplicated; insertion order preserved.
     pub scan_ambiguities: Vec<String>,
@@ -398,21 +398,21 @@ pub struct ScanDiagnostics {
     /// detected by the per-ecosystem dedup sites. Aggregated by the
     /// orchestrator at the end of `read_all` into a
     /// [`CollisionsSummary`](waybill_common::divergence::CollisionsSummary)
-    /// emitted as a document-scope `mikebom:purl-collisions-detected`
+    /// emitted as a document-scope `waybill:purl-collisions-detected`
     /// annotation. Each entry's per-component surface
-    /// (`mikebom:duplicate-purl-divergent`) is already stamped on the
+    /// (`waybill:duplicate-purl-divergent`) is already stamped on the
     /// owning `PackageDbEntry.extra_annotations` at construction time
     /// (cargo today; npm / maven / pip / gem / go-binary follow-ups
     /// converge on the same shape).
     pub divergence_records: Vec<waybill_common::divergence::DivergenceRecord>,
 
     /// Milestone 188 (#455) — Helm image-extraction mode signal for
-    /// document-scope `mikebom:image-extraction-completeness`
+    /// document-scope `waybill:image-extraction-completeness`
     /// annotation. `None` when the scan didn't touch a Helm chart
     /// (byte-identity per FR-016 / SC-005). `Some(Unrendered)` when
-    /// mikebom parsed a chart with default US2 line-based regex
+    /// waybill parsed a chart with default US2 line-based regex
     /// extraction. `Some(Rendered)` when `--helm-render` succeeded and
-    /// mikebom extracted from `helm template`-rendered output.
+    /// waybill extracted from `helm template`-rendered output.
     ///
     /// Drives the document-scope `partial`/`full` annotation emitted
     /// at `generate/cyclonedx/metadata.rs`, `generate/spdx/*` (SPDX
@@ -422,12 +422,12 @@ pub struct ScanDiagnostics {
 
 /// Milestone 188 (#455) — result-side classification of Helm
 /// image-extraction fidelity for the document-scope
-/// `mikebom:image-extraction-completeness` annotation.
+/// `waybill:image-extraction-completeness` annotation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HelmExtractionMode {
     /// US2 default — line-based regex over unrendered `templates/*.yaml`.
     /// Templated image refs (`{{ .Values.image.tag }}`) emit with
-    /// `mikebom:image-ref-unresolved = "true"` markers.
+    /// `waybill:image-ref-unresolved = "true"` markers.
     Unrendered,
     /// US3 opt-in — `helm template` shell-out succeeded. All Values
     /// placeholders resolved to concrete image strings. Wired by
@@ -436,7 +436,7 @@ pub enum HelmExtractionMode {
 }
 
 impl HelmExtractionMode {
-    /// Wire-format string for the `mikebom:image-extraction-completeness`
+    /// Wire-format string for the `waybill:image-extraction-completeness`
     /// document-scope annotation across CDX 1.6 / SPDX 2.3 / SPDX 3.
     /// Milestone 204 (#554). Determinism-critical — MUST match the
     /// values in the m071 parity catalog row C123 exactly.
@@ -449,7 +449,7 @@ impl HelmExtractionMode {
 }
 
 /// Document-level completeness classification for the Go ecosystem
-/// graph. Per Constitution Principle X (Transparency): when mikebom
+/// graph. Per Constitution Principle X (Transparency): when waybill
 /// can't supply every transitive edge for `go.sum` components (typical
 /// in `--offline` + empty cache + `// indirect` requires), the SBOM
 /// MUST signal that limitation so consumers can distinguish "dead dep"
@@ -466,7 +466,7 @@ pub enum GraphCompleteness {
     Complete,
     /// One or more Go components are orphans (no incoming
     /// `dependsOn`). Per-orphan reason carried via the milestone 061
-    /// per-component `mikebom:orphan-reason` annotation.
+    /// per-component `waybill:orphan-reason` annotation.
     Partial,
 }
 
@@ -482,7 +482,7 @@ impl ScanDiagnostics {
 
     /// Record a scan-context ambiguity (milestone 107 FR-005a). The
     /// reason string is preserved verbatim for downstream emission as
-    /// a `mikebom:scan-ambiguity` SBOM-metadata property.
+    /// a `waybill:scan-ambiguity` SBOM-metadata property.
     pub fn record_scan_ambiguity(&mut self, reason: &str) {
         if !self.scan_ambiguities.iter().any(|r| r == reason) {
             self.scan_ambiguities.push(reason.to_string());
@@ -619,7 +619,7 @@ fn apply_go_production_set_filter(
             // the standards-defined `Test` scope. SPDX 2.3 emits
             // `TEST_DEPENDENCY_OF`; SPDX 3 emits
             // `lifecycleScope: "test"`; CDX emits
-            // `scope: "excluded"` + `mikebom:lifecycle-scope: "test"`.
+            // `scope: "excluded"` + `waybill:lifecycle-scope: "test"`.
             e.lifecycle_scope = Some(waybill_common::resolution::LifecycleScope::Test);
             tagged_test_only += 1;
         } else if test_closure.contains(&e.name) {
@@ -628,10 +628,10 @@ fn apply_go_production_set_filter(
             // provenance discriminator so operators can distinguish
             // graph-derived scope from the direct `_test.go`
             // import-walk signal (Constitution Principle X, mirroring
-            // milestone 091's `mikebom:resolver-step`).
+            // milestone 091's `waybill:resolver-step`).
             e.lifecycle_scope = Some(waybill_common::resolution::LifecycleScope::Test);
             e.extra_annotations.insert(
-                "mikebom:lifecycle-scope-derivation".to_string(),
+                "waybill:lifecycle-scope-derivation".to_string(),
                 serde_json::Value::String("test-only-closure".to_string()),
             );
             tagged_test_transitive += 1;
@@ -708,7 +708,7 @@ fn compute_go_test_only_closure(
         edges.insert(e.name.as_str(), e.depends.as_slice());
         let is_main_module = e
             .extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .and_then(|v| v.as_str())
             == Some("main-module");
         if is_main_module {
@@ -763,7 +763,7 @@ fn compute_go_test_only_closure(
 /// regardless of tier.
 ///
 /// Milestone 053 FR-009: when an entry carries
-/// `mikebom:component-role: main-module` in its `extra_annotations`,
+/// `waybill:component-role: main-module` in its `extra_annotations`,
 /// PRESERVE it — that's the new synthetic main-module component
 /// emitted by `golang::build_main_module_entry()` per FR-001a, and
 /// the SBOM is supposed to have it. The filter still drops every
@@ -792,7 +792,7 @@ fn apply_go_main_module_filter(
         // drop binary BuildInfo's redundant emission and any other
         // self-reference per FR-009 dedup.
         e.extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .and_then(|v| v.as_str())
             == Some("main-module")
     });
@@ -809,7 +809,7 @@ fn apply_go_main_module_filter(
 /// G3 (milestone 050 redesign): when a Go binary is present in the
 /// scanned rootfs, TAG every `pkg:golang` source-tier entry whose
 /// `(name, version)` is NOT in the binary's BuildInfo with a
-/// `mikebom:not-linked = true` property. The annotation tells SBOM
+/// `waybill:not-linked = true` property. The annotation tells SBOM
 /// consumers "this module was in go.sum but the linker did not embed
 /// it in the compiled binary in this rootfs" — a precise signal for
 /// scope-narrowing without throwing the data away.
@@ -844,13 +844,13 @@ fn apply_go_linked_filter(entries: &mut [PackageDbEntry]) {
             continue;
         }
         // Milestone 053 FR-010: the synthetic main-module component
-        // (carrying `mikebom:component-role: main-module`) is the
+        // (carrying `waybill:component-role: main-module`) is the
         // linker root by definition, never a non-linked dep. Skip it
         // unconditionally — the binary's BuildInfo doesn't list the
         // main module among its `Deps[]`, so without this guard the
         // not-linked filter would falsely tag the project itself.
         if e.extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .and_then(|v| v.as_str())
             == Some("main-module")
         {
@@ -858,7 +858,7 @@ fn apply_go_linked_filter(entries: &mut [PackageDbEntry]) {
         }
         if !linked.contains(&(e.name.clone(), e.version.clone())) {
             e.extra_annotations.insert(
-                "mikebom:not-linked".to_string(),
+                "waybill:not-linked".to_string(),
                 serde_json::Value::Bool(true),
             );
             tagged += 1;
@@ -868,7 +868,7 @@ fn apply_go_linked_filter(entries: &mut [PackageDbEntry]) {
         tracing::info!(
             tagged,
             linked_count = linked.len(),
-            "G3 filter: tagged go.sum entries not confirmed by Go binary BuildInfo with mikebom:not-linked",
+            "G3 filter: tagged go.sum entries not confirmed by Go binary BuildInfo with waybill:not-linked",
         );
     }
 }
@@ -876,20 +876,20 @@ fn apply_go_linked_filter(entries: &mut [PackageDbEntry]) {
 /// Milestone 112 Part B — mark golang source-tier entries whose
 /// production-build participation no signal can confirm with
 /// `BuildInclusion::Unknown` (rendered as the consumer-visible
-/// `mikebom:build-inclusion: unknown` annotation at emission).
+/// `waybill:build-inclusion: unknown` annotation at emission).
 ///
 /// Targets exactly the fallback-discovered entries:
-/// - `mikebom:resolver-step: go-sum-fallback` (milestone 091's go.sum
+/// - `waybill:resolver-step: go-sum-fallback` (milestone 091's go.sum
 ///   transitive fallback), or
-/// - `mikebom:orphan-reason: flat-attached-fallback` (issue #251's
+/// - `waybill:orphan-reason: flat-attached-fallback` (issue #251's
 ///   orphan backfill).
 ///
 /// Exemptions (data-model.md state transitions, FR-010):
 /// - BuildInfo-confirmed entries — a Go binary was scanned (golang
 ///   analyzed-tier entries exist) and the entry does NOT carry
-///   `mikebom:not-linked`: the linker proved production inclusion;
+///   `waybill:not-linked`: the linker proved production inclusion;
 ///   never marked Unknown.
-/// - Main-module entries (`mikebom:component-role: main-module`) —
+/// - Main-module entries (`waybill:component-role: main-module`) —
 ///   exempt from all build-inclusion passes.
 /// - Already-classified entries: `build_inclusion` already set by the
 ///   `go mod why` classification pass, or test-scoped
@@ -920,7 +920,7 @@ fn apply_go_build_inclusion_unknown_markers(
             continue;
         }
         if e.extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .and_then(|v| v.as_str())
             == Some("main-module")
         {
@@ -937,11 +937,11 @@ fn apply_go_build_inclusion_unknown_markers(
         }
         let fallback_discovered = e
             .extra_annotations
-            .get("mikebom:resolver-step")
+            .get("waybill:resolver-step")
             .and_then(|v| v.as_str())
             == Some("go-sum-fallback")
             || e.extra_annotations
-                .get("mikebom:orphan-reason")
+                .get("waybill:orphan-reason")
                 .and_then(|v| v.as_str())
                 == Some("flat-attached-fallback");
         if !fallback_discovered {
@@ -949,7 +949,7 @@ fn apply_go_build_inclusion_unknown_markers(
         }
         // FR-010: BuildInfo wins. Binary present + no not-linked tag
         // ⇒ the linker embedded this module; inclusion is confirmed.
-        if buildinfo_present && !e.extra_annotations.contains_key("mikebom:not-linked") {
+        if buildinfo_present && !e.extra_annotations.contains_key("waybill:not-linked") {
             continue;
         }
         e.build_inclusion = Some(BuildInclusion::Unknown);
@@ -960,7 +960,7 @@ fn apply_go_build_inclusion_unknown_markers(
         tracing::info!(
             marked,
             "build-inclusion pass: marked fallback-discovered Go modules with \
-             mikebom:build-inclusion: unknown (no higher-fidelity signal confirms \
+             waybill:build-inclusion: unknown (no higher-fidelity signal confirms \
              production-build participation)",
         );
     }
@@ -978,7 +978,7 @@ fn apply_go_build_inclusion_unknown_markers(
 ///   `<workspace>/go.sum`), gated per main module by the `go list all`
 ///   reliability preflight inside `mod_why::analyze_main_module`;
 /// - shared 60s budget across all workspaces
-///   (`MIKEBOM_GO_MOD_WHY_BUDGET_MS` test override);
+///   (`WAYBILL_GO_MOD_WHY_BUDGET_MS` test override);
 /// - multi-module trees: EVERY main module is asked about the UNION
 ///   of eligible module names (dedup may leave a shared module's
 ///   `source_path` naming only one go.sum) and verdicts merge with
@@ -1004,7 +1004,7 @@ fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOu
 
     let is_main_module = |e: &PackageDbEntry| {
         e.extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .and_then(|v| v.as_str())
             == Some("main-module")
     };
@@ -1032,7 +1032,7 @@ fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOu
     if mod_why::classification_disabled() {
         tracing::info!(
             "go-mod-why analysis skipped (disabled): --no-go-mod-why / \
-             MIKEBOM_NO_GO_MOD_WHY set; build-inclusion falls back to \
+             WAYBILL_NO_GO_MOD_WHY set; build-inclusion falls back to \
              unknown markers"
         );
         outcome.skipped = Some(SkipReason::Disabled.as_str());
@@ -1047,7 +1047,7 @@ fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOu
         return outcome;
     }
 
-    let offline = std::env::var("MIKEBOM_OFFLINE").is_ok();
+    let offline = std::env::var("WAYBILL_OFFLINE").is_ok();
     let buildinfo_present = entries.iter().any(|e| {
         e.purl.ecosystem() == "golang" && e.sbom_tier.as_deref() == Some("analyzed")
     });
@@ -1084,7 +1084,7 @@ fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOu
         }
         // FR-010: BuildInfo-confirmed entries are exempt from all
         // build-inclusion passes — don't spend budget on them.
-        if buildinfo_present && !e.extra_annotations.contains_key("mikebom:not-linked") {
+        if buildinfo_present && !e.extra_annotations.contains_key("waybill:not-linked") {
             continue;
         }
         if seen.insert(e.name.as_str()) {
@@ -1175,10 +1175,10 @@ fn verdict_rank(
 /// - `ProdNeeded` — no entry state (FR-011 byte stability); the
 ///   returned handoff set is the only signal;
 /// - `TestOnly` — `LifecycleScope::Test` +
-///   `mikebom:lifecycle-scope-derivation: go-mod-why` (no-op when
+///   `waybill:lifecycle-scope-derivation: go-mod-why` (no-op when
 ///   already test-tagged — never overwrite an existing derivation);
 /// - `NotNeeded` — `BuildInclusion::NotNeeded` +
-///   `mikebom:build-inclusion-derivation: go-mod-why`, EXCEPT when the
+///   `waybill:build-inclusion-derivation: go-mod-why`, EXCEPT when the
 ///   entry already carries a test tag (never downgrade existing test
 ///   classifications);
 /// - `Unresolved` — untouched; eligible for the unknown-marker pass.
@@ -1204,7 +1204,7 @@ fn apply_go_mod_why_verdicts(
             continue;
         }
         if e.extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .and_then(|v| v.as_str())
             == Some("main-module")
         {
@@ -1221,7 +1221,7 @@ fn apply_go_mod_why_verdicts(
         if e.build_inclusion.is_some() {
             continue;
         }
-        if buildinfo_present && !e.extra_annotations.contains_key("mikebom:not-linked") {
+        if buildinfo_present && !e.extra_annotations.contains_key("waybill:not-linked") {
             continue;
         }
         let Some(verdict) = verdicts.get(&e.name) else {
@@ -1236,7 +1236,7 @@ fn apply_go_mod_why_verdicts(
                 if e.lifecycle_scope != Some(LifecycleScope::Test) {
                     e.lifecycle_scope = Some(LifecycleScope::Test);
                     e.extra_annotations.insert(
-                        "mikebom:lifecycle-scope-derivation".to_string(),
+                        "waybill:lifecycle-scope-derivation".to_string(),
                         serde_json::Value::String("go-mod-why".to_string()),
                     );
                 }
@@ -1249,7 +1249,7 @@ fn apply_go_mod_why_verdicts(
                 }
                 e.build_inclusion = Some(BuildInclusion::NotNeeded);
                 e.extra_annotations.insert(
-                    "mikebom:build-inclusion-derivation".to_string(),
+                    "waybill:build-inclusion-derivation".to_string(),
                     serde_json::Value::String("go-mod-why".to_string()),
                 );
             }
@@ -1283,8 +1283,8 @@ pub fn read_all(
     // `add_subdirectory(third_party/...)`. Read via env var so the
     // CLI flag in scan_cmd can set it without plumbing through the
     // 75-callsite `scan_path` -> `read_all` signature chain. Default
-    // off; `--include-vendored` CLI flag sets `MIKEBOM_INCLUDE_VENDORED=1`.
-    let include_vendored = std::env::var("MIKEBOM_INCLUDE_VENDORED")
+    // off; `--include-vendored` CLI flag sets `WAYBILL_INCLUDE_VENDORED=1`.
+    let include_vendored = std::env::var("WAYBILL_INCLUDE_VENDORED")
         .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
         .unwrap_or(false);
     let mut out = Vec::new();
@@ -1441,7 +1441,7 @@ pub fn read_all(
     // Lowest tier in the FR-010 precedence ladder: declarations may
     // never have been built. Cross-tier collisions (opkg-installed-DB
     // + recipe-tier both naming the same coord) merge through the
-    // milestone-105 dedup pipeline via `mikebom:also-detected-via`
+    // milestone-105 dedup pipeline via `waybill:also-detected-via`
     // per FR-014a; the recipe-tier's license + provenance fields
     // propagate onto the post-dedup winning component.
     out.extend(yocto::recipe::read(rootfs, exclude_set));
@@ -1507,7 +1507,7 @@ pub fn read_all(
     // into the document-level `ScanDiagnostics` that flows up to the
     // format emitters. Per spec FR-005/FR-006/FR-007, each format's
     // metadata builder reads these fields and emits the doc-level
-    // `mikebom:graph-completeness` + `*-reason` annotations.
+    // `waybill:graph-completeness` + `*-reason` annotations.
     diagnostics.go_graph_completeness = go_signals.graph_completeness;
     if !go_signals.graph_completeness_reasons.is_empty() {
         // Tokens carry the bare reason class from legacy.rs; prefix
@@ -1526,7 +1526,7 @@ pub fn read_all(
     // C110/C111 doc-scope annotations.
     diagnostics.go_transitive_coverage = go_signals.go_transitive_coverage;
     // Milestone 172: propagate the ecosystem-wide step-5 fallback count
-    // to the doc-scope `mikebom:go-transitive-fallback-count` annotation
+    // to the doc-scope `waybill:go-transitive-fallback-count` annotation
     // channel. Gate on coverage-presence: `None` iff no Go workspace was
     // scanned (annotation absent per FR-002); `Some(N)` iff Go was
     // scanned (annotation emitted with value `"N"`, including `"0"` on
@@ -1577,21 +1577,21 @@ pub fn read_all(
     out.extend(go_binary_entries);
     // Milestone 004 US1: standalone `.rpm` artefact reader.
     // Milestone 144: build per-scan `RpmReaderConfig` from env vars
-    // populated by `scan_cmd.rs` (`MIKEBOM_MAX_RPM_BYTES`,
-    // `MIKEBOM_RPM_DISTRO`) — same plumbing pattern as the existing
-    // `MIKEBOM_INCLUDE_VENDORED` (milestone 102) and `MIKEBOM_DEEP_HASH`
+    // populated by `scan_cmd.rs` (`WAYBILL_MAX_RPM_BYTES`,
+    // `WAYBILL_RPM_DISTRO`) — same plumbing pattern as the existing
+    // `WAYBILL_INCLUDE_VENDORED` (milestone 102) and `WAYBILL_DEEP_HASH`
     // (milestone 134) knobs; avoids churning the 75-callsite
     // `scan_path -> read_all -> rpm_file::read` signature chain for
     // a pair of scan-wide config values. Tests pass
     // `&RpmReaderConfig::default()` directly via `rpm_file::read`'s
     // explicit arg, bypassing env-var coupling.
     let rpm_config = rpm_file::RpmReaderConfig {
-        cap_bytes: std::env::var("MIKEBOM_MAX_RPM_BYTES")
+        cap_bytes: std::env::var("WAYBILL_MAX_RPM_BYTES")
             .ok()
             .and_then(|s| s.parse().ok())
             .filter(|&v: &u64| v > 0)
             .unwrap_or(rpm_file::DEFAULT_RPM_FILE_BYTES),
-        distro_override: std::env::var("MIKEBOM_RPM_DISTRO")
+        distro_override: std::env::var("WAYBILL_RPM_DISTRO")
             .ok()
             .filter(|s| !s.is_empty()),
     };
@@ -1607,12 +1607,12 @@ pub fn read_all(
 
     // Milestone 188 (#455) — Helm chart reader. Auto-detects
     // `<rootfs>/Chart.yaml` presence per research §R1. `HelmRenderMode`
-    // is passed via env var (MIKEBOM_HELM_RENDER=1 set by scan_cmd.rs
+    // is passed via env var (WAYBILL_HELM_RENDER=1 set by scan_cmd.rs
     // when the operator passes `--helm-render`), matching the m102
-    // MIKEBOM_INCLUDE_VENDORED precedent for avoiding read_all
+    // WAYBILL_INCLUDE_VENDORED precedent for avoiding read_all
     // signature-churn. Composability preserved per m188 Clarifications
     // Q1 — helm components emit alongside other package-DB readers.
-    let helm_render_mode = if std::env::var("MIKEBOM_HELM_RENDER")
+    let helm_render_mode = if std::env::var("WAYBILL_HELM_RENDER")
         .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
         .unwrap_or(false)
     {
@@ -1658,7 +1658,7 @@ pub fn read_all(
     // gated by `include_dev` per clarification Q5. Multi-module
     // workspaces synthesize a `pkg:generic/<rootProject.name>@0.0.0`
     // workspace-root per FR-007. KMP source-set provenance rides
-    // `mikebom:kmp-source-set` as a JSON-encoded array per FR-006.
+    // `waybill:kmp-source-set` as a JSON-encoded array per FR-006.
     out.extend(kotlin_dsl::read(rootfs, include_dev, exclude_set));
     // Milestone 122 US1: Swift Package Manager source-tree reader.
     // Parses `Package.resolved` lockfiles (v1/v2/v3 schema) and emits
@@ -1679,7 +1679,7 @@ pub fn read_all(
     // Milestone 134: the cargo reader now also returns per-collision
     // `DivergenceRecord`s. They land in `diagnostics.divergence_records`
     // for downstream aggregation into the document-scope
-    // `mikebom:purl-collisions-detected` annotation.
+    // `waybill:purl-collisions-detected` annotation.
     let cargo_out = cargo::read(rootfs, include_dev, exclude_set)?;
     out.extend(cargo_out.entries);
     diagnostics.divergence_records.extend(cargo_out.divergences);
@@ -1733,7 +1733,7 @@ pub fn read_all(
     // per the milestone-140 convention), otp-runtime (pkg:generic/
     // placeholder per Q1 over-emission contract), main-module
     // (pkg:hex/<app>@<vsn>). Inner SHA-256 hash emission per FR-011.
-    // Q3 keyword family discrimination via mikebom:erlang-app-dep-kind
+    // Q3 keyword family discrimination via waybill:erlang-app-dep-kind
     // annotation (required > included > optional precedence). Umbrella
     // project handling per FR-009 (one main-module per *.app.src). Zero
     // new Cargo deps.
@@ -1814,7 +1814,7 @@ pub fn read_all(
     // only surviving entries) and before the Part B unknown pass (so
     // classified modules never receive unknown markers). Default-on
     // when a `go` toolchain is on PATH; disabled via --no-go-mod-why /
-    // MIKEBOM_NO_GO_MOD_WHY; every failure mode degrades to Part B.
+    // WAYBILL_NO_GO_MOD_WHY; every failure mode degrades to Part B.
     let go_mod_why_outcome = apply_go_mod_why_classification(&mut out);
 
     // Milestone 112 Part B (runs LAST among Go passes so it observes
@@ -1846,11 +1846,11 @@ pub fn read_all(
     }
 
     // Milestone 050: source-tree Go scan with go.mod parsed but no
-    // built Go binary present. Without a binary, mikebom can't
+    // built Go binary present. Without a binary, waybill can't
     // distinguish modules that the linker actually embedded from
     // modules that are merely in go.sum (build-tag alternatives,
     // test scaffolding). When a binary IS present, G3 tags every
-    // non-BuildInfo go.sum entry with `mikebom:not-linked = true`
+    // non-BuildInfo go.sum entry with `waybill:not-linked = true`
     // so consumers can filter precisely. Emit a single
     // tracing::info hint so users know to tighten their workflow.
     // Gated to --path scans because --image scans don't give the
@@ -1871,7 +1871,7 @@ pub fn read_all(
             go_sum_components,
             "no Go binary found alongside go.mod — every go.sum \
              entry is emitted unmarked. Run `go build` and re-scan \
-             to annotate non-linked entries with mikebom:not-linked.",
+             to annotate non-linked entries with waybill:not-linked.",
         );
     }
 
@@ -1972,7 +1972,7 @@ fn is_archive_file_evidence_kind(kind: Option<&str>) -> bool {
 /// Map an `/etc/os-release::ID` value to the PURL vendor segment used
 /// for `pkg:rpm/<vendor>/...` components, per milestone 003 research R8.
 ///
-/// The mapping covers the nine ID values mikebom commits to supporting
+/// The mapping covers the nine ID values waybill commits to supporting
 /// in milestone 003:
 ///
 /// | `ID=` | `<vendor>` |
@@ -2180,7 +2180,7 @@ Architecture: arm64
     fn make_go_main_module_entry(name: &str, depends: &[&str]) -> PackageDbEntry {
         let mut e = make_go_entry(name, depends);
         e.extra_annotations.insert(
-            "mikebom:component-role".to_string(),
+            "waybill:component-role".to_string(),
             serde_json::Value::String("main-module".to_string()),
         );
         e
@@ -2201,7 +2201,7 @@ Architecture: arm64
     /// scope (the testify → go-spew/go-difflib case from the
     /// kusari-cli scope-gap report). Modules with any production path
     /// stay untagged, and graph-derived tags carry the
-    /// `mikebom:lifecycle-scope-derivation` discriminator while the
+    /// `waybill:lifecycle-scope-derivation` discriminator while the
     /// direct `_test.go`-walk tag does not (back-compat).
     #[test]
     fn g4_propagates_test_scope_through_test_only_closure() {
@@ -2252,7 +2252,7 @@ Architecture: arm64
         assert!(
             !testify
                 .extra_annotations
-                .contains_key("mikebom:lifecycle-scope-derivation"),
+                .contains_key("waybill:lifecycle-scope-derivation"),
             "direct test-only tag must stay byte-identical to milestone-049 output"
         );
 
@@ -2266,7 +2266,7 @@ Architecture: arm64
             let e = entries.iter().find(|e| e.name == name).expect("present");
             assert_eq!(
                 e.extra_annotations
-                    .get("mikebom:lifecycle-scope-derivation")
+                    .get("waybill:lifecycle-scope-derivation")
                     .and_then(|v| v.as_str()),
                 Some("test-only-closure"),
                 "{name} must carry the graph-derivation discriminator"
@@ -2365,7 +2365,7 @@ Architecture: arm64
     #[test]
     fn g3_tags_go_sum_entries_without_buildinfo_match() {
         // Milestone 050: G3 tags non-BuildInfo entries with
-        // mikebom:not-linked rather than dropping them. Three
+        // waybill:not-linked rather than dropping them. Three
         // source-tier Go entries (from go.sum). Two analyzed-tier
         // (from BuildInfo) — only `logrus` overlaps. Plus non-Go
         // entries that must pass through untouched.
@@ -2427,16 +2427,16 @@ Architecture: arm64
         let go_spew = lookup("github.com/davecgh/go-spew", "source")
             .expect("go-spew source-tier must be retained (tagged, not dropped)");
         assert_eq!(
-            go_spew.extra_annotations.get("mikebom:not-linked"),
+            go_spew.extra_annotations.get("waybill:not-linked"),
             Some(&serde_json::Value::Bool(true)),
-            "go-spew must carry mikebom:not-linked = true: \
+            "go-spew must carry waybill:not-linked = true: \
              extra_annotations={:?}",
             go_spew.extra_annotations,
         );
         let testify = lookup("github.com/stretchr/testify", "source")
             .expect("testify source-tier must be retained (tagged, not dropped)");
         assert_eq!(
-            testify.extra_annotations.get("mikebom:not-linked"),
+            testify.extra_annotations.get("waybill:not-linked"),
             Some(&serde_json::Value::Bool(true)),
         );
 
@@ -2446,8 +2446,8 @@ Architecture: arm64
         assert!(
             !logrus_source
                 .extra_annotations
-                .contains_key("mikebom:not-linked"),
-            "logrus source-tier must NOT carry mikebom:not-linked \
+                .contains_key("waybill:not-linked"),
+            "logrus source-tier must NOT carry waybill:not-linked \
              (it's in BuildInfo): extra_annotations={:?}",
             logrus_source.extra_annotations,
         );
@@ -2548,7 +2548,7 @@ Architecture: arm64
     // --- Milestone 053 FR-009 + FR-010 ------------------------------------
 
     /// FR-009: when a source-tree main-module entry (carrying
-    /// `mikebom:component-role: "main-module"`) AND a binary-derived
+    /// `waybill:component-role: "main-module"`) AND a binary-derived
     /// main-module entry (same module path, no role tag) both exist,
     /// the G5 filter MUST drop the binary-derived one and preserve
     /// the synthetic source-tree entry.
@@ -2561,7 +2561,7 @@ Architecture: arm64
             Some("source"),
         );
         synthetic.extra_annotations.insert(
-            "mikebom:component-role".to_string(),
+            "waybill:component-role".to_string(),
             serde_json::Value::String("main-module".to_string()),
         );
         // Binary BuildInfo's redundant emission of the same main module.
@@ -2579,7 +2579,7 @@ Architecture: arm64
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("main-module"),
             "the synthetic main-module entry must survive",
@@ -2587,7 +2587,7 @@ Architecture: arm64
     }
 
     /// FR-010: the synthetic main-module entry MUST NOT receive the
-    /// `mikebom:not-linked` annotation, even when a Go binary's
+    /// `waybill:not-linked` annotation, even when a Go binary's
     /// BuildInfo lists no main-module among its Deps[]. The project
     /// itself is the linker root, never a non-linked dep.
     #[test]
@@ -2607,7 +2607,7 @@ Architecture: arm64
             Some("source"),
         );
         main_module.extra_annotations.insert(
-            "mikebom:component-role".to_string(),
+            "waybill:component-role".to_string(),
             serde_json::Value::String("main-module".to_string()),
         );
         let mut entries = vec![analyzed, main_module];
@@ -2621,9 +2621,9 @@ Architecture: arm64
             .find(|e| e.name == "example.com/proj")
             .expect("main-module entry preserved");
         assert!(
-            !mm.extra_annotations.contains_key("mikebom:not-linked"),
+            !mm.extra_annotations.contains_key("waybill:not-linked"),
             "FR-010 violated: main-module was incorrectly tagged \
-             mikebom:not-linked. extra_annotations = {:?}",
+             waybill:not-linked. extra_annotations = {:?}",
             mm.extra_annotations,
         );
     }
@@ -2655,7 +2655,7 @@ Architecture: arm64
     fn unknown_marker_set_on_go_sum_fallback_entry() {
         let mut entries = vec![make_go_fallback_entry(
             "example.com/orphan",
-            "mikebom:resolver-step",
+            "waybill:resolver-step",
             "go-sum-fallback",
         )];
         apply_go_build_inclusion_unknown_markers(&mut entries, &Default::default());
@@ -2670,7 +2670,7 @@ Architecture: arm64
     fn unknown_marker_set_on_flat_attached_fallback_entry() {
         let mut entries = vec![make_go_fallback_entry(
             "example.com/flat",
-            "mikebom:orphan-reason",
+            "waybill:orphan-reason",
             "flat-attached-fallback",
         )];
         apply_go_build_inclusion_unknown_markers(&mut entries, &Default::default());
@@ -2694,17 +2694,17 @@ Architecture: arm64
         // after G3 because its (name, version) IS in BuildInfo).
         let confirmed = make_go_fallback_entry(
             "example.com/confirmed",
-            "mikebom:resolver-step",
+            "waybill:resolver-step",
             "go-sum-fallback",
         );
         // Fallback-discovered AND not-linked: stays Unknown-eligible.
         let mut unconfirmed = make_go_fallback_entry(
             "example.com/unconfirmed",
-            "mikebom:resolver-step",
+            "waybill:resolver-step",
             "go-sum-fallback",
         );
         unconfirmed.extra_annotations.insert(
-            "mikebom:not-linked".to_string(),
+            "waybill:not-linked".to_string(),
             serde_json::Value::Bool(true),
         );
         let mut entries = vec![analyzed, confirmed, unconfirmed];
@@ -2731,7 +2731,7 @@ Architecture: arm64
         // Pathological: even if a main-module somehow carried a
         // fallback marker, the role exemption wins.
         mm.extra_annotations.insert(
-            "mikebom:resolver-step".to_string(),
+            "waybill:resolver-step".to_string(),
             serde_json::Value::String("go-sum-fallback".to_string()),
         );
         let mut entries = vec![mm];
@@ -2754,7 +2754,7 @@ Architecture: arm64
     fn unknown_marker_exempts_test_scoped_entry() {
         let mut e = make_go_fallback_entry(
             "example.com/testonly",
-            "mikebom:resolver-step",
+            "waybill:resolver-step",
             "go-sum-fallback",
         );
         e.lifecycle_scope = Some(waybill_common::resolution::LifecycleScope::Test);
@@ -2769,7 +2769,7 @@ Architecture: arm64
     fn unknown_marker_exempts_already_classified_entry() {
         let mut e = make_go_fallback_entry(
             "example.com/classified",
-            "mikebom:resolver-step",
+            "waybill:resolver-step",
             "go-sum-fallback",
         );
         e.build_inclusion = Some(BuildInclusion::NotNeeded);
@@ -2792,12 +2792,12 @@ Architecture: arm64
             Some("source"),
         );
         npm.extra_annotations.insert(
-            "mikebom:resolver-step".to_string(),
+            "waybill:resolver-step".to_string(),
             serde_json::Value::String("go-sum-fallback".to_string()),
         );
         let fallback = make_go_fallback_entry(
             "example.com/orphan",
-            "mikebom:resolver-step",
+            "waybill:resolver-step",
             "go-sum-fallback",
         );
         let mut entries = vec![npm, fallback];
@@ -2827,7 +2827,7 @@ Architecture: arm64
     fn verdict_not_needed_sets_build_inclusion_and_derivation() {
         let mut entries = vec![make_go_fallback_entry(
             "example.com/unneeded",
-            "mikebom:resolver-step",
+            "waybill:resolver-step",
             "go-sum-fallback",
         )];
         let verdicts =
@@ -2840,7 +2840,7 @@ Architecture: arm64
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:build-inclusion-derivation")
+                .get("waybill:build-inclusion-derivation")
                 .and_then(|v| v.as_str()),
             Some("go-mod-why"),
         );
@@ -2867,7 +2867,7 @@ Architecture: arm64
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:lifecycle-scope-derivation")
+                .get("waybill:lifecycle-scope-derivation")
                 .and_then(|v| v.as_str()),
             Some("go-mod-why"),
         );
@@ -2882,7 +2882,7 @@ Architecture: arm64
         let mut e = make_go_entry("example.com/already", &[]);
         e.lifecycle_scope = Some(waybill_common::resolution::LifecycleScope::Test);
         e.extra_annotations.insert(
-            "mikebom:lifecycle-scope-derivation".to_string(),
+            "waybill:lifecycle-scope-derivation".to_string(),
             serde_json::Value::String("test-only-closure".to_string()),
         );
         let mut entries = vec![e];
@@ -2892,7 +2892,7 @@ Architecture: arm64
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:lifecycle-scope-derivation")
+                .get("waybill:lifecycle-scope-derivation")
                 .and_then(|v| v.as_str()),
             Some("test-only-closure"),
         );
@@ -2921,7 +2921,7 @@ Architecture: arm64
     fn verdict_prod_needed_shields_fallback_entry_from_unknown_marker() {
         let mut entries = vec![make_go_fallback_entry(
             "example.com/prodfallback",
-            "mikebom:resolver-step",
+            "waybill:resolver-step",
             "go-sum-fallback",
         )];
         let verdicts = verdict_map(&[(
@@ -2933,7 +2933,7 @@ Architecture: arm64
         assert!(
             !entries[0]
                 .extra_annotations
-                .contains_key("mikebom:build-inclusion-derivation"),
+                .contains_key("waybill:build-inclusion-derivation"),
             "ProdNeeded must leave no entry state"
         );
         assert!(classified.contains("example.com/prodfallback"));
@@ -2951,7 +2951,7 @@ Architecture: arm64
     fn verdict_unresolved_falls_through_to_unknown_marker() {
         let mut entries = vec![make_go_fallback_entry(
             "example.com/unres",
-            "mikebom:resolver-step",
+            "waybill:resolver-step",
             "go-sum-fallback",
         )];
         let verdicts =

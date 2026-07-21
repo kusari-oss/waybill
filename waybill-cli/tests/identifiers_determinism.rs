@@ -100,10 +100,10 @@ fn extract_cdx_identifiers(doc: &serde_json::Value) -> BTreeSet<(String, String)
             out.insert((scheme.to_string(), url.to_string()));
         }
     }
-    // User-defined identifiers ride metadata.properties[mikebom:identifiers].
+    // User-defined identifiers ride metadata.properties[waybill:identifiers].
     if let Some(props) = doc["metadata"].get("properties").and_then(|v| v.as_array()) {
         for p in props {
-            if p.get("name").and_then(|v| v.as_str()) != Some("mikebom:identifiers") {
+            if p.get("name").and_then(|v| v.as_str()) != Some("waybill:identifiers") {
                 continue;
             }
             let raw = p["value"].as_str().unwrap_or("[]");
@@ -147,7 +147,7 @@ fn extract_spdx23_identifiers(doc: &serde_json::Value) -> BTreeSet<(String, Stri
             }
         }
     }
-    // User-defined: document-level annotations[mikebom:identifiers].
+    // User-defined: document-level annotations[waybill:identifiers].
     if let Some(annos) = doc.get("annotations").and_then(|v| v.as_array()) {
         for a in annos {
             let Some(comment) = a.get("comment").and_then(|v| v.as_str()) else {
@@ -157,7 +157,7 @@ fn extract_spdx23_identifiers(doc: &serde_json::Value) -> BTreeSet<(String, Stri
                 Ok(v) => v,
                 Err(_) => continue,
             };
-            if parsed.get("field").and_then(|v| v.as_str()) != Some("mikebom:identifiers") {
+            if parsed.get("field").and_then(|v| v.as_str()) != Some("waybill:identifiers") {
                 continue;
             }
             let Some(arr) = parsed.get("value").and_then(|v| v.as_array()) else {
@@ -178,7 +178,7 @@ fn extract_spdx23_identifiers(doc: &serde_json::Value) -> BTreeSet<(String, Stri
 /// built-in and user-defined identifiers per SPDX 3's open-typed
 /// model).
 ///
-/// Per milestone 079, mikebom's internal scheme names map to the
+/// Per milestone 079, waybill's internal scheme names map to the
 /// SPDX 3 controlled vocab at emission time (`Core/externalIdentifierType`
 /// SHACL constraint). When the mapping returns `other`, the original
 /// scheme is preserved on the `comment` field as
@@ -203,7 +203,7 @@ fn extract_spdx3_identifiers(doc: &serde_json::Value) -> BTreeSet<(String, Strin
                 .get("externalIdentifierType")
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            // Recover the original mikebom scheme from the
+            // Recover the original waybill scheme from the
             // milestone-079 `comment` field when present (vocab
             // value is `other` and comment carries
             // `original-scheme: <name>`); otherwise pass through

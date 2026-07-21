@@ -205,7 +205,7 @@ mod tests {
 
         assert_eq!(stmt.statement_type, InTotoStatement::STATEMENT_TYPE);
         assert_eq!(stmt.predicate_type, InTotoStatement::PREDICATE_TYPE);
-        assert_eq!(stmt.predicate.metadata.tool.name, "mikebom");
+        assert_eq!(stmt.predicate.metadata.tool.name, "waybill");
         assert_eq!(
             stmt.predicate.metadata.generation_context,
             GenerationContext::BuildTimeTrace

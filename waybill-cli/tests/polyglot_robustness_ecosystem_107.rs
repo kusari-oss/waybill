@@ -39,17 +39,17 @@ fn build_fixture(root: &Path) {
     // corrupted image dump).
     write(
         &root.join("var/lib/opkg/status"),
-        "Package: mikebom-fixture-libcore\n\
+        "Package: waybill-fixture-libcore\n\
          Version: 1.2.3\n\
-         Architecture: mikebom-fixture-arch\n\
+         Architecture: waybill-fixture-arch\n\
          Status: install user installed\n\
          \n\
          this-is-garbage-without-a-colon\n\
          a-malformed-stanza-fragment\n\
          \n\
-         Package: mikebom-fixture-libssl\n\
+         Package: waybill-fixture-libssl\n\
          Version: 3.0.5\n\
-         Architecture: mikebom-fixture-arch\n\
+         Architecture: waybill-fixture-arch\n\
          Status: install user installed\n",
     );
 
@@ -59,11 +59,11 @@ fn build_fixture(root: &Path) {
     // and one malformed manifest under a "bad-machine" dir — both at
     // the same level. The well-formed one MUST still emit.
     write(
-        &root.join("build/tmp/deploy/images/mikebom-fixture-good/good.manifest"),
-        "mikebom-fixture-gst mikebom-fixture-arch 1.22.7\n",
+        &root.join("build/tmp/deploy/images/waybill-fixture-good/good.manifest"),
+        "waybill-fixture-gst waybill-fixture-arch 1.22.7\n",
     );
     write(
-        &root.join("build/tmp/deploy/images/mikebom-fixture-bad/broken.manifest"),
+        &root.join("build/tmp/deploy/images/waybill-fixture-bad/broken.manifest"),
         "only-one-token\n\
          two tokens here\n\
          four tokens are here too\n",
@@ -71,12 +71,12 @@ fn build_fixture(root: &Path) {
 
     // ── BitBake recipe layer (well-formed + unexpanded-variable) ─
     write(
-        &root.join("meta-mikebom-fixture/recipes-mikebom/mikebom-fixture-recipe/mikebom-fixture-recipe_1.0.0.bb"),
+        &root.join("meta-waybill-fixture/recipes-waybill/waybill-fixture-recipe/waybill-fixture-recipe_1.0.0.bb"),
         "SUMMARY = \"fixture\"\nLICENSE = \"MIT\"\n",
     );
     // Unexpanded `${...}` filename — silent-skip path per FR-008.
     write(
-        &root.join("meta-mikebom-fixture/recipes-mikebom/mikebom-fixture-shared/${PN}_${PV}.bb"),
+        &root.join("meta-waybill-fixture/recipes-waybill/waybill-fixture-shared/${PN}_${PV}.bb"),
         "SUMMARY = \"unexpanded variables in filename\"\n",
     );
 }
@@ -91,7 +91,7 @@ fn well_formed_yocto_manifests_emit_components_despite_neighboring_malformed_fil
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -103,7 +103,7 @@ fn well_formed_yocto_manifests_emit_components_despite_neighboring_malformed_fil
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "scan unexpectedly failed: status={:?}\nstderr={}",
@@ -124,11 +124,11 @@ fn well_formed_yocto_manifests_emit_components_despite_neighboring_malformed_fil
     // opkg installed-DB well-formed stanzas BOTH MUST surface despite
     // the malformed garbage block between them in the same status file.
     assert!(
-        purls.iter().any(|p| p == "pkg:opkg/mikebom-fixture-libcore@1.2.3?arch=mikebom-fixture-arch"),
+        purls.iter().any(|p| p == "pkg:opkg/waybill-fixture-libcore@1.2.3?arch=waybill-fixture-arch"),
         "opkg well-formed component (libcore) missing; got purls: {purls:#?}",
     );
     assert!(
-        purls.iter().any(|p| p == "pkg:opkg/mikebom-fixture-libssl@3.0.5?arch=mikebom-fixture-arch"),
+        purls.iter().any(|p| p == "pkg:opkg/waybill-fixture-libssl@3.0.5?arch=waybill-fixture-arch"),
         "opkg well-formed component (libssl) past the garbage block missing; got purls: {purls:#?}",
     );
 
@@ -136,7 +136,7 @@ fn well_formed_yocto_manifests_emit_components_despite_neighboring_malformed_fil
     // surface despite the malformed `bad-machine/broken.manifest`
     // sibling.
     assert!(
-        purls.iter().any(|p| p == "pkg:opkg/mikebom-fixture-gst@1.22.7?arch=mikebom-fixture-arch"),
+        purls.iter().any(|p| p == "pkg:opkg/waybill-fixture-gst@1.22.7?arch=waybill-fixture-arch"),
         "yocto-manifest well-formed component (gst) missing; got purls: {purls:#?}",
     );
 
@@ -145,7 +145,7 @@ fn well_formed_yocto_manifests_emit_components_despite_neighboring_malformed_fil
     // to `pkg:generic/...?openembedded=true&layer=...` (qualifiers
     // alphabetized by `Purl::new`).
     assert!(
-        purls.iter().any(|p| p == "pkg:generic/mikebom-fixture-recipe@1.0.0?layer=meta-mikebom-fixture&openembedded=true"),
+        purls.iter().any(|p| p == "pkg:generic/waybill-fixture-recipe@1.0.0?layer=meta-waybill-fixture&openembedded=true"),
         "bitbake-recipe well-formed component missing; got purls: {purls:#?}",
     );
 

@@ -15,10 +15,10 @@
 //! - `source_inputs.rs` — `extract_source_inputs_for_component(...)
 //!   -> BindingHashInputs` dispatching per ecosystem.
 //! - `annotation.rs` — JSON serialization helpers for the
-//!   `mikebom:source-document-binding` annotation across CDX
+//!   `waybill:source-document-binding` annotation across CDX
 //!   property-string form and SPDX envelope-value form.
 //! - `verify.rs` — `verify_binding(image, source) -> VerifyReport`
-//!   for the `mikebom sbom verify-binding` subcommand.
+//!   for the `waybill sbom verify-binding` subcommand.
 //!
 //! Per Constitution Principle IV, every domain value is a newtype
 //! or enum. Production code uses `anyhow::Result` / `BindingError`;
@@ -168,7 +168,7 @@ impl BindingStrength {
 /// `alias_from` / `alias_to` are populated (paired-presence invariant).
 /// Lets auditors distinguish operator-supplied aliases (milestone 111's
 /// `--pkg-alias` flag) from automatic aliases derived at bind-time from
-/// the source-tier `mikebom:produces-binaries` declaration (milestone 116).
+/// the source-tier `waybill:produces-binaries` declaration (milestone 116).
 ///
 /// Pre-feature SBOMs that carry milestone-111 aliases without this field
 /// deserialize cleanly via `#[serde(default)]`; consumers SHOULD interpret
@@ -178,9 +178,9 @@ impl BindingStrength {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum AliasSource {
-    /// `--pkg-alias` flag (or `MIKEBOM_PKG_ALIAS` env var). Milestone 111.
+    /// `--pkg-alias` flag (or `WAYBILL_PKG_ALIAS` env var). Milestone 111.
     OperatorSupplied,
-    /// Source-tier `mikebom:produces-binaries` declaration auto-aliased the
+    /// Source-tier `waybill:produces-binaries` declaration auto-aliased the
     /// image-tier `pkg:generic/<name>` to the source-tier ecosystem PURL.
     /// Milestone 116.
     AutomaticFromProducesBinaries,
@@ -201,9 +201,9 @@ pub struct SourceDocumentId {
 /// FR-001 per-component binding annotation payload.
 ///
 /// Carried on every non-source-tier component (i.e.,
-/// `mikebom:sbom-tier: build` or `deployed`) in:
+/// `waybill:sbom-tier: build` or `deployed`) in:
 ///
-/// - CDX `properties[]` with `name == "mikebom:source-document-binding"`
+/// - CDX `properties[]` with `name == "waybill:source-document-binding"`
 ///   and `value == JSON-encoded SourceDocumentBinding`.
 /// - SPDX 2.3 `Package.annotations[].comment` wrapped in the existing
 ///   `MikebomAnnotationCommentV1` envelope.
@@ -269,7 +269,7 @@ impl SourceDocumentBinding {
     }
 }
 
-/// FR-007 propagation mode for `mikebom sbom enrich --vex-propagation-mode`.
+/// FR-007 propagation mode for `waybill sbom enrich --vex-propagation-mode`.
 /// (Used by US2 milestone-072 work; declared here so the foundational
 /// data model is complete and present from PR-A.)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, clap::ValueEnum)]

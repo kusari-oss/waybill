@@ -1,12 +1,12 @@
 //! Milestone 077 — root component override (`--root-name` /
 //! `--root-version`) integration tests.
 //!
-//! These tests drive `mikebom sbom scan --path` against tempdir-based
+//! These tests drive `waybill sbom scan --path` against tempdir-based
 //! fixtures, asserting that:
 //!   * US1 — operator-supplied overrides flow into the emitted SBOM's
 //!     root component identity (name + version + bom-ref + purl + cpe).
 //!   * US2 (build-tier) — the override emits when threaded through the
-//!     `mikebom sbom generate` build-tier path with a synthetic
+//!     `waybill sbom generate` build-tier path with a synthetic
 //!     `ScanArtifacts`.
 //!   * US3 — manifest-driven main-module components (Cargo) are
 //!     dropped from emitted SBOMs when the override is active (clean
@@ -24,7 +24,7 @@ use common::bin;
 use common::normalize::apply_fake_home_env;
 
 // ---------------------------------------------------------------------
-// Helper: run `mikebom sbom scan --path <tempdir>` with extra args.
+// Helper: run `waybill sbom scan --path <tempdir>` with extra args.
 // ---------------------------------------------------------------------
 
 fn run_scan_returning_json(
@@ -139,7 +139,7 @@ fn root_name_and_version_override_on_arbitrary_dir() {
     assert_eq!(comp["purl"].as_str(), Some("pkg:generic/widget-svc@1.2.3"));
     assert_eq!(
         comp["cpe"].as_str(),
-        Some("cpe:2.3:a:mikebom:widget-svc:1.2.3:*:*:*:*:*:*:*")
+        Some("cpe:2.3:a:waybill:widget-svc:1.2.3:*:*:*:*:*:*:*")
     );
 }
 

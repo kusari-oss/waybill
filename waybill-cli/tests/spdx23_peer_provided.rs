@@ -8,7 +8,7 @@
 //! * **US2 (P1)**: basic-mode collapses peer edges to natural-direction
 //!   `DEPENDS_ON` (pre-178 behavior preserved, m228 escape hatch
 //!   respected).
-//! * **US3 (P2)**: `mikebom:peer-edge-targets` annotation retained in
+//! * **US3 (P2)**: `waybill:peer-edge-targets` annotation retained in
 //!   both compat modes with byte-identical value; FR-007 bidirectional
 //!   invariant (every annotation entry ↔ every emitted PROVIDED edge).
 //!
@@ -47,7 +47,7 @@ fn scan_spdx23(path: &Path, compat: Option<&str>) -> serde_json::Value {
         cmd.arg("--spdx2-relationship-compat").arg(mode);
     }
 
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed (exit={:?}): stderr={}",
@@ -58,7 +58,7 @@ fn scan_spdx23(path: &Path, compat: Option<&str>) -> serde_json::Value {
     serde_json::from_str(&raw).expect("valid JSON")
 }
 
-/// Extract the value of the `mikebom:peer-edge-targets` annotation on
+/// Extract the value of the `waybill:peer-edge-targets` annotation on
 /// the Package whose `name` matches. Returns `None` if no such
 /// annotation or Package.
 fn peer_edge_annotation(sbom: &serde_json::Value, package_name: &str) -> Option<String> {
@@ -71,7 +71,7 @@ fn peer_edge_annotation(sbom: &serde_json::Value, package_name: &str) -> Option<
         let comment = anno["comment"].as_str()?;
         // Envelope: {schema, field, value}. Filter by field.
         let envelope: serde_json::Value = serde_json::from_str(comment).ok()?;
-        if envelope["field"].as_str() == Some("mikebom:peer-edge-targets") {
+        if envelope["field"].as_str() == Some("waybill:peer-edge-targets") {
             return Some(comment.to_string());
         }
     }
@@ -288,11 +288,11 @@ fn t005_us3_annotation_present_both_modes() {
     let anno_basic = peer_edge_annotation(&sbom_basic, "consumer-pkg");
     assert!(
         anno_full.is_some(),
-        "SC-004: mikebom:peer-edge-targets MUST be present on consumer-pkg under full mode"
+        "SC-004: waybill:peer-edge-targets MUST be present on consumer-pkg under full mode"
     );
     assert!(
         anno_basic.is_some(),
-        "SC-004: mikebom:peer-edge-targets MUST be present on consumer-pkg under basic mode"
+        "SC-004: waybill:peer-edge-targets MUST be present on consumer-pkg under basic mode"
     );
 }
 
@@ -318,7 +318,7 @@ fn t006_us3_annotation_value_byte_identical_across_modes() {
 
 /// SC-005 / FR-007 bidirectional invariant — under full mode:
 ///
-/// * every (source_purl, target_purl) tuple in `mikebom:peer-edge-targets`
+/// * every (source_purl, target_purl) tuple in `waybill:peer-edge-targets`
 ///   annotations MUST correspond to exactly one PROVIDED_DEPENDENCY_OF
 ///   edge (accounting for the direction reversal — SPDX
 ///   `relatedSpdxElement` maps to annotation-source PURL, SPDX
@@ -365,7 +365,7 @@ fn t007_us3_fr007_bidirectional_invariant() {
             let Ok(envelope) = serde_json::from_str::<serde_json::Value>(comment) else {
                 continue;
             };
-            if envelope["field"].as_str() != Some("mikebom:peer-edge-targets") {
+            if envelope["field"].as_str() != Some("waybill:peer-edge-targets") {
                 continue;
             }
             // Value can be a native JSON array OR a JSON-encoded string.

@@ -165,18 +165,18 @@ fn us1_closed_license_emits_yocto_license_closed_annotation() {
         cdx_license_expression(recipe_c).is_none(),
         "CLOSED recipe MUST NOT emit a license expression"
     );
-    // CLOSED → mikebom:yocto-license-closed: true annotation.
+    // CLOSED → waybill:yocto-license-closed: true annotation.
     let props = recipe_c
         .pointer("/properties")
         .and_then(|v| v.as_array())
         .expect("properties array");
     let has_closed_marker = props.iter().any(|p| {
-        p.get("name").and_then(|v| v.as_str()) == Some("mikebom:yocto-license-closed")
+        p.get("name").and_then(|v| v.as_str()) == Some("waybill:yocto-license-closed")
             && p.get("value").and_then(|v| v.as_str()) == Some("true")
     });
     assert!(
         has_closed_marker,
-        "CLOSED recipe MUST carry mikebom:yocto-license-closed annotation"
+        "CLOSED recipe MUST carry waybill:yocto-license-closed annotation"
     );
 }
 

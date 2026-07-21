@@ -27,7 +27,7 @@ fn scan_fixture() -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -86,7 +86,7 @@ fn cmake_externalproject_url_emits_sha256_and_url() {
         "version must be parsed from URL filename"
     );
     assert_eq!(
-        component_property(zlib[0], "mikebom:download-url"),
+        component_property(zlib[0], "waybill:download-url"),
         Some("https://zlib.net/zlib-1.3.1.tar.gz")
     );
     let hashes = zlib[0]["hashes"].as_array().expect("hashes array");
@@ -103,8 +103,8 @@ fn cmake_includes_walked() {
     let sbom = scan_fixture();
     let boost = components_by_prefix(&sbom, "pkg:generic/boost");
     assert_eq!(boost.len(), 1, "expected pkg:generic/boost from cmake/third_party.cmake");
-    let source = component_property(boost[0], "mikebom:source-files")
-        .expect("boost must carry mikebom:source-files");
+    let source = component_property(boost[0], "waybill:source-files")
+        .expect("boost must carry waybill:source-files");
     assert!(
         source.contains("third_party.cmake"),
         "source-files must point at cmake/third_party.cmake (the included file), not the top-level CMakeLists.txt; got {source:?}"
@@ -114,7 +114,7 @@ fn cmake_includes_walked() {
 /// Contract 7 (milestone 155 REVERSAL of milestone-102 FR-007):
 /// `find_package(OpenSSL REQUIRED)` in the milestone-090 cmake fixture
 /// now emits a `pkg:generic/openssl` component tagged with
-/// `mikebom:source-mechanism = "cmake-find-package"`. Pre-milestone-155
+/// `waybill:source-mechanism = "cmake-find-package"`. Pre-milestone-155
 /// this test asserted 0 emissions per the FR-007 refusal; post-155 it
 /// asserts exactly one emission with the correct annotation shape.
 #[test]
@@ -135,7 +135,7 @@ fn cmake_find_package_emits_since_milestone_155() {
                 })
         })
         .filter(|c| {
-            component_property(c, "mikebom:source-mechanism") == Some("cmake-find-package")
+            component_property(c, "waybill:source-mechanism") == Some("cmake-find-package")
         })
         .collect();
     assert_eq!(
@@ -151,7 +151,7 @@ fn cmake_find_package_emits_since_milestone_155() {
         "no version constraint declared → no @version segment"
     );
     assert_eq!(
-        component_property(openssl_from_find_package[0], "mikebom:cmake-find-package-name"),
+        component_property(openssl_from_find_package[0], "waybill:cmake-find-package-name"),
         Some("OpenSSL"),
         "milestone 155 FR-008: original casing preserved when it differs from lowercased PURL"
     );

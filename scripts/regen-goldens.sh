@@ -3,7 +3,7 @@
 # can produce.
 #
 # Runs the WHOLE workspace test suite under the three documented
-# `MIKEBOM_UPDATE_*` env vars at once. Each affected test honors the
+# `WAYBILL_UPDATE_*` env vars at once. Each affected test honors the
 # env var by writing its own pinned golden in place; everything else
 # just runs normally.
 #
@@ -15,7 +15,7 @@
 #   `tests/fixtures/pkg_alias_binding/image-baz.cdx.json` from the
 #   milestone-111 byte-identity regression) honor the SAME env vars
 #   and live outside that tree. Narrowing cargo to the three suites
-#   silently skips those. See https://github.com/kusari-oss/mikebom/issues/361.
+#   silently skips those. See https://github.com/kusari-oss/waybill/issues/361.
 #
 # Usage:
 #   ./scripts/regen-goldens.sh
@@ -30,9 +30,9 @@ set -euo pipefail
 
 printf '>>> regenerating all byte-identity goldens via workspace test sweep\n'
 
-MIKEBOM_UPDATE_CDX_GOLDENS=1 \
-MIKEBOM_UPDATE_SPDX_GOLDENS=1 \
-MIKEBOM_UPDATE_SPDX3_GOLDENS=1 \
+WAYBILL_UPDATE_CDX_GOLDENS=1 \
+WAYBILL_UPDATE_SPDX_GOLDENS=1 \
+WAYBILL_UPDATE_SPDX3_GOLDENS=1 \
     cargo +stable test --workspace --no-fail-fast >/dev/null
 
 printf '\n>>> regen sweep done. Review `git status` + `git diff --stat`\n'

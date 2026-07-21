@@ -1,16 +1,16 @@
 //! Milestone 097 integration test — CPE candidate emission for
 //! binary-extracted `pkg:generic/<lib>@<version>` components.
 //!
-//! Negative-control coverage for SC-007: mikebom's own binary uses
-//! rustls (not OpenSSL), so scanning the mikebom binary itself must
+//! Negative-control coverage for SC-007: waybill's own binary uses
+//! rustls (not OpenSSL), so scanning the waybill binary itself must
 //! NOT produce an OpenSSL CPE. If this test ever fires, either:
 //! (a) the milestone-096 version-string scanner now matches an
-//!     OpenSSL literal embedded in mikebom (a spurious match — fix
+//!     OpenSSL literal embedded in waybill (a spurious match — fix
 //!     the scanner's anchor regex),
 //! (b) the milestone-097 CPE table has a row whose vendor/product
 //!     would produce an `openssl:openssl:` CPE for an unrelated PURL
 //!     (impossible by construction — the table maps slug → vendor),
-//! (c) mikebom genuinely started linking OpenSSL (which would be a
+//! (c) waybill genuinely started linking OpenSSL (which would be a
 //!     real dependency change worth reviewing).
 //!
 //! Positive end-to-end coverage is via the unit tests in
@@ -29,14 +29,14 @@ use std::process::Command;
 use serde_json::Value;
 use tempfile::TempDir;
 
-/// SC-007 negative control: mikebom binary should not trip the
+/// SC-007 negative control: waybill binary should not trip the
 /// milestone-097 CPE table OR the milestone-096 version-string
-/// scanner. Scanning mikebom-itself emits NO `openssl:openssl` CPE
+/// scanner. Scanning waybill-itself emits NO `openssl:openssl` CPE
 /// in the resulting CDX SBOM.
 #[test]
 fn mikebom_self_scan_emits_no_spurious_openssl_cpe() {
     let dir = TempDir::new().unwrap();
-    let dest = dir.path().join("mikebom-under-test");
+    let dest = dir.path().join("waybill-under-test");
     std::fs::copy(env!("CARGO_BIN_EXE_mikebom"), &dest).unwrap();
 
     let out_file = dir.path().join("out.cdx.json");
@@ -47,10 +47,10 @@ fn mikebom_self_scan_emits_no_spurious_openssl_cpe() {
         .arg(&out_file)
         .arg("--no-deep-hash")
         .output()
-        .expect("failed to invoke mikebom");
+        .expect("failed to invoke waybill");
     assert!(
         output.status.success(),
-        "mikebom sbom scan failed: stderr={}",
+        "waybill sbom scan failed: stderr={}",
         String::from_utf8_lossy(&output.stderr),
     );
 
@@ -60,10 +60,10 @@ fn mikebom_self_scan_emits_no_spurious_openssl_cpe() {
 
     assert!(
         !json_str.contains("cpe:2.3:a:openssl:openssl:"),
-        "milestone-097 SC-007 spurious-emission guard: mikebom binary \
-         should not emit an openssl:openssl CPE (mikebom uses rustls). \
+        "milestone-097 SC-007 spurious-emission guard: waybill binary \
+         should not emit an openssl:openssl CPE (waybill uses rustls). \
          If this fires, check (a) milestone-096 version-string scanner \
-         for a false-positive anchor match, OR (b) whether mikebom now \
+         for a false-positive anchor match, OR (b) whether waybill now \
          genuinely links OpenSSL (a real dependency change)."
     );
 }

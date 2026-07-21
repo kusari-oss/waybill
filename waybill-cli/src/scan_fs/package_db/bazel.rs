@@ -6,7 +6,7 @@
 //!   `git_repository` rules.
 //!
 //! Emits `pkg:bazel/<name>@<version>` components per FR-002 + FR-003.
-//! Declared upstream URLs surface as `mikebom:download-url`; declared
+//! Declared upstream URLs surface as `waybill:download-url`; declared
 //! `sha256` values populate `hashes[]` as SHA-256 ContentHashes per
 //! FR-004. `dev_dependency = True` sets `LifecycleScope::Development`
 //! (which maps to standards-native CDX `scope` per Principle V).
@@ -31,7 +31,7 @@ const WORKSPACE_BAZEL: &str = "WORKSPACE.bazel";
 const WORKSPACE: &str = "WORKSPACE";
 
 /// Short-SHA truncation length per research §8. Full SHA discarded
-/// for now; future milestone could preserve via `mikebom:bazel-commit-sha`.
+/// for now; future milestone could preserve via `waybill:bazel-commit-sha`.
 const SHORT_SHA_LEN: usize = 7;
 /// Full git-SHA length (the threshold above which we treat the version
 /// as a SHA worth truncating; below it, it's a tag, used verbatim).
@@ -230,11 +230,11 @@ fn build_bazel_entry(
         std::collections::BTreeMap::new();
     if let Some(url) = download_url {
         extra_annotations.insert(
-            "mikebom:download-url".to_string(),
+            "waybill:download-url".to_string(),
             serde_json::json!(url),
         );
         extra_annotations.insert(
-            "mikebom:bazel-archive-name".to_string(),
+            "waybill:bazel-archive-name".to_string(),
             serde_json::json!(name),
         );
     }
@@ -242,7 +242,7 @@ fn build_bazel_entry(
     // (closed-enum value `bazel-http-archive`). See cmake.rs for
     // the full rationale + enum docs.
     extra_annotations.insert(
-        "mikebom:source-mechanism".to_string(),
+        "waybill:source-mechanism".to_string(),
         serde_json::json!("bazel-http-archive"),
     );
 
@@ -371,14 +371,14 @@ http_archive(
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:download-url")
+                .get("waybill:download-url")
                 .and_then(|v| v.as_str()),
             Some("https://github.com/bazelbuild/rules_python/archive/0.30.0.tar.gz")
         );
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:bazel-archive-name")
+                .get("waybill:bazel-archive-name")
                 .and_then(|v| v.as_str()),
             Some("rules_python")
         );
@@ -445,11 +445,11 @@ http_archive(
         for e in &entries {
             assert_eq!(
                 e.extra_annotations
-                    .get("mikebom:source-mechanism")
+                    .get("waybill:source-mechanism")
                     .and_then(|v| v.as_str()),
                 Some("bazel-http-archive"),
                 "every bazel entry should carry source-mechanism: bazel-http-archive; got: {:?}",
-                e.extra_annotations.get("mikebom:source-mechanism"),
+                e.extra_annotations.get("waybill:source-mechanism"),
             );
         }
     }

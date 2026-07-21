@@ -10,7 +10,7 @@
 //! Wraps them in a `go.work` file with `use ( ./base ./middle ./leaf )`.
 //!
 //! Then invokes the release binary in `--offline` mode and asserts:
-//!   (a) doc-scope `mikebom:go-workspace-mode = "detected: 3 use-modules"`;
+//!   (a) doc-scope `waybill:go-workspace-mode = "detected: 3 use-modules"`;
 //!   (b) parity-catalog registration is exercised via at least one
 //!       emitted C112 property in `metadata.properties[]`.
 //!
@@ -83,7 +83,7 @@ fn scan_offline(path: &std::path::Path) -> serde_json::Value {
     let tmp = tempfile::NamedTempFile::new().expect("tempfile");
     let out_path = tmp.path().to_path_buf();
     let mut cmd = Command::new(bin);
-    cmd.env("MIKEBOM_NO_GO_MOD_WHY", "1");
+    cmd.env("WAYBILL_NO_GO_MOD_WHY", "1");
     cmd.arg("--offline")
         .arg("sbom")
         .arg("scan")
@@ -92,7 +92,7 @@ fn scan_offline(path: &std::path::Path) -> serde_json::Value {
         .arg("--output")
         .arg(&out_path)
         .arg("--no-deep-hash");
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -118,7 +118,7 @@ fn t050_workspace_scan_emits_c112_annotation() {
     let fixture = write_workspace_fixture();
     let sbom = scan_offline(fixture.path());
 
-    let c112 = doc_property(&sbom, "mikebom:go-workspace-mode");
+    let c112 = doc_property(&sbom, "waybill:go-workspace-mode");
     assert_eq!(
         c112,
         Some("detected: 3 use-modules"),
@@ -133,7 +133,7 @@ fn t050_c112_present_iff_go_work_exists() {
     let fixture = write_workspace_fixture();
     let sbom_with_workspace = scan_offline(fixture.path());
     assert!(
-        doc_property(&sbom_with_workspace, "mikebom:go-workspace-mode").is_some(),
+        doc_property(&sbom_with_workspace, "waybill:go-workspace-mode").is_some(),
         "SC-004: C112 MUST be present when go.work exists"
     );
 
@@ -141,7 +141,7 @@ fn t050_c112_present_iff_go_work_exists() {
     std::fs::remove_file(fixture.path().join("go.work")).unwrap();
     let sbom_without_workspace = scan_offline(fixture.path());
     assert!(
-        doc_property(&sbom_without_workspace, "mikebom:go-workspace-mode").is_none(),
+        doc_property(&sbom_without_workspace, "waybill:go-workspace-mode").is_none(),
         "SC-003: C112 MUST be absent when go.work does NOT exist"
     );
 }
@@ -154,7 +154,7 @@ fn t050_workspace_scan_preserves_milestone_160_annotations() {
     let sbom = scan_offline(fixture.path());
     // Milestone-160 doc-scope C110 (go-transitive-coverage) should be
     // present on any Go-containing scan.
-    let c110 = doc_property(&sbom, "mikebom:go-transitive-coverage");
+    let c110 = doc_property(&sbom, "waybill:go-transitive-coverage");
     assert!(
         c110.is_some(),
         "Milestone 160 interop: C110 must remain emitted alongside C112"

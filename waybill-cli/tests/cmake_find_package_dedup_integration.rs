@@ -4,7 +4,7 @@
 //! `find_package(<Name> <Version>)` and `FetchContent_Declare(<name> URL
 //! ...archive-with-embedded-version.tar.gz)`, the production
 //! `resolve::deduplicator` pass merges them into exactly ONE emitted
-//! component. The surviving `mikebom:source-mechanism` value is one of
+//! component. The surviving `waybill:source-mechanism` value is one of
 //! `{"cmake-find-package", "cmake-fetchcontent-url"}` — the winner is
 //! confidence-tie-break-dependent and NOT prescribed by the spec.
 //!
@@ -111,12 +111,12 @@ FetchContent_Declare(openssl URL https://example.com/openssl-1.1.0.tar.gz)
         serde_json::to_string_pretty(&openssls).unwrap()
     );
 
-    // The winner's mikebom:source-mechanism must be one of the two
+    // The winner's waybill:source-mechanism must be one of the two
     // possible values. The spec does NOT prescribe which one.
-    let mechanism = property_value(openssls[0], "mikebom:source-mechanism");
+    let mechanism = property_value(openssls[0], "waybill:source-mechanism");
     assert!(
         matches!(mechanism, Some("cmake-find-package") | Some("cmake-fetchcontent-url")),
-        "expected mikebom:source-mechanism ∈ {{cmake-find-package, cmake-fetchcontent-url}}; got {:?}",
+        "expected waybill:source-mechanism ∈ {{cmake-find-package, cmake-fetchcontent-url}}; got {:?}",
         mechanism
     );
 }

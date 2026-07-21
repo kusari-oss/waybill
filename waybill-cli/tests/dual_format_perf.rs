@@ -1,7 +1,7 @@
 //! Dual-format wall-clock performance benchmark (milestone 010
 //! T049 / SC-009).
 //!
-//! Spec: a single `mikebom sbom scan --format
+//! Spec: a single `waybill sbom scan --format
 //! cyclonedx-json,spdx-2.3-json` invocation MUST complete in **at
 //! least 30 % less wall-clock time** than two sequential
 //! single-format invocations against the same target. The savings
@@ -16,7 +16,7 @@
 //! Actions runners doesn't swamp the signal. Best-of-3 per mode;
 //! assertion compares medians.
 //!
-//! When `MIKEBOM_PERF_IMAGE` is set, the benchmark uses that image
+//! When `WAYBILL_PERF_IMAGE` is set, the benchmark uses that image
 //! instead of the synthetic fixture — useful for reviewers who
 //! want to verify against a full `debian:12-slim.tar` or similar.
 
@@ -85,7 +85,7 @@ pub(crate) fn build_synthetic_image(files: &[ImageFile]) -> (tempfile::TempDir, 
         }
         layer_tar.finish().expect("layer finish");
     }
-    let manifest = r#"[{"Config":"config.json","RepoTags":["mikebom-perf:latest"],"Layers":["layer0/layer.tar"]}]"#;
+    let manifest = r#"[{"Config":"config.json","RepoTags":["waybill-perf:latest"],"Layers":["layer0/layer.tar"]}]"#;
     let tar_path = dir.path().join("image.tar");
     let file = std::fs::File::create(&tar_path).expect("create image.tar");
     {
@@ -114,7 +114,7 @@ pub(crate) fn build_synthetic_image(files: &[ImageFile]) -> (tempfile::TempDir, 
 /// comfortable margin.
 ///
 /// SC-009's ≥ 30 % reduction only holds when per-scan wall-clock
-/// is big enough that the fixed overhead per `mikebom` invocation
+/// is big enough that the fixed overhead per `waybill` invocation
 /// (CLI init + docker-tarball extract + enrichment no-op) is a
 /// small fraction of the total. On a 100 ms-scale per-scan
 /// timing, ~50 ms of that is fixed overhead — leaving only ~50 ms
@@ -184,7 +184,7 @@ pub(crate) fn build_benchmark_fixture() -> (tempfile::TempDir, PathBuf) {
     build_synthetic_image(&files)
 }
 
-/// One wall-clock measurement of a single `mikebom sbom scan`
+/// One wall-clock measurement of a single `waybill sbom scan`
 /// invocation. Uses `--image` (not `--path`) to exercise the full
 /// docker-extract + deep-hash + scan pipeline — the work
 /// dual-format emission amortizes.
@@ -213,7 +213,7 @@ fn time_scan(image: &std::path::Path, formats: &str) -> Duration {
         ));
     }
     let start = Instant::now();
-    let out = cmd.output().expect("mikebom runs");
+    let out = cmd.output().expect("waybill runs");
     let elapsed = start.elapsed();
     assert!(
         out.status.success(),
@@ -251,15 +251,15 @@ fn median_of_5(image: &std::path::Path, formats: &str) -> Duration {
 fn dual_format_is_at_least_30_percent_faster_than_two_sequential_scans() {
     // Allow reviewers to point the benchmark at a real image
     // (`debian:12-slim.tar` is the spec's named fixture) by setting
-    // `MIKEBOM_PERF_IMAGE=<abs-path>`. Absent that, build a
+    // `WAYBILL_PERF_IMAGE=<abs-path>`. Absent that, build a
     // synthetic fixture heavy enough to make each scan take
     // > ~1 second so wall-clock noise on shared CI runners stays
     // small relative to the signal.
-    let (_fixture_guard, image) = if let Ok(p) = std::env::var("MIKEBOM_PERF_IMAGE") {
+    let (_fixture_guard, image) = if let Ok(p) = std::env::var("WAYBILL_PERF_IMAGE") {
         let p = PathBuf::from(p);
         assert!(
             p.exists(),
-            "MIKEBOM_PERF_IMAGE set but {} does not exist",
+            "WAYBILL_PERF_IMAGE set but {} does not exist",
             p.display()
         );
         (tempfile::tempdir().expect("unused guard"), p)
@@ -378,7 +378,7 @@ fn go_resolver_no_catastrophic_regression() {
     use std::time::{Duration, Instant};
 
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
-    let fixture_root: PathBuf = PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("go");
+    let fixture_root: PathBuf = PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("go");
 
     let cases = [
         ("simple-module", Duration::from_secs(30)),
@@ -409,7 +409,7 @@ fn go_resolver_no_catastrophic_regression() {
             .arg(format!("cyclonedx-json={}", out_path.display()))
             .arg("--no-deep-hash");
         let start = Instant::now();
-        let out = cmd.output().expect("mikebom runs");
+        let out = cmd.output().expect("waybill runs");
         let elapsed = start.elapsed();
         assert!(
             out.status.success(),

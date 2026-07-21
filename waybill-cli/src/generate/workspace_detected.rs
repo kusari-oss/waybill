@@ -1,6 +1,6 @@
 //! Milestone 176 (US3 / FR-003): compute the document-scope
-//! `mikebom:workspaces-detected` annotation value from the per-
-//! component `mikebom:workspace-member` values populated in
+//! `waybill:workspaces-detected` annotation value from the per-
+//! component `waybill:workspace-member` values populated in
 //! `scan_fs::tag_components_with_workspace_member`.
 //!
 //! Shared across all three format emitters (CDX 1.6, SPDX 2.3, SPDX
@@ -16,10 +16,10 @@
 use waybill_common::resolution::ResolvedComponent;
 use std::collections::BTreeSet;
 
-/// Union every component's `mikebom:workspace-member` annotation
+/// Union every component's `waybill:workspace-member` annotation
 /// values into a single sorted-deduplicated `Vec<String>`.
 ///
-/// Reads `c.extra_annotations["mikebom:workspace-member"]` — a
+/// Reads `c.extra_annotations["waybill:workspace-member"]` — a
 /// `Value::String` carrying a JSON-encoded array (per the m134 /
 /// m147 / m173 wire convention). Silently skips components whose
 /// entry is absent, non-string, or contains malformed JSON — the
@@ -28,7 +28,7 @@ use std::collections::BTreeSet;
 pub fn compute(components: &[ResolvedComponent]) -> Vec<String> {
     let mut out: BTreeSet<String> = BTreeSet::new();
     for c in components {
-        let Some(v) = c.extra_annotations.get("mikebom:workspace-member") else {
+        let Some(v) = c.extra_annotations.get("waybill:workspace-member") else {
             continue;
         };
         let Some(s) = v.as_str() else {
@@ -95,7 +95,7 @@ mod tests {
         };
         if let Some(v) = workspace_member {
             c.extra_annotations
-                .insert("mikebom:workspace-member".to_string(), v);
+                .insert("waybill:workspace-member".to_string(), v);
         }
         c
     }

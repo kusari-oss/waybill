@@ -7,10 +7,10 @@
 //! that causes the scan pipeline to run N times instead of 1) using a
 //! deterministic side-channel signal instead of wall-clock timing:
 //!
-//!   - The production code at `mikebom-cli/src/cli/scan_cmd.rs:1413`
+//!   - The production code at `waybill-cli/src/cli/scan_cmd.rs:1413`
 //!     emits `tracing::info!(..., "scan starting")` exactly once per
 //!     scan-pipeline invocation.
-//!   - We capture stderr from `mikebom sbom scan` and count "scan
+//!   - We capture stderr from `waybill sbom scan` and count "scan
 //!     starting" occurrences. A correct triple-format invocation
 //!     produces count == 1; a broken-single-pass implementation would
 //!     produce count == 3.
@@ -77,7 +77,7 @@ fn build_synthetic_image(files: &[ImageFile]) -> (tempfile::TempDir, PathBuf) {
         }
         layer_tar.finish().expect("layer finish");
     }
-    let manifest = r#"[{"Config":"config.json","RepoTags":["mikebom-perf-triple-structural:latest"],"Layers":["layer0/layer.tar"]}]"#;
+    let manifest = r#"[{"Config":"config.json","RepoTags":["waybill-perf-triple-structural:latest"],"Layers":["layer0/layer.tar"]}]"#;
     let tar_path = dir.path().join("image.tar");
     let file = std::fs::File::create(&tar_path).expect("create image.tar");
     {
@@ -139,7 +139,7 @@ fn build_structural_fixture() -> (tempfile::TempDir, PathBuf) {
 // Tests
 // ---------------------------------------------------------------------
 
-/// FR-005 / SC-003: a single `mikebom sbom scan --format A,B,C`
+/// FR-005 / SC-003: a single `waybill sbom scan --format A,B,C`
 /// invocation runs the scan pipeline exactly once. The structural
 /// signal is the `"scan starting"` log line emitted at
 /// `scan_cmd.rs:1413`; we count its occurrences in captured stderr.
@@ -174,7 +174,7 @@ fn triple_format_invokes_scan_pipeline_exactly_once() {
             tmp.path().join("out.spdx3.json").display()
         ))
         .arg("--no-deep-hash");
-    let out = cmd.output().expect("mikebom runs");
+    let out = cmd.output().expect("waybill runs");
     assert!(
         out.status.success(),
         "triple-format scan failed: stderr={}",
@@ -218,7 +218,7 @@ fn three_sequential_invocations_emit_three_pipeline_starts() {
                 tmp.path().join("out").display()
             ))
             .arg("--no-deep-hash");
-        let out = cmd.output().expect("mikebom runs");
+        let out = cmd.output().expect("waybill runs");
         assert!(
             out.status.success(),
             "{fmt} scan failed: stderr={}",
@@ -273,7 +273,7 @@ fn triple_format_outputs_byte_match_three_sequential() {
             triple_tmp.path().join("out.spdx3.json").display()
         ))
         .arg("--no-deep-hash");
-    let triple_out = triple_cmd.output().expect("mikebom runs");
+    let triple_out = triple_cmd.output().expect("waybill runs");
     assert!(
         triple_out.status.success(),
         "triple-format scan failed: stderr={}",
@@ -307,7 +307,7 @@ fn triple_format_outputs_byte_match_three_sequential() {
                 single_tmp.path().join(fname).display()
             ))
             .arg("--no-deep-hash");
-        let single_out = single_cmd.output().expect("mikebom runs");
+        let single_out = single_cmd.output().expect("waybill runs");
         assert!(
             single_out.status.success(),
             "single-format {fmt} scan failed: stderr={}",
@@ -333,28 +333,28 @@ fn triple_format_outputs_byte_match_three_sequential() {
     }
 }
 
-/// Strip the dynamic image-extraction temp-dir suffix from `mikebom:source-files`
-/// property values. Each `mikebom sbom scan --image <tar>` invocation extracts the
-/// image to a fresh `tempfile::tempdir()` named `mikebom-image-<random>`, so two
+/// Strip the dynamic image-extraction temp-dir suffix from `waybill:source-files`
+/// property values. Each `waybill sbom scan --image <tar>` invocation extracts the
+/// image to a fresh `tempfile::tempdir()` named `waybill-image-<random>`, so two
 /// independent subprocess invocations against the same image produce SBOMs whose
-/// `mikebom:source-files` properties differ only in that random segment. The
+/// `waybill:source-files` properties differ only in that random segment. The
 /// per-format `normalize_*_for_golden` helpers don't mask this (they mask only
-/// `MIKEBOM_FIXTURES_DIR` and the workspace root) — so this helper does a
-/// pre-pass regex-replace to collapse `mikebom-image-<random>` to a stable
+/// `WAYBILL_FIXTURES_DIR` and the workspace root) — so this helper does a
+/// pre-pass regex-replace to collapse `waybill-image-<random>` to a stable
 /// placeholder before normalization. Preserves dispatch-correctness signal:
 /// component lists, dep edges, PURL bodies, and hashes still compared
 /// byte-for-byte; only the per-invocation extraction-path randomness is masked.
 fn strip_image_temp_dir(body: &str) -> String {
-    // Pattern: `mikebom-image-` followed by tempfile's random suffix
+    // Pattern: `waybill-image-` followed by tempfile's random suffix
     // (typically alphanumeric, up to ~30 chars on Unix). Greedy-match
     // up to the next `/` since the rootfs subpath always follows.
     let mut out = String::with_capacity(body.len());
     let mut rest = body;
-    while let Some(idx) = rest.find("mikebom-image-") {
+    while let Some(idx) = rest.find("waybill-image-") {
         out.push_str(&rest[..idx]);
-        out.push_str("mikebom-image-PLACEHOLDER");
+        out.push_str("waybill-image-PLACEHOLDER");
         // Advance past the random suffix (everything up to the next `/`).
-        let after_prefix = &rest[idx + "mikebom-image-".len()..];
+        let after_prefix = &rest[idx + "waybill-image-".len()..];
         if let Some(slash_idx) = after_prefix.find('/') {
             rest = &after_prefix[slash_idx..];
         } else {

@@ -2,13 +2,13 @@
 //! BOM subject, DEPENDS edges, CPE-name normalization.
 //!
 //! Verifies:
-//! - Every recipe carries `mikebom:yocto-layer` annotation pointing
+//! - Every recipe carries `waybill:yocto-layer` annotation pointing
 //!   at its nearest-ancestor `conf/layer.conf`'s `BBFILE_COLLECTIONS`.
 //! - The BOM subject identifies a layer-collection name via the
 //!   milestone-127 root-selector ladder.
 //! - `DEPENDS_ON` relationship edges connect recipes within the scan.
-//! - Unresolved DEPENDS entries surface in `mikebom:depends-unresolved`.
-//! - `mikebom:cpe-candidates` array includes the openembedded-core
+//! - Unresolved DEPENDS entries surface in `waybill:depends-unresolved`.
+//! - `waybill:cpe-candidates` array includes the openembedded-core
 //!   normalized CPE product name (e.g., `linux_kernel`) when
 //!   FR-017's table fires.
 
@@ -116,9 +116,9 @@ fn us3_each_recipe_attributed_to_nearest_ancestor_layer() {
     let foo = cdx_component(&cdx, "foo");
     let bar = cdx_component(&cdx, "bar");
     let baz = cdx_component(&cdx, "baz");
-    assert_eq!(cdx_property(foo, "mikebom:yocto-layer"), Some("layer-a"));
-    assert_eq!(cdx_property(bar, "mikebom:yocto-layer"), Some("layer-a"));
-    assert_eq!(cdx_property(baz, "mikebom:yocto-layer"), Some("layer-b"));
+    assert_eq!(cdx_property(foo, "waybill:yocto-layer"), Some("layer-a"));
+    assert_eq!(cdx_property(bar, "waybill:yocto-layer"), Some("layer-a"));
+    assert_eq!(cdx_property(baz, "waybill:yocto-layer"), Some("layer-b"));
 }
 
 #[test]
@@ -165,12 +165,12 @@ fn us5_depends_resolves_to_relationships_for_in_scope_recipes() {
     // foo depends on bar (resolvable in scope) AND openssl-dev (unresolvable).
     let foo = cdx_component(&cdx, "foo");
 
-    // FR-009: unresolved entry appears under mikebom:depends-unresolved.
-    let unresolved = cdx_property_array(foo, "mikebom:depends-unresolved")
-        .expect("mikebom:depends-unresolved property present");
+    // FR-009: unresolved entry appears under waybill:depends-unresolved.
+    let unresolved = cdx_property_array(foo, "waybill:depends-unresolved")
+        .expect("waybill:depends-unresolved property present");
     assert!(
         unresolved.iter().any(|s| s == "openssl-dev"),
-        "openssl-dev MUST appear in mikebom:depends-unresolved (no openssl-dev recipe in scan), got: {unresolved:?}"
+        "openssl-dev MUST appear in waybill:depends-unresolved (no openssl-dev recipe in scan), got: {unresolved:?}"
     );
 
     // foo → bar DEPENDS_ON edge MUST exist in CDX dependencies[].
@@ -230,8 +230,8 @@ SUMMARY = "Linux kernel recipe"
     .unwrap();
     let cdx = run_scan(fake_home.path(), root, "cyclonedx-json", "out.cdx.json");
     let kernel = cdx_component(&cdx, "linux-kernel");
-    let candidates = cdx_property_array(kernel, "mikebom:cpe-candidates")
-        .expect("mikebom:cpe-candidates present");
+    let candidates = cdx_property_array(kernel, "waybill:cpe-candidates")
+        .expect("waybill:cpe-candidates present");
     assert!(
         candidates.iter().any(|s| s == "linux-kernel"),
         "raw recipe name MUST be in cpe-candidates, got: {candidates:?}"

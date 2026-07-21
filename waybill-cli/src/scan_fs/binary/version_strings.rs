@@ -33,8 +33,8 @@
 
 /// One match from the curated scanner. Converted to a
 /// `PackageDbEntry` with `pkg:generic/<library>@<version>` and
-/// `mikebom:evidence-kind = "embedded-version-string"` +
-/// `mikebom:confidence = "heuristic"`.
+/// `waybill:evidence-kind = "embedded-version-string"` +
+/// `waybill:confidence = "heuristic"`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct EmbeddedVersionMatch {
     pub library: CuratedLibrary,

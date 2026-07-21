@@ -6,7 +6,7 @@
 //!
 //! Per FR-007 + research §1: pinned tool versions are trivy 0.69.3 +
 //! syft 1.27.0. Per research §5: graceful-skip when external tools
-//! are missing unless `MIKEBOM_REQUIRE_TRANSITIVE_PARITY=1` is set.
+//! are missing unless `WAYBILL_REQUIRE_TRANSITIVE_PARITY=1` is set.
 
 mod transitive_parity_common;
 
@@ -30,7 +30,7 @@ const FIXTURE_SUBPATH: &str = "cargo";
 /// counts only generic `DEPENDS_ON` / `DEPENDENCY_OF` verbs (the
 /// cross-tool lingua franca — trivy/syft don't emit typed dep-scope
 /// verbs at all), so the m179 downgrade drops this edge from
-/// mikebom's audited edge set. The clap_derive component itself
+/// waybill's audited edge set. The clap_derive component itself
 /// remains present in the SBOM; its outgoing edges (to heck,
 /// proc-macro2, quote, syn per m088 pin) also remain since they're
 /// declared with regular runtime scope. This is the pico filter-
@@ -53,31 +53,31 @@ const FIXTURE_SUBPATH: &str = "cargo";
 // scenario. Real clap workspaces with source trees would activate the
 // feature-resolved path and MAY show +1 edge for one feature-activated
 // optional dep; the audit fixture doesn't exercise that.
-const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 321;
+const EXPECTED_WAYBILL_EDGE_COUNT: usize = 321;
 
-/// Representative edges that mikebom **actually emits** today — pinning
+/// Representative edges that waybill **actually emits** today — pinning
 /// current behavior so future milestones can't silently regress.
 /// Per FR-010 the audit is observation-only: spot-check edges reflect
-/// what mikebom does, not what it should ideally do. The audit's
+/// what waybill does, not what it should ideally do. The audit's
 /// `cross_tool_parity_check` test surfaces divergences from trivy /
-/// syft for follow-up triage; this baseline test catches mikebom
+/// syft for follow-up triage; this baseline test catches waybill
 /// regressing AGAINST ITSELF.
 ///
 /// Closed by milestone 087:
 /// - The `clap@4.5.21 → clap_builder@4.5.9` wrong-version edge is
-///   gone. mikebom now correctly emits `→ clap_builder@4.5.21`,
+///   gone. waybill now correctly emits `→ clap_builder@4.5.21`,
 ///   pinned below as the post-087 invariant.
 ///
 /// Closed by milestone 088 (locked-down by milestone 087's fix):
 /// - `clap_derive@4.5.18` (a workspace-member proc-macro crate) emits
 ///   its 4 declared outgoing edges (heck, proc-macro2, quote, syn) per
-///   `Cargo.lock`. Pre-087 mikebom emitted ZERO outgoing edges from
+///   `Cargo.lock`. Pre-087 waybill emitted ZERO outgoing edges from
 ///   `clap_derive` because the workspace-member skip dropped the
 ///   source crate from the component set. Pinned below as the
 ///   post-088 invariant; future cargo-reader changes that drop
 ///   proc-macro outgoing edges fail this test.
 const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
-    // Confirmed in mikebom output — clap workspace root depends on automod.
+    // Confirmed in waybill output — clap workspace root depends on automod.
     ("pkg:cargo/clap", "pkg:cargo/automod"),
     // Confirmed — anstream emits style-stripper deps.
     ("pkg:cargo/anstream", "pkg:cargo/anstyle"),
@@ -91,7 +91,7 @@ const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
     // Milestone 088 invariant — proc-macro outgoing-edge pin (closes
     // #173): clap_derive@4.5.18 is a workspace-member proc-macro crate;
     // its 4 declared deps in Cargo.lock MUST emit as outgoing
-    // DEPENDS_ON edges. Pre-087 mikebom emitted zero edges from
+    // DEPENDS_ON edges. Pre-087 waybill emitted zero edges from
     // clap_derive because the workspace-member skip removed the
     // source crate from the component set.
     ("pkg:cargo/clap_derive", "pkg:cargo/heck"),
@@ -113,13 +113,13 @@ fn fixture_present() {
 
 #[test]
 fn transitive_edges_match_baseline() {
-    // mikebom is always available (it's the test binary itself).
+    // waybill is always available (it's the test binary itself).
     let mikebom_edges = run_mikebom(&fixture());
     assert_eq!(
         mikebom_edges.len(),
-        EXPECTED_MIKEBOM_EDGE_COUNT,
-        "mikebom edge count drifted from the alpha.24 baseline. \
-         Investigate per quickstart.md Recipe 3 + bump EXPECTED_MIKEBOM_EDGE_COUNT \
+        EXPECTED_WAYBILL_EDGE_COUNT,
+        "waybill edge count drifted from the alpha.24 baseline. \
+         Investigate per quickstart.md Recipe 3 + bump EXPECTED_WAYBILL_EDGE_COUNT \
          only after confirming the change is intended."
     );
 
@@ -150,15 +150,15 @@ fn cross_tool_parity_check() {
         eprintln!("transitive_parity_cargo::cross_tool_parity_check skipped: {reason}");
         return;
     }
-    let mikebom = run_mikebom(&fixture());
+    let waybill = run_mikebom(&fixture());
     let trivy = run_trivy(&fixture());
     let syft = run_syft(&fixture());
-    let diff = compute_edge_diff(&mikebom, &trivy, &syft);
+    let diff = compute_edge_diff(&waybill, &trivy, &syft);
 
     eprintln!("\n=== cargo audit (clap-rs/clap @ v4.5.21) ===");
     eprintln!(
-        "edge counts: mikebom={} trivy={} syft={}",
-        mikebom.len(),
+        "edge counts: waybill={} trivy={} syft={}",
+        waybill.len(),
         trivy.len(),
         syft.len()
     );
@@ -179,7 +179,7 @@ fn graceful_skip_when_tools_absent() {
     // returns Some(reason) when strict mode is off. Already covered
     // by transitive_parity_common_sanity but repeated here for
     // per-ecosystem documentation.
-    std::env::remove_var("MIKEBOM_REQUIRE_TRANSITIVE_PARITY");
+    std::env::remove_var("WAYBILL_REQUIRE_TRANSITIVE_PARITY");
     assert!(maybe_skip(&["this-tool-definitely-does-not-exist"]).is_some());
 }
 

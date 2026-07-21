@@ -3,7 +3,7 @@
 //!
 //! **SC-004** — pre-m182 invocations (no m182 flags set) must produce
 //! byte-identical SBOM output. Verified via the existing golden-
-//! regression suite (`MIKEBOM_UPDATE_CDX_GOLDENS=1` + `_SPDX_` + `_SPDX3_`
+//! regression suite (`WAYBILL_UPDATE_CDX_GOLDENS=1` + `_SPDX_` + `_SPDX3_`
 //! regens); this file adds a direct sanity check that flag-absence
 //! preserves the pre-m182 CDX shape.
 //!
@@ -38,7 +38,7 @@ fn backward_compat_no_m182_flags_no_new_warn_logs() {
         ])
         .env("RUST_LOG", "warn")
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         out.status.success(),
@@ -81,7 +81,7 @@ fn backward_compat_registry_credentials_dir_coexists_with_m182_flags() {
             "--insecure-tls-skip-verify",
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     // Fails at network-time (unreachable host), NOT at parse-time.
     assert!(
@@ -93,7 +93,7 @@ fn backward_compat_registry_credentials_dir_coexists_with_m182_flags() {
         !stderr.contains("cannot be used with"),
         "unexpected clap conflict message. stderr:\n{stderr}",
     );
-    // WARN log fires (skip-verify set), proving mikebom reached the
+    // WARN log fires (skip-verify set), proving waybill reached the
     // registry-client construction stage after credential resolution.
     assert!(
         stderr.contains("TLS verification DISABLED"),

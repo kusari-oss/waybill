@@ -1,7 +1,7 @@
-//! Shared test helpers for mikebom-cli integration tests.
+//! Shared test helpers for waybill-cli integration tests.
 //!
 //! Rust integration tests under `tests/*.rs` are each their own
-//! crate, so they can't import private items from `mikebom-cli/src/`
+//! crate, so they can't import private items from `waybill-cli/src/`
 //! and they can't directly share code with each other. The standard
 //! pattern is to put shared definitions in `tests/common/mod.rs` and
 //! pull them into each test file via `mod common;`. The `mod.rs`
@@ -20,12 +20,12 @@
 //!   (or changing a fixture path) used to require touching 14
 //!   files; now it's one place.
 //!
-//! * [`bin`] — the path to the `mikebom` binary built by cargo's
+//! * [`bin`] — the path to the `waybill` binary built by cargo's
 //!   integration-test machinery. Before this module, ~10 files
 //!   had a private `fn bin() -> &'static str { env!("CARGO_BIN_EXE_mikebom") }`.
 //!
 //! * [`workspace_root`] — the absolute path to the workspace root
-//!   (the parent of `mikebom-cli/`). Used by tests that need to
+//!   (the parent of `waybill-cli/`). Used by tests that need to
 //!   locate `tests/fixtures/` from the workspace root rather than
 //!   from the test crate's own `CARGO_MANIFEST_DIR`. Before this
 //!   module, 21 files carried byte-identical copies.
@@ -84,7 +84,7 @@ pub const CASES: &[EcosystemCase] = &[
     EcosystemCase { label: "cmake",  fixture_subpath: "cmake",                 deb_codename: None },
 ];
 
-/// Path to the `mikebom` binary built by cargo's integration-test
+/// Path to the `waybill` binary built by cargo's integration-test
 /// machinery. Tests use this to spawn the CLI as a subprocess —
 /// `Command::new(common::bin())`.
 pub fn bin() -> &'static str {
@@ -92,11 +92,11 @@ pub fn bin() -> &'static str {
 }
 
 /// Absolute path to the workspace root — the parent of
-/// `mikebom-cli/`, where `tests/fixtures/` lives. Tests that need to
+/// `waybill-cli/`, where `tests/fixtures/` lives. Tests that need to
 /// locate fixtures, goldens, or sibling crates start here.
 ///
 /// `CARGO_MANIFEST_DIR` for an integration test resolves to the
-/// containing crate's manifest dir (`mikebom-cli/`); the workspace
+/// containing crate's manifest dir (`waybill-cli/`); the workspace
 /// root is one level up. The `.parent()` lookup is infallible for any
 /// crate that lives in a workspace; tests panicking here would mean a
 /// truly broken cargo invocation.
@@ -116,28 +116,28 @@ pub fn workspace_root() -> PathBuf {
 // maven-multi-module-reactor / npm-scoped-package / npm-workspace /
 // pip-pyproject-pep621 / pip-pyproject-poetry-only) live in the
 // separate `mikebom-test-fixtures` repo, fetched by `build.rs` into
-// `~/.cache/mikebom/fixtures/<sha>/`. The `MIKEBOM_FIXTURES_DIR`
+// `~/.cache/waybill/fixtures/<sha>/`. The `WAYBILL_FIXTURES_DIR`
 // compile-time env var (set by build.rs via cargo:rustc-env) holds
 // the absolute path.
 //
 // The stay-set fixtures (apk/synthetic, deb/synthetic, rpm/*,
 // binaries/*, bdb-rpmdb, gem-source-project, polyglot-rpm-binary,
 // polyglot-five, reference/, sample-attestation.json, go/binaries/)
-// live in mikebom main repo at `tests/fixtures/<subpath>`. They have
+// live in waybill main repo at `tests/fixtures/<subpath>`. They have
 // no source-language manifests and don't trigger SBOM scanners.
 //
 // See specs/090-split-test-fixtures-repo/contracts/fixture-path-helper.md.
 
 /// Path to a moved fixture relative to the cloned `mikebom-test-fixtures`
-/// repo root. Resolves against `MIKEBOM_FIXTURES_DIR` (set by build.rs).
+/// repo root. Resolves against `WAYBILL_FIXTURES_DIR` (set by build.rs).
 ///
 /// Use this for: every manifest-bearing fixture per
 /// `specs/090-split-test-fixtures-repo/research.md` §4 move-set.
 pub fn fixture_path(rel: &str) -> PathBuf {
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join(rel)
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join(rel)
 }
 
-/// Path to a stay-set fixture relative to mikebom main repo's
+/// Path to a stay-set fixture relative to waybill main repo's
 /// `tests/fixtures/` directory. Resolves against `workspace_root()`.
 ///
 /// As of the post-103 migration the stay-set is narrow:
@@ -156,7 +156,7 @@ pub fn local_fixture_path(rel: &str) -> PathBuf {
 /// sibling `mikebom-test-fixtures` repo and resolves via
 /// `fixture_path`. Earlier history had apk/deb/rpm at workspace-root
 /// `tests/fixtures/` (milestone-090 stay-set) and bazel/cmake at
-/// crate-local `mikebom-cli/tests/fixtures/` (milestone-103
+/// crate-local `waybill-cli/tests/fixtures/` (milestone-103
 /// quick-implementation); both have been migrated out to keep the
 /// main repo free of synthetic OS-image rpmdb data and full
 /// build-manifest test projects.

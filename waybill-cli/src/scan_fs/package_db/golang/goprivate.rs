@@ -35,7 +35,7 @@ use reqwest::Url;
 #[derive(thiserror::Error, Debug)]
 pub enum ProxyParseError {
     // `reqwest::Url::parse` returns `url::ParseError`, but the `url`
-    // crate isn't a direct dep of mikebom-cli. We stringify the error
+    // crate isn't a direct dep of waybill-cli. We stringify the error
     // message at the parse site instead of carrying the typed source.
     #[error("invalid proxy URL `{url}`: {detail}")]
     InvalidUrl { url: String, detail: String },

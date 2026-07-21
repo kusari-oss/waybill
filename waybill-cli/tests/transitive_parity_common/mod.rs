@@ -1,14 +1,14 @@
 //! Transitive-parity audit harness — milestone 083 (issue #111).
 //!
 //! Shared infrastructure for the per-ecosystem `transitive_parity_*`
-//! regression tests. Runs 3 SBOM tools (mikebom + trivy + syft) plus
+//! regression tests. Runs 3 SBOM tools (waybill + trivy + syft) plus
 //! a source-format direct-read tiebreaker against a vendored fixture,
 //! computes a set-theoretic edge diff, and emits an `AuditRow` so the
 //! per-ecosystem test files stay thin.
 //!
 //! Per spec/083 FR-006: pinned tool versions are trivy 0.69.3 + syft
 //! 1.27.0. Per research §5: the harness gracefully skips when an
-//! external tool isn't on PATH, unless `MIKEBOM_REQUIRE_TRANSITIVE_PARITY=1`
+//! external tool isn't on PATH, unless `WAYBILL_REQUIRE_TRANSITIVE_PARITY=1`
 //! is set (CI's strict mode mirroring milestone-078's pattern).
 //!
 //! Cross-tool comparison uses SPDX 2.3 as the lingua franca: all
@@ -112,10 +112,10 @@ pub struct TransitiveParityFixture {
 // ============================================================
 
 /// Returns Some(reason) when the test should skip; None to proceed.
-/// Strict-mode (`MIKEBOM_REQUIRE_TRANSITIVE_PARITY=1`) flips skip to
+/// Strict-mode (`WAYBILL_REQUIRE_TRANSITIVE_PARITY=1`) flips skip to
 /// hard fail by panicking with the same reason string.
 pub fn maybe_skip(required_tools: &[&str]) -> Option<String> {
-    let strict = std::env::var("MIKEBOM_REQUIRE_TRANSITIVE_PARITY")
+    let strict = std::env::var("WAYBILL_REQUIRE_TRANSITIVE_PARITY")
         .ok()
         .as_deref()
         == Some("1");
@@ -128,7 +128,7 @@ pub fn maybe_skip(required_tools: &[&str]) -> Option<String> {
         return None;
     }
     let reason = format!(
-        "missing required tools: {} (set MIKEBOM_REQUIRE_TRANSITIVE_PARITY=1 to make this fail instead of skip)",
+        "missing required tools: {} (set WAYBILL_REQUIRE_TRANSITIVE_PARITY=1 to make this fail instead of skip)",
         missing.join(", ")
     );
     if strict {
@@ -138,7 +138,7 @@ pub fn maybe_skip(required_tools: &[&str]) -> Option<String> {
 }
 
 /// Shell-out detection so we don't need the `which` crate as a
-/// new dev-dep — `command -v` works on every POSIX shell mikebom
+/// new dev-dep — `command -v` works on every POSIX shell waybill
 /// CI hits (Linux + macOS).
 fn is_on_path(tool: &str) -> bool {
     Command::new("sh")
@@ -166,13 +166,13 @@ pub fn skip_on_macos_for_os_package(ecosystem: &str) -> Option<String> {
 // Per-tool invocations
 // ============================================================
 
-/// Run mikebom against a fixture and return the dep edges as `Edge`
+/// Run waybill against a fixture and return the dep edges as `Edge`
 /// tuples. Uses SPDX 2.3 emission as the lingua franca with the
 /// other two tools.
 pub fn run_mikebom(fixture_path: &Path) -> Vec<Edge> {
     let bin = env!("CARGO_BIN_EXE_mikebom");
     let tmp = tempfile::tempdir().expect("tempdir");
-    let out = tmp.path().join("mikebom.spdx.json");
+    let out = tmp.path().join("waybill.spdx.json");
     let fake_home = tempfile::tempdir().expect("fake-home");
     let mut cmd = Command::new(bin);
     apply_fake_home_env(&mut cmd, fake_home.path());
@@ -186,16 +186,16 @@ pub fn run_mikebom(fixture_path: &Path) -> Vec<Edge> {
         .arg("--output")
         .arg(&out)
         .arg("--no-deep-hash");
-    let output = cmd.output().expect("mikebom invokes");
+    let output = cmd.output().expect("waybill invokes");
     assert!(
         output.status.success(),
-        "mikebom failed for {}: {}",
+        "waybill failed for {}: {}",
         fixture_path.display(),
         String::from_utf8_lossy(&output.stderr)
     );
-    let bytes = std::fs::read(&out).expect("read mikebom output");
+    let bytes = std::fs::read(&out).expect("read waybill output");
     let doc: serde_json::Value =
-        serde_json::from_slice(&bytes).expect("parse mikebom SPDX 2.3");
+        serde_json::from_slice(&bytes).expect("parse waybill SPDX 2.3");
     extract_edges_spdx_2_3(&doc)
 }
 
@@ -294,7 +294,7 @@ pub fn extract_edges_spdx_2_3(doc: &serde_json::Value) -> Vec<Edge> {
             // SPDX 2.3 §11.1 has both DEPENDS_ON (forward) and
             // DEPENDENCY_OF (reverse) relationship types. Different
             // SBOM tools choose different representations for the
-            // same logical edge: trivy + mikebom emit DEPENDS_ON,
+            // same logical edge: trivy + waybill emit DEPENDS_ON,
             // syft emits DEPENDENCY_OF. The audit normalizes both
             // to a forward-direction `Edge` so cross-tool
             // comparison sees the same set.
@@ -351,11 +351,11 @@ pub fn normalize_purl(purl: &str) -> String {
 // ============================================================
 
 pub fn compute_edge_diff(
-    mikebom: &[Edge],
+    waybill: &[Edge],
     trivy: &[Edge],
     syft: &[Edge],
 ) -> EdgeDiff {
-    let m: HashSet<Edge> = mikebom.iter().cloned().collect();
+    let m: HashSet<Edge> = waybill.iter().cloned().collect();
     let t: HashSet<Edge> = trivy.iter().cloned().collect();
     let s: HashSet<Edge> = syft.iter().cloned().collect();
 
@@ -439,12 +439,12 @@ pub fn format_edge_diff(diff: &EdgeDiff) -> String {
     }
     let mut out = String::new();
     out.push_str(&sample(&diff.agreement, "agreement (all 3 tools)"));
-    out.push_str(&sample(&diff.mikebom_only, "mikebom-only"));
+    out.push_str(&sample(&diff.mikebom_only, "waybill-only"));
     out.push_str(&sample(&diff.trivy_only, "trivy-only"));
     out.push_str(&sample(&diff.syft_only, "syft-only"));
-    out.push_str(&sample(&diff.mikebom_trivy, "mikebom+trivy (not syft)"));
-    out.push_str(&sample(&diff.mikebom_syft, "mikebom+syft (not trivy)"));
-    out.push_str(&sample(&diff.trivy_syft, "trivy+syft (not mikebom)"));
+    out.push_str(&sample(&diff.mikebom_trivy, "waybill+trivy (not syft)"));
+    out.push_str(&sample(&diff.mikebom_syft, "waybill+syft (not trivy)"));
+    out.push_str(&sample(&diff.trivy_syft, "trivy+syft (not waybill)"));
     out
 }
 
@@ -479,14 +479,14 @@ pub fn workspace_root() -> PathBuf {
 pub fn fixture_path(eco_subpath: &str) -> PathBuf {
     // Milestone 090: transitive_parity fixtures moved to the
     // `mikebom-test-fixtures` repo. Resolve via build.rs's
-    // MIKEBOM_FIXTURES_DIR rather than against workspace_root.
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR"))
+    // WAYBILL_FIXTURES_DIR rather than against workspace_root.
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR"))
         .join("transitive_parity")
         .join(eco_subpath)
 }
 
 // (sanity tests for this module live in
-// `mikebom-cli/tests/transitive_parity_common_sanity.rs` — required
+// `waybill-cli/tests/transitive_parity_common_sanity.rs` — required
 // by cargo's integration-test sharing pattern, where this `mod.rs`
 // is included via `mod transitive_parity_common;` from each
 // per-ecosystem regression test.)

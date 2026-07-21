@@ -63,7 +63,7 @@ fn mapping_doc_path() -> PathBuf {
     if let Some(code) = case.deb_codename {
         cmd.arg("--deb-codename").arg(code);
     }
-    let out = cmd.output().expect("mikebom runs");
+    let out = cmd.output().expect("waybill runs");
     assert!(
         out.status.success(),
         "scan failed for {}: stderr={}",
@@ -148,7 +148,7 @@ fn emitted_cdx_names(doc: &serde_json::Value) -> BTreeSet<String> {
 /// scaffolding) or are CycloneDX-internal mechanism keys
 /// (`bom-ref` cross-references, `type` taxonomy enum, `lifecycles`
 /// metadata). The forward check skips them — the test is about
-/// catching *unexpected new mikebom emitter shapes*, not format-
+/// catching *unexpected new waybill emitter shapes*, not format-
 /// spec scaffolding that's owned by the CycloneDX schema.
 fn is_envelope_or_format_scaffolding(name: &str) -> bool {
     matches!(
@@ -189,11 +189,11 @@ fn forward_every_emitted_property_has_a_catalog_row() {
             if catalog_names.contains(&name) {
                 continue;
             }
-            // C23 is written as `mikebom:trace-integrity-*` in
+            // C23 is written as `waybill:trace-integrity-*` in
             // the catalog (one row covers all four trace-integrity
             // sub-keys per the row's narrative); the helper
-            // returns the prefix `mikebom:trace-integrity-`. The
-            // emitted form is `mikebom:trace-integrity-events-
+            // returns the prefix `waybill:trace-integrity-`. The
+            // emitted form is `waybill:trace-integrity-events-
             // dropped`, etc. Honor the prefix expansion.
             let any_prefix_match = catalog_names
                 .iter()
@@ -244,17 +244,17 @@ fn reverse_every_universal_parity_row_has_at_least_one_emitted_value() {
         if row.section == 'H' {
             continue;
         }
-        // `mikebom:*` annotation rows are conditionally emitted
+        // `waybill:*` annotation rows are conditionally emitted
         // (only when the underlying signal is present — e.g.,
         // dev-dependency requires a dev edge in the manifest;
         // shade-relocation requires a shaded JAR). The fixed
         // 9-ecosystem fixture set deliberately doesn't exercise
-        // every conditional path. Skip mikebom:*-rows for the
+        // every conditional path. Skip waybill:*-rows for the
         // reverse check; the holistic_parity test (US1) already
         // enforces cross-format consistency for these rows when
         // they ARE emitted, and the forward check (test (a) above)
         // catches new annotations added without a catalog row.
-        if row.label.contains("mikebom:") {
+        if row.label.contains("waybill:") {
             continue;
         }
         let candidates = extract_cdx_property_names_from_catalog_row(row);
@@ -263,8 +263,8 @@ fn reverse_every_universal_parity_row_has_at_least_one_emitted_value() {
         }
         // Reverse passes if ANY candidate name appears in some
         // fixture's emitted set, OR if any catalog candidate is
-        // a prefix of an emitted name (handles C23's `mikebom:
-        // trace-integrity-` → `mikebom:trace-integrity-events-
+        // a prefix of an emitted name (handles C23's `waybill:
+        // trace-integrity-` → `waybill:trace-integrity-events-
         // dropped`).
         let any_match = candidates.iter().any(|c| {
             all_emitted.contains(c)

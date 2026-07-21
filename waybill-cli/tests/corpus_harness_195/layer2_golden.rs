@@ -3,7 +3,7 @@
 //! Reuses the masking helpers from the existing `cdx_regression.rs` /
 //! `spdx_regression.rs` / `spdx3_regression.rs` pattern (workspace-
 //! path rewrite, HOME isolation, hash normalization, timestamp
-//! masking, serial-number masking). When `MIKEBOM_UPDATE_PUBLIC_
+//! masking, serial-number masking). When `WAYBILL_UPDATE_PUBLIC_
 //! CORPUS_GOLDENS=1` is set, comparison is replaced with a golden
 //! file write.
 
@@ -11,7 +11,7 @@ use std::path::PathBuf;
 
 use super::harness::{AssertionFailure, EmittedSboms, FailureFormat, update_goldens_gate};
 
-/// Fixture root under the workspace: `mikebom-cli/tests/fixtures/public_corpus/`.
+/// Fixture root under the workspace: `waybill-cli/tests/fixtures/public_corpus/`.
 fn fixtures_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
@@ -34,7 +34,7 @@ fn golden_path(target: &str, format: FailureFormat) -> PathBuf {
 /// `.actual.json` sibling next to the golden so `diff` is copy-
 /// pasteable per contracts/corpus-harness.md.
 ///
-/// Under `MIKEBOM_UPDATE_PUBLIC_CORPUS_GOLDENS=1`, writes the actual
+/// Under `WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1`, writes the actual
 /// as the new golden (regen mode).
 pub fn compare_golden(
     target: &str,
@@ -91,7 +91,7 @@ pub fn compare_golden(
         format: fmt_kind,
         observed: format!("emitted (masked): {}", actual_sibling.display()),
         expected: format!("golden: {}", golden.display()),
-        suggested_action: "run `diff <golden> <actual>` to inspect drift; if drift is intended, regen via MIKEBOM_UPDATE_PUBLIC_CORPUS_GOLDENS=1",
+        suggested_action: "run `diff <golden> <actual>` to inspect drift; if drift is intended, regen via WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS=1",
     })
 }
 

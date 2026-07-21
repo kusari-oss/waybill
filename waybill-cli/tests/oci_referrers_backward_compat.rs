@@ -40,7 +40,7 @@ struct OciImage {
 fn build_minimal_oci_image() -> OciImage {
     let uncompressed_tar = {
         let mut builder = tar::Builder::new(Vec::<u8>::new());
-        let body = b"ID=mikebom-m186-us3-test\nVERSION=1\n";
+        let body = b"ID=waybill-m186-us3-test\nVERSION=1\n";
         let mut header = tar::Header::new_gnu();
         header.set_path("etc/os-release").unwrap();
         header.set_size(body.len() as u64);
@@ -212,7 +212,7 @@ fn mikebom_bin() -> &'static str {
 // ── Tests ────────────────────────────────────────────────────────────
 
 /// FR-010 / SC-004 gate — verify that under `--sbom-source scan` (or omitted)
-/// mikebom NEVER hits the Referrers endpoint. We mount the endpoint with a
+/// waybill NEVER hits the Referrers endpoint. We mount the endpoint with a
 /// response that would cause a byte-identity divergence if consulted (returns
 /// a bogus non-JSON body), and assert the scan succeeds anyway — proving the
 /// endpoint was untouched.
@@ -220,12 +220,12 @@ fn mikebom_bin() -> &'static str {
 async fn scan_mode_never_calls_referrers_endpoint() {
     let server = MockServer::start().await;
     let image = build_minimal_oci_image();
-    let repo = "library/mikebom-m186-us3-scan";
+    let repo = "library/waybill-m186-us3-scan";
     let tag = "1.0";
     mount_image_endpoints(&server, repo, tag, &image).await;
 
     // Mount a "poisoned" referrers endpoint — 500 + a body that would trip
-    // any code path that consumed it. If mikebom under `--sbom-source scan`
+    // any code path that consumed it. If waybill under `--sbom-source scan`
     // called it, the scan would fail; scan succeeds only if this handler is
     // NEVER hit.
     Mock::given(method("GET"))
@@ -263,11 +263,11 @@ async fn scan_mode_never_calls_referrers_endpoint() {
             output.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         out.status.success(),
-        "mikebom exit={:?} stderr:\n{stderr}",
+        "waybill exit={:?} stderr:\n{stderr}",
         out.status.code(),
     );
     // Scan-derived output; not the referrer bytes.
@@ -286,16 +286,16 @@ async fn scan_mode_never_calls_referrers_endpoint() {
     }
 }
 
-/// SC-004 gate — invoking mikebom WITHOUT `--sbom-source` produces the same
+/// SC-004 gate — invoking waybill WITHOUT `--sbom-source` produces the same
 /// scan-mode behavior as passing `--sbom-source scan` explicitly.
 #[tokio::test]
 async fn default_flag_absence_equivalent_to_scan_mode() {
     let server = MockServer::start().await;
     let image = build_minimal_oci_image();
-    let repo = "library/mikebom-m186-us3-default";
+    let repo = "library/waybill-m186-us3-default";
     let tag = "1.0";
     mount_image_endpoints(&server, repo, tag, &image).await;
-    // A live referrer is mounted, BUT since `--sbom-source` is absent, mikebom
+    // A live referrer is mounted, BUT since `--sbom-source` is absent, waybill
     // must produce scan-derived output (not the referrer bytes).
     let referrer_bytes = build_cdx_referrer("SHOULD-NOT-APPEAR-IN-OUTPUT");
     mount_referrer(&server, repo, &image.manifest_digest, &referrer_bytes).await;
@@ -323,11 +323,11 @@ async fn default_flag_absence_equivalent_to_scan_mode() {
             output.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         out.status.success(),
-        "mikebom exit={:?} stderr:\n{stderr}",
+        "waybill exit={:?} stderr:\n{stderr}",
         out.status.code(),
     );
     let got = std::fs::read(&output).unwrap();
@@ -368,11 +368,11 @@ async fn sbom_source_rejected_on_local_path_input() {
                 tempdir.path().join("out.cdx.json").to_str().unwrap(),
             ])
             .output()
-            .expect("spawn mikebom binary");
+            .expect("spawn waybill binary");
         let stderr = String::from_utf8_lossy(&out.stderr).to_string();
         assert!(
             !out.status.success(),
-            "expected mikebom to reject --sbom-source {mode} against --path. stderr:\n{stderr}",
+            "expected waybill to reject --sbom-source {mode} against --path. stderr:\n{stderr}",
         );
         assert!(
             stderr.contains("only valid for registry-pull scans"),
@@ -389,11 +389,11 @@ async fn sbom_source_rejected_on_local_path_input() {
 async fn referrers_endpoint_honors_insecure_registry_flag() {
     let server = MockServer::start().await;
     let image = build_minimal_oci_image();
-    let repo = "library/mikebom-m186-us3-tls";
+    let repo = "library/waybill-m186-us3-tls";
     let tag = "1.0";
     mount_image_endpoints(&server, repo, tag, &image).await;
 
-    let referrer_bytes = build_cdx_referrer("mikebom-m186-us3-tls-referrer");
+    let referrer_bytes = build_cdx_referrer("waybill-m186-us3-tls-referrer");
     let descriptor_digest =
         mount_referrer(&server, repo, &image.manifest_digest, &referrer_bytes).await;
 
@@ -422,11 +422,11 @@ async fn referrers_endpoint_honors_insecure_registry_flag() {
             output.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         out.status.success(),
-        "mikebom exit={:?} stderr:\n{stderr}",
+        "waybill exit={:?} stderr:\n{stderr}",
         out.status.code(),
     );
     // (a) The Referrers endpoint was reached via plain HTTP.

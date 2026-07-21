@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join(sub)
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join(sub)
 }
 
 fn run_scan(path: &Path) -> serde_json::Value {
@@ -28,7 +28,7 @@ fn run_scan(path: &Path) -> serde_json::Value {
         .arg("--file-inventory=off")
         .arg("--no-deep-hash")
         .status()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(status.success(), "scan failed");
     let raw = std::fs::read(&out_path).expect("read sbom");
     serde_json::from_slice(&raw).expect("valid JSON")
@@ -75,12 +75,12 @@ fn go_source_scan_emits_stdlib_component_with_purl_and_cpe() {
     );
 
     // Build-inclusion misclassification regression: stdlib must NOT
-    // carry `mikebom:build-inclusion = "not-needed"` (false positive
+    // carry `waybill:build-inclusion = "not-needed"` (false positive
     // from `go mod why stdlib` returning "package not in import
     // graph"). See `apply_go_mod_why_verdicts` stdlib skip.
     let props = stdlib["properties"].as_array().cloned().unwrap_or_default();
     for p in &props {
-        if p["name"].as_str() == Some("mikebom:build-inclusion") {
+        if p["name"].as_str() == Some("waybill:build-inclusion") {
             assert_ne!(
                 p["value"].as_str(),
                 Some("not-needed"),

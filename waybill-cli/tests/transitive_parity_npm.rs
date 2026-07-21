@@ -32,10 +32,10 @@ const FIXTURE_SUBPATH: &str = "npm";
 // (counted) because their now-correctly-pinned targets are Runtime
 // instead of the wrong Dev version. Confirms reachability invariant
 // on the molcajete corpus (66 orphans → 0 post-fix).
-const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 155;
+const EXPECTED_WAYBILL_EDGE_COUNT: usize = 155;
 
 const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
-    // Confirmed in mikebom output — accepts pulls in mime-types.
+    // Confirmed in waybill output — accepts pulls in mime-types.
     ("pkg:npm/accepts", "pkg:npm/mime-types"),
     // accepts also pulls in negotiator.
     ("pkg:npm/accepts", "pkg:npm/negotiator"),
@@ -59,8 +59,8 @@ fn transitive_edges_match_baseline() {
     let mikebom_edges = run_mikebom(&fixture());
     assert_eq!(
         mikebom_edges.len(),
-        EXPECTED_MIKEBOM_EDGE_COUNT,
-        "mikebom edge count drifted from the alpha.24 baseline."
+        EXPECTED_WAYBILL_EDGE_COUNT,
+        "waybill edge count drifted from the alpha.24 baseline."
     );
     let edge_set: std::collections::HashSet<(String, String)> = mikebom_edges
         .iter()
@@ -80,14 +80,14 @@ fn cross_tool_parity_check() {
         eprintln!("transitive_parity_npm::cross_tool_parity_check skipped: {reason}");
         return;
     }
-    let mikebom = run_mikebom(&fixture());
+    let waybill = run_mikebom(&fixture());
     let trivy = run_trivy(&fixture());
     let syft = run_syft(&fixture());
-    let diff = compute_edge_diff(&mikebom, &trivy, &syft);
+    let diff = compute_edge_diff(&waybill, &trivy, &syft);
     eprintln!("\n=== npm audit (expressjs/express @ 4.21.0) ===");
     eprintln!(
-        "edge counts: mikebom={} trivy={} syft={}",
-        mikebom.len(),
+        "edge counts: waybill={} trivy={} syft={}",
+        waybill.len(),
         trivy.len(),
         syft.len()
     );

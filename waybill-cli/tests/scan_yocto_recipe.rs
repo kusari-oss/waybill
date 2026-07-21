@@ -1,21 +1,21 @@
 //! Integration test for the BitBake recipe walker (milestone 107 US4).
 //!
 //! Companion to the unit tests in `scan_fs::package_db::yocto::recipe::tests`.
-//! Invokes the `mikebom sbom scan` binary against the in-repo
-//! `yocto_recipe_layer/` fixture (a synthetic `meta-mikebom-fixture/`
+//! Invokes the `waybill sbom scan` binary against the in-repo
+//! `yocto_recipe_layer/` fixture (a synthetic `meta-waybill-fixture/`
 //! Yocto layer with 4 recipe files) and asserts:
 //!
 //! - 3 `pkg:generic/...` components emerge (the well-formed recipes +
 //!   the no-version recipe; the `${PN}_${PV}.bb` is silently skipped
 //!   per FR-008)
-//! - Each emitted component carries the `?layer=meta-mikebom-fixture`
+//! - Each emitted component carries the `?layer=meta-waybill-fixture`
 //!   qualifier (proves the layer-root detection walked up correctly)
 //! - The no-version recipe emerges with `version: "unknown"` + a
-//!   `mikebom:version-status: "missing"` annotation
+//!   `waybill:version-status: "missing"` annotation
 //! - Every emitted component carries
-//!   `mikebom:source-mechanism: "bitbake-recipe"`
+//!   `waybill:source-mechanism: "bitbake-recipe"`
 //!
-//! All fixture recipe names use the synthetic `mikebom-fixture-*`
+//! All fixture recipe names use the synthetic `waybill-fixture-*`
 //! prefix per the milestone-106 convention.
 
 use std::path::PathBuf;
@@ -44,7 +44,7 @@ fn yocto_recipe_layer_emits_bitbake_components() {
 
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -56,7 +56,7 @@ fn yocto_recipe_layer_emits_bitbake_components() {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "recipe scan unexpectedly failed: stderr={}",
@@ -95,10 +95,10 @@ fn yocto_recipe_layer_emits_bitbake_components() {
         .collect();
 
     let expected = [
-        "pkg:generic/mikebom-fixture-lib@1.2.3?layer=meta-mikebom-fixture&openembedded=true",
+        "pkg:generic/waybill-fixture-lib@1.2.3?layer=meta-waybill-fixture&openembedded=true",
         // `+` in version becomes `%2B` per the package-url spec via encode_purl_segment.
-        "pkg:generic/mikebom-fixture-app@2.0%2Bgit1234abcd?layer=meta-mikebom-fixture&openembedded=true",
-        "pkg:generic/mikebom-fixture-noversion@unknown?layer=meta-mikebom-fixture&openembedded=true",
+        "pkg:generic/waybill-fixture-app@2.0%2Bgit1234abcd?layer=meta-waybill-fixture&openembedded=true",
+        "pkg:generic/waybill-fixture-noversion@unknown?layer=meta-waybill-fixture&openembedded=true",
     ];
     for purl in expected {
         assert!(
@@ -109,7 +109,7 @@ fn yocto_recipe_layer_emits_bitbake_components() {
 
     // Every emitted component carries the source-mechanism annotation.
     for component in &bitbake_components {
-        let mechanism = find_property(component, "mikebom:source-mechanism");
+        let mechanism = find_property(component, "waybill:source-mechanism");
         assert_eq!(
             mechanism.as_deref(),
             Some("bitbake-recipe"),
@@ -123,11 +123,11 @@ fn yocto_recipe_layer_emits_bitbake_components() {
         .find(|c| {
             c["purl"]
                 .as_str()
-                .map(|p| p.contains("mikebom-fixture-noversion"))
+                .map(|p| p.contains("waybill-fixture-noversion"))
                 .unwrap_or(false)
         })
         .expect("noversion component present");
-    let status = find_property(noversion, "mikebom:version-status");
+    let status = find_property(noversion, "waybill:version-status");
     assert_eq!(
         status.as_deref(),
         Some("missing"),
@@ -135,7 +135,7 @@ fn yocto_recipe_layer_emits_bitbake_components() {
     );
 }
 
-/// CDX serializes per-component `mikebom:*` annotations as
+/// CDX serializes per-component `waybill:*` annotations as
 /// `properties[]` entries with `name` + `value` keys. This helper
 /// returns the first matching property's `value` as a String.
 fn find_property(component: &serde_json::Value, name: &str) -> Option<String> {

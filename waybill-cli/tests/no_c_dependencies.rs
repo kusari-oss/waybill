@@ -1,6 +1,6 @@
 //! Principle I regression test (milestone 003, T001).
 //!
-//! mikebom's constitution (Principle I) mandates zero C source files or
+//! waybill's constitution (Principle I) mandates zero C source files or
 //! C-toolchain dependencies anywhere in the build pipeline. Historically,
 //! the risk surface has been feature-flag-driven: adding a dependency
 //! like `zip`, `flate2`, or `rusqlite` can silently pull in a C backend
@@ -24,7 +24,7 @@
 //!   - `quick-xml` is pure Rust.
 //!
 //! When this test fails:
-//! 1. Run `cargo tree -p mikebom -e normal` locally.
+//! 1. Run `cargo tree -p waybill -e normal` locally.
 //! 2. Identify which new crate triggered the match.
 //! 3. Find the feature flag that pulled it in; either disable the
 //!    feature or find a pure-Rust alternative.
@@ -55,7 +55,7 @@ const BLACKLIST: &[&str] = &[
 fn assert_no_c_deps(extra_args: &[&str], profile_label: &str) {
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
     let mut cmd = Command::new("cargo");
-    cmd.arg("tree").arg("-p").arg("mikebom").arg("-e").arg("normal");
+    cmd.arg("tree").arg("-p").arg("waybill").arg("-e").arg("normal");
     for a in extra_args {
         cmd.arg(a);
     }

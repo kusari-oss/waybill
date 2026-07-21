@@ -1,7 +1,7 @@
 //! Integration test for the NuGet reader (milestone 106 US4, issue #275).
 //!
 //! Companion to the unit tests in `scan_fs::package_db::nuget::*`. This
-//! test invokes the `mikebom sbom scan --path <fixture>` binary against
+//! test invokes the `waybill sbom scan --path <fixture>` binary against
 //! four in-repo fixtures and asserts the emitted CDX contains the
 //! expected `pkg:nuget/...` components with correct version resolution,
 //! CPM walk-up, PrivateAssets-driven build-only tagging, and
@@ -34,7 +34,7 @@ fn run_scan(path: &std::path::Path) -> serde_json::Value {
 
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -46,7 +46,7 @@ fn run_scan(path: &std::path::Path) -> serde_json::Value {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "nuget scan unexpectedly failed: stderr={}",

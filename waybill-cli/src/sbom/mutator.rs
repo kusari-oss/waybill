@@ -1,8 +1,8 @@
 //! RFC 6902 JSON Patch applier + provenance recorder.
 //!
-//! Called from `mikebom sbom enrich` to apply operator-supplied patches
+//! Called from `waybill sbom enrich` to apply operator-supplied patches
 //! to a CycloneDX SBOM. Every patch is recorded under the SBOM's
-//! top-level `properties[]` array as a `mikebom:enrichment-patch[N]`
+//! top-level `properties[]` array as a `waybill:enrichment-patch[N]`
 //! entry carrying the author, timestamp, base-attestation SHA-256 (if
 //! any), and op count. Downstream consumers walking the SBOM can tell
 //! attested data from post-hoc enrichment via this property group.
@@ -67,7 +67,7 @@ pub fn apply_patch(sbom: &mut Value, ops: &Value) -> Result<usize, EnrichmentErr
     Ok(count)
 }
 
-/// Append a `mikebom:enrichment-patch[N]` entry to the SBOM's top-level
+/// Append a `waybill:enrichment-patch[N]` entry to the SBOM's top-level
 /// `properties[]` array. If `properties` is absent, it's created.
 pub fn append_provenance_property(
     sbom: &mut Value,
@@ -95,7 +95,7 @@ pub fn append_provenance_property(
     let value_json = Value::Object(value_obj).to_string();
 
     let property = serde_json::json!({
-        "name": format!("mikebom:enrichment-patch[{patch_index}]"),
+        "name": format!("waybill:enrichment-patch[{patch_index}]"),
         "value": value_json,
     });
 
@@ -136,7 +136,7 @@ pub fn enrich(
 // `statements` array, each with a `products` array and a `status`
 // field) and propagates each statement onto matching components in
 // the target SBOM. The propagation respects each target component's
-// `mikebom:source-document-binding` annotation per
+// `waybill:source-document-binding` annotation per
 // `contracts/openvex-instance-identifiers.md` C-3 + C-4 + C-5.
 //
 // Three modes from `crate::binding::VexPropagationMode`:
@@ -144,16 +144,16 @@ pub fn enrich(
 // - `Permissive` — broadcast unchanged to every PURL match. Pre-072
 //   semantic preserved.
 // - `Caveated` — broadcast to every PURL match, attaching a
-//   `mikebom:vex-binding-status: unverified` caveat on every instance
+//   `waybill:vex-binding-status: unverified` caveat on every instance
 //   whose binding strength is not `verified` (per FR-008 corner-case
 //   F2-b). Verified-bound instances get the propagated statement
 //   clean.
 // - `Strict` — propagate ONLY to verified-bound instances. Refuse the
 //   rest with a structured refusal-rationale annotation under
-//   `mikebom:enrichment-patch[N]`. Exit non-zero per VR-006.
+//   `waybill:enrichment-patch[N]`. Exit non-zero per VR-006.
 //
 // The propagation result is recorded both in the target SBOM (as
-// new entries in `vulnerabilities[]` and as `mikebom:enrichment-
+// new entries in `vulnerabilities[]` and as `waybill:enrichment-
 // patch[N]` provenance entries) and returned as a `PropagationReport`
 // so the CLI can render a per-instance summary and pick an exit code.
 
@@ -170,7 +170,7 @@ pub struct TargetInstance {
     /// CDX `bom-ref` for this instance — the per-instance
     /// identifier T020 propagates into `OpenVexProduct.identifiers`.
     pub bom_ref: Option<String>,
-    /// Decoded `mikebom:source-document-binding` annotation, if
+    /// Decoded `waybill:source-document-binding` annotation, if
     /// present. `None` when the target component has no binding —
     /// this counts as `Unknown` strength for propagation purposes.
     pub binding: Option<SourceDocumentBinding>,
@@ -192,7 +192,7 @@ pub enum PropagationOutcome {
     /// Statement was propagated cleanly. `verified` binding (or
     /// `permissive` mode regardless of strength).
     Propagated,
-    /// Statement was propagated WITH a `mikebom:vex-binding-status:
+    /// Statement was propagated WITH a `waybill:vex-binding-status:
     /// unverified` caveat — the instance's binding strength is not
     /// `verified` and the mode is `caveated`.
     Caveated { reason: String },
@@ -224,7 +224,7 @@ pub struct PropagationReport {
 
 impl PropagationReport {
     /// `true` when no statement was refused. Drives the
-    /// `mikebom sbom enrich --vex-propagation-mode strict` exit code
+    /// `waybill sbom enrich --vex-propagation-mode strict` exit code
     /// (non-zero when false) per VR-006.
     pub fn is_clean(&self) -> bool {
         self.statements_refused == 0
@@ -233,8 +233,8 @@ impl PropagationReport {
 
 /// Walk the target SBOM and find every component instance whose
 /// PURL matches `purl`. Decodes each instance's
-/// `mikebom:source-document-binding` annotation. Currently CDX-only
-/// (target SBOM the `mikebom sbom enrich` command operates on is
+/// `waybill:source-document-binding` annotation. Currently CDX-only
+/// (target SBOM the `waybill sbom enrich` command operates on is
 /// CycloneDX per the existing JSON-Patch path).
 fn find_target_instances(target_sbom: &Value, purl: &str) -> Vec<TargetInstance> {
     let mut out = Vec::new();
@@ -290,7 +290,7 @@ fn product_per_instance_id(product: &Value) -> Option<String> {
 
 /// Build the propagated CDX `vulnerabilities[]` entry for a (vuln,
 /// matched-instances) tuple. Per T022, each `affects[]` entry binds
-/// to a specific bom-ref; the `mikebom:vex-binding-status` field is
+/// to a specific bom-ref; the `waybill:vex-binding-status` field is
 /// a sibling on each `affects` entry per
 /// `contracts/openvex-instance-identifiers.md` C-5.
 fn build_vulnerability_entry(
@@ -319,7 +319,7 @@ fn build_vulnerability_entry(
             );
             caveat.insert("reason".to_string(), Value::String(reason.clone()));
             entry.insert(
-                "mikebom:vex-binding-status".to_string(),
+                "waybill:vex-binding-status".to_string(),
                 Value::Object(caveat),
             );
         }
@@ -357,7 +357,7 @@ fn push_vulnerability(target: &mut Value, entry: Value) -> Result<(), Enrichment
 
 /// Append a refusal-rationale entry under `properties[]` so the
 /// strict-mode operator can audit which (vuln, instance) pairs were
-/// refused. Reuses the milestone-006 `mikebom:enrichment-patch[N]`
+/// refused. Reuses the milestone-006 `waybill:enrichment-patch[N]`
 /// provenance scheme so existing tooling doesn't need a new property
 /// type.
 fn append_refusal_rationale(
@@ -410,7 +410,7 @@ fn append_refusal_rationale(
     let value_json = Value::Object(value_obj).to_string();
 
     let property = serde_json::json!({
-        "name": "mikebom:vex-propagation-refusals",
+        "name": "waybill:vex-propagation-refusals",
         "value": value_json,
     });
 
@@ -495,7 +495,7 @@ fn caveat_reason(binding: &Option<SourceDocumentBinding>) -> String {
 /// - Apply mode-specific behavior to each matched instance:
 ///   `Permissive` propagates clean to every match; `Caveated`
 ///   propagates clean to verified instances and adds
-///   `mikebom:vex-binding-status: unverified` to non-verified
+///   `waybill:vex-binding-status: unverified` to non-verified
 ///   instances; `Strict` propagates clean to verified instances and
 ///   REFUSES non-verified instances with a refusal-rationale
 ///   annotation, exiting non-zero per VR-006.
@@ -503,7 +503,7 @@ fn caveat_reason(binding: &Option<SourceDocumentBinding>) -> String {
 /// Then aggregate per-instance outcomes into one `vulnerabilities[]`
 /// entry per (vuln, matched-instances) tuple. Per T022, each
 /// `affects[].ref` is a specific bom-ref; the
-/// `mikebom:vex-binding-status` field is a sibling on each
+/// `waybill:vex-binding-status` field is a sibling on each
 /// `affects` entry.
 pub fn propagate_vex_with_binding(
     mode: VexPropagationMode,
@@ -747,7 +747,7 @@ mod tests {
         append_provenance_property(&mut sbom, 0, &patch).unwrap();
         let props = sbom["properties"].as_array().unwrap();
         assert_eq!(props.len(), 1);
-        assert_eq!(props[0]["name"], json!("mikebom:enrichment-patch[0]"));
+        assert_eq!(props[0]["name"], json!("waybill:enrichment-patch[0]"));
         let value_str = props[0]["value"].as_str().unwrap();
         assert!(value_str.contains("security-team@example.com"));
         assert!(value_str.contains("\"base_attestation\":\"abc123\""));
@@ -786,11 +786,11 @@ mod tests {
         assert_eq!(props.len(), 2);
         assert_eq!(
             props[0]["name"],
-            json!("mikebom:enrichment-patch[0]")
+            json!("waybill:enrichment-patch[0]")
         );
         assert_eq!(
             props[1]["name"],
-            json!("mikebom:enrichment-patch[1]")
+            json!("waybill:enrichment-patch[1]")
         );
     }
 
@@ -947,7 +947,7 @@ mod tests {
         assert_eq!(affects.len(), 1);
         assert_eq!(affects[0]["ref"], "a-bom-1");
         // Permissive mode → no caveat sibling.
-        assert!(affects[0].get("mikebom:vex-binding-status").is_none());
+        assert!(affects[0].get("waybill:vex-binding-status").is_none());
     }
 
     /// Caveated mode + verified binding → propagate clean.
@@ -970,7 +970,7 @@ mod tests {
         assert_eq!(report.statements_caveated, 0);
 
         let affects = target["vulnerabilities"][0]["affects"].as_array().unwrap();
-        assert!(affects[0].get("mikebom:vex-binding-status").is_none());
+        assert!(affects[0].get("waybill:vex-binding-status").is_none());
     }
 
     /// Caveated mode + weak binding → propagate WITH caveat.
@@ -992,7 +992,7 @@ mod tests {
         assert_eq!(report.statements_propagated, 0);
 
         let affects = target["vulnerabilities"][0]["affects"].as_array().unwrap();
-        let caveat = affects[0]["mikebom:vex-binding-status"].as_object().unwrap();
+        let caveat = affects[0]["waybill:vex-binding-status"].as_object().unwrap();
         assert_eq!(caveat["status"], "unverified");
         let reason = caveat["reason"].as_str().unwrap();
         assert!(reason.contains("binding-strength-weak"));
@@ -1027,7 +1027,7 @@ mod tests {
         let props = target["properties"].as_array().unwrap();
         let refusal = props
             .iter()
-            .find(|p| p["name"] == "mikebom:vex-propagation-refusals")
+            .find(|p| p["name"] == "waybill:vex-propagation-refusals")
             .expect("refusal property present");
         let value_str = refusal["value"].as_str().unwrap();
         assert!(value_str.contains("CVE-2026-0004"));
@@ -1052,7 +1052,7 @@ mod tests {
         assert!(report.is_clean());
         assert_eq!(report.statements_propagated, 1);
         let affects = target["vulnerabilities"][0]["affects"].as_array().unwrap();
-        assert!(affects[0].get("mikebom:vex-binding-status").is_none());
+        assert!(affects[0].get("waybill:vex-binding-status").is_none());
     }
 
     /// Worked-example case (US2 AS#4 / SC-003): two instances of the
@@ -1104,10 +1104,10 @@ mod tests {
             .find(|a| a["ref"] == "baselayer-net-instance")
             .unwrap();
         assert!(
-            foo_entry.get("mikebom:vex-binding-status").is_none(),
+            foo_entry.get("waybill:vex-binding-status").is_none(),
             "verified-bound instance must not carry caveat"
         );
-        let caveat = baselayer_entry["mikebom:vex-binding-status"]
+        let caveat = baselayer_entry["waybill:vex-binding-status"]
             .as_object()
             .unwrap();
         assert_eq!(caveat["status"], "unverified");
@@ -1161,7 +1161,7 @@ mod tests {
 
         assert_eq!(report.statements_caveated, 1);
         let affects = target["vulnerabilities"][0]["affects"].as_array().unwrap();
-        let caveat = affects[0]["mikebom:vex-binding-status"].as_object().unwrap();
+        let caveat = affects[0]["waybill:vex-binding-status"].as_object().unwrap();
         assert_eq!(caveat["status"], "unverified");
         assert!(caveat["reason"]
             .as_str()

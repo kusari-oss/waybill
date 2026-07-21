@@ -79,7 +79,7 @@ mod tests {
             predicate: BuildTracePredicate {
                 metadata: TraceMetadata {
                     tool: ToolInfo {
-                        name: "mikebom".to_string(),
+                        name: "waybill".to_string(),
                         version: "0.1.0".to_string(),
                     },
                     trace_start: Timestamp::now(),

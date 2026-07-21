@@ -7,7 +7,7 @@
 //! - **v2** (Swift 5.6 — 5.10): top-level `pins[]` with shape `{identity,
 //!   kind, location, state: {revision, version}}`.
 //! - **v3** (Swift 5.10+): same shape as v2 plus an optional `originHash`
-//!   field on each pin. mikebom IGNORES `originHash` in v0.1.
+//!   field on each pin. waybill IGNORES `originHash` in v0.1.
 //!
 //! PURL projection per `contracts/swift-lockfile-format.md` § "PURL
 //! projection rules": strip `.git` suffix; HTTPS-form / SSH-form / deep-
@@ -202,12 +202,12 @@ fn project_to_package_db_entry(
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra_annotations.insert(
-        "mikebom:source-files".to_string(),
+        "waybill:source-files".to_string(),
         serde_json::Value::String(source_path.to_string()),
     );
     let source_type = if entry.version.is_none() {
         extra_annotations.insert(
-            "mikebom:source-revision".to_string(),
+            "waybill:source-revision".to_string(),
             serde_json::Value::String(entry.revision.clone()),
         );
         Some("git".to_string())
@@ -460,7 +460,7 @@ mod tests {
         let f = write_lockfile(
             r#"{
                 "version": 3,
-                "originHash": "ignored-by-mikebom",
+                "originHash": "ignored-by-waybill",
                 "pins": [
                     {
                         "identity": "swift-log",
@@ -579,7 +579,7 @@ mod tests {
         assert_eq!(e.source_type.as_deref(), Some("git"));
         assert_eq!(
             e.extra_annotations
-                .get("mikebom:source-revision")
+                .get("waybill:source-revision")
                 .and_then(|v| v.as_str()),
             Some(sha)
         );

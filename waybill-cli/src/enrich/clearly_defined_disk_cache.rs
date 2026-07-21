@@ -5,10 +5,10 @@
 //! at `binary/fingerprints/cache.rs::cache_root`:
 //!
 //! Cache root resolution order:
-//!   1. `MIKEBOM_CLEARLY_DEFINED_CACHE_DIR` env var (operator override)
-//!   2. `$XDG_CACHE_HOME/mikebom/clearly-defined/` (Linux convention)
-//!   3. `$HOME/.cache/mikebom/clearly-defined/` (Unix) /
-//!      `$USERPROFILE/.cache/mikebom/clearly-defined/` (Windows)
+//!   1. `WAYBILL_CLEARLY_DEFINED_CACHE_DIR` env var (operator override)
+//!   2. `$XDG_CACHE_HOME/waybill/clearly-defined/` (Linux convention)
+//!   3. `$HOME/.cache/waybill/clearly-defined/` (Unix) /
+//!      `$USERPROFILE/.cache/waybill/clearly-defined/` (Windows)
 //!
 //! Per-coord entries land in flat files keyed on the SHA-256 of the
 //! coord's URL path, truncated to 32 hex chars (128 bits of collision
@@ -53,8 +53,8 @@ use tracing::{debug, warn};
 use super::clearly_defined_client::CdDefinition;
 use super::clearly_defined_coord::CdCoord;
 
-const CACHE_ENV_OVERRIDE: &str = "MIKEBOM_CLEARLY_DEFINED_CACHE_DIR";
-const DISABLE_ENV: &str = "MIKEBOM_CLEARLY_DEFINED_NO_CACHE";
+const CACHE_ENV_OVERRIDE: &str = "WAYBILL_CLEARLY_DEFINED_CACHE_DIR";
+const DISABLE_ENV: &str = "WAYBILL_CLEARLY_DEFINED_NO_CACHE";
 /// 7-day TTL. CD definitions change rarely enough that a week
 /// out-of-date entry is fine; tune later if license curation lag
 /// observed in the field is higher than this.
@@ -66,7 +66,7 @@ const SCHEMA_VERSION: u32 = 1;
 /// at the source layer keeps the cost of fan-out clones at O(1).
 ///
 /// `root == None` means the cache is **disabled** — either the
-/// operator opted out via `MIKEBOM_CLEARLY_DEFINED_NO_CACHE`, or no
+/// operator opted out via `WAYBILL_CLEARLY_DEFINED_NO_CACHE`, or no
 /// writable cache directory could be resolved. Disabled-cache reads
 /// always miss and writes are no-ops.
 #[derive(Clone)]
@@ -213,7 +213,7 @@ fn resolve_cache_root() -> Option<PathBuf> {
     }
     if let Some(xdg) = std::env::var_os("XDG_CACHE_HOME") {
         if !xdg.is_empty() {
-            return Some(PathBuf::from(xdg).join("mikebom").join("clearly-defined"));
+            return Some(PathBuf::from(xdg).join("waybill").join("clearly-defined"));
         }
     }
     let home = std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE"))?;
@@ -223,7 +223,7 @@ fn resolve_cache_root() -> Option<PathBuf> {
     Some(
         PathBuf::from(home)
             .join(".cache")
-            .join("mikebom")
+            .join("waybill")
             .join("clearly-defined"),
     )
 }

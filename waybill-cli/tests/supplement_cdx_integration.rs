@@ -26,8 +26,8 @@
 //!
 //! Tests synthesize a minimal Cargo project fixture + a hand-rolled
 //! supplement file in a per-test `tempfile::tempdir()` and invoke the
-//! `mikebom` binary via cargo's `CARGO_BIN_EXE_mikebom` env. The Cargo
-//! fixture is the smallest path to exercise mikebom's component
+//! `waybill` binary via cargo's `CARGO_BIN_EXE_mikebom` env. The Cargo
+//! fixture is the smallest path to exercise waybill's component
 //! emission without pulling in real-world workspace fixtures.
 
 #![cfg_attr(test, allow(clippy::unwrap_used))]
@@ -39,7 +39,7 @@ fn binary_path() -> &'static str {
     env!("CARGO_BIN_EXE_mikebom")
 }
 
-/// Write a minimal Cargo project fixture so mikebom's scanner has
+/// Write a minimal Cargo project fixture so waybill's scanner has
 /// something to discover. Doesn't matter what's in it — the supplement
 /// merge runs after discovery either way.
 fn write_cargo_project(root: &Path, name: &str, version: &str) {
@@ -52,7 +52,7 @@ fn write_cargo_project(root: &Path, name: &str, version: &str) {
     std::fs::write(root.join("src/lib.rs"), "").unwrap();
 }
 
-/// Invoke `mikebom sbom scan --path <root>` writing the CDX output to
+/// Invoke `waybill sbom scan --path <root>` writing the CDX output to
 /// `<root>/out.cdx.json`. Optionally pass a `--supplement-cdx` path.
 /// Returns the parsed CDX (or the unparsed text in `String`) plus the
 /// raw process output for status / stderr inspection.
@@ -72,14 +72,14 @@ fn run_scan(
         .arg("--offline")
         .arg("--output")
         .arg(&out_path)
-        .env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
+        .env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
         .env("RUST_LOG", "warn")
-        .env_remove("MIKEBOM_EXCLUDE_PATH")
-        .env_remove("MIKEBOM_NO_GO_MOD_WHY");
+        .env_remove("WAYBILL_EXCLUDE_PATH")
+        .env_remove("WAYBILL_NO_GO_MOD_WHY");
     if let Some(path) = supplement {
         cmd.arg("--supplement-cdx").arg(path);
     }
-    let output = cmd.output().expect("failed to invoke mikebom binary");
+    let output = cmd.output().expect("failed to invoke waybill binary");
     let cdx = std::fs::read_to_string(&out_path)
         .ok()
         .and_then(|text| serde_json::from_str::<serde_json::Value>(&text).ok());
@@ -95,7 +95,7 @@ fn write_supplement(root: &Path, body: &str) -> std::path::PathBuf {
 fn assert_success(out: &Output) {
     if !out.status.success() {
         panic!(
-            "mikebom exited non-zero:\nstdout: {}\nstderr: {}",
+            "waybill exited non-zero:\nstdout: {}\nstderr: {}",
             String::from_utf8_lossy(&out.stdout),
             String::from_utf8_lossy(&out.stderr),
         );
@@ -186,7 +186,7 @@ fn us1_as1_saas_service_appears_in_services_section() {
         .and_then(|v| v.as_array())
         .expect("services[].properties present");
     assert!(props.iter().any(|p| p.get("name").and_then(|v| v.as_str())
-        == Some("mikebom:source-tier")
+        == Some("waybill:source-tier")
         && p.get("value").and_then(|v| v.as_str()) == Some("declared")));
 }
 
@@ -217,11 +217,11 @@ fn us1_as2_vendored_library_carries_declared_metadata() {
     let liberror =
         component_by_purl(&cdx, "pkg:generic/liberror@1.2.3").expect("liberror component");
     assert_eq!(
-        component_property(liberror, "mikebom:source-tier"),
+        component_property(liberror, "waybill:source-tier"),
         Some("declared")
     );
     // Provenance annotation on metadata.properties[].
-    let provenance = metadata_property(&cdx, "mikebom:supplement-cdx")
+    let provenance = metadata_property(&cdx, "waybill:supplement-cdx")
         .expect("provenance property");
     assert!(provenance.contains("@sha256:"));
     assert!(provenance.contains("supplement.cdx.json"));
@@ -243,7 +243,7 @@ fn us1_as3_empty_supplement_emits_provenance_only() {
     // Provenance still present per FR-013 emission gating: an empty
     // supplement DOES carry the supplement-cdx property because
     // consumers need to know a supplement was supplied.
-    assert!(metadata_property(&cdx, "mikebom:supplement-cdx").is_some());
+    assert!(metadata_property(&cdx, "waybill:supplement-cdx").is_some());
 }
 
 #[test]
@@ -254,7 +254,7 @@ fn us1_as4_no_flag_omits_supplement_cdx_property() {
     assert_success(&out);
     let cdx = cdx.expect("CDX output produced");
     // No flag → no supplement-cdx property anywhere.
-    assert!(metadata_property(&cdx, "mikebom:supplement-cdx").is_none());
+    assert!(metadata_property(&cdx, "waybill:supplement-cdx").is_none());
     // No services[] section either.
     assert!(cdx.get("services").is_none());
 }
@@ -292,7 +292,7 @@ fn us2_as1_declared_license_overrides_empty_scanner_value() {
     // follow-up since the existing flow projects licenses via
     // ResolvedComponent.licenses (Vec<SpdxExpression>) which the
     // supplement's typed override bypasses.
-    assert!(metadata_property(&cdx, "mikebom:supplement-cdx").is_some());
+    assert!(metadata_property(&cdx, "waybill:supplement-cdx").is_some());
 }
 
 #[test]
@@ -315,7 +315,7 @@ fn us3_as1_consumer_can_distinguish_declared_from_observed() {
     let liberror = component_by_purl(&cdx, "pkg:generic/liberror@1.2.3")
         .expect("liberror declared component");
     assert_eq!(
-        component_property(liberror, "mikebom:source-tier"),
+        component_property(liberror, "waybill:source-tier"),
         Some("declared")
     );
 }
@@ -331,7 +331,7 @@ fn us3_as2_metadata_carries_supplement_cdx_provenance() {
     let (cdx, out) = run_scan(dir.path(), Some(&supp));
     assert_success(&out);
     let cdx = cdx.expect("CDX output produced");
-    let provenance = metadata_property(&cdx, "mikebom:supplement-cdx")
+    let provenance = metadata_property(&cdx, "waybill:supplement-cdx")
         .expect("provenance property");
     // Shape: "<path>@sha256:<64-hex>"
     let parts: Vec<&str> = provenance.split("@sha256:").collect();
@@ -390,7 +390,7 @@ fn schema_invalid_supplement_exits_nonzero() {
 /// Write a 2-member Cargo workspace so both main-modules emit in
 /// `components[]` (vs the 1-member case which promotes to
 /// `metadata.component`). Required to exercise the supplement-collision
-/// → `mikebom:assertion-conflict` flow against a component the emitter
+/// → `waybill:assertion-conflict` flow against a component the emitter
 /// routes through the per-component properties[] path.
 fn write_cargo_workspace_two_members(root: &Path) {
     std::fs::create_dir_all(root).unwrap();
@@ -422,7 +422,7 @@ fn t014_assertion_conflict_emits_as_json_array_on_components_properties() {
     write_cargo_workspace_two_members(dir.path());
     // Collide with member-a: supplement asserts a different display
     // name. The partition routes `name` to developer-wins, so the
-    // supplement's name appears as primary AND a `mikebom:assertion-
+    // supplement's name appears as primary AND a `waybill:assertion-
     // conflict` property is emitted on member-a's components[] entry.
     let supp = write_supplement(
         dir.path(),
@@ -450,8 +450,8 @@ fn t014_assertion_conflict_emits_as_json_array_on_components_properties() {
     // assertion-conflict property emitted. Per the C1 storage shape,
     // the value is a JSON-encoded string of an ARRAY of conflict
     // records. Parse it.
-    let conflict_str = component_property(comp, "mikebom:assertion-conflict")
-        .expect("mikebom:assertion-conflict property present");
+    let conflict_str = component_property(comp, "waybill:assertion-conflict")
+        .expect("waybill:assertion-conflict property present");
     let conflict_arr: serde_json::Value = serde_json::from_str(conflict_str)
         .expect("assertion-conflict value must be JSON-parseable");
     let conflicts = conflict_arr
@@ -471,7 +471,7 @@ fn t014_assertion_conflict_emits_as_json_array_on_components_properties() {
     );
     // The scanner's discovered name is preserved as an annotation.
     assert_eq!(
-        component_property(comp, "mikebom:scanner-discovered-name"),
+        component_property(comp, "waybill:scanner-discovered-name"),
         Some("member-a")
     );
 }
@@ -499,8 +499,8 @@ fn t014_multiple_conflicts_accumulate_into_single_json_array_property() {
     let cdx = cdx.expect("CDX output produced");
     let comp = component_by_purl(&cdx, "pkg:cargo/member-a@0.1.0")
         .expect("member-a in components[]");
-    let conflict_str = component_property(comp, "mikebom:assertion-conflict")
-        .expect("mikebom:assertion-conflict property present");
+    let conflict_str = component_property(comp, "waybill:assertion-conflict")
+        .expect("waybill:assertion-conflict property present");
     let arr: serde_json::Value =
         serde_json::from_str(conflict_str).expect("must parse");
     let records = arr.as_array().expect("array of conflicts");
@@ -571,7 +571,7 @@ fn cargo_metadata_component_carries_supplement_declared_license() {
     // supplement asserts a license override on the main-module's
     // canonical PURL; the typed `licenses[]` field on
     // `metadata.component` must carry the operator's value (not
-    // just the `mikebom:supplement-licenses` annotation).
+    // just the `waybill:supplement-licenses` annotation).
     let dir = tempfile::tempdir().unwrap();
     write_cargo_project(dir.path(), "demo-app", "1.0.0");
     let supp = write_supplement(
@@ -599,7 +599,7 @@ fn cargo_metadata_component_carries_supplement_declared_license() {
         .expect("metadata.component.licenses[] present");
     assert!(!licenses.is_empty(), "license array must be non-empty");
     // The first entry should carry `license.id = Apache-2.0` per CDX
-    // single-SPDX-id shape (mikebom routes single-ID expressions
+    // single-SPDX-id shape (waybill routes single-ID expressions
     // through `license.id` not `license.expression`).
     let found = licenses.iter().any(|l| {
         l.get("license")
@@ -685,14 +685,14 @@ fn run_scan_all_formats(
         .arg(format!("spdx-2.3-json={}", spdx23_path.display()))
         .arg("--output")
         .arg(format!("spdx-3-json={}", spdx3_path.display()))
-        .env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
+        .env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
         .env("RUST_LOG", "warn")
-        .env_remove("MIKEBOM_EXCLUDE_PATH")
-        .env_remove("MIKEBOM_NO_GO_MOD_WHY");
+        .env_remove("WAYBILL_EXCLUDE_PATH")
+        .env_remove("WAYBILL_NO_GO_MOD_WHY");
     if let Some(path) = supplement {
         cmd.arg("--supplement-cdx").arg(path);
     }
-    let output = cmd.output().expect("failed to invoke mikebom binary");
+    let output = cmd.output().expect("failed to invoke waybill binary");
     let parse = |p: &Path| {
         std::fs::read_to_string(p)
             .ok()
@@ -744,13 +744,13 @@ fn t020_spdx23_carries_supplement_service_as_saas_package() {
     assert!(
         comments
             .iter()
-            .any(|c| c.contains("mikebom:component-role") && c.contains("saas-service")),
+            .any(|c| c.contains("waybill:component-role") && c.contains("saas-service")),
         "saas-service annotation: {comments:?}"
     );
     assert!(
         comments
             .iter()
-            .any(|c| c.contains("mikebom:source-tier") && c.contains("declared")),
+            .any(|c| c.contains("waybill:source-tier") && c.contains("declared")),
         "source-tier=declared annotation: {comments:?}"
     );
 }
@@ -811,13 +811,13 @@ fn t020_spdx3_carries_supplement_service_as_software_package() {
     assert!(
         statements
             .iter()
-            .any(|s| s.contains("mikebom:component-role") && s.contains("saas-service")),
+            .any(|s| s.contains("waybill:component-role") && s.contains("saas-service")),
         "saas-service Annotation: {statements:?}"
     );
     assert!(
         statements
             .iter()
-            .any(|s| s.contains("mikebom:source-tier") && s.contains("declared")),
+            .any(|s| s.contains("waybill:source-tier") && s.contains("declared")),
         "source-tier=declared Annotation: {statements:?}"
     );
 }
@@ -840,7 +840,7 @@ fn t020_spdx23_carries_supplement_cdx_provenance_on_creation_info() {
     let found = annos.iter().any(|a| {
         a.get("comment")
             .and_then(|v| v.as_str())
-            .is_some_and(|c| c.contains("mikebom:supplement-cdx") && c.contains("@sha256:"))
+            .is_some_and(|c| c.contains("waybill:supplement-cdx") && c.contains("@sha256:"))
     });
     assert!(found, "envelope supplement-cdx provenance missing: {annos:?}");
 }
@@ -864,7 +864,7 @@ fn t020_spdx3_carries_supplement_cdx_provenance_on_document_annotation() {
         e.get("type").and_then(|v| v.as_str()) == Some("Annotation")
             && e.get("statement")
                 .and_then(|v| v.as_str())
-                .is_some_and(|s| s.contains("mikebom:supplement-cdx") && s.contains("@sha256:"))
+                .is_some_and(|s| s.contains("waybill:supplement-cdx") && s.contains("@sha256:"))
     });
     assert!(
         found,

@@ -15,7 +15,7 @@
 //! strip), and compares the result byte-for-byte against
 //! `tests/fixtures/golden/spdx-2.3/{label}.spdx.json`.
 //!
-//! Updating a golden: set `MIKEBOM_UPDATE_SPDX_GOLDENS=1` and rerun
+//! Updating a golden: set `WAYBILL_UPDATE_SPDX_GOLDENS=1` and rerun
 //! the test. The normalized output is written back to the golden
 //! file. Commit the diff only after reviewing — any change here is a
 //! real SPDX-output change and needs an audit per the regen contract
@@ -34,7 +34,7 @@ fn golden_path(label: &str) -> PathBuf {
         .join(format!("{label}.spdx.json"))
 }
 
-/// Run `mikebom sbom scan --format spdx-2.3-json` against a fixture
+/// Run `waybill sbom scan --format spdx-2.3-json` against a fixture
 /// under fake-HOME isolation; return the raw SPDX 2.3 JSON text.
 fn run_scan(case: &EcosystemCase) -> String {
     let fx = case_fixture_path(case);
@@ -46,7 +46,7 @@ fn run_scan(case: &EcosystemCase) -> String {
     );
     let bin = env!("CARGO_BIN_EXE_mikebom");
     let tmp = tempfile::tempdir().expect("tempdir");
-    let out_path = tmp.path().join("mikebom.spdx.json");
+    let out_path = tmp.path().join("waybill.spdx.json");
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
     let mut cmd = Command::new(bin);
     apply_fake_home_env(&mut cmd, fake_home.path());
@@ -63,7 +63,7 @@ fn run_scan(case: &EcosystemCase) -> String {
     if let Some(code) = case.deb_codename {
         cmd.arg("--deb-codename").arg(code);
     }
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed for {}: stderr={}",
@@ -74,10 +74,10 @@ fn run_scan(case: &EcosystemCase) -> String {
 }
 
 /// Write or compare a golden file. Accepts a test-time toggle via
-/// `MIKEBOM_UPDATE_SPDX_GOLDENS=1` to rewrite instead of diff.
+/// `WAYBILL_UPDATE_SPDX_GOLDENS=1` to rewrite instead of diff.
 fn assert_or_update_golden(label: &str, normalized: &str) {
     let path = golden_path(label);
-    let update = std::env::var("MIKEBOM_UPDATE_SPDX_GOLDENS")
+    let update = std::env::var("WAYBILL_UPDATE_SPDX_GOLDENS")
         .ok()
         .map(|v| v == "1")
         .unwrap_or(false);
@@ -107,7 +107,7 @@ fn assert_or_update_golden(label: &str, normalized: &str) {
         panic!(
             "SPDX 2.3 regression for ecosystem {label}: output differs from \
              pinned golden.\n  golden: {}\n  actual: {}\nTo accept the change, \
-             run: MIKEBOM_UPDATE_SPDX_GOLDENS=1 cargo test --test spdx_regression",
+             run: WAYBILL_UPDATE_SPDX_GOLDENS=1 cargo test --test spdx_regression",
             path.display(),
             actual.display()
         );

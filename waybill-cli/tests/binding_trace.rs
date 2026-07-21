@@ -1,4 +1,4 @@
-//! Milestone 072 T026 — `mikebom sbom trace-binding` integration tests.
+//! Milestone 072 T026 — `waybill sbom trace-binding` integration tests.
 //!
 //! Three scenarios per the spec / quickstart Recipe 6:
 //!
@@ -99,7 +99,7 @@ fn cdx_image_with_bound_instance(
             "purl": purl,
             "bom-ref": bom_ref,
             "properties": [{
-                "name": "mikebom:source-document-binding",
+                "name": "waybill:source-document-binding",
                 "value": binding_str,
             }]
         }]
@@ -131,7 +131,7 @@ fn cdx_source_with_main_module(
             "purl": purl,
             "bom-ref": format!("{purl}-source-bom"),
             "properties": [{
-                "name": "mikebom:source-document-binding",
+                "name": "waybill:source-document-binding",
                 "value": binding_str,
             }]
         }]
@@ -284,7 +284,7 @@ fn trace_two_instances_returns_both_with_per_instance_binding() {
                 "purl": purl,
                 "bom-ref": "golang-net-from-foo",
                 "properties": [{
-                    "name": "mikebom:source-document-binding",
+                    "name": "waybill:source-document-binding",
                     "value": bound_str,
                 }],
             },

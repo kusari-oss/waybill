@@ -4,15 +4,15 @@
 //! Two halves of FR-016a + SC-002 for VEX:
 //!
 //! 1. **Negative case** (green today on every fixture):
-//!    mikebom's scan pipeline doesn't yet populate
+//!    waybill's scan pipeline doesn't yet populate
 //!    `ResolvedComponent.advisories` — no ecosystem emits VEX
 //!    statements. For all 9 fixtures, the CLI MUST therefore NOT
-//!    produce `mikebom.openvex.json`, and the SPDX document MUST
+//!    produce `waybill.openvex.json`, and the SPDX document MUST
 //!    NOT carry an `externalDocumentRefs` entry. That's the
 //!    "no VEX → no sidecar" half of FR-016a.
 //!
 //! 2. **Schema-validation canary**: a hand-built OpenVEX document
-//!    (shape that mikebom would emit if it had advisories) validates
+//!    (shape that waybill would emit if it had advisories) validates
 //!    clean against the vendored `openvex-0.2.0.json` schema. This
 //!    guards the emitter shape even though no live-scan produces
 //!    VEX today — when a future milestone wires advisory
@@ -85,7 +85,7 @@ fn scan_spdx(case: &EcosystemCase) -> (tempfile::TempDir, PathBuf, serde_json::V
     if let Some(code) = case.deb_codename {
         cmd.arg("--deb-codename").arg(code);
     }
-    let out = cmd.output().expect("mikebom runs");
+    let out = cmd.output().expect("waybill runs");
     assert!(
         out.status.success(),
         "scan failed for {}: stderr={}",
@@ -103,8 +103,8 @@ fn scan_spdx(case: &EcosystemCase) -> (tempfile::TempDir, PathBuf, serde_json::V
 fn assert_no_vex_sidecar(case: &EcosystemCase) {
     let (_guard, dir, spdx) = scan_spdx(case);
     assert!(
-        !dir.join("mikebom.openvex.json").exists(),
-        "{}: unexpected mikebom.openvex.json produced in {}; \
+        !dir.join("waybill.openvex.json").exists(),
+        "{}: unexpected waybill.openvex.json produced in {}; \
          no fixture should populate advisories today",
         case.label,
         dir.display()
@@ -166,7 +166,7 @@ fn no_sidecar_for_rpm() {
 // (2) Schema-validation canary for the emitter shape.
 // ----------------------------------------------------------------
 
-/// Synthetically produce the exact document shape mikebom's
+/// Synthetically produce the exact document shape waybill's
 /// emitter would emit for one CVE affecting one component
 /// (mirrors the output of `serialize_openvex` when advisories are
 /// present), and assert it validates clean against the vendored
@@ -177,11 +177,11 @@ fn no_sidecar_for_rpm() {
 fn synthetic_openvex_document_matches_vendored_schema() {
     let doc = serde_json::json!({
         "@context": "https://openvex.dev/ns/v0.2.0",
-        "@id": "https://mikebom.kusari.dev/openvex/ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
-        "author": "mikebom-0.0.0-test",
+        "@id": "https://waybill.kusari.dev/openvex/ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ",
+        "author": "waybill-0.0.0-test",
         "timestamp": "2026-01-01T00:00:00Z",
         "version": 1,
-        "tooling": "mikebom-0.0.0-test",
+        "tooling": "waybill-0.0.0-test",
         "statements": [
             {
                 "vulnerability": { "name": "CVE-2026-0001" },
@@ -209,8 +209,8 @@ fn synthetic_openvex_document_matches_vendored_schema() {
 fn malformed_openvex_document_fails_validation() {
     let bad = serde_json::json!({
         "@context": "https://openvex.dev/ns/v0.2.0",
-        "@id": "https://mikebom.kusari.dev/openvex/AAAA",
-        "author": "mikebom-0.0.0-test",
+        "@id": "https://waybill.kusari.dev/openvex/AAAA",
+        "author": "waybill-0.0.0-test",
         "timestamp": "2026-01-01T00:00:00Z",
         "version": 1
         // `statements` is missing — the schema requires it.

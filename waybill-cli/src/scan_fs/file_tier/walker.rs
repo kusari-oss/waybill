@@ -100,7 +100,7 @@ pub(crate) struct WalkerConfig<'a> {
 }
 
 /// Diagnostic skip-counters. Emitted as document-level annotations
-/// per Principle X (`mikebom:file-inventory-skipped-oversize` etc.)
+/// per Principle X (`waybill:file-inventory-skipped-oversize` etc.)
 /// in US1.B. US1.A returns them but the SBOM emission code does
 /// not yet read them.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
@@ -110,7 +110,7 @@ pub(crate) struct WalkerStats {
     /// Files skipped because they were special files (devices,
     /// sockets, FIFOs) or otherwise non-regular.
     pub special_skipped: usize,
-    /// Files skipped because mikebom couldn't open or read them
+    /// Files skipped because waybill couldn't open or read them
     /// (permissions, missing, mid-flight delete).
     pub unreadable_skipped: usize,
     /// Files skipped because the dedupe index reported them

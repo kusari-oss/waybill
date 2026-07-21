@@ -2,15 +2,15 @@
 //!
 //! Pure-Rust `no_std`-compatible classifier that matches file-open path
 //! bytes against four filter categories (System, UserCache, Ephemeral,
-//! CargoFingerprint). Called from `mikebom-ebpf/src/programs/file_ops.rs`
+//! CargoFingerprint). Called from `waybill-ebpf/src/programs/file_ops.rs`
 //! kprobes to drop noise events BEFORE they enter the FILE_EVENTS ring
 //! buffer, freeing capacity for the actual rustc + linker events the
 //! operator cares about.
 //!
 //! The classifier is shared between the kernel-side eBPF programs and
-//! userspace test code by living in `mikebom-common` — same crate that
+//! userspace test code by living in `waybill-common` — same crate that
 //! defines `FileEvent`. This lets us test the substring / prefix
-//! matching logic exhaustively in `cargo test -p mikebom-common` without
+//! matching logic exhaustively in `cargo test -p waybill-common` without
 //! needing a kernel + eBPF loader. The eBPF side calls
 //! `path_matches_filter_category(&path, widen_system)` from
 //! `try_do_filp_open` + `try_openat2` (m213 T012 + T013).
@@ -356,7 +356,7 @@ mod tests {
     fn t007_cargo_fingerprint_paths_classified() {
         assert_eq!(
             path_matches_filter_category(
-                &to_path_buf("/root/mikebom/target/debug/build/foo-abc/fingerprint/dep-blah"),
+                &to_path_buf("/root/waybill/target/debug/build/foo-abc/fingerprint/dep-blah"),
                 false
             ),
             Some(FilterCategoryTag::CargoFingerprint)
@@ -391,7 +391,7 @@ mod tests {
             None
         );
         assert_eq!(
-            path_matches_filter_category(&to_path_buf("/home/dev/proj/target/release/mikebom"), false),
+            path_matches_filter_category(&to_path_buf("/home/dev/proj/target/release/waybill"), false),
             None
         );
         assert_eq!(
@@ -399,7 +399,7 @@ mod tests {
             None
         );
         assert_eq!(
-            path_matches_filter_category(&to_path_buf("/mikebom/mikebom-cli/src/main.rs"), false),
+            path_matches_filter_category(&to_path_buf("/waybill/waybill-cli/src/main.rs"), false),
             None
         );
     }
@@ -457,7 +457,7 @@ mod tests {
         );
         assert_eq!(
             path_matches_filter_category(
-                &to_path_buf("/root/mikebom/target/debug/build/foo/fingerprint/dep-x"),
+                &to_path_buf("/root/waybill/target/debug/build/foo/fingerprint/dep-x"),
                 true
             ),
             Some(FilterCategoryTag::CargoFingerprint)
@@ -525,7 +525,7 @@ mod tests {
         // real builds probes these paths 400+× per package.
         assert_eq!(
             path_matches_filter_category(
-                &to_path_buf("/mikebom/mikebom-cli/tests/fixtures/foo/Cargo.toml"),
+                &to_path_buf("/waybill/waybill-cli/tests/fixtures/foo/Cargo.toml"),
                 false
             ),
             Some(FilterCategoryTag::CargoFingerprint)
@@ -539,7 +539,7 @@ mod tests {
             Some(FilterCategoryTag::CargoFingerprint)
         );
         assert_eq!(
-            path_matches_filter_category(&to_path_buf("/mikebom/.cargo/config"), false),
+            path_matches_filter_category(&to_path_buf("/waybill/.cargo/config"), false),
             Some(FilterCategoryTag::CargoFingerprint)
         );
     }

@@ -106,7 +106,7 @@ fn sc002_hex_git_otp_runtime_discrimination() {
     // Hex default-org PURL:
     let cowboy = component_with_purl(&doc, "pkg:hex/cowboy@2.10.0").expect("cowboy hex component");
     assert_eq!(
-        property_value(cowboy, "mikebom:source-type"),
+        property_value(cowboy, "waybill:source-type"),
         Some("erlang-hex"),
     );
 
@@ -114,11 +114,11 @@ fn sc002_hex_git_otp_runtime_discrimination() {
     let git_purl = "pkg:generic/my_fork@eb39649a76b87e8451baf75d10ce82ca3a3d5601?vcs_url=git+https://github.com/foo/my-fork.git";
     let my_fork = component_with_purl(&doc, git_purl).expect("git component");
     assert_eq!(
-        property_value(my_fork, "mikebom:source-type"),
+        property_value(my_fork, "waybill:source-type"),
         Some("erlang-git"),
     );
     assert_eq!(
-        property_value(my_fork, "mikebom:vcs-declared-ref"),
+        property_value(my_fork, "waybill:vcs-declared-ref"),
         Some("ref"),
     );
 
@@ -126,11 +126,11 @@ fn sc002_hex_git_otp_runtime_discrimination() {
     let kernel = component_with_purl(&doc, "pkg:generic/kernel@unspecified")
         .expect("kernel OTP runtime placeholder");
     assert_eq!(
-        property_value(kernel, "mikebom:source-type"),
+        property_value(kernel, "waybill:source-type"),
         Some("erlang-otp-runtime"),
     );
     assert_eq!(
-        property_value(kernel, "mikebom:otp-stdlib"),
+        property_value(kernel, "waybill:otp-stdlib"),
         Some("true"),
         "kernel is in OTP_STDLIB_ALLOWLIST per Q1",
     );
@@ -138,7 +138,7 @@ fn sc002_hex_git_otp_runtime_discrimination() {
     let stdlib = component_with_purl(&doc, "pkg:generic/stdlib@unspecified")
         .expect("stdlib OTP runtime placeholder");
     assert_eq!(
-        property_value(stdlib, "mikebom:otp-stdlib"),
+        property_value(stdlib, "waybill:otp-stdlib"),
         Some("true"),
     );
 }
@@ -222,7 +222,7 @@ fn sc002_git_tag_and_branch_forms() {
         "pkg:generic/my_tag_dep@v1.2.3?vcs_url=git+https://example.com/x.git";
     let tag_comp = component_with_purl(&doc, tag_purl).expect("tag-form git component");
     assert_eq!(
-        property_value(tag_comp, "mikebom:vcs-declared-ref"),
+        property_value(tag_comp, "waybill:vcs-declared-ref"),
         Some("tag"),
     );
 
@@ -230,7 +230,7 @@ fn sc002_git_tag_and_branch_forms() {
         "pkg:generic/my_branch_dep@main?vcs_url=git+https://example.com/y.git";
     let branch_comp = component_with_purl(&doc, branch_purl).expect("branch-form git component");
     assert_eq!(
-        property_value(branch_comp, "mikebom:vcs-declared-ref"),
+        property_value(branch_comp, "waybill:vcs-declared-ref"),
         Some("branch"),
     );
 }
@@ -269,15 +269,15 @@ fn sc008_main_module_emission_from_app_src() {
     let main_module = component_with_purl(&doc, "pkg:hex/my_app@1.2.3")
         .expect("main-module component should emit");
     assert_eq!(
-        property_value(main_module, "mikebom:component-role"),
+        property_value(main_module, "waybill:component-role"),
         Some("main-module"),
     );
-    // Note: mikebom:source-type may be absent on the promoted
+    // Note: waybill:source-type may be absent on the promoted
     // metadata.component subject — the source_type field is emitted
     // only by builder.rs into components[]. metadata.rs's curated
-    // propagation list does not include mikebom:source-type today; this
+    // propagation list does not include waybill:source-type today; this
     // matches the milestone-140 elixir main_module test convention which
-    // also asserts only mikebom:component-role on the promoted subject.
+    // also asserts only waybill:component-role on the promoted subject.
     // Future cross-reader work could promote source-type propagation
     // generically; not in scope for milestone 141.
 }

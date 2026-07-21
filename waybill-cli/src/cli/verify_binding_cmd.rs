@@ -1,4 +1,4 @@
-//! Milestone 072 T016 — `mikebom sbom verify-binding` subcommand.
+//! Milestone 072 T016 — `waybill sbom verify-binding` subcommand.
 //!
 //! Reads an image-tier SBOM and a source-tier SBOM and reports
 //! per-component binding verification status per FR-005 / VR-005.

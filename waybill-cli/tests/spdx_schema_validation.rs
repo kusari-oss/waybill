@@ -7,7 +7,7 @@
 //! also produces under the same validator.
 //!
 //! The vendored reference is at
-//! `mikebom-cli/tests/fixtures/reference/SPDXJSONExample-v2.3.spdx.json`
+//! `waybill-cli/tests/fixtures/reference/SPDXJSONExample-v2.3.spdx.json`
 //! (downloaded in Phase 1 T056). It's not network-fetched at test
 //! time — schema validation runs fully offline.
 
@@ -56,7 +56,7 @@ pub fn validate_spdx_2_3(doc: &serde_json::Value) -> std::collections::BTreeSet<
 /// Warning-baseline categories produced by validating the SPDX
 /// reference example (`SPDXJSONExample-v2.3.spdx.json`) against the
 /// same schema. Our produced documents' categories must be a subset
-/// of this set — that's the "mikebom doesn't introduce new warning
+/// of this set — that's the "waybill doesn't introduce new warning
 /// categories beyond what the SPDX project's own reference produces"
 /// rule from the spec.
 fn reference_baseline_categories() -> &'static std::collections::BTreeSet<String> {
@@ -79,10 +79,10 @@ fn scan_to_spdx(case: &EcosystemCase) -> serde_json::Value {
         fixture.display()
     );
     let tmp = tempfile::tempdir().expect("tempdir");
-    let out_path = tmp.path().join("mikebom.spdx.json");
+    let out_path = tmp.path().join("waybill.spdx.json");
     let bin = env!("CARGO_BIN_EXE_mikebom");
     let mut cmd = Command::new(bin);
-    cmd.env("MIKEBOM_NO_GO_MOD_WHY", "1");
+    cmd.env("WAYBILL_NO_GO_MOD_WHY", "1");
     cmd.arg("--offline")
         .arg("sbom")
         .arg("scan")
@@ -99,7 +99,7 @@ fn scan_to_spdx(case: &EcosystemCase) -> serde_json::Value {
     if let Some(code) = case.deb_codename {
         cmd.arg("--deb-codename").arg(code);
     }
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed for {}: stderr={}",

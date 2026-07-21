@@ -1,7 +1,7 @@
 //! Integration test for the Yocto image-manifest reader (milestone 107 US2).
 //!
 //! Companion to the unit tests in `scan_fs::package_db::yocto::manifest::tests`.
-//! Invokes the `mikebom sbom scan` binary against the in-repo
+//! Invokes the `waybill sbom scan` binary against the in-repo
 //! `yocto_manifest_basic/` fixture (a synthetic Yocto build directory
 //! with `build/tmp/deploy/images/<machine>/<image>.manifest`) and
 //! asserts:
@@ -11,10 +11,10 @@
 //! - The `nativesdk-` prefixed line is tagged with CDX `scope:
 //!   "excluded"` (proves the FR-006 per-line override flows through
 //!   the milestone-052 emission path)
-//! - The `mikebom:source-mechanism` annotation is
+//! - The `waybill:source-mechanism` annotation is
 //!   `"yocto-image-manifest"` on every emitted component
 //!
-//! All package names use the synthetic `mikebom-fixture-*` prefix per
+//! All package names use the synthetic `waybill-fixture-*` prefix per
 //! the milestone-106 convention.
 
 use std::path::PathBuf;
@@ -43,7 +43,7 @@ fn yocto_manifest_fixture_emits_components() {
 
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -55,7 +55,7 @@ fn yocto_manifest_fixture_emits_components() {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "manifest scan unexpectedly failed: stderr={}",
@@ -73,11 +73,11 @@ fn yocto_manifest_fixture_emits_components() {
 
     // All 5 manifest lines should emerge as distinct PURLs.
     let expected = [
-        "pkg:opkg/mikebom-fixture-libc@2.38?arch=mikebom-fixture-arch",
-        "pkg:opkg/mikebom-fixture-openssl@3.0.5?arch=mikebom-fixture-arch",
-        "pkg:opkg/mikebom-fixture-gstreamer@1.22.7?arch=mikebom-fixture-arch",
-        "pkg:opkg/mikebom-fixture-app@1.0.0?arch=mikebom-fixture-arch",
-        "pkg:opkg/nativesdk-mikebom-fixture-cmake@3.27.0?arch=x86_64",
+        "pkg:opkg/waybill-fixture-libc@2.38?arch=waybill-fixture-arch",
+        "pkg:opkg/waybill-fixture-openssl@3.0.5?arch=waybill-fixture-arch",
+        "pkg:opkg/waybill-fixture-gstreamer@1.22.7?arch=waybill-fixture-arch",
+        "pkg:opkg/waybill-fixture-app@1.0.0?arch=waybill-fixture-arch",
+        "pkg:opkg/nativesdk-waybill-fixture-cmake@3.27.0?arch=x86_64",
     ];
     for purl in expected {
         assert!(
@@ -93,7 +93,7 @@ fn yocto_manifest_fixture_emits_components() {
         .find(|c| {
             c["purl"]
                 .as_str()
-                .map(|p| p == "pkg:opkg/nativesdk-mikebom-fixture-cmake@3.27.0?arch=x86_64")
+                .map(|p| p == "pkg:opkg/nativesdk-waybill-fixture-cmake@3.27.0?arch=x86_64")
                 .unwrap_or(false)
         })
         .expect("nativesdk component present");

@@ -21,7 +21,7 @@ use std::process::Command;
 use std::time::{Duration, Instant};
 
 fn fixture_root() -> PathBuf {
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("polyglot-monorepo")
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("polyglot-monorepo")
 }
 
 fn time_scan(fixture: &Path, exclude_paths: &[&str]) -> Duration {
@@ -35,14 +35,14 @@ fn time_scan(fixture: &Path, exclude_paths: &[&str]) -> Duration {
         .arg("--no-deep-hash")
         .arg("--output")
         .arg("/dev/null")
-        .env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
+        .env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
         .env("RUST_LOG", "warn")
-        .env_remove("MIKEBOM_EXCLUDE_PATH");
+        .env_remove("WAYBILL_EXCLUDE_PATH");
     for entry in exclude_paths {
         cmd.arg("--exclude-path").arg(entry);
     }
     let start = Instant::now();
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     let elapsed = start.elapsed();
     assert!(
         output.status.success(),

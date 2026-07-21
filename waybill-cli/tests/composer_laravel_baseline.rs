@@ -221,7 +221,7 @@ fn main_module_emission() {
     let main = component_with_purl(&doc, "pkg:composer/acme/my-app@1.2.3")
         .expect("main-module component must exist");
     assert_eq!(
-        property_value(main, "mikebom:component-role"),
+        property_value(main, "waybill:component-role"),
         Some("main-module"),
         "main-module must carry the component-role annotation",
     );
@@ -296,7 +296,7 @@ fn sha1_hash_emitted_for_packagist_entries() {
 #[test]
 fn dev_scope_filterability() {
     // SC-007: packages-dev[] entries produce components with
-    // mikebom:lifecycle-scope = development; --exclude-scope dev
+    // waybill:lifecycle-scope = development; --exclude-scope dev
     // suppresses them.
     let tmp = tempfile::tempdir().unwrap();
     std::fs::write(
@@ -334,7 +334,7 @@ fn dev_scope_filterability() {
     let phpunit = component_with_purl(&doc_with_dev, "pkg:composer/phpunit/phpunit@11.0.0");
     assert!(phpunit.is_some(), "default scan must include dev-scope phpunit");
     if let Some(c) = phpunit {
-        let lifecycle = property_value(c, "mikebom:lifecycle-scope");
+        let lifecycle = property_value(c, "waybill:lifecycle-scope");
         let cdx_scope = c.get("scope").and_then(|v| v.as_str());
         assert!(
             lifecycle == Some("development")

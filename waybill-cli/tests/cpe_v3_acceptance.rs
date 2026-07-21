@@ -47,7 +47,7 @@ fn dual_scan(case: &EcosystemCase) -> Scan {
     if let Some(code) = case.deb_codename {
         cmd.arg("--deb-codename").arg(code);
     }
-    let out = cmd.output().expect("mikebom runs");
+    let out = cmd.output().expect("waybill runs");
     assert!(
         out.status.success(),
         "scan failed for {}: stderr={}",
@@ -121,7 +121,7 @@ fn assert_cpe_parity(case: &EcosystemCase) {
     // dropped ~every CPE; post-fix the directional containment must
     // hold. Note: SPDX 3 may carry MORE CPEs than CDX, because
     // CycloneDX's `component.cpe` is single-valued (primary candidate
-    // only; the full candidate set lives in a `mikebom:cpe-candidates`
+    // only; the full candidate set lives in a `waybill:cpe-candidates`
     // CDX property), while SPDX 3 per FR-003 emits every fully-
     // resolved candidate as a separate ExternalIdentifier entry.
     for cdx_cpe in &cdx_set {

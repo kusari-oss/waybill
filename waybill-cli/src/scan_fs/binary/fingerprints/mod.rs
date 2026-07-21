@@ -9,7 +9,7 @@
 //!   `super::symbol_fingerprint::scan` consumes a unified slice
 //!   regardless of source.
 //! - A `CorpusSource` enum tracking provenance for the
-//!   `mikebom:fingerprint-corpus-sha` SBOM annotation (FR-005).
+//!   `waybill:fingerprint-corpus-sha` SBOM annotation (FR-005).
 //!
 //! Phase 2B/2C scope: types + loader + bundled-fallback path. Phase 4
 //! adds the network-fetch path (`fetch.rs`); Phase 4 also wires
@@ -41,7 +41,7 @@ use loader::LoaderError;
 use source_config::Sources;
 
 /// Provenance tag for the corpus that produced a match. Surfaces as
-/// the value of the `mikebom:fingerprint-corpus-sha` SBOM annotation
+/// the value of the `waybill:fingerprint-corpus-sha` SBOM annotation
 /// (FR-005): the 12-hex SHA for cached/fetched paths, the literal
 /// `"bundled"` for the fallback path.
 #[allow(dead_code)]
@@ -88,23 +88,23 @@ pub(crate) struct FingerprintCorpus {
 #[allow(dead_code)]
 pub(crate) struct LoadOptions {
     /// True when the operator passed `--fingerprints-corpus` (or set
-    /// `MIKEBOM_FINGERPRINTS_CORPUS=1`). When false, the bundled
+    /// `WAYBILL_FINGERPRINTS_CORPUS=1`). When false, the bundled
     /// fallback is returned unconditionally — no cache access.
     pub external_enabled: bool,
     /// True when the operator passed `--offline` (the existing global
-    /// flag). On a cache miss with `offline = true`, mikebom skips the
+    /// flag). On a cache miss with `offline = true`, waybill skips the
     /// network fetch entirely and falls back to bundled defaults with
     /// a single `tracing::warn!`.
     pub offline: bool,
     /// Runtime-override SHA per milestone-108 US5 (`--fingerprints-rev`
-    /// or `MIKEBOM_FINGERPRINTS_REV=<SHA>`). When `Some(sha)`, mikebom
+    /// or `WAYBILL_FINGERPRINTS_REV=<SHA>`). When `Some(sha)`, waybill
     /// uses this SHA instead of the build-time-embedded one for both
     /// cache lookup and any cache-miss fetch. The SBOM annotation
     /// reflects the override.
     pub sha_override: Option<CorpusSha>,
     /// Milestone 110 Phase 5-Slim — multi-source configuration
-    /// materialized from `MIKEBOM_FINGERPRINTS_SOURCES` and
-    /// `MIKEBOM_FINGERPRINTS_NO_DEFAULT`. PR-1 of the Phase 5-Slim
+    /// materialized from `WAYBILL_FINGERPRINTS_SOURCES` and
+    /// `WAYBILL_FINGERPRINTS_NO_DEFAULT`. PR-1 of the Phase 5-Slim
     /// slice parses this into the struct but does not yet fetch
     /// extras — those land in PR-2. `load_corpus` logs the parsed
     /// extras so operators can confirm their configuration is being
@@ -115,9 +115,9 @@ pub(crate) struct LoadOptions {
 impl LoadOptions {
     /// Build the options from the process env. Drives the milestone-108
     /// env-var bridge that `scan_cmd::execute` populates from the CLI
-    /// flag (same pattern as `MIKEBOM_INCLUDE_VENDORED`) — keeps the
+    /// flag (same pattern as `WAYBILL_INCLUDE_VENDORED`) — keeps the
     /// caller from threading params through `scan_path`'s 75-callsite
-    /// chain. Malformed `MIKEBOM_FINGERPRINTS_REV` values are caught
+    /// chain. Malformed `WAYBILL_FINGERPRINTS_REV` values are caught
     /// at clap parse time; reaching `from_env()` with a bad value
     /// implies an external caller (e.g., a test or a downstream
     /// embedder) set the env directly — we emit a warn and discard
@@ -125,20 +125,20 @@ impl LoadOptions {
     #[allow(dead_code)]
     pub fn from_env() -> Self {
         let sha_override =
-            std::env::var("MIKEBOM_FINGERPRINTS_REV").ok().and_then(|s| {
+            std::env::var("WAYBILL_FINGERPRINTS_REV").ok().and_then(|s| {
                 CorpusSha::from_hex(&s)
                     .map_err(|e| {
                         tracing::warn!(
                             value = %s,
                             error = %e,
-                            "MIKEBOM_FINGERPRINTS_REV is malformed; ignoring (using build-time-embedded SHA instead)",
+                            "WAYBILL_FINGERPRINTS_REV is malformed; ignoring (using build-time-embedded SHA instead)",
                         );
                     })
                     .ok()
             });
         Self {
-            external_enabled: env_flag("MIKEBOM_FINGERPRINTS_CORPUS"),
-            offline: env_flag("MIKEBOM_OFFLINE"),
+            external_enabled: env_flag("WAYBILL_FINGERPRINTS_CORPUS"),
+            offline: env_flag("WAYBILL_OFFLINE"),
             sha_override,
             sources: Sources::from_env(),
         }
@@ -208,7 +208,7 @@ pub(crate) fn load_corpus(opts: LoadOptions) -> FingerprintCorpus {
     }
     // Milestone 110 Phase 5-Slim (PR-1): surface the parsed multi-
     // source configuration via a single info log so operators can
-    // confirm `--fingerprints-source` and `MIKEBOM_FINGERPRINTS_SOURCES`
+    // confirm `--fingerprints-source` and `WAYBILL_FINGERPRINTS_SOURCES`
     // are being picked up. The extras are NOT yet fetched in PR-1;
     // PR-2 wires the per-source fetch + cache layout and PR-3
     // dispatches to the multi-source orchestrator. The implicit
@@ -272,7 +272,7 @@ fn load_cached_or_fallback(
             tracing::warn!(
                 sha = %sha.to_full_hex(),
                 reason,
-                "fingerprint corpus cache is corrupt; falling back to bundled (consider `mikebom fingerprints cache-clear`)",
+                "fingerprint corpus cache is corrupt; falling back to bundled (consider `waybill fingerprints cache-clear`)",
             );
             load_bundled().clone()
         }
@@ -280,7 +280,7 @@ fn load_cached_or_fallback(
 }
 
 /// Process-wide mutex for tests that mutate the
-/// `MIKEBOM_FINGERPRINTS_CACHE_DIR` env var. cargo runs tests in
+/// `WAYBILL_FINGERPRINTS_CACHE_DIR` env var. cargo runs tests in
 /// parallel by default; without a shared lock, `cache::tests` and
 /// `loader::tests` race for the same env var. Shared here (not
 /// per-module) so any test in either module serializes against
@@ -317,7 +317,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         let corpus = load_corpus(LoadOptions {
             external_enabled: true,
@@ -327,7 +327,7 @@ mod tests {
         });
         assert!(matches!(corpus.source, CorpusSource::Bundled));
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 
@@ -340,7 +340,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         let override_sha =
             CorpusSha::from_hex("0123456789abcdef0123456789abcdef01234567").unwrap();
@@ -372,7 +372,7 @@ mod tests {
         assert_eq!(corpus.records.len(), 1);
         assert_eq!(corpus.records[0].library, "libfoo");
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 
@@ -382,7 +382,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         // Pre-populate the cache at the build-time-embedded SHA with a
         // single-library fixture so the cache-hit path triggers.
@@ -412,7 +412,7 @@ mod tests {
         assert_eq!(corpus.source.annotation_value(), sha.to_short_hex());
         assert_eq!(corpus.source.annotation_value().len(), 12);
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 }

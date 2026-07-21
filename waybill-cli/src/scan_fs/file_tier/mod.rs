@@ -36,11 +36,11 @@
 //!   index, and accumulates [`FileTierEntry`] records keyed by
 //!   SHA-256 (per FR-006 per-unique-hash dedupe).
 //!
-//! **`mikebom:component-paths` is a spec fabrication**: the
-//! original FR-011 wording references a `mikebom:component-paths`
-//! property that mikebom never emitted. US2 (already merged at
-//! PR US2.1 / US2.2 / US2.3) ships `mikebom:source-files`,
-//! `mikebom:layer-digest`, and standards-native
+//! **`waybill:component-paths` is a spec fabrication**: the
+//! original FR-011 wording references a `waybill:component-paths`
+//! property that waybill never emitted. US2 (already merged at
+//! PR US2.1 / US2.2 / US2.3) ships `waybill:source-files`,
+//! `waybill:layer-digest`, and standards-native
 //! `evidence.occurrences[]`. The DedupeIndex here reads from the
 //! third — `evidence.occurrences[]` — which after US2.3 covers
 //! 2925 / 2926 components (99.96 %) on the audit baseline.
@@ -63,39 +63,39 @@ pub(crate) use content_shape::ContentShape;
 
 /// CDX component type emitted for file-tier components per FR-001.
 /// The CDX 1.6 schema reserves `"file"` for components that ARE
-/// files at a known path; mikebom file-tier entries qualify by
+/// files at a known path; waybill file-tier entries qualify by
 /// definition (the SHA-256 hash IS the identity, paths are
 /// rootfs-relative).
 pub(crate) const FILE_TIER_CDX_TYPE: &str = "file";
 
-/// `mikebom:component-tier` annotation key. Mark every file-tier
+/// `waybill:component-tier` annotation key. Mark every file-tier
 /// component with `value = "file"` per FR-002. Emission code paths
 /// (CDX `builder.rs`, SPDX 2.3 `packages.rs`, SPDX 3 packages
 /// builder) recognize this annotation and adapt — CDX overrides the
 /// `type` field and drops `purl`; the SPDX paths swap the element
 /// shape per the format's file-element semantics (US1.C polish).
 /// The scan-side code stays format-neutral per FR-017.
-pub(crate) const COMPONENT_TIER_KEY: &str = "mikebom:component-tier";
+pub(crate) const COMPONENT_TIER_KEY: &str = "waybill:component-tier";
 
 /// Annotation value paired with [`COMPONENT_TIER_KEY`] for file-tier
-/// emission. Plain string per existing mikebom:* annotation
+/// emission. Plain string per existing waybill:* annotation
 /// conventions (compares equal in CDX property + SPDX annotation
 /// envelope round-trips).
 pub(crate) const COMPONENT_TIER_FILE_VALUE: &str = "file";
 
-/// `mikebom:file-paths` annotation key. Value is a JSON-encoded
+/// `waybill:file-paths` annotation key. Value is a JSON-encoded
 /// string array carrying every path the entry covers, sorted
 /// lex-ascending per FR-007. Capped at 100 entries; when the cap
 /// fires, the companion [`FILE_PATHS_TRUNCATED_KEY`] annotation is
 /// also set to `"true"`.
-pub(crate) const FILE_PATHS_KEY: &str = "mikebom:file-paths";
+pub(crate) const FILE_PATHS_KEY: &str = "waybill:file-paths";
 
-/// `mikebom:file-paths-truncated` annotation key. Emitted alongside
+/// `waybill:file-paths-truncated` annotation key. Emitted alongside
 /// [`FILE_PATHS_KEY`] when the entry's path list was capped at the
 /// 100-entry limit (defensive — protects against pathological cases
 /// like a `.gitignore` file content duplicated across 1000s of nested
 /// repos).
-pub(crate) const FILE_PATHS_TRUNCATED_KEY: &str = "mikebom:file-paths-truncated";
+pub(crate) const FILE_PATHS_TRUNCATED_KEY: &str = "waybill:file-paths-truncated";
 
 /// FR-007 / FR-002: cap the per-entry `paths[]` length at 100
 /// entries. Excess paths are dropped and the truncation flag fires.
@@ -110,8 +110,8 @@ pub(crate) const FILE_PATHS_CAP: usize = 100;
 /// **Conversion to `ResolvedComponent`** lives in US1.B
 /// (`crate::scan_fs::file_tier::mod::file_tier_entry_to_component`)
 /// alongside the new C-rows that surface
-/// `mikebom:component-tier`, `mikebom:file-paths`,
-/// `mikebom:file-paths-truncated`. This entry type is the
+/// `waybill:component-tier`, `waybill:file-paths`,
+/// `waybill:file-paths-truncated`. This entry type is the
 /// in-process accumulator; emission shape comes later.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct FileTierEntry {
@@ -186,14 +186,14 @@ impl FileTierEntry {
     /// **Hashes**: SHA-256 in the canonical `ContentHash` form.
     ///
     /// **Annotations** seeded:
-    /// - `mikebom:component-tier = "file"` (FR-002)
-    /// - `mikebom:file-paths = <sorted JSON array of paths>` (FR-007)
+    /// - `waybill:component-tier = "file"` (FR-002)
+    /// - `waybill:file-paths = <sorted JSON array of paths>` (FR-007)
     ///   — native JSON array, NOT a JSON-string-encoded array.
     ///   The stringified-array shape (pre-milestone-145) was a wire
     ///   bug; consumers were forced to do a second `JSON.parse(value)`
     ///   to extract the paths. Fixed in milestone 145 US1 per
     ///   `specs/145-annotation-parity-fixes/contracts/file-paths-shape.md`.
-    /// - `mikebom:file-paths-truncated = "true"` (only when capped)
+    /// - `waybill:file-paths-truncated = "true"` (only when capped)
     pub(crate) fn into_resolved_component(self) -> ResolvedComponent {
         let basename = self
             .paths
@@ -469,12 +469,12 @@ mod tests {
         let c = e.into_resolved_component();
         // Placeholder PURL embeds the SHA-256 so different
         // contents distinct identities even before the
-        // mikebom:component-tier-driven PURL drop at emission.
+        // waybill:component-tier-driven PURL drop at emission.
         assert!(c.purl.as_str().contains(&sha));
         assert!(c.purl.as_str().starts_with("pkg:generic/file-tier"));
     }
 
-    /// Milestone 145 US1 T004 (SC-002): the `mikebom:file-paths`
+    /// Milestone 145 US1 T004 (SC-002): the `waybill:file-paths`
     /// annotation value MUST be a `Value::Array`, NOT a `Value::String`
     /// holding a JSON-string-encoding of the array. Guards against
     /// regression of the pre-145 double-encoding bug.
@@ -491,7 +491,7 @@ mod tests {
         let value = c
             .extra_annotations
             .get(FILE_PATHS_KEY)
-            .expect("mikebom:file-paths is present");
+            .expect("waybill:file-paths is present");
         assert!(
             value.is_array(),
             "FR-001 violation: expected Value::Array, got {value:?}"

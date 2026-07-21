@@ -1,6 +1,6 @@
 //! Corpus harness — data-model.md Entities 2, 3, 5 + research §R2.
 //!
-//! Spawns the released `mikebom` binary against each pinned corpus
+//! Spawns the released `waybill` binary against each pinned corpus
 //! target, captures the emitted CDX + SPDX 2.3 + SPDX 3 SBOMs, and
 //! surfaces structured `AssertionFailure` vs `CorpusInfraError`
 //! diagnostics per FR-009 / FR-012.
@@ -64,7 +64,7 @@ impl std::fmt::Display for AssertionFailure {
         writeln!(f, "================================================================================")?;
         writeln!(f, "✗ corpus target FAILED")?;
         writeln!(f, "--------------------------------------------------------------------------------")?;
-        writeln!(f, "class:     mikebom-regression")?;
+        writeln!(f, "class:     waybill-regression")?;
         writeln!(f, "invariant: {}", self.invariant_name)?;
         writeln!(f, "format:    {}", self.format)?;
         writeln!(f, "observed:  {}", self.observed)?;
@@ -92,7 +92,7 @@ impl std::fmt::Display for CorpusInfraError {
     /// corpus-harness.md "Diagnostic Output Format", including the
     /// `underlying error: <stderr excerpt, capped at 500 chars>` line.
     /// The `class:` value is `corpus-infra` (distinct from
-    /// `AssertionFailure`'s `mikebom-regression`) per FR-012.
+    /// `AssertionFailure`'s `waybill-regression`) per FR-012.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "================================================================================")?;
         writeln!(f, "✗ corpus target FAILED")?;
@@ -115,7 +115,7 @@ impl std::fmt::Display for CorpusInfraError {
                 writeln!(f, "invariant: sbom-emission")?;
                 writeln!(f, "target:    {target}")?;
                 writeln!(f, "missing:   {missing_files:?}")?;
-                writeln!(f, "next:      investigate mikebom regression in the emission path for {target}")?;
+                writeln!(f, "next:      investigate waybill regression in the emission path for {target}")?;
                 writeln!(f, "underlying error: {}", truncate_stderr(stderr))?;
             }
             CorpusInfraError::CacheIo { path, kind } => {
@@ -126,7 +126,7 @@ impl std::fmt::Display for CorpusInfraError {
             }
             CorpusInfraError::OciToolMissing => {
                 writeln!(f, "invariant: oci-tool-missing")?;
-                writeln!(f, "next:      install `docker` (or set MIKEBOM_CORPUS_SKIP_OCI=1 to skip image targets on this host)")?;
+                writeln!(f, "next:      install `docker` (or set WAYBILL_CORPUS_SKIP_OCI=1 to skip image targets on this host)")?;
             }
         }
         write!(f, "================================================================================")
@@ -148,23 +148,23 @@ fn truncate_stderr(s: &str) -> String {
 /// FR-006 opt-in gate. `#[test]` functions early-return when this
 /// returns false — matches the milestone-101 windows-smoke pattern.
 pub fn env_gate() -> bool {
-    std::env::var("MIKEBOM_RUN_PUBLIC_CORPUS").as_deref() == Ok("1")
+    std::env::var("WAYBILL_RUN_PUBLIC_CORPUS").as_deref() == Ok("1")
 }
 
 pub fn skip_oci_gate() -> bool {
-    std::env::var("MIKEBOM_CORPUS_SKIP_OCI").as_deref() == Ok("1")
+    std::env::var("WAYBILL_CORPUS_SKIP_OCI").as_deref() == Ok("1")
 }
 
 pub fn update_goldens_gate() -> bool {
-    std::env::var("MIKEBOM_UPDATE_PUBLIC_CORPUS_GOLDENS").as_deref() == Ok("1")
+    std::env::var("WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS").as_deref() == Ok("1")
 }
 
 // -----------------------------------------------------------------------
-// scan_target — invoke released mikebom binary, capture emitted SBOMs
+// scan_target — invoke released waybill binary, capture emitted SBOMs
 // -----------------------------------------------------------------------
 
 /// Ensures the pinned artifact is hydrated (clone or pull), invokes
-/// the released `mikebom` binary via `env!("CARGO_BIN_EXE_mikebom")`
+/// the released `waybill` binary via `env!("CARGO_BIN_EXE_mikebom")`
 /// (matches milestone-101 windows-smoke pattern), reads back the
 /// emitted CDX + SPDX 2.3 + SPDX 3 files, and returns them parsed.
 pub fn scan_target(target: &CorpusTarget) -> Result<EmittedSboms, CorpusInfraError> {
@@ -182,7 +182,7 @@ pub fn scan_target(target: &CorpusTarget) -> Result<EmittedSboms, CorpusInfraErr
     let bin = env!("CARGO_BIN_EXE_mikebom");
     let mut cmd = std::process::Command::new(bin);
     cmd.arg("--offline"); // Corpus scans MUST NOT hit the network
-                          // from the mikebom side — network activity
+                          // from the waybill side — network activity
                           // is confined to the cache-hydration step.
     cmd.arg("sbom").arg("scan");
     match &target.source {

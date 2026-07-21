@@ -4,7 +4,7 @@
 # Resolves the current upstream SHA / digest for each pinned corpus
 # target and prints a unified diff of proposed manifest changes.
 # Does NOT auto-commit — per FR-008, invariant updates must land
-# alongside any mikebom behavior change that motivated them.
+# alongside any waybill behavior change that motivated them.
 #
 # Usage:
 #   ./scripts/corpus/refresh-pins.sh
@@ -13,11 +13,11 @@
 
 set -euo pipefail
 
-MANIFEST="mikebom-cli/tests/corpus_harness_195/manifest.rs"
+MANIFEST="waybill-cli/tests/corpus_harness_195/manifest.rs"
 
 if [[ ! -f "$MANIFEST" ]]; then
   echo "error: manifest not found at $MANIFEST" >&2
-  echo "hint: run from the mikebom repo root" >&2
+  echo "hint: run from the waybill repo root" >&2
   exit 2
 fi
 
@@ -95,5 +95,5 @@ grep -nE '(image_ref|algo_hex): "' "$MANIFEST" | \
 
 echo ""
 echo "==> Done. To apply: edit $MANIFEST by hand and commit alongside any"
-echo "    mikebom behavior change that motivates the pin bump (FR-008)."
+echo "    waybill behavior change that motivates the pin bump (FR-008)."
 echo "    Then regen goldens: ./scripts/corpus/regen-goldens.sh"

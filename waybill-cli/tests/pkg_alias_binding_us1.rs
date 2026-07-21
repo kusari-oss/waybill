@@ -31,7 +31,7 @@ use common::normalize::{apply_fake_home_env, normalize_cdx_for_golden};
 use common::{bin, workspace_root};
 
 /// Path to an in-repo milestone-111 fixture under
-/// `mikebom-cli/tests/fixtures/pkg_alias_binding/`.
+/// `waybill-cli/tests/fixtures/pkg_alias_binding/`.
 fn alias_fixture(rel: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/pkg_alias_binding")
@@ -80,7 +80,7 @@ fn build_synthetic_image(files: &[(&str, Vec<u8>)]) -> PathBuf {
         layer_tar.finish().unwrap();
     }
 
-    let manifest = r#"[{"Config":"config.json","RepoTags":["mikebom-test:latest"],"Layers":["layer0/layer.tar"]}]"#;
+    let manifest = r#"[{"Config":"config.json","RepoTags":["waybill-test:latest"],"Layers":["layer0/layer.tar"]}]"#;
     let tmp = tempfile::NamedTempFile::new().unwrap();
     let path = tmp.path().to_path_buf();
     let file = tmp.reopen().unwrap();
@@ -141,7 +141,7 @@ fn scan_image_bound(tarball: &Path, extra_args: &[&str]) -> String {
     std::fs::read_to_string(&cdx_out).expect("read emitted CDX")
 }
 
-/// Extract the parsed `mikebom:source-document-binding` envelope from
+/// Extract the parsed `waybill:source-document-binding` envelope from
 /// the component whose PURL starts with `pkg:generic/baz`.
 fn baz_binding_envelope(raw: &str) -> serde_json::Value {
     let sbom: serde_json::Value = serde_json::from_str(raw).expect("valid JSON");
@@ -169,7 +169,7 @@ fn baz_binding_envelope(raw: &str) -> serde_json::Value {
         .as_array()
         .expect("properties array")
         .iter()
-        .find(|p| p["name"].as_str() == Some("mikebom:source-document-binding"))
+        .find(|p| p["name"].as_str() == Some("waybill:source-document-binding"))
         .expect("binding property present");
     serde_json::from_str(prop["value"].as_str().expect("string value"))
         .expect("envelope is valid JSON")
@@ -242,19 +242,19 @@ fn no_alias_scan_is_byte_identical_to_pre_feature_golden() {
     // Byte-identity against the pinned golden. Two per-run paths leak
     // into the document and must be masked before the standard
     // normalization pass: the tarball itself, and the per-scan
-    // `mikebom-image-<random>` extraction dir that prefixes every
+    // `waybill-image-<random>` extraction dir that prefixes every
     // component source-path.
     let masked = raw.replace(
         tarball.to_string_lossy().as_ref(),
         "<IMAGE_TARBALL>",
     );
-    let extract_dir_re = regex::Regex::new(r#"[^"]*mikebom-image-[^/"]+"#)
+    let extract_dir_re = regex::Regex::new(r#"[^"]*waybill-image-[^/"]+"#)
         .expect("static regex compiles");
     let masked = extract_dir_re.replace_all(&masked, "<IMAGE_EXTRACT_DIR>");
     let normalized = normalize_cdx_for_golden(&masked, &workspace_root());
 
     let golden_path = alias_fixture("image-baz.cdx.json");
-    let update = std::env::var("MIKEBOM_UPDATE_CDX_GOLDENS")
+    let update = std::env::var("WAYBILL_UPDATE_CDX_GOLDENS")
         .ok()
         .map(|v| v == "1")
         .unwrap_or(false);
@@ -276,7 +276,7 @@ fn no_alias_scan_is_byte_identical_to_pre_feature_golden() {
             "no-alias image scan drifted from the pre-feature golden \
              (SC-004 byte-identity).\n  golden: {}\n  actual: {}\nTo \
              accept an intentional change, rerun with \
-             MIKEBOM_UPDATE_CDX_GOLDENS=1",
+             WAYBILL_UPDATE_CDX_GOLDENS=1",
             golden_path.display(),
             actual.display()
         );

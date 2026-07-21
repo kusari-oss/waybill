@@ -203,9 +203,9 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
             // e.g., a cmake source-tier zlib component (winner) +
             // a binary-tier fingerprint match for the same PURL
             // (loser) merges into one component carrying both
-            // `mikebom:source-mechanism = cmake-fetchcontent-git` AND
-            // `mikebom:fingerprint-corpus-sha = <sha>` AND
-            // `mikebom:fingerprint-symbols-matched = "10/10"`.
+            // `waybill:source-mechanism = cmake-fetchcontent-git` AND
+            // `waybill:fingerprint-corpus-sha = <sha>` AND
+            // `waybill:fingerprint-symbols-matched = "10/10"`.
             //
             // Conservative merge — only inserts when the key isn't
             // already present on `best`. No upgrade-by-precedence
@@ -244,7 +244,7 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
     // dedup'd component whose `evidence.occurrences[]` paths match a
     // curated build-tool / language-runtime path heuristic. Three-state
     // semantics: components without a heuristic match get NO
-    // `mikebom:component-role` annotation (absence ≠ application).
+    // `waybill:component-role` annotation (absence ≠ application).
     classify_component_roles(&mut result);
 
     result
@@ -253,7 +253,7 @@ pub fn deduplicate(components: Vec<ResolvedComponent>) -> Vec<ResolvedComponent>
 /// Apply the milestone-048 component-role classifier to every
 /// component in `components` post-dedup. Components whose
 /// `occurrences[]` paths match a heuristic-table entry get a
-/// `mikebom:component-role` annotation in their
+/// `waybill:component-role` annotation in their
 /// `extra_annotations` bag; components without a match are left
 /// unchanged.
 fn classify_component_roles(components: &mut [ResolvedComponent]) {
@@ -262,7 +262,7 @@ fn classify_component_roles(components: &mut [ResolvedComponent]) {
             crate::resolve::component_role::classify(&component.occurrences)
         {
             component.extra_annotations.insert(
-                "mikebom:component-role".to_string(),
+                "waybill:component-role".to_string(),
                 serde_json::Value::String(role.as_str().to_string()),
             );
         }
@@ -284,7 +284,7 @@ fn canonical_coord_key(c: &ResolvedComponent) -> (String, String, String, String
 }
 
 /// Return true if this source_type marks a "secondary" emission —
-/// a coord that mikebom knows about by declaration or transitive
+/// a coord that waybill knows about by declaration or transitive
 /// resolution but that an authoritative file-walk (JAR walker,
 /// dpkg, rpm, apk, npm node_modules, etc.) may ALSO have found.
 /// Secondary entries are candidates for folding into on-disk
@@ -458,14 +458,14 @@ fn fold_declared_not_cached(components: &mut Vec<ResolvedComponent>) {
 /// `cyclonedx/builder.rs:830-839`, SPDX 2.3 `spdx/annotations.rs:302-308`,
 /// SPDX 3 `spdx/v3_annotations.rs:267-273`) cause the sbom-conformance
 /// audit harness to observe cross-format divergence on the
-/// `mikebom:source-files` annotation for what the harness treats as the
+/// `waybill:source-files` annotation for what the harness treats as the
 /// same PURL (51 polyglot-builder-image findings, 2026-06-28 audit).
 ///
 /// This pass, keyed on the full canonical `Purl::as_str()` string,
 /// replaces each same-PURL entry's `source_file_paths` Vec with the
 /// alphabetically-sorted UNION of paths observed across all same-PURL
 /// entries. After the pass, every emitter sees the same Vec content for
-/// every same-PURL pair, so the wire-side `mikebom:source-files`
+/// every same-PURL pair, so the wire-side `waybill:source-files`
 /// annotation is identical across formats regardless of which entry the
 /// harness happens to pick.
 ///
@@ -476,7 +476,7 @@ fn fold_declared_not_cached(components: &mut Vec<ResolvedComponent>) {
 /// - **Content-preserving no-op for single-entry PURLs** — the path
 ///   *set* is unchanged (FR-007). Wire-order MAY canonicalize to
 ///   alphabetical via the `BTreeSet` collection semantic; that's a
-///   non-breaking shift because `mikebom:source-files` value-order has
+///   non-breaking shift because `waybill:source-files` value-order has
 ///   no documented semantic and consumers parse the value as a set.
 /// - **Cross-ecosystem isolation** — keying on `Purl::as_str()` (which
 ///   includes the ecosystem segment) prevents cross-ecosystem path
@@ -1181,7 +1181,7 @@ mod tests {
         assert_eq!(deduped.len(), 1);
         let role = deduped[0]
             .extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .expect("classifier should have annotated this component");
         assert_eq!(role, &serde_json::json!("build-tool"));
     }
@@ -1215,7 +1215,7 @@ mod tests {
         assert!(
             !deduped[0]
                 .extra_annotations
-                .contains_key("mikebom:component-role"),
+                .contains_key("waybill:component-role"),
             "application paths must NOT carry the role annotation",
         );
     }
@@ -1370,7 +1370,7 @@ mod tests {
         component.evidence.confidence = 0.9;
         component.evidence.source_connection_ids = vec!["conn-42".to_string()];
         component.extra_annotations.insert(
-            "mikebom:test-key".to_string(),
+            "waybill:test-key".to_string(),
             serde_json::json!("test-value"),
         );
         let snapshot = component.clone();
@@ -1412,19 +1412,19 @@ mod tests {
     }
 
     /// Milestone 148 T009b — analyze-finding-H1 fallback: code-shape
-    /// regression guard asserting `mikebom:source-files` remains the
+    /// regression guard asserting `waybill:source-files` remains the
     /// single-source-of-truth field-owned key. Combined with
     /// `canonicalize_source_files_by_purl_same_purl_*` (asserting
     /// post-pass Vec content equality across same-PURL entries), this
     /// transitively guarantees cross-format wire-side equality
-    /// (CDX 1.6 / SPDX 2.3 / SPDX 3) of the `mikebom:source-files`
+    /// (CDX 1.6 / SPDX 2.3 / SPDX 3) of the `waybill:source-files`
     /// annotation WITHOUT requiring a synthetic Maven fixture or full
     /// per-format emitter invocation. This closes SC-003 / FR-009 in
     /// CI even when T008 + T009 are deferred.
     #[test]
     fn source_files_single_source_of_truth_invariant_md148() {
         use crate::generate::root_selector::is_field_owned_annotation_key;
-        // FR-008 + milestone-145 US3 invariant: `mikebom:source-files`
+        // FR-008 + milestone-145 US3 invariant: `waybill:source-files`
         // is field-owned. All three SBOM emitters consume it from
         // `c.evidence.source_file_paths` exclusively; the
         // `extra_annotations` bag-stamped duplicate is filtered out
@@ -1432,15 +1432,15 @@ mod tests {
         // `is_field_owned_annotation_key`. Any new emitter MUST NOT
         // bypass this filter; any new reader MUST NOT stamp the
         // bag-keyed duplicate (the Maven reader's renamed key is
-        // `mikebom:source-files-nested-url` post-145 specifically to
+        // `waybill:source-files-nested-url` post-145 specifically to
         // avoid this collision).
         assert!(
-            is_field_owned_annotation_key("mikebom:source-files"),
-            "FR-008 + milestone-145 US3 invariant: mikebom:source-files MUST remain \
+            is_field_owned_annotation_key("waybill:source-files"),
+            "FR-008 + milestone-145 US3 invariant: waybill:source-files MUST remain \
              field-owned (drives single-source-of-truth across CDX/SPDX2.3/SPDX3 emitters)",
         );
         assert!(
-            !is_field_owned_annotation_key("mikebom:source-files-nested-url"),
+            !is_field_owned_annotation_key("waybill:source-files-nested-url"),
             "the renamed Maven-reader key is NOT field-owned — it ships through \
              extra_annotations as a distinct annotation",
         );
@@ -1453,7 +1453,7 @@ mod tests {
     /// combined with the single-source-of-truth invariant from
     /// `source_files_single_source_of_truth_invariant_md148`, transitively
     /// guarantees cross-format byte-equality of the wire-side
-    /// `mikebom:source-files` annotation.
+    /// `waybill:source-files` annotation.
     #[test]
     fn canonicalize_produces_emitter_ready_vec_across_formats_md148() {
         let mut components = vec![
@@ -1475,7 +1475,7 @@ mod tests {
         // single-source-of-truth invariant asserted by
         // source_files_single_source_of_truth_invariant_md148, this
         // is sufficient to guarantee cross-format wire-side equality
-        // of `mikebom:source-files` without instantiating the per-format
+        // of `waybill:source-files` without instantiating the per-format
         // emitters (which require full ScanResult plumbing the unit
         // test cannot easily reproduce).
         assert_eq!(
@@ -1483,7 +1483,7 @@ mod tests {
             components[1].evidence.source_file_paths,
             "SC-003: post-canonicalize, all same-PURL entries MUST carry identical \
              source_file_paths Vec — this transitively guarantees cross-format \
-             mikebom:source-files equality because all three emitters read from \
+             waybill:source-files equality because all three emitters read from \
              this field exclusively (FR-008 + 145-US3 single-source-of-truth invariant)",
         );
     }

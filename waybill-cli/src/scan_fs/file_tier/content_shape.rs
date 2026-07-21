@@ -42,13 +42,13 @@ pub(crate) enum ContentShape {
     /// as one of the binary variants above (e.g. an empty/stub `.so`).
     SharedLib,
     /// `.jar` / `.war` / `.ear` / generic `.zip` not already opened by
-    /// mikebom's archive walkers.
+    /// waybill's archive walkers.
     JavaOrArchive,
     /// `.deb` / `.rpm` / `.apk` not already opened by the OS-package
     /// readers.
     OsPackage,
     /// `.tar.gz` / `.tgz` / `.tar.xz` / `.tar.bz2` / `.tar` not already
-    /// opened by mikebom's archive walkers.
+    /// opened by waybill's archive walkers.
     CompressedArchive,
     /// Lone package manifest with no adjacent lockfile — `package.json`
     /// without sibling `package-lock.json` etc. The adjacent-lockfile

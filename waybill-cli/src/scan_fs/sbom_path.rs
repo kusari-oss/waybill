@@ -44,7 +44,7 @@ pub fn normalize_sbom_path_str(s: &str) -> String {
 /// Strip the scan-rootfs prefix from a single path AND strip any leading `/`,
 /// so `ResolutionEvidence.source_file_paths` carries rootfs-relative values
 /// from the moment they are recorded by each reader. All three SBOM formats
-/// (CDX `mikebom:source-files` property, SPDX 2.3/3 `mikebom:source-files`
+/// (CDX `waybill:source-files` property, SPDX 2.3/3 `waybill:source-files`
 /// annotation, CDX `evidence.occurrences[].location`) read the same field, so
 /// normalizing once at source guarantees cross-format identity (the
 /// `holistic_parity` test verifies this — C18 is `SymmetricEqual`).
@@ -52,7 +52,7 @@ pub fn normalize_sbom_path_str(s: &str) -> String {
 /// Per milestone 133 US2.1 (FR-012):
 /// - **Defect A**: when `rootfs_root` is `Some`, a path starting with the
 ///   rootfs root prefix has the prefix stripped (avoids leaking the scanner
-///   host's tempdir, e.g. `/private/var/folders/.../mikebom-image-XXXXXX/rootfs/
+///   host's tempdir, e.g. `/private/var/folders/.../waybill-image-XXXXXX/rootfs/
 ///   usr/bin/curl` becomes `usr/bin/curl`).
 /// - **Defect C**: leading `/` is stripped so the no-leading-`/` convention
 ///   matches FR-007 and FR-014.
@@ -89,7 +89,7 @@ pub fn normalize_sbom_path_relative(s: &str, rootfs_root: Option<&std::path::Pat
 }
 
 /// Serialize a `source_file_paths` Vec as a JSON-encoded array string for
-/// CycloneDX `mikebom:source-files` property emission. Fixes milestone-133
+/// CycloneDX `waybill:source-files` property emission. Fixes milestone-133
 /// FR-012 Defect B (pre-133 emission was a comma-separated string).
 ///
 /// Assumes the input is already path-normalized via
@@ -162,13 +162,13 @@ mod tests {
 
     #[test]
     fn normalize_path_relative_strips_rootfs_tempdir_prefix() {
-        // FR-012 Defect A: the macOS tempdir + mikebom-image-XXX/rootfs/
+        // FR-012 Defect A: the macOS tempdir + waybill-image-XXX/rootfs/
         // prefix the resolver records during image scans is stripped so
         // emitted paths are rootfs-relative.
-        let rootfs = PathBuf::from("/private/var/folders/dz/abc/T/mikebom-image-XYZ/rootfs");
+        let rootfs = PathBuf::from("/private/var/folders/dz/abc/T/waybill-image-XYZ/rootfs");
         assert_eq!(
             normalize_sbom_path_relative(
-                "/private/var/folders/dz/abc/T/mikebom-image-XYZ/rootfs/usr/bin/curl",
+                "/private/var/folders/dz/abc/T/waybill-image-XYZ/rootfs/usr/bin/curl",
                 Some(&rootfs),
             ),
             "usr/bin/curl",
@@ -180,7 +180,7 @@ mod tests {
         // When a path doesn't share the rootfs prefix (e.g. a stray
         // absolute path from a different scan context), the prefix-strip
         // is a no-op and only the leading-`/` strip applies.
-        let rootfs = PathBuf::from("/private/var/folders/dz/abc/T/mikebom-image-XYZ/rootfs");
+        let rootfs = PathBuf::from("/private/var/folders/dz/abc/T/waybill-image-XYZ/rootfs");
         assert_eq!(normalize_sbom_path_relative("/etc/passwd", Some(&rootfs)), "etc/passwd");
     }
 

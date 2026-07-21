@@ -74,7 +74,7 @@ fn hex_purls(doc: &Value) -> Vec<String> {
                         .map(|arr| {
                             arr.iter().any(|p| {
                                 p.get("name").and_then(|v| v.as_str())
-                                    == Some("mikebom:source-type")
+                                    == Some("waybill:source-type")
                                     && p.get("value")
                                         .and_then(|v| v.as_str())
                                         .map(|s| s.starts_with("hex-"))
@@ -203,7 +203,7 @@ fn main_module_from_mix_exs_app_keyword() {
     let main = component_with_purl(&doc, "pkg:hex/my_app@0.5.2")
         .expect("main-module must exist");
     assert_eq!(
-        property_value(main, "mikebom:component-role"),
+        property_value(main, "waybill:component-role"),
         Some("main-module"),
     );
 }
@@ -316,7 +316,7 @@ end
 #[test]
 fn dev_scope_filterability() {
     // SC-007: mix.lock entry whose mix.exs deps/0 declares
-    // `only: [:dev, :test]` carries mikebom:lifecycle-scope=development;
+    // `only: [:dev, :test]` carries waybill:lifecycle-scope=development;
     // --exclude-scope dev suppresses (top-level flag BEFORE sbom subcommand).
     let tmp = tempfile::tempdir().unwrap();
     let inner = "a".repeat(64);
@@ -349,7 +349,7 @@ end
     let doc_with_dev = run_scan(tmp.path());
     let credo = component_with_purl(&doc_with_dev, "pkg:hex/credo@1.7.0")
         .expect("credo must emit by default");
-    let lifecycle = property_value(credo, "mikebom:lifecycle-scope");
+    let lifecycle = property_value(credo, "waybill:lifecycle-scope");
     let cdx_scope = credo.get("scope").and_then(|v| v.as_str());
     assert!(
         lifecycle == Some("development")

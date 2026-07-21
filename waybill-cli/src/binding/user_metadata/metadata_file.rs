@@ -145,7 +145,7 @@ mod tests {
 
     #[test]
     fn load_missing_file_fails_with_io_error() {
-        let path = std::path::PathBuf::from("/nonexistent/mikebom-080-test.json");
+        let path = std::path::PathBuf::from("/nonexistent/waybill-080-test.json");
         let err = load_metadata_file(&path).unwrap_err();
         assert!(matches!(
             err,

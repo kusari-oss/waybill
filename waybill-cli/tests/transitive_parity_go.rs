@@ -12,7 +12,7 @@ use transitive_parity_common::*;
 const FIXTURE_SUBPATH: &str = "go";
 
 /// **Cache-empty baseline** — pinned at the CI-reproducible state where
-/// `$GOMODCACHE` is empty. Mikebom's go reader has a 5-step ladder per
+/// `$GOMODCACHE` is empty. Waybill's go reader has a 5-step ladder per
 /// milestones 055 + 091 (`go mod graph` / `$GOMODCACHE` / proxy /
 /// **go.sum flat fallback** / no-edges-fallback). With `--offline` and
 /// an empty cache, step 5 (the milestone-091 go.sum-driven flat
@@ -24,7 +24,7 @@ const FIXTURE_SUBPATH: &str = "go";
 /// Real-world output on a developer's box with a populated module
 /// cache will be 260+ edges (full per-transitive parent-child topology
 /// from step 2); we pin the 109-edge offline-cache-empty count because
-/// that's what CI sees and what `MIKEBOM_REQUIRE_TRANSITIVE_PARITY=1`
+/// that's what CI sees and what `WAYBILL_REQUIRE_TRANSITIVE_PARITY=1`
 /// must reproduce.
 ///
 /// Closed by milestone 091 (go.sum-fallback step 5):
@@ -35,7 +35,7 @@ const FIXTURE_SUBPATH: &str = "go";
 ///   edges synthesized from go.sum's flat closure via step 5).
 /// - Post-194 US1 (issue #571): 110 edges (+1: main-module →
 ///   pkg:golang/stdlib@v* edge closing the stdlib-orphan gap).
-const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 110;
+const EXPECTED_WAYBILL_EDGE_COUNT: usize = 110;
 
 const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
     // Direct deps from go.mod `require` block — synthesized into edges
@@ -57,7 +57,7 @@ const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
     // and was previously dropped in offline+cache-empty mode.
     // beorn7/perks is a transitive of prometheus libraries, not a
     // direct cri-tools dep — it's only reachable via go.sum.
-    // Pre-091 mikebom emitted no edge to this component; post-091
+    // Pre-091 waybill emitted no edge to this component; post-091
     // step 5 augments main-module's depends list.
     (
         "pkg:golang/sigs.k8s.io/cri-tools",
@@ -81,8 +81,8 @@ fn transitive_edges_match_baseline() {
     let mikebom_edges = run_mikebom(&fixture());
     assert_eq!(
         mikebom_edges.len(),
-        EXPECTED_MIKEBOM_EDGE_COUNT,
-        "mikebom edge count drifted from the alpha.24 baseline."
+        EXPECTED_WAYBILL_EDGE_COUNT,
+        "waybill edge count drifted from the alpha.24 baseline."
     );
     let edge_set: std::collections::HashSet<(String, String)> = mikebom_edges
         .iter()
@@ -102,14 +102,14 @@ fn cross_tool_parity_check() {
         eprintln!("transitive_parity_go::cross_tool_parity_check skipped: {reason}");
         return;
     }
-    let mikebom = run_mikebom(&fixture());
+    let waybill = run_mikebom(&fixture());
     let trivy = run_trivy(&fixture());
     let syft = run_syft(&fixture());
-    let diff = compute_edge_diff(&mikebom, &trivy, &syft);
+    let diff = compute_edge_diff(&waybill, &trivy, &syft);
     eprintln!("\n=== go audit (kubernetes-sigs/cri-tools @ v1.32.0) ===");
     eprintln!(
-        "edge counts: mikebom={} trivy={} syft={}",
-        mikebom.len(),
+        "edge counts: waybill={} trivy={} syft={}",
+        waybill.len(),
         trivy.len(),
         syft.len()
     );
@@ -124,13 +124,13 @@ fn strip_version(purl: &str) -> &str {
 }
 
 // ============================================================
-// Milestone 112 (T011) — C60 `mikebom:build-inclusion` cross-format
+// Milestone 112 (T011) — C60 `waybill:build-inclusion` cross-format
 // consistency on the cri-tools fixture.
 //
 // Offline + cache-empty, step 5 (the milestone-091 go.sum flat
 // fallback) claims every module steps 1–3 missed — those components
-// carry `mikebom:resolver-step: go-sum-fallback` and therefore the
-// milestone-112 `mikebom:build-inclusion: unknown` marker. The
+// carry `waybill:resolver-step: go-sum-fallback` and therefore the
+// milestone-112 `waybill:build-inclusion: unknown` marker. The
 // marked PURL set must be non-empty and IDENTICAL across CDX 1.6,
 // SPDX 2.3, and SPDX 3 (catalog row C60, SymmetricEqual).
 // ============================================================
@@ -163,7 +163,7 @@ fn build_inclusion_marker_cross_format_consistency() {
         .arg(format!("spdx-3-json={}", spdx3_path.to_string_lossy()))
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom invokes");
+        .expect("waybill invokes");
     assert!(
         output.status.success(),
         "scan failed: {}",
@@ -177,14 +177,14 @@ fn build_inclusion_marker_cross_format_consistency() {
     let spdx23 = parse(&spdx23_path);
     let spdx3 = parse(&spdx3_path);
 
-    let cdx_marked = cdx_marked_purls(&cdx, "mikebom:build-inclusion", "unknown");
-    let spdx23_marked = spdx23_marked_purls(&spdx23, "mikebom:build-inclusion", "unknown");
-    let spdx3_marked = spdx3_marked_purls(&spdx3, "mikebom:build-inclusion", "unknown");
+    let cdx_marked = cdx_marked_purls(&cdx, "waybill:build-inclusion", "unknown");
+    let spdx23_marked = spdx23_marked_purls(&spdx23, "waybill:build-inclusion", "unknown");
+    let spdx3_marked = spdx3_marked_purls(&spdx3, "waybill:build-inclusion", "unknown");
 
     assert!(
         !cdx_marked.is_empty(),
         "offline + cache-empty cri-tools scan must produce go-sum-fallback \
-         components carrying mikebom:build-inclusion: unknown"
+         components carrying waybill:build-inclusion: unknown"
     );
     assert_eq!(
         cdx_marked, spdx23_marked,
@@ -284,8 +284,8 @@ fn spdx3_marked_purls(
 }
 
 // ============================================================
-// Milestone 112 (T019) — C61 `mikebom:build-inclusion-derivation` +
-// C62 `mikebom:lifecycle-scope-derivation` cross-format consistency.
+// Milestone 112 (T019) — C61 `waybill:build-inclusion-derivation` +
+// C62 `waybill:lifecycle-scope-derivation` cross-format consistency.
 //
 // The derivation discriminators are only emitted when the `go mod
 // why -m` classification runs, so this test injects a stub `go`
@@ -380,7 +380,7 @@ exit 1
             .env("PATH", format!("{}:{real_path}", stub_dir.path().to_string_lossy()))
             // Classification ON — the helper pins it off for golden
             // stability; this test exists to exercise it.
-            .env_remove("MIKEBOM_NO_GO_MOD_WHY")
+            .env_remove("WAYBILL_NO_GO_MOD_WHY")
             .arg("--offline")
             .arg("sbom")
             .arg("scan")
@@ -396,7 +396,7 @@ exit 1
             .arg(format!("spdx-3-json={}", spdx3_path.to_string_lossy()))
             .arg("--no-deep-hash")
             .output()
-            .expect("mikebom invokes");
+            .expect("waybill invokes");
         assert!(
             output.status.success(),
             "scan failed: {}",
@@ -411,15 +411,15 @@ exit 1
         let spdx3 = parse(&spdx3_path);
 
         // C61 — build-inclusion-derivation: go-mod-why.
-        let cdx_c61 = cdx_marked_purls(&cdx, "mikebom:build-inclusion-derivation", "go-mod-why");
+        let cdx_c61 = cdx_marked_purls(&cdx, "waybill:build-inclusion-derivation", "go-mod-why");
         let spdx23_c61 =
-            spdx23_marked_purls(&spdx23, "mikebom:build-inclusion-derivation", "go-mod-why");
+            spdx23_marked_purls(&spdx23, "waybill:build-inclusion-derivation", "go-mod-why");
         let spdx3_c61 =
-            spdx3_marked_purls(&spdx3, "mikebom:build-inclusion-derivation", "go-mod-why");
+            spdx3_marked_purls(&spdx3, "waybill:build-inclusion-derivation", "go-mod-why");
         assert!(
             !cdx_c61.is_empty(),
             "stub-classified scan must mark at least one not-needed component \
-             with mikebom:build-inclusion-derivation: go-mod-why"
+             with waybill:build-inclusion-derivation: go-mod-why"
         );
         assert_eq!(
             cdx_c61, spdx23_c61,
@@ -432,22 +432,22 @@ exit 1
 
         // C61 is the REQUIRED companion of C60 `not-needed` — the two
         // marked sets must coincide exactly.
-        let cdx_not_needed = cdx_marked_purls(&cdx, "mikebom:build-inclusion", "not-needed");
+        let cdx_not_needed = cdx_marked_purls(&cdx, "waybill:build-inclusion", "not-needed");
         assert_eq!(
             cdx_c61, cdx_not_needed,
             "every not-needed component must carry the C61 derivation and vice versa"
         );
 
         // C62 — lifecycle-scope-derivation: go-mod-why.
-        let cdx_c62 = cdx_marked_purls(&cdx, "mikebom:lifecycle-scope-derivation", "go-mod-why");
+        let cdx_c62 = cdx_marked_purls(&cdx, "waybill:lifecycle-scope-derivation", "go-mod-why");
         let spdx23_c62 =
-            spdx23_marked_purls(&spdx23, "mikebom:lifecycle-scope-derivation", "go-mod-why");
+            spdx23_marked_purls(&spdx23, "waybill:lifecycle-scope-derivation", "go-mod-why");
         let spdx3_c62 =
-            spdx3_marked_purls(&spdx3, "mikebom:lifecycle-scope-derivation", "go-mod-why");
+            spdx3_marked_purls(&spdx3, "waybill:lifecycle-scope-derivation", "go-mod-why");
         assert!(
             !cdx_c62.is_empty(),
             "stub-classified scan must mark at least one test-only component \
-             with mikebom:lifecycle-scope-derivation: go-mod-why"
+             with waybill:lifecycle-scope-derivation: go-mod-why"
         );
         assert_eq!(
             cdx_c62, spdx23_c62,

@@ -160,7 +160,7 @@ pub(crate) fn is_ruby_built_in_gem(name: &str) -> bool {
 // --------------------------------------------------------------------
 
 /// Language runtime whose toolchain provides this gem as built-in.
-/// Serialized to the `mikebom:synthetic-built-in` (C113) annotation value.
+/// Serialized to the `waybill:synthetic-built-in` (C113) annotation value.
 ///
 /// Closed 1-variant vocab in scope for milestone 162; extensible in
 /// future milestones if similar patterns are discovered in other
@@ -184,7 +184,7 @@ impl SyntheticGemKind {
 /// Per milestone 162 (T003), `depends` carries both the dep-name AND
 /// the raw version-constraint clause (empty when the source declaration
 /// had no clause). The constraint is load-bearing for FR-005 (C114
-/// `mikebom:built-in-requirement` annotation on synthetic components).
+/// `waybill:built-in-requirement` annotation on synthetic components).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct GemSpec {
     pub name: String,
@@ -322,7 +322,7 @@ pub(crate) fn parse_gemfile_lock(text: &str) -> GemfileLockDocument {
             // Format is `name` or `name (constraint[, constraint])`.
             // Milestone 162 (T004): preserve the version-constraint
             // clause (needed for the FR-005 C114
-            // `mikebom:built-in-requirement` annotation on synthetic
+            // `waybill:built-in-requirement` annotation on synthetic
             // components). Also strip the `!` source pin per the
             // DEPENDENCIES block's convention.
             let mut parts = trimmed.splitn(2, char::is_whitespace);
@@ -466,14 +466,14 @@ fn append_synthetic_built_in_gems(
             String,
             serde_json::Value,
         > = std::collections::BTreeMap::new();
-        // C113: mikebom:synthetic-built-in = "ruby"
+        // C113: waybill:synthetic-built-in = "ruby"
         extra_annotations.insert(
-            "mikebom:synthetic-built-in".to_string(),
+            "waybill:synthetic-built-in".to_string(),
             serde_json::Value::String(
                 SyntheticGemKind::RubyBuiltIn.as_wire_str().to_string(),
             ),
         );
-        // C114: mikebom:built-in-requirement — string OR JSON array
+        // C114: waybill:built-in-requirement — string OR JSON array
         // per R4 (multi-source union).
         if !requirements.is_empty() {
             let value = if requirements.len() == 1 {
@@ -491,7 +491,7 @@ fn append_synthetic_built_in_gems(
                         .collect(),
                 )
             };
-            extra_annotations.insert("mikebom:built-in-requirement".to_string(), value);
+            extra_annotations.insert("waybill:built-in-requirement".to_string(), value);
         }
 
         let entry = PackageDbEntry {
@@ -1196,7 +1196,7 @@ fn find_top_level_gemspecs(rootfs: &Path) -> Vec<PathBuf> {
 /// emits with the literal `0.0.0-unknown` placeholder per FR-001
 /// step 2 + Assumption A1.
 ///
-/// Mikebom does NOT execute the gemspec as Ruby code (A9). Only
+/// Waybill does NOT execute the gemspec as Ruby code (A9). Only
 /// literal-string assignments are recognized; everything else falls
 /// through to the placeholder.
 fn build_gem_main_module_entry(gemspec_path: &Path) -> Option<PackageDbEntry> {
@@ -1227,7 +1227,7 @@ fn build_gem_main_module_entry(gemspec_path: &Path) -> Option<PackageDbEntry> {
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra_annotations.insert(
-        "mikebom:component-role".to_string(),
+        "waybill:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
 
@@ -1298,7 +1298,7 @@ pub(crate) fn dedup_gem_main_modules_by_purl(
     for entry in std::mem::take(entries) {
         let is_main = entry
             .extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .and_then(|v| v.as_str())
             == Some("main-module");
         if !is_main {
@@ -1477,7 +1477,7 @@ fn harvest_gemspecs_in_dir(dir: &Path, out: &mut Vec<PathBuf>) {
 
 /// Parse a `.gemspec` file and extract `(name, version)`.
 ///
-/// Gemspec files are Ruby source; mikebom doesn't execute Ruby.
+/// Gemspec files are Ruby source; waybill doesn't execute Ruby.
 /// Fortunately the name+version assignments follow a rigid idiom
 /// across all installed gemspecs:
 ///
@@ -2239,7 +2239,7 @@ end
         assert_eq!(
             entry
                 .extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("main-module"),
         );
@@ -2341,7 +2341,7 @@ end
         let mut extra: std::collections::BTreeMap<String, serde_json::Value> =
             Default::default();
         extra.insert(
-            "mikebom:component-role".to_string(),
+            "waybill:component-role".to_string(),
             serde_json::Value::String("main-module".to_string()),
         );
         PackageDbEntry {
@@ -2503,7 +2503,7 @@ DEPENDENCIES
 
     #[test]
     fn t018_synthetic_component_carries_c113() {
-        // SC-009 (e): C113 mikebom:synthetic-built-in = "ruby".
+        // SC-009 (e): C113 waybill:synthetic-built-in = "ruby".
         let mut out: Vec<PackageDbEntry> = Vec::new();
         let specs = vec![synth_gem_spec(
             "bundler-audit",
@@ -2514,14 +2514,14 @@ DEPENDENCIES
         assert_eq!(out.len(), 1);
         let entry = &out[0];
         assert_eq!(
-            entry.extra_annotations.get("mikebom:synthetic-built-in"),
+            entry.extra_annotations.get("waybill:synthetic-built-in"),
             Some(&serde_json::Value::String("ruby".to_string()))
         );
     }
 
     #[test]
     fn t019_synthetic_component_carries_c114_single_source() {
-        // SC-009 (f): C114 mikebom:built-in-requirement carries the
+        // SC-009 (f): C114 waybill:built-in-requirement carries the
         // Gemfile.lock version-constraint (single source → bare string).
         let mut out: Vec<PackageDbEntry> = Vec::new();
         let specs = vec![synth_gem_spec(
@@ -2532,7 +2532,7 @@ DEPENDENCIES
         append_synthetic_built_in_gems(&mut out, &HashSet::new(), "/tmp", &specs);
         let entry = &out[0];
         assert_eq!(
-            entry.extra_annotations.get("mikebom:built-in-requirement"),
+            entry.extra_annotations.get("waybill:built-in-requirement"),
             Some(&serde_json::Value::String(">= 1.2.0".to_string()))
         );
     }
@@ -2594,7 +2594,7 @@ DEPENDENCIES
         let entry = &out[0];
         let req = entry
             .extra_annotations
-            .get("mikebom:built-in-requirement")
+            .get("waybill:built-in-requirement")
             .expect("C114 present");
         // BTreeSet sorts alphabetically: `">= 1.2.0"` < `">= 2.0.0"`.
         let expected = serde_json::Value::Array(vec![
@@ -2639,14 +2639,14 @@ DEPENDENCIES
     fn t026_real_gem_carries_at_version_and_no_c113() {
         // SC-004 complement: a real GEM/specs entry emitted via
         // spec_to_entry has `@version` in PURL AND does NOT carry the
-        // mikebom:synthetic-built-in annotation.
+        // waybill:synthetic-built-in annotation.
         let spec = synth_gem_spec("bundler-audit", "0.9.3", &[]);
         let entry = spec_to_entry(&spec, "/tmp", &HashSet::new())
             .expect("real entry constructed");
         assert!(entry.purl.as_str().contains("@0.9.3"));
         assert!(!entry
             .extra_annotations
-            .contains_key("mikebom:synthetic-built-in"));
+            .contains_key("waybill:synthetic-built-in"));
     }
 
     #[test]
@@ -2677,7 +2677,7 @@ DEPENDENCIES
             let has_at = entry.purl.as_str().contains('@');
             let has_c113 = entry
                 .extra_annotations
-                .contains_key("mikebom:synthetic-built-in");
+                .contains_key("waybill:synthetic-built-in");
             assert_ne!(
                 has_at, has_c113,
                 "SC-004 dual invariant violated for {}: has_at={has_at}, has_c113={has_c113}",

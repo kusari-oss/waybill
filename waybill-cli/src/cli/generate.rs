@@ -29,7 +29,7 @@ pub struct GenerateArgs {
     pub format: String,
 
     /// SBOM output path
-    #[arg(long, default_value = "mikebom.cdx.json")]
+    #[arg(long, default_value = "waybill.cdx.json")]
     pub output: PathBuf,
 
     /// What to include: packages (default) or source (packages + source files)
@@ -65,7 +65,7 @@ pub struct GenerateArgs {
     pub json: bool,
 
     /// Milestone 073: identifiers to attach to the emitted
-    /// build-tier SBOM. Forwarded from the `mikebom trace run`
+    /// build-tier SBOM. Forwarded from the `waybill trace run`
     /// dedicated identifier flags (`--repo`, `--git-ref`, `--image-id`,
     /// `--attestation`, `--id <scheme>=<value>`). The list is
     /// pre-assembled by `cli/run.rs::execute` before calling
@@ -75,7 +75,7 @@ pub struct GenerateArgs {
 
     /// Milestone 076: per-component user-defined identifiers from
     /// `--component-id <PURL>=<scheme>:<value>` flags on
-    /// `mikebom trace run`. Threaded through to the CycloneDX builder
+    /// `waybill trace run`. Threaded through to the CycloneDX builder
     /// so per-component matching can fire on the emitted build-tier
     /// SBOM.
     #[arg(skip)]
@@ -83,9 +83,9 @@ pub struct GenerateArgs {
         Vec<waybill::binding::identifiers::component_id::ComponentIdentifierFlag>,
 
     /// Milestone 077: operator-supplied overrides for the root
-    /// component's name + version, threaded from `mikebom trace run`'s
+    /// component's name + version, threaded from `waybill trace run`'s
     /// `--root-name` / `--root-version` flags. Per research §6 this
-    /// field is `#[arg(skip)]` because the `mikebom sbom generate`
+    /// field is `#[arg(skip)]` because the `waybill sbom generate`
     /// subcommand itself does NOT receive new flags — overriding the
     /// root component on a re-emit-from-attestation flow has ambiguous
     /// semantics. The override only takes effect when populated by
@@ -94,19 +94,19 @@ pub struct GenerateArgs {
     pub root_override: crate::generate::RootComponentOverride,
 
     /// Milestone 080: user-provided SBOM metadata aggregated from
-    /// `mikebom trace run`'s new flags (`--creator` / `--annotator` /
+    /// `waybill trace run`'s new flags (`--creator` / `--annotator` /
     /// `--annotation-comment` / `--metadata-comment` /
     /// `--scan-target-name` / `--metadata-file`). `#[arg(skip)]` for
-    /// the same reason as `root_override`: `mikebom sbom generate`
+    /// the same reason as `root_override`: `waybill sbom generate`
     /// itself does NOT receive these flags; the field is populated
     /// only via `cli/run.rs::execute`.
     #[arg(skip)]
     pub user_metadata: waybill::binding::user_metadata::UserMetadata,
 
     /// Milestone 081: operator-asserted CISA SBOM Type override
-    /// threaded from `mikebom trace run`'s `--sbom-type <type>`
+    /// threaded from `waybill trace run`'s `--sbom-type <type>`
     /// flag. Same `#[arg(skip)]` rationale as `root_override` and
-    /// `user_metadata` — the standalone `mikebom sbom generate`
+    /// `user_metadata` — the standalone `waybill sbom generate`
     /// subcommand does not receive new flags. Populated only by
     /// `cli/run.rs::execute` from the trace-run flag.
     #[arg(skip)]
@@ -187,24 +187,24 @@ pub async fn execute(args: GenerateArgs, offline: bool) -> anyhow::Result<()> {
         // builder. Build-tier scans don't auto-detect; manual only.
         .with_identifiers(args.identifiers.clone())
         // Milestone 076 — propagate per-component user-defined
-        // identifiers so build-tier `mikebom trace run` honors
+        // identifiers so build-tier `waybill trace run` honors
         // `--component-id` matches against the emitted CDX
         // `components[]`.
         .with_component_identifiers(args.component_identifiers.clone())
         // Milestone 077 — propagate the operator-supplied root-
         // component override from the trace-run flags
         // (`--root-name` / `--root-version`). Empty by default for
-        // the standalone `mikebom sbom generate` invocation per
+        // the standalone `waybill sbom generate` invocation per
         // research §6.
         .with_root_override(args.root_override.clone())
         // Milestone 080 — propagate user-supplied SBOM metadata from
         // the trace-run flags. Empty by default for the standalone
-        // `mikebom sbom generate` invocation.
+        // `waybill sbom generate` invocation.
         .with_user_metadata(args.user_metadata.clone())
         // Milestone 081 — propagate the operator-asserted CISA
-        // SBOM Type override from `mikebom trace run --sbom-type
+        // SBOM Type override from `waybill trace run --sbom-type
         // <type>`. None by default for the standalone
-        // `mikebom sbom generate` invocation.
+        // `waybill sbom generate` invocation.
         .with_sbom_type_override(args.sbom_type_override);
     let bom = builder.build(
         &components,

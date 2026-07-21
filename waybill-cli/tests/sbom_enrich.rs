@@ -1,4 +1,4 @@
-//! Integration tests for `mikebom sbom enrich` — feature 006 US5.
+//! Integration tests for `waybill sbom enrich` — feature 006 US5.
 
 #![cfg_attr(test, allow(clippy::unwrap_used))]
 
@@ -67,7 +67,7 @@ fn adds_supplier_to_component() {
     assert_eq!(props.len(), 1);
     assert_eq!(
         props[0]["name"],
-        serde_json::json!("mikebom:enrichment-patch[0]")
+        serde_json::json!("waybill:enrichment-patch[0]")
     );
     let value_str = props[0]["value"].as_str().unwrap();
     assert!(value_str.contains("security-team@example.com"));

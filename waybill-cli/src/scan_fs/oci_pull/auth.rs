@@ -20,7 +20,7 @@
 //!
 //! Sync by design: the cred-helper subprocess completes in ~100ms in
 //! practice (worst case a few seconds for ECR's STS round-trip), and
-//! mikebom is a one-shot CLI. Brief blocking in the tokio runtime is
+//! waybill is a one-shot CLI. Brief blocking in the tokio runtime is
 //! acceptable here. If this ever needs to become async, switch to
 //! `tokio::process::Command` + `tokio::fs::read`.
 
@@ -123,13 +123,13 @@ fn docker_config_path() -> Option<PathBuf> {
 /// next if it returns `None`:
 ///
 /// 1. **Per-registry env vars**:
-///    `MIKEBOM_REGISTRY_<HOST>_USERNAME` + `_PASSWORD`, where
+///    `WAYBILL_REGISTRY_<HOST>_USERNAME` + `_PASSWORD`, where
 ///    `<HOST>` is the registry hostname normalized to uppercase
 ///    with `[^A-Z0-9]` replaced by `_` (e.g. `ghcr.io` →
-///    `MIKEBOM_REGISTRY_GHCR_IO_USERNAME`,
+///    `WAYBILL_REGISTRY_GHCR_IO_USERNAME`,
 ///    `my-ecr.amazonaws.com` →
-///    `MIKEBOM_REGISTRY_MY_ECR_AMAZONAWS_COM_USERNAME`).
-/// 2. **Generic env vars**: `MIKEBOM_REGISTRY_USERNAME` +
+///    `WAYBILL_REGISTRY_MY_ECR_AMAZONAWS_COM_USERNAME`).
+/// 2. **Generic env vars**: `WAYBILL_REGISTRY_USERNAME` +
 ///    `_PASSWORD`. Applies to every registry — useful when a
 ///    cluster scan only ever hits one registry.
 /// 3. **Credentials directory** (`--registry-credentials-dir`):
@@ -172,8 +172,8 @@ pub(super) fn resolve_credentials_layered(
 }
 
 /// Issue #235 — env-var credential lookup. Tries per-registry
-/// `MIKEBOM_REGISTRY_<HOST>_USERNAME` + `_PASSWORD` first, then
-/// generic `MIKEBOM_REGISTRY_USERNAME` + `_PASSWORD`. Returns
+/// `WAYBILL_REGISTRY_<HOST>_USERNAME` + `_PASSWORD` first, then
+/// generic `WAYBILL_REGISTRY_USERNAME` + `_PASSWORD`. Returns
 /// `None` when either USERNAME or PASSWORD is missing for the
 /// chosen source (partial config is treated as no config — we
 /// don't synthesize a half-complete `Credential`).
@@ -190,8 +190,8 @@ fn env_credential(registry: &str) -> Option<Credential> {
             }
         })
         .collect::<String>();
-    let per_user = format!("MIKEBOM_REGISTRY_{env_host}_USERNAME");
-    let per_pass = format!("MIKEBOM_REGISTRY_{env_host}_PASSWORD");
+    let per_user = format!("WAYBILL_REGISTRY_{env_host}_USERNAME");
+    let per_pass = format!("WAYBILL_REGISTRY_{env_host}_PASSWORD");
     if let (Ok(u), Ok(p)) = (std::env::var(&per_user), std::env::var(&per_pass)) {
         if !u.is_empty() && !p.is_empty() {
             return Some(Credential {
@@ -201,8 +201,8 @@ fn env_credential(registry: &str) -> Option<Credential> {
         }
     }
     if let (Ok(u), Ok(p)) = (
-        std::env::var("MIKEBOM_REGISTRY_USERNAME"),
-        std::env::var("MIKEBOM_REGISTRY_PASSWORD"),
+        std::env::var("WAYBILL_REGISTRY_USERNAME"),
+        std::env::var("WAYBILL_REGISTRY_PASSWORD"),
     ) {
         if !u.is_empty() && !p.is_empty() {
             return Some(Credential {
@@ -360,7 +360,7 @@ fn run_credential_helper(helper: &str, registry: &str) -> Option<Credential> {
 ///
 /// The helper's stderr is piped to `Stdio::null()` — some helpers
 /// emit partial credentials (or auth-failure details) on stderr, and
-/// we don't want those leaking into mikebom's logs.
+/// we don't want those leaking into waybill's logs.
 fn run_credential_helper_program(program: &str, registry: &str) -> Option<Credential> {
     use std::io::Write as _;
 
@@ -690,11 +690,11 @@ exit 2
     /// names are constructed dynamically; the caller passes any
     /// per-host names that need clearing too.
     fn clear_creds_env(extra_host_names: &[&str]) {
-        std::env::remove_var("MIKEBOM_REGISTRY_USERNAME");
-        std::env::remove_var("MIKEBOM_REGISTRY_PASSWORD");
+        std::env::remove_var("WAYBILL_REGISTRY_USERNAME");
+        std::env::remove_var("WAYBILL_REGISTRY_PASSWORD");
         for host in extra_host_names {
-            std::env::remove_var(format!("MIKEBOM_REGISTRY_{host}_USERNAME"));
-            std::env::remove_var(format!("MIKEBOM_REGISTRY_{host}_PASSWORD"));
+            std::env::remove_var(format!("WAYBILL_REGISTRY_{host}_USERNAME"));
+            std::env::remove_var(format!("WAYBILL_REGISTRY_{host}_PASSWORD"));
         }
     }
 
@@ -702,8 +702,8 @@ exit 2
     fn env_credential_returns_per_registry_pair_when_set() {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         clear_creds_env(&["GHCR_IO"]);
-        std::env::set_var("MIKEBOM_REGISTRY_GHCR_IO_USERNAME", "alice");
-        std::env::set_var("MIKEBOM_REGISTRY_GHCR_IO_PASSWORD", "shh");
+        std::env::set_var("WAYBILL_REGISTRY_GHCR_IO_USERNAME", "alice");
+        std::env::set_var("WAYBILL_REGISTRY_GHCR_IO_PASSWORD", "shh");
         let cred = env_credential("ghcr.io").expect("per-registry pair returned");
         assert_eq!(cred.username, "alice");
         assert_eq!(cred.secret, "shh");
@@ -715,11 +715,11 @@ exit 2
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         clear_creds_env(&["MY_ECR_AMAZONAWS_COM"]);
         std::env::set_var(
-            "MIKEBOM_REGISTRY_MY_ECR_AMAZONAWS_COM_USERNAME",
+            "WAYBILL_REGISTRY_MY_ECR_AMAZONAWS_COM_USERNAME",
             "aws-id",
         );
         std::env::set_var(
-            "MIKEBOM_REGISTRY_MY_ECR_AMAZONAWS_COM_PASSWORD",
+            "WAYBILL_REGISTRY_MY_ECR_AMAZONAWS_COM_PASSWORD",
             "aws-secret",
         );
         let cred = env_credential("my-ecr.amazonaws.com")
@@ -732,8 +732,8 @@ exit 2
     fn env_credential_falls_back_to_generic_pair_when_per_registry_missing() {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         clear_creds_env(&["GHCR_IO"]);
-        std::env::set_var("MIKEBOM_REGISTRY_USERNAME", "generic");
-        std::env::set_var("MIKEBOM_REGISTRY_PASSWORD", "generic-secret");
+        std::env::set_var("WAYBILL_REGISTRY_USERNAME", "generic");
+        std::env::set_var("WAYBILL_REGISTRY_PASSWORD", "generic-secret");
         let cred = env_credential("ghcr.io").expect("generic pair returned as fallback");
         assert_eq!(cred.username, "generic");
         clear_creds_env(&["GHCR_IO"]);
@@ -743,7 +743,7 @@ exit 2
     fn env_credential_returns_none_when_only_one_half_set() {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         clear_creds_env(&["GHCR_IO"]);
-        std::env::set_var("MIKEBOM_REGISTRY_GHCR_IO_USERNAME", "alice");
+        std::env::set_var("WAYBILL_REGISTRY_GHCR_IO_USERNAME", "alice");
         // PASSWORD intentionally not set.
         assert!(
             env_credential("ghcr.io").is_none(),
@@ -756,10 +756,10 @@ exit 2
     fn env_credential_per_registry_wins_over_generic() {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         clear_creds_env(&["GHCR_IO"]);
-        std::env::set_var("MIKEBOM_REGISTRY_USERNAME", "generic");
-        std::env::set_var("MIKEBOM_REGISTRY_PASSWORD", "generic-secret");
-        std::env::set_var("MIKEBOM_REGISTRY_GHCR_IO_USERNAME", "per-host");
-        std::env::set_var("MIKEBOM_REGISTRY_GHCR_IO_PASSWORD", "per-host-secret");
+        std::env::set_var("WAYBILL_REGISTRY_USERNAME", "generic");
+        std::env::set_var("WAYBILL_REGISTRY_PASSWORD", "generic-secret");
+        std::env::set_var("WAYBILL_REGISTRY_GHCR_IO_USERNAME", "per-host");
+        std::env::set_var("WAYBILL_REGISTRY_GHCR_IO_PASSWORD", "per-host-secret");
         let cred = env_credential("ghcr.io").expect("per-registry wins precedence");
         assert_eq!(cred.username, "per-host");
         clear_creds_env(&["GHCR_IO"]);

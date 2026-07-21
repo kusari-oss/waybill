@@ -1,6 +1,6 @@
 //! Milestone 081 — SBOM-type signaling integration tests.
 //!
-//! Drives `mikebom sbom scan` with the milestone-081 `--sbom-type`
+//! Drives `waybill sbom scan` with the milestone-081 `--sbom-type`
 //! flag against synthetic source-tier fixtures, then asserts the
 //! standards-native SBOM-type signal at each format's per-format
 //! field position (CDX `metadata.lifecycles[]`, SPDX 2.3
@@ -44,7 +44,7 @@ fn fixture_root() -> PathBuf {
     fixture_path("cargo/lockfile-v3")
 }
 
-/// Run `mikebom sbom scan` against `fixture` with `extra_args`,
+/// Run `waybill sbom scan` against `fixture` with `extra_args`,
 /// emitting `out_format` to a tempdir; returns the parsed JSON +
 /// captured stderr + the on-disk path (held by the tempdir guard).
 struct ScanResult {
@@ -99,7 +99,7 @@ fn run_scan(
     }
 }
 
-/// Run `mikebom sbom scan` and return the failed exit + stderr.
+/// Run `waybill sbom scan` and return the failed exit + stderr.
 /// Used by the `sbom_type_invalid_value_fails_parse` test.
 fn run_scan_expect_fail(
     fake_home: &Path,
@@ -354,9 +354,9 @@ fn sbom_type_flag_overrides_cdx_lifecycles() {
 #[test]
 fn sbom_type_flag_preserves_per_component_tiers() {
     // SC-005 / VR-081-005 — `--sbom-type build` is document-level
-    // ONLY; per-component `mikebom:sbom-tier` annotations preserve
+    // ONLY; per-component `waybill:sbom-tier` annotations preserve
     // auto-detected values. Verify on the SPDX 3 emission path: at
-    // least one Annotation element MUST carry a mikebom:sbom-tier
+    // least one Annotation element MUST carry a waybill:sbom-tier
     // value that is NOT the operator-asserted `build` (the cargo
     // fixture's deps auto-detect to `source`).
     let fake_home = tempfile::tempdir().unwrap();
@@ -373,9 +373,9 @@ fn sbom_type_flag_preserves_per_component_tiers() {
             if el.get("type").and_then(|v| v.as_str()) == Some("Annotation") {
                 if let Some(stmt) = el.get("statement").and_then(|v| v.as_str())
                 {
-                    // The mikebom:sbom-tier annotation envelope encodes
+                    // The waybill:sbom-tier annotation envelope encodes
                     // the tier value in the JSON statement field.
-                    if stmt.contains("mikebom:sbom-tier")
+                    if stmt.contains("waybill:sbom-tier")
                         && stmt.contains("source")
                     {
                         found_source_tier = true;
@@ -387,7 +387,7 @@ fn sbom_type_flag_preserves_per_component_tiers() {
     }
     assert!(
         found_source_tier,
-        "expected at least one per-component mikebom:sbom-tier=source \
+        "expected at least one per-component waybill:sbom-tier=source \
          annotation to survive the --sbom-type build override (per VR-081-005)"
     );
 }
@@ -423,7 +423,7 @@ fn sbom_type_invalid_value_fails_parse() {
 fn sbom_type_runtime_value_accepted() {
     // SC-007 + analyze C1 fix — `--sbom-type runtime` must parse
     // successfully and emit software_sbomType: ["runtime"]. Per
-    // research §3, mikebom does not auto-detect `runtime` (the
+    // research §3, waybill does not auto-detect `runtime` (the
     // deferred-work follow-up issue captures the future runtime-
     // observation feature) but the flag accepts the value for
     // operator self-assertion.
@@ -474,7 +474,7 @@ enum ValidationOutcome {
 fn run_spdx3_validator(fixture_path: &Path) -> ValidationOutcome {
     let bin_path = validator_path();
     if !bin_path.exists() {
-        let require = std::env::var("MIKEBOM_REQUIRE_SPDX3_VALIDATOR")
+        let require = std::env::var("WAYBILL_REQUIRE_SPDX3_VALIDATOR")
             .ok()
             .as_deref()
             == Some("1");
@@ -482,7 +482,7 @@ fn run_spdx3_validator(fixture_path: &Path) -> ValidationOutcome {
             return ValidationOutcome::Fail {
                 combined_output: format!(
                     "spdx3-validate not found at {} and \
-                     MIKEBOM_REQUIRE_SPDX3_VALIDATOR=1 is set; run \
+                     WAYBILL_REQUIRE_SPDX3_VALIDATOR=1 is set; run \
                      scripts/install-spdx3-validate.sh on this host \
                      before re-running CI.",
                     bin_path.display()

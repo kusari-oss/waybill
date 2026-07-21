@@ -1,6 +1,6 @@
 //! Closure-invariant regression test — milestone 084 FR-006 / FR-011.
 //!
-//! Asserts that every reference field in a mikebom-emitted CDX 1.6
+//! Asserts that every reference field in a waybill-emitted CDX 1.6
 //! document resolves to a declared `bom-ref` in the same document.
 //! The CDX 1.6 schema's `refLinkType` is defined as "Descriptor for
 //! an element identified by the attribute 'bom-ref' in the same BOM
@@ -47,7 +47,7 @@ struct Fixture {
     fixture_subpath: &'static str,
 }
 
-// Milestone 090: paths are now relative to MIKEBOM_FIXTURES_DIR (the
+// Milestone 090: paths are now relative to WAYBILL_FIXTURES_DIR (the
 // cloned `mikebom-test-fixtures` repo); resolved at the call site via
 // `common::fixture_path()`.
 const FIXTURES: &[Fixture] = &[
@@ -59,7 +59,7 @@ const FIXTURES: &[Fixture] = &[
     Fixture { label: "maven",  fixture_subpath: "maven/pom-three-deps" },
 ];
 
-/// Run mikebom against a fixture and return the parsed CDX 1.6 JSON.
+/// Run waybill against a fixture and return the parsed CDX 1.6 JSON.
 /// Optionally pass override flags to exercise the milestone-077
 /// `--root-name` / `--root-version` path; when both are `None`, the
 /// scan runs without overrides (default milestone-053+ main-module
@@ -77,7 +77,7 @@ fn run_mikebom_cdx_with_override(
     );
     let bin = env!("CARGO_BIN_EXE_mikebom");
     let tmp = tempfile::tempdir().expect("tempdir");
-    let out_path = tmp.path().join("mikebom.cdx.json");
+    let out_path = tmp.path().join("waybill.cdx.json");
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
     let mut cmd = Command::new(bin);
     apply_fake_home_env(&mut cmd, fake_home.path());
@@ -97,10 +97,10 @@ fn run_mikebom_cdx_with_override(
     if let Some(version) = root_version {
         cmd.arg("--root-version").arg(version);
     }
-    let output = cmd.output().expect("failed to invoke mikebom");
+    let output = cmd.output().expect("failed to invoke waybill");
     assert!(
         output.status.success(),
-        "mikebom failed for {}: stderr={}",
+        "waybill failed for {}: stderr={}",
         fixture_subpath,
         String::from_utf8_lossy(&output.stderr)
     );
@@ -126,7 +126,7 @@ fn declared_refs(cdx: &serde_json::Value) -> HashSet<String> {
         }
     }
     // Services may also declare bom-refs (CDX 1.6 §services). Include
-    // for completeness — empty for current mikebom output but
+    // for completeness — empty for current waybill output but
     // future-proof.
     if let Some(arr) = cdx["services"].as_array() {
         for c in arr {

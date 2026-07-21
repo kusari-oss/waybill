@@ -126,8 +126,8 @@ fn t027_peer_optional_react_emits_provided_not_optional() {
     // the reader guard short-circuited it.
     let react_cdx = find_component_by_name(&cdx, "react").expect("react component in CDX");
     assert!(
-        find_property(react_cdx, "mikebom:optional-derivation").is_none(),
-        "FR-006: peer-optional react MUST NOT carry mikebom:optional-derivation"
+        find_property(react_cdx, "waybill:optional-derivation").is_none(),
+        "FR-006: peer-optional react MUST NOT carry waybill:optional-derivation"
     );
     // React MUST NOT be marked `scope: "excluded"` either — its
     // lifecycle_scope stayed Runtime (the guard prevented Optional).
@@ -141,21 +141,21 @@ fn t027_peer_optional_react_emits_provided_not_optional() {
 fn t028_some_lib_carries_peer_edge_targets_for_react() {
     // Sibling assertion — some-lib (the parent that declared react
     // as peer-optional) MUST still carry m147's
-    // `mikebom:peer-edge-targets` annotation listing react. This is
+    // `waybill:peer-edge-targets` annotation listing react. This is
     // the unchanged m147/m178 behavior; m180 MUST NOT disturb it.
     let (cdx, _spdx23) = run_scan(&fixture_path());
 
     let some_lib = find_component_by_name(&cdx, "some-lib")
         .expect("some-lib component in CDX");
-    let peer_targets_val = find_property(some_lib, "mikebom:peer-edge-targets");
+    let peer_targets_val = find_property(some_lib, "waybill:peer-edge-targets");
     assert!(
         peer_targets_val.is_some(),
-        "some-lib MUST carry mikebom:peer-edge-targets (unchanged m147 behavior)"
+        "some-lib MUST carry waybill:peer-edge-targets (unchanged m147 behavior)"
     );
     let peer_targets_str = peer_targets_val.unwrap().as_str().unwrap();
     assert!(
         peer_targets_str.contains("react"),
-        "mikebom:peer-edge-targets MUST list react (peer-declared): got {}",
+        "waybill:peer-edge-targets MUST list react (peer-declared): got {}",
         peer_targets_str
     );
 }

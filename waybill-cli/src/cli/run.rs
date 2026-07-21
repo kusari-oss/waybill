@@ -51,11 +51,11 @@ pub struct RunArgs {
     pub format: String,
 
     /// SBOM output path
-    #[arg(long, default_value = "mikebom.cdx.json")]
+    #[arg(long, default_value = "waybill.cdx.json")]
     pub sbom_output: PathBuf,
 
     /// Attestation output path
-    #[arg(long, default_value = "mikebom.attestation.json")]
+    #[arg(long, default_value = "waybill.attestation.json")]
     pub attestation_output: PathBuf,
 
     /// Skip enrichment step
@@ -114,7 +114,7 @@ pub struct RunArgs {
 
     /// Attach an `image:` identifier — image identity. Manual only.
     /// Named `--image-id` to keep the flag-name semantics consistent
-    /// with `mikebom sbom scan --image-id`.
+    /// with `waybill sbom scan --image-id`.
     #[arg(long = "image-id", value_name = "REF")]
     pub image_id: Option<String>,
 
@@ -125,7 +125,7 @@ pub struct RunArgs {
     /// Attach a user-defined identifier in `<scheme>=<value>` form.
     /// Repeatable. Built-in schemes (`repo`, `git`, `image`,
     /// `attestation`) are rejected — use the dedicated flag instead.
-    /// See `mikebom sbom scan --help` for the full identifier docs.
+    /// See `waybill sbom scan --help` for the full identifier docs.
     #[arg(
         long = "id",
         action = clap::ArgAction::Append,
@@ -136,7 +136,7 @@ pub struct RunArgs {
 
     /// Preserve userinfo (e.g., `USER:TOKEN@host`) in auto-detected git
     /// remote URLs when constructing `repo:` and `git:` identifiers.
-    /// By default, mikebom strips userinfo to prevent accidental
+    /// By default, waybill strips userinfo to prevent accidental
     /// credential disclosure in published SBOMs. Use this flag only
     /// when the credentials are deliberately non-sensitive (e.g., a
     /// public read-only deploy token, internal-network-only
@@ -148,7 +148,7 @@ pub struct RunArgs {
     /// Attach a `subject:` identifier declaring "this SBOM describes
     /// the artifact with the given content hash." Format:
     /// `sha256:<64-lowercase-hex>` or `sha512:<128-lowercase-hex>`.
-    /// Repeatable. On `mikebom trace run`, subject identifiers are
+    /// Repeatable. On `waybill trace run`, subject identifiers are
     /// auto-detected from the in-toto attestation envelope's subject
     /// set; manual flags augment auto-detected entries (deduplicated
     /// by exact match per milestone 073).
@@ -164,7 +164,7 @@ pub struct RunArgs {
     /// field in the emitted output; the SCHEME must be a non-built-in
     /// scheme name (built-in schemes `repo`, `git`, `image`,
     /// `attestation`, `subject` are reserved for document-level use).
-    /// See `mikebom sbom scan --help` for full examples. Repeatable.
+    /// See `waybill sbom scan --help` for full examples. Repeatable.
     /// Zero-match selectors warn and the scan continues.
     #[arg(
         long = "component-id",
@@ -177,7 +177,7 @@ pub struct RunArgs {
 
     /// Override the auto-derived `metadata.component.name` of the
     /// emitted SBOM. Same shape and validation as
-    /// `mikebom sbom scan --root-name`: accepts any non-empty UTF-8
+    /// `waybill sbom scan --root-name`: accepts any non-empty UTF-8
     /// except whitespace, control characters, `?`, and `#`. URL-encoded
     /// automatically when emitted into the PURL `name` segment. When
     /// the trace produces a manifest-derived main-module component
@@ -203,12 +203,12 @@ pub struct RunArgs {
 
     // ────────────────────────────────────────────────────────────
     // Milestone 080 — user-provided SBOM metadata. Symmetric with
-    // `mikebom sbom scan`. See `specs/080-user-sbom-metadata/`.
+    // `waybill sbom scan`. See `specs/080-user-sbom-metadata/`.
     // ────────────────────────────────────────────────────────────
 
     /// Attach a creator entry to the emitted SBOM. Repeatable. Form:
     /// `<Type>: <Name>` where `<Type>` is one of `Tool`, `Organization`,
-    /// `Person` (case-sensitive). See `mikebom sbom scan --help` for
+    /// `Person` (case-sensitive). See `waybill sbom scan --help` for
     /// per-format landing details.
     #[arg(
         long = "creator",
@@ -241,21 +241,21 @@ pub struct RunArgs {
     pub metadata_comment: Option<String>,
 
     /// Operator-supplied override for the document/Sbom-level name
-    /// field. See `mikebom sbom scan --help` for the per-format
+    /// field. See `waybill sbom scan --help` for the per-format
     /// precedence rules vs. `--root-name`.
     #[arg(long = "scan-target-name", value_name = "NAME")]
     pub scan_target_name: Option<String>,
 
     /// Path to a JSON sidecar file containing user-supplied metadata.
-    /// See `mikebom sbom scan --help` for the schema.
+    /// See `waybill sbom scan --help` for the schema.
     #[arg(long = "metadata-file", value_name = "PATH")]
     pub metadata_file: Option<std::path::PathBuf>,
 
     /// Override the auto-detected SBOM type with an operator-asserted
     /// CISA SBOM Type. Valid values: design, source, build, analyzed,
     /// deployed, runtime. Document-level only — per-component
-    /// `mikebom:sbom-tier` annotations preserve auto-detected values.
-    /// See `mikebom sbom scan --help` for full per-format details.
+    /// `waybill:sbom-tier` annotations preserve auto-detected values.
+    /// See `waybill sbom scan --help` for full per-format details.
     #[arg(
         long = "sbom-type",
         value_name = "TYPE",
@@ -265,13 +265,13 @@ pub struct RunArgs {
         Option<crate::generate::lifecycle_phases::SbomType>,
 
     /// Directories to scan for artifact files after the traced command
-    /// exits. Forwarded verbatim to `mikebom trace capture`. See the
+    /// exits. Forwarded verbatim to `waybill trace capture`. See the
     /// `--artifact-dir` flag there for details.
     #[arg(long, value_delimiter = ',')]
     pub artifact_dir: Vec<PathBuf>,
 
     /// Auto-detect artifact directories from the traced command. See
-    /// `mikebom trace capture --help` for the supported tool list.
+    /// `waybill trace capture --help` for the supported tool list.
     #[arg(long)]
     pub auto_dirs: bool,
 
@@ -319,8 +319,8 @@ pub struct RunArgs {
 
     /// Milestone 210 — see `sbom scan --include-system-reads`. Threads
     /// through to the trace phase's compiler-pipeline aggregator when
-    /// the compound `mikebom run` is used instead of the two-step
-    /// `mikebom sbom scan → mikebom sbom generate` flow.
+    /// the compound `waybill run` is used instead of the two-step
+    /// `waybill sbom scan → waybill sbom generate` flow.
     #[arg(long)]
     pub include_system_reads: bool,
 
@@ -379,10 +379,10 @@ pub async fn execute(args: RunArgs) -> anyhow::Result<()> {
         require_signing: args.require_signing,
         subject: args.subject.clone(),
         attestation_format: args.attestation_format.clone(),
-        // Milestone 210 — `mikebom run` is a shortcut for trace + generate;
+        // Milestone 210 — `waybill run` is a shortcut for trace + generate;
         // pass through the include-system-reads override if the operator
         // asked for it via the compound command's arg surface. Default is
-        // false (denylist active) so `mikebom run` behaves identically to
+        // false (denylist active) so `waybill run` behaves identically to
         // pre-m210 for existing operators.
         include_system_reads: args.include_system_reads,
         command: args.command.clone(),
@@ -483,7 +483,7 @@ pub async fn execute(args: RunArgs) -> anyhow::Result<()> {
         waybill::binding::identifiers::resolve_identifiers(auto_detected_ids, &manual_ids);
 
     // Milestone 080 — assemble user-supplied SBOM metadata from the
-    // trace-run flags. Same shape and merge rules as `mikebom sbom
+    // trace-run flags. Same shape and merge rules as `waybill sbom
     // scan`. The emission timestamp is captured here so all
     // annotations share a single deterministic value.
     let metadata_file = match args.metadata_file.as_deref() {

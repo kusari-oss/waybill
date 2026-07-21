@@ -2,7 +2,7 @@
 //!
 //! Covers three user stories:
 //!
-//! * **US1 (P1 MVP)**: per-component `mikebom:workspace-member`
+//! * **US1 (P1 MVP)**: per-component `waybill:workspace-member`
 //!   annotation lets consumers filter emitted components by workspace
 //!   via jq. FR-001 emission; FR-002 file-tier absence; SC-001
 //!   per-workspace filter behavior; SC-006 tf-models-shape 3-workspace
@@ -36,7 +36,7 @@ fn scan_cdx(path: &Path) -> (serde_json::Value, String) {
         .arg(&out_path)
         .arg("--no-deep-hash");
 
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed (exit={:?}): stderr={}",
@@ -77,7 +77,7 @@ fn write_three_workspace_pip_fixture(root: &Path) {
     write_pyproject(&root.join("subproject_b"), "sub-b-pkg", "sub-b-only-dep>=3.0");
 }
 
-/// Extract the union of every `mikebom:workspace-member` value found
+/// Extract the union of every `waybill:workspace-member` value found
 /// on components in the emitted CDX SBOM. Returns a deduplicated,
 /// alphabetically-sorted Vec of workspace paths.
 fn component_workspace_paths(sbom: &serde_json::Value) -> Vec<String> {
@@ -91,7 +91,7 @@ fn component_workspace_paths(sbom: &serde_json::Value) -> Vec<String> {
             continue;
         };
         for p in props {
-            if p["name"] == "mikebom:workspace-member" {
+            if p["name"] == "waybill:workspace-member" {
                 if let Some(v) = p["value"].as_str() {
                     if let Ok(parsed) = serde_json::from_str::<Vec<String>>(v) {
                         for entry in parsed {
@@ -106,7 +106,7 @@ fn component_workspace_paths(sbom: &serde_json::Value) -> Vec<String> {
 }
 
 /// For a given workspace path, return every component PURL whose
-/// `mikebom:workspace-member` array-contains the path.
+/// `waybill:workspace-member` array-contains the path.
 fn purls_in_workspace(sbom: &serde_json::Value, workspace: &str) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
     let Some(components) = sbom["components"].as_array() else {
@@ -118,7 +118,7 @@ fn purls_in_workspace(sbom: &serde_json::Value, workspace: &str) -> Vec<String> 
         };
         let mut member = false;
         for p in props {
-            if p["name"] == "mikebom:workspace-member" {
+            if p["name"] == "waybill:workspace-member" {
                 if let Some(v) = p["value"].as_str() {
                     if let Ok(parsed) = serde_json::from_str::<Vec<String>>(v) {
                         if parsed.iter().any(|x| x == workspace) {
@@ -139,16 +139,16 @@ fn purls_in_workspace(sbom: &serde_json::Value, workspace: &str) -> Vec<String> 
 }
 
 // -----------------------------------------------------------------------
-// US1 T014 — per-component `mikebom:workspace-member` acceptance.
+// US1 T014 — per-component `waybill:workspace-member` acceptance.
 // Covers acceptance scenarios 1 + 2 + 3 (per spec.md US1) AND SC-006
 // (3-workspace distinct-set count via the /speckit-analyze C1 remediation).
 // -----------------------------------------------------------------------
 
 /// Given a 3-workspace synthesized fixture, verify:
 ///
-/// * Every workspace-scoped component gains `mikebom:workspace-member`
+/// * Every workspace-scoped component gains `waybill:workspace-member`
 ///   whose value is a JSON-encoded array (FR-001).
-/// * The union of every emitted `mikebom:workspace-member` value
+/// * The union of every emitted `waybill:workspace-member` value
 ///   contains exactly the 3 workspaces the fixture created (SC-006).
 /// * jq-shaped per-workspace filters return workspace-scoped components
 ///   (acceptance scenarios 1 + 2).
@@ -173,7 +173,7 @@ fn t007_us1_per_component_workspace_member_annotation() {
     assert_eq!(
         distinct, expected,
         "SC-006 gate: expected exactly 3 distinct workspaces ({expected:?}); \
-         got {distinct:?}. Every emitted mikebom:workspace-member value across \
+         got {distinct:?}. Every emitted waybill:workspace-member value across \
          all components must dedup to these three paths"
     );
 
@@ -344,18 +344,18 @@ fn t011_us2_advisory_log_fires_under_offline() {
 }
 
 // -----------------------------------------------------------------------
-// US3 T024 — doc-scope `mikebom:workspaces-detected` (C121) behavior.
+// US3 T024 — doc-scope `waybill:workspaces-detected` (C121) behavior.
 // Covers FR-003 (emitted when N >= 1, absent when N = 0), FR-012
 // cross-annotation invariant (C121 == union of C120 values).
 // -----------------------------------------------------------------------
 
-/// Extract the doc-scope `mikebom:workspaces-detected` value from
+/// Extract the doc-scope `waybill:workspaces-detected` value from
 /// `metadata.properties[]` in a CDX SBOM. Returns `Some(parsed_array)`
 /// if present, `None` if the annotation is absent (FR-003 signal).
 fn doc_scope_workspaces_detected(sbom: &serde_json::Value) -> Option<Vec<String>> {
     let props = sbom["metadata"]["properties"].as_array()?;
     for p in props {
-        if p["name"] == "mikebom:workspaces-detected" {
+        if p["name"] == "waybill:workspaces-detected" {
             let raw = p["value"].as_str()?;
             return serde_json::from_str::<Vec<String>>(raw).ok();
         }
@@ -373,7 +373,7 @@ fn t012_us3_doc_scope_workspaces_detected_annotation() {
     let (sbom, _stderr) = scan_cdx(tmp.path());
 
     let detected = doc_scope_workspaces_detected(&sbom).expect(
-        "FR-003: doc-scope mikebom:workspaces-detected MUST be present when N >= 1",
+        "FR-003: doc-scope waybill:workspaces-detected MUST be present when N >= 1",
     );
     assert_eq!(
         detected,
@@ -407,8 +407,8 @@ fn t013_us3_absent_when_zero_workspaces() {
 }
 
 /// FR-012 cross-annotation invariant — the doc-scope
-/// `mikebom:workspaces-detected` value equals the sorted-deduplicated
-/// union of every per-component `mikebom:workspace-member` value.
+/// `waybill:workspaces-detected` value equals the sorted-deduplicated
+/// union of every per-component `waybill:workspace-member` value.
 /// Verified against the 3-workspace fixture.
 #[test]
 fn t014_us3_c121_equals_union_of_c120() {
@@ -506,8 +506,8 @@ fn per_component_property_names(sbom: &serde_json::Value) -> std::collections::B
 }
 
 /// SC-004 monorepo gate — a 3-workspace scan's ONLY m176-introduced
-/// property additions are `mikebom:workspace-member` (per-component)
-/// and `mikebom:workspaces-detected` (doc-scope). No other property
+/// property additions are `waybill:workspace-member` (per-component)
+/// and `waybill:workspaces-detected` (doc-scope). No other property
 /// keys are added by m176.
 ///
 /// This test is the semantic complement to the 33 golden regression
@@ -524,15 +524,15 @@ fn t015_sc004_monorepo_byte_identity_gate_semantic() {
     // The doc-scope property set MUST contain the C121 addition.
     let doc_props = doc_scope_property_names(&sbom);
     assert!(
-        doc_props.contains("mikebom:workspaces-detected"),
-        "SC-004 monorepo: doc-scope MUST include mikebom:workspaces-detected; got {doc_props:?}"
+        doc_props.contains("waybill:workspaces-detected"),
+        "SC-004 monorepo: doc-scope MUST include waybill:workspaces-detected; got {doc_props:?}"
     );
 
     // The per-component property set MUST contain the C120 addition.
     let component_props = per_component_property_names(&sbom);
     assert!(
-        component_props.contains("mikebom:workspace-member"),
-        "SC-004 monorepo: per-component MUST include mikebom:workspace-member; got {component_props:?}"
+        component_props.contains("waybill:workspace-member"),
+        "SC-004 monorepo: per-component MUST include waybill:workspace-member; got {component_props:?}"
     );
 
     // Sanity — components[] is non-empty (workspace-attributable scan).
@@ -571,18 +571,18 @@ fn t015b_sc004_single_project_byte_identity_gate_semantic() {
     // "the ONLY change is the addition of the two new annotations").
     let doc_props = doc_scope_property_names(&sbom);
     assert!(
-        doc_props.contains("mikebom:workspaces-detected"),
-        "SC-008 single-project: doc-scope MUST include mikebom:workspaces-detected on N=1 scans; got {doc_props:?}"
+        doc_props.contains("waybill:workspaces-detected"),
+        "SC-008 single-project: doc-scope MUST include waybill:workspaces-detected on N=1 scans; got {doc_props:?}"
     );
     let component_props = per_component_property_names(&sbom);
     assert!(
-        component_props.contains("mikebom:workspace-member"),
-        "SC-008 single-project: per-component MUST include mikebom:workspace-member on N=1 scans; got {component_props:?}"
+        component_props.contains("waybill:workspace-member"),
+        "SC-008 single-project: per-component MUST include waybill:workspace-member on N=1 scans; got {component_props:?}"
     );
 
     // C121 value MUST be exactly `["."]` for the single-workspace case.
     let detected = doc_scope_workspaces_detected(&sbom).expect(
-        "SC-008: mikebom:workspaces-detected MUST be present on single-workspace scan",
+        "SC-008: waybill:workspaces-detected MUST be present on single-workspace scan",
     );
     assert_eq!(
         detected,

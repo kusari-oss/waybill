@@ -5,7 +5,7 @@
 # `#[cfg(test)]` modules too) and the workspace test suite.
 #
 # Per CLAUDE.md: BOTH must pass locally before any PR. A passing
-# `cargo test -p mikebom` alone is insufficient — clippy is not run,
+# `cargo test -p waybill` alone is insufficient — clippy is not run,
 # and `--all-targets` enforces lints on tests.
 #
 # Usage:
@@ -13,7 +13,7 @@
 #       Default lane — matches the `lint-and-test` CI job. Stable
 #       toolchain only, no eBPF, no nightly required.
 #
-#   MIKEBOM_PREPR_EBPF=1 ./scripts/pre-pr.sh
+#   WAYBILL_PREPR_EBPF=1 ./scripts/pre-pr.sh
 #       Opt-in eBPF lane — matches the `lint-and-test-ebpf` CI job.
 #       Adds `--features ebpf-tracing` to both clippy and test.
 #       Linux only (the optional aya/aya-log/libc deps are also
@@ -25,7 +25,7 @@
 
 set -euo pipefail
 
-if [[ "${MIKEBOM_PREPR_EBPF:-0}" == "1" ]]; then
+if [[ "${WAYBILL_PREPR_EBPF:-0}" == "1" ]]; then
     printf '>>> running pre-PR checks with --features ebpf-tracing (eBPF lane)\n'
     feature_args=(--features ebpf-tracing)
 else

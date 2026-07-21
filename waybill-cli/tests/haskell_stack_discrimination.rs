@@ -122,25 +122,25 @@ fn sc002_stack_baseline_four_components() {
     // 2 hackage-stack-lock extra-deps
     let stack_lock_components: Vec<&Value> = all_components(&doc)
         .into_iter()
-        .filter(|c| property_value(c, "mikebom:source-type") == Some("hackage-stack-lock"))
+        .filter(|c| property_value(c, "waybill:source-type") == Some("hackage-stack-lock"))
         .collect();
     assert_eq!(stack_lock_components.len(), 2, "expected 2 hackage-stack-lock components");
 
     // 1 hackage-snapshot placeholder
     let snapshot_components: Vec<&Value> = all_components(&doc)
         .into_iter()
-        .filter(|c| property_value(c, "mikebom:source-type") == Some("hackage-snapshot"))
+        .filter(|c| property_value(c, "waybill:source-type") == Some("hackage-snapshot"))
         .collect();
     assert_eq!(snapshot_components.len(), 1, "expected 1 hackage-snapshot placeholder");
 
-    // 1 main-module (use mikebom:component-role which IS propagated to
+    // 1 main-module (use waybill:component-role which IS propagated to
     // metadata.component when the main-module is promoted; the
-    // mikebom:source-type "hackage-main-module" annotation gets stripped
+    // waybill:source-type "hackage-main-module" annotation gets stripped
     // on promotion per the metadata.rs curated allowlist — same gap as
     // milestones 141/142).
     let main_module_components: Vec<&Value> = all_components(&doc)
         .into_iter()
-        .filter(|c| property_value(c, "mikebom:component-role") == Some("main-module"))
+        .filter(|c| property_value(c, "waybill:component-role") == Some("main-module"))
         .collect();
     assert_eq!(main_module_components.len(), 1, "expected 1 main-module");
 }
@@ -153,11 +153,11 @@ fn sc010_snapshot_placeholder_purl_and_annotations() {
     let purl = "pkg:generic/stackage-lts-22.0@5cf7f73716ab1bff7c0e34dee5e6b69077c93e3c447bb71e2ae3a45f0b5c1018";
     let snap = component_with_purl(&doc, purl).expect("snapshot placeholder PURL must emit");
     assert_eq!(
-        property_value(snap, "mikebom:source-type"),
+        property_value(snap, "waybill:source-type"),
         Some("hackage-snapshot"),
     );
     assert_eq!(
-        property_value(snap, "mikebom:stackage-resolver"),
+        property_value(snap, "waybill:stackage-resolver"),
         Some("lts-22.0"),
     );
 }
@@ -230,8 +230,8 @@ packages:
     let doc = run_scan(dir.path());
     let base = component_with_purl(&doc, "pkg:hackage/base@4.18.0.0").expect("base component");
     assert_eq!(
-        property_value(base, "mikebom:ghc-stdlib"),
+        property_value(base, "waybill:ghc-stdlib"),
         Some("true"),
-        "base is in boot-library allowlist; must carry mikebom:ghc-stdlib per Q1 + FR-014",
+        "base is in boot-library allowlist; must carry waybill:ghc-stdlib per Q1 + FR-014",
     );
 }

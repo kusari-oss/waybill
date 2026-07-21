@@ -164,7 +164,7 @@ pub(super) fn parse_stanzas(text: &str) -> Vec<ControlStanza> {
 /// Semantics (per m169 Q2 clarification 2026-07-06):
 ///
 /// - `Depends: pkg-a, pkg-b` → `resolved = ["pkg-a", "pkg-b"]` (2 edges; no alternatives).
-/// - `Depends: pkg-a | pkg-b, pkg-c` → `resolved = ["pkg-a", "pkg-c"]` + `alternates_by_source["pkg-a"] = ["pkg-b"]` (first-wins matches opkg runtime default; fallback preserved for downstream consumers via `mikebom:dep-alternative-alternates` annotation).
+/// - `Depends: pkg-a | pkg-b, pkg-c` → `resolved = ["pkg-a", "pkg-c"]` + `alternates_by_source["pkg-a"] = ["pkg-b"]` (first-wins matches opkg runtime default; fallback preserved for downstream consumers via `waybill:dep-alternative-alternates` annotation).
 /// - Version constraints in parens are ignored for the resolved list per existing dpkg/opkg reader precedent.
 ///
 /// Consumed by `ipk_file.rs` (m169 US1 T011, wired up 2026-07-06) and
@@ -220,7 +220,7 @@ pub(super) struct DepsWithAlternatives {
     /// dependsOn edges.
     pub(super) resolved: Vec<String>,
     /// Fallback alternatives per source-dep name — feeds the
-    /// `mikebom:dep-alternative-alternates` annotation on the SOURCE
+    /// `waybill:dep-alternative-alternates` annotation on the SOURCE
     /// component. Key = the first-wins name in `resolved`; value =
     /// non-empty list of fallback names.
     pub(super) alternates_by_source:

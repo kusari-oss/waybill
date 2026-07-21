@@ -5,7 +5,7 @@ use crate::maps::CONFIG;
 
 /// Check if the current process should be traced.
 ///
-/// Drops events originating from the tracer itself (mikebom userspace) to
+/// Drops events originating from the tracer itself (waybill userspace) to
 /// prevent a feedback loop where ring buffer draining generates new events.
 /// Broader PID filtering (e.g. limiting to a specific build command) is
 /// applied in userspace against the aggregated stream.

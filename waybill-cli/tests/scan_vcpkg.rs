@@ -29,7 +29,7 @@ fn scan_fixture() -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -93,11 +93,11 @@ fn vcpkg_components_carry_source_files_annotation() {
         .as_array()
         .expect("properties array");
     let source_files = props.iter().find(|p| {
-        p["name"].as_str() == Some("mikebom:source-files")
+        p["name"].as_str() == Some("waybill:source-files")
     });
     assert!(
         source_files.is_some(),
-        "vcpkg components MUST carry mikebom:source-files (FR-012); got props={props:?}"
+        "vcpkg components MUST carry waybill:source-files (FR-012); got props={props:?}"
     );
     let val = source_files.unwrap()["value"].as_str().unwrap_or("");
     assert!(

@@ -79,10 +79,10 @@ fn t017_pnpm_optional_full_mode_end_to_end() {
         "pnpm-classified Optional MUST emit CDX scope: \"excluded\""
     );
     assert_eq!(
-        find_property(fsevents_cdx, "mikebom:optional-derivation")
+        find_property(fsevents_cdx, "waybill:optional-derivation")
             .and_then(|v| v.as_str()),
         Some("npm-optional-dependencies"),
-        "pnpm-classified Optional MUST carry mikebom:optional-derivation"
+        "pnpm-classified Optional MUST carry waybill:optional-derivation"
     );
 
     // ---- SPDX 2.3 (Full mode) ----

@@ -27,7 +27,7 @@ pub struct TraceStats {
     pub events_dropped: u64,
     /// Milestone 212 (issue #615) — short names of any counter maps
     /// that failed to attach on this kernel (e.g. `"file_event_drops"`).
-    /// Populated by `mikebom-cli/src/trace/counters.rs::read_ring_buffer_drops`.
+    /// Populated by `waybill-cli/src/trace/counters.rs::read_ring_buffer_drops`.
     /// Empty on kernels where all three maps loaded cleanly.
     /// Flows into `TraceIntegrity.kprobe_attach_failures[]` per Q3 —
     /// consumers of the attestation JSON check this array to
@@ -38,7 +38,7 @@ pub struct TraceStats {
     /// noise-filter categories that fired during the trace
     /// (`"System"`, `"UserCache"`, `"Ephemeral"`, `"CargoFingerprint"`).
     /// Populated by
-    /// `mikebom-cli/src/trace/counters.rs::read_filter_category_hits`
+    /// `waybill-cli/src/trace/counters.rs::read_filter_category_hits`
     /// at trace-end + threaded into `TraceIntegrity.filter_categories_applied`
     /// via `aggregator.rs::finalize`. Empty when no category fired
     /// (per FR-009 — MUST serialize as `[]` in the emitted JSON, never
@@ -133,7 +133,7 @@ mod inner {
             // Milestone 210: compiler ring buffer is optional so
             // pre-m210 callers don't have to change. When Some(_),
             // events flow to `compiler_tx` (typically consumed by
-            // `mikebom-cli/src/trace/compiler_pipeline.rs::CompilerPipelineAggregator`).
+            // `waybill-cli/src/trace/compiler_pipeline.rs::CompilerPipelineAggregator`).
             let mut compiler_rb = compiler_rb;
             debug!("Trace processor started");
 

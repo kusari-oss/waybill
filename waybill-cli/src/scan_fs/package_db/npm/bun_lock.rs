@@ -158,7 +158,7 @@ pub(crate) fn parse_bun_lock(
             let mut extra: std::collections::BTreeMap<String, serde_json::Value> =
                 Default::default();
             extra.insert(
-                "mikebom:component-role".to_string(),
+                "waybill:component-role".to_string(),
                 serde_json::Value::String("main-module".to_string()),
             );
 
@@ -434,7 +434,7 @@ mod tests {
         assert_eq!(web.purl.as_str(), "pkg:npm/%40my/web@1.0.0");
         assert_eq!(
             web.extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("main-module"),
         );
@@ -445,7 +445,7 @@ mod tests {
         assert_eq!(
             shared
                 .extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("main-module"),
         );
@@ -453,7 +453,7 @@ mod tests {
         let lodash = entries.iter().find(|e| e.name == "lodash").unwrap();
         assert!(!lodash
             .extra_annotations
-            .contains_key("mikebom:component-role"));
+            .contains_key("waybill:component-role"));
 
         let ws_root = entries
             .iter()
@@ -462,7 +462,7 @@ mod tests {
         assert_eq!(
             ws_root
                 .extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("workspace-root"),
         );

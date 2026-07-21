@@ -4,9 +4,9 @@
 //!
 //! * **US1 (P1)**: downstream reachability tool can machine-check the
 //!   `transitive-edges-unresolvable` substring in
-//!   `mikebom:graph-completeness-reason` and gate its analysis.
+//!   `waybill:graph-completeness-reason` and gate its analysis.
 //! * **US2 (P1)**: constraint-only scans flip
-//!   `mikebom:graph-completeness` from `"complete"` (pre-177 misleading)
+//!   `waybill:graph-completeness` from `"complete"` (pre-177 misleading)
 //!   to `"partial"` and gain the new reason code.
 //! * **US3 (P2)**: polyglot scans enumerate ONLY affected ecosystems in
 //!   the reason detail; safe ecosystems (lockfile-resolved) are NOT
@@ -48,7 +48,7 @@ fn scan_cdx(path: &Path) -> (serde_json::Value, String) {
         .arg(&out_path)
         .arg("--no-deep-hash");
 
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed (exit={:?}): stderr={}",
@@ -61,24 +61,24 @@ fn scan_cdx(path: &Path) -> (serde_json::Value, String) {
     (sbom, stderr)
 }
 
-/// Extract the doc-scope `mikebom:graph-completeness` value.
+/// Extract the doc-scope `waybill:graph-completeness` value.
 /// Returns `None` when the annotation is absent (e.g., empty scan).
 fn graph_completeness(sbom: &serde_json::Value) -> Option<String> {
     sbom["metadata"]["properties"]
         .as_array()?
         .iter()
-        .find(|p| p["name"] == "mikebom:graph-completeness")?["value"]
+        .find(|p| p["name"] == "waybill:graph-completeness")?["value"]
         .as_str()
         .map(String::from)
 }
 
-/// Extract the doc-scope `mikebom:graph-completeness-reason` value.
+/// Extract the doc-scope `waybill:graph-completeness-reason` value.
 /// Returns `None` when the annotation is absent (Complete scans).
 fn graph_completeness_reason(sbom: &serde_json::Value) -> Option<String> {
     sbom["metadata"]["properties"]
         .as_array()?
         .iter()
-        .find(|p| p["name"] == "mikebom:graph-completeness-reason")?["value"]
+        .find(|p| p["name"] == "waybill:graph-completeness-reason")?["value"]
         .as_str()
         .map(String::from)
 }
@@ -160,7 +160,7 @@ fn t001_us1_machine_check_true_on_design_tier_scan() {
     let (sbom, _stderr) = scan_cdx(tmp.path());
 
     let reason = graph_completeness_reason(&sbom).expect(
-        "US1: mikebom:graph-completeness-reason MUST be present when the classifier fires",
+        "US1: waybill:graph-completeness-reason MUST be present when the classifier fires",
     );
     assert!(
         reason.contains(CODE_SUBSTRING),
@@ -174,7 +174,7 @@ fn t001_us1_machine_check_true_on_design_tier_scan() {
 
 /// US2 acceptance scenario 1 — `graph-completeness` value flips from
 /// pre-177 `"complete"` to post-177 `"partial"` on the same fixture.
-/// This is the behavior-change assertion (mikebom-side deliverable).
+/// This is the behavior-change assertion (waybill-side deliverable).
 #[test]
 fn t002_us1_partial_graph_completeness_value() {
     let tmp = tempfile::tempdir().expect("tempdir");
@@ -183,7 +183,7 @@ fn t002_us1_partial_graph_completeness_value() {
     let (sbom, _stderr) = scan_cdx(tmp.path());
 
     let value = graph_completeness(&sbom)
-        .expect("US1: mikebom:graph-completeness MUST be present on non-empty scan");
+        .expect("US1: waybill:graph-completeness MUST be present on non-empty scan");
     assert_eq!(
         value, "partial",
         "US1: graph-completeness MUST be `partial` (not `complete`) on constraint-only scan; got {value:?}"
@@ -305,7 +305,7 @@ fn t007_sc002_safe_fixture_stays_complete() {
     let (sbom, _stderr) = scan_cdx(tmp.path());
 
     let value = graph_completeness(&sbom)
-        .expect("SC-002: mikebom:graph-completeness MUST be present on non-empty scan");
+        .expect("SC-002: waybill:graph-completeness MUST be present on non-empty scan");
     assert_eq!(
         value, "complete",
         "SC-002: fully-resolved (cargo lockfile-only) scan MUST stay `complete`; got {value:?}"

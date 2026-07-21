@@ -1,6 +1,6 @@
 // Milestone 119 (#326) — operator-supplied CDX 1.6 JSON supplement merge.
 //
-// `mikebom sbom scan --supplement-cdx <PATH>` accepts a hand-authored
+// `waybill sbom scan --supplement-cdx <PATH>` accepts a hand-authored
 // CDX 1.6 (or 1.4 / 1.5) JSON document declaring ground truth the
 // scanner cannot observe:
 //
@@ -24,19 +24,19 @@
 //   description, externalReferences[] (all types).
 // - Catch-all default: scanner wins (FR-015 safety property).
 //
-// Every disagreement is recorded as a `mikebom:assertion-conflict`
+// Every disagreement is recorded as a `waybill:assertion-conflict`
 // annotation on the merged component so consumers can audit. The
 // scanner CANNOT be silenced — a supplement asserting "no openssl"
 // against a fingerprint-detected openssl still emits the openssl
 // component; the assertion appears as an annotated conflict.
 //
-// Three new mikebom annotation keys (research.md § Decision 8):
+// Three new waybill annotation keys (research.md § Decision 8):
 //
-// - **C65**: `mikebom:source-tier = "declared"` (value extension on
+// - **C65**: `waybill:source-tier = "declared"` (value extension on
 //   the existing per-component key — supplement-only entries).
-// - **C66**: `mikebom:supplement-cdx = "<path>@sha256:<hex>"`
+// - **C66**: `waybill:supplement-cdx = "<path>@sha256:<hex>"`
 //   (document-scope provenance, emitted iff the flag is in effect).
-// - **C67**: `mikebom:assertion-conflict = <JSON-encoded array of
+// - **C67**: `waybill:assertion-conflict = <JSON-encoded array of
 //   conflict records>` (per-component, repeatable conflicts stored
 //   as a single JSON-array property).
 //

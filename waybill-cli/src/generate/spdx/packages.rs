@@ -2,7 +2,7 @@
 //! (milestone 010, T021 / T023).
 //!
 //! SPDX 2.3 §7 defines a `Package` as the unit-of-interest in an SPDX
-//! document. For mikebom, one `ResolvedComponent` emits exactly one
+//! document. For waybill, one `ResolvedComponent` emits exactly one
 //! `SpdxPackage` (FR-006). Nested CycloneDX components (shade-jar
 //! children, etc.) flatten into top-level Packages connected by
 //! CONTAINS/CONTAINED_BY relationships (FR-011) — the nesting happens
@@ -19,7 +19,7 @@ use crate::generate::ScanArtifacts;
 
 /// SPDX 2.3 hash algorithm enum (spec §7.10).
 ///
-/// Full list in spec; mikebom emits only what its hasher produces
+/// Full list in spec; waybill emits only what its hasher produces
 /// today. Others are reserved and added on demand.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 #[allow(clippy::upper_case_acronyms)]
@@ -60,10 +60,10 @@ pub enum SpdxLicenseField {
     /// `spdx::Expression::canonicalize`). Passed through verbatim so
     /// upstream canonicalization's output wins.
     Expression(String),
-    /// Spec literal "NOASSERTION" — emitted when mikebom has no
+    /// Spec literal "NOASSERTION" — emitted when waybill has no
     /// value for the field (FR-009).
     NoAssertion,
-    /// Spec literal "NONE" — currently unused by mikebom; reserved
+    /// Spec literal "NONE" — currently unused by waybill; reserved
     /// for upstream sources that explicitly assert "no license."
     #[allow(dead_code)]
     None,
@@ -91,7 +91,7 @@ impl serde::Serialize for SpdxLicenseField {
 
 /// SPDX 2.3 external reference (spec §7.21).
 ///
-/// Mikebom's primary use here is the PURL cross-reference
+/// Waybill's primary use here is the PURL cross-reference
 /// (`referenceCategory: "PACKAGE-MANAGER", referenceType: "purl"`)
 /// per FR-007. CPE entries land under `SECURITY / cpe23Type` in US2.
 #[derive(Debug, Clone, serde::Serialize)]
@@ -265,14 +265,14 @@ fn reduce_license_vec(
             let info = SpdxExtractedLicensingInfo {
                 license_id: license_id.clone(),
                 extracted_text: joined_raw,
-                name: "mikebom-extracted-license".to_string(),
+                name: "waybill-extracted-license".to_string(),
             };
             (SpdxLicenseField::LicenseRef(license_id), Some(info))
         }
     }
 }
 
-/// Derive an SPDX `supplier` / `originator` string from a mikebom
+/// Derive an SPDX `supplier` / `originator` string from a waybill
 /// supplier name. SPDX 2.3 §7.5/§7.6 require either
 /// `Organization: <name>`, `Person: <name>`, or the literal
 /// `NOASSERTION`. We default to `Organization:` because the
@@ -295,7 +295,7 @@ fn supplier_string(name: &str) -> String {
 /// deduplicator).
 ///
 /// `annotator` and `date` are threaded in from `build_document` so
-/// the per-package annotations (T034 — the `mikebom:*` + evidence
+/// the per-package annotations (T034 — the `waybill:*` + evidence
 /// envelopes) carry the same creator + timestamp strings as the
 /// document's `creationInfo`. Match is what lets a consumer treat
 /// the annotations as provenanced by the same tool run.
@@ -359,7 +359,7 @@ pub fn build_packages(
     let extracted: Vec<super::document::SpdxExtractedLicensingInfo> =
         extracted_by_id.into_values().collect();
     // Milestone 119 phase-2 — append supplement-declared services as
-    // SPDX 2.3 Packages tagged `mikebom:component-role = "saas-service"`
+    // SPDX 2.3 Packages tagged `waybill:component-role = "saas-service"`
     // per research Decision 4. SPDX 2.3 has no native Service type;
     // the C40 component-role pattern is the project's standing
     // mechanism for component-role classification when no native
@@ -375,11 +375,11 @@ pub fn build_packages(
 }
 
 /// Project a supplement-declared `SupplementService` onto an SPDX 2.3
-/// `SpdxPackage` carrying the `mikebom:component-role = "saas-service"`
-/// + `mikebom:source-tier = "declared"` annotations. The Package has
+/// `SpdxPackage` carrying the `waybill:component-role = "saas-service"`
+/// + `waybill:source-tier = "declared"` annotations. The Package has
 ///   `downloadLocation = NOASSERTION` (services aren't artifacts),
 ///   `filesAnalyzed = false`, and no checksums/external-refs by default
-///   — supplement endpoints surface as `mikebom:service-endpoints`
+///   — supplement endpoints surface as `waybill:service-endpoints`
 ///   annotation since SPDX 2.3 has no native `endpoints[]` slot.
 fn supplement_service_to_package(
     svc: &crate::supplement::SupplementService,
@@ -398,17 +398,17 @@ fn supplement_service_to_package(
         build_annotation(
             annotator,
             date,
-            "mikebom:component-role",
+            "waybill:component-role",
             json!("saas-service"),
         ),
-        build_annotation(annotator, date, "mikebom:source-tier", json!("declared")),
+        build_annotation(annotator, date, "waybill:source-tier", json!("declared")),
     ];
     if let Some(endpoints) = &svc.endpoints {
         if !endpoints.is_empty() {
             annotations.push(build_annotation(
                 annotator,
                 date,
-                "mikebom:service-endpoints",
+                "waybill:service-endpoints",
                 json!(endpoints),
             ));
         }
@@ -417,7 +417,7 @@ fn supplement_service_to_package(
         annotations.push(build_annotation(
             annotator,
             date,
-            "mikebom:description",
+            "waybill:description",
             json!(desc),
         ));
     }
@@ -474,7 +474,7 @@ fn component_to_package(
     // Milestone 133 US1.C: file-tier components carry a placeholder
     // `pkg:generic/file-tier?content-sha256=<hex>` in-process PURL
     // but MUST NOT emit it on the wire (FR-009). Detect the
-    // `mikebom:component-tier = "file"` annotation and skip the
+    // `waybill:component-tier = "file"` annotation and skip the
     // purl externalRef entirely.
     let is_file_tier = c
         .extra_annotations
@@ -498,7 +498,7 @@ fn component_to_package(
 
     // A12: primary CPE. The first entry in `c.cpes` is the
     // highest-signal synthesized candidate; the full set lives in
-    // the `mikebom:cpe-candidates` annotation (C19).
+    // the `waybill:cpe-candidates` annotation (C19).
     if let Some(primary_cpe) = c.cpes.first() {
         external_refs.push(SpdxExternalRef {
             category: SpdxExternalRefCategory::Security,
@@ -530,7 +530,7 @@ fn component_to_package(
     // stay byte-identical to alpha.15 emissions.
     let is_main_module = c
         .extra_annotations
-        .get("mikebom:component-role")
+        .get("waybill:component-role")
         .and_then(|v| v.as_str())
         == Some("main-module");
     if is_main_module {
@@ -592,7 +592,7 @@ fn component_to_package(
     let (license_concluded, conc_extracted) = reduce_license_vec(&c.concluded_licenses);
 
     // Milestones 053 (Go) + 064 (cargo) FR-001a (SPDX 2.3 placement):
-    // components carrying `mikebom:component-role: main-module`
+    // components carrying `waybill:component-role: main-module`
     // (catalog row C40) are a workspace's main-module — set the
     // native SPDX 2.3 §7.24 `primaryPackagePurpose: APPLICATION`
     // field. All other components leave the field as None so
@@ -621,7 +621,7 @@ fn component_to_package(
         }
         Some(waybill_common::resolution::BinaryRole::Other) | None => c
             .extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .and_then(|v| v.as_str())
             .filter(|s| *s == "main-module")
             .map(|_| SpdxPrimaryPackagePurpose::Application),
@@ -771,7 +771,7 @@ mod tests {
             mk_component("pkg:cargo/tokio@1.35.0", "tokio", "1.35.0"),
         ];
         let integ = empty_integrity();
-        let (pkgs, _extracted) = build_packages(&mk_artifacts("demo", &comps, &[], &integ), "Tool: mikebom-test", "2026-01-01T00:00:00Z");
+        let (pkgs, _extracted) = build_packages(&mk_artifacts("demo", &comps, &[], &integ), "Tool: waybill-test", "2026-01-01T00:00:00Z");
         assert_eq!(pkgs.len(), 2);
     }
 
@@ -779,7 +779,7 @@ mod tests {
     fn package_carries_purl_external_ref() {
         let comps = vec![mk_component("pkg:cargo/serde@1.0.197", "serde", "1.0.197")];
         let integ = empty_integrity();
-        let (pkgs, _extracted) = build_packages(&mk_artifacts("demo", &comps, &[], &integ), "Tool: mikebom-test", "2026-01-01T00:00:00Z");
+        let (pkgs, _extracted) = build_packages(&mk_artifacts("demo", &comps, &[], &integ), "Tool: waybill-test", "2026-01-01T00:00:00Z");
         let purl_ref = pkgs[0]
             .external_refs
             .iter()
@@ -798,7 +798,7 @@ mod tests {
         .unwrap()];
         let integ = empty_integrity();
         let comps = [c];
-        let (pkgs, _extracted) = build_packages(&mk_artifacts("demo", &comps, &[], &integ), "Tool: mikebom-test", "2026-01-01T00:00:00Z");
+        let (pkgs, _extracted) = build_packages(&mk_artifacts("demo", &comps, &[], &integ), "Tool: waybill-test", "2026-01-01T00:00:00Z");
         assert_eq!(pkgs[0].checksums.len(), 1);
         assert_eq!(pkgs[0].checksums[0].algorithm, SpdxChecksumAlgorithm::SHA256);
     }
@@ -814,7 +814,7 @@ mod tests {
         let comps = [c];
         let mut artifacts = mk_artifacts("demo", &comps, &[], &integ);
         artifacts.include_hashes = false;
-        let (pkgs, _extracted) = build_packages(&artifacts, "Tool: mikebom-test", "2026-01-01T00:00:00Z");
+        let (pkgs, _extracted) = build_packages(&artifacts, "Tool: waybill-test", "2026-01-01T00:00:00Z");
         assert!(pkgs[0].checksums.is_empty());
     }
 
@@ -827,7 +827,7 @@ mod tests {
         c.licenses = vec![SpdxExpression::new("MIT").unwrap()];
         let integ = empty_integrity();
         let comps = [c];
-        let (pkgs, _extracted) = build_packages(&mk_artifacts("demo", &comps, &[], &integ), "Tool: mikebom-test", "2026-01-01T00:00:00Z");
+        let (pkgs, _extracted) = build_packages(&mk_artifacts("demo", &comps, &[], &integ), "Tool: waybill-test", "2026-01-01T00:00:00Z");
         match &pkgs[0].license_declared {
             SpdxLicenseField::Expression(s) => assert_eq!(s, "MIT"),
             other => panic!("expected Expression, got {other:?}"),
@@ -849,7 +849,7 @@ mod tests {
         let comps = [c];
         let (pkgs, extracted) = build_packages(
             &mk_artifacts("demo", &comps, &[], &integ),
-            "Tool: mikebom-test",
+            "Tool: waybill-test",
             "2026-01-01T00:00:00Z",
         );
         // licenseDeclared is a LicenseRef-<hash> reference.
@@ -862,7 +862,7 @@ mod tests {
         assert_eq!(extracted.len(), 1);
         assert_eq!(extracted[0].license_id, license_id);
         assert_eq!(extracted[0].extracted_text, "Some Free-Text License");
-        assert_eq!(extracted[0].name, "mikebom-extracted-license");
+        assert_eq!(extracted[0].name, "waybill-extracted-license");
     }
 
     #[test]
@@ -880,7 +880,7 @@ mod tests {
         let comps = [c];
         let (pkgs, extracted) = build_packages(
             &mk_artifacts("demo", &comps, &[], &integ),
-            "Tool: mikebom-test",
+            "Tool: waybill-test",
             "2026-01-01T00:00:00Z",
         );
         match &pkgs[0].license_declared {
@@ -905,7 +905,7 @@ mod tests {
         let comps = [c1, c2];
         let (_pkgs, extracted) = build_packages(
             &mk_artifacts("demo", &comps, &[], &integ),
-            "Tool: mikebom-test",
+            "Tool: waybill-test",
             "2026-01-01T00:00:00Z",
         );
         // Document-level extracted-info is deduped by license_id —
@@ -919,7 +919,7 @@ mod tests {
         c.concluded_licenses = vec![SpdxExpression::new("Apache-2.0").unwrap()];
         let integ = empty_integrity();
         let comps = [c];
-        let (pkgs, _extracted) = build_packages(&mk_artifacts("demo", &comps, &[], &integ), "Tool: mikebom-test", "2026-01-01T00:00:00Z");
+        let (pkgs, _extracted) = build_packages(&mk_artifacts("demo", &comps, &[], &integ), "Tool: waybill-test", "2026-01-01T00:00:00Z");
         match &pkgs[0].license_concluded {
             SpdxLicenseField::Expression(s) => assert_eq!(s, "Apache-2.0"),
             other => panic!("expected Expression, got {other:?}"),
@@ -931,7 +931,7 @@ mod tests {
         let c = mk_component("pkg:cargo/x@1", "x", "1");
         let integ = empty_integrity();
         let comps = [c];
-        let (pkgs, _extracted) = build_packages(&mk_artifacts("demo", &comps, &[], &integ), "Tool: mikebom-test", "2026-01-01T00:00:00Z");
+        let (pkgs, _extracted) = build_packages(&mk_artifacts("demo", &comps, &[], &integ), "Tool: waybill-test", "2026-01-01T00:00:00Z");
         assert!(matches!(pkgs[0].license_declared, SpdxLicenseField::NoAssertion));
         assert!(matches!(pkgs[0].license_concluded, SpdxLicenseField::NoAssertion));
     }
@@ -942,7 +942,7 @@ mod tests {
         c.supplier = Some("Acme Corp".to_string());
         let integ = empty_integrity();
         let comps = [c];
-        let (pkgs, _extracted) = build_packages(&mk_artifacts("demo", &comps, &[], &integ), "Tool: mikebom-test", "2026-01-01T00:00:00Z");
+        let (pkgs, _extracted) = build_packages(&mk_artifacts("demo", &comps, &[], &integ), "Tool: waybill-test", "2026-01-01T00:00:00Z");
         assert_eq!(pkgs[0].supplier.as_deref(), Some("Organization: Acme Corp"));
     }
 

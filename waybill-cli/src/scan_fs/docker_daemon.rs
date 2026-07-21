@@ -1,7 +1,7 @@
 //! Local Docker-daemon image source (milestone 044 commit 1).
 //!
 //! Trivy and syft both default to checking the local docker daemon
-//! before reaching for a registry pull. mikebom adopts the same
+//! before reaching for a registry pull. waybill adopts the same
 //! convention via the `--image-src docker,remote` flag (see
 //! [`crate::cli::scan_cmd::ImageSource`]).
 //!
@@ -169,7 +169,7 @@ mod tests {
         // A reference that cannot exist anywhere — random suffix in
         // the tag space.
         let outcome =
-            inspect("registry.invalid.mikebom-test.example/no-such-image:nope-d9f4b2");
+            inspect("registry.invalid.waybill-test.example/no-such-image:nope-d9f4b2");
         assert_eq!(outcome, InspectOutcome::Absent);
     }
 
@@ -182,7 +182,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let dest = tmp.path().join("image.tar");
         let err = save(
-            "registry.invalid.mikebom-test.example/no-such-image:nope-d9f4b2",
+            "registry.invalid.waybill-test.example/no-such-image:nope-d9f4b2",
             &dest,
         )
         .unwrap_err();

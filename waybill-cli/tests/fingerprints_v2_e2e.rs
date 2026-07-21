@@ -1,28 +1,28 @@
 //! End-to-end integration test for the v2 fingerprint corpus pipeline
 //! (milestone 110 Phase 4 Slice B-3).
 //!
-//! Verifies that when a v2 corpus record lives in mikebom's fingerprint
+//! Verifies that when a v2 corpus record lives in waybill's fingerprint
 //! cache and an operator scans a binary whose extracted indicators match
-//! the record, mikebom emits a PackageDbEntry with the v2 record's
+//! the record, waybill emits a PackageDbEntry with the v2 record's
 //! canonical PURL (versioned, ecosystem-specific) and the numeric
-//! `mikebom:fingerprint-confidence` annotation derived from the matcher's
+//! `waybill:fingerprint-confidence` annotation derived from the matcher's
 //! fusion algorithm.
 //!
 //! Test design:
 //! - Use `tempfile::tempdir` for an isolated fingerprint cache.
-//! - Override `MIKEBOM_FINGERPRINTS_CACHE_DIR` for the spawned mikebom
+//! - Override `WAYBILL_FINGERPRINTS_CACHE_DIR` for the spawned waybill
 //!   subprocess to point at the temp cache.
-//! - Override `MIKEBOM_FINGERPRINTS_REV` with a synthetic SHA so the
+//! - Override `WAYBILL_FINGERPRINTS_REV` with a synthetic SHA so the
 //!   cache lookup hits our fixture dir (independent of the build-time-
 //!   embedded sibling-repo SHA).
-//! - Author a v2 record whose `purl.name()` is `mikebom-110-zlib-detector`
+//! - Author a v2 record whose `purl.name()` is `waybill-110-zlib-detector`
 //!   (distinct from `zlib` so the `by_library` slot is vacant + the v2
 //!   path can emit alongside the existing v1 zlib emission).
-//! - Run `mikebom sbom scan` against the cmake-demo project root (which
+//! - Run `waybill sbom scan` against the cmake-demo project root (which
 //!   carries `build/crc-demo`, a Mach-O binary exporting zlib's public
 //!   API symbols).
 //! - Assert the SBOM contains a component with the v2 PURL +
-//!   `mikebom:fingerprint-confidence` ≥ "0.70".
+//!   `waybill:fingerprint-confidence` ≥ "0.70".
 //!
 //! Skips gracefully when the cmake-demo isn't pre-built on the test host
 //! (same skip pattern as the milestone-109 binary_source_binding tests).
@@ -42,7 +42,7 @@ fn binary_path() -> &'static str {
 /// Locate the cmake-demo project root (contains `build/crc-demo`, a
 /// zlib-statically-linked binary).
 fn find_cmake_demo_root() -> Option<PathBuf> {
-    let candidates = ["../mikebom-cmake-demo", "../../mikebom-cmake-demo"];
+    let candidates = ["../waybill-cmake-demo", "../../waybill-cmake-demo"];
     for c in candidates {
         let p = PathBuf::from(c);
         if p.is_dir() && p.join("build/crc-demo").is_file() {
@@ -57,15 +57,15 @@ fn find_cmake_demo_root() -> Option<PathBuf> {
 /// lookup hits our temp dir.
 const FIXTURE_SHA: &str = "0123456789abcdef0123456789abcdef01234567";
 
-/// v2 corpus record JSON. PURL name `mikebom-110-zlib-detector` is
+/// v2 corpus record JSON. PURL name `waybill-110-zlib-detector` is
 /// intentionally distinct from `zlib` so the by_library merge doesn't
 /// collide with the existing v1 / source-binding zlib emission.
 /// confidence_baseline 0.70 + min_match 5 means 5-of-10 zlib symbol
 /// matches → `Medium` bucket → emits.
 fn fixture_v2_record() -> &'static str {
     r#"{
-      "id": "mikebom-110-zlib-detector-test-fixture",
-      "purl": "pkg:test/mikebom-fixture/mikebom-110-zlib-detector@v2-0.1.0",
+      "id": "waybill-110-zlib-detector-test-fixture",
+      "purl": "pkg:test/waybill-fixture/waybill-110-zlib-detector@v2-0.1.0",
       "version_range": "v2-0.1.0",
       "indicators": {
         "exported_symbols": {
@@ -88,9 +88,9 @@ fn fixture_v2_record() -> &'static str {
       },
       "provenance": {
         "tier": "manual-curation",
-        "extracted_from": "https://example.com/mikebom-110-fixture",
+        "extracted_from": "https://example.com/waybill-110-fixture",
         "extracted_from_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "extraction_toolchain": "mikebom-110-fixture-test",
+        "extraction_toolchain": "waybill-110-fixture-test",
         "extracted_at": "2026-06-05T00:00:00Z"
       },
       "schema_version": 2
@@ -103,7 +103,7 @@ fn populate_fixture_cache(cache_root: &Path) {
     let corpus_dir = cache_root.join(FIXTURE_SHA).join("corpus");
     std::fs::create_dir_all(&corpus_dir).unwrap();
     std::fs::write(
-        corpus_dir.join("mikebom-110-zlib-detector.json"),
+        corpus_dir.join("waybill-110-zlib-detector.json"),
         fixture_v2_record(),
     )
     .unwrap();
@@ -114,7 +114,7 @@ fn populate_fixture_cache(cache_root: &Path) {
     // loaders share the index but dispatch per-record by shape.
     std::fs::write(
         corpus_dir.join("index.json"),
-        r#"{"version":1,"entries":[{"library":"mikebom-110-zlib-detector","path":"mikebom-110-zlib-detector.json"}]}"#,
+        r#"{"version":1,"entries":[{"library":"waybill-110-zlib-detector","path":"waybill-110-zlib-detector.json"}]}"#,
     )
     .unwrap();
 }
@@ -131,13 +131,13 @@ fn scan_with_fixture_cache(project_root: &Path, cache_root: &Path) -> Value {
         .arg(&out_file)
         .arg("--no-deep-hash")
         .arg("--fingerprints-corpus")
-        .env("MIKEBOM_FINGERPRINTS_CACHE_DIR", cache_root)
-        .env("MIKEBOM_FINGERPRINTS_REV", FIXTURE_SHA)
+        .env("WAYBILL_FINGERPRINTS_CACHE_DIR", cache_root)
+        .env("WAYBILL_FINGERPRINTS_REV", FIXTURE_SHA)
         .output()
         .unwrap();
     assert!(
         result.status.success(),
-        "mikebom sbom scan failed: stderr={}",
+        "waybill sbom scan failed: stderr={}",
         String::from_utf8_lossy(&result.stderr)
     );
     let bytes = std::fs::read(&out_file).unwrap();
@@ -154,15 +154,15 @@ fn find_component_by_purl_contains<'a>(sbom: &'a Value, needle: &str) -> Option<
 }
 
 /// US1 acceptance: when a v2 corpus record matches a binary's
-/// exported-symbol set, mikebom emits a component with the record's
+/// exported-symbol set, waybill emits a component with the record's
 /// canonical (versioned) PURL.
 #[test]
 fn v2_record_emits_canonical_purl_when_indicators_match() {
     let Some(project_root) = find_cmake_demo_root() else {
         println!(
             "skipped: no cmake-demo project available \
-             (build mikebom-cmake-demo first: \
-             `cd ../mikebom-cmake-demo && cmake -S . -B build -G Ninja && ninja -C build`)"
+             (build waybill-cmake-demo first: \
+             `cd ../waybill-cmake-demo && cmake -S . -B build -G Ninja && ninja -C build`)"
         );
         return;
     };
@@ -174,7 +174,7 @@ fn v2_record_emits_canonical_purl_when_indicators_match() {
 
     let v2_component = find_component_by_purl_contains(
         &sbom,
-        "pkg:test/mikebom-fixture/mikebom-110-zlib-detector",
+        "pkg:test/waybill-fixture/waybill-110-zlib-detector",
     );
     assert!(
         v2_component.is_some(),
@@ -194,7 +194,7 @@ fn v2_record_emits_canonical_purl_when_indicators_match() {
 }
 
 /// US1 acceptance scenario 1 + FR-017: every v2-derived component MUST
-/// carry a `mikebom:fingerprint-confidence` annotation whose value is a
+/// carry a `waybill:fingerprint-confidence` annotation whose value is a
 /// numeric "X.XX" string ≥ "0.70" (the medium-bucket floor).
 #[test]
 fn v2_record_emits_numeric_confidence_annotation() {
@@ -208,7 +208,7 @@ fn v2_record_emits_numeric_confidence_annotation() {
 
     let sbom = scan_with_fixture_cache(&project_root, cache.path());
     let v2_component =
-        find_component_by_purl_contains(&sbom, "mikebom-110-zlib-detector")
+        find_component_by_purl_contains(&sbom, "waybill-110-zlib-detector")
             .expect("v2 component must emit");
 
     let props = v2_component["properties"]
@@ -216,13 +216,13 @@ fn v2_record_emits_numeric_confidence_annotation() {
         .expect("v2 component MUST carry properties[]");
     let confidence = props
         .iter()
-        .find(|p| p["name"].as_str() == Some("mikebom:fingerprint-confidence"))
-        .expect("v2 component MUST carry mikebom:fingerprint-confidence per FR-017");
+        .find(|p| p["name"].as_str() == Some("waybill:fingerprint-confidence"))
+        .expect("v2 component MUST carry waybill:fingerprint-confidence per FR-017");
     let value = confidence["value"].as_str().expect("annotation value is a string");
     // Format check: "X.XX" + parses as a float ≥ 0.70.
     let parsed: f64 = value
         .parse()
-        .unwrap_or_else(|_| panic!("mikebom:fingerprint-confidence MUST parse as a float; got {value:?}"));
+        .unwrap_or_else(|_| panic!("waybill:fingerprint-confidence MUST parse as a float; got {value:?}"));
     assert!(
         parsed >= 0.70,
         "v2 fingerprint-confidence MUST be >= 0.70 (the Medium bucket floor); got {parsed}"
@@ -256,6 +256,6 @@ fn v1_zlib_emission_survives_alongside_v2_emission() {
 
     // v2 fixture detector MUST emit alongside.
     let v2_detector =
-        find_component_by_purl_contains(&sbom, "mikebom-110-zlib-detector");
+        find_component_by_purl_contains(&sbom, "waybill-110-zlib-detector");
     assert!(v2_detector.is_some(), "v2 fixture component must emit alongside v1");
 }

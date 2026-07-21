@@ -146,7 +146,7 @@ pub struct VerifyOptions {
 /// Parsed envelope + decoded payload. Shared across the verify pipeline.
 ///
 /// The `statement` field is a format-agnostic JSON `Value` — accepts
-/// any in-toto Statement shape (v0.1 witness-collection, v1 mikebom-
+/// any in-toto Statement shape (v0.1 witness-collection, v1 waybill-
 /// native, or anything else that has the minimum `_type` + `subject`
 /// + `predicateType` + `predicate` keys).
 #[derive(Debug)]
@@ -628,10 +628,10 @@ mod tests {
         let statement = serde_json::json!({
             "_type": "https://in-toto.io/Statement/v1",
             "subject": [{"name": "test", "digest": {"sha256": "a".repeat(64)}}],
-            "predicateType": "https://mikebom.dev/attestation/build-trace/v1",
+            "predicateType": "https://waybill.dev/attestation/build-trace/v1",
             "predicate": {
                 "metadata": {
-                    "tool": {"name": "mikebom", "version": "0.1.0"},
+                    "tool": {"name": "waybill", "version": "0.1.0"},
                     "trace_start": "2026-01-01T00:00:00Z",
                     "trace_end": "2026-01-01T00:00:01Z",
                     "target_process": {"pid": 1, "command": "test", "cgroup_id": 0},
@@ -800,7 +800,7 @@ mod tests {
         let raw = serde_json::json!({
             "_type": "https://in-toto.io/Statement/v1",
             "subject": [],
-            "predicateType": "https://mikebom.dev/attestation/build-trace/v1",
+            "predicateType": "https://waybill.dev/attestation/build-trace/v1",
             "predicate": {}
         })
         .to_string();

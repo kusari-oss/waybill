@@ -1,7 +1,7 @@
 //! Build a witness-compatible attestation-collection Statement from
-//! the same `AggregatedTrace` that powers the mikebom-native builder.
+//! the same `AggregatedTrace` that powers the waybill-native builder.
 //!
-//! Maps mikebom's trace data into four inner attestations:
+//! Maps waybill's trace data into four inner attestations:
 //! - `material/v0.1` = pre-exec file reads (attestable build inputs)
 //! - `command-run/v0.1` = the traced process + its exit code
 //! - `product/v0.1` = subject-resolver output (real artifact hashes)
@@ -56,7 +56,7 @@ pub fn build_witness_statement(
 
     // Build entries in declaration order (material → command-run →
     // product → network-trace). Each entry's starttime/endtime span
-    // the full trace for now — mikebom doesn't split attestors into
+    // the full trace for now — waybill doesn't split attestors into
     // sub-phases the way go-witness does when wrapping a command.
     let mut entries: Vec<CollectionEntry> = Vec::new();
 
@@ -186,7 +186,7 @@ fn build_material_attestation(ops: &[FileOperation]) -> MaterialAttestation {
 }
 
 fn algorithm_key(alg: &HashAlgorithm) -> &'static str {
-    // Map mikebom's HashAlgorithm enum to go-witness's string keys.
+    // Map waybill's HashAlgorithm enum to go-witness's string keys.
     // go-witness spells these "sha256", "sha1", "sha512", "md5".
     match alg {
         HashAlgorithm::Sha256 => "sha256",
@@ -197,11 +197,11 @@ fn algorithm_key(alg: &HashAlgorithm) -> &'static str {
 }
 
 fn build_command_run_attestation(cfg: &WitnessBuildConfig) -> CommandRunAttestation {
-    // mikebom's current aggregator doesn't split `target_command` back
+    // waybill's current aggregator doesn't split `target_command` back
     // into argv, so emit as a single-element vec carrying the raw
     // command line. Downstream consumers that care (sbomit doesn't)
     // can re-parse via shell-splitting rules. Exit code is unknown at
-    // attestation time — mikebom does not currently wait on the traced
+    // attestation time — waybill does not currently wait on the traced
     // command's return value. Default to 0.
     let cmd_vec: Vec<String> = shell_split(&cfg.target_command);
     let processes = if cfg.target_pid > 0 {
@@ -233,7 +233,7 @@ fn build_command_run_attestation(cfg: &WitnessBuildConfig) -> CommandRunAttestat
 }
 
 /// Very small shell-style splitter — whitespace separation is enough
-/// for mikebom's use case because we're re-inflating the argv the
+/// for waybill's use case because we're re-inflating the argv the
 /// operator passed after `--`.
 fn shell_split(cmd: &str) -> Vec<String> {
     cmd.split_whitespace().map(|s| s.to_string()).collect()

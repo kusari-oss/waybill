@@ -1,7 +1,7 @@
 //! Triple-format wall-clock performance benchmark (milestone 011
 //! T035 / SC-007).
 //!
-//! Spec: a single `mikebom sbom scan --format
+//! Spec: a single `waybill sbom scan --format
 //! cyclonedx-json,spdx-2.3-json,spdx-3-json` invocation MUST
 //! complete in **at least 30 % less wall-clock time** than three
 //! sequential single-format invocations against the same target.
@@ -25,7 +25,7 @@
 //! GitHub Actions ubuntu-latest — big enough that fixed overhead
 //! stays below the amortization margin.
 //!
-//! When `MIKEBOM_PERF_IMAGE` is set, the benchmark uses that image
+//! When `WAYBILL_PERF_IMAGE` is set, the benchmark uses that image
 //! instead of the synthetic fixture — useful for reviewers who want
 //! to verify against a production-scale `debian:12-slim.tar`.
 
@@ -63,7 +63,7 @@ fn build_synthetic_image(files: &[ImageFile]) -> (tempfile::TempDir, PathBuf) {
         }
         layer_tar.finish().expect("layer finish");
     }
-    let manifest = r#"[{"Config":"config.json","RepoTags":["mikebom-perf-triple:latest"],"Layers":["layer0/layer.tar"]}]"#;
+    let manifest = r#"[{"Config":"config.json","RepoTags":["waybill-perf-triple:latest"],"Layers":["layer0/layer.tar"]}]"#;
     let tar_path = dir.path().join("image.tar");
     let file = std::fs::File::create(&tar_path).expect("create image.tar");
     {
@@ -135,7 +135,7 @@ fn build_benchmark_fixture() -> (tempfile::TempDir, PathBuf) {
     build_synthetic_image(&files)
 }
 
-/// One wall-clock measurement of a single `mikebom sbom scan` run.
+/// One wall-clock measurement of a single `waybill sbom scan` run.
 /// Handles arbitrary comma-separated `--format` lists by deriving
 /// the per-format output path from the id.
 fn time_scan(image: &std::path::Path, formats: &str) -> Duration {
@@ -164,7 +164,7 @@ fn time_scan(image: &std::path::Path, formats: &str) -> Duration {
         ));
     }
     let start = Instant::now();
-    let out = cmd.output().expect("mikebom runs");
+    let out = cmd.output().expect("waybill runs");
     let elapsed = start.elapsed();
     assert!(
         out.status.success(),
@@ -199,11 +199,11 @@ fn median_of_5(image: &std::path::Path, formats: &str) -> Duration {
 #[test]
 #[ignore = "wall-clock perf test — opt in via `cargo test -- --ignored`, runs in dedicated .github/workflows/perf.yml lane"]
 fn triple_format_is_at_least_25_percent_faster_than_three_sequential_scans() {
-    let (_fixture_guard, image) = if let Ok(p) = std::env::var("MIKEBOM_PERF_IMAGE") {
+    let (_fixture_guard, image) = if let Ok(p) = std::env::var("WAYBILL_PERF_IMAGE") {
         let p = PathBuf::from(p);
         assert!(
             p.exists(),
-            "MIKEBOM_PERF_IMAGE set but {} does not exist",
+            "WAYBILL_PERF_IMAGE set but {} does not exist",
             p.display()
         );
         (tempfile::tempdir().expect("unused guard"), p)

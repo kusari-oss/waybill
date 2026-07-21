@@ -22,7 +22,7 @@
 //!   git-source emits via `pkg:generic/` (honest about loss of Hex.pm
 //!   provenance once git-swapped).
 //! - **path** (`:path` tuple): `pkg:generic/<name>@unspecified`
-//!   placeholder + `mikebom:source-type = "hex-path"` annotation.
+//!   placeholder + `waybill:source-type = "hex-path"` annotation.
 //!
 //! Inner SHA-256 (4th tuple element) always emits; outer SHA-256 (8th,
 //! optional) emits only when present + non-empty per Q3 best-effort.
@@ -34,7 +34,7 @@
 //! Design-tier `deps/0` extraction is conditional-flattened per Q1 —
 //! every dep tuple in the file emits regardless of `if Mix.env() ...`
 //! / `unless ...` / multi-clause `def deps(env)` nesting; components
-//! inside any conditional carry `mikebom:elixir-extraction-mode =
+//! inside any conditional carry `waybill:elixir-extraction-mode =
 //! "conditional-flattened"` annotation as a precision-loss signal.
 
 use std::collections::{BTreeMap, HashSet};
@@ -311,7 +311,7 @@ pub fn read(
             if entry.name == *root_app_name
                 && entry
                     .extra_annotations
-                    .get("mikebom:umbrella-root")
+                    .get("waybill:umbrella-root")
                     .and_then(|v| v.as_str())
                     == Some("true")
             {
@@ -872,7 +872,7 @@ fn build_extra_annotations(
 ) -> BTreeMap<String, serde_json::Value> {
     let mut out: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     out.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String(source_type_value.to_string()),
     );
     match entry {
@@ -881,7 +881,7 @@ fn build_extra_annotations(
             ..
         } => {
             out.insert(
-                "mikebom:vcs-declared-ref".to_string(),
+                "waybill:vcs-declared-ref".to_string(),
                 serde_json::Value::String(r.clone()),
             );
         }
@@ -889,12 +889,12 @@ fn build_extra_annotations(
             path, in_umbrella, ..
         } => {
             out.insert(
-                "mikebom:path".to_string(),
+                "waybill:path".to_string(),
                 serde_json::Value::String(path.clone()),
             );
             if *in_umbrella {
                 out.insert(
-                    "mikebom:in-umbrella".to_string(),
+                    "waybill:in-umbrella".to_string(),
                     serde_json::Value::String("true".to_string()),
                 );
             }
@@ -937,16 +937,16 @@ fn emit_main_module(
 
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     extra_annotations.insert(
-        "mikebom:component-role".to_string(),
+        "waybill:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
     extra_annotations.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String("hex-main-module".to_string()),
     );
     if info.is_some_and(|i| i.is_umbrella) {
         extra_annotations.insert(
-            "mikebom:umbrella-root".to_string(),
+            "waybill:umbrella-root".to_string(),
             serde_json::Value::String("true".to_string()),
         );
     }
@@ -1122,7 +1122,7 @@ fn emit_design_tier_components(
                 let mut anns: BTreeMap<String, serde_json::Value> = BTreeMap::new();
                 if let Some(r) = declared_ref {
                     anns.insert(
-                        "mikebom:vcs-declared-ref".to_string(),
+                        "waybill:vcs-declared-ref".to_string(),
                         serde_json::Value::String(r.clone()),
                     );
                 }
@@ -1133,13 +1133,13 @@ fn emit_design_tier_components(
                 let mut anns: BTreeMap<String, serde_json::Value> = BTreeMap::new();
                 if !path.is_empty() {
                     anns.insert(
-                        "mikebom:path".to_string(),
+                        "waybill:path".to_string(),
                         serde_json::Value::String(path.clone()),
                     );
                 }
                 if *in_umbrella {
                     anns.insert(
-                        "mikebom:in-umbrella".to_string(),
+                        "waybill:in-umbrella".to_string(),
                         serde_json::Value::String("true".to_string()),
                     );
                 }
@@ -1159,7 +1159,7 @@ fn emit_design_tier_components(
 
         let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
         extra_annotations.insert(
-            "mikebom:source-type".to_string(),
+            "waybill:source-type".to_string(),
             serde_json::Value::String(source_type_value.to_string()),
         );
         for (k, v) in source_specific_anns {
@@ -1167,7 +1167,7 @@ fn emit_design_tier_components(
         }
         if decl.in_conditional {
             extra_annotations.insert(
-                "mikebom:elixir-extraction-mode".to_string(),
+                "waybill:elixir-extraction-mode".to_string(),
                 serde_json::Value::String("conditional-flattened".to_string()),
             );
         }
@@ -1480,7 +1480,7 @@ mod tests {
         };
         let ann = build_extra_annotations(&e, "hex-git");
         assert_eq!(
-            ann.get("mikebom:vcs-declared-ref").and_then(|v| v.as_str()),
+            ann.get("waybill:vcs-declared-ref").and_then(|v| v.as_str()),
             Some("ref: main")
         );
     }
@@ -1493,9 +1493,9 @@ mod tests {
             in_umbrella: true,
         };
         let ann = build_extra_annotations(&e, "hex-path");
-        assert_eq!(ann.get("mikebom:path").and_then(|v| v.as_str()), Some("../shared"));
+        assert_eq!(ann.get("waybill:path").and_then(|v| v.as_str()), Some("../shared"));
         assert_eq!(
-            ann.get("mikebom:in-umbrella").and_then(|v| v.as_str()),
+            ann.get("waybill:in-umbrella").and_then(|v| v.as_str()),
             Some("true")
         );
     }

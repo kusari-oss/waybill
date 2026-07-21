@@ -204,7 +204,7 @@ impl SqliteFile {
     /// rpmdb.sqlite stores each package's header as the single blob
     /// column; the visitor receives that payload so callers can feed
     /// it to [`rpm_header::parse_header_blob`]. Rows with no blob
-    /// column (e.g. mikebom's test-fixture schema) receive an empty
+    /// column (e.g. waybill's test-fixture schema) receive an empty
     /// slice.
     pub fn iter_table_blobs<F>(
         &self,

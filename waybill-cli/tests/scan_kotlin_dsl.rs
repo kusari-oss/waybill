@@ -5,7 +5,7 @@
 //! - US2 AS1: `implementation("g:n:v")` emits as `pkg:maven/...`
 //! - US2 AS2: `libs.okhttp` catalog ref resolves to a fully-qualified PURL
 //! - US2 AS3: dep-config families map to lifecycle scopes correctly
-//! - US2 AS4: KMP source-set declarations stamp `mikebom:kmp-source-set`
+//! - US2 AS4: KMP source-set declarations stamp `waybill:kmp-source-set`
 //!   as a lex-sorted JSON-encoded array
 //! - US2 AS5: multi-module settings.gradle.kts synthesizes a
 //!   `pkg:generic/<rootProject.name>@0.0.0` workspace-root component
@@ -48,17 +48,17 @@ fn run_scan_with_args(root: &Path, extra: &[&str]) -> (serde_json::Value, Output
         .arg("--offline")
         .arg("--output")
         .arg(&out_path)
-        .env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
+        .env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
         .env("RUST_LOG", "warn")
-        .env_remove("MIKEBOM_EXCLUDE_PATH")
-        .env_remove("MIKEBOM_NO_GO_MOD_WHY");
+        .env_remove("WAYBILL_EXCLUDE_PATH")
+        .env_remove("WAYBILL_NO_GO_MOD_WHY");
     for a in extra {
         cmd.arg(a);
     }
-    let output = cmd.output().expect("failed to invoke mikebom binary");
+    let output = cmd.output().expect("failed to invoke waybill binary");
     if !output.status.success() {
         panic!(
-            "mikebom exited non-zero:\nstdout: {}\nstderr: {}",
+            "waybill exited non-zero:\nstdout: {}\nstderr: {}",
             String::from_utf8_lossy(&output.stdout),
             String::from_utf8_lossy(&output.stderr),
         );
@@ -145,38 +145,38 @@ fn us2_as3_dep_config_to_lifecycle_scope_mapping() {
     let fixture = workspace_fixture("kotlin_dsl_gradle");
     let (cdx, _out) = run_scan(&fixture);
 
-    // testImplementation → mikebom:lifecycle-scope = test (CDX scope: excluded)
+    // testImplementation → waybill:lifecycle-scope = test (CDX scope: excluded)
     let kotest = component_by_purl(
         &cdx,
         "pkg:maven/io.kotest/kotest-runner-junit5@5.8.0",
     )
     .expect("kotest-runner component");
     assert_eq!(
-        component_property(kotest, "mikebom:lifecycle-scope"),
+        component_property(kotest, "waybill:lifecycle-scope"),
         Some("test"),
         "testImplementation must map to lifecycle-scope=test"
     );
 
-    // kapt → mikebom:lifecycle-scope = build
+    // kapt → waybill:lifecycle-scope = build
     let dagger = component_by_purl(
         &cdx,
         "pkg:maven/com.google.dagger/dagger-compiler@2.50",
     )
     .expect("dagger-compiler component");
     assert_eq!(
-        component_property(dagger, "mikebom:lifecycle-scope"),
+        component_property(dagger, "waybill:lifecycle-scope"),
         Some("build"),
         "kapt must map to lifecycle-scope=build"
     );
 
-    // debugImplementation → mikebom:lifecycle-scope = development
+    // debugImplementation → waybill:lifecycle-scope = development
     let leak = component_by_purl(
         &cdx,
         "pkg:maven/com.squareup.leakcanary/leakcanary-android@2.12",
     )
     .expect("leakcanary component");
     assert_eq!(
-        component_property(leak, "mikebom:lifecycle-scope"),
+        component_property(leak, "waybill:lifecycle-scope"),
         Some("development")
     );
 }
@@ -193,7 +193,7 @@ fn us2_as4_kmp_source_set_emits_json_array_lex_sorted() {
         "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-json@1.6.2",
     )
     .expect("kotlinx-serialization-json component");
-    let raw = component_property(kx, "mikebom:kmp-source-set")
+    let raw = component_property(kx, "waybill:kmp-source-set")
         .expect("kmp-source-set property must be present");
     let arr: serde_json::Value = serde_json::from_str(raw)
         .expect("kmp-source-set value must parse as JSON");
@@ -208,11 +208,11 @@ fn us2_as5_settings_kts_workspace_synthesizes_pkg_generic_root() {
     let fixture = workspace_fixture("kotlin_dsl_gradle");
     let (cdx, _out) = run_scan(&fixture);
 
-    // Workspace-root: pkg:generic/demo-kts@0.0.0 with mikebom:component-role = workspace-root.
+    // Workspace-root: pkg:generic/demo-kts@0.0.0 with waybill:component-role = workspace-root.
     let root = component_by_purl(&cdx, "pkg:generic/demo-kts@0.0.0")
         .expect("workspace-root component");
     assert_eq!(
-        component_property(root, "mikebom:component-role"),
+        component_property(root, "waybill:component-role"),
         Some("workspace-root")
     );
 }
@@ -260,7 +260,7 @@ fn us2_nested_gradle_workspace_emits_only_outermost_workspace_root() {
     let workspace_roots: Vec<_> = components(&cdx)
         .iter()
         .filter(|c| {
-            component_property(c, "mikebom:component-role")
+            component_property(c, "waybill:component-role")
                 == Some("workspace-root")
         })
         .collect();

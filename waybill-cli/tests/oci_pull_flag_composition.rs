@@ -33,7 +33,7 @@ fn sha256_hex(bytes: &[u8]) -> String {
 async fn mount_minimal_image(server: &MockServer, repo: &str, tag: &str) {
     let uncompressed_tar = {
         let mut builder = tar::Builder::new(Vec::<u8>::new());
-        let body = b"ID=mikebom-m182-us4\nVERSION=1\n";
+        let body = b"ID=waybill-m182-us4\nVERSION=1\n";
         let mut header = tar::Header::new_gnu();
         header.set_path("etc/os-release").unwrap();
         header.set_size(body.len() as u64);
@@ -137,12 +137,12 @@ async fn us4_all_three_flags_coexist_without_clap_conflict() {
             "--insecure-tls-skip-verify",
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     // Fails at transport-time (unreachable host), NOT at parse-time.
     assert!(
         !out.status.success(),
-        "expected mikebom to fail against unreachable host. stderr:\n{stderr}",
+        "expected waybill to fail against unreachable host. stderr:\n{stderr}",
     );
     // Parse-error signatures — none should appear.
     assert!(
@@ -163,13 +163,13 @@ async fn us4_all_three_flags_coexist_without_clap_conflict() {
 
 #[tokio::test]
 async fn us4_insecure_registry_wins_over_skip_verify_on_same_host() {
-    // FR-009: when --insecure-registry matches a host, mikebom uses
+    // FR-009: when --insecure-registry matches a host, waybill uses
     // http://... — skip-verify is moot because there's no TLS
     // handshake. This is a plain-HTTP wiremock target where BOTH
     // flags are set for the same host; the pull must succeed via the
     // plain-HTTP path.
     let server = MockServer::start().await;
-    let repo = "library/mikebom-m182-us4";
+    let repo = "library/waybill-m182-us4";
     let tag = "1.0";
     mount_minimal_image(&server, repo, tag).await;
     let uri = server.uri();
@@ -196,7 +196,7 @@ async fn us4_insecure_registry_wins_over_skip_verify_on_same_host() {
             output.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         out.status.success(),

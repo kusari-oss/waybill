@@ -47,16 +47,16 @@ mod trace;
 
 #[derive(Parser)]
 #[command(
-    name = "mikebom",
+    name = "waybill",
     version,
     about = "SBOM generator with optional eBPF build-tracing",
     long_about = "SBOM generator.\n\n\
-                  - `mikebom sbom scan` (stable): filesystem / image scanning with \
+                  - `waybill sbom scan` (stable): filesystem / image scanning with \
                   lockfile-aware dep-graph extraction. Cross-platform, no privileges.\n\
-                  - `mikebom sbom verify` / `policy init` / `sbom enrich` (stable): \
+                  - `waybill sbom verify` / `policy init` / `sbom enrich` (stable): \
                   signed attestation verification + in-toto layouts + RFC 6902 \
                   SBOM enrichment.\n\
-                  - `mikebom trace` (experimental, Linux only): eBPF-based build-time \
+                  - `waybill trace` (experimental, Linux only): eBPF-based build-time \
                   capture. Produces attestations bound to the build event. Requires \
                   CAP_BPF + CAP_PERFMON; 2-3× slowdown on syscall-heavy builds. See \
                   docs/user-guide/quickstart.md for stability notes."
@@ -84,14 +84,14 @@ struct Cli {
 
     /// Disable Go package-level build-graph classification. By default,
     /// when a `go` toolchain is found on PATH during a Go source scan,
-    /// mikebom runs `go mod why -m -vendor` (60-second total budget,
+    /// waybill runs `go mod why -m -vendor` (60-second total budget,
     /// modules batched in chunks of 20) to classify modules outside the
     /// build graph as `not-needed` (emitted with `scope: "excluded"`)
     /// or test-only (emitted with test scope). With this flag set, that
     /// subprocess never runs: affected modules keep the conservative
-    /// `mikebom:build-inclusion: unknown` marker instead.
+    /// `waybill:build-inclusion: unknown` marker instead.
     ///
-    /// Also settable via `MIKEBOM_NO_GO_MOD_WHY` (any non-empty value
+    /// Also settable via `WAYBILL_NO_GO_MOD_WHY` (any non-empty value
     /// other than `0` disables classification). Flag or env var — either
     /// one disables. Milestone 112.
     #[arg(long = "no-go-mod-why", global = true)]
@@ -108,7 +108,7 @@ struct Cli {
     /// `--exclude-scope dev,build` keeps test for security-audit
     /// workflows.
     ///
-    /// When omitted, mikebom emits all scopes (Runtime +
+    /// When omitted, waybill emits all scopes (Runtime +
     /// Development + Build + Test) — the milestone-052 default.
     #[arg(long, global = true, value_delimiter = ',')]
     exclude_scope: Vec<ExcludeScopeArg>,
@@ -129,12 +129,12 @@ struct Cli {
     /// `.`-prefixed dirs, the Go-tool unconditional skips of
     /// `testdata/` and `_`-prefixed dirs).
     ///
-    /// Also via `MIKEBOM_EXCLUDE_PATH` using the platform's path-list
+    /// Also via `WAYBILL_EXCLUDE_PATH` using the platform's path-list
     /// separator (`:` on Unix, `;` on Windows). CLI flags and env-var
     /// entries combine by union.
     ///
     /// When any exclusion is in effect the emitted SBOM carries a
-    /// `mikebom:exclude-path` envelope annotation listing the active
+    /// `waybill:exclude-path` envelope annotation listing the active
     /// entries (Constitution Principle X). When omitted the emitted
     /// SBOM is byte-identical to a pre-feature build.
     ///
@@ -148,17 +148,17 @@ struct Cli {
     /// recognizable manifests, license + supplier + copyright
     /// metadata on otherwise-known components.
     ///
-    /// At scan startup mikebom parses + structurally validates the
+    /// At scan startup waybill parses + structurally validates the
     /// file (zero new runtime deps — hand-rolled subset check), then
     /// merges it into the emitted SBOM:
     /// - **Solo entries** (PURL not in scanner output) become new
-    ///   components/services tagged `mikebom:source-tier = declared`.
+    ///   components/services tagged `waybill:source-tier = declared`.
     /// - **Collisions** (PURL matches scanner output) resolve via
     ///   the hard/soft split: scanner wins on bytes-derived facts
     ///   (hashes, cpe, canonical purl, version, binary role);
     ///   developer wins on metadata (licenses, supplier, copyright,
     ///   display name, description, externalReferences). Each
-    ///   disagreement annotated `mikebom:assertion-conflict` for
+    ///   disagreement annotated `waybill:assertion-conflict` for
     ///   audit.
     ///
     /// Safety property: developer CANNOT suppress scanner detection
@@ -167,7 +167,7 @@ struct Cli {
     /// fingerprinted; the assertion appears as an annotated conflict.
     ///
     /// Provenance: the emitted SBOM carries a document-scope
-    /// `mikebom:supplement-cdx = <path>@sha256:<hex>` annotation so
+    /// `waybill:supplement-cdx = <path>@sha256:<hex>` annotation so
     /// consumers can verify which supplement file fed the merge.
     ///
     /// Parse / I/O / schema-validation failures cause non-zero exit
@@ -183,7 +183,7 @@ struct Cli {
     supplement_cdx: Option<std::path::PathBuf>,
 
     /// Include declared-but-not-on-disk dependencies (manifest SBOM).
-    /// By default, mikebom emits only components physically present in
+    /// By default, waybill emits only components physically present in
     /// the scanned tree or image ("artifact SBOM" — if it's in the
     /// image, it's in the SBOM). When set, also emits: (1) deps.dev-
     /// reported transitives with no on-disk trace
@@ -207,13 +207,13 @@ struct Cli {
     /// on pre-RHEL-8 / CentOS-7 / Amazon-Linux-2 images. Off by default;
     /// preserves milestone-003 behaviour (diagnostic log, zero components)
     /// so existing scans don't silently change output. Canonical
-    /// invocation: `mikebom sbom scan --include-legacy-rpmdb …`. Also
-    /// enabled via `MIKEBOM_INCLUDE_LEGACY_RPMDB=1`. Milestone 004 US4.
-    #[arg(long, global = true, env = "MIKEBOM_INCLUDE_LEGACY_RPMDB")]
+    /// invocation: `waybill sbom scan --include-legacy-rpmdb …`. Also
+    /// enabled via `WAYBILL_INCLUDE_LEGACY_RPMDB=1`. Milestone 004 US4.
+    #[arg(long, global = true, env = "WAYBILL_INCLUDE_LEGACY_RPMDB")]
     include_legacy_rpmdb: bool,
 
-    /// Wall-clock time limit for the entire mikebom invocation, in
-    /// seconds. If exceeded, mikebom emits a tracing::error and exits
+    /// Wall-clock time limit for the entire waybill invocation, in
+    /// seconds. If exceeded, waybill emits a tracing::error and exits
     /// with status 124 (POSIX `timeout(1)` convention).
     ///
     /// Use cases: bound a runaway scan in CI; protect a Kubernetes
@@ -223,7 +223,7 @@ struct Cli {
     /// Disabled when omitted or set to 0. Mutually exclusive with no
     /// other flag — it complements `--offline`, registry timeouts,
     /// and the existing `trace run --timeout` (which caps the
-    /// SUBPROCESS being traced, not mikebom itself; whichever fires
+    /// SUBPROCESS being traced, not waybill itself; whichever fires
     /// first wins).
     ///
     /// Partial output may not be written when the watchdog fires —
@@ -244,7 +244,7 @@ enum Commands {
     /// [EXPERIMENTAL, Linux-only] eBPF build-process tracing.
     /// Produces attestations bound to the build event. Requires CAP_BPF +
     /// CAP_PERFMON. Adds ~2-3× wall-clock overhead on syscall-heavy builds.
-    /// For most SBOM use cases, prefer `mikebom sbom scan`.
+    /// For most SBOM use cases, prefer `waybill sbom scan`.
     Trace(cli::trace_cmd::TraceCommand),
     /// SBOM generation, enrichment, and validation
     Sbom(cli::sbom_cmd::SbomCommand),
@@ -271,7 +271,7 @@ async fn main() -> anyhow::Result<std::process::ExitCode> {
 
     let cli = Cli::parse();
 
-    // Milestone 055 (T010): expose --offline as MIKEBOM_OFFLINE env var
+    // Milestone 055 (T010): expose --offline as WAYBILL_OFFLINE env var
     // so the Go transitive-edge resolver in `scan_fs::package_db::
     // golang::graph_resolver::WorkspaceContext::from_parts` can honor
     // it without requiring the multi-test-fixture refactor of plumbing
@@ -281,20 +281,20 @@ async fn main() -> anyhow::Result<std::process::ExitCode> {
     if cli.offline {
         // SAFETY: single-threaded prelude before any async runtime
         // workers spawn — env mutation here is race-free.
-        std::env::set_var("MIKEBOM_OFFLINE", "1");
+        std::env::set_var("WAYBILL_OFFLINE", "1");
     }
 
     // Milestone 112 (T012): expose --no-go-mod-why as the
-    // MIKEBOM_NO_GO_MOD_WHY env var so the go-mod-why classification
+    // WAYBILL_NO_GO_MOD_WHY env var so the go-mod-why classification
     // pass in `scan_fs::package_db` can honor it without plumbing a
     // bool through `scan_path` → `read_all` → `golang::read` (same
-    // env-var-bridge rationale as MIKEBOM_OFFLINE above). The read
+    // env-var-bridge rationale as WAYBILL_OFFLINE above). The read
     // side treats any non-empty value other than `0` as "disabled",
     // so flag OR pre-set env var disables classification.
     if cli.no_go_mod_why {
         // SAFETY: single-threaded prelude before any async runtime
         // workers spawn — env mutation here is race-free.
-        std::env::set_var("MIKEBOM_NO_GO_MOD_WHY", "1");
+        std::env::set_var("WAYBILL_NO_GO_MOD_WHY", "1");
     }
 
     // Global wall-clock watchdog. When `--timeout <SECONDS>` is set
@@ -315,7 +315,7 @@ async fn main() -> anyhow::Result<std::process::ExitCode> {
                 tokio::time::sleep(std::time::Duration::from_secs(secs)).await;
                 tracing::error!(
                     timeout_secs = secs,
-                    "mikebom exceeded the configured --timeout wall-clock limit; exiting with status 124"
+                    "waybill exceeded the configured --timeout wall-clock limit; exiting with status 124"
                 );
                 std::process::exit(124);
             });
@@ -326,13 +326,13 @@ async fn main() -> anyhow::Result<std::process::ExitCode> {
         cli.exclude_scope.iter().map(|a| a.as_lifecycle_scope()).collect();
 
     // Milestone 113 — user-supplied directory exclusion. CLI flag
-    // entries plus MIKEBOM_EXCLUDE_PATH env-var entries (split on the
+    // entries plus WAYBILL_EXCLUDE_PATH env-var entries (split on the
     // platform's path-list separator: `:` on Unix, `;` on Windows)
     // combine by union, in flag-then-env order. Reject malformed
     // entries at parse time (FR-007 / SC-005) so the scan never
     // begins on a bad config.
     let mut exclude_path_entries: Vec<String> = cli.exclude_path.clone();
-    if let Ok(env_value) = std::env::var("MIKEBOM_EXCLUDE_PATH") {
+    if let Ok(env_value) = std::env::var("WAYBILL_EXCLUDE_PATH") {
         for piece in std::env::split_paths(&env_value) {
             let s = piece.to_string_lossy().into_owned();
             if !s.is_empty() {

@@ -106,14 +106,14 @@ fn default_hexpm_emits_bare_purl() {
     let doc = run_scan(tmp.path());
     let c = component_with_purl(&doc, "pkg:hex/phoenix@1.7.10")
         .expect("default hexpm must emit bare PURL");
-    assert_eq!(property_value(c, "mikebom:source-type"), Some("hex-hex"));
+    assert_eq!(property_value(c, "waybill:source-type"), Some("hex-hex"));
 }
 
 #[test]
 fn private_hexpm_org_emits_namespace_and_repository_url() {
     // Phase 0 correction regression: lockfile entry with "hexpm:acme"
     // repo string emits pkg:hex/acme/internal_lib@2.0.0?repository_url=...
-    // NOT a mikebom:hex-repo annotation.
+    // NOT a waybill:hex-repo annotation.
     let tmp = tempfile::tempdir().unwrap();
     write_mixed_fixture(tmp.path());
     let doc = run_scan(tmp.path());
@@ -121,12 +121,12 @@ fn private_hexpm_org_emits_namespace_and_repository_url() {
         "pkg:hex/acme/internal_lib@2.0.0?repository_url=https://repo.hex.pm";
     let c = component_with_purl(&doc, expected)
         .unwrap_or_else(|| panic!("private-org PURL {expected} not found"));
-    assert_eq!(property_value(c, "mikebom:source-type"), Some("hex-hex"));
-    // Should NOT have the deprecated mikebom:hex-repo annotation
+    assert_eq!(property_value(c, "waybill:source-type"), Some("hex-hex"));
+    // Should NOT have the deprecated waybill:hex-repo annotation
     // (verifies the initial spec-guess form was removed).
     assert!(
-        property_value(c, "mikebom:hex-repo").is_none(),
-        "Phase 0 correction: mikebom:hex-repo annotation must NOT appear; private-org info goes in PURL namespace + repository_url qualifier",
+        property_value(c, "waybill:hex-repo").is_none(),
+        "Phase 0 correction: waybill:hex-repo annotation must NOT appear; private-org info goes in PURL namespace + repository_url qualifier",
     );
 }
 
@@ -140,7 +140,7 @@ fn git_source_emits_pkg_generic_with_vcs_url() {
     let expected = "pkg:generic/my_fork@eb39649a76b87e8451baf75d10ce82ca3a3d5601?vcs_url=git+https://github.com/foo/my-fork.git";
     let c = component_with_purl(&doc, expected)
         .unwrap_or_else(|| panic!("git-source PURL {expected} not found"));
-    assert_eq!(property_value(c, "mikebom:source-type"), Some("hex-git"));
+    assert_eq!(property_value(c, "waybill:source-type"), Some("hex-git"));
 }
 
 #[test]
@@ -154,7 +154,7 @@ fn git_source_carries_vcs_declared_ref() {
     )
     .unwrap();
     assert_eq!(
-        property_value(c, "mikebom:vcs-declared-ref"),
+        property_value(c, "waybill:vcs-declared-ref"),
         Some("ref: main"),
     );
 }
@@ -166,8 +166,8 @@ fn path_source_emits_pkg_generic_placeholder() {
     let doc = run_scan(tmp.path());
     let c = component_with_purl(&doc, "pkg:generic/shared_lib@unspecified")
         .expect("path source must use pkg:generic/ placeholder");
-    assert_eq!(property_value(c, "mikebom:source-type"), Some("hex-path"));
-    assert_eq!(property_value(c, "mikebom:path"), Some("apps/shared_lib"));
+    assert_eq!(property_value(c, "waybill:source-type"), Some("hex-path"));
+    assert_eq!(property_value(c, "waybill:path"), Some("apps/shared_lib"));
 }
 
 #[test]
@@ -196,7 +196,7 @@ end
     .unwrap();
     let doc = run_scan(tmp.path());
     let c = component_with_purl(&doc, "pkg:generic/core@unspecified").unwrap();
-    assert_eq!(property_value(c, "mikebom:in-umbrella"), Some("true"));
+    assert_eq!(property_value(c, "waybill:in-umbrella"), Some("true"));
 }
 
 #[test]

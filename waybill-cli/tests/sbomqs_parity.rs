@@ -1,7 +1,7 @@
 //! sbomqs cross-format scoring (milestone 010 T055 / SC-001).
 //!
 //! Spec: for each of the 9 supported ecosystems, `sbomqs score`
-//! against mikebom's SPDX 2.3 output MUST meet or beat the score
+//! against waybill's SPDX 2.3 output MUST meet or beat the score
 //! against its CycloneDX output on the features both formats
 //! express natively (NTIA-minimum: name, version, supplier,
 //! checksums, license, PURL, CPE, spec-conformance).
@@ -9,13 +9,13 @@
 //! Discovery gate: `sbomqs` is an external Go binary that isn't
 //! vendored in the tree. CI provisions it in a setup step (see
 //! `.github/workflows/ci.yml`); local runs pick it up from `$PATH`
-//! or `MIKEBOM_SBOMQS_BIN=<abs-path>`. When the binary is not
+//! or `WAYBILL_SBOMQS_BIN=<abs-path>`. When the binary is not
 //! available the test exits cleanly with an informational skip
 //! rather than failing — this keeps the test non-blocking for
 //! devs who haven't installed sbomqs while still enforcing SC-001
 //! in CI.
 //!
-//! The NTIA-minimum category subset mikebom expects parity on:
+//! The NTIA-minimum category subset waybill expects parity on:
 //! `sbomqs score` emits per-category numerical scores; we parse the
 //! JSON output (`sbomqs score --json`), extract the categories we
 //! care about, and assert `spdx ≥ cdx` on each.
@@ -30,7 +30,7 @@ use common::{case_fixture_path, EcosystemCase, CASES};
 
 /// Locate `sbomqs`. Env var overrides the `$PATH` lookup.
 fn sbomqs_bin() -> Option<PathBuf> {
-    if let Ok(env) = std::env::var("MIKEBOM_SBOMQS_BIN") {
+    if let Ok(env) = std::env::var("WAYBILL_SBOMQS_BIN") {
         let p = PathBuf::from(env);
         if p.exists() {
             return Some(p);
@@ -45,9 +45,9 @@ fn sbomqs_bin() -> Option<PathBuf> {
         .ok()
         .map(|_| PathBuf::from("sbomqs"))
 }/// sbomqs **feature** keys (under the top-level category keys)
-/// that express mikebom-significant data natively in both CDX and
+/// that express waybill-significant data natively in both CDX and
 /// SPDX. Excludes features sbomqs scores as "N/A (SPDX)" (no
-/// equivalent in the SPDX 2.3 spec, not a mikebom gap) and features
+/// equivalent in the SPDX 2.3 spec, not a waybill gap) and features
 /// tied to `component.type` / `primaryPurpose` (SPDX 2.3 has no
 /// native home for it; annotations don't score).
 ///
@@ -104,7 +104,7 @@ fn produce_sboms(
     if let Some(code) = case.deb_codename {
         cmd.arg("--deb-codename").arg(code);
     }
-    let final_out = cmd.output().expect("mikebom runs");
+    let final_out = cmd.output().expect("waybill runs");
     assert!(
         final_out.status.success(),
         "scan failed for {}: stderr={}",
@@ -192,7 +192,7 @@ fn run_case(sbomqs: &std::path::Path, case: &EcosystemCase) {
     let cdx_scores = match sbomqs_feature_scores(sbomqs, &cdx_path) {
         SbomqsScoreResult::Scored(m) => m,
         SbomqsScoreResult::Unsupported => panic!(
-            "{}: sbomqs can't parse mikebom's CycloneDX output — that's a \
+            "{}: sbomqs can't parse waybill's CycloneDX output — that's a \
              real regression",
             case.label
         ),
@@ -200,7 +200,7 @@ fn run_case(sbomqs: &std::path::Path, case: &EcosystemCase) {
     let spdx_scores = match sbomqs_feature_scores(sbomqs, &spdx_path) {
         SbomqsScoreResult::Scored(m) => m,
         SbomqsScoreResult::Unsupported => panic!(
-            "{}: sbomqs can't parse mikebom's SPDX 2.3 output — that's a \
+            "{}: sbomqs can't parse waybill's SPDX 2.3 output — that's a \
              real regression",
             case.label
         ),
@@ -268,7 +268,7 @@ fn sbomqs_spdx_score_meets_or_beats_cdx_across_ecosystems() {
         // harness fails loudly anyway.
         eprintln!(
             "[sbomqs_parity] skipping: sbomqs binary not found on \
-             PATH and MIKEBOM_SBOMQS_BIN not set. Install from \
+             PATH and WAYBILL_SBOMQS_BIN not set. Install from \
              https://github.com/interlynk-io/sbomqs to enable \
              SC-001 enforcement locally."
         );

@@ -35,7 +35,7 @@ use waybill_common::resolution::{Relationship, ResolvedComponent};
 /// (`metadata.component`, here `target_ref`) to have at least one
 /// outgoing `dependsOn` edge — without it, sbomqs reports
 /// "no dependency graph present" even when component-to-component
-/// edges are populated. When mikebom skips the lockfile root entry
+/// edges are populated. When waybill skips the lockfile root entry
 /// (workspace root, npm path_key=""), the primary has no source for
 /// direct-dep names. Fall back to "primary depends on all root
 /// components" — i.e., every component that isn't pointed at by any

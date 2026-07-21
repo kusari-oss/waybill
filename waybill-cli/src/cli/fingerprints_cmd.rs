@@ -1,10 +1,10 @@
-//! `mikebom fingerprints` — operator subcommands for the external
+//! `waybill fingerprints` — operator subcommands for the external
 //! symbol-fingerprint corpus (milestone 108 US4 / FR-008 / FR-009).
 //!
 //! Three subcommands:
 //!
 //! - `fetch [--corpus-rev <SHA>]` — explicit one-shot fetch. The only
-//!   subcommand in mikebom-cli that's REQUIRED to perform a network
+//!   subcommand in waybill-cli that's REQUIRED to perform a network
 //!   call. Air-gapped operators run this on an internet-connected
 //!   machine, tar the cache, ship it, and untar on the air-gapped
 //!   destination.
@@ -39,13 +39,13 @@ pub struct FingerprintsCommand {
 #[derive(Subcommand, Debug)]
 pub enum FingerprintsSubcommand {
     /// Fetch the external corpus tarball + extract into the per-host
-    /// cache. The only mikebom subcommand REQUIRED to perform a network
+    /// cache. The only waybill subcommand REQUIRED to perform a network
     /// call.
     ///
     /// Example: pre-fetch for an air-gapped operator.
     ///
-    ///   $ mikebom fingerprints fetch
-    ///   fetched: fff39c6ad22ce8420b506323ce1d5cce4b628d5c → /home/user/.cache/mikebom/fingerprints/fff39c6.../
+    ///   $ waybill fingerprints fetch
+    ///   fetched: fff39c6ad22ce8420b506323ce1d5cce4b628d5c → /home/user/.cache/waybill/fingerprints/fff39c6.../
     ///
     /// Idempotent — running twice against the same SHA short-circuits
     /// with a `cache hit:` message and exits 0.
@@ -54,8 +54,8 @@ pub enum FingerprintsSubcommand {
     ///
     /// Example: drop every cached SHA except the build-time-pinned one.
     ///
-    ///   $ mikebom fingerprints cache-clear --keep-rev fff39c6ad22ce8420b506323ce1d5cce4b628d5c
-    ///   removed: /home/user/.cache/mikebom/fingerprints/<other-sha>/
+    ///   $ waybill fingerprints cache-clear --keep-rev fff39c6ad22ce8420b506323ce1d5cce4b628d5c
+    ///   removed: /home/user/.cache/waybill/fingerprints/<other-sha>/
     ///
     /// Idempotent — running against an already-empty cache exits 0
     /// with no output.
@@ -64,7 +64,7 @@ pub enum FingerprintsSubcommand {
     /// List cached corpora (full SHA + record count + mtime).
     /// Purely local; no network.
     ///
-    ///   $ mikebom fingerprints list
+    ///   $ waybill fingerprints list
     ///   fff39c6ad22ce8420b506323ce1d5cce4b628d5c  7  2026-06-02T17:30:55Z
     List,
 }

@@ -1,12 +1,12 @@
 //! Milestone 191 (issue #560) — design-tier / source-tier reconciliation.
 //! Milestone 199 (issue #564 + #565) — always-array shape for the
 //! declaration-provenance annotations + npm-alias resolved-identity
-//! accumulation via `mikebom:declared-as`.
+//! accumulation via `waybill:declared-as`.
 //!
 //! At emission time (after `deduplicate` runs), collapse each design-tier
 //! component into its matching source-tier sibling when one exists in the
 //! same workspace scope. Accumulate every design-tier match's requirement
-//! range + source manifest path + (optional) npm-alias `mikebom:declared-as`
+//! range + source manifest path + (optional) npm-alias `waybill:declared-as`
 //! onto the surviving source-tier component. Rewrite dep-graph edges
 //! pointing at the removed design-tier component so they target the
 //! survivor.
@@ -17,19 +17,19 @@
 //! # m199 wire shape
 //!
 //! Every reconciler-survivor with at least one design-tier match carries:
-//! - `mikebom:requirement-ranges` — always JSON array of range strings.
+//! - `waybill:requirement-ranges` — always JSON array of range strings.
 //!   N-element for N-manifest cases; duplicates preserved (range/manifest
 //!   count IS provenance signal per data-model E2).
-//! - `mikebom:source-manifests` — always JSON array of workspace-relative
+//! - `waybill:source-manifests` — always JSON array of workspace-relative
 //!   manifest paths, sorted lex-ascending. Ordering 1:1 with ranges (Nth
 //!   range came from Nth manifest).
-//! - `mikebom:declared-as` (US2) — JSON array of npm alias names, sorted
+//! - `waybill:declared-as` (US2) — JSON array of npm alias names, sorted
 //!   lex-ascending + DEDUPED (unlike ranges/manifests: alias-count is not
 //!   provenance per data-model E1). Emitted only when at least one
 //!   design-tier match carried the annotation.
 //!
-//! The m191 singular scalars `mikebom:requirement-range` /
-//! `mikebom:source-manifest` MUST NOT appear on reconciler survivors
+//! The m191 singular scalars `waybill:requirement-range` /
+//! `waybill:source-manifest` MUST NOT appear on reconciler survivors
 //! post-m199 (FR-001).
 //!
 //! # Design decisions
@@ -104,7 +104,7 @@ pub fn reconcile_design_source_tiers(
     //
     // Ecosystem + canonical name + source-manifest directory jointly
     // identify a scope-matched pair. `source_manifest_dir` is derived
-    // from the design-tier component's `mikebom:source-manifest`
+    // from the design-tier component's `waybill:source-manifest`
     // annotation (typically `package.json` or `packages/foo/package.json`
     // — we take the parent directory).
     let source_index: HashMap<MatchKey, Vec<usize>> = build_source_index(&components);
@@ -132,8 +132,8 @@ pub fn reconcile_design_source_tiers(
         // (legacy) forms; treat scalar OR array values equivalently.
         let design_manifest = design
             .extra_annotations
-            .get("mikebom:source-manifests")
-            .or_else(|| design.extra_annotations.get("mikebom:source-manifest"))
+            .get("waybill:source-manifests")
+            .or_else(|| design.extra_annotations.get("waybill:source-manifest"))
             .and_then(|v| match v {
                 serde_json::Value::String(s) => Some(s.clone()),
                 serde_json::Value::Array(a) => a
@@ -146,7 +146,7 @@ pub fn reconcile_design_source_tiers(
         // site or scalar for defensive-forward-compat).
         let design_declared_as: Vec<String> = design
             .extra_annotations
-            .get("mikebom:declared-as")
+            .get("waybill:declared-as")
             .map(|v| match v {
                 serde_json::Value::String(s) => vec![s.clone()],
                 serde_json::Value::Array(a) => a
@@ -187,8 +187,8 @@ pub fn reconcile_design_source_tiers(
 
     // Flush accumulators onto survivors. Also strip any m191 singular
     // scalars that may have been written by earlier passes — post-m199
-    // reconciler survivors MUST NOT carry `mikebom:requirement-range` or
-    // `mikebom:source-manifest` (FR-001).
+    // reconciler survivors MUST NOT carry `waybill:requirement-range` or
+    // `waybill:source-manifest` (FR-001).
     let mut components = components;
     for (src_idx, acc) in accumulators {
         let acc = finalize_accumulator(acc);
@@ -197,13 +197,13 @@ pub fn reconcile_design_source_tiers(
         // to it).
         if !acc.ranges.is_empty() {
             components[src_idx].extra_annotations.insert(
-                "mikebom:requirement-ranges".to_string(),
+                "waybill:requirement-ranges".to_string(),
                 serde_json::json!(acc.ranges),
             );
         }
         if !acc.manifests.is_empty() {
             components[src_idx].extra_annotations.insert(
-                "mikebom:source-manifests".to_string(),
+                "waybill:source-manifests".to_string(),
                 serde_json::json!(acc.manifests),
             );
         }
@@ -211,15 +211,15 @@ pub fn reconcile_design_source_tiers(
             let sorted: Vec<String> = acc.declared_as.into_iter().collect();
             components[src_idx]
                 .extra_annotations
-                .insert("mikebom:declared-as".to_string(), serde_json::json!(sorted));
+                .insert("waybill:declared-as".to_string(), serde_json::json!(sorted));
         }
         // Strip m191 singular scalars — supersede-by-pluralization.
         components[src_idx]
             .extra_annotations
-            .remove("mikebom:requirement-range");
+            .remove("waybill:requirement-range");
         components[src_idx]
             .extra_annotations
-            .remove("mikebom:source-manifest");
+            .remove("waybill:source-manifest");
         // Also clear the ResolvedComponent's requirement_ranges field
         // to avoid double-emission by the CDX/SPDX emitters (which read
         // the struct field). The extra_annotations bag is the m199
@@ -310,7 +310,7 @@ fn build_source_index(components: &[ResolvedComponent]) -> HashMap<MatchKey, Vec
 fn match_key_for(c: &ResolvedComponent) -> Option<MatchKey> {
     let ecosystem = c.purl.ecosystem().to_string();
     let name = c.name.clone();
-    // Extract manifest directory from `mikebom:source-manifest`
+    // Extract manifest directory from `waybill:source-manifest`
     // annotation. Value may be a scalar string (single-manifest case)
     // or an array (post-reconciliation case — take the first entry for
     // matching). If the annotation is absent, fall back to the
@@ -324,8 +324,8 @@ fn match_key_for(c: &ResolvedComponent) -> Option<MatchKey> {
 }
 
 fn source_manifest_dir(c: &ResolvedComponent) -> Option<PathBuf> {
-    // Milestone 199: prefer plural `mikebom:source-manifests` (post-m199
-    // shape). Fall back to singular `mikebom:source-manifest` for legacy
+    // Milestone 199: prefer plural `waybill:source-manifests` (post-m199
+    // shape). Fall back to singular `waybill:source-manifest` for legacy
     // readers that still stamp the scalar form. Both accept string OR
     // array values (defense-in-depth).
     let extract = |key: &str| -> Option<String> {
@@ -338,8 +338,8 @@ fn source_manifest_dir(c: &ResolvedComponent) -> Option<PathBuf> {
             _ => None,
         })
     };
-    let raw = extract("mikebom:source-manifests")
-        .or_else(|| extract("mikebom:source-manifest"))
+    let raw = extract("waybill:source-manifests")
+        .or_else(|| extract("waybill:source-manifest"))
         .or_else(|| {
             // Fallback: pick first source-file-path.
             c.evidence.source_file_paths.first().cloned()
@@ -374,7 +374,7 @@ mod tests {
         let mut extra = BTreeMap::new();
         if let Some(m) = manifest {
             extra.insert(
-                "mikebom:source-manifest".to_string(),
+                "waybill:source-manifest".to_string(),
                 serde_json::Value::String(m.to_string()),
             );
         }
@@ -464,7 +464,7 @@ mod tests {
         // Milestone 199 — always-array shape (FR-001).
         let ranges = out[0]
             .extra_annotations
-            .get("mikebom:requirement-ranges")
+            .get("waybill:requirement-ranges")
             .expect("requirement-ranges must transfer to survivor as array");
         assert_eq!(
             ranges,
@@ -473,7 +473,7 @@ mod tests {
         );
         let manifests = out[0]
             .extra_annotations
-            .get("mikebom:source-manifests")
+            .get("waybill:source-manifests")
             .expect("source-manifests must transfer to survivor as array");
         assert_eq!(
             manifests,
@@ -484,13 +484,13 @@ mod tests {
         assert!(
             !out[0]
                 .extra_annotations
-                .contains_key("mikebom:requirement-range"),
+                .contains_key("waybill:requirement-range"),
             "m191 singular scalar must be stripped from reconciler survivor"
         );
         assert!(
             !out[0]
                 .extra_annotations
-                .contains_key("mikebom:source-manifest"),
+                .contains_key("waybill:source-manifest"),
             "m191 singular scalar must be stripped from reconciler survivor"
         );
     }

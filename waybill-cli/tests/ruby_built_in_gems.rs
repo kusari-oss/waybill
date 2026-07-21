@@ -12,8 +12,8 @@
 //!   (a) `pkg:gem/bundler-audit@0.9.3` present as a real component.
 //!   (b) `pkg:gem/thor@1.4.0` present as a real component.
 //!   (c) `pkg:gem/bundler` (versionless) present as a synthetic component
-//!       with `mikebom:synthetic-built-in = "ruby"` +
-//!       `mikebom:built-in-requirement = ">= 1.2.0"`.
+//!       with `waybill:synthetic-built-in = "ruby"` +
+//!       `waybill:built-in-requirement = ">= 1.2.0"`.
 //!   (d) `dependencies[]` array shows `bundler-audit → thor` AND
 //!       `bundler-audit → pkg:gem/bundler`.
 //!   (e) SC-004 dual invariant across every `pkg:gem/*` component.
@@ -60,7 +60,7 @@ fn scan(path: &Path) -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -124,11 +124,11 @@ fn t024_bundler_audit_to_bundler_edge_present() {
     let bundler = find_component(&sbom, "pkg:gem/bundler")
         .expect("SC-002: pkg:gem/bundler (versionless) must be present");
     assert_eq!(
-        component_property(bundler, "mikebom:synthetic-built-in"),
+        component_property(bundler, "waybill:synthetic-built-in"),
         Some(&serde_json::Value::String("ruby".to_string()))
     );
     assert_eq!(
-        component_property(bundler, "mikebom:built-in-requirement"),
+        component_property(bundler, "waybill:built-in-requirement"),
         Some(&serde_json::Value::String(">= 1.2.0".to_string()))
     );
 
@@ -174,7 +174,7 @@ fn t024_dual_invariant_holds() {
         let purl = component["purl"].as_str().unwrap_or("");
         let has_at = purl.contains('@');
         let has_c113 =
-            component_property(component, "mikebom:synthetic-built-in").is_some();
+            component_property(component, "waybill:synthetic-built-in").is_some();
         assert_ne!(
             has_at, has_c113,
             "SC-004 dual invariant violated for {purl}: has_at={has_at}, has_c113={has_c113}"

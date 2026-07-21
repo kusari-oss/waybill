@@ -6,7 +6,7 @@
 //! line-oriented, one component per line, `<name> <arch> <version>`
 //! separated by single spaces. Stable since Yocto 2.0 (2015).
 //!
-//! mikebom walks the scan target for any `*.manifest` file under a
+//! waybill walks the scan target for any `*.manifest` file under a
 //! `build/tmp/deploy/images/*/` ancestor path and emits one
 //! `pkg:opkg/<name>@<version>?arch=<arch>` component per line. Same
 //! PURL ecosystem as the opkg-installed-DB reader — the milestone-105
@@ -16,7 +16,7 @@
 //! the same scan contains both an opkg-installed-DB stanza and a
 //! manifest line naming the same coord, the installed-DB component
 //! wins; the loser's source-mechanism (`"yocto-image-manifest"`)
-//! appears in the surviving component's `mikebom:also-detected-via`
+//! appears in the surviving component's `waybill:also-detected-via`
 //! annotation.
 
 use std::path::{Path, PathBuf};
@@ -148,7 +148,7 @@ fn build_entry(name: &str, arch: &str, version: &str, source_path: &str) -> Opti
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra_annotations.insert(
-        "mikebom:source-mechanism".to_string(),
+        "waybill:source-mechanism".to_string(),
         serde_json::Value::String("yocto-image-manifest".to_string()),
     );
     // Carry the image's logical name (manifest filename stem) as an
@@ -159,7 +159,7 @@ fn build_entry(name: &str, arch: &str, version: &str, source_path: &str) -> Opti
         .and_then(|s| s.to_str())
     {
         extra_annotations.insert(
-            "mikebom:image-name".to_string(),
+            "waybill:image-name".to_string(),
             serde_json::Value::String(image_name.to_string()),
         );
     }
@@ -214,30 +214,30 @@ mod tests {
 
     #[test]
     fn emits_one_component_per_line() {
-        let text = "mikebom-fixture-libc mikebom-fixture-arch 2.38\n\
-                    mikebom-fixture-openssl mikebom-fixture-arch 3.0.5\n";
+        let text = "waybill-fixture-libc waybill-fixture-arch 2.38\n\
+                    waybill-fixture-openssl waybill-fixture-arch 3.0.5\n";
         let entries = parse_manifest(text, "test.manifest");
         assert_eq!(entries.len(), 2);
         assert_eq!(
             entries[0].purl.as_str(),
-            "pkg:opkg/mikebom-fixture-libc@2.38?arch=mikebom-fixture-arch"
+            "pkg:opkg/waybill-fixture-libc@2.38?arch=waybill-fixture-arch"
         );
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:source-mechanism")
+                .get("waybill:source-mechanism")
                 .and_then(|v| v.as_str()),
             Some("yocto-image-manifest"),
         );
         assert_eq!(
             entries[1].purl.as_str(),
-            "pkg:opkg/mikebom-fixture-openssl@3.0.5?arch=mikebom-fixture-arch"
+            "pkg:opkg/waybill-fixture-openssl@3.0.5?arch=waybill-fixture-arch"
         );
     }
 
     #[test]
     fn nativesdk_lines_tagged_build() {
-        let text = "nativesdk-mikebom-fixture-cmake x86_64 3.27.0\n";
+        let text = "nativesdk-waybill-fixture-cmake x86_64 3.27.0\n";
         let entries = parse_manifest(text, "test.manifest");
         assert_eq!(entries.len(), 1);
         assert!(matches!(
@@ -248,7 +248,7 @@ mod tests {
 
     #[test]
     fn host_arch_lines_tagged_build() {
-        let text = "mikebom-fixture-buildtool x86_64 1.0\n";
+        let text = "waybill-fixture-buildtool x86_64 1.0\n";
         let entries = parse_manifest(text, "test.manifest");
         assert_eq!(entries.len(), 1);
         assert!(matches!(
@@ -259,7 +259,7 @@ mod tests {
 
     #[test]
     fn target_arch_lines_have_no_lifecycle_scope() {
-        let text = "mikebom-fixture-lib mikebom-fixture-arch 1.0\n";
+        let text = "waybill-fixture-lib waybill-fixture-arch 1.0\n";
         let entries = parse_manifest(text, "test.manifest");
         assert_eq!(entries.len(), 1);
         assert!(entries[0].lifecycle_scope.is_none());
@@ -269,18 +269,18 @@ mod tests {
     fn wrong_token_count_warns_and_skips() {
         // 2-token line + 4-token line both invalid; 3-token line valid.
         let text = "only-two tokens\n\
-                    mikebom-fixture-lib mikebom-fixture-arch 1.0\n\
+                    waybill-fixture-lib waybill-fixture-arch 1.0\n\
                     one two three four\n";
         let entries = parse_manifest(text, "test.manifest");
         assert_eq!(entries.len(), 1);
-        assert_eq!(entries[0].name, "mikebom-fixture-lib");
+        assert_eq!(entries[0].name, "waybill-fixture-lib");
     }
 
     #[test]
     fn empty_and_comment_lines_ignored() {
         let text = "\n\
                     # a comment line\n\
-                    mikebom-fixture-lib mikebom-fixture-arch 1.0\n\
+                    waybill-fixture-lib waybill-fixture-arch 1.0\n\
                     \n";
         let entries = parse_manifest(text, "test.manifest");
         assert_eq!(entries.len(), 1);
@@ -288,12 +288,12 @@ mod tests {
 
     #[test]
     fn image_name_annotation_derived_from_filename_stem() {
-        let text = "mikebom-fixture-lib mikebom-fixture-arch 1.0\n";
+        let text = "waybill-fixture-lib waybill-fixture-arch 1.0\n";
         let entries = parse_manifest(text, "/build/tmp/deploy/images/qemux86-64/core-image-minimal.manifest");
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:image-name")
+                .get("waybill:image-name")
                 .and_then(|v| v.as_str()),
             Some("core-image-minimal"),
         );

@@ -1,6 +1,6 @@
 //! Milestone 181 US1 — end-to-end integration tests for the yarn v1
 //! optional-dep classifier. Scans the m181 fixture
-//! (`tests/fixtures/optional_dep/yarn-v1/`) via the compiled `mikebom`
+//! (`tests/fixtures/optional_dep/yarn-v1/`) via the compiled `waybill`
 //! binary and asserts the same shape m180 established for npm/pnpm.
 //!
 //! Contract references:
@@ -85,10 +85,10 @@ fn t011_yarn_v1_optional_full_mode_end_to_end() {
         "yarn v1 optional-classified optional-child-lib MUST emit CDX scope: \"excluded\""
     );
     assert_eq!(
-        find_property(optional_child, "mikebom:optional-derivation")
+        find_property(optional_child, "waybill:optional-derivation")
             .and_then(|v| v.as_str()),
         Some("npm-optional-dependencies"),
-        "yarn v1 optional-classified optional-child-lib MUST carry mikebom:optional-derivation"
+        "yarn v1 optional-classified optional-child-lib MUST carry waybill:optional-derivation"
     );
 
     // Regression guard: runtime-util (runtime) MUST stay Runtime.
@@ -99,8 +99,8 @@ fn t011_yarn_v1_optional_full_mode_end_to_end() {
         "runtime-util MUST NOT be marked excluded (regular runtime dep)"
     );
     assert!(
-        find_property(runtime, "mikebom:optional-derivation").is_none(),
-        "runtime-util MUST NOT carry mikebom:optional-derivation"
+        find_property(runtime, "waybill:optional-derivation").is_none(),
+        "runtime-util MUST NOT carry waybill:optional-derivation"
     );
 
     // ---- SPDX 2.3 (Full mode) ----
@@ -136,8 +136,8 @@ fn t011b_yarn_v1_optional_basic_mode_collapses() {
 
     // Annotation still present (orthogonal).
     assert!(
-        find_property(optional_child, "mikebom:optional-derivation").is_some(),
-        "mikebom:optional-derivation MUST be present in CDX regardless of compat mode"
+        find_property(optional_child, "waybill:optional-derivation").is_some(),
+        "waybill:optional-derivation MUST be present in CDX regardless of compat mode"
     );
 
     // SPDX 2.3 has zero OPTIONAL_DEPENDENCY_OF edges under basic mode.

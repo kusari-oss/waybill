@@ -16,7 +16,7 @@ fn main() {
 }
 
 fn build_ebpf() {
-    let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../mikebom-ebpf");
+    let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../waybill-ebpf");
 
     let status = Command::new("cargo")
         .current_dir(dir)

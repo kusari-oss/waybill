@@ -21,18 +21,18 @@ use sha2::{Digest, Sha256};
 /// Env-var name (alias for repeated `--fingerprints-source`). Comma-
 /// separated list of URLs, optionally each suffixed with `=ENV_VAR`
 /// (the suffix is reserved for FR-007 and currently warns + strips).
-pub(crate) const SOURCES_ENV: &str = "MIKEBOM_FINGERPRINTS_SOURCES";
+pub(crate) const SOURCES_ENV: &str = "WAYBILL_FINGERPRINTS_SOURCES";
 
 /// Env-var name for `--fingerprints-source-no-default`. Boolean (`1`,
 /// `true`).
-pub(crate) const NO_DEFAULT_ENV: &str = "MIKEBOM_FINGERPRINTS_NO_DEFAULT";
+pub(crate) const NO_DEFAULT_ENV: &str = "WAYBILL_FINGERPRINTS_NO_DEFAULT";
 
 /// Milestone-108 public default corpus URL — the implicit source loaded
 /// when `--fingerprints-corpus` is on and `--fingerprints-source-no-
 /// default` is NOT set. This URL also drives the
 /// `CorpusSourceId::MILESTONE_108_DEFAULT` sentinel.
 pub(crate) const MILESTONE_108_DEFAULT_URL: &str =
-    "https://github.com/kusari-sandbox/mikebom-fingerprints";
+    "https://github.com/kusari-sandbox/waybill-fingerprints";
 
 /// Stable per-source identifier used as a cache-directory key.
 ///
@@ -49,7 +49,7 @@ pub(crate) struct CorpusSourceId(String);
 #[allow(dead_code)]
 impl CorpusSourceId {
     /// Sentinel for the milestone-108 default corpus URL. Operators see
-    /// `~/.cache/mikebom/fingerprints/public-milestone-108/` (the
+    /// `~/.cache/waybill/fingerprints/public-milestone-108/` (the
     /// human-recognizable name) rather than a BASE32 hash for the
     /// default install path.
     pub(crate) const MILESTONE_108_DEFAULT: &'static str = "public-milestone-108";
@@ -83,9 +83,9 @@ impl CorpusSourceId {
     fn is_milestone_108_default(url: &str) -> bool {
         // Match the milestone-108 GitHub Pages URL + the underlying raw
         // archive URLs. Conservative: anything from the public
-        // kusari-sandbox/mikebom-fingerprints repo counts.
-        url.starts_with("https://kusari-sandbox.github.io/mikebom-fingerprints/")
-            || url.contains("kusari-sandbox/mikebom-fingerprints")
+        // kusari-sandbox/waybill-fingerprints repo counts.
+        url.starts_with("https://kusari-sandbox.github.io/waybill-fingerprints/")
+            || url.contains("kusari-sandbox/waybill-fingerprints")
     }
 }
 
@@ -106,7 +106,7 @@ pub(crate) struct CorpusSource {
     /// Optional name of an environment variable holding the bearer token
     /// for this source. Per FR-007 + `contracts/cli-flags.md`: the
     /// credential VALUE never appears in argv or in this struct; only the
-    /// env-var NAME is stored. mikebom reads `$<credential_env>` at
+    /// env-var NAME is stored. waybill reads `$<credential_env>` at
     /// fetch time.
     pub credential_env: Option<String>,
     /// Sigstore identity allowlist for this source's signed archives.
@@ -146,7 +146,7 @@ impl CorpusSource {
     ///
     /// Returns `None` only when the trimmed input is empty (so layered
     /// callers can quietly skip blank entries from
-    /// `MIKEBOM_FINGERPRINTS_SOURCES=,,foo,` without warning noise).
+    /// `WAYBILL_FINGERPRINTS_SOURCES=,,foo,` without warning noise).
     pub(crate) fn parse_flag_value(raw: &str) -> Option<Self> {
         let raw = raw.trim();
         if raw.is_empty() {
@@ -203,16 +203,16 @@ pub(crate) struct Sources {
     /// OSS-out-of-the-box configuration.
     pub extras: Vec<CorpusSource>,
     /// True when the operator passed `--fingerprints-source-no-default`
-    /// (or set `MIKEBOM_FINGERPRINTS_NO_DEFAULT=1`). Suppresses the
+    /// (or set `WAYBILL_FINGERPRINTS_NO_DEFAULT=1`). Suppresses the
     /// implicit milestone-108 default.
     pub no_default: bool,
 }
 
 #[allow(dead_code)]
 impl Sources {
-    /// Build from the process env. Reads `MIKEBOM_FINGERPRINTS_SOURCES`
+    /// Build from the process env. Reads `WAYBILL_FINGERPRINTS_SOURCES`
     /// (comma-separated `URL[=ENV_VAR]` entries) and the boolean
-    /// `MIKEBOM_FINGERPRINTS_NO_DEFAULT`.
+    /// `WAYBILL_FINGERPRINTS_NO_DEFAULT`.
     pub fn from_env() -> Self {
         let extras = match std::env::var(SOURCES_ENV) {
             Ok(raw) => parse_sources_list(&raw),
@@ -266,7 +266,7 @@ mod tests {
     #[test]
     fn milestone_108_default_url_gets_sentinel_id() {
         let id = CorpusSourceId::from_url(
-            "https://kusari-sandbox.github.io/mikebom-fingerprints/release.json",
+            "https://kusari-sandbox.github.io/waybill-fingerprints/release.json",
         );
         assert_eq!(id.as_str(), CorpusSourceId::MILESTONE_108_DEFAULT);
     }
@@ -489,7 +489,7 @@ mod tests {
         // the implicit default — must collapse to ONE entry, not two.
         let extras = vec![
             CorpusSource::unauthenticated(
-                "https://github.com/kusari-sandbox/mikebom-fingerprints/archive/abc.tar.gz"
+                "https://github.com/kusari-sandbox/waybill-fingerprints/archive/abc.tar.gz"
                     .to_string(),
             ),
         ];

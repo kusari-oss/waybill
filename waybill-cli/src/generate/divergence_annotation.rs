@@ -1,6 +1,6 @@
 //! Ecosystem-agnostic envelope construction for the milestone-134
-//! `mikebom:duplicate-purl-divergent` (per-component) and
-//! `mikebom:purl-collisions-detected` (document-scope) annotations.
+//! `waybill:duplicate-purl-divergent` (per-component) and
+//! `waybill:purl-collisions-detected` (document-scope) annotations.
 //!
 //! The actual per-format emission code lives in `cyclonedx/`,
 //! `spdx/annotations.rs`, and `spdx/v3_annotations.rs`. Per-component
@@ -23,12 +23,12 @@ use waybill_common::divergence::{CollisionsSummary, DivergenceRecord};
 
 /// Property/field identifier for the per-component property.
 /// Lives on the deduped `pkg:<ecosystem>/<name>@<version>` component.
-pub const PER_COMPONENT_PROPERTY_NAME: &str = "mikebom:duplicate-purl-divergent";
+pub const PER_COMPONENT_PROPERTY_NAME: &str = "waybill:duplicate-purl-divergent";
 
 /// Property/field identifier for the document-scope summary annotation.
 /// Lives on the SBOM document (CDX `metadata.properties`, SPDX
 /// top-level `annotations`, SPDX 3 `SpdxDocument.extension`).
-pub const DOCUMENT_SCOPE_PROPERTY_NAME: &str = "mikebom:purl-collisions-detected";
+pub const DOCUMENT_SCOPE_PROPERTY_NAME: &str = "waybill:purl-collisions-detected";
 
 /// Build the per-component property's JSON value. CDX emitters
 /// place this inside `components[].properties[].value` as a JSON-

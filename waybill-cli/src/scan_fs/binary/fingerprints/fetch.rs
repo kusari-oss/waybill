@@ -17,7 +17,7 @@ use super::source_config::{CorpusSource, CorpusSourceId};
 use super::source_sha::CorpusSha;
 
 const PRODUCTION_BASE_URL: &str = "https://github.com";
-const REPO_PATH: &str = "kusari-sandbox/mikebom-fingerprints";
+const REPO_PATH: &str = "kusari-sandbox/waybill-fingerprints";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
 const MAX_REDIRECTS: usize = 5;
 const MAX_RETRY_ATTEMPTS: u32 = 3;
@@ -53,7 +53,7 @@ pub(crate) fn fetch_corpus(sha: &CorpusSha) -> Result<(), FetchError> {
 /// lets tests redirect writes into a tempdir.
 ///
 /// The blocking HTTP call is run on a fresh OS thread so we can be
-/// safely invoked from inside a tokio runtime (mikebom's `#[tokio::main]`
+/// safely invoked from inside a tokio runtime (waybill's `#[tokio::main]`
 /// CLI entry point) — calling `reqwest::blocking::Client` from an
 /// async context otherwise panics on `Runtime::drop`. Same posture as
 /// `golang::graph_resolver` (`std::thread::spawn` workers around its
@@ -99,7 +99,7 @@ fn build_client() -> Result<reqwest::blocking::Client, FetchError> {
         .timeout(REQUEST_TIMEOUT)
         .redirect(reqwest::redirect::Policy::limited(MAX_REDIRECTS))
         .user_agent(concat!(
-            "mikebom/",
+            "waybill/",
             env!("CARGO_PKG_VERSION"),
             " (corpus-fetch)"
         ))
@@ -541,7 +541,7 @@ mod tests {
                 flate2::Compression::default(),
             );
             let mut builder = tar::Builder::new(enc);
-            let wrapper = "mikebom-fingerprints-fff39c6/";
+            let wrapper = "waybill-fingerprints-fff39c6/";
             for name in ["index.json", "openssl.json", "zlib.json"] {
                 let payload: &[u8] = match name {
                     "index.json" => br#"{"version":1,"entries":[{"library":"openssl","path":"openssl.json"},{"library":"zlib","path":"zlib.json"}]}"#,
@@ -573,7 +573,7 @@ mod tests {
             let mut builder = tar::Builder::new(enc);
             let payload = b"# README content";
             let mut header = tar::Header::new_gnu();
-            header.set_path("mikebom-fingerprints-fff39c6/README.md").unwrap();
+            header.set_path("waybill-fingerprints-fff39c6/README.md").unwrap();
             header.set_size(payload.len() as u64);
             header.set_mode(0o644);
             header.set_cksum();
@@ -817,7 +817,7 @@ mod tests {
     fn corpus_filename_from_tar_path_matches_corpus_subtree() {
         assert_eq!(
             corpus_filename_from_tar_path(Path::new(
-                "mikebom-fingerprints-fff39c6/corpus/openssl.json"
+                "waybill-fingerprints-fff39c6/corpus/openssl.json"
             )),
             Some("openssl.json".to_string())
         );
@@ -826,19 +826,19 @@ mod tests {
     #[test]
     fn corpus_filename_from_tar_path_rejects_other_subtrees() {
         assert!(corpus_filename_from_tar_path(Path::new(
-            "mikebom-fingerprints-fff39c6/README.md"
+            "waybill-fingerprints-fff39c6/README.md"
         ))
         .is_none());
         assert!(corpus_filename_from_tar_path(Path::new(
-            "mikebom-fingerprints-fff39c6/schema/fingerprint-record.v1.json"
+            "waybill-fingerprints-fff39c6/schema/fingerprint-record.v1.json"
         ))
         .is_none());
         assert!(corpus_filename_from_tar_path(Path::new(
-            "mikebom-fingerprints-fff39c6/corpus/nested/file.json"
+            "waybill-fingerprints-fff39c6/corpus/nested/file.json"
         ))
         .is_none());
         assert!(corpus_filename_from_tar_path(Path::new(
-            "mikebom-fingerprints-fff39c6/corpus/file.txt"
+            "waybill-fingerprints-fff39c6/corpus/file.txt"
         ))
         .is_none());
     }

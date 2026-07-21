@@ -8,7 +8,7 @@
 //! Spring-Boot-style executable JARs and some `maven-assembly-plugin`
 //! layouts bundle their dependencies under non-standard paths
 //! (`BOOT-INF/lib/*.jar`, flat `lib/*`) that don't expose nested
-//! `META-INF/maven/<g>/<a>/` dirs — so mikebom sees only the
+//! `META-INF/maven/<g>/<a>/` dirs — so waybill sees only the
 //! project's own primary coord and `meta_list.len() >= 2` fails.
 //!
 //! US4 extends the heuristic: an unclaimed JAR whose manifest
@@ -19,7 +19,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn fixture_root() -> PathBuf {
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("maven/executable_jar")
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("maven/executable_jar")
 }
 
 fn scan_path(path: &std::path::Path) -> serde_json::Value {
@@ -36,7 +36,7 @@ fn scan_path(path: &std::path::Path) -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",

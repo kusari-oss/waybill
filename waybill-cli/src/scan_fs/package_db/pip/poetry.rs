@@ -71,7 +71,7 @@ pub(crate) fn parse_poetry_lock(
         //
         // Precedence (Decision 2 dev-wins-over-optional): if the
         // package is dev-classified, the dev classification wins and
-        // the `mikebom:optional-derivation` annotation is NOT emitted
+        // the `waybill:optional-derivation` annotation is NOT emitted
         // (one-derivation-per-component invariant).
         let legacy_is_dev = poetry_is_dev(tbl);
         let is_optional = poetry_is_optional(tbl);
@@ -132,7 +132,7 @@ pub(crate) fn parse_poetry_lock(
             Default::default();
         if is_m183_optional {
             extra_annotations.insert(
-                "mikebom:optional-derivation".to_string(),
+                "waybill:optional-derivation".to_string(),
                 serde_json::Value::String("pip-optional-dependencies".to_string()),
             );
         }
@@ -364,7 +364,7 @@ lock-version = "2.0"
         let out = parse_poetry_lock(&parsed, "/poetry.lock", true);
         assert_eq!(out.len(), 1);
         assert_eq!(
-            out[0].extra_annotations.get("mikebom:optional-derivation"),
+            out[0].extra_annotations.get("waybill:optional-derivation"),
             Some(&serde_json::Value::String("pip-optional-dependencies".to_string())),
         );
     }
@@ -394,7 +394,7 @@ lock-version = "1.1"
         );
         assert!(!out[0]
             .extra_annotations
-            .contains_key("mikebom:optional-derivation"));
+            .contains_key("waybill:optional-derivation"));
     }
 
     #[test]
@@ -418,7 +418,7 @@ lock-version = "1.1"
         );
         assert!(!out[0]
             .extra_annotations
-            .contains_key("mikebom:optional-derivation"));
+            .contains_key("waybill:optional-derivation"));
     }
 
     #[test]
@@ -493,6 +493,6 @@ lock-version = "1.1"
         );
         assert!(!out[0]
             .extra_annotations
-            .contains_key("mikebom:optional-derivation"));
+            .contains_key("waybill:optional-derivation"));
     }
 }

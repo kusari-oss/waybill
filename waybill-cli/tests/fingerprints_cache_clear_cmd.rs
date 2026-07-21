@@ -1,6 +1,6 @@
-//! Milestone 108 US4 — `mikebom fingerprints cache-clear` integration
+//! Milestone 108 US4 — `waybill fingerprints cache-clear` integration
 //! test. Fully offline; uses `tempfile::TempDir` + the
-//! `MIKEBOM_FINGERPRINTS_CACHE_DIR` env override.
+//! `WAYBILL_FINGERPRINTS_CACHE_DIR` env override.
 
 #![cfg(test)]
 #![allow(clippy::unwrap_used)]
@@ -24,7 +24,7 @@ fn cache_clear_removes_all_directories_by_default() {
     seed_cache_entry(tmp.path(), SHA_A);
     seed_cache_entry(tmp.path(), SHA_B);
     let output = Command::new(binary_path())
-        .env("MIKEBOM_FINGERPRINTS_CACHE_DIR", tmp.path())
+        .env("WAYBILL_FINGERPRINTS_CACHE_DIR", tmp.path())
         .arg("fingerprints")
         .arg("cache-clear")
         .output()
@@ -42,7 +42,7 @@ fn cache_clear_with_keep_rev_preserves_the_named_sha() {
     seed_cache_entry(tmp.path(), SHA_A);
     seed_cache_entry(tmp.path(), SHA_B);
     let output = Command::new(binary_path())
-        .env("MIKEBOM_FINGERPRINTS_CACHE_DIR", tmp.path())
+        .env("WAYBILL_FINGERPRINTS_CACHE_DIR", tmp.path())
         .arg("fingerprints")
         .arg("cache-clear")
         .arg("--keep-rev")
@@ -61,7 +61,7 @@ fn cache_clear_with_keep_rev_preserves_the_named_sha() {
 fn cache_clear_idempotent_on_empty_cache() {
     let tmp = tempfile::tempdir().unwrap();
     let output = Command::new(binary_path())
-        .env("MIKEBOM_FINGERPRINTS_CACHE_DIR", tmp.path())
+        .env("WAYBILL_FINGERPRINTS_CACHE_DIR", tmp.path())
         .arg("fingerprints")
         .arg("cache-clear")
         .output()
@@ -75,7 +75,7 @@ fn cache_clear_idempotent_on_empty_cache() {
 fn cache_clear_rejects_malformed_keep_rev_with_exit_1() {
     let tmp = tempfile::tempdir().unwrap();
     let output = Command::new(binary_path())
-        .env("MIKEBOM_FINGERPRINTS_CACHE_DIR", tmp.path())
+        .env("WAYBILL_FINGERPRINTS_CACHE_DIR", tmp.path())
         .arg("fingerprints")
         .arg("cache-clear")
         .arg("--keep-rev")

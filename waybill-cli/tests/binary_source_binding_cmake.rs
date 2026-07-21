@@ -1,6 +1,6 @@
 //! Milestone 109 — US1 + US2 end-to-end integration tests.
 //!
-//! Verifies the cross-tier PURL attribution mechanism: when mikebom
+//! Verifies the cross-tier PURL attribution mechanism: when waybill
 //! scans a cmake project root (source CMakeLists.txt + a build dir
 //! with `_deps/<name>-build/` + a binary that exports the matching
 //! library's symbols), the emitted SBOM contains ONE component per
@@ -11,7 +11,7 @@
 //! `std::fs::create_dir_all`; the binary is a real Mach-O / ELF
 //! executable that exports the zlib API. The test SKIPS gracefully
 //! when no such fixture binary is available on the test host (e.g.,
-//! the mikebom-cmake-demo's `build/crc-demo` hasn't been built
+//! the waybill-cmake-demo's `build/crc-demo` hasn't been built
 //! locally) — useful for CI lanes that don't pre-build the demo.
 
 #![cfg(test)]
@@ -32,9 +32,9 @@ fn binary_path() -> &'static str {
 /// `None` on hosts without the demo pre-built.
 fn find_zlib_exporting_binary() -> Option<PathBuf> {
     let candidates = [
-        // mikebom-cmake-demo sibling repo (when developer has built it locally)
-        "../mikebom-cmake-demo/build/crc-demo",
-        "../../mikebom-cmake-demo/build/crc-demo",
+        // waybill-cmake-demo sibling repo (when developer has built it locally)
+        "../waybill-cmake-demo/build/crc-demo",
+        "../../waybill-cmake-demo/build/crc-demo",
     ];
     for c in candidates {
         let p = PathBuf::from(c);
@@ -99,7 +99,7 @@ FetchContent_MakeAvailable({library})
     root
 }
 
-/// Run `mikebom sbom scan --fingerprints-corpus` against the given
+/// Run `waybill sbom scan --fingerprints-corpus` against the given
 /// project root + return the parsed CDX SBOM as a `serde_json::Value`.
 fn scan_with_corpus(project_root: &Path) -> Value {
     let out = tempfile::tempdir().unwrap();
@@ -117,7 +117,7 @@ fn scan_with_corpus(project_root: &Path) -> Value {
         .unwrap();
     assert!(
         result.status.success(),
-        "mikebom sbom scan failed: stderr={}",
+        "waybill sbom scan failed: stderr={}",
         String::from_utf8_lossy(&result.stderr)
     );
     let bytes = std::fs::read(&out_file).unwrap();
@@ -133,8 +133,8 @@ fn attribution_fires_when_cmake_decl_and_build_dir_present() {
     let Some(binary) = find_zlib_exporting_binary() else {
         println!(
             "skipped: no zlib-exporting binary available \
-             (build mikebom-cmake-demo first: \
-             `cd ../mikebom-cmake-demo && cmake -S . -B build -G Ninja && ninja -C build`)"
+             (build waybill-cmake-demo first: \
+             `cd ../waybill-cmake-demo && cmake -S . -B build -G Ninja && ninja -C build`)"
         );
         return;
     };
@@ -194,23 +194,23 @@ fn attribution_fires_when_cmake_decl_and_build_dir_present() {
         .map(|p| (p["name"].as_str().unwrap(), p["value"].as_str().unwrap()))
         .collect();
     assert!(
-        props.iter().any(|(k, v)| *k == "mikebom:source-mechanism"
+        props.iter().any(|(k, v)| *k == "waybill:source-mechanism"
             && *v == "cmake-fetchcontent-git"),
-        "expected mikebom:source-mechanism=cmake-fetchcontent-git in properties; got {props:?}"
+        "expected waybill:source-mechanism=cmake-fetchcontent-git in properties; got {props:?}"
     );
     assert!(
         props
             .iter()
-            .any(|(k, _)| *k == "mikebom:fingerprint-corpus-sha"),
-        "expected mikebom:fingerprint-corpus-sha in properties (binary-tier \
+            .any(|(k, _)| *k == "waybill:fingerprint-corpus-sha"),
+        "expected waybill:fingerprint-corpus-sha in properties (binary-tier \
          annotation should survive the dedup merge); got {props:?}"
     );
     assert!(
         props
             .iter()
-            .any(|(k, v)| *k == "mikebom:fingerprint-symbols-matched"
+            .any(|(k, v)| *k == "waybill:fingerprint-symbols-matched"
                 && *v == "10/10"),
-        "expected mikebom:fingerprint-symbols-matched=10/10 in properties; got {props:?}"
+        "expected waybill:fingerprint-symbols-matched=10/10 in properties; got {props:?}"
     );
 }
 
@@ -270,13 +270,13 @@ fn consumer_equality_join_recovers_zero_phantom_mismatches() {
     let Some(binary) = find_zlib_exporting_binary() else {
         println!(
             "skipped: no zlib-exporting binary available \
-             (build mikebom-cmake-demo first)"
+             (build waybill-cmake-demo first)"
         );
         return;
     };
 
-    // Source-only scan: run mikebom on a project WITHOUT build/
-    // (mirrors `mikebom sbom scan --path src/` at PR-merge time).
+    // Source-only scan: run waybill on a project WITHOUT build/
+    // (mirrors `waybill sbom scan --path src/` at PR-merge time).
     let source_root = tempfile::tempdir().unwrap();
     let cmake_lists = r#"cmake_minimum_required(VERSION 3.16)
 project(t LANGUAGES C)
@@ -288,7 +288,7 @@ FetchContent_MakeAvailable(zlib)
     let source_sbom = scan_with_corpus(source_root.path());
 
     // Project-root scan: source + build + binary (mirrors
-    // `mikebom sbom scan --path .` at release-build time).
+    // `waybill sbom scan --path .` at release-build time).
     let project = make_cmake_project_fixture(
         "zlib",
         "https://github.com/madler/zlib.git",

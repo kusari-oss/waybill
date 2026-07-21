@@ -7,12 +7,12 @@
 //! `--offline` mode. Offline mode is the deterministic path that:
 //!
 //!   - Emits every Go component with
-//!     `mikebom:go-transitive-source = "go-sum-fallback"` (step 5
+//!     `waybill:go-transitive-source = "go-sum-fallback"` (step 5
 //!     claims all go.sum modules).
-//!   - Emits doc-scope `mikebom:go-transitive-coverage = "unknown"`
+//!   - Emits doc-scope `waybill:go-transitive-coverage = "unknown"`
 //!     with reason `offline-mode: transitive edges from proxy fetches
 //!     unavailable` (Q1 caution-first).
-//!   - Does NOT emit `mikebom:go-transitive-unresolved-reason` because
+//!   - Does NOT emit `waybill:go-transitive-unresolved-reason` because
 //!     no module reaches `ResolutionStep::None` (step 5 always claims).
 //!
 //! This exercises the full pipeline: resolver → per-component emitter
@@ -22,7 +22,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("go").join(sub)
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("go").join(sub)
 }
 
 fn scan_offline(path: &std::path::Path) -> serde_json::Value {
@@ -30,7 +30,7 @@ fn scan_offline(path: &std::path::Path) -> serde_json::Value {
     let tmp = tempfile::NamedTempFile::new().expect("tempfile");
     let out_path = tmp.path().to_path_buf();
     let mut cmd = Command::new(bin);
-    cmd.env("MIKEBOM_NO_GO_MOD_WHY", "1");
+    cmd.env("WAYBILL_NO_GO_MOD_WHY", "1");
     cmd.arg("--offline")
         .arg("sbom")
         .arg("scan")
@@ -39,7 +39,7 @@ fn scan_offline(path: &std::path::Path) -> serde_json::Value {
         .arg("--output")
         .arg(&out_path)
         .arg("--no-deep-hash");
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -86,14 +86,14 @@ fn component_property<'a>(component: &'a serde_json::Value, name: &str) -> Optio
 fn t039_offline_scan_emits_unknown_coverage_with_reason() {
     let sbom = scan_offline(&fixture("simple-module"));
 
-    let c110 = doc_property(&sbom, "mikebom:go-transitive-coverage");
+    let c110 = doc_property(&sbom, "waybill:go-transitive-coverage");
     assert_eq!(
         c110,
         Some("unknown"),
         "SC-006: offline scan MUST emit C110 = unknown; got {c110:?}"
     );
 
-    let c111 = doc_property(&sbom, "mikebom:go-transitive-coverage-reason");
+    let c111 = doc_property(&sbom, "waybill:go-transitive-coverage-reason");
     let c111_str = c111.expect("SC-006: C111 must accompany unknown-value C110");
     assert!(
         c111_str.starts_with("offline-mode:"),
@@ -101,7 +101,7 @@ fn t039_offline_scan_emits_unknown_coverage_with_reason() {
     );
 }
 
-/// SC-004: every Go module component carries `mikebom:go-transitive-source`
+/// SC-004: every Go module component carries `waybill:go-transitive-source`
 /// (universal per Q2). The synthetic `pkg:golang/stdlib@vX.Y.Z` component is
 /// exempt — it's not a go.sum-declared module and doesn't flow through the
 /// resolver ladder.
@@ -122,10 +122,10 @@ fn t039_every_go_component_has_transitive_source_annotation() {
         "fixture must produce at least one non-stdlib Go component"
     );
     for c in &go_comps {
-        let source = component_property(c, "mikebom:go-transitive-source");
+        let source = component_property(c, "waybill:go-transitive-source");
         assert!(
             source.is_some(),
-            "SC-004: Go component missing mikebom:go-transitive-source: {}",
+            "SC-004: Go component missing waybill:go-transitive-source: {}",
             c["purl"].as_str().unwrap_or("?")
         );
         // Value must be one of the 5-code C108 vocab.
@@ -141,15 +141,15 @@ fn t039_every_go_component_has_transitive_source_annotation() {
     }
 }
 
-/// FR-003: C109 (`mikebom:go-transitive-unresolved-reason`) MUST accompany C108
+/// FR-003: C109 (`waybill:go-transitive-unresolved-reason`) MUST accompany C108
 /// exactly when C108 == "unresolved". In offline mode step 5 claims every
 /// module, so no C109 should be emitted anywhere.
 #[test]
 fn t039_c109_absent_when_no_component_is_unresolved_in_offline() {
     let sbom = scan_offline(&fixture("simple-module"));
     for c in go_components(&sbom) {
-        let c108 = component_property(c, "mikebom:go-transitive-source");
-        let c109 = component_property(c, "mikebom:go-transitive-unresolved-reason");
+        let c108 = component_property(c, "waybill:go-transitive-source");
+        let c109 = component_property(c, "waybill:go-transitive-unresolved-reason");
         if c108 == Some("unresolved") {
             assert!(
                 c109.is_some(),

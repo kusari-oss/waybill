@@ -6,7 +6,7 @@
 //! `/<distro>/pool/main/{letter}/{name}/{name}_{version}_{arch}.deb`.
 //!
 //! Extracted verbatim from the pre-refactor
-//! `mikebom-cli/src/resolve/url_resolver.rs::resolve_deb` per FR-002.
+//! `waybill-cli/src/resolve/url_resolver.rs::resolve_deb` per FR-002.
 //! Threads `ctx.deb_codename` (the `/etc/os-release`-sampled distro
 //! codename) into the extraction as the PURL `distro` qualifier.
 

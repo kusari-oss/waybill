@@ -1,4 +1,4 @@
-//! `mikebom sbom verify` — feature 006 US1.
+//! `waybill sbom verify` — feature 006 US1.
 //!
 //! Validate a signed DSSE-wrapped attestation. Exit code contract per
 //! `specs/006-sbomit-suite/contracts/cli.md`:

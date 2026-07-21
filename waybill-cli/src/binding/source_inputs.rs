@@ -13,7 +13,7 @@
 //!
 //! - **VCS commit**: `git rev-parse HEAD` shell-out from the scan
 //!   root. Mirrors milestone 053's `git describe` pattern at
-//!   `mikebom-cli/src/scan_fs/package_db/golang.rs:733`. Returns
+//!   `waybill-cli/src/scan_fs/package_db/golang.rs:733`. Returns
 //!   `None` when git is absent OR the path isn't inside a git
 //!   working tree (e.g., extracted tarball, container rootfs).
 //! - **Lockfile**: SHA-256 of the on-disk bytes per
@@ -46,7 +46,7 @@ pub enum BindingEcosystem {
 
 impl BindingEcosystem {
     /// Decode a PURL ecosystem string to a `BindingEcosystem`.
-    /// Returns `None` for ecosystems mikebom doesn't bind today
+    /// Returns `None` for ecosystems waybill doesn't bind today
     /// (deb / apk / rpm / generic — base-layer system packages,
     /// which carry `binding: unknown { reason: "base-layer-system-package" }`).
     pub fn from_purl_ecosystem(eco: &str) -> Option<Self> {

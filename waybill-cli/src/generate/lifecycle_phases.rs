@@ -1,7 +1,7 @@
 //! Lifecycle-phase aggregation shared between CDX and SPDX
 //! serializers (milestone 047, extended in milestone 081).
 //!
-//! Maps the per-component `mikebom:sbom-tier` value (one of
+//! Maps the per-component `waybill:sbom-tier` value (one of
 //! `design`, `source`, `build`, `deployed`, `analyzed`) to the
 //! corresponding CycloneDX 1.6 / SPDX-comment phase name, and
 //! aggregates the observed phase set across a scan's components.
@@ -17,9 +17,9 @@
 //! so byte-identity goldens regen cleanly.
 //!
 //! Coverage: end-to-end byte-identity goldens
-//! (`mikebom-cli/tests/cdx_regression.rs`,
-//! `mikebom-cli/tests/spdx_regression.rs`,
-//! `mikebom-cli/tests/spdx3_regression.rs`) exercise both
+//! (`waybill-cli/tests/cdx_regression.rs`,
+//! `waybill-cli/tests/spdx_regression.rs`,
+//! `waybill-cli/tests/spdx3_regression.rs`) exercise both
 //! functions through the live serializer pipeline. Any change
 //! to phase mapping or aggregation order surfaces as a goldens
 //! regression.
@@ -47,14 +47,14 @@ use waybill_common::resolution::ResolvedComponent;
 /// - The `--sbom-type` operator-assert flag (milestone 081 US3) to
 ///   override the auto-detected document-level SBOM-type signal in
 ///   all three formats while preserving per-component
-///   `mikebom:sbom-tier` annotations.
+///   `waybill:sbom-tier` annotations.
 /// - The SPDX 3 native-field emission path
 ///   (`software_Sbom.software_sbomType[]`) in
-///   `mikebom-cli/src/generate/spdx/v3_document.rs`.
+///   `waybill-cli/src/generate/spdx/v3_document.rs`.
 ///
 /// Per Constitution Principle V (standards-native first), this
 /// vocabulary mirrors the CISA framework verbatim — no
-/// `mikebom:`-prefix bridge needed because the SPDX 3 native field
+/// `waybill:`-prefix bridge needed because the SPDX 3 native field
 /// already accepts these 6 values.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SbomType {
@@ -72,12 +72,12 @@ impl SbomType {
     ///
     /// Wire format: bare lowercase short-name per the SPDX 3 JSON
     /// schema's `prop_software_Sbom_software_sbomType` enum
-    /// (`mikebom-cli/tests/fixtures/schemas/spdx-3.0.1.json`). The
+    /// (`waybill-cli/tests/fixtures/schemas/spdx-3.0.1.json`). The
     /// JSON-LD `@context` resolves these short names to full IRIs
     /// (`spdx:Software/SbomType/<name>`) at consumption time, but
     /// the wire shape mirrors the existing
     /// `externalIdentifierType` / `relationshipType` convention
-    /// (bare strings, not IRIs) used throughout mikebom's SPDX 3
+    /// (bare strings, not IRIs) used throughout waybill's SPDX 3
     /// emission.
     ///
     /// Per VR-081-001 / VR-081-004.
@@ -93,7 +93,7 @@ impl SbomType {
     }
 
     /// Returns the lowercase short-name for `--sbom-type` flag
-    /// parsing and round-trip with the `mikebom:sbom-tier`
+    /// parsing and round-trip with the `waybill:sbom-tier`
     /// per-component vocabulary.
     #[allow(dead_code)]
     pub fn as_str(&self) -> &'static str {
@@ -128,7 +128,7 @@ impl SbomType {
     /// `metadata.lifecycles[].phase` value via the equivalence
     /// table (research §2):
     ///
-    /// | CISA      | mikebom    | CDX phase    |
+    /// | CISA      | waybill    | CDX phase    |
     /// |-----------|------------|--------------|
     /// | Design    | `design`   | `design`     |
     /// | Source    | `source`   | `pre-build`  |
@@ -164,7 +164,7 @@ pub struct ParseSbomTypeError {
     pub value: String,
 }
 
-/// Map a `mikebom:sbom-tier` string to its corresponding
+/// Map a `waybill:sbom-tier` string to its corresponding
 /// CycloneDX 1.5+ `lifecycles[].phase` value. Returns `None` for
 /// unrecognised tier strings so unknown tiers don't pollute the
 /// aggregated phase set.
@@ -179,12 +179,12 @@ pub fn tier_to_phase(tier: &str) -> Option<&'static str> {
     }
 }
 
-/// Map a `mikebom:sbom-tier` string to its corresponding SPDX 3
+/// Map a `waybill:sbom-tier` string to its corresponding SPDX 3
 /// `software_SbomType` short-name (wire form). Returns `None` for
 /// unrecognised tiers (matches the [`tier_to_phase`] resilience
 /// pattern for unknown-tier inputs).
 ///
-/// 1:1 mapping per research §2 equivalence table — all 6 mikebom
+/// 1:1 mapping per research §2 equivalence table — all 6 waybill
 /// tier values round-trip cleanly with the SPDX 3 vocabulary,
 /// unlike CDX which lacks a dedicated `runtime` phase.
 ///

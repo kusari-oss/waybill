@@ -87,7 +87,7 @@ fn sc004_no_op_on_non_erlang_tree() {
     let erlang_comps: Vec<&Value> = all_components(&doc)
         .into_iter()
         .filter(|c| {
-            property_value(c, "mikebom:source-type")
+            property_value(c, "waybill:source-type")
                 .map(|s| s.starts_with("erlang-"))
                 .unwrap_or(false)
         })
@@ -128,7 +128,7 @@ fn sc005_malformed_lockfile_warns_and_falls_back() {
     // Fallback design-tier emission of cowboy is present.
     let cowboy = component_with_name(&doc, "cowboy").expect("cowboy design-tier fallback");
     assert_eq!(
-        property_value(cowboy, "mikebom:sbom-tier"),
+        property_value(cowboy, "waybill:sbom-tier"),
         Some("design"),
     );
 }

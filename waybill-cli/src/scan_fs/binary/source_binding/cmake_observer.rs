@@ -87,19 +87,19 @@ impl BuildDirObserver for CmakeFetchContentObserver {
 
 /// True when this PackageDbEntry was emitted by the cmake reader for
 /// a `FetchContent_Declare` rule (git or url form). Reads the
-/// `mikebom:source-mechanism` annotation.
+/// `waybill:source-mechanism` annotation.
 fn is_cmake_fetchcontent(entry: &PackageDbEntry) -> bool {
     extract_source_mechanism(entry)
         .map(|m| m == "cmake-fetchcontent-git" || m == "cmake-fetchcontent-url")
         .unwrap_or(false)
 }
 
-/// Pull the `mikebom:source-mechanism` annotation value out of a
+/// Pull the `waybill:source-mechanism` annotation value out of a
 /// PackageDbEntry's extra_annotations bag.
 fn extract_source_mechanism(entry: &PackageDbEntry) -> Option<String> {
     entry
         .extra_annotations
-        .get("mikebom:source-mechanism")
+        .get("waybill:source-mechanism")
         .and_then(|v| v.as_str())
         .map(|s| s.to_string())
 }
@@ -185,7 +185,7 @@ mod tests {
     fn cmake_decl(name: &str, purl: &str, mechanism: &str) -> PackageDbEntry {
         let mut extra_annotations = std::collections::BTreeMap::new();
         extra_annotations.insert(
-            "mikebom:source-mechanism".to_string(),
+            "waybill:source-mechanism".to_string(),
             serde_json::json!(mechanism),
         );
         PackageDbEntry {

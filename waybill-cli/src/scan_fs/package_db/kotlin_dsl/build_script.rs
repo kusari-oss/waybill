@@ -181,7 +181,7 @@ fn parse_gav_string(s: &str) -> Option<KotlinDepRaw> {
     }
 }
 
-/// Project Kotlin dep configuration → mikebom lifecycle scope per
+/// Project Kotlin dep configuration → waybill lifecycle scope per
 /// contracts/kotlin-dsl-extraction.md § "Dep-configuration →
 /// lifecycle-scope mapping".
 fn config_to_lifecycle_scope(config: &str) -> Option<LifecycleScope> {
@@ -260,7 +260,7 @@ pub(super) fn resolve_and_emit(
         let mut extra_annotations: std::collections::BTreeMap<String, JsonValue> =
             Default::default();
         extra_annotations.insert(
-            "mikebom:source-files".to_string(),
+            "waybill:source-files".to_string(),
             JsonValue::String(source_path_str.clone()),
         );
         // Record the source-set hit BEFORE pushing the entry; the

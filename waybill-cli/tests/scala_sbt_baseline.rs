@@ -47,7 +47,7 @@ fn scala_components(doc: &Value) -> Vec<&Value> {
             .and_then(|v| v.as_array())
             .map(|arr| {
                 arr.iter().any(|p| {
-                    p.get("name").and_then(|v| v.as_str()) == Some("mikebom:source-type")
+                    p.get("name").and_then(|v| v.as_str()) == Some("waybill:source-type")
                         && p.get("value")
                             .and_then(|v| v.as_str())
                             .map(|s| s.starts_with("scala-"))
@@ -148,7 +148,7 @@ fn sc001_baseline_seven_components() {
     write_sbt_fixture(dir.path());
     let doc = run_scan(dir.path());
 
-    // 7 lockfile-derived components carry mikebom:source-type = scala-sbt-lock.
+    // 7 lockfile-derived components carry waybill:source-type = scala-sbt-lock.
     let lock_components: Vec<&Value> = scala_components(&doc)
         .into_iter()
         .filter(|c| {
@@ -156,7 +156,7 @@ fn sc001_baseline_seven_components() {
                 .and_then(|v| v.as_array())
                 .map(|arr| {
                     arr.iter().any(|p| {
-                        p.get("name").and_then(|v| v.as_str()) == Some("mikebom:source-type")
+                        p.get("name").and_then(|v| v.as_str()) == Some("waybill:source-type")
                             && p.get("value").and_then(|v| v.as_str()) == Some("scala-sbt-lock")
                     })
                 })
@@ -196,8 +196,8 @@ fn sc001_source_type_annotation() {
     let props = cats.get("properties").and_then(|v| v.as_array()).unwrap();
     let st = props
         .iter()
-        .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("mikebom:source-type"))
+        .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("waybill:source-type"))
         .and_then(|p| p.get("value").and_then(|v| v.as_str()))
-        .expect("mikebom:source-type property");
+        .expect("waybill:source-type property");
     assert_eq!(st, "scala-sbt-lock");
 }

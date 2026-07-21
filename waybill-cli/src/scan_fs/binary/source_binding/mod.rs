@@ -1,6 +1,6 @@
 //! Source-tier ↔ binary-tier PURL attribution (milestone 109).
 //!
-//! Bridges the gap between mikebom's two SBOM-emission paths for the
+//! Bridges the gap between waybill's two SBOM-emission paths for the
 //! same C/C++ library:
 //! - **Source-tier**: the milestone-102/103 cmake reader emits
 //!   `pkg:github/madler/zlib@v1.3.1` when it parses
@@ -51,7 +51,7 @@ pub(crate) struct CmakeBuildDirObservation {
     /// PURL when attribution fires.
     pub source_tier_purl: String,
 
-    /// The `mikebom:source-mechanism` enum value the cmake reader
+    /// The `waybill:source-mechanism` enum value the cmake reader
     /// tagged this declaration with — one of `cmake-fetchcontent-git`
     /// / `cmake-fetchcontent-url`. Drives the merged component's
     /// source-mechanism annotation.
@@ -74,7 +74,7 @@ pub(crate) struct CmakeBuildDirObservation {
 /// (Bazel, Meson, etc.). The cmake observer is the only implementer
 /// this milestone (per the Phase-2 clarification: ExternalProject,
 /// Bazel, and Meson are all deferred). The trait is `pub(crate)`
-/// because every implementer lives inside `mikebom-cli`.
+/// because every implementer lives inside `waybill-cli`.
 #[allow(dead_code)]
 pub(crate) trait BuildDirObserver {
     /// Walk `scan_root` and join the build-tree artifacts against
@@ -121,7 +121,7 @@ pub(crate) fn build_attribution_registry(
 // observer-agnostic.
 //
 // To add a Bazel observer:
-//   1. Add `mikebom-cli/src/scan_fs/binary/source_binding/bazel_observer.rs`
+//   1. Add `waybill-cli/src/scan_fs/binary/source_binding/bazel_observer.rs`
 //      with a `BazelExternalRepoObserver` struct implementing
 //      `BuildDirObserver`. Walk `bazel-out/<config>/bin/external/`
 //      for Bazel's external-repo build artifacts.

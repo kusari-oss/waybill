@@ -4,7 +4,7 @@
 //! Scenario: an npm project declares a dependency in `package.json`
 //! that has NO corresponding entry in `package-lock.json` (e.g., an
 //! `optionalDependencies` entry that failed to install, or a
-//! freshly-added dep before lockfile refresh). Pre-m191 mikebom
+//! freshly-added dep before lockfile refresh). Pre-m191 waybill
 //! emitted `pkg:npm/optional-dep@` (trailing `@`) with `.version: ""`.
 //! Post-m191 the same component emits `pkg:npm/optional-dep` (no `@`)
 //! with the `.version` field omitted from the CDX JSON entirely,
@@ -45,7 +45,7 @@ fn scan(dir: &Path, format: &str) -> Value {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "scan failed: format={format} stderr={}",
@@ -57,12 +57,12 @@ fn scan(dir: &Path, format: &str) -> Value {
 
 /// Build a synthetic npm project that declares `optional-dep: "^1.0.0"`
 /// in `package.json` but has NO lockfile (the manifest-only design-tier
-/// path — mikebom's npm reader emits a design-tier component for the
-/// declaration, carrying `mikebom:sbom-tier: design` +
-/// `mikebom:requirement-range: ^1.0.0`).
+/// path — waybill's npm reader emits a design-tier component for the
+/// declaration, carrying `waybill:sbom-tier: design` +
+/// `waybill:requirement-range: ^1.0.0`).
 ///
 /// This is the primary US2 test vector: a real-world case where a
-/// user runs mikebom against a repo that hasn't yet run `npm install`
+/// user runs waybill against a repo that hasn't yet run `npm install`
 /// (fresh checkout, CI pre-install phase, or a repo where the lockfile
 /// is intentionally gitignored per team policy).
 fn build_optional_missing_project(dir: &Path) -> PathBuf {
@@ -258,10 +258,10 @@ fn spdx3_validate_or_skip(spdx3_path: &Path) {
     let bin_path = workspace_root().join(".venv/spdx3-validate/bin/spdx3-validate");
     if !bin_path.exists() {
         let require =
-            std::env::var("MIKEBOM_REQUIRE_SPDX3_VALIDATOR").ok().as_deref() == Some("1");
+            std::env::var("WAYBILL_REQUIRE_SPDX3_VALIDATOR").ok().as_deref() == Some("1");
         if require {
             panic!(
-                "spdx3-validate not found at {} and MIKEBOM_REQUIRE_SPDX3_VALIDATOR=1 is set",
+                "spdx3-validate not found at {} and WAYBILL_REQUIRE_SPDX3_VALIDATOR=1 is set",
                 bin_path.display()
             );
         }
@@ -312,7 +312,7 @@ fn us2_spdx3_validate_accepts_versionless_design_tier() {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(output.status.success(), "spdx-3 emission failed");
 
     spdx3_validate_or_skip(&out_path);

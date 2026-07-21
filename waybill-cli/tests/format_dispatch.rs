@@ -24,7 +24,7 @@ fn cargo_fixture() -> PathBuf {
 }
 
 
-/// Run `mikebom sbom scan` with the given extra args, returning the
+/// Run `waybill sbom scan` with the given extra args, returning the
 /// completed process output. The caller chooses the working
 /// directory — most tests use a tempdir so default-filename emission
 /// can be observed without stamping on cwd.
@@ -47,7 +47,7 @@ fn run_scan_in(
     // assertions (e.g. `spdx_3_alias_bytes_are_byte_identical_to_
     // stable_identifier`) fail intermittently. The env var contract
     // is documented at `cli::scan_cmd::scan_created_timestamp`.
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd
         .arg("--offline")
         .arg("sbom")
@@ -58,7 +58,7 @@ fn run_scan_in(
     for a in extra_args {
         cmd.arg(a);
     }
-    cmd.output().expect("mikebom should run")
+    cmd.output().expect("waybill should run")
 }
 
 /// Normalize CDX volatile fields (serialNumber + metadata.timestamp)
@@ -134,7 +134,7 @@ fn pinned_cargo_golden() -> String {
 // ---- (a) default path + byte-identity ------------------------------------
 
 /// No `--format`, no `--output`: produces exactly one file at the
-/// default name `mikebom.cdx.json`, byte-identical (modulo the two
+/// default name `waybill.cdx.json`, byte-identical (modulo the two
 /// pinned volatile fields) to the T010 cargo golden.
 #[test]
 fn default_invocation_emits_single_cdx_file_matching_pinned_golden() {
@@ -145,10 +145,10 @@ fn default_invocation_emits_single_cdx_file_matching_pinned_golden() {
         "scan failed: stderr={}",
         String::from_utf8_lossy(&out.stderr)
     );
-    let produced = tmp.path().join("mikebom.cdx.json");
+    let produced = tmp.path().join("waybill.cdx.json");
     assert!(
         produced.exists(),
-        "default invocation did not write mikebom.cdx.json in cwd"
+        "default invocation did not write waybill.cdx.json in cwd"
     );
     // No other SBOM files should appear.
     let stray: Vec<_> = std::fs::read_dir(tmp.path())
@@ -157,7 +157,7 @@ fn default_invocation_emits_single_cdx_file_matching_pinned_golden() {
         .map(|e| e.file_name())
         .filter(|n| {
             n.to_string_lossy().ends_with(".json")
-                && n.to_string_lossy() != "mikebom.cdx.json"
+                && n.to_string_lossy() != "waybill.cdx.json"
         })
         .collect();
     assert!(
@@ -187,7 +187,7 @@ fn comma_separated_duplicate_formats_dedupe_silently() {
         "scan failed: stderr={}",
         String::from_utf8_lossy(&out.stderr)
     );
-    assert!(tmp.path().join("mikebom.cdx.json").exists());
+    assert!(tmp.path().join("waybill.cdx.json").exists());
 }
 
 #[test]
@@ -207,7 +207,7 @@ fn repeated_flag_duplicate_formats_dedupe_silently() {
         "scan failed: stderr={}",
         String::from_utf8_lossy(&out.stderr)
     );
-    assert!(tmp.path().join("mikebom.cdx.json").exists());
+    assert!(tmp.path().join("waybill.cdx.json").exists());
 }
 
 // ---- (c) unknown format id -----------------------------------------------
@@ -230,7 +230,7 @@ fn unknown_format_id_exits_non_zero_and_lists_registered_ids() {
         "error should enumerate registered ids (at least cyclonedx-json), got: {stderr}"
     );
     // No SBOM file should be written on this error path.
-    assert!(!tmp.path().join("mikebom.cdx.json").exists());
+    assert!(!tmp.path().join("waybill.cdx.json").exists());
 }
 
 // ---- (d) --output for unrequested format ---------------------------------
@@ -256,7 +256,7 @@ fn output_override_for_unrequested_format_is_hard_error() {
         stderr.contains("but --format did not request it"),
         "error should say '--format did not request it', got: {stderr}"
     );
-    assert!(!tmp.path().join("mikebom.cdx.json").exists());
+    assert!(!tmp.path().join("waybill.cdx.json").exists());
     assert!(!tmp.path().join("custom.spdx.json").exists());
 }
 
@@ -331,7 +331,7 @@ fn per_format_override_writes_to_named_path() {
         target.display()
     );
     // Default filename must not have also been written.
-    assert!(!tmp.path().join("mikebom.cdx.json").exists());
+    assert!(!tmp.path().join("waybill.cdx.json").exists());
 }
 
 // ---- Milestone 011 US3 dispatch surface --------------------------
@@ -340,7 +340,7 @@ fn per_format_override_writes_to_named_path() {
 fn both_spdx_3_identifiers_dispatch_and_emit_the_same_default_filename() {
     // Post-US3 state (research.md §R6 / contract §4):
     // `spdx-3-json` and `spdx-3-json-experimental` both dispatch
-    // through the registry, both emit `mikebom.spdx3.json` as the
+    // through the registry, both emit `waybill.spdx3.json` as the
     // default filename, both route through the same emitter so
     // output bytes are byte-identical. The alias additionally
     // prints a stderr deprecation notice.
@@ -355,10 +355,10 @@ fn both_spdx_3_identifiers_dispatch_and_emit_the_same_default_filename() {
             "`--format {format}` must dispatch successfully; stderr={}",
             String::from_utf8_lossy(&out.stderr)
         );
-        let default_file = tmp.path().join("mikebom.spdx3.json");
+        let default_file = tmp.path().join("waybill.spdx3.json");
         assert!(
             default_file.exists(),
-            "`--format {format}` must emit `mikebom.spdx3.json` at the default location"
+            "`--format {format}` must emit `waybill.spdx3.json` at the default location"
         );
         let stderr = String::from_utf8_lossy(&out.stderr);
         let has_notice = stderr.contains("is deprecated");

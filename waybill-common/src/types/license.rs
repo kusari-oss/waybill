@@ -34,7 +34,7 @@ pub enum LicenseError {
 ///
 /// **Constitution Principle V audit**: this is a semantics-preserving
 /// canonicalization (`X AND X ≡ X`, `X OR X ≡ X` per SPDX 2.x grammar).
-/// No new `mikebom:*` annotations introduced.
+/// No new `waybill:*` annotations introduced.
 fn dedupe_top_level_operands(expr: &spdx::Expression) -> String {
     use spdx::expression::{ExprNode, Operator};
 
@@ -234,7 +234,7 @@ impl From<SpdxExpression> for String {
 
 /// Milestone 202 (FR-002, closes #579) — shared license-operand sanitizer.
 ///
-/// Extracted from `mikebom-cli/src/scan_fs/package_db/rpm_file.rs::sanitize_to_license_ref_idstring`
+/// Extracted from `waybill-cli/src/scan_fs/package_db/rpm_file.rs::sanitize_to_license_ref_idstring`
 /// (m185 US2). Same behavior: filter to alphanumeric + `-` + `.`, collapse
 /// dash runs, trim leading/trailing dashes. Returns the sanitized id-suffix
 /// (without a `LicenseRef-` prefix) or `None` if the filtered result is

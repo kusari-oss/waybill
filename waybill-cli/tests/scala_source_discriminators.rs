@@ -168,12 +168,12 @@ scalaVersion := "2.13.12"
     let main = component_with_purl(&doc, "pkg:maven/com.example/my_app_2.13@1.2.3")
         .expect("main-module PURL must emit with _2.13 suffix");
     assert_eq!(
-        property_value(main, "mikebom:component-role"),
+        property_value(main, "waybill:component-role"),
         Some("main-module"),
     );
     // Per F6 remediation: main-module carries scala-version-source.
     assert_eq!(
-        property_value(main, "mikebom:scala-version-source"),
+        property_value(main, "waybill:scala-version-source"),
         Some("build-sbt-explicit"),
     );
 }

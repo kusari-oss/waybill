@@ -1,4 +1,4 @@
-//! Milestone 072 T025 — `mikebom sbom trace-binding` subcommand.
+//! Milestone 072 T025 — `waybill sbom trace-binding` subcommand.
 //!
 //! Operator-triage tool answering "which source-tier SBOM (if any)
 //! corresponds to this image-tier component?" per FR-006 / US3.
@@ -20,7 +20,7 @@
 //!   instance. Each instance is independently traced against every
 //!   candidate.
 //! - When the image-tier instance carries a pre-emitted
-//!   `mikebom:source-document-binding` annotation, the trace
+//!   `waybill:source-document-binding` annotation, the trace
 //!   answers from that. When absent, the trace falls back to
 //!   "PURL match against the candidate's component set" and
 //!   reports `binding: unknown` with a structured `reason`.
@@ -51,7 +51,7 @@ pub enum TraceBindingOutputFormat {
     Json,
 }
 
-/// Args for `mikebom sbom trace-binding`. Either `--source-sbom` or
+/// Args for `waybill sbom trace-binding`. Either `--source-sbom` or
 /// `--candidate-sources-dir` MUST be supplied (mutually exclusive
 /// per clap `conflicts_with`).
 #[derive(Args, Debug)]
@@ -365,7 +365,7 @@ fn decode_spdx_envelope_binding_from_annotations(
 
 fn decode_envelope_binding(serialized: &str) -> Option<SourceDocumentBinding> {
     let v: Value = serde_json::from_str(serialized).ok()?;
-    if v.get("schema").and_then(|x| x.as_str()) != Some("mikebom-annotation/v1") {
+    if v.get("schema").and_then(|x| x.as_str()) != Some("waybill-annotation/v1") {
         return None;
     }
     if v.get("field").and_then(|x| x.as_str()) != Some(BINDING_PROPERTY_NAME) {
@@ -427,7 +427,7 @@ fn walk_spdx3_instances(doc: &Value, target_purl: &str) -> Vec<ImageInstance> {
 /// Build a `TraceInstance` row from one image-tier instance, the
 /// target PURL, and the candidate sources. Resolution order:
 ///
-/// 1. If the image-tier instance carries a `mikebom:source-document-binding`
+/// 1. If the image-tier instance carries a `waybill:source-document-binding`
 ///    annotation AND any candidate source SBOM's content-SHA matches
 ///    the asserted `source_doc_id.sha256`, return the asserted
 ///    binding (provenance preserved + content-SHA matched).
@@ -506,7 +506,7 @@ fn trace_instance_with_purl(
     // from US2 AS#4 / SC-003). Return `Unknown` with a reason that
     // names what the trace observed.
     //
-    // Per quickstart.md Recipe 6 (b): "image contains code mikebom
+    // Per quickstart.md Recipe 6 (b): "image contains code waybill
     // can't trace" is the operator-actionable answer.
     TraceInstance {
         bom_ref,
@@ -548,7 +548,7 @@ mod tests {
                     "purl": "pkg:golang/golang.org/x/net@v0.28.0",
                     "bom-ref": "golang-net-from-foo",
                     "properties": [{
-                        "name": "mikebom:source-document-binding",
+                        "name": "waybill:source-document-binding",
                         "value": bound_str,
                     }],
                 },

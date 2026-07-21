@@ -92,11 +92,11 @@ fn us4_cross_layer_bbappend_matches_base_recipe() {
         "out.cdx.json",
     );
     // foo_1.0.bb is in layer-a; foo_%.bbappend is in layer-b. The
-    // wildcard `%` matches foo@1.0 → foo carries mikebom:bbappend-applied
+    // wildcard `%` matches foo@1.0 → foo carries waybill:bbappend-applied
     // listing the layer-b append path.
     let foo = cdx_component(&cdx, "foo");
-    let applied = cdx_property(foo, "mikebom:bbappend-applied")
-        .expect("mikebom:bbappend-applied property present on foo");
+    let applied = cdx_property(foo, "waybill:bbappend-applied")
+        .expect("waybill:bbappend-applied property present on foo");
     assert!(
         applied.contains("foo_%.bbappend"),
         "FR-008: applied appends list MUST contain the matching .bbappend filename, got: {applied}"
@@ -105,7 +105,7 @@ fn us4_cross_layer_bbappend_matches_base_recipe() {
     // they MUST NOT carry the annotation.
     let bar = cdx_component(&cdx, "bar");
     assert!(
-        cdx_property(bar, "mikebom:bbappend-applied").is_none(),
+        cdx_property(bar, "waybill:bbappend-applied").is_none(),
         "bar has no matching .bbappend; annotation must be absent"
     );
 }

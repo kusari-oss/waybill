@@ -7,7 +7,7 @@
 //! US2 (P1) — template-level image-ref extraction with Go-template
 //!   tolerance. Emits `pkg:docker/...` (tagged), `pkg:oci/...` (digested),
 //!   or `pkg:generic/<placeholder>` (templated) components with
-//!   `mikebom:image-ref-unresolved = "true"` on placeholders.
+//!   `waybill:image-ref-unresolved = "true"` on placeholders.
 //!
 //! Test fixtures are fabricated at test time via stdlib `fs::write` +
 //! `tar` + `flate2` — no vendored fixtures needed. Matches m187's
@@ -69,11 +69,11 @@ fn scan_dir(scan_root: &Path) -> (serde_json::Value, String) {
             out.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&cmd_out.stderr).to_string();
     assert!(
         cmd_out.status.success(),
-        "mikebom exit={:?} stderr:\n{stderr}",
+        "waybill exit={:?} stderr:\n{stderr}",
         cmd_out.status.code(),
     );
     let json: serde_json::Value =
@@ -97,7 +97,7 @@ fn scan_helm_chart_tgz(tgz_path: &Path) -> (serde_json::Value, String) {
             out.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&cmd_out.stderr).to_string();
     if !cmd_out.status.success() {
         return (serde_json::Value::Null, stderr);
@@ -222,9 +222,9 @@ generated: '2026-01-01T00:00:00Z'
         "Chart.lock should override to 11.9.5; got {purl}"
     );
     assert_eq!(
-        get_property(postgres, "mikebom:helm-lock-authoritative").as_deref(),
+        get_property(postgres, "waybill:helm-lock-authoritative").as_deref(),
         Some("true"),
-        "postgres should carry mikebom:helm-lock-authoritative = true"
+        "postgres should carry waybill:helm-lock-authoritative = true"
     );
 }
 
@@ -285,11 +285,11 @@ fn us1_helm_chart_flag_with_invalid_tarball_exits_nonzero() {
             tempdir.path().join("out.cdx.json").to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&cmd_out.stderr).to_string();
     assert!(
         !cmd_out.status.success(),
-        "mikebom should reject tarball without Chart.yaml. stderr:\n{stderr}"
+        "waybill should reject tarball without Chart.yaml. stderr:\n{stderr}"
     );
     assert!(
         stderr.contains("no Chart.yaml"),
@@ -329,14 +329,14 @@ spec:
     );
     let templated = &generic_comps[0];
     assert_eq!(
-        get_property(templated, "mikebom:image-ref-unresolved").as_deref(),
+        get_property(templated, "waybill:image-ref-unresolved").as_deref(),
         Some("true"),
-        "templated image should carry mikebom:image-ref-unresolved = true"
+        "templated image should carry waybill:image-ref-unresolved = true"
     );
-    let raw = get_property(templated, "mikebom:image-ref-raw").unwrap_or_default();
+    let raw = get_property(templated, "waybill:image-ref-raw").unwrap_or_default();
     assert!(
         raw.contains("{{"),
-        "mikebom:image-ref-raw should preserve the raw string with placeholders; got: {raw}"
+        "waybill:image-ref-raw should preserve the raw string with placeholders; got: {raw}"
     );
 }
 
@@ -381,8 +381,8 @@ spec:
     // None should carry the unresolved property.
     for c in &docker_comps {
         assert!(
-            get_property(c, "mikebom:image-ref-unresolved").is_none(),
-            "concrete refs must NOT carry mikebom:image-ref-unresolved"
+            get_property(c, "waybill:image-ref-unresolved").is_none(),
+            "concrete refs must NOT carry waybill:image-ref-unresolved"
         );
     }
 }
@@ -447,11 +447,11 @@ fn default_scan_without_chart_yaml_is_byte_identical() {
     );
     let generic_comps = components_by_purl_prefix(&cdx, "pkg:generic/");
     // Note: other readers may emit pkg:generic/ for legitimate reasons —
-    // we assert no `mikebom:image-ref-unresolved` marker specifically.
+    // we assert no `waybill:image-ref-unresolved` marker specifically.
     for c in &generic_comps {
         assert!(
-            get_property(c, "mikebom:image-ref-unresolved").is_none(),
-            "non-Helm scan MUST NOT emit mikebom:image-ref-unresolved components"
+            get_property(c, "waybill:image-ref-unresolved").is_none(),
+            "non-Helm scan MUST NOT emit waybill:image-ref-unresolved components"
         );
     }
 }
@@ -462,11 +462,11 @@ fn default_scan_without_chart_yaml_is_byte_identical() {
 //
 // US2 fallback classes exercised via `PATH` scrubbing + stub shell
 // scripts (research §R3 Approach A). Each test overrides `PATH` when
-// invoking mikebom so `Command::new("helm")` resolves to either
+// invoking waybill so `Command::new("helm")` resolves to either
 // (a) nothing (`BinaryNotFound`) or (b) a stub script (NonZeroExit /
 // Timeout). Zero real `helm` binary required.
 //
-// US1 success test is gated behind `MIKEBOM_HELM_INTEGRATION=1`
+// US1 success test is gated behind `WAYBILL_HELM_INTEGRATION=1`
 // (matches m188 precedent) — nightly-only, requires real `helm`.
 
 #[cfg(unix)]
@@ -507,9 +507,9 @@ fn scan_dir_with_env(
         cmd.env("PATH", p);
     }
     if let Some(t) = render_timeout_secs {
-        cmd.env("MIKEBOM_HELM_RENDER_TIMEOUT_SECS", t);
+        cmd.env("WAYBILL_HELM_RENDER_TIMEOUT_SECS", t);
     }
-    let cmd_out = cmd.output().expect("spawn mikebom binary");
+    let cmd_out = cmd.output().expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&cmd_out.stderr).to_string();
     let success = cmd_out.status.success();
     let json = if success {
@@ -556,7 +556,7 @@ fn m203_us2_1_missing_helm_binary_falls_back_to_unrendered() {
     // Fallback path emitted the unresolved-template component.
     let generic = components_by_purl_prefix(&cdx, "pkg:generic/");
     assert!(
-        generic.iter().any(|c| get_property(c, "mikebom:image-ref-unresolved").as_deref()
+        generic.iter().any(|c| get_property(c, "waybill:image-ref-unresolved").as_deref()
             == Some("true")),
         "expected fallback to unrendered extraction. cdx: {cdx:#}"
     );
@@ -584,7 +584,7 @@ fn m203_us2_2_nonzero_exit_falls_back_to_unrendered() {
     assert!(ok, "scan should succeed despite helm exit=1: stderr:\n{stderr}");
     let generic = components_by_purl_prefix(&cdx, "pkg:generic/");
     assert!(
-        generic.iter().any(|c| get_property(c, "mikebom:image-ref-unresolved").as_deref()
+        generic.iter().any(|c| get_property(c, "waybill:image-ref-unresolved").as_deref()
             == Some("true")),
         "expected fallback to unrendered extraction. cdx: {cdx:#}"
     );
@@ -620,7 +620,7 @@ fn m203_us2_3_timeout_falls_back_to_unrendered() {
     assert!(ok, "scan should succeed despite helm timeout: stderr:\n{stderr}");
     let generic = components_by_purl_prefix(&cdx, "pkg:generic/");
     assert!(
-        generic.iter().any(|c| get_property(c, "mikebom:image-ref-unresolved").as_deref()
+        generic.iter().any(|c| get_property(c, "waybill:image-ref-unresolved").as_deref()
             == Some("true")),
         "expected fallback to unrendered extraction. cdx: {cdx:#}"
     );
@@ -662,7 +662,7 @@ fn m203_us2_4_default_flow_without_helm_render_does_not_invoke_helm() {
 #[test]
 #[cfg(unix)]
 fn m203_us2_5_env_var_override_shortens_timeout() {
-    // Sanity: setting `MIKEBOM_HELM_RENDER_TIMEOUT_SECS=1` while the
+    // Sanity: setting `WAYBILL_HELM_RENDER_TIMEOUT_SECS=1` while the
     // stub sleeps 5s must still produce a Timeout classification —
     // i.e., the env var actually reduces the effective timeout.
     let tempdir = tempfile::tempdir().unwrap();
@@ -694,11 +694,11 @@ fn m203_us2_5_env_var_override_shortens_timeout() {
 #[test]
 #[cfg_attr(
     not(any()),
-    ignore = "gated behind MIKEBOM_HELM_INTEGRATION=1 (requires real helm binary)"
+    ignore = "gated behind WAYBILL_HELM_INTEGRATION=1 (requires real helm binary)"
 )]
 fn m203_us1_helm_render_extracts_rendered_image_ref() {
-    if std::env::var("MIKEBOM_HELM_INTEGRATION").ok().as_deref() != Some("1") {
-        eprintln!("skipping: MIKEBOM_HELM_INTEGRATION!=1");
+    if std::env::var("WAYBILL_HELM_INTEGRATION").ok().as_deref() != Some("1") {
+        eprintln!("skipping: WAYBILL_HELM_INTEGRATION!=1");
         return;
     }
     let tempdir = tempfile::tempdir().unwrap();
@@ -718,18 +718,18 @@ fn m203_us1_helm_render_extracts_rendered_image_ref() {
     );
     let generic = components_by_purl_prefix(&cdx, "pkg:generic/");
     assert!(
-        !generic.iter().any(|c| get_property(c, "mikebom:image-ref-unresolved").as_deref()
+        !generic.iter().any(|c| get_property(c, "waybill:image-ref-unresolved").as_deref()
             == Some("true")),
         "us1 rendered scan MUST NOT emit unresolved-placeholder components"
     );
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Milestone 204 (#554) — mikebom:image-extraction-completeness
+// Milestone 204 (#554) — waybill:image-extraction-completeness
 // document-scope annotation tests. C123 parity catalog row.
 // ─────────────────────────────────────────────────────────────────
 
-/// Scan a directory with mikebom in the specified format, returning
+/// Scan a directory with waybill in the specified format, returning
 /// the parsed JSON. Panics if the scan doesn't exit successfully.
 fn scan_dir_with_format(scan_root: &Path, format: &str) -> serde_json::Value {
     let tempdir = tempfile::tempdir().unwrap();
@@ -747,10 +747,10 @@ fn scan_dir_with_format(scan_root: &Path, format: &str) -> serde_json::Value {
             out.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     assert!(
         cmd_out.status.success(),
-        "mikebom {format} exit={:?} stderr:\n{}",
+        "waybill {format} exit={:?} stderr:\n{}",
         cmd_out.status.code(),
         String::from_utf8_lossy(&cmd_out.stderr),
     );
@@ -758,13 +758,13 @@ fn scan_dir_with_format(scan_root: &Path, format: &str) -> serde_json::Value {
         .unwrap_or_else(|e| panic!("output {format} is valid JSON: {e}"))
 }
 
-/// Extract the m204 `mikebom:image-extraction-completeness` value from
+/// Extract the m204 `waybill:image-extraction-completeness` value from
 /// a CDX document, or None if the annotation is absent.
 fn m204_extract_cdx_value(cdx: &serde_json::Value) -> Option<String> {
     cdx.pointer("/metadata/properties")?
         .as_array()?
         .iter()
-        .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("mikebom:image-extraction-completeness"))
+        .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("waybill:image-extraction-completeness"))
         .and_then(|p| p.get("value").and_then(|v| v.as_str()).map(String::from))
 }
 
@@ -775,7 +775,7 @@ fn m204_extract_spdx23_value(spdx: &serde_json::Value) -> Option<String> {
     for anno in annos {
         let comment = anno.get("comment").and_then(|v| v.as_str())?;
         let env: serde_json::Value = serde_json::from_str(comment).ok()?;
-        if env.get("field").and_then(|v| v.as_str()) == Some("mikebom:image-extraction-completeness") {
+        if env.get("field").and_then(|v| v.as_str()) == Some("waybill:image-extraction-completeness") {
             return env.get("value").and_then(|v| v.as_str()).map(String::from);
         }
     }
@@ -793,7 +793,7 @@ fn m204_extract_spdx3_value(spdx3: &serde_json::Value) -> Option<String> {
         }
         let statement = elem.get("statement").and_then(|v| v.as_str())?;
         let env: serde_json::Value = serde_json::from_str(statement).ok()?;
-        if env.get("field").and_then(|v| v.as_str()) == Some("mikebom:image-extraction-completeness") {
+        if env.get("field").and_then(|v| v.as_str()) == Some("waybill:image-extraction-completeness") {
             return env.get("value").and_then(|v| v.as_str()).map(String::from);
         }
     }
@@ -827,21 +827,21 @@ fn m204_us1_partial_annotation_present_on_unrendered_helm_scan() {
     assert_eq!(
         m204_extract_cdx_value(&cdx).as_deref(),
         Some("partial"),
-        "CDX MUST carry mikebom:image-extraction-completeness = partial. cdx: {cdx:#}"
+        "CDX MUST carry waybill:image-extraction-completeness = partial. cdx: {cdx:#}"
     );
 
     let spdx = scan_dir_with_format(&chart_dir, "spdx-2.3-json");
     assert_eq!(
         m204_extract_spdx23_value(&spdx).as_deref(),
         Some("partial"),
-        "SPDX 2.3 MUST carry mikebom:image-extraction-completeness = partial. spdx: {spdx:#}"
+        "SPDX 2.3 MUST carry waybill:image-extraction-completeness = partial. spdx: {spdx:#}"
     );
 
     let spdx3 = scan_dir_with_format(&chart_dir, "spdx-3-json");
     assert_eq!(
         m204_extract_spdx3_value(&spdx3).as_deref(),
         Some("partial"),
-        "SPDX 3 MUST carry mikebom:image-extraction-completeness = partial. spdx3: {spdx3:#}"
+        "SPDX 3 MUST carry waybill:image-extraction-completeness = partial. spdx3: {spdx3:#}"
     );
 }
 
@@ -876,7 +876,7 @@ fn m204_us3_annotation_absent_on_non_helm_scan() {
         let raw = serde_json::to_string(&doc).unwrap();
         assert!(
             !raw.contains("image-extraction-completeness"),
-            "{format} non-Helm scan MUST NOT emit mikebom:image-extraction-completeness \
+            "{format} non-Helm scan MUST NOT emit waybill:image-extraction-completeness \
              (byte-identity FR-004). raw: {}",
             &raw[..raw.len().min(500)],
         );
@@ -886,18 +886,18 @@ fn m204_us3_annotation_absent_on_non_helm_scan() {
 #[test]
 #[cfg_attr(
     not(any()),
-    ignore = "gated behind MIKEBOM_HELM_INTEGRATION=1 (requires real helm binary)"
+    ignore = "gated behind WAYBILL_HELM_INTEGRATION=1 (requires real helm binary)"
 )]
 fn m204_us2_full_annotation_present_on_rendered_helm_scan() {
-    if std::env::var("MIKEBOM_HELM_INTEGRATION").ok().as_deref() != Some("1") {
-        eprintln!("skipping: MIKEBOM_HELM_INTEGRATION!=1");
+    if std::env::var("WAYBILL_HELM_INTEGRATION").ok().as_deref() != Some("1") {
+        eprintln!("skipping: WAYBILL_HELM_INTEGRATION!=1");
         return;
     }
     let tempdir = tempfile::tempdir().unwrap();
     let chart_dir = tempdir.path().join("mychart");
     m204_make_helm_chart(&chart_dir);
 
-    // Manual mikebom invocation with --helm-render.
+    // Manual waybill invocation with --helm-render.
     let out_dir = tempfile::tempdir().unwrap();
     for format in ["cyclonedx-json", "spdx-2.3-json", "spdx-3-json"] {
         let out = out_dir.path().join(format!("out.{format}.json"));
@@ -915,7 +915,7 @@ fn m204_us2_full_annotation_present_on_rendered_helm_scan() {
                 out.to_str().unwrap(),
             ])
             .output()
-            .expect("spawn mikebom binary");
+            .expect("spawn waybill binary");
         assert!(
             cmd_out.status.success(),
             "helm-render {format} exit={:?} stderr:\n{}",
@@ -933,7 +933,7 @@ fn m204_us2_full_annotation_present_on_rendered_helm_scan() {
         assert_eq!(
             value.as_deref(),
             Some("full"),
-            "{format} MUST carry mikebom:image-extraction-completeness = full"
+            "{format} MUST carry waybill:image-extraction-completeness = full"
         );
     }
 }

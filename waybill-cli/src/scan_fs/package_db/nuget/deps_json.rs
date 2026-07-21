@@ -6,7 +6,7 @@
 //! NuGet dependency graph that a managed application loads at
 //! runtime. They are the ONLY ground-truth declaration of NuGet
 //! dependencies in a production container image where `.csproj`
-//! source manifests aren't shipped — the gap that left mikebom
+//! source manifests aren't shipped — the gap that left waybill
 //! emitting zero `pkg:nuget` PURLs on .NET-bearing images pre-129.
 //!
 //! Wire format (the subset we deserialize):
@@ -200,12 +200,12 @@ fn read_one_deps_json(rootfs: &Path, path: &Path) -> Vec<PackageDbEntry> {
         };
         let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
         extra_annotations.insert(
-            "mikebom:source-mechanism".to_string(),
+            "waybill:source-mechanism".to_string(),
             serde_json::Value::String("dotnet-deps-json".to_string()),
         );
         if let Some(rt_name) = runtime_target_name.as_ref() {
             extra_annotations.insert(
-                "mikebom:dotnet-runtime-target".to_string(),
+                "waybill:dotnet-runtime-target".to_string(),
                 serde_json::Value::String(rt_name.clone()),
             );
         }
@@ -216,7 +216,7 @@ fn read_one_deps_json(rootfs: &Path, path: &Path) -> Vec<PackageDbEntry> {
             let assembly_present = check_assembly_present(rootfs, path, declared);
             if !assembly_present {
                 extra_annotations.insert(
-                    "mikebom:image-presence".to_string(),
+                    "waybill:image-presence".to_string(),
                     serde_json::Value::String("declared-not-installed".to_string()),
                 );
             }
@@ -357,10 +357,10 @@ mod tests {
         // sbom-tier = "image" per FR-001.
         assert_eq!(logging.sbom_tier.as_deref(), Some("image"));
         // source-mechanism annotation per FR-002.
-        let mech = logging.extra_annotations.get("mikebom:source-mechanism").unwrap();
+        let mech = logging.extra_annotations.get("waybill:source-mechanism").unwrap();
         assert_eq!(mech.as_str(), Some("dotnet-deps-json"));
         // runtime-target annotation.
-        let rt = logging.extra_annotations.get("mikebom:dotnet-runtime-target").unwrap();
+        let rt = logging.extra_annotations.get("waybill:dotnet-runtime-target").unwrap();
         assert_eq!(rt.as_str(), Some(".NETCoreApp,Version=v8.0"));
     }
 
@@ -452,7 +452,7 @@ mod tests {
         assert_eq!(entries.len(), 1);
         let mech = entries[0]
             .extra_annotations
-            .get("mikebom:image-presence")
+            .get("waybill:image-presence")
             .and_then(|v| v.as_str());
         assert_eq!(mech, Some("declared-not-installed"));
     }
@@ -472,7 +472,7 @@ mod tests {
         let entries = read(root, &empty_exclusions());
         assert_eq!(entries.len(), 1);
         assert!(
-            !entries[0].extra_annotations.contains_key("mikebom:image-presence"),
+            !entries[0].extra_annotations.contains_key("waybill:image-presence"),
             "annotation should be absent when assembly is present"
         );
     }

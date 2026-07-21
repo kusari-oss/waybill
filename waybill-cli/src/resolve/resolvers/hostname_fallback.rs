@@ -9,7 +9,7 @@
 //! `debug!` when a hostname matches a known ecosystem, but always
 //! returns `Ok(vec![])`.
 //!
-//! Wraps `mikebom-cli/src/resolve/hostname_resolver.rs::resolve_hostname`
+//! Wraps `waybill-cli/src/resolve/hostname_resolver.rs::resolve_hostname`
 //! per FR-005.
 
 use std::future::Future;

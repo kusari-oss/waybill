@@ -8,7 +8,7 @@
 //!
 //! ## Subprocess pattern
 //!
-//! Mirrors `mikebom-cli/src/scan_fs/package_db/golang/go_mod_graph.rs`'s
+//! Mirrors `waybill-cli/src/scan_fs/package_db/golang/go_mod_graph.rs`'s
 //! `run_go_mod_graph` verbatim (research §R2): `std::process::Command`
 //! spawned in a worker `std::thread` with `mpsc::channel()` for the
 //! result and `rx.recv_timeout(duration)` to enforce the timeout.
@@ -40,7 +40,7 @@ use serde::Serialize;
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum CacheWarmingMode {
-    /// Default. No warming performed. C117 (`mikebom:go-transitive-
+    /// Default. No warming performed. C117 (`waybill:go-transitive-
     /// fallback-count`) reflects whatever state the operator's env is
     /// in.
     Off,
@@ -134,7 +134,7 @@ pub struct WorkspaceFailure {
 #[derive(Debug, Clone, Serialize)]
 pub struct CacheWarmingResult {
     /// The effective mode the warmer operated under. Used by the
-    /// C118 `mikebom:go-cache-warming-mode` annotation.
+    /// C118 `waybill:go-cache-warming-mode` annotation.
     pub mode: CacheWarmingMode,
     /// Per-workspace failures, sorted alphabetically by `workspace`
     /// for byte-identity across regenerations. Successful workspaces

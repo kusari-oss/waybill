@@ -71,7 +71,7 @@ const VENDOR_HEADER_MAP: &[(&str, &str)] = &[
 ];
 
 /// Which source populated the vendor slug — drives the
-/// `mikebom:vendor-source` property (not yet wired at serialization
+/// `waybill:vendor-source` property (not yet wired at serialization
 /// time in this pass; `vendor_source` is recorded on the return
 /// channel for future use by T017's property-bag plumbing).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -516,7 +516,7 @@ fn parse_rpm_file(
         confidence: None,
         binary_packed: None,
         // Feature 005 US4: same verbatim `VERSION-RELEASE` preservation
-        // as `rpm::assemble_entry`. Drives the `mikebom:raw-version`
+        // as `rpm::assemble_entry`. Drives the `waybill:raw-version`
         // property at CycloneDX serialisation time.
         raw_version: Some(version_tok),
         parent_purl: None,
@@ -1522,7 +1522,7 @@ mod tests {
         // The SC-001 busybox reference case. The issue body speculated the
         // raw RPM header was `GPLv2 & bzip2-1.0.4`, but Yocto's build
         // pipeline canonicalizes `License:` headers upstream — the actual
-        // shape mikebom sees is `GPL-2.0-only & bzip2-1.0.4` (with the
+        // shape waybill sees is `GPL-2.0-only & bzip2-1.0.4` (with the
         // BitBake `&` operator still in place). After milestone-478's
         // operator normalization → `GPL-2.0-only AND bzip2-1.0.4`. The
         // milestone-152 fallback wraps the unrecognized `bzip2-1.0.4` as

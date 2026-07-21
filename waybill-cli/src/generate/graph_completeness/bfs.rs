@@ -22,7 +22,7 @@ pub(super) struct EcosystemRootSet {
     /// The BFS seed set: canonical PURL strings.
     pub roots: HashSet<String>,
     /// Ecosystems represented by at least one emitted component
-    /// where mikebom could NOT identify a root.
+    /// where waybill could NOT identify a root.
     pub ecosystems_without_root: Vec<String>,
 }
 
@@ -42,7 +42,7 @@ fn pick_ecosystem_top<'a>(
         return Some(candidates[0]);
     }
 
-    // (a) prefer `mikebom:is-workspace-root == true`. The annotation
+    // (a) prefer `waybill:is-workspace-root == true`. The annotation
     // is stored as `Value::Bool` per `root_selector::is_workspace_root`;
     // absent or non-bool degrades to false.
     let workspace_roots: Vec<&ResolvedComponent> = candidates
@@ -50,7 +50,7 @@ fn pick_ecosystem_top<'a>(
         .copied()
         .filter(|c| {
             c.extra_annotations
-                .get("mikebom:is-workspace-root")
+                .get("waybill:is-workspace-root")
                 .and_then(|v| v.as_bool())
                 .unwrap_or(false)
         })
@@ -106,7 +106,7 @@ pub(super) fn build_ecosystem_root_set(
         .iter()
         .filter(|c| {
             c.extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str())
                 == Some("main-module")
         })

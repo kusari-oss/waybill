@@ -31,7 +31,7 @@
 //! ```
 //!
 //! Per Constitution Principle V audit (research §R1), the alpm reader
-//! introduces NO `mikebom:*` annotation — the standards-native
+//! introduces NO `waybill:*` annotation — the standards-native
 //! `pkg:alpm/...` PURL (purl-spec `alpm` type) carries the full
 //! identity. CycloneDX 1.6, SPDX 2.3, and SPDX 3.0.1 all consume PURLs
 //! as first-class component-identity fields.

@@ -2,7 +2,7 @@
 //! entities E1–E6 + E14 supporting types.
 //!
 //! Public types populated by the user-space aggregator at
-//! `mikebom-cli/src/trace/compiler_pipeline.rs` (m210 tasks
+//! `waybill-cli/src/trace/compiler_pipeline.rs` (m210 tasks
 //! T022–T024) and consumed by:
 //!
 //! - `BuildTracePredicate.compiler_pipeline` (statement.rs E7) —
@@ -11,8 +11,8 @@
 //!   `compiler-invocation/v0.1` attestor entry per
 //!   `contracts/attestor-predicate.md` C-1
 //! - The three per-format emitters at
-//!   `mikebom-cli/src/generate/{cyclonedx,spdx}/*.rs` — emit the
-//!   `mikebom:source-read-set` per-component annotation (C130)
+//!   `waybill-cli/src/generate/{cyclonedx,spdx}/*.rs` — emit the
+//!   `waybill:source-read-set` per-component annotation (C130)
 //!   per Clarifications Q1 mapping
 //!
 //! Design decisions locked in `specs/210-compiler-pipeline-trace/research.md`:
@@ -142,7 +142,7 @@ pub struct InvocationDagEdge {
 }
 
 /// Per-scan pipeline-completeness signal. Drives the doc-scope
-/// `mikebom:compiler-pipeline-completeness` annotation (C132) per
+/// `waybill:compiler-pipeline-completeness` annotation (C132) per
 /// FR-008 + FR-017 + contracts/annotations.md A-3.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "state", rename_all = "snake_case")]
@@ -207,13 +207,13 @@ pub struct CompilerPipelineData {
 }
 
 impl CompilerPipelineData {
-    /// The mikebom-owned URI for the `compiler-invocation/v0.1`
+    /// The waybill-owned URI for the `compiler-invocation/v0.1`
     /// witness attestor entry. Locked per Clarifications Q3 +
     /// `contracts/attestor-predicate.md` C-1. Future version bumps
     /// (v0.2, v1, etc.) MUST retain the `/compiler-invocation/` path
     /// prefix.
     pub const PREDICATE_TYPE: &'static str =
-        "https://mikebom.dev/attestation/compiler-invocation/v0.1";
+        "https://waybill.dev/attestation/compiler-invocation/v0.1";
 }
 
 #[cfg(test)]
@@ -396,7 +396,7 @@ mod tests {
         // without a URI bump (v0.2, etc.).
         assert_eq!(
             CompilerPipelineData::PREDICATE_TYPE,
-            "https://mikebom.dev/attestation/compiler-invocation/v0.1"
+            "https://waybill.dev/attestation/compiler-invocation/v0.1"
         );
     }
 }

@@ -1,19 +1,19 @@
-//! SPDX 2.3 `annotations[]` envelope for mikebom-specific data
+//! SPDX 2.3 `annotations[]` envelope for waybill-specific data
 //! preserved losslessly via `MikebomAnnotationCommentV1` (milestone
 //! 010, T033 / T034).
 //!
-//! SPDX 2.3 has no native home for mikebom's cross-cutting
-//! properties — `mikebom:*` component properties, CycloneDX
+//! SPDX 2.3 has no native home for waybill's cross-cutting
+//! properties — `waybill:*` component properties, CycloneDX
 //! `evidence.identity` / `evidence.occurrences`, and `compositions`.
 //! Per spec.md Clarification Q2 + FR-016, these land in SPDX
 //! `annotations[]` entries whose `comment` field carries a JSON-
 //! encoded envelope. Consumers that ignore annotations see a clean
-//! SPDX document; consumers that parse them recover full mikebom
+//! SPDX document; consumers that parse them recover full waybill
 //! fidelity. The per-field placement contract is
 //! `contracts/sbom-format-mapping.md` Sections C / D / E.
 //!
 //! The envelope's JSON schema is
-//! `contracts/mikebom-annotation.schema.json` — the
+//! `contracts/waybill-annotation.schema.json` — the
 //! `annotation_envelope_schema_matches_json_file` unit test in this
 //! module is a structural canary that catches drift between the
 //! Rust type and the committed schema.
@@ -26,14 +26,14 @@ use super::document::{SpdxAnnotation, SpdxAnnotationType};
 use crate::generate::ScanArtifacts;
 
 /// Versioned envelope identifier. Bumping this constant requires a
-/// coordinated update to `contracts/mikebom-annotation.schema.json`
+/// coordinated update to `contracts/waybill-annotation.schema.json`
 /// (which pins `schema` to the exact same string via `const`).
-pub const ENVELOPE_SCHEMA_V1: &str = "mikebom-annotation/v1";
+pub const ENVELOPE_SCHEMA_V1: &str = "waybill-annotation/v1";
 
-/// The JSON payload mikebom places inside `SpdxAnnotation.comment`.
+/// The JSON payload waybill places inside `SpdxAnnotation.comment`.
 ///
-/// `field` is the originating mikebom identifier as it appears in
-/// CycloneDX — e.g. `"mikebom:evidence-kind"`, `"evidence.identity"`,
+/// `field` is the originating waybill identifier as it appears in
+/// CycloneDX — e.g. `"waybill:evidence-kind"`, `"evidence.identity"`,
 /// `"compositions"`. The exact set of legal identifiers is
 /// enumerated in the data-placement map.
 ///
@@ -78,17 +78,17 @@ impl MikebomAnnotationCommentV1 {
 /// CycloneDX 1.6's `property.value` is spec-typed as a string
 /// (`<simpleType name="propertyValue">` → `xs:string` in the schema),
 /// so the CDX emitter at
-/// `mikebom-cli/src/generate/cyclonedx/builder.rs:1092` calls
+/// `waybill-cli/src/generate/cyclonedx/builder.rs:1092` calls
 /// `serde_json::to_string(other)` on non-String JSON values, coercing
 /// `Value::Bool(true)` → the 4-char string `"true"`, `Value::Number(N)`
 /// → its JSON-numeric form, etc. This SPDX-side helper mirrors that
 /// stringification ONLY for scalars so external parity audits that
-/// don't run mikebom's compare-time canonicalizer
+/// don't run waybill's compare-time canonicalizer
 /// (`parity/extractors/common.rs::canonicalize_atomic_values`) see the
 /// same string representation across all three format outputs.
 ///
 /// **Why arrays + objects pass through structured**: when CDX
-/// stringifies an array like `mikebom:identifiers`, it produces a
+/// stringifies an array like `waybill:identifiers`, it produces a
 /// JSON-literal string `"[{\"scheme\":...}]"`. The SPDX 2.3 + SPDX 3
 /// envelopes are not spec-constrained to strings the way CDX
 /// property.value is; their `value` field is free-form JSON. Internal
@@ -98,7 +98,7 @@ impl MikebomAnnotationCommentV1 {
 /// the array shape being preserved. Stringifying arrays here would
 /// break that machine-readable contract for no audit benefit (the
 /// audit's complaint surfaced specifically on boolean annotations:
-/// `mikebom:detected-cargo-auditable`, `mikebom:not-linked`).
+/// `waybill:detected-cargo-auditable`, `waybill:not-linked`).
 ///
 /// Caught originally by the sbom-conformance harness 2026-06 audit;
 /// the array-preservation carve-out caught by
@@ -117,9 +117,9 @@ pub fn coerce_envelope_value(value: serde_json::Value) -> serde_json::Value {
     }
 }
 
-/// Build an `SpdxAnnotation` whose `comment` is a mikebom-namespaced
+/// Build an `SpdxAnnotation` whose `comment` is a waybill-namespaced
 /// v1 envelope. `annotator` and `date` are passed through — callers
-/// typically use `"Tool: mikebom-<version>"` (matching
+/// typically use `"Tool: waybill-<version>"` (matching
 /// `CreationInfo.creators`) and the shared
 /// `OutputConfig.created` stamp respectively, so annotation
 /// timestamps stay consistent with the document's creation info.
@@ -138,7 +138,7 @@ pub fn build_annotation(
     }
 }
 
-/// Build every per-component annotation mikebom's SPDX 2.3 output
+/// Build every per-component annotation waybill's SPDX 2.3 output
 /// emits for `c`. Follows `contracts/sbom-format-mapping.md`
 /// Sections C (rows C1–C20) and D (D1 identity, D2 occurrences).
 ///
@@ -165,7 +165,7 @@ pub fn annotate_component(
 
     // C1 source-type
     if let Some(ref v) = c.source_type {
-        push(&mut out, "mikebom:source-type", json!(v));
+        push(&mut out, "waybill:source-type", json!(v));
     }
     // C2 source-connection-ids (from evidence)
     if !c.evidence.source_connection_ids.is_empty() {
@@ -173,7 +173,7 @@ pub fn annotate_component(
         // list back can split on commas. Losslessly trivial.
         push(
             &mut out,
-            "mikebom:source-connection-ids",
+            "waybill:source-connection-ids",
             json!(c.evidence.source_connection_ids.join(",")),
         );
     }
@@ -181,24 +181,24 @@ pub fn annotate_component(
     if let Some(ref m) = c.evidence.deps_dev_match {
         push(
             &mut out,
-            "mikebom:deps-dev-match",
+            "waybill:deps-dev-match",
             json!(format!("{}:{}@{}", m.system, m.name, m.version)),
         );
     }
     // C4 evidence-kind
     if let Some(ref v) = c.evidence_kind {
-        push(&mut out, "mikebom:evidence-kind", json!(v));
+        push(&mut out, "waybill:evidence-kind", json!(v));
     }
     // C5 sbom-tier
     if let Some(ref v) = c.sbom_tier {
-        push(&mut out, "mikebom:sbom-tier", json!(v));
+        push(&mut out, "waybill:sbom-tier", json!(v));
     }
-    // C42 `mikebom:lifecycle-scope` — parity-bridging annotation per
+    // C42 `waybill:lifecycle-scope` — parity-bridging annotation per
     // Constitution Principle V's "format-asymmetry" carve-out, added
     // for issue #228.
     //
     // Background: milestone 052/part-2 removed the legacy
-    // `mikebom:dev-dependency` annotation because SPDX 2.3 already
+    // `waybill:dev-dependency` annotation because SPDX 2.3 already
     // carries the same signal natively via the typed scoped
     // relationship variants (`DEV_DEPENDENCY_OF` / `BUILD_DEPENDENCY_OF`
     // / `TEST_DEPENDENCY_OF`). That removal was correct given those
@@ -208,7 +208,7 @@ pub fn annotate_component(
     // dependency graph by `DEPENDS_ON` alone — which, per the Trivy +
     // Syft survey, covers most of the deployed SBOM-consumer
     // ecosystem. CDX bridges this with a Package-level
-    // `mikebom:lifecycle-scope` property (the C42 slot, also set on
+    // `waybill:lifecycle-scope` property (the C42 slot, also set on
     // CDX components per `cdx/builder.rs`). Without an equivalent on
     // the SPDX 2.3 Package, a consumer reading the SPDX 2.3 document
     // (without scope-aware edge walking) cannot tell that
@@ -237,68 +237,68 @@ pub fn annotate_component(
             LifecycleScope::Runtime => None, // runtime is the default; no annotation
         };
         if let Some(s) = scope_str {
-            push(&mut out, "mikebom:lifecycle-scope", json!(s));
+            push(&mut out, "waybill:lifecycle-scope", json!(s));
         }
     }
-    // Milestone 112: `mikebom:build-inclusion` — parity-bridging
+    // Milestone 112: `waybill:build-inclusion` — parity-bridging
     // annotation per Constitution Principle V's format-asymmetry
     // carve-out. SPDX 2.3 has no per-package excluded-scope or
     // build-inclusion construct (CDX expresses not-needed natively
     // via `scope: "excluded"`); the annotation is the only carrier
     // here. Values: `unknown` | `not-needed`. The companion
-    // `mikebom:build-inclusion-derivation` flows through the
+    // `waybill:build-inclusion-derivation` flows through the
     // extra_annotations bag. Documented in
     // `docs/reference/sbom-format-mapping.md`.
     if let Some(inclusion) = c.build_inclusion {
-        push(&mut out, "mikebom:build-inclusion", json!(inclusion.as_str()));
+        push(&mut out, "waybill:build-inclusion", json!(inclusion.as_str()));
     }
     // C7 co-owned-by
     if let Some(ref v) = c.co_owned_by {
-        push(&mut out, "mikebom:co-owned-by", json!(v));
+        push(&mut out, "waybill:co-owned-by", json!(v));
     }
     // C8 shade-relocation
     if c.shade_relocation == Some(true) {
-        push(&mut out, "mikebom:shade-relocation", json!("true"));
+        push(&mut out, "waybill:shade-relocation", json!("true"));
     }
     // C9 npm-role
     if let Some(ref v) = c.npm_role {
-        push(&mut out, "mikebom:npm-role", json!(v));
+        push(&mut out, "waybill:npm-role", json!(v));
     }
     // C10 binary-class
     if let Some(ref v) = c.binary_class {
-        push(&mut out, "mikebom:binary-class", json!(v));
+        push(&mut out, "waybill:binary-class", json!(v));
     }
     // C11 binary-stripped
     if let Some(v) = c.binary_stripped {
         push(
             &mut out,
-            "mikebom:binary-stripped",
+            "waybill:binary-stripped",
             json!(if v { "true" } else { "false" }),
         );
     }
     // C12 linkage-kind
     if let Some(ref v) = c.linkage_kind {
-        push(&mut out, "mikebom:linkage-kind", json!(v));
+        push(&mut out, "waybill:linkage-kind", json!(v));
     }
     // C13 buildinfo-status
     if let Some(ref v) = c.buildinfo_status {
-        push(&mut out, "mikebom:buildinfo-status", json!(v));
+        push(&mut out, "waybill:buildinfo-status", json!(v));
     }
     // C14 detected-go
     if c.detected_go == Some(true) {
-        push(&mut out, "mikebom:detected-go", json!("true"));
+        push(&mut out, "waybill:detected-go", json!("true"));
     }
     // C15 binary-packed
     if let Some(ref v) = c.binary_packed {
-        push(&mut out, "mikebom:binary-packed", json!(v));
+        push(&mut out, "waybill:binary-packed", json!(v));
     }
     // C16 confidence
     if let Some(ref v) = c.confidence {
-        push(&mut out, "mikebom:confidence", json!(v));
+        push(&mut out, "waybill:confidence", json!(v));
     }
     // C17 raw-version
     if let Some(ref v) = c.raw_version {
-        push(&mut out, "mikebom:raw-version", json!(v));
+        push(&mut out, "waybill:raw-version", json!(v));
     }
     // C18 source-files — same gate as CDX (only when
     // include_source_files AND non-empty). SPDX value is the array
@@ -306,7 +306,7 @@ pub fn annotate_component(
     if include_source_files && !c.evidence.source_file_paths.is_empty() {
         push(
             &mut out,
-            "mikebom:source-files",
+            "waybill:source-files",
             json!(c.evidence.source_file_paths),
         );
     }
@@ -315,12 +315,12 @@ pub fn annotate_component(
     // native `externalRefs[SECURITY/cpe23Type]` per A12 (handled in
     // packages.rs); the full candidate set lives here.
     if c.cpes.len() > 1 {
-        push(&mut out, "mikebom:cpe-candidates", json!(c.cpes));
+        push(&mut out, "waybill:cpe-candidates", json!(c.cpes));
     }
     // C20 requirement-ranges (milestone 199 — always-array shape;
-    // supersedes the m191 singular `mikebom:requirement-range` scalar).
+    // supersedes the m191 singular `waybill:requirement-range` scalar).
     if !c.requirement_ranges.is_empty() {
-        push(&mut out, "mikebom:requirement-ranges", json!(c.requirement_ranges));
+        push(&mut out, "waybill:requirement-ranges", json!(c.requirement_ranges));
     }
 
     // D1 evidence.identity — technique + confidence. Emit
@@ -371,14 +371,14 @@ pub fn annotate_component(
     // order is sorted by key — deterministic across runs.
     //
     // Milestone 127: filter out internal-only keys (the
-    // `mikebom:is-workspace-root` signal that drives root-selector
+    // `waybill:is-workspace-root` signal that drives root-selector
     // logic but is NOT meant to surface in emitted SBOMs).
     for (key, value) in &c.extra_annotations {
         if crate::generate::root_selector::is_internal_emission_key(key)
             || crate::generate::root_selector::is_field_owned_annotation_key(key)
         {
             // Milestone 145 US3 (FR-009): skip keys already emitted
-            // from a field-derived source (e.g., `mikebom:source-files`
+            // from a field-derived source (e.g., `waybill:source-files`
             // comes from `c.evidence.source_file_paths` at line ~302
             // above) — re-emitting from the bag double-stamps.
             continue;
@@ -387,9 +387,9 @@ pub fn annotate_component(
     }
 
     // Milestone 210 — per-component compiler-pipeline attribution.
-    // C130 (`mikebom:source-read-set`) + C131 (`mikebom:read-set-source`)
-    // + C134 (`mikebom:trace-attach-late`) per contracts/annotations.md
-    // A-1/A-2/A-5. Only emitted when the scan ran with `mikebom trace`
+    // C130 (`waybill:source-read-set`) + C131 (`waybill:read-set-source`)
+    // + C134 (`waybill:trace-attach-late`) per contracts/annotations.md
+    // A-1/A-2/A-5. Only emitted when the scan ran with `waybill trace`
     // (eBPF) AND at least one compiler invocation was captured.
     // Matching = component's file paths intersect at least one
     // invocation's write-set. `Traced` ⇒ C130 + C131. `Unknown` ⇒
@@ -403,11 +403,11 @@ pub fn annotate_component(
             pipeline,
         );
         if let Some(payload) = mapping.payload {
-            push(&mut out, "mikebom:source-read-set", payload);
+            push(&mut out, "waybill:source-read-set", payload);
         }
         push(
             &mut out,
-            "mikebom:read-set-source",
+            "waybill:read-set-source",
             json!(mapping.source.as_wire_str()),
         );
         if matches!(
@@ -416,15 +416,15 @@ pub fn annotate_component(
                 reason: waybill_common::attestation::compiler_pipeline::PartialReason::AttachLate,
             }
         ) {
-            push(&mut out, "mikebom:trace-attach-late", json!("true"));
+            push(&mut out, "waybill:trace-attach-late", json!("true"));
         }
     }
 
     out
 }
 
-/// Build every document-level annotation mikebom's SPDX 2.3 output
-/// emits. Follows Sections C21–C23 (document-level mikebom metadata)
+/// Build every document-level annotation waybill's SPDX 2.3 output
+/// emits. Follows Sections C21–C23 (document-level waybill metadata)
 /// and E1 (compositions). Always emits at least the
 /// `generation-context` annotation plus four `trace-integrity-*`
 /// scalars — those are constitution-mandated transparency signals
@@ -447,12 +447,12 @@ pub fn annotate_document(
         GenerationContext::ContainerImageScan => "container-image-scan",
         GenerationContext::BuildTimeTrace => "build-time-trace",
     };
-    push(&mut out, "mikebom:generation-context", json!(gc));
+    push(&mut out, "waybill:generation-context", json!(gc));
 
     // Milestone 133 US4 (Constitution Strict Boundary §5):
     // `--file-inventory=full` opt-in marker. CDX + SPDX 3 twins.
     if let Some("full") = artifacts.file_inventory_mode {
-        push(&mut out, "mikebom:file-inventory-mode", json!("full"));
+        push(&mut out, "waybill:file-inventory-mode", json!("full"));
     }
 
     // Milestone 133 US3 (C93/C94/C95): file-tier walker diagnostic
@@ -464,21 +464,21 @@ pub fn annotate_document(
         if stats.oversize_skipped > 0 {
             push(
                 &mut out,
-                "mikebom:file-inventory-skipped-oversize",
+                "waybill:file-inventory-skipped-oversize",
                 json!(stats.oversize_skipped.to_string()),
             );
         }
         if stats.special_skipped > 0 {
             push(
                 &mut out,
-                "mikebom:file-inventory-skipped-special-files",
+                "waybill:file-inventory-skipped-special-files",
                 json!(stats.special_skipped.to_string()),
             );
         }
         if stats.unreadable_skipped > 0 {
             push(
                 &mut out,
-                "mikebom:file-inventory-unreadable",
+                "waybill:file-inventory-unreadable",
                 json!(stats.unreadable_skipped.to_string()),
             );
         }
@@ -491,7 +491,7 @@ pub fn annotate_document(
     if !artifacts.os_release_missing_fields.is_empty() {
         push(
             &mut out,
-            "mikebom:os-release-missing-fields",
+            "waybill:os-release-missing-fields",
             json!(artifacts.os_release_missing_fields),
         );
     }
@@ -507,7 +507,7 @@ pub fn annotate_document(
         if !entries.is_empty() {
             push(
                 &mut out,
-                "mikebom:exclude-path",
+                "waybill:exclude-path",
                 json!(entries.join(",")),
             );
         }
@@ -519,7 +519,7 @@ pub fn annotate_document(
     if let Some(prov) = crate::supplement::current_provenance() {
         push(
             &mut out,
-            "mikebom:supplement-cdx",
+            "waybill:supplement-cdx",
             json!(
                 crate::supplement::annotation::build_supplement_cdx_provenance_string(
                     &prov.source_path,
@@ -549,7 +549,7 @@ pub fn annotate_document(
             if !selection.losers.is_empty() {
                 push(
                     &mut out,
-                    "mikebom:root-selection-heuristic",
+                    "waybill:root-selection-heuristic",
                     json!({
                         "heuristic": h.name(),
                         "confidence": h.confidence(),
@@ -559,14 +559,14 @@ pub fn annotate_document(
         }
     }
 
-    // Milestone 158 US2 — always-emit `mikebom:graph-completeness`
+    // Milestone 158 US2 — always-emit `waybill:graph-completeness`
     // at document scope per FR-003 (universal presence). Value is
     // the three-way `complete|partial|unknown` string. The
-    // companion `mikebom:graph-completeness-reason` is emitted
+    // companion `waybill:graph-completeness-reason` is emitted
     // conditionally per FR-004/FR-005.
     push(
         &mut out,
-        "mikebom:graph-completeness",
+        "waybill:graph-completeness",
         json!(graph_completeness.value.as_str()),
     );
     if graph_completeness.value
@@ -575,7 +575,7 @@ pub fn annotate_document(
     {
         push(
             &mut out,
-            "mikebom:graph-completeness-reason",
+            "waybill:graph-completeness-reason",
             json!(crate::generate::graph_completeness::join_reason_codes(
                 &graph_completeness.reason_codes,
             )),
@@ -587,7 +587,7 @@ pub fn annotate_document(
     // component (`go_transitive_coverage` is `Some`). C111 conditionally
     // emitted iff coverage != Complete. Per FR-004/FR-005 + Q1
     // reason-code-driven decision rule.
-    // Milestone 173: C119 doc-scope `mikebom:go-cache-warming-failed`.
+    // Milestone 173: C119 doc-scope `waybill:go-cache-warming-failed`.
     // Emitted BEFORE C118 for alphabetic sort. Gated on Go presence
     // AND at least one failing workspace. JSON-encoded array value.
     if let Some(cw) = artifacts.go_cache_warming {
@@ -595,15 +595,15 @@ pub fn annotate_document(
             let value = serde_json::to_string(&cw.failures).unwrap_or_default();
             push(
                 &mut out,
-                "mikebom:go-cache-warming-failed",
+                "waybill:go-cache-warming-failed",
                 json!(value),
             );
         }
     }
 
-    // Milestone 176: C121 doc-scope `mikebom:workspaces-detected`.
+    // Milestone 176: C121 doc-scope `waybill:workspaces-detected`.
     // Value is a JSON-encoded array of the sorted-deduplicated union
-    // of every per-component `mikebom:workspace-member` value (FR-003
+    // of every per-component `waybill:workspace-member` value (FR-003
     // + FR-012). Emission gated on the union being non-empty (FR-003:
     // absent when zero workspaces detected). Computed via the shared
     // helper so all three formats guarantee the FR-012 cross-
@@ -615,19 +615,19 @@ pub fn annotate_document(
             let value = serde_json::to_string(&workspaces).unwrap_or_default();
             push(
                 &mut out,
-                "mikebom:workspaces-detected",
+                "waybill:workspaces-detected",
                 json!(value),
             );
         }
     }
 
-    // Milestone 173: C118 doc-scope `mikebom:go-cache-warming-mode`.
+    // Milestone 173: C118 doc-scope `waybill:go-cache-warming-mode`.
     // Emitted BEFORE C110 for alphabetic sort. Value one of `"off"` /
     // `"per-workspace"` / `"offline-inhibited"`.
     if let Some(cw) = artifacts.go_cache_warming {
         push(
             &mut out,
-            "mikebom:go-cache-warming-mode",
+            "waybill:go-cache-warming-mode",
             json!(cw.mode.as_wire_str()),
         );
     }
@@ -635,26 +635,26 @@ pub fn annotate_document(
     if let Some(coverage) = artifacts.go_transitive_coverage {
         push(
             &mut out,
-            "mikebom:go-transitive-coverage",
+            "waybill:go-transitive-coverage",
             json!(coverage.value_wire_str()),
         );
         if let Some(reason) = coverage.reason() {
             push(
                 &mut out,
-                "mikebom:go-transitive-coverage-reason",
+                "waybill:go-transitive-coverage-reason",
                 json!(reason),
             );
         }
     }
 
-    // Milestone 172: doc-scope C117 `mikebom:go-transitive-fallback-
+    // Milestone 172: doc-scope C117 `waybill:go-transitive-fallback-
     // count` annotation. Emitted iff `go_transitive_fallback_count` is
     // `Some(_)` (Go was scanned). Value `"0"` explicit on healthy scans
     // per Q1 clarification. Companion to C110.
     if let Some(count) = artifacts.go_transitive_fallback_count {
         push(
             &mut out,
-            "mikebom:go-transitive-fallback-count",
+            "waybill:go-transitive-fallback-count",
             json!(count.to_string()),
         );
     }
@@ -669,7 +669,7 @@ pub fn annotate_document(
         if !matches!(mode, WorkspaceMode::Absent) {
             push(
                 &mut out,
-                "mikebom:go-workspace-mode",
+                "waybill:go-workspace-mode",
                 json!(mode.as_wire_str()),
             );
         }
@@ -681,7 +681,7 @@ pub fn annotate_document(
     if let Some(mode) = artifacts.helm_extraction_mode {
         push(
             &mut out,
-            "mikebom:image-extraction-completeness",
+            "waybill:image-extraction-completeness",
             json!(mode.as_wire_str()),
         );
     }
@@ -694,7 +694,7 @@ pub fn annotate_document(
         artifacts.image_source,
         Some(crate::cli::scan_cmd::ImageSource::Podman)
     ) {
-        push(&mut out, "mikebom:image-source", json!("podman"));
+        push(&mut out, "waybill:image-source", json!("podman"));
     }
 
     // Milestone 210: document-scope compiler-pipeline transparency
@@ -706,19 +706,19 @@ pub fn annotate_document(
     // preserved for scan-mode).
     if let Some(pipeline) = artifacts.compiler_pipeline {
         if let Ok(value) = serde_json::to_value(&pipeline.completeness) {
-            push(&mut out, "mikebom:compiler-pipeline-completeness", value);
+            push(&mut out, "waybill:compiler-pipeline-completeness", value);
         }
         if pipeline.secrets_read_filtered > 0 {
             push(
                 &mut out,
-                "mikebom:secrets-read-filtered",
+                "waybill:secrets-read-filtered",
                 json!(pipeline.secrets_read_filtered.to_string()),
             );
         }
     }
 
     // Milestone 134 (closes #125, catalog row C100): document-scope
-    // `mikebom:purl-collisions-detected` summary annotation. Omitted
+    // `waybill:purl-collisions-detected` summary annotation. Omitted
     // entirely when no collisions were detected so clean scans stay
     // byte-identical to alpha.51 emissions (FR-009 / SC-002). Per
     // `contracts/document-scope-annotation.md`, value is the
@@ -726,7 +726,7 @@ pub fn annotate_document(
     // `MikebomAnnotationCommentV1` envelope.
     if let Some(summary) = artifacts.collisions_summary {
         if let Ok(value) = serde_json::to_value(summary) {
-            push(&mut out, "mikebom:purl-collisions-detected", value);
+            push(&mut out, "waybill:purl-collisions-detected", value);
         }
     }
 
@@ -751,7 +751,7 @@ pub fn annotate_document(
     }
 
     // C47 (milestone 073) — user-defined identifiers ride a
-    // single document-level `mikebom:identifiers` annotation
+    // single document-level `waybill:identifiers` annotation
     // wrapped in the `MikebomAnnotationCommentV1` envelope. Built-in
     // identifiers ride the dual-carrier standards-native path
     // (main-module `Package.externalRefs[PERSISTENT-ID]` + redundant
@@ -788,7 +788,7 @@ pub fn annotate_document(
     if !user_defined_payload.is_empty() {
         push(
             &mut out,
-            "mikebom:identifiers",
+            "waybill:identifiers",
             json!(user_defined_payload),
         );
     }
@@ -806,25 +806,25 @@ fn push_trace_integrity(
     out.push(build_annotation(
         annotator,
         date,
-        "mikebom:trace-integrity-ring-buffer-overflows",
+        "waybill:trace-integrity-ring-buffer-overflows",
         json!(integrity.ring_buffer_overflows),
     ));
     out.push(build_annotation(
         annotator,
         date,
-        "mikebom:trace-integrity-events-dropped",
+        "waybill:trace-integrity-events-dropped",
         json!(integrity.events_dropped),
     ));
     out.push(build_annotation(
         annotator,
         date,
-        "mikebom:trace-integrity-uprobe-attach-failures",
+        "waybill:trace-integrity-uprobe-attach-failures",
         json!(integrity.uprobe_attach_failures),
     ));
     out.push(build_annotation(
         annotator,
         date,
-        "mikebom:trace-integrity-kprobe-attach-failures",
+        "waybill:trace-integrity-kprobe-attach-failures",
         json!(integrity.kprobe_attach_failures),
     ));
 }
@@ -837,7 +837,7 @@ mod tests {
     #[test]
     fn envelope_serializes_schema_field_value_in_that_order() {
         let env = MikebomAnnotationCommentV1::new(
-            "mikebom:sbom-tier",
+            "waybill:sbom-tier",
             serde_json::Value::String("deployed".to_string()),
         );
         let json = env.to_comment_string();
@@ -845,27 +845,27 @@ mod tests {
         // array + property declaration order; swap detection is part
         // of the drift guard below, but we also check the basic
         // shape here.
-        assert!(json.starts_with("{\"schema\":\"mikebom-annotation/v1\""));
-        assert!(json.contains("\"field\":\"mikebom:sbom-tier\""));
+        assert!(json.starts_with("{\"schema\":\"waybill-annotation/v1\""));
+        assert!(json.contains("\"field\":\"waybill:sbom-tier\""));
         assert!(json.contains("\"value\":\"deployed\""));
     }
 
     #[test]
     fn build_annotation_wraps_envelope_as_spdx_comment() {
         let a = build_annotation(
-            "Tool: mikebom-0.1.0",
+            "Tool: waybill-0.1.0",
             "2026-04-24T10:00:00Z",
-            "mikebom:evidence-kind",
+            "waybill:evidence-kind",
             serde_json::json!("instrumentation"),
         );
-        assert_eq!(a.annotator, "Tool: mikebom-0.1.0");
+        assert_eq!(a.annotator, "Tool: waybill-0.1.0");
         assert_eq!(a.date, "2026-04-24T10:00:00Z");
         assert!(matches!(a.kind, SpdxAnnotationType::Other));
         // The comment parses back to a v1 envelope with matching field.
         let parsed: MikebomAnnotationCommentV1 =
             serde_json::from_str(&a.comment).unwrap();
         assert_eq!(parsed.schema, ENVELOPE_SCHEMA_V1);
-        assert_eq!(parsed.field, "mikebom:evidence-kind");
+        assert_eq!(parsed.field, "waybill:evidence-kind");
         assert_eq!(parsed.value, serde_json::json!("instrumentation"));
     }
 
@@ -904,9 +904,9 @@ mod tests {
     // These tests pin the contract that `build_annotation` always
     // produces an envelope whose `value` field is a `Value::String`,
     // mirroring CDX's `serde_json::to_string(other)` coercion at
-    // `mikebom-cli/src/generate/cyclonedx/builder.rs:1092`. External
+    // `waybill-cli/src/generate/cyclonedx/builder.rs:1092`. External
     // parity audits (sbom-conformance harness, 2026-06) caught the
-    // pre-coercion mismatch on `mikebom:detected-cargo-auditable`
+    // pre-coercion mismatch on `waybill:detected-cargo-auditable`
     // (`Value::Bool(true)` → CDX `"true"` string vs SPDX `true` bool).
 
     #[test]
@@ -946,7 +946,7 @@ mod tests {
         // Arrays + objects pass through structured. SPDX envelopes are
         // free-form JSON (unlike CDX property.value which is spec-typed
         // as a string), so consumers walking the structured array
-        // shape — e.g., mikebom:identifiers — must see the original
+        // shape — e.g., waybill:identifiers — must see the original
         // Value::Array. Stringifying these would break the
         // identifiers_determinism cross-format extractor and any
         // external consumer depending on machine-readable array
@@ -968,9 +968,9 @@ mod tests {
         // datum as the string `"true"`. Post-fix, both formats carry
         // the string `"true"`.
         let a = build_annotation(
-            "Tool: mikebom-test",
+            "Tool: waybill-test",
             "2026-06-26T12:00:00Z",
-            "mikebom:not-linked",
+            "waybill:not-linked",
             serde_json::json!(true),
         );
         let parsed: MikebomAnnotationCommentV1 =
@@ -996,7 +996,7 @@ mod tests {
     }
 
     /// Structural drift guard: the Rust envelope and the committed
-    /// JSON schema at `contracts/mikebom-annotation.schema.json`
+    /// JSON schema at `contracts/waybill-annotation.schema.json`
     /// MUST stay in sync on the three things a consumer writes code
     /// against: the fixed `schema` constant, the set of required
     /// fields, and the `additionalProperties: false` constraint.
@@ -1007,7 +1007,7 @@ mod tests {
             .expect("workspace root")
             .join(
                 "specs/010-spdx-output-support/contracts/\
-                 mikebom-annotation.schema.json",
+                 waybill-annotation.schema.json",
             );
         let raw = std::fs::read_to_string(&schema_path)
             .unwrap_or_else(|e| panic!("read {}: {e}", schema_path.display()));
@@ -1042,7 +1042,7 @@ mod tests {
     }
 
     // -----------------------------------------------------------
-    // Issue #228 — `mikebom:lifecycle-scope` annotation emission
+    // Issue #228 — `waybill:lifecycle-scope` annotation emission
     // -----------------------------------------------------------
 
     fn mk_minimal_component(
@@ -1100,7 +1100,7 @@ mod tests {
     #[test]
     fn lifecycle_scope_annotation_emitted_for_test_scope() {
         // Issue #228 — a Test-scoped Package must carry a
-        // `mikebom:lifecycle-scope: "test"` annotation regardless of
+        // `waybill:lifecycle-scope: "test"` annotation regardless of
         // edge-style. This is the parity-bridging signal CDX
         // consumers expect on the target component, and the only
         // way a flat-DEPENDS_ON SPDX 2.3 consumer can distinguish
@@ -1109,10 +1109,10 @@ mod tests {
             "pkg:golang/example.com/testify@v1",
             Some(waybill_common::resolution::LifecycleScope::Test),
         );
-        let annos = annotate_component("Tool: mikebom-test", "2026-05-23T00:00:00Z", &c, false, false, None);
+        let annos = annotate_component("Tool: waybill-test", "2026-05-23T00:00:00Z", &c, false, false, None);
         let scope_annos: Vec<_> = annos
             .iter()
-            .filter(|a| parse_envelope(a).field == "mikebom:lifecycle-scope")
+            .filter(|a| parse_envelope(a).field == "waybill:lifecycle-scope")
             .collect();
         assert_eq!(scope_annos.len(), 1, "exactly one lifecycle-scope annotation");
         assert_eq!(parse_envelope(scope_annos[0]).value, serde_json::json!("test"));
@@ -1126,12 +1126,12 @@ mod tests {
             (waybill_common::resolution::LifecycleScope::Build, "build"),
         ] {
             let c = mk_minimal_component("pkg:cargo/x@1", Some(scope));
-            let annos = annotate_component("Tool: mikebom-test", "2026-05-23T00:00:00Z", &c, false, false, None);
+            let annos = annotate_component("Tool: waybill-test", "2026-05-23T00:00:00Z", &c, false, false, None);
             let found = annos
                 .iter()
                 .any(|a| {
                     let env = parse_envelope(a);
-                    env.field == "mikebom:lifecycle-scope" && env.value == serde_json::json!(expected)
+                    env.field == "waybill:lifecycle-scope" && env.value == serde_json::json!(expected)
                 });
             assert!(found, "expected lifecycle-scope={expected} annotation for scope={scope:?}");
         }
@@ -1147,10 +1147,10 @@ mod tests {
             None,
         ] {
             let c = mk_minimal_component("pkg:deb/debian/libc6@2.36", scope);
-            let annos = annotate_component("Tool: mikebom-test", "2026-05-23T00:00:00Z", &c, false, false, None);
+            let annos = annotate_component("Tool: waybill-test", "2026-05-23T00:00:00Z", &c, false, false, None);
             let leaked = annos
                 .iter()
-                .any(|a| parse_envelope(a).field == "mikebom:lifecycle-scope");
+                .any(|a| parse_envelope(a).field == "waybill:lifecycle-scope");
             assert!(!leaked, "no lifecycle-scope annotation for scope={scope:?}; got {annos:#?}");
         }
     }

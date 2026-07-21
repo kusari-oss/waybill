@@ -8,7 +8,7 @@
 //! Milestone-155's Q1 highest-version-wins consolidation fires across
 //! the depths that milestone-156's extended walker now sees together.
 //! Asserts one merged `pkg:generic/openssl@3.0` component with both
-//! source paths in `mikebom:source-files`.
+//! source paths in `waybill:source-files`.
 
 #![cfg(test)]
 #![allow(clippy::unwrap_used)]
@@ -73,7 +73,7 @@ fn cmake_walker_cross_depth_version_consolidation() {
         openssls.len()
     );
 
-    // Both source paths captured in mikebom:source-files (via milestone-148
+    // Both source paths captured in waybill:source-files (via milestone-148
     // union pass).
     let props = openssls[0]
         .get("properties")
@@ -81,9 +81,9 @@ fn cmake_walker_cross_depth_version_consolidation() {
         .expect("openssl component has properties[]");
     let source_files_prop = props
         .iter()
-        .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("mikebom:source-files"))
+        .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("waybill:source-files"))
         .and_then(|p| p.get("value").and_then(|v| v.as_str()))
-        .expect("mikebom:source-files annotation present");
+        .expect("waybill:source-files annotation present");
     assert!(
         source_files_prop.contains("CMakeLists.txt"),
         "source-files should include depth-0 CMakeLists.txt; got {source_files_prop:?}"

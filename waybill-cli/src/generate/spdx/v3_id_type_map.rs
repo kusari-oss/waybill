@@ -4,7 +4,7 @@
 //! Per the SPDX 3 SHACL constraint on `Core/externalIdentifierType`,
 //! emitted values MUST come from the 11-value enumeration:
 //! `[other, cve, swhid, securityOther, cpe23, packageUrl, gitoid,
-//! cpe22, urlScheme, email, swid]`. mikebom's internal scheme names
+//! cpe22, urlScheme, email, swid]`. waybill's internal scheme names
 //! (`image`, `repo`, `git`, `subject`, `attestation`, plus
 //! user-defined values from `--component-id <PURL>=<SCHEME>:<VALUE>`)
 //! must be mapped to a vocab value at SPDX 3 emission time.
@@ -12,7 +12,7 @@
 //! This module provides the pure-function mapping per
 //! `specs/079-spdx3-id-vocab/research.md` §1, plus the optional
 //! `comment` field (`"original-scheme: <name>"`) that preserves the
-//! original mikebom scheme name on `Core/ExternalIdentifier`
+//! original waybill scheme name on `Core/ExternalIdentifier`
 //! elements when the vocab mapping is `other`.
 //!
 //! Determinism contract (FR-005): same `(scheme, value)` input →
@@ -30,7 +30,7 @@ use waybill::binding::identifiers::SchemeName;
 
 /// The 11 controlled-vocabulary values for SPDX 3's
 /// `Core/externalIdentifierType` (per the schema audit against
-/// `mikebom-cli/tests/fixtures/schemas/spdx-3.0.1.json`).
+/// `waybill-cli/tests/fixtures/schemas/spdx-3.0.1.json`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) enum SpdxIdType {
     Other,
@@ -93,7 +93,7 @@ impl SpdxIdType {
 pub(crate) struct MappingResult {
     /// SPDX 3 controlled-vocabulary value to emit.
     pub(crate) vocab_type: SpdxIdType,
-    /// `Some(comment_text)` when the original mikebom scheme name
+    /// `Some(comment_text)` when the original waybill scheme name
     /// would otherwise be lost (i.e., the scheme isn't in the vocab
     /// AND we didn't capture its semantic via a more-specific vocab
     /// value like `gitoid`). `None` when no info-preservation comment
@@ -101,7 +101,7 @@ pub(crate) struct MappingResult {
     pub(crate) comment: Option<String>,
 }
 
-/// Pure function: `(mikebom scheme, identifier value)` → SPDX 3 vocab
+/// Pure function: `(waybill scheme, identifier value)` → SPDX 3 vocab
 /// value + optional `comment` field text.
 ///
 /// Logic per `specs/079-spdx3-id-vocab/research.md` §1:
@@ -153,7 +153,7 @@ pub(crate) fn map_scheme_to_vocab(scheme: &SchemeName, value: &str) -> MappingRe
 /// Compiled-once regex `^[0-9a-f]{40}$`. Returns true when `value`
 /// is exactly a 40-char lowercase hex string (a SHA-1 git commit).
 ///
-/// Per `specs/079-spdx3-id-vocab/research.md` §2: mikebom's
+/// Per `specs/079-spdx3-id-vocab/research.md` §2: waybill's
 /// auto-detect `git:` values are bounded by `git_rev_parse_head` to
 /// always match this pattern. Other shapes (abbreviated SHAs,
 /// 64-char SHA-256, `git+https://...` URLs) fall through to the
@@ -163,7 +163,7 @@ fn is_git_sha(value: &str) -> bool {
     let re = RE.get_or_init(|| {
         // Constructed from a compile-time literal — `unwrap` is
         // safe; a compile-time-invalid regex here would represent
-        // a mikebom code-defect rather than a runtime input
+        // a waybill code-defect rather than a runtime input
         // condition.
         #[allow(clippy::unwrap_used)]
         {

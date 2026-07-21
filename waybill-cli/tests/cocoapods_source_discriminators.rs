@@ -126,7 +126,7 @@ fn trunk_default_emits_bare_purl() {
     let c = component_with_purl(&doc, "pkg:cocoapods/AFNetworking@4.0.1")
         .expect("trunk pod must emit as bare PURL");
     assert_eq!(
-        property_value(c, "mikebom:source-type"),
+        property_value(c, "waybill:source-type"),
         Some("cocoapods-trunk"),
     );
 }
@@ -141,11 +141,11 @@ fn subspec_subpath_form() {
     let c = component_with_purl(&doc, "pkg:cocoapods/Firebase@10.20.0#Core")
         .expect("subspec must emit with #subpath form per Phase 0 correction");
     assert_eq!(
-        property_value(c, "mikebom:source-type"),
+        property_value(c, "waybill:source-type"),
         Some("cocoapods-trunk"),
     );
     assert_eq!(
-        property_value(c, "mikebom:subspec"),
+        property_value(c, "waybill:subspec"),
         Some("Core"),
         "subspec annotation duplicates the subpath for easier filtering",
     );
@@ -179,8 +179,8 @@ fn multi_level_subspec_preserves_slashes() {
 #[test]
 fn git_source_emits_vcs_url_and_vcs_ref_from_checkout_options() {
     // Q2: PURL includes ?vcs_url= qualifier from EXTERNAL SOURCES;
-    // mikebom:vcs-ref carries the resolved 40-char SHA from CHECKOUT
-    // OPTIONS; mikebom:vcs-declared-ref carries the operator-declared
+    // waybill:vcs-ref carries the resolved 40-char SHA from CHECKOUT
+    // OPTIONS; waybill:vcs-declared-ref carries the operator-declared
     // branch/tag/commit.
     let tmp = tempfile::tempdir().unwrap();
     write_mixed_fixture(tmp.path());
@@ -189,16 +189,16 @@ fn git_source_emits_vcs_url_and_vcs_ref_from_checkout_options() {
     let c = component_with_purl(&doc, expected)
         .unwrap_or_else(|| panic!("git-source PURL {expected} not found"));
     assert_eq!(
-        property_value(c, "mikebom:source-type"),
+        property_value(c, "waybill:source-type"),
         Some("cocoapods-git"),
     );
     assert_eq!(
-        property_value(c, "mikebom:vcs-ref"),
+        property_value(c, "waybill:vcs-ref"),
         Some("eb39649a76b87e8451baf75d10ce82ca3a3d5601"),
         "Q2: resolved SHA from CHECKOUT OPTIONS must surface as vcs-ref",
     );
     assert_eq!(
-        property_value(c, "mikebom:vcs-declared-ref"),
+        property_value(c, "waybill:vcs-declared-ref"),
         Some("main"),
         "operator-declared branch from EXTERNAL SOURCES must surface as vcs-declared-ref",
     );
@@ -212,11 +212,11 @@ fn path_source_emits_generic_placeholder() {
     let c = component_with_purl(&doc, "pkg:generic/LocalLib@0.1.0")
         .expect("path-source PURL must use pkg:generic/ placeholder");
     assert_eq!(
-        property_value(c, "mikebom:source-type"),
+        property_value(c, "waybill:source-type"),
         Some("cocoapods-path"),
     );
     assert_eq!(
-        property_value(c, "mikebom:path"),
+        property_value(c, "waybill:path"),
         Some("../packages/local-lib"),
     );
 }

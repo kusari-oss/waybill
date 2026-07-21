@@ -1,6 +1,6 @@
 //! Milestone 186 US2 — `--sbom-source referrer` strict-mode integration tests.
 //!
-//! Fail-closed guarantee: mikebom exits non-zero with an actionable error
+//! Fail-closed guarantee: waybill exits non-zero with an actionable error
 //! when no matching referrer exists (FR-009 / SC-003). Verified via a
 //! `wiremock` plain-HTTP registry (dev-dep since m055).
 
@@ -34,7 +34,7 @@ struct OciImage {
 fn build_minimal_oci_image() -> OciImage {
     let uncompressed_tar = {
         let mut builder = tar::Builder::new(Vec::<u8>::new());
-        let body = b"ID=mikebom-m186-us2-test\nVERSION=1\n";
+        let body = b"ID=waybill-m186-us2-test\nVERSION=1\n";
         let mut header = tar::Header::new_gnu();
         header.set_path("etc/os-release").unwrap();
         header.set_size(body.len() as u64);
@@ -268,11 +268,11 @@ fn mikebom_bin() -> &'static str {
 async fn referrer_mode_emits_matching_referrer() {
     let server = MockServer::start().await;
     let image = build_minimal_oci_image();
-    let repo = "library/mikebom-m186-us2";
+    let repo = "library/waybill-m186-us2";
     let tag = "1.0";
     mount_image_endpoints(&server, repo, tag, &image).await;
 
-    let referrer_bytes = build_cdx_referrer("mikebom-m186-us2-referrer");
+    let referrer_bytes = build_cdx_referrer("waybill-m186-us2-referrer");
     let descriptor_digest =
         mount_referrer(&server, repo, &image.manifest_digest, &referrer_bytes).await;
 
@@ -301,11 +301,11 @@ async fn referrer_mode_emits_matching_referrer() {
             output.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         out.status.success(),
-        "mikebom exit={:?} stderr:\n{stderr}",
+        "waybill exit={:?} stderr:\n{stderr}",
         out.status.code(),
     );
     let got = std::fs::read(&output).unwrap();
@@ -327,7 +327,7 @@ async fn referrer_mode_emits_matching_referrer() {
 async fn referrer_mode_errors_on_no_match() {
     let server = MockServer::start().await;
     let image = build_minimal_oci_image();
-    let repo = "library/mikebom-m186-us2-empty";
+    let repo = "library/waybill-m186-us2-empty";
     let tag = "1.0";
     mount_image_endpoints(&server, repo, tag, &image).await;
     mount_empty_referrers(&server, repo, &image.manifest_digest).await;
@@ -357,11 +357,11 @@ async fn referrer_mode_errors_on_no_match() {
             output.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         !out.status.success(),
-        "expected mikebom to fail under --sbom-source referrer with no match. stderr:\n{stderr}",
+        "expected waybill to fail under --sbom-source referrer with no match. stderr:\n{stderr}",
     );
     assert!(
         stderr.contains("no matching SBOM referrer found"),
@@ -375,7 +375,7 @@ async fn referrer_mode_errors_on_no_match() {
 async fn referrer_mode_errors_on_404_registry() {
     let server = MockServer::start().await;
     let image = build_minimal_oci_image();
-    let repo = "library/mikebom-m186-us2-404";
+    let repo = "library/waybill-m186-us2-404";
     let tag = "1.0";
     mount_image_endpoints(&server, repo, tag, &image).await;
     mount_referrers_404(&server, repo, &image.manifest_digest).await;
@@ -405,11 +405,11 @@ async fn referrer_mode_errors_on_404_registry() {
             output.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         !out.status.success(),
-        "expected mikebom to fail under --sbom-source referrer with HTTP 404. stderr:\n{stderr}",
+        "expected waybill to fail under --sbom-source referrer with HTTP 404. stderr:\n{stderr}",
     );
     assert!(
         stderr.contains("--sbom-source scan")
@@ -423,7 +423,7 @@ async fn referrer_mode_errors_on_404_registry() {
 async fn referrer_mode_errors_on_size_cap() {
     let server = MockServer::start().await;
     let image = build_minimal_oci_image();
-    let repo = "library/mikebom-m186-us2-oversize";
+    let repo = "library/waybill-m186-us2-oversize";
     let tag = "1.0";
     mount_image_endpoints(&server, repo, tag, &image).await;
     mount_oversize_referrer(&server, repo, &image.manifest_digest).await;
@@ -453,17 +453,17 @@ async fn referrer_mode_errors_on_size_cap() {
             output.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         !out.status.success(),
-        "expected mikebom to fail under --sbom-source referrer with all candidates over size cap. stderr:\n{stderr}",
+        "expected waybill to fail under --sbom-source referrer with all candidates over size cap. stderr:\n{stderr}",
     );
     // Size-cap WARN is emitted during the pick step; the "no matching" error
     // message is what surfaces to the operator since the picker returned None.
     assert!(
         stderr.contains("no matching SBOM referrer found")
-            || stderr.contains("MIKEBOM_REFERRER_MAX_BYTES"),
+            || stderr.contains("WAYBILL_REFERRER_MAX_BYTES"),
         "expected size-cap-related error message. stderr:\n{stderr}",
     );
 }

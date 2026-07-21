@@ -1,6 +1,6 @@
 //! Integration tests for npm-ecosystem scanning (US2 of milestone 002).
 //!
-//! Shells out to the `mikebom sbom scan --path <fixture>` binary the same
+//! Shells out to the `waybill sbom scan --path <fixture>` binary the same
 //! way `scan_python.rs` does. Each test asserts the per-story acceptance
 //! scenarios + success criteria for the npm pathway documented in
 //! `specs/002-python-npm-ecosystem/spec.md`.
@@ -9,11 +9,11 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("npm")
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("npm")
         .join(sub)
 }
 
-/// Run `mikebom sbom scan --path <fixture>` and return the parsed
+/// Run `waybill sbom scan --path <fixture>` and return the parsed
 /// CycloneDX JSON. Returns None if the binary exits non-zero so the
 /// caller can assert refusal cases.
 ///
@@ -64,7 +64,7 @@ fn scan_raw(fixture_sub: &str, exclude_dev_test: bool) -> std::process::Output {
         .arg("--output")
         .arg(&out_path)
         .arg("--no-deep-hash");
-    cmd.output().expect("mikebom should run")
+    cmd.output().expect("waybill should run")
 }
 
 fn npm_components(sbom: &serde_json::Value) -> Vec<&serde_json::Value> {
@@ -102,11 +102,11 @@ fn lockfile_v3_fixture_emits_source_tier_prod_only_with_exclude_scope() {
         npm.iter().map(|c| c["name"].as_str()).collect::<Vec<_>>()
     );
     for c in &npm {
-        assert_eq!(prop_value(c, "mikebom:sbom-tier"), Some("source"));
+        assert_eq!(prop_value(c, "waybill:sbom-tier"), Some("source"));
         // Prod entries don't emit lifecycle-scope (Runtime is implicit).
         assert!(
-            prop_value(c, "mikebom:lifecycle-scope").is_none(),
-            "{}: prod entries should not surface mikebom:lifecycle-scope",
+            prop_value(c, "waybill:lifecycle-scope").is_none(),
+            "{}: prod entries should not surface waybill:lifecycle-scope",
             c["name"]
         );
     }
@@ -142,7 +142,7 @@ fn lockfile_v3_marks_npm_ecosystem_complete() {
 fn lockfile_v3_default_emits_jest_with_native_scope() {
     // Milestone 052/part-3: default mode emits ALL lifecycle scopes.
     // jest (devDependency) shows up tagged with native CDX `scope:
-    // "excluded"` + `mikebom:lifecycle-scope: "development"`.
+    // "excluded"` + `waybill:lifecycle-scope: "development"`.
     let sbom = scan("lockfile-v3", false);
     let npm = npm_components(&sbom);
     assert_eq!(npm.len(), 3, "lockfile-v3 default (post-052): expected 3");
@@ -156,9 +156,9 @@ fn lockfile_v3_default_emits_jest_with_native_scope() {
         "jest must carry native CDX scope: \"excluded\" in default mode"
     );
     assert_eq!(
-        prop_value(jest, "mikebom:lifecycle-scope"),
+        prop_value(jest, "waybill:lifecycle-scope"),
         Some("development"),
-        "jest must carry mikebom:lifecycle-scope = \"development\" in default mode"
+        "jest must carry waybill:lifecycle-scope = \"development\" in default mode"
     );
 }
 
@@ -195,9 +195,9 @@ fn pnpm_v8_fixture_parses_prod_and_filters_dev() {
         "mocha must carry native CDX scope: \"excluded\" in default mode"
     );
     assert_eq!(
-        prop_value(mocha, "mikebom:lifecycle-scope"),
+        prop_value(mocha, "waybill:lifecycle-scope"),
         Some("development"),
-        "mocha must carry mikebom:lifecycle-scope = \"development\""
+        "mocha must carry waybill:lifecycle-scope = \"development\""
     );
 
     let sbom = scan("pnpm-v8", true);
@@ -208,7 +208,7 @@ fn pnpm_v8_fixture_parses_prod_and_filters_dev() {
         "pnpm-v8 --exclude-scope dev,build,test: expected 1"
     );
     assert_eq!(npm[0]["name"], "is-odd");
-    assert_eq!(prop_value(npm[0], "mikebom:sbom-tier"), Some("source"));
+    assert_eq!(prop_value(npm[0], "waybill:sbom-tier"), Some("source"));
 }
 
 #[test]
@@ -218,7 +218,7 @@ fn node_modules_walk_emits_deployed_tier() {
     assert_eq!(npm.len(), 2, "expected express + safe-buffer");
     for c in &npm {
         assert_eq!(
-            prop_value(c, "mikebom:sbom-tier"),
+            prop_value(c, "waybill:sbom-tier"),
             Some("deployed"),
             "{}: node_modules walk must tag deployed",
             c["name"]
@@ -238,24 +238,24 @@ fn package_json_only_emits_design_tier_and_source_type() {
     assert_eq!(npm.len(), 3);
     for c in &npm {
         assert_eq!(
-            prop_value(c, "mikebom:sbom-tier"),
+            prop_value(c, "waybill:sbom-tier"),
             Some("design"),
             "{}: must be design-tier",
             c["name"]
         );
         assert!(
-            prop_value(c, "mikebom:requirement-ranges").is_some(),
+            prop_value(c, "waybill:requirement-ranges").is_some(),
             "{}: must carry requirement-range",
             c["name"]
         );
     }
     let local = npm.iter().find(|c| c["name"] == "local-helper").unwrap();
-    assert_eq!(prop_value(local, "mikebom:source-type"), Some("local"));
+    assert_eq!(prop_value(local, "waybill:source-type"), Some("local"));
     let git = npm.iter().find(|c| c["name"] == "internal-tool").unwrap();
-    assert_eq!(prop_value(git, "mikebom:source-type"), Some("git"));
+    assert_eq!(prop_value(git, "waybill:source-type"), Some("git"));
     let reg = npm.iter().find(|c| c["name"] == "axios").unwrap();
     assert!(
-        prop_value(reg, "mikebom:source-type").is_none(),
+        prop_value(reg, "waybill:source-type").is_none(),
         "registry entries emit no source-type property"
     );
 
@@ -270,7 +270,7 @@ fn package_json_only_emits_design_tier_and_source_type() {
     // composition just groups them with the source-tier main-module
     // by ecosystem. This is an accurate downgrade in signal
     // resolution, but acceptable per milestone 066 — consumers
-    // walking individual component `mikebom:sbom-tier` properties
+    // walking individual component `waybill:sbom-tier` properties
     // can still distinguish design-tier deps from the source-tier
     // main-module.
     let compositions = sbom["compositions"].as_array().unwrap();
@@ -372,13 +372,13 @@ fn v1_lockfile_warns_but_does_not_abort_scan() {
 
 // --- Milestone 066: npm main-module emission ------------------------
 
-/// Helper for milestone-066 fixtures that live under mikebom-cli/
+/// Helper for milestone-066 fixtures that live under waybill-cli/
 /// (not the workspace-root tests/fixtures/npm/ tree). Mirrors the
 /// pattern used for the cargo-workspace fixture in milestone 064.
 fn cli_local_fixture(sub: &str) -> PathBuf {
-    // Milestone 090: mikebom-cli/tests/fixtures/<sub> dirs moved to
-    // mikebom-test-fixtures repo; resolve via MIKEBOM_FIXTURES_DIR.
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join(sub)
+    // Milestone 090: waybill-cli/tests/fixtures/<sub> dirs moved to
+    // mikebom-test-fixtures repo; resolve via WAYBILL_FIXTURES_DIR.
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join(sub)
 }
 
 /// Scan a fixture path directly (bypassing the workspace-root
@@ -400,7 +400,7 @@ fn scan_path(path: &Path) -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -429,7 +429,7 @@ fn scan_npm_single_package_emits_main_module_in_metadata_component() {
         .as_array()
         .expect("metadata.component.properties")
         .iter()
-        .find(|p| p["name"].as_str() == Some("mikebom:component-role"));
+        .find(|p| p["name"].as_str() == Some("waybill:component-role"));
     assert_eq!(
         role.and_then(|p| p["value"].as_str()),
         Some("main-module")
@@ -477,7 +477,7 @@ fn scan_npm_workspace_emits_per_member_main_modules() {
                 .as_array()
                 .map(|p| {
                     p.iter().any(|prop| {
-                        prop["name"].as_str() == Some("mikebom:component-role")
+                        prop["name"].as_str() == Some("waybill:component-role")
                             && prop["value"].as_str() == Some("main-module")
                     })
                 })
@@ -617,17 +617,17 @@ fn scan_npm_multi_declaration_preserves_all_ranges_m199() {
     let sbom = scan_path(root);
     let raw = serde_json::to_string(&sbom).unwrap();
     assert!(
-        !raw.contains(r#""mikebom:requirement-range""#),
-        "m199 SC-002: singular scalar mikebom:requirement-range MUST NOT appear anywhere in emitted SBOM"
+        !raw.contains(r#""waybill:requirement-range""#),
+        "m199 SC-002: singular scalar waybill:requirement-range MUST NOT appear anywhere in emitted SBOM"
     );
     assert!(
-        !raw.contains(r#""mikebom:source-manifest""#),
-        "m199 SC-002: singular scalar mikebom:source-manifest MUST NOT appear anywhere in emitted SBOM"
+        !raw.contains(r#""waybill:source-manifest""#),
+        "m199 SC-002: singular scalar waybill:source-manifest MUST NOT appear anywhere in emitted SBOM"
     );
 }
 
 /// US2 (m199) basic case — npm-alias declaration reconciles by resolved
-/// identity, stamps `mikebom:declared-as: [alias]` on the survivor,
+/// identity, stamps `waybill:declared-as: [alias]` on the survivor,
 /// emits NO phantom under the alias name.
 #[test]
 fn scan_npm_alias_reconciles_by_resolved_identity_m199() {
@@ -661,7 +661,7 @@ fn scan_npm_alias_reconciles_by_resolved_identity_m199() {
         .filter(|c| c["purl"].as_str().is_some_and(|p| p.starts_with("pkg:npm/my-alias")))
         .count();
     assert_eq!(phantom_count, 0, "no phantom pkg:npm/my-alias component (FR-005)");
-    // At least one `actual-pkg` component MUST carry `mikebom:declared-as`.
+    // At least one `actual-pkg` component MUST carry `waybill:declared-as`.
     let actual_pkgs: Vec<&&serde_json::Value> = comps
         .iter()
         .filter(|c| {
@@ -676,15 +676,15 @@ fn scan_npm_alias_reconciles_by_resolved_identity_m199() {
     );
     let has_declared_as = actual_pkgs
         .iter()
-        .any(|c| prop_value(c, "mikebom:declared-as").is_some());
+        .any(|c| prop_value(c, "waybill:declared-as").is_some());
     assert!(
         has_declared_as,
-        "at least one actual-pkg component MUST carry mikebom:declared-as (FR-006)"
+        "at least one actual-pkg component MUST carry waybill:declared-as (FR-006)"
     );
 }
 
 /// US2 (m199) negative guardrail — a project with NO alias declarations
-/// MUST NOT stamp `mikebom:declared-as` on any component (FR-006).
+/// MUST NOT stamp `waybill:declared-as` on any component (FR-006).
 #[test]
 fn scan_npm_no_alias_no_declared_as_annotation_m199() {
     let dir = tempfile::tempdir().expect("tempdir");
@@ -708,8 +708,8 @@ fn scan_npm_no_alias_no_declared_as_annotation_m199() {
     let sbom = scan_path(root);
     let raw = serde_json::to_string(&sbom).unwrap();
     assert!(
-        !raw.contains(r#""mikebom:declared-as""#),
-        "FR-006: no alias declarations → no mikebom:declared-as anywhere"
+        !raw.contains(r#""waybill:declared-as""#),
+        "FR-006: no alias declarations → no waybill:declared-as anywhere"
     );
 }
 

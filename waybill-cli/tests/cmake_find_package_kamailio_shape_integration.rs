@@ -56,7 +56,7 @@ fn components_by_mechanism<'a>(doc: &'a Value, mechanism: &str) -> Vec<&'a Value
             None => continue,
         };
         if props.iter().any(|p| {
-            p.get("name").and_then(|v| v.as_str()) == Some("mikebom:source-mechanism")
+            p.get("name").and_then(|v| v.as_str()) == Some("waybill:source-mechanism")
                 && p.get("value").and_then(|v| v.as_str()) == Some(mechanism)
         }) {
             out.push(c);
@@ -107,7 +107,7 @@ fn kamailio_shape_emits_expected_cmake_components() {
         })
         .expect("expected pkg:generic/openssl@1.1.0 in cmake-find-package emissions");
     assert_eq!(
-        property_value(openssl, "mikebom:cmake-find-package-name"),
+        property_value(openssl, "waybill:cmake-find-package-name"),
         Some("OpenSSL"),
         "OpenSSL component must preserve original casing"
     );
@@ -118,7 +118,7 @@ fn kamailio_shape_emits_expected_cmake_components() {
         .find(|c| c.get("purl").and_then(|v| v.as_str()) == Some("pkg:generic/radcli"))
         .expect("expected pkg:generic/radcli in cmake-pkg-check-modules emissions");
     assert!(
-        property_value(radcli, "mikebom:cmake-find-package-name").is_none(),
-        "pkg_check_modules emissions MUST NOT carry mikebom:cmake-find-package-name"
+        property_value(radcli, "waybill:cmake-find-package-name").is_none(),
+        "pkg_check_modules emissions MUST NOT carry waybill:cmake-find-package-name"
     );
 }

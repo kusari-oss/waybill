@@ -28,7 +28,7 @@ const APK_INSTALLED_PATH: &str = "lib/apk/db/installed";
 /// extracted from the file's `Z:` companion line. The SHA-1 is
 /// `None` when the package's stanza omitted the `Z:` line for
 /// this file (rare; very old apk dbs or malformed stanzas) or
-/// when the `Z:` line uses a non-`Q1` scheme that mikebom
+/// when the `Z:` line uses a non-`Q1` scheme that waybill
 /// doesn't recognize.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ApkFileEntry {
@@ -195,7 +195,7 @@ pub fn read_file_lists(
 
 /// Decode an apk `Z:` line value into a 40-hex-char lowercase
 /// SHA-1 string. apk uses `Q1<base64-encoded-20-bytes>` (the only
-/// scheme mikebom recognizes today). Returns `None` for any other
+/// scheme waybill recognizes today). Returns `None` for any other
 /// prefix, malformed base64, or wrong-length payload.
 fn parse_apk_z_value(z_value: &str) -> Option<String> {
     let payload = z_value.trim().strip_prefix("Q1")?;

@@ -16,7 +16,7 @@ const FIXTURE_SUBPATH: &str = "pip_poetry";
 // `synthesize_root`, and the issue-#236 fix adds synth-root →
 // graph-root `DEPENDS_ON` edges (mirrors CDX's primary-dependency
 // fallback). 26 graph-root packages → 26 new edges; 62 + 26 = 88.
-const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 88;
+const EXPECTED_WAYBILL_EDGE_COUNT: usize = 88;
 
 const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
     // build → packaging.
@@ -43,8 +43,8 @@ fn transitive_edges_match_baseline() {
     let mikebom_edges = run_mikebom(&fixture());
     assert_eq!(
         mikebom_edges.len(),
-        EXPECTED_MIKEBOM_EDGE_COUNT,
-        "mikebom edge count drifted from the alpha.24 baseline."
+        EXPECTED_WAYBILL_EDGE_COUNT,
+        "waybill edge count drifted from the alpha.24 baseline."
     );
     let edge_set: std::collections::HashSet<(String, String)> = mikebom_edges
         .iter()
@@ -64,14 +64,14 @@ fn cross_tool_parity_check() {
         eprintln!("transitive_parity_pip_poetry::cross_tool_parity_check skipped: {reason}");
         return;
     }
-    let mikebom = run_mikebom(&fixture());
+    let waybill = run_mikebom(&fixture());
     let trivy = run_trivy(&fixture());
     let syft = run_syft(&fixture());
-    let diff = compute_edge_diff(&mikebom, &trivy, &syft);
+    let diff = compute_edge_diff(&waybill, &trivy, &syft);
     eprintln!("\n=== pip-poetry audit (python-poetry/poetry @ 1.8.4) ===");
     eprintln!(
-        "edge counts: mikebom={} trivy={} syft={}",
-        mikebom.len(),
+        "edge counts: waybill={} trivy={} syft={}",
+        waybill.len(),
         trivy.len(),
         syft.len()
     );

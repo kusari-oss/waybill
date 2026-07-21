@@ -526,7 +526,7 @@ License: Ignored
         assert_eq!(
             out[0]
                 .extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("main-module"),
             "milestone 068: pyproject-only emits a C40-tagged main-module"

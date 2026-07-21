@@ -53,11 +53,11 @@ fn scan(fixture: &Path, formats: &[&str], extra_args: &[&str]) -> Scan {
         let out = match *f {
             "cyclonedx-json" => {
                 want_cdx = true;
-                tmp.path().join("mikebom.cdx.json")
+                tmp.path().join("waybill.cdx.json")
             }
             "spdx-2.3-json" => {
                 want_spdx = true;
-                tmp.path().join("mikebom.spdx.json")
+                tmp.path().join("waybill.spdx.json")
             }
             other => panic!("unknown format requested: {other}"),
         };
@@ -67,7 +67,7 @@ fn scan(fixture: &Path, formats: &[&str], extra_args: &[&str]) -> Scan {
     for a in extra_args {
         cmd.arg(a);
     }
-    let out = cmd.output().expect("mikebom runs");
+    let out = cmd.output().expect("waybill runs");
     assert!(
         out.status.success(),
         "scan failed: stderr={}",
@@ -76,7 +76,7 @@ fn scan(fixture: &Path, formats: &[&str], extra_args: &[&str]) -> Scan {
     let cdx = if want_cdx {
         Some(
             serde_json::from_str(
-                &std::fs::read_to_string(tmp.path().join("mikebom.cdx.json"))
+                &std::fs::read_to_string(tmp.path().join("waybill.cdx.json"))
                     .expect("read cdx"),
             )
             .expect("parse cdx"),
@@ -87,7 +87,7 @@ fn scan(fixture: &Path, formats: &[&str], extra_args: &[&str]) -> Scan {
     let spdx = if want_spdx {
         Some(
             serde_json::from_str(
-                &std::fs::read_to_string(tmp.path().join("mikebom.spdx.json"))
+                &std::fs::read_to_string(tmp.path().join("waybill.spdx.json"))
                     .expect("read spdx"),
             )
             .expect("parse spdx"),

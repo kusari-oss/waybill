@@ -9,7 +9,7 @@
 //!   logged at `tracing::info!` and returns `None` — never fails the
 //!   scan.
 //! - `auto_detect_build_tier_identifiers(invocation_cwd)` for
-//!   build-tier `mikebom trace run` invocations (milestone 074).
+//!   build-tier `waybill trace run` invocations (milestone 074).
 //!   Reuses the shared 3-step git-remote fallback core via
 //!   `discover_repo_url`, then additionally captures
 //!   `git rev-parse HEAD` to emit a commit-anchored `git:` identifier.
@@ -226,7 +226,7 @@ fn build_repo_identifier_with_label(
                     reason = %err,
                     "auto-detected repo URL failed `repo:` validation; \
                      emitting as user-defined under \
-                     mikebom:identifiers"
+                     waybill:identifiers"
                 );
                 IdentifierKind::UserDefined
             }
@@ -241,7 +241,7 @@ fn build_repo_identifier_with_label(
     ))
 }
 
-/// Auto-detect build-tier identifiers from a `mikebom trace run`
+/// Auto-detect build-tier identifiers from a `waybill trace run`
 /// invocation cwd (milestone 074).
 ///
 /// Returns 0, 1, or 2 identifiers in deterministic order:
@@ -376,7 +376,7 @@ pub fn auto_detect_build_tier_identifiers(
                     reason = %err,
                     "auto-detected build-tier `git:` value failed validation; \
                      emitting as user-defined under \
-                     mikebom:identifiers"
+                     waybill:identifiers"
                 );
                 IdentifierKind::UserDefined
             }
@@ -546,7 +546,7 @@ pub fn image_reference_to_identifier(
                     reason = %err,
                     "auto-synthesized `image:` value failed validation; \
                      emitting as user-defined under \
-                     mikebom:identifiers"
+                     waybill:identifiers"
                 );
                 IdentifierKind::UserDefined
             }
@@ -637,7 +637,7 @@ pub fn subject_identifiers_from_attestation_subjects(
                         reason = %err,
                         "auto-detected `subject:` value failed validation; \
                          emitting as user-defined under \
-                         mikebom:identifiers"
+                         waybill:identifiers"
                     );
                     IdentifierKind::UserDefined
                 }
@@ -1046,7 +1046,7 @@ mod tests {
     }
 
     // Milestone 075's `sanitize_userinfo` and `redact_userinfo_for_log`
-    // unit tests were moved to `mikebom-cli/src/identifiers/sanitize.rs`
+    // unit tests were moved to `waybill-cli/src/identifiers/sanitize.rs`
     // by milestone 105 (research R4) when the helpers were promoted to
     // a public shared utility.
 

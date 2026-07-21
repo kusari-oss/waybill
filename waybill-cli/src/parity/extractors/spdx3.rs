@@ -118,14 +118,14 @@ pub(super) fn spdx3_distribution(doc: &Value) -> BTreeSet<String> {
 /// comparison with CDX succeeds directly.
 ///
 /// Scoped to binary-reader-emitted Packages only — detected via the
-/// `mikebom:binary-class` Annotation element pointing at the
+/// `waybill:binary-class` Annotation element pointing at the
 /// package's IRI. Mirrors the scoping in `cdx_binary_role`; see
 /// that function for rationale.
 pub(super) fn spdx3_binary_role(doc: &Value) -> BTreeSet<String> {
     let Some(graph) = doc.get("@graph").and_then(|v| v.as_array()) else {
         return BTreeSet::new();
     };
-    // Build the set of package IRIs that have a `mikebom:binary-class`
+    // Build the set of package IRIs that have a `waybill:binary-class`
     // Annotation pointing at them (`subject` field).
     let binary_reader_iris: std::collections::BTreeSet<&str> = graph
         .iter()
@@ -133,7 +133,7 @@ pub(super) fn spdx3_binary_role(doc: &Value) -> BTreeSet<String> {
         .filter(|el| {
             el.get("statement")
                 .and_then(|v| v.as_str())
-                .map(|s| s.contains("\"field\":\"mikebom:binary-class\""))
+                .map(|s| s.contains("\"field\":\"waybill:binary-class\""))
                 .unwrap_or(false)
         })
         .filter_map(|el| el.get("subject").and_then(|v| v.as_str()))
@@ -333,7 +333,7 @@ pub(super) fn spdx3_runtime_deps(doc: &Value) -> BTreeSet<String> {
 // those whose `scope` is dev/build/test. Mirrors B1 (which
 // excludes the same scopes) and matches SPDX 2.3's typed
 // DEV/BUILD/TEST_DEPENDENCY_OF representation. The previous
-// implementation read a deprecated `mikebom:dev-dependency`
+// implementation read a deprecated `waybill:dev-dependency`
 // annotation on the source Package; that annotation was removed
 // when 052/part-2 promoted the native scope encoding.
 pub(super) fn spdx3_dev_deps(doc: &Value) -> BTreeSet<String> {
@@ -428,98 +428,98 @@ pub(super) fn spdx3_root(doc: &Value) -> BTreeSet<String> {
 // Section C — annotation stubs (C1-C23 SPDX 3 side)
 // ============================================================
 
-spdx3_anno!(c1_spdx3, "mikebom:source-type", component);
-spdx3_anno!(c2_spdx3, "mikebom:source-connection-ids", component);
-spdx3_anno!(c3_spdx3, "mikebom:deps-dev-match", component);
-spdx3_anno!(c4_spdx3, "mikebom:evidence-kind", component);
-spdx3_anno!(c5_spdx3, "mikebom:sbom-tier", component);
-spdx3_anno!(c7_spdx3, "mikebom:co-owned-by", component);
-spdx3_anno!(c8_spdx3, "mikebom:shade-relocation", component);
-spdx3_anno!(c9_spdx3, "mikebom:npm-role", component);
-spdx3_anno!(c10_spdx3, "mikebom:binary-class", component);
-spdx3_anno!(c11_spdx3, "mikebom:binary-stripped", component);
-spdx3_anno!(c12_spdx3, "mikebom:linkage-kind", component);
-spdx3_anno!(c13_spdx3, "mikebom:buildinfo-status", component);
-spdx3_anno!(c14_spdx3, "mikebom:detected-go", component);
-spdx3_anno!(c15_spdx3, "mikebom:binary-packed", component);
-spdx3_anno!(c16_spdx3, "mikebom:confidence", component);
-spdx3_anno!(c17_spdx3, "mikebom:raw-version", component);
-spdx3_anno!(c18_spdx3, "mikebom:source-files", component);
-spdx3_anno!(c19_spdx3, "mikebom:cpe-candidates", component);
-spdx3_anno!(c20_spdx3, "mikebom:requirement-ranges", component);
-spdx3_anno!(c21_spdx3, "mikebom:generation-context", document);
-spdx3_anno!(c22_spdx3, "mikebom:os-release-missing-fields", document);
-spdx3_anno!(c23_spdx3, "mikebom:trace-integrity-ring-buffer-overflows", document);
+spdx3_anno!(c1_spdx3, "waybill:source-type", component);
+spdx3_anno!(c2_spdx3, "waybill:source-connection-ids", component);
+spdx3_anno!(c3_spdx3, "waybill:deps-dev-match", component);
+spdx3_anno!(c4_spdx3, "waybill:evidence-kind", component);
+spdx3_anno!(c5_spdx3, "waybill:sbom-tier", component);
+spdx3_anno!(c7_spdx3, "waybill:co-owned-by", component);
+spdx3_anno!(c8_spdx3, "waybill:shade-relocation", component);
+spdx3_anno!(c9_spdx3, "waybill:npm-role", component);
+spdx3_anno!(c10_spdx3, "waybill:binary-class", component);
+spdx3_anno!(c11_spdx3, "waybill:binary-stripped", component);
+spdx3_anno!(c12_spdx3, "waybill:linkage-kind", component);
+spdx3_anno!(c13_spdx3, "waybill:buildinfo-status", component);
+spdx3_anno!(c14_spdx3, "waybill:detected-go", component);
+spdx3_anno!(c15_spdx3, "waybill:binary-packed", component);
+spdx3_anno!(c16_spdx3, "waybill:confidence", component);
+spdx3_anno!(c17_spdx3, "waybill:raw-version", component);
+spdx3_anno!(c18_spdx3, "waybill:source-files", component);
+spdx3_anno!(c19_spdx3, "waybill:cpe-candidates", component);
+spdx3_anno!(c20_spdx3, "waybill:requirement-ranges", component);
+spdx3_anno!(c21_spdx3, "waybill:generation-context", document);
+spdx3_anno!(c22_spdx3, "waybill:os-release-missing-fields", document);
+spdx3_anno!(c23_spdx3, "waybill:trace-integrity-ring-buffer-overflows", document);
 
 // C24-C26 (milestone 023 — ELF identity, surfaced via the
 // extra_annotations bag in entry.rs::make_file_level_component).
-spdx3_anno!(c24_spdx3, "mikebom:elf-build-id", component);
-spdx3_anno!(c25_spdx3, "mikebom:elf-runpath", component);
-spdx3_anno!(c26_spdx3, "mikebom:elf-debuglink", component);
+spdx3_anno!(c24_spdx3, "waybill:elf-build-id", component);
+spdx3_anno!(c25_spdx3, "waybill:elf-runpath", component);
+spdx3_anno!(c26_spdx3, "waybill:elf-debuglink", component);
 
 // C27-C29 (milestone 025 — Go VCS metadata).
-spdx3_anno!(c27_spdx3, "mikebom:go-vcs-revision", component);
-spdx3_anno!(c28_spdx3, "mikebom:go-vcs-time", component);
-spdx3_anno!(c29_spdx3, "mikebom:go-vcs-modified", component);
+spdx3_anno!(c27_spdx3, "waybill:go-vcs-revision", component);
+spdx3_anno!(c28_spdx3, "waybill:go-vcs-time", component);
+spdx3_anno!(c29_spdx3, "waybill:go-vcs-modified", component);
 
 // C30-C32 (milestone 024 — Mach-O binary identity).
-spdx3_anno!(c30_spdx3, "mikebom:macho-uuid", component);
-spdx3_anno!(c31_spdx3, "mikebom:macho-rpath", component);
-spdx3_anno!(c32_spdx3, "mikebom:macho-min-os", component);
+spdx3_anno!(c30_spdx3, "waybill:macho-uuid", component);
+spdx3_anno!(c31_spdx3, "waybill:macho-rpath", component);
+spdx3_anno!(c32_spdx3, "waybill:macho-min-os", component);
 
 // C33-C35 (milestone 028 — PE binary identity).
-spdx3_anno!(c33_spdx3, "mikebom:pe-pdb-id", component);
-spdx3_anno!(c34_spdx3, "mikebom:pe-machine", component);
-spdx3_anno!(c35_spdx3, "mikebom:pe-subsystem", component);
+spdx3_anno!(c33_spdx3, "waybill:pe-pdb-id", component);
+spdx3_anno!(c34_spdx3, "waybill:pe-machine", component);
+spdx3_anno!(c35_spdx3, "waybill:pe-subsystem", component);
 
 // C36 (milestone 029 — cargo-auditable cross-link).
-spdx3_anno!(c36_spdx3, "mikebom:detected-cargo-auditable", component);
+spdx3_anno!(c36_spdx3, "waybill:detected-cargo-auditable", component);
 
 // C37-C39 (milestone 030 — Mach-O codesign metadata).
-spdx3_anno!(c37_spdx3, "mikebom:macho-codesign-identifier", component);
-spdx3_anno!(c38_spdx3, "mikebom:macho-codesign-flags",      component);
-spdx3_anno!(c39_spdx3, "mikebom:macho-codesign-team-id",    component);
+spdx3_anno!(c37_spdx3, "waybill:macho-codesign-identifier", component);
+spdx3_anno!(c38_spdx3, "waybill:macho-codesign-flags",      component);
+spdx3_anno!(c39_spdx3, "waybill:macho-codesign-team-id",    component);
 
 // C40 (milestone 048 — component-role classifier).
-spdx3_anno!(c40_spdx3, "mikebom:component-role",            component);
+spdx3_anno!(c40_spdx3, "waybill:component-role",            component);
 
 // C41 (milestone 050 — not-linked classifier).
-spdx3_anno!(c41_spdx3, "mikebom:not-linked",                component);
+spdx3_anno!(c41_spdx3, "waybill:not-linked",                component);
 
 // C44 removed in milestone 170 — see cdx.rs for context.
 
 // C45 — per-component orphan-reason (milestone 061).
-spdx3_anno!(c45_spdx3, "mikebom:orphan-reason",             component);
+spdx3_anno!(c45_spdx3, "waybill:orphan-reason",             component);
 
 // C46 — per-component cross-tier source-document binding (milestone 072
 // PR-A T008). Carrier shape per
 // `contracts/source-document-binding-annotation.md` C-3 SPDX 3.
-spdx3_anno!(c46_spdx3, "mikebom:source-document-binding",  component);
+spdx3_anno!(c46_spdx3, "waybill:source-document-binding",  component);
 
 // C48 — per-component go-resolver-step provenance (milestone 091).
-spdx3_anno!(c48_spdx3, "mikebom:resolver-step",            component);
+spdx3_anno!(c48_spdx3, "waybill:resolver-step",            component);
 
 // C49-C52 — milestone-098 build-tier provenance signals
 // (compiler/linker stamps). Emitted as `Annotation` elements with
-// `statement = "mikebom:<key>=<value>"` per SPDX 3 conventions.
-spdx3_anno!(c49_spdx3, "mikebom:elf-compiler-stamps",      component);
-spdx3_anno!(c50_spdx3, "mikebom:macho-build-version",      component);
-spdx3_anno!(c51_spdx3, "mikebom:macho-build-tools",        component);
-spdx3_anno!(c52_spdx3, "mikebom:pe-linker-version",        component);
+// `statement = "waybill:<key>=<value>"` per SPDX 3 conventions.
+spdx3_anno!(c49_spdx3, "waybill:elf-compiler-stamps",      component);
+spdx3_anno!(c50_spdx3, "waybill:macho-build-version",      component);
+spdx3_anno!(c51_spdx3, "waybill:macho-build-tools",        component);
+spdx3_anno!(c52_spdx3, "waybill:pe-linker-version",        component);
 
 // Milestone 103 — Bazel WORKSPACE / CMake source-tree readers.
 // Both emit as `Annotation` elements with the
-// `mikebom:<key>=<value>` statement prefix.
-spdx3_anno!(c53_spdx3, "mikebom:download-url",             component);
-spdx3_anno!(c54_spdx3, "mikebom:bazel-archive-name",       component);
+// `waybill:<key>=<value>` statement prefix.
+spdx3_anno!(c53_spdx3, "waybill:download-url",             component);
+spdx3_anno!(c54_spdx3, "waybill:bazel-archive-name",       component);
 // C55 — closed-enum source-mechanism. See cdx.rs for the docs.
-spdx3_anno!(c55_spdx3, "mikebom:source-mechanism",         component);
-// C56 — `mikebom:also-detected-via` (FR-015). Same shape as
+spdx3_anno!(c55_spdx3, "waybill:source-mechanism",         component);
+// C56 — `waybill:also-detected-via` (FR-015). Same shape as
 // C56's SPDX 2.3 form: the annotation value is a JSON-array of
 // source-mechanism strings; the extractor parses + flattens.
 // SymmetricEqual against the CDX-native evidence.identity path.
 pub(super) fn c56_spdx3(doc: &Value) -> BTreeSet<String> {
-    extract_mikebom_annotation_values(doc, "mikebom:also-detected-via", false)
+    extract_mikebom_annotation_values(doc, "waybill:also-detected-via", false)
         .into_iter()
         .filter_map(|json_array_str| {
             serde_json::from_str::<Vec<String>>(&json_array_str).ok()
@@ -527,182 +527,182 @@ pub(super) fn c56_spdx3(doc: &Value) -> BTreeSet<String> {
         .flatten()
         .collect()
 }
-// C57 — `mikebom:build-reference` (FR-008a). Closed enum.
-spdx3_anno!(c57_spdx3, "mikebom:build-reference",          component);
+// C57 — `waybill:build-reference` (FR-008a). Closed enum.
+spdx3_anno!(c57_spdx3, "waybill:build-reference",          component);
 
-// C58 — `mikebom:fingerprint-corpus-sha` (milestone 108 FR-005).
+// C58 — `waybill:fingerprint-corpus-sha` (milestone 108 FR-005).
 // 12-hex SHA prefix OR literal `bundled` sentinel.
-spdx3_anno!(c58_spdx3, "mikebom:fingerprint-corpus-sha",   component);
+spdx3_anno!(c58_spdx3, "waybill:fingerprint-corpus-sha",   component);
 
-// C59 — `mikebom:fingerprint-confidence` (milestone 110 FR-017).
+// C59 — `waybill:fingerprint-confidence` (milestone 110 FR-017).
 // Numeric "X.XX" fused-confidence string.
-spdx3_anno!(c59_spdx3, "mikebom:fingerprint-confidence",   component);
+spdx3_anno!(c59_spdx3, "waybill:fingerprint-confidence",   component);
 
-// C60 — `mikebom:build-inclusion` (milestone 112). Open-enum
+// C60 — `waybill:build-inclusion` (milestone 112). Open-enum
 // `unknown` / `not-needed` — parity bridge (`LifecycleScopeType`
 // has no excluded/unknown value).
-spdx3_anno!(c60_spdx3, "mikebom:build-inclusion",          component);
+spdx3_anno!(c60_spdx3, "waybill:build-inclusion",          component);
 
-// C61 — `mikebom:build-inclusion-derivation` (milestone 112).
+// C61 — `waybill:build-inclusion-derivation` (milestone 112).
 // Provenance discriminator for C60 `not-needed`.
-spdx3_anno!(c61_spdx3, "mikebom:build-inclusion-derivation", component);
+spdx3_anno!(c61_spdx3, "waybill:build-inclusion-derivation", component);
 
-// C62 — `mikebom:lifecycle-scope-derivation` (test-closure fix +
+// C62 — `waybill:lifecycle-scope-derivation` (test-closure fix +
 // milestone 112). Unlike C42 (scope itself rides the native
 // `LifecycleScopeType`), the derivation has no native carrier, so
 // the annotation IS emitted on SPDX 3.
-spdx3_anno!(c62_spdx3, "mikebom:lifecycle-scope-derivation", component);
+spdx3_anno!(c62_spdx3, "waybill:lifecycle-scope-derivation", component);
 
-// C63 — `mikebom:exclude-path` (milestone 113 FR-014 / SC-007).
+// C63 — `waybill:exclude-path` (milestone 113 FR-014 / SC-007).
 // Envelope-level transparency annotation. Document-scope, mirrors
-// CDX `metadata.properties[].mikebom:exclude-path`.
-spdx3_anno!(c63_spdx3, "mikebom:exclude-path",             document);
+// CDX `metadata.properties[].waybill:exclude-path`.
+spdx3_anno!(c63_spdx3, "waybill:exclude-path",             document);
 
-// C64 — `mikebom:produces-binaries` (milestone 116). Per-Package
+// C64 — `waybill:produces-binaries` (milestone 116). Per-Package
 // graph-element annotation listing produced binary names.
-spdx3_anno!(c64_spdx3, "mikebom:produces-binaries",        component);
+spdx3_anno!(c64_spdx3, "waybill:produces-binaries",        component);
 
-// C65 — `mikebom:source-tier = "declared"` (milestone 119).
+// C65 — `waybill:source-tier = "declared"` (milestone 119).
 // Per-component graph-element annotation; value-set extension on
 // the existing source-tier key.
-spdx3_anno!(c65_spdx3, "mikebom:source-tier",              component);
+spdx3_anno!(c65_spdx3, "waybill:source-tier",              component);
 
-// C66 — `mikebom:supplement-cdx` (milestone 119). Document-scope
+// C66 — `waybill:supplement-cdx` (milestone 119). Document-scope
 // provenance for `--supplement-cdx`; envelope shape mirrors C63.
-spdx3_anno!(c66_spdx3, "mikebom:supplement-cdx",           document);
+spdx3_anno!(c66_spdx3, "waybill:supplement-cdx",           document);
 
 // Milestone 127: C69 — envelope-level mirror of CDX C69. Same emission
 // gating as the CDX side.
-spdx3_anno!(c69_spdx3, "mikebom:root-selection-heuristic", document);
+spdx3_anno!(c69_spdx3, "waybill:root-selection-heuristic", document);
 
 // Milestone 128: C70..C86 — Yocto annotation family.
-spdx3_anno!(c70_spdx3, "mikebom:srcrev",                    component);
-spdx3_anno!(c71_spdx3, "mikebom:src-uri",                   component);
-spdx3_anno!(c72_spdx3, "mikebom:srcrev-by-machine",         component);
-spdx3_anno!(c73_spdx3, "mikebom:yocto-layer",               component);
-spdx3_anno!(c74_spdx3, "mikebom:yocto-layer-version",       component);
-spdx3_anno!(c75_spdx3, "mikebom:yocto-layer-series",        component);
-spdx3_anno!(c76_spdx3, "mikebom:bbappend-applied",          component);
-spdx3_anno!(c77_spdx3, "mikebom:depends-unresolved",        component);
-spdx3_anno!(c78_spdx3, "mikebom:rdepends-unresolved",       component);
-spdx3_anno!(c79_spdx3, "mikebom:yocto-unexpanded-vars",     component);
-spdx3_anno!(c80_spdx3, "mikebom:yocto-license-closed",      component);
-spdx3_anno!(c81_spdx3, "mikebom:yocto-description",         component);
-spdx3_anno!(c82_spdx3, "mikebom:src-uri-local-only",        component);
-spdx3_anno!(c83_spdx3, "mikebom:yocto-class-extend",        component);
-spdx3_anno!(c84_spdx3, "mikebom:yocto-overrides-merged",    component);
-spdx3_anno!(c85_spdx3, "mikebom:yocto-recipe-name",         component);
-spdx3_anno!(c86_spdx3, "mikebom:yocto-recipe-version",      component);
-spdx3_anno!(c87_spdx3, "mikebom:assembly-version-informational-stripped", component);
-spdx3_anno!(c88_spdx3, "mikebom:layer-digest", component);
-spdx3_anno!(c91_spdx3, "mikebom:component-tier", component);
-spdx3_anno!(c92_spdx3, "mikebom:file-paths", component);
-spdx3_anno!(c93_spdx3, "mikebom:file-inventory-skipped-oversize", document);
-spdx3_anno!(c94_spdx3, "mikebom:file-inventory-skipped-special-files", document);
-spdx3_anno!(c95_spdx3, "mikebom:file-inventory-unreadable", document);
-spdx3_anno!(c96_spdx3, "mikebom:file-paths-truncated", component);
-spdx3_anno!(c97_spdx3, "mikebom:file-inventory-mode", document);
-spdx3_anno!(c98_spdx3, "mikebom:license-concluded-source", component);
+spdx3_anno!(c70_spdx3, "waybill:srcrev",                    component);
+spdx3_anno!(c71_spdx3, "waybill:src-uri",                   component);
+spdx3_anno!(c72_spdx3, "waybill:srcrev-by-machine",         component);
+spdx3_anno!(c73_spdx3, "waybill:yocto-layer",               component);
+spdx3_anno!(c74_spdx3, "waybill:yocto-layer-version",       component);
+spdx3_anno!(c75_spdx3, "waybill:yocto-layer-series",        component);
+spdx3_anno!(c76_spdx3, "waybill:bbappend-applied",          component);
+spdx3_anno!(c77_spdx3, "waybill:depends-unresolved",        component);
+spdx3_anno!(c78_spdx3, "waybill:rdepends-unresolved",       component);
+spdx3_anno!(c79_spdx3, "waybill:yocto-unexpanded-vars",     component);
+spdx3_anno!(c80_spdx3, "waybill:yocto-license-closed",      component);
+spdx3_anno!(c81_spdx3, "waybill:yocto-description",         component);
+spdx3_anno!(c82_spdx3, "waybill:src-uri-local-only",        component);
+spdx3_anno!(c83_spdx3, "waybill:yocto-class-extend",        component);
+spdx3_anno!(c84_spdx3, "waybill:yocto-overrides-merged",    component);
+spdx3_anno!(c85_spdx3, "waybill:yocto-recipe-name",         component);
+spdx3_anno!(c86_spdx3, "waybill:yocto-recipe-version",      component);
+spdx3_anno!(c87_spdx3, "waybill:assembly-version-informational-stripped", component);
+spdx3_anno!(c88_spdx3, "waybill:layer-digest", component);
+spdx3_anno!(c91_spdx3, "waybill:component-tier", component);
+spdx3_anno!(c92_spdx3, "waybill:file-paths", component);
+spdx3_anno!(c93_spdx3, "waybill:file-inventory-skipped-oversize", document);
+spdx3_anno!(c94_spdx3, "waybill:file-inventory-skipped-special-files", document);
+spdx3_anno!(c95_spdx3, "waybill:file-inventory-unreadable", document);
+spdx3_anno!(c96_spdx3, "waybill:file-paths-truncated", component);
+spdx3_anno!(c97_spdx3, "waybill:file-inventory-mode", document);
+spdx3_anno!(c98_spdx3, "waybill:license-concluded-source", component);
 // Milestone 134 (closes #125): divergent-PURL detection — see cdx.rs
 // for the C99/C100 design notes.
-spdx3_anno!(c99_spdx3, "mikebom:duplicate-purl-divergent", component);
-spdx3_anno!(c100_spdx3, "mikebom:purl-collisions-detected", document);
+spdx3_anno!(c99_spdx3, "waybill:duplicate-purl-divergent", component);
+spdx3_anno!(c100_spdx3, "waybill:purl-collisions-detected", document);
 // Milestone 147: npm peerDependencies emit DEPENDS_ON edges; the
 // peer-edge-targets annotation lists their PURLs so consumers can
 // filter install-vs-functional. Per-component graph-element annotation.
-spdx3_anno!(c101_spdx3, "mikebom:peer-edge-targets", component);
+spdx3_anno!(c101_spdx3, "waybill:peer-edge-targets", component);
 // Milestone 149 (closes #151): preserves manifest-derived main-module
 // as a library entry when --root-name override fires + the new
 // --preserve-manifest-main-module flag is set. Per-component
 // graph-element annotation.
-spdx3_anno!(c102_spdx3, "mikebom:demoted-from-main-module", component);
+spdx3_anno!(c102_spdx3, "waybill:demoted-from-main-module", component);
 
-// C103 — `mikebom:cmake-find-package-name` (milestone 155). Per-component
+// C103 — `waybill:cmake-find-package-name` (milestone 155). Per-component
 // graph-element annotation.
-spdx3_anno!(c103_spdx3, "mikebom:cmake-find-package-name", component);
+spdx3_anno!(c103_spdx3, "waybill:cmake-find-package-name", component);
 
 // Milestone 158 (closes #492): C104/C105 — document-scope graph-
 // completeness signal + reason. See contracts/annotation-schema.md.
-spdx3_anno!(c104_spdx3, "mikebom:graph-completeness",        document);
-spdx3_anno!(c105_spdx3, "mikebom:graph-completeness-reason", document);
+spdx3_anno!(c104_spdx3, "waybill:graph-completeness",        document);
+spdx3_anno!(c105_spdx3, "waybill:graph-completeness-reason", document);
 
 // Milestone 159 (closes #493): C106/C107 — per-component alias-provenance
 // annotations.
-spdx3_anno!(c106_spdx3, "mikebom:pnpm-alias",                component);
-spdx3_anno!(c107_spdx3, "mikebom:yarn-alias",                component);
+spdx3_anno!(c106_spdx3, "waybill:pnpm-alias",                component);
+spdx3_anno!(c107_spdx3, "waybill:yarn-alias",                component);
 
 // Milestone 160 (closes #494): C108/C109 per-component + C110/C111
 // document-scope Go-transitive coverage annotations.
-spdx3_anno!(c108_spdx3, "mikebom:go-transitive-source",             component);
-spdx3_anno!(c109_spdx3, "mikebom:go-transitive-unresolved-reason",  component);
-spdx3_anno!(c110_spdx3, "mikebom:go-transitive-coverage",           document);
-spdx3_anno!(c111_spdx3, "mikebom:go-transitive-coverage-reason",    document);
+spdx3_anno!(c108_spdx3, "waybill:go-transitive-source",             component);
+spdx3_anno!(c109_spdx3, "waybill:go-transitive-unresolved-reason",  component);
+spdx3_anno!(c110_spdx3, "waybill:go-transitive-coverage",           document);
+spdx3_anno!(c111_spdx3, "waybill:go-transitive-coverage-reason",    document);
 
 // Milestone 161 (closes #495): C112 document-scope Go-workspace-mode
 // detection annotation.
-spdx3_anno!(c112_spdx3, "mikebom:go-workspace-mode",                document);
+spdx3_anno!(c112_spdx3, "waybill:go-workspace-mode",                document);
 
 // Milestone 204 (closes #554): C123 document-scope helm image-
 // extraction-completeness annotation.
-spdx3_anno!(c123_spdx3, "mikebom:image-extraction-completeness",    document);
+spdx3_anno!(c123_spdx3, "waybill:image-extraction-completeness",    document);
 
 // Milestone 206 (closes #440): C124 doc-scope image-source annotation.
-spdx3_anno!(c124_spdx3, "mikebom:image-source",                     document);
+spdx3_anno!(c124_spdx3, "waybill:image-source",                     document);
 
 // Milestone 210: per-component compiler-pipeline attribution — C130
 // carries the merged `read_set` payload for traced components;
 // C131 carries the closed-enum source label (`traced` | `unknown`).
 // See contracts/annotations.md A-1 / A-2.
-spdx3_anno!(c130_spdx3, "mikebom:source-read-set",                  component);
-spdx3_anno!(c131_spdx3, "mikebom:read-set-source",                  component);
+spdx3_anno!(c130_spdx3, "waybill:source-read-set",                  component);
+spdx3_anno!(c131_spdx3, "waybill:read-set-source",                  component);
 
 // Milestone 210: document-scope compiler-pipeline transparency
 // (C132 completeness + C133 secrets-filtered count) + per-component
 // C134 attach-late marker. See contracts/annotations.md A-3 / A-4 / A-5.
-spdx3_anno!(c132_spdx3, "mikebom:compiler-pipeline-completeness",   document);
-spdx3_anno!(c133_spdx3, "mikebom:secrets-read-filtered",            document);
-spdx3_anno!(c134_spdx3, "mikebom:trace-attach-late",                component);
+spdx3_anno!(c132_spdx3, "waybill:compiler-pipeline-completeness",   document);
+spdx3_anno!(c133_spdx3, "waybill:secrets-read-filtered",            document);
+spdx3_anno!(c134_spdx3, "waybill:trace-attach-late",                component);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
-spdx3_anno!(c113_spdx3, "mikebom:synthetic-built-in",               component);
-spdx3_anno!(c114_spdx3, "mikebom:built-in-requirement",             component);
+spdx3_anno!(c113_spdx3, "waybill:synthetic-built-in",               component);
+spdx3_anno!(c114_spdx3, "waybill:built-in-requirement",             component);
 
 // Milestone 163 (closes #498): C115 per-component npm workspace-peer
 // unresolved-declared-dep annotation.
-spdx3_anno!(c115_spdx3, "mikebom:unresolved-declared-dep",          component);
+spdx3_anno!(c115_spdx3, "waybill:unresolved-declared-dep",          component);
 // Milestone 169 (closes #500 Q2): C116 per-source-component
-// `mikebom:dep-alternative-alternates` annotation for Debian/opkg alt-lists.
-spdx3_anno!(c116_spdx3, "mikebom:dep-alternative-alternates",       component);
+// `waybill:dep-alternative-alternates` annotation for Debian/opkg alt-lists.
+spdx3_anno!(c116_spdx3, "waybill:dep-alternative-alternates",       component);
 // Milestone 172: C117 document-scope
-// `mikebom:go-transitive-fallback-count` annotation. Companion to C110.
-spdx3_anno!(c117_spdx3, "mikebom:go-transitive-fallback-count",     document);
+// `waybill:go-transitive-fallback-count` annotation. Companion to C110.
+spdx3_anno!(c117_spdx3, "waybill:go-transitive-fallback-count",     document);
 // Milestone 173: C118 + C119 document-scope Go cache-warming
 // annotations.
-spdx3_anno!(c118_spdx3, "mikebom:go-cache-warming-mode",            document);
-spdx3_anno!(c119_spdx3, "mikebom:go-cache-warming-failed",          document);
+spdx3_anno!(c118_spdx3, "waybill:go-cache-warming-mode",            document);
+spdx3_anno!(c119_spdx3, "waybill:go-cache-warming-failed",          document);
 // Milestone 176: C120 per-component workspace-member annotation.
-spdx3_anno!(c120_spdx3, "mikebom:workspace-member",                 component);
+spdx3_anno!(c120_spdx3, "waybill:workspace-member",                 component);
 // Milestone 176: C121 document-scope workspaces-detected aggregate.
-spdx3_anno!(c121_spdx3, "mikebom:workspaces-detected",              document);
+spdx3_anno!(c121_spdx3, "waybill:workspaces-detected",              document);
 // Milestone 179: C122 per-component optional-dep derivation source.
-spdx3_anno!(c122_spdx3, "mikebom:optional-derivation",              component);
+spdx3_anno!(c122_spdx3, "waybill:optional-derivation",              component);
 
-// C67 — `mikebom:assertion-conflict` (milestone 119). Per-component
+// C67 — `waybill:assertion-conflict` (milestone 119). Per-component
 // graph-element annotation carrying the JSON-encoded array of
 // conflict records.
-spdx3_anno!(c67_spdx3, "mikebom:assertion-conflict",       component);
+spdx3_anno!(c67_spdx3, "waybill:assertion-conflict",       component);
 
-// C68 — `mikebom:kmp-source-set` (milestone 122). Per-component
+// C68 — `waybill:kmp-source-set` (milestone 122). Per-component
 // graph-element annotation carrying the JSON-encoded array of Kotlin
 // Multiplatform source-set names that declared the dep.
-spdx3_anno!(c68_spdx3, "mikebom:kmp-source-set",           component);
+spdx3_anno!(c68_spdx3, "waybill:kmp-source-set",           component);
 
 // C47 — document-level user-defined identifiers (milestone 073).
 // Per `contracts/identifiers-annotation.md` C-1 SPDX 3 and C-2
 // SPDX 3: user-defined identifiers ride `Element.externalIdentifier[]`
 // natively on the SpdxDocument element rather than a separate
-// `mikebom:identifiers` annotation. The C47 row must therefore
+// `waybill:identifiers` annotation. The C47 row must therefore
 // reach into the native carrier and emit the same canonical
 // `{scheme, value}` payload that the CDX/SPDX 2.3 sides produce from
 // their respective annotation envelopes — filtering OUT the built-in
@@ -710,13 +710,13 @@ spdx3_anno!(c68_spdx3, "mikebom:kmp-source-set",           component);
 // entirely; built-ins ride standards-native carriers per C46-style
 // pattern).
 //
-// Milestone 079 — mikebom's internal scheme names (`image`, `repo`,
+// Milestone 079 — waybill's internal scheme names (`image`, `repo`,
 // `git`, `subject`, `attestation`) no longer appear in the
 // `externalIdentifierType` field; that field now carries the SPDX 3
 // controlled-vocab value (`other` for non-vocab built-ins) with the
 // original scheme preserved on the `comment` field as
 // `original-scheme: <name>`. The C47 extractor reconstructs the
-// original mikebom scheme via the comment-prefix recovery and
+// original waybill scheme via the comment-prefix recovery and
 // continues to filter out built-ins so the cross-format C47 set
 // matches CDX / SPDX 2.3.
 pub(super) fn c47_spdx3(doc: &Value) -> BTreeSet<String> {
@@ -732,7 +732,7 @@ pub(super) fn c47_spdx3(doc: &Value) -> BTreeSet<String> {
             continue;
         };
         for ident in idents {
-            // Per milestone 079: recover the original mikebom scheme
+            // Per milestone 079: recover the original waybill scheme
             // from the `comment` field's `original-scheme: ` prefix
             // when present, else fall through to the vocab value
             // (operator-named-vocab case, e.g., `cve` passthrough).

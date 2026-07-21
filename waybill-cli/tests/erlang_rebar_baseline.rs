@@ -47,7 +47,7 @@ fn erlang_components(doc: &Value) -> Vec<&Value> {
             .and_then(|v| v.as_array())
             .map(|arr| {
                 arr.iter().any(|p| {
-                    p.get("name").and_then(|v| v.as_str()) == Some("mikebom:source-type")
+                    p.get("name").and_then(|v| v.as_str()) == Some("waybill:source-type")
                         && p.get("value")
                             .and_then(|v| v.as_str())
                             .map(|s| s.starts_with("erlang-"))
@@ -181,8 +181,8 @@ fn sc001_source_type_annotation() {
         .expect("properties array");
     let st = props
         .iter()
-        .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("mikebom:source-type"))
+        .find(|p| p.get("name").and_then(|v| v.as_str()) == Some("waybill:source-type"))
         .and_then(|p| p.get("value").and_then(|v| v.as_str()))
-        .expect("mikebom:source-type property");
+        .expect("waybill:source-type property");
     assert_eq!(st, "erlang-hex");
 }

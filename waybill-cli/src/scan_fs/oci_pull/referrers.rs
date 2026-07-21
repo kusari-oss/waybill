@@ -1,7 +1,7 @@
 //! OCI Distribution Spec v1.1 Referrers API — SBOM discovery + descriptor
 //! filter (milestone 186, #442).
 //!
-//! When the operator passes `--sbom-source referrer|either`, mikebom queries
+//! When the operator passes `--sbom-source referrer|either`, waybill queries
 //! `/v2/<repo>/referrers/<manifest-digest>` for descriptors advertising
 //! attached artifacts (SBOMs, attestations, signatures). This module carries
 //! the SBOM media-type filter + priority-ordering picker used by
@@ -28,7 +28,7 @@ pub(super) const SBOM_MEDIA_TYPES: &[&str] = &[
     "application/vnd.cyclonedx+xml",
 ];
 
-/// Map mikebom's `--format` value to the referrer descriptor media type it
+/// Map waybill's `--format` value to the referrer descriptor media type it
 /// corresponds to.
 ///
 /// Used by [`pick_sbom_descriptor`] for the format-match preference (Tier 1
@@ -71,7 +71,7 @@ pub(super) fn pick_sbom_descriptor<'a>(
                     digest = %d.digest(),
                     declared_size = d.size(),
                     cap = max_bytes,
-                    "skipping oversize referrer descriptor — override via MIKEBOM_REFERRER_MAX_BYTES env var if trusted"
+                    "skipping oversize referrer descriptor — override via WAYBILL_REFERRER_MAX_BYTES env var if trusted"
                 );
                 false
             } else {

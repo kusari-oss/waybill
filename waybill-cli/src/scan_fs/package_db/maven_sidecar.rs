@@ -2,7 +2,7 @@
 //!
 //! When a JAR's in-archive `META-INF/maven/` metadata is absent
 //! (a common build-pipeline outcome on distros that strip it during
-//! packaging), mikebom recovers the Maven coordinates from the
+//! packaging), waybill recovers the Maven coordinates from the
 //! distro's external sidecar POM layout:
 //!
 //! - **Fedora/RHEL**: `/usr/share/maven-poms/<basename>.pom` — flat

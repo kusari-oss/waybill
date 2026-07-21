@@ -111,11 +111,11 @@ library
     for name in &["base", "text"] {
         let c = component_with_name(&doc, name).unwrap_or_else(|| panic!("expected {name} component"));
         assert_eq!(
-            property_value(c, "mikebom:sbom-tier"),
+            property_value(c, "waybill:sbom-tier"),
             Some("design"),
         );
         assert_eq!(
-            property_value(c, "mikebom:source-type"),
+            property_value(c, "waybill:source-type"),
             Some("hackage-cabal-design"),
         );
     }
@@ -169,7 +169,7 @@ fn sc009_multi_package_three_subpackages() {
     // Per FR-011 + SC-009: 3 main-modules emit (one per sub-package).
     let main_modules: Vec<&Value> = all_components(&doc)
         .into_iter()
-        .filter(|c| property_value(c, "mikebom:component-role") == Some("main-module"))
+        .filter(|c| property_value(c, "waybill:component-role") == Some("main-module"))
         .collect();
     assert_eq!(main_modules.len(), 3, "expected 3 main-modules");
     for sub in &["pkg-a", "pkg-b", "pkg-c"] {
@@ -209,10 +209,10 @@ benchmark perf
     let haskell_comps: Vec<&Value> = all_components(&doc)
         .into_iter()
         .filter(|c| {
-            property_value(c, "mikebom:source-type")
+            property_value(c, "waybill:source-type")
                 .map(|s| s.starts_with("hackage-"))
                 .unwrap_or(false)
-                || property_value(c, "mikebom:component-role") == Some("main-module")
+                || property_value(c, "waybill:component-role") == Some("main-module")
         })
         .collect();
     let names: Vec<&str> = haskell_comps

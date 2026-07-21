@@ -3,7 +3,7 @@
 //!
 //! Reproduces the Kusari pico scenario: scanning a Go source repo
 //! with `--root-name X --root-version Y` was reporting
-//! `mikebom:graph-completeness: partial` with reason
+//! `waybill:graph-completeness: partial` with reason
 //! `multi-ecosystem-partial-root: golang`. Post-m192 it reports
 //! `complete` — the operator's synthetic root now covers the
 //! per-ecosystem-root slot so the classifier no longer over-fires.
@@ -44,7 +44,7 @@ fn scan_with_args(dir: &Path, format: &str, extra_args: &[&str]) -> Value {
     for a in extra_args {
         cmd.arg(*a);
     }
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "scan failed: format={format} args={extra_args:?} stderr={}",
@@ -70,7 +70,7 @@ fn build_go_source_project(dir: &Path) -> PathBuf {
     std::fs::write(
         project.join("main.go"),
         "package main\n\nimport \"github.com/spf13/cobra\"\n\n\
-         fn main() {}\n", // deliberately not compiled — mikebom doesn't build the code
+         fn main() {}\n", // deliberately not compiled — waybill doesn't build the code
     )
     .expect("write main.go");
     project
@@ -80,7 +80,7 @@ fn cdx_graph_completeness_value(doc: &Value) -> Option<String> {
     doc["metadata"]["properties"]
         .as_array()?
         .iter()
-        .find(|p| p["name"].as_str() == Some("mikebom:graph-completeness"))
+        .find(|p| p["name"].as_str() == Some("waybill:graph-completeness"))
         .and_then(|p| p["value"].as_str().map(str::to_string))
 }
 
@@ -88,7 +88,7 @@ fn cdx_graph_completeness_reason(doc: &Value) -> Option<String> {
     doc["metadata"]["properties"]
         .as_array()?
         .iter()
-        .find(|p| p["name"].as_str() == Some("mikebom:graph-completeness-reason"))
+        .find(|p| p["name"].as_str() == Some("waybill:graph-completeness-reason"))
         .and_then(|p| p["value"].as_str().map(str::to_string))
 }
 
@@ -107,7 +107,7 @@ fn us1_go_source_with_root_name_reports_complete() {
     );
 
     let value = cdx_graph_completeness_value(&doc)
-        .expect("mikebom:graph-completeness annotation present");
+        .expect("waybill:graph-completeness annotation present");
     assert_eq!(
         value, "complete",
         "operator-override Go source scan MUST report `complete` post-m192 (pre-m192 was `partial: multi-ecosystem-partial-root: golang`)"
@@ -142,19 +142,19 @@ fn us1_cross_format_all_three_report_complete() {
     );
 
     // SPDX 2.3: annotation is inside an Annotation.comment JSON envelope
-    // per mikebom's m111 pkg-alias-binding schema (`"field":"mikebom:...",
+    // per waybill's m111 pkg-alias-binding schema (`"field":"waybill:...",
     // "value":"..."`).
     let spdx23_ann = spdx23["annotations"]
         .as_array()
         .expect("SPDX 2.3 annotations array");
     let has_complete = spdx23_ann.iter().any(|a| {
         let c = a["comment"].as_str().unwrap_or("");
-        c.contains("\"field\":\"mikebom:graph-completeness\"")
+        c.contains("\"field\":\"waybill:graph-completeness\"")
             && c.contains("\"value\":\"complete\"")
     });
     assert!(
         has_complete,
-        "SPDX 2.3 must carry mikebom:graph-completeness=complete in a document Annotation"
+        "SPDX 2.3 must carry waybill:graph-completeness=complete in a document Annotation"
     );
 
     // SPDX 3: annotation is a graph element with type=Annotation +
@@ -165,12 +165,12 @@ fn us1_cross_format_all_three_report_complete() {
             return false;
         }
         let s = e["statement"].as_str().unwrap_or("");
-        s.contains("\"field\":\"mikebom:graph-completeness\"")
+        s.contains("\"field\":\"waybill:graph-completeness\"")
             && s.contains("\"value\":\"complete\"")
     });
     assert!(
         has_complete_v3,
-        "SPDX 3 must carry mikebom:graph-completeness=complete in an Annotation graph element"
+        "SPDX 3 must carry waybill:graph-completeness=complete in an Annotation graph element"
     );
 }
 
@@ -212,7 +212,7 @@ fn us1_root_purl_type_golang_reports_complete_no_duplicate_root() {
 
 #[test]
 fn us1_native_root_scan_is_byte_identical() {
-    // Without --root-name, mikebom's Go reader detects the module
+    // Without --root-name, waybill's Go reader detects the module
     // name from go.mod and emits it as the main-module root. That
     // path goes through ResolvedRootSubject::MainModule → the m192
     // synthesis block is SKIPPED. Output must be byte-identical to

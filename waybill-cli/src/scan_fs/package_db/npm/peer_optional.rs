@@ -8,7 +8,7 @@
 //! classification. This means:
 //!
 //! - `LifecycleScope::Optional` MUST NOT be set on the target.
-//! - `mikebom:optional-derivation` annotation MUST NOT be emitted on the
+//! - `waybill:optional-derivation` annotation MUST NOT be emitted on the
 //!   target.
 //! - m178's `PROVIDED_DEPENDENCY_OF` emission (via the m147 peer-edge-
 //!   targets state on the SOURCE component) continues to fire.

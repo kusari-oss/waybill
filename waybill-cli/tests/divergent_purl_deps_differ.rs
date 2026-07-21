@@ -1,6 +1,6 @@
 //! Milestone 134 US1 (SC-001 + SC-002) — end-to-end test that two
 //! `Cargo.toml` files claiming the same PURL with divergent
-//! `[dependencies]` blocks produce a `mikebom:duplicate-purl-divergent`
+//! `[dependencies]` blocks produce a `waybill:duplicate-purl-divergent`
 //! property on the deduped root component.
 //!
 //! Negative case (SC-002): two `Cargo.toml` files with the SAME PURL
@@ -67,7 +67,7 @@ fn divergence_property_for_purl(doc: &Value, purl: &str) -> Option<Value> {
         let properties = c.get("properties")?.as_array()?;
         for p in properties {
             if p.get("name").and_then(|v| v.as_str())
-                == Some("mikebom:duplicate-purl-divergent")
+                == Some("waybill:duplicate-purl-divergent")
             {
                 let raw = p.get("value")?.as_str()?;
                 return serde_json::from_str(raw).ok();

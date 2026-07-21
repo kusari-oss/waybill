@@ -3,8 +3,8 @@
 //! Covers SC-003 + US3 acceptance scenarios 1/2/3: a Dart library
 //! project with `pubspec.yaml` only (no `pubspec.lock`) emits
 //! components for declared `dependencies:` + `dev_dependencies:` with
-//! `mikebom:sbom-tier = "design"` annotation + constraint preserved
-//! as `mikebom:requirement-range` evidence.
+//! `waybill:sbom-tier = "design"` annotation + constraint preserved
+//! as `waybill:requirement-range` evidence.
 
 #![cfg(test)]
 #![allow(clippy::unwrap_used)]
@@ -76,7 +76,7 @@ fn dart_components(doc: &Value) -> Vec<&Value> {
                 .filter(|c| {
                     let purl = c.get("purl").and_then(|v| v.as_str()).unwrap_or("");
                     (purl.starts_with("pkg:pub/") || purl.starts_with("pkg:generic/"))
-                        && property_value(c, "mikebom:component-role") != Some("main-module")
+                        && property_value(c, "waybill:component-role") != Some("main-module")
                 })
                 .collect()
         })
@@ -121,7 +121,7 @@ fn design_tier_no_lockfile_emits_constraints() {
     );
     for &c in &dart {
         assert_eq!(
-            property_value(c, "mikebom:sbom-tier"),
+            property_value(c, "waybill:sbom-tier"),
             Some("design"),
             "design-tier component {} missing sbom-tier=design",
             c.get("name").and_then(|v| v.as_str()).unwrap_or("?"),
@@ -130,13 +130,13 @@ fn design_tier_no_lockfile_emits_constraints() {
     let http = find_by_name(&dart, "http").expect("http component must exist");
     // Milestone 199: always-array shape — JSON-array-in-string value.
     assert_eq!(
-        property_value(http, "mikebom:requirement-ranges"),
+        property_value(http, "waybill:requirement-ranges"),
         Some(r#"["^1.0.0"]"#),
         "http design-tier component must preserve constraint string verbatim (m199 plural)",
     );
     let provider = find_by_name(&dart, "provider").expect("provider component must exist");
     assert_eq!(
-        property_value(provider, "mikebom:requirement-ranges"),
+        property_value(provider, "waybill:requirement-ranges"),
         Some(r#"["^6.1.0"]"#),
     );
 }
@@ -178,7 +178,7 @@ fn design_tier_no_transitive_deps() {
 #[test]
 fn design_tier_dev_deps_carry_lifecycle_scope() {
     // US3 acceptance scenario 3: dev_dependencies entries emit with
-    // mikebom:lifecycle-scope=development; --exclude-scope suppresses.
+    // waybill:lifecycle-scope=development; --exclude-scope suppresses.
     let tmp = tempfile::tempdir().unwrap();
     std::fs::write(
         tmp.path().join("pubspec.yaml"),
@@ -192,7 +192,7 @@ fn design_tier_dev_deps_carry_lifecycle_scope() {
     let doc_with_dev = run_scan(tmp.path());
     let dart = dart_components(&doc_with_dev);
     let test_c = find_by_name(&dart, "test").expect("dev dep `test` must emit");
-    let lifecycle = property_value(test_c, "mikebom:lifecycle-scope");
+    let lifecycle = property_value(test_c, "waybill:lifecycle-scope");
     let cdx_scope = test_c.get("scope").and_then(|v| v.as_str());
     assert!(
         lifecycle == Some("development")

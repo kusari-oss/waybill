@@ -125,16 +125,16 @@ pub fn read(
     let os_release_id = crate::scan_fs::os_release::read_id_from_rootfs(rootfs);
     let os_release_version_id =
         crate::scan_fs::os_release::read_version_id_from_rootfs(rootfs);
-    // v5 Phase A diagnostic: when MIKEBOM_WALKER_DEBUG=1 is set, every
+    // v5 Phase A diagnostic: when WAYBILL_WALKER_DEBUG=1 is set, every
     // filter decision emits a single line to stderr. Used to identify
     // which binaries get dropped by which rule (regression-diagnosis
     // workflow on real fixtures). Gated to zero cost when unset.
-    let walker_debug = std::env::var_os("MIKEBOM_WALKER_DEBUG").is_some();
+    let walker_debug = std::env::var_os("WAYBILL_WALKER_DEBUG").is_some();
 
     // Milestone 108 — load the external fingerprint corpus exactly
     // once per scan when the operator opted in via `--fingerprints-corpus`
-    // (the clap derive sets `MIKEBOM_FINGERPRINTS_CORPUS=1`; the offline
-    // signal rides the existing `MIKEBOM_OFFLINE` env var set in
+    // (the clap derive sets `WAYBILL_FINGERPRINTS_CORPUS=1`; the offline
+    // signal rides the existing `WAYBILL_OFFLINE` env var set in
     // main.rs). The bundled fallback path is the no-op default and
     // costs nothing — the per-binary loop calls the legacy `scan()`
     // wrapper which preserves SC-003 byte-identity. Hoisted out of the
@@ -552,7 +552,7 @@ pub fn read(
         // entry's PURL (with `@<version>`) wins because it carries
         // higher-confidence identity; the symbol-fingerprint signal is
         // recorded as a corroborating annotation
-        // (`mikebom:fingerprint-symbols-matched`) on the same component.
+        // (`waybill:fingerprint-symbols-matched`) on the same component.
         //
         // v6: gated on `skip_file_level_and_linkage` so claimed
         // binaries (dpkg/rpm-owned, collapsed-by-python/jdk, go
@@ -575,7 +575,7 @@ pub fn read(
             }
             // Milestone 108 — when the operator opted in to the
             // external corpus, run the matcher against it (stamping
-            // `mikebom:fingerprint-corpus-sha` on every emitted match
+            // `waybill:fingerprint-corpus-sha` on every emitted match
             // per FR-005). Otherwise stick with the bundled path
             // through the legacy `scan()` wrapper — preserves the
             // SC-003 byte-identity contract for the 33 byte-identity
@@ -601,7 +601,7 @@ pub fn read(
                 // higher-confidence version-string PURL pins identity.
                 if let Some(existing) = by_library.get_mut(&m.library) {
                     existing.extra_annotations.insert(
-                        "mikebom:fingerprint-symbols-matched".to_string(),
+                        "waybill:fingerprint-symbols-matched".to_string(),
                         serde_json::Value::String(format!(
                             "{}/{}",
                             m.matched_count, m.total_count
@@ -614,16 +614,16 @@ pub fn read(
                     //
                     // Milestone 110 FR-017 (US3): when corpus-sha is
                     // emitted, ALSO emit the numeric fused-confidence
-                    // value as `mikebom:fingerprint-confidence`. Distinct
-                    // from the existing C16 `mikebom:confidence` enum
+                    // value as `waybill:fingerprint-confidence`. Distinct
+                    // from the existing C16 `waybill:confidence` enum
                     // (value=`"heuristic"`) so no carrier collision.
                     if let Some(ref sha) = m.corpus_sha_annotation {
                         existing.extra_annotations.insert(
-                            "mikebom:fingerprint-corpus-sha".to_string(),
+                            "waybill:fingerprint-corpus-sha".to_string(),
                             serde_json::Value::String(sha.clone()),
                         );
                         existing.extra_annotations.insert(
-                            "mikebom:fingerprint-confidence".to_string(),
+                            "waybill:fingerprint-confidence".to_string(),
                             serde_json::Value::String("0.70".to_string()),
                         );
                     }
@@ -650,7 +650,7 @@ pub fn read(
             // byte-identity goldens — a v2 record that happens to
             // share a library name with a v1 record does NOT override
             // the v1 emission. Cross-tier collision handling +
-            // mikebom:also-detected-via cross-references ship in a
+            // waybill:also-detected-via cross-references ship in a
             // follow-on slice (Phase 6 / US4).
             // Milestone 110 Phase 5-Slim PR 3 — dispatch the matcher
             // per source so each `MatchResult` carries the correct

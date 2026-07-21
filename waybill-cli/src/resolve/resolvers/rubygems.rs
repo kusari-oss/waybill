@@ -4,7 +4,7 @@
 //! `/downloads/{name}-{version}.gem` and `/gems/{name}-{version}.gem`.
 //!
 //! Extracted verbatim from the pre-refactor
-//! `mikebom-cli/src/resolve/url_resolver.rs::resolve_rubygems` per FR-002.
+//! `waybill-cli/src/resolve/url_resolver.rs::resolve_rubygems` per FR-002.
 
 use std::future::Future;
 use std::pin::Pin;

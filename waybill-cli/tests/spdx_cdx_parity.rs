@@ -19,7 +19,7 @@
 //!
 //! Currently green on US1's native surface. Any future change that
 //! drops or renames one of these fields in either format trips the
-//! test. Phase 4 (US2) will add `mikebom-cli/tests/spdx_annotation_fidelity.rs`
+//! test. Phase 4 (US2) will add `waybill-cli/tests/spdx_annotation_fidelity.rs`
 //! alongside this file to cover the annotation-fidelity half of the
 //! data-placement contract; the two tests together answer the
 //! "same info?" question for the whole surface.
@@ -36,7 +36,7 @@ struct Scan {
     spdx: serde_json::Value,
 }
 
-/// Run `mikebom sbom scan --format cyclonedx-json,spdx-2.3-json`
+/// Run `waybill sbom scan --format cyclonedx-json,spdx-2.3-json`
 /// against a fixture (single invocation) and return both parsed docs.
 fn dual_scan(case: &EcosystemCase) -> Scan {
     let fixture = case_fixture_path(case);
@@ -51,7 +51,7 @@ fn dual_scan(case: &EcosystemCase) -> Scan {
     let spdx_path = tmp.path().join("out.spdx.json");
     let bin = env!("CARGO_BIN_EXE_mikebom");
     let mut cmd = Command::new(bin);
-    cmd.env("MIKEBOM_NO_GO_MOD_WHY", "1");
+    cmd.env("WAYBILL_NO_GO_MOD_WHY", "1");
     cmd.arg("--offline")
         .arg("sbom")
         .arg("scan")
@@ -67,7 +67,7 @@ fn dual_scan(case: &EcosystemCase) -> Scan {
     if let Some(code) = case.deb_codename {
         cmd.arg("--deb-codename").arg(code);
     }
-    let out = cmd.output().expect("mikebom runs");
+    let out = cmd.output().expect("waybill runs");
     assert!(
         out.status.success(),
         "scan failed for {}: stderr={}",
@@ -98,7 +98,7 @@ fn walk_cdx_components(doc: &serde_json::Value) -> Vec<&serde_json::Value> {
     let mut out = Vec::new();
     recur(doc, &mut out);
     // Milestone 053: also include `metadata.component` when it's the
-    // Go main-module (carries `mikebom:component-role: main-module`).
+    // Go main-module (carries `waybill:component-role: main-module`).
     // Same rationale as `tests/spdx3_cdx_parity.rs` and the
     // milestone-053 parity-extractor walk.
     if let Some(metadata_component) = doc.get("metadata").and_then(|m| m.get("component")) {
@@ -108,7 +108,7 @@ fn walk_cdx_components(doc: &serde_json::Value) -> Vec<&serde_json::Value> {
             .map(|arr| {
                 arr.iter().any(|p| {
                     p.get("name").and_then(|v| v.as_str())
-                        == Some("mikebom:component-role")
+                        == Some("waybill:component-role")
                         && p.get("value").and_then(|v| v.as_str())
                             == Some("main-module")
                 })
@@ -229,7 +229,7 @@ fn assert_parity(case: &EcosystemCase) {
     // document root should correspond to exactly one CDX component.
     // The synthetic root now carries a synthesized
     // `pkg:generic/<target>@0.0.0` PURL + a synthesized
-    // `cpe:2.3:a:mikebom:<target>:0.0.0:*` CPE externalRef (so
+    // `cpe:2.3:a:waybill:<target>:0.0.0:*` CPE externalRef (so
     // sbomqs's comp_with_purl / comp_with_cpe features don't dock
     // the document for a missing-identity component). That PURL is
     // SPDX-only — CDX emits the scan subject as

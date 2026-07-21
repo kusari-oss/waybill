@@ -1,13 +1,13 @@
 //! SPDX annotation fidelity (milestone 010 T029).
 //!
-//! FR-015 / FR-016 promise: every `mikebom:*` property and every
+//! FR-015 / FR-016 promise: every `waybill:*` property and every
 //! `evidence.identity` / `evidence.occurrences` entry present in the
 //! CycloneDX output for a scan has a matching
 //! `MikebomAnnotationCommentV1`-envelope annotation in the SPDX
 //! output for the same scan.
 //!
 //! This test walks the nine ecosystem fixtures and asserts that for
-//! each distinct `mikebom:*` property name observed in the CDX
+//! each distinct `waybill:*` property name observed in the CDX
 //! output, at least one SPDX `annotations[]` entry decodes to a
 //! v1 envelope with a matching `field`. Full value-level parity is
 //! out of scope here — the exhaustive map-coverage check in
@@ -71,7 +71,7 @@ fn run_dual_scan(case: &EcosystemCase) -> DualScan {
     if let Some(code) = case.deb_codename {
         cmd.arg("--deb-codename").arg(code);
     }
-    let out = cmd.output().expect("mikebom runs");
+    let out = cmd.output().expect("waybill runs");
     assert!(
         out.status.success(),
         "scan failed for {}: stderr={}",
@@ -86,7 +86,7 @@ fn run_dual_scan(case: &EcosystemCase) -> DualScan {
     }
 }
 
-/// Collect every distinct `mikebom:*` property name observed anywhere
+/// Collect every distinct `waybill:*` property name observed anywhere
 /// in the CDX document — on components, on nested components, on
 /// metadata. Returns the names as a sorted set for stable error
 /// reporting.
@@ -96,7 +96,7 @@ fn cdx_mikebom_property_names(cdx: &serde_json::Value) -> BTreeSet<String> {
         if let Some(props) = c.get("properties").and_then(|v| v.as_array()) {
             for p in props {
                 if let Some(name) = p.get("name").and_then(|v| v.as_str()) {
-                    if name.starts_with("mikebom:") {
+                    if name.starts_with("waybill:") {
                         out.insert(name.to_string());
                     }
                 }
@@ -111,7 +111,7 @@ fn cdx_mikebom_property_names(cdx: &serde_json::Value) -> BTreeSet<String> {
     for c in cdx.get("components").and_then(|v| v.as_array()).into_iter().flatten() {
         walk_component(c, &mut out);
     }
-    // Metadata-level mikebom properties.
+    // Metadata-level waybill properties.
     if let Some(props) = cdx
         .get("metadata")
         .and_then(|m| m.get("properties"))
@@ -119,7 +119,7 @@ fn cdx_mikebom_property_names(cdx: &serde_json::Value) -> BTreeSet<String> {
     {
         for p in props {
             if let Some(name) = p.get("name").and_then(|v| v.as_str()) {
-                if name.starts_with("mikebom:") {
+                if name.starts_with("waybill:") {
                     out.insert(name.to_string());
                 }
             }
@@ -151,7 +151,7 @@ fn spdx_annotation_fields(spdx: &serde_json::Value) -> BTreeSet<String> {
                 continue;
             };
             if env.get("schema").and_then(|v| v.as_str())
-                != Some("mikebom-annotation/v1")
+                != Some("waybill-annotation/v1")
             {
                 continue;
             }
@@ -169,16 +169,16 @@ fn spdx_annotation_fields(spdx: &serde_json::Value) -> BTreeSet<String> {
     out
 }
 
-/// Milestone 052/part-2 (Constitution Principle V): `mikebom:*`
+/// Milestone 052/part-2 (Constitution Principle V): `waybill:*`
 /// properties that have a dedicated NATIVE field on the SPDX side are
 /// excluded from the annotation-fidelity check — the CDX property is
 /// only a carve-out for CDX (which lacks the native field), and the
 /// SPDX side carries the same signal via a native relationship type
-/// or scalar (e.g. `mikebom:lifecycle-scope` ↔ SPDX 2.3
+/// or scalar (e.g. `waybill:lifecycle-scope` ↔ SPDX 2.3
 /// `DEV/BUILD/TEST_DEPENDENCY_OF` relationships + SPDX 3
 /// `lifecycleScope` on `dependsOn`). Same pattern as the C42
 /// `Directionality::CdxOnly` carve-out in the parity-extractor table.
-const CDX_ONLY_PROPERTIES: &[&str] = &["mikebom:lifecycle-scope"];
+const CDX_ONLY_PROPERTIES: &[&str] = &["waybill:lifecycle-scope"];
 
 fn check_fidelity(case: &EcosystemCase) {
     let s = run_dual_scan(case);
@@ -190,7 +190,7 @@ fn check_fidelity(case: &EcosystemCase) {
         .collect();
     assert!(
         missing.is_empty(),
-        "{}: CDX emitted {} mikebom:* properties without matching SPDX \
+        "{}: CDX emitted {} waybill:* properties without matching SPDX \
          annotation:\n  {:?}\nSPDX annotation-field set was: {:?}",
         case.label,
         missing.len(),

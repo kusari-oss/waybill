@@ -20,10 +20,10 @@
 //! LRU eviction keyed on file mtime.
 //!
 //! Cache-dir resolution priority:
-//!   1. `$MIKEBOM_OCI_CACHE_DIR`
-//!   2. `$XDG_CACHE_HOME/mikebom/oci-layers`
-//!   3. macOS: `$HOME/Library/Caches/mikebom/oci-layers`
-//!   4. fallback: `$HOME/.cache/mikebom/oci-layers`
+//!   1. `$WAYBILL_OCI_CACHE_DIR`
+//!   2. `$XDG_CACHE_HOME/waybill/oci-layers`
+//!   3. macOS: `$HOME/Library/Caches/waybill/oci-layers`
+//!   4. fallback: `$HOME/.cache/waybill/oci-layers`
 //!
 //! The cache is "best-effort": any IO failure on open/get/insert
 //! falls through to anonymous behavior (cache-miss-style) rather
@@ -76,7 +76,7 @@ impl Cache {
         // Probe-write to verify the directory is writable. A read-only
         // mount or permission-denied path discovers itself here rather
         // than on the first real cache write.
-        let probe = dir.join(".mikebom-cache-probe");
+        let probe = dir.join(".waybill-cache-probe");
         match File::create(&probe).and_then(|mut f| f.write_all(b"ok")) {
             Ok(_) => {
                 let _ = fs::remove_file(&probe);
@@ -281,14 +281,14 @@ impl Cache {
 /// chain. Returns `None` only if `$HOME` is unset and no override
 /// env var is set — in that case the cache is disabled.
 pub(super) fn resolve_cache_dir() -> Option<PathBuf> {
-    if let Ok(p) = std::env::var("MIKEBOM_OCI_CACHE_DIR") {
+    if let Ok(p) = std::env::var("WAYBILL_OCI_CACHE_DIR") {
         if !p.is_empty() {
             return Some(PathBuf::from(p));
         }
     }
     if let Ok(xdg) = std::env::var("XDG_CACHE_HOME") {
         if !xdg.is_empty() {
-            return Some(PathBuf::from(xdg).join("mikebom").join("oci-layers"));
+            return Some(PathBuf::from(xdg).join("waybill").join("oci-layers"));
         }
     }
     let home = std::env::var("HOME").ok()?;
@@ -300,7 +300,7 @@ pub(super) fn resolve_cache_dir() -> Option<PathBuf> {
     } else {
         PathBuf::from(&home).join(".cache")
     };
-    Some(base.join("mikebom").join("oci-layers"))
+    Some(base.join("waybill").join("oci-layers"))
 }
 
 #[cfg(test)]
@@ -311,7 +311,7 @@ mod tests {
 
     use super::*;
 
-    /// Tests that mutate process-wide env vars (`MIKEBOM_OCI_CACHE_DIR`,
+    /// Tests that mutate process-wide env vars (`WAYBILL_OCI_CACHE_DIR`,
     /// `XDG_CACHE_HOME`, `HOME`) must hold this lock — cargo runs
     /// tests in parallel by default and concurrent env-mutation
     /// produces flaky failures.
@@ -462,13 +462,13 @@ mod tests {
     fn open_returns_some_for_writable_dir() {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let tmp = tempfile::tempdir().unwrap();
-        let saved = std::env::var("MIKEBOM_OCI_CACHE_DIR").ok();
-        std::env::set_var("MIKEBOM_OCI_CACHE_DIR", tmp.path());
+        let saved = std::env::var("WAYBILL_OCI_CACHE_DIR").ok();
+        std::env::set_var("WAYBILL_OCI_CACHE_DIR", tmp.path());
         let cache = Cache::open(1 << 30);
         if let Some(v) = saved {
-            std::env::set_var("MIKEBOM_OCI_CACHE_DIR", v);
+            std::env::set_var("WAYBILL_OCI_CACHE_DIR", v);
         } else {
-            std::env::remove_var("MIKEBOM_OCI_CACHE_DIR");
+            std::env::remove_var("WAYBILL_OCI_CACHE_DIR");
         }
         assert!(cache.is_some());
     }
@@ -476,15 +476,15 @@ mod tests {
     #[test]
     fn open_returns_none_when_dir_is_unresolvable() {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let saved_override = std::env::var("MIKEBOM_OCI_CACHE_DIR").ok();
+        let saved_override = std::env::var("WAYBILL_OCI_CACHE_DIR").ok();
         let saved_xdg = std::env::var("XDG_CACHE_HOME").ok();
         let saved_home = std::env::var("HOME").ok();
-        std::env::remove_var("MIKEBOM_OCI_CACHE_DIR");
+        std::env::remove_var("WAYBILL_OCI_CACHE_DIR");
         std::env::remove_var("XDG_CACHE_HOME");
         std::env::remove_var("HOME");
         let result = resolve_cache_dir();
         if let Some(v) = saved_override {
-            std::env::set_var("MIKEBOM_OCI_CACHE_DIR", v);
+            std::env::set_var("WAYBILL_OCI_CACHE_DIR", v);
         }
         if let Some(v) = saved_xdg {
             std::env::set_var("XDG_CACHE_HOME", v);
@@ -498,13 +498,13 @@ mod tests {
     #[test]
     fn resolve_cache_dir_uses_override_first() {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
-        let saved = std::env::var("MIKEBOM_OCI_CACHE_DIR").ok();
-        std::env::set_var("MIKEBOM_OCI_CACHE_DIR", "/custom/cache/path");
+        let saved = std::env::var("WAYBILL_OCI_CACHE_DIR").ok();
+        std::env::set_var("WAYBILL_OCI_CACHE_DIR", "/custom/cache/path");
         let resolved = resolve_cache_dir().unwrap();
         if let Some(v) = saved {
-            std::env::set_var("MIKEBOM_OCI_CACHE_DIR", v);
+            std::env::set_var("WAYBILL_OCI_CACHE_DIR", v);
         } else {
-            std::env::remove_var("MIKEBOM_OCI_CACHE_DIR");
+            std::env::remove_var("WAYBILL_OCI_CACHE_DIR");
         }
         assert_eq!(resolved, PathBuf::from("/custom/cache/path"));
     }

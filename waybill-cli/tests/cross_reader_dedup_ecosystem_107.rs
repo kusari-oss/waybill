@@ -2,12 +2,12 @@
 //!
 //! When a single scan contains BOTH an opkg-installed-DB stanza AND a
 //! Yocto image manifest line for the SAME canonical PURL (the
-//! mikebom-CI-container scenario where both the build directory and
+//! waybill-CI-container scenario where both the build directory and
 //! the device rootfs are mounted), the milestone-105 dedup pipeline
 //! MUST collapse them into a single component. Per FR-010 precedence,
 //! the higher-authority `OpkgInstalled` reader wins; the
 //! `YoctoImageManifest` source-mechanism appears in the surviving
-//! component's `mikebom:also-detected-via` annotation.
+//! component's `waybill:also-detected-via` annotation.
 //!
 //! Locks the FR-010 precedence contract against regression.
 
@@ -26,20 +26,20 @@ fn write(path: &Path, contents: &str) {
 }
 
 /// Build a fixture where the same canonical PURL
-/// (`pkg:opkg/mikebom-fixture-shared@9.9.9?arch=mikebom-fixture-arch`)
+/// (`pkg:opkg/waybill-fixture-shared@9.9.9?arch=waybill-fixture-arch`)
 /// is named by BOTH the opkg installed-DB AND a Yocto image manifest.
 fn build_fixture(root: &Path) {
     write(
         &root.join("var/lib/opkg/status"),
-        "Package: mikebom-fixture-shared\n\
+        "Package: waybill-fixture-shared\n\
          Version: 9.9.9\n\
-         Architecture: mikebom-fixture-arch\n\
-         Maintainer: Mikebom Fixture <fixture@example.invalid>\n\
+         Architecture: waybill-fixture-arch\n\
+         Maintainer: Waybill Fixture <fixture@example.invalid>\n\
          Status: install user installed\n",
     );
     write(
-        &root.join("build/tmp/deploy/images/mikebom-fixture-machine/mikebom-fixture-image.manifest"),
-        "mikebom-fixture-shared mikebom-fixture-arch 9.9.9\n",
+        &root.join("build/tmp/deploy/images/waybill-fixture-machine/waybill-fixture-image.manifest"),
+        "waybill-fixture-shared waybill-fixture-arch 9.9.9\n",
     );
 }
 
@@ -53,7 +53,7 @@ fn opkg_installed_outranks_yocto_image_manifest_on_canonical_purl_collision() {
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -65,7 +65,7 @@ fn opkg_installed_outranks_yocto_image_manifest_on_canonical_purl_collision() {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "cross-reader scan unexpectedly failed: stderr={}",
@@ -79,7 +79,7 @@ fn opkg_installed_outranks_yocto_image_manifest_on_canonical_purl_collision() {
         .expect("components[] present");
 
     let canonical_purl =
-        "pkg:opkg/mikebom-fixture-shared@9.9.9?arch=mikebom-fixture-arch";
+        "pkg:opkg/waybill-fixture-shared@9.9.9?arch=waybill-fixture-arch";
     let matching: Vec<&serde_json::Value> = components
         .iter()
         .filter(|c| c["purl"].as_str() == Some(canonical_purl))
@@ -100,14 +100,14 @@ fn opkg_installed_outranks_yocto_image_manifest_on_canonical_purl_collision() {
     );
 
     // The surviving component MUST be the OpkgInstalled one — its
-    // `mikebom:source-mechanism` annotation must be `opkg-installed`.
+    // `waybill:source-mechanism` annotation must be `opkg-installed`.
     let winner = matching.first().expect("non-empty");
     let source_mechanism = winner["properties"]
         .as_array()
         .and_then(|props| {
             props
                 .iter()
-                .find(|p| p["name"].as_str() == Some("mikebom:source-mechanism"))
+                .find(|p| p["name"].as_str() == Some("waybill:source-mechanism"))
                 .and_then(|p| p["value"].as_str())
         })
         .unwrap_or("(none)");

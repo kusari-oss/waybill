@@ -2,7 +2,7 @@
 //!
 //! Covers SC-002: a fixture mixing hosted / git / path / sdk + the
 //! self-hosted hosted-source variant. Each entry must emit with the
-//! correct PURL shape per FR-003 + the correct `mikebom:source-type`
+//! correct PURL shape per FR-003 + the correct `waybill:source-type`
 //! annotation value (prefixed `pub-hosted` / `pub-git` / `pub-path` /
 //! `pub-sdk`).
 
@@ -129,7 +129,7 @@ fn hosted_default_pubdev_emits_bare_purl() {
     let http = component_with_purl(&doc, "pkg:pub/http@1.1.0")
         .expect("hosted-default http must emit as bare PURL");
     assert_eq!(
-        property_value(http, "mikebom:source-type"),
+        property_value(http, "waybill:source-type"),
         Some("pub-hosted"),
     );
 }
@@ -167,7 +167,7 @@ fn hosted_self_hosted_emits_repository_url_qualifier() {
     let internal = component_with_purl(&doc, expected)
         .unwrap_or_else(|| panic!("self-hosted PURL {expected} not found"));
     assert_eq!(
-        property_value(internal, "mikebom:source-type"),
+        property_value(internal, "waybill:source-type"),
         Some("pub-hosted"),
     );
 }
@@ -182,13 +182,13 @@ fn git_source_emits_resolved_sha_plus_vcs_url() {
     let window = component_with_purl(&doc, expected)
         .unwrap_or_else(|| panic!("git-source PURL {expected} not found"));
     assert_eq!(
-        property_value(window, "mikebom:source-type"),
+        property_value(window, "waybill:source-type"),
         Some("pub-git"),
     );
     assert_eq!(
-        property_value(window, "mikebom:vcs-ref"),
+        property_value(window, "waybill:vcs-ref"),
         Some("master"),
-        "git source must surface the user-supplied ref via mikebom:vcs-ref annotation",
+        "git source must surface the user-supplied ref via waybill:vcs-ref annotation",
     );
 }
 
@@ -201,11 +201,11 @@ fn path_source_emits_generic_placeholder() {
     let my_local = component_with_purl(&doc, "pkg:generic/my_local_lib@0.1.0")
         .expect("path-source PURL must use pkg:generic/ placeholder");
     assert_eq!(
-        property_value(my_local, "mikebom:source-type"),
+        property_value(my_local, "waybill:source-type"),
         Some("pub-path"),
     );
     assert_eq!(
-        property_value(my_local, "mikebom:path"),
+        property_value(my_local, "waybill:path"),
         Some("../packages/my_local_lib"),
     );
 }
@@ -220,14 +220,14 @@ fn sdk_source_emits_zero_zero_zero_version() {
         let c = component_with_purl(&doc, sdk_purl)
             .unwrap_or_else(|| panic!("SDK pseudo-dep PURL {sdk_purl} not found"));
         assert_eq!(
-            property_value(c, "mikebom:source-type"),
+            property_value(c, "waybill:source-type"),
             Some("pub-sdk"),
-            "SDK component {sdk_purl} must carry mikebom:source-type=pub-sdk",
+            "SDK component {sdk_purl} must carry waybill:source-type=pub-sdk",
         );
         assert_eq!(
-            property_value(c, "mikebom:sdk-name"),
+            property_value(c, "waybill:sdk-name"),
             Some("flutter"),
-            "SDK component {sdk_purl} must carry mikebom:sdk-name=flutter",
+            "SDK component {sdk_purl} must carry waybill:sdk-name=flutter",
         );
     }
 }

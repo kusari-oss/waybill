@@ -64,7 +64,7 @@ fn triple_scan(case: &EcosystemCase) -> Scan {
     if let Some(code) = case.deb_codename {
         cmd.arg("--deb-codename").arg(code);
     }
-    let out = cmd.output().expect("mikebom runs");
+    let out = cmd.output().expect("waybill runs");
     assert!(
         out.status.success(),
         "scan failed for {}: stderr={}",
@@ -84,7 +84,7 @@ fn triple_scan(case: &EcosystemCase) -> Scan {
 /// Count CDX components recursively — top-level + everything nested
 /// under `components[].components[]`, plus `metadata.component` when
 /// it's a real component (the milestone-053 Go main-module per
-/// FR-001a, identified by carrying `mikebom:component-role:
+/// FR-001a, identified by carrying `waybill:component-role:
 /// main-module` in its properties[]). Pre-053 the metadata.component
 /// was a synthetic placeholder that didn't represent a real
 /// `ResolvedComponent` and was excluded from the count.
@@ -106,7 +106,7 @@ fn cdx_flattened_count(doc: &serde_json::Value) -> usize {
             .map(|arr| {
                 arr.iter().any(|p| {
                     p.get("name").and_then(|v| v.as_str())
-                        == Some("mikebom:component-role")
+                        == Some("waybill:component-role")
                         && p.get("value").and_then(|v| v.as_str())
                             == Some("main-module")
                 })

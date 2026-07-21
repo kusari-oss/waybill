@@ -11,7 +11,7 @@
 //!   `std::panic::catch_unwind`.
 //! - `monotonic_additive_real_goldens_from_snapshot` (T010 Step-3):
 //!   verifies the REAL pre-157 vs post-157 golden diff via
-//!   MIKEBOM_PRE157_SNAPSHOT_DIR env var. Gracefully skips when the
+//!   WAYBILL_PRE157_SNAPSHOT_DIR env var. Gracefully skips when the
 //!   snapshot dir isn't populated (post-merge CI).
 
 #![cfg(test)]
@@ -280,17 +280,17 @@ fn monotonic_additive_helper_accepts_pure_additive_change() {
 }
 
 /// T010 Step-3 real-golden verification. Reads a snapshotted pre-157
-/// golden from MIKEBOM_PRE157_SNAPSHOT_DIR and compares against the
+/// golden from WAYBILL_PRE157_SNAPSHOT_DIR and compares against the
 /// working-tree regenerated golden. Gracefully skips when the snapshot
 /// dir isn't populated (post-merge CI). Prints an edge-count summary
 /// that the maintainer pastes into the PR description as SC-002's
 /// real-golden verification receipt.
 #[test]
 fn monotonic_additive_real_goldens_from_snapshot() {
-    let Ok(snapshot_dir) = std::env::var("MIKEBOM_PRE157_SNAPSHOT_DIR") else {
+    let Ok(snapshot_dir) = std::env::var("WAYBILL_PRE157_SNAPSHOT_DIR") else {
         eprintln!(
-            "skip: MIKEBOM_PRE157_SNAPSHOT_DIR not set. T010 Step-1 must snapshot pre-157 goldens \
-             before running this test. Example: MIKEBOM_PRE157_SNAPSHOT_DIR=/tmp/mikebom-m157-pre-goldens"
+            "skip: WAYBILL_PRE157_SNAPSHOT_DIR not set. T010 Step-1 must snapshot pre-157 goldens \
+             before running this test. Example: WAYBILL_PRE157_SNAPSHOT_DIR=/tmp/waybill-m157-pre-goldens"
         );
         return;
     };

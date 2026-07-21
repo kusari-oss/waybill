@@ -8,7 +8,7 @@
 //!    same `ScanArtifacts` / `ResolvedComponent` / `Relationship`
 //!    types the CycloneDX and SPDX 2.3 emitters consume. Asserted
 //!    as a grep against `src/scan_fs/`, `src/resolve/`,
-//!    `mikebom-common/src/resolution.rs`.
+//!    `waybill-common/src/resolution.rs`.
 //!
 //! 2. **Data-placement map carries populated SPDX 3 column.**
 //!    Every row of `docs/reference/sbom-format-mapping.md` has a
@@ -53,10 +53,10 @@ fn scenario_1_scan_and_resolve_code_has_no_spdx3_struct_leaks() {
     // SPDX emitter tree means the internal model leaked a
     // format-specific shape — a regression against FR-017.
     let roots = [
-        workspace_root().join("mikebom-cli/src/scan_fs"),
-        workspace_root().join("mikebom-cli/src/resolve"),
-        workspace_root().join("mikebom-cli/src/enrich"),
-        workspace_root().join("mikebom-common/src/resolution.rs"),
+        workspace_root().join("waybill-cli/src/scan_fs"),
+        workspace_root().join("waybill-cli/src/resolve"),
+        workspace_root().join("waybill-cli/src/enrich"),
+        workspace_root().join("waybill-common/src/resolution.rs"),
     ];
     // Tokens that would betray SPDX-3 leakage. Chosen so
     // unrelated mentions (e.g. "spdx" in a URL, "Spdx" in a
@@ -172,7 +172,7 @@ fn scenario_3_stub_touches_only_expected_files() {
     ];
     let mut offenders: BTreeSet<PathBuf> = BTreeSet::new();
     let mut all_rs: Vec<PathBuf> = Vec::new();
-    collect_rs(&workspace_root().join("mikebom-cli/src"), &mut all_rs);
+    collect_rs(&workspace_root().join("waybill-cli/src"), &mut all_rs);
     for path in all_rs {
         let Ok(text) = std::fs::read_to_string(&path) else {
             continue;
@@ -225,7 +225,7 @@ fn scenario_4_npm_fixture_has_purl_parity_between_cdx_and_spdx3() {
         ))
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom runs");
+        .expect("waybill runs");
     assert!(
         out.status.success(),
         "scan failed: stderr={}",
@@ -304,17 +304,17 @@ fn scenario_5_opt_in_not_selected_produces_no_spdx3_artifact() {
         .arg(&fx)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom runs");
+        .expect("waybill runs");
     assert!(out.status.success());
     assert!(
-        !tmp.path().join("mikebom.spdx3-experimental.json").exists(),
+        !tmp.path().join("waybill.spdx3-experimental.json").exists(),
         "no SPDX 3 artifact should appear when the format wasn't requested"
     );
     assert!(
-        !tmp.path().join("mikebom.spdx.json").exists(),
+        !tmp.path().join("waybill.spdx.json").exists(),
         "no SPDX 2.3 artifact should appear either"
     );
-    assert!(tmp.path().join("mikebom.cdx.json").exists());
+    assert!(tmp.path().join("waybill.cdx.json").exists());
 }
 
 // ---------- milestone 011 US3: alias-deprecation semantics --------
@@ -325,10 +325,10 @@ fn scenario_5_opt_in_not_selected_produces_no_spdx3_artifact() {
 //       notice exactly once per invocation
 //   (7) alias bytes are byte-identical to the stable identifier's
 //       bytes for the same scan (research.md §R6)
-//   (8) MIKEBOM_NO_DEPRECATION_NOTICE=1 suppresses the stderr
+//   (8) WAYBILL_NO_DEPRECATION_NOTICE=1 suppresses the stderr
 //       warning without changing the document bytes
 
-/// Helper: run mikebom against the npm fixture with the given
+/// Helper: run waybill against the npm fixture with the given
 /// format identifier and optional env override. Returns
 /// (document_bytes, stderr_text).
 fn run_scan_with_format(
@@ -348,7 +348,7 @@ fn run_scan_with_format(
     // surfacing as a CI flake on docs-only PRs and on main. Set
     // before `extra_env` so callers can still override via that
     // mechanism if a test specifically needs a non-fixed timestamp.
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     for (k, v) in extra_env {
         cmd.env(k, v);
     }
@@ -364,7 +364,7 @@ fn run_scan_with_format(
         .arg(format!("{format}={}", out_path.to_string_lossy()))
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom runs");
+        .expect("waybill runs");
     assert!(
         out.status.success(),
         "scan failed for {format}: stderr={}",
@@ -416,7 +416,7 @@ fn scenario_8_mikebom_no_deprecation_notice_env_suppresses_stderr_warning() {
         run_scan_with_format("spdx-3-json-experimental", &[]);
     let (bytes_without_notice, stderr_without) = run_scan_with_format(
         "spdx-3-json-experimental",
-        &[("MIKEBOM_NO_DEPRECATION_NOTICE", "1")],
+        &[("WAYBILL_NO_DEPRECATION_NOTICE", "1")],
     );
     assert!(
         stderr_with.contains("deprecated"),
@@ -424,7 +424,7 @@ fn scenario_8_mikebom_no_deprecation_notice_env_suppresses_stderr_warning() {
     );
     assert!(
         !stderr_without.contains("deprecated"),
-        "MIKEBOM_NO_DEPRECATION_NOTICE=1 must suppress the warning; got:\n{stderr_without}"
+        "WAYBILL_NO_DEPRECATION_NOTICE=1 must suppress the warning; got:\n{stderr_without}"
     );
     // Document bytes are unaffected by the env flag.
     assert_eq!(

@@ -95,10 +95,10 @@ mod tests {
 
     #[test]
     fn diff_detects_mikebom_only() {
-        let mikebom = vec![Edge::new("a", "b"), Edge::new("c", "d")];
+        let waybill = vec![Edge::new("a", "b"), Edge::new("c", "d")];
         let trivy = vec![Edge::new("a", "b")];
         let syft = vec![Edge::new("a", "b")];
-        let diff = compute_edge_diff(&mikebom, &trivy, &syft);
+        let diff = compute_edge_diff(&waybill, &trivy, &syft);
         assert!(!diff.is_unanimous());
         assert_eq!(diff.mikebom_only.len(), 1);
         assert!(diff.mikebom_only.contains(&Edge::new("c", "d")));
@@ -114,7 +114,7 @@ mod tests {
     fn maybe_skip_returns_some_when_tool_missing_and_strict_unset() {
         // Ensure strict mode is off for this test (other tests in
         // the same process might have set it).
-        std::env::remove_var("MIKEBOM_REQUIRE_TRANSITIVE_PARITY");
+        std::env::remove_var("WAYBILL_REQUIRE_TRANSITIVE_PARITY");
         let result = maybe_skip(&["this-tool-definitely-does-not-exist"]);
         assert!(result.is_some());
         assert!(result.unwrap().contains("this-tool-definitely-does-not-exist"));

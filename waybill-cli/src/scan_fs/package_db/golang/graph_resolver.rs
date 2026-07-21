@@ -84,7 +84,7 @@ pub enum ResolutionStep {
 
 impl ResolutionStep {
     /// Milestone 160 (T001): kebab-case wire string for the
-    /// `mikebom:go-transitive-source` component annotation (C108).
+    /// `waybill:go-transitive-source` component annotation (C108).
     /// Note: `ResolutionStep::None` serializes to `"unresolved"` — the
     /// enum variant name predates the milestone-160 wire vocab.
     pub fn as_wire_str(&self) -> &'static str {
@@ -99,7 +99,7 @@ impl ResolutionStep {
 }
 
 /// Milestone 160 (T002): closed 7-code vocabulary for the
-/// `mikebom:go-transitive-unresolved-reason` component annotation (C109).
+/// `waybill:go-transitive-unresolved-reason` component annotation (C109).
 /// Emitted iff `ResolutionStep::None` claimed the module. Maps from the
 /// milestone-055 `StepError` at fetch failure time.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -157,7 +157,7 @@ pub enum GoTransitiveCoverage {
 }
 
 impl GoTransitiveCoverage {
-    /// Wire value for `mikebom:go-transitive-coverage` (C110).
+    /// Wire value for `waybill:go-transitive-coverage` (C110).
     pub fn value_wire_str(&self) -> &'static str {
         match self {
             Self::Complete => "complete",
@@ -166,7 +166,7 @@ impl GoTransitiveCoverage {
         }
     }
 
-    /// Wire value for `mikebom:go-transitive-coverage-reason` (C111);
+    /// Wire value for `waybill:go-transitive-coverage-reason` (C111);
     /// returns None iff variant is `Complete`.
     pub fn reason(&self) -> Option<&str> {
         match self {
@@ -199,12 +199,12 @@ pub struct ModuleGraphMap {
     /// Milestone 160 (T008): document-scope Go-transitive coverage
     /// signal produced by `compute_coverage()` at the tail of
     /// `GraphResolver::resolve()`. Consumed by the CLI's SBOM-assembly
-    /// path to emit `mikebom:go-transitive-coverage` (C110) +
-    /// `mikebom:go-transitive-coverage-reason` (C111) at document scope.
+    /// path to emit `waybill:go-transitive-coverage` (C110) +
+    /// `waybill:go-transitive-coverage-reason` (C111) at document scope.
     /// `None` iff the resolver was never invoked (empty workspace).
     coverage: Option<GoTransitiveCoverage>,
     /// Milestone 160 (T021): per-module reason classes for the C109
-    /// `mikebom:go-transitive-unresolved-reason` annotation. Populated
+    /// `waybill:go-transitive-unresolved-reason` annotation. Populated
     /// during step 3 on `StepResult::Failed(_)` outcomes via
     /// `UnresolvedReasonClass::from(&err)`. Consumed by `legacy::read()`
     /// when emitting per-component annotations for modules whose
@@ -803,7 +803,7 @@ impl GraphResolver {
 
         // `reqwest::blocking::Client` spawns and OWNS its own internal
         // tokio runtime. Constructing or dropping it from within an
-        // async context (which is what `mikebom sbom scan` runs in,
+        // async context (which is what `waybill sbom scan` runs in,
         // because main.rs is #[tokio::main]) panics with
         // `Cannot drop a runtime in a context where blocking is not
         // allowed`. Wrapping the entire client-lifecycle block in a
@@ -855,7 +855,7 @@ impl GraphResolver {
                     );
                     // Milestone 160 (T021): classify the failure into
                     // the C109 vocabulary and stash it so `legacy::read`
-                    // can emit `mikebom:go-transitive-unresolved-reason`
+                    // can emit `waybill:go-transitive-unresolved-reason`
                     // when this module ends up at `ResolutionStep::None`
                     // after step 5 declines to claim it.
                     let reason_class = UnresolvedReasonClass::from(&err);
@@ -891,7 +891,7 @@ impl GraphResolver {
     /// Step 5 (milestone 091): go.sum-driven flat fallback.
     ///
     /// When steps 1–3 fail (offline + cache-empty CI configuration —
-    /// the typical case where mikebom would otherwise lose ~110
+    /// the typical case where waybill would otherwise lose ~110
     /// transitive edges trivy gets from go.sum content alone), this
     /// step claims every go.sum module not yet in the map. Each
     /// claimed module gets `source = GoSumFallback` + empty
@@ -1075,7 +1075,7 @@ impl WorkspaceContext {
     /// `project_root` is the directory containing both files. `offline`
     /// is plumbed from the global `--offline` CLI flag. Environment
     /// variables `$GOPROXY` and `$GOPRIVATE` are read at this point;
-    /// if mikebom is invoked from a CI runner that wants a fixed proxy,
+    /// if waybill is invoked from a CI runner that wants a fixed proxy,
     /// the user sets it in the environment.
     pub fn from_parts(
         project_root: PathBuf,
@@ -1087,11 +1087,11 @@ impl WorkspaceContext {
         // `--offline` through their call chain (T010 noted that
         // threading it through `scan_path` → `read_all` → `golang::read`
         // is a multi-test-fixture refactor we deferred for milestone
-        // 055). main.rs sets `MIKEBOM_OFFLINE=1` when `cli.offline`
+        // 055). main.rs sets `WAYBILL_OFFLINE=1` when `cli.offline`
         // is true; we OR that into the explicit param here so any
         // call site that hard-codes `false` still respects the user's
         // intent.
-        let offline = offline || std::env::var("MIKEBOM_OFFLINE").is_ok();
+        let offline = offline || std::env::var("WAYBILL_OFFLINE").is_ok();
 
         let go_sum_modules: HashSet<ModuleId> = sums
             .iter()
@@ -1184,7 +1184,7 @@ mod tests {
     fn ladder_summary_gosum_fallback_count_readable() {
         // Milestone 172 T005: sanity-gate that `LadderSummary.gosum_fallback_count`
         // stays a public, externally-readable field. m172 exposes it via the
-        // doc-scope `mikebom:go-transitive-fallback-count` annotation; a future
+        // doc-scope `waybill:go-transitive-fallback-count` annotation; a future
         // rename to a private name would silently break emission. This test
         // fails the build if the field is renamed or made non-public.
         let s = LadderSummary {
@@ -1393,7 +1393,7 @@ mod tests {
 // SC-001 / SC-005 / SC-007 / FR-009).
 //
 // These live inside the resolver's source file rather than under
-// `mikebom-cli/tests/` because exposing the entire `scan_fs` tree via
+// `waybill-cli/tests/` because exposing the entire `scan_fs` tree via
 // the library crate would cascade-require lib-exposing every other
 // binary-internal module (`trace`, `generate`, `resolve`, ...) — too
 // large a change for milestone 055. Functionally these test the same
@@ -1411,7 +1411,7 @@ mod wiremock_integration {
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     // Milestone 090: fixture moved to `mikebom-test-fixtures` repo;
-    // resolved via build.rs's MIKEBOM_FIXTURES_DIR env var.
+    // resolved via build.rs's WAYBILL_FIXTURES_DIR env var.
     const ARGO_FIXTURE_SUBPATH: &str = "go/argo-style-no-cache/argo-workflows";
 
     /// Synthesized minimal `go.mod` bodies for every module in the
@@ -1525,7 +1525,7 @@ mod wiremock_integration {
     }
 
     fn argo_fixture_dir() -> PathBuf {
-        PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join(ARGO_FIXTURE_SUBPATH)
+        PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join(ARGO_FIXTURE_SUBPATH)
     }
 
     async fn start_mock_proxy() -> MockServer {
@@ -1684,7 +1684,7 @@ mod wiremock_integration {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
     async fn step1_real_go_mod_graph_parity_simple_module() {
-        // T035: when `go` is available, mikebom's edge set against the
+        // T035: when `go` is available, waybill's edge set against the
         // simple-module fixture matches `go mod graph` (intersected
         // with go.sum). Skips cleanly when `go` is not on PATH so CI
         // runners without the toolchain stay green.
@@ -1701,7 +1701,7 @@ mod wiremock_integration {
 
         // Run `go mod graph` against the simple-module fixture.
         // Milestone 090: fixture moved to `mikebom-test-fixtures` repo.
-        let fixture = PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("go/simple-module");
+        let fixture = PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("go/simple-module");
         let output = std::process::Command::new("go")
             .args(["mod", "graph"])
             .current_dir(&fixture)
@@ -1720,10 +1720,10 @@ mod wiremock_integration {
             &stdout,
         );
 
-        // Run mikebom's resolver against the same fixture (no `--offline`,
-        // so step 1 is allowed). MIKEBOM_OFFLINE may be set by other
+        // Run waybill's resolver against the same fixture (no `--offline`,
+        // so step 1 is allowed). WAYBILL_OFFLINE may be set by other
         // tests in the same binary — ensure it's cleared for this test.
-        std::env::remove_var("MIKEBOM_OFFLINE");
+        std::env::remove_var("WAYBILL_OFFLINE");
         let go_mod_text = std::fs::read_to_string(fixture.join("go.mod")).unwrap();
         let go_sum_text = std::fs::read_to_string(fixture.join("go.sum")).unwrap();
         let doc = crate::scan_fs::package_db::golang::legacy::parse_go_mod(&go_mod_text);
@@ -1737,7 +1737,7 @@ mod wiremock_integration {
 
         // Build the comparison sets. Both are intersected with go.sum
         // and indexed by parent path. The MVS rewrite means edge target
-        // versions in mikebom's output match go.sum's; `go mod graph`
+        // versions in waybill's output match go.sum's; `go mod graph`
         // emits the declared (pre-MVS) versions, so we compare on path.
         let go_sum_paths: HashSet<&str> = sums
             .iter()
@@ -1782,15 +1782,15 @@ mod wiremock_integration {
             })
             .collect();
 
-        // Mikebom may emit edges from go.sum modules that go mod graph
+        // Waybill may emit edges from go.sum modules that go mod graph
         // doesn't list (e.g., a module's go.mod requires that didn't
         // make MVS — go mod graph would prune them). The other
         // direction is the meaningful check: every go-mod-graph edge
-        // between go.sum modules SHOULD appear in mikebom's output.
+        // between go.sum modules SHOULD appear in waybill's output.
         for edge in &go_graph_edges {
             assert!(
                 mikebom_edges.contains(edge),
-                "SC-002: missing edge in mikebom output: {} → {}",
+                "SC-002: missing edge in waybill output: {} → {}",
                 edge.0, edge.1
             );
         }

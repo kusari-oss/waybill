@@ -201,7 +201,7 @@ pub fn parse_mapping_doc_str(raw: &str) -> Vec<CatalogRow> {
 ///
 /// Per research.md §R3, three patterns are tried in order:
 /// 1. `name="([^"]+)"` over the column text — captures
-///    `mikebom:source-type`, etc. for property rows.
+///    `waybill:source-type`, etc. for property rows.
 /// 2. Trailing path segment after the final `/` — captures
 ///    `purl`, `version`, etc. for direct-JSON-path rows.
 /// 3. None — caller falls back / skips.
@@ -272,8 +272,8 @@ pub fn extract_cdx_property_names_from_catalog_row(row: &CatalogRow) -> Vec<Stri
     // "property" / "metadata property" pointer (C19 / C22 / C23):
     // pull every backtick-wrapped identifier from the LABEL
     // column. Strip a trailing `-*` glob marker so e.g.
-    // `` `mikebom:trace-integrity-*` `` returns the prefix
-    // `mikebom:trace-integrity-` (caller's responsibility to
+    // `` `waybill:trace-integrity-*` `` returns the prefix
+    // `waybill:trace-integrity-` (caller's responsibility to
     // `starts_with`-match for the C23 multi-subkey case).
     let label_re =
         regex::Regex::new(r"`([^`]+)`").expect("compile label-backtick regex");
@@ -305,10 +305,10 @@ mod tests {
 
     #[test]
     fn classify_omitted_row() {
-        let cov = classify_column("omitted — mikebom resolution layer doesn't surface originator");
+        let cov = classify_column("omitted — waybill resolution layer doesn't surface originator");
         match cov {
             FormatCoverage::Omitted { reason } => {
-                assert!(reason.starts_with("mikebom resolution layer"));
+                assert!(reason.starts_with("waybill resolution layer"));
             }
             other => panic!("expected Omitted, got {other:?}"),
         }
@@ -384,15 +384,15 @@ mod tests {
     fn extract_cdx_property_name_property_pattern() {
         let row = CatalogRow {
             id: "C1".into(),
-            label: "mikebom:source-type".into(),
-            cdx_location: r#"`/components/{i}/properties[name="mikebom:source-type"]`"#.into(),
-            spdx23_location: "Annotation `mikebom:source-type`".into(),
-            spdx3_location: "Annotation `mikebom:source-type`".into(),
+            label: "waybill:source-type".into(),
+            cdx_location: r#"`/components/{i}/properties[name="waybill:source-type"]`"#.into(),
+            spdx23_location: "Annotation `waybill:source-type`".into(),
+            spdx3_location: "Annotation `waybill:source-type`".into(),
             section: 'C',
         };
         assert_eq!(
             extract_cdx_property_name_from_catalog_row(&row).as_deref(),
-            Some("mikebom:source-type"),
+            Some("waybill:source-type"),
         );
     }
 
@@ -444,7 +444,7 @@ mod tests {
         let name = extract_cdx_property_name_from_catalog_row(c19);
         assert_eq!(
             name.as_deref(),
-            Some("mikebom:cpe-candidates"),
+            Some("waybill:cpe-candidates"),
             "C19 cdx_location={:?} label={:?}",
             c19.cdx_location,
             c19.label,
@@ -459,15 +459,15 @@ mod tests {
         // the LABEL column. Pattern 3 must extract it.
         let row = CatalogRow {
             id: "C19".into(),
-            label: "`mikebom:cpe-candidates`".into(),
+            label: "`waybill:cpe-candidates`".into(),
             cdx_location: "property".into(),
-            spdx23_location: "Annotation `mikebom:cpe-candidates`".into(),
-            spdx3_location: "Annotation `mikebom:cpe-candidates`".into(),
+            spdx23_location: "Annotation `waybill:cpe-candidates`".into(),
+            spdx3_location: "Annotation `waybill:cpe-candidates`".into(),
             section: 'C',
         };
         assert_eq!(
             extract_cdx_property_name_from_catalog_row(&row).as_deref(),
-            Some("mikebom:cpe-candidates"),
+            Some("waybill:cpe-candidates"),
         );
     }
 

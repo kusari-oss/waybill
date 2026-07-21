@@ -67,7 +67,7 @@ pub static COMPILER_INVOCATIONS: HashMap<u32, u64> =
     HashMap::with_max_entries(4096, 0);
 
 /// Milestone 210 — ring buffer for compiler exec + exit events
-/// (see `mikebom-ebpf/src/programs/compiler_exec.rs`). Separate from
+/// (see `waybill-ebpf/src/programs/compiler_exec.rs`). Separate from
 /// `FILE_EVENTS` so overflow accounting per FR-008 is per-event-type.
 /// 256 KB per research R7 — sized for typical build fanout (~100-1000
 /// compiler invocations per scan).

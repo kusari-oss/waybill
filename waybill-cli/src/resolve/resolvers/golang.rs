@@ -4,7 +4,7 @@
 //! `sum.golang.org`. Matches `/{module}/@v/{version}.(zip|mod|info|ziphash)`.
 //!
 //! Extracted verbatim from the pre-refactor
-//! `mikebom-cli/src/resolve/url_resolver.rs::resolve_golang` per FR-002.
+//! `waybill-cli/src/resolve/url_resolver.rs::resolve_golang` per FR-002.
 
 use std::future::Future;
 use std::pin::Pin;

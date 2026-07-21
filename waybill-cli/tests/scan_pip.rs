@@ -5,9 +5,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn cli_local_fixture(sub: &str) -> PathBuf {
-    // Milestone 090: mikebom-cli/tests/fixtures/<sub> dirs moved to
-    // mikebom-test-fixtures repo; resolve via MIKEBOM_FIXTURES_DIR.
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join(sub)
+    // Milestone 090: waybill-cli/tests/fixtures/<sub> dirs moved to
+    // mikebom-test-fixtures repo; resolve via WAYBILL_FIXTURES_DIR.
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join(sub)
 }
 
 fn scan_path(path: &Path, format: &str) -> serde_json::Value {
@@ -28,7 +28,7 @@ fn scan_path(path: &Path, format: &str) -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -52,7 +52,7 @@ fn scan_pip_pep621_emits_main_module_in_metadata_component() {
         .as_array()
         .expect("metadata.component.properties")
         .iter()
-        .find(|p| p["name"].as_str() == Some("mikebom:component-role"));
+        .find(|p| p["name"].as_str() == Some("waybill:component-role"));
     assert_eq!(
         role.and_then(|p| p["value"].as_str()),
         Some("main-module")
@@ -174,14 +174,14 @@ version = "1.0.0"
     // The merged main-module should be in metadata.component (since
     // there's only one main-module, it gets promoted per the
     // C40-tag-driven hooks). Verify both signals: C40 tag (Phase A)
-    // and `mikebom:sbom-tier: deployed` (venv evidence wins per
+    // and `waybill:sbom-tier: deployed` (venv evidence wins per
     // FR-011).
     let meta = &cdx["metadata"]["component"];
     assert_eq!(meta["purl"].as_str(), Some("pkg:pypi/editable-pkg@1.0.0"));
     let props = meta["properties"].as_array().expect("properties array");
     let role = props
         .iter()
-        .find(|p| p["name"].as_str() == Some("mikebom:component-role"));
+        .find(|p| p["name"].as_str() == Some("waybill:component-role"));
     assert_eq!(
         role.and_then(|p| p["value"].as_str()),
         Some("main-module"),
@@ -189,7 +189,7 @@ version = "1.0.0"
     );
     let tier = props
         .iter()
-        .find(|p| p["name"].as_str() == Some("mikebom:sbom-tier"));
+        .find(|p| p["name"].as_str() == Some("waybill:sbom-tier"));
     assert_eq!(
         tier.and_then(|p| p["value"].as_str()),
         Some("deployed"),

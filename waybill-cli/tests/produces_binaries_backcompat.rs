@@ -1,10 +1,10 @@
 //! Milestone 116 PR-A T018 — backwards-compatibility verification.
 //!
 //! Per spec FR-014 / SC-005, source SBOMs that lack the new
-//! `mikebom:produces-binaries` property MUST bind identically to the
+//! `waybill:produces-binaries` property MUST bind identically to the
 //! pre-feature milestone-072 baseline:
 //!
-//! 1. A source SBOM with no `mikebom:produces-binaries` properties
+//! 1. A source SBOM with no `waybill:produces-binaries` properties
 //!    anywhere produces no auto-alias hits — every `binding_for_purl()`
 //!    short-circuits to the existing exact-PURL match path.
 //! 2. A milestone-111-era binding envelope (operator-supplied alias

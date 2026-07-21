@@ -1,11 +1,11 @@
 //! Integration test for the global `--timeout <SECONDS>` flag.
 //!
 //! The flag spawns a tokio watchdog at startup; if it fires before
-//! the main work completes, mikebom exits with status 124 (POSIX
+//! the main work completes, waybill exits with status 124 (POSIX
 //! `timeout(1)` convention) and emits a tracing::error explaining
 //! the early termination.
 //!
-//! The test exercises the watchdog by running mikebom against an
+//! The test exercises the watchdog by running waybill against an
 //! `--image` target that requires a network pull. A `--timeout 1`
 //! is short enough to fire before the pull completes; we assert
 //! the resulting exit code is exactly 124.
@@ -30,7 +30,7 @@ fn timeout_zero_does_not_kill_quick_invocation() {
         .arg("0")
         .arg("--help")
         .output()
-        .expect("mikebom should invoke");
+        .expect("waybill should invoke");
     assert!(
         output.status.success(),
         "--timeout 0 must not kill quick invocations; got status {:?} stderr={}",
@@ -46,7 +46,7 @@ fn timeout_omitted_does_not_kill_quick_invocation() {
     let output = Command::new(mikebom_bin())
         .arg("--help")
         .output()
-        .expect("mikebom should invoke");
+        .expect("waybill should invoke");
     assert!(output.status.success());
 }
 
@@ -54,7 +54,7 @@ fn timeout_omitted_does_not_kill_quick_invocation() {
 fn timeout_fires_on_long_running_work_with_exit_code_124() {
     // Run a deliberately-long-running scan (image-mode pull against
     // a fake registry path that will block) under `--timeout 1`.
-    // The watchdog should fire; mikebom must exit with status 124.
+    // The watchdog should fire; waybill must exit with status 124.
     //
     // We use `--image` against a non-existent registry path that
     // forces a slow lookup. With `--offline=false` (default) +
@@ -76,10 +76,10 @@ fn timeout_fires_on_long_running_work_with_exit_code_124() {
     // separately by the unit-test below.
     //
     // For now, gate behind an env var so it doesn't fail in CI.
-    if std::env::var("MIKEBOM_GLOBAL_TIMEOUT_SLOW_TEST").is_err() {
+    if std::env::var("WAYBILL_GLOBAL_TIMEOUT_SLOW_TEST").is_err() {
         eprintln!(
             "skipping timeout_fires_on_long_running_work_with_exit_code_124 — \
-             set MIKEBOM_GLOBAL_TIMEOUT_SLOW_TEST=1 to enable. \
+             set WAYBILL_GLOBAL_TIMEOUT_SLOW_TEST=1 to enable. \
              Test relies on a deliberately slow scan path which may not \
              reproduce on fast hosts."
         );
@@ -95,7 +95,7 @@ fn timeout_fires_on_long_running_work_with_exit_code_124() {
         .arg("--output")
         .arg("/tmp/_mikebom_timeout_test.cdx.json")
         .output()
-        .expect("mikebom should invoke");
+        .expect("waybill should invoke");
     assert_eq!(
         output.status.code(),
         Some(124),

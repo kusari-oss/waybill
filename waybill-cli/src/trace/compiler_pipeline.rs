@@ -2,7 +2,7 @@
 //!
 //! Consumes:
 //! - `CompilerExecEvent`s from the `COMPILER_EXEC_EVENTS` ring buffer
-//!   (populated by `mikebom-ebpf/src/programs/compiler_exec.rs` —
+//!   (populated by `waybill-ebpf/src/programs/compiler_exec.rs` —
 //!   `sched_process_exec` + `sched_process_exit` tracepoints)
 //! - `FileEvent`s from the existing `FILE_EVENTS` ring buffer that
 //!   carry a `compiler_invocation_id` stamp (added in-kernel per
@@ -73,7 +73,7 @@ pub struct CompilerPipelineAggregator {
     /// FR-016 accounting: which filter categories actually fired at
     /// least once during this trace.
     filter_categories_applied: std::collections::HashSet<FilterCategory>,
-    /// FR-017 signal: was mikebom attached AFTER some compilers had
+    /// FR-017 signal: was waybill attached AFTER some compilers had
     /// already started? Set at trace-start if any `Exec` event
     /// reference a pid that had already been observed.
     attach_late: bool,

@@ -4,7 +4,7 @@
 //!
 //! * **US2 (P1)**: advisory-log fires exactly once when the scan detects
 //!   ≥1 design-tier component AND the scan produced ≥1 component AND
-//!   `MIKEBOM_NO_DESIGN_TIER_ADVISORY` is unset. Silent otherwise.
+//!   `WAYBILL_NO_DESIGN_TIER_ADVISORY` is unset. Silent otherwise.
 //! * **FR-002 offline-orthogonality (SC-005)**: advisory fires under
 //!   `--offline` (unlike the m173 warming advisory).
 //! * **FR-009 cross-ecosystem coverage** (per /speckit-analyze C1 remediation):
@@ -26,7 +26,7 @@ use common::bin;
 const ADVISORY_SUBSTRING: &str = "design-tier components detected: ";
 
 /// Env-var suppression name per data-model.md §Entity 2.
-const SUPPRESS_ENV_VAR: &str = "MIKEBOM_NO_DESIGN_TIER_ADVISORY";
+const SUPPRESS_ENV_VAR: &str = "WAYBILL_NO_DESIGN_TIER_ADVISORY";
 
 /// Count how many times the stable advisory substring appears in the
 /// captured stderr. Equivalent to `grep -cF 'design-tier components detected: '`.
@@ -59,7 +59,7 @@ fn scan_with_env(path: &Path, suppress_value: Option<&str>) -> String {
         .arg(&out_path)
         .arg("--no-deep-hash");
 
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed (exit={:?}): stderr={}",
@@ -151,7 +151,7 @@ fn t001_advisory_fires_once_on_design_tier_scan() {
 
     // Body must reference the reading-guide anchor.
     assert!(
-        stderr.contains("docs/reference/reading-a-mikebom-sbom.md"),
+        stderr.contains("docs/reference/reading-a-waybill-sbom.md"),
         "FR-003: advisory body should reference the reading-guide docs path; full stderr:\n{stderr}"
     );
 }
@@ -270,7 +270,7 @@ fn t006_advisory_fires_on_non_python_design_tier() {
          full stderr:\n{stderr}"
     );
     assert!(
-        stderr.contains("docs/reference/reading-a-mikebom-sbom.md"),
+        stderr.contains("docs/reference/reading-a-waybill-sbom.md"),
         "FR-009: advisory body wording MUST match cross-ecosystem (docs anchor present); \
          full stderr:\n{stderr}"
     );

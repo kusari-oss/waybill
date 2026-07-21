@@ -6,14 +6,14 @@
 //! preserved). When the flag is passed, the operator asserts that the
 //! declared licenses have been reviewed and may be promoted to the
 //! concluded slot; the per-component
-//! `mikebom:license-concluded-source = "operator-asserted"`
+//! `waybill:license-concluded-source = "operator-asserted"`
 //! annotation records the assertion provenance.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join(sub)
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join(sub)
 }
 
 fn run_scan(path: &Path, extra_args: &[&str]) -> serde_json::Value {
@@ -33,7 +33,7 @@ fn run_scan(path: &Path, extra_args: &[&str]) -> serde_json::Value {
     for a in extra_args {
         cmd.arg(a);
     }
-    let status = cmd.status().expect("mikebom should run");
+    let status = cmd.status().expect("waybill should run");
     assert!(status.success(), "scan failed: {extra_args:?}");
     let raw = std::fs::read(&out_path).expect("read sbom");
     serde_json::from_slice(&raw).expect("valid JSON")
@@ -69,7 +69,7 @@ fn count_operator_asserted_annotations(sbom: &serde_json::Value) -> usize {
                         return false;
                     };
                     props.iter().any(|p| {
-                        p["name"].as_str() == Some("mikebom:license-concluded-source")
+                        p["name"].as_str() == Some("waybill:license-concluded-source")
                             && p["value"].as_str() == Some("operator-asserted")
                     })
                 })
@@ -140,7 +140,7 @@ fn conclude_flag_promotes_declared_to_concluded_with_provenance_on_pip() {
     );
     assert_eq!(
         asserted, concluded,
-        "with --conclude-licenses, every promoted component must carry mikebom:license-concluded-source=operator-asserted; got concluded={concluded} annotated={asserted}"
+        "with --conclude-licenses, every promoted component must carry waybill:license-concluded-source=operator-asserted; got concluded={concluded} annotated={asserted}"
     );
 }
 

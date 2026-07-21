@@ -1,6 +1,6 @@
 //! Milestone 133 US1.B integration test — `--file-inventory=orphan`
 //! emits a CDX file-tier component for an unattributed binary, with
-//! no PURL and the `mikebom:component-tier = "file"` annotation.
+//! no PURL and the `waybill:component-tier = "file"` annotation.
 //!
 //! Default behavior (no flag) must NOT emit file-tier components —
 //! preserves the pre-milestone-133 byte-identity guarantee per FR-004
@@ -33,7 +33,7 @@ fn run_scan(path: &Path, extra_args: &[&str]) -> serde_json::Value {
     for a in extra_args {
         cmd.arg(a);
     }
-    let status = cmd.status().expect("mikebom should run");
+    let status = cmd.status().expect("waybill should run");
     assert!(status.success(), "scan failed: {extra_args:?}");
     let raw = std::fs::read(&out_path).expect("read sbom");
     serde_json::from_slice(&raw).expect("valid JSON")
@@ -50,7 +50,7 @@ fn file_tier_components(sbom: &serde_json::Value) -> Vec<&serde_json::Value> {
                 return false;
             };
             props.iter().any(|p| {
-                p["name"].as_str() == Some("mikebom:component-tier")
+                p["name"].as_str() == Some("waybill:component-tier")
                     && p["value"].as_str() == Some("file")
             })
         })
@@ -151,18 +151,18 @@ fn orphan_mode_emits_file_tier_components_with_correct_shape() {
                 .any(|h| h["alg"].as_str() == Some("SHA-256")),
             "file-tier component must carry a SHA-256 hash"
         );
-        // FR-007: `mikebom:file-paths` JSON-encoded array.
+        // FR-007: `waybill:file-paths` JSON-encoded array.
         let props = c["properties"].as_array().expect("properties array");
         let fp = props
             .iter()
-            .find(|p| p["name"].as_str() == Some("mikebom:file-paths"))
+            .find(|p| p["name"].as_str() == Some("waybill:file-paths"))
             .and_then(|p| p["value"].as_str())
-            .expect("mikebom:file-paths annotation present");
+            .expect("waybill:file-paths annotation present");
         let parsed: Vec<String> =
-            serde_json::from_str(fp).expect("mikebom:file-paths is JSON-encoded array");
+            serde_json::from_str(fp).expect("waybill:file-paths is JSON-encoded array");
         assert!(
             !parsed.is_empty(),
-            "mikebom:file-paths must list at least one path"
+            "waybill:file-paths must list at least one path"
         );
         for p in &parsed {
             assert!(
@@ -232,7 +232,7 @@ fn invalid_file_inventory_flag_value_exits_nonzero() {
         .arg("--file-inventory=bogus")
         .arg("--no-deep-hash")
         .status()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         !status.success(),
         "scan with invalid --file-inventory must exit non-zero"

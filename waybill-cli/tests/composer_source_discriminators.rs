@@ -2,7 +2,7 @@
 //!
 //! Covers SC-002: a fixture mixing packagist + vcs + path + plugin +
 //! metapackage. Each entry must emit with the correct PURL shape per
-//! FR-003 + the correct `mikebom:source-type` annotation value
+//! FR-003 + the correct `waybill:source-type` annotation value
 //! (prefixed `composer-packagist` / `composer-vcs` / `composer-path` /
 //! `composer-plugin` / `composer-metapackage`). Plus vendor/name
 //! lowercasing per purl-spec canonical form.
@@ -129,7 +129,7 @@ fn packagist_default_emits_bare_purl() {
     let c = component_with_purl(&doc, "pkg:composer/symfony/console@v7.0.4")
         .expect("packagist-default symfony/console must emit as bare PURL");
     assert_eq!(
-        property_value(c, "mikebom:source-type"),
+        property_value(c, "waybill:source-type"),
         Some("composer-packagist"),
     );
 }
@@ -164,7 +164,7 @@ fn packagist_self_hosted_emits_repository_url_qualifier() {
     let c = component_with_purl(&doc, expected)
         .unwrap_or_else(|| panic!("self-hosted PURL {expected} not found"));
     assert_eq!(
-        property_value(c, "mikebom:source-type"),
+        property_value(c, "waybill:source-type"),
         Some("composer-packagist"),
     );
 }
@@ -179,13 +179,13 @@ fn vcs_source_emits_vcs_url_and_vcs_ref() {
     let c = component_with_purl(&doc, expected)
         .unwrap_or_else(|| panic!("VCS PURL {expected} not found"));
     assert_eq!(
-        property_value(c, "mikebom:source-type"),
+        property_value(c, "waybill:source-type"),
         Some("composer-vcs"),
     );
     assert_eq!(
-        property_value(c, "mikebom:vcs-ref"),
+        property_value(c, "waybill:vcs-ref"),
         Some("eb39649a76b87e8451baf75d10ce82ca3a3d5601"),
-        "VCS source must surface the resolved SHA via mikebom:vcs-ref",
+        "VCS source must surface the resolved SHA via waybill:vcs-ref",
     );
 }
 
@@ -198,11 +198,11 @@ fn path_source_emits_generic_placeholder() {
     let c = component_with_purl(&doc, "pkg:generic/acme-local-lib@0.1.0")
         .expect("path-source PURL must use pkg:generic/ placeholder with flattened vendor");
     assert_eq!(
-        property_value(c, "mikebom:source-type"),
+        property_value(c, "waybill:source-type"),
         Some("composer-path"),
     );
     assert_eq!(
-        property_value(c, "mikebom:path"),
+        property_value(c, "waybill:path"),
         Some("../packages/local-lib"),
     );
 }
@@ -216,11 +216,11 @@ fn composer_plugin_emits_packagist_purl_with_plugin_annotation() {
     let c = component_with_purl(&doc, "pkg:composer/composer/installers@v2.3.0")
         .expect("composer-plugin must emit with standard Packagist PURL");
     assert_eq!(
-        property_value(c, "mikebom:source-type"),
+        property_value(c, "waybill:source-type"),
         Some("composer-plugin"),
     );
     assert_eq!(
-        property_value(c, "mikebom:composer-type"),
+        property_value(c, "waybill:composer-type"),
         Some("composer-plugin"),
     );
 }
@@ -234,7 +234,7 @@ fn composer_metapackage_emits_packagist_purl_with_metapackage_annotation() {
     let c = component_with_purl(&doc, "pkg:composer/symfony/symfony@v7.0.4")
         .expect("metapackage must emit with standard Packagist PURL");
     assert_eq!(
-        property_value(c, "mikebom:source-type"),
+        property_value(c, "waybill:source-type"),
         Some("composer-metapackage"),
     );
     // Metapackages have no dist → no SHA-1 hash.

@@ -6,7 +6,7 @@
 //! * `spdx-2.3-json` — stable, covers all ecosystems supported by the
 //!   CycloneDX path. See [`document`], [`packages`], [`relationships`].
 //! * `spdx-3-json` — stable SPDX 3.0.1 JSON-LD emitter, full ecosystem
-//!   coverage with mikebom-specific signal fidelity vs. the SPDX 2.3
+//!   coverage with waybill-specific signal fidelity vs. the SPDX 2.3
 //!   path. See [`v3_document`], [`v3_packages`], [`v3_relationships`],
 //!   [`v3_licenses`], [`v3_agents`], [`v3_external_ids`],
 //!   [`v3_annotations`].
@@ -16,10 +16,10 @@
 //!   research.md §R2. Prints a stderr deprecation notice at
 //!   invocation time via the CLI layer in `cli/scan_cmd.rs`.
 //!
-//! Mikebom-specific data without a native SPDX 2.3 / 3.0.1 home is
+//! Waybill-specific data without a native SPDX 2.3 / 3.0.1 home is
 //! preserved losslessly via [`annotations`] (SPDX 2.3) and
 //! [`v3_annotations`] (SPDX 3) using the same versioned JSON envelope
-//! per `contracts/mikebom-annotation.schema.json`.
+//! per `contracts/waybill-annotation.schema.json`.
 //!
 //! The data-placement map in `docs/reference/sbom-format-mapping.md`
 //! is the authoritative cross-format contract these serializers honor.
@@ -46,7 +46,7 @@ use super::{EmittedArtifact, OutputConfig, SbomSerializer, ScanArtifacts};
 
 /// SPDX 2.3 JSON serializer (T026).
 ///
-/// Produces a document under the default filename `mikebom.spdx.json`.
+/// Produces a document under the default filename `waybill.spdx.json`.
 /// Determinism is guaranteed by construction: the document's
 /// `creationInfo.created` is taken from [`OutputConfig::created`] and
 /// the `documentNamespace` is a SHA-256 hash of scan content; no
@@ -55,12 +55,12 @@ pub struct Spdx2_3JsonSerializer;
 
 /// SPDX 3.0.1 stable serializer (milestone 011).
 ///
-/// Full coverage across all 9 ecosystems mikebom supports
+/// Full coverage across all 9 ecosystems waybill supports
 /// (apk, cargo, deb, gem, go, maven, npm, pip, rpm); produces a
 /// schema-valid SPDX 3.0.1 JSON-LD document with native-field
 /// parity vs. the CycloneDX serializer (PURL, name, version,
-/// license, hash, supplier/originator) plus mikebom-specific
-/// signal fidelity vs. the SPDX 2.3 serializer (every `mikebom:*`
+/// license, hash, supplier/originator) plus waybill-specific
+/// signal fidelity vs. the SPDX 2.3 serializer (every `waybill:*`
 /// field reaches SPDX 3 either as a typed native property or as
 /// an `Annotation` element under the Q2 strict-match rule).
 /// `experimental()` returns `false` — this is a first-class
@@ -73,7 +73,7 @@ impl SbomSerializer for Spdx3JsonSerializer {
     }
 
     fn default_filename(&self) -> &'static str {
-        "mikebom.spdx3.json"
+        "waybill.spdx3.json"
     }
 
     fn experimental(&self) -> bool {
@@ -121,7 +121,7 @@ impl SbomSerializer for Spdx3JsonSerializer {
 /// Per spec FR-002 + research.md §R6: this identifier was the
 /// milestone-010 experimental stub. Milestone 011 retains it as a
 /// deprecation alias that delegates to [`Spdx3JsonSerializer::serialize`]
-/// verbatim — byte-identical output, same `mikebom.spdx3.json`
+/// verbatim — byte-identical output, same `waybill.spdx3.json`
 /// default filename, no comment-marker injection.
 ///
 /// The deprecation signal is carried by the stderr notice (emitted
@@ -148,7 +148,7 @@ impl SbomSerializer for Spdx3JsonExperimentalSerializer {
         // research.md §R6 — alias produces byte-identical output
         // including the on-disk filename when no `--output`
         // override is set.
-        "mikebom.spdx3.json"
+        "waybill.spdx3.json"
     }
 
     fn experimental(&self) -> bool {
@@ -178,7 +178,7 @@ impl SbomSerializer for Spdx2_3JsonSerializer {
     }
 
     fn default_filename(&self) -> &'static str {
-        "mikebom.spdx.json"
+        "waybill.spdx.json"
     }
 
     fn serialize(
@@ -296,7 +296,7 @@ fn sha256_hex(bytes: &[u8]) -> String {
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     //! Tests for the SPDX ↔ OpenVEX sidecar co-emit path (T030/T037).
-    //! mikebom's scan pipeline doesn't populate `AdvisoryRef` anywhere
+    //! waybill's scan pipeline doesn't populate `AdvisoryRef` anywhere
     //! today, so the only way to exercise the emit-with-VEX branch is
     //! to hand-build a `ScanArtifacts` with synthetic advisories. When
     //! the scanner grows a VEX-enrichment path later, these tests keep
@@ -458,16 +458,16 @@ mod tests {
             "advisory present → SPDX artifact + OpenVEX sidecar"
         );
         let (spdx_art, vex_art) = match artifacts[0].relative_path.to_string_lossy().as_ref() {
-            "mikebom.spdx.json" => (&artifacts[0], &artifacts[1]),
+            "waybill.spdx.json" => (&artifacts[0], &artifacts[1]),
             _ => (&artifacts[1], &artifacts[0]),
         };
         assert_eq!(
             spdx_art.relative_path,
-            std::path::PathBuf::from("mikebom.spdx.json")
+            std::path::PathBuf::from("waybill.spdx.json")
         );
         assert_eq!(
             vex_art.relative_path,
-            std::path::PathBuf::from("mikebom.openvex.json")
+            std::path::PathBuf::from("waybill.openvex.json")
         );
 
         let spdx = parse_spdx(&spdx_art.bytes);
@@ -477,7 +477,7 @@ mod tests {
         assert_eq!(refs.len(), 1);
         let r = &refs[0];
         assert_eq!(r["externalDocumentId"], "DocumentRef-OpenVEX");
-        assert_eq!(r["spdxDocument"], "mikebom.openvex.json");
+        assert_eq!(r["spdxDocument"], "waybill.openvex.json");
         assert_eq!(r["checksum"]["algorithm"], "SHA256");
         // The checksum MUST match the sidecar bytes — if this drifts
         // a consumer would integrity-check and reject the sidecar.
@@ -543,16 +543,16 @@ mod tests {
             "advisory present → SPDX 3 artifact + OpenVEX sidecar"
         );
         let (spdx3_art, vex_art) = match artifacts[0].relative_path.to_string_lossy().as_ref() {
-            "mikebom.spdx3.json" => (&artifacts[0], &artifacts[1]),
+            "waybill.spdx3.json" => (&artifacts[0], &artifacts[1]),
             _ => (&artifacts[1], &artifacts[0]),
         };
         assert_eq!(
             spdx3_art.relative_path,
-            std::path::PathBuf::from("mikebom.spdx3.json")
+            std::path::PathBuf::from("waybill.spdx3.json")
         );
         assert_eq!(
             vex_art.relative_path,
-            std::path::PathBuf::from("mikebom.openvex.json")
+            std::path::PathBuf::from("waybill.openvex.json")
         );
 
         let spdx3 = parse_spdx3(&spdx3_art.bytes);
@@ -572,7 +572,7 @@ mod tests {
         // `locator` is array-typed in the SPDX 3 vocabulary.
         assert_eq!(
             r["locator"],
-            serde_json::json!(["mikebom.openvex.json"])
+            serde_json::json!(["waybill.openvex.json"])
         );
     }
 
@@ -597,7 +597,7 @@ mod tests {
         let spdx3 = parse_spdx3(
             artifacts
                 .iter()
-                .find(|a| a.relative_path == std::path::Path::new("mikebom.spdx3.json"))
+                .find(|a| a.relative_path == std::path::Path::new("waybill.spdx3.json"))
                 .map(|a| &a.bytes)
                 .unwrap(),
         );
@@ -652,7 +652,7 @@ mod tests {
         let spdx = parse_spdx(
             artifacts
                 .iter()
-                .find(|a| a.relative_path == std::path::Path::new("mikebom.spdx.json"))
+                .find(|a| a.relative_path == std::path::Path::new("waybill.spdx.json"))
                 .map(|a| &a.bytes)
                 .unwrap(),
         );

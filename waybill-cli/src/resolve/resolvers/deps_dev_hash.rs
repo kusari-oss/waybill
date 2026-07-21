@@ -1,6 +1,6 @@
 //! Milestone 209: deps.dev hash-lookup resolver.
 //!
-//! Wraps `mikebom-cli/src/resolve/hash_resolver.rs::HashResolver`
+//! Wraps `waybill-cli/src/resolve/hash_resolver.rs::HashResolver`
 //! per FR-003. Handles ONLY `ResolveInput::Connection` variants
 //! whose response carries a `content_hash`. `handles()` also
 //! short-circuits on `ctx.skip_online_validation = true` (FR-011

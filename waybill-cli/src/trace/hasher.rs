@@ -111,7 +111,7 @@ mod tests {
     /// Verify the raw bytes output matches the hex output.
     #[test]
     fn sha256_bytes_matches_hex() {
-        let data = b"mikebom attestation test";
+        let data = b"waybill attestation test";
         let hex = sha256_hex(data);
         let bytes = sha256_bytes(data);
 

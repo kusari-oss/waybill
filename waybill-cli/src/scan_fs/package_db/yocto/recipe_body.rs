@@ -58,7 +58,7 @@ pub(crate) struct RecipeMetadata {
     /// the discriminator); `Some(...)` for every other case.
     pub license: Option<SpdxExpression>,
     /// `LICENSE = "CLOSED"` discriminator. Drives FR-012's
-    /// `mikebom:yocto-license-closed` annotation.
+    /// `waybill:yocto-license-closed` annotation.
     pub license_closed: bool,
     /// `SRC_URI = "..."` field, split on whitespace. Each entry
     /// preserves its scheme + qualifiers (e.g.,
@@ -78,7 +78,7 @@ pub(crate) struct RecipeMetadata {
     /// `component.description` (CDX) / `Package.summary` (SPDX).
     pub summary: Option<String>,
     /// `DESCRIPTION = "..."` field. Caller emits a
-    /// `mikebom:yocto-description` annotation when it differs from
+    /// `waybill:yocto-description` annotation when it differs from
     /// `summary` per FR-010.
     pub description: Option<String>,
     /// `DEPENDS = "..."` field, split on whitespace. Each entry is
@@ -90,14 +90,14 @@ pub(crate) struct RecipeMetadata {
     pub rdepends: BTreeMap<String, Vec<String>>,
     /// `BBCLASSEXTEND = "..."` field, split on whitespace. e.g.,
     /// `["native", "nativesdk"]`. Drives the
-    /// `mikebom:yocto-class-extend` annotation.
+    /// `waybill:yocto-class-extend` annotation.
     pub class_extend: Vec<String>,
     /// Unresolved `${VAR}` references the parser saw in IDENTITY
     /// fields (LICENSE, SRC_URI, SRCREV, HOMEPAGE, SUMMARY). Drives
-    /// FR-005's `mikebom:yocto-unexpanded-vars` annotation.
+    /// FR-005's `waybill:yocto-unexpanded-vars` annotation.
     pub unexpanded_vars: Vec<String>,
     /// Did the parser apply ≥1 override-syntax merge (FR-016)?
-    /// Drives the `mikebom:yocto-overrides-merged` annotation.
+    /// Drives the `waybill:yocto-overrides-merged` annotation.
     pub overrides_merged: bool,
     /// Filesystem path of the `.bb` file (for provenance +
     /// nearest-ancestor layer attribution per FR-006).

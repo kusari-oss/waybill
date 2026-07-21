@@ -6,7 +6,7 @@ use clap::Args;
 pub struct ScanArgs {
     #[arg(long)]
     pub target_pid: Option<u32>,
-    #[arg(long, default_value = "mikebom.attestation.json")]
+    #[arg(long, default_value = "waybill.attestation.json")]
     pub output: PathBuf,
     #[arg(long)]
     pub trace_children: bool,
@@ -77,7 +77,7 @@ pub struct ScanArgs {
     pub require_signing: bool,
 
     /// Explicit subject artifact path. Repeatable. When set,
-    /// auto-detection is suppressed — mikebom signs exactly what you
+    /// auto-detection is suppressed — waybill signs exactly what you
     /// told it to (FR-009).
     #[arg(long = "subject", value_name = "PATH")]
     pub subject: Vec<PathBuf>,
@@ -86,16 +86,16 @@ pub struct ScanArgs {
     /// Statement v0.1 wrapped around a witness attestation-collection
     /// (`material` + `command-run` + `product` + `network-trace`
     /// inner attestors), directly consumable by `sbomit generate` and
-    /// any go-witness-aware verifier. `mikebom-v1` emits mikebom's
+    /// any go-witness-aware verifier. `waybill-v1` emits waybill's
     /// native `BuildTracePredicate` Statement v1 — richer network-
-    /// trace semantics but only mikebom understands it.
+    /// trace semantics but only waybill understands it.
     #[arg(long = "attestation-format", value_name = "FORMAT", default_value = "witness-v0.1")]
     pub attestation_format: String,
 
     /// Milestone 210 (FR-016) — bypass the compiler-pipeline aggregator's
     /// default denylist for `/etc/`, `/proc/`, `/sys/`, `/dev/`, user
     /// cache directories, `/tmp/`, and secret-adjacent paths. Off by
-    /// default so per-component `mikebom:source-read-set` annotations
+    /// default so per-component `waybill:source-read-set` annotations
     /// stay signal-heavy (system reads dominate a build's read syscalls
     /// but almost never disambiguate which SOURCE input produced a
     /// binary). Turn on for kernel/toolchain SBOM audits where reads
@@ -154,9 +154,9 @@ pub async fn execute(args: ScanArgs) -> anyhow::Result<()> {
         anyhow::bail!("--target-pid and command are mutually exclusive");
     }
     match args.attestation_format.as_str() {
-        "witness-v0.1" | "mikebom-v1" => {}
+        "witness-v0.1" | "waybill-v1" => {}
         other => anyhow::bail!(
-            "unknown --attestation-format {other:?}; accepted: witness-v0.1, mikebom-v1"
+            "unknown --attestation-format {other:?}; accepted: witness-v0.1, waybill-v1"
         ),
     }
     execute_scan(args).await
@@ -284,7 +284,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     target_pids.insert(child_pid);
     // Milestone 211 (issue #611) — pid-filter now applies ONLY when the
     // operator explicitly attached to an existing pid via `--target-pid`.
-    // The "run a command and trace it" path (`mikebom trace run -- ...`)
+    // The "run a command and trace it" path (`waybill trace run -- ...`)
     // ALWAYS wants to see events from the entire process subtree —
     // cargo builds fan out to rustc / cc / ld / etc., all of which are
     // legitimate build activity the SBOM depends on. Pre-m211, the
@@ -602,7 +602,7 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
     });
 
     // Feature 006 — dispatch on attestation format. Witness-v0.1 is
-    // the default; mikebom-v1 preserves the richer native predicate
+    // the default; waybill-v1 preserves the richer native predicate
     // for operators who want it.
     if args.attestation_format == "witness-v0.1" {
         use crate::attestation::witness_builder::{build_witness_statement, WitnessBuildConfig};

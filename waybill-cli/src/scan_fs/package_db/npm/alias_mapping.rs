@@ -31,7 +31,7 @@ use std::collections::HashMap;
 ///      (FR-003).
 ///   2. Rewrite edges from local-name refs to aliased identity
 ///      (FR-005).
-///   3. Populate the `mikebom:pnpm-alias` / `mikebom:yarn-alias`
+///   3. Populate the `waybill:pnpm-alias` / `waybill:yarn-alias`
 ///      annotation on the aliased component (FR-006).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct AliasResolution {
@@ -57,7 +57,7 @@ pub(crate) enum AliasEcosystem {
     /// Milestone 199 US2 — package.json inline alias declarations of the
     /// form `"my-alias": "npm:actual-pkg@1.0.0"`. Detected at design-tier
     /// emission time in `walk.rs::parse_root_package_json` via
-    /// [`parse_package_json_alias`]. Emits a `mikebom:declared-as`
+    /// [`parse_package_json_alias`]. Emits a `waybill:declared-as`
     /// annotation carrying the alias name so downstream consumers can
     /// map back to the source-manifest declaration.
     NpmPackageJson,
@@ -70,9 +70,9 @@ impl AliasEcosystem {
     /// pnpm_lock.rs + yarn_lock.rs sites use the literal string.
     pub(crate) fn annotation_name(&self) -> &'static str {
         match self {
-            Self::Pnpm => "mikebom:pnpm-alias",
-            Self::YarnV1 => "mikebom:yarn-alias",
-            Self::NpmPackageJson => "mikebom:declared-as",
+            Self::Pnpm => "waybill:pnpm-alias",
+            Self::YarnV1 => "waybill:yarn-alias",
+            Self::NpmPackageJson => "waybill:declared-as",
         }
     }
 
@@ -101,7 +101,7 @@ impl AliasEcosystem {
 /// Called from `walk.rs::parse_root_package_json` at design-tier emit
 /// time. The caller keys the emitted `PackageDbEntry.purl` on
 /// `aliased_name` (resolved identity) and stamps
-/// `mikebom:declared-as: [local_name]` on the entry.
+/// `waybill:declared-as: [local_name]` on the entry.
 pub(crate) fn parse_package_json_alias(
     dep_name: &str,
     dep_ver_raw: &str,
@@ -677,8 +677,8 @@ mod tests {
     // ─── AliasEcosystem helper tests ───
     #[test]
     fn alias_ecosystem_annotation_name() {
-        assert_eq!(AliasEcosystem::Pnpm.annotation_name(), "mikebom:pnpm-alias");
-        assert_eq!(AliasEcosystem::YarnV1.annotation_name(), "mikebom:yarn-alias");
+        assert_eq!(AliasEcosystem::Pnpm.annotation_name(), "waybill:pnpm-alias");
+        assert_eq!(AliasEcosystem::YarnV1.annotation_name(), "waybill:yarn-alias");
     }
 
     #[test]

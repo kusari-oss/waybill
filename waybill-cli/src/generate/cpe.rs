@@ -34,7 +34,7 @@ use waybill_common::resolution::ResolvedComponent;
 const GENERIC_LIBRARY_CPES: &[(&str, &[(&str, &str)])] = &[
     // libcurl: historical `haxx:curl` dominates pre-2023 NVD records;
     // modern `curl:curl` also appears. Both emitted — primary goes to
-    // `component.cpe`, secondary to `mikebom:cpe-candidates` property.
+    // `component.cpe`, secondary to `waybill:cpe-candidates` property.
     ("curl", &[("haxx", "curl"), ("curl", "curl")]),
     // GnuTLS — NVD canonical.
     ("gnutls", &[("gnu", "gnutls")]),
@@ -428,7 +428,7 @@ mod tests {
     /// T007 — Contract 1 (multi-vendor): libcurl gets two NVD-cited
     /// vendor:product pairs. The first (`haxx:curl`) populates the
     /// CDX `component.cpe`; the second (`curl:curl`) flows through
-    /// the existing `mikebom:cpe-candidates` overflow property.
+    /// the existing `waybill:cpe-candidates` overflow property.
     #[test]
     fn generic_curl_emits_dual_candidates() {
         let c = make_component("pkg:generic/curl@8.4.0");

@@ -1,14 +1,14 @@
-//! `mikebom sbom enrich` — feature 006 US5 + milestone 072 US2.
+//! `waybill sbom enrich` — feature 006 US5 + milestone 072 US2.
 //!
 //! Two enrichment paths:
 //!
 //! - `--patch <PATH>`: RFC 6902 JSON Patch operations applied to the
-//!   target SBOM with `mikebom:enrichment-patch[N]` provenance
+//!   target SBOM with `waybill:enrichment-patch[N]` provenance
 //!   recording. Untouched by milestone 072.
 //! - `--vex-overrides <PATH>` + `--vex-propagation-mode {permissive,
 //!   caveated,strict}` (milestone 072 / T021): propagate VEX
 //!   statements from a source-tier OpenVEX 0.2.0 document onto the
-//!   target SBOM, gated by per-instance `mikebom:source-document-
+//!   target SBOM, gated by per-instance `waybill:source-document-
 //!   binding` strength per `contracts/openvex-instance-identifiers
 //!   .md` C-3 + C-4 + C-5.
 //!
@@ -55,7 +55,7 @@ pub struct EnrichArgs {
     /// Path to a source-tier OpenVEX 0.2.0 document whose statements
     /// will be propagated onto components in `sbom_file`. Each
     /// propagation is gated by the target component's
-    /// `mikebom:source-document-binding` strength per
+    /// `waybill:source-document-binding` strength per
     /// `--vex-propagation-mode`.
     #[arg(long = "vex-overrides", value_name = "PATH")]
     pub vex_overrides: Option<PathBuf>,
@@ -68,7 +68,7 @@ pub struct EnrichArgs {
         value_enum,
         default_value_t = VexPropagationMode::Caveated,
         help = "VEX propagation mode. caveated (default) tags non-verified \
-                bindings with mikebom:vex-binding-status: unverified. strict \
+                bindings with waybill:vex-binding-status: unverified. strict \
                 refuses propagation onto non-verified bindings (exit non-zero). \
                 permissive matches pre-072 behavior — propagate by PURL match \
                 without binding check."
@@ -201,7 +201,7 @@ pub async fn execute(args: EnrichArgs, _offline: bool) -> anyhow::Result<()> {
     if propagation_failed {
         anyhow::bail!(
             "VEX propagation refused at least one statement under \
-             --vex-propagation-mode {:?}: see mikebom:vex-propagation-refusals \
+             --vex-propagation-mode {:?}: see waybill:vex-propagation-refusals \
              property in the output SBOM for per-instance rationales",
             args.vex_propagation_mode
         );

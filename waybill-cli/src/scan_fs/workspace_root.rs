@@ -32,7 +32,7 @@ use std::path::Path;
 /// Returns `None` when the input is malformed (empty string) or
 /// unattributable (a `path+file://` URI whose absolute path is not
 /// under `scan_root_abs`). The caller then omits the
-/// `mikebom:workspace-member` annotation per FR-002.
+/// `waybill:workspace-member` annotation per FR-002.
 ///
 /// See module docs for the two source-path shapes handled.
 pub(crate) fn derive_workspace_root(

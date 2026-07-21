@@ -1,10 +1,10 @@
-//! Shared identifier-handling utilities used across the mikebom-cli
+//! Shared identifier-handling utilities used across the waybill-cli
 //! binary. Currently exposes one submodule:
 //!
 //! * [`sanitize`] — milestone 105 (originally milestone 075): URL
 //!   credential redaction. Strips RFC 3986 userinfo from candidate URLs
 //!   before they appear in any emitted SBOM (`pkg:git+https://`,
-//!   `mikebom:download-url`, etc.) and emits a `tracing::warn!` event
+//!   `waybill:download-url`, etc.) and emits a `tracing::warn!` event
 //!   so operators can fix manifests that contain secrets.
 //!
 //! Milestone 105 promoted the helper from `binding/identifiers/auto_detect.rs`'s

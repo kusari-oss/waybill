@@ -363,7 +363,7 @@ pub(crate) fn parse_pnpm_lock(
         // (same shape as npm US1). Precedence:
         //   1. `dev: true`  → Development (m179 FR-015)
         //   2. `optional: true` AND NOT peer-optional → Optional (m180 US2)
-        //      + emit `mikebom:optional-derivation = "npm-optional-dependencies"`
+        //      + emit `waybill:optional-derivation = "npm-optional-dependencies"`
         //   3. otherwise → Runtime
         // Peer-optional (`peer && optional`) short-circuits Optional
         // per FR-006 — m178's PROVIDED_DEPENDENCY_OF wins.
@@ -374,7 +374,7 @@ pub(crate) fn parse_pnpm_lock(
             Some(LifecycleScope::Development)
         } else if is_optional && !is_peer {
             m180_annotations.insert(
-                "mikebom:optional-derivation".to_string(),
+                "waybill:optional-derivation".to_string(),
                 serde_json::Value::String("npm-optional-dependencies".to_string()),
             );
             Some(LifecycleScope::Optional)
@@ -425,7 +425,7 @@ pub(crate) fn parse_pnpm_lock(
     //      canonical (FR-012 multi-alias case).
     //   3. Rewrite each PackageDbEntry.depends via `rewrite_dep_names`.
     //   4. For each PackageDbEntry whose canonical matches the reverse-
-    //      map, insert `mikebom:pnpm-alias = <local-name>` into
+    //      map, insert `waybill:pnpm-alias = <local-name>` into
     //      extra_annotations. Multi-alias emits Value::Array;
     //      single-alias emits Value::String.
     let mut alias_map: super::alias_mapping::AliasMap =
@@ -469,7 +469,7 @@ pub(crate) fn parse_pnpm_lock(
                 };
                 entry
                     .extra_annotations
-                    .insert("mikebom:pnpm-alias".to_string(), value);
+                    .insert("waybill:pnpm-alias".to_string(), value);
             }
         }
         // Milestone 159 FR-011 info log — emit ONLY when at least one
@@ -504,7 +504,7 @@ pub(crate) fn parse_pnpm_lock(
     // Milestone 157 FR-008 warn-level diagnostic — anomalous v9
     // lockfile shape. Fires when the operator's lockfile claims
     // v9 but has no snapshots section (pnpm's own tools would
-    // refuse to install from it, but mikebom's fail-open posture
+    // refuse to install from it, but waybill's fail-open posture
     // emits the identity-only graph with a diagnostic).
     if is_v9_or_later && snapshots_lookup.is_empty() {
         tracing::warn!(
@@ -843,7 +843,7 @@ packages:
     /// T014 — real test-podman-desktop-shape aliases: `react-helmet-async`,
     /// `react-loadable`, `string-width-cjs`, `strip-ansi-cjs` all resolve
     /// to their aliased canonical PURLs; the local-name PURLs are NOT
-    /// emitted; each aliased entry carries `mikebom:pnpm-alias =
+    /// emitted; each aliased entry carries `waybill:pnpm-alias =
     /// <local-name>`; the depender's depends list contains the aliased
     /// canonical names.
     #[test]
@@ -908,15 +908,15 @@ snapshots:
             "local-name string-width-cjs MUST NOT be emitted"
         );
 
-        // Aliased entries carry `mikebom:pnpm-alias = <local-name>`.
+        // Aliased entries carry `waybill:pnpm-alias = <local-name>`.
         let slorber = by_name["@slorber/react-helmet-async"];
         assert_eq!(
-            slorber.extra_annotations.get("mikebom:pnpm-alias"),
+            slorber.extra_annotations.get("waybill:pnpm-alias"),
             Some(&serde_json::Value::String("react-helmet-async".to_string())),
         );
         let sw = by_name["string-width"];
         assert_eq!(
-            sw.extra_annotations.get("mikebom:pnpm-alias"),
+            sw.extra_annotations.get("waybill:pnpm-alias"),
             Some(&serde_json::Value::String("string-width-cjs".to_string())),
         );
 
@@ -938,7 +938,7 @@ snapshots:
 
     /// T015a (analyze finding A2) — FR-012 multi-alias: same canonical
     /// component reached via TWO different local-names emits a
-    /// Value::Array of local-names in `mikebom:pnpm-alias`.
+    /// Value::Array of local-names in `waybill:pnpm-alias`.
     #[test]
     fn m159_pnpm_multi_alias_emits_array() {
         let yaml = r#"
@@ -967,7 +967,7 @@ snapshots:
         let by_name: std::collections::HashMap<String, &PackageDbEntry> =
             out.iter().map(|e| (e.name.clone(), e)).collect();
         let helmet = by_name["@slorber/react-helmet-async"];
-        let anno = helmet.extra_annotations.get("mikebom:pnpm-alias").unwrap();
+        let anno = helmet.extra_annotations.get("waybill:pnpm-alias").unwrap();
         // Expected: Value::Array of both locals, sorted.
         let arr = anno.as_array().expect("annotation must be Value::Array for multi-alias");
         let values: Vec<&str> = arr.iter().filter_map(|v| v.as_str()).collect();
@@ -975,7 +975,7 @@ snapshots:
     }
 
     /// T016 — no-alias pnpm-lock is byte-identical to pre-159 behavior:
-    /// no `mikebom:pnpm-alias` annotations added on any entry.
+    /// no `waybill:pnpm-alias` annotations added on any entry.
     #[test]
     fn m159_pnpm_no_alias_no_annotation() {
         let yaml = r#"
@@ -997,8 +997,8 @@ snapshots:
         let out = parse_pnpm_lock(&parsed, "/no-alias.yaml", false);
         for entry in &out {
             assert!(
-                !entry.extra_annotations.contains_key("mikebom:pnpm-alias"),
-                "no-alias lockfile MUST NOT add mikebom:pnpm-alias; {} did",
+                !entry.extra_annotations.contains_key("waybill:pnpm-alias"),
+                "no-alias lockfile MUST NOT add waybill:pnpm-alias; {} did",
                 entry.name
             );
         }
@@ -1267,7 +1267,7 @@ packages:
         assert_eq!(
             fsevents
                 .extra_annotations
-                .get("mikebom:optional-derivation"),
+                .get("waybill:optional-derivation"),
             Some(&serde_json::Value::String(
                 "npm-optional-dependencies".to_string()
             ))
@@ -1296,7 +1296,7 @@ packages:
         assert!(
             !entry
                 .extra_annotations
-                .contains_key("mikebom:optional-derivation")
+                .contains_key("waybill:optional-derivation")
         );
     }
 
@@ -1324,8 +1324,8 @@ packages:
         assert!(
             !react
                 .extra_annotations
-                .contains_key("mikebom:optional-derivation"),
-            "peer-optional entry MUST NOT carry mikebom:optional-derivation (FR-006)"
+                .contains_key("waybill:optional-derivation"),
+            "peer-optional entry MUST NOT carry waybill:optional-derivation (FR-006)"
         );
     }
 }

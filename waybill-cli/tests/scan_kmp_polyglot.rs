@@ -52,15 +52,15 @@ fn run_scan(root: &Path) -> (serde_json::Value, Output) {
         .arg("--offline")
         .arg("--output")
         .arg(&out_path)
-        .env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
+        .env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
         .env("RUST_LOG", "warn")
-        .env_remove("MIKEBOM_EXCLUDE_PATH")
-        .env_remove("MIKEBOM_NO_GO_MOD_WHY")
+        .env_remove("WAYBILL_EXCLUDE_PATH")
+        .env_remove("WAYBILL_NO_GO_MOD_WHY")
         .output()
-        .expect("failed to invoke mikebom binary");
+        .expect("failed to invoke waybill binary");
     if !output.status.success() {
         panic!(
-            "mikebom exited non-zero:\nstdout: {}\nstderr: {}",
+            "waybill exited non-zero:\nstdout: {}\nstderr: {}",
             String::from_utf8_lossy(&output.stdout),
             String::from_utf8_lossy(&output.stderr),
         );
@@ -158,7 +158,7 @@ fn us3_kmp_workspace_root_and_kmp_source_set_provenance_present() {
     let root = component_by_purl(&cdx, "pkg:generic/kmp-app@0.0.0")
         .expect("workspace-root component pkg:generic/kmp-app@0.0.0");
     assert_eq!(
-        component_property(root, "mikebom:component-role"),
+        component_property(root, "waybill:component-role"),
         Some("workspace-root")
     );
 
@@ -169,8 +169,8 @@ fn us3_kmp_workspace_root_and_kmp_source_set_provenance_present() {
         "pkg:maven/org.jetbrains.kotlinx/kotlinx-serialization-json@1.6.2",
     )
     .expect("kotlinx-serialization-json (shared module commonMain)");
-    let raw = component_property(kx, "mikebom:kmp-source-set")
-        .expect("mikebom:kmp-source-set property present");
+    let raw = component_property(kx, "waybill:kmp-source-set")
+        .expect("waybill:kmp-source-set property present");
     let arr: serde_json::Value =
         serde_json::from_str(raw).expect("kmp-source-set value parses as JSON");
     let names: Vec<&str> = arr
@@ -254,7 +254,7 @@ fn us3_no_swift_no_kotlin_emits_zero_122_components() {
             c.get("purl")
                 .and_then(|v| v.as_str())
                 .is_some_and(|p| p.starts_with("pkg:generic/") && p.ends_with("@0.0.0"))
-                && component_property(c, "mikebom:component-role") == Some("workspace-root")
+                && component_property(c, "waybill:component-role") == Some("workspace-root")
         })
         .count();
     assert_eq!(

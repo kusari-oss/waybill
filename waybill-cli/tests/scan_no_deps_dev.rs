@@ -42,7 +42,7 @@ fn scan(extra_args: &[&str]) -> (bool, String) {
     for a in extra_args {
         cmd.arg(a);
     }
-    let out = cmd.output().expect("spawn mikebom");
+    let out = cmd.output().expect("spawn waybill");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     (out.status.success(), stderr)
 }

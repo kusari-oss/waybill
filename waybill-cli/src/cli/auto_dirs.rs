@@ -1,6 +1,6 @@
 //! Auto-detect artifact directories from the traced command.
 //!
-//! A user running `mikebom trace run --auto-dirs -- cargo install ripgrep`
+//! A user running `waybill trace run --auto-dirs -- cargo install ripgrep`
 //! shouldn't need to know that cargo's cache lives at
 //! `$CARGO_HOME/registry/cache`. We inspect the command argv, match the
 //! first interesting basename against a known-tool table, and return the

@@ -8,7 +8,7 @@
 //! `rootElement` selection in `generate/cyclonedx/metadata.rs`,
 //! `generate/spdx/document.rs`, and `generate/spdx/v3_document.rs`
 //! each carries its own inline priority ladder. When multiple
-//! main-module-tagged components exist (`mikebom:component-role:
+//! main-module-tagged components exist (`waybill:component-role:
 //! "main-module"`), the existing ladder falls through to either the
 //! Maven `scan_target_coord` branch or a `pkg:generic/<target>@0.0.0`
 //! placeholder. This is wrong for two reproducible bug classes:
@@ -33,12 +33,12 @@ use crate::scan_fs::package_db::maven::ScanTargetCoord;
 
 /// Annotation key carrying the main-module role (set by every
 /// per-ecosystem main-module emitter).
-const COMPONENT_ROLE_KEY: &str = "mikebom:component-role";
+const COMPONENT_ROLE_KEY: &str = "waybill:component-role";
 const MAIN_MODULE_ROLE: &str = "main-module";
 
 /// Annotation key set by [`crate::scan_fs::scan_path`] after readers
 /// complete. Carries a `serde_json::Value::Bool`.
-pub const IS_WORKSPACE_ROOT_KEY: &str = "mikebom:is-workspace-root";
+pub const IS_WORKSPACE_ROOT_KEY: &str = "waybill:is-workspace-root";
 
 /// FR-003 ecosystem-priority order. Fixed at compile time per
 /// research R2. Operators wanting a different order use
@@ -82,7 +82,7 @@ impl RootSelectionHeuristic {
         }
     }
 
-    /// Fixed confidence per heuristic. Modeled on mikebom's existing
+    /// Fixed confidence per heuristic. Modeled on waybill's existing
     /// CDX `evidence.identity.confidence` channel. Always in `[0.0, 1.0]`.
     pub fn confidence(&self) -> f64 {
         match self {
@@ -143,7 +143,7 @@ pub struct RootSelectionResult {
 ///    (preserves byte-identity per FR-009). This is the
 ///    pre-milestone-127 behavior, unchanged.
 /// 3. **FR-002 repo-root tiebreaker** — exactly one main-module has
-///    `mikebom:is-workspace-root == true` → `MainModule(idx)`,
+///    `waybill:is-workspace-root == true` → `MainModule(idx)`,
 ///    heuristic = `RepoRoot` (confidence 0.95).
 /// 4. **FR-003 ecosystem-priority** — multiple main-modules have
 ///    `is_workspace_root == true`; pick by [`ECOSYSTEM_PRIORITY`] →
@@ -299,7 +299,7 @@ pub fn select_root(
     }
 }
 
-/// Read the `mikebom:is-workspace-root` annotation. Absent or
+/// Read the `waybill:is-workspace-root` annotation. Absent or
 /// non-bool → `false` (degrades gracefully per FR-001 contract).
 fn is_workspace_root(c: &ResolvedComponent) -> bool {
     c.extra_annotations
@@ -343,7 +343,7 @@ fn pick_by_lcp(
     // contract — main-modules emit their defining manifest file there).
     // Ecosystems vary in where they record the path: Go reader uses
     // `evidence.source_file_paths`; workspace-synthesizer + Swift /
-    // Kotlin / NuGet readers use the `mikebom:source-files` annotation
+    // Kotlin / NuGet readers use the `waybill:source-files` annotation
     // (string OR array). Read both, prefer evidence.
     let manifest_paths: Vec<(usize, PathBuf)> = main_modules
         .iter()
@@ -352,7 +352,7 @@ fn pick_by_lcp(
             let from_evidence = comp.evidence.source_file_paths.first().cloned();
             let from_annotation = comp
                 .extra_annotations
-                .get("mikebom:source-files")
+                .get("waybill:source-files")
                 .and_then(|v| match v {
                     serde_json::Value::String(s) => Some(s.clone()),
                     serde_json::Value::Array(arr) => arr
@@ -433,17 +433,17 @@ fn longest_common_path_prefix(paths: &[PathBuf]) -> PathBuf {
 /// `extra_annotations` iteration site (CDX builder, SPDX 2.3 + 3
 /// annotations) so the count==1 fast path stays byte-identical to
 /// pre-milestone-127 emission for every fixture in
-/// `mikebom-cli/tests/fixtures/golden/`.
+/// `waybill-cli/tests/fixtures/golden/`.
 pub fn is_internal_emission_key(key: &str) -> bool {
     // Milestone 201 (FR-007, closes #587): m201's new positive-
-    // identifier annotation `mikebom:is-cargo-workspace-toplevel`
+    // identifier annotation `waybill:is-cargo-workspace-toplevel`
     // (stamped by cargo m064 emission, consumed by scan_fs/mod.rs's
     // is_workspace_root stamping) is internal-only — same treatment
-    // as `mikebom:is-workspace-root`. It never appears in emitted
+    // as `waybill:is-workspace-root`. It never appears in emitted
     // CDX/SPDX SBOMs.
     matches!(
         key,
-        IS_WORKSPACE_ROOT_KEY | "mikebom:is-cargo-workspace-toplevel"
+        IS_WORKSPACE_ROOT_KEY | "waybill:is-cargo-workspace-toplevel"
     )
 }
 
@@ -452,14 +452,14 @@ pub fn is_internal_emission_key(key: &str) -> bool {
 /// `c.evidence.*`) and MUST NOT be re-emitted from the
 /// `extra_annotations` bag — doing so produces double-emission +
 /// per-emitter value-drift like the 2026-06-26 audit flagged for
-/// `mikebom:source-files` on Maven nested-JAR components.
+/// `waybill:source-files` on Maven nested-JAR components.
 ///
 /// Defense-in-depth: callers that intend to carry per-reader source
 /// provenance MUST use a DISTINCT annotation key (e.g.,
-/// `mikebom:<reader>-source-url`) to avoid colliding with the
+/// `waybill:<reader>-source-url`) to avoid colliding with the
 /// field-derived emission.
 pub fn is_field_owned_annotation_key(key: &str) -> bool {
-    matches!(key, "mikebom:source-files")
+    matches!(key, "waybill:source-files")
 }
 
 // ============================================================
@@ -474,7 +474,7 @@ pub fn is_field_owned_annotation_key(key: &str) -> bool {
 /// CDX 1.6 `component.type = "library"` describes the role but not the
 /// demote provenance; SPDX 2.3 + SPDX 3 likewise lack a native carrier.
 /// See `docs/reference/sbom-format-mapping.md` C102 for the audit.
-pub(crate) const DEMOTED_FROM_MAIN_MODULE_KEY: &str = "mikebom:demoted-from-main-module";
+pub(crate) const DEMOTED_FROM_MAIN_MODULE_KEY: &str = "waybill:demoted-from-main-module";
 
 /// Return shape for [`apply_main_module_drop_or_demote`].
 ///
@@ -515,9 +515,9 @@ pub(crate) struct DropOrDemoteResult {
 ///
 /// 3. **Override ACTIVE + preserve ON** — milestone 149 NEW. For each
 ///    main-module entry: KEEP in the returned Vec after applying the
-///    demote transformation (remove the `mikebom:component-role:
+///    demote transformation (remove the `waybill:component-role:
 ///    main-module` annotation so downstream type-derivation produces
-///    `type: "library"`; add `mikebom:demoted-from-main-module: "true"`
+///    `type: "library"`; add `waybill:demoted-from-main-module: "true"`
 ///    annotation per Constitution Principle V parity-bridging); ADD
 ///    PURL to `redirected_main_module_purls` so relationship re-anchoring
 ///    still fires per US1 clarification Option A.
@@ -642,31 +642,31 @@ mod tests {
     use std::collections::BTreeMap;
 
     /// Milestone 145 US3 (FR-009): the field-owned-key helper protects
-    /// `mikebom:source-files` from double-emission. New field-owned
+    /// `waybill:source-files` from double-emission. New field-owned
     /// keys can be added by extending the `matches!` arm; the test
     /// guards the contract.
     #[test]
     fn is_field_owned_annotation_key_md145() {
-        assert!(is_field_owned_annotation_key("mikebom:source-files"));
+        assert!(is_field_owned_annotation_key("waybill:source-files"));
         // Unrelated keys MUST NOT be filtered (they're emitted from
         // extra_annotations as the only source).
-        assert!(!is_field_owned_annotation_key("mikebom:source-files-nested-url"));
-        assert!(!is_field_owned_annotation_key("mikebom:lifecycle-scope"));
-        assert!(!is_field_owned_annotation_key("mikebom:cpe-candidates"));
-        assert!(!is_field_owned_annotation_key("mikebom:file-paths"));
+        assert!(!is_field_owned_annotation_key("waybill:source-files-nested-url"));
+        assert!(!is_field_owned_annotation_key("waybill:lifecycle-scope"));
+        assert!(!is_field_owned_annotation_key("waybill:cpe-candidates"));
+        assert!(!is_field_owned_annotation_key("waybill:file-paths"));
     }
 
     /// Milestone 201 (FR-007, closes #587): the m201 positive-identifier
-    /// annotation `mikebom:is-cargo-workspace-toplevel` MUST be internal-
+    /// annotation `waybill:is-cargo-workspace-toplevel` MUST be internal-
     /// emission-only (filtered from CDX/SPDX output), matching the
-    /// existing treatment of `mikebom:is-workspace-root`.
+    /// existing treatment of `waybill:is-workspace-root`.
     #[test]
     fn is_internal_emission_key_filters_workspace_toplevel_annotation_m201() {
-        assert!(is_internal_emission_key("mikebom:is-cargo-workspace-toplevel"));
+        assert!(is_internal_emission_key("waybill:is-cargo-workspace-toplevel"));
         assert!(is_internal_emission_key(IS_WORKSPACE_ROOT_KEY));
         // Guardrail: filter must not over-broaden.
-        assert!(!is_internal_emission_key("mikebom:some-other-annotation"));
-        assert!(!is_internal_emission_key("mikebom:lifecycle-scope"));
+        assert!(!is_internal_emission_key("waybill:some-other-annotation"));
+        assert!(!is_internal_emission_key("waybill:lifecycle-scope"));
     }
 
     fn make_main_module(
@@ -686,7 +686,7 @@ mod tests {
             serde_json::Value::Bool(is_workspace_root_flag),
         );
         extra_annotations.insert(
-            "mikebom:source-files".to_string(),
+            "waybill:source-files".to_string(),
             serde_json::Value::Array(vec![serde_json::Value::String(
                 manifest_path.to_string(),
             )]),
@@ -1027,7 +1027,7 @@ mod tests {
     /// T009 — FR-007 + SC-003 regression guard: Path 1 (passthrough).
     /// Override INACTIVE → helper returns input verbatim, no redirected
     /// PURLs, no demote transformation. Main-module entries KEEP their
-    /// `mikebom:component-role` annotation.
+    /// `waybill:component-role` annotation.
     #[test]
     fn apply_drop_or_demote_no_override_is_passthrough_md149() {
         let components = vec![

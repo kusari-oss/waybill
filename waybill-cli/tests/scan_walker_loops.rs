@@ -1,4 +1,4 @@
-//! Milestone 054 integration test (US1 AS#1 + AS#2): mikebom must
+//! Milestone 054 integration test (US1 AS#1 + AS#2): waybill must
 //! complete a scan in bounded wall-clock time on a synthesized
 //! filesystem topology that mirrors the knative/func v1.22.0
 //! reproducer (intentional symlink loops in test-fixture directories).
@@ -6,7 +6,7 @@
 //! Pre-054 this test would hang at 100% CPU forever in
 //! `rpm_file::walk_dir` (and `binary::discover::walk_dir`); post-054
 //! the canonicalize-keyed visited-set breaks the cycles. The test
-//! invokes the actual `mikebom` binary subprocess (matching the
+//! invokes the actual `waybill` binary subprocess (matching the
 //! existing `tests/scan_*.rs` integration-test pattern) so the
 //! coverage is end-to-end.
 //!
@@ -53,7 +53,7 @@ fn build_knative_style_fixture(root: &Path) {
 #[test]
 fn scan_handles_knative_func_style_symlink_loops_without_hanging() {
     // US1 AS#1 + AS#2 + SC-001 + SC-006: pre-054 this fixture
-    // shape would hang `mikebom sbom scan` indefinitely. Post-054
+    // shape would hang `waybill sbom scan` indefinitely. Post-054
     // the canonicalize-keyed visited-set breaks every cycle and
     // the scan completes promptly.
     let tmp = tempfile::tempdir().expect("tempdir");
@@ -79,7 +79,7 @@ fn scan_handles_knative_func_style_symlink_loops_without_hanging() {
         .arg(out.path())
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     let elapsed = start.elapsed();
 
     assert!(

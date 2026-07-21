@@ -1,4 +1,4 @@
-//! Shared helper for normalizing `mikebom:produces-binaries` declarations
+//! Shared helper for normalizing `waybill:produces-binaries` declarations
 //! (milestone 116, Option B of issue #225).
 //!
 //! Every per-ecosystem main-module extractor (Cargo, npm, pip, gem, maven, Go)
@@ -20,11 +20,11 @@ use std::collections::BTreeSet;
 
 /// CDX property + SPDX annotation key. Public so per-ecosystem extractors
 /// and the cross-tier binder share one string literal.
-pub(crate) const PROPERTY_NAME: &str = "mikebom:produces-binaries";
+pub(crate) const PROPERTY_NAME: &str = "waybill:produces-binaries";
 
 /// Stamp a normalized + union-merged produces-binaries declaration onto a
 /// main-module component's `extra_annotations` map. Performs:
-///   1. Read any pre-existing `mikebom:produces-binaries` value already on
+///   1. Read any pre-existing `waybill:produces-binaries` value already on
 ///      the component (e.g., operator pre-seeded via `--from-sbom` round-
 ///      trip per FR-012 operator-preservation rule).
 ///   2. Union-merge with the newly-discovered candidates.
@@ -66,7 +66,7 @@ pub(crate) fn stamp_into_annotations(
     );
 }
 
-/// Canonical-form normalization for `mikebom:produces-binaries` declarations.
+/// Canonical-form normalization for `waybill:produces-binaries` declarations.
 ///
 /// Returns the input names lowercased, with `.exe` / `.jar` suffixes stripped,
 /// filtered to the `[a-z0-9][a-z0-9_-]*` shape invariant, deduped, and lex-sorted.

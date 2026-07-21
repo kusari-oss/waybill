@@ -1,7 +1,7 @@
 //! Integration test for `--include-vendored` CLI flag runtime behavior
 //! (milestone 102 US3 / milestone 103 / Contract 8). Verifies:
 //! - default OFF → zero vendored components
-//! - flag ON (via env var) → vendored components emit with `mikebom:vendored = true`
+//! - flag ON (via env var) → vendored components emit with `waybill:vendored = true`
 //! - path-prefix gate rejects first-party `add_subdirectory(src)`
 
 use std::path::PathBuf;
@@ -22,10 +22,10 @@ fn scan_fixture(include_vendored: bool) -> serde_json::Value {
         .to_path_buf();
     let mut cmd = Command::new(bin);
     if include_vendored {
-        cmd.env("MIKEBOM_INCLUDE_VENDORED", "1");
+        cmd.env("WAYBILL_INCLUDE_VENDORED", "1");
     } else {
         // Explicitly clear so a host-level env doesn't leak into the test.
-        cmd.env_remove("MIKEBOM_INCLUDE_VENDORED");
+        cmd.env_remove("WAYBILL_INCLUDE_VENDORED");
     }
     cmd.arg("--offline")
         .arg("sbom")
@@ -35,7 +35,7 @@ fn scan_fixture(include_vendored: bool) -> serde_json::Value {
         .arg("--output")
         .arg(&out_path)
         .arg("--no-deep-hash");
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -86,18 +86,18 @@ fn vendored_emitted_with_flag() {
     assert_eq!(
         foo.len(),
         1,
-        "with MIKEBOM_INCLUDE_VENDORED=1, third_party/foo MUST emit one component"
+        "with WAYBILL_INCLUDE_VENDORED=1, third_party/foo MUST emit one component"
     );
     assert_eq!(
         foo[0]["purl"].as_str(),
         Some("pkg:generic/foo@1.2.3"),
         "version must be backfilled from third_party/foo/version.txt"
     );
-    let vendored = component_property(foo[0], "mikebom:vendored");
+    let vendored = component_property(foo[0], "waybill:vendored");
     assert_eq!(
         vendored,
         Some("true"),
-        "mikebom:vendored MUST be JSON boolean true (serializes as the string \"true\" when CDX property values are stringified); got {vendored:?}"
+        "waybill:vendored MUST be JSON boolean true (serializes as the string \"true\" when CDX property values are stringified); got {vendored:?}"
     );
 }
 

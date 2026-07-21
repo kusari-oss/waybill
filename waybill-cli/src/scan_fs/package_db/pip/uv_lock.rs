@@ -29,7 +29,7 @@
 //!
 //! Workspace handling per Clarification Q1 of milestone 106: when the
 //! root `pyproject.toml` declares `[tool.uv.workspace]` with a `members`
-//! array, mikebom emits a synthetic workspace-root + each member as
+//! array, waybill emits a synthetic workspace-root + each member as
 //! main-module + intra-workspace dependency edges. The workspace-root
 //! component is built by [`super::super::workspace::synthesize_workspace_root`].
 
@@ -79,7 +79,7 @@ pub(crate) fn parse_uv_lock(
     // Detect workspace mode by reading the root pyproject.toml's
     // `[tool.uv.workspace]` block. When present, collect the set of
     // workspace member names so we can tag them with
-    // `mikebom:component-role: "main-module"` at emission time and
+    // `waybill:component-role: "main-module"` at emission time and
     // emit a synthetic workspace-root above them.
     let workspace_info = detect_workspace(rootfs);
 
@@ -187,7 +187,7 @@ pub(crate) fn parse_uv_lock(
         if let Some(ws) = &workspace_info {
             if ws.member_names.contains(name) {
                 extra.insert(
-                    "mikebom:component-role".to_string(),
+                    "waybill:component-role".to_string(),
                     serde_json::Value::String("main-module".to_string()),
                 );
             }
@@ -247,7 +247,7 @@ pub(crate) fn parse_uv_lock(
     // guard: since uv.lock is itself a lockfile, entries typically
     // reach the post-pass with `None` and get classified here; the
     // guard is a defense-in-depth pin) with `LifecycleScope::Optional`
-    // + the `mikebom:optional-derivation = "pip-optional-dependencies"`
+    // + the `waybill:optional-derivation = "pip-optional-dependencies"`
     // annotation.
     super::apply_optional_derivation_annotation(&mut out, &optional_child_names);
 
@@ -485,7 +485,7 @@ source = { registry = "https://pypi.org/simple" }
         let web = entries.iter().find(|e| e.name == "web").unwrap();
         assert_eq!(
             web.extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("main-module"),
         );
@@ -493,14 +493,14 @@ source = { registry = "https://pypi.org/simple" }
         assert_eq!(
             shared
                 .extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("main-module"),
         );
 
         // External PyPI dep does NOT carry component-role.
         let httpx = entries.iter().find(|e| e.name == "httpx").unwrap();
-        assert!(!httpx.extra_annotations.contains_key("mikebom:component-role"));
+        assert!(!httpx.extra_annotations.contains_key("waybill:component-role"));
 
         // Synthetic workspace-root component is present.
         let ws_root = entries
@@ -510,7 +510,7 @@ source = { registry = "https://pypi.org/simple" }
         assert_eq!(
             ws_root
                 .extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("workspace-root"),
         );
@@ -613,7 +613,7 @@ source = { registry = "https://pypi.org/simple" }
             Some(waybill_common::resolution::LifecycleScope::Optional)
         );
         assert_eq!(
-            pytest.extra_annotations.get("mikebom:optional-derivation"),
+            pytest.extra_annotations.get("waybill:optional-derivation"),
             Some(&serde_json::Value::String("pip-optional-dependencies".to_string()))
         );
 
@@ -626,7 +626,7 @@ source = { registry = "https://pypi.org/simple" }
             .expect("my-app emitted");
         assert!(!my_app
             .extra_annotations
-            .contains_key("mikebom:optional-derivation"));
+            .contains_key("waybill:optional-derivation"));
     }
 
     #[test]
@@ -664,7 +664,7 @@ source = { registry = "https://pypi.org/simple" }
         );
         assert!(!pytest
             .extra_annotations
-            .contains_key("mikebom:optional-derivation"));
+            .contains_key("waybill:optional-derivation"));
     }
 
     #[test]
@@ -692,7 +692,7 @@ source = { registry = "https://pypi.org/simple" }
             assert!(
                 !entry
                     .extra_annotations
-                    .contains_key("mikebom:optional-derivation"),
+                    .contains_key("waybill:optional-derivation"),
                 "unexpected derivation annotation on {}: {:?}",
                 entry.name,
                 entry.extra_annotations

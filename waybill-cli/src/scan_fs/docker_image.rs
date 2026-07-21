@@ -60,7 +60,7 @@ pub struct ExtractedImage {
     /// this content?" want the latest writer, since earlier writes are
     /// no longer the file at rest).
     ///
-    /// Drives the `mikebom:layer-digest` per-component property at SBOM
+    /// Drives the `waybill:layer-digest` per-component property at SBOM
     /// emission time. CDX, SPDX 2.3, SPDX 3 all read the same map so
     /// `holistic_parity` C-row directionality (`SymmetricEqual`) holds
     /// across formats.
@@ -113,7 +113,7 @@ pub fn extract(archive_path: &Path) -> Result<ExtractedImage> {
     }
 
     let tempdir = tempfile::Builder::new()
-        .prefix("mikebom-image-")
+        .prefix("waybill-image-")
         .tempdir()
         .context("creating tempdir for image extraction")?;
     let rootfs = tempdir.path().join("rootfs");
@@ -145,7 +145,7 @@ pub fn extract(archive_path: &Path) -> Result<ExtractedImage> {
     }
 
     // After the rootfs is fully assembled, read the distro tag (see
-    // `os_release::read_distro_tag_from_rootfs`) so `mikebom sbom scan
+    // `os_release::read_distro_tag_from_rootfs`) so `waybill sbom scan
     // --image` can stamp `distro=<ID>-<VERSION_ID>` (e.g. `debian-12`)
     // on deb PURLs without the user having to pass --deb-codename.
     // Rootfs-aware because /etc/os-release is commonly a symlink into
@@ -1288,7 +1288,7 @@ mod tests {
     // `build_fake_image` helper (which uses `set_path` under the
     // hood). Real ko / docker save tarballs are built by other tools
     // whose writers don't have this defense — that's how the absolute
-    // paths get into real-world tar streams that mikebom READS. Below
+    // paths get into real-world tar streams that waybill READS. Below
     // we write the raw 512-byte ustar header bytes directly to mimic
     // those real tarballs.
 

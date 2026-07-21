@@ -7,7 +7,7 @@ mod common;
 use common::fixture_path;
 
 fn fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("gem")
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("gem")
         .join(sub)
 }
 
@@ -25,7 +25,7 @@ fn scan_path(path: &Path) -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -159,12 +159,12 @@ fn scan_gem_git_and_path_entries_tagged_with_source_type() {
         .expect("my-gem component present");
     let rails_src = rails["properties"]
         .as_array()
-        .and_then(|a| a.iter().find(|p| p["name"].as_str() == Some("mikebom:source-type")))
+        .and_then(|a| a.iter().find(|p| p["name"].as_str() == Some("waybill:source-type")))
         .and_then(|p| p["value"].as_str())
         .unwrap_or("");
     let my_gem_src = my_gem["properties"]
         .as_array()
-        .and_then(|a| a.iter().find(|p| p["name"].as_str() == Some("mikebom:source-type")))
+        .and_then(|a| a.iter().find(|p| p["name"].as_str() == Some("waybill:source-type")))
         .and_then(|p| p["value"].as_str())
         .unwrap_or("");
     assert_eq!(rails_src, "git");
@@ -191,7 +191,7 @@ fn scan_args(path: &Path, extra: &[&str]) -> serde_json::Value {
     for a in extra {
         cmd.arg(a);
     }
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -210,7 +210,7 @@ fn gem_named<'a>(sbom: &'a serde_json::Value, name: &str) -> Option<&'a serde_js
 
 fn has_dev_property(component: &serde_json::Value) -> bool {
     // Milestone 052/part-2: native CDX `scope: "excluded"` is the
-    // primary signal; the new `mikebom:lifecycle-scope` property
+    // primary signal; the new `waybill:lifecycle-scope` property
     // carries the finer dev/build/test distinction. Either signal
     // proves the component is non-Runtime-scoped.
     if component["scope"].as_str() == Some("excluded") {
@@ -220,7 +220,7 @@ fn has_dev_property(component: &serde_json::Value) -> bool {
         .as_array()
         .map(|props| {
             props.iter().any(|p| {
-                p["name"].as_str() == Some("mikebom:lifecycle-scope")
+                p["name"].as_str() == Some("waybill:lifecycle-scope")
             })
         })
         .unwrap_or(false)
@@ -444,7 +444,7 @@ fn scan_path_format(path: &Path, format: &str) -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -468,7 +468,7 @@ fn scan_gem_top_level_gemspec_emits_main_module_in_metadata_component() {
         .as_array()
         .expect("metadata.component.properties")
         .iter()
-        .find(|p| p["name"].as_str() == Some("mikebom:component-role"));
+        .find(|p| p["name"].as_str() == Some("waybill:component-role"));
     assert_eq!(
         role.and_then(|p| p["value"].as_str()),
         Some("main-module")

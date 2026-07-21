@@ -1,12 +1,12 @@
 //! Milestone 180 US1 — end-to-end integration tests for the npm
 //! `package-lock.json` optional-dep classifier. Scans the m180 fixture
-//! (`tests/fixtures/optional_dep/npm/`) via the compiled `mikebom`
+//! (`tests/fixtures/optional_dep/npm/`) via the compiled `waybill`
 //! binary and asserts:
 //!
 //! - **T010** (Full mode): SPDX 2.3 emits `fsevents
 //!   OPTIONAL_DEPENDENCY_OF <root>` (reversed direction per m052); CDX
 //!   emits `fsevents` with `scope: "excluded"`; both formats carry the
-//!   `mikebom:optional-derivation = "npm-optional-dependencies"`
+//!   `waybill:optional-derivation = "npm-optional-dependencies"`
 //!   annotation; `lodash` (regular runtime dep) stays Runtime with no
 //!   `scope: "excluded"` (regression guard against over-classification).
 //!
@@ -131,10 +131,10 @@ fn t010_npm_optional_full_mode_end_to_end() {
     );
     // FR-005 — derivation annotation identifies the JavaScript ecosystem.
     assert_eq!(
-        find_property(fsevents_cdx, "mikebom:optional-derivation")
+        find_property(fsevents_cdx, "waybill:optional-derivation")
             .and_then(|v| v.as_str()),
         Some("npm-optional-dependencies"),
-        "CDX MUST carry mikebom:optional-derivation = \"npm-optional-dependencies\""
+        "CDX MUST carry waybill:optional-derivation = \"npm-optional-dependencies\""
     );
     // Regression guard — lodash MUST stay Runtime.
     let lodash_cdx = find_component_by_name(&cdx, "lodash").expect("lodash component in CDX");
@@ -144,8 +144,8 @@ fn t010_npm_optional_full_mode_end_to_end() {
         "lodash MUST NOT be marked excluded (runtime dep)"
     );
     assert!(
-        find_property(lodash_cdx, "mikebom:optional-derivation").is_none(),
-        "lodash MUST NOT carry mikebom:optional-derivation (runtime dep)"
+        find_property(lodash_cdx, "waybill:optional-derivation").is_none(),
+        "lodash MUST NOT carry waybill:optional-derivation (runtime dep)"
     );
 
     // ---- SPDX 2.3 (Full mode default) ----
@@ -169,9 +169,9 @@ fn t010_npm_optional_full_mode_end_to_end() {
         "reversed-direction: fsevents SPDXID MUST be the source (spdxElementId) of OPTIONAL_DEPENDENCY_OF"
     );
     assert_eq!(
-        find_annotation_value(fsevents_spdx, "mikebom:optional-derivation"),
+        find_annotation_value(fsevents_spdx, "waybill:optional-derivation"),
         Some("npm-optional-dependencies".to_string()),
-        "SPDX 2.3 MUST carry mikebom:optional-derivation on fsevents Package"
+        "SPDX 2.3 MUST carry waybill:optional-derivation on fsevents Package"
     );
 
     // ---- SPDX 3.0.1 ----
@@ -199,14 +199,14 @@ fn t010_npm_optional_full_mode_end_to_end() {
             a.get("statement")
                 .and_then(|v| v.as_str())
                 .map(|s| {
-                    s.contains("mikebom:optional-derivation")
+                    s.contains("waybill:optional-derivation")
                         && s.contains("npm-optional-dependencies")
                 })
                 .unwrap_or(false)
         });
     assert!(
         has_optional_deriv,
-        "SPDX 3 MUST carry a mikebom:optional-derivation Annotation on fsevents"
+        "SPDX 3 MUST carry a waybill:optional-derivation Annotation on fsevents"
     );
     // Confirm no LifecycleScopedRelationship with scope="optional".
     for e in elements {
@@ -256,8 +256,8 @@ fn t011_npm_optional_basic_mode_collapses() {
     let fsevents_spdx =
         find_package_by_name(&spdx23, "fsevents").expect("fsevents package in SPDX 2.3");
     assert_eq!(
-        find_annotation_value(fsevents_spdx, "mikebom:optional-derivation"),
+        find_annotation_value(fsevents_spdx, "waybill:optional-derivation"),
         Some("npm-optional-dependencies".to_string()),
-        "mikebom:optional-derivation annotation MUST be present in basic mode too"
+        "waybill:optional-derivation annotation MUST be present in basic mode too"
     );
 }

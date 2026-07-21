@@ -1,4 +1,4 @@
-//! Integration tests for `mikebom policy init` + `mikebom sbom verify
+//! Integration tests for `waybill policy init` + `waybill sbom verify
 //! --layout` — feature 006 US4.
 
 #![cfg_attr(test, allow(clippy::unwrap_used))]
@@ -43,7 +43,7 @@ fn minimal_statement() -> InTotoStatement {
         predicate: BuildTracePredicate {
             metadata: TraceMetadata {
                 tool: ToolInfo {
-                    name: "mikebom".to_string(),
+                    name: "waybill".to_string(),
                     version: "0.1.0-test".to_string(),
                 },
                 trace_start: Timestamp::now(),

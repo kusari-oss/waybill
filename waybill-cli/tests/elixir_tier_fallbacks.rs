@@ -45,13 +45,13 @@ fn hex_components(doc: &Value) -> Vec<&Value> {
             arr.iter()
                 .filter(|c| {
                     let purl = c.get("purl").and_then(|v| v.as_str()).unwrap_or("");
-                    let role = property_value(c, "mikebom:component-role");
+                    let role = property_value(c, "waybill:component-role");
                     if role == Some("main-module") {
                         return false;
                     }
                     purl.starts_with("pkg:hex/")
                         || (purl.starts_with("pkg:generic/")
-                            && property_value(c, "mikebom:source-type")
+                            && property_value(c, "waybill:source-type")
                                 .map(|s| s.starts_with("hex-"))
                                 .unwrap_or(false))
                 })
@@ -114,12 +114,12 @@ end
     let comps = hex_components(&doc);
     assert_eq!(comps.len(), 2);
     for &c in &comps {
-        assert_eq!(property_value(c, "mikebom:sbom-tier"), Some("design"));
+        assert_eq!(property_value(c, "waybill:sbom-tier"), Some("design"));
     }
     let phx = find_by_name(&comps, "phoenix").unwrap();
     // Milestone 199: always-array shape — JSON-array-in-string value.
     assert_eq!(
-        property_value(phx, "mikebom:requirement-ranges"),
+        property_value(phx, "waybill:requirement-ranges"),
         Some(r#"["~> 1.7"]"#),
     );
 }
@@ -152,7 +152,7 @@ end
 #[test]
 fn conditional_block_dep_carries_extraction_mode_annotation() {
     // Q1: `if Mix.env() == :test do {:meck, "~> 0.9"} end` emits with
-    // mikebom:elixir-extraction-mode = "conditional-flattened".
+    // waybill:elixir-extraction-mode = "conditional-flattened".
     let tmp = tempfile::tempdir().unwrap();
     std::fs::write(
         tmp.path().join("mix.exs"),
@@ -175,7 +175,7 @@ end
     let meck = find_by_name(&comps, "meck")
         .expect("meck must emit (conditional-flattened per Q1)");
     assert_eq!(
-        property_value(meck, "mikebom:elixir-extraction-mode"),
+        property_value(meck, "waybill:elixir-extraction-mode"),
         Some("conditional-flattened"),
     );
 }
@@ -196,7 +196,7 @@ end
     let comps = hex_components(&doc);
     let phx = find_by_name(&comps, "phoenix").unwrap();
     assert!(
-        property_value(phx, "mikebom:elixir-extraction-mode").is_none(),
+        property_value(phx, "waybill:elixir-extraction-mode").is_none(),
         "top-level dep must NOT carry conditional-flattened annotation",
     );
 }
@@ -230,7 +230,7 @@ end
     let umbrella = component_with_purl(&doc, "pkg:hex/my_umbrella@0.1.0")
         .expect("umbrella root main-module must emit");
     assert_eq!(
-        property_value(umbrella, "mikebom:umbrella-root"),
+        property_value(umbrella, "waybill:umbrella-root"),
         Some("true"),
     );
 
@@ -238,7 +238,7 @@ end
     let core = component_with_purl(&doc, "pkg:hex/core@0.1.0")
         .expect("sub-app core main-module must emit");
     assert!(
-        property_value(core, "mikebom:umbrella-root").is_none(),
+        property_value(core, "waybill:umbrella-root").is_none(),
         "sub-app must NOT carry umbrella-root annotation",
     );
 }
@@ -345,9 +345,9 @@ end
                     .collect::<Vec<_>>())
         )
     });
-    assert_eq!(property_value(c, "mikebom:source-type"), Some("hex-git"));
+    assert_eq!(property_value(c, "waybill:source-type"), Some("hex-git"));
     assert_eq!(
-        property_value(c, "mikebom:vcs-declared-ref"),
+        property_value(c, "waybill:vcs-declared-ref"),
         Some("branch: main"),
     );
 }
@@ -367,8 +367,8 @@ end
     let doc = run_scan(tmp.path());
     let c = component_with_purl(&doc, "pkg:generic/shared@unspecified")
         .expect("design-tier path dep must emit pkg:generic/ form per C2");
-    assert_eq!(property_value(c, "mikebom:source-type"), Some("hex-path"));
-    assert_eq!(property_value(c, "mikebom:path"), Some("../shared"));
+    assert_eq!(property_value(c, "waybill:source-type"), Some("hex-path"));
+    assert_eq!(property_value(c, "waybill:path"), Some("../shared"));
 }
 
 #[test]

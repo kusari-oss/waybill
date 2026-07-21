@@ -3,7 +3,7 @@
 //!
 //! ## Test harness rationale
 //!
-//! `mikebom trace run` (the build-tier subject auto-detect path)
+//! `waybill trace run` (the build-tier subject auto-detect path)
 //! requires Linux + eBPF + privileges, so end-to-end driving a real
 //! trace through the CLI binary isn't feasible cross-platform. This
 //! file follows the milestone-074 / milestone-073 pattern:
@@ -13,7 +13,7 @@
 //!    `Vec<ResourceDescriptor>` fixtures — covers US1's auto-detect
 //!    behavior (FR-002 + 2026-05-06 sha256-only clarification).
 //!
-//! 2. **`mikebom sbom scan`-driven tests** for the source-tier and
+//! 2. **`waybill sbom scan`-driven tests** for the source-tier and
 //!    image-tier `--subject-hash` / `--component-id` flags — covers
 //!    US2 / US3 / US4 cross-format wire mapping. Source-tier scans
 //!    can be driven cross-platform.
@@ -231,7 +231,7 @@ fn manual_subject_hash_flag_repeatable() {
 #[test]
 fn subject_value_validation_soft_fails_to_user_defined() {
     // US2 §3 / FR-005: malformed --subject-hash value soft-fails to
-    // user-defined under mikebom:identifiers; the scan still exits 0.
+    // user-defined under waybill:identifiers; the scan still exits 0.
     let fake_home = tempfile::tempdir().unwrap();
     let (cdx, _) = run_scan(
         fake_home.path(),
@@ -241,14 +241,14 @@ fn subject_value_validation_soft_fails_to_user_defined() {
         "out.cdx.json",
     );
     // The scan succeeded (the run_scan helper asserts non-zero exit
-    // panics). The malformed value rides under mikebom:identifiers.
+    // panics). The malformed value rides under waybill:identifiers.
     let props = cdx["metadata"]["properties"].as_array();
     let mut found_userdef = false;
     if let Some(arr) = props {
         for p in arr {
-            if p["name"].as_str() == Some("mikebom:identifiers") {
+            if p["name"].as_str() == Some("waybill:identifiers") {
                 let v = p["value"].as_str().unwrap_or("");
-                // The mikebom:identifiers annotation envelope is a
+                // The waybill:identifiers annotation envelope is a
                 // JSON-encoded list of {scheme, value} entries — the
                 // soft-failed entry rides as scheme="subject",
                 // value="banana".
@@ -261,7 +261,7 @@ fn subject_value_validation_soft_fails_to_user_defined() {
     }
     assert!(
         found_userdef,
-        "malformed `subject:banana` should ride under mikebom:identifiers; got props={props:?}"
+        "malformed `subject:banana` should ride under waybill:identifiers; got props={props:?}"
     );
 }
 
@@ -323,7 +323,7 @@ fn subject_identifier_emits_in_all_three_formats() {
         "out.spdx3.json",
     );
     // SpdxDocument.externalIdentifier[] carries the subject entry.
-    // Per milestone 079, mikebom's `subject` scheme maps to the
+    // Per milestone 079, waybill's `subject` scheme maps to the
     // SPDX 3 controlled-vocab value `other` with the original
     // scheme preserved on `comment` as `original-scheme: subject`.
     let graph = spdx3["@graph"].as_array().expect("@graph");
@@ -444,7 +444,7 @@ fn cross_tier_handshake_image_digest_matches_build_subject() {
     // US3 §1, SC-002: an external SBOM-store consumer holding a build
     // SBOM with `subject:sha256:X` and an image SBOM whose components
     // have `hashes[].sha256 == X` can correlate the two by string
-    // match alone, with no mikebom-side resolver. This test
+    // match alone, with no waybill-side resolver. This test
     // synthesizes two SBOMs and runs the correlation in serde_json.
 
     let target = SHA256_A;

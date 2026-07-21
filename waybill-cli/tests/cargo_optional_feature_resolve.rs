@@ -8,7 +8,7 @@
 //!
 //! Tests build synthetic Cargo workspaces via `tempfile::tempdir()` +
 //! shell out to `cargo generate-lockfile` to produce Cargo.lock, then
-//! invoke the mikebom binary via `env!("CARGO_BIN_EXE_mikebom")`.
+//! invoke the waybill binary via `env!("CARGO_BIN_EXE_mikebom")`.
 //! `cargo` binary is a hard dev prereq (matches m087 / m173 / m203
 //! precedent).
 
@@ -29,7 +29,7 @@ fn require_cargo() -> bool {
 /// to produce Cargo.lock AND unpack `.crate` files into
 /// `$CARGO_HOME/registry/src/`. This is CRITICAL for cold-cache
 /// environments (fresh CI runners): `cargo metadata --offline`
-/// (invoked by mikebom's classifier) reads dep manifests from
+/// (invoked by waybill's classifier) reads dep manifests from
 /// unpacked crates in registry/src/. Bare `cargo generate-lockfile`
 /// fetches the index + creates Cargo.lock but does NOT unpack — so
 /// `cargo metadata --offline` fails with "failed to download …"
@@ -77,7 +77,7 @@ fn scan_workspace_with_env(
     if let Some(p) = path_env {
         cmd.env("PATH", p);
     }
-    let cmd_out = cmd.output().expect("spawn mikebom binary");
+    let cmd_out = cmd.output().expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&cmd_out.stderr).to_string();
     let success = cmd_out.status.success();
     let json = if success && out.exists() {
@@ -153,8 +153,8 @@ default = ["serde"]
         "serde should be scope=runtime (or absent → runtime), got {scope:?}. cdx: {cdx:#}"
     );
     assert!(
-        component_property(serde_comp, "mikebom:optional-derivation").is_none(),
-        "serde MUST NOT carry mikebom:optional-derivation (default-feature-activated). cdx: {cdx:#}"
+        component_property(serde_comp, "waybill:optional-derivation").is_none(),
+        "serde MUST NOT carry waybill:optional-derivation (default-feature-activated). cdx: {cdx:#}"
     );
 }
 
@@ -196,9 +196,9 @@ enable-regex = ["regex"]
         "regex (non-default-activated optional) MUST be scope=excluded. cdx: {cdx:#}"
     );
     assert_eq!(
-        component_property(regex_comp, "mikebom:optional-derivation"),
+        component_property(regex_comp, "waybill:optional-derivation"),
         Some("cargo-optional-true"),
-        "regex MUST carry mikebom:optional-derivation = cargo-optional-true. cdx: {cdx:#}"
+        "regex MUST carry waybill:optional-derivation = cargo-optional-true. cdx: {cdx:#}"
     );
 }
 
@@ -227,8 +227,8 @@ fn us3_non_cargo_scan_does_not_invoke_cargo_metadata() {
     if let Some(comps) = cdx.get("components").and_then(|c| c.as_array()) {
         for c in comps {
             assert!(
-                component_property(c, "mikebom:optional-derivation").is_none(),
-                "non-Cargo scan MUST NOT emit mikebom:optional-derivation. comp: {c:#}"
+                component_property(c, "waybill:optional-derivation").is_none(),
+                "non-Cargo scan MUST NOT emit waybill:optional-derivation. comp: {c:#}"
             );
         }
     }
@@ -264,7 +264,7 @@ default = ["serde"]
 "#,
     );
 
-    // Scrub PATH so mikebom's own cargo-metadata subprocess cannot
+    // Scrub PATH so waybill's own cargo-metadata subprocess cannot
     // resolve `cargo` → BinaryNotFound fallback fires.
     let (cdx, stderr, ok) = scan_workspace_with_env(ws, Some(""));
     assert!(ok, "scan MUST succeed via FR-004 fallback. stderr:\n{stderr}");
@@ -292,7 +292,7 @@ default = ["serde"]
     );
 
     // (d) FR-004 fallback preserves pre-m205 name-only classification.
-    // Under fallback, mikebom can't verify feature activation via cargo,
+    // Under fallback, waybill can't verify feature activation via cargo,
     // so it defers to the manifest's `optional = true` declaration.
     // For `serde = { optional = true }` + `default = ["serde"]`, this
     // means serde is classified Optional (scope: excluded) — this is
@@ -312,14 +312,14 @@ default = ["serde"]
          cargo-metadata-fallback (same as alpha.63 behavior). cdx: {cdx:#}"
     );
 
-    // (e) The `mikebom:optional-derivation` annotation IS still emitted
+    // (e) The `waybill:optional-derivation` annotation IS still emitted
     // under fallback — it's set by the classifier's Optional branch,
     // which now fires because activated_names is empty. This matches
     // pre-m205 behavior.
     assert_eq!(
-        component_property(serde_comp, "mikebom:optional-derivation"),
+        component_property(serde_comp, "waybill:optional-derivation"),
         Some("cargo-optional-true"),
-        "FR-004 fallback: serde MUST carry mikebom:optional-derivation \
+        "FR-004 fallback: serde MUST carry waybill:optional-derivation \
          (same as alpha.63 behavior). cdx: {cdx:#}"
     );
 }

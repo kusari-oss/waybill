@@ -52,7 +52,7 @@ fn cocoapods_purls(doc: &Value) -> Vec<String> {
                         .map(|arr| {
                             arr.iter().any(|p| {
                                 p.get("name").and_then(|v| v.as_str())
-                                    == Some("mikebom:source-type")
+                                    == Some("waybill:source-type")
                                     && p.get("value")
                                         .and_then(|v| v.as_str())
                                         .map(|s| s.starts_with("cocoapods-"))
@@ -180,7 +180,7 @@ fn main_module_emission_from_target_block() {
     let main = component_with_purl(&doc, "pkg:cocoapods/MyApp")
         .expect("main-module component must exist");
     assert_eq!(
-        property_value(main, "mikebom:component-role"),
+        property_value(main, "waybill:component-role"),
         Some("main-module"),
     );
 }

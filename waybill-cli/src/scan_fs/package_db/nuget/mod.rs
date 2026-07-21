@@ -1,6 +1,6 @@
 //! NuGet source-tree reader (milestone 106 US4, closes #275).
 //!
-//! mikebom already encodes `pkg:nuget/<name>@<version>` PURLs and runs
+//! waybill already encodes `pkg:nuget/<name>@<version>` PURLs and runs
 //! deps.dev enrichment for the nuget system — the missing piece was
 //! the filesystem detection source. This reader closes that gap by
 //! walking the scan tree for `.csproj` / `.vbproj` / `.fsproj` files
@@ -126,7 +126,7 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
     // Build a (name -> source-paths) accumulator so the same
     // (name, version) coord collected from .csproj + props +
     // packages.lock.json merges into a single component with a
-    // comma-joined `mikebom:source-files` annotation.
+    // comma-joined `waybill:source-files` annotation.
     let mut acc: BTreeMap<(String, String), AccEntry> = BTreeMap::new();
 
     // Build per-name dependency edges from the lockfile (one merged
@@ -183,7 +183,7 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
 
     // Step 2: emit transitive deps from the lockfile that are NOT
     // already accounted for via .csproj references. Transitives are
-    // tagged with `mikebom:source-type: "transitive"`.
+    // tagged with `waybill:source-type: "transitive"`.
     if let Some(lock) = &lockfile {
         for packages in lock.dependencies.values() {
             for (name, pkg) in packages {
@@ -232,7 +232,7 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
                 .collect::<Vec<_>>()
                 .join(",");
             extra_annotations.insert(
-                "mikebom:source-files".to_string(),
+                "waybill:source-files".to_string(),
                 serde_json::Value::String(joined),
             );
         }
@@ -393,7 +393,7 @@ mod tests {
         // Both .csproj and props paths must appear in source-files.
         let source_files = entries[0]
             .extra_annotations
-            .get("mikebom:source-files")
+            .get("waybill:source-files")
             .and_then(|v| v.as_str())
             .unwrap();
         assert!(source_files.contains("App.csproj"));

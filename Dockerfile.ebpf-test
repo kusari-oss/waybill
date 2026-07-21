@@ -1,11 +1,11 @@
 # Container-based eBPF integration test harness for m210.
 #
-# Runs mikebom trace against the two_binaries_diverge fixture INSIDE
+# Runs waybill trace against the two_binaries_diverge fixture INSIDE
 # the container and asserts the emitted attestation carries the
 # expected compiler-pipeline metadata. The container needs CAP_BPF
 # + CAP_PERFMON when run, so invocation is:
 #
-#   docker run --rm --privileged mikebom-ebpf-test
+#   docker run --rm --privileged waybill-ebpf-test
 #
 # `--privileged` is required for eBPF; `--rm` cleans up after.
 #
@@ -32,9 +32,9 @@ RUN rustup toolchain install nightly --profile minimal \
     && rustup component add rust-src --toolchain nightly \
     && cargo +nightly install bpf-linker
 
-WORKDIR /mikebom
+WORKDIR /waybill
 
-# COPY the mikebom source tree WITHOUT the harness script, so iterating
+# COPY the waybill source tree WITHOUT the harness script, so iterating
 # on the assertion script doesn't invalidate the ~10-minute cargo-build
 # layer. `.dockerignore` (see below) excludes scripts/ from this COPY;
 # we bring the script in as a separate final layer.
@@ -44,7 +44,7 @@ COPY . .
 # The two-stage build lets Docker cache the eBPF layer independently
 # of the userspace changes.
 RUN cargo run --package xtask -- ebpf
-RUN cargo build --release --features ebpf-tracing --bin mikebom
+RUN cargo build --release --features ebpf-tracing --bin waybill
 
 # Layer the harness script LAST so edits to it don't invalidate the
 # preceding cargo-build layer. The COPY at line ~36 above pulls in

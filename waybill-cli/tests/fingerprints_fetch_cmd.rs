@@ -1,4 +1,4 @@
-//! Milestone 108 US4 — `mikebom fingerprints fetch` integration test.
+//! Milestone 108 US4 — `waybill fingerprints fetch` integration test.
 //!
 //! Two-tier coverage:
 //!
@@ -6,7 +6,7 @@
 //!   a synthetic cache entry, runs `fingerprints fetch`, asserts the
 //!   command prints `cache hit:` + exits 0 without touching the
 //!   network.
-//! - **Network-gated half** (`MIKEBOM_FINGERPRINTS_NETWORK_TESTS=1`):
+//! - **Network-gated half** (`WAYBILL_FINGERPRINTS_NETWORK_TESTS=1`):
 //!   real fetch from the sibling repo at the build-time-embedded
 //!   SHA. Asserts the fetched-message + cache-populated invariants.
 //!
@@ -22,11 +22,11 @@ fn binary_path() -> &'static str {
 }
 
 fn embedded_sha() -> &'static str {
-    env!("MIKEBOM_FINGERPRINTS_CORPUS_SHA")
+    env!("WAYBILL_FINGERPRINTS_CORPUS_SHA")
 }
 
 fn network_tests_enabled() -> bool {
-    std::env::var("MIKEBOM_FINGERPRINTS_NETWORK_TESTS").ok().as_deref() == Some("1")
+    std::env::var("WAYBILL_FINGERPRINTS_NETWORK_TESTS").ok().as_deref() == Some("1")
 }
 
 #[test]
@@ -42,7 +42,7 @@ fn fetch_short_circuits_on_cache_hit() {
     )
     .unwrap();
     let output = Command::new(binary_path())
-        .env("MIKEBOM_FINGERPRINTS_CACHE_DIR", tmp.path())
+        .env("WAYBILL_FINGERPRINTS_CACHE_DIR", tmp.path())
         .arg("fingerprints")
         .arg("fetch")
         .output()
@@ -60,7 +60,7 @@ fn fetch_short_circuits_on_cache_hit() {
 fn fetch_rejects_malformed_corpus_rev_with_exit_1() {
     let tmp = tempfile::tempdir().unwrap();
     let output = Command::new(binary_path())
-        .env("MIKEBOM_FINGERPRINTS_CACHE_DIR", tmp.path())
+        .env("WAYBILL_FINGERPRINTS_CACHE_DIR", tmp.path())
         .arg("fingerprints")
         .arg("fetch")
         .arg("--corpus-rev")
@@ -80,14 +80,14 @@ fn fetch_rejects_malformed_corpus_rev_with_exit_1() {
 fn fetch_populates_cache_and_prints_fetched_message() {
     if !network_tests_enabled() {
         println!(
-            "skipped: MIKEBOM_FINGERPRINTS_NETWORK_TESTS not set (offline CI lane)"
+            "skipped: WAYBILL_FINGERPRINTS_NETWORK_TESTS not set (offline CI lane)"
         );
         return;
     }
     let tmp = tempfile::tempdir().unwrap();
     let sha = embedded_sha();
     let output = Command::new(binary_path())
-        .env("MIKEBOM_FINGERPRINTS_CACHE_DIR", tmp.path())
+        .env("WAYBILL_FINGERPRINTS_CACHE_DIR", tmp.path())
         .arg("fingerprints")
         .arg("fetch")
         .output()

@@ -1,12 +1,12 @@
 //! Per-host cache layout management for the fingerprint corpus.
 //!
 //! Cache root resolution (in order):
-//!   1. `MIKEBOM_FINGERPRINTS_CACHE_DIR` env var (operator override —
+//!   1. `WAYBILL_FINGERPRINTS_CACHE_DIR` env var (operator override —
 //!      useful for CI sandboxes + Docker `COPY` scenarios)
-//!   2. `$XDG_CACHE_HOME/mikebom/fingerprints/` when `$XDG_CACHE_HOME`
+//!   2. `$XDG_CACHE_HOME/waybill/fingerprints/` when `$XDG_CACHE_HOME`
 //!      is set (Linux convention)
-//!   3. `$HOME/.cache/mikebom/fingerprints/` on Unix /
-//!      `$USERPROFILE/.cache/mikebom/fingerprints/` on Windows
+//!   3. `$HOME/.cache/waybill/fingerprints/` on Unix /
+//!      `$USERPROFILE/.cache/waybill/fingerprints/` on Windows
 //!
 //! Per-SHA layout (full 40-hex SHA as directory key for collision
 //! resistance; 12-hex truncation is reserved for the SBOM annotation):
@@ -29,7 +29,7 @@ use std::path::PathBuf;
 use super::source_config::CorpusSourceId;
 use super::source_sha::CorpusSha;
 
-const CACHE_ENV_OVERRIDE: &str = "MIKEBOM_FINGERPRINTS_CACHE_DIR";
+const CACHE_ENV_OVERRIDE: &str = "WAYBILL_FINGERPRINTS_CACHE_DIR";
 
 /// Resolve the cache root per the documented resolution order.
 /// Returns the resolved path; does NOT create the directory.
@@ -42,7 +42,7 @@ pub(crate) fn cache_root() -> PathBuf {
     }
     if let Some(xdg) = std::env::var_os("XDG_CACHE_HOME") {
         if !xdg.is_empty() {
-            return PathBuf::from(xdg).join("mikebom").join("fingerprints");
+            return PathBuf::from(xdg).join("waybill").join("fingerprints");
         }
     }
     let home = std::env::var_os("HOME")
@@ -50,7 +50,7 @@ pub(crate) fn cache_root() -> PathBuf {
         .unwrap_or_default();
     PathBuf::from(home)
         .join(".cache")
-        .join("mikebom")
+        .join("waybill")
         .join("fingerprints")
 }
 
@@ -125,7 +125,7 @@ pub(crate) enum KeepRev<'a> {
 
 /// Remove cache directories per the operator's `--keep-rev` selection.
 /// Returns the paths of every directory removed (for stdout reporting
-/// by the `mikebom fingerprints cache-clear` subcommand).
+/// by the `waybill fingerprints cache-clear` subcommand).
 #[allow(dead_code)]
 pub(crate) fn cache_clear(keep: KeepRev<'_>) -> std::io::Result<Vec<PathBuf>> {
     let root = cache_root();

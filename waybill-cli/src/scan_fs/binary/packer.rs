@@ -4,7 +4,7 @@
 //! data and re-inflate at load time, which means static scanners see
 //! an artificially sparse linkage list. Detecting packing tells the
 //! consumer "the linkage you see here is not the linkage the binary
-//! will have at runtime" — surfaced via `mikebom:binary-packed`.
+//! will have at runtime" — surfaced via `waybill:binary-packed`.
 //!
 //! v1 detects UPX only (the dominant format). Other packers (ASProtect,
 //! PECompact, VMProtect, Themida) are deliberately out of scope —

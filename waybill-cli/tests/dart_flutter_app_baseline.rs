@@ -221,7 +221,7 @@ fn main_module_emission() {
     let main = component_with_purl(&doc, "pkg:pub/my_flutter_app@1.2.3")
         .expect("main-module component must exist");
     assert_eq!(
-        property_value(main, "mikebom:component-role"),
+        property_value(main, "waybill:component-role"),
         Some("main-module"),
         "main-module must carry the component-role annotation; got {main:#?}",
     );
@@ -274,7 +274,7 @@ fn main_module_depends_lists_direct_deps() {
 #[test]
 fn dev_scope_filterability() {
     // SC-007: a fixture with a `direct dev` entry produces a component
-    // with `mikebom:lifecycle-scope = development`; running with
+    // with `waybill:lifecycle-scope = development`; running with
     // `--exclude-scope dev` suppresses it.
     let tmp = tempfile::tempdir().unwrap();
     std::fs::write(
@@ -311,7 +311,7 @@ fn dev_scope_filterability() {
     .unwrap();
 
     // With dev (default — flag varies; we rely on the default behavior
-    // of `mikebom sbom scan` which includes dev deps unless opted out).
+    // of `waybill sbom scan` which includes dev deps unless opted out).
     let doc_with_dev = run_scan(tmp.path());
     let test_component = component_with_purl(&doc_with_dev, "pkg:pub/test@1.24.0");
     assert!(
@@ -320,7 +320,7 @@ fn dev_scope_filterability() {
     );
     if let Some(c) = test_component {
         // Property may be set via `lifecycle-scope` or `scope` (CDX native).
-        let lifecycle_property = property_value(c, "mikebom:lifecycle-scope");
+        let lifecycle_property = property_value(c, "waybill:lifecycle-scope");
         let cdx_scope = c.get("scope").and_then(|v| v.as_str());
         assert!(
             lifecycle_property == Some("development")

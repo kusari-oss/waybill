@@ -1,4 +1,4 @@
-//! Milestone 118 (#343 / FR-008) — `mikebom sbom scan --help` documents
+//! Milestone 118 (#343 / FR-008) — `waybill sbom scan --help` documents
 //! `--exclude-path` and points operators at the user-guide CLI reference.
 
 use std::process::Command;
@@ -11,7 +11,7 @@ fn help_text_documents_exclude_path() {
         .arg("scan")
         .arg("--help")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "--help must exit zero; stderr: {}",

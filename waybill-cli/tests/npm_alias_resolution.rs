@@ -3,7 +3,7 @@
 //! binary, and asserts that the emitted CDX contains:
 //!
 //!   1. The aliased-canonical components (not local-name PURLs).
-//!   2. `mikebom:pnpm-alias` / `mikebom:yarn-alias` annotations on
+//!   2. `waybill:pnpm-alias` / `waybill:yarn-alias` annotations on
 //!      each aliased component carrying the correct local-name.
 //!   3. Depender's `dependsOn` referencing the aliased canonical
 //!      PURL (not the local-name PURL).
@@ -123,7 +123,7 @@ snapshots:
         "local-name strip-ansi-cjs MUST NOT be emitted"
     );
 
-    // The aliased components carry `mikebom:pnpm-alias =
+    // The aliased components carry `waybill:pnpm-alias =
     // <local-name>` annotation.
     let get_alias_annotation = |purl: &str| -> Option<String> {
         doc["components"].as_array().unwrap().iter().find_map(|c| {
@@ -131,7 +131,7 @@ snapshots:
                 return None;
             }
             c["properties"].as_array()?.iter().find_map(|p| {
-                if p["name"].as_str() == Some("mikebom:pnpm-alias") {
+                if p["name"].as_str() == Some("waybill:pnpm-alias") {
                     p["value"].as_str().map(String::from)
                 } else {
                     None
@@ -142,12 +142,12 @@ snapshots:
     assert_eq!(
         get_alias_annotation("pkg:npm/string-width@4.2.3").as_deref(),
         Some("string-width-cjs"),
-        "string-width@4.2.3 MUST carry mikebom:pnpm-alias = \"string-width-cjs\""
+        "string-width@4.2.3 MUST carry waybill:pnpm-alias = \"string-width-cjs\""
     );
     assert_eq!(
         get_alias_annotation("pkg:npm/strip-ansi@6.0.1").as_deref(),
         Some("strip-ansi-cjs"),
-        "strip-ansi@6.0.1 MUST carry mikebom:pnpm-alias = \"strip-ansi-cjs\""
+        "strip-ansi@6.0.1 MUST carry waybill:pnpm-alias = \"strip-ansi-cjs\""
     );
 
     // The depender's dependsOn MUST reference the aliased canonicals.

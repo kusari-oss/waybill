@@ -2,12 +2,12 @@
 //! pipeline (milestones 031 anonymous + 034 authenticated).
 //!
 //! These tests pull real OCI images from real registries, run them
-//! through the full mikebom pipeline (oci_pull →
+//! through the full waybill pipeline (oci_pull →
 //! docker_image::extract → scan → SBOM emission), and verify the
 //! output is well-formed. They run ONLY when:
 //!
 //!   1. The crate is built with `--features oci-registry`, AND
-//!   2. The `MIKEBOM_OCI_NETWORK_TESTS=1` env var is set.
+//!   2. The `WAYBILL_OCI_NETWORK_TESTS=1` env var is set.
 //!
 //! The default Linux + ebpf + macOS CI lanes do NOT set the env
 //! var, so these tests are silently skipped on every standard PR.
@@ -16,22 +16,22 @@
 //! ship as opt-in only.
 //!
 //! The authenticated smoke test additionally requires
-//! `MIKEBOM_OCI_AUTH_TESTS=1` and the env var
-//! `MIKEBOM_OCI_AUTH_PRIVATE_IMAGE_REF` pointing at a private image
+//! `WAYBILL_OCI_AUTH_TESTS=1` and the env var
+//! `WAYBILL_OCI_AUTH_PRIVATE_IMAGE_REF` pointing at a private image
 //! you already have credentials for in `~/.docker/config.json`.
 //! Documented in PR descriptions for manual verification.
 //!
 //! To run locally:
 //!
 //! ```sh
-//! MIKEBOM_OCI_NETWORK_TESTS=1 cargo +stable test \
-//!     -p mikebom --features oci-registry --test oci_registry_smoke
+//! WAYBILL_OCI_NETWORK_TESTS=1 cargo +stable test \
+//!     -p waybill --features oci-registry --test oci_registry_smoke
 //!
-//! MIKEBOM_OCI_NETWORK_TESTS=1 \
-//! MIKEBOM_OCI_AUTH_TESTS=1 \
-//! MIKEBOM_OCI_AUTH_PRIVATE_IMAGE_REF=ghcr.io/<you>/<priv>:tag \
+//! WAYBILL_OCI_NETWORK_TESTS=1 \
+//! WAYBILL_OCI_AUTH_TESTS=1 \
+//! WAYBILL_OCI_AUTH_PRIVATE_IMAGE_REF=ghcr.io/<you>/<priv>:tag \
 //!     cargo +stable test \
-//!     -p mikebom --features oci-registry --test oci_registry_smoke
+//!     -p waybill --features oci-registry --test oci_registry_smoke
 //! ```
 
 #![cfg(feature = "oci-registry")]
@@ -39,18 +39,18 @@
 use std::process::Command;
 
 fn network_tests_enabled() -> bool {
-    std::env::var("MIKEBOM_OCI_NETWORK_TESTS").ok().as_deref() == Some("1")
+    std::env::var("WAYBILL_OCI_NETWORK_TESTS").ok().as_deref() == Some("1")
 }
 
 fn auth_tests_enabled() -> bool {
-    std::env::var("MIKEBOM_OCI_AUTH_TESTS").ok().as_deref() == Some("1")
+    std::env::var("WAYBILL_OCI_AUTH_TESTS").ok().as_deref() == Some("1")
 }
 
 #[test]
 fn pulls_alpine_3_19_and_emits_apk_components() {
     if !network_tests_enabled() {
         eprintln!(
-            "skipping: set MIKEBOM_OCI_NETWORK_TESTS=1 to run network-gated smoke tests"
+            "skipping: set WAYBILL_OCI_NETWORK_TESTS=1 to run network-gated smoke tests"
         );
         return;
     }
@@ -68,10 +68,10 @@ fn pulls_alpine_3_19_and_emits_apk_components() {
         .arg("--output")
         .arg(&out_path)
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
-        "mikebom failed:\nstdout={}\nstderr={}",
+        "waybill failed:\nstdout={}\nstderr={}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr),
     );
@@ -156,7 +156,7 @@ fn pulls_alpine_3_19_and_emits_apk_components() {
 fn pulls_distroless_static_and_emits_dpkg_status_d_components() {
     if !network_tests_enabled() {
         eprintln!(
-            "skipping: set MIKEBOM_OCI_NETWORK_TESTS=1 to run network-gated smoke tests"
+            "skipping: set WAYBILL_OCI_NETWORK_TESTS=1 to run network-gated smoke tests"
         );
         return;
     }
@@ -164,7 +164,7 @@ fn pulls_distroless_static_and_emits_dpkg_status_d_components() {
     // distroless static-debian12 ships per-package metadata at
     // `/var/lib/dpkg/status.d/<pkg>` files (no monolithic
     // `/var/lib/dpkg/status` daemon-managed file). Milestone 037
-    // / #64 closed the previous "0 components" gap; mikebom now
+    // / #64 closed the previous "0 components" gap; waybill now
     // surfaces the 4 documented packages: base-files, media-types,
     // netbase, tzdata.
     let tmp = tempfile::tempdir().expect("tempdir");
@@ -180,10 +180,10 @@ fn pulls_distroless_static_and_emits_dpkg_status_d_components() {
         .arg("--output")
         .arg(&out_path)
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
-        "mikebom failed:\nstdout={}\nstderr={}",
+        "waybill failed:\nstdout={}\nstderr={}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr),
     );
@@ -223,7 +223,7 @@ fn pulls_distroless_static_and_emits_dpkg_status_d_components() {
     // post-038 the .md5sums-derived path-list synthesis populates
     // evidence.occurrences[] for each component.
     //
-    // CDX shape per mikebom-cli/src/generate/cyclonedx/evidence.rs:
+    // CDX shape per waybill-cli/src/generate/cyclonedx/evidence.rs:
     //   evidence.occurrences[] = [{ location, additionalContext }]
     // where additionalContext is a JSON-string-encoded map carrying
     // sha256 + optionally md5. We parse it back to verify the
@@ -269,12 +269,12 @@ fn pulls_distroless_static_and_emits_dpkg_status_d_components() {
 /// Pulls alpine:3.19 twice into a fresh tempdir-backed cache; the
 /// second pull reads every blob from disk and produces a
 /// byte-identical SBOM. Skipped silently unless
-/// `MIKEBOM_OCI_NETWORK_TESTS=1`.
+/// `WAYBILL_OCI_NETWORK_TESTS=1`.
 #[test]
 fn repeat_pull_uses_cache_for_warm_layers() {
     if !network_tests_enabled() {
         eprintln!(
-            "skipping: set MIKEBOM_OCI_NETWORK_TESTS=1 to run network-gated smoke tests"
+            "skipping: set WAYBILL_OCI_NETWORK_TESTS=1 to run network-gated smoke tests"
         );
         return;
     }
@@ -296,16 +296,16 @@ fn repeat_pull_uses_cache_for_warm_layers() {
             .arg("cyclonedx-json")
             .arg("--output")
             .arg(out)
-            .env("MIKEBOM_OCI_CACHE_DIR", &cache_dir)
+            .env("WAYBILL_OCI_CACHE_DIR", &cache_dir)
             .output()
-            .expect("mikebom should run")
+            .expect("waybill should run")
     };
 
     // First pull: cache is empty → network fetches, writes cache.
     let out1 = invoke(&out_path_1);
     assert!(
         out1.status.success(),
-        "first mikebom pull failed:\nstdout={}\nstderr={}",
+        "first waybill pull failed:\nstdout={}\nstderr={}",
         String::from_utf8_lossy(&out1.stdout),
         String::from_utf8_lossy(&out1.stderr),
     );
@@ -327,7 +327,7 @@ fn repeat_pull_uses_cache_for_warm_layers() {
     let out2 = invoke(&out_path_2);
     assert!(
         out2.status.success(),
-        "second mikebom pull failed:\nstdout={}\nstderr={}",
+        "second waybill pull failed:\nstdout={}\nstderr={}",
         String::from_utf8_lossy(&out2.stdout),
         String::from_utf8_lossy(&out2.stderr),
     );
@@ -363,12 +363,12 @@ fn repeat_pull_uses_cache_for_warm_layers() {
 /// and asserts the SBOM's apk PURLs reflect the requested arch's
 /// alpine `apk` arch name (e.g. linux/amd64 → x86_64,
 /// linux/arm64 → aarch64). Skipped silently unless
-/// `MIKEBOM_OCI_NETWORK_TESTS=1`.
+/// `WAYBILL_OCI_NETWORK_TESTS=1`.
 #[test]
 fn pulls_alpine_with_image_platform_override() {
     if !network_tests_enabled() {
         eprintln!(
-            "skipping: set MIKEBOM_OCI_NETWORK_TESTS=1 to run network-gated smoke tests"
+            "skipping: set WAYBILL_OCI_NETWORK_TESTS=1 to run network-gated smoke tests"
         );
         return;
     }
@@ -395,10 +395,10 @@ fn pulls_alpine_with_image_platform_override() {
         .arg("--output")
         .arg(&out_path)
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
-        "mikebom failed for {target_platform}:\nstdout={}\nstderr={}",
+        "waybill failed for {target_platform}:\nstdout={}\nstderr={}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr),
     );
@@ -429,12 +429,12 @@ fn pulls_alpine_with_image_platform_override() {
 ///
 /// Pulls a private image from the registry using credentials
 /// resolved from `~/.docker/config.json`. The image reference is
-/// passed via `MIKEBOM_OCI_AUTH_PRIVATE_IMAGE_REF` so that this
+/// passed via `WAYBILL_OCI_AUTH_PRIVATE_IMAGE_REF` so that this
 /// test doesn't bake in any specific user's private repo.
 ///
 /// Skipped silently unless BOTH gate env vars are set:
-///   - `MIKEBOM_OCI_NETWORK_TESTS=1`
-///   - `MIKEBOM_OCI_AUTH_TESTS=1`
+///   - `WAYBILL_OCI_NETWORK_TESTS=1`
+///   - `WAYBILL_OCI_AUTH_TESTS=1`
 ///
 /// Verifies the scan succeeds AND that no credential bytes leak to
 /// stdout / stderr. The `auth` field's base64 string is what we'd
@@ -444,17 +444,17 @@ fn pulls_alpine_with_image_platform_override() {
 fn pulls_private_image_via_docker_keychain() {
     if !network_tests_enabled() || !auth_tests_enabled() {
         eprintln!(
-            "skipping: set MIKEBOM_OCI_NETWORK_TESTS=1 and \
-             MIKEBOM_OCI_AUTH_TESTS=1 to run the authenticated smoke test"
+            "skipping: set WAYBILL_OCI_NETWORK_TESTS=1 and \
+             WAYBILL_OCI_AUTH_TESTS=1 to run the authenticated smoke test"
         );
         return;
     }
 
-    let image_ref = match std::env::var("MIKEBOM_OCI_AUTH_PRIVATE_IMAGE_REF") {
+    let image_ref = match std::env::var("WAYBILL_OCI_AUTH_PRIVATE_IMAGE_REF") {
         Ok(r) if !r.is_empty() => r,
         _ => {
             eprintln!(
-                "skipping: MIKEBOM_OCI_AUTH_PRIVATE_IMAGE_REF must point at a \
+                "skipping: WAYBILL_OCI_AUTH_PRIVATE_IMAGE_REF must point at a \
                  private image you have credentials for in ~/.docker/config.json"
             );
             return;
@@ -475,17 +475,17 @@ fn pulls_private_image_via_docker_keychain() {
         .arg(&out_path)
         .env("RUST_LOG", "debug")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
-        "mikebom failed for {image_ref}:\nstdout={}\nstderr={}",
+        "waybill failed for {image_ref}:\nstdout={}\nstderr={}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr),
     );
 
     // Best-effort secret-leak guard. If the user's config.json puts a
     // credential value in `auths.<reg>.auth`, we can read it back here
-    // and confirm it doesn't appear in mikebom's output. This is a
+    // and confirm it doesn't appear in waybill's output. This is a
     // sanity check, not a security guarantee — credential helpers
     // store the secret outside config.json so we can't guard them.
     let stdout = String::from_utf8_lossy(&output.stdout);

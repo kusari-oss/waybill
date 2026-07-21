@@ -15,7 +15,7 @@
 //! Two tests:
 //! - `scan_cargo_workspace_root_is_runtime_m200` (FR-002 + SC-001):
 //!   asserts the root component has `scope: null` and no
-//!   `mikebom:lifecycle-scope: "development"` annotation.
+//!   `waybill:lifecycle-scope: "development"` annotation.
 //! - `scan_cargo_workspace_root_wins_root_election_m200` (SC-001):
 //!   asserts `metadata.component.name == "app"` when no operator
 //!   override is passed.
@@ -25,13 +25,13 @@ use std::process::Command;
 
 fn fixture_root() -> PathBuf {
     // The fixture is committed in-tree at
-    // mikebom-cli/tests/fixtures/cargo/root_package_lifecycle/.
+    // waybill-cli/tests/fixtures/cargo/root_package_lifecycle/.
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/cargo/root_package_lifecycle")
 }
 
 /// Mirrors the `scan_path` helper at `scan_npm.rs:387`: shells out to
-/// the built mikebom binary via `env!("CARGO_BIN_EXE_mikebom")` and
+/// the built waybill binary via `env!("CARGO_BIN_EXE_mikebom")` and
 /// returns the parsed CDX JSON.
 fn scan_path(path: &Path) -> serde_json::Value {
     let bin = env!("CARGO_BIN_EXE_mikebom");
@@ -51,7 +51,7 @@ fn scan_path(path: &Path) -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -78,7 +78,7 @@ fn property_value<'a>(component: &'a serde_json::Value, key: &str) -> Option<&'a
 }
 
 /// FR-002 + SC-001: workspace-root [package] emits with `scope: null`
-/// and no `mikebom:lifecycle-scope: "development"` annotation.
+/// and no `waybill:lifecycle-scope: "development"` annotation.
 #[test]
 fn scan_cargo_workspace_root_is_runtime_m200() {
     let sbom = scan_path(&fixture_root());
@@ -103,10 +103,10 @@ fn scan_cargo_workspace_root_is_runtime_m200() {
         "workspace-root [package] must NOT be scope=excluded post-m200; got scope={scope:?}"
     );
     // FR-002 corollary: no development lifecycle-scope annotation.
-    let lifecycle = property_value(root_component, "mikebom:lifecycle-scope");
+    let lifecycle = property_value(root_component, "waybill:lifecycle-scope");
     assert!(
         lifecycle != Some("development"),
-        "workspace-root [package] must NOT carry mikebom:lifecycle-scope=development post-m200; got {lifecycle:?}"
+        "workspace-root [package] must NOT carry waybill:lifecycle-scope=development post-m200; got {lifecycle:?}"
     );
 }
 
@@ -138,7 +138,7 @@ fn scan_cargo_workspace_root_wins_root_election_m200() {
 
 // ============================================================
 // Milestone 201 (issue #587) — root-selector disambiguation via
-// `mikebom:is-cargo-workspace-toplevel` positive-identifier signal.
+// `waybill:is-cargo-workspace-toplevel` positive-identifier signal.
 // The extended fixture (sub/package.json + sub/index.js) introduces
 // a 3rd main-module candidate (npm) alongside the existing cargo-
 // root `app` + cargo-member `helper`. Post-m201 the RepoRoot ladder
@@ -182,7 +182,7 @@ fn scan_cargo_workspace_root_wins_multi_ecosystem_m201() {
         .as_array()
         .and_then(|arr| {
             arr.iter()
-                .find(|p| p["name"].as_str() == Some("mikebom:root-selection-heuristic"))
+                .find(|p| p["name"].as_str() == Some("waybill:root-selection-heuristic"))
         })
         .and_then(|p| p["value"].as_str())
         .expect("root-selection-heuristic annotation must be present on metadata");
@@ -201,7 +201,7 @@ fn scan_cargo_workspace_root_wins_multi_ecosystem_m201() {
     );
 }
 
-/// FR-007: the new internal-only annotation `mikebom:is-cargo-workspace-toplevel`
+/// FR-007: the new internal-only annotation `waybill:is-cargo-workspace-toplevel`
 /// MUST NOT appear anywhere in emitted SBOM output (filtered by extended
 /// `is_internal_emission_key` at root_selector.rs).
 #[test]
@@ -209,7 +209,7 @@ fn scan_cargo_new_internal_annotation_is_filtered_from_output_m201() {
     let sbom = scan_path(&fixture_root());
     let raw = serde_json::to_string(&sbom).unwrap();
     assert!(
-        !raw.contains("mikebom:is-cargo-workspace-toplevel"),
+        !raw.contains("waybill:is-cargo-workspace-toplevel"),
         "internal-only annotation MUST NOT leak into emitted SBOM (FR-007); \
          found in serialized output"
     );

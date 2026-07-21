@@ -69,7 +69,7 @@ pub fn build_packages(
         // Milestone 133 US1.C: file-tier components emit as a
         // distinct element type per research §"SPDX 3 element type
         // for file-tier components" (FR-001). Detect the
-        // `mikebom:component-tier = "file"` annotation and emit
+        // `waybill:component-tier = "file"` annotation and emit
         // `software_File` instead of the regular package element
         // type; suppress `software_packageUrl` per FR-009.
         let is_file_tier = c
@@ -96,7 +96,7 @@ pub fn build_packages(
         }
 
         // Milestone 053 FR-001a (SPDX 3.0.1): components carrying
-        // `mikebom:component-role: main-module` (catalog row C40) are
+        // `waybill:component-role: main-module` (catalog row C40) are
         // the workspace's main-module — set the native SPDX 3.0.1
         // `software_primaryPurpose: "application"` field per the
         // schema's `prop_software_SoftwareArtifact_software_primaryPurpose`
@@ -115,7 +115,7 @@ pub fn build_packages(
             Some(waybill_common::resolution::BinaryRole::Other) => None,
             None => {
                 if c.extra_annotations
-                    .get("mikebom:component-role")
+                    .get("waybill:component-role")
                     .and_then(|v| v.as_str())
                     == Some("main-module")
                 {
@@ -130,7 +130,7 @@ pub fn build_packages(
         }
 
         // verifiedUsing[] — Hash value-objects, one per integrity
-        // checksum mikebom computed. SPDX 3's algorithm enum uses
+        // checksum waybill computed. SPDX 3's algorithm enum uses
         // lowercase-with-no-hyphen form (`sha256`, `sha1`, `md5`).
         // See `prop_Hash_algorithm` in the bundled schema.
         if !c.hashes.is_empty() {
@@ -284,7 +284,7 @@ pub fn build_packages(
 
     // Milestone 119 phase-2 — append supplement-declared services as
     // SPDX 3 `software_Package` elements tagged via the existing C40
-    // mikebom annotation pattern per research Decision 4. The
+    // waybill annotation pattern per research Decision 4. The
     // standalone SPDX 3.0.1 stable schema doesn't carry a Service
     // element type usable across consumer tooling; the C40 fallback
     // pattern preserves consumer interoperability with the SPDX 2.3
@@ -322,7 +322,7 @@ fn supplement_service_to_v3_package(
         pkg.insert("description".to_string(), json!(desc));
     }
     // Endpoints surface on `software_homePage` when there's exactly
-    // one; otherwise they ride a mikebom-namespaced extension below.
+    // one; otherwise they ride a waybill-namespaced extension below.
     // The SPDX 3.0.1 stable schema has no native `endpoints[]` slot.
     if let Some(endpoints) = &svc.endpoints {
         if endpoints.len() == 1 {
@@ -349,7 +349,7 @@ fn hash_prefix(input: &[u8], chars: usize) -> String {
     encoded[..chars].to_string()
 }
 
-/// Convert a mikebom `HashAlgorithm` to the SPDX 3 `Hash.algorithm`
+/// Convert a waybill `HashAlgorithm` to the SPDX 3 `Hash.algorithm`
 /// enum value (lowercase, no hyphens) per `prop_Hash_algorithm` in
 /// the bundled schema.
 fn spdx3_algorithm_name(algo: waybill_common::types::hash::HashAlgorithm) -> &'static str {

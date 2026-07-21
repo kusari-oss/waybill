@@ -1,22 +1,22 @@
 // Milestone 119 — annotation stamping helpers for the three new
-// mikebom:* keys this feature introduces:
+// waybill:* keys this feature introduces:
 //
-// - `mikebom:source-tier = "declared"` (per-component, value extension
+// - `waybill:source-tier = "declared"` (per-component, value extension
 //   on the existing C5 key — supplement-only entries)
-// - `mikebom:assertion-conflict` (per-component, REPEATABLE conflicts
+// - `waybill:assertion-conflict` (per-component, REPEATABLE conflicts
 //   stored as a single JSON-array property — see annotation-shape.md
 //   § "Cardinality + storage shape")
-// - `mikebom:supplement-cdx` (document-scope provenance — emitted via
+// - `waybill:supplement-cdx` (document-scope provenance — emitted via
 //   `metadata.rs`, not via these helpers)
 
 use std::collections::BTreeMap;
 
 use super::conflict::ConflictRecord;
 
-const SOURCE_TIER_KEY: &str = "mikebom:source-tier";
-const ASSERTION_CONFLICT_KEY: &str = "mikebom:assertion-conflict";
+const SOURCE_TIER_KEY: &str = "waybill:source-tier";
+const ASSERTION_CONFLICT_KEY: &str = "waybill:assertion-conflict";
 
-/// Stamp `mikebom:source-tier = "declared"` on a supplement-introduced
+/// Stamp `waybill:source-tier = "declared"` on a supplement-introduced
 /// component's `extra_annotations` bag. Overwrites any pre-existing
 /// value (per emission gating in contracts/annotation-shape.md: solo
 /// entries only — collisions keep the scanner's pre-existing tier and
@@ -31,7 +31,7 @@ pub(crate) fn stamp_source_tier_declared(
 }
 
 /// Append a single conflict record to a component's
-/// `mikebom:assertion-conflict` JSON array. Multiple conflicts on the
+/// `waybill:assertion-conflict` JSON array. Multiple conflicts on the
 /// same component accumulate into the same array value — the in-process
 /// storage channel is `BTreeMap<String, serde_json::Value>` which holds
 /// one value per key, so REPEATABILITY is implemented by storing a
@@ -68,7 +68,7 @@ pub(crate) fn stamp_assertion_conflict(
     }
 }
 
-/// Build the document-scope `mikebom:supplement-cdx` property value
+/// Build the document-scope `waybill:supplement-cdx` property value
 /// per FR-012 / Decision 6. The shape is `<path>@sha256:<hex>` where
 /// `<path>` is the verbatim string the operator passed and `<hex>` is
 /// the lowercase 64-char SHA-256 over the supplement file's raw bytes.

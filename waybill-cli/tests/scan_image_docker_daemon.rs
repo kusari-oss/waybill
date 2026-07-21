@@ -4,11 +4,11 @@
 //! - the `docker` CLI is not on `$PATH`, OR
 //! - `docker info` fails (daemon not running, unreachable
 //!   `DOCKER_HOST`, etc.), OR
-//! - the env var `MIKEBOM_SKIP_DOCKER_INTEGRATION` is non-empty.
+//! - the env var `WAYBILL_SKIP_DOCKER_INTEGRATION` is non-empty.
 //!
 //! When all gates pass, the test pulls a tiny well-known image
 //! (`alpine:3.19`) into the local docker daemon, then runs
-//! `mikebom sbom scan --image alpine:3.19 --image-src docker` and
+//! `waybill sbom scan --image alpine:3.19 --image-src docker` and
 //! asserts:
 //!
 //! - the CLI exits 0,
@@ -32,8 +32,8 @@ mod common;
 /// skip (docker missing or daemon unreachable). Centralized here so
 /// the same logic applies to every assertion path.
 fn should_skip() -> bool {
-    if std::env::var_os("MIKEBOM_SKIP_DOCKER_INTEGRATION").is_some() {
-        eprintln!("skipping: MIKEBOM_SKIP_DOCKER_INTEGRATION set");
+    if std::env::var_os("WAYBILL_SKIP_DOCKER_INTEGRATION").is_some() {
+        eprintln!("skipping: WAYBILL_SKIP_DOCKER_INTEGRATION set");
         return true;
     }
     let version = Command::new("docker")
@@ -90,7 +90,7 @@ fn docker_daemon_source_scans_locally_cached_image_end_to_end() {
         String::from_utf8_lossy(&pull.stderr)
     );
 
-    // Run mikebom in a fresh tempdir so we don't leak `mikebom.cdx.json`
+    // Run waybill in a fresh tempdir so we don't leak `waybill.cdx.json`
     // into the repo or the user's CWD.
     let tmp = tempfile::tempdir().expect("create tempdir");
     let output = Command::new(common::bin())
@@ -104,13 +104,13 @@ fn docker_daemon_source_scans_locally_cached_image_end_to_end() {
         ])
         .current_dir(tmp.path())
         .output()
-        .expect("spawn mikebom");
+        .expect("spawn waybill");
 
     let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
     let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
     assert!(
         output.status.success(),
-        "mikebom exited {}; stderr:\n{stderr}\nstdout:\n{stdout}",
+        "waybill exited {}; stderr:\n{stderr}\nstdout:\n{stdout}",
         output.status
     );
     assert!(
@@ -118,9 +118,9 @@ fn docker_daemon_source_scans_locally_cached_image_end_to_end() {
         "expected docker-daemon source to be reported in tracing output; got stderr:\n{stderr}"
     );
 
-    // SBOM should land at `mikebom.cdx.json` in the tempdir (default
+    // SBOM should land at `waybill.cdx.json` in the tempdir (default
     // filename for the cyclonedx-json format).
-    let sbom_path: PathBuf = tmp.path().join("mikebom.cdx.json");
+    let sbom_path: PathBuf = tmp.path().join("waybill.cdx.json");
     assert!(
         sbom_path.exists(),
         "expected SBOM at {}; tempdir contents: {:?}",
@@ -152,23 +152,23 @@ fn docker_only_source_errors_helpfully_when_image_not_cached() {
     }
 
     // Reference that cannot exist in any cache — random suffix is
-    // not in any registry mikebom would query. With `--image-src
+    // not in any registry waybill would query. With `--image-src
     // docker` we never reach the registry; the docker-inspect probe
     // returns Absent and we expect the "not found in any of the
     // configured sources" error.
-    let bogus = "registry.invalid.mikebom-test.example/no-such-image:nope-d9f4b2";
+    let bogus = "registry.invalid.waybill-test.example/no-such-image:nope-d9f4b2";
 
     let tmp = tempfile::tempdir().expect("create tempdir");
     let output = Command::new(common::bin())
         .args(["sbom", "scan", "--image", bogus, "--image-src", "docker"])
         .current_dir(tmp.path())
         .output()
-        .expect("spawn mikebom");
+        .expect("spawn waybill");
 
     let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
     assert!(
         !output.status.success(),
-        "mikebom should have errored on a docker-only miss"
+        "waybill should have errored on a docker-only miss"
     );
     assert!(
         stderr.contains("not found in any of the configured `--image-src` sources"),

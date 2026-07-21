@@ -173,7 +173,7 @@ mod inner {
             warn!("could not attach do_filp_open kprobe: {e}");
         }
         // Milestone 211 (issue #611): the vfs_open kprobe was retired
-        // — see mikebom-ebpf/src/programs/file_ops.rs for the full
+        // — see waybill-ebpf/src/programs/file_ops.rs for the full
         // explanation. Its intended fallback role for paths that
         // do_filp_open + openat2 miss was never realized because
         // bpf_d_path (which vfs_open used to resolve paths) is
@@ -245,9 +245,9 @@ mod inner {
     }
 
     fn default_ebpf_path() -> PathBuf {
-        let p = PathBuf::from("mikebom-ebpf/target/bpfel-unknown-none/release/mikebom-ebpf");
+        let p = PathBuf::from("waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf");
         if p.exists() { return p; }
-        PathBuf::from("target/bpfel-unknown-none/release/mikebom-ebpf")
+        PathBuf::from("target/bpfel-unknown-none/release/waybill-ebpf")
     }
 
     fn find_libssl() -> Option<PathBuf> {

@@ -22,7 +22,7 @@ pub struct OpenVexDocument {
     /// the same `@id`.
     #[serde(rename = "@id")]
     pub id: String,
-    /// `"mikebom-<version>"` — matches the first creator entry in
+    /// `"waybill-<version>"` — matches the first creator entry in
     /// the companion SPDX document's `creationInfo.creators`.
     pub author: String,
     /// RFC 3339 UTC timestamp — sourced from `OutputConfig.created`.
@@ -32,7 +32,7 @@ pub struct OpenVexDocument {
     pub version: u64,
     /// Optional tool identifier. OpenVEX separates `author` (who
     /// authored the statements) from `tooling` (what produced the
-    /// document) — for mikebom they are the same string today.
+    /// document) — for waybill they are the same string today.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tooling: Option<String>,
     /// One entry per (vulnerability, product-set) tuple. Empty is
@@ -70,7 +70,7 @@ pub struct OpenVexVulnerability {
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct OpenVexProduct {
-    /// Component identifier — mikebom emits the PURL string here,
+    /// Component identifier — waybill emits the PURL string here,
     /// so the VEX statement binds to the same identity SPDX's
     /// `externalRefs[PACKAGE-MANAGER/purl]` carries.
     #[serde(rename = "@id")]
@@ -78,7 +78,7 @@ pub struct OpenVexProduct {
     /// Milestone 072 / FR-008: per-instance identifier map.
     ///
     /// Open-ended dictionary per the OpenVEX 0.2.0
-    /// `Product.identifiers` field. Standard keys mikebom emits:
+    /// `Product.identifiers` field. Standard keys waybill emits:
     ///
     /// - `purl` — the component PURL string (always populated when
     ///   set; equal to the legacy `@id` field).
@@ -106,7 +106,7 @@ pub enum OpenVexStatus {
     Affected,
     #[allow(dead_code)]
     Fixed,
-    /// Default for advisories mikebom has discovered but not
+    /// Default for advisories waybill has discovered but not
     /// analyzed. The VEX-enrichment milestone that wires
     /// `AdvisoryRef → OpenVexStatus` with real analysis will pick
     /// among the four variants.

@@ -8,7 +8,7 @@
 //!
 //! FR-007 / SC-005: `us1_either_prefers_referrer_when_available` also asserts
 //! stderr contains the audit-log provenance strings so operators consuming
-//! mikebom logs can identify referrer-sourced emissions from log content
+//! waybill logs can identify referrer-sourced emissions from log content
 //! alone (F3 remediation from /speckit-analyze).
 
 #![cfg(feature = "oci-registry")]
@@ -44,7 +44,7 @@ struct OciImage {
 fn build_minimal_oci_image() -> OciImage {
     let uncompressed_tar = {
         let mut builder = tar::Builder::new(Vec::<u8>::new());
-        let body = b"ID=mikebom-m186-test\nVERSION=1\n";
+        let body = b"ID=waybill-m186-test\nVERSION=1\n";
         let mut header = tar::Header::new_gnu();
         header.set_path("etc/os-release").unwrap();
         header.set_size(body.len() as u64);
@@ -151,7 +151,7 @@ async fn mount_image_endpoints(server: &MockServer, repo: &str, tag: &str, image
 
 /// Build a tiny CycloneDX 1.6 SBOM body suitable as a referrer blob.
 /// `marker` is a caller-supplied string embedded in the `metadata.component.name`
-/// field so tests can prove byte-identity round-tripping through mikebom.
+/// field so tests can prove byte-identity round-tripping through waybill.
 fn build_cdx_referrer(marker: &str) -> Vec<u8> {
     let body = json!({
         "bomFormat": "CycloneDX",
@@ -221,7 +221,7 @@ async fn mount_referrer(
 }
 
 /// Mount an oversize-declared referrer that would trip
-/// `MIKEBOM_REFERRER_MAX_BYTES` — the `size` field claims 200 MiB even
+/// `WAYBILL_REFERRER_MAX_BYTES` — the `size` field claims 200 MiB even
 /// though the blob body would be a few hundred bytes if fetched.
 async fn mount_oversize_referrer(
     server: &MockServer,
@@ -302,11 +302,11 @@ fn mikebom_bin() -> &'static str {
 async fn either_prefers_referrer_when_available() {
     let server = MockServer::start().await;
     let image = build_minimal_oci_image();
-    let repo = "library/mikebom-m186-us1";
+    let repo = "library/waybill-m186-us1";
     let tag = "1.0";
     mount_image_endpoints(&server, repo, tag, &image).await;
 
-    let referrer_bytes = build_cdx_referrer("mikebom-m186-us1-referrer");
+    let referrer_bytes = build_cdx_referrer("waybill-m186-us1-referrer");
     let descriptor_digest =
         mount_referrer(&server, repo, &image.manifest_digest, &referrer_bytes).await;
 
@@ -335,11 +335,11 @@ async fn either_prefers_referrer_when_available() {
             output.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         out.status.success(),
-        "mikebom exit={:?} stderr:\n{stderr}",
+        "waybill exit={:?} stderr:\n{stderr}",
         out.status.code(),
     );
 
@@ -377,7 +377,7 @@ async fn either_prefers_referrer_when_available() {
 async fn either_falls_through_to_scan_when_no_referrer() {
     let server = MockServer::start().await;
     let image = build_minimal_oci_image();
-    let repo = "library/mikebom-m186-us1-empty";
+    let repo = "library/waybill-m186-us1-empty";
     let tag = "1.0";
     mount_image_endpoints(&server, repo, tag, &image).await;
     mount_empty_referrers(&server, repo, &image.manifest_digest).await;
@@ -407,11 +407,11 @@ async fn either_falls_through_to_scan_when_no_referrer() {
             output.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         out.status.success(),
-        "mikebom exit={:?} stderr:\n{stderr}",
+        "waybill exit={:?} stderr:\n{stderr}",
         out.status.code(),
     );
     // Fall-through log per F3 remediation.
@@ -420,7 +420,7 @@ async fn either_falls_through_to_scan_when_no_referrer() {
         "expected stderr to contain the fall-through INFO log. stderr:\n{stderr}",
     );
     // Scan-derived output: should be a full CDX 1.6 document with our
-    // fixture's ecosystem shape (empty components on the mikebom-m186-test
+    // fixture's ecosystem shape (empty components on the waybill-m186-test
     // synthetic os-release, but a valid CDX metadata block).
     let parsed: serde_json::Value = serde_json::from_slice(&std::fs::read(&output).unwrap())
         .expect("scan output is valid JSON");
@@ -431,7 +431,7 @@ async fn either_falls_through_to_scan_when_no_referrer() {
 async fn either_falls_through_silently_on_404() {
     let server = MockServer::start().await;
     let image = build_minimal_oci_image();
-    let repo = "library/mikebom-m186-us1-404";
+    let repo = "library/waybill-m186-us1-404";
     let tag = "1.0";
     mount_image_endpoints(&server, repo, tag, &image).await;
     mount_referrers_404(&server, repo, &image.manifest_digest).await;
@@ -461,11 +461,11 @@ async fn either_falls_through_silently_on_404() {
             output.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         out.status.success(),
-        "mikebom exit={:?} stderr:\n{stderr}",
+        "waybill exit={:?} stderr:\n{stderr}",
         out.status.code(),
     );
     // 404 is a spec-blessed signal, not an error — log at INFO not WARN.
@@ -484,7 +484,7 @@ async fn either_falls_through_silently_on_404() {
 async fn either_falls_through_on_size_cap_exceeded() {
     let server = MockServer::start().await;
     let image = build_minimal_oci_image();
-    let repo = "library/mikebom-m186-us1-oversize";
+    let repo = "library/waybill-m186-us1-oversize";
     let tag = "1.0";
     mount_image_endpoints(&server, repo, tag, &image).await;
     let _descriptor_digest =
@@ -515,17 +515,17 @@ async fn either_falls_through_on_size_cap_exceeded() {
             output.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         out.status.success(),
-        "mikebom exit={:?} stderr:\n{stderr}",
+        "waybill exit={:?} stderr:\n{stderr}",
         out.status.code(),
     );
     // Size-cap WARN log per research.md Decision 4.
     assert!(
         stderr.contains("oversize referrer descriptor")
-            || stderr.contains("MIKEBOM_REFERRER_MAX_BYTES"),
+            || stderr.contains("WAYBILL_REFERRER_MAX_BYTES"),
         "expected stderr to log the size-cap WARN. stderr:\n{stderr}",
     );
     // Fell through to scan.

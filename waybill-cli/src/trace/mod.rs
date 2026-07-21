@@ -1,6 +1,6 @@
 //! Userspace trace pipeline for eBPF-based build observation.
 //!
-//! This module implements the userspace side of the mikebom trace pipeline:
+//! This module implements the userspace side of the waybill trace pipeline:
 //!
 //! - **loader**: Loads eBPF bytecode and attaches probes (Linux only)
 //! - **processor**: Consumes events from eBPF ring buffers

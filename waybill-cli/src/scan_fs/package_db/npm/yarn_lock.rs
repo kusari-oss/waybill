@@ -380,7 +380,7 @@ fn parse_v1(
             unique = super::alias_mapping::rewrite_dep_names(&unique, &alias_map);
         }
         if let Some(mut entry) = build_entry(&name, &version, source_path, unique, &optional_names) {
-            // Milestone 159 FR-006 — attach `mikebom:yarn-alias`
+            // Milestone 159 FR-006 — attach `waybill:yarn-alias`
             // annotation on aliased components. Single local-name
             // emits Value::String; multi-alias (FR-012) emits
             // Value::Array with sorted local-names.
@@ -400,7 +400,7 @@ fn parse_v1(
                 };
                 entry
                     .extra_annotations
-                    .insert("mikebom:yarn-alias".to_string(), value);
+                    .insert("waybill:yarn-alias".to_string(), value);
             }
             out.push(entry);
         }
@@ -492,7 +492,7 @@ fn build_entry(
     depends: Vec<String>,
     // Milestone 181 T005 — m181 classifier input. When the name is
     // in the set, the entry gets `LifecycleScope::Optional` + the
-    // `mikebom:optional-derivation = "npm-optional-dependencies"`
+    // `waybill:optional-derivation = "npm-optional-dependencies"`
     // annotation. When absent (or when the set is empty), pre-m181
     // behavior is preserved verbatim: `lifecycle_scope: None` +
     // empty `extra_annotations` — this is the SC-008 byte-identity
@@ -506,7 +506,7 @@ fn build_entry(
     ) = if optional_names.contains(name) {
         let mut ann: BTreeMap<String, serde_json::Value> = Default::default();
         ann.insert(
-            "mikebom:optional-derivation".to_string(),
+            "waybill:optional-derivation".to_string(),
             serde_json::Value::String("npm-optional-dependencies".to_string()),
         );
         (Some(waybill_common::resolution::LifecycleScope::Optional), ann)
@@ -564,20 +564,20 @@ mod tests {
         let text = r#"# yarn lockfile v1
 
 
-"mikebom-fixture-lib@^1.0.0":
+"waybill-fixture-lib@^1.0.0":
   version "1.2.3"
-  resolved "https://example.invalid/mikebom-fixture-lib/-/mikebom-fixture-lib-1.2.3.tgz"
+  resolved "https://example.invalid/waybill-fixture-lib/-/waybill-fixture-lib-1.2.3.tgz"
   integrity sha512-aaa
 
-"mikebom-fixture-other@^2.0.0":
+"waybill-fixture-other@^2.0.0":
   version "2.3.4"
-  resolved "https://example.invalid/mikebom-fixture-other/-/mikebom-fixture-other-2.3.4.tgz"
+  resolved "https://example.invalid/waybill-fixture-other/-/waybill-fixture-other-2.3.4.tgz"
 "#;
         let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         assert_eq!(entries.len(), 2);
         let purls: Vec<&str> = entries.iter().map(|e| e.purl.as_str()).collect();
-        assert!(purls.contains(&"pkg:npm/mikebom-fixture-lib@1.2.3"));
-        assert!(purls.contains(&"pkg:npm/mikebom-fixture-other@2.3.4"));
+        assert!(purls.contains(&"pkg:npm/waybill-fixture-lib@1.2.3"));
+        assert!(purls.contains(&"pkg:npm/waybill-fixture-other@2.3.4"));
     }
 
     #[test]
@@ -585,12 +585,12 @@ mod tests {
         let text = r#"# yarn lockfile v1
 
 
-"@mikebom-fixture/types-pkg@^4.0.0":
+"@waybill-fixture/types-pkg@^4.0.0":
   version "4.5.6"
 "#;
         let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         assert_eq!(entries.len(), 1);
-        assert_eq!(entries[0].name, "@mikebom-fixture/types-pkg");
+        assert_eq!(entries[0].name, "@waybill-fixture/types-pkg");
         assert_eq!(entries[0].version, "4.5.6");
         assert_eq!(
             entries[0].purl.as_str(),
@@ -604,12 +604,12 @@ mod tests {
         let text = r#"# yarn lockfile v1
 
 
-"mikebom-fixture-alias@^1.0.0", "mikebom-fixture-alias@^1.1.0":
+"waybill-fixture-alias@^1.0.0", "waybill-fixture-alias@^1.1.0":
   version "1.5.0"
 "#;
         let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         assert_eq!(entries.len(), 1);
-        assert_eq!(entries[0].name, "mikebom-fixture-alias");
+        assert_eq!(entries[0].name, "waybill-fixture-alias");
         assert_eq!(entries[0].version, "1.5.0");
     }
 
@@ -618,27 +618,27 @@ mod tests {
         let text = r#"# yarn lockfile v1
 
 
-"mikebom-fixture-parent@^1.0.0":
+"waybill-fixture-parent@^1.0.0":
   version "1.0.0"
   dependencies:
-    "mikebom-fixture-child" "^2.0.0"
-    mikebom-fixture-other "^3.0.0"
+    "waybill-fixture-child" "^2.0.0"
+    waybill-fixture-other "^3.0.0"
 
-"mikebom-fixture-child@^2.0.0":
+"waybill-fixture-child@^2.0.0":
   version "2.0.0"
 "#;
         let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         let parent = entries
             .iter()
-            .find(|e| e.name == "mikebom-fixture-parent")
+            .find(|e| e.name == "waybill-fixture-parent")
             .unwrap();
         assert_eq!(parent.depends.len(), 2);
         assert!(parent
             .depends
-            .contains(&"mikebom-fixture-child".to_string()));
+            .contains(&"waybill-fixture-child".to_string()));
         assert!(parent
             .depends
-            .contains(&"mikebom-fixture-other".to_string()));
+            .contains(&"waybill-fixture-other".to_string()));
     }
 
     #[test]
@@ -649,20 +649,20 @@ __metadata:
   version: 8
   cacheKey: 10
 
-"mikebom-fixture-lib@npm:^1.0.0":
+"waybill-fixture-lib@npm:^1.0.0":
   version: 1.2.3
-  resolution: "mikebom-fixture-lib@npm:1.2.3"
+  resolution: "waybill-fixture-lib@npm:1.2.3"
   languageName: node
   linkType: hard
 
-"@mikebom-fixture/types-pkg@npm:^4.0.0":
+"@waybill-fixture/types-pkg@npm:^4.0.0":
   version: 4.5.6
-  resolution: "@mikebom-fixture/types-pkg@npm:4.5.6"
+  resolution: "@waybill-fixture/types-pkg@npm:4.5.6"
 "#;
         let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         assert_eq!(entries.len(), 2);
         let purls: Vec<&str> = entries.iter().map(|e| e.purl.as_str()).collect();
-        assert!(purls.contains(&"pkg:npm/mikebom-fixture-lib@1.2.3"));
+        assert!(purls.contains(&"pkg:npm/waybill-fixture-lib@1.2.3"));
         assert!(purls.contains(&"pkg:npm/%40mikebom-fixture/types-pkg@4.5.6"));
     }
 
@@ -673,29 +673,29 @@ __metadata:
 __metadata:
   version: 8
 
-"mikebom-fixture-parent@npm:^1.0.0":
+"waybill-fixture-parent@npm:^1.0.0":
   version: 1.0.0
-  resolution: "mikebom-fixture-parent@npm:1.0.0"
+  resolution: "waybill-fixture-parent@npm:1.0.0"
   dependencies:
-    mikebom-fixture-child: ^2.0.0
-    "@mikebom-fixture/scoped-dep": ^1.0.0
+    waybill-fixture-child: ^2.0.0
+    "@waybill-fixture/scoped-dep": ^1.0.0
 
-"mikebom-fixture-child@npm:^2.0.0":
+"waybill-fixture-child@npm:^2.0.0":
   version: 2.0.0
-  resolution: "mikebom-fixture-child@npm:2.0.0"
+  resolution: "waybill-fixture-child@npm:2.0.0"
 "#;
         let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         let parent = entries
             .iter()
-            .find(|e| e.name == "mikebom-fixture-parent")
+            .find(|e| e.name == "waybill-fixture-parent")
             .unwrap();
         assert_eq!(parent.depends.len(), 2);
         assert!(parent
             .depends
-            .contains(&"mikebom-fixture-child".to_string()));
+            .contains(&"waybill-fixture-child".to_string()));
         assert!(parent
             .depends
-            .contains(&"@mikebom-fixture/scoped-dep".to_string()));
+            .contains(&"@waybill-fixture/scoped-dep".to_string()));
     }
 
     #[test]
@@ -719,7 +719,7 @@ __metadata:
     /// T015 — real test-guac-visualizer-shape yarn alias: local
     /// `@cosmograph/cosmos` aliases to `@cosmos.gl/graph@2.6.4`. The
     /// aliased-canonical component is emitted (not local); the
-    /// aliased entry carries `mikebom:yarn-alias = "@cosmograph/cosmos"`;
+    /// aliased entry carries `waybill:yarn-alias = "@cosmograph/cosmos"`;
     /// OTHER entries referencing the local-name get their depends
     /// rewritten to the aliased canonical.
     #[test]
@@ -760,7 +760,7 @@ __metadata:
 
         // Annotation carries the local-name.
         assert_eq!(
-            aliased.extra_annotations.get("mikebom:yarn-alias"),
+            aliased.extra_annotations.get("waybill:yarn-alias"),
             Some(&serde_json::Value::String("@cosmograph/cosmos".to_string())),
         );
 
@@ -770,7 +770,7 @@ __metadata:
         assert!(!host.depends.contains(&"@cosmograph/cosmos".to_string()));
     }
 
-    /// T017 — no-alias yarn lockfile MUST NOT add mikebom:yarn-alias
+    /// T017 — no-alias yarn lockfile MUST NOT add waybill:yarn-alias
     /// annotations. Byte-identity preserved on the vast majority case.
     #[test]
     fn m159_yarn_no_alias_no_annotation() {
@@ -785,8 +785,8 @@ __metadata:
         let entries = parse_yarn_lock(text, "yarn.lock", &serde_json::Value::Null);
         for entry in &entries {
             assert!(
-                !entry.extra_annotations.contains_key("mikebom:yarn-alias"),
-                "no-alias yarn.lock MUST NOT add mikebom:yarn-alias; {} did",
+                !entry.extra_annotations.contains_key("waybill:yarn-alias"),
+                "no-alias yarn.lock MUST NOT add waybill:yarn-alias; {} did",
                 entry.name
             );
         }
@@ -810,7 +810,7 @@ __metadata:
         // Milestone 181 T006 — flagship US1: a v1 yarn.lock where a
         // parent declares `optionalDependencies:` naming `optional-child`
         // MUST classify the child as LifecycleScope::Optional + emit
-        // the m180-shared `mikebom:optional-derivation` annotation.
+        // the m180-shared `waybill:optional-derivation` annotation.
         let text = r#"# yarn lockfile v1
 
 
@@ -829,7 +829,7 @@ __metadata:
             Some(waybill_common::resolution::LifecycleScope::Optional)
         );
         assert_eq!(
-            child.extra_annotations.get("mikebom:optional-derivation"),
+            child.extra_annotations.get("waybill:optional-derivation"),
             Some(&serde_json::Value::String(
                 "npm-optional-dependencies".to_string()
             ))
@@ -867,7 +867,7 @@ __metadata:
         assert!(
             !child
                 .extra_annotations
-                .contains_key("mikebom:optional-derivation"),
+                .contains_key("waybill:optional-derivation"),
             "diamond: no optional-derivation annotation when Runtime wins"
         );
     }
@@ -898,7 +898,7 @@ __metadata:
             );
             assert!(
                 !e.extra_annotations
-                    .contains_key("mikebom:optional-derivation"),
+                    .contains_key("waybill:optional-derivation"),
                 "SC-008: no derivation annotation on pre-m181-shape fixture"
             );
         }
@@ -961,7 +961,7 @@ __metadata:
             Some(waybill_common::resolution::LifecycleScope::Optional)
         );
         assert_eq!(
-            foo.extra_annotations.get("mikebom:optional-derivation"),
+            foo.extra_annotations.get("waybill:optional-derivation"),
             Some(&serde_json::Value::String(
                 "npm-optional-dependencies".to_string()
             ))
@@ -1054,8 +1054,8 @@ __metadata:
         assert!(
             !react
                 .extra_annotations
-                .contains_key("mikebom:optional-derivation"),
-            "FR-005: peer-optional react MUST NOT carry mikebom:optional-derivation"
+                .contains_key("waybill:optional-derivation"),
+            "FR-005: peer-optional react MUST NOT carry waybill:optional-derivation"
         );
     }
 
@@ -1089,7 +1089,7 @@ __metadata:
         assert!(
             !react
                 .extra_annotations
-                .contains_key("mikebom:optional-derivation")
+                .contains_key("waybill:optional-derivation")
         );
     }
 }

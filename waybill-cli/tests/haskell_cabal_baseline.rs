@@ -48,7 +48,7 @@ fn haskell_components(doc: &Value) -> Vec<&Value> {
             .and_then(|v| v.as_array())
             .map(|arr| {
                 arr.iter().any(|p| {
-                    p.get("name").and_then(|v| v.as_str()) == Some("mikebom:source-type")
+                    p.get("name").and_then(|v| v.as_str()) == Some("waybill:source-type")
                         && p.get("value")
                             .and_then(|v| v.as_str())
                             .map(|s| s.starts_with("hackage-"))
@@ -127,10 +127,10 @@ fn sc001_baseline_eight_freeze_components() {
     let dir = tempfile::tempdir().unwrap();
     write_cabal_fixture(dir.path());
     let doc = run_scan(dir.path());
-    // 8 freeze-derived components (mikebom:source-type = hackage-freeze).
+    // 8 freeze-derived components (waybill:source-type = hackage-freeze).
     let freeze_components: Vec<&Value> = haskell_components(&doc)
         .into_iter()
-        .filter(|c| property_value(c, "mikebom:source-type") == Some("hackage-freeze"))
+        .filter(|c| property_value(c, "waybill:source-type") == Some("hackage-freeze"))
         .collect();
     assert_eq!(
         freeze_components.len(),
@@ -150,7 +150,7 @@ fn sc001_main_module_emission() {
         Some("pkg:hackage/my-app@1.2.3"),
     );
     assert_eq!(
-        property_value(main, "mikebom:component-role"),
+        property_value(main, "waybill:component-role"),
         Some("main-module"),
     );
 }
@@ -165,9 +165,9 @@ fn sc011_q1_ghc_stdlib_annotation_emitted() {
     for boot_name in &["base", "text", "bytestring", "containers", "time"] {
         let c = component_with_name(&doc, boot_name).unwrap_or_else(|| panic!("expected {boot_name} component"));
         assert_eq!(
-            property_value(c, "mikebom:ghc-stdlib"),
+            property_value(c, "waybill:ghc-stdlib"),
             Some("true"),
-            "{boot_name} should carry mikebom:ghc-stdlib = true per Q1 + FR-014",
+            "{boot_name} should carry waybill:ghc-stdlib = true per Q1 + FR-014",
         );
     }
 
@@ -175,8 +175,8 @@ fn sc011_q1_ghc_stdlib_annotation_emitted() {
     for non_boot in &["aeson", "attoparsec", "vector"] {
         let c = component_with_name(&doc, non_boot).unwrap_or_else(|| panic!("expected {non_boot} component"));
         assert!(
-            property_value(c, "mikebom:ghc-stdlib").is_none(),
-            "{non_boot} should NOT carry mikebom:ghc-stdlib annotation",
+            property_value(c, "waybill:ghc-stdlib").is_none(),
+            "{non_boot} should NOT carry waybill:ghc-stdlib annotation",
         );
     }
 }

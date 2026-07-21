@@ -97,7 +97,7 @@ impl FileEvent {
 
 /// Milestone 210: kind of a compiler-pipeline event emitted from
 /// the `sched_process_exec` + `sched_process_fork` tracepoints
-/// (see mikebom-ebpf/src/programs/compiler_exec.rs).
+/// (see waybill-ebpf/src/programs/compiler_exec.rs).
 ///
 /// `Fork` events propagate the parent's compiler-invocation-id to
 /// the child in-kernel (research R3); user-space only sees `Exec`
@@ -120,7 +120,7 @@ pub enum CompilerExecEventKind {
 /// `#[repr(C)]` for shared use between kernel + userspace, matching
 /// the NetworkEvent + FileEvent pattern above.
 ///
-/// Consumed by `mikebom-cli/src/trace/compiler_pipeline.rs` which
+/// Consumed by `waybill-cli/src/trace/compiler_pipeline.rs` which
 /// assembles the compiler-invocation DAG + read/write sets.
 #[derive(Clone, Copy)]
 #[repr(C)]

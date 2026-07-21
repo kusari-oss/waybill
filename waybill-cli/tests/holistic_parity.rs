@@ -80,7 +80,7 @@ fn triple_scan_at_path(
     if let Some(code) = deb_codename {
         cmd.arg("--deb-codename").arg(code);
     }
-    let out = cmd.output().expect("mikebom runs");
+    let out = cmd.output().expect("waybill runs");
     assert!(
         out.status.success(),
         "scan failed for {label}: stderr={}",

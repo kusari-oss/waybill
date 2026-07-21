@@ -1,5 +1,5 @@
 //! End-to-end integration test for polyglot monorepos — a single
-//! `mikebom sbom scan --path` invocation over a repo containing both
+//! `waybill sbom scan --path` invocation over a repo containing both
 //! a Python backend and an npm frontend must emit one SBOM carrying
 //! components from BOTH ecosystems, with per-ecosystem compositions
 //! records where authoritative.
@@ -11,7 +11,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn fixture() -> PathBuf {
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("polyglot-monorepo")
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("polyglot-monorepo")
 }
 
 fn scan(exclude_dev_test: bool) -> serde_json::Value {
@@ -32,7 +32,7 @@ fn scan(exclude_dev_test: bool) -> serde_json::Value {
         .arg("--output")
         .arg(&out_path)
         .arg("--no-deep-hash");
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",

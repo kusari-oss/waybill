@@ -45,11 +45,11 @@ fn cocoapods_components(doc: &Value) -> Vec<&Value> {
                 .filter(|c| {
                     let purl = c.get("purl").and_then(|v| v.as_str()).unwrap_or("");
                     if purl.starts_with("pkg:cocoapods/") {
-                        return property_value(c, "mikebom:component-role")
+                        return property_value(c, "waybill:component-role")
                             != Some("main-module");
                     }
                     if purl.starts_with("pkg:generic/") {
-                        return property_value(c, "mikebom:source-type")
+                        return property_value(c, "waybill:source-type")
                             .map(|s| s.starts_with("cocoapods-"))
                             .unwrap_or(false);
                     }
@@ -109,14 +109,14 @@ fn design_tier_podfile_only_emits_constraints() {
     assert_eq!(comps.len(), 2);
     for &c in &comps {
         assert_eq!(
-            property_value(c, "mikebom:sbom-tier"),
+            property_value(c, "waybill:sbom-tier"),
             Some("design"),
         );
     }
     let af = find_by_name(&comps, "AFNetworking").unwrap();
     // Milestone 199: always-array shape — JSON-array-in-string value.
     assert_eq!(
-        property_value(af, "mikebom:requirement-ranges"),
+        property_value(af, "waybill:requirement-ranges"),
         Some(r#"["~> 4.0"]"#),
     );
 }
@@ -180,11 +180,11 @@ fn deployed_tier_manifest_lock_only_emits_with_sbom_tier_deployed() {
     assert_eq!(comps.len(), 2);
     for &c in &comps {
         assert_eq!(
-            property_value(c, "mikebom:sbom-tier"),
+            property_value(c, "waybill:sbom-tier"),
             Some("deployed"),
         );
         assert_eq!(
-            property_value(c, "mikebom:evidence-kind"),
+            property_value(c, "waybill:evidence-kind"),
             Some("cocoapods-manifest-lock"),
         );
     }
@@ -228,7 +228,7 @@ fn manifest_lock_skipped_when_podfile_lock_present() {
         .find(|c| c.get("name").and_then(|v| v.as_str()) == Some("AFNetworking"))
         .unwrap();
     assert_eq!(
-        property_value(af, "mikebom:sbom-tier"),
+        property_value(af, "waybill:sbom-tier"),
         Some("source"),
     );
 }

@@ -2,14 +2,14 @@
 //!
 //! The load-bearing guarantee behind FR-022 / SC-006: existing CDX
 //! output must not drift as SPDX emission lands. For each of the 9
-//! ecosystems mikebom supports today, this test runs `mikebom sbom
+//! ecosystems waybill supports today, this test runs `waybill sbom
 //! scan` against a committed fixture, normalizes the two fields
 //! CycloneDX intentionally varies per invocation (`serialNumber`, a
 //! fresh UUID; `metadata.timestamp`, `Utc::now()`), and compares the
 //! result byte-for-byte against a pinned golden fixture under
-//! `mikebom-cli/tests/fixtures/golden/cyclonedx/`.
+//! `waybill-cli/tests/fixtures/golden/cyclonedx/`.
 //!
-//! Updating a golden: set `MIKEBOM_UPDATE_CDX_GOLDENS=1` and rerun the
+//! Updating a golden: set `WAYBILL_UPDATE_CDX_GOLDENS=1` and rerun the
 //! test. The normalized output is written back to the golden file.
 //! Commit the diff only after reviewing — any change here is a real
 //! CDX-output change and needs an audit.
@@ -28,7 +28,7 @@ fn golden_path(label: &str) -> PathBuf {
         .join(format!("{label}.cdx.json"))
 }
 
-/// Run `mikebom sbom scan` against a fixture and return the raw CDX
+/// Run `waybill sbom scan` against a fixture and return the raw CDX
 /// JSON text.
 ///
 /// The scan subprocess runs with `HOME` and related cache-pointing
@@ -60,7 +60,7 @@ fn run_scan(case: &EcosystemCase) -> String {
     );
     let bin = env!("CARGO_BIN_EXE_mikebom");
     let tmp = tempfile::tempdir().expect("tempdir");
-    let out_path = tmp.path().join("mikebom.cdx.json");
+    let out_path = tmp.path().join("waybill.cdx.json");
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
     let mut cmd = Command::new(bin);
     apply_fake_home_env(&mut cmd, fake_home.path());
@@ -75,7 +75,7 @@ fn run_scan(case: &EcosystemCase) -> String {
     if let Some(code) = case.deb_codename {
         cmd.arg("--deb-codename").arg(code);
     }
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed for {}: stderr={}",
@@ -86,10 +86,10 @@ fn run_scan(case: &EcosystemCase) -> String {
 }
 
 /// Write or compare a golden file. Accepts a test-time toggle via
-/// `MIKEBOM_UPDATE_CDX_GOLDENS=1` to rewrite instead of diff.
+/// `WAYBILL_UPDATE_CDX_GOLDENS=1` to rewrite instead of diff.
 fn assert_or_update_golden(label: &str, normalized: &str) {
     let path = golden_path(label);
-    let update = std::env::var("MIKEBOM_UPDATE_CDX_GOLDENS")
+    let update = std::env::var("WAYBILL_UPDATE_CDX_GOLDENS")
         .ok()
         .map(|v| v == "1")
         .unwrap_or(false);
@@ -133,7 +133,7 @@ fn assert_or_update_golden(label: &str, normalized: &str) {
         panic!(
             "CDX regression for ecosystem {label}: output differs from \
              pinned golden.\n  golden: {}\n  actual: {}\nTo accept the \
-             change, run: MIKEBOM_UPDATE_CDX_GOLDENS=1 cargo test \
+             change, run: WAYBILL_UPDATE_CDX_GOLDENS=1 cargo test \
              --test cdx_regression",
             path.display(),
             actual.display()
@@ -175,7 +175,7 @@ fn run_case(case: &EcosystemCase) {
     let normalized = normalize_cdx_for_golden(&raw, &workspace_root());
     // Sanity: the two volatile fields must exist in every produced
     // CDX document (they are required by the CDX 1.6 schema and by
-    // mikebom's builder). If they ever stop being emitted, the
+    // waybill's builder). If they ever stop being emitted, the
     // normalization below is a silent no-op and this test becomes
     // meaningless — fail loudly instead.
     let reparsed: serde_json::Value =
@@ -258,7 +258,7 @@ fn cdx_regression_rpm() {
 
 // Milestone 103: source-tree-build ecosystems (Bazel WORKSPACE/MODULE,
 // CMake FetchContent/ExternalProject_Add). Fixtures are stay-set
-// under mikebom-cli/tests/fixtures/{bazel,cmake}/.
+// under waybill-cli/tests/fixtures/{bazel,cmake}/.
 
 #[test]
 fn cdx_regression_bazel() {

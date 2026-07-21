@@ -56,17 +56,17 @@ jobs:
         with:
           shared-key: public-corpus
 
-      - name: Build mikebom (release)
-        run: cargo build --release -p mikebom --bin mikebom
+      - name: Build waybill (release)
+        run: cargo build --release -p waybill --bin waybill
 
       - name: Run public corpus
         env:
-          MIKEBOM_RUN_PUBLIC_CORPUS: '1'
+          WAYBILL_RUN_PUBLIC_CORPUS: '1'
           # m196: conditional regen mode. When the maintainer dispatches
           # with `regen_goldens=true`, the m195 harness writes goldens
           # instead of comparing (see layer2_golden::compare_golden).
           # Nightly cron never sets this — remains empty string = verify mode.
-          MIKEBOM_UPDATE_PUBLIC_CORPUS_GOLDENS: ${{ inputs.regen_goldens == true && '1' || '' }}
+          WAYBILL_UPDATE_PUBLIC_CORPUS_GOLDENS: ${{ inputs.regen_goldens == true && '1' || '' }}
         run: |
           cargo test --test public_corpus --release -- --nocapture --test-threads=3
 
@@ -103,10 +103,10 @@ jobs:
         with:
           name: corpus-emitted-sboms
           # Cache layout per m195 cache.rs is
-          # `~/.cache/mikebom/corpus/<source-id>/<pin>/{repo/emitted,emitted}/*.json`
+          # `~/.cache/waybill/corpus/<source-id>/<pin>/{repo/emitted,emitted}/*.json`
           # — depth varies (git targets nest under `repo/`, OCI targets don't).
           # `**` handles both cases.
-          path: ~/.cache/mikebom/corpus/**/emitted/*.json
+          path: ~/.cache/waybill/corpus/**/emitted/*.json
           if-no-files-found: warn
           retention-days: 14
 
@@ -120,6 +120,6 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: corpus-goldens-regen
-          path: mikebom-cli/tests/fixtures/public_corpus/
+          path: waybill-cli/tests/fixtures/public_corpus/
           if-no-files-found: warn
           retention-days: 14

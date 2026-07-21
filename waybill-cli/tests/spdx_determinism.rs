@@ -13,7 +13,7 @@ mod common;
 use common::normalize::{apply_fake_home_env, normalize_spdx23_for_golden};
 use common::{fixture_path, workspace_root};
 
-/// Run `mikebom sbom scan --format spdx-2.3-json` against `fixture`
+/// Run `waybill sbom scan --format spdx-2.3-json` against `fixture`
 /// in an isolated fake-HOME and return the produced raw JSON string.
 /// Callers normalize via `normalize_spdx23_for_golden` (for byte
 /// equality) or parse to `serde_json::Value` (for narrower
@@ -21,7 +21,7 @@ use common::{fixture_path, workspace_root};
 fn scan_to_spdx_raw(fixture: &std::path::Path) -> String {
     let tmp = tempfile::tempdir().expect("tempdir");
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
-    let out = tmp.path().join("mikebom.spdx.json");
+    let out = tmp.path().join("waybill.spdx.json");
     let bin = env!("CARGO_BIN_EXE_mikebom");
     let mut cmd = Command::new(bin);
     apply_fake_home_env(&mut cmd, fake_home.path());
@@ -37,7 +37,7 @@ fn scan_to_spdx_raw(fixture: &std::path::Path) -> String {
         .arg(format!("spdx-2.3-json={}", out.to_string_lossy()))
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom runs");
+        .expect("waybill runs");
     assert!(
         status.status.success(),
         "scan failed: {}",

@@ -1,11 +1,11 @@
 //! Integration tests for Python-ecosystem scanning (US1 of milestone 002).
 //!
-//! Each test invokes the `mikebom sbom scan --path <fixture>` binary
+//! Each test invokes the `waybill sbom scan --path <fixture>` binary
 //! against a fixture directory under `tests/fixtures/python/` and
 //! asserts the CycloneDX-output invariants declared in spec.md's
 //! Success Criteria (SC-001..SC-010) and the per-story acceptance
 //! scenarios. We shell out to the binary rather than call the library
-//! directly because `mikebom-cli` exposes its scan surface via the CLI
+//! directly because `waybill-cli` exposes its scan surface via the CLI
 //! only (matches how users invoke it in practice).
 //!
 //! The binary path is the debug build produced by `cargo test`; the
@@ -15,11 +15,11 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("python")
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("python")
         .join(sub)
 }
 
-/// Run `mikebom sbom scan --path <fixture>` (with `--offline` so we
+/// Run `waybill sbom scan --path <fixture>` (with `--offline` so we
 /// don't hit deps.dev from CI). Returns the parsed CycloneDX JSON.
 ///
 /// Milestone 052/part-3: `exclude_dev_test` adds
@@ -44,7 +44,7 @@ fn scan(fixture_sub: &str, exclude_dev_test: bool) -> serde_json::Value {
         .arg("--output")
         .arg(&out_path)
         .arg("--no-deep-hash");
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -85,7 +85,7 @@ fn simple_venv_fixture_produces_seven_pypi_components() {
     assert_eq!(pypi.len(), 7, "simple-venv: expected 7 pypi components");
     // Every component tagged deployed.
     for c in &pypi {
-        assert_eq!(prop_value(c, "mikebom:sbom-tier"), Some("deployed"));
+        assert_eq!(prop_value(c, "waybill:sbom-tier"), Some("deployed"));
     }
     // Every PURL round-trips via Purl::new (SC-004). We round-trip via
     // the same parser by re-serialising through a jq-ish check: the
@@ -179,7 +179,7 @@ fn poetry_project_surfaces_prod_default_dev_behind_flag() {
     // `--exclude-scope dev,build,test` restores the prod-only view.
 
     // Default mode: both requests (prod) and pytest (dev) emit; pytest
-    // tagged with native CDX scope + mikebom:lifecycle-scope.
+    // tagged with native CDX scope + waybill:lifecycle-scope.
     let all = scan("poetry-project", false);
     let pypi_all = pypi_components(&all);
     assert_eq!(
@@ -197,9 +197,9 @@ fn poetry_project_surfaces_prod_default_dev_behind_flag() {
         "pytest must carry native CDX scope: \"excluded\" in default mode"
     );
     assert_eq!(
-        prop_value(pytest, "mikebom:lifecycle-scope"),
+        prop_value(pytest, "waybill:lifecycle-scope"),
         Some("development"),
-        "pytest must carry mikebom:lifecycle-scope = \"development\" in default mode"
+        "pytest must carry waybill:lifecycle-scope = \"development\" in default mode"
     );
 
     // --exclude-scope dev,build,test: restores the strict prod-only view.
@@ -212,7 +212,7 @@ fn poetry_project_surfaces_prod_default_dev_behind_flag() {
     );
     assert_eq!(pypi_prod[0]["name"], "requests");
     assert_eq!(
-        prop_value(pypi_prod[0], "mikebom:sbom-tier"),
+        prop_value(pypi_prod[0], "waybill:sbom-tier"),
         Some("source")
     );
 }
@@ -231,7 +231,7 @@ fn pipfile_project_splits_default_vs_develop() {
         .expect("pytest present in default mode (post-052)");
     assert_eq!(pytest["scope"].as_str(), Some("excluded"));
     assert_eq!(
-        prop_value(pytest, "mikebom:lifecycle-scope"),
+        prop_value(pytest, "waybill:lifecycle-scope"),
         Some("development")
     );
 
@@ -254,23 +254,23 @@ fn requirements_only_emits_mixed_tier_components() {
             .unwrap_or_else(|| panic!("{name} missing from pypi components"))
     };
     assert_eq!(
-        prop_value(find("requests"), "mikebom:sbom-tier"),
+        prop_value(find("requests"), "waybill:sbom-tier"),
         Some("source"),
         "pinned `requests==2.31.0` must be source-tier",
     );
     assert_eq!(
-        prop_value(find("urllib3"), "mikebom:sbom-tier"),
+        prop_value(find("urllib3"), "waybill:sbom-tier"),
         Some("design"),
         "range `urllib3>=2,<3` must be design-tier",
     );
     assert_eq!(
-        prop_value(find("certifi"), "mikebom:sbom-tier"),
+        prop_value(find("certifi"), "waybill:sbom-tier"),
         Some("design"),
         "unpinned `certifi` must be design-tier",
     );
     for c in &pypi {
         assert!(
-            prop_value(c, "mikebom:requirement-ranges").is_some(),
+            prop_value(c, "waybill:requirement-ranges").is_some(),
             "{}: must carry requirement-range",
             c["name"]
         );

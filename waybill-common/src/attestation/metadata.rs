@@ -43,7 +43,7 @@ pub struct HostInfo {
 }
 
 /// The context in which the attestation was generated. Propagates into
-/// the CycloneDX `mikebom:generation-context` property so downstream
+/// the CycloneDX `waybill:generation-context` property so downstream
 /// consumers can tell apart authoritative build-time observations from
 /// lower-confidence post-hoc scans.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -85,7 +85,7 @@ mod tests {
     fn trace_metadata_serde_round_trip() {
         let meta = TraceMetadata {
             tool: ToolInfo {
-                name: "mikebom".to_string(),
+                name: "waybill".to_string(),
                 version: "0.1.0".to_string(),
             },
             trace_start: Timestamp::now(),

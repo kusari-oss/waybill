@@ -32,7 +32,7 @@ const LOSING_READER_CONFIDENCE: f64 = 0.85;
 ///   is deprecated.
 /// - `evidence.identity[].tools` used to carry source connection IDs
 ///   and deps.dev markers, but CDX 1.6 requires those entries to be
-///   bom-refs of items declared elsewhere in the BOM. Neither mikebom
+///   bom-refs of items declared elsewhere in the BOM. Neither waybill
 ///   payload fits that — both are now emitted as component properties
 ///   via [`evidence_to_properties`] instead.
 ///
@@ -40,25 +40,25 @@ const LOSING_READER_CONFIDENCE: f64 = 0.85;
 ///
 /// `winning_source_mechanism` and `losing_source_mechanisms` carry
 /// the dedup-pipeline output for C/C++ readers. The hybrid emission
-/// per research R1 puts the `mikebom:also-detected-via` signal in
-/// `evidence.identity[0].methods[*].mikebom-source-mechanism`
+/// per research R1 puts the `waybill:also-detected-via` signal in
+/// `evidence.identity[0].methods[*].waybill-source-mechanism`
 /// natively in CDX (SPDX 2.3/3 use a parallel annotation per C56).
 ///
 /// - `winning_source_mechanism = Some(value)`: the FIRST method entry
-///   carries `mikebom-source-mechanism = value`.
+///   carries `waybill-source-mechanism = value`.
 /// - `losing_source_mechanisms` non-empty: additional method entries
 ///   follow the winner — one per losing reader, each with
 ///   `technique = "manifest-analysis"`, `confidence = 0.85`,
-///   `mikebom-source-mechanism = <loser>`.
+///   `waybill-source-mechanism = <loser>`.
 /// - Both `None` / empty: byte-identical to pre-milestone-105 output.
 ///
 /// **Important (T023)**: the C56 parity catalog row's CDX side reads
 /// the loser set EXCLUSIVELY from this `evidence.identity[].methods[]`
-/// native field. Callers MUST NOT also emit a `mikebom:also-detected-via`
+/// native field. Callers MUST NOT also emit a `waybill:also-detected-via`
 /// component property — that would duplicate the signal on the CDX
 /// path and break SymmetricEqual byte-identity against the SPDX
 /// annotation-based emission. The SPDX 2.3 / SPDX 3.0.1 emission
-/// paths emit the `mikebom:also-detected-via` annotation as their
+/// paths emit the `waybill:also-detected-via` annotation as their
 /// sole home (no native equivalent on the SPDX side).
 pub fn build_evidence(
     evidence: &ResolutionEvidence,
@@ -74,13 +74,13 @@ pub fn build_evidence(
         ResolutionTechnique::HostnameHeuristic => "other",
     };
 
-    // Build the winning method entry. Adds `mikebom-source-mechanism`
+    // Build the winning method entry. Adds `waybill-source-mechanism`
     // sub-field iff the caller supplied a winner (C/C++ reader path).
     let winning_method = if let Some(value) = winning_source_mechanism {
         json!({
             "technique": technique,
             "confidence": evidence.confidence,
-            "mikebom-source-mechanism": value,
+            "waybill-source-mechanism": value,
         })
     } else {
         json!({
@@ -96,7 +96,7 @@ pub fn build_evidence(
         methods.push(json!({
             "technique": "manifest-analysis",
             "confidence": LOSING_READER_CONFIDENCE,
-            "mikebom-source-mechanism": loser,
+            "waybill-source-mechanism": loser,
         }));
     }
 
@@ -129,7 +129,7 @@ pub fn build_evidence(
                 // Milestone 041: rpm-provided per-file digest
                 // from the package's FILEDIGESTS tag,
                 // algorithm-prefixed (e.g. "sha256:abc...",
-                // "md5:def..."). Carried alongside mikebom's own
+                // "md5:def..."). Carried alongside waybill's own
                 // `sha256` so consumers can correlate observed
                 // bytes against the upstream-claimed digest.
                 if let Some(ref rpm_fd) = o.rpm_file_digest {
@@ -161,13 +161,13 @@ pub fn evidence_to_properties(
     let mut out = Vec::new();
     if !evidence.source_connection_ids.is_empty() {
         out.push(json!({
-            "name": "mikebom:source-connection-ids",
+            "name": "waybill:source-connection-ids",
             "value": evidence.source_connection_ids.join(","),
         }));
     }
     if let Some(ref m) = evidence.deps_dev_match {
         out.push(json!({
-            "name": "mikebom:deps-dev-match",
+            "name": "waybill:deps-dev-match",
             "value": format!("{}:{}@{}", m.system, m.name, m.version),
         }));
     }
@@ -293,7 +293,7 @@ mod tests {
         };
         let props = evidence_to_properties(&ev);
         assert_eq!(props.len(), 1);
-        assert_eq!(props[0]["name"], "mikebom:source-connection-ids");
+        assert_eq!(props[0]["name"], "waybill:source-connection-ids");
         assert_eq!(props[0]["value"], "conn-1,conn-2");
     }
 
@@ -312,7 +312,7 @@ mod tests {
         };
         let props = evidence_to_properties(&ev);
         assert_eq!(props.len(), 1);
-        assert_eq!(props[0]["name"], "mikebom:deps-dev-match");
+        assert_eq!(props[0]["name"], "waybill:deps-dev-match");
         assert_eq!(props[0]["value"], "npm:express@4.19.2");
     }
 
@@ -338,8 +338,8 @@ mod tests {
         };
         let props = evidence_to_properties(&ev);
         assert_eq!(props.len(), 2);
-        assert_eq!(props[0]["name"], "mikebom:source-connection-ids");
-        assert_eq!(props[1]["name"], "mikebom:deps-dev-match");
+        assert_eq!(props[0]["name"], "waybill:source-connection-ids");
+        assert_eq!(props[1]["name"], "waybill:deps-dev-match");
     }
 
     #[test]
@@ -389,7 +389,7 @@ mod tests {
     // ----------------------------------------------------------------
     // Milestone 105 phase 2E — hybrid emission for cross-reader dedup
     // (FR-015). The winning + losing source-mechanisms ride
-    // `evidence.identity[0].methods[*].mikebom-source-mechanism`
+    // `evidence.identity[0].methods[*].waybill-source-mechanism`
     // natively on the CDX side; the C56 parity extractor reads from
     // there exclusively.
     // ----------------------------------------------------------------
@@ -401,20 +401,20 @@ mod tests {
         let method = &result["identity"][0]["methods"][0];
         assert_eq!(method["technique"], "manifest-analysis");
         assert_eq!(method["confidence"], 0.95);
-        assert_eq!(method["mikebom-source-mechanism"], "conan-recipe");
+        assert_eq!(method["waybill-source-mechanism"], "conan-recipe");
     }
 
     #[test]
     fn no_winning_source_mechanism_omits_subfield() {
         // Byte-identity guard for the pre-milestone-105 path: when no
         // winner is supplied, the first method entry MUST NOT carry
-        // a `mikebom-source-mechanism` sub-field.
+        // a `waybill-source-mechanism` sub-field.
         let ev = make_evidence(ResolutionTechnique::PackageDatabase, 0.95);
         let result = build_evidence(&ev, &[], None, &[]);
         let method = &result["identity"][0]["methods"][0];
         assert!(
-            method.get("mikebom-source-mechanism").is_none(),
-            "no winner supplied → no mikebom-source-mechanism on first method; got {method:?}"
+            method.get("waybill-source-mechanism").is_none(),
+            "no winner supplied → no waybill-source-mechanism on first method; got {method:?}"
         );
     }
 
@@ -428,13 +428,13 @@ mod tests {
         let methods = result["identity"][0]["methods"].as_array().unwrap();
         assert_eq!(methods.len(), 3, "1 winner + 2 losers = 3 method entries");
         // Winner first
-        assert_eq!(methods[0]["mikebom-source-mechanism"], "conan-recipe");
+        assert_eq!(methods[0]["waybill-source-mechanism"], "conan-recipe");
         assert_eq!(methods[0]["confidence"], 0.95);
         // Losers follow, each at confidence 0.85
-        assert_eq!(methods[1]["mikebom-source-mechanism"], "git-submodule");
+        assert_eq!(methods[1]["waybill-source-mechanism"], "git-submodule");
         assert_eq!(methods[1]["technique"], "manifest-analysis");
         assert_eq!(methods[1]["confidence"], 0.85);
-        assert_eq!(methods[2]["mikebom-source-mechanism"], "cmake-vendored");
+        assert_eq!(methods[2]["waybill-source-mechanism"], "cmake-vendored");
         assert_eq!(methods[2]["confidence"], 0.85);
     }
 
@@ -443,19 +443,19 @@ mod tests {
         // Edge: empty winner + non-empty losers. Unusual (the dedup
         // pipeline doesn't produce this shape), but the function MUST
         // not panic. The first method is the C/C++-reader-neutral
-        // form (no mikebom-source-mechanism); losers follow normally.
+        // form (no waybill-source-mechanism); losers follow normally.
         let ev = make_evidence(ResolutionTechnique::PackageDatabase, 0.95);
         let result = build_evidence(&ev, &[], None, &["git-submodule"]);
         let methods = result["identity"][0]["methods"].as_array().unwrap();
         assert_eq!(methods.len(), 2);
-        assert!(methods[0].get("mikebom-source-mechanism").is_none());
-        assert_eq!(methods[1]["mikebom-source-mechanism"], "git-submodule");
+        assert!(methods[0].get("waybill-source-mechanism").is_none());
+        assert_eq!(methods[1]["waybill-source-mechanism"], "git-submodule");
     }
 
     // Note: cross-module integration between this emission shape and
     // the C56 parity extractor (`parity::extractors::cdx::c56_cdx`)
     // is covered by the holistic parity test suite under
-    // `mikebom-cli/tests/holistic_parity.rs`. The extractor is
+    // `waybill-cli/tests/holistic_parity.rs`. The extractor is
     // `pub(super)` and not directly callable from this module — the
     // round-trip check happens at the integration test layer.
 }

@@ -5,27 +5,27 @@
 //! Parses `CMakeLists.txt` + included `.cmake` files for:
 //! - `FetchContent_Declare(<name> GIT_REPOSITORY ... GIT_TAG ...)` — emits
 //!   `pkg:github/<owner>/<repo>@<tag>` for GitHub-hosted URLs, otherwise
-//!   `pkg:generic/<name>@<tag>` with `mikebom:download-url`.
+//!   `pkg:generic/<name>@<tag>` with `waybill:download-url`.
 //! - `FetchContent_Declare(<name> URL ... URL_HASH SHA256=...)` and
 //!   `ExternalProject_Add(<name> URL ...)` — emits `pkg:generic/<name>@<version>`
 //!   with URL + SHA-256.
 //! - `add_subdirectory(third_party|vendor/<name>)` — opt-in via the
 //!   `include_vendored` parameter (wired from PR-A's CLI flag); emits
 //!   `pkg:generic/<name>@<version-from-version.txt>` with the JSON
-//!   boolean `mikebom:vendored = true` annotation.
+//!   boolean `waybill:vendored = true` annotation.
 //! - **milestone 155**: `find_package(<Name> [<Version>])` — emits
 //!   `pkg:generic/<lowercased-name>[@<highest-declared-version>]` with
-//!   `mikebom:source-mechanism = "cmake-find-package"`. Multi-file
+//!   `waybill:source-mechanism = "cmake-find-package"`. Multi-file
 //!   same-name declarations are consolidated to the highest declared
 //!   version (Q1 clarification). Original casing preserved in the
-//!   `mikebom:cmake-find-package-name` annotation when it differs from
+//!   `waybill:cmake-find-package-name` annotation when it differs from
 //!   the lowercased PURL. Same-PURL cross-mechanism double-counting is
 //!   prevented by the production `resolve::deduplicator` pass.
 //! - **milestone 155**: `pkg_check_modules(<TARGET> <modules>)` +
 //!   `pkg_search_module(<TARGET> <modules>)` — emits one
 //!   `pkg:generic/<module>` per module (target variable discarded,
 //!   version constraints stripped) with
-//!   `mikebom:source-mechanism = "cmake-pkg-check-modules"`.
+//!   `waybill:source-mechanism = "cmake-pkg-check-modules"`.
 //!
 //! Walks the scan root for `CMakeLists.txt` at depth-0. Under
 //! `cmake/` and `Modules/`, recursive descent captures every
@@ -34,7 +34,7 @@
 //! `cmake/modules/Find*.cmake`). Under `third_party/`, depth-1 walk
 //! by default (matches milestone-102 behavior); opt in to recursive
 //! descent via `--cmake-third-party-recursive` (env alias
-//! `MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE=1`) to also walk vendored
+//! `WAYBILL_CMAKE_THIRD_PARTY_RECURSIVE=1`) to also walk vendored
 //! deps' own `find_package` declarations.
 //!
 //! Cross-platform; no `#[cfg(unix)]` gates. Zero new Cargo deps —
@@ -125,11 +125,11 @@ pub fn read(
     // Milestone 156: opt-in recursive descent for third_party/. Default
     // depth-1 (matches milestone-102 behavior) unless the CLI flag
     // `--cmake-third-party-recursive` OR the env var
-    // `MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE=1` is set. Mirrors the
-    // milestone-102 MIKEBOM_INCLUDE_VENDORED env-var propagation
+    // `WAYBILL_CMAKE_THIRD_PARTY_RECURSIVE=1` is set. Mirrors the
+    // milestone-102 WAYBILL_INCLUDE_VENDORED env-var propagation
     // pattern at read_all:1193 to avoid plumbing a new bool through
     // the 75-callsite scan_path -> read_all chain.
-    let include_third_party_recursive = std::env::var("MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE")
+    let include_third_party_recursive = std::env::var("WAYBILL_CMAKE_THIRD_PARTY_RECURSIVE")
         .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
         .unwrap_or(false);
     let cmake_files = discover_cmake_files(scan_root, include_third_party_recursive, exclude_set);
@@ -345,7 +345,7 @@ fn emit_find_package_entries(hits: Vec<FindPackageHit>) -> Vec<PackageDbEntry> {
             // lowercased PURL name — parity-bridging annotation.
             if hit.original_casing != hit.lowercased_name {
                 entry.extra_annotations.insert(
-                    "mikebom:cmake-find-package-name".to_string(),
+                    "waybill:cmake-find-package-name".to_string(),
                     serde_json::json!(hit.original_casing),
                 );
             }
@@ -402,7 +402,7 @@ fn emit_pkg_check_module_entries(hits: Vec<PkgCheckHit>) -> Vec<PackageDbEntry> 
 /// `add_library(... ALIAS ...)` alias/target names declared anywhere
 /// under the scan root's CMake files. Used by the milestone-105
 /// `git-submodule` reader (FR-008a) to classify each `.gitmodules`
-/// entry as `mikebom:build-reference: "declared-and-used"` (the
+/// entry as `waybill:build-reference: "declared-and-used"` (the
 /// submodule's path basename appears in this set) or
 /// `"declared-only"` (it doesn't).
 ///
@@ -639,7 +639,7 @@ fn collect_cmake_files_recursive(
 ///   milestone-102 behavior). Recursive descent applied only when
 ///   `include_third_party_recursive = true` (from the
 ///   `--cmake-third-party-recursive` CLI flag or
-///   `MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE=1` env var).
+///   `WAYBILL_CMAKE_THIRD_PARTY_RECURSIVE=1` env var).
 ///
 /// Reuses milestone-054's `safe_walk` for recursive descent —
 /// symlink cycles caught by the canonicalize-keyed visited-set;
@@ -836,9 +836,9 @@ fn parse_vendored(
                 "cmake-vendored",
             );
             // FR-009: JSON boolean `true` per the milestone-009
-            // `mikebom:shade-relocation` precedent.
+            // `waybill:shade-relocation` precedent.
             entry.extra_annotations.insert(
-                "mikebom:vendored".to_string(),
+                "waybill:vendored".to_string(),
                 serde_json::json!(true),
             );
             out.push(entry);
@@ -870,11 +870,11 @@ fn build_cmake_entry(
         std::collections::BTreeMap::new();
     if let Some(url) = download_url {
         extra_annotations.insert(
-            "mikebom:download-url".to_string(),
+            "waybill:download-url".to_string(),
             serde_json::json!(url),
         );
     }
-    // C/C++ provenance: explicit `mikebom:source-mechanism` annotation
+    // C/C++ provenance: explicit `waybill:source-mechanism` annotation
     // so operators can grep/filter components by origin without
     // reverse-engineering the PURL prefix + per-reader annotations.
     // Closed enum across cmake / vcpkg / conan / bazel:
@@ -883,7 +883,7 @@ fn build_cmake_entry(
     //   cmake-find-package, cmake-pkg-check-modules,  // milestone 155
     //   bazel-http-archive, vcpkg-manifest, conan-recipe.
     extra_annotations.insert(
-        "mikebom:source-mechanism".to_string(),
+        "waybill:source-mechanism".to_string(),
         serde_json::json!(source_mechanism),
     );
     let hashes = sha256_hex
@@ -966,7 +966,7 @@ mod tests {
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:download-url")
+                .get("waybill:download-url")
                 .and_then(|v| v.as_str()),
             Some("https://zlib.net/zlib-1.3.1.tar.gz")
         );
@@ -1007,7 +1007,7 @@ mod tests {
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:source-mechanism")
+                .get("waybill:source-mechanism")
                 .and_then(|v| v.as_str()),
             Some("cmake-find-package")
         );
@@ -1036,7 +1036,7 @@ mod tests {
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].purl.as_str(), "pkg:generic/foo@1.2.3");
         assert_eq!(
-            entries[0].extra_annotations.get("mikebom:vendored"),
+            entries[0].extra_annotations.get("waybill:vendored"),
             Some(&serde_json::json!(true))
         );
     }
@@ -1074,11 +1074,11 @@ add_subdirectory(tests)"#,
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:source-mechanism")
+                .get("waybill:source-mechanism")
                 .and_then(|v| v.as_str()),
             Some("cmake-fetchcontent-git"),
             "FetchContent_Declare GIT form should be `cmake-fetchcontent-git`; got: {:?}",
-            entries[0].extra_annotations.get("mikebom:source-mechanism"),
+            entries[0].extra_annotations.get("waybill:source-mechanism"),
         );
     }
 
@@ -1095,7 +1095,7 @@ add_subdirectory(tests)"#,
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:source-mechanism")
+                .get("waybill:source-mechanism")
                 .and_then(|v| v.as_str()),
             Some("cmake-fetchcontent-url"),
         );
@@ -1114,7 +1114,7 @@ add_subdirectory(tests)"#,
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:source-mechanism")
+                .get("waybill:source-mechanism")
                 .and_then(|v| v.as_str()),
             Some("cmake-externalproject"),
         );
@@ -1136,7 +1136,7 @@ add_subdirectory(tests)"#,
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:source-mechanism")
+                .get("waybill:source-mechanism")
                 .and_then(|v| v.as_str()),
             Some("cmake-vendored"),
         );
@@ -1270,7 +1270,7 @@ add_subdirectory(tests)"#,
             .iter()
             .filter(|e| {
                 e.extra_annotations
-                    .get("mikebom:source-mechanism")
+                    .get("waybill:source-mechanism")
                     .and_then(|v| v.as_str())
                     == Some("cmake-find-package")
             })
@@ -1296,7 +1296,7 @@ add_subdirectory(tests)"#,
             .iter()
             .filter(|e| {
                 e.extra_annotations
-                    .get("mikebom:source-mechanism")
+                    .get("waybill:source-mechanism")
                     .and_then(|v| v.as_str())
                     == Some(mechanism)
             })
@@ -1319,7 +1319,7 @@ add_subdirectory(tests)"#,
         assert_eq!(fp[0].purl.as_str(), "pkg:generic/foo");
         assert_eq!(
             fp[0].extra_annotations
-                .get("mikebom:cmake-find-package-name")
+                .get("waybill:cmake-find-package-name")
                 .and_then(|v| v.as_str()),
             Some("Foo")
         );
@@ -1339,7 +1339,7 @@ add_subdirectory(tests)"#,
         assert_eq!(fp[0].purl.as_str(), "pkg:generic/openssl@1.1.0");
         assert_eq!(
             fp[0].extra_annotations
-                .get("mikebom:cmake-find-package-name")
+                .get("waybill:cmake-find-package-name")
                 .and_then(|v| v.as_str()),
             Some("OpenSSL")
         );
@@ -1359,7 +1359,7 @@ add_subdirectory(tests)"#,
         assert_eq!(fp[0].purl.as_str(), "pkg:generic/boost@1.75.0");
         assert_eq!(
             fp[0].extra_annotations
-                .get("mikebom:cmake-find-package-name")
+                .get("waybill:cmake-find-package-name")
                 .and_then(|v| v.as_str()),
             Some("BOOST")
         );
@@ -1474,7 +1474,7 @@ add_subdirectory(tests)"#,
         assert!(
             !pcm[0]
                 .extra_annotations
-                .contains_key("mikebom:cmake-find-package-name"),
+                .contains_key("waybill:cmake-find-package-name"),
             "pkg_check_modules emissions MUST NOT carry cmake-find-package-name"
         );
     }
@@ -1518,7 +1518,7 @@ add_subdirectory(tests)"#,
 
     #[test]
     fn find_package_all_lowercase_no_annotation() {
-        // Contracts/mikebom-cmake-find-package-name.md conditional
+        // Contracts/waybill-cmake-find-package-name.md conditional
         // emission: when the original casing equals the lowercased
         // name, the annotation MUST NOT be emitted.
         let tmp = tempfile::tempdir().unwrap();
@@ -1534,8 +1534,8 @@ add_subdirectory(tests)"#,
         assert!(
             !fp[0]
                 .extra_annotations
-                .contains_key("mikebom:cmake-find-package-name"),
-            "all-lowercase input MUST NOT emit mikebom:cmake-find-package-name"
+                .contains_key("waybill:cmake-find-package-name"),
+            "all-lowercase input MUST NOT emit waybill:cmake-find-package-name"
         );
     }
 
@@ -1574,12 +1574,12 @@ add_subdirectory(tests)"#,
     // Milestone 156 unit tests (SC-008 floor ≥6). All 6 test fns
     // named with the `discover_cmake_files_` prefix so the SC-008
     // grep count command
-    //   grep -cE "^\s+fn discover_cmake_files_" mikebom-cli/src/scan_fs/package_db/cmake.rs
+    //   grep -cE "^\s+fn discover_cmake_files_" waybill-cli/src/scan_fs/package_db/cmake.rs
     // returns ≥6 (F2 remediation from /speckit-analyze 2026-07-02).
     // ============================================================
 
     /// Serial guard for env-var mutation tests. cargo runs tests
-    /// concurrently by default; `MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE`
+    /// concurrently by default; `WAYBILL_CMAKE_THIRD_PARTY_RECURSIVE`
     /// is process-global, so tests #3 + #4 (default vs opt-in
     /// behavior) MUST NOT run concurrently.
     static ENV_MUTEX: std::sync::Mutex<()> = std::sync::Mutex::new(());
@@ -1630,7 +1630,7 @@ add_subdirectory(tests)"#,
         let _guard = ENV_MUTEX.lock().unwrap();
         // SAFETY: guarded by ENV_MUTEX above; single-threaded across
         // this test and the opt-in variant below.
-        unsafe { std::env::remove_var("MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE") };
+        unsafe { std::env::remove_var("WAYBILL_CMAKE_THIRD_PARTY_RECURSIVE") };
         let tmp = tempfile::tempdir().unwrap();
         std::fs::create_dir_all(tmp.path().join("third_party").join("subdir")).unwrap();
         std::fs::write(

@@ -1,7 +1,7 @@
 //! SPDX identifier newtype (milestone 010, T018).
 //!
 //! SPDX 2.3 §3.2 mandates `SPDXRef-[A-Za-z0-9.-]+`. [`SpdxId`] is the
-//! only legal way to produce one of these strings inside mikebom, so
+//! only legal way to produce one of these strings inside waybill, so
 //! a raw `String` that happens to look like an SPDXID cannot be
 //! passed anywhere an SPDXID is expected (Constitution Principle IV).
 //!
@@ -123,7 +123,7 @@ impl SpdxId {
 /// [`SpdxId::for_license_ref`]. Factored out so the two identifier
 /// kinds use byte-identical hashing (same function, same
 /// encoding, same prefix length) — which means a stable ID scheme
-/// across mikebom's SPDX output surface.
+/// across waybill's SPDX output surface.
 fn hash_prefix(input: &[u8], chars: usize) -> String {
     let digest = Sha256::digest(input);
     let encoded = BASE32_NOPAD.encode(&digest);

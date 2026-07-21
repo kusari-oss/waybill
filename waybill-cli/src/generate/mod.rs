@@ -83,7 +83,7 @@ pub struct ScanArtifacts<'a> {
     /// iff no Go scan happened). `Some(0)` on healthy Go scans (per Q1
     /// clarification, annotation is emitted with value `"0"`).
     /// `Some(N > 0)` on degraded scans. Consumed by
-    /// `mikebom:go-transitive-fallback-count` annotation emitters in
+    /// `waybill:go-transitive-fallback-count` annotation emitters in
     /// CDX 1.6, SPDX 2.3, and SPDX 3.0.1.
     pub go_transitive_fallback_count: Option<usize>,
     /// Milestone 173: doc-scope Go cache-warming outcome. `None` iff
@@ -92,9 +92,9 @@ pub struct ScanArtifacts<'a> {
     /// reflecting the effective `--warm-go-cache` setting and
     /// `failures` naming any workspaces where `go mod download`
     /// failed. Consumed by the C118
-    /// (`mikebom:go-cache-warming-mode`) emission code
+    /// (`waybill:go-cache-warming-mode`) emission code
     /// unconditionally when populated + C119
-    /// (`mikebom:go-cache-warming-failed`) conditionally when
+    /// (`waybill:go-cache-warming-failed`) conditionally when
     /// `failures` is non-empty. Reference lifetime matches the other
     /// borrowed `ScanArtifacts` fields.
     pub go_cache_warming: Option<
@@ -108,7 +108,7 @@ pub struct ScanArtifacts<'a> {
         &'a crate::scan_fs::package_db::golang::gowork::WorkspaceMode,
     >,
     /// Milestone 204 (#554): document-scope Helm image-extraction-mode
-    /// signal driving the C123 `mikebom:image-extraction-completeness`
+    /// signal driving the C123 `waybill:image-extraction-completeness`
     /// annotation. `None` when no helm reader ran during the scan
     /// (byte-identity per FR-004). `Some(Unrendered)` → wire value
     /// `"partial"`. `Some(Rendered)` → wire value `"full"`. Consumed by
@@ -119,7 +119,7 @@ pub struct ScanArtifacts<'a> {
         &'a crate::scan_fs::package_db::HelmExtractionMode,
     >,
     /// Milestone 206 (#440): document-scope image-source signal
-    /// driving the C124 `mikebom:image-source` annotation. `None`
+    /// driving the C124 `waybill:image-source` annotation. `None`
     /// when scanning `--path` (not an image); `Some(ImageSource::
     /// <variant>)` when an image source won the `--image-src`
     /// dispatch. Emission is CONDITIONAL per FR-005 byte-identity:
@@ -153,7 +153,7 @@ pub struct ScanArtifacts<'a> {
     /// dual-carrier on main-module `Package.externalRefs[
     /// PERSISTENT-ID]` + `creationInfo.creators` text, SPDX 3
     /// `Element.externalIdentifier[]`). User-defined identifiers
-    /// ride the `mikebom:identifiers` annotation envelope
+    /// ride the `waybill:identifiers` annotation envelope
     /// (parity-catalog row C47); SPDX 3 also carries them natively
     /// in `Element.externalIdentifier[]` per
     /// `contracts/identifiers-annotation.md` C-1.
@@ -178,14 +178,14 @@ pub struct ScanArtifacts<'a> {
     /// Milestone 133 US3: file-tier walker diagnostic counters.
     /// `None` when the walker didn't run (`--file-inventory=off`).
     /// `Some(_)` when `orphan` or `full` ran — each non-zero
-    /// counter projects onto one `mikebom:file-inventory-skipped-*`
+    /// counter projects onto one `waybill:file-inventory-skipped-*`
     /// document-level annotation per Constitution Principle X.
     pub file_inventory_stats:
         Option<&'a crate::scan_fs::file_tier::walker::WalkerStats>,
     /// Milestone 133 US4 (Constitution Strict Boundary §5):
     /// operator-supplied `--file-inventory` mode label (`"off"` /
     /// `"orphan"` / `"full"`). `Some("full")` triggers a mandatory
-    /// document-level `mikebom:file-inventory-mode` annotation so
+    /// document-level `waybill:file-inventory-mode` annotation so
     /// consumers can detect when the FR-011 dedupe was bypassed.
     /// `None` for pre-feature scans and tests; `Some("off")` /
     /// `Some("orphan")` permit transparent passthrough without
@@ -205,7 +205,7 @@ pub struct ScanArtifacts<'a> {
     /// preserve the manifest-derived main-module as a `library`-typed
     /// entry in `components[]` rather than dropping it per the milestone-077
     /// clean-replacement default. Demoted entries carry a
-    /// `mikebom:demoted-from-main-module = "true"` annotation per
+    /// `waybill:demoted-from-main-module = "true"` annotation per
     /// Constitution Principle V parity-bridging audit. Default `false`
     /// preserves milestone-077 byte-identity (SC-002 regression guard).
     /// Read by the three per-format emitters and passed to
@@ -233,7 +233,7 @@ pub struct ScanArtifacts<'a> {
     /// <single-phase>", SPDX 3 `software_Sbom.software_sbomType:
     /// ["<short-name>"]`). When `None`, the milestone-047
     /// per-component aggregation continues unchanged. Per-component
-    /// `mikebom:sbom-tier` annotations are NEVER overridden — the
+    /// `waybill:sbom-tier` annotations are NEVER overridden — the
     /// operator-assert is document-level only per research §4 +
     /// FR-005 + VR-081-005. Default `None` keeps existing
     /// struct-literal call sites compiling.
@@ -251,7 +251,7 @@ pub struct ScanArtifacts<'a> {
     /// dev, build, test — into natural-direction `DEPENDS_ON` for
     /// compatibility with the basic-vocabulary consumer set. Scope
     /// info still rides on the target Package's
-    /// `mikebom:lifecycle-scope` annotation in both modes. CDX and
+    /// `waybill:lifecycle-scope` annotation in both modes. CDX and
     /// SPDX 3 are unaffected. See
     /// `docs/reference/sbom-format-mapping.md` C42 + the
     /// `--spdx2-relationship-compat` CLI flag.
@@ -259,7 +259,7 @@ pub struct ScanArtifacts<'a> {
     /// Milestone 134 (closes #125): document-scope aggregate of every
     /// divergent-PURL collision detected in the scan. `None` when no
     /// divergence was detected — emitters MUST omit the
-    /// `mikebom:purl-collisions-detected` annotation entirely in
+    /// `waybill:purl-collisions-detected` annotation entirely in
     /// that case (FR-009: no SBOM bloat, no spurious signal on
     /// clean scans). `Some(_)` triggers a document-level annotation
     /// in CDX `metadata.properties[]`, SPDX 2.3 top-level
@@ -273,7 +273,7 @@ pub struct ScanArtifacts<'a> {
     /// eBPF (default features) OR the operator's build didn't
     /// invoke a whitelisted compiler. When `Some(_)`, each per-
     /// format emitter walks `components` + emits per-component
-    /// `mikebom:source-read-set` (C130) and `mikebom:read-set-source`
+    /// `waybill:source-read-set` (C130) and `waybill:read-set-source`
     /// (C131) annotations per contracts/annotations.md A-1/A-2.
     pub compiler_pipeline:
         Option<&'a waybill_common::attestation::compiler_pipeline::CompilerPipelineData>,
@@ -287,7 +287,7 @@ pub struct ScanArtifacts<'a> {
 ///    override values (where each is `Some(_)`); the unset half falls
 ///    through to the existing auto-derivation.
 /// 2. Filter manifest-derived main-module components (identified by
-///    `mikebom:component-role = main-module`) from the emitted
+///    `waybill:component-role = main-module`) from the emitted
 ///    `components[]` array per the 2026-05-06 clean-replacement
 ///    clarification (Q2). The future demote-to-library follow-up is
 ///    tracked as GitHub issue #151.
@@ -430,7 +430,7 @@ pub fn percent_encode_purl_name(s: &str) -> String {
 /// Issue #228 — SPDX 2.3 relationship-vocabulary compatibility
 /// selector. Both modes are spec-conformant, but they are not
 /// equivalent: `Full` (default) preserves more information than
-/// `Basic`. Per Constitution Principle X (Transparency), mikebom
+/// `Basic`. Per Constitution Principle X (Transparency), waybill
 /// defaults to the spec-native mechanism that carries the most
 /// consumer-actionable signal, and the SPDX 2.3 spec defines the
 /// typed scoped relationship variants for exactly the purpose of
@@ -448,7 +448,7 @@ pub fn percent_encode_purl_name(s: &str) -> String {
 ///
 /// `Basic`: every dep — runtime, dev, build, test — emits as natural-
 /// direction `DEPENDS_ON`. The scope distinction lives entirely on
-/// the target Package via the `mikebom:lifecycle-scope` annotation
+/// the target Package via the `waybill:lifecycle-scope` annotation
 /// (which is also emitted under `Full`, so consumers can rely on it
 /// in either mode). Use only when emitting for downstream tooling
 /// that doesn't implement the typed scoped variants (Trivy, Syft,
@@ -457,7 +457,7 @@ pub fn percent_encode_purl_name(s: &str) -> String {
 ///
 /// CDX and SPDX 3 emission are unaffected — CDX always carries scope
 /// on the component (`scope: "excluded"` plus the
-/// `mikebom:lifecycle-scope` property), and SPDX 3 always uses
+/// `waybill:lifecycle-scope` property), and SPDX 3 always uses
 /// `LifecycleScopedRelationship` with `relationshipType: "dependsOn"`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Spdx2RelationshipCompat {
@@ -468,11 +468,11 @@ pub enum Spdx2RelationshipCompat {
     Full,
     /// Basic SPDX 2.3 vocabulary only — every dep emits as natural-
     /// direction `DEPENDS_ON` regardless of scope. Scope info lives
-    /// on the target Package's `mikebom:lifecycle-scope` annotation.
+    /// on the target Package's `waybill:lifecycle-scope` annotation.
     Basic,
 }
 
-/// Document-level scope mode for a single mikebom scan. Surfaced
+/// Document-level scope mode for a single waybill scan. Surfaced
 /// in SPDX 2.3 `creationInfo.comment` and SPDX 3
 /// `SpdxDocument.comment` so consumers reading metadata-only know
 /// whether the document represents on-disk-only emission
@@ -623,7 +623,7 @@ mod tests {
         );
         let s = reg.get("cyclonedx-json").expect("cyclonedx-json registered");
         assert_eq!(s.id(), "cyclonedx-json");
-        assert_eq!(s.default_filename(), "mikebom.cdx.json");
+        assert_eq!(s.default_filename(), "waybill.cdx.json");
         assert!(!s.experimental());
     }
 

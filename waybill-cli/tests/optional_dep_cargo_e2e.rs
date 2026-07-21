@@ -1,12 +1,12 @@
 //! Milestone 179 US3 — end-to-end integration tests for the Cargo
 //! optional-dep classifier. Scans the m179 fixture
-//! (`tests/fixtures/optional_dep/cargo`) via the compiled `mikebom`
+//! (`tests/fixtures/optional_dep/cargo`) via the compiled `waybill`
 //! binary and asserts:
 //!
 //! - **T026** (Full mode): SPDX 2.3 emits `once_cell
 //!   OPTIONAL_DEPENDENCY_OF <root>` (reversed direction per m052);
 //!   CDX emits `once_cell` with `scope: "excluded"`; both formats
-//!   carry the `mikebom:optional-derivation = "cargo-optional-true"`
+//!   carry the `waybill:optional-derivation = "cargo-optional-true"`
 //!   annotation; SPDX 3 carries the annotation (no native
 //!   `lifecycleScope: "optional"` per FR-017).
 //!
@@ -97,7 +97,7 @@ fn find_annotation_value(pkg: &Value, key: &str) -> Option<String> {
     let annotations = pkg.get("annotations").and_then(|v| v.as_array())?;
     for anno in annotations {
         // The SPDX 2.3 wire-format key is `comment`, not
-        // `annotationComment` (though the spec allows both — mikebom
+        // `annotationComment` (though the spec allows both — waybill
         // emits `comment`).
         let comment = anno
             .get("comment")
@@ -133,10 +133,10 @@ fn t026_cargo_optional_full_mode_end_to_end() {
     );
     // FR-019 — annotation carries derivation source.
     assert_eq!(
-        find_property(once_cell_cdx, "mikebom:optional-derivation")
+        find_property(once_cell_cdx, "waybill:optional-derivation")
             .and_then(|v| v.as_str()),
         Some("cargo-optional-true"),
-        "CDX MUST carry mikebom:optional-derivation on once_cell"
+        "CDX MUST carry waybill:optional-derivation on once_cell"
     );
 
     // --- SPDX 2.3 assertions (Full mode is default) ---
@@ -166,9 +166,9 @@ fn t026_cargo_optional_full_mode_end_to_end() {
     );
     // Annotation on the Package.
     assert_eq!(
-        find_annotation_value(once_cell_spdx, "mikebom:optional-derivation"),
+        find_annotation_value(once_cell_spdx, "waybill:optional-derivation"),
         Some("cargo-optional-true".to_string()),
-        "SPDX 2.3 MUST carry mikebom:optional-derivation on once_cell Package"
+        "SPDX 2.3 MUST carry waybill:optional-derivation on once_cell Package"
     );
 
     // --- SPDX 3.0.1 assertions ---
@@ -195,12 +195,12 @@ fn t026_cargo_optional_full_mode_end_to_end() {
     let has_optional_deriv = annotations.iter().any(|a| {
         a.get("statement")
             .and_then(|v| v.as_str())
-            .map(|s| s.contains("mikebom:optional-derivation") && s.contains("cargo-optional-true"))
+            .map(|s| s.contains("waybill:optional-derivation") && s.contains("cargo-optional-true"))
             .unwrap_or(false)
     });
     assert!(
         has_optional_deriv,
-        "SPDX 3 MUST carry a mikebom:optional-derivation Annotation on once_cell software_Package"
+        "SPDX 3 MUST carry a waybill:optional-derivation Annotation on once_cell software_Package"
     );
     // Confirm no LifecycleScopedRelationship with scope="optional" was
     // emitted (FR-017 — SPDX 3.0.1 has no such enum value).
@@ -252,8 +252,8 @@ fn t027_cargo_optional_basic_mode_collapses() {
     let once_cell_spdx =
         find_package_by_name(&spdx23, "once_cell").expect("once_cell package in SPDX 2.3");
     assert_eq!(
-        find_annotation_value(once_cell_spdx, "mikebom:optional-derivation"),
+        find_annotation_value(once_cell_spdx, "waybill:optional-derivation"),
         Some("cargo-optional-true".to_string()),
-        "mikebom:optional-derivation annotation MUST be present in basic mode too"
+        "waybill:optional-derivation annotation MUST be present in basic mode too"
     );
 }

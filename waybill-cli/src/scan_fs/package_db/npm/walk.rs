@@ -22,7 +22,7 @@ use super::enrich::extract_author_string;
 ///   index (FR-001). The `version` is the concrete pinned version.
 /// - `Unresolved`: neither source produced a hit. Per unified Q1+Q2
 ///   disposition, the peer's main-module component gains a
-///   `mikebom:unresolved-declared-dep` annotation (C115) naming the dep
+///   `waybill:unresolved-declared-dep` annotation (C115) naming the dep
 ///   and NO `dependsOn` edge is emitted. Zero phantom empty-version
 ///   PURLs enter the graph (SC-004 invariant).
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -51,7 +51,7 @@ pub(crate) struct CrossWorkspaceContext<'a> {
 /// cross-resolution results. `resolved_deps` become the peer's main-
 /// module `depends` names (downstream graph resolver in `scan_fs/mod.rs`
 /// wires them to concrete-version PURLs via `name_to_purl` at line 471).
-/// `unresolved_deps` become the C115 `mikebom:unresolved-declared-dep`
+/// `unresolved_deps` become the C115 `waybill:unresolved-declared-dep`
 /// annotation value on the peer's main-module component (bare string
 /// when 1; JSON array sorted+deduplicated when ≥2).
 #[derive(Debug, Default, Clone)]
@@ -347,7 +347,7 @@ pub(super) fn read_root_package_json(
 /// - `Unresolved` → dep-name accumulated in
 ///   `WorkspacePeerAccumulator.unresolved_deps`. NO design-tier phantom
 ///   entry emitted. The peer's main-module component will gain the
-///   C115 `mikebom:unresolved-declared-dep` annotation naming the dep
+///   C115 `waybill:unresolved-declared-dep` annotation naming the dep
 ///   (stamped in `npm::read()` post-fixup).
 ///
 /// Guarantees SC-004: zero empty-version PURLs enter the graph when
@@ -392,7 +392,7 @@ pub(crate) fn parse_root_package_json(
             // Milestone 199 US2 — package.json inline alias detection.
             // `"my-alias": "npm:actual-pkg@1.0.0"` → emit ONE component
             // keyed on the resolved identity (aliased_name) + stamp
-            // `mikebom:declared-as: [my-alias]`. When no alias is
+            // `waybill:declared-as: [my-alias]`. When no alias is
             // detected, keep the pre-m199 behavior verbatim.
             let alias =
                 super::alias_mapping::parse_package_json_alias(name, &range);
@@ -402,7 +402,7 @@ pub(crate) fn parse_root_package_json(
                     // The design-tier component preserves the FULL declared
                     // value in requirement_ranges (`npm:actual@1.0.0`) so
                     // downstream consumers can reconstruct the original
-                    // declaration; `mikebom:declared-as` carries the alias
+                    // declaration; `waybill:declared-as` carries the alias
                     // name for the resolved-identity mapping.
                     range.clone(),
                     Some(a.local_name.clone()),
@@ -418,7 +418,7 @@ pub(crate) fn parse_root_package_json(
             > = Default::default();
             if let Some(local) = alias_local_name {
                 extra_annotations.insert(
-                    "mikebom:declared-as".to_string(),
+                    "waybill:declared-as".to_string(),
                     serde_json::json!([local]),
                 );
             }
@@ -489,7 +489,7 @@ pub(crate) struct DroppedDuplicate {
 ///   (matches cargo's milestone-064 ladder behavior).
 /// - `parent_purl: None` (top-level — FR-001a).
 /// - `sbom_tier: Some("source")` (FR-006).
-/// - `extra_annotations` carries `mikebom:component-role: main-module`
+/// - `extra_annotations` carries `waybill:component-role: main-module`
 ///   (C40, FR-004).
 /// - `licenses: vec![]` (FR-005; license detection is #103 follow-up).
 /// - `depends` populated from `dependencies`/`devDependencies`/
@@ -522,7 +522,7 @@ pub(crate) fn build_npm_main_module_entry(
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra_annotations.insert(
-        "mikebom:component-role".to_string(),
+        "waybill:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
 
@@ -695,7 +695,7 @@ pub(crate) fn dedup_npm_main_modules_by_purl(
     for entry in std::mem::take(entries) {
         let is_main = entry
             .extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .and_then(|v| v.as_str())
             == Some("main-module");
         if !is_main {

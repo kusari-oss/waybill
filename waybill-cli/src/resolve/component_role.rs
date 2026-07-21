@@ -6,11 +6,11 @@
 //!
 //! - [`ComponentRole::BuildTool`] — components living under
 //!   build-tool installation paths (Maven, Gradle, sbt). Annotated
-//!   as `mikebom:component-role = "build-tool"`.
+//!   as `waybill:component-role = "build-tool"`.
 //! - [`ComponentRole::LanguageRuntime`] — components living under
 //!   language-runtime system-installed paths (JDK, system Python,
 //!   system Node). Annotated as
-//!   `mikebom:component-role = "language-runtime"`.
+//!   `waybill:component-role = "language-runtime"`.
 //! - **Absent** (no annotation emitted) — when no occurrence
 //!   matches any heuristic-table entry. Three-state semantics:
 //!   absence does NOT mean "definitely application code"; it
@@ -43,7 +43,7 @@ pub enum ComponentRole {
 
 impl ComponentRole {
     /// User-facing string value emitted in the
-    /// `mikebom:component-role` annotation.
+    /// `waybill:component-role` annotation.
     pub fn as_str(&self) -> &'static str {
         match self {
             ComponentRole::BuildTool => "build-tool",

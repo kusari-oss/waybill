@@ -73,14 +73,14 @@ fn cmake_walker_depth3_emits_find_package() {
     let foo = find_component(&doc, "pkg:generic/foo@2.5")
         .expect("expected pkg:generic/foo@2.5 component from depth-3 find_package");
     assert_eq!(
-        property_value(foo, "mikebom:source-mechanism"),
+        property_value(foo, "waybill:source-mechanism"),
         Some("cmake-find-package")
     );
-    let source_files = property_value(foo, "mikebom:source-files").unwrap_or("");
+    let source_files = property_value(foo, "waybill:source-files").unwrap_or("");
     assert!(
         source_files.contains("cmake/modules/vendor/Extra.cmake")
             || source_files.contains("cmake\\modules\\vendor\\Extra.cmake"),
-        "mikebom:source-files should name the depth-3 path; got {source_files:?}"
+        "waybill:source-files should name the depth-3 path; got {source_files:?}"
     );
 }
 
@@ -93,7 +93,7 @@ fn cmake_walker_depth3_emits_pkg_check_modules() {
     let bar = find_component(&doc, "pkg:generic/bar")
         .expect("expected pkg:generic/bar component from depth-3 pkg_check_modules");
     assert_eq!(
-        property_value(bar, "mikebom:source-mechanism"),
+        property_value(bar, "waybill:source-mechanism"),
         Some("cmake-pkg-check-modules")
     );
 }

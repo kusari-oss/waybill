@@ -25,7 +25,7 @@ fn write_pkg(rootfs: &Path, dir_name: &str, desc_body: &str, files_body: Option<
     }
 }
 
-/// Write a minimal valid ELF64 file at `path`. The mikebom binary
+/// Write a minimal valid ELF64 file at `path`. The waybill binary
 /// walker only inspects the first ~52 bytes for the ELF header; an
 /// empty body after the header is sufficient to make the walker emit
 /// a file-level binary component for unclaimed paths.
@@ -167,7 +167,7 @@ fn unclaimed_binary_still_surfaces_via_walker() {
                 props.iter().any(|p| {
                     let is_paths_prop = matches!(
                         p.get("name").and_then(|v| v.as_str()),
-                        Some("mikebom:file-paths") | Some("mikebom:source-files")
+                        Some("waybill:file-paths") | Some("waybill:source-files")
                     );
                     let v = p.get("value").and_then(|v| v.as_str()).unwrap_or("");
                     is_paths_prop && v.contains("custom-tool")

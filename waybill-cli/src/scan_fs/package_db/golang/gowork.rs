@@ -26,7 +26,7 @@ use crate::scan_fs::package_db::golang::module_id::ModuleId;
 // --------------------------------------------------------------------
 
 /// Detection outcome for `go.work` at the scanned root. Drives the
-/// `mikebom:go-workspace-mode` (C112) document-scope annotation.
+/// `waybill:go-workspace-mode` (C112) document-scope annotation.
 ///
 /// Per Q2 clarification 2026-07-04: `Detected { use_count: 0 }` is
 /// a legal state (empty-but-valid workspace scaffolding) — the file
@@ -47,7 +47,7 @@ pub enum WorkspaceMode {
 }
 
 impl WorkspaceMode {
-    /// Wire value for `mikebom:go-workspace-mode` (C112).
+    /// Wire value for `waybill:go-workspace-mode` (C112).
     /// Per Q2 clarification: empty-use case yields
     /// `detected: 0 use-modules` (not `malformed:`).
     pub fn as_wire_str(&self) -> String {

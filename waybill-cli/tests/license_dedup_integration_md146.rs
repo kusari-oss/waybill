@@ -3,12 +3,12 @@
 //!
 //! Builds a synthetic RPM whose `License:` header contains `MIT AND MIT`
 //! (mirroring the Yocto-shaped input that surfaced the original audit
-//! finding), scans it via the `mikebom sbom scan` binary, and asserts
+//! finding), scans it via the `waybill sbom scan` binary, and asserts
 //! that the emitted CDX 1.6, SPDX 2.3, and SPDX 3 outputs ALL carry the
 //! deduplicated single-id `MIT` form (FR-008 cross-format invariance).
 //!
 //! Mirrors the milestone-144 T035 synthetic-RPM pattern at
-//! `mikebom-cli/src/scan_fs/package_db/rpm_file.rs:524-577` (the repo
+//! `waybill-cli/src/scan_fs/package_db/rpm_file.rs:524-577` (the repo
 //! ships zero `.rpm` fixtures; runtime-built via `rpm::PackageBuilder`).
 //!
 //! Covers spec SC-004.
@@ -57,7 +57,7 @@ fn license_dedup_end_to_end_via_synthetic_rpm_md146() {
         .arg(format!("spdx-3-json={}", spdx3_path.display()))
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom binary runs");
+        .expect("waybill binary runs");
     assert!(
         out.status.success(),
         "scan failed: stderr={}",
@@ -66,7 +66,7 @@ fn license_dedup_end_to_end_via_synthetic_rpm_md146() {
 
     // CDX 1.6: post-146, the single-id `MIT` form routes to
     // `licenses[].license.id` via `as_spdx_id()` at
-    // `mikebom-common/src/types/license.rs:86-120`. Pre-146 the
+    // `waybill-common/src/types/license.rs:86-120`. Pre-146 the
     // compound `"MIT AND MIT"` would have failed `as_spdx_id` and
     // fallen through to the `expression` shape.
     let cdx: serde_json::Value =

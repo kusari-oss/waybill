@@ -1,6 +1,6 @@
 //! Child PID tracker for process tree isolation.
 //!
-//! When `--trace-children` is enabled, mikebom needs to discover all
+//! When `--trace-children` is enabled, waybill needs to discover all
 //! child processes spawned by the target build command so their eBPF
 //! events are also captured. On Linux, this reads the process tree from
 //! `/proc/<pid>/task/<tid>/children`. On non-Linux, a stub is provided.

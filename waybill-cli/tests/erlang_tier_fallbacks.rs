@@ -104,15 +104,15 @@ fn sc003_design_tier_from_rebar_config_only() {
     let doc = run_scan(dir.path());
     let cowboy = component_with_name(&doc, "cowboy").expect("cowboy design-tier component");
     assert_eq!(
-        property_value(cowboy, "mikebom:sbom-tier"),
+        property_value(cowboy, "waybill:sbom-tier"),
         Some("design"),
     );
     // requirement_range is emitted as the CDX-native field via the
-    // builder. Check via property channel — mikebom emits both.
+    // builder. Check via property channel — waybill emits both.
     // (Builder writes requirement_range into a dedicated property too.)
     let jiffy = component_with_name(&doc, "jiffy").expect("jiffy design-tier component");
     assert_eq!(
-        property_value(jiffy, "mikebom:sbom-tier"),
+        property_value(jiffy, "waybill:sbom-tier"),
         Some("design"),
     );
 }
@@ -133,7 +133,7 @@ fn sc007_profile_scoped_dev_dep_lifecycle_scope() {
     // NO lockfile — design-tier mode emits meck with lifecycle-scope=dev.
     let doc = run_scan(dir.path());
     let meck = component_with_name(&doc, "meck").expect("meck dev-profile component");
-    // CDX native field: scope. Check via property channel (mikebom
+    // CDX native field: scope. Check via property channel (waybill
     // emits both — milestone 052 lifecycle-scope-as-property bridge).
     let scope = meck.get("scope").and_then(|v| v.as_str());
     // Per milestone 052 lifecycle-scope bridge: dev-scope maps to CDX
@@ -225,28 +225,28 @@ fn sc010_q3_keyword_family_discrimination() {
     )
     .unwrap();
     let doc = run_scan(dir.path());
-    // Q3: each edge-target carries mikebom:erlang-app-dep-kind.
+    // Q3: each edge-target carries waybill:erlang-app-dep-kind.
     let cowboy = component_with_name(&doc, "cowboy").expect("cowboy required-required");
     assert_eq!(
-        property_value(cowboy, "mikebom:erlang-app-dep-kind"),
+        property_value(cowboy, "waybill:erlang-app-dep-kind"),
         Some("required"),
     );
     let config_app =
         component_with_name(&doc, "config_app").expect("config_app included");
     assert_eq!(
-        property_value(config_app, "mikebom:erlang-app-dep-kind"),
+        property_value(config_app, "waybill:erlang-app-dep-kind"),
         Some("included"),
     );
     let telemetry =
         component_with_name(&doc, "telemetry").expect("telemetry optional");
     assert_eq!(
-        property_value(telemetry, "mikebom:erlang-app-dep-kind"),
+        property_value(telemetry, "waybill:erlang-app-dep-kind"),
         Some("optional"),
     );
     // Operator filtering on optional retrieves exactly telemetry:
     let optionals: Vec<&str> = all_components(&doc)
         .into_iter()
-        .filter(|c| property_value(c, "mikebom:erlang-app-dep-kind") == Some("optional"))
+        .filter(|c| property_value(c, "waybill:erlang-app-dep-kind") == Some("optional"))
         .filter_map(|c| c.get("name").and_then(|v| v.as_str()))
         .collect();
     assert_eq!(optionals, vec!["telemetry"]);
@@ -294,7 +294,7 @@ fn sc010_q3_precedence_required_wins() {
     let cowboy = component_with_name(&doc, "cowboy")
         .expect("cowboy must emit (as OTP-runtime placeholder since no lockfile)");
     assert_eq!(
-        property_value(cowboy, "mikebom:erlang-app-dep-kind"),
+        property_value(cowboy, "waybill:erlang-app-dep-kind"),
         Some("required"),
         "Q3 precedence: required > optional when an atom appears in both",
     );

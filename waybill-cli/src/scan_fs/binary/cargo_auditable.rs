@@ -16,7 +16,7 @@
 //! and the official Rust container images** ship a pre-configured
 //! Cargo wrapper so most Rust binaries built in those environments
 //! get the embedded manifest automatically. Without extraction, those
-//! binaries present to mikebom as opaque `pkg:generic/<filename>`
+//! binaries present to waybill as opaque `pkg:generic/<filename>`
 //! components even though the binary itself carries the answer to
 //! "which crates are statically linked here".
 //!

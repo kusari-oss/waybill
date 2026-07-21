@@ -18,9 +18,9 @@
 
 /// One match from the fingerprint scanner. Converted to a
 /// `PackageDbEntry` with `pkg:generic/<library>` (no `@version`),
-/// `mikebom:evidence-kind = "symbol-fingerprint"`,
-/// `mikebom:confidence = "heuristic"`, and
-/// `mikebom:fingerprint-symbols-matched = "<count>/<total>"`.
+/// `waybill:evidence-kind = "symbol-fingerprint"`,
+/// `waybill:confidence = "heuristic"`, and
+/// `waybill:fingerprint-symbols-matched = "<count>/<total>"`.
 ///
 /// Milestone 108 adds three optional fields:
 /// - `target_purl`: explicit PURL string. Bundled-corpus matches set
@@ -29,13 +29,13 @@
 ///   the record's `target_purl` field (which may carry variant or
 ///   non-generic namespaces — e.g. `pkg:generic/openssl?variant=fips`).
 /// - `corpus_sha_annotation`: when `Some(_)`, the value is emitted as
-///   the `mikebom:fingerprint-corpus-sha` annotation per FR-005.
+///   the `waybill:fingerprint-corpus-sha` annotation per FR-005.
 ///   `None` means "don't emit the annotation" — preserves SC-003
 ///   byte-identity for non-opt-in scans.
 /// - `also_detected_via`: FR-013 multi-record collision. When two
 ///   records match the same target binary (vendor-fork variant + the
 ///   upstream library), each match lists the OTHER's library name
-///   here, surfaced as `mikebom:also-detected-via`.
+///   here, surfaced as `waybill:also-detected-via`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SymbolFingerprintMatch {
     pub library: String,
@@ -71,7 +71,7 @@ struct SymbolFingerprint {
 ///     Version-string scanner's `LibreSSL ` anchor handles disambiguation.
 ///   - llvm: API surface too broad (hundreds of public-API entry points
 ///     across libLLVMCore / libLLVMAnalysis / ...); no stable 10-symbol
-///     slice. Different mikebom releases would pick different slices.
+///     slice. Different waybill releases would pick different slices.
 ///     Defer until a versioned compiler-libs strategy emerges.
 ///   - openjdk: the launcher binary doesn't statically link JDK APIs
 ///     (those live in libjvm.so loaded via JNI). Symbol fingerprinting
@@ -211,13 +211,13 @@ const FINGERPRINTS: &[SymbolFingerprint] = &[
 /// `super::fingerprints::load_bundled`).
 ///
 /// The bundled records are SEMANTICALLY IDENTICAL to what the seeded
-/// `kusari-sandbox/mikebom-fingerprints` repo ships on day 1 — same
+/// `kusari-sandbox/waybill-fingerprints` repo ships on day 1 — same
 /// 7 libraries, same symbol lists, same `min_symbols=8` threshold.
 /// Operators who don't opt into the external corpus see zero
 /// behavioral change (FR-001 / SC-003).
 ///
 /// **DO NOT ADD NEW LIBRARIES HERE.** Post-milestone-108, the
-/// source-of-truth corpus lives at `kusari-sandbox/mikebom-fingerprints`.
+/// source-of-truth corpus lives at `kusari-sandbox/waybill-fingerprints`.
 /// This const is the bundled fallback ONLY. (Const-growth guard
 /// task T060a — milestone 108 polish PR — adds a unit test asserting
 /// `FINGERPRINTS.len() == 7`.)
@@ -825,10 +825,10 @@ mod tests {
     /// **DO NOT BUMP THIS NUMBER unless you've actually intended to
     /// add to the BUNDLED fallback.** Post-milestone-108, the source-
     /// of-truth fingerprint corpus lives at
-    /// `kusari-sandbox/mikebom-fingerprints`. New libraries go in the
+    /// `kusari-sandbox/waybill-fingerprints`. New libraries go in the
     /// sibling repo (via a PR there), not in this const. The bundled
     /// const stays at 7 entries as the offline-only fallback that
-    /// every mikebom-cli release ships with, regardless of cache
+    /// every waybill-cli release ships with, regardless of cache
     /// state.
     ///
     /// If a release intentionally raises the floor (e.g., milestone
@@ -843,7 +843,7 @@ mod tests {
             FINGERPRINTS.len(),
             7,
             "FINGERPRINTS grew beyond the 7-library bundled-fallback floor. \
-             New fingerprints belong in `kusari-sandbox/mikebom-fingerprints`, \
+             New fingerprints belong in `kusari-sandbox/waybill-fingerprints`, \
              not in this const. See the doc comment on FINGERPRINTS + this \
              test's docstring for the lift required to legitimately raise \
              the floor."

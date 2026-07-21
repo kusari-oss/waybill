@@ -24,14 +24,14 @@ const FIXTURE_SUBPATH: &str = "gem";
 // Milestone 162 (#496) bumped baseline from 217 → 218: a Gemfile.lock
 // spec declares `bundler (>= 1.12.0, < 3.0.0)` as a dep, but
 // `bundler` is a Ruby toolchain-provided built-in gem NOT in the
-// GEM/specs section. Pre-162 mikebom silently dropped that edge;
-// post-162 mikebom emits a synthetic `pkg:gem/bundler` (versionless)
+// GEM/specs section. Pre-162 waybill silently dropped that edge;
+// post-162 waybill emits a synthetic `pkg:gem/bundler` (versionless)
 // component + preserves the edge from source to synthetic. 1 new
 // edge; 217 + 1 = 218.
-const EXPECTED_MIKEBOM_EDGE_COUNT: usize = 218;
+const EXPECTED_WAYBILL_EDGE_COUNT: usize = 218;
 
 const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
-    // Confirmed in mikebom output — fastlane's main module pulls in CFPropertyList.
+    // Confirmed in waybill output — fastlane's main module pulls in CFPropertyList.
     ("pkg:gem/fastlane", "pkg:gem/CFPropertyList"),
     // fastlane → addressable.
     ("pkg:gem/fastlane", "pkg:gem/addressable"),
@@ -55,8 +55,8 @@ fn transitive_edges_match_baseline() {
     let mikebom_edges = run_mikebom(&fixture());
     assert_eq!(
         mikebom_edges.len(),
-        EXPECTED_MIKEBOM_EDGE_COUNT,
-        "mikebom edge count drifted from the alpha.24 baseline."
+        EXPECTED_WAYBILL_EDGE_COUNT,
+        "waybill edge count drifted from the alpha.24 baseline."
     );
     let edge_set: std::collections::HashSet<(String, String)> = mikebom_edges
         .iter()
@@ -76,14 +76,14 @@ fn cross_tool_parity_check() {
         eprintln!("transitive_parity_gem::cross_tool_parity_check skipped: {reason}");
         return;
     }
-    let mikebom = run_mikebom(&fixture());
+    let waybill = run_mikebom(&fixture());
     let trivy = run_trivy(&fixture());
     let syft = run_syft(&fixture());
-    let diff = compute_edge_diff(&mikebom, &trivy, &syft);
+    let diff = compute_edge_diff(&waybill, &trivy, &syft);
     eprintln!("\n=== gem audit (fastlane/fastlane @ 2.224.0) ===");
     eprintln!(
-        "edge counts: mikebom={} trivy={} syft={}",
-        mikebom.len(),
+        "edge counts: waybill={} trivy={} syft={}",
+        waybill.len(),
         trivy.len(),
         syft.len()
     );

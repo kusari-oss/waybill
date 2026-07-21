@@ -1,7 +1,7 @@
 //! HTTP client for the ClearlyDefined `/definitions/{...}` endpoint.
 //!
 //! Returns the curated `licensed.declared` SPDX expression — that's
-//! mikebom's only consumer for this milestone. The richer payload
+//! waybill's only consumer for this milestone. The richer payload
 //! (per-file licenses, attributions, copyrights, tool scores) is not
 //! parsed; if a future enrichment needs them, extend [`CdDefinition`].
 
@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 
 const DEFAULT_BASE_URL: &str = "https://api.clearlydefined.io";
 
-/// Fields mikebom actually uses out of CD's `/definitions` payload.
+/// Fields waybill actually uses out of CD's `/definitions` payload.
 /// Optional everywhere because CD returns 200 with a sparse body for
 /// "we know about this package but have no curated data yet."
 ///
@@ -42,9 +42,9 @@ impl ClearlyDefinedClient {
         let http = reqwest::Client::builder()
             .timeout(timeout)
             .user_agent(concat!(
-                "mikebom/",
+                "waybill/",
                 env!("CARGO_PKG_VERSION"),
-                " (+https://github.com/mikebom)"
+                " (+https://github.com/waybill)"
             ))
             .build()
             .unwrap_or_else(|_| reqwest::Client::new());

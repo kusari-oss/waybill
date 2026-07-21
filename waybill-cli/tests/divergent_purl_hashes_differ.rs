@@ -59,7 +59,7 @@ fn divergence_property_for_purl(doc: &Value, purl: &str) -> Option<Value> {
         let properties = c.get("properties")?.as_array()?;
         for p in properties {
             if p.get("name").and_then(|v| v.as_str())
-                == Some("mikebom:duplicate-purl-divergent")
+                == Some("waybill:duplicate-purl-divergent")
             {
                 let raw = p.get("value")?.as_str()?;
                 return serde_json::from_str(raw).ok();

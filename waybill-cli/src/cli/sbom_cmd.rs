@@ -41,7 +41,7 @@ pub enum SbomSubcommand {
     /// Drives the milestone-013 user-facing diagnostic.
     ParityCheck(ParityCheckArgs),
     /// Verify that an image-tier SBOM's per-component
-    /// `mikebom:source-document-binding` annotations match the
+    /// `waybill:source-document-binding` annotations match the
     /// recompute against a source-tier SBOM (milestone 072, FR-005).
     /// Exits non-zero on any verification failure.
     VerifyBinding(VerifyBindingArgs),

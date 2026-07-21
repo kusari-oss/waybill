@@ -29,7 +29,7 @@ pub(super) struct SettingsScript {
     #[allow(dead_code)]
     pub(super) includes: Vec<String>,
     /// Path to the `settings.gradle.kts` file. Drives the workspace-
-    /// root component's `mikebom:source-files` annotation.
+    /// root component's `waybill:source-files` annotation.
     pub(super) source_path: PathBuf,
 }
 

@@ -192,7 +192,7 @@ where
             if let Some(bdb_path) = resolve_rpmdb_path(rootfs, RPMDB_BDB_CANDIDATES) {
                 tracing::warn!(
                     path = %bdb_path.display(),
-                    "detected legacy rpmdb (Berkeley DB) — BDB is not supported in this mikebom version; regenerate on rpmdb.sqlite-based RHEL ≥8 to scan",
+                    "detected legacy rpmdb (Berkeley DB) — BDB is not supported in this waybill version; regenerate on rpmdb.sqlite-based RHEL ≥8 to scan",
                 );
             }
             return;
@@ -228,7 +228,7 @@ where
         tracing::warn!(
             path = %sqlite_path.display(),
             "rpmdb.sqlite is in WAL journaling mode — companion `-wal`/`-shm` present. \
-             Mikebom's pure-Rust sqlite reader walks only the main file; tables created \
+             Waybill's pure-Rust sqlite reader walks only the main file; tables created \
              in the WAL may be invisible. Workaround: run \
              `sqlite3 <path> 'PRAGMA wal_checkpoint(TRUNCATE);'` before scanning to \
              merge WAL frames into the main file. Full WAL-merge support is future work.",
@@ -294,7 +294,7 @@ where
 ///    magic (`\x8e\xad\xe8\x01`). All package fields are decoded from
 ///    header tags and file paths come from BASENAMES/DIRNAMES/
 ///    DIRINDEXES.
-/// 2. **Fixture**: mikebom's test-fixture schema puts discrete text
+/// 2. **Fixture**: waybill's test-fixture schema puts discrete text
 ///    columns at positions 1..=8 (name, version, release, epoch,
 ///    arch, license, packager, requires). Used by tests that haven't
 ///    been regenerated against the production blob format. Returns
@@ -460,7 +460,7 @@ fn build_entry_from_header(
     ))
 }
 
-/// Build a `PackageDbEntry` from discrete text columns (mikebom's
+/// Build a `PackageDbEntry` from discrete text columns (waybill's
 /// synthetic fixture schema).
 fn build_entry_from_text_columns(
     values: &[RecordValue],
@@ -555,7 +555,7 @@ fn assemble_entry(
     // Epoch handling. RPM treats "no epoch" and "epoch = 0" as
     // equivalent for version comparison; `rpm -qa`'s default display
     // omits epoch when it is 0; the purl-spec rpm example never shows
-    // `epoch=0`. Mikebom omits the qualifier in both the absent and
+    // `epoch=0`. Waybill omits the qualifier in both the absent and
     // zero cases — only non-zero epochs surface. This matches the
     // sbom-conformance framework's canonical interpretation and drops
     // 27 exact-match failures on Fedora images where ~5% of packages
@@ -642,7 +642,7 @@ fn assemble_entry(
         // `rpm -qa`'s `%{VERSION}-%{RELEASE}` column without re-parsing
         // the PURL. Same string as `version` for rpm components (we
         // never re-encode); populated explicitly so the builder can
-        // drive the `mikebom:raw-version` property deterministically
+        // drive the `waybill:raw-version` property deterministically
         // without having to infer which ecosystem the entry came from.
         raw_version: Some(full_version),
         parent_purl: None,
@@ -852,7 +852,7 @@ mod tests {
 
     /// Fixture path — a production-magic-free row with text columns
     /// at positions 1..=8 should decode from the fixture schema. Used
-    /// by mikebom's existing synthetic rpmdb fixture; must continue
+    /// by waybill's existing synthetic rpmdb fixture; must continue
     /// working so legacy tests pass.
     #[test]
     fn row_to_entry_decodes_fixture_text_columns() {

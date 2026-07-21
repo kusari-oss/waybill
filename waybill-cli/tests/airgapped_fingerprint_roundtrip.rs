@@ -5,10 +5,10 @@
 //! destination → runs scan under `--offline`).
 //!
 //! Stages:
-//!   1. `mikebom fingerprints fetch` against tempdir A's cache root.
+//!   1. `waybill fingerprints fetch` against tempdir A's cache root.
 //!   2. `tar czf cache.tgz` over tempdir A's contents.
 //!   3. `tar xzf` into tempdir B.
-//!   4. `mikebom sbom scan --offline --fingerprints-corpus` against
+//!   4. `waybill sbom scan --offline --fingerprints-corpus` against
 //!      tempdir B's cache root + a placeholder fixture.
 //!   5. Assert the scan succeeded + emitted a parseable SBOM
 //!      (`--offline` MUST NOT abort when the cache is populated).
@@ -18,7 +18,7 @@
 //! (cache is portable; `--offline` + populated cache = no network) are
 //! fully covered by the single-pin scenario.
 //!
-//! Gated behind `MIKEBOM_FINGERPRINTS_NETWORK_TESTS=1` because stage 1
+//! Gated behind `WAYBILL_FINGERPRINTS_NETWORK_TESTS=1` because stage 1
 //! is the only one that requires real network access. The rest is
 //! purely local file shuffling.
 
@@ -33,18 +33,18 @@ fn binary_path() -> &'static str {
 }
 
 fn embedded_sha() -> &'static str {
-    env!("MIKEBOM_FINGERPRINTS_CORPUS_SHA")
+    env!("WAYBILL_FINGERPRINTS_CORPUS_SHA")
 }
 
 fn network_tests_enabled() -> bool {
-    std::env::var("MIKEBOM_FINGERPRINTS_NETWORK_TESTS").ok().as_deref() == Some("1")
+    std::env::var("WAYBILL_FINGERPRINTS_NETWORK_TESTS").ok().as_deref() == Some("1")
 }
 
 #[test]
 fn airgap_roundtrip_fetch_tar_untar_offline_scan() {
     if !network_tests_enabled() {
         println!(
-            "skipped: MIKEBOM_FINGERPRINTS_NETWORK_TESTS not set (offline CI lane)"
+            "skipped: WAYBILL_FINGERPRINTS_NETWORK_TESTS not set (offline CI lane)"
         );
         return;
     }
@@ -59,7 +59,7 @@ fn airgap_roundtrip_fetch_tar_untar_offline_scan() {
     // Stage 1: fetch on the "internet-connected" machine.
     // ──────────────────────────────────────────────────────────────
     let stage1 = Command::new(binary_path())
-        .env("MIKEBOM_FINGERPRINTS_CACHE_DIR", connected_cache.path())
+        .env("WAYBILL_FINGERPRINTS_CACHE_DIR", connected_cache.path())
         .arg("fingerprints")
         .arg("fetch")
         .output()
@@ -130,7 +130,7 @@ fn airgap_roundtrip_fetch_tar_untar_offline_scan() {
     std::fs::write(scan_target.path().join("placeholder.txt"), b"placeholder").unwrap();
     let out_file = scan_target.path().join("out.cdx.json");
     let stage4 = Command::new(binary_path())
-        .env("MIKEBOM_FINGERPRINTS_CACHE_DIR", airgap_cache.path())
+        .env("WAYBILL_FINGERPRINTS_CACHE_DIR", airgap_cache.path())
         .arg("--offline")
         .arg("sbom")
         .arg("scan")

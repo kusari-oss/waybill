@@ -25,10 +25,10 @@ use super::super::package_db::{rpm_vendor_from_id, PackageDbEntry};
 /// 096 FR-004 / US3. PURL has no `@<version>` segment — symbol presence
 /// alone can't pin a release. Confidence is intentionally lower than
 /// `embedded-version-string` (0.4 vs 0.6 conceptually; both map to the
-/// `heuristic` value in `mikebom:confidence` since the CDX evidence
+/// `heuristic` value in `waybill:confidence` since the CDX evidence
 /// pipeline currently maps ALL package-db-derived entries to
 /// `manifest-analysis` / 0.85 — see milestone-097 follow-up for a real
-/// confidence-tier split). The `mikebom:fingerprint-symbols-matched`
+/// confidence-tier split). The `waybill:fingerprint-symbols-matched`
 /// annotation carries the X/Y ratio for transparency per Constitution X.
 pub(super) fn symbol_match_to_entry(
     m: &symbol_fingerprint::SymbolFingerprintMatch,
@@ -53,7 +53,7 @@ pub(super) fn symbol_match_to_entry(
     let mut extra: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra.insert(
-        "mikebom:fingerprint-symbols-matched".to_string(),
+        "waybill:fingerprint-symbols-matched".to_string(),
         serde_json::Value::String(format!("{}/{}", m.matched_count, m.total_count)),
     );
     // Milestone 108 FR-005: stamp the corpus provenance when present.
@@ -62,8 +62,8 @@ pub(super) fn symbol_match_to_entry(
     //
     // Milestone 110 FR-017 (US3 regression-gate): when corpus-sha is
     // emitted (i.e., operator is opted in to fingerprints), ALSO emit
-    // the numeric fused-confidence value as `mikebom:fingerprint-
-    // confidence`. Distinct from the existing `mikebom:confidence`
+    // the numeric fused-confidence value as `waybill:fingerprint-
+    // confidence`. Distinct from the existing `waybill:confidence`
     // enum-string carrier (C16, value=`"heuristic"`) so no collision.
     // v1 records all map to the 0.70 baseline per the design doc §7
     // "threshold-met exported symbols" entry + the 2026-06-03
@@ -71,11 +71,11 @@ pub(super) fn symbol_match_to_entry(
     // their own values via the fusion rule and stamp that instead.
     if let Some(ref sha) = m.corpus_sha_annotation {
         extra.insert(
-            "mikebom:fingerprint-corpus-sha".to_string(),
+            "waybill:fingerprint-corpus-sha".to_string(),
             serde_json::Value::String(sha.clone()),
         );
         extra.insert(
-            "mikebom:fingerprint-confidence".to_string(),
+            "waybill:fingerprint-confidence".to_string(),
             serde_json::Value::String("0.70".to_string()),
         );
     }
@@ -85,7 +85,7 @@ pub(super) fn symbol_match_to_entry(
     // sibling matches so consumers can disambiguate.
     if !m.also_detected_via.is_empty() {
         extra.insert(
-            "mikebom:also-detected-via".to_string(),
+            "waybill:also-detected-via".to_string(),
             serde_json::json!(m.also_detected_via),
         );
     }
@@ -128,17 +128,17 @@ pub(super) fn symbol_match_to_entry(
 /// Mirrors `symbol_match_to_entry` but uses the v2 `MatchResult` shape:
 /// - PURL comes directly from the matched record (carries the version
 ///   segment when available, unlike v1's symbol-only `pkg:generic/<lib>`).
-/// - `mikebom:fingerprint-confidence` carries the numeric fused score
+/// - `waybill:fingerprint-confidence` carries the numeric fused score
 ///   from the matcher's "max + bump" fusion algorithm (vs v1's hardcoded
 ///   `"0.70"` baseline) — formatted "X.XX" per FR-017.
-/// - `mikebom:fingerprint-symbols-matched` records the indicator count
+/// - `waybill:fingerprint-symbols-matched` records the indicator count
 ///   (e.g., `"2/3"` when 2 of 3 indicator kinds in the record matched).
 ///   Repurposed from the v1 symbol-count carrier; v2 records carry per-
 ///   indicator-KIND counts rather than per-symbol counts.
-/// - No `mikebom:fingerprint-corpus-sha` annotation on the v2 path —
+/// - No `waybill:fingerprint-corpus-sha` annotation on the v2 path —
 ///   the C58 carrier is v1-specific (a 12-hex git SHA from the
 ///   milestone-108 sibling repo). A v2-equivalent annotation
-///   (`mikebom:fingerprint-source-id`) ships in a follow-on slice with
+///   (`waybill:fingerprint-source-id`) ships in a follow-on slice with
 ///   its own C-row.
 #[allow(dead_code)] // Slice B-2 final task wires this in the scan loop.
 pub(super) fn v2_match_to_entry(m: &MatchResult, path: &Path) -> PackageDbEntry {
@@ -151,7 +151,7 @@ pub(super) fn v2_match_to_entry(m: &MatchResult, path: &Path) -> PackageDbEntry 
     // existing v1-path "0.70" string also fits this format).
     let score_str = format!("{:.2}", m.confidence_score.into_inner());
     extra.insert(
-        "mikebom:fingerprint-confidence".to_string(),
+        "waybill:fingerprint-confidence".to_string(),
         serde_json::Value::String(score_str),
     );
     // Indicator-kind count carrier — repurposed from v1's per-symbol
@@ -159,7 +159,7 @@ pub(super) fn v2_match_to_entry(m: &MatchResult, path: &Path) -> PackageDbEntry 
     // version_string / build_id / macho_uuid / pe_pdb / abi_marker);
     // the count tells operators which kinds the matcher fused.
     extra.insert(
-        "mikebom:fingerprint-symbols-matched".to_string(),
+        "waybill:fingerprint-symbols-matched".to_string(),
         serde_json::Value::String(format!(
             "{}/{}",
             m.indicators_matched.len(),
@@ -204,7 +204,7 @@ pub(super) fn v2_match_to_entry(m: &MatchResult, path: &Path) -> PackageDbEntry 
 #[allow(dead_code)]
 fn derive_name_from_purl(purl: &Purl) -> String {
     // The Purl newtype exposes `name()` for this purpose (cf.
-    // mikebom-common/src/types/purl.rs).
+    // waybill-common/src/types/purl.rs).
     purl.name().to_string()
 }
 
@@ -325,7 +325,7 @@ pub(super) fn cargo_auditable_packages_to_entries(
             if let Some(ref k) = pkg.kind {
                 if k != "runtime" {
                     extra.insert(
-                        "mikebom:cargo-auditable-kind".to_string(),
+                        "waybill:cargo-auditable-kind".to_string(),
                         serde_json::Value::String(k.clone()),
                     );
                 }
@@ -334,7 +334,7 @@ pub(super) fn cargo_auditable_packages_to_entries(
             // crates.io default is implied by the bare PURL).
             if pkg.source != "registry" {
                 extra.insert(
-                    "mikebom:cargo-auditable-source".to_string(),
+                    "waybill:cargo-auditable-source".to_string(),
                     serde_json::Value::String(pkg.source.clone()),
                 );
             }
@@ -351,7 +351,7 @@ pub(super) fn cargo_auditable_packages_to_entries(
                 || pkg.source == "crates.io"
             {
                 extra.insert(
-                    "mikebom:license-source".to_string(),
+                    "waybill:license-source".to_string(),
                     serde_json::Value::String("registry-required".to_string()),
                 );
             }
@@ -359,13 +359,13 @@ pub(super) fn cargo_auditable_packages_to_entries(
             // carries a parseable `git+https://...` URL, extract it
             // (stripping the `git+` prefix, any trailing `.git`, and
             // the `#<rev>` fragment) and stash under
-            // `mikebom:cargo-vcs-source-url`. The downstream
+            // `waybill:cargo-vcs-source-url`. The downstream
             // `external_refs_from_purl` helper at scan_fs/mod.rs reads
             // this annotation to emit a `vcs`-type ExternalReference
             // on the resolved component.
             if let Some(vcs_url) = parse_cargo_auditable_git_source(&pkg.source) {
                 extra.insert(
-                    "mikebom:cargo-vcs-source-url".to_string(),
+                    "waybill:cargo-vcs-source-url".to_string(),
                     serde_json::Value::String(vcs_url),
                 );
             }
@@ -407,12 +407,12 @@ pub(super) fn cargo_auditable_packages_to_entries(
     entries.sort_by(|a, b| {
         let a_src = a
             .extra_annotations
-            .get("mikebom:cargo-auditable-source")
+            .get("waybill:cargo-auditable-source")
             .and_then(|v| v.as_str())
             .unwrap_or("registry");
         let b_src = b
             .extra_annotations
-            .get("mikebom:cargo-auditable-source")
+            .get("waybill:cargo-auditable-source")
             .and_then(|v| v.as_str())
             .unwrap_or("registry");
         (a.name.as_str(), a.version.as_str(), a_src)
@@ -468,7 +468,7 @@ pub(crate) struct BinaryScan {
     pub runpath: Vec<String>,
     /// `.gnu_debuglink` reference (milestone 023): NUL-terminated
     /// filename + LE CRC32 of the referenced .debug file. Pointer
-    /// only — mikebom does not chase or verify the .debug file.
+    /// only — waybill does not chase or verify the .debug file.
     pub debuglink: Option<elf::DebuglinkEntry>,
     /// Mach-O `LC_UUID` 16-byte identity, hex-encoded lowercase
     /// (milestone 024). The macOS analog of `build_id`. `None` for
@@ -546,14 +546,14 @@ pub(crate) struct BinaryScan {
     /// Full `LC_BUILD_VERSION` record per milestone-098 FR-002. `None`
     /// for non-Mach-O or for Mach-O binaries lacking the command
     /// (legacy `LC_VERSION_MIN_*`-only builds). When present, drives
-    /// the `mikebom:macho-build-version` + `mikebom:macho-build-tools`
+    /// the `waybill:macho-build-version` + `waybill:macho-build-tools`
     /// annotation emission on the file-level binary component.
     pub macho_build_version: Option<macho::MachoBuildVersion>,
     /// PE linker-version `<major>.<minor>` string per milestone-098
     /// FR-003. Always emitted (`Some(...)`) for any PE binary that
     /// reaches the file-level emission path — packed/obfuscated PEs
     /// with zeroed optional-header bytes emit `"0.0"` (informative,
-    /// correlates with `mikebom:binary-packed`). `None` for non-PE.
+    /// correlates with `waybill:binary-packed`). `None` for non-PE.
     pub pe_linker_version: Option<String>,
     /// Milestone 104 — role classification (Application /
     /// SharedLibrary / Object / Other) derived from the format
@@ -632,10 +632,10 @@ pub(super) fn make_file_level_component(
         detected_go: if detected_go { Some(true) } else { None },
         confidence: None,
         // Milestone 096 Clarification Q2: always-emit
-        // `mikebom:binary-packed` on every file-level binary
+        // `waybill:binary-packed` on every file-level binary
         // component. Value is the lowercase packer name when one is
         // detected (currently `"upx"` only), `"none"` otherwise.
-        // Matches the existing `mikebom:binary-stripped` always-emit
+        // Matches the existing `waybill:binary-stripped` always-emit
         // convention so downstream filters can use value-equality
         // without presence checks.
         binary_packed: Some(
@@ -672,12 +672,12 @@ fn build_binary_identity_annotations(
     bag
 }
 
-/// Milestone 029: emit `mikebom:detected-cargo-auditable = true` when
+/// Milestone 029: emit `waybill:detected-cargo-auditable = true` when
 /// the binary carries a parsed cargo-auditable manifest. Cross-link
 /// annotation that lets consumers find the per-crate
 /// `pkg:cargo/<name>@<version>` components emitted by
 /// `cargo_auditable_packages_to_entries` without scanning every
-/// component. The Rust analog of `mikebom:detected-go = true` (set
+/// component. The Rust analog of `waybill:detected-go = true` (set
 /// directly on `PackageDbEntry::detected_go` for Go binaries via the
 /// milestone-005 `detected_go` field — kept typed because Go support
 /// predates the bag).
@@ -687,7 +687,7 @@ fn build_cargo_auditable_cross_link(
     let mut bag = std::collections::BTreeMap::new();
     if scan.cargo_auditable.is_some() {
         bag.insert(
-            "mikebom:detected-cargo-auditable".to_string(),
+            "waybill:detected-cargo-auditable".to_string(),
             serde_json::Value::Bool(true),
         );
     }
@@ -705,19 +705,19 @@ fn build_elf_identity_annotations(
     let mut bag = std::collections::BTreeMap::new();
     if let Some(ref id) = scan.build_id {
         bag.insert(
-            "mikebom:elf-build-id".to_string(),
+            "waybill:elf-build-id".to_string(),
             serde_json::Value::String(id.clone()),
         );
     }
     if !scan.runpath.is_empty() {
         bag.insert(
-            "mikebom:elf-runpath".to_string(),
+            "waybill:elf-runpath".to_string(),
             serde_json::json!(scan.runpath),
         );
     }
     if let Some(ref dl) = scan.debuglink {
         bag.insert(
-            "mikebom:elf-debuglink".to_string(),
+            "waybill:elf-debuglink".to_string(),
             serde_json::json!({
                 "file": dl.file,
                 "crc32": format!("{:08x}", dl.crc32),
@@ -730,7 +730,7 @@ fn build_elf_identity_annotations(
     // "we don't know who built it" signal.
     if !scan.comment_stamps.is_empty() {
         bag.insert(
-            "mikebom:elf-compiler-stamps".to_string(),
+            "waybill:elf-compiler-stamps".to_string(),
             serde_json::json!(scan.comment_stamps),
         );
     }
@@ -741,65 +741,65 @@ fn build_elf_identity_annotations(
 /// fields on `BinaryScan` into bag entries. Same skip-on-empty
 /// contract as the ELF helper. Each annotation key names the source
 /// LC_* command as a stable cross-format identity hint:
-/// - `mikebom:macho-uuid` ← LC_UUID (milestone 024)
-/// - `mikebom:macho-rpath` ← LC_RPATH (024)
-/// - `mikebom:macho-min-os` ← LC_BUILD_VERSION or LC_VERSION_MIN_* (024)
-/// - `mikebom:macho-codesign-identifier` ← LC_CODE_SIGNATURE
+/// - `waybill:macho-uuid` ← LC_UUID (milestone 024)
+/// - `waybill:macho-rpath` ← LC_RPATH (024)
+/// - `waybill:macho-min-os` ← LC_BUILD_VERSION or LC_VERSION_MIN_* (024)
+/// - `waybill:macho-codesign-identifier` ← LC_CODE_SIGNATURE
 ///   SuperBlob CodeDirectory.identOffset (milestone 030)
-/// - `mikebom:macho-codesign-flags` ← CodeDirectory.flags (030)
-/// - `mikebom:macho-codesign-team-id` ← CodeDirectory.teamOffset (030)
+/// - `waybill:macho-codesign-flags` ← CodeDirectory.flags (030)
+/// - `waybill:macho-codesign-team-id` ← CodeDirectory.teamOffset (030)
 fn build_macho_identity_annotations(
     scan: &BinaryScan,
 ) -> std::collections::BTreeMap<String, serde_json::Value> {
     let mut bag = std::collections::BTreeMap::new();
     if let Some(ref uuid) = scan.macho_uuid {
         bag.insert(
-            "mikebom:macho-uuid".to_string(),
+            "waybill:macho-uuid".to_string(),
             serde_json::Value::String(uuid.clone()),
         );
     }
     if !scan.macho_rpath.is_empty() {
         bag.insert(
-            "mikebom:macho-rpath".to_string(),
+            "waybill:macho-rpath".to_string(),
             serde_json::json!(scan.macho_rpath),
         );
     }
     if let Some(ref min_os) = scan.macho_min_os {
         bag.insert(
-            "mikebom:macho-min-os".to_string(),
+            "waybill:macho-min-os".to_string(),
             serde_json::Value::String(min_os.clone()),
         );
     }
     if let Some(ref id) = scan.macho_codesign_identifier {
         bag.insert(
-            "mikebom:macho-codesign-identifier".to_string(),
+            "waybill:macho-codesign-identifier".to_string(),
             serde_json::Value::String(id.clone()),
         );
     }
     if !scan.macho_codesign_flags.is_empty() {
         bag.insert(
-            "mikebom:macho-codesign-flags".to_string(),
+            "waybill:macho-codesign-flags".to_string(),
             serde_json::json!(scan.macho_codesign_flags),
         );
     }
     if let Some(ref team) = scan.macho_codesign_team_id {
         bag.insert(
-            "mikebom:macho-codesign-team-id".to_string(),
+            "waybill:macho-codesign-team-id".to_string(),
             serde_json::Value::String(team.clone()),
         );
     }
     // Milestone 098 FR-002 — LC_BUILD_VERSION full record. Emits two
     // properties when the load command is present:
-    //   - `mikebom:macho-build-version`: structured object with
+    //   - `waybill:macho-build-version`: structured object with
     //     platform/min_os/sdk
-    //   - `mikebom:macho-build-tools`: array of {tool, version} pairs
+    //   - `waybill:macho-build-tools`: array of {tool, version} pairs
     //     (only when the tools list is non-empty)
     // Omitted entirely (FR-007) when LC_BUILD_VERSION is absent — the
-    // milestone-024 `mikebom:macho-min-os` flat property continues to
+    // milestone-024 `waybill:macho-min-os` flat property continues to
     // emit independently for legacy LC_VERSION_MIN_* binaries.
     if let Some(ref bv) = scan.macho_build_version {
         bag.insert(
-            "mikebom:macho-build-version".to_string(),
+            "waybill:macho-build-version".to_string(),
             serde_json::json!({
                 "platform": bv.platform,
                 "min_os": bv.min_os,
@@ -813,7 +813,7 @@ fn build_macho_identity_annotations(
                 .map(|(tool, version)| serde_json::json!({"tool": tool, "version": version}))
                 .collect();
             bag.insert(
-                "mikebom:macho-build-tools".to_string(),
+                "waybill:macho-build-tools".to_string(),
                 serde_json::Value::Array(tools_json),
             );
         }
@@ -825,39 +825,39 @@ fn build_macho_identity_annotations(
 /// `BinaryScan` into bag entries. Same skip-on-empty contract as the
 /// ELF + Mach-O helpers. Bag keys carry the source IMAGE_* field for
 /// cross-format identity:
-/// - `mikebom:pe-pdb-id`    ← IMAGE_DEBUG_DIRECTORY CodeView record
-/// - `mikebom:pe-machine`   ← IMAGE_FILE_HEADER.Machine
-/// - `mikebom:pe-subsystem` ← IMAGE_OPTIONAL_HEADER.Subsystem
+/// - `waybill:pe-pdb-id`    ← IMAGE_DEBUG_DIRECTORY CodeView record
+/// - `waybill:pe-machine`   ← IMAGE_FILE_HEADER.Machine
+/// - `waybill:pe-subsystem` ← IMAGE_OPTIONAL_HEADER.Subsystem
 fn build_pe_identity_annotations(
     scan: &BinaryScan,
 ) -> std::collections::BTreeMap<String, serde_json::Value> {
     let mut bag = std::collections::BTreeMap::new();
     if let Some(ref id) = scan.pe_pdb_id {
         bag.insert(
-            "mikebom:pe-pdb-id".to_string(),
+            "waybill:pe-pdb-id".to_string(),
             serde_json::Value::String(id.clone()),
         );
     }
     if let Some(ref machine) = scan.pe_machine {
         bag.insert(
-            "mikebom:pe-machine".to_string(),
+            "waybill:pe-machine".to_string(),
             serde_json::Value::String(machine.clone()),
         );
     }
     if let Some(ref subsystem) = scan.pe_subsystem {
         bag.insert(
-            "mikebom:pe-subsystem".to_string(),
+            "waybill:pe-subsystem".to_string(),
             serde_json::Value::String(subsystem.clone()),
         );
     }
     // Milestone 098 FR-003 — PE linker-version always-emit on
     // parseable PEs. `pe_linker_version` is `Some(...)` whenever
     // the PE parser succeeded (zero-zero → "0.0"); `None` only when
-    // parse_pe_identity itself failed, in which case mikebom already
+    // parse_pe_identity itself failed, in which case waybill already
     // dropped the binary upstream.
     if let Some(ref lv) = scan.pe_linker_version {
         bag.insert(
-            "mikebom:pe-linker-version".to_string(),
+            "waybill:pe-linker-version".to_string(),
             serde_json::Value::String(lv.clone()),
         );
     }
@@ -1273,7 +1273,7 @@ mod tests {
         // `detected_go = true` when the caller's `go_in_linux`
         // check fires. The emitted PackageDbEntry carries
         // `detected_go = Some(true)` so the CDX emitter surfaces
-        // `mikebom:detected-go = true` on the file-level
+        // `waybill:detected-go = true` on the file-level
         // component, cross-linking it with the sibling
         // `pkg:golang/.../module@version` entries from
         // `go_binary.rs`.
@@ -1328,18 +1328,18 @@ mod tests {
         let entry = make_file_level_component(&path, b"sample", &scan, false);
         assert_eq!(entry.extra_annotations.len(), 3);
         assert_eq!(
-            entry.extra_annotations.get("mikebom:elf-build-id"),
+            entry.extra_annotations.get("waybill:elf-build-id"),
             Some(&serde_json::Value::String("deadbeef".repeat(5))),
         );
         assert_eq!(
-            entry.extra_annotations.get("mikebom:elf-runpath"),
+            entry.extra_annotations.get("waybill:elf-runpath"),
             Some(&serde_json::json!([
                 "$ORIGIN/../lib",
                 "/opt/vendor/lib"
             ])),
         );
         assert_eq!(
-            entry.extra_annotations.get("mikebom:elf-debuglink"),
+            entry.extra_annotations.get("waybill:elf-debuglink"),
             Some(&serde_json::json!({
                 "file": "with-all.debug",
                 "crc32": "deadbeef",
@@ -1348,7 +1348,7 @@ mod tests {
     }
 
     /// When BinaryScan carries no ELF identity fields, the bag is
-    /// empty — no `mikebom:elf-*` annotations slip through.
+    /// empty — no `waybill:elf-*` annotations slip through.
     #[test]
     fn make_file_level_component_empty_bag_when_elf_signals_absent() {
         let tmp = tempfile::tempdir().unwrap();
@@ -1375,11 +1375,11 @@ mod tests {
         let entry = make_file_level_component(&path, b"only-build-id", &scan, false);
         assert_eq!(entry.extra_annotations.len(), 1);
         assert_eq!(
-            entry.extra_annotations.get("mikebom:elf-build-id"),
+            entry.extra_annotations.get("waybill:elf-build-id"),
             Some(&serde_json::Value::String("c0ffee".to_string())),
         );
-        assert!(!entry.extra_annotations.contains_key("mikebom:elf-runpath"));
-        assert!(!entry.extra_annotations.contains_key("mikebom:elf-debuglink"));
+        assert!(!entry.extra_annotations.contains_key("waybill:elf-runpath"));
+        assert!(!entry.extra_annotations.contains_key("waybill:elf-debuglink"));
     }
 
     /// Milestone 028: a fully-populated PE BinaryScan emits all three
@@ -1399,17 +1399,17 @@ mod tests {
         let entry = make_file_level_component(&path, b"sample", &scan, false);
         assert_eq!(entry.extra_annotations.len(), 3);
         assert_eq!(
-            entry.extra_annotations.get("mikebom:pe-pdb-id"),
+            entry.extra_annotations.get("waybill:pe-pdb-id"),
             Some(&serde_json::Value::String(
                 "0123456789abcdeffedcba9876543210:7".to_string(),
             )),
         );
         assert_eq!(
-            entry.extra_annotations.get("mikebom:pe-machine"),
+            entry.extra_annotations.get("waybill:pe-machine"),
             Some(&serde_json::Value::String("amd64".to_string())),
         );
         assert_eq!(
-            entry.extra_annotations.get("mikebom:pe-subsystem"),
+            entry.extra_annotations.get("waybill:pe-subsystem"),
             Some(&serde_json::Value::String("console".to_string())),
         );
     }
@@ -1431,19 +1431,19 @@ mod tests {
 
         let entry = make_file_level_component(&path, b"stripped", &scan, false);
         assert_eq!(entry.extra_annotations.len(), 2);
-        assert!(!entry.extra_annotations.contains_key("mikebom:pe-pdb-id"));
+        assert!(!entry.extra_annotations.contains_key("waybill:pe-pdb-id"));
         assert_eq!(
-            entry.extra_annotations.get("mikebom:pe-machine"),
+            entry.extra_annotations.get("waybill:pe-machine"),
             Some(&serde_json::Value::String("arm64".to_string())),
         );
         assert_eq!(
-            entry.extra_annotations.get("mikebom:pe-subsystem"),
+            entry.extra_annotations.get("waybill:pe-subsystem"),
             Some(&serde_json::Value::String("efi-application".to_string())),
         );
     }
 
     /// Milestone 029: a populated cargo-auditable manifest emits the
-    /// `mikebom:detected-cargo-auditable = true` cross-link annotation
+    /// `waybill:detected-cargo-auditable = true` cross-link annotation
     /// on the file-level component.
     #[test]
     fn make_file_level_component_emits_detected_cargo_auditable_when_manifest_present() {
@@ -1457,7 +1457,7 @@ mod tests {
 
         let entry = make_file_level_component(&path, b"sample", &scan, false);
         assert_eq!(
-            entry.extra_annotations.get("mikebom:detected-cargo-auditable"),
+            entry.extra_annotations.get("waybill:detected-cargo-auditable"),
             Some(&serde_json::Value::Bool(true)),
         );
     }
@@ -1475,7 +1475,7 @@ mod tests {
         let entry = make_file_level_component(&path, b"plain", &scan, false);
         assert!(!entry
             .extra_annotations
-            .contains_key("mikebom:detected-cargo-auditable"));
+            .contains_key("waybill:detected-cargo-auditable"));
     }
 
     /// Milestone 029: a 3-crate manifest emits 3 per-crate
@@ -1559,18 +1559,18 @@ mod tests {
             ]
         );
 
-        // myapp carries the `mikebom:cargo-auditable-source = "local"`
+        // myapp carries the `waybill:cargo-auditable-source = "local"`
         // annotation (non-registry sources surface). Runtime kind is
         // suppressed (the implied default).
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:cargo-auditable-source"),
+                .get("waybill:cargo-auditable-source"),
             Some(&serde_json::Value::String("local".to_string())),
         );
         assert!(!entries[0]
             .extra_annotations
-            .contains_key("mikebom:cargo-auditable-kind"));
+            .contains_key("waybill:cargo-auditable-kind"));
     }
 
     // ============================================================
@@ -1649,7 +1649,7 @@ mod tests {
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:cargo-vcs-source-url")
+                .get("waybill:cargo-vcs-source-url")
                 .and_then(|v| v.as_str()),
             Some("https://github.com/example/mycrate"),
         );

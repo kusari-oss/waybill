@@ -21,7 +21,7 @@
 //!
 //! Pattern mirrors `gem::strip_ruby_comment` and
 //! `golang::legacy::strip_line_comment` (single-line strippers already
-//! in mikebom). This helper extends those with block-comment +
+//! in waybill). This helper extends those with block-comment +
 //! string-boundary awareness + trailing-comma stripping.
 
 /// Strip C-style line comments (`//`), block comments (`/* */`), AND
@@ -121,7 +121,7 @@ enum State {
 /// (past whitespace) by `]` or `}` is removed. String-literal contents
 /// are preserved verbatim.
 ///
-/// Milestone 189 (#555) — fix for Fable5's audit finding that mikebom
+/// Milestone 189 (#555) — fix for Fable5's audit finding that waybill
 /// silently truncated bun.lock parses to manifest-tier only (282
 /// components vs 1584 for the full transitive graph).
 fn strip_trailing_commas(input: &str) -> String {

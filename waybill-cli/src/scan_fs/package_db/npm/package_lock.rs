@@ -181,21 +181,21 @@ pub(crate) fn parse_package_lock(
         let mut depends_set: std::collections::BTreeMap<String, String> =
             std::collections::BTreeMap::new();
         // Milestone 147 US2: track which peer-driven edges were
-        // emitted so we can stamp a `mikebom:peer-edge-targets`
+        // emitted so we can stamp a `waybill:peer-edge-targets`
         // annotation listing their PURLs. BTreeSet gives sort +
         // dedup for free (research §A — alphabetical order matches
-        // milestone-145 `mikebom:file-paths` precedent).
+        // milestone-145 `waybill:file-paths` precedent).
         let mut peer_edge_targets: std::collections::BTreeSet<String> =
             std::collections::BTreeSet::new();
         // Walk all four standard npm dep sections. peerDependencies were
         // historically skipped (matching Syft's behavior pre-147), but
         // milestone 147 enables them to close the orphan gap surfaced by
         // the Trivy comparison on the looker-frontend lockfile (Trivy
-        // emits peer-edges as DEPENDS_ON; 5 mikebom orphans dropped to 0
+        // emits peer-edges as DEPENDS_ON; 5 waybill orphans dropped to 0
         // matching Trivy).
         //
         // The install-vs-functional distinction is preserved via a
-        // mikebom:peer-edge-targets annotation on the source component
+        // waybill:peer-edge-targets annotation on the source component
         // listing the PURLs of peer-driven edges (Constitution Principle V
         // parity-bridging — CDX/SPDX 2.3/SPDX 3 all lack a native carrier
         // for per-edge peer-kind metadata). Documented in
@@ -298,7 +298,7 @@ pub(crate) fn parse_package_lock(
                 .map(serde_json::Value::String)
                 .collect();
             extra_annotations.insert(
-                "mikebom:peer-edge-targets".to_string(),
+                "waybill:peer-edge-targets".to_string(),
                 serde_json::Value::Array(sorted_arr),
             );
         }
@@ -307,7 +307,7 @@ pub(crate) fn parse_package_lock(
         // Precedence (highest wins):
         //   1. `dev: true`     → Development (m179 FR-015)
         //   2. `optional: true` AND NOT peer-optional → Optional (m180 US1)
-        //      + emit `mikebom:optional-derivation = "npm-optional-dependencies"`
+        //      + emit `waybill:optional-derivation = "npm-optional-dependencies"`
         //   3. otherwise → Runtime (unchanged)
         // The `is_peer && is_optional` combo identifies a peer-optional
         // entry per FR-006 — the m178 PROVIDED_DEPENDENCY_OF classification
@@ -320,7 +320,7 @@ pub(crate) fn parse_package_lock(
             Some(LifecycleScope::Development)
         } else if is_optional && !is_peer {
             extra_annotations.insert(
-                "mikebom:optional-derivation".to_string(),
+                "waybill:optional-derivation".to_string(),
                 serde_json::Value::String("npm-optional-dependencies".to_string()),
             );
             Some(LifecycleScope::Optional)
@@ -783,7 +783,7 @@ mod tests {
         // Milestone 147 (closes Trivy-comparison orphan gap):
         // peerDependencies emit as DEPENDS_ON edges when the peer is
         // actually installed in the lockfile. Pre-147 the edge was
-        // skipped (matching Syft); post-147 mikebom matches Trivy's
+        // skipped (matching Syft); post-147 waybill matches Trivy's
         // npm-7+ auto-install convention.
         //
         // Reproducer: mlly declares `pathe` ONLY via peerDependencies
@@ -838,7 +838,7 @@ mod tests {
             mlly.depends
         );
         assert!(
-            !mlly.extra_annotations.contains_key("mikebom:peer-edge-targets"),
+            !mlly.extra_annotations.contains_key("waybill:peer-edge-targets"),
             "FR-002/FR-005: unmet peer must NOT contribute to peer-edge-targets; got: {:?}",
             mlly.extra_annotations
         );
@@ -873,7 +873,7 @@ mod tests {
             parent.depends
         );
         assert!(
-            !parent.extra_annotations.contains_key("mikebom:peer-edge-targets"),
+            !parent.extra_annotations.contains_key("waybill:peer-edge-targets"),
             "FR-003: name handled by regular section must NOT appear in peer-edge-targets; got: {:?}",
             parent.extra_annotations
         );
@@ -882,7 +882,7 @@ mod tests {
     #[test]
     fn peer_edge_targets_annotation_present_md147() {
         // SC-003 / FR-004: ACTUALLY-resolved peer ⇒ component carries
-        // mikebom:peer-edge-targets as a native JSON array of PURL
+        // waybill:peer-edge-targets as a native JSON array of PURL
         // strings naming the peer-driven targets.
         let lockfile = serde_json::json!({
             "lockfileVersion": 3,
@@ -899,8 +899,8 @@ mod tests {
         let mlly = entries.iter().find(|e| e.name == "mlly").expect("mlly");
         let anno = mlly
             .extra_annotations
-            .get("mikebom:peer-edge-targets")
-            .expect("milestone-147: mlly MUST carry mikebom:peer-edge-targets annotation");
+            .get("waybill:peer-edge-targets")
+            .expect("milestone-147: mlly MUST carry waybill:peer-edge-targets annotation");
         assert_eq!(
             anno,
             &serde_json::json!(["pkg:npm/pathe@2.0.3"]),
@@ -911,7 +911,7 @@ mod tests {
     #[test]
     fn peer_annotation_omitted_when_set_empty_md147() {
         // FR-005: component with zero peer-driven edges must NOT
-        // carry the mikebom:peer-edge-targets key (omitted, not
+        // carry the waybill:peer-edge-targets key (omitted, not
         // empty-array).
         let lockfile = serde_json::json!({
             "lockfileVersion": 3,
@@ -926,7 +926,7 @@ mod tests {
         let entries = parse_package_lock(&lockfile, "/tmp/lock.json", false);
         let parent = entries.iter().find(|e| e.name == "parent").expect("parent");
         assert!(
-            !parent.extra_annotations.contains_key("mikebom:peer-edge-targets"),
+            !parent.extra_annotations.contains_key("waybill:peer-edge-targets"),
             "FR-005: components with zero peer-driven edges MUST NOT carry the annotation; got: {:?}",
             parent.extra_annotations
         );
@@ -958,7 +958,7 @@ mod tests {
         assert_eq!(
             parent
                 .extra_annotations
-                .get("mikebom:peer-edge-targets")
+                .get("waybill:peer-edge-targets")
                 .expect("annotation present"),
             &serde_json::json!([
                 "pkg:npm/axios@1.0.0",
@@ -1173,7 +1173,7 @@ mod tests {
         assert_eq!(
             fsevents
                 .extra_annotations
-                .get("mikebom:optional-derivation"),
+                .get("waybill:optional-derivation"),
             Some(&serde_json::Value::String(
                 "npm-optional-dependencies".to_string()
             ))
@@ -1206,8 +1206,8 @@ mod tests {
         assert!(
             !entry
                 .extra_annotations
-                .contains_key("mikebom:optional-derivation"),
-            "Development-classified entries MUST NOT carry mikebom:optional-derivation"
+                .contains_key("waybill:optional-derivation"),
+            "Development-classified entries MUST NOT carry waybill:optional-derivation"
         );
     }
 
@@ -1243,8 +1243,8 @@ mod tests {
         assert!(
             !react
                 .extra_annotations
-                .contains_key("mikebom:optional-derivation"),
-            "peer-optional entry MUST NOT carry mikebom:optional-derivation (FR-006)"
+                .contains_key("waybill:optional-derivation"),
+            "peer-optional entry MUST NOT carry waybill:optional-derivation (FR-006)"
         );
     }
 
@@ -1254,7 +1254,7 @@ mod tests {
         // `dependencies` and `optionalDependencies` at the same
         // package.json level results in npm's resolver setting
         // `optional: false` in the lockfile (non-optional wins in
-        // npm's own semantic). mikebom respects the resolver's output
+        // npm's own semantic). waybill respects the resolver's output
         // verbatim. This test pins the invariant: an entry with
         // `optional: false` explicitly stays Runtime.
         let src = serde_json::json!({

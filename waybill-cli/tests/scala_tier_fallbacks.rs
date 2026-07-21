@@ -105,20 +105,20 @@ libraryDependencies ++= Seq(
     // NO build.sbt.lock — triggers design-tier fallback per FR-005.
     let doc = run_scan(dir.path());
     let cats = component_with_name(&doc, "cats-core").expect("cats-core design-tier component");
-    assert_eq!(property_value(cats, "mikebom:sbom-tier"), Some("design"));
+    assert_eq!(property_value(cats, "waybill:sbom-tier"), Some("design"));
     assert_eq!(
-        property_value(cats, "mikebom:source-type"),
+        property_value(cats, "waybill:source-type"),
         Some("scala-sbt-design"),
     );
     // F6: %% dep carries scala-version-source annotation.
     assert_eq!(
-        property_value(cats, "mikebom:scala-version-source"),
+        property_value(cats, "waybill:scala-version-source"),
         Some("build-sbt-explicit"),
     );
     // Pure-Java dep does NOT carry scala-version-source.
     let postgres =
         component_with_name(&doc, "postgresql").expect("postgresql design-tier component");
-    assert_eq!(property_value(postgres, "mikebom:scala-version-source"), None);
+    assert_eq!(property_value(postgres, "waybill:scala-version-source"), None);
 }
 
 #[test]
@@ -140,7 +140,7 @@ fn q1_default_fallback_when_scalaversion_absent() {
         Some("pkg:maven/org.typelevel/cats-core_2.13@2.10.0"),
     );
     assert_eq!(
-        property_value(cats, "mikebom:scala-version-source"),
+        property_value(cats, "waybill:scala-version-source"),
         Some("default-fallback"),
     );
 }
@@ -195,8 +195,8 @@ lazy val worker = project.in(file("worker"))
     let main_modules: Vec<&Value> = all_components(&doc)
         .into_iter()
         .filter(|c| {
-            property_value(c, "mikebom:component-role") == Some("main-module")
-                && property_value(c, "mikebom:source-type") == Some("scala-main-module")
+            property_value(c, "waybill:component-role") == Some("main-module")
+                && property_value(c, "waybill:source-type") == Some("scala-main-module")
         })
         .collect();
     assert_eq!(

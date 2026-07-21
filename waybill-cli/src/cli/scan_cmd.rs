@@ -59,7 +59,7 @@ pub enum ImageSource {
     /// Milestone 206 (#440) — local podman image cache. Filesystem-only
     /// (no daemon/REST API). Requires the target image be pre-pulled
     /// via `podman pull` or `podman build`. Rootless preferred;
-    /// rootful supported when mikebom has read access to
+    /// rootful supported when waybill has read access to
     /// `/var/lib/containers/storage/`. Linux-only per spec Assumption 1.
     Podman,
     /// OCI distribution-spec registry pull (the milestone-031+
@@ -67,7 +67,7 @@ pub enum ImageSource {
     Remote,
 }
 
-/// Milestone 186 (#442) — where mikebom should get the SBOM: scan the image
+/// Milestone 186 (#442) — where waybill should get the SBOM: scan the image
 /// bytes or fetch a pre-existing SBOM via the OCI Distribution Spec v1.1
 /// Referrers API.
 ///
@@ -128,7 +128,7 @@ fn resolve_helm_chart_input(
         );
     }
     let tempdir = tempfile::Builder::new()
-        .prefix("mikebom-helm-chart-")
+        .prefix("waybill-helm-chart-")
         .tempdir()
         .with_context(|| "creating tempdir for --helm-chart tarball extraction")?;
     let bytes = std::fs::read(helm_chart_path).with_context(|| {
@@ -181,7 +181,7 @@ fn sbom_source_mode_wire_str(mode: SbomSourceMode) -> &'static str {
 }
 
 /// Milestone 186 — map a requested `--format` value to the referrer
-/// descriptor media type mikebom expects to see for byte-identical emission.
+/// descriptor media type waybill expects to see for byte-identical emission.
 /// Returns `None` for `--format` values without a canonical referrer media
 /// type mapping (SPDX 3 currently — the ecosystem hasn't converged on a
 /// stable media type registration as of m186's landing). Used at emission
@@ -223,7 +223,7 @@ pub struct ScanArgs {
     /// Image source-resolution order for `--image <ref>` (when the
     /// argument is an OCI reference, not a tarball path on disk).
     ///
-    /// Comma-separated list; mikebom tries each source in order and
+    /// Comma-separated list; waybill tries each source in order and
     /// stops at the first one that has the image. Default
     /// `docker,remote` matches trivy's `--image-src` and syft's
     /// auto-detection: prefer the local docker daemon's cache, fall
@@ -248,13 +248,13 @@ pub struct ScanArgs {
     /// platform is fixed by whatever `docker save` already wrote.
     ///
     /// Format: `<os>/<arch>` or `<os>/<arch>/<variant>`. Only `linux`
-    /// is supported as the OS — mikebom's package-database readers
+    /// is supported as the OS — waybill's package-database readers
     /// (dpkg / apk / rpm) are linux-rootfs-shaped, so non-Linux
     /// container images aren't a meaningful scan target.
     ///
     /// Common values: `linux/amd64`, `linux/arm64`, `linux/arm/v7`,
     /// `linux/arm/v6`, `linux/386`, `linux/ppc64le`, `linux/s390x`.
-    /// When omitted (default), mikebom auto-resolves to
+    /// When omitted (default), waybill auto-resolves to
     /// `linux/<host-arch>` matching the machine running the scan.
     ///
     /// Use case: a macOS arm64 dev machine scanning a `linux/amd64`
@@ -264,8 +264,8 @@ pub struct ScanArgs {
     pub image_platform: Option<String>,
 
     /// Disable the OCI blob cache for registry pulls. Equivalent to
-    /// `MIKEBOM_OCI_CACHE=0`. When set, every blob (config + layer)
-    /// is fetched from the registry on every scan, even if mikebom
+    /// `WAYBILL_OCI_CACHE=0`. When set, every blob (config + layer)
+    /// is fetched from the registry on every scan, even if waybill
     /// has already cached the same digest from a previous pull.
     /// Cache files on disk are untouched.
     ///
@@ -276,17 +276,17 @@ pub struct ScanArgs {
     /// Cap (in bytes) for the on-disk OCI blob cache. When the cache
     /// exceeds this size, oldest-mtime entries are evicted until the
     /// total drops below the cap. Default: 10 GB. Equivalent env
-    /// var: `MIKEBOM_OCI_CACHE_SIZE=<bytes>`.
+    /// var: `WAYBILL_OCI_CACHE_SIZE=<bytes>`.
     ///
     /// Cache location is resolved from (in priority order):
-    /// `$MIKEBOM_OCI_CACHE_DIR`, `$XDG_CACHE_HOME/mikebom/oci-layers`,
-    /// `$HOME/Library/Caches/mikebom/oci-layers` on macOS, otherwise
-    /// `$HOME/.cache/mikebom/oci-layers`.
+    /// `$WAYBILL_OCI_CACHE_DIR`, `$XDG_CACHE_HOME/waybill/oci-layers`,
+    /// `$HOME/Library/Caches/waybill/oci-layers` on macOS, otherwise
+    /// `$HOME/.cache/waybill/oci-layers`.
     #[arg(long, value_name = "BYTES")]
     pub oci_cache_size: Option<u64>,
 
     /// Issue #235 — directory containing Docker-format registry
-    /// credentials. mikebom probes `<DIR>/config.json`,
+    /// credentials. waybill probes `<DIR>/config.json`,
     /// `<DIR>/.dockerconfigjson` (K8s `kubernetes.io/dockerconfigjson`
     /// secret type), and `<DIR>/.dockercfg` (legacy K8s
     /// `kubernetes.io/dockercfg` secret type) in that order; the
@@ -295,23 +295,23 @@ pub struct ScanArgs {
     /// `credHelpers`), so the existing credential-resolution
     /// precedence applies inside the loaded config.
     ///
-    /// Use this when running mikebom in a container that mounts a
+    /// Use this when running waybill in a container that mounts a
     /// K8s `imagePullSecrets`-derived volume (typically at
     /// `/var/run/secrets/registry/`). For local/CI use with the
-    /// standard Docker keychain, leave this unset — mikebom falls
+    /// standard Docker keychain, leave this unset — waybill falls
     /// back to `$DOCKER_CONFIG/config.json` or
     /// `$HOME/.docker/config.json`.
     ///
-    /// Composes with `MIKEBOM_REGISTRY_<HOST>_USERNAME/_PASSWORD`
+    /// Composes with `WAYBILL_REGISTRY_<HOST>_USERNAME/_PASSWORD`
     /// env vars (per-registry, higher priority than the directory
-    /// probe) and `MIKEBOM_REGISTRY_USERNAME/_PASSWORD` (generic
+    /// probe) and `WAYBILL_REGISTRY_USERNAME/_PASSWORD` (generic
     /// fallback, also higher priority than the directory probe).
     /// See `docs/reference/identifiers.md` for the full credential
     /// resolution priority chain.
     #[arg(long = "registry-credentials-dir", value_name = "PATH")]
     pub registry_credentials_dir: Option<std::path::PathBuf>,
 
-    /// `--insecure-registry <HOST[:PORT]>` — repeatable. When set, mikebom
+    /// `--insecure-registry <HOST[:PORT]>` — repeatable. When set, waybill
     /// pulls from the named host over `http://` instead of `https://`.
     /// Host-only form matches any port; explicit `<host>:<port>` matches
     /// only that port. Match target is the user-facing registry name
@@ -363,7 +363,7 @@ pub struct ScanArgs {
     #[arg(long = "insecure-tls-skip-verify")]
     pub insecure_tls_skip_verify: bool,
 
-    /// Milestone 186 (#442) — where mikebom should get the SBOM: scan the
+    /// Milestone 186 (#442) — where waybill should get the SBOM: scan the
     /// image bytes, or fetch a pre-existing SBOM via the OCI Distribution
     /// Spec v1.1 Referrers API.
     ///
@@ -383,13 +383,13 @@ pub struct ScanArgs {
 
     /// Milestone 188 (#455) — Helm chart tarball or directory to scan.
     ///
-    /// When `<path>` ends in `.tgz`, mikebom extracts the tarball to a
+    /// When `<path>` ends in `.tgz`, waybill extracts the tarball to a
     /// tempdir and runs the scan pipeline against the extracted
     /// contents. When it is a directory, behavior is identical to
     /// `--path <path>` — Chart.yaml is auto-detected regardless.
     ///
     /// The `.tgz` MUST contain a `Chart.yaml` at the top-level
-    /// extracted directory; otherwise mikebom exits non-zero.
+    /// extracted directory; otherwise waybill exits non-zero.
     /// Directory inputs without Chart.yaml don't cause an error —
     /// other package-DB readers (npm / cargo / etc.) still run.
     ///
@@ -400,20 +400,20 @@ pub struct ScanArgs {
 
     /// Milestone 188 (#455) — Opt-in Helm template rendering.
     ///
-    /// When set, mikebom shells out to `helm template <chart-dir>`
+    /// When set, waybill shells out to `helm template <chart-dir>`
     /// before extracting container image references, resolving every
     /// `{{ .Values.image.tag }}` placeholder to a concrete value.
     /// Requires the `helm` binary on `$PATH`.
     ///
-    /// On failure (missing binary, non-zero exit, timeout), mikebom
+    /// On failure (missing binary, non-zero exit, timeout), waybill
     /// emits a WARN log and falls back to the default unrendered
     /// extraction — the scan does NOT abort. The emitted SBOM's
-    /// document-scope `mikebom:image-extraction-completeness`
+    /// document-scope `waybill:image-extraction-completeness`
     /// annotation surfaces whether extraction was "partial" (fallback)
     /// or "full" (helm succeeded).
     ///
     /// Timeout: 60 seconds by default; override via
-    /// `MIKEBOM_HELM_RENDER_TIMEOUT_SECS=<n>` env var.
+    /// `WAYBILL_HELM_RENDER_TIMEOUT_SECS=<n>` env var.
     ///
     /// Default (flag omitted): NO helm binary invocation. Zero
     /// external-tool calls per FR-013.
@@ -429,7 +429,7 @@ pub struct ScanArgs {
     ///
     /// Per-format form is required for multi-format emission. When
     /// omitted, each format writes to its own default filename
-    /// (`mikebom.cdx.json`, `mikebom.spdx.json`, …).
+    /// (`waybill.cdx.json`, `waybill.spdx.json`, …).
     #[arg(long, action = clap::ArgAction::Append, value_name = "[FMT=]PATH")]
     pub output: Vec<String>,
 
@@ -440,18 +440,18 @@ pub struct ScanArgs {
     ///
     /// Registered formats:
     /// - `cyclonedx-json` — CycloneDX 1.6 JSON (default filename
-    ///   `mikebom.cdx.json`).
+    ///   `waybill.cdx.json`).
     /// - `spdx-2.3-json` — SPDX 2.3 JSON (default filename
-    ///   `mikebom.spdx.json`).
+    ///   `waybill.spdx.json`).
     /// - `spdx-3-json` — SPDX 3.0.1 JSON-LD (default filename
-    ///   `mikebom.spdx3.json`). Full ecosystem coverage; production-
+    ///   `waybill.spdx3.json`). Full ecosystem coverage; production-
     ///   grade output with native-field + annotation parity vs.
     ///   CycloneDX and SPDX 2.3.
     /// - `spdx-3-json-experimental` [DEPRECATED] — deprecation alias
     ///   for `spdx-3-json`. Byte-identical output; prints a stderr
     ///   deprecation notice. Accepted through milestone 012;
     ///   removed in milestone 013. Set
-    ///   `MIKEBOM_NO_DEPRECATION_NOTICE=1` to suppress the warning
+    ///   `WAYBILL_NO_DEPRECATION_NOTICE=1` to suppress the warning
     ///   in CI logs during a controlled migration.
     #[arg(
         long,
@@ -509,7 +509,7 @@ pub struct ScanArgs {
     /// **By passing this flag, YOU (the operator) ASSERT that you have
     /// reviewed and verified the declared license data for accuracy.**
     /// Per SPDX 2.3 § 7.13 / SPDX 3.0.1 `licenseConcluded` carries the
-    /// analyst's reviewed conclusion; without this flag mikebom leaves
+    /// analyst's reviewed conclusion; without this flag waybill leaves
     /// `licenseConcluded` as `NOASSERTION` (no human verified) even
     /// when `licenseDeclared` is populated — technically correct but
     /// invisible to consumers that key on `concluded` (sbomqs,
@@ -518,7 +518,7 @@ pub struct ScanArgs {
     /// When set, every component whose `concluded_licenses` is empty
     /// AND `licenses` is non-empty gets its declared licenses copied to
     /// concluded, plus a per-component
-    /// `mikebom:license-concluded-source = "operator-asserted"`
+    /// `waybill:license-concluded-source = "operator-asserted"`
     /// annotation recording that the conclusion came from THIS FLAG (a
     /// formal operator assertion), not from external enrichment
     /// (ClearlyDefined / deps.dev). Components that already have a
@@ -557,8 +557,8 @@ pub struct ScanArgs {
     ///   forensic / compliance use cases cataloguing every hash on
     ///   disk.
     ///
-    /// Emitted file-tier components carry a `mikebom:component-tier =
-    /// "file"` annotation and a `mikebom:file-paths` JSON-encoded
+    /// Emitted file-tier components carry a `waybill:component-tier =
+    /// "file"` annotation and a `waybill:file-paths` JSON-encoded
     /// array of every observed path for the unique content.
     ///
     /// **Default flipped to `orphan` in milestone 133 US1.C per FR-015**
@@ -573,7 +573,7 @@ pub struct ScanArgs {
 
     /// Maximum file size (bytes) considered for file-tier emission.
     /// Files larger than this are skipped; the document-level
-    /// `mikebom:file-inventory-skipped-oversize` annotation reports
+    /// `waybill:file-inventory-skipped-oversize` annotation reports
     /// the skip count. Default 100 MB per FR-010.
     #[arg(long, default_value_t = 100 * 1024 * 1024)]
     pub file_inventory_size_limit: u64,
@@ -628,7 +628,7 @@ pub struct ScanArgs {
     /// require explicit opt-in. When enabled, version is backfilled
     /// from a co-located `version.txt` or `.version` file when present;
     /// otherwise the PURL has no version segment. Also accepts
-    /// `MIKEBOM_INCLUDE_VENDORED=1` env var which is read directly by
+    /// `WAYBILL_INCLUDE_VENDORED=1` env var which is read directly by
     /// the milestone-102 C/C++ readers in `read_all` (no clap-level
     /// env binding here, so the env var accepts "1"/"true"/etc. without
     /// clap's bool-env strictness).
@@ -644,9 +644,9 @@ pub struct ScanArgs {
     /// whose transitive `find_package` declarations should surface
     /// in the SBOM.
     ///
-    /// Also accepts `MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE=1` env var,
+    /// Also accepts `WAYBILL_CMAKE_THIRD_PARTY_RECURSIVE=1` env var,
     /// read directly by the milestone-156 cmake reader (mirrors the
-    /// `MIKEBOM_INCLUDE_VENDORED` env-var propagation pattern).
+    /// `WAYBILL_INCLUDE_VENDORED` env-var propagation pattern).
     #[arg(long)]
     pub cmake_third_party_recursive: bool,
 
@@ -674,7 +674,7 @@ pub struct ScanArgs {
 
     /// Path to a source-tier SBOM document (CDX 1.6 / SPDX 2.3 / SPDX 3
     /// JSON) that emitted components will be bound to per milestone 072
-    /// (FR-011). When set, mikebom emits a `mikebom:source-document-binding`
+    /// (FR-011). When set, waybill emits a `waybill:source-document-binding`
     /// annotation on each first-party component whose PURL appears in
     /// the source SBOM, plus a document-level cross-document reference
     /// (CDX `externalReferences[type:bom]`, SPDX `externalDocumentRefs` +
@@ -687,7 +687,7 @@ pub struct ScanArgs {
     /// `binding: unknown { reason: "source-not-found-in-bind-target" }`
     /// marker per FR-003.
     ///
-    /// Use `mikebom sbom verify-binding --image-sbom <out> --source-sbom <path>`
+    /// Use `waybill sbom verify-binding --image-sbom <out> --source-sbom <path>`
     /// to verify the binding after emission.
     #[arg(long, value_name = "PATH")]
     pub bind_to_source: Option<PathBuf>,
@@ -706,10 +706,10 @@ pub struct ScanArgs {
     /// stays `unknown { reason: "source-not-found-in-bind-target" }`.
     ///
     /// Requires `--bind-to-source` to have effect. Supplied otherwise,
-    /// mikebom emits a warning and the alias is discarded (the scan
+    /// waybill emits a warning and the alias is discarded (the scan
     /// proceeds; no alias is recorded in the emitted SBOM).
     ///
-    /// Also settable via `MIKEBOM_PKG_ALIAS` (comma-separated entries
+    /// Also settable via `WAYBILL_PKG_ALIAS` (comma-separated entries
     /// matching the per-flag syntax) for CI ergonomics.
     #[arg(
         long = "pkg-alias",
@@ -759,7 +759,7 @@ pub struct ScanArgs {
     /// remainder after the first `=`; values may contain `=`
     /// characters.
     ///
-    /// User-defined identifiers ride the `mikebom:identifiers`
+    /// User-defined identifiers ride the `waybill:identifiers`
     /// document-level annotation per Constitution Principle V's
     /// documented-exception path; SPDX 3 carries them natively in
     /// `Element.externalIdentifier[]`.
@@ -779,7 +779,7 @@ pub struct ScanArgs {
 
     /// Preserve userinfo (e.g., `USER:TOKEN@host`) in auto-detected git
     /// remote URLs when constructing `repo:` and `git:` identifiers.
-    /// By default, mikebom strips userinfo to prevent accidental
+    /// By default, waybill strips userinfo to prevent accidental
     /// credential disclosure in published SBOMs. Use this flag only
     /// when the credentials are deliberately non-sensitive (e.g., a
     /// public read-only deploy token, internal-network-only
@@ -792,7 +792,7 @@ pub struct ScanArgs {
     /// the artifact with the given content hash." Format:
     /// `sha256:<64-lowercase-hex>` or `sha512:<128-lowercase-hex>`.
     /// Repeatable for multi-subject SBOMs. On build-tier scans
-    /// (`mikebom trace run`), subject identifiers are auto-detected
+    /// (`waybill trace run`), subject identifiers are auto-detected
     /// from the in-toto attestation envelope's subject set; manual
     /// flags augment auto-detected entries (deduplicated by exact
     /// match per milestone 073). On source-tier and image-tier
@@ -908,7 +908,7 @@ pub struct ScanArgs {
     pub no_root_purl: bool,
 
     /// Issue #359 — operator-supplied full PURL string for the root
-    /// component. When set, mikebom emits this PURL verbatim in every
+    /// component. When set, waybill emits this PURL verbatim in every
     /// format (CDX `metadata.component.purl`, SPDX 2.3 root Package
     /// `externalRefs[purl]`, SPDX 3 root `software_packageUrl` +
     /// `externalIdentifier[packageUrl]`). The BOM-subject `name` +
@@ -944,7 +944,7 @@ pub struct ScanArgs {
     /// main-module identity as a `library`-typed entry in
     /// `components[]` rather than dropping it per the milestone-077
     /// clean-replacement default. The demoted entry carries a
-    /// `mikebom:demoted-from-main-module = "true"` annotation per
+    /// `waybill:demoted-from-main-module = "true"` annotation per
     /// Constitution Principle V parity-bridging (none of CDX 1.6
     /// `component.type`, SPDX 2.3 `primaryPackagePurpose`, or SPDX 3
     /// `software_softwarePurpose` expresses demote-provenance). No-op
@@ -966,7 +966,7 @@ pub struct ScanArgs {
     /// `metadata.tools.components[]` / `metadata.manufacturer` /
     /// `metadata.authors[]` (per Type), SPDX 2.3
     /// `creationInfo.creators[]` (verbatim), SPDX 3 new `Tool` /
-    /// `Organization` / `Person` element in `@graph`. mikebom's own
+    /// `Organization` / `Person` element in `@graph`. waybill's own
     /// auto-populated tool/organization entries are preserved alongside.
     #[arg(
         long = "creator",
@@ -1000,7 +1000,7 @@ pub struct ScanArgs {
     /// Free-text comment about the SBOM document as a whole. Single-
     /// valued. Lands at SPDX 2.3 `creationInfo.comment`, SPDX 3
     /// `Annotation` element of type `OTHER`, CDX 1.6 `bom.annotations[]`
-    /// (per the milestone-080 native-fields audit; no `mikebom:`
+    /// (per the milestone-080 native-fields audit; no `waybill:`
     /// parity bridge introduced).
     #[arg(long = "metadata-comment", value_name = "TEXT")]
     pub metadata_comment: Option<String>,
@@ -1033,7 +1033,7 @@ pub struct ScanArgs {
     /// Override the auto-detected SBOM type with an operator-asserted
     /// CISA SBOM Type. Valid values: design, source, build, analyzed,
     /// deployed, runtime. Document-level only — per-component
-    /// `mikebom:sbom-tier` annotations preserve auto-detected values.
+    /// `waybill:sbom-tier` annotations preserve auto-detected values.
     /// When set, CDX `metadata.lifecycles[]`, SPDX 2.3
     /// `creationInfo.comment` "Observed lifecycle phases", and SPDX 3
     /// `software_Sbom.software_sbomType[]` all collapse to a single-
@@ -1057,7 +1057,7 @@ pub struct ScanArgs {
     /// SPDX 2.3 spec defines the typed scoped variants for exactly
     /// the purpose of expressing dev/build/test scope on a
     /// dependency edge, and Constitution Principle X (Transparency)
-    /// requires mikebom to default to the spec-native mechanism that
+    /// requires waybill to default to the spec-native mechanism that
     /// carries the most consumer-actionable signal. Operators who
     /// pick `basic` accept information loss in exchange for
     /// compatibility — choose deliberately.
@@ -1070,7 +1070,7 @@ pub struct ScanArgs {
     /// for downstream consumers that don't implement the typed
     /// variants (Trivy, Syft, and tooling built on top of them).
     ///
-    /// In BOTH modes the `mikebom:lifecycle-scope` annotation is set
+    /// In BOTH modes the `waybill:lifecycle-scope` annotation is set
     /// on the target Package for non-runtime deps, so the scope
     /// distinction is recoverable from the document regardless of
     /// which mode is in effect. Only affects the `spdx-2.3-json`
@@ -1086,19 +1086,19 @@ pub struct ScanArgs {
     pub spdx2_relationship_compat: crate::generate::Spdx2RelationshipCompat,
 
     /// Milestone 108 — opt into the external symbol-fingerprint
-    /// corpus. Defaults to false: mikebom uses the in-source bundled
+    /// corpus. Defaults to false: waybill uses the in-source bundled
     /// 7-library corpus exactly as it did pre-108 (SC-003 byte-identity
-    /// guarantee). When set, mikebom loads fingerprint records from
+    /// guarantee). When set, waybill loads fingerprint records from
     /// the operator's per-host cache at the build-time-pinned SHA;
     /// cache-miss triggers a one-shot fetch from
-    /// `kusari-sandbox/mikebom-fingerprints` (skipped under `--offline`,
+    /// `kusari-sandbox/waybill-fingerprints` (skipped under `--offline`,
     /// falls back to bundled defaults on failure). Components
     /// identified via the symbol-fingerprint path then carry a
-    /// `mikebom:fingerprint-corpus-sha` annotation (12-hex SHA or
+    /// `waybill:fingerprint-corpus-sha` annotation (12-hex SHA or
     /// the `bundled` sentinel) per FR-005.
     ///
-    /// Also enabled via `MIKEBOM_FINGERPRINTS_CORPUS=1`.
-    #[arg(long, env = "MIKEBOM_FINGERPRINTS_CORPUS")]
+    /// Also enabled via `WAYBILL_FINGERPRINTS_CORPUS=1`.
+    #[arg(long, env = "WAYBILL_FINGERPRINTS_CORPUS")]
     pub fingerprints_corpus: bool,
 
     /// Milestone 110 Phase 5-Slim (FR-006) — declare additional
@@ -1108,11 +1108,11 @@ pub struct ScanArgs {
     /// warned-and-stripped (FR-007 is deferred to a follow-on slice).
     ///
     /// Requires `--fingerprints-corpus`. Sources from this flag are
-    /// UNION'd with `MIKEBOM_FINGERPRINTS_SOURCES` and the implicit
+    /// UNION'd with `WAYBILL_FINGERPRINTS_SOURCES` and the implicit
     /// milestone-108 default (unless `--fingerprints-source-no-default`
     /// is set).
     ///
-    /// Also settable via `MIKEBOM_FINGERPRINTS_SOURCES` (comma-
+    /// Also settable via `WAYBILL_FINGERPRINTS_SOURCES` (comma-
     /// separated).
     #[arg(
         long = "fingerprints-source",
@@ -1126,34 +1126,34 @@ pub struct ScanArgs {
     /// gapped runs that must NOT attempt the public-corpus fetch, or
     /// when the operator's own mirror is the only desired source.
     ///
-    /// Also settable via `MIKEBOM_FINGERPRINTS_NO_DEFAULT=1`.
+    /// Also settable via `WAYBILL_FINGERPRINTS_NO_DEFAULT=1`.
     #[arg(
         long = "fingerprints-source-no-default",
-        env = "MIKEBOM_FINGERPRINTS_NO_DEFAULT",
+        env = "WAYBILL_FINGERPRINTS_NO_DEFAULT",
     )]
     pub fingerprints_source_no_default: bool,
 
     /// Milestone 108 (US5) — override the build-time-embedded corpus
     /// SHA with a runtime-specified one. Format: 40-char lowercase hex.
     /// Requires `--fingerprints-corpus` (or
-    /// `MIKEBOM_FINGERPRINTS_CORPUS=1`); when the override is supplied
-    /// without the opt-in, mikebom emits a warning and ignores the
+    /// `WAYBILL_FINGERPRINTS_CORPUS=1`); when the override is supplied
+    /// without the opt-in, waybill emits a warning and ignores the
     /// override (the bundled fallback path is used). Use this to test
-    /// newer corpora before they're embedded in a mikebom release, or
+    /// newer corpora before they're embedded in a waybill release, or
     /// to pin a specific corpus version for reproducibility across
     /// machines whose embedded SHAs differ.
     ///
-    /// Also settable via `MIKEBOM_FINGERPRINTS_REV=<SHA>`.
+    /// Also settable via `WAYBILL_FINGERPRINTS_REV=<SHA>`.
     #[arg(
         long = "fingerprints-rev",
-        env = "MIKEBOM_FINGERPRINTS_REV",
+        env = "WAYBILL_FINGERPRINTS_REV",
         value_name = "SHA",
         value_parser = parse_fingerprints_rev_flag,
     )]
     pub fingerprints_rev: Option<String>,
 
     /// Milestone 173: opt-in Go cache-warming mode. `off` (default)
-    /// preserves the milestone-172 `mikebom:go-transitive-fallback-count`
+    /// preserves the milestone-172 `waybill:go-transitive-fallback-count`
     /// annotation as an actionable signal — a non-zero count tells
     /// operators their env is degraded. `per-workspace` invokes `go mod
     /// download` in every discovered Go workspace before the transitive
@@ -1163,7 +1163,7 @@ pub struct ScanArgs {
     ///
     /// No-op when `--offline` is set (the effective mode becomes
     /// `offline-inhibited` and is surfaced via the
-    /// `mikebom:go-cache-warming-mode` doc-scope annotation).
+    /// `waybill:go-cache-warming-mode` doc-scope annotation).
     ///
     /// Concurrency is controlled by `--warm-go-cache-concurrency`
     /// (default 4). No-op on non-Go scans.
@@ -1196,7 +1196,7 @@ pub struct ScanArgs {
     /// normally filters system paths (`/etc`, `/proc`), user caches
     /// (`~/.cache`), ephemeral paths (`/tmp`), and secret-adjacent
     /// paths (`/var/run/secrets`, `~/.ssh`, `~/.aws`, `*.key`,
-    /// `*_rsa` etc.) from the emitted `mikebom:source-read-set`
+    /// `*_rsa` etc.) from the emitted `waybill:source-read-set`
     /// annotation.
     ///
     /// When set, EVERY observed read on a compiler-invocation
@@ -1574,7 +1574,7 @@ fn image_auto_identifier(
     // it differs from the upstream registry's content digest. Operators
     // who need the registry-side digest can pass `--image-id
     // <ref>@sha256:<their-digest>` manually; auto-detection's job
-    // is to emit a maximally-informative identifier from what mikebom
+    // is to emit a maximally-informative identifier from what waybill
     // can observe.
     let digest = if extracted.manifest_digest.is_empty() {
         None
@@ -1870,7 +1870,7 @@ fn resolve_dispatch(
     // Also check the OpenVEX override against format outputs, since
     // the sidecar lands beside the SPDX file. No default path to
     // check when the override isn't set — the sidecar's default is
-    // `mikebom.openvex.json`, which can't collide with any
+    // `waybill.openvex.json`, which can't collide with any
     // registered format's default (cdx / spdx filenames are
     // distinct from openvex's).
     if let Some(openvex_path) = overrides.get(OPENVEX_PSEUDO_FORMAT) {
@@ -1897,7 +1897,7 @@ const SPDX_3_DEPRECATED_ALIAS: &str = "spdx-3-json-experimental";
 /// `spdx-3-json-experimental` deprecation notice. Set to any
 /// non-empty value to silence the stderr warning during a
 /// controlled migration; document bytes are unaffected either way.
-const NO_DEPRECATION_NOTICE_ENV: &str = "MIKEBOM_NO_DEPRECATION_NOTICE";
+const NO_DEPRECATION_NOTICE_ENV: &str = "WAYBILL_NO_DEPRECATION_NOTICE";
 
 /// Format the registered-id list for user-facing text. Appends
 /// ` [EXPERIMENTAL]` to any serializer where
@@ -2047,11 +2047,11 @@ async fn resolve_image_ref(
                 {
                     tracing::info!(image_ref = arg_str, "pulling image from registry");
                     let cache_disabled = args.no_oci_cache
-                        || std::env::var("MIKEBOM_OCI_CACHE").as_deref() == Ok("0");
+                        || std::env::var("WAYBILL_OCI_CACHE").as_deref() == Ok("0");
                     let cache_size_cap = if cache_disabled {
                         None
                     } else {
-                        let env_size = std::env::var("MIKEBOM_OCI_CACHE_SIZE")
+                        let env_size = std::env::var("WAYBILL_OCI_CACHE_SIZE")
                             .ok()
                             .and_then(|s| s.parse::<u64>().ok());
                         Some(
@@ -2086,12 +2086,12 @@ async fn resolve_image_ref(
                 {
                     anyhow::bail!(
                         "--image-src includes `remote`, but this build of \
-                         mikebom was compiled with `--no-default-features` \
+                         waybill was compiled with `--no-default-features` \
                          (the `oci-registry` Cargo feature is OFF), so OCI \
                          image references like `alpine:3.19` cannot be \
                          pulled from a registry. Either:\n\
                          (a) reinstall with the default feature set: \
-                         `cargo install mikebom`, or\n\
+                         `cargo install waybill`, or\n\
                          (b) pre-extract the image with \
                          `docker save <ref> -o image.tar` and pass \
                          `--image image.tar`, or\n\
@@ -2123,52 +2123,52 @@ pub async fn execute(
     // the env var that the C/C++ readers read directly. This avoids
     // plumbing through `scan_path`'s 75-callsite chain. The clap derive
     // already populates `args.include_vendored` from either the CLI
-    // flag or `MIKEBOM_INCLUDE_VENDORED=1` env (whichever was set first);
+    // flag or `WAYBILL_INCLUDE_VENDORED=1` env (whichever was set first);
     // we re-export to the env so `read_all`-internal readers see the
     // unified signal regardless of which input set it.
     // SAFETY: single-threaded at this point in the scan-cmd lifecycle.
     if args.include_vendored {
         // SAFETY: see comment above — single-threaded.
         unsafe {
-            std::env::set_var("MIKEBOM_INCLUDE_VENDORED", "1");
+            std::env::set_var("WAYBILL_INCLUDE_VENDORED", "1");
         }
     }
 
     // Milestone 188 (#455) — propagate `--helm-render` to the env var
     // that the helm reader consumes. Same zero-plumbing pattern as
-    // MIKEBOM_INCLUDE_VENDORED. Absent env var → HelmRenderMode::Off.
+    // WAYBILL_INCLUDE_VENDORED. Absent env var → HelmRenderMode::Off.
     // SAFETY: single-threaded at this point in the scan-cmd lifecycle.
     if args.helm_render {
         // SAFETY: see comment above — single-threaded.
         unsafe {
-            std::env::set_var("MIKEBOM_HELM_RENDER", "1");
+            std::env::set_var("WAYBILL_HELM_RENDER", "1");
         }
     }
 
     // Milestone 156: propagate `--cmake-third-party-recursive` to the
     // env var that the cmake reader reads directly. Same pattern as
-    // MIKEBOM_INCLUDE_VENDORED above — zero-plumbing propagation
+    // WAYBILL_INCLUDE_VENDORED above — zero-plumbing propagation
     // avoiding the 75-callsite scan_path -> read_all chain.
     // SAFETY: single-threaded at this point in the scan-cmd lifecycle.
     if args.cmake_third_party_recursive {
         // SAFETY: see comment above — single-threaded.
         unsafe {
-            std::env::set_var("MIKEBOM_CMAKE_THIRD_PARTY_RECURSIVE", "1");
+            std::env::set_var("WAYBILL_CMAKE_THIRD_PARTY_RECURSIVE", "1");
         }
     }
 
     // Milestone 108 FR-002: propagate the `--fingerprints-corpus`
     // opt-in to the env var that the binary-scan loop's fingerprint
-    // matcher reads directly. Same pattern as MIKEBOM_INCLUDE_VENDORED
-    // above. Clap's `env = "MIKEBOM_FINGERPRINTS_CORPUS"` derive picks
+    // matcher reads directly. Same pattern as WAYBILL_INCLUDE_VENDORED
+    // above. Clap's `env = "WAYBILL_FINGERPRINTS_CORPUS"` derive picks
     // up the env-set form; this re-export handles the
     // operator-passed-the-flag-but-not-the-env form. The matcher then
-    // calls `LoadOptions::from_env()` (which also reads `MIKEBOM_OFFLINE`,
+    // calls `LoadOptions::from_env()` (which also reads `WAYBILL_OFFLINE`,
     // already set by main.rs).
     if args.fingerprints_corpus {
         // SAFETY: see comment above — single-threaded.
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CORPUS", "1");
+            std::env::set_var("WAYBILL_FINGERPRINTS_CORPUS", "1");
         }
     }
 
@@ -2181,11 +2181,11 @@ pub async fn execute(
     // gate downstream will short-circuit before any fetch happens, so
     // the env vars are inert.
     if !args.fingerprints_source.is_empty() {
-        // SAFETY: env-mutation pattern matches MIKEBOM_FINGERPRINTS_CORPUS
+        // SAFETY: env-mutation pattern matches WAYBILL_FINGERPRINTS_CORPUS
         // above; called single-threaded before any scan thread spawns.
         unsafe {
             std::env::set_var(
-                "MIKEBOM_FINGERPRINTS_SOURCES",
+                "WAYBILL_FINGERPRINTS_SOURCES",
                 args.fingerprints_source.join(","),
             );
         }
@@ -2194,14 +2194,14 @@ pub async fn execute(
                 count = args.fingerprints_source.len(),
                 "--fingerprints-source declared without --fingerprints-corpus; \
                  the sources are parsed but no corpus loading will occur. \
-                 Add --fingerprints-corpus (or MIKEBOM_FINGERPRINTS_CORPUS=1) to enable.",
+                 Add --fingerprints-corpus (or WAYBILL_FINGERPRINTS_CORPUS=1) to enable.",
             );
         }
     }
     if args.fingerprints_source_no_default {
         // SAFETY: see comment above.
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_NO_DEFAULT", "1");
+            std::env::set_var("WAYBILL_FINGERPRINTS_NO_DEFAULT", "1");
         }
     }
 
@@ -2218,21 +2218,21 @@ pub async fn execute(
         } else {
             // SAFETY: see comment above — single-threaded.
             unsafe {
-                std::env::set_var("MIKEBOM_FINGERPRINTS_REV", rev);
+                std::env::set_var("WAYBILL_FINGERPRINTS_REV", rev);
             }
         }
     }
 
     // Milestone 173: propagate `--warm-go-cache` + `--warm-go-cache-
     // concurrency` to the Go reader via env vars (same convention as
-    // MIKEBOM_INCLUDE_VENDORED / MIKEBOM_DEEP_HASH). The reader
+    // WAYBILL_INCLUDE_VENDORED / WAYBILL_DEEP_HASH). The reader
     // consults these before invoking `warm_workspaces()`.
     //
     // Effective-mode reconciliation with `--offline` (FR-003): when
     // both `--offline` AND `--warm-go-cache=per-workspace` are set,
     // upgrade to `OfflineInhibited` and emit a warn-level log naming
     // the conflict. The mode is still surfaced via the
-    // `mikebom:go-cache-warming-mode` doc-scope annotation so the
+    // `waybill:go-cache-warming-mode` doc-scope annotation so the
     // operator's request is auditable.
     let effective_warm_mode: crate::scan_fs::package_db::golang::CacheWarmingMode = {
         use crate::scan_fs::package_db::golang::CacheWarmingMode;
@@ -2249,11 +2249,11 @@ pub async fn execute(
     // SAFETY: single-threaded at this point in the scan-cmd lifecycle.
     unsafe {
         std::env::set_var(
-            "MIKEBOM_WARM_GO_CACHE_MODE",
+            "WAYBILL_WARM_GO_CACHE_MODE",
             effective_warm_mode.as_wire_str(),
         );
         std::env::set_var(
-            "MIKEBOM_WARM_GO_CACHE_CONCURRENCY",
+            "WAYBILL_WARM_GO_CACHE_CONCURRENCY",
             args.warm_go_cache_concurrency.to_string(),
         );
     }
@@ -2372,7 +2372,7 @@ pub async fn execute(
                                     let default_name = registry
                                         .get(first_fmt)
                                         .map(|s| s.default_filename())
-                                        .unwrap_or("mikebom.sbom");
+                                        .unwrap_or("waybill.sbom");
                                     std::path::PathBuf::from(default_name)
                                 });
                             std::fs::write(&output_path, &sbom.bytes).with_context(|| {
@@ -2382,7 +2382,7 @@ pub async fn execute(
                                 )
                             })?;
                             // FR-007 / SC-005 audit log — operators consuming
-                            // mikebom logs identify referrer-sourced emissions
+                            // waybill logs identify referrer-sourced emissions
                             // from log content alone. Keys named to match the
                             // strings asserted by the m186 integration tests.
                             tracing::info!(
@@ -2459,7 +2459,7 @@ pub async fn execute(
     // in the resolved format list, print a two-line stderr notice
     // (deprecation directive + shape-change advisory) exactly once
     // per invocation. Suppress with
-    // `MIKEBOM_NO_DEPRECATION_NOTICE=<anything>` so CI logs of
+    // `WAYBILL_NO_DEPRECATION_NOTICE=<anything>` so CI logs of
     // pipelines on a controlled migration don't drown in repeats.
     // Bytes emitted are unaffected by this flag.
     if plan.formats.iter().any(|f| f == SPDX_3_DEPRECATED_ALIAS)
@@ -2493,7 +2493,7 @@ pub async fn execute(
     // without conflict.
     let mut _image_tempdir: Option<tempfile::TempDir> = None;
     // Milestone 206 (#440) — track which --image-src won the
-    // dispatch, so the C124 `mikebom:image-source` annotation
+    // dispatch, so the C124 `waybill:image-source` annotation
     // can be emitted (conditional per FR-005 byte-identity).
     let mut selected_image_source: Option<ImageSource> = None;
 
@@ -2646,7 +2646,7 @@ pub async fn execute(
     // Milestone 113 FR-014 / Constitution Principle X: when any
     // exclusion entry is active, install its snapshot via the
     // exclude_path thread-local so the CDX/SPDX 2.3/SPDX 3 metadata
-    // emitters can pick it up and emit `mikebom:exclude-path` at
+    // emitters can pick it up and emit `waybill:exclude-path` at
     // envelope level. The guard MUST outlive every emitter call
     // below so successive in-process scans (e.g. integration tests)
     // never leak state.
@@ -2660,7 +2660,7 @@ pub async fn execute(
     // Milestone 118 (#343 / FR-010) — when --exclude-path had ≥1 entry
     // in effect, surface the per-scan summary so operators can see how
     // many entries applied and how many directories were suppressed
-    // without paging through MIKEBOM_LOG=debug output. Per-walker debug
+    // without paging through WAYBILL_LOG=debug output. Per-walker debug
     // events emit centrally from `safe_walk` since milestone 114.
     // When the set is empty, preserve the pre-118 two-field shape
     // byte-identically (FR-010 emission gating).
@@ -2908,7 +2908,7 @@ pub async fn execute(
 
     // Milestone 111 (issue #225 Option A): assemble the operator's
     // `--pkg-alias` declarations into a deterministic AliasMap. CLI-
-    // supplied flags are concatenated with `MIKEBOM_PKG_ALIAS` env-var
+    // supplied flags are concatenated with `WAYBILL_PKG_ALIAS` env-var
     // entries; conflicts (same LHS, different RHS) abort the scan.
     let pkg_alias_map = build_pkg_alias_map(&args)?;
 
@@ -2928,7 +2928,7 @@ pub async fn execute(
 
     // Milestone 072 / T027: when `--bind-to-source <path>` is supplied,
     // resolve the source-tier SBOM and attach per-component
-    // `mikebom:source-document-binding` annotations to image-tier
+    // `waybill:source-document-binding` annotations to image-tier
     // components whose PURL has a counterpart in the source SBOM.
     // Per FR-011, failure to load the source SBOM aborts the scan.
     let bind_source_ctx: Option<waybill::binding::SourceSbomContext> = if let Some(
@@ -2977,7 +2977,7 @@ pub async fn execute(
     // to have overflowed or dropped. Milestone 212 audit (T007a): this
     // site is SCAN-MODE — no eBPF programs are loaded here, so
     // `ring_buffer_overflows: 0` is factually correct + FR-004 compliant.
-    // Real-trace attestations flow through `mikebom-cli/src/cli/scan.rs`
+    // Real-trace attestations flow through `waybill-cli/src/cli/scan.rs`
     // where the value comes from `counters::read_ring_buffer_drops`.
     let integrity = TraceIntegrity {
         ring_buffer_overflows: 0,
@@ -3091,7 +3091,7 @@ pub async fn execute(
     // Parse / I/O / schema-validation failures here exit non-zero
     // BEFORE any emitter runs per FR-002 / SC-005. When the flag is
     // absent the merge is skipped entirely, preserving byte-identity
-    // with pre-119 mikebom output per FR-013 / SC-006.
+    // with pre-119 waybill output per FR-013 / SC-006.
     let _supplement_guard = if let Some(path) = supplement_cdx.as_ref() {
         let supp = crate::supplement::load(path).with_context(|| {
             format!(
@@ -3118,7 +3118,7 @@ pub async fn execute(
         None
     };
 
-    // Milestone 133 US2.2 (FR-013): stamp `mikebom:layer-digest` on every
+    // Milestone 133 US2.2 (FR-013): stamp `waybill:layer-digest` on every
     // component whose `evidence.source_file_paths[0]` matches a path the
     // OCI layer extractor recorded. No-op for non-image scans (path map
     // is `None`). Must run AFTER component resolution + all annotations
@@ -3130,7 +3130,7 @@ pub async fn execute(
     );
 
     // Milestone 176 (US1 / FR-001): stamp per-component
-    // `mikebom:workspace-member` annotation on every component whose
+    // `waybill:workspace-member` annotation on every component whose
     // evidence.source_file_paths yields a derivable workspace root.
     // Uses the canonicalized scan root so `path+file://<abs>` URI-form
     // source paths (pip/cargo/npm main-modules) can have their scan-
@@ -3243,7 +3243,7 @@ pub async fn execute(
             ))
         };
 
-    // Milestone 167 (T011) — emit-time `mikebom:orphan-reason`
+    // Milestone 167 (T011) — emit-time `waybill:orphan-reason`
     // classifier. Stamps per-component annotations on BFS-unreachable
     // Go/npm components per the extended C45 vocabulary + fires the
     // FR-008 grep-friendly log with per-code counters. Runs AFTER
@@ -3251,7 +3251,7 @@ pub async fn execute(
     // dedupe, supplement merge, file-tier walker) and BEFORE the
     // ScanArtifacts bundle is built so the mutation lands on the
     // shared `components` Vec every emitter (CDX / SPDX 2.3 / SPDX 3)
-    // reads. The `mikebom:orphan-reason` annotation flows through
+    // reads. The `waybill:orphan-reason` annotation flows through
     // the format emitters unchanged via the existing per-format
     // `extra_annotations` serialization (parity-catalog C45).
     //
@@ -3384,7 +3384,7 @@ pub async fn execute(
         // new --sbom-type flag. When set, all three formats'
         // document-level lifecycle aggregations collapse to a
         // single-element output reflecting the asserted type;
-        // per-component `mikebom:sbom-tier` annotations preserve
+        // per-component `waybill:sbom-tier` annotations preserve
         // auto-detected values.
         sbom_type_override: args.sbom_type,
         // Issue #228: relationship-vocabulary compat flag (default
@@ -3396,7 +3396,7 @@ pub async fn execute(
         // detected (FR-009: no annotation emitted on clean scans).
         collisions_summary: collisions_summary.as_ref(),
         // Milestone 210 — scan-mode never populates the compiler-
-        // pipeline field; that data comes from `mikebom trace`
+        // pipeline field; that data comes from `waybill trace`
         // (eBPF-observed) and reaches the SBOM emitter via the
         // `sbom generate --attestation` code path. Preserving `None`
         // here per m208 defensive-default pattern.
@@ -3493,7 +3493,7 @@ pub async fn execute(
     //   1. Scan produced ≥1 Go component (FR-009 gate).
     //   2. `--offline` is NOT set.
     //   3. `--warm-go-cache` was NOT explicitly set (took default `off`).
-    //   4. The C117 `mikebom:go-transitive-fallback-count` value is > 0.
+    //   4. The C117 `waybill:go-transitive-fallback-count` value is > 0.
     // Suppressed otherwise. The literal string here MUST match
     // contracts/cli-surface.md verbatim so consumers can grep with a
     // stable substring.
@@ -3508,14 +3508,14 @@ pub async fn execute(
     };
     if advisory_ctx.should_advise() {
         tracing::info!(
-            "mikebom:go-transitive-fallback-count > 0 detected. Prime the cache with --warm-go-cache=per-workspace or 'go mod download' per workspace before scanning."
+            "waybill:go-transitive-fallback-count > 0 detected. Prime the cache with --warm-go-cache=per-workspace or 'go mod download' per workspace before scanning."
         );
     }
 
     // Milestone 176 — FR-004 advisory log. Emitted at INFO level
     // exactly once when TWO predicates hold:
     //   1. The scan detected N > 1 workspaces (union of every
-    //      component's `mikebom:workspace-member` annotation).
+    //      component's `waybill:workspace-member` annotation).
     //   2. The scan produced ≥1 component (else there's nothing to
     //      slice per-workspace and no useful advice to give).
     // Suppressed otherwise (single-project + bare-directory scans stay
@@ -3528,7 +3528,7 @@ pub async fn execute(
         use std::collections::BTreeSet;
         let mut workspaces: BTreeSet<String> = BTreeSet::new();
         for c in &components {
-            if let Some(v) = c.extra_annotations.get("mikebom:workspace-member") {
+            if let Some(v) = c.extra_annotations.get("waybill:workspace-member") {
                 if let Some(s) = v.as_str() {
                     if let Ok(paths) = serde_json::from_str::<Vec<String>>(s) {
                         for p in paths {
@@ -3541,7 +3541,7 @@ pub async fn execute(
         if workspaces.len() > 1 && !components.is_empty() {
             let list = workspaces.iter().cloned().collect::<Vec<_>>().join(", ");
             tracing::info!(
-                "monorepo shape detected: {} workspaces ({}). Downstream consumers can filter per-workspace via `mikebom:workspace-member`; see docs/reference/monorepos.md for jq recipes.",
+                "monorepo shape detected: {} workspaces ({}). Downstream consumers can filter per-workspace via `waybill:workspace-member`; see docs/reference/monorepos.md for jq recipes.",
                 workspaces.len(),
                 list,
             );
@@ -3555,9 +3555,9 @@ pub async fn execute(
     //      without `Gemfile.lock`, npm root `package.json` without
     //      `package-lock.json`, etc.).
     //   2. The scan produced ≥1 component (empty scans stay quiet).
-    //   3. The `MIKEBOM_NO_DESIGN_TIER_ADVISORY` env var is unset (or
+    //   3. The `WAYBILL_NO_DESIGN_TIER_ADVISORY` env var is unset (or
     //      set to a value other than "1" / "true"). Env-var precedent:
-    //      milestone-110 `MIKEBOM_NO_DEPRECATION_NOTICE=1`.
+    //      milestone-110 `WAYBILL_NO_DEPRECATION_NOTICE=1`.
     // NOT gated on --offline: the remediation (generate a lockfile,
     // install into a venv) works fully offline (FR-002 explicit).
     // Stable grep substring: "design-tier components detected: " —
@@ -3567,7 +3567,7 @@ pub async fn execute(
             .iter()
             .filter(|c| c.sbom_tier.as_deref() == Some("design"))
             .count();
-        let suppress = std::env::var("MIKEBOM_NO_DESIGN_TIER_ADVISORY")
+        let suppress = std::env::var("WAYBILL_NO_DESIGN_TIER_ADVISORY")
             .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
             .unwrap_or(false);
         if design_tier_count > 0 && !components.is_empty() && !suppress {
@@ -3576,7 +3576,7 @@ pub async fn execute(
                  resolved versions. Remediation: generate a lockfile (uv lock / poetry \
                  lock / pip-compile / npm install / bundle lock / cargo generate-lockfile) \
                  OR install into a venv and re-scan. See \
-                 docs/reference/reading-a-mikebom-sbom.md#design-tier-components for jq \
+                 docs/reference/reading-a-waybill-sbom.md#design-tier-components for jq \
                  recipes and per-ecosystem guidance."
             );
         }
@@ -3675,9 +3675,9 @@ mod advisory_tests {
 /// Resolve the `created` timestamp for the SBOM output config.
 ///
 /// Defaults to `chrono::Utc::now()`. **Test-only override**: when the
-/// `MIKEBOM_FIXED_TIMESTAMP` env var is set to an RFC 3339 string,
+/// `WAYBILL_FIXED_TIMESTAMP` env var is set to an RFC 3339 string,
 /// that value is used instead — required for tests that compare raw
-/// SBOM bytes across two `mikebom sbom scan` subprocesses (e.g.
+/// SBOM bytes across two `waybill sbom scan` subprocesses (e.g.
 /// `format_dispatch::spdx_3_alias_bytes_are_byte_identical_to_stable_identifier`).
 /// Without the override, the two subprocesses' independent
 /// `Utc::now()` calls can cross a second boundary on slow runners
@@ -3689,7 +3689,7 @@ mod advisory_tests {
 /// than panic, since this is a defensive belt-and-braces helper, not
 /// a hard contract.
 fn scan_created_timestamp() -> chrono::DateTime<chrono::Utc> {
-    if let Ok(s) = std::env::var("MIKEBOM_FIXED_TIMESTAMP") {
+    if let Ok(s) = std::env::var("WAYBILL_FIXED_TIMESTAMP") {
         if let Ok(parsed) = chrono::DateTime::parse_from_rfc3339(&s) {
             return parsed.with_timezone(&chrono::Utc);
         }
@@ -3698,7 +3698,7 @@ fn scan_created_timestamp() -> chrono::DateTime<chrono::Utc> {
 }
 
 /// Milestone 072 / T027 helper: walk the resolved component set and
-/// attach a `mikebom:source-document-binding` annotation to each
+/// attach a `waybill:source-document-binding` annotation to each
 /// component whose PURL appears in the source-tier SBOM.
 ///
 /// Components matching by PURL get the source-tier's binding metadata
@@ -3714,7 +3714,7 @@ fn scan_created_timestamp() -> chrono::DateTime<chrono::Utc> {
 /// transparently — no per-format emission code change needed for
 /// per-component binding annotations.
 /// Milestone 111: assemble the operator's `--pkg-alias` declarations
-/// and `MIKEBOM_PKG_ALIAS` env-var entries into a single deterministic
+/// and `WAYBILL_PKG_ALIAS` env-var entries into a single deterministic
 /// `AliasMap`. Conflicts (same LHS, different RHS) abort the scan with
 /// an actionable error per FR-008.
 ///
@@ -3734,14 +3734,14 @@ fn build_pkg_alias_map(
     }
 
     // Then env-var entries.
-    if let Ok(raw) = std::env::var("MIKEBOM_PKG_ALIAS") {
+    if let Ok(raw) = std::env::var("WAYBILL_PKG_ALIAS") {
         for entry in raw.split(',') {
             let trimmed = entry.trim();
             if trimmed.is_empty() {
                 continue;
             }
             let alias = parse_pkg_alias(trimmed)
-                .map_err(|e| anyhow::anyhow!("MIKEBOM_PKG_ALIAS entry: {}", e))?;
+                .map_err(|e| anyhow::anyhow!("WAYBILL_PKG_ALIAS entry: {}", e))?;
             map.insert(alias)
                 .map_err(|e| anyhow::anyhow!("{}", e))?;
         }
@@ -3984,7 +3984,7 @@ mod tests {
             &["cyclonedx-json".into(), "spdx-2.3-json".into()],
             &[
                 "spdx-2.3-json=out.spdx.json".into(),
-                "openvex=mikebom.cdx.json".into(),
+                "openvex=waybill.cdx.json".into(),
             ],
         )
         .unwrap_err()
@@ -4575,7 +4575,7 @@ mod tests {
 
     #[test]
     fn no_deps_dev_help_mentions_enrich_sources_m207() {
-        // FR-008 — operators reading `mikebom sbom scan --help`
+        // FR-008 — operators reading `waybill sbom scan --help`
         // see the composition hint next to the flag they're setting.
         // `ScanArgsForTest` flattens `ScanArgs` at the top level (no
         // subcommand nesting), so args are directly discoverable via
@@ -5130,7 +5130,7 @@ mod tests {
         let mut args = enrich_args(false, false, false, false, vec![]);
         args.pkg_alias = vec![];
         unsafe {
-            std::env::remove_var("MIKEBOM_PKG_ALIAS");
+            std::env::remove_var("WAYBILL_PKG_ALIAS");
         }
         let map = build_pkg_alias_map(&args).unwrap();
         assert!(map.is_empty());
@@ -5143,7 +5143,7 @@ mod tests {
         args.pkg_alias =
             vec![make_alias("pkg:generic/baz", "pkg:cargo/baz@1.0.0")];
         unsafe {
-            std::env::remove_var("MIKEBOM_PKG_ALIAS");
+            std::env::remove_var("WAYBILL_PKG_ALIAS");
         }
         let map = build_pkg_alias_map(&args).unwrap();
         assert_eq!(map.len(), 1);
@@ -5157,13 +5157,13 @@ mod tests {
             vec![make_alias("pkg:generic/baz", "pkg:cargo/baz@1.0.0")];
         unsafe {
             std::env::set_var(
-                "MIKEBOM_PKG_ALIAS",
+                "WAYBILL_PKG_ALIAS",
                 "pkg:generic/qux=pkg:npm/qux@2.0.0",
             );
         }
         let map = build_pkg_alias_map(&args).unwrap();
         unsafe {
-            std::env::remove_var("MIKEBOM_PKG_ALIAS");
+            std::env::remove_var("WAYBILL_PKG_ALIAS");
         }
         assert_eq!(map.len(), 2);
     }
@@ -5175,13 +5175,13 @@ mod tests {
         args.pkg_alias = vec![];
         unsafe {
             std::env::set_var(
-                "MIKEBOM_PKG_ALIAS",
+                "WAYBILL_PKG_ALIAS",
                 ",,pkg:generic/baz=pkg:cargo/baz@1.0.0,,",
             );
         }
         let map = build_pkg_alias_map(&args).unwrap();
         unsafe {
-            std::env::remove_var("MIKEBOM_PKG_ALIAS");
+            std::env::remove_var("WAYBILL_PKG_ALIAS");
         }
         assert_eq!(map.len(), 1);
     }
@@ -5194,13 +5194,13 @@ mod tests {
             vec![make_alias("pkg:generic/baz", "pkg:cargo/baz@1.0.0")];
         unsafe {
             std::env::set_var(
-                "MIKEBOM_PKG_ALIAS",
+                "WAYBILL_PKG_ALIAS",
                 "pkg:generic/baz=pkg:cargo/baz@1.1.0",
             );
         }
         let result = build_pkg_alias_map(&args);
         unsafe {
-            std::env::remove_var("MIKEBOM_PKG_ALIAS");
+            std::env::remove_var("WAYBILL_PKG_ALIAS");
         }
         let err = result.unwrap_err();
         let msg = err.to_string();

@@ -22,7 +22,7 @@ fn sysroot_path() -> PathBuf {
         .join("yocto_sysroot")
         .join("sdk-root")
         .join("sysroots")
-        .join("mikebom-fixture-target")
+        .join("waybill-fixture-target")
 }
 
 #[test]
@@ -36,7 +36,7 @@ fn sdk_sysroot_scan_tags_every_component_with_build_scope() {
 
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -48,7 +48,7 @@ fn sdk_sysroot_scan_tags_every_component_with_build_scope() {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "sysroot scan unexpectedly failed: stderr={}",
@@ -91,14 +91,14 @@ fn sdk_sysroot_scan_tags_every_component_with_build_scope() {
         );
     }
 
-    // No `mikebom:scan-ambiguity` annotation on metadata.properties — the
+    // No `waybill:scan-ambiguity` annotation on metadata.properties — the
     // fixture is unambiguous (primary fires; secondary is absent but not
     // conflicting).
     if let Some(props) = json["metadata"]["properties"].as_array() {
         for prop in props {
             assert_ne!(
                 prop["name"].as_str(),
-                Some("mikebom:scan-ambiguity"),
+                Some("waybill:scan-ambiguity"),
                 "unexpected scan-ambiguity annotation on a clean sysroot fixture",
             );
         }

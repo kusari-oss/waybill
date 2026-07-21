@@ -7,12 +7,12 @@
 //
 // - **Solo**: supplement PURL doesn't collide with any scanner PURL.
 //   A new `ResolvedComponent` is constructed from the supplement's
-//   declared fields, tagged `mikebom:source-tier = "declared"`, and
+//   declared fields, tagged `waybill:source-tier = "declared"`, and
 //   appended to the output components vec.
 // - **Collision**: supplement PURL matches a scanner PURL. The
 //   `conflict::resolve_component()` function applies the FR-006/FR-007
 //   partition; each conflict is stamped on the merged component's
-//   `mikebom:assertion-conflict` array.
+//   `waybill:assertion-conflict` array.
 //
 // FR-015 safety property: `merge_outcome.components.len() >=
 // scanner_components.len()` ALWAYS — supplement entries never suppress
@@ -174,31 +174,31 @@ fn synthesize_resolved(supp: &SupplementComponent) -> ResolvedComponent {
 
     if let Some(licenses) = supp.licenses.as_ref() {
         extra_annotations.insert(
-            "mikebom:supplement-licenses".to_string(),
+            "waybill:supplement-licenses".to_string(),
             serde_json::Value::Array(licenses.clone()),
         );
     }
     if let Some(copyright) = supp.copyright.as_ref() {
         extra_annotations.insert(
-            "mikebom:copyright".to_string(),
+            "waybill:copyright".to_string(),
             serde_json::Value::String(copyright.clone()),
         );
     }
     if let Some(description) = supp.description.as_ref() {
         extra_annotations.insert(
-            "mikebom:description".to_string(),
+            "waybill:description".to_string(),
             serde_json::Value::String(description.clone()),
         );
     }
     if let Some(ext_refs) = supp.external_references.as_ref() {
         extra_annotations.insert(
-            "mikebom:supplement-externalReferences".to_string(),
+            "waybill:supplement-externalReferences".to_string(),
             serde_json::Value::Array(ext_refs.clone()),
         );
     }
     if let Some(hashes) = supp.hashes.as_ref() {
         extra_annotations.insert(
-            "mikebom:declared-hashes".to_string(),
+            "waybill:declared-hashes".to_string(),
             serde_json::Value::Array(hashes.clone()),
         );
     }
@@ -434,7 +434,7 @@ mod tests {
         assert_eq!(
             out.components[0]
                 .extra_annotations
-                .get("mikebom:source-tier")
+                .get("waybill:source-tier")
                 .and_then(|v| v.as_str()),
             Some("declared")
         );
@@ -457,7 +457,7 @@ mod tests {
         // assertion-conflict annotation stamped on the merged component.
         let arr = out.components[0]
             .extra_annotations
-            .get("mikebom:assertion-conflict")
+            .get("waybill:assertion-conflict")
             .unwrap()
             .as_array()
             .unwrap();

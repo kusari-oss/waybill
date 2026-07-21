@@ -43,7 +43,7 @@ fn write_cached_jar(cache_root: &Path, g: &str, a: &str, v: &str) {
 }
 
 fn fixture_dir() -> PathBuf {
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("maven")
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("maven")
 }
 
 fn scan_subpath(sub: &str) -> serde_json::Value {
@@ -64,7 +64,7 @@ fn scan_path(path: &Path) -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -127,10 +127,10 @@ fn scan_maven_pom_emits_source_tier_components() {
         Some("excluded"),
         "junit must carry native CDX scope: \"excluded\" in default mode: {junit:?}"
     );
-    let lifecycle_scope = prop_value(junit, "mikebom:lifecycle-scope").unwrap_or("");
+    let lifecycle_scope = prop_value(junit, "waybill:lifecycle-scope").unwrap_or("");
     assert_eq!(
         lifecycle_scope, "test",
-        "junit must carry mikebom:lifecycle-scope = \"test\": {junit:?}"
+        "junit must carry waybill:lifecycle-scope = \"test\": {junit:?}"
     );
 }
 
@@ -153,7 +153,7 @@ fn scan_maven_jar_emits_analyzed_tier_components() {
     assert!(names.contains(&"jackson-databind"));
     // All three should be analyzed-tier (from JAR).
     for c in &maven {
-        let tier = prop_value(c, "mikebom:sbom-tier").unwrap_or("");
+        let tier = prop_value(c, "waybill:sbom-tier").unwrap_or("");
         assert_eq!(
             tier, "analyzed",
             "JAR-sourced {} has wrong tier: {tier}",
@@ -278,7 +278,7 @@ fn scan_maven_pulls_transitive_edges_from_cached_m2_repo() {
 
     // Transitive coords must appear as components too — not just as
     // edge targets. bar and baz are BFS-discovered; they should carry
-    // the `mikebom:source-type=transitive` property.
+    // the `waybill:source-type=transitive` property.
     let components = sbom["components"]
         .as_array()
         .expect("components array");
@@ -294,7 +294,7 @@ fn scan_maven_pulls_transitive_edges_from_cached_m2_repo() {
             .unwrap_or_else(|| panic!("component for {needle} missing from SBOM"));
         let src_type = comp["properties"]
             .as_array()
-            .and_then(|a| a.iter().find(|p| p["name"].as_str() == Some("mikebom:source-type")))
+            .and_then(|a| a.iter().find(|p| p["name"].as_str() == Some("waybill:source-type")))
             .and_then(|p| p["value"].as_str())
             .unwrap_or("");
         assert_eq!(
@@ -307,7 +307,7 @@ fn scan_maven_pulls_transitive_edges_from_cached_m2_repo() {
     let foo_comp = find_by_artifact("foo").expect("foo component");
     let foo_src = foo_comp["properties"]
         .as_array()
-        .and_then(|a| a.iter().find(|p| p["name"].as_str() == Some("mikebom:source-type")))
+        .and_then(|a| a.iter().find(|p| p["name"].as_str() == Some("waybill:source-type")))
         .and_then(|p| p["value"].as_str())
         .unwrap_or("");
     assert_eq!(
@@ -317,7 +317,7 @@ fn scan_maven_pulls_transitive_edges_from_cached_m2_repo() {
 }
 
 // --- Cache-only scan: .m2/repository populated but no pom.xml, no JARs ---
-// This is the polyglot case where mikebom reported 7/46 vs trivy's 46/46.
+// This is the polyglot case where waybill reported 7/46 vs trivy's 46/46.
 // A warm `.m2` cache with no seed source (no scanned pom.xml, no packed
 // JAR with META-INF/maven) should still surface every cached artifact as
 // a component via the unconditional cache walk.
@@ -394,7 +394,7 @@ fn scan_maven_cached_only_rootfs_emits_all_cached_coords() {
     // Each cache-walk-discovered coord must carry source_type = "transitive"
     // (matches the BFS emission shape; no schema divergence).
     for c in &maven {
-        let src_type = prop_value(c, "mikebom:source-type").unwrap_or("");
+        let src_type = prop_value(c, "waybill:source-type").unwrap_or("");
         assert_eq!(
             src_type,
             "transitive",
@@ -712,10 +712,10 @@ fn scan_maven_placeholder_version_becomes_design_tier() {
         .iter()
         .find(|c| c["name"].as_str() == Some("sibling"))
         .expect("sibling component present");
-    let tier = prop_value(sibling, "mikebom:sbom-tier").unwrap_or("");
+    let tier = prop_value(sibling, "waybill:sbom-tier").unwrap_or("");
     assert_eq!(tier, "design");
     // Milestone 199: always-array shape — JSON-array-in-string value.
-    let range = prop_value(sibling, "mikebom:requirement-ranges").unwrap_or("");
+    let range = prop_value(sibling, "waybill:requirement-ranges").unwrap_or("");
     assert_eq!(range, r#"["${sibling.version}"]"#);
 }
 
@@ -739,7 +739,7 @@ fn scan_path_args(path: &Path, extra: &[&str]) -> serde_json::Value {
     for a in extra {
         cmd.arg(a);
     }
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -753,7 +753,7 @@ fn scan_path_args(path: &Path, extra: &[&str]) -> serde_json::Value {
 fn scan_maven_test_scope_is_tagged_in_default_mode() {
     // Milestone 052/part-3 (FR-002): test-scope deps now emit by
     // default with native CDX `scope: "excluded"` + new
-    // `mikebom:lifecycle-scope: "test"` property. The legacy "drop in
+    // `waybill:lifecycle-scope: "test"` property. The legacy "drop in
     // default mode" behavior is gone; `--exclude-scope dev,build,test`
     // restores the strict subset.
     let dir = tempfile::tempdir().expect("tempdir");
@@ -784,7 +784,7 @@ fn scan_maven_test_scope_is_tagged_in_default_mode() {
     .unwrap();
 
     // Default (post-052/part-3): junit emits with native CDX
-    // `scope: "excluded"` + `mikebom:lifecycle-scope: "test"`.
+    // `scope: "excluded"` + `waybill:lifecycle-scope: "test"`.
     let sbom = scan_path_args(dir.path(), &[]);
     let maven = maven_components(&sbom);
     let junit = maven
@@ -796,10 +796,10 @@ fn scan_maven_test_scope_is_tagged_in_default_mode() {
         Some("excluded"),
         "junit must carry native CDX scope: \"excluded\" in default mode: {junit:?}",
     );
-    let lifecycle_scope = prop_value(junit, "mikebom:lifecycle-scope").unwrap_or("");
+    let lifecycle_scope = prop_value(junit, "waybill:lifecycle-scope").unwrap_or("");
     assert_eq!(
         lifecycle_scope, "test",
-        "junit must carry mikebom:lifecycle-scope = \"test\" in default mode: {junit:?}",
+        "junit must carry waybill:lifecycle-scope = \"test\" in default mode: {junit:?}",
     );
     // slf4j-api stays unmarked.
     assert!(
@@ -827,9 +827,9 @@ fn scan_maven_test_scope_is_tagged_in_default_mode() {
 // --- Milestone 070: maven main-module emission ----------------------
 
 fn cli_local_fixture(sub: &str) -> PathBuf {
-    // Milestone 090: mikebom-cli/tests/fixtures/<sub> dirs moved to
-    // mikebom-test-fixtures repo; resolve via MIKEBOM_FIXTURES_DIR.
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join(sub)
+    // Milestone 090: waybill-cli/tests/fixtures/<sub> dirs moved to
+    // mikebom-test-fixtures repo; resolve via WAYBILL_FIXTURES_DIR.
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join(sub)
 }
 
 fn scan_path_format(path: &Path, format: &str) -> serde_json::Value {
@@ -850,7 +850,7 @@ fn scan_path_format(path: &Path, format: &str) -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -886,7 +886,7 @@ fn scan_maven_single_module_emits_main_module() {
         .as_array()
         .expect("metadata.component.properties")
         .iter()
-        .find(|p| p["name"].as_str() == Some("mikebom:component-role"));
+        .find(|p| p["name"].as_str() == Some("waybill:component-role"));
     assert_eq!(
         role.and_then(|p| p["value"].as_str()),
         Some("main-module")

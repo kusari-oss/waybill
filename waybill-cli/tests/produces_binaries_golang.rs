@@ -24,7 +24,7 @@ fn run_scan(path: &Path, out_path: &Path) -> Output {
         .arg(out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run")
+        .expect("waybill should run")
 }
 
 fn read_sbom(path: &Path) -> serde_json::Value {
@@ -48,7 +48,7 @@ fn produces_binaries_for_purl(sbom: &serde_json::Value, purl: &str) -> Option<Ve
                 return Some(Vec::new());
             };
             for p in props {
-                if p.get("name").and_then(|v| v.as_str()) == Some("mikebom:produces-binaries") {
+                if p.get("name").and_then(|v| v.as_str()) == Some("waybill:produces-binaries") {
                     let v = p.get("value").and_then(|v| v.as_str())?;
                     let arr: Vec<String> = serde_json::from_str(v).ok()?;
                     return Some(arr);
@@ -81,7 +81,7 @@ fn produces_binaries_anywhere(
             };
             for prop in props {
                 if prop.get("name").and_then(|v| v.as_str())
-                    == Some("mikebom:produces-binaries")
+                    == Some("waybill:produces-binaries")
                 {
                     let v = prop.get("value").and_then(|v| v.as_str())?;
                     let arr: Vec<String> = serde_json::from_str(v).ok()?;

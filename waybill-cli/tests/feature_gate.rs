@@ -2,7 +2,7 @@
 //!
 //! Verifies the runtime guard contract from
 //! `specs/020-ebpf-feature-gate/contracts/feature-flag.md`: when the feature
-//! is OFF (the default), invoking `mikebom trace capture` exits non-zero with
+//! is OFF (the default), invoking `waybill trace capture` exits non-zero with
 //! a stderr message that names both the missing feature and the rebuild
 //! instruction.
 //!
@@ -23,7 +23,7 @@ fn trace_capture_returns_feature_off_error_in_default_build() {
     let output = Command::new(common::bin())
         .args(["trace", "capture", "--target-pid", "1"])
         .output()
-        .expect("spawn mikebom trace capture");
+        .expect("spawn waybill trace capture");
 
     assert!(
         !output.status.success(),

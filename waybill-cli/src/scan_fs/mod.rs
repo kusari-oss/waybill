@@ -7,7 +7,7 @@
 //! - [`scan_path`] — end-to-end orchestrator: walks a root, runs the
 //!   path resolver over each captured file, and returns a
 //!   `Vec<ResolvedComponent>` ready for the CycloneDX builder. Used by
-//!   the standalone `mikebom sbom scan` subcommand.
+//!   the standalone `waybill sbom scan` subcommand.
 
 pub mod binary;
 pub mod dedup;
@@ -51,7 +51,7 @@ use crate::resolve::path_resolver::resolve_path_with_context;
 /// trace-sourced one where the artifact-dir scan fired.
 pub const FILE_PATH_CONFIDENCE: f64 = 0.70;
 
-/// How the caller invoked mikebom — image-tarball extraction vs. plain
+/// How the caller invoked waybill — image-tarball extraction vs. plain
 /// directory. Drives scan-mode-aware scoping decisions like npm-internals
 /// inclusion (feature 005 US1): `Image` includes npm's own internal
 /// packages because the container IS the target; `Path` excludes them
@@ -59,9 +59,9 @@ pub const FILE_PATH_CONFIDENCE: f64 = 0.70;
 /// its dependencies.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ScanMode {
-    /// `mikebom sbom scan --path <dir>` — target is an application source tree.
+    /// `waybill sbom scan --path <dir>` — target is an application source tree.
     Path,
-    /// `mikebom sbom scan --image <tarball>` — target is a full container filesystem.
+    /// `waybill sbom scan --image <tarball>` — target is a full container filesystem.
     Image,
 }
 
@@ -89,7 +89,7 @@ pub struct ScanResult {
     pub complete_ecosystems: Vec<String>,
     /// Feature 005 SC-009 — `/etc/os-release` fields the package-db
     /// readers tried to read but found absent/empty. Surfaced into the
-    /// SBOM's `metadata.properties` as `mikebom:os-release-missing-fields`
+    /// SBOM's `metadata.properties` as `waybill:os-release-missing-fields`
     /// when non-empty. Empty vec means clean scan.
     pub os_release_missing_fields: Vec<String>,
     /// Milestone 160 (T009): document-scope Go-transitive coverage signal
@@ -105,7 +105,7 @@ pub struct ScanResult {
     /// was the m091 step-5 go.sum flat fallback (i.e., steps 1-3 of the
     /// ladder failed and go.sum was consulted for a flat root→transitive
     /// edge). Emitted as the document-scope
-    /// `mikebom:go-transitive-fallback-count` annotation across CDX/SPDX
+    /// `waybill:go-transitive-fallback-count` annotation across CDX/SPDX
     /// 2.3/SPDX 3. `None` iff no Go scan happened (annotation absent per
     /// FR-002). `Some(0)` on healthy Go scans (annotation emitted with
     /// value "0" per Q1 clarification). `Some(N > 0)` on degraded scans.
@@ -119,8 +119,8 @@ pub struct ScanResult {
     /// `--warm-go-cache` setting (`Off` / `PerWorkspace` /
     /// `OfflineInhibited`) and `failures` naming any workspaces where
     /// `go mod download` failed. Feeds C118
-    /// (`mikebom:go-cache-warming-mode`) unconditionally when
-    /// populated + C119 (`mikebom:go-cache-warming-failed`)
+    /// (`waybill:go-cache-warming-mode`) unconditionally when
+    /// populated + C119 (`waybill:go-cache-warming-failed`)
     /// conditionally when `failures` is non-empty. Source:
     /// `scan_result.diagnostics.go_cache_warming`.
     pub go_cache_warming: Option<
@@ -134,7 +134,7 @@ pub struct ScanResult {
     pub go_workspace_mode:
         Option<crate::scan_fs::package_db::golang::gowork::WorkspaceMode>,
     /// Milestone 204 (#554): document-scope Helm image-extraction-mode
-    /// signal driving the C123 `mikebom:image-extraction-completeness`
+    /// signal driving the C123 `waybill:image-extraction-completeness`
     /// annotation. `None` when no helm reader ran during the scan
     /// (byte-identity per FR-004). `Some(Unrendered)` → wire value
     /// `"partial"`. `Some(Rendered)` → wire value `"full"`. Set by the
@@ -151,10 +151,10 @@ pub struct ScanResult {
     pub scan_target_coord: Option<package_db::maven::ScanTargetCoord>,
     /// Milestone 134 (closes #125): divergent-PURL collision records
     /// detected during per-ecosystem dedup. When non-empty, the format
-    /// emitters surface a document-scope `mikebom:purl-collisions-
+    /// emitters surface a document-scope `waybill:purl-collisions-
     /// detected` annotation aggregating every collision in the scan.
     /// Per-component annotations
-    /// (`mikebom:duplicate-purl-divergent`) are already attached to
+    /// (`waybill:duplicate-purl-divergent`) are already attached to
     /// the owning components' `extra_annotations` bag — this field is
     /// the document-scope twin.
     pub divergence_records:
@@ -242,14 +242,14 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 // get the same clean value (holistic_parity test asserts the
                 // C18 row's `SymmetricEqual` directionality across formats).
                 //
-                // NOTE (milestone 145 US3): `mikebom:source-files` has TWO
+                // NOTE (milestone 145 US3): `waybill:source-files` has TWO
                 // emission sources — this field (canonical) AND
-                // `extra_annotations["mikebom:source-files"]` (legacy,
+                // `extra_annotations["waybill:source-files"]` (legacy,
                 // dedup'd at emit time via
                 // `root_selector::is_field_owned_annotation_key`). DO NOT
                 // stamp the latter from a new reader; if you need to carry
                 // per-reader source provenance, use a distinct key like
-                // `mikebom:<reader>-source-url`.
+                // `waybill:<reader>-source-url`.
                 source_file_paths: vec![crate::scan_fs::sbom_path::normalize_sbom_path_relative(
                     &path_string,
                     Some(root),
@@ -324,38 +324,38 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     let mut go_workspace_mode:
         Option<package_db::golang::gowork::WorkspaceMode> = None;
     // Milestone 204 (#554): doc-scope helm-extraction-mode signal for
-    // the C123 `mikebom:image-extraction-completeness` annotation.
+    // the C123 `waybill:image-extraction-completeness` annotation.
     // `None` on non-Helm scans (byte-identity per FR-004).
     let mut helm_extraction_mode:
         Option<package_db::HelmExtractionMode> = None;
     let mut scan_target_coord: Option<package_db::maven::ScanTargetCoord> = None;
     // Milestone 134 — divergent-PURL collision records collected by
     // per-ecosystem dedup. Routed into ScanResult.divergence_records
-    // for document-scope `mikebom:purl-collisions-detected` emission.
+    // for document-scope `waybill:purl-collisions-detected` emission.
     let mut divergence_records: Vec<waybill_common::divergence::DivergenceRecord> =
         Vec::new();
     if read_package_db {
         // Milestone 134 US2 — surface the `--deep-hash` choice to the
         // cargo reader via env var (same plumbing pattern as
-        // `MIKEBOM_INCLUDE_VENDORED`; avoids churning the 75-callsite
+        // `WAYBILL_INCLUDE_VENDORED`; avoids churning the 75-callsite
         // `scan_path -> read_all -> cargo::read` signature chain for
         // an opt-in observability feature).
         if deep_hash {
-            std::env::set_var("MIKEBOM_DEEP_HASH", "1");
+            std::env::set_var("WAYBILL_DEEP_HASH", "1");
         } else {
-            std::env::remove_var("MIKEBOM_DEEP_HASH");
+            std::env::remove_var("WAYBILL_DEEP_HASH");
         }
         // Milestone 144: thread `--max-rpm-bytes` + `--rpm-distro` to
         // the rpm-file reader via env vars (same convention as the
         // DEEP_HASH knob above). The reader builds `RpmReaderConfig`
         // from these in `package_db::read_all`.
         match max_rpm_bytes {
-            Some(v) => std::env::set_var("MIKEBOM_MAX_RPM_BYTES", v.to_string()),
-            None => std::env::remove_var("MIKEBOM_MAX_RPM_BYTES"),
+            Some(v) => std::env::set_var("WAYBILL_MAX_RPM_BYTES", v.to_string()),
+            None => std::env::remove_var("WAYBILL_MAX_RPM_BYTES"),
         }
         match rpm_distro {
-            Some(s) => std::env::set_var("MIKEBOM_RPM_DISTRO", s),
-            None => std::env::remove_var("MIKEBOM_RPM_DISTRO"),
+            Some(s) => std::env::set_var("WAYBILL_RPM_DISTRO", s),
+            None => std::env::remove_var("WAYBILL_RPM_DISTRO"),
         }
         let scan_result = package_db::read_all(root, deb_codename, include_dev, include_legacy_rpmdb, scan_mode, include_declared_deps, scan_target_name, exclude_set)?;
         os_release_missing_fields = scan_result.diagnostics.os_release_missing_fields.clone();
@@ -614,7 +614,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             // Detector matches both legacy `var/lib/rpm/` and the
             // newer `usr/lib/sysimage/rpm/` paths via the common
             // `lib/rpm/` substring (verified to not collide with
-            // any non-rpm source_path in mikebom).
+            // any non-rpm source_path in waybill).
             let is_rpm = entry.source_path.contains("lib/rpm/");
             // dpkg licenses live out-of-band in /usr/share/doc/<pkg>/
             // copyright; other sources (e.g. Python dist-info METADATA)
@@ -682,7 +682,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 // at `entry.source_path` (the manifest file or binary
                 // we read to discover this component). The location is
                 // normalized to rootfs-relative + no-leading-`/` (the
-                // same convention as `mikebom:source-files` per
+                // same convention as `waybill:source-files` per
                 // FR-012). The SHA-256 anchors the occurrence to the
                 // exact manifest bytes we parsed — useful for cross-
                 // host SBOM diffing and supply-chain integrity.
@@ -723,7 +723,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                     // time so SPDX/CDX/SPDX3 all read the clean value.
                     //
                     // NOTE (milestone 145 US3): canonical source for
-                    // `mikebom:source-files` emission — see also
+                    // `waybill:source-files` emission — see also
                     // `root_selector::is_field_owned_annotation_key`.
                     source_file_paths: vec![crate::scan_fs::sbom_path::normalize_sbom_path_relative(
                         &entry.source_path,
@@ -843,11 +843,11 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // topology depends on this. Pre-148 each surviving entry carried its
     // own single-path source_file_paths Vec, and per-emitter iteration-
     // order differences produced cross-format divergence on the
-    // mikebom:source-files annotation (51 polyglot-builder-image audit
+    // waybill:source-files annotation (51 polyglot-builder-image audit
     // findings, 2026-06-28). The canonicalize pass writes the alphabetically-
     // sorted union of all observed paths onto every same-PURL entry so
     // every emitter sees the same Vec content and emits the same
-    // mikebom:source-files value regardless of which entry the harness
+    // waybill:source-files value regardless of which entry the harness
     // picks first. Idempotent; preserves all other fields including
     // parent_purl topology. See specs/148-source-files-union/ for details.
     canonicalize_source_files_by_purl(&mut components);
@@ -867,7 +867,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         maybe_suppress_scan_target_coord(&components, scan_target_coord);
 
     // Milestone 127 FR-001 — tag every main-module-tagged component with
-    // `mikebom:is-workspace-root: <bool>`. The signal feeds the
+    // `waybill:is-workspace-root: <bool>`. The signal feeds the
     // `generate/root_selector.rs` ladder (FR-002, FR-003) at SBOM
     // emission time. The key is internal-only — filtered out by
     // `is_internal_emission_key` at every per-format
@@ -893,7 +893,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
 /// Milestone 127 FR-001 implementation. Walks every component once;
 /// for main-module-tagged ones, computes whether the component's
 /// defining manifest file's parent directory canonicalizes to
-/// `scan_root` and writes the result to `mikebom:is-workspace-root`.
+/// `scan_root` and writes the result to `waybill:is-workspace-root`.
 ///
 /// Strict equality of canonicalized parent directories per research
 /// R3. `canonicalize` failures on EITHER side degrade gracefully to
@@ -914,7 +914,7 @@ fn tag_main_modules_with_workspace_root(
     for c in components.iter_mut() {
         let is_main_module = c
             .extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .and_then(|v| v.as_str())
             == Some("main-module");
         if !is_main_module {
@@ -924,7 +924,7 @@ fn tag_main_modules_with_workspace_root(
         // Manifest path lookup: ecosystems vary on where they record it.
         // Go reader populates `evidence.source_file_paths`. Workspace-
         // synthesizer + Swift / Kotlin / NuGet readers use the
-        // `mikebom:source-files` annotation (as either a string OR an
+        // `waybill:source-files` annotation (as either a string OR an
         // array depending on the ecosystem). Read both, prefer evidence.
         let from_evidence: Option<String> = c
             .evidence
@@ -933,7 +933,7 @@ fn tag_main_modules_with_workspace_root(
             .cloned();
         let from_annotation: Option<String> = c
             .extra_annotations
-            .get("mikebom:source-files")
+            .get("waybill:source-files")
             .and_then(|v| match v {
                 serde_json::Value::String(s) => Some(s.clone()),
                 serde_json::Value::Array(arr) => arr
@@ -947,7 +947,7 @@ fn tag_main_modules_with_workspace_root(
 
         // Milestone 201 (FR-001, closes #587): positive-identifier
         // short-circuit for cargo workspace-toplevel crates. When the
-        // cargo reader stamped `mikebom:is-cargo-workspace-toplevel:
+        // cargo reader stamped `waybill:is-cargo-workspace-toplevel:
         // true` (its Cargo.toml has both [package] AND [workspace]
         // blocks), skip the filesystem-based check below — which
         // cannot distinguish workspace-ROOT from workspace-MEMBER
@@ -989,7 +989,7 @@ fn tag_main_modules_with_workspace_root(
         // tests (FR-004 regression guard).
         let is_cargo_workspace_toplevel = c
             .extra_annotations
-            .get("mikebom:is-cargo-workspace-toplevel")
+            .get("waybill:is-cargo-workspace-toplevel")
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
         let is_cargo_purl = c.purl.as_str().starts_with("pkg:cargo/");
@@ -1027,7 +1027,7 @@ fn tag_main_modules_with_workspace_root(
     }
 }
 
-/// Milestone 133 US2.2 (FR-013): stamp `mikebom:layer-digest` on every
+/// Milestone 133 US2.2 (FR-013): stamp `waybill:layer-digest` on every
 /// component whose source path (first entry of `evidence.source_file_paths`)
 /// appears in the OCI image's path → layer-digest map. The map is built
 /// by `scan_fs::docker_image::extract` during layer extraction and
@@ -1058,7 +1058,7 @@ pub fn tag_components_with_layer_digest(
         };
         if let Some(digest) = map.get(source_path.as_str()) {
             c.extra_annotations.insert(
-                "mikebom:layer-digest".to_string(),
+                "waybill:layer-digest".to_string(),
                 serde_json::Value::String(digest.clone()),
             );
         }
@@ -1066,7 +1066,7 @@ pub fn tag_components_with_layer_digest(
 }
 
 /// Milestone 176 (US1 / FR-001): stamp per-component
-/// `mikebom:workspace-member` annotation on every component derived
+/// `waybill:workspace-member` annotation on every component derived
 /// from a workspace-scoped source. Value is a JSON-encoded array of
 /// workspace root-relative paths that the component belongs to,
 /// alphabetically sorted, deduplicated. Single-workspace components
@@ -1108,7 +1108,7 @@ pub fn tag_components_with_workspace_member(
         let sorted: Vec<String> = workspaces.into_iter().collect();
         let value = serde_json::to_string(&sorted).unwrap_or_default();
         c.extra_annotations.insert(
-            "mikebom:workspace-member".to_string(),
+            "waybill:workspace-member".to_string(),
             serde_json::Value::String(value),
         );
     }
@@ -1148,7 +1148,7 @@ fn manifest_occurrence(
     // extractor, SPDX's main-module Package is) which trips the
     // `holistic_parity::parity_*` SymmetricEqual assertion. The
     // workspace root is already surfaced via the existing
-    // `mikebom:source-files` annotation; we don't need to duplicate it
+    // `waybill:source-files` annotation; we don't need to duplicate it
     // here.
     if source_path.starts_with("path+file://")
         || source_path.starts_with("git+")
@@ -1192,7 +1192,7 @@ fn manifest_occurrence(
 
 /// Issue #363 — operator-asserted license-concluded promotion.
 ///
-/// When the operator passes `--conclude-licenses`, mikebom promotes every
+/// When the operator passes `--conclude-licenses`, waybill promotes every
 /// component's declared licenses to concluded IF AND ONLY IF the
 /// concluded field is currently empty (preserves earlier ClearlyDefined /
 /// deps.dev enrichment, which sets it to a verified value).
@@ -1202,7 +1202,7 @@ fn manifest_occurrence(
 /// reading `licenseConcluded` (sbomqs, Kusari Inspector, syft-style
 /// comparators) treat the value as analyst-verified per SPDX 2.3 § 7.13
 /// / SPDX 3.0.1 semantics. The per-component annotation
-/// `mikebom:license-concluded-source = "operator-asserted"` records the
+/// `waybill:license-concluded-source = "operator-asserted"` records the
 /// provenance so consumers can distinguish operator-asserted conclusions
 /// from external-enrichment-derived ones.
 ///
@@ -1216,7 +1216,7 @@ pub fn apply_operator_asserted_conclusions(
         if c.concluded_licenses.is_empty() && !c.licenses.is_empty() {
             c.concluded_licenses = c.licenses.clone();
             c.extra_annotations.insert(
-                "mikebom:license-concluded-source".to_string(),
+                "waybill:license-concluded-source".to_string(),
                 serde_json::Value::String("operator-asserted".to_string()),
             );
             promoted += 1;
@@ -1240,7 +1240,7 @@ fn maybe_suppress_scan_target_coord(
     let dup = components.iter().any(|c| {
         let role = c
             .extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .and_then(|v| v.as_str());
         role == Some("main-module")
             && c.purl.ecosystem() == "maven"
@@ -1518,7 +1518,7 @@ fn supplier_from_purl(purl: &waybill_common::types::purl::Purl) -> Option<String
 /// `website` URLs for `pkg:cargo`, `pkg:nuget`, and nested
 /// `pkg:maven` components (FR-017..019), plus a `vcs` URL parsed
 /// from cargo-auditable's `source` field when carried via the C98
-/// `mikebom:cargo-vcs-source-url` plumbing annotation (FR-020).
+/// `waybill:cargo-vcs-source-url` plumbing annotation (FR-020).
 fn external_refs_from_purl(
     purl: &waybill_common::types::purl::Purl,
     extra_annotations: &std::collections::BTreeMap<String, serde_json::Value>,
@@ -1562,11 +1562,11 @@ fn external_refs_from_purl(
         }
         "maven" => {
             // FR-019: search.maven.org canonical per-artifact URL.
-            // Gated on `mikebom:source-mechanism = "maven-jar-nested"` so the
+            // Gated on `waybill:source-mechanism = "maven-jar-nested"` so the
             // existing top-level milestone-009 reader's sidecar-derived URLs
             // aren't clobbered.
             let is_nested = extra_annotations
-                .get("mikebom:source-mechanism")
+                .get("waybill:source-mechanism")
                 .and_then(|v| v.as_str())
                 == Some("maven-jar-nested");
             if is_nested {
@@ -1586,11 +1586,11 @@ fn external_refs_from_purl(
     }
     // FR-020: emit a `vcs`-type ExternalReference when cargo-auditable
     // carried a parseable `git+https://...` source field. The URL
-    // itself flows through the C98 `mikebom:cargo-vcs-source-url`
+    // itself flows through the C98 `waybill:cargo-vcs-source-url`
     // plumbing annotation, populated upstream at
     // `binary/entry.rs::cargo_auditable_packages_to_entries`.
     if let Some(vcs_url) = extra_annotations
-        .get("mikebom:cargo-vcs-source-url")
+        .get("waybill:cargo-vcs-source-url")
         .and_then(|v| v.as_str())
     {
         out.push(ExternalReference {
@@ -1735,7 +1735,7 @@ mod external_refs_tests {
         let p = Purl::new("pkg:maven/com.example/foo@1.0.0").unwrap();
         let mut annotations = BTreeMap::new();
         annotations.insert(
-            "mikebom:source-mechanism".to_string(),
+            "waybill:source-mechanism".to_string(),
             serde_json::Value::String("maven-jar-nested".to_string()),
         );
         let refs = external_refs_from_purl(&p, &annotations);
@@ -1762,7 +1762,7 @@ mod external_refs_tests {
         let p = Purl::new("pkg:cargo/serde@1.0.197").unwrap();
         let mut annotations = BTreeMap::new();
         annotations.insert(
-            "mikebom:cargo-vcs-source-url".to_string(),
+            "waybill:cargo-vcs-source-url".to_string(),
             serde_json::Value::String("https://github.com/serde-rs/serde".to_string()),
         );
         let refs = external_refs_from_purl(&p, &annotations);
@@ -2331,7 +2331,7 @@ Architecture: amd64
         assert_eq!(
             comps[0]
                 .extra_annotations
-                .get("mikebom:layer-digest")
+                .get("waybill:layer-digest")
                 .and_then(|v| v.as_str()),
             Some("sha256:abc123"),
         );
@@ -2342,7 +2342,7 @@ Architecture: amd64
         let map = std::collections::HashMap::new();
         let mut comps = vec![make_component("unattributed/path")];
         tag_components_with_layer_digest(&mut comps, Some(&map));
-        assert!(!comps[0].extra_annotations.contains_key("mikebom:layer-digest"));
+        assert!(!comps[0].extra_annotations.contains_key("waybill:layer-digest"));
     }
 
     #[test]
@@ -2350,7 +2350,7 @@ Architecture: amd64
         // Non-image scans pass `None` — function should be a no-op.
         let mut comps = vec![make_component("any/path")];
         tag_components_with_layer_digest(&mut comps, None);
-        assert!(!comps[0].extra_annotations.contains_key("mikebom:layer-digest"));
+        assert!(!comps[0].extra_annotations.contains_key("waybill:layer-digest"));
     }
 
     #[test]
@@ -2361,7 +2361,7 @@ Architecture: amd64
         comp.evidence.source_file_paths.clear();
         let mut comps = vec![comp];
         tag_components_with_layer_digest(&mut comps, Some(&map));
-        assert!(!comps[0].extra_annotations.contains_key("mikebom:layer-digest"));
+        assert!(!comps[0].extra_annotations.contains_key("waybill:layer-digest"));
     }
 
     // ---- Milestone 201 (issue #587) — is_workspace_root disambiguation ----
@@ -2390,10 +2390,10 @@ Architecture: amd64
 
         let mut extra: BTreeMap<String, serde_json::Value> = BTreeMap::new();
         extra.insert(
-            "mikebom:component-role".to_string(),
+            "waybill:component-role".to_string(),
             serde_json::Value::String("main-module".to_string()),
         );
-        // No mikebom:is-cargo-workspace-toplevel annotation (npm case).
+        // No waybill:is-cargo-workspace-toplevel annotation (npm case).
         let component = ResolvedComponent {
             purl: Purl::new("pkg:npm/foo@1.0.0").unwrap(),
             name: "foo".to_string(),
@@ -2438,7 +2438,7 @@ Architecture: amd64
         tag_main_modules_with_workspace_root(&mut components, root);
         let stamped = components[0]
             .extra_annotations
-            .get("mikebom:is-workspace-root")
+            .get("waybill:is-workspace-root")
             .and_then(|v| v.as_bool());
         assert_eq!(
             stamped,

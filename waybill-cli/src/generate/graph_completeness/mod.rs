@@ -1,7 +1,7 @@
 //! Milestone 158 — graph-completeness signal (issue #492).
 //!
 //! Runs a multi-root BFS-reachability pass over the assembled dep-
-//! graph at emit-time. Determines the three-value `mikebom:graph-
+//! graph at emit-time. Determines the three-value `waybill:graph-
 //! completeness` annotation per spec.md FR-006 + FR-008 + FR-012:
 //!
 //!   - `complete` iff 100% of emitted components are reachable
@@ -42,7 +42,7 @@ pub enum GraphCompletenessValue {
 }
 
 impl GraphCompletenessValue {
-    /// Wire value for the `mikebom:graph-completeness` annotation.
+    /// Wire value for the `waybill:graph-completeness` annotation.
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Complete => "complete",
@@ -144,7 +144,7 @@ pub fn compute_graph_completeness(
     target_ref: &str,
 ) -> GraphCompletenessResult {
     // Milestone 194 US3: file-tier components (m133) carry
-    // `mikebom:component-tier: file` and have no dep-graph edges by
+    // `waybill:component-tier: file` and have no dep-graph edges by
     // design — they represent unattributed file inventory (SHA-256-
     // hashed blobs), not package-graph participants. Excluding them
     // from reachability accounting prevents them from perma-triggering

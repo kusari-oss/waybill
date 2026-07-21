@@ -24,7 +24,7 @@ fn help_text_lists_both_spdx_3_identifiers_without_experimental_label() {
         .arg("scan")
         .arg("--help")
         .output()
-        .expect("mikebom --help runs");
+        .expect("waybill --help runs");
     assert!(output.status.success(), "sbom scan --help must succeed");
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
@@ -65,7 +65,7 @@ fn spdx_3_json_is_a_first_class_format() {
         .arg("scan")
         .arg("--path")
         .arg(
-            std::path::PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("npm/node-modules-walk"),
+            std::path::PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("npm/node-modules-walk"),
         )
         .arg("--format")
         .arg("spdx-3-json")
@@ -73,7 +73,7 @@ fn spdx_3_json_is_a_first_class_format() {
         .arg(format!("spdx-3-json={}", out_path.to_string_lossy()))
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom runs");
+        .expect("waybill runs");
     assert!(
         output.status.success(),
         "spdx-3-json must be accepted as a first-class format; stderr=\n{}",
@@ -105,12 +105,12 @@ fn unknown_format_error_labels_alias_as_deprecated_in_known_list() {
         .arg("scan")
         .arg("--path")
         .arg(
-            std::path::PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("npm/node-modules-walk"),
+            std::path::PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("npm/node-modules-walk"),
         )
         .arg("--format")
         .arg("not-a-format")
         .output()
-        .expect("mikebom runs");
+        .expect("waybill runs");
     assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
     // Post-US3: the unknown-format-error known-id list labels the

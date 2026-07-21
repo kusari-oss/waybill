@@ -110,7 +110,7 @@ pub enum SigningError {
     Io(#[from] std::io::Error),
 }
 
-/// Default local-key algorithm when `mikebom` generates or imports a
+/// Default local-key algorithm when `waybill` generates or imports a
 /// key without explicit scheme information. ECDSA-P256 matches Fulcio.
 pub(crate) const DEFAULT_KEY_ALGORITHM: KeyAlgorithm = KeyAlgorithm::EcdsaP256;
 
@@ -300,7 +300,7 @@ mod tests {
             predicate: BuildTracePredicate {
                 metadata: TraceMetadata {
                     tool: ToolInfo {
-                        name: "mikebom".to_string(),
+                        name: "waybill".to_string(),
                         version: "0.1.0".to_string(),
                     },
                     trace_start: Timestamp::now(),
@@ -421,7 +421,7 @@ mod tests {
 
     #[test]
     fn load_local_signer_missing_path_errors() {
-        let bogus = Path::new("/nonexistent/mikebom-test-key.pem");
+        let bogus = Path::new("/nonexistent/waybill-test-key.pem");
         let err = load_local_signer(bogus, None).err().expect("should error");
         match err {
             SigningError::KeyFileMissing { path } => {
@@ -434,12 +434,12 @@ mod tests {
     #[test]
     fn load_local_signer_passphrase_env_missing_errors() {
         let (tmp, _pub) = pem_tempfile();
-        let err = load_local_signer(tmp.path(), Some("MIKEBOM_NONEXISTENT_PASSPHRASE_ENV"))
+        let err = load_local_signer(tmp.path(), Some("WAYBILL_NONEXISTENT_PASSPHRASE_ENV"))
             .err()
             .expect("should error");
         match err {
             SigningError::KeyPassphraseInvalid { env_var } => {
-                assert!(env_var.contains("MIKEBOM_NONEXISTENT"));
+                assert!(env_var.contains("WAYBILL_NONEXISTENT"));
             }
             other => panic!("expected KeyPassphraseInvalid, got {other:?}"),
         }
@@ -514,7 +514,7 @@ mod tests {
     fn sign_hard_fails_on_missing_key_file() {
         let stmt = minimal_statement();
         let identity = SigningIdentity::LocalKey {
-            path: PathBuf::from("/nonexistent/mikebom-test.pem"),
+            path: PathBuf::from("/nonexistent/waybill-test.pem"),
             passphrase_env: None,
         };
         match sign(&stmt, &identity) {

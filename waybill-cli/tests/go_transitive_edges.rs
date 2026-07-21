@@ -2,10 +2,10 @@
 //
 // The wiremock-backed integration tests (`ladder_step3_only_argo_fixture`,
 // `offline_makes_no_network_calls`, `ladder_fall_through_with_404_proxy`)
-// live in `mikebom-cli/src/scan_fs/package_db/golang/graph_resolver.rs::
+// live in `waybill-cli/src/scan_fs/package_db/golang/graph_resolver.rs::
 // wiremock_integration` rather than under `tests/`. The reason is that
 // integration tests under `tests/` link against the LIBRARY crate
-// (`mikebom`), and the resolver code is in the BINARY crate's
+// (`waybill`), and the resolver code is in the BINARY crate's
 // `scan_fs::*` tree. Exposing that tree via the lib would cascade-
 // require lib-exposing every other binary-internal module
 // (`trace`, `generate`, `resolve`, ...) — too large a structural
@@ -17,7 +17,7 @@
 //
 // Run them with:
 //
-//   cargo +stable test -p mikebom --bin mikebom \
+//   cargo +stable test -p waybill --bin waybill \
 //     scan_fs::package_db::golang::graph_resolver::wiremock_integration
 
 #[test]

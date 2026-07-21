@@ -1,12 +1,12 @@
 //! Integration test for the yarn.lock reader (milestone 106 US5, issue #274).
 //!
 //! Companion to the unit tests in `scan_fs::package_db::npm::yarn_lock::tests`.
-//! This test invokes the `mikebom sbom scan --path <fixture>` binary against
+//! This test invokes the `waybill sbom scan --path <fixture>` binary against
 //! TWO in-repo fixtures (one yarn-v1, one Berry) to verify both formats
 //! are auto-detected and parsed end-to-end through to emitted CDX.
 //!
-//! All fixture package names use the synthetic `mikebom-fixture-*` prefix
-//! (and `@mikebom-fixture/*` scope) so they never collide with real-world
+//! All fixture package names use the synthetic `waybill-fixture-*` prefix
+//! (and `@waybill-fixture/*` scope) so they never collide with real-world
 //! CVE advisories — applying the lesson from PR #285's lodash flagging.
 
 use std::path::PathBuf;
@@ -32,7 +32,7 @@ fn run_scan(path: &std::path::Path) -> serde_json::Value {
 
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -44,7 +44,7 @@ fn run_scan(path: &std::path::Path) -> serde_json::Value {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "yarn scan unexpectedly failed: stderr={}",
@@ -71,12 +71,12 @@ fn yarn_v1_basic_fixture_emits_npm_components() {
     let json = run_scan(&path);
     let purls = npm_purls(&json);
     assert!(
-        purls.contains(&"pkg:npm/mikebom-fixture-lib@1.2.3".to_string()),
-        "expected mikebom-fixture-lib@1.2.3 in output; got: {purls:?}",
+        purls.contains(&"pkg:npm/waybill-fixture-lib@1.2.3".to_string()),
+        "expected waybill-fixture-lib@1.2.3 in output; got: {purls:?}",
     );
     assert!(
         purls.contains(&"pkg:npm/%40mikebom-fixture/types-pkg@4.5.6".to_string()),
-        "expected URL-encoded @mikebom-fixture/types-pkg@4.5.6 in output; got: {purls:?}",
+        "expected URL-encoded @waybill-fixture/types-pkg@4.5.6 in output; got: {purls:?}",
     );
 }
 
@@ -86,11 +86,11 @@ fn yarn_berry_basic_fixture_emits_npm_components() {
     let json = run_scan(&path);
     let purls = npm_purls(&json);
     assert!(
-        purls.contains(&"pkg:npm/mikebom-fixture-lib@1.2.3".to_string()),
-        "expected mikebom-fixture-lib@1.2.3 in output; got: {purls:?}",
+        purls.contains(&"pkg:npm/waybill-fixture-lib@1.2.3".to_string()),
+        "expected waybill-fixture-lib@1.2.3 in output; got: {purls:?}",
     );
     assert!(
         purls.contains(&"pkg:npm/%40mikebom-fixture/types-pkg@4.5.6".to_string()),
-        "expected URL-encoded @mikebom-fixture/types-pkg@4.5.6 in output; got: {purls:?}",
+        "expected URL-encoded @waybill-fixture/types-pkg@4.5.6 in output; got: {purls:?}",
     );
 }

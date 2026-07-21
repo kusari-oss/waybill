@@ -5,7 +5,7 @@
 //!
 //! * **US1 (P1 MVP)** — scans of git-cloned repos emit ZERO components
 //!   representing files inside `.git/` at any depth. Verified against
-//!   the emitted `mikebom:source-files` annotation.
+//!   the emitted `waybill:source-files` annotation.
 //! * **US2 (P1)** — first-party scripts and `.gitignore` files (which
 //!   are NOT VCS metadata) still surface as file-tier components.
 //! * **US3 (P2)** — the operator's `--exclude-path` flag continues to
@@ -31,7 +31,7 @@ fn scan(fixture_root: &Path, extra_args: &[&str]) -> serde_json::Value {
     for a in extra_args {
         cmd.arg(a);
     }
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed (exit={:?}): stderr={}",
@@ -43,14 +43,14 @@ fn scan(fixture_root: &Path, extra_args: &[&str]) -> serde_json::Value {
 }
 
 /// Extract every distinct file-path string referenced by any
-/// `mikebom:source-files` annotation in the emitted SBOM.
+/// `waybill:source-files` annotation in the emitted SBOM.
 fn all_source_file_paths(sbom: &serde_json::Value) -> Vec<String> {
     let mut out = Vec::new();
     if let Some(components) = sbom["components"].as_array() {
         for c in components {
             if let Some(props) = c["properties"].as_array() {
                 for p in props {
-                    if p["name"].as_str() == Some("mikebom:source-files") {
+                    if p["name"].as_str() == Some("waybill:source-files") {
                         if let Some(v) = p["value"].as_str() {
                             if let Ok(arr) = serde_json::from_str::<Vec<String>>(v) {
                                 out.extend(arr);
@@ -96,7 +96,7 @@ fn assemble_repo_fixture(root: &Path) {
 }
 
 /// US1 primary acceptance: zero `.git/` paths in any component's
-/// `mikebom:source-files` annotation. Also asserts US2 preview: first-
+/// `waybill:source-files` annotation. Also asserts US2 preview: first-
 /// party script + `.gitignore` DO appear.
 #[test]
 fn t006_us1_git_hook_samples_not_emitted() {

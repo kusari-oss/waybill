@@ -47,8 +47,8 @@ pub enum DivergenceReason {
 ///
 /// Constructed at the per-ecosystem dedup site and forwarded
 /// through the SBOM emission pipeline. Lives on the deduped root
-/// component as a `mikebom:duplicate-purl-divergent` property AND
-/// inside the document-scope `mikebom:purl-collisions-detected`
+/// component as a `waybill:duplicate-purl-divergent` property AND
+/// inside the document-scope `waybill:purl-collisions-detected`
 /// summary's `collisions[]` array.
 ///
 /// Validation invariants (enforced via [`DivergenceRecord::validate`]):

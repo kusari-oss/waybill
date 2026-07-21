@@ -153,7 +153,7 @@ fn sc_003_cask_emits_with_type_cask_qualifier_no_dep_edges() {
         .expect("cask bom-ref");
 
     // The cask's `dependencies` entry (if present) must have an empty
-    // `dependsOn`. mikebom only emits a dependencies entry when there
+    // `dependsOn`. waybill only emits a dependencies entry when there
     // are no edges OR when the component is referenced as a dep
     // target — so absence is equally valid.
     let deps = doc.get("dependencies").and_then(|v| v.as_array()).unwrap();
@@ -229,7 +229,7 @@ fn formula_and_cask_coexistence_with_distinct_purls() {
 fn same_name_formula_and_cask_collapse_via_deduplicator() {
     // U4 (analysis remediation) — when a formula and a cask share
     // (ecosystem, name, version), the post-emission deduplicator at
-    // `mikebom-cli/src/resolve/deduplicator.rs::deduplicate` groups
+    // `waybill-cli/src/resolve/deduplicator.rs::deduplicate` groups
     // by `(ecosystem, name, version, parent_purl)` — the `?type=cask`
     // qualifier does NOT participate in the dedup key. The two
     // entries collapse to one survivor (highest-confidence wins).

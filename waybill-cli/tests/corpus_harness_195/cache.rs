@@ -1,7 +1,7 @@
 //! Corpus cache — data-model.md Entity 4, research §R3.
 //!
 //! Cache layout mirrors milestone-090 fixture cache exactly:
-//! `~/.cache/mikebom/corpus/<source-id-short>/<pin>/` where
+//! `~/.cache/waybill/corpus/<source-id-short>/<pin>/` where
 //! `source-id-short` is `hex(sha256(url))[..16]` and `<pin>` is the
 //! raw SHA (40 hex) or digest algo:hex.
 
@@ -51,19 +51,19 @@ pub struct CorpusCacheDir {
 }
 
 impl CorpusCacheDir {
-    /// Honors `MIKEBOM_CORPUS_CACHE_DIR`, then `$XDG_CACHE_HOME/mikebom`,
-    /// then `$HOME/.cache/mikebom` per contracts/corpus-harness.md.
+    /// Honors `WAYBILL_CORPUS_CACHE_DIR`, then `$XDG_CACHE_HOME/waybill`,
+    /// then `$HOME/.cache/waybill` per contracts/corpus-harness.md.
     pub fn default() -> Result<Self, CorpusInfraError> {
-        let root = if let Ok(explicit) = std::env::var("MIKEBOM_CORPUS_CACHE_DIR") {
+        let root = if let Ok(explicit) = std::env::var("WAYBILL_CORPUS_CACHE_DIR") {
             PathBuf::from(explicit)
         } else if let Ok(xdg) = std::env::var("XDG_CACHE_HOME") {
-            PathBuf::from(xdg).join("mikebom")
+            PathBuf::from(xdg).join("waybill")
         } else {
             let home = std::env::var("HOME").map_err(|_| CorpusInfraError::CacheIo {
                 path: PathBuf::from("<no-home>"),
                 kind: std::io::ErrorKind::NotFound,
             })?;
-            PathBuf::from(home).join(".cache").join("mikebom")
+            PathBuf::from(home).join(".cache").join("waybill")
         };
         Ok(Self { root })
     }
@@ -172,7 +172,7 @@ impl CorpusCacheDir {
                     kind: e.kind(),
                 })?;
                 // For OCI targets, the "work dir" convention returns
-                // the cache dir itself (mikebom is invoked with
+                // the cache dir itself (waybill is invoked with
                 // `--image <ref>@<digest>`, not `--path <dir>`).
                 Ok(dir)
             }

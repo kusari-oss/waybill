@@ -2,7 +2,7 @@
 //!
 //! A `--component-id <PURL>=<scheme>:<value>` flag is parsed once at
 //! CLI parse time into a `ComponentIdentifierFlag`. Per-format emitters
-//! (`mikebom-cli/src/generate/{cyclonedx,spdx}/...`) consume the
+//! (`waybill-cli/src/generate/{cyclonedx,spdx}/...`) consume the
 //! flag list and append the identifier to every component whose
 //! emitted `purl` byte-equals `selector_purl`.
 //!

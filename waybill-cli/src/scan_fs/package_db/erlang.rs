@@ -38,7 +38,7 @@
 //! - **otp-runtime**: `pkg:generic/<lib-name>@unspecified` placeholder
 //!   per Q1 — emitted for ALL atoms in `applications:`/`included_applications:`/
 //!   `optional_applications:` that don't appear in the lockfile.
-//!   Allowlisted atoms additionally carry `mikebom:otp-stdlib = "true"`
+//!   Allowlisted atoms additionally carry `waybill:otp-stdlib = "true"`
 //!   per the informational-allowlist Q1 contract.
 //!
 //! Main-module emission per FR-012: one per `*.app.src`, PURL
@@ -46,12 +46,12 @@
 //! atoms from `applications:` + `included_applications:` +
 //! `optional_applications:` + the nearest-ancestor `rebar.config`'s
 //! `{deps, [...]}` block per Q2+Q3. Each edge-target component carries
-//! `mikebom:erlang-app-dep-kind = "required" | "included" | "optional"`
+//! `waybill:erlang-app-dep-kind = "required" | "included" | "optional"`
 //! annotation (precedence required > included > optional when an atom
 //! appears in multiple keyword families); pure-build-time deps from
 //! `rebar.config` alone carry no annotation per data-model §3.5.
 //!
-//! `mikebom:source-type` value-set per the milestone-122/137-140
+//! `waybill:source-type` value-set per the milestone-122/137-140
 //! precedent: `erlang-hex`, `erlang-git`, `erlang-otp-runtime`,
 //! `erlang-main-module`. Distinguishes Erlang-derived components from
 //! milestone-140's `hex-*` Elixir-derived values even when both readers
@@ -83,7 +83,7 @@ const MAX_ERLANG_WALK_DEPTH: usize = 12;
 /// `applications:`/`included_applications:`/`optional_applications:`
 /// lists NOT in any parsed `rebar.lock` emit as `pkg:generic/<lib>@unspecified`
 /// regardless of allowlist membership. Allowlisted atoms additionally
-/// carry `mikebom:otp-stdlib = "true"` so operators can filter "Ericsson
+/// carry `waybill:otp-stdlib = "true"` so operators can filter "Ericsson
 /// stdlib only" via the standard property filter.
 const OTP_STDLIB_ALLOWLIST: &[&str] = &[
     "kernel",
@@ -1313,11 +1313,11 @@ fn build_main_module_component(
 
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     extra_annotations.insert(
-        "mikebom:component-role".to_string(),
+        "waybill:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
     extra_annotations.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String("erlang-main-module".to_string()),
     );
 
@@ -1430,21 +1430,21 @@ fn build_lock_entry_component(
 
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     extra_annotations.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String(source_type.to_string()),
     );
     if let Some(r) = declared_ref {
         extra_annotations.insert(
-            "mikebom:vcs-declared-ref".to_string(),
+            "waybill:vcs-declared-ref".to_string(),
             serde_json::Value::String(r),
         );
     }
-    // Q3: apply mikebom:erlang-app-dep-kind annotation per the highest-
+    // Q3: apply waybill:erlang-app-dep-kind annotation per the highest-
     // binding kind across all *.app.src declarations.
     if let Some(kind) = atom_kind.get(&name) {
         if let Some(kind_str) = kind.annotation_value() {
             extra_annotations.insert(
-                "mikebom:erlang-app-dep-kind".to_string(),
+                "waybill:erlang-app-dep-kind".to_string(),
                 serde_json::Value::String(kind_str.to_string()),
             );
         }
@@ -1497,19 +1497,19 @@ fn build_otp_runtime_placeholder(
 
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     extra_annotations.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String("erlang-otp-runtime".to_string()),
     );
     if OTP_STDLIB_ALLOWLIST.contains(&atom) {
         extra_annotations.insert(
-            "mikebom:otp-stdlib".to_string(),
+            "waybill:otp-stdlib".to_string(),
             serde_json::Value::String("true".to_string()),
         );
     }
     if let Some(kind) = atom_kind.get(atom) {
         if let Some(kind_str) = kind.annotation_value() {
             extra_annotations.insert(
-                "mikebom:erlang-app-dep-kind".to_string(),
+                "waybill:erlang-app-dep-kind".to_string(),
                 serde_json::Value::String(kind_str.to_string()),
             );
         }
@@ -1577,7 +1577,7 @@ fn build_design_tier_component(decl: &DeclaredDep, config_dir: &Path) -> Option<
             let mut anns: BTreeMap<String, serde_json::Value> = BTreeMap::new();
             if let Some(r) = declared_ref {
                 anns.insert(
-                    "mikebom:vcs-declared-ref".to_string(),
+                    "waybill:vcs-declared-ref".to_string(),
                     serde_json::Value::String(r.clone()),
                 );
             }
@@ -1588,7 +1588,7 @@ fn build_design_tier_component(decl: &DeclaredDep, config_dir: &Path) -> Option<
             let mut anns: BTreeMap<String, serde_json::Value> = BTreeMap::new();
             if !path.is_empty() {
                 anns.insert(
-                    "mikebom:path".to_string(),
+                    "waybill:path".to_string(),
                     serde_json::Value::String(path.clone()),
                 );
             }
@@ -1611,14 +1611,14 @@ fn build_design_tier_component(decl: &DeclaredDep, config_dir: &Path) -> Option<
 
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     extra_annotations.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String(source_type.to_string()),
     );
     for (k, v) in source_anns {
         extra_annotations.insert(k, v);
     }
 
-    // Profile-scoped → mikebom:lifecycle-scope per FR-008.
+    // Profile-scoped → waybill:lifecycle-scope per FR-008.
     let lifecycle_scope = match decl.profile.as_deref() {
         Some("dev") | Some("test") | Some("doc") => LifecycleScope::Development,
         _ => LifecycleScope::Runtime,

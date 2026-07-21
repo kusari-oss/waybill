@@ -1,6 +1,6 @@
 //! Dedicated test for milestone 155's REVERSAL of milestone-102 FR-007
 //! — `find_package(X)` NOW emits `pkg:generic/x` tagged with
-//! `mikebom:source-mechanism = "cmake-find-package"`.
+//! `waybill:source-mechanism = "cmake-find-package"`.
 //!
 //! Fixture combines: (a) a FetchContent_Declare for googletest to prove
 //! the cmake reader RAN, with (b) a `find_package(zlib REQUIRED)` line.
@@ -34,7 +34,7 @@ fn scan_fixture() -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -66,14 +66,14 @@ fn findpackage_emits_since_milestone_155() {
 
     // (b) Milestone 155 REVERSAL of FR-007: find_package(zlib REQUIRED)
     // MUST now emit exactly one pkg:generic/zlib component tagged with
-    // mikebom:source-mechanism = "cmake-find-package".
+    // waybill:source-mechanism = "cmake-find-package".
     let zlib_from_find_package: Vec<&serde_json::Value> = comps
         .iter()
         .filter(|c| c["purl"].as_str() == Some("pkg:generic/zlib"))
         .filter(|c| {
             c["properties"].as_array().is_some_and(|arr| {
                 arr.iter().any(|p| {
-                    p["name"].as_str() == Some("mikebom:source-mechanism")
+                    p["name"].as_str() == Some("waybill:source-mechanism")
                         && p["value"].as_str() == Some("cmake-find-package")
                 })
             })

@@ -1,16 +1,16 @@
 //! Milestone 108 — end-to-end gated integration test for the external
 //! fingerprint corpus fetch + scan path.
 //!
-//! Gated behind `MIKEBOM_FINGERPRINTS_NETWORK_TESTS=1`. When the env
+//! Gated behind `WAYBILL_FINGERPRINTS_NETWORK_TESTS=1`. When the env
 //! var is unset (the default CI lane), the test exits zero with a
 //! `println!("skipped: ...")` message — preserves the offline-by-default
 //! posture of `cargo +stable test --workspace`.
 //!
 //! When enabled, the test:
 //!
-//! 1. Points `MIKEBOM_FINGERPRINTS_CACHE_DIR` at a fresh tempdir so we
+//! 1. Points `WAYBILL_FINGERPRINTS_CACHE_DIR` at a fresh tempdir so we
 //!    exercise the real cache-miss → fetch → cache-populate path.
-//! 2. Invokes `mikebom sbom scan --fingerprints-corpus --path <fixture>`
+//! 2. Invokes `waybill sbom scan --fingerprints-corpus --path <fixture>`
 //!    against a synthetic empty fixture (we don't need real
 //!    statically-linked binaries to prove plumbing — the unit tests
 //!    cover matching; this test proves fetch + cache mechanics).
@@ -21,8 +21,8 @@
 //! Run locally:
 //!
 //! ```sh
-//! MIKEBOM_FINGERPRINTS_NETWORK_TESTS=1 \
-//!     cargo +stable test -p mikebom \
+//! WAYBILL_FINGERPRINTS_NETWORK_TESTS=1 \
+//!     cargo +stable test -p waybill \
 //!         --test scan_fingerprint_corpus_external
 //! ```
 
@@ -33,7 +33,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn network_tests_enabled() -> bool {
-    std::env::var("MIKEBOM_FINGERPRINTS_NETWORK_TESTS").ok().as_deref() == Some("1")
+    std::env::var("WAYBILL_FINGERPRINTS_NETWORK_TESTS").ok().as_deref() == Some("1")
 }
 
 fn binary_path() -> &'static str {
@@ -45,14 +45,14 @@ fn binary_path() -> &'static str {
 /// This couples the test to the build-time pin exactly the way the
 /// production code is coupled — no second source of truth.
 fn embedded_sha() -> &'static str {
-    env!("MIKEBOM_FINGERPRINTS_CORPUS_SHA")
+    env!("WAYBILL_FINGERPRINTS_CORPUS_SHA")
 }
 
 #[test]
 fn external_corpus_fetch_populates_cache_and_scan_succeeds() {
     if !network_tests_enabled() {
         println!(
-            "skipped: MIKEBOM_FINGERPRINTS_NETWORK_TESTS not set (offline CI lane)"
+            "skipped: WAYBILL_FINGERPRINTS_NETWORK_TESTS not set (offline CI lane)"
         );
         return;
     }
@@ -68,7 +68,7 @@ fn external_corpus_fetch_populates_cache_and_scan_succeeds() {
         .expect("write placeholder");
 
     let output = Command::new(binary_path())
-        .env("MIKEBOM_FINGERPRINTS_CACHE_DIR", cache_dir.path())
+        .env("WAYBILL_FINGERPRINTS_CACHE_DIR", cache_dir.path())
         .arg("sbom")
         .arg("scan")
         .arg("--path")
@@ -78,10 +78,10 @@ fn external_corpus_fetch_populates_cache_and_scan_succeeds() {
         .arg("--fingerprints-corpus")
         .arg("--no-deep-hash")
         .output()
-        .expect("failed to invoke mikebom");
+        .expect("failed to invoke waybill");
     assert!(
         output.status.success(),
-        "mikebom sbom scan failed: stderr={}",
+        "waybill sbom scan failed: stderr={}",
         String::from_utf8_lossy(&output.stderr),
     );
 

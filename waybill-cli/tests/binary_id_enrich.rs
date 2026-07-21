@@ -2,7 +2,7 @@
 //! enrichment (embedded version strings + packer transparency +
 //! symbol fingerprinting).
 //!
-//! These tests run end-to-end against the compiled `mikebom` binary
+//! These tests run end-to-end against the compiled `waybill` binary
 //! and verify the milestone-096 invariants on real binaries available
 //! on the test host. They SKIP cleanly when no suitable binary exists
 //! (e.g., minimal CI container missing `/bin/ls`) rather than
@@ -12,13 +12,13 @@
 //! - **US1** (FR-001 embedded version strings): unit-tested
 //!   exhaustively in `scan_fs::binary::version_strings::tests`; this
 //!   file's integration coverage is the negative-control assertion
-//!   that mikebom itself (which uses rustls, not OpenSSL) does NOT
+//!   that waybill itself (which uses rustls, not OpenSSL) does NOT
 //!   emit a `pkg:generic/openssl@*` component.
 //! - **US2** (FR-003 packer transparency, Q2 always-emit): asserts
-//!   every file-level binary component carries `mikebom:binary-packed`
+//!   every file-level binary component carries `waybill:binary-packed`
 //!   with value `none` on an unpacked binary.
 //! - **US3** (FR-004 symbol fingerprinting): negative-control —
-//!   mikebom's own dynamic symbol table doesn't match the 3 v1
+//!   waybill's own dynamic symbol table doesn't match the 3 v1
 //!   fingerprints (openssl/zlib/libcurl) so no spurious
 //!   `pkg:generic/openssl|zlib|libcurl` should appear. The
 //!   composite-evidence merge (Q1) is unit-tested via
@@ -50,10 +50,10 @@ fn scan(dir: &Path) -> Value {
         .arg(&out_file)
         .arg("--no-deep-hash")
         .output()
-        .expect("failed to invoke mikebom");
+        .expect("failed to invoke waybill");
     assert!(
         output.status.success(),
-        "mikebom sbom scan failed: stderr={}",
+        "waybill sbom scan failed: stderr={}",
         String::from_utf8_lossy(&output.stderr),
     );
     let json_bytes = std::fs::read(&out_file).expect("SBOM not written");
@@ -72,7 +72,7 @@ fn find_file_level(sbom: &Value) -> Option<&Value> {
     sbom["components"]
         .as_array()?
         .iter()
-        .find(|c| property_value(c, "mikebom:binary-class").is_some())
+        .find(|c| property_value(c, "waybill:binary-class").is_some())
 }
 
 fn find_system_binary() -> Option<PathBuf> {
@@ -86,7 +86,7 @@ fn find_system_binary() -> Option<PathBuf> {
 }
 
 /// Contract 2 (FR-003 + Clarification Q2 always-emit): every
-/// file-level binary component carries `mikebom:binary-packed` even
+/// file-level binary component carries `waybill:binary-packed` even
 /// when the binary is not packed. Value is `"none"` on an unpacked
 /// binary (the universal case for `/bin/ls`).
 #[test]
@@ -103,29 +103,29 @@ fn unpacked_binary_emits_binary_packed_none() {
     let sbom = scan(dir.path());
     let file_level = find_file_level(&sbom)
         .expect("file-level binary component missing — discover step failed");
-    let packed = property_value(file_level, "mikebom:binary-packed");
+    let packed = property_value(file_level, "waybill:binary-packed");
     assert_eq!(
         packed.as_deref(),
         Some("none"),
         "Q2 always-emit invariant: unpacked binary must carry \
-         mikebom:binary-packed = 'none' (got {packed:?}). The file-level \
+         waybill:binary-packed = 'none' (got {packed:?}). The file-level \
          entry's properties were {:?}",
         file_level["properties"]
     );
 }
 
 /// Contract 1 negative control (FR-001 / SC-007 spurious-match bound):
-/// mikebom itself does NOT statically link OpenSSL, zlib, libcurl,
+/// waybill itself does NOT statically link OpenSSL, zlib, libcurl,
 /// SQLite, or libxml2. Its binary scan MUST NOT emit any
 /// `pkg:generic/<v1-lib>@<version>` component. If this assertion fires
-/// the v1 pattern set has a false-positive in mikebom's own
+/// the v1 pattern set has a false-positive in waybill's own
 /// `.rodata` / `__cstring` / `.rdata`. Tightens the anchor.
 #[test]
 fn mikebom_itself_does_not_emit_spurious_version_strings() {
-    // Scan a directory containing only the mikebom binary itself —
+    // Scan a directory containing only the waybill binary itself —
     // its own bytes shouldn't trip any v1 anchor.
     let dir = TempDir::new().unwrap();
-    let dest = dir.path().join("mikebom-under-test");
+    let dest = dir.path().join("waybill-under-test");
     std::fs::copy(binary_path(), &dest).unwrap();
 
     let sbom = scan(dir.path());
@@ -144,24 +144,24 @@ fn mikebom_itself_does_not_emit_spurious_version_strings() {
         .collect();
     assert!(
         spurious.is_empty(),
-        "SC-007 false-positive guard: mikebom binary should not trip \
+        "SC-007 false-positive guard: waybill binary should not trip \
          any v1 version-string pattern. Found {} spurious matches: {:?}",
         spurious.len(),
         spurious.iter().map(|c| c["purl"].as_str()).collect::<Vec<_>>(),
     );
 }
 
-/// Contract 3 negative control (FR-004 / SC-007): mikebom's dynamic
+/// Contract 3 negative control (FR-004 / SC-007): waybill's dynamic
 /// symbol table doesn't export the OpenSSL / zlib / libcurl public
 /// API. The 3 v1 fingerprints should produce zero
-/// `pkg:generic/<lib>` (no-version) emissions on mikebom's own bytes.
-/// If this fires either (a) mikebom started linking one of those
+/// `pkg:generic/<lib>` (no-version) emissions on waybill's own bytes.
+/// If this fires either (a) waybill started linking one of those
 /// libraries (signaling a real dependency change), or (b) the
 /// fingerprint threshold is too loose.
 #[test]
 fn mikebom_itself_does_not_emit_spurious_symbol_fingerprints() {
     let dir = TempDir::new().unwrap();
-    let dest = dir.path().join("mikebom-under-test");
+    let dest = dir.path().join("waybill-under-test");
     std::fs::copy(binary_path(), &dest).unwrap();
 
     let sbom = scan(dir.path());
@@ -180,10 +180,10 @@ fn mikebom_itself_does_not_emit_spurious_symbol_fingerprints() {
                 "pkg:generic/openssl"
                     | "pkg:generic/zlib"
                     | "pkg:generic/libcurl"
-                    // Milestone-099 v2 fingerprint expansion. Mikebom
+                    // Milestone-099 v2 fingerprint expansion. Waybill
                     // uses rustls + Rust's own regex crate (NOT linking
                     // any of these libraries) so the assertion still
-                    // holds — a regression here would mean mikebom
+                    // holds — a regression here would mean waybill
                     // now actually depends on the matched library.
                     | "pkg:generic/sqlite"
                     | "pkg:generic/pcre"
@@ -194,7 +194,7 @@ fn mikebom_itself_does_not_emit_spurious_symbol_fingerprints() {
         .collect();
     assert!(
         spurious.is_empty(),
-        "SC-007 false-positive guard: mikebom should not trip any v1 \
+        "SC-007 false-positive guard: waybill should not trip any v1 \
          symbol fingerprint. Found {} spurious matches: {:?}",
         spurious.len(),
         spurious.iter().map(|c| c["purl"].as_str()).collect::<Vec<_>>(),

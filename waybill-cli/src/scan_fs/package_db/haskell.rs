@@ -5,7 +5,7 @@
 //! - `cabal.project.freeze` (cabal-install line-format pinned constraints) —
 //!   source-tier per FR-002. Regex-extracted exact-pin entries
 //!   (`<name> ==<version>`); flag toggles (`<name> +<flag>`) skipped; range
-//!   constraints emit as design-tier with `mikebom:requirement-range`.
+//!   constraints emit as design-tier with `waybill:requirement-range`.
 //!
 //! - `stack.yaml.lock` (YAML, Stack 2.1+) — source-tier per FR-003.
 //!   Parsed via `serde_yaml` with Q3-style content-shape gate (top-level
@@ -51,12 +51,12 @@
 //!
 //! - **Q1 (GHC-stdlib annotation, FR-014)**: hardcoded ~22-name boot-library
 //!   allowlist (`base`, `text`, `bytestring`, `containers`, etc.) emits
-//!   `mikebom:ghc-stdlib = "true"` on matching components. Informational
+//!   `waybill:ghc-stdlib = "true"` on matching components. Informational
 //!   — does NOT gate emission. Mirrors milestone-141 OTP-stdlib pattern.
 //!
 //! - **Q2 (multi-stanza union)**: main-module `depends` unions ALL stanzas'
 //!   `build-depends:` (library + executable + test-suite + benchmark +
-//!   build-tool-depends) with per-stanza `mikebom:lifecycle-scope`
+//!   build-tool-depends) with per-stanza `waybill:lifecycle-scope`
 //!   (runtime vs development); most-binding scope wins on name collision.
 //!
 //! - **Q3 (Hpack detect-and-warn, FR-015)**: when `package.yaml` is found
@@ -64,7 +64,7 @@
 //!   `tracing::warn!` recommending regeneration. Reader does NOT parse
 //!   `package.yaml` directly — avoids second-source-of-truth complexity.
 //!
-//! `mikebom:source-type` value-set follows the milestone-122/137-142
+//! `waybill:source-type` value-set follows the milestone-122/137-142
 //! prefixed convention with the `hackage-` prefix.
 //!
 //! Zero new Cargo dependencies — reuses workspace `regex`, `serde_yaml`,
@@ -87,7 +87,7 @@ const MAX_HASKELL_WALK_DEPTH: usize = 12;
 
 /// Hardcoded GHC boot-library allowlist per Q1 + FR-014. Allowlisted
 /// entries emit as regular `pkg:hackage/<name>@<version>` components AND
-/// additionally carry `mikebom:ghc-stdlib = "true"`. The annotation is
+/// additionally carry `waybill:ghc-stdlib = "true"`. The annotation is
 /// informational — it does NOT gate emission; non-allowlisted entries
 /// emit identically except for the additional property. Mirrors the
 /// milestone-141 OTP-stdlib pattern.
@@ -1047,11 +1047,11 @@ fn build_snapshot_placeholder(snapshot: &StackSnapshot) -> PackageDbEntry {
     let purl = Purl::new(&purl_str).unwrap_or_else(|_| fallback_purl());
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     extra_annotations.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String("hackage-snapshot".to_string()),
     );
     extra_annotations.insert(
-        "mikebom:stackage-resolver".to_string(),
+        "waybill:stackage-resolver".to_string(),
         serde_json::Value::String(snapshot.resolver.clone()),
     );
     let sbom_tier = if snapshot.sha256.is_some() {
@@ -1136,11 +1136,11 @@ fn build_main_module(
 
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     extra_annotations.insert(
-        "mikebom:component-role".to_string(),
+        "waybill:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
     extra_annotations.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String("hackage-main-module".to_string()),
     );
     let sbom_tier = if has_lockfile { "source" } else { "design" };
@@ -1202,7 +1202,7 @@ fn build_design_tier_components(
         // plural (1-element for its own single-dep case); reconciler may
         // later accumulate onto a survivor if a source-tier match exists.
         extra_annotations.insert(
-            "mikebom:requirement-ranges".to_string(),
+            "waybill:requirement-ranges".to_string(),
             serde_json::json!([dep.range.clone().unwrap_or_default()]),
         );
         apply_ghc_stdlib_annotation(&mut extra_annotations, &dep.name);
@@ -1279,7 +1279,7 @@ fn emit_hpack_warnings(
 fn base_annotations(source_type: &str) -> BTreeMap<String, serde_json::Value> {
     let mut m: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     m.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String(source_type.to_string()),
     );
     m
@@ -1294,7 +1294,7 @@ fn apply_ghc_stdlib_annotation(
         .any(|s| s.eq_ignore_ascii_case(name))
     {
         annotations.insert(
-            "mikebom:ghc-stdlib".to_string(),
+            "waybill:ghc-stdlib".to_string(),
             serde_json::Value::String("true".to_string()),
         );
     }
@@ -1615,7 +1615,7 @@ version: 0.1.0
         };
         let c = build_freeze_component(&entry);
         assert_eq!(
-            c.extra_annotations.get("mikebom:ghc-stdlib"),
+            c.extra_annotations.get("waybill:ghc-stdlib"),
             Some(&serde_json::Value::String("true".to_string()))
         );
     }
@@ -1627,7 +1627,7 @@ version: 0.1.0
             version: "2.2.0.0".to_string(),
         };
         let c = build_freeze_component(&entry);
-        assert!(!c.extra_annotations.contains_key("mikebom:ghc-stdlib"));
+        assert!(!c.extra_annotations.contains_key("waybill:ghc-stdlib"));
     }
 
     #[test]

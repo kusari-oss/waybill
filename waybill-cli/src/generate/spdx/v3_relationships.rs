@@ -49,7 +49,7 @@ pub fn build_relationship(
 ///
 /// SPDX 3.0.1's `relationshipType` enum does NOT carry over
 /// SPDX 2.3's `DEV_DEPENDENCY_OF` / `BUILD_DEPENDENCY_OF`
-/// distinction — all four mikebom relationship kinds
+/// distinction — all four waybill relationship kinds
 /// (`DependsOn`, `DevDependsOn`, `BuildDependsOn`,
 /// `TestDependsOn`) emit as `dependsOn` in SPDX 3.0.1. The
 /// dev/build/test subtype signal is preserved via the
@@ -100,7 +100,7 @@ pub fn build_dependency_relationships(
         // Milestone 179 FR-017: `OptionalDependsOn` intentionally maps
         // to `None` — SPDX 3.0.1's `LifecycleScopeType` enum has no
         // `optional` value at spec version 3.0.1. The classification
-        // information rides on the `mikebom:optional-derivation`
+        // information rides on the `waybill:optional-derivation`
         // component-level annotation instead (Principle V KEEP-BOTH
         // carve-out for the SPDX 3 side). If a future SPDX 3 minor
         // (3.1, 3.2, ...) adds an `optional` value, a follow-up

@@ -8,7 +8,7 @@
 //! - (a) manual `--repo <url>` on a non-git tempdir →
 //!   identifier appears in the standards-native VCS slot per format.
 //! - (b) two user-defined `--id <scheme>=<value>` flags →
-//!   `mikebom:identifiers` annotation carries both, sorted lex.
+//!   `waybill:identifiers` annotation carries both, sorted lex.
 //! - (c) git checkout + `--repo <different>` →
 //!   manual override wins (auto-detected entry dropped).
 //! - (d) duplicate `--repo <same>` is *not* possible at the CLI
@@ -29,7 +29,7 @@
 //!   case (the old `--with-source repo:foo` was a valid form; the
 //!   refactor splits it into `--repo foo`).
 //! - (f) `--repo obviously_invalid` → soft-fail to opaque,
-//!   identifier appears under `mikebom:identifiers` not the
+//!   identifier appears under `waybill:identifiers` not the
 //!   VCS slot. (Built-in value validators behind dedicated flags
 //!   share the same soft-fail path.)
 
@@ -134,7 +134,7 @@ fn cdx_vcs_urls(doc: &serde_json::Value) -> Vec<String> {
 fn cdx_user_defined_payload(doc: &serde_json::Value) -> Option<Vec<serde_json::Value>> {
     let props = doc["metadata"].get("properties")?.as_array()?;
     let entry = props.iter().find(|p| {
-        p.get("name").and_then(|v| v.as_str()) == Some("mikebom:identifiers")
+        p.get("name").and_then(|v| v.as_str()) == Some("waybill:identifiers")
     })?;
     let raw = entry["value"].as_str()?;
     serde_json::from_str(raw).ok()
@@ -310,7 +310,7 @@ fn malformed_builtin_value_softfails_to_user_defined() {
         urls.is_empty(),
         "soft-failed built-in identifier MUST NOT ride the VCS slot; got urls={urls:?}"
     );
-    // It should appear under `mikebom:identifiers` instead.
+    // It should appear under `waybill:identifiers` instead.
     let payload = cdx_user_defined_payload(&cdx)
         .expect("payload present after soft-fail downgrade");
     let found = payload
@@ -318,6 +318,6 @@ fn malformed_builtin_value_softfails_to_user_defined() {
         .any(|e| e["scheme"].as_str() == Some("repo"));
     assert!(
         found,
-        "soft-failed built-in identifier must emit under mikebom:identifiers; got {payload:?}"
+        "soft-failed built-in identifier must emit under waybill:identifiers; got {payload:?}"
     );
 }

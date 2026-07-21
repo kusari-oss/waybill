@@ -6,7 +6,7 @@
 //! These tests build synthetic pom.xml fixtures in tempdirs so they
 //! exercise the parser + main-module emission paths without requiring
 //! the milestone-090 fixture-cache repo. The transitive_parity_maven
-//! test (mikebom-cli/tests/transitive_parity_maven.rs) provides the
+//! test (waybill-cli/tests/transitive_parity_maven.rs) provides the
 //! complementary audit-fixture coverage.
 
 use std::path::Path;
@@ -28,7 +28,7 @@ fn scan_to_cdx(path: &Path) -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -111,7 +111,7 @@ fn main_module_falls_back_to_parent_version_when_project_version_absent() {
 }
 
 /// Milestone 092 / FR-003: when BOTH project-level `<version>` and
-/// `<parent>/<version>` are absent, mikebom MUST NOT emit a main-module
+/// `<parent>/<version>` are absent, waybill MUST NOT emit a main-module
 /// component (the existing `is_empty()` guard at maven.rs:3436 catches
 /// it). No malformed `pkg:maven/.../<artifact>@` PURL appears.
 #[test]

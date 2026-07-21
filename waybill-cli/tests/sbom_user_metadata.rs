@@ -1,6 +1,6 @@
 //! Milestone 080 — user-provided SBOM metadata integration tests.
 //!
-//! Drives `mikebom sbom scan` with the milestone-080 flag set
+//! Drives `waybill sbom scan` with the milestone-080 flag set
 //! (`--creator`, `--annotator`, `--annotation-comment`,
 //! `--metadata-comment`, `--scan-target-name`, `--metadata-file`)
 //! against synthetic source-tier fixtures, then asserts that each
@@ -54,12 +54,12 @@ use common::fixture_path;
 
 /// Path to the existing minimal cargo fixture used by the rest of the
 /// integration suite. Source-tier scans of this fixture exercise every
-/// emission code path mikebom 080 touched.
+/// emission code path waybill 080 touched.
 fn fixture_root() -> PathBuf {
     fixture_path("cargo/lockfile-v3")
 }
 
-/// Run `mikebom sbom scan` against `fixture` with `extra_args`,
+/// Run `waybill sbom scan` against `fixture` with `extra_args`,
 /// emitting `out_format` to a tempdir; returns the parsed JSON +
 /// captured stderr.
 ///
@@ -103,7 +103,7 @@ fn run_scan(
     (parsed, stderr)
 }
 
-/// Run `mikebom sbom scan` and return the raw output bytes alongside
+/// Run `waybill sbom scan` and return the raw output bytes alongside
 /// the parsed JSON — used by the determinism test which needs the
 /// on-disk shape for normalization-stable byte compare.
 fn run_scan_raw(
@@ -193,8 +193,8 @@ fn creator_lands_in_all_three_formats() {
         "CDX metadata.tools.components missing user creator; got {names:?}"
     );
     assert!(
-        names.contains(&"mikebom"),
-        "CDX metadata.tools.components dropped the auto-populated mikebom entry; got {names:?}"
+        names.contains(&"waybill"),
+        "CDX metadata.tools.components dropped the auto-populated waybill entry; got {names:?}"
     );
 
     // SPDX 2.3: creationInfo.creators[] contains the verbatim line.
@@ -256,7 +256,7 @@ fn creator_lands_in_all_three_formats() {
 #[test]
 fn multi_creator_appends_additively() {
     // US1 §2 / FR-001 + FR-007: two `--creator` flags both visible
-    // alongside the auto-populated mikebom entry.
+    // alongside the auto-populated waybill entry.
     let fake_home = tempfile::tempdir().unwrap();
     let extra = &[
         "--creator",
@@ -279,7 +279,7 @@ fn multi_creator_appends_additively() {
         .filter_map(|c| c["name"].as_str())
         .collect();
     assert!(
-        names.contains(&"mikebom") && names.contains(&"pipeline-a") && names.contains(&"pipeline-b"),
+        names.contains(&"waybill") && names.contains(&"pipeline-a") && names.contains(&"pipeline-b"),
         "CDX missing one or more expected creators; got {names:?}"
     );
     let pos_a = names.iter().position(|n| *n == "pipeline-a").unwrap();
@@ -304,10 +304,10 @@ fn multi_creator_appends_additively() {
         .collect();
     assert!(creator_strs.iter().any(|s| s == "Tool: pipeline-a"));
     assert!(creator_strs.iter().any(|s| s == "Tool: pipeline-b"));
-    // mikebom auto-tool entry preserved.
+    // waybill auto-tool entry preserved.
     assert!(
-        creator_strs.iter().any(|s| s.starts_with("Tool: mikebom-")),
-        "SPDX 2.3 dropped the auto mikebom Tool entry: {creator_strs:?}"
+        creator_strs.iter().any(|s| s.starts_with("Tool: waybill-")),
+        "SPDX 2.3 dropped the auto waybill Tool entry: {creator_strs:?}"
     );
 }
 
@@ -522,7 +522,7 @@ fn metadata_comment_lands_in_all_three() {
         "SPDX 2.3 creationInfo.comment doesn't lead with user comment; got {ci_comment:?}"
     );
 
-    // CDX: bom.annotations[] entry annotator.organization.name = mikebom contributors,
+    // CDX: bom.annotations[] entry annotator.organization.name = waybill contributors,
     // text == comment.
     let (cdx, _) = run_scan(
         fake_home.path(),
@@ -531,7 +531,7 @@ fn metadata_comment_lands_in_all_three() {
         "cyclonedx-json",
         "out.cdx.json",
     );
-    let texts = cdx_annotation_texts(&cdx, "organization", "mikebom contributors");
+    let texts = cdx_annotation_texts(&cdx, "organization", "waybill contributors");
     assert!(
         texts.contains(&comment),
         "CDX bom.annotations missing metadata-comment; got texts={texts:?}"
@@ -899,7 +899,7 @@ fn scan_target_name_root_name_precedence() {
 fn write_metadata_file(content: &str) -> tempfile::NamedTempFile {
     use std::io::Write;
     let mut f = tempfile::Builder::new()
-        .prefix("mikebom-080-meta-")
+        .prefix("waybill-080-meta-")
         .suffix(".json")
         .tempfile()
         .unwrap();
@@ -943,7 +943,7 @@ fn metadata_file_loads_correctly() {
     assert!(tool_names.contains(&"file-T"), "got {tool_names:?}");
     let from_file = cdx_annotation_texts(&cdx, "component", "file-A");
     assert!(from_file.contains(&"from file"), "got {from_file:?}");
-    let doc_from_file = cdx_annotation_texts(&cdx, "organization", "mikebom contributors");
+    let doc_from_file = cdx_annotation_texts(&cdx, "organization", "waybill contributors");
     assert!(
         doc_from_file.contains(&"doc comment from file"),
         "expected doc comment from file in CDX bom.annotations[]; got {doc_from_file:?}"
@@ -1223,11 +1223,11 @@ fn run_spdx3_validator(fixture_path: &Path) -> ValidationResult {
     let bin_path = validator_path();
     if !bin_path.exists() {
         let require =
-            std::env::var("MIKEBOM_REQUIRE_SPDX3_VALIDATOR").ok().as_deref() == Some("1");
+            std::env::var("WAYBILL_REQUIRE_SPDX3_VALIDATOR").ok().as_deref() == Some("1");
         if require {
             return ValidationResult::Fail {
                 combined_output: format!(
-                    "spdx3-validate not found at {} and MIKEBOM_REQUIRE_SPDX3_VALIDATOR=1 is set; \
+                    "spdx3-validate not found at {} and WAYBILL_REQUIRE_SPDX3_VALIDATOR=1 is set; \
                      run scripts/install-spdx3-validate.sh on this host before re-running CI.",
                     bin_path.display()
                 ),
@@ -1320,8 +1320,8 @@ fn spdx3_conformance_with_full_metadata() {
 #[test]
 fn cdx_native_annotations_emit_correctly() {
     // Q2 audit confirmation: with milestone-080 flags exercised, the
-    // CDX SBOM does NOT introduce any `mikebom:invocation-comment`,
-    // `mikebom:annotation`, or `mikebom:user-metadata` properties — the
+    // CDX SBOM does NOT introduce any `waybill:invocation-comment`,
+    // `waybill:annotation`, or `waybill:user-metadata` properties — the
     // values ride bom.annotations[] / metadata.* native slots per the
     // Phase 0 §1 audit (FR-008; parity-bridge fallback NOT triggered).
     let fake_home = tempfile::tempdir().unwrap();
@@ -1350,18 +1350,18 @@ fn cdx_native_annotations_emit_correctly() {
     );
 
     // Walk all property arrays and assert no milestone-080-specific
-    // mikebom:* annotation namespaces appear. (Pre-existing
-    // mikebom:* properties from earlier milestones — generation-context,
+    // waybill:* annotation namespaces appear. (Pre-existing
+    // waybill:* properties from earlier milestones — generation-context,
     // sbom-tier, etc. — are EXPECTED to be present; we only assert the
     // milestone-080 namespaces don't fall back.)
     let forbidden_names = [
-        "mikebom:invocation-comment",
-        "mikebom:annotation",
-        "mikebom:annotator",
-        "mikebom:metadata-comment",
-        "mikebom:scan-target-name",
-        "mikebom:creator",
-        "mikebom:user-metadata",
+        "waybill:invocation-comment",
+        "waybill:annotation",
+        "waybill:annotator",
+        "waybill:metadata-comment",
+        "waybill:scan-target-name",
+        "waybill:creator",
+        "waybill:user-metadata",
     ];
     fn collect_property_names(value: &serde_json::Value, out: &mut Vec<String>) {
         match value {
@@ -1443,7 +1443,7 @@ fn spdx3_schema_path() -> PathBuf {
 
 /// Custom retriever for the CDX 1.6 schema's two external `$ref`s
 /// (`spdx.schema.json` for the licenses field, `jsf-0.82.schema.json`
-/// for `metadata.signature`). Mikebom's emitted output doesn't use
+/// for `metadata.signature`). Waybill's emitted output doesn't use
 /// either feature, so the safest stubs are permissive empty schemas
 /// (`{}` validates anything). This avoids depending on the
 /// `resolve-http` feature flag (not enabled in our workspace dep).
@@ -1458,14 +1458,14 @@ impl jsonschema::Retrieve for CdxStubRetriever {
         if s.ends_with("spdx.schema.json") {
             // SPDX schema is referenced as a top-level $ref for the
             // license-expression string type. Permissive stub: accept
-            // any string. Mikebom's emitted CDX uses literal SPDX-
+            // any string. Waybill's emitted CDX uses literal SPDX-
             // listed-license IDs which the official schema would
             // accept anyway.
             return Ok(serde_json::json!({"type": "string"}));
         }
         if s.ends_with("jsf-0.82.schema.json") {
             // jsf-0.82 is referenced via `#/definitions/signature` for
-            // optional BOM signing. Mikebom never emits signed BOMs so
+            // optional BOM signing. Waybill never emits signed BOMs so
             // the slot is structurally absent. Provide an inner
             // `definitions/signature` that's permissive (`{}`) so the
             // JSON-pointer dereference resolves.

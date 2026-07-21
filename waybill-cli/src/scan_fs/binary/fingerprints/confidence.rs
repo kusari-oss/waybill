@@ -90,7 +90,7 @@ impl FusedConfidence {
         }
     }
 
-    /// SBOM-annotation-friendly bucket name. Stable across mikebom versions
+    /// SBOM-annotation-friendly bucket name. Stable across waybill versions
     /// per FR-017 ("version-stable fusion rule"); consumers can pattern-match
     /// on the string.
     pub(crate) const fn as_str(self) -> &'static str {

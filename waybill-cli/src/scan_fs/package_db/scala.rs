@@ -30,19 +30,19 @@
 //! - **scala-sbt-lock** (modern Hex on Maven Central): `pkg:maven/<group>/<artifact>@<version>`.
 //!   The lockfile's `name` field is authoritative — it already contains
 //!   any Scala-version suffix (`_2.13` / `_3`) that the plugin's resolver
-//!   appended at publish time. mikebom does NOT re-append.
+//!   appended at publish time. waybill does NOT re-append.
 //! - **scala-sbt-design** (build.sbt fallback): same PURL shape, but the
 //!   Scala-version suffix is derived via the Q1 inference cascade:
 //!   (1) explicit `scalaVersion := "..."` → (2) `project/build.properties`
 //!   embedded `scala.version=` → (3) default `_2.13` with
-//!   `mikebom:scala-version-source = "default-fallback"` per Q1. Each
-//!   design-tier `%%` dep carries `mikebom:scala-version-source` for
+//!   `waybill:scala-version-source = "default-fallback"` per Q1. Each
+//!   design-tier `%%` dep carries `waybill:scala-version-source` for
 //!   transparency.
 //! - **scala-main-module** (per-subproject root component): one per
 //!   surfaced subproject per Q2 union discovery. PURL
 //!   `pkg:maven/<organization>/<name><scala-suffix>@<version>` with the
-//!   same `%%` semantics; carries `mikebom:component-role = "main-module"`
-//!   + F6-clarification `mikebom:scala-version-source` for transparency.
+//!   same `%%` semantics; carries `waybill:component-role = "main-module"`
+//!   + F6-clarification `waybill:scala-version-source` for transparency.
 //! - Cross-built libraries (`cats-core_2.13` + `cats-core_3`) emit as
 //!   distinct components per FR-003 — the PURLs differ in `name` slot
 //!   per Maven Central reality.
@@ -54,7 +54,7 @@
 //! surfaces hit the same dir. Each surfaced subproject emits one
 //! main-module + the implicit root project emits its own (Q2 Phase C).
 //!
-//! `mikebom:source-type` value-set follows the milestone-122/137-141
+//! `waybill:source-type` value-set follows the milestone-122/137-141
 //! prefixed convention: `scala-sbt-lock` / `scala-sbt-design` /
 //! `scala-main-module`. Distinguishes Scala-derived components from
 //! milestone-070's `maven-pom`-prefixed values even though both readers
@@ -1016,7 +1016,7 @@ fn build_lockfile_component(entry: &SbtLockEntry) -> PackageDbEntry {
 
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     extra_annotations.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String("scala-sbt-lock".to_string()),
     );
 
@@ -1115,17 +1115,17 @@ fn build_main_module_component(
 
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     extra_annotations.insert(
-        "mikebom:component-role".to_string(),
+        "waybill:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
     extra_annotations.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String("scala-main-module".to_string()),
     );
     // Per F6 remediation: surface the Scala-version-source on the main-module
     // (matches the design-tier %% deps' transparency convention).
     extra_annotations.insert(
-        "mikebom:scala-version-source".to_string(),
+        "waybill:scala-version-source".to_string(),
         serde_json::Value::String(source.to_annotation_value().to_string()),
     );
 
@@ -1205,13 +1205,13 @@ fn build_design_tier_component(
 
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     extra_annotations.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String("scala-sbt-design".to_string()),
     );
-    // F6 + Q1: emit mikebom:scala-version-source ONLY on %% deps (not on % pure-Java).
+    // F6 + Q1: emit waybill:scala-version-source ONLY on %% deps (not on % pure-Java).
     if dep.declaration_kind == DeclKind::DoublePercent {
         extra_annotations.insert(
-            "mikebom:scala-version-source".to_string(),
+            "waybill:scala-version-source".to_string(),
             serde_json::Value::String(scala_version_source.to_annotation_value().to_string()),
         );
     }

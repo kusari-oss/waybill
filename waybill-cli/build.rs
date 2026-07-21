@@ -10,12 +10,12 @@
 // The fixture-fetch side reads the pinned `mikebom-test-fixtures`
 // Git SHA from `<workspace>/tests/fixtures.rev`, ensures the fixture
 // repo is cloned at that SHA into a per-host cache, and exposes the
-// cache path to test code via the `MIKEBOM_FIXTURES_DIR` compile-time
+// cache path to test code via the `WAYBILL_FIXTURES_DIR` compile-time
 // env var. Cache-warm builds skip the network entirely. See
 // specs/090-split-test-fixtures-repo/contracts/fixture-path-helper.md.
 //
 // The fingerprint-corpus SHA pin reads `<workspace>/tests/fingerprints.rev`
-// and emits it as the `MIKEBOM_FINGERPRINTS_CORPUS_SHA` compile-time
+// and emits it as the `WAYBILL_FINGERPRINTS_CORPUS_SHA` compile-time
 // env var consumed by the runtime corpus loader. Unlike fetch_fixtures,
 // this build step does NOT touch the network — the runtime loader
 // handles cache-miss fetch when `--fingerprints-corpus` is set at
@@ -44,11 +44,11 @@ fn fetch_fixtures() {
     let pin_path = workspace_root.join("tests").join("fixtures.rev");
 
     println!("cargo:rerun-if-changed={}", pin_path.display());
-    println!("cargo:rerun-if-env-changed=MIKEBOM_FIXTURE_CACHE");
+    println!("cargo:rerun-if-env-changed=WAYBILL_FIXTURE_CACHE");
 
     let sha_raw = std::fs::read_to_string(&pin_path).unwrap_or_else(|e| {
         panic!(
-            "\nfailed to read fixture-repo pin at {}: {}\n\nThis commit predates the milestone-090 fixture split, OR the pin\nfile is missing. Either:\n  1. Check out a post-090 mikebom revision that has tests/fixtures.rev, OR\n  2. Manually create the file with a 40-char hex SHA from\n     {url}\n",
+            "\nfailed to read fixture-repo pin at {}: {}\n\nThis commit predates the milestone-090 fixture split, OR the pin\nfile is missing. Either:\n  1. Check out a post-090 waybill revision that has tests/fixtures.rev, OR\n  2. Manually create the file with a 40-char hex SHA from\n     {url}\n",
             pin_path.display(),
             e,
             url = FIXTURE_REPO_URL,
@@ -74,7 +74,7 @@ fn fetch_fixtures() {
     {
         // Cache hit — skip fetch.
         println!(
-            "cargo:rustc-env=MIKEBOM_FIXTURES_DIR={}",
+            "cargo:rustc-env=WAYBILL_FIXTURES_DIR={}",
             cache_target.display()
         );
         return;
@@ -103,7 +103,7 @@ fn fetch_fixtures() {
 
     // Pin to exact SHA — clone defaults to default-branch HEAD; we
     // want the specific SHA from tests/fixtures.rev for reproducibility
-    // across mikebom commits.
+    // across waybill commits.
     let reset_status = Command::new("git")
         .args(["-C", cache_target_str, "reset", "--hard", &sha])
         .status();
@@ -117,7 +117,7 @@ fn fetch_fixtures() {
     }
 
     println!(
-        "cargo:rustc-env=MIKEBOM_FIXTURES_DIR={}",
+        "cargo:rustc-env=WAYBILL_FIXTURES_DIR={}",
         cache_target.display()
     );
 }
@@ -125,20 +125,20 @@ fn fetch_fixtures() {
 /// Resolve a writable directory to host the fixture-repo cache.
 ///
 /// Resolution order:
-/// 1. `MIKEBOM_FIXTURE_CACHE` env var (explicit operator override).
-/// 2. `$HOME/.cache/mikebom/fixtures/` on Unix /
-///    `$USERPROFILE/.cache/mikebom/fixtures/` on Windows.
-/// 3. `$OUT_DIR/mikebom-fixtures/` as a defensive fallback when (2)
+/// 1. `WAYBILL_FIXTURE_CACHE` env var (explicit operator override).
+/// 2. `$HOME/.cache/waybill/fixtures/` on Unix /
+///    `$USERPROFILE/.cache/waybill/fixtures/` on Windows.
+/// 3. `$OUT_DIR/waybill-fixtures/` as a defensive fallback when (2)
 ///    isn't writable — cargo always sets `OUT_DIR` and guarantees it
 ///    is writable. Triggered in `cross` Docker containers where
-///    `HOME=""` produces an unusable path like `/.cache/mikebom/...`
+///    `HOME=""` produces an unusable path like `/.cache/waybill/...`
 ///    that the container's root filesystem rejects.
 ///
 /// Returns a path whose parent directory already exists and is
 /// writable, so callers can `clone`/`reset` into a subdirectory of it
 /// without panicking on permission errors.
 fn resolve_cache_parent() -> PathBuf {
-    let preferred = std::env::var("MIKEBOM_FIXTURE_CACHE")
+    let preferred = std::env::var("WAYBILL_FIXTURE_CACHE")
         .ok()
         .filter(|s| !s.is_empty())
         .map(PathBuf::from)
@@ -150,7 +150,7 @@ fn resolve_cache_parent() -> PathBuf {
             Some(
                 PathBuf::from(home)
                     .join(".cache")
-                    .join("mikebom")
+                    .join("waybill")
                     .join("fixtures"),
             )
         });
@@ -160,7 +160,7 @@ fn resolve_cache_parent() -> PathBuf {
             return path;
         }
         println!(
-            "cargo:warning=fixture cache parent {} not writable; falling back to $OUT_DIR/mikebom-fixtures/",
+            "cargo:warning=fixture cache parent {} not writable; falling back to $OUT_DIR/waybill-fixtures/",
             path.display()
         );
     }
@@ -168,20 +168,20 @@ fn resolve_cache_parent() -> PathBuf {
     // Fallback: $OUT_DIR is always set by cargo and is writable.
     let out_dir = std::env::var("OUT_DIR")
         .expect("cargo must set OUT_DIR in build.rs");
-    let fallback = PathBuf::from(out_dir).join("mikebom-fixtures");
+    let fallback = PathBuf::from(out_dir).join("waybill-fixtures");
     std::fs::create_dir_all(&fallback)
         .expect("OUT_DIR-based fixture cache fallback must be writable");
     fallback
 }
 
-/// Milestone 108 — read the pinned `kusari-sandbox/mikebom-fingerprints`
+/// Milestone 108 — read the pinned `kusari-sandbox/waybill-fingerprints`
 /// SHA from `<workspace>/tests/fingerprints.rev` and emit it as the
-/// `MIKEBOM_FINGERPRINTS_CORPUS_SHA` compile-time env var.
+/// `WAYBILL_FINGERPRINTS_CORPUS_SHA` compile-time env var.
 ///
 /// Unlike `fetch_fixtures`, this step does NOT touch the network. The
 /// runtime corpus loader handles cache-miss fetch when an operator
 /// passes `--fingerprints-corpus` at scan time. The build only emits
-/// the pin so `env!("MIKEBOM_FINGERPRINTS_CORPUS_SHA")` resolves to
+/// the pin so `env!("WAYBILL_FINGERPRINTS_CORPUS_SHA")` resolves to
 /// a known value in production code.
 ///
 /// Validation: the file must contain a single 40-char lowercase hex
@@ -202,7 +202,7 @@ fn emit_fingerprints_corpus_sha() {
 
     let sha_raw = std::fs::read_to_string(&pin_path).unwrap_or_else(|e| {
         panic!(
-            "\nfailed to read fingerprint-corpus pin at {}: {}\n\nThis commit predates the milestone-108 fingerprint-corpus split,\nOR the pin file is missing. Either:\n  1. Check out a post-108 mikebom revision that has tests/fingerprints.rev, OR\n  2. Manually create the file with a 40-char hex SHA from\n     https://github.com/kusari-sandbox/mikebom-fingerprints/commits/main\n",
+            "\nfailed to read fingerprint-corpus pin at {}: {}\n\nThis commit predates the milestone-108 fingerprint-corpus split,\nOR the pin file is missing. Either:\n  1. Check out a post-108 waybill revision that has tests/fingerprints.rev, OR\n  2. Manually create the file with a 40-char hex SHA from\n     https://github.com/kusari-sandbox/waybill-fingerprints/commits/main\n",
             pin_path.display(),
             e,
         )
@@ -216,5 +216,5 @@ fn emit_fingerprints_corpus_sha() {
         panic!("\ntests/fingerprints.rev MUST be a 40-char lowercase hex SHA; got {sha:?}\n");
     }
 
-    println!("cargo:rustc-env=MIKEBOM_FINGERPRINTS_CORPUS_SHA={sha}");
+    println!("cargo:rustc-env=WAYBILL_FINGERPRINTS_CORPUS_SHA={sha}");
 }

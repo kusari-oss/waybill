@@ -2,7 +2,7 @@
 //!
 //! Companion to the unit tests in `scan_fs::package_db::npm::bun_lock::tests`
 //! (which exercise `parse_bun_lock` directly). This test invokes the
-//! `mikebom sbom scan --path <fixture>` binary against the in-repo
+//! `waybill sbom scan --path <fixture>` binary against the in-repo
 //! `bun_lock/basic/` fixture to verify the dispatcher integration —
 //! `npm::read` actually calls `bun_lock::read_bun_lock`, the JSONC
 //! comment stripper handles the top-of-file `// bun: lockfileVersion: 1`
@@ -39,7 +39,7 @@ fn bun_lock_basic_fixture_emits_npm_components() {
 
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -51,7 +51,7 @@ fn bun_lock_basic_fixture_emits_npm_components() {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "bun.lock scan unexpectedly failed: stderr={}",
@@ -72,18 +72,18 @@ fn bun_lock_basic_fixture_emits_npm_components() {
 
     // Both fixture packages MUST appear, including the scoped name
     // with URL-encoded `@` (per the PURL spec). The names are
-    // deliberately synthetic (`mikebom-fixture-*`) so the fixture
+    // deliberately synthetic (`waybill-fixture-*`) so the fixture
     // never collides with real-world CVE advisories — Inspector +
     // dependency policy gates don't whack-a-mole us on package
     // version churn (the fixture is a parser exercise, not a real
     // build dep).
     assert!(
-        npm_purls.contains(&"pkg:npm/mikebom-fixture-lib@1.2.3"),
-        "expected mikebom-fixture-lib in output; got: {npm_purls:?}",
+        npm_purls.contains(&"pkg:npm/waybill-fixture-lib@1.2.3"),
+        "expected waybill-fixture-lib in output; got: {npm_purls:?}",
     );
     assert!(
         npm_purls.contains(&"pkg:npm/%40mikebom-fixture/types-pkg@4.5.6"),
-        "expected URL-encoded @mikebom-fixture/types-pkg in output; got: {npm_purls:?}",
+        "expected URL-encoded @waybill-fixture/types-pkg in output; got: {npm_purls:?}",
     );
 }
 
@@ -103,14 +103,14 @@ fn bun_lock_with_trailing_commas_parses_and_emits_components() {
     "": {
       "name": "m189-trailing-comma-fixture",
       "dependencies": {
-        "mikebom-fixture-lib": "1.2.3",
-        "@mikebom-fixture/types-pkg": "4.5.6",
+        "waybill-fixture-lib": "1.2.3",
+        "@waybill-fixture/types-pkg": "4.5.6",
       },
     },
   },
   "packages": {
-    "mikebom-fixture-lib": ["mikebom-fixture-lib@1.2.3", "sha512-abc"],
-    "@mikebom-fixture/types-pkg": ["@mikebom-fixture/types-pkg@4.5.6", "sha512-def"],
+    "waybill-fixture-lib": ["waybill-fixture-lib@1.2.3", "sha512-abc"],
+    "@waybill-fixture/types-pkg": ["@waybill-fixture/types-pkg@4.5.6", "sha512-def"],
   },
 }
 "#;
@@ -125,8 +125,8 @@ fn bun_lock_with_trailing_commas_parses_and_emits_components() {
   "name": "m189-trailing-comma-fixture",
   "version": "0.1.0",
   "dependencies": {
-    "mikebom-fixture-lib": "1.2.3",
-    "@mikebom-fixture/types-pkg": "4.5.6"
+    "waybill-fixture-lib": "1.2.3",
+    "@waybill-fixture/types-pkg": "4.5.6"
   }
 }
 "#;
@@ -135,7 +135,7 @@ fn bun_lock_with_trailing_commas_parses_and_emits_components() {
 
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -147,14 +147,14 @@ fn bun_lock_with_trailing_commas_parses_and_emits_components() {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
         output.status.success(),
         "bun.lock scan with trailing commas failed: stderr={stderr}"
     );
 
-    // Critical: verify mikebom did NOT emit a bun.lock parse-failure
+    // Critical: verify waybill did NOT emit a bun.lock parse-failure
     // WARN (that'd mean we're still silently falling back to
     // manifest-tier).
     assert!(
@@ -173,8 +173,8 @@ fn bun_lock_with_trailing_commas_parses_and_emits_components() {
         .filter(|p| p.starts_with("pkg:npm/"))
         .collect();
     assert!(
-        npm_purls.contains(&"pkg:npm/mikebom-fixture-lib@1.2.3"),
-        "expected mikebom-fixture-lib from bun.lock in output; got: {npm_purls:?}"
+        npm_purls.contains(&"pkg:npm/waybill-fixture-lib@1.2.3"),
+        "expected waybill-fixture-lib from bun.lock in output; got: {npm_purls:?}"
     );
     assert!(
         npm_purls.contains(&"pkg:npm/%40mikebom-fixture/types-pkg@4.5.6"),

@@ -399,7 +399,7 @@ pub(crate) struct DroppedDuplicate {
 /// - `sbom_tier: Some("source")` (FR-006); overridden to `"deployed"`
 ///   downstream when augment-existing merges with a Tier-1 venv entry
 ///   (FR-011, in `read()`).
-/// - `extra_annotations` carries `mikebom:component-role: "main-module"`
+/// - `extra_annotations` carries `waybill:component-role: "main-module"`
 ///   (C40, FR-004).
 /// - `licenses: vec![]` (FR-005; license detection is #103 follow-up).
 /// - `depends`: direct-dep package names extracted from
@@ -506,7 +506,7 @@ pub(crate) fn build_pip_main_module_entry(
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra_annotations.insert(
-        "mikebom:component-role".to_string(),
+        "waybill:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
 
@@ -631,7 +631,7 @@ pub(crate) fn dedup_pip_main_modules_by_purl(
     for entry in std::mem::take(entries) {
         let is_main = entry
             .extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .and_then(|v| v.as_str())
             == Some("main-module");
         if !is_main {
@@ -799,7 +799,7 @@ fn optional_deps_from_pyproject(
 }
 
 /// Milestone 183 (US2 + US3) — apply `LifecycleScope::Optional` +
-/// `mikebom:optional-derivation = "pip-optional-dependencies"` to each
+/// `waybill:optional-derivation = "pip-optional-dependencies"` to each
 /// entry whose name is in `optional_names` AND whose `lifecycle_scope`
 /// is currently `None`.
 ///
@@ -832,7 +832,7 @@ fn apply_optional_derivation_annotation(
         entry.lifecycle_scope =
             Some(waybill_common::resolution::LifecycleScope::Optional);
         entry.extra_annotations.insert(
-            "mikebom:optional-derivation".to_string(),
+            "waybill:optional-derivation".to_string(),
             serde_json::Value::String("pip-optional-dependencies".to_string()),
         );
     }
@@ -894,7 +894,7 @@ mod tests {
     #[test]
     fn normalize_pypi_name_lowercases_and_flips_underscores() {
         // Reference impl (packageurl-python) canonicalises pypi names
-        // to lowercase with `_` → `-`. Mikebom follows suit so PURLs
+        // to lowercase with `_` → `-`. Waybill follows suit so PURLs
         // round-trip byte-for-byte (SC-004).
         assert_eq!(normalize_pypi_name_for_purl("Flask"), "flask");
         assert_eq!(normalize_pypi_name_for_purl("MarkupSafe"), "markupsafe");
@@ -1029,7 +1029,7 @@ version = "1.0.0"
         assert_eq!(
             entry
                 .extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("main-module")
         );
@@ -1178,7 +1178,7 @@ dependencies = [
         let mut extra: std::collections::BTreeMap<String, serde_json::Value> =
             Default::default();
         extra.insert(
-            "mikebom:component-role".to_string(),
+            "waybill:component-role".to_string(),
             serde_json::Value::String("main-module".to_string()),
         );
         PackageDbEntry {
@@ -1259,13 +1259,13 @@ dependencies = [
             Some(waybill_common::resolution::LifecycleScope::Optional)
         );
         assert_eq!(
-            entries[0].extra_annotations.get("mikebom:optional-derivation"),
+            entries[0].extra_annotations.get("waybill:optional-derivation"),
             Some(&serde_json::Value::String("pip-optional-dependencies".to_string()))
         );
         assert!(entries[1].lifecycle_scope.is_none());
         assert!(!entries[1]
             .extra_annotations
-            .contains_key("mikebom:optional-derivation"));
+            .contains_key("waybill:optional-derivation"));
 
         // Clone the shadowed originals to silence unused warnings + prove
         // the helper mutated `entries`, not `a`/`b`.
@@ -1375,7 +1375,7 @@ dev = ["pytest>=7.0"]
             "pytest should be Optional per [project.optional-dependencies].dev"
         );
         assert_eq!(
-            pytest.extra_annotations.get("mikebom:optional-derivation"),
+            pytest.extra_annotations.get("waybill:optional-derivation"),
             Some(&serde_json::Value::String("pip-optional-dependencies".to_string())),
         );
 
@@ -1393,7 +1393,7 @@ dev = ["pytest>=7.0"]
         );
         assert!(!requests
             .extra_annotations
-            .contains_key("mikebom:optional-derivation"));
+            .contains_key("waybill:optional-derivation"));
     }
 
     #[test]
@@ -1448,7 +1448,7 @@ dependencies = ["requests"]
         for e in &entries {
             assert!(!e
                 .extra_annotations
-                .contains_key("mikebom:optional-derivation"));
+                .contains_key("waybill:optional-derivation"));
         }
     }
 

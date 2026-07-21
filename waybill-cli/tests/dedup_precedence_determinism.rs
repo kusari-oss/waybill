@@ -3,14 +3,14 @@
 //!
 //! Companion to the unit-level `dedup_is_input_order_invariant` test
 //! in `scan_fs::dedup::tests`. This file exercises the END-TO-END
-//! determinism guarantee: a real fixture, real `mikebom sbom scan`
+//! determinism guarantee: a real fixture, real `waybill sbom scan`
 //! invocations, real SBOM bytes compared across N runs.
 //!
 //! The fixture at `tests/fixtures/golden_inputs/dedup_collision/`
 //! contains both a `conanfile.txt` AND a `.gitmodules` declaring the
 //! same library (`abseil`). Once milestone 105's US6 git-submodule
 //! reader lands, this fixture produces a real cross-reader collision
-//! and the `mikebom:also-detected-via` annotation MUST be emitted
+//! and the `waybill:also-detected-via` annotation MUST be emitted
 //! deterministically (lexicographic ordering of losing source-
 //! mechanism strings per FR-015).
 //!
@@ -27,7 +27,7 @@
 //!    `#[ignore]`. The full SC-010 test. Activated when the
 //!    git-submodule reader is wired AND the dispatcher feeds
 //!    DetectionRecords through the dedup pipeline. Asserts the
-//!    `mikebom:also-detected-via` annotation appears with the
+//!    `waybill:also-detected-via` annotation appears with the
 //!    expected payload across multiple runs.
 
 use std::path::{Path, PathBuf};
@@ -39,7 +39,7 @@ use common::{bin, workspace_root};
 
 /// Path to the local dedup_collision fixture. The milestone-090
 /// `fixture_path()` helper points at the EXTERNAL fixtures repo;
-/// this fixture lives in-tree (under `mikebom-cli/tests/fixtures/`)
+/// this fixture lives in-tree (under `waybill-cli/tests/fixtures/`)
 /// because it's small + tightly coupled to the milestone-105 dedup
 /// pipeline code. Reference by `CARGO_MANIFEST_DIR` directly.
 fn dedup_collision_fixture() -> PathBuf {
@@ -50,7 +50,7 @@ fn dedup_collision_fixture() -> PathBuf {
         .join("dedup_collision")
 }
 
-/// Run `mikebom sbom scan` against the dedup_collision fixture,
+/// Run `waybill sbom scan` against the dedup_collision fixture,
 /// returning the NORMALIZED CDX-JSON output. Pins HOME and the
 /// emission timestamp env var; runs the produced output through
 /// `normalize_cdx_for_golden` to mask the spec-mandated volatile
@@ -67,7 +67,7 @@ fn scan_fixture_cdx(out_path: &Path) -> Vec<u8> {
     );
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -79,8 +79,8 @@ fn scan_fixture_cdx(out_path: &Path) -> Vec<u8> {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let status = cmd.status().expect("spawn mikebom");
-    assert!(status.success(), "mikebom scan failed: {status:?}");
+    let status = cmd.status().expect("spawn waybill");
+    assert!(status.success(), "waybill scan failed: {status:?}");
     let raw = std::fs::read_to_string(out_path).expect("read emitted SBOM");
     normalize_cdx_for_golden(&raw, &workspace_root()).into_bytes()
 }
@@ -91,7 +91,7 @@ fn scan_fixture_cdx(out_path: &Path) -> Vec<u8> {
 ///
 /// The number of components emitted will depend on which readers
 /// fire. Today: 1 (the conan recipe). After US6: 1 deduped
-/// component with `mikebom:also-detected-via` annotation. The test
+/// component with `waybill:also-detected-via` annotation. The test
 /// makes NO assertion about component count — only that the bytes
 /// are stable across runs.
 #[test]
@@ -113,7 +113,7 @@ fn dedup_collision_scans_deterministically_today() {
         );
         assert!(
             first == bytes,
-            "run {i} bytes differ from run 0 — non-determinism in mikebom output. First mismatch byte: {}",
+            "run {i} bytes differ from run 0 — non-determinism in waybill output. First mismatch byte: {}",
             first.iter().zip(bytes.iter()).position(|(a, b)| a != b).unwrap_or(usize::MAX)
         );
     }
@@ -124,9 +124,9 @@ fn dedup_collision_scans_deterministically_today() {
 /// the dedup_collision fixture produces:
 ///
 /// - Exactly ONE component for `abseil` (collision deduplicated).
-/// - `mikebom:source-mechanism: "conan-recipe"` on that component
+/// - `waybill:source-mechanism: "conan-recipe"` on that component
 ///   (manifest-mode tier outranks filesystem-derived per FR-015).
-/// - `mikebom:also-detected-via` containing `["git-submodule"]`
+/// - `waybill:also-detected-via` containing `["git-submodule"]`
 ///   (the losing reader, sorted lex order — single entry here).
 /// - Byte-identical output across multiple runs.
 ///
@@ -157,21 +157,21 @@ fn dedup_collision_emits_also_detected_via_after_us6() {
         .as_array()
         .and_then(|props| {
             props.iter().find_map(|p| {
-                if p["name"].as_str()? == "mikebom:source-mechanism" {
+                if p["name"].as_str()? == "waybill:source-mechanism" {
                     p["value"].as_str().map(str::to_string)
                 } else {
                     None
                 }
             })
         })
-        .expect("mikebom:source-mechanism property present");
+        .expect("waybill:source-mechanism property present");
     assert_eq!(
         sm, "conan-recipe",
         "expected conan-recipe to win the manifest-mode tier; got {sm:?}"
     );
     // also-detected-via lives natively in evidence.identity[].methods[]
     // on the CDX side per research R1. The C56 parity row reads
-    // `evidence.identity[0].methods[*].mikebom-source-mechanism`
+    // `evidence.identity[0].methods[*].waybill-source-mechanism`
     // (skipping the winner).
     let methods = abseil["evidence"]["identity"][0]["methods"]
         .as_array()
@@ -179,7 +179,7 @@ fn dedup_collision_emits_also_detected_via_after_us6() {
     let losers: Vec<&str> = methods
         .iter()
         .skip(1)
-        .filter_map(|m| m["mikebom-source-mechanism"].as_str())
+        .filter_map(|m| m["waybill-source-mechanism"].as_str())
         .collect();
     assert_eq!(
         losers,

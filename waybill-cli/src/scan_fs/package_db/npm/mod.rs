@@ -65,7 +65,7 @@ pub fn read(
     // component with (a) resolved dep NAMES in `depends` (downstream
     // graph resolver wires the edge to the concrete-version PURL via
     // `name_to_purl` at `scan_fs/mod.rs:471`), and (b) the C115
-    // `mikebom:unresolved-declared-dep` annotation naming any dep the
+    // `waybill:unresolved-declared-dep` annotation naming any dep the
     // cross-workspace index couldn't resolve.
     let mut peer_accumulators: std::collections::HashMap<
         PathBuf,
@@ -175,7 +175,7 @@ pub fn read(
             }
         }
 
-        // Milestone 199 US2 — stamp `mikebom:declared-as` on lockfile-
+        // Milestone 199 US2 — stamp `waybill:declared-as` on lockfile-
         // resolved entries whose declaration in the local `package.json`
         // used the `npm:<actual>@<ver>` alias syntax. Runs regardless of
         // which tier (A / B / C) produced the entries, since aliases can
@@ -211,7 +211,7 @@ pub fn read(
         // `scan_fs/mod.rs:729` walks these to build DependsOn edges via
         // `name_to_purl` lookup against emitted Tier A entries).
         // `unresolved_deps` become the C115
-        // `mikebom:unresolved-declared-dep` annotation on the peer's
+        // `waybill:unresolved-declared-dep` annotation on the peer's
         // main-module (bare string when 1; JSON array
         // sorted+deduplicated when ≥2).
         if let Some(acc) = peer_accumulators.remove(&project_root) {
@@ -235,7 +235,7 @@ pub fn read(
                 };
                 synthesized
                     .extra_annotations
-                    .insert("mikebom:unresolved-declared-dep".to_string(), value);
+                    .insert("waybill:unresolved-declared-dep".to_string(), value);
             }
         }
         let purl_key = synthesized.purl.as_str().to_string();
@@ -297,13 +297,13 @@ pub fn read(
     // `package.json`, find the closest enclosing primary main-module
     // (by source_path-prefix-match) and merge the nameless manifest's
     // declared deps into ITS `.depends`. Tag each merged dep's
-    // component with `mikebom:source-manifest: <relative-path>`
+    // component with `waybill:source-manifest: <relative-path>`
     // annotation so the manifest provenance survives the topology
     // flattening — graph-walking SBOM consumers see the dep is
     // reachable from root; provenance-walking consumers can still
     // trace it to its declaring manifest.
     //
-    // The annotation slot is mikebom-namespaced. No new parity-
+    // The annotation slot is waybill-namespaced. No new parity-
     // catalog row needed today; row C45 / milestone 061's annotation
     // infrastructure is the natural place to extend if we want
     // cross-format parity guarantees on source-manifest.
@@ -372,22 +372,22 @@ pub fn read(
 /// the m066 loop), or (c) already have an entry at the same PURL in
 /// `entries` (dedup safety — the umbrella pass may have populated it).
 ///
-/// Uses `mikebom:component-role: main-module` so the m127 root-
+/// Uses `waybill:component-role: main-module` so the m127 root-
 /// selector treats the synthesized mainmod as a workspace peer, and
 /// so `apply_main_module_drop_or_demote` correctly drops it under
 /// operator-override (`--root-name X`). The m192/m193 pre-rewrite
 /// re-anchors its outgoing DependsOn edges onto the operator's
 /// synthetic root, keeping the graph connected.
-/// Milestone 199 US2 — stamp `mikebom:declared-as` on lockfile-
+/// Milestone 199 US2 — stamp `waybill:declared-as` on lockfile-
 /// resolved entries whose declaration in `project_root/package.json`
 /// used the `"my-alias": "npm:actual-pkg@1.0.0"` alias syntax.
 ///
 /// Runs once per project root, iterating the local `package.json` deps
 /// (and devDependencies) for the `npm:` prefix pattern. For each
 /// detected alias, finds the corresponding entry in `entries` by name
-/// (aliased_name) and stamps `mikebom:declared-as: [alias_name]` on it.
+/// (aliased_name) and stamps `waybill:declared-as: [alias_name]` on it.
 ///
-/// If an entry already has `mikebom:declared-as`, appends the new alias
+/// If an entry already has `waybill:declared-as`, appends the new alias
 /// into the existing array + sorts + dedupes (matches m199 data-model E1
 /// validation rules — alias-count is not provenance).
 ///
@@ -426,7 +426,7 @@ fn stamp_alias_declared_as(project_root: &Path, entries: &mut [PackageDbEntry]) 
                 }
                 let existing = e
                     .extra_annotations
-                    .get("mikebom:declared-as")
+                    .get("waybill:declared-as")
                     .and_then(|v| v.as_array())
                     .cloned()
                     .unwrap_or_default();
@@ -437,7 +437,7 @@ fn stamp_alias_declared_as(project_root: &Path, entries: &mut [PackageDbEntry]) 
                 aliases.insert(alias.local_name.clone());
                 let sorted: Vec<String> = aliases.into_iter().collect();
                 e.extra_annotations.insert(
-                    "mikebom:declared-as".to_string(),
+                    "waybill:declared-as".to_string(),
                     serde_json::json!(sorted),
                 );
             }
@@ -540,11 +540,11 @@ fn synthesize_nameless_nested_mainmods(
         let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
             Default::default();
         extra_annotations.insert(
-            "mikebom:component-role".to_string(),
+            "waybill:component-role".to_string(),
             serde_json::Value::String("main-module".to_string()),
         );
         extra_annotations.insert(
-            "mikebom:synthesized-from".to_string(),
+            "waybill:synthesized-from".to_string(),
             serde_json::Value::String("nameless-nested-workspace".to_string()),
         );
         entries.push(PackageDbEntry {
@@ -592,7 +592,7 @@ fn synthesize_nameless_nested_mainmods(
 /// missing the `name` field), merge its declared `dependencies[]`
 /// (and `devDependencies[]` when `include_dev`) into the closest
 /// enclosing primary main-module's `.depends`, and tag each merged
-/// dep's component with a `mikebom:source-manifest: <relative-path>`
+/// dep's component with a `waybill:source-manifest: <relative-path>`
 /// annotation.
 ///
 /// "Closest enclosing primary main-module" is determined by walking
@@ -632,7 +632,7 @@ fn apply_nameless_secondary_umbrella(
         .filter(|e| {
             e.purl.as_str().starts_with("pkg:npm/")
                 && e.extra_annotations
-                    .get("mikebom:component-role")
+                    .get("waybill:component-role")
                     .and_then(|v| v.as_str())
                     == Some("main-module")
         })
@@ -725,7 +725,7 @@ fn apply_nameless_secondary_umbrella(
             if entry.source_path == target_source_path
                 && entry
                     .extra_annotations
-                    .get("mikebom:component-role")
+                    .get("waybill:component-role")
                     .and_then(|v| v.as_str())
                     == Some("main-module")
             {
@@ -742,7 +742,7 @@ fn apply_nameless_secondary_umbrella(
         }
 
         // Pass 2 (mut iter): tag each merged dep's component with the
-        // `mikebom:source-manifest` annotation. Separate pass so we
+        // `waybill:source-manifest` annotation. Separate pass so we
         // don't hold a mut borrow over the loop.
         let declared_set: std::collections::HashSet<&str> =
             declared_dep_names.iter().map(|s| s.as_str()).collect();
@@ -757,7 +757,7 @@ fn apply_nameless_secondary_umbrella(
                 // matches) or leaves the standalone design-tier's
                 // annotation as-is (still plural, still 1-element array).
                 entry.extra_annotations.insert(
-                    "mikebom:source-manifests".to_string(),
+                    "waybill:source-manifests".to_string(),
                     serde_json::json!([relative_manifest.clone()]),
                 );
             }
@@ -873,7 +873,7 @@ impl NpmIntegrity {
         })
     }
 
-    /// Convert to a `ContentHash`. Maps the SRI algorithm to mikebom's
+    /// Convert to a `ContentHash`. Maps the SRI algorithm to waybill's
     /// `HashAlgorithm` enum and validates hex length via the shared
     /// `with_algorithm` constructor. SHA-512 and SHA-256 are by far
     /// the dominant algorithms in npm lockfiles; SHA-384 and SHA-1
@@ -1145,7 +1145,7 @@ mod tests {
         // NOT in the root lockfile → per Q1+Q2 unified disposition, they
         // are UNRESOLVABLE. Post-163 does NOT emit phantom empty-version
         // entries for them (SC-004). Instead each peer's main-module
-        // component carries a `mikebom:unresolved-declared-dep` (C115)
+        // component carries a `waybill:unresolved-declared-dep` (C115)
         // annotation naming its unresolvable dep. The test verifies:
         //   1. root lockfile entry (`shared-lib`) still emitted.
         //   2. all 3 sub-package main-modules emitted (per milestone 066).
@@ -1219,7 +1219,7 @@ mod tests {
                 .unwrap_or_else(|| panic!("peer {peer_name} not found in {names:?}"));
             let c115 = peer
                 .extra_annotations
-                .get("mikebom:unresolved-declared-dep")
+                .get("waybill:unresolved-declared-dep")
                 .unwrap_or_else(|| {
                     panic!("C115 annotation missing on peer {peer_name}");
                 });
@@ -1368,7 +1368,7 @@ mod tests {
         // `pkg/db/integrationtest/schemalint/package.json`. Without
         // the fix, schemalint is emitted as a component but has zero
         // incoming edges. With the fix, schemalint appears in
-        // repro-root's `.depends` AND carries a `mikebom:source-manifest`
+        // repro-root's `.depends` AND carries a `waybill:source-manifest`
         // annotation pointing at the secondary manifest path.
         let dir = tempfile::tempdir().unwrap();
         let root = dir.path();
@@ -1412,11 +1412,11 @@ mod tests {
         // relative path as a JSON array (1-element for single-manifest).
         let annot_val = schemalint
             .extra_annotations
-            .get("mikebom:source-manifests")
-            .expect("schemalint must have mikebom:source-manifests annotation");
+            .get("waybill:source-manifests")
+            .expect("schemalint must have waybill:source-manifests annotation");
         let arr = annot_val
             .as_array()
-            .expect("mikebom:source-manifests must be a JSON array");
+            .expect("waybill:source-manifests must be a JSON array");
         assert_eq!(arr.len(), 1, "1-element for single-manifest design-tier");
         let annot = arr[0].as_str().expect("array entry must be string");
         assert!(
@@ -1432,7 +1432,7 @@ mod tests {
             .find(|e| {
                 e.name == "repro-root"
                     && e.extra_annotations
-                        .get("mikebom:component-role")
+                        .get("waybill:component-role")
                         .and_then(|v| v.as_str())
                         == Some("main-module")
             })
@@ -1483,12 +1483,12 @@ mod tests {
             .find(|e| e.name == "axios")
             .expect("axios must be emitted as a component");
         assert!(
-            !axios.extra_annotations.contains_key("mikebom:source-manifests"),
+            !axios.extra_annotations.contains_key("waybill:source-manifests"),
             "no anchor → no umbrella → no source-manifests annotation (m199 plural)"
         );
         // Also assert m191 singular scalar is gone post-m199.
         assert!(
-            !axios.extra_annotations.contains_key("mikebom:source-manifest"),
+            !axios.extra_annotations.contains_key("waybill:source-manifest"),
             "m191 singular scalar must not be written by m199-era npm reader"
         );
     }
@@ -1534,7 +1534,7 @@ mod tests {
         assert!(
             !schemalint
                 .extra_annotations
-                .contains_key("mikebom:source-manifests"),
+                .contains_key("waybill:source-manifests"),
             "named secondary's deps should NOT get the umbrella annotation; got: {:?}",
             schemalint.extra_annotations
         );
@@ -1615,7 +1615,7 @@ mod tests {
         let sub_pkg = out.iter().find(|e| {
             e.name == "sub-pkg"
                 && e.extra_annotations
-                    .get("mikebom:component-role")
+                    .get("waybill:component-role")
                     .and_then(|v| v.as_str())
                     == Some("main-module")
         });
@@ -1711,11 +1711,11 @@ mod tests {
     #[test]
     fn nameless_secondary_annotation_contract_naming_stable() {
         // Contract test: the annotation key for nameless-secondary
-        // umbrella deps is `mikebom:source-manifests` (m199 always-array).
+        // umbrella deps is `waybill:source-manifests` (m199 always-array).
         // Any accidental rename should be caught here before it ships and
         // breaks downstream consumer policy.
-        const ANNOTATION_KEY: &str = "mikebom:source-manifests";
-        assert_eq!(ANNOTATION_KEY, "mikebom:source-manifests");
+        const ANNOTATION_KEY: &str = "waybill:source-manifests";
+        assert_eq!(ANNOTATION_KEY, "waybill:source-manifests");
         // If you rename this, update consumer-side policy AND the
         // parity-catalog C20 row.
     }

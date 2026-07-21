@@ -1,4 +1,4 @@
-//! End-to-end test for `mikebom sbom parity-check` (milestone
+//! End-to-end test for `waybill sbom parity-check` (milestone
 //! 013 US3 / T018).
 //!
 //! Three scenarios cover the documented exit-code semantics
@@ -17,13 +17,13 @@ use common::{bin, fixture_path, workspace_root};
 
 
 /// Produce the three format outputs for the npm fixture into
-/// `<dir>/mikebom.cdx.json` etc.
+/// `<dir>/waybill.cdx.json` etc.
 fn scan_into(dir: &std::path::Path) {
     let fixture = fixture_path("npm/node-modules-walk");
     let fake_home = tempfile::tempdir().expect("fake-home");
-    let cdx = dir.join("mikebom.cdx.json");
-    let spdx23 = dir.join("mikebom.spdx.json");
-    let spdx3 = dir.join("mikebom.spdx3.json");
+    let cdx = dir.join("waybill.cdx.json");
+    let spdx23 = dir.join("waybill.spdx.json");
+    let spdx3 = dir.join("waybill.spdx3.json");
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
     let out = cmd
@@ -91,7 +91,7 @@ fn parity_check_exit_code_two_when_input_missing() {
     scan_into(tmp.path());
     // Delete one of the three files post-scan to provoke the
     // missing-input failure mode.
-    std::fs::remove_file(tmp.path().join("mikebom.spdx3.json")).expect("remove spdx3 file");
+    std::fs::remove_file(tmp.path().join("waybill.spdx3.json")).expect("remove spdx3 file");
 
     let out = Command::new(bin())
         .current_dir(workspace_root())

@@ -74,7 +74,7 @@ fn cocoapods_purls(doc: &Value) -> Vec<String> {
                         .map(|arr| {
                             arr.iter().any(|p| {
                                 p.get("name").and_then(|v| v.as_str())
-                                    == Some("mikebom:source-type")
+                                    == Some("waybill:source-type")
                                     && p.get("value")
                                         .and_then(|v| v.as_str())
                                         .map(|s| s.starts_with("cocoapods-"))
@@ -161,8 +161,8 @@ fn multi_target_podfile_emits_first_target_as_main_module() {
 #[test]
 fn git_source_missing_checkout_options_emits_without_vcs_ref() {
     // Q2 partial case: EXTERNAL SOURCES present, CHECKOUT OPTIONS
-    // absent. PURL still emits with ?vcs_url= qualifier; mikebom:vcs-ref
-    // absent; mikebom:vcs-declared-ref still present.
+    // absent. PURL still emits with ?vcs_url= qualifier; waybill:vcs-ref
+    // absent; waybill:vcs-declared-ref still present.
     let tmp = tempfile::tempdir().unwrap();
     std::fs::write(
         tmp.path().join("Podfile"),
@@ -184,13 +184,13 @@ fn git_source_missing_checkout_options_emits_without_vcs_ref() {
         panic!("VCS PURL must emit even without CHECKOUT OPTIONS; got {:?}", cocoapods_purls(&doc))
     });
     assert!(
-        property_value(c, "mikebom:vcs-ref").is_none(),
-        "mikebom:vcs-ref must be absent when CHECKOUT OPTIONS missing",
+        property_value(c, "waybill:vcs-ref").is_none(),
+        "waybill:vcs-ref must be absent when CHECKOUT OPTIONS missing",
     );
     assert_eq!(
-        property_value(c, "mikebom:vcs-declared-ref"),
+        property_value(c, "waybill:vcs-declared-ref"),
         Some("v1.0"),
-        "mikebom:vcs-declared-ref must still surface from EXTERNAL SOURCES",
+        "waybill:vcs-declared-ref must still surface from EXTERNAL SOURCES",
     );
 }
 
@@ -331,15 +331,15 @@ fn path_sourced_subspec_flattens_slash_to_hyphen() {
             )
         });
     assert_eq!(
-        property_value(c, "mikebom:source-type"),
+        property_value(c, "waybill:source-type"),
         Some("cocoapods-path"),
     );
     assert_eq!(
-        property_value(c, "mikebom:path"),
+        property_value(c, "waybill:path"),
         Some("../firebase-core"),
     );
     assert_eq!(
-        property_value(c, "mikebom:subspec"),
+        property_value(c, "waybill:subspec"),
         Some("Core"),
         "original subspec form preserved as annotation for recovery per I2",
     );

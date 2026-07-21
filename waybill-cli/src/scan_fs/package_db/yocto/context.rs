@@ -36,7 +36,7 @@
 //! | ❌ | ✅ | `Sysroot` |
 //! | ❌ | ❌ | `Rootfs` |
 //!
-//! `AmbiguousSysroot` emits a `mikebom:scan-ambiguity` diagnostic
+//! `AmbiguousSysroot` emits a `waybill:scan-ambiguity` diagnostic
 //! annotation on the SBOM metadata via the caller's
 //! `ScanDiagnostics` collector.
 
@@ -179,7 +179,7 @@ mod tests {
     fn env_script_in_scan_target_fires_primary() {
         let tmp = tempfile::tempdir().unwrap();
         let target = tmp.path();
-        touch(&target.join("environment-setup-cortexa7t2hf-mikebom-fixture"));
+        touch(&target.join("environment-setup-cortexa7t2hf-waybill-fixture"));
         let ctx = detect_scan_context(target);
         // Primary fires; secondary doesn't (no usr/include); should be
         // Sysroot, not AmbiguousSysroot (since secondary's absence
@@ -192,9 +192,9 @@ mod tests {
     fn env_script_in_parent_dir_fires_primary() {
         let tmp = tempfile::tempdir().unwrap();
         let parent = tmp.path();
-        let target = parent.join("sysroots").join("mikebom-fixture-target");
+        let target = parent.join("sysroots").join("waybill-fixture-target");
         mkdir(&target);
-        touch(&parent.join("environment-setup-mikebom-fixture-target"));
+        touch(&parent.join("environment-setup-waybill-fixture-target"));
         let ctx = detect_scan_context(&target);
         assert!(matches!(ctx, ScanContext::Sysroot { primary_signal: true, .. }));
     }
@@ -223,7 +223,7 @@ mod tests {
     fn ambiguous_when_primary_fires_but_init_d_present() {
         let tmp = tempfile::tempdir().unwrap();
         let target = tmp.path();
-        touch(&target.join("environment-setup-mikebom-fixture"));
+        touch(&target.join("environment-setup-waybill-fixture"));
         mkdir(&target.join("etc").join("init.d"));
         // /usr/include intentionally absent so the secondary check
         // (include AND no init.d) fails — conflicting with the primary.

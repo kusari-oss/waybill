@@ -1,4 +1,4 @@
-//! Integration tests for the milestone 116 PR-A `mikebom:produces-binaries`
+//! Integration tests for the milestone 116 PR-A `waybill:produces-binaries`
 //! Cargo extractor + auto-alias binder.
 //!
 //! Covers:
@@ -8,7 +8,7 @@
 //!   - T017: operator-`--pkg-alias` precedence rule (FR-004)
 //!
 //! Fixtures live in-tree under
-//! `mikebom-cli/tests/fixtures/produces_binaries/cargo/` (not in the
+//! `waybill-cli/tests/fixtures/produces_binaries/cargo/` (not in the
 //! milestone-090 external fixture repo; these are tiny synthetic projects).
 
 use std::path::{Path, PathBuf};
@@ -35,7 +35,7 @@ fn run_scan(path: &Path, out_path: &Path) -> Output {
         .arg(out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run")
+        .expect("waybill should run")
 }
 
 fn read_sbom(path: &Path) -> serde_json::Value {
@@ -62,7 +62,7 @@ fn produces_binaries_for_purl(sbom: &serde_json::Value, purl: &str) -> Option<Ve
                 return Some(Vec::new());
             };
             for p in props {
-                if p.get("name").and_then(|v| v.as_str()) == Some("mikebom:produces-binaries") {
+                if p.get("name").and_then(|v| v.as_str()) == Some("waybill:produces-binaries") {
                     let v = p.get("value").and_then(|v| v.as_str())?;
                     let arr: Vec<String> = serde_json::from_str(v).ok()?;
                     return Some(arr);
@@ -189,7 +189,7 @@ mod binder_unit {
                         "type": "library",
                         "purl": "pkg:cargo/fixture-baz@1.0.0",
                         "properties": [
-                            { "name": "mikebom:produces-binaries", "value": "[\"fixture-baz\"]" }
+                            { "name": "waybill:produces-binaries", "value": "[\"fixture-baz\"]" }
                         ]
                     }
                 ]
@@ -225,7 +225,7 @@ mod binder_unit {
                         "type": "library",
                         "purl": "pkg:maven/com.acme/baz@1.0.0",
                         "properties": [
-                            { "name": "mikebom:produces-binaries", "value": "[\"baz\"]" }
+                            { "name": "waybill:produces-binaries", "value": "[\"baz\"]" }
                         ]
                     }
                 ]
@@ -261,14 +261,14 @@ mod binder_unit {
                         "type": "library",
                         "purl": "pkg:cargo/baz@1.0.0",
                         "properties": [
-                            { "name": "mikebom:produces-binaries", "value": "[\"baz\"]" }
+                            { "name": "waybill:produces-binaries", "value": "[\"baz\"]" }
                         ]
                     },
                     {
                         "type": "library",
                         "purl": "pkg:cargo/other-baz@2.0.0",
                         "properties": [
-                            { "name": "mikebom:produces-binaries", "value": "[\"baz\"]" }
+                            { "name": "waybill:produces-binaries", "value": "[\"baz\"]" }
                         ]
                     }
                 ]
@@ -320,7 +320,7 @@ mod binder_unit {
                         "type": "library",
                         "purl": "pkg:cargo/fixture-baz@1.0.0",
                         "properties": [
-                            { "name": "mikebom:produces-binaries", "value": "[\"fixture-baz\"]" }
+                            { "name": "waybill:produces-binaries", "value": "[\"fixture-baz\"]" }
                         ]
                     },
                     {

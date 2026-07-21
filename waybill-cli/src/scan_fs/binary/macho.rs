@@ -4,7 +4,7 @@
 //! The companion file `scan.rs` already handles fat / universal slice
 //! iteration (`scan_fat_macho`) + linkage extraction via the `object`
 //! crate's high-level `imports()` API. This module fills the
-//! identity-and-runtime-linkage gap that mikebom previously left at
+//! identity-and-runtime-linkage gap that waybill previously left at
 //! defaults for Mach-O.
 //!
 //! Three signals (mirroring milestone 023's ELF identity work):
@@ -72,7 +72,7 @@ const TOOL_AIRLLD: u32 = 1025;
 /// Full `LC_BUILD_VERSION` record per milestone-098 FR-002. Filled in by
 /// `parse_build_version_full`; consumed by
 /// `entry.rs::build_macho_identity_annotations` to emit the
-/// `mikebom:macho-build-version` and `mikebom:macho-build-tools`
+/// `waybill:macho-build-version` and `waybill:macho-build-tools`
 /// annotation properties on the file-level binary component.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct MachoBuildVersion {

@@ -17,7 +17,7 @@ use crate::supplement::SupplementService;
 /// Build the CDX 1.6 `services[]` JSON array from the supplement's
 /// declared service entries. Returns `Value::Null` when the input
 /// slice is empty so the emitter can OMIT the field entirely — that
-/// preserves byte-identity with pre-119 mikebom output when no
+/// preserves byte-identity with pre-119 waybill output when no
 /// supplement was supplied (FR-013 / SC-006).
 pub(super) fn build_services(services: &[SupplementService]) -> Value {
     if services.is_empty() {
@@ -66,13 +66,13 @@ fn build_one(s: &SupplementService) -> Value {
         }
     }
     // FR-011 / contracts/annotation-shape.md § Annotation 1:
-    // every supplement-declared entry carries `mikebom:source-tier =
+    // every supplement-declared entry carries `waybill:source-tier =
     // "declared"`. Services live outside the per-component
     // ResolvedComponent channel, so the stamp emits directly here
     // via the CDX-native `properties[]` slot on Service.
     obj.insert(
         "properties".to_string(),
-        json!([{ "name": "mikebom:source-tier", "value": "declared" }]),
+        json!([{ "name": "waybill:source-tier", "value": "declared" }]),
     );
     Value::Object(obj)
 }
@@ -111,10 +111,10 @@ mod tests {
         assert_eq!(s.get("bom-ref").unwrap().as_str(), Some("Stripe-ref"));
         // No `type` field per CDX 1.6 spec — services[] doesn't carry it.
         assert!(s.get("type").is_none());
-        // mikebom:source-tier=declared property present.
+        // waybill:source-tier=declared property present.
         let props = s.get("properties").unwrap().as_array().unwrap();
         assert!(props.iter().any(|p| p.get("name").unwrap().as_str()
-            == Some("mikebom:source-tier")
+            == Some("waybill:source-tier")
             && p.get("value").unwrap().as_str() == Some("declared")));
     }
 

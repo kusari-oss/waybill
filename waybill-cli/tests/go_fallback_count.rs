@@ -1,6 +1,6 @@
 //! Milestone 172 (T018): SC-001..SC-005 integration test — Go
 //! step-5-fallback count doc-scope annotation
-//! (`mikebom:go-transitive-fallback-count`) end-to-end via the release
+//! (`waybill:go-transitive-fallback-count`) end-to-end via the release
 //! binary.
 //!
 //! Three FR-006 scenarios are covered:
@@ -22,7 +22,7 @@
 //!
 //! Plus the SC-005 count-sum invariant: for the degraded scan,
 //! the doc-scope count MUST equal the number of components tagged
-//! `mikebom:go-transitive-source == "go-sum-fallback"`.
+//! `waybill:go-transitive-source == "go-sum-fallback"`.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -32,7 +32,7 @@ use common::bin;
 use common::normalize::apply_fake_home_env;
 
 fn go_fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("go").join(sub)
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("go").join(sub)
 }
 
 /// Scan a path with a fake `$HOME` so `$GOMODCACHE` points at an
@@ -47,7 +47,7 @@ fn scan(path: &Path, offline: bool) -> serde_json::Value {
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_NO_GO_MOD_WHY", "1");
+    cmd.env("WAYBILL_NO_GO_MOD_WHY", "1");
     if offline {
         cmd.arg("--offline");
     }
@@ -58,7 +58,7 @@ fn scan(path: &Path, offline: bool) -> serde_json::Value {
         .arg("--output")
         .arg(&out_path)
         .arg("--no-deep-hash");
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -113,7 +113,7 @@ fn t018_healthy_go_scan_emits_zero() {
     write_empty_go_project(tmp.path());
 
     let sbom = scan(tmp.path(), /* offline */ false);
-    let c117 = doc_property(&sbom, "mikebom:go-transitive-fallback-count");
+    let c117 = doc_property(&sbom, "waybill:go-transitive-fallback-count");
     assert_eq!(
         c117,
         Some("0"),
@@ -126,7 +126,7 @@ fn t018_healthy_go_scan_emits_zero() {
 #[test]
 fn t018_degraded_go_scan_emits_positive() {
     let sbom = scan(&go_fixture("simple-module"), /* offline */ true);
-    let c117 = doc_property(&sbom, "mikebom:go-transitive-fallback-count");
+    let c117 = doc_property(&sbom, "waybill:go-transitive-fallback-count");
     let value = c117.expect("SC-001: degraded scan MUST emit C117");
     let count: usize = value.parse().expect("C117 value must parse as integer");
     assert!(
@@ -142,7 +142,7 @@ fn t018_non_go_scan_omits_annotation() {
     write_empty_rust_project(tmp.path());
 
     let sbom = scan(tmp.path(), /* offline */ false);
-    let c117 = doc_property(&sbom, "mikebom:go-transitive-fallback-count");
+    let c117 = doc_property(&sbom, "waybill:go-transitive-fallback-count");
     assert_eq!(
         c117, None,
         "SC-002: non-Go scan MUST NOT emit C117 (annotation absent per FR-002); \
@@ -151,11 +151,11 @@ fn t018_non_go_scan_omits_annotation() {
 }
 
 /// SC-005: the doc-scope C117 count MUST equal the number of components
-/// tagged `mikebom:go-transitive-source == "go-sum-fallback"`.
+/// tagged `waybill:go-transitive-source == "go-sum-fallback"`.
 #[test]
 fn t018_sc005_count_sum_invariant() {
     let sbom = scan(&go_fixture("simple-module"), /* offline */ true);
-    let doc_count: usize = doc_property(&sbom, "mikebom:go-transitive-fallback-count")
+    let doc_count: usize = doc_property(&sbom, "waybill:go-transitive-fallback-count")
         .expect("C117 must be present on degraded scan")
         .parse()
         .expect("C117 value must parse");
@@ -164,12 +164,12 @@ fn t018_sc005_count_sum_invariant() {
         .as_array()
         .expect("components array")
         .iter()
-        .filter(|c| component_property(c, "mikebom:go-transitive-source") == Some("go-sum-fallback"))
+        .filter(|c| component_property(c, "waybill:go-transitive-source") == Some("go-sum-fallback"))
         .count();
 
     assert_eq!(
         doc_count, per_component_count,
         "SC-005 invariant violated: doc-scope C117 = {doc_count} but per-component \
-         `mikebom:go-transitive-source == go-sum-fallback` count = {per_component_count}"
+         `waybill:go-transitive-source == go-sum-fallback` count = {per_component_count}"
     );
 }

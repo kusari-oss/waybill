@@ -3,7 +3,7 @@
 //! CI doesn't need Docker, pull bandwidth, or large checked-in blobs.
 //!
 //! Each test builds an outer tar holding `manifest.json` + one layer
-//! tar whose contents are the image's rootfs. The mikebom CLI is then
+//! tar whose contents are the image's rootfs. The waybill CLI is then
 //! invoked with `--image <tarball>`; the resulting SBOM is inspected.
 //!
 //! This is the integration-test counterpart to the per-module image-
@@ -43,7 +43,7 @@ fn build_synthetic_image(files: &[ImageFile]) -> PathBuf {
 
     // Outer tarball.
     let manifest =
-        r#"[{"Config":"config.json","RepoTags":["mikebom-test:latest"],"Layers":["layer0/layer.tar"]}]"#;
+        r#"[{"Config":"config.json","RepoTags":["waybill-test:latest"],"Layers":["layer0/layer.tar"]}]"#;
     let tmp = tempfile::NamedTempFile::new().unwrap();
     let path = tmp.path().to_path_buf();
     let file = tmp.reopen().unwrap();
@@ -86,7 +86,7 @@ fn scan_image(tarball: &Path) -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -330,7 +330,7 @@ fn scan_image_with_mixed_deb_pypi_npm_surfaces_all_three() {
 // ----------------------------------------------------------------------
 
 /// T021 — `--image` scans must emit npm-internals components with the
-/// `mikebom:npm-role = internal` property so downstream consumers can
+/// `waybill:npm-role = internal` property so downstream consumers can
 /// distinguish application deps from the npm tooling that ships in the
 /// base image.
 #[test]
@@ -350,7 +350,7 @@ fn image_scan_emits_mikebom_npm_role_property() {
     let tarball = build_synthetic_image(&files);
     let sbom = scan_image(&tarball);
 
-    // At least one component should carry mikebom:npm-role=internal.
+    // At least one component should carry waybill:npm-role=internal.
     let components = sbom["components"].as_array().expect("components");
     let tagged: Vec<&serde_json::Value> = components
         .iter()
@@ -359,7 +359,7 @@ fn image_scan_emits_mikebom_npm_role_property() {
                 .as_array()
                 .map(|props| {
                     props.iter().any(|p| {
-                        p["name"].as_str() == Some("mikebom:npm-role")
+                        p["name"].as_str() == Some("waybill:npm-role")
                             && p["value"].as_str() == Some("internal")
                     })
                 })
@@ -368,6 +368,6 @@ fn image_scan_emits_mikebom_npm_role_property() {
         .collect();
     assert!(
         !tagged.is_empty(),
-        "expected at least one component with mikebom:npm-role=internal in --image output"
+        "expected at least one component with waybill:npm-role=internal in --image output"
     );
 }

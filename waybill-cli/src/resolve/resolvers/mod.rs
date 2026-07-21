@@ -6,7 +6,7 @@
 //! adding a new resolver means creating one new file in this
 //! directory + adding one `pub(crate) mod <name>;` declaration
 //! below + one entry in `RESOLVER_REGISTRY` at
-//! `mikebom-cli/src/resolve/resolver_chain.rs`. No other file
+//! `waybill-cli/src/resolve/resolver_chain.rs`. No other file
 //! needs editing (FR-010).
 //!
 //! Priority ordering (per contracts/resolver-trait.md C-5):

@@ -73,7 +73,7 @@ pub fn classify(file: &File<'_>) -> BinaryRole {
             // ObjectKind enum doesn't distinguish them). PE with
             // IMAGE_FILE_SYSTEM also lands here. The `Other` bucket
             // collapses these together; consumers wanting finer
-            // detail read the existing `mikebom:binary-class`
+            // detail read the existing `waybill:binary-class`
             // annotation (which carries `elf`/`macho`/`pe`).
             tracing::info!(
                 role = "Other",

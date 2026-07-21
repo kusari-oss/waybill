@@ -3,7 +3,7 @@
 //! All tests here are Linux-only (podman storage layout is Linux-specific
 //! per spec Assumption 1) AND require the `podman` binary on `$PATH`
 //! at least one image pre-cached. Gated behind
-//! `MIKEBOM_PODMAN_INTEGRATION=1` per m188/m203/m205 precedent — CI's
+//! `WAYBILL_PODMAN_INTEGRATION=1` per m188/m203/m205 precedent — CI's
 //! Linux lane opts in; local dev workstations without podman skip
 //! cleanly.
 
@@ -15,11 +15,11 @@ fn mikebom_bin() -> &'static str {
     env!("CARGO_BIN_EXE_mikebom")
 }
 
-/// Skip cleanly if `MIKEBOM_PODMAN_INTEGRATION=1` is not set OR podman
+/// Skip cleanly if `WAYBILL_PODMAN_INTEGRATION=1` is not set OR podman
 /// is not on PATH. Prints a skip message so test runners record it.
 fn require_podman_integration() -> bool {
-    if std::env::var("MIKEBOM_PODMAN_INTEGRATION").as_deref() != Ok("1") {
-        eprintln!("skipping: MIKEBOM_PODMAN_INTEGRATION != 1");
+    if std::env::var("WAYBILL_PODMAN_INTEGRATION").as_deref() != Ok("1") {
+        eprintln!("skipping: WAYBILL_PODMAN_INTEGRATION != 1");
         return false;
     }
     match Command::new("podman").arg("--version").output() {
@@ -62,7 +62,7 @@ fn scan_image_via_podman(image_ref: &str, extra_args: &[&str]) -> (serde_json::V
     for a in extra_args {
         cmd.arg(a);
     }
-    let cmd_out = cmd.output().expect("spawn mikebom");
+    let cmd_out = cmd.output().expect("spawn waybill");
     let stderr = String::from_utf8_lossy(&cmd_out.stderr).to_string();
     let success = cmd_out.status.success();
     let json = if success {
@@ -78,7 +78,7 @@ fn find_image_source_property(cdx: &serde_json::Value) -> Option<String> {
     cdx.pointer("/metadata/properties")?
         .as_array()?
         .iter()
-        .find(|p| p.get("name").and_then(|n| n.as_str()) == Some("mikebom:image-source"))
+        .find(|p| p.get("name").and_then(|n| n.as_str()) == Some("waybill:image-source"))
         .and_then(|p| p.get("value").and_then(|v| v.as_str()).map(String::from))
 }
 
@@ -117,11 +117,11 @@ fn us1_podman_source_scans_rootless_alpine() {
         "expected ≥10 pkg:apk/ components; got {apk_count}. cdx: {cdx:#}"
     );
 
-    // (c) mikebom:image-source = "podman" annotation present.
+    // (c) waybill:image-source = "podman" annotation present.
     assert_eq!(
         find_image_source_property(&cdx).as_deref(),
         Some("podman"),
-        "CDX MUST carry mikebom:image-source = podman. cdx: {cdx:#}"
+        "CDX MUST carry waybill:image-source = podman. cdx: {cdx:#}"
     );
 
     // (d) F2 — SC-004: metadata.component.name reflects the operator's ref.
@@ -142,8 +142,8 @@ fn us2_podman_source_scans_rootful_image() {
     if !require_podman_integration() {
         return;
     }
-    if std::env::var("MIKEBOM_PODMAN_ROOTFUL_INTEGRATION").as_deref() != Ok("1") {
-        eprintln!("skipping: MIKEBOM_PODMAN_ROOTFUL_INTEGRATION != 1 (test needs root)");
+    if std::env::var("WAYBILL_PODMAN_ROOTFUL_INTEGRATION").as_deref() != Ok("1") {
+        eprintln!("skipping: WAYBILL_PODMAN_ROOTFUL_INTEGRATION != 1 (test needs root)");
         return;
     }
     // Skip if not root.
@@ -160,7 +160,7 @@ fn us2_podman_source_scans_rootful_image() {
     assert_eq!(
         find_image_source_property(&cdx).as_deref(),
         Some("podman"),
-        "CDX MUST carry mikebom:image-source = podman"
+        "CDX MUST carry waybill:image-source = podman"
     );
     let apk_count = count_apk_components(&cdx);
     assert!(apk_count >= 10, "expected ≥10 apk components; got {apk_count}");

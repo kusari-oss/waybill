@@ -1,16 +1,16 @@
-//! Milestone 072 T007 — `mikebom:source-document-binding` annotation
+//! Milestone 072 T007 — `waybill:source-document-binding` annotation
 //! serialize/deserialize helpers.
 //!
 //! Two carrier shapes per `contracts/source-document-binding-annotation.md`
 //! C-3:
 //!
 //! - **CDX 1.6** — `components[].properties[]` entry where
-//!   `name == "mikebom:source-document-binding"` and `value` is the
+//!   `name == "waybill:source-document-binding"` and `value` is the
 //!   JSON-encoded `SourceDocumentBinding` (a string, single-line, no
 //!   whitespace beyond what `serde_json::to_string` produces).
 //! - **SPDX 2.3 / SPDX 3** — wrapped inside the existing
 //!   `MikebomAnnotationCommentV1` envelope (`{ "schema":
-//!   "mikebom-annotation/v1", "field": "mikebom:source-document-binding",
+//!   "waybill-annotation/v1", "field": "waybill:source-document-binding",
 //!   "value": <SourceDocumentBinding-as-real-JSON-object> }`), serialized
 //!   into `Package.annotations[].comment` (SPDX 2.3) /
 //!   `Annotation.statement` (SPDX 3).
@@ -22,7 +22,7 @@
 //! "string-encoded JSON looks like JSON → recursively decode" rule
 //! (see `parity/extractors/common.rs::canonicalize_atomic_values`).
 //!
-//! Constant: `BINDING_PROPERTY_NAME = "mikebom:source-document-binding"`.
+//! Constant: `BINDING_PROPERTY_NAME = "waybill:source-document-binding"`.
 //! This is the stable annotation key per
 //! `contracts/source-document-binding-annotation.md` C-7.
 
@@ -34,13 +34,13 @@ use crate::binding::{BindingError, SourceDocumentBinding};
 /// `contracts/source-document-binding-annotation.md` C-3 + C-7. Used
 /// across CDX `properties[].name`, SPDX 2.3 envelope `field`, SPDX 3
 /// envelope `field`.
-pub const BINDING_PROPERTY_NAME: &str = "mikebom:source-document-binding";
+pub const BINDING_PROPERTY_NAME: &str = "waybill:source-document-binding";
 
 /// Milestone 116 — source-tier main-module property listing produced
 /// binary names. Read by `SourceSbomContext::load()` at bind-time to
 /// build the `binary_name_to_purl` auto-alias index. See
 /// `specs/116-produces-binaries/contracts/property.md`.
-pub const PRODUCES_BINARIES_PROPERTY_NAME: &str = "mikebom:produces-binaries";
+pub const PRODUCES_BINARIES_PROPERTY_NAME: &str = "waybill:produces-binaries";
 
 /// Serialize a `SourceDocumentBinding` to the CDX-property-string
 /// shape per `contracts/source-document-binding-annotation.md` C-3 CDX
@@ -180,7 +180,7 @@ mod tests {
     /// contract C-3 / C-7 string. Lock against accidental rename.
     #[test]
     fn binding_property_name_constant_locked() {
-        assert_eq!(BINDING_PROPERTY_NAME, "mikebom:source-document-binding");
+        assert_eq!(BINDING_PROPERTY_NAME, "waybill:source-document-binding");
     }
 
     /// Tolerate-arbitrary-key-order: the CDX-side deserializer must

@@ -1,8 +1,8 @@
 //! Milestone 210 — write-set → SBOM component mapping (task T029).
 //!
 //! Given a `ResolvedComponent` and a `CompilerPipelineData`, produce
-//! the payload for the per-component `mikebom:source-read-set`
-//! annotation (C130) OR the fallback `mikebom:read-set-source`
+//! the payload for the per-component `waybill:source-read-set`
+//! annotation (C130) OR the fallback `waybill:read-set-source`
 //! annotation value (C131) per contracts/annotations.md A-1 / A-2.
 //!
 //! Mapping rule (Clarifications Q1):
@@ -25,7 +25,7 @@ use waybill_common::attestation::compiler_pipeline::{
 use waybill_common::resolution::ResolvedComponent;
 use serde_json::{json, Value};
 
-/// The value emitted for `mikebom:read-set-source` (catalog row C131).
+/// The value emitted for `waybill:read-set-source` (catalog row C131).
 /// Per contracts/annotations.md A-2 — MVP only emits `Traced` or
 /// `Unknown`; `CacheHit` + `TraceAttachLate` are follow-up work.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -53,7 +53,7 @@ impl ReadSetSource {
 pub struct ComponentReadSet {
     pub source: ReadSetSource,
     /// `Some(payload_value)` when `source == Traced` — the deterministic
-    /// `mikebom:source-read-set` annotation payload.
+    /// `waybill:source-read-set` annotation payload.
     /// `None` when `source == Unknown` (per A-2: C130 is OMITTED for
     /// non-traced components; C131 alone signals the state).
     pub payload: Option<Value>,

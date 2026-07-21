@@ -8,7 +8,7 @@
 //!    regex — SC-002.
 //! 3. `pkg:npm/docs@0.0.0` has a `dependsOn` edge to
 //!    `pkg:npm/%40docusaurus/core@3.10.1` (concrete version) — FR-001.
-//! 4. `pkg:npm/docs@0.0.0` carries `mikebom:unresolved-declared-dep =
+//! 4. `pkg:npm/docs@0.0.0` carries `waybill:unresolved-declared-dep =
 //!    "@some/removed"` annotation — FR-004.
 //! 5. `pkg:npm/renderer@0.0.0` has a `dependsOn` edge to
 //!    `pkg:npm/thor@1.4.0`.
@@ -124,7 +124,7 @@ fn scan_fixture(tmp: &std::path::Path) -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -238,7 +238,7 @@ fn t028_synthesized_monorepo_zero_phantoms_and_100pct_bfs() {
         .iter()
         .find(|c| c.get("purl").and_then(|p| p.as_str()) == Some("pkg:npm/docs@0.0.0"))
         .expect("pkg:npm/docs@0.0.0 component must exist");
-    let c115 = component_property(docs_comp, "mikebom:unresolved-declared-dep")
+    let c115 = component_property(docs_comp, "waybill:unresolved-declared-dep")
         .expect("C115 annotation must be present on docs peer");
     // Single unresolved dep → bare string value per contracts/annotations.md.
     assert_eq!(

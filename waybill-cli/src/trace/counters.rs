@@ -142,7 +142,7 @@ fn truncate_error(msg: &str) -> String {
 //
 // Parallel to `read_ring_buffer_drops` above, but reads the
 // `FILTER_CATEGORY_HITS` per-CPU array (4 slots — one per
-// `FilterCategoryTag` variant) declared in mikebom-ebpf/src/maps.rs.
+// `FilterCategoryTag` variant) declared in waybill-ebpf/src/maps.rs.
 // The kernel-side classifier increments the appropriate slot every
 // time a file-open path matches a category prefix / substring.
 //

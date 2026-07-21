@@ -1,6 +1,6 @@
 //! Milestone 164 SC-010 optional real-testbed audit — gated behind
-//! `MIKEBOM_PNPM_MULTIVER_AUDIT=1`. If a cached copy of
-//! `podman-desktop` is available (via `MIKEBOM_FIXTURES_DIR`), assert
+//! `WAYBILL_PNPM_MULTIVER_AUDIT=1`. If a cached copy of
+//! `podman-desktop` is available (via `WAYBILL_FIXTURES_DIR`), assert
 //! multi-version orphan count ≤ 30 and BFS reachability ≥ 93%. NOT
 //! blocking for the PR — matches milestone-160 T033 + milestone-161
 //! T040 + milestone-162 T034 + milestone-163 T037 pattern.
@@ -16,10 +16,10 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn should_run() -> Option<PathBuf> {
-    if std::env::var("MIKEBOM_PNPM_MULTIVER_AUDIT").is_err() {
+    if std::env::var("WAYBILL_PNPM_MULTIVER_AUDIT").is_err() {
         return None;
     }
-    let fixtures_dir = std::env::var("MIKEBOM_FIXTURES_DIR").ok()?;
+    let fixtures_dir = std::env::var("WAYBILL_FIXTURES_DIR").ok()?;
     let candidate = PathBuf::from(fixtures_dir).join("podman-desktop");
     if !candidate.join("pnpm-lock.yaml").is_file() {
         return None;
@@ -43,7 +43,7 @@ fn scan(path: &std::path::Path) -> serde_json::Value {
         .arg(&out)
         .arg("--no-deep-hash")
         .output()
-        .expect("run mikebom");
+        .expect("run waybill");
     assert!(
         status.status.success(),
         "scan failed: stderr={}",
@@ -57,7 +57,7 @@ fn scan(path: &std::path::Path) -> serde_json::Value {
 fn t020_podman_desktop_multi_version_orphans_and_bfs_within_thresholds() {
     let Some(path) = should_run() else {
         eprintln!(
-            "t020 SKIP: set MIKEBOM_PNPM_MULTIVER_AUDIT=1 + MIKEBOM_FIXTURES_DIR to a \
+            "t020 SKIP: set WAYBILL_PNPM_MULTIVER_AUDIT=1 + WAYBILL_FIXTURES_DIR to a \
              directory containing a `podman-desktop/` subdir with pnpm-lock.yaml"
         );
         return;

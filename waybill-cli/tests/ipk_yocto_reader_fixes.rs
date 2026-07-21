@@ -1,11 +1,11 @@
 //! Milestone 187 (#542 + #543) — ipk reader Yocto fixes integration tests.
 //!
-//! US1 (#543) — ar-format is now the PRIMARY parse path; mikebom extracts
+//! US1 (#543) — ar-format is now the PRIMARY parse path; waybill extracts
 //! `License:` / `Depends:` / `Architecture:` / other control fields for every
-//! modern Yocto ipk, emitting `mikebom:source-mechanism =
-//! "ipk-file-archive-extraction"` and `mikebom:arch-source = "control-file"`.
+//! modern Yocto ipk, emitting `waybill:source-mechanism =
+//! "ipk-file-archive-extraction"` and `waybill:arch-source = "control-file"`.
 //! Pre-2015 `gzip(tar)` ipks are still parsed via the legacy path with
-//! `mikebom:source-mechanism = "ipk-file"` and NO arch-source property
+//! `waybill:source-mechanism = "ipk-file"` and NO arch-source property
 //! (FR-014 / SC-005 byte-identity guarantee).
 //!
 //! US2 (#542) — the filename-fallback path consults the parent-directory
@@ -152,11 +152,11 @@ fn scan_dir(scan_root: &std::path::Path) -> (serde_json::Value, String) {
             out.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&cmd_out.stderr).to_string();
     assert!(
         cmd_out.status.success(),
-        "mikebom exit={:?} stderr:\n{stderr}",
+        "waybill exit={:?} stderr:\n{stderr}",
         cmd_out.status.code(),
     );
     let json: serde_json::Value =
@@ -176,7 +176,7 @@ fn components_by_name<'a>(cdx: &'a serde_json::Value, name: &str) -> Vec<&'a ser
         .unwrap_or_default()
 }
 
-/// Get a specific `mikebom:*` property value from a component.
+/// Get a specific `waybill:*` property value from a component.
 fn get_property(component: &serde_json::Value, key: &str) -> Option<String> {
     component
         .get("properties")
@@ -206,7 +206,7 @@ fn us1_ar_format_extracts_control_metadata() {
     std::fs::write(arch_dir.join("busybox_1.36.1-r0_core2-64.ipk"), &ipk).unwrap();
 
     // Also emit a stub libc6 ipk so busybox's Depends edge can
-    // resolve (mikebom's edge emission graph-resolves — phantom edges
+    // resolve (waybill's edge emission graph-resolves — phantom edges
     // are dropped when the depended-on component isn't in the SBOM).
     let libc6_control = "Package: libc6\n\
                          Version: 2.39\n\
@@ -241,12 +241,12 @@ fn us1_ar_format_extracts_control_metadata() {
     );
 
     assert_eq!(
-        get_property(comp, "mikebom:source-mechanism").as_deref(),
+        get_property(comp, "waybill:source-mechanism").as_deref(),
         Some("ipk-file-archive-extraction"),
         "ar-format path MUST emit ipk-file-archive-extraction"
     );
     assert_eq!(
-        get_property(comp, "mikebom:arch-source").as_deref(),
+        get_property(comp, "waybill:arch-source").as_deref(),
         Some("control-file"),
         "ar-format path MUST emit arch-source = control-file"
     );
@@ -297,7 +297,7 @@ fn us1_ar_format_tolerates_missing_debian_binary() {
     assert_eq!(comps.len(), 1);
     let comp = comps[0];
     assert_eq!(
-        get_property(comp, "mikebom:source-mechanism").as_deref(),
+        get_property(comp, "waybill:source-mechanism").as_deref(),
         Some("ipk-file-archive-extraction")
     );
     assert!(
@@ -325,13 +325,13 @@ fn us1_pre_2015_gzip_tar_still_works() {
     let comp = comps[0];
     // Legacy path: source-mechanism = "ipk-file" (unchanged from pre-m187).
     assert_eq!(
-        get_property(comp, "mikebom:source-mechanism").as_deref(),
+        get_property(comp, "waybill:source-mechanism").as_deref(),
         Some("ipk-file"),
         "legacy gzip-tar path MUST emit source-mechanism = ipk-file (byte-identity)"
     );
     // F9 byte-identity guarantee — legacy path does NOT emit arch-source.
     assert_eq!(
-        get_property(comp, "mikebom:arch-source"),
+        get_property(comp, "waybill:arch-source"),
         None,
         "legacy path MUST NOT emit arch-source property (SC-005 byte-identity)"
     );
@@ -359,7 +359,7 @@ fn us1_malformed_ar_falls_through_to_filename() {
     );
     let comp = comps[0];
     assert_eq!(
-        get_property(comp, "mikebom:source-mechanism").as_deref(),
+        get_property(comp, "waybill:source-mechanism").as_deref(),
         Some("ipk-file-filename-fallback")
     );
     assert!(
@@ -405,7 +405,7 @@ fn us1_sc004_invariant_extraction_implies_license() {
         assert_eq!(comps.len(), 1, "expected one component for {name}");
         let comp = comps[0];
         assert_eq!(
-            get_property(comp, "mikebom:source-mechanism").as_deref(),
+            get_property(comp, "waybill:source-mechanism").as_deref(),
             Some("ipk-file-archive-extraction"),
             "{name} should take ar-extraction path"
         );
@@ -436,7 +436,7 @@ fn us1_sc004_invariant_extraction_implies_license() {
 fn us2_qemux86_64_arch_extracted_from_parent_dir() {
     // Malformed ar body → filename fallback. Parent dir is qemux86_64.
     // Verify ?arch=qemux86_64, version=1.0-r0 (no _qemux86 gluing),
-    // mikebom:arch-source = parent-directory.
+    // waybill:arch-source = parent-directory.
     let tempdir = tempfile::tempdir().unwrap();
     let arch_dir = tempdir.path().join("qemux86_64");
     std::fs::create_dir(&arch_dir).unwrap();
@@ -464,11 +464,11 @@ fn us2_qemux86_64_arch_extracted_from_parent_dir() {
     );
 
     assert_eq!(
-        get_property(comp, "mikebom:arch-source").as_deref(),
+        get_property(comp, "waybill:arch-source").as_deref(),
         Some("parent-directory")
     );
     assert_eq!(
-        get_property(comp, "mikebom:source-mechanism").as_deref(),
+        get_property(comp, "waybill:source-mechanism").as_deref(),
         Some("ipk-file-filename-fallback")
     );
 }
@@ -497,7 +497,7 @@ fn us2_powerpc_e500v2_arch_extracted_from_parent_dir() {
         "multi-underscore arch MUST be preserved verbatim — got: {purl}"
     );
     assert_eq!(
-        get_property(comp, "mikebom:arch-source").as_deref(),
+        get_property(comp, "waybill:arch-source").as_deref(),
         Some("parent-directory")
     );
 }
@@ -505,7 +505,7 @@ fn us2_powerpc_e500v2_arch_extracted_from_parent_dir() {
 #[test]
 fn us2_no_parent_dir_match_falls_back_to_filename_heuristic() {
     // Parent dir "downloads" doesn't match filename's arch suffix "_all"
-    // → filename rsplit heuristic → mikebom:arch-source = filename-heuristic.
+    // → filename rsplit heuristic → waybill:arch-source = filename-heuristic.
     let tempdir = tempfile::tempdir().unwrap();
     let loose_dir = tempdir.path().join("downloads");
     std::fs::create_dir(&loose_dir).unwrap();
@@ -523,7 +523,7 @@ fn us2_no_parent_dir_match_falls_back_to_filename_heuristic() {
         "filename rsplit heuristic should emit ?arch=all — got: {purl}"
     );
     assert_eq!(
-        get_property(comp, "mikebom:arch-source").as_deref(),
+        get_property(comp, "waybill:arch-source").as_deref(),
         Some("filename-heuristic")
     );
 }
@@ -532,7 +532,7 @@ fn us2_no_parent_dir_match_falls_back_to_filename_heuristic() {
 fn us2_arch_source_control_file_when_ar_succeeds() {
     // Well-formed ar with control-file Architecture = qemux86_64
     // inside a directory named `wrongname/` — control-file wins per
-    // FR-005. Emits mikebom:arch-source = "control-file", NOT
+    // FR-005. Emits waybill:arch-source = "control-file", NOT
     // "parent-directory".
     let tempdir = tempfile::tempdir().unwrap();
     let wrong_dir = tempdir.path().join("wrongname");
@@ -559,11 +559,11 @@ fn us2_arch_source_control_file_when_ar_succeeds() {
         "control-file Architecture MUST win over parent dir — got: {purl}"
     );
     assert_eq!(
-        get_property(comp, "mikebom:arch-source").as_deref(),
+        get_property(comp, "waybill:arch-source").as_deref(),
         Some("control-file")
     );
     assert_eq!(
-        get_property(comp, "mikebom:source-mechanism").as_deref(),
+        get_property(comp, "waybill:source-mechanism").as_deref(),
         Some("ipk-file-archive-extraction")
     );
 }
@@ -620,18 +620,18 @@ fn regression_us1_us2_combined_yocto_scan() {
     // (a) + (b) — ar path.
     for comp in [a[0], b[0]] {
         assert_eq!(
-            get_property(comp, "mikebom:source-mechanism").as_deref(),
+            get_property(comp, "waybill:source-mechanism").as_deref(),
             Some("ipk-file-archive-extraction")
         );
         assert_eq!(
-            get_property(comp, "mikebom:arch-source").as_deref(),
+            get_property(comp, "waybill:arch-source").as_deref(),
             Some("control-file")
         );
     }
     // (c) — legacy path, NO arch-source.
     assert_eq!(
-        get_property(c[0], "mikebom:source-mechanism").as_deref(),
+        get_property(c[0], "waybill:source-mechanism").as_deref(),
         Some("ipk-file")
     );
-    assert_eq!(get_property(c[0], "mikebom:arch-source"), None);
+    assert_eq!(get_property(c[0], "waybill:arch-source"), None);
 }

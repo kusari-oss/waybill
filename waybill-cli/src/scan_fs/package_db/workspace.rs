@@ -9,7 +9,7 @@
 //!   fallback.
 //! - `synthesize_workspace_root`: construct the `PackageDbEntry` for
 //!   the synthetic workspace-root component, with the
-//!   `mikebom:component-role: "workspace-root"` annotation (C40
+//!   `waybill:component-role: "workspace-root"` annotation (C40
 //!   open-enum value added in milestone 106 per research R3).
 //!
 //! The workspace emission model is documented in
@@ -47,8 +47,8 @@ pub(super) fn workspace_root_name(root_manifest_field: Option<&str>) -> String {
 ///
 /// - PURL: `pkg:generic/<encoded-name>` (no version — workspace roots
 ///   are unversioned by design)
-/// - `mikebom:component-role: "workspace-root"`
-/// - `mikebom:source-files: "<source_path>"`
+/// - `waybill:component-role: "workspace-root"`
+/// - `waybill:source-files: "<source_path>"`
 ///
 /// The returned `PackageDbEntry`'s `depends` field is left empty —
 /// callers populate it with the resolved member PURLs after they walk
@@ -69,11 +69,11 @@ pub(super) fn synthesize_workspace_root(
     let mut extra: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra.insert(
-        "mikebom:component-role".to_string(),
+        "waybill:component-role".to_string(),
         serde_json::Value::String("workspace-root".to_string()),
     );
     extra.insert(
-        "mikebom:source-files".to_string(),
+        "waybill:source-files".to_string(),
         serde_json::Value::String(source_path.to_string_lossy().into_owned()),
     );
 
@@ -126,14 +126,14 @@ mod tests {
         assert_eq!(
             entry
                 .extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("workspace-root"),
         );
         assert_eq!(
             entry
                 .extra_annotations
-                .get("mikebom:source-files")
+                .get("waybill:source-files")
                 .and_then(|v| v.as_str()),
             Some("/tmp/my-monorepo/pyproject.toml"),
         );
@@ -165,7 +165,7 @@ mod tests {
         .unwrap();
         let role = entry
             .extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .expect("workspace-root entry must carry component-role annotation");
         assert_eq!(role, &serde_json::Value::String("workspace-root".to_string()));
     }

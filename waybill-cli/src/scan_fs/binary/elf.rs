@@ -19,12 +19,12 @@ pub const MIN_BINARY_SIZE_BYTES: u64 = 1024;
 
 /// Cap on concatenated read-only string-section bytes. Larger
 /// `.rodata` gets truncated silently (the parent `BinaryFileComponent`
-/// carries `mikebom:binary-parse-limit = "string-region-cap"` in that
+/// carries `waybill:binary-parse-limit = "string-region-cap"` in that
 /// case — plumbed by the caller).
 /// Parsed `.note.package` payload (systemd FDO Packaging Metadata
 /// Notes schema — research R4). Fields align with the published spec.
 /// `os_cpe` is populated by serde from the JSON payload but not yet
-/// consumed by mikebom code; preserved for spec fidelity.
+/// consumed by waybill code; preserved for spec fidelity.
 #[allow(dead_code)]
 #[derive(Clone, Debug, Default, Deserialize)]
 pub struct ElfNotePackage {

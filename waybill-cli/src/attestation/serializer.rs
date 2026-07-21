@@ -57,7 +57,7 @@ pub fn write_attestation_signed(
 }
 
 /// Serialize a witness-compatible attestation Statement v0.1, signing
-/// through the same DSSE envelope flow as the mikebom-native path.
+/// through the same DSSE envelope flow as the waybill-native path.
 ///
 /// The envelope's `payloadType` stays `application/vnd.in-toto+json`
 /// regardless of Statement version — `go-witness`, `sbomit`, and any
@@ -106,7 +106,7 @@ fn write_signable<T: Serialize>(
             let pae = dsse_pae(IN_TOTO_PAYLOAD_TYPE, &payload_bytes);
 
             // Local-key path only for now; keyless reuses the same
-            // typed error as the mikebom-v1 path.
+            // typed error as the waybill-v1 path.
             let SigningIdentity::LocalKey {
                 path: key_path,
                 passphrase_env,
@@ -179,7 +179,7 @@ mod tests {
 
         assert_eq!(stmt.statement_type, InTotoStatement::STATEMENT_TYPE);
         assert_eq!(stmt.predicate_type, InTotoStatement::PREDICATE_TYPE);
-        assert_eq!(stmt.predicate.metadata.tool.name, "mikebom");
+        assert_eq!(stmt.predicate.metadata.tool.name, "waybill");
         assert_eq!(stmt.predicate.network_trace.connections.len(), 3);
         assert_eq!(stmt.predicate.file_access.operations.len(), 2);
         assert_eq!(stmt.predicate.trace_integrity.ring_buffer_overflows, 0);

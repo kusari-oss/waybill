@@ -1,6 +1,6 @@
 //! Legacy Berkeley-DB rpmdb reader (pre-RHEL-8 / CentOS-7 / Amazon
 //! Linux 2). Milestone 004 US4 — gated behind the
-//! `--include-legacy-rpmdb` CLI flag (also via `MIKEBOM_INCLUDE_LEGACY_RPMDB=1`).
+//! `--include-legacy-rpmdb` CLI flag (also via `WAYBILL_INCLUDE_LEGACY_RPMDB=1`).
 //! Concrete parsing lands in tasks T061–T065.
 //!
 //! When the flag is UNSET, this reader is a no-op; milestone-003

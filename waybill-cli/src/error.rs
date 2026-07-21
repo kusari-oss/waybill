@@ -3,7 +3,7 @@
 // flagged dead. Allow on non-Linux to keep cross-platform clippy quiet.
 #![allow(dead_code)]
 
-/// Application error types for mikebom CLI.
+/// Application error types for waybill CLI.
 ///
 /// Uses `thiserror` for library-level errors with structured variants.
 /// Maps to the exit codes defined in contracts/cli-interface.md.

@@ -24,9 +24,9 @@
 //! - **Phase B (deferred)**: `CustomAttribute` walking for
 //!   `AssemblyFileVersionAttribute` + `AssemblyInformationalVersionAttribute`.
 //!   These would let the PURL version use Informational > File >
-//!   AssemblyVersion (the full FR-020 ladder). For now mikebom emits
+//!   AssemblyVersion (the full FR-020 ladder). For now waybill emits
 //!   the AssemblyVersion 4-tuple, which is sufficient identity for
-//!   cross-reader dedup with `.deps.json` (`mikebom:also-detected-via`
+//!   cross-reader dedup with `.deps.json` (`waybill:also-detected-via`
 //!   collapses both into one component).
 //!
 //! ECMA-335 §II.22 metadata-table layout is the canonical reference.
@@ -411,7 +411,7 @@ fn parse_tables_stream(
     // name (single digit, leading underscore, looks like a version
     // number, etc.). Reject these to keep the SBOM clean. Real
     // assemblies that PASS this filter are the high-confidence subset
-    // mikebom emits for milestone 130 US3 Phase A.
+    // waybill emits for milestone 130 US3 Phase A.
     if !is_plausible_assembly_name(name) {
         return Err(ClrParseError::NoAssemblyRow);
     }
@@ -735,7 +735,7 @@ fn is_plausible_version_string(s: &str) -> bool {
 ///
 /// Milestone 132 US2 (FR-008 + FR-009 + FR-010): syft and similar
 /// comparators strip everything from the first `+` onward when matching
-/// `pkg:nuget` versions. mikebom keeps the verbatim Informational per
+/// `pkg:nuget` versions. waybill keeps the verbatim Informational per
 /// SemVer §10 but ALSO emits this stripped form alongside so consumers
 /// can key on either.
 ///
@@ -1167,19 +1167,19 @@ impl AssemblyAccumulator {
             };
             let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
             extra_annotations.insert(
-                "mikebom:source-mechanism".to_string(),
+                "waybill:source-mechanism".to_string(),
                 serde_json::Value::String("dotnet-assembly-metadata".to_string()),
             );
             // Always-emit the 4-tuple AssemblyVersion per FR-010.
             extra_annotations.insert(
-                "mikebom:assembly-version-runtime".to_string(),
+                "waybill:assembly-version-runtime".to_string(),
                 serde_json::Value::String(acc.representative_version.to_string()),
             );
             // Milestone 131 US1 — additional version annotations when
             // extracted from CustomAttribute walk.
             if let Some(v) = &acc.informational_version {
                 extra_annotations.insert(
-                    "mikebom:assembly-version-informational".to_string(),
+                    "waybill:assembly-version-informational".to_string(),
                     serde_json::Value::String(v.clone()),
                 );
                 // Milestone 132 US2 (FR-008): companion annotation carrying
@@ -1189,14 +1189,14 @@ impl AssemblyAccumulator {
                 // strip_informational_build_metadata.
                 if let Some(stripped) = strip_informational_build_metadata(v) {
                     extra_annotations.insert(
-                        "mikebom:assembly-version-informational-stripped".to_string(),
+                        "waybill:assembly-version-informational-stripped".to_string(),
                         serde_json::Value::String(stripped.to_string()),
                     );
                 }
             }
             if let Some(v) = &acc.file_version {
                 extra_annotations.insert(
-                    "mikebom:assembly-version-file".to_string(),
+                    "waybill:assembly-version-file".to_string(),
                     serde_json::Value::String(v.clone()),
                 );
             }
@@ -1208,7 +1208,7 @@ impl AssemblyAccumulator {
                     .collect::<Vec<_>>()
                     .join(",");
                 extra_annotations.insert(
-                    "mikebom:assembly-cultures".to_string(),
+                    "waybill:assembly-cultures".to_string(),
                     serde_json::Value::String(joined),
                 );
             }
@@ -1217,7 +1217,7 @@ impl AssemblyAccumulator {
             let licenses_vec = match &acc.license {
                 Some(LicenseProbeResult::Identified { spdx_id }) => {
                     extra_annotations.insert(
-                        "mikebom:license-source".to_string(),
+                        "waybill:license-source".to_string(),
                         serde_json::Value::String("package-dir".to_string()),
                     );
                     match waybill_common::types::license::SpdxExpression::try_canonical(spdx_id) {
@@ -1234,18 +1234,18 @@ impl AssemblyAccumulator {
                 }
                 Some(LicenseProbeResult::Unrecognized { sha256_hex }) => {
                     extra_annotations.insert(
-                        "mikebom:license-source".to_string(),
+                        "waybill:license-source".to_string(),
                         serde_json::Value::String("package-dir-unrecognized".to_string()),
                     );
                     extra_annotations.insert(
-                        "mikebom:license-text-sha256".to_string(),
+                        "waybill:license-text-sha256".to_string(),
                         serde_json::Value::String(sha256_hex.clone()),
                     );
                     Vec::new()
                 }
                 Some(LicenseProbeResult::NotFound) | None => {
                     extra_annotations.insert(
-                        "mikebom:license-source".to_string(),
+                        "waybill:license-source".to_string(),
                         serde_json::Value::String("package-dir-no-license".to_string()),
                     );
                     Vec::new()
@@ -1365,7 +1365,7 @@ mod tests {
         assert_eq!(entries.len(), 1);
         let cultures = entries[0]
             .extra_annotations
-            .get("mikebom:assembly-cultures")
+            .get("waybill:assembly-cultures")
             .and_then(|v| v.as_str())
             .unwrap();
         assert_eq!(cultures, "de,fr");
@@ -1384,15 +1384,15 @@ mod tests {
         acc.absorb(neutral, Path::new("/a/Foo.Bar.dll"));
         let entries = acc.flatten();
         assert_eq!(entries.len(), 1);
-        assert!(!entries[0].extra_annotations.contains_key("mikebom:assembly-cultures"));
+        assert!(!entries[0].extra_annotations.contains_key("waybill:assembly-cultures"));
         let mech = entries[0]
             .extra_annotations
-            .get("mikebom:source-mechanism")
+            .get("waybill:source-mechanism")
             .and_then(|v| v.as_str());
         assert_eq!(mech, Some("dotnet-assembly-metadata"));
         let runtime_ver = entries[0]
             .extra_annotations
-            .get("mikebom:assembly-version-runtime")
+            .get("waybill:assembly-version-runtime")
             .and_then(|v| v.as_str());
         assert_eq!(runtime_ver, Some("8.0.0.0"));
         assert_eq!(entries[0].sbom_tier.as_deref(), Some("image"));
@@ -1430,7 +1430,7 @@ mod tests {
 
     #[test]
     fn fingerprint_license_returns_none_for_unrecognized_text() {
-        let text = b"This is some proprietary license that mikebom doesn't recognize.";
+        let text = b"This is some proprietary license that waybill doesn't recognize.";
         assert!(fingerprint_license(text).is_none());
     }
 
@@ -1626,7 +1626,7 @@ mod tests {
     #[test]
     fn strip_informational_build_metadata_multiple_plus_uses_first() {
         // SemVer §10: everything from the FIRST `+` onward is build
-        // metadata; mikebom MUST NOT interpret further.
+        // metadata; waybill MUST NOT interpret further.
         assert_eq!(
             strip_informational_build_metadata("1.2.3+meta+more"),
             Some("1.2.3"),

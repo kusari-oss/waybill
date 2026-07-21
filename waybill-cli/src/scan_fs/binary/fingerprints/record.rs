@@ -16,9 +16,9 @@
 //! public corpus contract.
 //!
 //! Schema versioned at v1 in
-//! `kusari-sandbox/mikebom-fingerprints/schema/fingerprint-record.v1.json`.
+//! `kusari-sandbox/waybill-fingerprints/schema/fingerprint-record.v1.json`.
 //! v2 schema is published at `docs/reference/corpus-record-v2.schema.json`
-//! per FR-004. mikebom-cli at load time treats records as TRUSTED
+//! per FR-004. waybill-cli at load time treats records as TRUSTED
 //! (sigstore signature verified on the archive itself; per-record
 //! defensive validation is FR-001's `#[serde(deny_unknown_fields)]` gate).
 
@@ -406,7 +406,7 @@ mod tests {
             "tier": "automated-ingestion",
             "extracted_from": "https://deb.debian.org/debian/pool/main/o/openssl/libssl3_3.1.4-1_amd64.deb",
             "extracted_from_sha256": "abc123def456000000000000000000000000000000000000000000000000abcd",
-            "extraction_toolchain": "mikebom-corpus-builder@v0.3.1",
+            "extraction_toolchain": "waybill-corpus-builder@v0.3.1",
             "extracted_at": "2026-06-01T12:00:00Z"
           },
           "schema_version": 2

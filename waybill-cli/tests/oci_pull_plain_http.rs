@@ -1,6 +1,6 @@
 //! Milestone 182 US1 — plain-HTTP OCI registry pull.
 //!
-//! Verifies that mikebom's `--insecure-registry` flag causes the
+//! Verifies that waybill's `--insecure-registry` flag causes the
 //! registry client to use `http://` instead of `https://`, and that
 //! the absence of the flag yields an actionable error naming
 //! `--insecure-registry` (FR-014 Case 1).
@@ -8,7 +8,7 @@
 //! Test infrastructure: `wiremock 0.6` for a plain-HTTP mock registry
 //! (dev-dep since m055). We build a minimal OCI-conformant manifest +
 //! config + gzipped-tar layer that carries a single `etc/os-release`
-//! entry. The layer is discovered by the mikebom OS-release reader and
+//! entry. The layer is discovered by the waybill OS-release reader and
 //! surfaces as a component in the emitted SBOM.
 
 #![cfg(feature = "oci-registry")]
@@ -42,7 +42,7 @@ fn build_minimal_oci_image() -> OciImage {
     // 1. Build the uncompressed layer: a tar containing `etc/os-release`.
     let uncompressed_tar = {
         let mut builder = tar::Builder::new(Vec::<u8>::new());
-        let body = b"ID=mikebom-m182-test\nVERSION=1\n";
+        let body = b"ID=waybill-m182-test\nVERSION=1\n";
         let mut header = tar::Header::new_gnu();
         header.set_path("etc/os-release").unwrap();
         header.set_size(body.len() as u64);
@@ -64,7 +64,7 @@ fn build_minimal_oci_image() -> OciImage {
     };
     let layer_digest = format!("sha256:{}", sha256_hex(&layer_bytes));
 
-    // 3. Image config JSON. Minimal shape — mikebom only needs
+    // 3. Image config JSON. Minimal shape — waybill only needs
     //    architecture/os for the platform-matching path (the pulled
     //    image is single-manifest, so platform matching is skipped).
     let config = json!({
@@ -158,7 +158,7 @@ fn mikebom_bin() -> &'static str {
 async fn us1_insecure_registry_flag_enables_plain_http_pull() {
     let server = MockServer::start().await;
     let image = build_minimal_oci_image();
-    let repo = "library/mikebom-m182-us1";
+    let repo = "library/waybill-m182-us1";
     let tag = "1.0";
     mount_oci_endpoints(&server, repo, tag, &image).await;
 
@@ -188,11 +188,11 @@ async fn us1_insecure_registry_flag_enables_plain_http_pull() {
             output.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(
         out.status.success(),
-        "mikebom exit={:?} stderr:\n{stderr}",
+        "waybill exit={:?} stderr:\n{stderr}",
         out.status.code(),
     );
     assert!(output.exists(), "output file missing: {}", output.display());
@@ -202,8 +202,8 @@ async fn us1_insecure_registry_flag_enables_plain_http_pull() {
     )
     .expect("output is valid JSON");
     // The minimal fixture image is intentionally NOT a known distro
-    // (os-release ID=mikebom-m182-test), so `components[]` may be
-    // empty. What we DO check: mikebom reached emission (dependencies
+    // (os-release ID=waybill-m182-test), so `components[]` may be
+    // empty. What we DO check: waybill reached emission (dependencies
     // referencing the pulled image), proving the plain-HTTP transport
     // succeeded end-to-end.
     let deps = parsed
@@ -213,7 +213,7 @@ async fn us1_insecure_registry_flag_enables_plain_http_pull() {
     let image_ref_in_deps = deps.iter().any(|d| {
         d.get("ref")
             .and_then(|r| r.as_str())
-            .is_some_and(|s| s.contains("mikebom-m182-us1"))
+            .is_some_and(|s| s.contains("waybill-m182-us1"))
     });
     assert!(
         image_ref_in_deps,
@@ -226,7 +226,7 @@ async fn us1_insecure_registry_flag_enables_plain_http_pull() {
 async fn us1_no_flag_produces_actionable_error() {
     let server = MockServer::start().await;
     let image = build_minimal_oci_image();
-    let repo = "library/mikebom-m182-us1";
+    let repo = "library/waybill-m182-us1";
     let tag = "1.0";
     mount_oci_endpoints(&server, repo, tag, &image).await;
     let uri = server.uri();
@@ -250,11 +250,11 @@ async fn us1_no_flag_produces_actionable_error() {
             output.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         !out.status.success(),
-        "expected mikebom to fail (plain-HTTP registry contacted over TLS), \
+        "expected waybill to fail (plain-HTTP registry contacted over TLS), \
          got success. stderr:\n{stderr}",
     );
     // FR-014 Case 1: message must name the fix flag.
@@ -278,14 +278,14 @@ async fn us1_url_scheme_in_image_does_not_imply_insecure() {
     // the `--image` URI does NOT by itself grant insecure transport;
     // `--insecure-registry` is the only opt-in.
     //
-    // The mikebom reference parser does not currently accept a
+    // The waybill reference parser does not currently accept a
     // leading scheme in `--image` — either way, we assert that
     // *without* the flag the invocation fails with the FR-014 Case 1
     // message. This future-proofs against a parser refactor that
     // silently accepts `http://<host>/...` as an insecure signal.
     let server = MockServer::start().await;
     let image = build_minimal_oci_image();
-    let repo = "library/mikebom-m182-us1";
+    let repo = "library/waybill-m182-us1";
     let tag = "1.0";
     mount_oci_endpoints(&server, repo, tag, &image).await;
     let uri = server.uri();
@@ -295,8 +295,8 @@ async fn us1_url_scheme_in_image_does_not_imply_insecure() {
     let output = tempdir.path().join("m182-us1-scheme.cdx.json");
 
     // Use the plain-HTTP hostport in --image but withhold the flag.
-    // The invocation must fail (mikebom tries HTTPS on the plain-HTTP
-    // port). No matter whether a future refactor makes mikebom
+    // The invocation must fail (waybill tries HTTPS on the plain-HTTP
+    // port). No matter whether a future refactor makes waybill
     // tolerate an explicit `http://` prefix, THE FLAG remains the
     // required opt-in.
     let image_ref = format!("{hostport}/{repo}:{tag}");
@@ -314,11 +314,11 @@ async fn us1_url_scheme_in_image_does_not_imply_insecure() {
             output.to_str().unwrap(),
         ])
         .output()
-        .expect("spawn mikebom binary");
+        .expect("spawn waybill binary");
     let stderr = String::from_utf8_lossy(&out.stderr).to_string();
     assert!(
         !out.status.success(),
-        "expected mikebom to fail without --insecure-registry. stderr:\n{stderr}",
+        "expected waybill to fail without --insecure-registry. stderr:\n{stderr}",
     );
     assert!(
         stderr.contains("--insecure-registry"),

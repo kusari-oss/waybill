@@ -8,8 +8,8 @@
 # what broke.
 set -euo pipefail
 
-MIKEBOM=/mikebom/target/release/mikebom
-FIXTURE=/mikebom/mikebom-cli/tests/fixtures/compiler_pipeline/two_binaries_diverge
+MIKEBOM=/waybill/target/release/waybill
+FIXTURE=/waybill/waybill-cli/tests/fixtures/compiler_pipeline/two_binaries_diverge
 OUTPUT=/tmp/m210-integration.attestation.json
 
 echo "==> m210 integration test: trace the SC-001 fixture build"
@@ -22,17 +22,17 @@ echo
 # `trace run -- cargo build --manifest-path ...` shape mirrors how
 # operators would invoke this in the wild.
 #
-# --output-format=mikebom-v1 gets us the native BuildTracePredicate
+# --output-format=waybill-v1 gets us the native BuildTracePredicate
 # shape with the `compiler_pipeline` field — witness-v0.1 wraps that
 # in the attestation-collection envelope which makes jq inspection
 # more indirect.
 #
-# Stay at the mikebom workspace root so the loader's CWD-relative eBPF
-# object-path resolution (`mikebom-ebpf/target/bpfel-unknown-none/release/
-# mikebom-ebpf`) matches xtask's build output. Point cargo at the
+# Stay at the waybill workspace root so the loader's CWD-relative eBPF
+# object-path resolution (`waybill-ebpf/target/bpfel-unknown-none/release/
+# waybill-ebpf`) matches xtask's build output. Point cargo at the
 # fixture's manifest instead of cd'ing into it, and give it a scratch
-# target dir so we don't clobber mikebom's own compile cache.
-cd /mikebom
+# target dir so we don't clobber waybill's own compile cache.
+cd /waybill
 
 set +e
 # `trace capture` (not `trace run`) emits ONLY the attestation. `trace
@@ -43,7 +43,7 @@ set +e
 # Using `capture` sidesteps the m211 US2 combined-workflow gap without
 # affecting m212's ring_buffer_overflows verification.
 "$MIKEBOM" trace capture \
-    --attestation-format mikebom-v1 \
+    --attestation-format waybill-v1 \
     --output "$OUTPUT" \
     -- cargo build --release \
         --manifest-path "$FIXTURE/Cargo.toml" \
@@ -52,7 +52,7 @@ TRACE_STATUS=$?
 set -e
 
 if [[ $TRACE_STATUS -ne 0 ]]; then
-    echo "FAIL: mikebom trace run exited $TRACE_STATUS"
+    echo "FAIL: waybill trace run exited $TRACE_STATUS"
     exit 1
 fi
 
@@ -231,7 +231,7 @@ if ! jq -e '.predicate.trace_integrity.filter_categories_applied | all(. | test(
 fi
 
 # Milestone 213 (issue #616) — SC-006 widen-flag assertion. Run a
-# second `mikebom trace capture` with --include-system-reads and assert
+# second `waybill trace capture` with --include-system-reads and assert
 # that the emitted attestation:
 # (a) does NOT contain "System" in filter_categories_applied
 # (b) shows /etc/ paths in file_access.operations (if the traced
@@ -243,7 +243,7 @@ echo "==> m213 SC-006 widen-flag verification"
 WIDENED_OUTPUT=/tmp/m213-widened.attestation.json
 set +e
 "$MIKEBOM" trace capture \
-    --attestation-format mikebom-v1 \
+    --attestation-format waybill-v1 \
     --output "$WIDENED_OUTPUT" \
     --include-system-reads \
     -- cat /etc/hostname

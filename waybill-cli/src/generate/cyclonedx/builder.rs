@@ -20,11 +20,11 @@ pub struct CycloneDxConfig {
     /// Whether to include source file paths in evidence.
     pub include_source_files: bool,
     /// How this SBOM was produced. Gets surfaced in the CycloneDX
-    /// `mikebom:generation-context` property so downstream consumers can
+    /// `waybill:generation-context` property so downstream consumers can
     /// distinguish a build-time trace from a post-hoc filesystem scan.
     pub generation_context: GenerationContext,
     /// Whether the caller ran the scan with `--include-dev`. Controls
-    /// emission of the `mikebom:dev-dependency` property on dev-flagged
+    /// emission of the `waybill:dev-dependency` property on dev-flagged
     /// components — the flag is only ever emitted when dev components
     /// were intentionally included, so downstream consumers can trust
     /// the absence of the property to mean "this component is prod".
@@ -48,7 +48,7 @@ pub struct CycloneDxBuilder {
     /// Feature 005 SC-009 — names of `/etc/os-release` fields that were
     /// missing during the scan. Populated by the caller via
     /// `set_os_release_missing_fields`; emitted into the SBOM's
-    /// `metadata.properties` as `mikebom:os-release-missing-fields`
+    /// `metadata.properties` as `waybill:os-release-missing-fields`
     /// when non-empty.
     os_release_missing_fields: Vec<String>,
     /// Milestone 160 (T034/T035): doc-scope Go-transitive coverage
@@ -57,13 +57,13 @@ pub struct CycloneDxBuilder {
     go_transitive_coverage:
         Option<crate::scan_fs::package_db::golang::graph_resolver::GoTransitiveCoverage>,
     /// Milestone 172: doc-scope Go step-5 fallback count for the C117
-    /// `mikebom:go-transitive-fallback-count` annotation. Sibling of
+    /// `waybill:go-transitive-fallback-count` annotation. Sibling of
     /// `go_transitive_coverage`; both are Go-gated. `None` iff no Go
     /// scan happened.
     go_transitive_fallback_count: Option<usize>,
     /// Milestone 173: doc-scope Go cache-warming outcome for the C118
-    /// (`mikebom:go-cache-warming-mode`) + C119
-    /// (`mikebom:go-cache-warming-failed`) annotations. Sibling of
+    /// (`waybill:go-cache-warming-mode`) + C119
+    /// (`waybill:go-cache-warming-failed`) annotations. Sibling of
     /// `go_transitive_coverage`; both are Go-gated. `None` iff no Go
     /// scan happened.
     go_cache_warming:
@@ -74,12 +74,12 @@ pub struct CycloneDxBuilder {
     go_workspace_mode:
         Option<crate::scan_fs::package_db::golang::gowork::WorkspaceMode>,
     /// Milestone 204 (#554): doc-scope helm image-extraction-mode
-    /// signal for the C123 `mikebom:image-extraction-completeness`
+    /// signal for the C123 `waybill:image-extraction-completeness`
     /// annotation. `None` ⇒ no helm reader ran (C123 absent).
     helm_extraction_mode:
         Option<crate::scan_fs::package_db::HelmExtractionMode>,
     /// Milestone 206 (#440): doc-scope image-source signal for the
-    /// C124 `mikebom:image-source` annotation. Conditional emission
+    /// C124 `waybill:image-source` annotation. Conditional emission
     /// (podman-only) preserves FR-005 byte-identity for docker/remote
     /// scans.
     image_source: Option<crate::cli::scan_cmd::ImageSource>,
@@ -93,7 +93,7 @@ pub struct CycloneDxBuilder {
     /// `--attestation` / `--id <scheme>=<value>` flags). Built-in
     /// identifiers ride `metadata.component.externalReferences[]`;
     /// user-defined identifiers ride a `metadata.properties[]` entry
-    /// under `mikebom:identifiers`. The Vec is already
+    /// under `waybill:identifiers`. The Vec is already
     /// deduplicated and ordered by the resolution pipeline in
     /// `cli/scan_cmd.rs::resolve_identifiers`.
     identifiers: Vec<waybill::binding::identifiers::Identifier>,
@@ -127,7 +127,7 @@ pub struct CycloneDxBuilder {
     /// `metadata.lifecycles[]` aggregator returns a single-element
     /// array with the asserted phase via the equivalence table; when
     /// `None`, the milestone-047 per-component aggregation continues
-    /// unchanged. Per-component `mikebom:sbom-tier` annotations are
+    /// unchanged. Per-component `waybill:sbom-tier` annotations are
     /// preserved in either case (operator override is document-level
     /// only).
     sbom_type_override:
@@ -148,8 +148,8 @@ pub struct CycloneDxBuilder {
     /// Milestone 210 — compiler-pipeline data captured from the
     /// eBPF trace. When `Some(_)`, `build_components` walks each
     /// component through `map_component_to_source_read_set` and
-    /// emits per-component `mikebom:source-read-set` (C130) +
-    /// `mikebom:read-set-source` (C131) `properties[]` entries
+    /// emits per-component `waybill:source-read-set` (C130) +
+    /// `waybill:read-set-source` (C131) `properties[]` entries
     /// per contracts/annotations.md A-1/A-2. `None` ⇒ scan ran
     /// without eBPF ⇒ neither property emitted (byte-identity
     /// preserved for the non-trace code path per m208 defensive-
@@ -269,7 +269,7 @@ impl CycloneDxBuilder {
     /// `--preserve-manifest-main-module` flag. When `true` AND
     /// `root_override.is_active()`, the manifest-derived main-module
     /// is preserved as a `library`-typed entry in `components[]` with
-    /// a `mikebom:demoted-from-main-module = "true"` annotation rather
+    /// a `waybill:demoted-from-main-module = "true"` annotation rather
     /// than being dropped per the milestone-077 clean-replacement
     /// default. No-op without an active root override (silent + INFO
     /// log per spec FR-006) and on multi-main-module scans (silent +
@@ -297,7 +297,7 @@ impl CycloneDxBuilder {
     /// Milestone 073 — record the identifiers for the emitted SBOM.
     /// Built-in schemes ride
     /// `metadata.component.externalReferences[]` per scheme; user-
-    /// defined schemes ride a `mikebom:identifiers` property
+    /// defined schemes ride a `waybill:identifiers` property
     /// at metadata level.
     pub fn with_identifiers(
         mut self,
@@ -323,7 +323,7 @@ impl CycloneDxBuilder {
     }
 
     /// Feature 005 — record diagnostic fields observed during the scan.
-    /// When non-empty, they drive the `mikebom:os-release-missing-fields`
+    /// When non-empty, they drive the `waybill:os-release-missing-fields`
     /// CycloneDX metadata property.
     pub fn with_os_release_missing_fields(mut self, fields: Vec<String>) -> Self {
         self.os_release_missing_fields = fields;
@@ -344,7 +344,7 @@ impl CycloneDxBuilder {
 
     /// Milestone 172 — record the doc-scope Go step-5 fallback count
     /// per FR-002 + Q1. Drives the C117
-    /// `mikebom:go-transitive-fallback-count` annotation. `None` iff no
+    /// `waybill:go-transitive-fallback-count` annotation. `None` iff no
     /// Go scan happened (annotation absent). `Some(0)` on healthy scans
     /// (annotation emitted with `"0"`).
     pub fn with_go_transitive_fallback_count(
@@ -356,8 +356,8 @@ impl CycloneDxBuilder {
     }
 
     /// Milestone 173 — record the doc-scope Go cache-warming outcome.
-    /// Drives the C118 (`mikebom:go-cache-warming-mode`) unconditional
-    /// annotation + C119 (`mikebom:go-cache-warming-failed`) conditional
+    /// Drives the C118 (`waybill:go-cache-warming-mode`) unconditional
+    /// annotation + C119 (`waybill:go-cache-warming-failed`) conditional
     /// annotation. `None` iff no Go scan happened.
     pub fn with_go_cache_warming(
         mut self,
@@ -381,7 +381,7 @@ impl CycloneDxBuilder {
 
     /// Milestone 204 (#554) — record the doc-scope helm image-extraction
     /// mode signal per FR-005. Drives the C123
-    /// `mikebom:image-extraction-completeness` document-scope
+    /// `waybill:image-extraction-completeness` document-scope
     /// annotation. `None` ⇒ no helm reader ran (annotation absent per
     /// FR-004 / SC-004 byte-identity for non-Helm scans).
     pub fn with_helm_extraction_mode(
@@ -393,7 +393,7 @@ impl CycloneDxBuilder {
     }
 
     /// Milestone 206 (#440) — record the doc-scope image-source signal
-    /// per FR-014. Drives the C124 `mikebom:image-source` annotation.
+    /// per FR-014. Drives the C124 `waybill:image-source` annotation.
     /// Conditional emission (podman-only in MVP) preserves FR-005
     /// byte-identity for docker/remote/path scans.
     pub fn with_image_source(
@@ -489,14 +489,14 @@ impl CycloneDxBuilder {
         // produced an orphan ref in dependencies[] and compositions[]
         // because metadata.rs:391-409 already returns the PURL for the
         // main-module case while builder.rs kept emitting the legacy
-        // short-form. Detection uses the same `mikebom:component-role:
+        // short-form. Detection uses the same `waybill:component-role:
         // main-module` annotation as the override-filter at lines 272-293.
         let main_module_purl: Option<String> = if !override_active {
             effective_components
                 .iter()
                 .find(|c| {
                     c.extra_annotations
-                        .get("mikebom:component-role")
+                        .get("waybill:component-role")
                         .and_then(|v| v.as_str())
                         == Some("main-module")
                 })
@@ -519,7 +519,7 @@ impl CycloneDxBuilder {
         //
         // We duplicate the `select_root` call that `build_metadata`
         // will also make internally (needed for milestone 127's
-        // `mikebom:root-selection-heuristic`). Both callers see the
+        // `waybill:root-selection-heuristic`). Both callers see the
         // same result — the ladder is deterministic — so no drift.
         let m158_selection = crate::generate::root_selector::select_root(
             effective_components,
@@ -827,14 +827,14 @@ impl CycloneDxBuilder {
             .iter()
             .filter(|c| {
                 c.extra_annotations
-                    .get("mikebom:component-role")
+                    .get("waybill:component-role")
                     .and_then(|v| v.as_str())
                     == Some("main-module")
             })
             .count();
         let is_main_module = |c: &ResolvedComponent| {
             c.extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str())
                 == Some("main-module")
         };
@@ -883,7 +883,7 @@ impl CycloneDxBuilder {
                 None => component.purl.as_str().to_string(),
             };
             // Milestone 133 US1.B: file-tier components carry a
-            // `mikebom:component-tier = "file"` annotation. When
+            // `waybill:component-tier = "file"` annotation. When
             // present, override `type` to the CDX-native `"file"`
             // (per FR-001) and OMIT `purl` (per FR-009 — the
             // placeholder PURL is in-process identity only; the
@@ -945,7 +945,7 @@ impl CycloneDxBuilder {
             // "not in deployment footprint"). Runtime + None omit
             // the field (default = `required`). The dev-vs-build-
             // vs-test distinction lives in the
-            // `mikebom:lifecycle-scope` property emitted later in
+            // `waybill:lifecycle-scope` property emitted later in
             // the properties[] block — CDX's 3-value `scope` enum
             // doesn't express that finer split.
             if self.config.include_dev {
@@ -966,7 +966,7 @@ impl CycloneDxBuilder {
             // is kept in the SBOM (never dropped by scope filtering —
             // its lifecycle_scope stays `None`, so `--exclude-scope`
             // can't match it) with the finer-grained reason carried by
-            // the `mikebom:build-inclusion` property below.
+            // the `waybill:build-inclusion` property below.
             if component.build_inclusion
                 == Some(waybill_common::resolution::BuildInclusion::NotNeeded)
             {
@@ -997,9 +997,9 @@ impl CycloneDxBuilder {
             //
             // The `acknowledgement` enum (CDX 1.6) distinguishes:
             // - "declared" — what the package author asserted in their
-            //   manifest (mikebom: `component.licenses`)
+            //   manifest (waybill: `component.licenses`)
             // - "concluded" — result of comprehensive analysis
-            //   (mikebom: `component.concluded_licenses`, populated by
+            //   (waybill: `component.concluded_licenses`, populated by
             //   the ClearlyDefined enrichment source)
             // sbomqs's `comp_with_licenses`, `comp_with_valid_licenses`,
             // `comp_no_deprecated_licenses`, `comp_no_restrictive_licenses`
@@ -1092,7 +1092,7 @@ impl CycloneDxBuilder {
                 entry["cpe"] = json!(component.cpes[0]);
                 if component.cpes.len() > 1 {
                     properties.push(json!({
-                        "name": "mikebom:cpe-candidates",
+                        "name": "waybill:cpe-candidates",
                         "value": component.cpes.join(" | ")
                     }));
                 }
@@ -1110,13 +1110,13 @@ impl CycloneDxBuilder {
                     &component.evidence.source_file_paths,
                 ) {
                     properties.push(json!({
-                        "name": "mikebom:source-files",
+                        "name": "waybill:source-files",
                         "value": value,
                     }));
                 }
             }
 
-            // Milestone 052: `mikebom:lifecycle-scope` property carrying
+            // Milestone 052: `waybill:lifecycle-scope` property carrying
             // the finer-grained dev/build/test distinction that CDX 1.6's
             // 3-value native `scope` enum cannot express. The native
             // `scope: "excluded"` field is set on the component itself
@@ -1128,23 +1128,23 @@ impl CycloneDxBuilder {
             if self.config.include_dev {
                 if let Some(scope) = component.lifecycle_scope.filter(|s| s.is_non_runtime()) {
                     properties.push(json!({
-                        "name": "mikebom:lifecycle-scope",
+                        "name": "waybill:lifecycle-scope",
                         "value": scope.as_str()
                     }));
                 }
             }
-            // Milestone 112: `mikebom:build-inclusion` property from
+            // Milestone 112: `waybill:build-inclusion` property from
             // the typed `BuildInclusion` field. `unknown` carries no
             // native CDX construct (the 3-value `scope` enum cannot
             // express "undetermined"); `not-needed`'s PRIMARY signal is
             // the native `scope: "excluded"` set in the scope block —
             // this property carries the finer-grained reason
             // (contracts/annotations.md, Constitution V/X). The
-            // companion `mikebom:build-inclusion-derivation` flows
+            // companion `waybill:build-inclusion-derivation` flows
             // through the extra_annotations bag.
             if let Some(inclusion) = component.build_inclusion {
                 properties.push(json!({
-                    "name": "mikebom:build-inclusion",
+                    "name": "waybill:build-inclusion",
                     "value": inclusion.as_str()
                 }));
             }
@@ -1153,17 +1153,17 @@ impl CycloneDxBuilder {
             // the m197 contracts/annotation-shapes.md wire contract.
             if !component.requirement_ranges.is_empty() {
                 properties.push(json!({
-                    "name": "mikebom:requirement-ranges",
+                    "name": "waybill:requirement-ranges",
                     "value": serde_json::to_string(&component.requirement_ranges).unwrap_or_default(),
                 }));
             }
             if let Some(ref src_type) = component.source_type {
                 properties.push(json!({
-                    "name": "mikebom:source-type",
+                    "name": "waybill:source-type",
                     "value": src_type
                 }));
             }
-            // `mikebom:co-owned-by` — set by the Maven JAR walker on
+            // `waybill:co-owned-by` — set by the Maven JAR walker on
             // coords extracted from JARs whose bytes are ALSO claimed
             // by an OS package-db reader (RPM/deb/apk). Value is the
             // owner ecosystem. Downstream consumers can filter on this
@@ -1174,7 +1174,7 @@ impl CycloneDxBuilder {
             // Maven coords in RPM-owned artifacts" for rationale.
             if let Some(ref owner) = component.co_owned_by {
                 properties.push(json!({
-                    "name": "mikebom:co-owned-by",
+                    "name": "waybill:co-owned-by",
                     "value": owner
                 }));
             }
@@ -1185,17 +1185,17 @@ impl CycloneDxBuilder {
             // deps.dev markers are not. Properties are the idiomatic
             // home for scanner-specific provenance data.
             properties.extend(evidence_to_properties(&component.evidence));
-            // `mikebom:sbom-tier` — the traceability-ladder classifier
+            // `waybill:sbom-tier` — the traceability-ladder classifier
             // introduced in milestone 002 (spec FR-021a, research R13).
             // Emitted on every component that carries one. Values:
             // build | deployed | analyzed | source | design.
             if let Some(ref tier) = component.sbom_tier {
                 properties.push(json!({
-                    "name": "mikebom:sbom-tier",
+                    "name": "waybill:sbom-tier",
                     "value": tier
                 }));
             }
-            // `mikebom:npm-role` — feature 005 US1 (spec FR-001, FR-003).
+            // `waybill:npm-role` — feature 005 US1 (spec FR-001, FR-003).
             // Emitted only on npm components discovered inside npm's own
             // bundled tree (`**/node_modules/npm/node_modules/**`) during
             // --image scans. Value: `internal`. Absent on application
@@ -1204,11 +1204,11 @@ impl CycloneDxBuilder {
             // the builder. See data-model.md §PackageDbEntry.npm_role.
             if let Some(ref role) = component.npm_role {
                 properties.push(json!({
-                    "name": "mikebom:npm-role",
+                    "name": "waybill:npm-role",
                     "value": role
                 }));
             }
-            // `mikebom:raw-version` — feature 005 US4 (spec FR-013).
+            // `waybill:raw-version` — feature 005 US4 (spec FR-013).
             // Verbatim `VERSION-RELEASE` string from the rpmdb header.
             // Populated on every rpm component so downstream consumers
             // can cross-reference `rpm -qa`'s `%{VERSION}-%{RELEASE}`
@@ -1217,11 +1217,11 @@ impl CycloneDxBuilder {
             // in later via the same field on `PackageDbEntry`.
             if let Some(ref raw) = component.raw_version {
                 properties.push(json!({
-                    "name": "mikebom:raw-version",
+                    "name": "waybill:raw-version",
                     "value": raw
                 }));
             }
-            // `mikebom:buildinfo-status` — milestone 003 (spec FR-015).
+            // `waybill:buildinfo-status` — milestone 003 (spec FR-015).
             // Emitted ONLY on file-level Go binary components where
             // `runtime/debug.BuildInfo` couldn't be recovered. Operators
             // distinguish "no modules found" from "scan failed" via the
@@ -1229,11 +1229,11 @@ impl CycloneDxBuilder {
             // `"unsupported"` (Go <1.18 pre-inline format).
             if let Some(ref status) = component.buildinfo_status {
                 properties.push(json!({
-                    "name": "mikebom:buildinfo-status",
+                    "name": "waybill:buildinfo-status",
                     "value": status
                 }));
             }
-            // `mikebom:evidence-kind` — milestone 004 (spec FR-004,
+            // `waybill:evidence-kind` — milestone 004 (spec FR-004,
             // contracts/schema.md). Six-value canonical enum identifying
             // how the component was discovered. Consumers filter by this.
             // Valid values enforced by `debug_assert!` per data-model.md
@@ -1287,7 +1287,7 @@ impl CycloneDxBuilder {
                             | "helm-chart-lock"
                             | "helm-template-image-ref"
                     ),
-                    "mikebom:evidence-kind value '{kind}' is not in the canonical \
+                    "waybill:evidence-kind value '{kind}' is not in the canonical \
                      enum (rpm-file | rpmdb-sqlite | rpmdb-bdb | \
                      dynamic-linkage | elf-note-package | \
                      embedded-version-string | symbol-fingerprint | \
@@ -1301,71 +1301,71 @@ impl CycloneDxBuilder {
                      ipk-file | opkg-status-db)"
                 );
                 properties.push(json!({
-                    "name": "mikebom:evidence-kind",
+                    "name": "waybill:evidence-kind",
                     "value": kind
                 }));
             }
             // Milestone 004 US2 binary-component properties. Each is
             // emitted only when Some(...) — the absence of the property
-            // is itself informative (e.g. no `mikebom:binary-class` =
+            // is itself informative (e.g. no `waybill:binary-class` =
             // non-binary component).
             if let Some(ref confidence) = component.confidence {
                 debug_assert_eq!(
                     confidence, "heuristic",
-                    "mikebom:confidence is currently only valid as 'heuristic'"
+                    "waybill:confidence is currently only valid as 'heuristic'"
                 );
                 properties.push(json!({
-                    "name": "mikebom:confidence",
+                    "name": "waybill:confidence",
                     "value": confidence
                 }));
             }
             if let Some(ref class) = component.binary_class {
                 debug_assert!(
                     matches!(class.as_str(), "elf" | "macho" | "pe"),
-                    "mikebom:binary-class value '{class}' is not in {{elf, macho, pe}}"
+                    "waybill:binary-class value '{class}' is not in {{elf, macho, pe}}"
                 );
                 properties.push(json!({
-                    "name": "mikebom:binary-class",
+                    "name": "waybill:binary-class",
                     "value": class
                 }));
             }
             if let Some(stripped) = component.binary_stripped {
                 properties.push(json!({
-                    "name": "mikebom:binary-stripped",
+                    "name": "waybill:binary-stripped",
                     "value": if stripped { "true" } else { "false" }
                 }));
             }
             if let Some(ref linkage) = component.linkage_kind {
                 debug_assert!(
                     matches!(linkage.as_str(), "dynamic" | "static" | "mixed"),
-                    "mikebom:linkage-kind value '{linkage}' is not in {{dynamic, static, mixed}}"
+                    "waybill:linkage-kind value '{linkage}' is not in {{dynamic, static, mixed}}"
                 );
                 properties.push(json!({
-                    "name": "mikebom:linkage-kind",
+                    "name": "waybill:linkage-kind",
                     "value": linkage
                 }));
             }
             if component.detected_go == Some(true) {
                 properties.push(json!({
-                    "name": "mikebom:detected-go",
+                    "name": "waybill:detected-go",
                     "value": "true"
                 }));
             }
             if component.shade_relocation == Some(true) {
                 properties.push(json!({
-                    "name": "mikebom:shade-relocation",
+                    "name": "waybill:shade-relocation",
                     "value": "true"
                 }));
             }
             if let Some(ref packed) = component.binary_packed {
                 debug_assert!(
                     matches!(packed.as_str(), "upx" | "none"),
-                    "mikebom:binary-packed value '{packed}' is not in the canonical \
+                    "waybill:binary-packed value '{packed}' is not in the canonical \
                      enum (upx | none); milestone-096 Q2 always-emits 'none' on \
                      file-level components when no packer is detected"
                 );
                 properties.push(json!({
-                    "name": "mikebom:binary-packed",
+                    "name": "waybill:binary-packed",
                     "value": packed
                 }));
             }
@@ -1377,7 +1377,7 @@ impl CycloneDxBuilder {
             // for array- and object-shaped CDX property values).
             //
             // Milestone 127: filter out internal-only keys (the
-            // `mikebom:is-workspace-root` signal that drives root-selector
+            // `waybill:is-workspace-root` signal that drives root-selector
             // logic but is NOT meant to surface in emitted SBOMs).
             for (key, value) in &component.extra_annotations {
                 if crate::generate::root_selector::is_internal_emission_key(key)
@@ -1385,7 +1385,7 @@ impl CycloneDxBuilder {
                 {
                     // Milestone 145 US3 (FR-009): skip keys already
                     // emitted from a field-derived source (e.g.,
-                    // `mikebom:source-files` comes from
+                    // `waybill:source-files` comes from
                     // `c.evidence.source_file_paths` higher up in
                     // this function — re-emitting from the bag
                     // would double-stamp and produce value drift.
@@ -1403,7 +1403,7 @@ impl CycloneDxBuilder {
 
             // Milestone 210: per-component compiler-pipeline attribution
             // (C130 + C131 + C134). Only emitted when the scan was
-            // invoked via `mikebom trace` AND at least one compiler
+            // invoked via `waybill trace` AND at least one compiler
             // invocation was captured. Matched via write-set intersection
             // with the component's known file paths per
             // contracts/annotations.md A-1/A-2/A-5. `Traced` ⇒ both C130
@@ -1422,12 +1422,12 @@ impl CycloneDxBuilder {
                 );
                 if let Some(payload) = mapping.payload {
                     properties.push(json!({
-                        "name": "mikebom:source-read-set",
+                        "name": "waybill:source-read-set",
                         "value": serde_json::to_string(&payload).unwrap_or_default(),
                     }));
                 }
                 properties.push(json!({
-                    "name": "mikebom:read-set-source",
+                    "name": "waybill:read-set-source",
                     "value": mapping.source.as_wire_str(),
                 }));
                 if matches!(
@@ -1437,7 +1437,7 @@ impl CycloneDxBuilder {
                     }
                 ) {
                     properties.push(json!({
-                        "name": "mikebom:trace-attach-late",
+                        "name": "waybill:trace-attach-late",
                         "value": "true",
                     }));
                 }
@@ -1550,7 +1550,7 @@ impl CycloneDxBuilder {
 /// `Other` bucket both fall back to `"library"` — the historic
 /// default that every binary-reader component used pre-milestone-104.
 /// This preserves backward compatibility for consumers reading the
-/// `type` field on components mikebom can't classify further.
+/// `type` field on components waybill can't classify further.
 pub(super) fn binary_role_to_cdx_type(role: Option<BinaryRole>) -> &'static str {
     match role {
         Some(BinaryRole::Application) => "application",
@@ -1877,9 +1877,9 @@ mod tests {
             .as_array()
             .expect("properties array");
         assert!(
-            props.iter().any(|p| p["name"] == "mikebom:build-inclusion"
+            props.iter().any(|p| p["name"] == "waybill:build-inclusion"
                 && p["value"] == "not-needed"),
-            "mikebom:build-inclusion: not-needed property must be emitted"
+            "waybill:build-inclusion: not-needed property must be emitted"
         );
         // The unaffected sibling has no scope field (default = required).
         let plain = comps
@@ -2080,7 +2080,7 @@ mod tests {
             .as_array()
             .expect("properties array");
         assert!(
-            props.iter().any(|p| p["name"] == "mikebom:cpe-candidates"
+            props.iter().any(|p| p["name"] == "waybill:cpe-candidates"
                 && p["value"].as_str().unwrap().contains("jq:jq")),
             "expected cpe-candidates property, got {props:?}"
         );
@@ -2107,7 +2107,7 @@ mod tests {
                     .as_array()
                     .unwrap()
                     .iter()
-                    .any(|p| p["name"] == "mikebom:cpe-candidates"),
+                    .any(|p| p["name"] == "waybill:cpe-candidates"),
                 "unexpected cpe-candidates property with single CPE"
             );
         }
@@ -2126,8 +2126,8 @@ mod tests {
         let props = cdx[0]["properties"].as_array().expect("properties");
         let found = props
             .iter()
-            .find(|p| p["name"] == "mikebom:buildinfo-status")
-            .expect("mikebom:buildinfo-status property must be present");
+            .find(|p| p["name"] == "waybill:buildinfo-status")
+            .expect("waybill:buildinfo-status property must be present");
         assert_eq!(found["value"], "missing");
     }
 
@@ -2144,8 +2144,8 @@ mod tests {
         let props = cdx[0]["properties"].as_array().expect("properties");
         let found = props
             .iter()
-            .find(|p| p["name"] == "mikebom:buildinfo-status")
-            .expect("mikebom:buildinfo-status property must be present");
+            .find(|p| p["name"] == "waybill:buildinfo-status")
+            .expect("waybill:buildinfo-status property must be present");
         assert_eq!(found["value"], "unsupported");
     }
 
@@ -2166,8 +2166,8 @@ mod tests {
                     .as_array()
                     .unwrap()
                     .iter()
-                    .any(|p| p["name"] == "mikebom:buildinfo-status"),
-                "non-Go component must not surface mikebom:buildinfo-status"
+                    .any(|p| p["name"] == "waybill:buildinfo-status"),
+                "non-Go component must not surface waybill:buildinfo-status"
             );
         }
     }
@@ -2192,7 +2192,7 @@ mod tests {
             .expect("component must have properties");
         let conn_prop = props
             .iter()
-            .find(|p| p["name"] == "mikebom:source-connection-ids")
+            .find(|p| p["name"] == "waybill:source-connection-ids")
             .expect("source-connection-ids property must be present");
         assert_eq!(conn_prop["value"], "conn-1,conn-2");
     }
@@ -2256,7 +2256,7 @@ mod tests {
             .expect("component must have properties");
         let dd_prop = props
             .iter()
-            .find(|p| p["name"] == "mikebom:deps-dev-match")
+            .find(|p| p["name"] == "waybill:deps-dev-match")
             .expect("deps-dev-match property must be present");
         assert_eq!(dd_prop["value"], "npm:express@4.19.2");
     }
@@ -2532,7 +2532,7 @@ mod tests {
         let purl_str = format!("pkg:{ecosystem}/{name}@{version}");
         c.purl = Purl::new(&purl_str).expect("valid purl");
         c.extra_annotations.insert(
-            "mikebom:component-role".to_string(),
+            "waybill:component-role".to_string(),
             serde_json::Value::String("main-module".to_string()),
         );
         c
@@ -2560,7 +2560,7 @@ mod tests {
         assert_eq!(comp["purl"], "pkg:generic/widget-svc@1.2.3");
         assert_eq!(
             comp["cpe"],
-            "cpe:2.3:a:mikebom:widget-svc:1.2.3:*:*:*:*:*:*:*"
+            "cpe:2.3:a:waybill:widget-svc:1.2.3:*:*:*:*:*:*:*"
         );
     }
 

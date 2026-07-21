@@ -7,7 +7,7 @@
 //!   matcher's output is the milestone-108 `pkg:generic/<library>`
 //!   shape unchanged.
 //! - **US4**: cross-format symmetry. The merged component's
-//!   `mikebom:source-mechanism` + `mikebom:fingerprint-corpus-sha`
+//!   `waybill:source-mechanism` + `waybill:fingerprint-corpus-sha`
 //!   annotations appear under all three SBOM formats (CDX 1.6
 //!   properties, SPDX 2.3 annotations, SPDX 3 graph annotations).
 //! - **US5 / FR-012**: the `BuildDirObserver` trait is observer-
@@ -27,7 +27,7 @@ fn binary_path() -> &'static str {
 }
 
 fn find_zlib_exporting_binary() -> Option<PathBuf> {
-    for c in ["../mikebom-cmake-demo/build/crc-demo", "../../mikebom-cmake-demo/build/crc-demo"] {
+    for c in ["../waybill-cmake-demo/build/crc-demo", "../../waybill-cmake-demo/build/crc-demo"] {
         let p = PathBuf::from(c);
         if p.is_file() {
             return p.canonicalize().ok();
@@ -112,7 +112,7 @@ FetchContent_MakeAvailable(zlib)
 // ============================================================
 
 /// US3 / SC-003: scanning a cmake project root WITHOUT
-/// `--fingerprints-corpus` produces NO `mikebom:fingerprint-corpus-sha`
+/// `--fingerprints-corpus` produces NO `waybill:fingerprint-corpus-sha`
 /// annotations anywhere in the SBOM, AND no PURL rewrite occurs (the
 /// cmake source-tier component appears as it did pre-milestone-108).
 #[test]
@@ -134,11 +134,11 @@ fn non_opt_in_scan_emits_no_attribution_annotations() {
         .iter()
         .filter_map(|c| c["properties"].as_array())
         .flat_map(|props| props.iter())
-        .filter(|p| p["name"].as_str() == Some("mikebom:fingerprint-corpus-sha"))
+        .filter(|p| p["name"].as_str() == Some("waybill:fingerprint-corpus-sha"))
         .count();
     assert_eq!(
         corpus_sha_count, 0,
-        "non-opt-in scan must emit ZERO mikebom:fingerprint-corpus-sha annotations"
+        "non-opt-in scan must emit ZERO waybill:fingerprint-corpus-sha annotations"
     );
 
     // The cmake source-tier zlib component still emits unchanged.
@@ -209,8 +209,8 @@ fn single_binary_scan_emits_generic_purl_unchanged() {
 // ============================================================
 
 /// US4 / FR-005: when attribution fires, all three output formats
-/// surface BOTH `mikebom:source-mechanism = cmake-fetchcontent-git`
-/// AND `mikebom:fingerprint-corpus-sha = <sha>` on the merged zlib
+/// surface BOTH `waybill:source-mechanism = cmake-fetchcontent-git`
+/// AND `waybill:fingerprint-corpus-sha = <sha>` on the merged zlib
 /// component. CDX carries them as `properties[]`; SPDX 2.3 + SPDX 3
 /// carry them as parity-bridging annotations.
 #[test]
@@ -238,8 +238,8 @@ fn attribution_annotations_emit_symmetrically_across_all_formats() {
             "format {fmt}: expected `cmake-fetchcontent-git` annotation value"
         );
         assert!(
-            json_str.contains("mikebom:fingerprint-corpus-sha"),
-            "format {fmt}: expected `mikebom:fingerprint-corpus-sha` annotation key"
+            json_str.contains("waybill:fingerprint-corpus-sha"),
+            "format {fmt}: expected `waybill:fingerprint-corpus-sha` annotation key"
         );
         assert!(
             json_str.contains("pkg:github/madler/zlib@v1.3.1"),
@@ -264,7 +264,7 @@ fn attribution_annotations_emit_symmetrically_across_all_formats() {
 /// US5 / FR-012: the `BuildDirObserver` trait surface is observer-
 /// agnostic. The actual compile-checked trait-stub test lives in
 /// `source_binding/mod.rs::tests` because the milestone-109 types
-/// are intentionally `pub(crate)` (internal to mikebom-cli — future
+/// are intentionally `pub(crate)` (internal to waybill-cli — future
 /// Bazel/Meson observers live in the same crate and don't need a
 /// public surface). Integration tests can't reach `pub(crate)`
 /// items, so this file's US5 entry is a documentary placeholder.

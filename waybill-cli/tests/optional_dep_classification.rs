@@ -20,7 +20,7 @@
 //! boundary using synthesized `ResolvedComponent` + `Relationship`
 //! values (no filesystem fixture, no `go mod why` shellout). The
 //! golden regeneration in the Polish phase (T029) validates the same
-//! contract against real Go fixtures via `MIKEBOM_UPDATE_SPDX_GOLDENS
+//! contract against real Go fixtures via `WAYBILL_UPDATE_SPDX_GOLDENS
 //! =1 cargo test --workspace`.
 //!
 //! Contract references:
@@ -60,7 +60,7 @@ fn pico_yaml_v3_fixture() -> (Vec<ResolvedComponent>, Vec<Relationship>) {
     check_v1
         .extra_annotations
         .insert(
-            "mikebom:build-inclusion-derivation".to_string(),
+            "waybill:build-inclusion-derivation".to_string(),
             serde_json::Value::String("go-mod-why".to_string()),
         );
 
@@ -83,7 +83,7 @@ fn cargo_optional_fixture() -> (Vec<ResolvedComponent>, Vec<Relationship>) {
     let mut optional_crate = mk_component("pkg:cargo/optional-crate@1.2.3", "optional-crate", "1.2.3");
     optional_crate.lifecycle_scope = Some(LifecycleScope::Optional);
     optional_crate.extra_annotations.insert(
-        "mikebom:optional-derivation".to_string(),
+        "waybill:optional-derivation".to_string(),
         serde_json::Value::String("cargo-optional-true".to_string()),
     );
 

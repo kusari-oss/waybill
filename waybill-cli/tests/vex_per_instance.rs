@@ -7,18 +7,18 @@
 //! - **Instance A** (`bom-ref=foo-net-instance`) bound to source with
 //!   `strength=verified` — the project's first-party binary.
 //! - **Instance B** (`bom-ref=baselayer-net-instance`) unbound
-//!   (`strength=unknown`) — a base-layer binary mikebom couldn't
+//!   (`strength=unknown`) — a base-layer binary waybill couldn't
 //!   trace to source.
 //!
 //! Source-tier OpenVEX has a `not_affected` statement on the PURL
 //! (no per-instance identifier — typical pre-072 input).
 //!
-//! Run `mikebom sbom enrich --vex-propagation-mode caveated`. Per
+//! Run `waybill sbom enrich --vex-propagation-mode caveated`. Per
 //! `contracts/openvex-instance-identifiers.md` C-3 + the spec's FR-008
 //! aggregation rule, assertions:
 //!
 //! 1. Instance A receives `not_affected` cleanly (no caveat).
-//! 2. Instance B receives the statement WITH a `mikebom:vex-binding-
+//! 2. Instance B receives the statement WITH a `waybill:vex-binding-
 //!    status: unverified` caveat.
 //! 3. The per-PURL aggregate (`affected ⊕ unbound-and-not-explicitly-
 //!    vexed = affected`) reports `affected` because instance B is
@@ -76,7 +76,7 @@ fn target_two_instance_sbom() -> serde_json::Value {
                 "purl": PURL,
                 "bom-ref": "foo-net-instance",
                 "properties": [{
-                    "name": "mikebom:source-document-binding",
+                    "name": "waybill:source-document-binding",
                     "value": verified,
                 }],
             },
@@ -87,7 +87,7 @@ fn target_two_instance_sbom() -> serde_json::Value {
                 "purl": PURL,
                 "bom-ref": "baselayer-net-instance",
                 "properties": [{
-                    "name": "mikebom:source-document-binding",
+                    "name": "waybill:source-document-binding",
                     "value": unknown,
                 }],
             },
@@ -188,14 +188,14 @@ fn caveated_propagation_handles_per_instance_binding_correctly() {
 
     // (a) Instance A — verified-bound → no caveat.
     assert!(
-        foo_entry.get("mikebom:vex-binding-status").is_none(),
-        "verified-bound instance must NOT carry mikebom:vex-binding-status \
+        foo_entry.get("waybill:vex-binding-status").is_none(),
+        "verified-bound instance must NOT carry waybill:vex-binding-status \
          caveat: {}",
         serde_json::to_string_pretty(foo_entry).unwrap_or_default(),
     );
 
     // (b) Instance B — unverified-bound → caveat present.
-    let caveat = baselayer_entry["mikebom:vex-binding-status"]
+    let caveat = baselayer_entry["waybill:vex-binding-status"]
         .as_object()
         .expect("unverified instance must carry caveat sibling");
     assert_eq!(caveat["status"], "unverified");
@@ -222,7 +222,7 @@ fn caveated_propagation_handles_per_instance_binding_correctly() {
     // side computation per C-3.
     let unverified_count = affects
         .iter()
-        .filter(|a| a.get("mikebom:vex-binding-status").is_some())
+        .filter(|a| a.get("waybill:vex-binding-status").is_some())
         .count();
     assert_eq!(
         unverified_count, 1,
@@ -231,7 +231,7 @@ fn caveated_propagation_handles_per_instance_binding_correctly() {
     );
     let verified_count = affects
         .iter()
-        .filter(|a| a.get("mikebom:vex-binding-status").is_none())
+        .filter(|a| a.get("waybill:vex-binding-status").is_none())
         .count();
     assert_eq!(
         verified_count, 1,

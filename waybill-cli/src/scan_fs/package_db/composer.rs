@@ -22,14 +22,14 @@
 //!   / `https://api.github.com`).
 //! - **vcs** (git/svn/hg): same PURL form + `?vcs_url=<scheme>+<url>`
 //!   qualifier per purl-spec cross-type convention. The resolved SHA is
-//!   surfaced via `mikebom:vcs-ref` annotation rather than embedded in
+//!   surfaced via `waybill:vcs-ref` annotation rather than embedded in
 //!   the version segment (Composer records the upstream tag in `version:`
 //!   for VCS sources too).
 //! - **path**: `pkg:generic/<lc-vendor>-<lc-package>@<version>`
-//!   placeholder (vendor+name flattened with `-`) + `mikebom:source-type
+//!   placeholder (vendor+name flattened with `-`) + `waybill:source-type
 //!   = "composer-path"` annotation as discriminator.
 //! - **composer-plugin / metapackage** (`type:` field at lockfile entry
-//!   level): standard Packagist PURL + `mikebom:source-type =
+//!   level): standard Packagist PURL + `waybill:source-type =
 //!   "composer-plugin"` / `"composer-metapackage"` annotation.
 //!
 //! Vendor + package segments MUST be lowercased per purl-spec canonical
@@ -37,7 +37,7 @@
 //! preserves the lockfile's literal case for display; only the PURL
 //! identity is lowercased.
 //!
-//! `mikebom:source-type` values use the `composer-` prefix to avoid
+//! `waybill:source-type` values use the `composer-` prefix to avoid
 //! collision with cargo's bare C1-row values (`git`/`path`/`registry`)
 //! and Dart's `pub-` prefixed values — per the milestone-122 `kmp-` +
 //! milestone-137 `pub-` precedent.
@@ -434,11 +434,11 @@ fn emit_main_module(
 
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     extra_annotations.insert(
-        "mikebom:component-role".to_string(),
+        "waybill:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
     extra_annotations.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String("composer-main-module".to_string()),
     );
 
@@ -526,7 +526,7 @@ fn emit_lockfile_packages(
 /// `vendor/composer/installed.json` with orphan-detection.
 /// `sibling_lockfile_purls`:
 /// - `Some(set)` → a sibling `composer.lock` exists; entries with
-///   PURL NOT in `set` are tagged `mikebom:lockfile-orphan = "true"`.
+///   PURL NOT in `set` are tagged `waybill:lockfile-orphan = "true"`.
 /// - `None` → no sibling lockfile; orphan annotation is suppressed
 ///   (the lockfile-vs-disk comparison is undefined).
 fn emit_installed_json_components(
@@ -565,7 +565,7 @@ fn emit_installed_json_components(
 
 /// Shared per-entry builder. The `orphan_check_against` argument:
 /// - `None` → don't add the orphan annotation.
-/// - `Some(set)` → add `mikebom:lockfile-orphan = "true"` ONLY when
+/// - `Some(set)` → add `waybill:lockfile-orphan = "true"` ONLY when
 ///   the constructed PURL is NOT in `set` (lockfile-vs-disk drift).
 fn build_entry_from_lockfile_package(
     pkg: &LockfilePackage,
@@ -595,7 +595,7 @@ fn build_entry_from_lockfile_package(
     if let Some(set) = orphan_check_against {
         if !set.contains(purl.as_str()) {
             extra_annotations.insert(
-                "mikebom:lockfile-orphan".to_string(),
+                "waybill:lockfile-orphan".to_string(),
                 serde_json::Value::String("true".to_string()),
             );
         }
@@ -690,7 +690,7 @@ fn emit_design_tier_components(
         };
         let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
         extra_annotations.insert(
-            "mikebom:source-type".to_string(),
+            "waybill:source-type".to_string(),
             serde_json::Value::String("composer-packagist".to_string()),
         );
 
@@ -884,7 +884,7 @@ fn build_extra_annotations(
 ) -> BTreeMap<String, serde_json::Value> {
     let mut out: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     out.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String(source_type_value.to_string()),
     );
     match source_type_value {
@@ -892,7 +892,7 @@ fn build_extra_annotations(
             if let Some(s) = &pkg.source {
                 if let Some(reference) = s.reference.as_deref() {
                     out.insert(
-                        "mikebom:vcs-ref".to_string(),
+                        "waybill:vcs-ref".to_string(),
                         serde_json::Value::String(reference.to_string()),
                     );
                 }
@@ -902,7 +902,7 @@ fn build_extra_annotations(
             if let Some(s) = &pkg.source {
                 if let Some(url) = s.url.as_deref() {
                     out.insert(
-                        "mikebom:path".to_string(),
+                        "waybill:path".to_string(),
                         serde_json::Value::String(url.to_string()),
                     );
                 }
@@ -910,7 +910,7 @@ fn build_extra_annotations(
         }
         "composer-plugin" => {
             out.insert(
-                "mikebom:composer-type".to_string(),
+                "waybill:composer-type".to_string(),
                 serde_json::Value::String(pkg.type_.clone()),
             );
         }
@@ -1117,10 +1117,10 @@ mod tests {
         let p = pkg_packagist("foo/bar", "1.0.0", None, None);
         let ann = build_extra_annotations(&p, "composer-packagist");
         assert_eq!(
-            ann.get("mikebom:source-type").and_then(|v| v.as_str()),
+            ann.get("waybill:source-type").and_then(|v| v.as_str()),
             Some("composer-packagist")
         );
-        assert!(!ann.contains_key("mikebom:vcs-ref"));
+        assert!(!ann.contains_key("waybill:vcs-ref"));
     }
 
     #[test]
@@ -1128,7 +1128,7 @@ mod tests {
         let p = pkg_vcs("acme/fork", "dev-main", "https://example.com/r.git", "eb39649abc");
         let ann = build_extra_annotations(&p, "composer-vcs");
         assert_eq!(
-            ann.get("mikebom:vcs-ref").and_then(|v| v.as_str()),
+            ann.get("waybill:vcs-ref").and_then(|v| v.as_str()),
             Some("eb39649abc")
         );
     }
@@ -1138,7 +1138,7 @@ mod tests {
         let p = pkg_path("acme/local", "0.1.0", "../packages/local");
         let ann = build_extra_annotations(&p, "composer-path");
         assert_eq!(
-            ann.get("mikebom:path").and_then(|v| v.as_str()),
+            ann.get("waybill:path").and_then(|v| v.as_str()),
             Some("../packages/local")
         );
     }
@@ -1148,7 +1148,7 @@ mod tests {
         let p = pkg_with_type("composer/installers", "v2.3.0", "composer-plugin");
         let ann = build_extra_annotations(&p, "composer-plugin");
         assert_eq!(
-            ann.get("mikebom:composer-type").and_then(|v| v.as_str()),
+            ann.get("waybill:composer-type").and_then(|v| v.as_str()),
             Some("composer-plugin")
         );
     }

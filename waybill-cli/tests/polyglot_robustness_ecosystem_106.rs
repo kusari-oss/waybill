@@ -35,7 +35,7 @@ fn build_fixture(root: &Path) {
     write(
         &root.join("python/pyproject.toml"),
         r#"[project]
-name = "mikebom-polyglot-py"
+name = "waybill-polyglot-py"
 version = "0.1.0"
 "#,
     );
@@ -44,7 +44,7 @@ version = "0.1.0"
         r#"version = 1
 
 [[package]]
-name = "mikebom-polyglot-uv-pkg"
+name = "waybill-polyglot-uv-pkg"
 version = "1.2.3"
 "#,
     );
@@ -53,7 +53,7 @@ version = "1.2.3"
     write(
         &root.join("python-bad/pyproject.toml"),
         r#"[project]
-name = "mikebom-polyglot-py-bad"
+name = "waybill-polyglot-py-bad"
 "#,
     );
     write(
@@ -65,7 +65,7 @@ name = "mikebom-polyglot-py-bad"
     write(
         &root.join("bun-app/package.json"),
         r#"{
-  "name": "mikebom-polyglot-bun",
+  "name": "waybill-polyglot-bun",
   "version": "0.1.0"
 }
 "#,
@@ -75,9 +75,9 @@ name = "mikebom-polyglot-py-bad"
         r#"// bun: lockfileVersion: 1
 {
   "lockfileVersion": 1,
-  "workspaces": { "": { "name": "mikebom-polyglot-bun" } },
+  "workspaces": { "": { "name": "waybill-polyglot-bun" } },
   "packages": {
-    "mikebom-polyglot-bun-pkg": ["mikebom-polyglot-bun-pkg@4.5.6", "sha512-aaa"]
+    "waybill-polyglot-bun-pkg": ["waybill-polyglot-bun-pkg@4.5.6", "sha512-aaa"]
   }
 }
 "#,
@@ -101,7 +101,7 @@ name = "mikebom-polyglot-py-bad"
     write(
         &root.join("jvm/gradle.lockfile"),
         r#"# This is a Gradle generated file for dependency locking.
-com.mikebom.polyglot:gradle-pkg:7.8.9=compileClasspath,runtimeClasspath
+com.waybill.polyglot:gradle-pkg:7.8.9=compileClasspath,runtimeClasspath
 "#,
     );
 
@@ -142,7 +142,7 @@ fn well_formed_manifests_emit_components_despite_neighboring_malformed_files() {
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -154,7 +154,7 @@ fn well_formed_manifests_emit_components_despite_neighboring_malformed_files() {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "scan unexpectedly failed: status={:?}\nstderr={}",
@@ -176,9 +176,9 @@ fn well_formed_manifests_emit_components_despite_neighboring_malformed_files() {
     // component despite the sibling malformed files in their own
     // ecosystems.
     let expected = [
-        "pkg:pypi/mikebom-polyglot-uv-pkg@1.2.3",
-        "pkg:npm/mikebom-polyglot-bun-pkg@4.5.6",
-        "pkg:maven/com.mikebom.polyglot/gradle-pkg@7.8.9",
+        "pkg:pypi/waybill-polyglot-uv-pkg@1.2.3",
+        "pkg:npm/waybill-polyglot-bun-pkg@4.5.6",
+        "pkg:maven/com.waybill.polyglot/gradle-pkg@7.8.9",
         "pkg:nuget/MikebomFixture.PolyglotNuget@10.11.12",
     ];
     for purl in expected {

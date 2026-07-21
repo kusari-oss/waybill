@@ -11,14 +11,14 @@
 //! 4. A scratch "image-shaped" rootfs (bare binary, no go.mod) still
 //!    produces the full module list — that's the distroless win.
 //!
-//! All four shell out to the `mikebom` CLI (same pattern as
+//! All four shell out to the `waybill` CLI (same pattern as
 //! `scan_python.rs` / `scan_npm.rs`).
 
 use std::path::PathBuf;
 use std::process::Command;
 
 fn fixture(sub: &str) -> PathBuf {
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("go")
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("go")
         .join(sub)
 }
 
@@ -33,7 +33,7 @@ fn scan_path_args(path: &std::path::Path, extra: &[&str]) -> serde_json::Value {
     let mut cmd = Command::new(bin);
     // Milestone 112: keep these fixture scans independent of the
     // host's `go` toolchain (classification is default-on).
-    cmd.env("MIKEBOM_NO_GO_MOD_WHY", "1");
+    cmd.env("WAYBILL_NO_GO_MOD_WHY", "1");
     cmd.arg("--offline")
         .arg("sbom")
         .arg("scan")
@@ -45,7 +45,7 @@ fn scan_path_args(path: &std::path::Path, extra: &[&str]) -> serde_json::Value {
     for a in extra {
         cmd.arg(a);
     }
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -180,7 +180,7 @@ fn scan_go_stripped_binary_emits_diagnostic_property() {
     let sbom = scan_path(dir.path());
     // Exit 0 is implicit (scan_path asserts success). We expect one
     // file-level diagnostic component — it carries a generic PURL
-    // with the filename, and the `mikebom:buildinfo-status` property.
+    // with the filename, and the `waybill:buildinfo-status` property.
     let diagnostics: Vec<_> = sbom["components"]
         .as_array()
         .map(|a| a.as_slice())
@@ -191,7 +191,7 @@ fn scan_go_stripped_binary_emits_diagnostic_property() {
                 .as_array()
                 .map(|props| {
                     props.iter().any(|p| {
-                        p["name"].as_str() == Some("mikebom:buildinfo-status")
+                        p["name"].as_str() == Some("waybill:buildinfo-status")
                     })
                 })
                 .unwrap_or(false)
@@ -199,12 +199,12 @@ fn scan_go_stripped_binary_emits_diagnostic_property() {
         .collect();
     assert!(
         !diagnostics.is_empty(),
-        "expected ≥1 component with mikebom:buildinfo-status property; got components: {}",
+        "expected ≥1 component with waybill:buildinfo-status property; got components: {}",
         serde_json::to_string_pretty(&sbom["components"]).unwrap_or_default(),
     );
     let status = diagnostics[0]["properties"]
         .as_array()
-        .and_then(|a| a.iter().find(|p| p["name"].as_str() == Some("mikebom:buildinfo-status")))
+        .and_then(|a| a.iter().find(|p| p["name"].as_str() == Some("waybill:buildinfo-status")))
         .and_then(|p| p["value"].as_str())
         .unwrap_or("");
     assert!(
@@ -245,7 +245,7 @@ fn scan_go_source_tree_emits_transitive_edges_when_cache_present() {
     // milestone 148's CI flake) the predicate gated only on cobra; a CI
     // runner with a half-populated cache (cobra present, logrus or x/sys
     // evicted) would proceed past the skip and fail at the assertions
-    // even though the partial-cache behavior is correct mikebom output.
+    // even though the partial-cache behavior is correct waybill output.
     let cached_mods = [
         ("cobra", "github.com/spf13/cobra/@v/v1.10.2.mod"),
         ("logrus", "github.com/sirupsen/logrus/@v/v1.9.4.mod"),
@@ -352,9 +352,9 @@ fn scan_go_binary_emits_both_generic_file_and_golang_module_components() {
     //     from the embedded BuildInfo (emitted by
     //     `package_db::go_binary`).
     //
-    // Pre-G1, mikebom only emitted the golang one — file-level was
+    // Pre-G1, waybill only emitted the golang one — file-level was
     // suppressed for Go binaries on Linux. Post-G1, both emit with
-    // `mikebom:detected-go = true` on the file-level entry as a
+    // `waybill:detected-go = true` on the file-level entry as a
     // cross-link marker.
     let dir = tempfile::tempdir().expect("tempdir");
     let src = fixture("binaries").join("hello-linux-amd64");
@@ -388,19 +388,19 @@ fn scan_go_binary_emits_both_generic_file_and_golang_module_components() {
             .filter_map(|c| c["purl"].as_str())
             .collect::<Vec<_>>(),
     );
-    // `mikebom:detected-go = true` marks the file-level as a Go binary.
+    // `waybill:detected-go = true` marks the file-level as a Go binary.
     let props = file_level.unwrap()["properties"]
         .as_array()
         .cloned()
         .unwrap_or_default();
     let detected_go = props
         .iter()
-        .find(|p| p["name"].as_str() == Some("mikebom:detected-go"))
+        .find(|p| p["name"].as_str() == Some("waybill:detected-go"))
         .and_then(|p| p["value"].as_str().map(|s| s.to_string()));
     assert_eq!(
         detected_go.as_deref(),
         Some("true"),
-        "file-level Go binary must carry mikebom:detected-go=true; \
+        "file-level Go binary must carry waybill:detected-go=true; \
          props = {props:?}",
     );
 
@@ -457,7 +457,7 @@ fn scan_go_source_plus_binary_filters_go_sum_to_linked_subset() {
     let golang = golang_purls(&sbom);
 
     // Milestone 050: the never-linked module IS retained (no longer
-    // dropped) and carries a `mikebom:not-linked = true` property
+    // dropped) and carries a `waybill:not-linked = true` property
     // identifying it as in-go.sum-but-not-in-BuildInfo. Consumers
     // wanting the strict "what shipped" view filter on this property.
     assert!(
@@ -479,11 +479,11 @@ fn scan_go_source_plus_binary_filters_go_sum_to_linked_subset() {
         .unwrap_or_default();
     assert!(
         fake_props.iter().any(|p| {
-            p["name"].as_str() == Some("mikebom:not-linked")
+            p["name"].as_str() == Some("waybill:not-linked")
                 && (p["value"].as_str() == Some("true")
                     || p["value"].as_bool() == Some(true))
         }),
-        "never-linked/fake must carry mikebom:not-linked = true: \
+        "never-linked/fake must carry waybill:not-linked = true: \
          props={fake_props:?}",
     );
 
@@ -544,7 +544,7 @@ fn scan_go_source_only_preserves_full_go_sum() {
 fn scan_go_source_test_only_import_is_tagged_and_droppable() {
     // Milestone 052/part-3: when a module is imported only from a
     // `_test.go` file, default mode emits it tagged with native CDX
-    // scope: "excluded" + mikebom:lifecycle-scope: "test".
+    // scope: "excluded" + waybill:lifecycle-scope: "test".
     // --exclude-scope dev,build,test restores the strict pre-052
     // "drop test-only" view (G4 filter behavior).
     let dir = tempfile::tempdir().expect("tempdir");
@@ -661,7 +661,7 @@ fn scan_go_source_production_and_test_import_dominates() {
 #[test]
 fn scan_go_main_module_from_gomod_is_suppressed() {
     // FR-010 / FR-012: go.mod's `module` directive names the project
-    // itself. Even when go.sum somehow lists it, mikebom must drop
+    // itself. Even when go.sum somehow lists it, waybill must drop
     // the self-reference.
     let dir = tempfile::tempdir().expect("tempdir");
     let app = dir.path().join("app");
@@ -814,7 +814,7 @@ fn scan_path_with_stderr(path: &std::path::Path) -> (serde_json::Value, String) 
     let tmp = tempfile::NamedTempFile::new().expect("tempfile");
     let out_path = tmp.path().to_path_buf();
     let output = Command::new(bin)
-        .env("MIKEBOM_NO_GO_MOD_WHY", "1")
+        .env("WAYBILL_NO_GO_MOD_WHY", "1")
         .arg("--offline")
         .arg("sbom")
         .arg("scan")
@@ -824,7 +824,7 @@ fn scan_path_with_stderr(path: &std::path::Path) -> (serde_json::Value, String) 
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -838,7 +838,7 @@ fn scan_path_with_stderr(path: &std::path::Path) -> (serde_json::Value, String) 
 
 #[test]
 fn scan_go_source_only_emits_buildinfo_scope_hint() {
-    // Milestone 050 SC-001: when `mikebom sbom scan --path` finds a
+    // Milestone 050 SC-001: when `waybill sbom scan --path` finds a
     // go.mod but no built Go binary in the rootfs, emit a hint
     // explaining the SBOM scope and how to tighten it via
     // `go build` + the existing G3 BuildInfo intersection.
@@ -868,7 +868,7 @@ fn scan_go_source_only_emits_buildinfo_scope_hint() {
     let (_sbom, stderr) = scan_path_with_stderr(dir.path());
     assert!(
         stderr.contains("no Go binary found alongside go.mod")
-            && stderr.contains("mikebom:not-linked"),
+            && stderr.contains("waybill:not-linked"),
         "SC-001: hint must fire when go.mod parsed but no binary \
          present, naming the not-linked annotation. stderr was: {stderr}",
     );
@@ -911,7 +911,7 @@ fn scan_isolated_two_format(
     let mut cmd = Command::new(bin);
     cmd.env("HOME", fake_home.path())
         .env("GOMODCACHE", empty_cache.path().join("empty"))
-        .env("MIKEBOM_NO_GO_MOD_WHY", "1")
+        .env("WAYBILL_NO_GO_MOD_WHY", "1")
         .arg("--offline")
         .arg("sbom")
         .arg("scan")
@@ -933,7 +933,7 @@ fn scan_isolated_two_format(
     for a in extra {
         cmd.arg(a);
     }
-    let output = cmd.output().expect("mikebom should run");
+    let output = cmd.output().expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",
@@ -1026,10 +1026,10 @@ fn scan_go_main_module_carries_primary_package_purpose_application() {
         .filter_map(|a| {
             let comment = a.get("comment")?.as_str()?;
             let env: serde_json::Value = serde_json::from_str(comment).ok()?;
-            if env.get("schema")?.as_str() != Some("mikebom-annotation/v1") {
+            if env.get("schema")?.as_str() != Some("waybill-annotation/v1") {
                 return None;
             }
-            if env.get("field")?.as_str()? == "mikebom:sbom-tier" {
+            if env.get("field")?.as_str()? == "waybill:sbom-tier" {
                 env.get("value")?.as_str().map(String::from)
             } else {
                 None
@@ -1039,15 +1039,15 @@ fn scan_go_main_module_carries_primary_package_purpose_application() {
     assert_eq!(
         tier_value.as_deref(),
         Some("source"),
-        "FR-006: main-module must carry mikebom:sbom-tier = \"source\"",
+        "FR-006: main-module must carry waybill:sbom-tier = \"source\"",
     );
 }
 
 #[test]
 fn scan_go_main_module_emits_c40_annotation_in_spdx() {
     // US2 AS#3: SPDX 2.3 main-module package must carry the
-    // `mikebom-annotation/v1` envelope with `field:
-    // "mikebom:component-role"` and `value: "main-module"`.
+    // `waybill-annotation/v1` envelope with `field:
+    // "waybill:component-role"` and `value: "main-module"`.
     let (spdx, _cdx) = scan_isolated_two_format(
         "argo-style-no-cache/argo-workflows",
         &[],
@@ -1060,10 +1060,10 @@ fn scan_go_main_module_emits_c40_annotation_in_spdx() {
         .filter_map(|a| {
             let comment = a.get("comment")?.as_str()?;
             let env: serde_json::Value = serde_json::from_str(comment).ok()?;
-            if env.get("schema")?.as_str() != Some("mikebom-annotation/v1") {
+            if env.get("schema")?.as_str() != Some("waybill-annotation/v1") {
                 return None;
             }
-            if env.get("field")?.as_str()? == "mikebom:component-role" {
+            if env.get("field")?.as_str()? == "waybill:component-role" {
                 env.get("value")?.as_str().map(String::from)
             } else {
                 None
@@ -1073,7 +1073,7 @@ fn scan_go_main_module_emits_c40_annotation_in_spdx() {
     assert_eq!(
         role_value.as_deref(),
         Some("main-module"),
-        "US2 AS#3: SPDX main-module must carry mikebom:component-role = \"main-module\"",
+        "US2 AS#3: SPDX main-module must carry waybill:component-role = \"main-module\"",
     );
 }
 
@@ -1126,15 +1126,15 @@ fn scan_go_main_module_in_cdx_metadata_component() {
         })
         .collect();
     assert!(
-        props.iter().any(|(n, v)| n == "mikebom:component-role"
+        props.iter().any(|(n, v)| n == "waybill:component-role"
             && v == "main-module"),
         "US2 AS#1: metadata.component.properties must contain \
-         mikebom:component-role = main-module. got: {props:?}",
+         waybill:component-role = main-module. got: {props:?}",
     );
     assert!(
-        props.iter().any(|(n, v)| n == "mikebom:sbom-tier" && v == "source"),
+        props.iter().any(|(n, v)| n == "waybill:sbom-tier" && v == "source"),
         "FR-006: metadata.component.properties must contain \
-         mikebom:sbom-tier = source. got: {props:?}",
+         waybill:sbom-tier = source. got: {props:?}",
     );
     // FR-005: metadata.component MUST NOT carry a non-empty licenses
     // array (LICENSE-file detection deferred to issue #103).
@@ -1237,7 +1237,7 @@ fn scan_go_zero_requires_emits_main_module_no_edges() {
     let output = Command::new(bin)
         .env("HOME", fake_home.path())
         .env("GOMODCACHE", empty_cache.path().join("empty"))
-        .env("MIKEBOM_NO_GO_MOD_WHY", "1")
+        .env("WAYBILL_NO_GO_MOD_WHY", "1")
         .arg("--offline")
         .arg("sbom")
         .arg("scan")
@@ -1249,7 +1249,7 @@ fn scan_go_zero_requires_emits_main_module_no_edges() {
         .arg(format!("spdx-2.3-json={}", out_path.to_string_lossy()))
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",

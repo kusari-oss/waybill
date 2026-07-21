@@ -3,7 +3,7 @@
 //! Sourced from openembedded-core's
 //! `meta/conf/distro/include/cve-extra-exclusions.inc` (master branch
 //! per research R2). Stable across Yocto releases; refresh requires
-//! a minor mikebom update.
+//! a minor waybill update.
 //!
 //! The mapping translates Yocto recipe names (which match `bitbake`'s
 //! recipe filename convention — typically hyphenated) to the
@@ -12,7 +12,7 @@
 //! `linux-kernel` → `linux_kernel`, `nss` → `network_security_services`.
 //!
 //! Applied by milestone-128's `recipe.rs` when populating each
-//! recipe component's `mikebom:cpe-candidates` annotation array per
+//! recipe component's `waybill:cpe-candidates` annotation array per
 //! FR-019. The raw recipe name is ALWAYS included; the mapped name
 //! is added only when it differs (no duplicates).
 
@@ -139,7 +139,7 @@ pub(crate) const CPE_NAME_MAP: &[(&str, &str)] = &[
 /// the recipe name unchanged when no mapping exists (the common
 /// case — most recipes are named identically to their CPE product).
 ///
-/// Used by `recipe.rs` to populate the `mikebom:cpe-candidates`
+/// Used by `recipe.rs` to populate the `waybill:cpe-candidates`
 /// annotation array per FR-017 + FR-019.
 pub(crate) fn cpe_product_for_recipe(recipe_name: &str) -> &str {
     for (recipe, cpe_product) in CPE_NAME_MAP {

@@ -86,7 +86,7 @@ fn sc004_no_op_on_non_haskell_tree() {
     let haskell_comps: Vec<&Value> = all_components(&doc)
         .into_iter()
         .filter(|c| {
-            property_value(c, "mikebom:source-type")
+            property_value(c, "waybill:source-type")
                 .map(|s| s.starts_with("hackage-"))
                 .unwrap_or(false)
         })
@@ -120,7 +120,7 @@ fn sc005_malformed_freeze_falls_back_to_design_tier() {
         "expected parse-failure warning; stderr={stderr}",
     );
     let text = component_with_name(&doc, "text").expect("text design-tier fallback");
-    assert_eq!(property_value(text, "mikebom:sbom-tier"), Some("design"));
+    assert_eq!(property_value(text, "waybill:sbom-tier"), Some("design"));
 }
 
 #[test]
@@ -135,7 +135,7 @@ fn q3_content_shape_skips_non_stack_files() {
     let haskell_comps: Vec<&Value> = all_components(&doc)
         .into_iter()
         .filter(|c| {
-            property_value(c, "mikebom:source-type")
+            property_value(c, "waybill:source-type")
                 .map(|s| s.starts_with("hackage-"))
                 .unwrap_or(false)
         })
@@ -173,10 +173,10 @@ fn range_constraint_in_freeze_emits_design_tier() {
     .unwrap();
     let (doc, _) = run_scan(dir.path());
     let text = component_with_name(&doc, "text").expect("text range component");
-    assert_eq!(property_value(text, "mikebom:sbom-tier"), Some("design"));
+    assert_eq!(property_value(text, "waybill:sbom-tier"), Some("design"));
     // Milestone 199: always-array shape — JSON-array-in-string value.
     assert_eq!(
-        property_value(text, "mikebom:requirement-ranges"),
+        property_value(text, "waybill:requirement-ranges"),
         Some(r#"[">=2.0 && <2.1"]"#),
     );
 }
@@ -230,7 +230,7 @@ fn boot_library_allowlist_case_insensitive_match() {
     let (doc, _) = run_scan(dir.path());
     let win32 = component_with_name(&doc, "win32").expect("win32 component");
     assert_eq!(
-        property_value(win32, "mikebom:ghc-stdlib"),
+        property_value(win32, "waybill:ghc-stdlib"),
         Some("true"),
         "Win32 allowlist entry should match case-insensitively against lowercased win32",
     );

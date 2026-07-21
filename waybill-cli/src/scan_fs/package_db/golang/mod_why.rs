@@ -6,7 +6,7 @@
 //   - chunks of at most 20 module paths per invocation
 //     (cyclonedx-gomod `FilterModules` parity);
 //   - one shared wall-clock budget (60s default,
-//     `MIKEBOM_GO_MOD_WHY_BUDGET_MS` test-only override) across ALL
+//     `WAYBILL_GO_MOD_WHY_BUDGET_MS` test-only override) across ALL
 //     invocations in a scan — preflight + every chunk, every main
 //     module;
 //   - per-main-module `go list all` reliability preflight: `go mod why`
@@ -15,7 +15,7 @@
 //     a failed preflight skips the main module entirely with ZERO
 //     verdicts accepted;
 //   - offline env pinning (`GOPROXY=off`, `GOFLAGS=-mod=mod`,
-//     `GOTOOLCHAIN=local`) when `--offline` / `MIKEBOM_OFFLINE` is set;
+//     `GOTOOLCHAIN=local`) when `--offline` / `WAYBILL_OFFLINE` is set;
 //   - every failure class degrades — the scan never errors because of
 //     this pass (FR-007).
 //
@@ -91,9 +91,9 @@ pub struct BudgetTracker {
 
 impl BudgetTracker {
     /// Budget from the contract: 60s, or the test-only
-    /// `MIKEBOM_GO_MOD_WHY_BUDGET_MS` integer-milliseconds override.
+    /// `WAYBILL_GO_MOD_WHY_BUDGET_MS` integer-milliseconds override.
     pub fn from_env() -> Self {
-        let budget = std::env::var("MIKEBOM_GO_MOD_WHY_BUDGET_MS")
+        let budget = std::env::var("WAYBILL_GO_MOD_WHY_BUDGET_MS")
             .ok()
             .and_then(|v| v.trim().parse::<u64>().ok())
             .map(Duration::from_millis)
@@ -111,11 +111,11 @@ impl BudgetTracker {
     }
 }
 
-/// `MIKEBOM_NO_GO_MOD_WHY` opt-out: any non-empty value other than
+/// `WAYBILL_NO_GO_MOD_WHY` opt-out: any non-empty value other than
 /// `0` disables classification (contracts/cli-flags.md). The
 /// `--no-go-mod-why` flag is bridged into this env var by `main.rs`.
 pub fn classification_disabled() -> bool {
-    match std::env::var("MIKEBOM_NO_GO_MOD_WHY") {
+    match std::env::var("WAYBILL_NO_GO_MOD_WHY") {
         Ok(v) => !v.is_empty() && v != "0",
         Err(_) => false,
     }
@@ -128,7 +128,7 @@ pub fn toolchain_available() -> bool {
 }
 
 /// Offline env pinning per FR-012: applied when `--offline` /
-/// `MIKEBOM_OFFLINE` is in effect so the toolchain answers from local
+/// `WAYBILL_OFFLINE` is in effect so the toolchain answers from local
 /// cache or fails fast (and `GOTOOLCHAIN=local` blocks go.mod
 /// `toolchain`-directive downloads).
 fn apply_offline_env(cmd: &mut Command, offline: bool) {
@@ -488,7 +488,7 @@ mod tests {
     fn disabled_env_semantics() {
         // NOTE: process-global env — keep all cases in ONE test to
         // avoid parallel-test races on the same var.
-        let key = "MIKEBOM_NO_GO_MOD_WHY";
+        let key = "WAYBILL_NO_GO_MOD_WHY";
         let prior = std::env::var(key).ok();
         std::env::remove_var(key);
         assert!(!classification_disabled());
@@ -508,7 +508,7 @@ mod tests {
 
     #[test]
     fn budget_tracker_env_override() {
-        let key = "MIKEBOM_GO_MOD_WHY_BUDGET_MS";
+        let key = "WAYBILL_GO_MOD_WHY_BUDGET_MS";
         let prior = std::env::var(key).ok();
         std::env::set_var(key, "50");
         let tracker = BudgetTracker::from_env();

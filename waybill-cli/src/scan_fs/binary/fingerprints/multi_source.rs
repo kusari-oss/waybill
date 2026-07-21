@@ -460,7 +460,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
 
         let harness_a = make_harness_serving(build_minimal_v2_tarball("liba"));
@@ -506,7 +506,7 @@ mod tests {
         assert_eq!(groups.len(), 2);
 
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 
@@ -516,7 +516,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
 
         // One good source, one source that 404s.
@@ -559,7 +559,7 @@ mod tests {
         }
 
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 }

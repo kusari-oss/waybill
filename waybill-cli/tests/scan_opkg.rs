@@ -1,7 +1,7 @@
 //! Integration test for the opkg installed-DB reader (milestone 107 US1).
 //!
 //! Companion to the unit tests in `scan_fs::package_db::opkg::tests`.
-//! This test invokes the `mikebom sbom scan --path <fixture>` binary
+//! This test invokes the `waybill sbom scan --path <fixture>` binary
 //! against the in-repo `opkg_basic/` fixture (a synthetic rootfs with
 //! `/var/lib/opkg/status` + per-package `.list` files) and asserts:
 //!
@@ -10,11 +10,11 @@
 //! - The `nativesdk-` prefixed package is tagged with CDX scope
 //!   `excluded` (proves the FR-006 lifecycle-scope override + the
 //!   milestone-052 emission path translation)
-//! - The `mikebom:source-mechanism` annotation is `"opkg-installed"`
+//! - The `waybill:source-mechanism` annotation is `"opkg-installed"`
 //!   on every emitted component (proves T024 + the milestone-105
 //!   dedup pipeline wiring)
 //!
-//! All package names use the synthetic `mikebom-fixture-*` prefix
+//! All package names use the synthetic `waybill-fixture-*` prefix
 //! per the milestone-106 convention — no real-world packages, no CVE
 //! advisory collisions.
 
@@ -44,7 +44,7 @@ fn opkg_basic_fixture_emits_components() {
 
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
-    cmd.env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
     cmd.args([
         "--offline",
         "sbom",
@@ -56,7 +56,7 @@ fn opkg_basic_fixture_emits_components() {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "opkg scan unexpectedly failed: stderr={}",
@@ -74,11 +74,11 @@ fn opkg_basic_fixture_emits_components() {
 
     // All 5 stanzas should emerge.
     let expected = [
-        "pkg:opkg/mikebom-fixture-libcore@1.2.3?arch=mikebom-fixture-arch",
-        "pkg:opkg/mikebom-fixture-libutil@0.5.2?arch=mikebom-fixture-arch",
-        "pkg:opkg/mikebom-fixture-app@3.0.0?arch=mikebom-fixture-arch",
-        "pkg:opkg/nativesdk-mikebom-fixture-buildtool@2.0.0?arch=x86_64",
-        "pkg:opkg/mikebom-fixture-kernel-modules@5.15.0?arch=mikebom-fixture-arch",
+        "pkg:opkg/waybill-fixture-libcore@1.2.3?arch=waybill-fixture-arch",
+        "pkg:opkg/waybill-fixture-libutil@0.5.2?arch=waybill-fixture-arch",
+        "pkg:opkg/waybill-fixture-app@3.0.0?arch=waybill-fixture-arch",
+        "pkg:opkg/nativesdk-waybill-fixture-buildtool@2.0.0?arch=x86_64",
+        "pkg:opkg/waybill-fixture-kernel-modules@5.15.0?arch=waybill-fixture-arch",
     ];
     for purl in expected {
         assert!(
@@ -94,7 +94,7 @@ fn opkg_basic_fixture_emits_components() {
         .find(|c| {
             c["purl"]
                 .as_str()
-                .map(|p| p == "pkg:opkg/nativesdk-mikebom-fixture-buildtool@2.0.0?arch=x86_64")
+                .map(|p| p == "pkg:opkg/nativesdk-waybill-fixture-buildtool@2.0.0?arch=x86_64")
                 .unwrap_or(false)
         })
         .expect("nativesdk component present");

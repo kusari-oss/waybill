@@ -185,7 +185,7 @@ fn public_hostname_allowlist() {
 #[test]
 fn no_credentials_required() {
     if !super::harness::env_gate() {
-        println!("skipping: MIKEBOM_RUN_PUBLIC_CORPUS not set (no-credentials probe hits the public network)");
+        println!("skipping: WAYBILL_RUN_PUBLIC_CORPUS not set (no-credentials probe hits the public network)");
         return;
     }
     use std::process::Command;

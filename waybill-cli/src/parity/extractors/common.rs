@@ -70,7 +70,7 @@ pub enum Directionality {
     /// CDX's native field is too coarse to express the signal
     /// directly and the SPDX sides carry the same lifecycle
     /// signal natively via OTHER catalog rows (e.g., C42's
-    /// `mikebom:lifecycle-scope` is a CDX-only finer split where
+    /// `waybill:lifecycle-scope` is a CDX-only finer split where
     /// CDX `scope` cannot express dev/build/test; SPDX 2.3 + 3
     /// carry the lifecycle scope via B2's typed dep-relationship
     /// types / `lifecycleScope` parameter, asserted independently
@@ -83,7 +83,7 @@ pub enum Directionality {
 /// Decode the `MikebomAnnotationCommentV1` envelope from SPDX
 /// 2.3 `annotations[].comment` / SPDX 3 `Annotation.statement`
 /// entries, returning the set of values observed for the named
-/// `mikebom:<field>`. When `subject_is_document` is true, the
+/// `waybill:<field>`. When `subject_is_document` is true, the
 /// helper checks document-level annotations (SPDX 2.3 top-level
 /// `annotations[]` / SPDX 3 `@graph[Annotation].subject ==
 /// document-iri`); otherwise it walks per-Package annotations
@@ -192,7 +192,7 @@ fn extract_spdx3_annotation_values(
 /// (one annotation, array-valued envelope).
 pub(super) fn decode_envelope(serialized: &str, field_name: &str) -> Option<Vec<String>> {
     let v: Value = serde_json::from_str(serialized).ok()?;
-    if v.get("schema")?.as_str()? != "mikebom-annotation/v1" {
+    if v.get("schema")?.as_str()? != "waybill-annotation/v1" {
         return None;
     }
     if v.get("field")?.as_str()? != field_name {
@@ -253,15 +253,15 @@ pub fn walk_cdx_components(doc: &Value) -> Vec<&Value> {
 
 /// Like `walk_cdx_components` but additionally includes
 /// `metadata.component` when it carries
-/// `mikebom:component-role: main-module` (milestone 053 — the Go
-/// workspace's main-module per FR-001a). Used by `mikebom:*`
+/// `waybill:component-role: main-module` (milestone 053 — the Go
+/// workspace's main-module per FR-001a). Used by `waybill:*`
 /// property extractors (C18 source-files, C40 component-role,
 /// sbom-tier, etc.) that need to see all components carrying the
 /// property regardless of where they live in the BOM tree.
 ///
 /// Section A extractors (purl, name, version, supplier, cpe) MUST
 /// NOT use this — those fields on `metadata.component` are
-/// synthesized in a CDX-specific shape (e.g., `cpe:2.3:a:mikebom:…`
+/// synthesized in a CDX-specific shape (e.g., `cpe:2.3:a:waybill:…`
 /// for the synthetic placeholder; `cpe:2.3:a:<name>:<name>:…` for
 /// the main-module's promoted entry) and don't round-trip to the
 /// SPDX side identically.
@@ -274,7 +274,7 @@ pub fn walk_cdx_components_and_main_module(doc: &Value) -> Vec<&Value> {
             .map(|arr| {
                 arr.iter().any(|p| {
                     p.get("name").and_then(|v| v.as_str())
-                        == Some("mikebom:component-role")
+                        == Some("waybill:component-role")
                         && p.get("value").and_then(|v| v.as_str())
                             == Some("main-module")
                 })
@@ -288,7 +288,7 @@ pub fn walk_cdx_components_and_main_module(doc: &Value) -> Vec<&Value> {
 }
 
 /// Like [`walk_cdx_components_and_main_module`] but also includes
-/// `metadata.component` when it lacks the `mikebom:component-role:
+/// `metadata.component` when it lacks the `waybill:component-role:
 /// main-module` tag (i.e., it's a synthetic scan-subject
 /// placeholder). Used by dep-edge extractors so the primary-dep
 /// fallback's `target_ref → top-level` edges resolve through the

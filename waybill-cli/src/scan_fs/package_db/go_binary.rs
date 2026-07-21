@@ -41,7 +41,7 @@ const MAX_BINARY_SIZE_BYTES: u64 = 500 * 1024 * 1024;
 const MIN_BINARY_SIZE_BYTES: u64 = 1024;
 
 /// Outcome of a single-binary BuildInfo extraction. Feeds directly into
-/// the `mikebom:buildinfo-status` property at serialization time per
+/// the `waybill:buildinfo-status` property at serialization time per
 /// contract.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum BuildInfoStatus {
@@ -67,18 +67,18 @@ pub struct GoVcsInfo {
     /// Commit SHA of the source tree at build time. Verbatim from
     /// the `vcs.revision` BuildInfo key — usually a 40-char SHA-1
     /// hex; can also be a short SHA depending on Go's emitter mode.
-    /// Drives the `mikebom:go-vcs-revision` annotation.
+    /// Drives the `waybill:go-vcs-revision` annotation.
     pub revision: Option<String>,
     /// Commit timestamp in RFC 3339 format (e.g.
     /// `"2026-04-26T12:00:00Z"`). Verbatim from the `vcs.time`
-    /// BuildInfo key. Drives the `mikebom:go-vcs-time` annotation.
+    /// BuildInfo key. Drives the `waybill:go-vcs-time` annotation.
     pub time: Option<String>,
     /// `true` when the worktree had uncommitted changes at build
     /// time, `false` when the build came from a clean checkout.
     /// Parsed from the `vcs.modified` BuildInfo key (which Go writes
     /// as the literal strings `"true"` / `"false"`). `None` when the
     /// key is absent or unparseable. Drives the
-    /// `mikebom:go-vcs-modified` annotation.
+    /// `waybill:go-vcs-modified` annotation.
     pub modified: Option<bool>,
 }
 
@@ -728,7 +728,7 @@ fn emit_file_level_diagnostic(
 ) {
     // File-level diagnostic. We emit a generic-ecosystem PURL so dedup
     // doesn't collapse with a real module coord. The
-    // `mikebom:buildinfo-status` property is driven off `source_type`
+    // `waybill:buildinfo-status` property is driven off `source_type`
     // here, which the CycloneDX builder already understands.
     let file_name = path
         .file_name()
@@ -788,20 +788,20 @@ fn build_vcs_annotations(
     };
     if let Some(ref rev) = vcs.revision {
         bag.insert(
-            "mikebom:go-vcs-revision".to_string(),
+            "waybill:go-vcs-revision".to_string(),
             serde_json::Value::String(rev.clone()),
         );
     }
     if let Some(ref t) = vcs.time {
         bag.insert(
-            "mikebom:go-vcs-time".to_string(),
+            "waybill:go-vcs-time".to_string(),
             serde_json::Value::String(t.clone()),
         );
     }
     if let Some(modified) = vcs.modified {
         // Match Go's wire convention: literal "true" / "false" string.
         bag.insert(
-            "mikebom:go-vcs-modified".to_string(),
+            "waybill:go-vcs-modified".to_string(),
             serde_json::Value::String(if modified { "true" } else { "false" }.to_string()),
         );
     }

@@ -3,14 +3,14 @@
 //!
 //! Two display widths matter:
 //! - **40-hex** (full): used as the cache directory key
-//!   (`~/.cache/mikebom/fingerprints/<full-40-hex>/`) to eliminate
+//!   (`~/.cache/waybill/fingerprints/<full-40-hex>/`) to eliminate
 //!   collision risk.
 //! - **12-hex** (`git rev-parse --short` default): used as the value
-//!   of the `mikebom:fingerprint-corpus-sha` SBOM annotation per
+//!   of the `waybill:fingerprint-corpus-sha` SBOM annotation per
 //!   FR-005, for human-readable provenance lookup.
 //!
 //! The build-time-embedded SHA is resolved via
-//! `env!("MIKEBOM_FINGERPRINTS_CORPUS_SHA")` (set by `build.rs` from
+//! `env!("WAYBILL_FINGERPRINTS_CORPUS_SHA")` (set by `build.rs` from
 //! `<workspace>/tests/fingerprints.rev`).
 
 use thiserror::Error;
@@ -55,7 +55,7 @@ impl CorpusSha {
     }
 
     /// 12-char lowercase hex — matches `git rev-parse --short` default,
-    /// used as the value of the `mikebom:fingerprint-corpus-sha`
+    /// used as the value of the `waybill:fingerprint-corpus-sha`
     /// SBOM annotation per FR-005.
     pub fn to_short_hex(self) -> String {
         let full = self.to_full_hex();
@@ -63,13 +63,13 @@ impl CorpusSha {
     }
 
     /// Resolve the build-time-embedded corpus SHA from the
-    /// `MIKEBOM_FINGERPRINTS_CORPUS_SHA` env var (set by `build.rs`).
+    /// `WAYBILL_FINGERPRINTS_CORPUS_SHA` env var (set by `build.rs`).
     /// Panics at compile time if the env var isn't set or is malformed,
     /// so production binaries are unforgeable on this axis.
     pub fn build_time_embedded() -> Self {
-        const EMBEDDED: &str = env!("MIKEBOM_FINGERPRINTS_CORPUS_SHA");
+        const EMBEDDED: &str = env!("WAYBILL_FINGERPRINTS_CORPUS_SHA");
         Self::from_hex(EMBEDDED).expect(
-            "MIKEBOM_FINGERPRINTS_CORPUS_SHA env var (set by build.rs) must be 40-char lowercase hex; build.rs panics on malformed pin so this should be unreachable in production",
+            "WAYBILL_FINGERPRINTS_CORPUS_SHA env var (set by build.rs) must be 40-char lowercase hex; build.rs panics on malformed pin so this should be unreachable in production",
         )
     }
 }

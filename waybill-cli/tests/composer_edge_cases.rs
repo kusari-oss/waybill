@@ -142,7 +142,7 @@ fn malformed_lockfile_falls_back_to_design_tier() {
     let monolog = component_with_purl(&doc, "pkg:composer/monolog/monolog@^3.5")
         .expect("bad project's design-tier monolog must emit from composer.json fallback");
     assert_eq!(
-        property_value(monolog, "mikebom:sbom-tier"),
+        property_value(monolog, "waybill:sbom-tier"),
         Some("design"),
     );
 
@@ -226,7 +226,7 @@ fn missing_name_skips_only_main_module() {
         .iter()
         .filter(|p| {
             component_with_purl(&doc, p)
-                .and_then(|c| property_value(c, "mikebom:component-role"))
+                .and_then(|c| property_value(c, "waybill:component-role"))
                 == Some("main-module")
         })
         .collect();
@@ -300,7 +300,7 @@ fn composer_1_installed_json_warns_and_skips() {
 fn c_source_type<'a>(arr: &'a [Value], purl: &str) -> Option<&'a str> {
     arr.iter()
         .find(|c| c.get("purl").and_then(|v| v.as_str()) == Some(purl))
-        .and_then(|c| property_value(c, "mikebom:source-type"))
+        .and_then(|c| property_value(c, "waybill:source-type"))
 }
 
 #[test]

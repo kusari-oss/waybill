@@ -12,7 +12,7 @@
 //!   for `image: <ref>` extraction using a permissive line-based regex
 //!   with Go-template tolerance. Unresolved
 //!   `{{ .Values.image.tag }}` placeholders emit as
-//!   `pkg:generic/<placeholder>` with `mikebom:image-ref-unresolved =
+//!   `pkg:generic/<placeholder>` with `waybill:image-ref-unresolved =
 //!   "true"` property. Resolved refs emit as
 //!   `pkg:docker/<name>@<tag>` (tagged) or
 //!   `pkg:oci/<name>@sha256:<digest>` (digested).
@@ -25,8 +25,8 @@
 //!
 //! **Native-field audit per Constitution Principle V** (documented in
 //! `docs/reference/sbom-format-mapping.md` §Milestone 188 addendum):
-//! Two new `mikebom:*` properties added — `mikebom:image-ref-unresolved`
-//! (per-component) + `mikebom:image-extraction-completeness` (document
+//! Two new `waybill:*` properties added — `waybill:image-ref-unresolved`
+//! (per-component) + `waybill:image-extraction-completeness` (document
 //! scope, plumbed via `ScanDiagnostics.helm_extraction_mode`). No native
 //! CDX / SPDX 2.3 / SPDX 3 construct exists for either concept.
 //!
@@ -70,7 +70,7 @@ pub(super) enum HelmRenderError {
     IoError(#[from] std::io::Error),
 }
 
-/// Milestone 203 (FR-002): read `MIKEBOM_HELM_RENDER_TIMEOUT_SECS` env
+/// Milestone 203 (FR-002): read `WAYBILL_HELM_RENDER_TIMEOUT_SECS` env
 /// var, parse as `u64`, clamp to `[1, 3600]`, default to 60. Silent
 /// clamp semantics per research R4 — matches m173/m089 env-var handling
 /// posture (parse-fail or out-of-range value silently falls back to
@@ -80,7 +80,7 @@ fn resolve_render_timeout() -> Duration {
     const DEFAULT_SECS: u64 = 60;
     const MIN_SECS: u64 = 1;
     const MAX_SECS: u64 = 3600;
-    let secs = std::env::var("MIKEBOM_HELM_RENDER_TIMEOUT_SECS")
+    let secs = std::env::var("WAYBILL_HELM_RENDER_TIMEOUT_SECS")
         .ok()
         .and_then(|s| s.parse::<u64>().ok())
         .map(|n| n.clamp(MIN_SECS, MAX_SECS))
@@ -187,11 +187,11 @@ const MAX_CHART_RECURSION_DEPTH: usize = 12;
 /// contracts/cli-flags.md.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum HelmRenderMode {
-    /// Default. mikebom does NOT invoke the `helm` binary. Extraction
+    /// Default. waybill does NOT invoke the `helm` binary. Extraction
     /// runs unrendered per FR-013.
     #[default]
     Off,
-    /// Operator passed `--helm-render`. mikebom attempts to shell out
+    /// Operator passed `--helm-render`. waybill attempts to shell out
     /// to `helm template <chart-dir>`; on failure (missing binary,
     /// non-zero exit, timeout), falls back to Off behavior per FR-012.
     OptIn,
@@ -304,7 +304,7 @@ pub(crate) enum ImageRefKind {
     },
     /// Ref contains one or more `{{ ... }}` blocks →
     /// `pkg:generic/<placeholder-slug>` with
-    /// `mikebom:image-ref-unresolved = "true"` property.
+    /// `waybill:image-ref-unresolved = "true"` property.
     TemplatePlaceholder {
         /// URL-safe slug with `{{ ... }}` blocks replaced by
         /// `__PLACEHOLDER_N__` tokens.
@@ -520,7 +520,7 @@ fn parse_chart_lock(chart_dir: &Path) -> Option<ChartLock> {
 
 /// Resolve a chart-dep's version per FR-004 precedence: Chart.lock
 /// wins when it has a matching `(name, repository)` entry. Returns
-/// `(version, source_kind)` for downstream `mikebom:evidence-kind`
+/// `(version, source_kind)` for downstream `waybill:evidence-kind`
 /// emission.
 fn resolve_chart_dep(dep: &ChartDep, lock: Option<&ChartLock>) -> (String, ChartDepSource) {
     if let Some(lock) = lock {
@@ -653,7 +653,7 @@ fn process_subchart_tgz(
     depth: usize,
 ) -> Result<Vec<HelmComponent>, HelmParseError> {
     let tempdir = tempfile::Builder::new()
-        .prefix("mikebom-helm-subchart-")
+        .prefix("waybill-helm-subchart-")
         .tempdir()
         .map_err(|e| HelmParseError::SubchartTarballFailed {
             path: tgz_path.to_string_lossy().into_owned(),
@@ -901,7 +901,7 @@ fn components_to_package_db_entries(components: Vec<HelmComponent>) -> Vec<Packa
                 if let Ok(purl) = Purl::new(&format!("pkg:helm/local/{name}@{version}")) {
                     let mut extra: BTreeMap<String, serde_json::Value> = Default::default();
                     extra.insert(
-                        "mikebom:source-mechanism".to_string(),
+                        "waybill:source-mechanism".to_string(),
                         serde_json::Value::String("helm-chart-yaml".to_string()),
                     );
                     out.push(build_helm_entry(
@@ -931,12 +931,12 @@ fn components_to_package_db_entries(components: Vec<HelmComponent>) -> Vec<Packa
                         ChartDepSource::ChartsTarball => ("helm-chart-yaml", "helm-charts-tgz"),
                     };
                     extra.insert(
-                        "mikebom:source-mechanism".to_string(),
+                        "waybill:source-mechanism".to_string(),
                         serde_json::Value::String(mechanism.to_string()),
                     );
                     if matches!(source_kind, ChartDepSource::ChartLock) {
                         extra.insert(
-                            "mikebom:helm-lock-authoritative".to_string(),
+                            "waybill:helm-lock-authoritative".to_string(),
                             serde_json::Value::String("true".to_string()),
                         );
                     }
@@ -975,7 +975,7 @@ fn image_ref_to_purl_and_annotations(
 ) -> (Option<Purl>, BTreeMap<String, serde_json::Value>) {
     let mut extra: BTreeMap<String, serde_json::Value> = Default::default();
     extra.insert(
-        "mikebom:source-mechanism".to_string(),
+        "waybill:source-mechanism".to_string(),
         serde_json::Value::String("helm-template-image-ref".to_string()),
     );
     let purl_str = match &image_ref.kind {
@@ -987,11 +987,11 @@ fn image_ref_to_purl_and_annotations(
         }
         ImageRefKind::TemplatePlaceholder { slug } => {
             extra.insert(
-                "mikebom:image-ref-unresolved".to_string(),
+                "waybill:image-ref-unresolved".to_string(),
                 serde_json::Value::String("true".to_string()),
             );
             extra.insert(
-                "mikebom:image-ref-raw".to_string(),
+                "waybill:image-ref-raw".to_string(),
                 serde_json::Value::String(image_ref.raw.clone()),
             );
             // Slug may contain characters not URL-safe for a PURL name
@@ -1254,7 +1254,7 @@ dependencies:
 
     // ── T007 m203 (#553) — HelmRenderError + resolve_render_timeout ──
     //
-    // These tests mutate the process-wide `MIKEBOM_HELM_RENDER_TIMEOUT_SECS`
+    // These tests mutate the process-wide `WAYBILL_HELM_RENDER_TIMEOUT_SECS`
     // env var. Cargo test runs test functions in parallel by default,
     // and the 4 timeout-env tests will race on the shared env var —
     // observed as flaky pre-PR failures per reference_m203_helm_test_flake.
@@ -1278,15 +1278,15 @@ dependencies:
         let _guard = helm_env_mutex()
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
-        let prev = std::env::var("MIKEBOM_HELM_RENDER_TIMEOUT_SECS").ok();
+        let prev = std::env::var("WAYBILL_HELM_RENDER_TIMEOUT_SECS").ok();
         match value {
-            Some(v) => std::env::set_var("MIKEBOM_HELM_RENDER_TIMEOUT_SECS", v),
-            None => std::env::remove_var("MIKEBOM_HELM_RENDER_TIMEOUT_SECS"),
+            Some(v) => std::env::set_var("WAYBILL_HELM_RENDER_TIMEOUT_SECS", v),
+            None => std::env::remove_var("WAYBILL_HELM_RENDER_TIMEOUT_SECS"),
         }
         f();
         match prev {
-            Some(v) => std::env::set_var("MIKEBOM_HELM_RENDER_TIMEOUT_SECS", v),
-            None => std::env::remove_var("MIKEBOM_HELM_RENDER_TIMEOUT_SECS"),
+            Some(v) => std::env::set_var("WAYBILL_HELM_RENDER_TIMEOUT_SECS", v),
+            None => std::env::remove_var("WAYBILL_HELM_RENDER_TIMEOUT_SECS"),
         }
     }
 

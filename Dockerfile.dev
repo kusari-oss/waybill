@@ -19,7 +19,7 @@ RUN rustup toolchain install nightly \
     && rustup component add rust-src --toolchain nightly \
     && cargo +nightly install bpf-linker
 
-WORKDIR /mikebom
+WORKDIR /waybill
 COPY . .
 
 # Build eBPF kernel programs first

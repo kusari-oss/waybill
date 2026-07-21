@@ -15,7 +15,7 @@
 //!
 //! Per Constitution Principle V the milestone audited CDX 1.6's
 //! `bom.annotations[]` (research §1) and confirmed full native parity;
-//! no `mikebom:` properties are introduced for this milestone.
+//! no `waybill:` properties are introduced for this milestone.
 
 pub mod annotation;
 pub mod creator;
@@ -405,7 +405,7 @@ mod tests {
     #[test]
     fn interleaving_ok_for_paired_flags() {
         let argv = vec![
-            "mikebom",
+            "waybill",
             "sbom",
             "scan",
             "--path",
@@ -450,7 +450,7 @@ mod tests {
 
     #[test]
     fn interleaving_no_annotator_is_ok() {
-        let argv = vec!["mikebom", "sbom", "scan", "--path", "."];
+        let argv = vec!["waybill", "sbom", "scan", "--path", "."];
         assert!(validate_annotator_pair_interleaving(argv).is_ok());
     }
 

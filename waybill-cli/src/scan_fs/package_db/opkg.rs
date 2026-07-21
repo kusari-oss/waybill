@@ -95,7 +95,7 @@ pub fn read(rootfs: &Path) -> (Vec<PackageDbEntry>, ScanContext) {
 /// absent. Each `.control` file is a single-stanza subset of
 /// `status`-file syntax, parsed via the same `parse_stanzas` helper.
 ///
-/// Adds a `mikebom:opkg-status-fallback = "true"` annotation on every
+/// Adds a `waybill:opkg-status-fallback = "true"` annotation on every
 /// emitted entry so consumers can distinguish primary-parse emissions
 /// from fallback-parse emissions.
 fn parse_info_dir_fallback(
@@ -125,7 +125,7 @@ fn parse_info_dir_fallback(
         for stanza in stanzas {
             if let Some(mut entry) = build_entry(&stanza, &source_path, ctx, distro_tag) {
                 entry.extra_annotations.insert(
-                    "mikebom:opkg-status-fallback".to_string(),
+                    "waybill:opkg-status-fallback".to_string(),
                     serde_json::Value::String("true".to_string()),
                 );
                 out.push(entry);
@@ -215,7 +215,7 @@ fn build_entry(
     let version_raw = stanza.version().unwrap_or("");
     let version_missing = version_raw.is_empty();
     let version = if version_missing {
-        // Per data-model.md: emit with `mikebom:version-status: "missing"`
+        // Per data-model.md: emit with `waybill:version-status: "missing"`
         // annotation rather than dropping.
         String::new()
     } else {
@@ -228,7 +228,7 @@ fn build_entry(
         .filter(|s| !s.is_empty());
     // Milestone 169 T021: Q2 alternative-list clarification —
     // `Depends: pkg-a | pkg-b` now emits ONLY `pkg-a` as an edge and
-    // records `pkg-b` in `mikebom:dep-alternative-alternates`. Uses
+    // records `pkg-b` in `waybill:dep-alternative-alternates`. Uses
     // the shared parser at `control_file::parse_depends_field_with_alternatives`.
     let depends_raw = stanza.depends().unwrap_or("");
     let super::control_file::DepsWithAlternatives {
@@ -251,12 +251,12 @@ fn build_entry(
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra_annotations.insert(
-        "mikebom:source-mechanism".to_string(),
+        "waybill:source-mechanism".to_string(),
         serde_json::Value::String("opkg-installed".to_string()),
     );
     if version_missing {
         extra_annotations.insert(
-            "mikebom:version-status".to_string(),
+            "waybill:version-status".to_string(),
             serde_json::Value::String("missing".to_string()),
         );
     }
@@ -273,7 +273,7 @@ fn build_entry(
             })
             .collect();
         extra_annotations.insert(
-            "mikebom:dep-alternative-alternates".to_string(),
+            "waybill:dep-alternative-alternates".to_string(),
             serde_json::Value::Object(json_map),
         );
     }
@@ -419,28 +419,28 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         write_status(
             tmp.path(),
-            "Package: mikebom-fixture-lib\n\
+            "Package: waybill-fixture-lib\n\
              Version: 1.2.3\n\
-             Architecture: mikebom-fixture-arch\n\
-             Maintainer: Mikebom Fixture <fixture@example.invalid>\n\
+             Architecture: waybill-fixture-arch\n\
+             Maintainer: Waybill Fixture <fixture@example.invalid>\n\
              Status: install user installed\n\
              \n\
-             Package: mikebom-fixture-other\n\
+             Package: waybill-fixture-other\n\
              Version: 2.3.4\n\
-             Architecture: mikebom-fixture-arch\n\
+             Architecture: waybill-fixture-arch\n\
              Status: install user installed\n",
         );
         let (entries, _ctx) = read(tmp.path());
         assert_eq!(entries.len(), 2);
         assert_eq!(
             entries[0].purl.as_str(),
-            "pkg:opkg/mikebom-fixture-lib@1.2.3?arch=mikebom-fixture-arch"
+            "pkg:opkg/waybill-fixture-lib@1.2.3?arch=waybill-fixture-arch"
         );
-        assert_eq!(entries[0].maintainer.as_deref(), Some("Mikebom Fixture <fixture@example.invalid>"));
+        assert_eq!(entries[0].maintainer.as_deref(), Some("Waybill Fixture <fixture@example.invalid>"));
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:source-mechanism")
+                .get("waybill:source-mechanism")
                 .and_then(|v| v.as_str()),
             Some("opkg-installed"),
         );
@@ -451,19 +451,19 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         write_status(
             tmp.path(),
-            "Package: mikebom-fixture-lib\n\
+            "Package: waybill-fixture-lib\n\
              Version: 1.0\n\
-             Architecture: mikebom-fixture-arch\n\
+             Architecture: waybill-fixture-arch\n\
              Status: install user installed\n",
         );
         // Create the actual file so the inode lookup succeeds.
-        let target = tmp.path().join("usr/bin/mikebom-fixture-binary");
+        let target = tmp.path().join("usr/bin/waybill-fixture-binary");
         std::fs::create_dir_all(target.parent().unwrap()).unwrap();
         std::fs::write(&target, "").unwrap();
         write_list(
             tmp.path(),
-            "mikebom-fixture-lib",
-            "/usr/bin/mikebom-fixture-binary\n/usr/share/doc/mikebom-fixture-lib/README\n",
+            "waybill-fixture-lib",
+            "/usr/bin/waybill-fixture-binary\n/usr/share/doc/waybill-fixture-lib/README\n",
         );
         let mut claimed = std::collections::HashSet::new();
         #[cfg(unix)]
@@ -484,9 +484,9 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         write_status(
             tmp.path(),
-            "Package: nativesdk-mikebom-fixture-tool\n\
+            "Package: nativesdk-waybill-fixture-tool\n\
              Version: 1.0\n\
-             Architecture: mikebom-fixture-arch\n\
+             Architecture: waybill-fixture-arch\n\
              Status: install user installed\n",
         );
         let (entries, ctx) = read(tmp.path());
@@ -500,7 +500,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         write_status(
             tmp.path(),
-            "Package: mikebom-fixture-tool\n\
+            "Package: waybill-fixture-tool\n\
              Version: 1.0\n\
              Architecture: x86_64\n\
              Status: install user installed\n",
@@ -515,9 +515,9 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         write_status(
             tmp.path(),
-            "Package: mikebom-fixture-lib\n\
+            "Package: waybill-fixture-lib\n\
              Version: 1.0\n\
-             Architecture: cortexa7t2hf-mikebom-fixture\n\
+             Architecture: cortexa7t2hf-waybill-fixture\n\
              Status: install user installed\n",
         );
         let (entries, _ctx) = read(tmp.path());
@@ -533,15 +533,15 @@ mod tests {
         let sysroot = parent.join("sysroot");
         std::fs::create_dir_all(&sysroot).unwrap();
         std::fs::write(
-            parent.join("environment-setup-mikebom-fixture-target"),
+            parent.join("environment-setup-waybill-fixture-target"),
             "",
         )
         .unwrap();
         write_status(
             &sysroot,
-            "Package: mikebom-fixture-lib\n\
+            "Package: waybill-fixture-lib\n\
              Version: 1.0\n\
-             Architecture: cortexa7t2hf-mikebom-fixture\n\
+             Architecture: cortexa7t2hf-waybill-fixture\n\
              Status: install user installed\n",
         );
         let (entries, ctx) = read(&sysroot);
@@ -556,8 +556,8 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         write_status(
             tmp.path(),
-            "Package: mikebom-fixture-noversion\n\
-             Architecture: mikebom-fixture-arch\n\
+            "Package: waybill-fixture-noversion\n\
+             Architecture: waybill-fixture-arch\n\
              Status: install user installed\n",
         );
         let (entries, _ctx) = read(tmp.path());
@@ -565,7 +565,7 @@ mod tests {
         assert_eq!(
             entries[0]
                 .extra_annotations
-                .get("mikebom:version-status")
+                .get("waybill:version-status")
                 .and_then(|v| v.as_str()),
             Some("missing"),
         );
@@ -576,9 +576,9 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         write_status(
             tmp.path(),
-            "Package: mikebom-fixture-lib\n\
+            "Package: waybill-fixture-lib\n\
              Version: 1.0\n\
-             Architecture: mikebom-fixture-arch\n\
+             Architecture: waybill-fixture-arch\n\
              Vendor-Extension: ignored\n\
              Installed-Time: 1234567890\n\
              Status: install user installed\n",
@@ -596,10 +596,10 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         write_status(
             tmp.path(),
-            "Package: mikebom-fixture-parent\n\
+            "Package: waybill-fixture-parent\n\
              Version: 1.0\n\
-             Architecture: mikebom-fixture-arch\n\
-             Depends: mikebom-fixture-child (>= 2.0), mikebom-fixture-other (= 3.0.1)\n\
+             Architecture: waybill-fixture-arch\n\
+             Depends: waybill-fixture-child (>= 2.0), waybill-fixture-other (= 3.0.1)\n\
              Status: install user installed\n",
         );
         let (entries, _ctx) = read(tmp.path());
@@ -607,8 +607,8 @@ mod tests {
         assert_eq!(
             entries[0].depends,
             vec![
-                "mikebom-fixture-child".to_string(),
-                "mikebom-fixture-other".to_string()
+                "waybill-fixture-child".to_string(),
+                "waybill-fixture-other".to_string()
             ]
         );
     }
@@ -622,9 +622,9 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         write_status(
             tmp.path(),
-            "Package: mikebom-fixture-lib\n\
+            "Package: waybill-fixture-lib\n\
              Version: 1.2.3\n\
-             Architecture: mikebom-fixture-arch\n\
+             Architecture: waybill-fixture-arch\n\
              Status: install user installed\n",
         );
         let (entries, _ctx) = read(tmp.path());
@@ -673,10 +673,10 @@ mod tests {
         for e in &entries {
             assert_eq!(
                 e.extra_annotations
-                    .get("mikebom:opkg-status-fallback")
+                    .get("waybill:opkg-status-fallback")
                     .and_then(|v| v.as_str()),
                 Some("true"),
-                "fallback emissions must carry mikebom:opkg-status-fallback annotation"
+                "fallback emissions must carry waybill:opkg-status-fallback annotation"
             );
             assert_eq!(
                 e.evidence_kind.as_deref(),
@@ -695,9 +695,9 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         write_status(
             tmp.path(),
-            "Package: mikebom-fixture-app\n\
+            "Package: waybill-fixture-app\n\
              Version: 1.0.0\n\
-             Architecture: mikebom-fixture-arch\n\
+             Architecture: waybill-fixture-arch\n\
              Depends: libmbedtls-12 | libssl3\n\
              Status: install user installed\n",
         );
@@ -711,7 +711,7 @@ mod tests {
         );
         let annotation = entries[0]
             .extra_annotations
-            .get("mikebom:dep-alternative-alternates")
+            .get("waybill:dep-alternative-alternates")
             .expect("alt-list annotation must be present");
         let obj = annotation.as_object().expect("annotation is JSON object");
         assert_eq!(
@@ -734,13 +734,13 @@ mod tests {
             Some(l) => format!(
                 "Package: m185-pkg\n\
                  Version: 1.0-r0\n\
-                 Architecture: mikebom-fixture-arch\n\
+                 Architecture: waybill-fixture-arch\n\
                  License: {l}\n\
                  Status: install user installed\n",
             ),
             None => "Package: m185-pkg\n\
                      Version: 1.0-r0\n\
-                     Architecture: mikebom-fixture-arch\n\
+                     Architecture: waybill-fixture-arch\n\
                      Status: install user installed\n"
                 .to_string(),
         };
@@ -784,7 +784,7 @@ mod tests {
         // pre-SPDX-list synonym). The pipeline wraps it as
         // LicenseRef-GPLv2 rather than substituting to GPL-2.0-only.
         // This is intentional — no synonym normalization dictionary
-        // in mikebom. Documented behavior; operators who want the
+        // in waybill. Documented behavior; operators who want the
         // canonical form should update the recipe LICENSE variable.
         let tmp = tempfile::tempdir().unwrap();
         let entry = m185_entry_for_license(tmp.path(), Some("GPLv2 & bzip2-1.0.4"));

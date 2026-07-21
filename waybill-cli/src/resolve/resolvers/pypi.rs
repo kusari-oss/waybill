@@ -5,7 +5,7 @@
 //! {name}-{version}.(tar.gz|whl|zip|tar.bz2)`.
 //!
 //! Extracted verbatim from the pre-refactor
-//! `mikebom-cli/src/resolve/url_resolver.rs::resolve_pypi` per FR-002.
+//! `waybill-cli/src/resolve/url_resolver.rs::resolve_pypi` per FR-002.
 
 use std::future::Future;
 use std::pin::Pin;

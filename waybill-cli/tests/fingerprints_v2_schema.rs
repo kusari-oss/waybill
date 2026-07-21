@@ -6,7 +6,7 @@
 //! Schema (the public contract for third-party corpus authors per FR-004).
 //!
 //! When fixture corpora are added under
-//! `mikebom-cli/tests/fixtures/fingerprints_v2/corpora/`, this test discovers
+//! `waybill-cli/tests/fixtures/fingerprints_v2/corpora/`, this test discovers
 //! them automatically and validates each.
 
 #![cfg_attr(test, allow(clippy::unwrap_used))]
@@ -56,7 +56,7 @@ fn schema_file_is_valid_json_schema() {
     );
     assert_eq!(
         schema.get("title").and_then(|s| s.as_str()),
-        Some("mikebom fingerprint corpus record (v2)")
+        Some("waybill fingerprint corpus record (v2)")
     );
 }
 

@@ -11,7 +11,7 @@ use anyhow::{anyhow, bail, Result};
 
 /// User-supplied platform parsed from `--image-platform <linux/ARCH[/VARIANT]>`.
 ///
-/// `os` is constrained to `"linux"` — mikebom's package-DB readers
+/// `os` is constrained to `"linux"` — waybill's package-DB readers
 /// (dpkg / apk / rpm) are linux-rootfs-shaped, so cross-OS image
 /// scans are rejected upfront with a clear error rather than
 /// producing an empty SBOM.
@@ -47,7 +47,7 @@ pub(super) fn parse_platform_string(s: &str) -> Result<ParsedPlatform> {
     if os != "linux" {
         bail!(
             "--image-platform `{trimmed}`: only `linux/<arch>` is supported. \
-             mikebom's package-database readers don't apply to non-Linux container \
+             waybill's package-database readers don't apply to non-Linux container \
              images, so cross-OS scans would yield empty SBOMs."
         );
     }

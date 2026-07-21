@@ -359,12 +359,12 @@ mod tests {
         let (tmp, sha) = setup_cache(&["openssl", "zlib"]);
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         let records = load_corpus_from_cache(&sha).unwrap();
         assert_eq!(records.len(), 2);
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 
@@ -374,7 +374,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         let sha = CorpusSha::from_hex(SAMPLE_SHA).unwrap();
         assert!(matches!(
@@ -382,7 +382,7 @@ mod tests {
             Err(LoaderError::CacheNotFound { .. })
         ));
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 
@@ -396,14 +396,14 @@ mod tests {
         std::fs::write(corpus_dir.join("index.json"), "{ not valid json").unwrap();
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         assert!(matches!(
             load_corpus_from_cache(&sha),
             Err(LoaderError::CacheCorrupt { .. })
         ));
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 
@@ -417,14 +417,14 @@ mod tests {
         write_index(&corpus_dir, &["openssl", "broken"]);
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         let records = load_corpus_from_cache(&sha).unwrap();
         // Only the valid record loaded; the broken one was skipped.
         assert_eq!(records.len(), 1);
         assert_eq!(records[0].library, "openssl");
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 
@@ -443,12 +443,12 @@ mod tests {
         .unwrap();
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         let records = load_corpus_from_cache(&sha).unwrap();
         assert_eq!(records.len(), 1);
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 
@@ -507,7 +507,7 @@ mod tests {
         let (tmp, sha) = setup_cache(&["openssl", "zlib"]); // v1-only cache
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         let records = load_v2_records_from_cache(&sha).unwrap();
         assert_eq!(
@@ -516,7 +516,7 @@ mod tests {
             "v2 loader MUST silently skip v1 records (milestone-108 backward compat)"
         );
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 
@@ -526,7 +526,7 @@ mod tests {
         let (tmp, sha) = setup_mixed_cache(&["openssl"], &["newlib", "anotherv2"]);
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         let v2_records = load_v2_records_from_cache(&sha).unwrap();
         assert_eq!(v2_records.len(), 2, "expected 2 v2 records; v1 entry skipped");
@@ -538,7 +538,7 @@ mod tests {
         assert_eq!(v1_records.len(), 1, "expected 1 v1 record alongside the 2 v2 ones");
         assert_eq!(v1_records[0].library, "openssl");
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 
@@ -559,7 +559,7 @@ mod tests {
         write_index(&corpus_dir, &["futurelib", "validlib"]);
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         let records = load_v2_records_from_cache(&sha).unwrap();
         assert_eq!(
@@ -569,7 +569,7 @@ mod tests {
         );
         assert_eq!(records[0].id, "validlib-1.0");
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 
@@ -591,7 +591,7 @@ mod tests {
         write_index(&corpus_dir, &["brokenlib", "good"]);
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         let records = load_v2_records_from_cache(&sha).unwrap();
         assert_eq!(
@@ -601,7 +601,7 @@ mod tests {
         );
         assert_eq!(records[0].id, "good-1.0");
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 
@@ -612,12 +612,12 @@ mod tests {
         let sha = CorpusSha::from_hex(SAMPLE_SHA).unwrap();
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         let err = load_v2_records_from_cache(&sha).unwrap_err();
         assert!(matches!(err, LoaderError::CacheNotFound { .. }));
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 
@@ -652,7 +652,7 @@ mod tests {
         let tmp = setup_per_source_cache(&source_id, &sha, &["libfoo", "libbar"]);
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         let records = load_v2_records_from_source_cache(&source_id, &sha).unwrap();
         assert_eq!(records.len(), 2);
@@ -660,7 +660,7 @@ mod tests {
         ids.sort();
         assert_eq!(ids, vec!["libbar-1.0".to_string(), "libfoo-1.0".to_string()]);
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 
@@ -670,14 +670,14 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         let source_id = CorpusSourceId::from_url("https://corpus.example/nope.tar.gz");
         let sha = CorpusSha::from_hex(SAMPLE_SHA).unwrap();
         let err = load_v2_records_from_source_cache(&source_id, &sha).unwrap_err();
         assert!(matches!(err, LoaderError::CacheNotFound { .. }));
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 
@@ -690,7 +690,7 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         // Flat layout for the milestone-108 default.
         let default_sha = CorpusSha::from_hex(SAMPLE_SHA).unwrap();
@@ -719,7 +719,7 @@ mod tests {
         assert_eq!(extra_recs.len(), 1);
         assert_eq!(extra_recs[0].id, "libxyz-1.0");
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 
@@ -732,7 +732,7 @@ mod tests {
         let (tmp, sha) = setup_mixed_cache(&["openssl", "zlib"], &["newlib"]);
         let path_str = tmp.path().to_string_lossy().into_owned();
         unsafe {
-            std::env::set_var("MIKEBOM_FINGERPRINTS_CACHE_DIR", &path_str);
+            std::env::set_var("WAYBILL_FINGERPRINTS_CACHE_DIR", &path_str);
         }
         // v1 path returns ONLY v1 records (the v2 entry is malformed-as-v1 +
         // skipped by the v1 loader's `FingerprintRecord` deserialize).
@@ -742,7 +742,7 @@ mod tests {
         let v2_records = load_v2_records_from_cache(&sha).unwrap();
         assert_eq!(v2_records.len(), 1);
         unsafe {
-            std::env::remove_var("MIKEBOM_FINGERPRINTS_CACHE_DIR");
+            std::env::remove_var("WAYBILL_FINGERPRINTS_CACHE_DIR");
         }
     }
 }

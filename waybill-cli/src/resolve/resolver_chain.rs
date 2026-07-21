@@ -65,7 +65,7 @@ pub const RESOLVER_REGISTRY: &[(&str, u32)] = &[
 /// (matching "cargo"); `cargo build` failed with error E0080 and
 /// the panic message identifying this file. Reverted; compile-time
 /// check confirmed active. A doctest-style compile-fail assertion
-/// isn't possible here because the mikebom-cli lib crate doesn't
+/// isn't possible here because the waybill-cli lib crate doesn't
 /// expose `resolve::resolver_chain` (Constitution Principle VI —
 /// resolvers stay crate-internal).
 pub const fn assert_registry_priorities_unique(reg: &[(&str, u32)]) {
@@ -78,7 +78,7 @@ pub const fn assert_registry_priorities_unique(reg: &[(&str, u32)]) {
                     "resolver priority collision — two resolvers declared \
                      matching priorities in RESOLVER_REGISTRY. Give each \
                      resolver a unique priority in \
-                     mikebom-cli/src/resolve/resolver_chain.rs (see the \
+                     waybill-cli/src/resolve/resolver_chain.rs (see the \
                      RESOLVER_REGISTRY const definition)."
                 );
             }

@@ -157,7 +157,7 @@ fn malformed_lockfile_falls_back_to_design_tier() {
     let provider = component_with_purl(&doc, "pkg:pub/provider@^6.1.0")
         .expect("bad project's design-tier provider MUST emit from pubspec.yaml fallback");
     assert_eq!(
-        property_value(provider, "mikebom:sbom-tier"),
+        property_value(provider, "waybill:sbom-tier"),
         Some("design"),
     );
 
@@ -221,7 +221,7 @@ fn missing_version_falls_back_to_unknown_placeholder() {
 #[test]
 fn sdk_pseudo_deps_emit_zero_zero_zero() {
     // FR-011: lockfile with `flutter` SDK pseudo-dep emits
-    // `pkg:pub/flutter@0.0.0` with `mikebom:source-type = pub-sdk`.
+    // `pkg:pub/flutter@0.0.0` with `waybill:source-type = pub-sdk`.
     let tmp = tempfile::tempdir().unwrap();
     std::fs::write(
         tmp.path().join("pubspec.yaml"),
@@ -243,7 +243,7 @@ fn sdk_pseudo_deps_emit_zero_zero_zero() {
     let (doc, _) = run_scan(tmp.path());
     let c = component_with_purl(&doc, "pkg:pub/flutter@0.0.0")
         .expect("SDK pseudo-dep must emit at @0.0.0");
-    assert_eq!(property_value(c, "mikebom:source-type"), Some("pub-sdk"));
+    assert_eq!(property_value(c, "waybill:source-type"), Some("pub-sdk"));
 }
 
 #[test]
@@ -279,7 +279,7 @@ fn direct_overridden_treated_as_runtime() {
     let http = component_with_purl(&doc, "pkg:pub/http@1.1.0")
         .expect("direct-overridden entry must still emit as a component");
     // Must NOT carry the development lifecycle indicator.
-    let lifecycle = property_value(http, "mikebom:lifecycle-scope");
+    let lifecycle = property_value(http, "waybill:lifecycle-scope");
     let cdx_scope = http.get("scope").and_then(|v| v.as_str());
     assert!(
         lifecycle != Some("development") && cdx_scope != Some("excluded"),

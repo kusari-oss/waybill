@@ -3,14 +3,14 @@
 //!
 //! Synthesizes a (target SBOM, source OpenVEX) pair where the target
 //! component is bound to source with `strength=weak` (NOT verified),
-//! then runs `mikebom sbom enrich --vex-overrides <vex.json>
+//! then runs `waybill sbom enrich --vex-overrides <vex.json>
 //! --vex-propagation-mode strict` and asserts:
 //!
 //! 1. The command exits non-zero per VR-006.
 //! 2. No `vulnerabilities[].affects[]` entry was written for the
 //!    refused (vuln, instance) pair.
 //! 3. A structured refusal-rationale annotation was added under the
-//!    SBOM's top-level `properties[]` array (`mikebom:vex-propagation-
+//!    SBOM's top-level `properties[]` array (`waybill:vex-propagation-
 //!    refusals`).
 
 #![cfg_attr(test, allow(clippy::unwrap_used))]
@@ -21,7 +21,7 @@ mod common;
 use common::bin;
 
 /// Build a CDX target SBOM with one component carrying a weak
-/// `mikebom:source-document-binding`.
+/// `waybill:source-document-binding`.
 fn weak_bound_target_sbom() -> serde_json::Value {
     // Weak: lockfile + manifest match, no VCS commit recorded.
     let binding_payload = serde_json::json!({
@@ -45,7 +45,7 @@ fn weak_bound_target_sbom() -> serde_json::Value {
             "purl": "pkg:golang/x@v1",
             "bom-ref": "x-bom-1",
             "properties": [{
-                "name": "mikebom:source-document-binding",
+                "name": "waybill:source-document-binding",
                 "value": binding_str,
             }],
         }],
@@ -135,7 +135,7 @@ fn strict_mode_refuses_propagation_on_weak_binding() {
     let props = result["properties"].as_array().unwrap();
     let refusal = props
         .iter()
-        .find(|p| p["name"] == "mikebom:vex-propagation-refusals")
+        .find(|p| p["name"] == "waybill:vex-propagation-refusals")
         .expect("refusal rationale property present");
     let value_str = refusal["value"].as_str().unwrap();
     assert!(value_str.contains("CVE-2026-9999"));
@@ -166,7 +166,7 @@ fn strict_mode_with_verified_binding_succeeds() {
             "purl": "pkg:golang/x@v1",
             "bom-ref": "x-bom-1",
             "properties": [{
-                "name": "mikebom:source-document-binding",
+                "name": "waybill:source-document-binding",
                 "value": binding_str,
             }],
         }],
@@ -214,5 +214,5 @@ fn strict_mode_with_verified_binding_succeeds() {
     assert_eq!(affects.len(), 1);
     assert_eq!(affects[0]["ref"], "x-bom-1");
     // Verified → no caveat sibling.
-    assert!(affects[0].get("mikebom:vex-binding-status").is_none());
+    assert!(affects[0].get("waybill:vex-binding-status").is_none());
 }

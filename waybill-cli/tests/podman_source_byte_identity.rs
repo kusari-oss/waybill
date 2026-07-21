@@ -1,7 +1,7 @@
 //! Milestone 206 (#440) — FR-005 byte-identity guardrail.
 //!
 //! Runs on every platform + every CI lane. Asserts that non-image
-//! scans (--path <dir>) don't emit the new C124 mikebom:image-source
+//! scans (--path <dir>) don't emit the new C124 waybill:image-source
 //! annotation. This is the FR-005 / SC-005 regression guard: adding
 //! m206's C124 to the emitters must NOT change output for pre-m206
 //! scan modes.
@@ -29,7 +29,7 @@ fn scan_path_to_cdx(path: &str) -> serde_json::Value {
             "--no-deep-hash",
         ])
         .output()
-        .expect("spawn mikebom");
+        .expect("spawn waybill");
     assert!(
         cmd.status.success(),
         "scan should succeed. stderr:\n{}",
@@ -45,7 +45,7 @@ fn has_image_source_property(cdx: &serde_json::Value) -> bool {
             arr.iter().any(|p| {
                 p.get("name")
                     .and_then(|n| n.as_str())
-                    .map(|s| s == "mikebom:image-source")
+                    .map(|s| s == "waybill:image-source")
                     .unwrap_or(false)
             })
         })
@@ -64,6 +64,6 @@ fn fr005_non_image_scan_omits_image_source_annotation() {
     let cdx = scan_path_to_cdx(fixture);
     assert!(
         !has_image_source_property(&cdx),
-        "FR-005 / SC-005: non-image scan MUST NOT emit mikebom:image-source. cdx: {cdx:#}"
+        "FR-005 / SC-005: non-image scan MUST NOT emit waybill:image-source. cdx: {cdx:#}"
     );
 }

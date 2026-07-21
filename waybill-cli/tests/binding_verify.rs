@@ -1,4 +1,4 @@
-//! Milestone 072 T018 — `mikebom sbom verify-binding` end-to-end test.
+//! Milestone 072 T018 — `waybill sbom verify-binding` end-to-end test.
 //!
 //! Two scenarios:
 //!
@@ -16,7 +16,7 @@ mod common;
 use common::bin;
 
 /// Build a CDX SBOM JSON byte string with one component carrying a
-/// `mikebom:source-document-binding` property.
+/// `waybill:source-document-binding` property.
 fn cdx_with_binding(purl: &str, asserted_hash: &str) -> String {
     let binding = serde_json::json!({
         "algo": "v1",
@@ -35,7 +35,7 @@ fn cdx_with_binding(purl: &str, asserted_hash: &str) -> String {
             "purl": purl,
             "bom-ref": format!("{}-bom", purl),
             "properties": [{
-                "name": "mikebom:source-document-binding",
+                "name": "waybill:source-document-binding",
                 "value": binding_str,
             }],
         }],

@@ -2,7 +2,7 @@
 //! `Relationship.kind` (milestone 010, T022 / T024).
 //!
 //! SPDX 2.3 models every edge in an SBOM's graph as an entry in
-//! `relationships[]` (spec §11). Mikebom's internal model carries:
+//! `relationships[]` (spec §11). Waybill's internal model carries:
 //!
 //!   * `Relationship { from: PURL, to: PURL, kind: RelationshipType }`
 //!     — the dependency-graph edges the CDX serializer consumes.
@@ -23,7 +23,7 @@ use crate::generate::ScanArtifacts;
 
 /// SPDX 2.3 relationship-type enum (spec §11.1).
 ///
-/// Mikebom emits a subset today; unused variants from the spec are
+/// Waybill emits a subset today; unused variants from the spec are
 /// added as new ecosystems or US2 annotations demand them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -38,7 +38,7 @@ pub enum SpdxRelationshipType {
     /// deps: "SPDXRef-A depends on SPDXRef-B as a provided
     /// dependency" (source consumer provides the target dep).
     /// Emitted reversed-direction per m228 convention: internal
-    /// `A DependsOn B` where B appears in A's `mikebom:peer-edge-
+    /// `A DependsOn B` where B appears in A's `waybill:peer-edge-
     /// targets` annotation → SPDX `B PROVIDED_DEPENDENCY_OF A`
     /// under `Spdx2RelationshipCompat::Full`. Under `Basic` mode,
     /// peer edges fall through to the existing catch-all Basic arm
@@ -118,7 +118,7 @@ pub struct SpdxRelationship {
 ///    favor of the basic SPDX 2.3 relationship vocabulary the
 ///    typical downstream consumer set (Trivy, Syft, and tooling
 ///    built on top of them) actually implements. Scope info lives
-///    on the target Package's `mikebom:lifecycle-scope` annotation
+///    on the target Package's `waybill:lifecycle-scope` annotation
 ///    (which is set in both modes — see C42 in
 ///    `docs/reference/sbom-format-mapping.md`).
 ///
@@ -176,7 +176,7 @@ pub fn build_relationships(
     }
 
     // Milestone 178 — pre-compute peer-edge lookup set from m147's
-    // `mikebom:peer-edge-targets` annotation on source components.
+    // `waybill:peer-edge-targets` annotation on source components.
     // Fail-open: missing annotation or unrecognized value shape
     // silently skips — the affected component's edges fall through
     // to the existing DependsOn treatment. O(N + P) construction
@@ -193,7 +193,7 @@ pub fn build_relationships(
         for c in artifacts.components {
             let Some(value) = c
                 .extra_annotations
-                .get("mikebom:peer-edge-targets")
+                .get("waybill:peer-edge-targets")
             else {
                 continue;
             };
@@ -247,7 +247,7 @@ pub fn build_relationships(
         // direction `DEPENDS_ON` edge, restricting emission to the
         // basic SPDX 2.3 relationship vocabulary downstream consumers
         // actually implement (Trivy, Syft, etc.). Scope info still
-        // rides on the target Package's `mikebom:lifecycle-scope`
+        // rides on the target Package's `waybill:lifecycle-scope`
         // annotation (emitted in both modes) so the dev/build/test
         // distinction is recoverable from the document regardless of
         // which compat mode is in effect.
@@ -521,7 +521,7 @@ mod tests {
         // Issue #228 — under Spdx2RelationshipCompat::Basic, internal
         // DevDependsOn / BuildDependsOn / TestDependsOn must all emit
         // as natural-direction DEPENDS_ON. Scope info lives on the
-        // target Package's `mikebom:lifecycle-scope` annotation, not
+        // target Package's `waybill:lifecycle-scope` annotation, not
         // on the edge.
         let a = mk_component("pkg:npm/a@1", "a", "1");
         let b = mk_component("pkg:npm/b@1", "b", "1");

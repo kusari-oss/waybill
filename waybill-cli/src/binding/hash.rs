@@ -15,7 +15,7 @@
 //! 4. Hex-encode lowercase via `data_encoding::HEXLOWER`.
 //! 5. Wrap in `BindingHash::from_hex(...)`.
 //!
-//! Determinism: this function is deterministic across mikebom alpha
+//! Determinism: this function is deterministic across waybill alpha
 //! versions for any byte-identical input triple. The pinned-vector
 //! tests (`pinned_vec_*`) lock the contract — a future canonical-JSON
 //! tweak that breaks them MUST bump the algo version (V1 → V2) per
@@ -170,7 +170,7 @@ mod tests {
     /// content (vcs = `deadbeef…`, lockfile + manifest = SHA-256 of
     /// well-known byte strings). This is the `verified`-strength
     /// happy path; downstream verifiers with the same input triple
-    /// MUST recompute the same hex, regardless of mikebom version.
+    /// MUST recompute the same hex, regardless of waybill version.
     /// Locked alongside docs/reference/binding-fixtures/cargo-verified
     /// + golang-verified — same canonical envelope, both ecosystems.
     #[test]

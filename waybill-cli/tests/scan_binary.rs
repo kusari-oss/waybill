@@ -1,7 +1,7 @@
 //! Milestone 004 US2 integration tests — generic-binary reader
 //! (ELF / Mach-O / PE) end-to-end.
 //!
-//! These tests invoke the compiled `mikebom` binary against real
+//! These tests invoke the compiled `waybill` binary against real
 //! system binaries (Mach-O on darwin; ELF if any are present). They
 //! SKIP cleanly on platforms where no suitable binary exists rather
 //! than false-failing.
@@ -30,10 +30,10 @@ fn scan(dir: &Path) -> Value {
         .arg(&out_file)
         .arg("--no-deep-hash")
         .output()
-        .expect("failed to invoke mikebom");
+        .expect("failed to invoke waybill");
     assert!(
         output.status.success(),
-        "mikebom sbom scan failed: stderr={}",
+        "waybill sbom scan failed: stderr={}",
         String::from_utf8_lossy(&output.stderr),
     );
     let json_bytes = std::fs::read(&out_file).expect("SBOM not written");
@@ -52,7 +52,7 @@ fn find_file_level(sbom: &Value) -> Option<&Value> {
     sbom["components"]
         .as_array()?
         .iter()
-        .find(|c| property_value(c, "mikebom:binary-class").is_some())
+        .find(|c| property_value(c, "waybill:binary-class").is_some())
 }
 
 fn find_system_binary() -> Option<PathBuf> {
@@ -91,19 +91,19 @@ fn scan_system_binary_emits_file_level_and_linkage() {
     // File-level binary component exists and is well-formed.
     let file_level =
         find_file_level(&sbom).expect("file-level binary component missing");
-    let class = property_value(file_level, "mikebom:binary-class").unwrap();
+    let class = property_value(file_level, "waybill:binary-class").unwrap();
     assert!(
         matches!(class.as_str(), "elf" | "macho" | "pe"),
         "binary-class must be one of elf/macho/pe, got {class}"
     );
     // Stripped bit is always emitted (true or false).
-    let stripped = property_value(file_level, "mikebom:binary-stripped");
+    let stripped = property_value(file_level, "waybill:binary-stripped");
     assert!(
         matches!(stripped.as_deref(), Some("true") | Some("false")),
         "binary-stripped must be 'true' or 'false', got {stripped:?}"
     );
     // Linkage kind is always emitted on a binary component.
-    let linkage = property_value(file_level, "mikebom:linkage-kind");
+    let linkage = property_value(file_level, "waybill:linkage-kind");
     assert!(
         matches!(
             linkage.as_deref(),
@@ -117,7 +117,7 @@ fn scan_system_binary_emits_file_level_and_linkage() {
     let linkage_components: Vec<&Value> = components
         .iter()
         .filter(|c| {
-            property_value(c, "mikebom:evidence-kind").as_deref()
+            property_value(c, "waybill:evidence-kind").as_deref()
                 == Some("dynamic-linkage")
         })
         .collect();
@@ -135,7 +135,7 @@ fn scan_system_binary_emits_file_level_and_linkage() {
             "linkage PURL must be pkg:generic/... got {purl}"
         );
         assert_eq!(
-            property_value(c, "mikebom:sbom-tier").as_deref(),
+            property_value(c, "waybill:sbom-tier").as_deref(),
             Some("analyzed")
         );
     }
@@ -143,32 +143,32 @@ fn scan_system_binary_emits_file_level_and_linkage() {
     // Milestone 023 — on Linux, /bin/ls is built with NT_GNU_BUILD_ID
     // by every modern distro (gcc/clang default; reproducible-builds
     // requirement). The bag-emission path should surface it as a
-    // CDX `mikebom:elf-build-id` property. Spec SC-002.
+    // CDX `waybill:elf-build-id` property. Spec SC-002.
     if class == "elf" {
-        let build_id = property_value(file_level, "mikebom:elf-build-id");
+        let build_id = property_value(file_level, "waybill:elf-build-id");
         assert!(
             build_id.as_deref().is_some_and(|s| !s.is_empty()
                 && s.chars().all(|c| c.is_ascii_hexdigit())),
-            "expected non-empty hex mikebom:elf-build-id on /bin/ls; got {build_id:?}"
+            "expected non-empty hex waybill:elf-build-id on /bin/ls; got {build_id:?}"
         );
     }
 
     // Milestone 024 — on macOS, /bin/ls is fat Mach-O with LC_UUID +
     // LC_BUILD_VERSION on every supported OS version; verify both
-    // surface as CDX `mikebom:macho-uuid` (32 hex chars) and
-    // `mikebom:macho-min-os` (`<platform>:<version>`). Spec SC-002.
+    // surface as CDX `waybill:macho-uuid` (32 hex chars) and
+    // `waybill:macho-min-os` (`<platform>:<version>`). Spec SC-002.
     if class == "macho" {
-        let uuid = property_value(file_level, "mikebom:macho-uuid");
+        let uuid = property_value(file_level, "waybill:macho-uuid");
         assert!(
             uuid.as_deref().is_some_and(|s| s.len() == 32
                 && s.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())),
-            "expected 32-lowercase-hex mikebom:macho-uuid on /bin/ls; got {uuid:?}"
+            "expected 32-lowercase-hex waybill:macho-uuid on /bin/ls; got {uuid:?}"
         );
-        let min_os = property_value(file_level, "mikebom:macho-min-os");
+        let min_os = property_value(file_level, "waybill:macho-min-os");
         assert!(
             min_os.as_deref().is_some_and(|s| s.contains(':')
                 && !s.starts_with(':') && !s.ends_with(':')),
-            "expected non-empty mikebom:macho-min-os of shape <platform>:<version> on /bin/ls; got {min_os:?}"
+            "expected non-empty waybill:macho-min-os of shape <platform>:<version> on /bin/ls; got {min_os:?}"
         );
 
         // Milestone 030 — codesign metadata. /bin/ls on macOS is
@@ -179,10 +179,10 @@ fn scan_system_binary_emits_file_level_and_linkage() {
         // hardened-runtime — that's a third-party-developer signal).
         // The team-id + flags + multi-flag decoder paths are covered
         // by the inline synthetic-fixture tests in macho.rs::tests.
-        let identifier = property_value(file_level, "mikebom:macho-codesign-identifier");
+        let identifier = property_value(file_level, "waybill:macho-codesign-identifier");
         assert!(
             identifier.as_deref().is_some_and(|s| s.starts_with("com.apple.")),
-            "expected mikebom:macho-codesign-identifier to start with `com.apple.` for /bin/ls; got {identifier:?}"
+            "expected waybill:macho-codesign-identifier to start with `com.apple.` for /bin/ls; got {identifier:?}"
         );
     }
 }
@@ -200,7 +200,7 @@ fn scan_non_binary_files_skipped() {
         .as_array()
         .unwrap()
         .iter()
-        .any(|c| property_value(c, "mikebom:binary-class").is_some());
+        .any(|c| property_value(c, "waybill:binary-class").is_some());
     assert!(
         !has_binary,
         "no binary components should be emitted for non-binary files"
@@ -619,16 +619,16 @@ fn python_stdlib_collapses_to_single_cpython_component() {
         "pkg:generic/cpython@3.11"
     );
     assert_eq!(
-        property_value(umbrellas[0], "mikebom:evidence-kind").as_deref(),
+        property_value(umbrellas[0], "waybill:evidence-kind").as_deref(),
         Some("python-stdlib-collapsed")
     );
     assert_eq!(
-        property_value(umbrellas[0], "mikebom:confidence").as_deref(),
+        property_value(umbrellas[0], "waybill:confidence").as_deref(),
         Some("heuristic")
     );
-    // mikebom:source-files property lists all source paths.
-    let sources = property_value(umbrellas[0], "mikebom:source-files")
-        .expect("mikebom:source-files must be set on collapsed umbrella");
+    // waybill:source-files property lists all source paths.
+    let sources = property_value(umbrellas[0], "waybill:source-files")
+        .expect("waybill:source-files must be set on collapsed umbrella");
     assert!(sources.contains("_bisect.cpython-311"));
     assert!(sources.contains("libpython3.11.so.1.0"));
     assert!(sources.contains("usr/local/bin/python3.11"));
@@ -756,10 +756,10 @@ fn python_collapse_catches_unversioned_symlink() {
         .collect();
     assert_eq!(umbrella.len(), 1, "expected exactly one cpython@3.11 umbrella");
 
-    // The `mikebom:source-files` property lists ALL three python paths
+    // The `waybill:source-files` property lists ALL three python paths
     // (including the unversioned symlinks — recorded as the walker saw them).
-    let sources = property_value(umbrella[0], "mikebom:source-files")
-        .expect("umbrella must carry mikebom:source-files");
+    let sources = property_value(umbrella[0], "waybill:source-files")
+        .expect("umbrella must carry waybill:source-files");
     assert!(sources.contains("python3.11"), "sources missing python3.11: {sources}");
     assert!(sources.contains("/python3"), "sources missing python3: {sources}");
     // The bare `python` symlink should also be listed.
@@ -933,7 +933,7 @@ fn linux_rootfs_skips_macho_host_system_leakage() {
     // Zero Mach-O file-level components (filtered by rootfs-kind check).
     let macho_count = components
         .iter()
-        .filter(|c| property_value(c, "mikebom:binary-class").as_deref() == Some("macho"))
+        .filter(|c| property_value(c, "waybill:binary-class").as_deref() == Some("macho"))
         .count();
     assert_eq!(
         macho_count, 0,
@@ -976,7 +976,7 @@ fn linkage_evidence_dedups_across_parent_binaries() {
     // Count file-level components — should be exactly 2 (one per bin).
     let file_levels: Vec<&Value> = components
         .iter()
-        .filter(|c| property_value(c, "mikebom:binary-class").is_some())
+        .filter(|c| property_value(c, "waybill:binary-class").is_some())
         .collect();
     assert_eq!(
         file_levels.len(),
@@ -989,7 +989,7 @@ fn linkage_evidence_dedups_across_parent_binaries() {
     let mut seen_purls = std::collections::HashSet::new();
     let mut dupe = None;
     for c in components.iter().filter(|c| {
-        property_value(c, "mikebom:evidence-kind").as_deref() == Some("dynamic-linkage")
+        property_value(c, "waybill:evidence-kind").as_deref() == Some("dynamic-linkage")
     }) {
         let purl = c["purl"].as_str().unwrap().to_string();
         if !seen_purls.insert(purl.clone()) {
@@ -1062,11 +1062,11 @@ fn jdk_collapses_debian_openjdk_tree() {
         "pkg:generic/openjdk@17"
     );
     assert_eq!(
-        property_value(umbrellas[0], "mikebom:evidence-kind").as_deref(),
+        property_value(umbrellas[0], "waybill:evidence-kind").as_deref(),
         Some("jdk-runtime-collapsed")
     );
-    let sources = property_value(umbrellas[0], "mikebom:source-files")
-        .expect("mikebom:source-files must be set");
+    let sources = property_value(umbrellas[0], "waybill:source-files")
+        .expect("waybill:source-files must be set");
     assert!(sources.contains("bin/java"));
     assert!(sources.contains("libjvm.so"));
 }
@@ -1188,7 +1188,7 @@ fn jdk_version_edge_cases() {
 // ----------------------------------------------------------------------
 
 /// T048 — every rpm component in an rpmdb-sourced scan must carry the
-/// `mikebom:raw-version` property. Uses the Rocky-9 rpmdb fixture when
+/// `waybill:raw-version` property. Uses the Rocky-9 rpmdb fixture when
 /// present (skips cleanly when absent, so CI without the sbom-
 /// conformance checkout still passes).
 #[test]
@@ -1228,10 +1228,10 @@ fn rpm_components_carry_raw_version_property() {
         .collect();
     assert!(!rpms.is_empty(), "expected at least one rpm component");
     for c in &rpms {
-        let has_raw = property_value(c, "mikebom:raw-version").is_some();
+        let has_raw = property_value(c, "waybill:raw-version").is_some();
         assert!(
             has_raw,
-            "rpm component missing mikebom:raw-version: purl={}",
+            "rpm component missing waybill:raw-version: purl={}",
             c["purl"].as_str().unwrap_or("")
         );
     }
@@ -1344,8 +1344,8 @@ fn missing_os_release_emits_diagnostic_metadata_property() {
         .expect("metadata.properties");
     let missing = props
         .iter()
-        .find(|p| p["name"].as_str() == Some("mikebom:os-release-missing-fields"))
-        .expect("expected mikebom:os-release-missing-fields property");
+        .find(|p| p["name"].as_str() == Some("waybill:os-release-missing-fields"))
+        .expect("expected waybill:os-release-missing-fields property");
     let value = missing["value"].as_str().expect("value is string");
     assert!(
         value.contains("ID") && value.contains("VERSION_ID"),
@@ -1358,7 +1358,7 @@ fn missing_os_release_emits_diagnostic_metadata_property() {
 // ----------------------------------------------------------------------
 
 /// T022 — `--path` scans must exclude the npm-internals tree entirely,
-/// so no component should carry `mikebom:npm-role`. The scoping
+/// so no component should carry `waybill:npm-role`. The scoping
 /// decision: when a caller scans a source tree, npm's own bundled deps
 /// are scanner tooling, not application deps.
 #[test]
@@ -1393,12 +1393,12 @@ fn path_scan_emits_no_npm_role_property() {
     let components = sbom["components"].as_array().expect("components");
     let offending: Vec<&str> = components
         .iter()
-        .filter(|c| property_value(c, "mikebom:npm-role").is_some())
+        .filter(|c| property_value(c, "waybill:npm-role").is_some())
         .map(|c| c["name"].as_str().unwrap_or(""))
         .collect();
     assert!(
         offending.is_empty(),
-        "--path scans must not emit mikebom:npm-role; got {offending:?}"
+        "--path scans must not emit waybill:npm-role; got {offending:?}"
     );
     // Sanity: the legitimate app dep must still be present.
     let names: Vec<&str> = components

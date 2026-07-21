@@ -440,7 +440,7 @@ mod tests {
         // `placeholder_text_matches_wire_contract` test simultaneously.
         assert!(
             PLACEHOLDER_EXTRACTED_TEXT
-                .starts_with("License text not extracted by mikebom."),
+                .starts_with("License text not extracted by waybill."),
             "placeholder wire contract (Clarifications Q1) must not drift; \
              milestone 153 + 154 share the same const via `pub(crate)`"
         );

@@ -7,7 +7,7 @@
 //! end-to-end OCI image scans aren't hermetic enough for an integration
 //! test). Asserts the resulting image-tier SBOM carries:
 //!
-//!   * Per-component `mikebom:source-document-binding` annotation on
+//!   * Per-component `waybill:source-document-binding` annotation on
 //!     components whose PURL appears in the source SBOM (FR-001).
 //!   * Document-level cross-document reference per format
 //!     (T010 / T012 / T014).
@@ -137,7 +137,7 @@ fn bind_to_source_with_path_scan_does_not_emit_bindings() {
             if let Some(props) = c.get("properties").and_then(|v| v.as_array()) {
                 for p in props {
                     if p.get("name").and_then(|v| v.as_str())
-                        == Some("mikebom:source-document-binding")
+                        == Some("waybill:source-document-binding")
                     {
                         found_binding_annotation = true;
                     }

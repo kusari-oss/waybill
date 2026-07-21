@@ -11,14 +11,14 @@ use super::harness::{AssertionFailure, EmittedSboms, FailureFormat};
 // Small helpers (JSON-Value walkers)
 // -----------------------------------------------------------------------
 
-/// Extract the mikebom:graph-completeness value from CDX
+/// Extract the waybill:graph-completeness value from CDX
 /// `.metadata.properties[]`.
 fn cdx_graph_completeness(cdx: &serde_json::Value) -> Option<String> {
     cdx.get("metadata")?
         .get("properties")?
         .as_array()?
         .iter()
-        .find(|p| p.get("name").and_then(|n| n.as_str()) == Some("mikebom:graph-completeness"))
+        .find(|p| p.get("name").and_then(|n| n.as_str()) == Some("waybill:graph-completeness"))
         .and_then(|p| p.get("value")?.as_str().map(str::to_string))
 }
 
@@ -73,7 +73,7 @@ fn cdx_has_edge(
 // -----------------------------------------------------------------------
 
 pub fn go_cobra_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
-    // The corpus harness invokes mikebom with `--root-name go-cobra
+    // The corpus harness invokes waybill with `--root-name go-cobra
     // --root-version <sha7>`, so the manifest-derived Go mainmod
     // (`pkg:golang/github.com/spf13/cobra`) is dropped per m077 and
     // replaced with the operator-override subject `go-cobra@<sha7>`.

@@ -5,7 +5,7 @@
 //! plus 0x0d leaf table pages for the `Packages` table. Index pages
 //! live in a separate B-tree rooted elsewhere in sqlite_schema.
 //!
-//! This decoder supports only the subset mikebom needs:
+//! This decoder supports only the subset waybill needs:
 //! - Leaf-table (0x0d): cell = [payload_len varint, rowid varint, payload bytes].
 //! - Interior-table (0x05): cell = [left_child u32, rowid varint] + right-most pointer.
 //!

@@ -243,9 +243,9 @@ pub fn build_http_client(
         // Default no proxy — we manage `$GOPROXY` chain ourselves.
         .no_proxy()
         .user_agent(concat!(
-            "mikebom/",
+            "waybill/",
             env!("CARGO_PKG_VERSION"),
-            " (https://github.com/Kusari-OSS/mikebom; +go-transitive-resolver)"
+            " (https://github.com/Kusari-OSS/waybill; +go-transitive-resolver)"
         ))
         .build()
 }
@@ -349,7 +349,7 @@ mod tests {
 
     // --- fetch_module_mod fallthrough (T014 — proxy chain semantics
     // without a real HTTP server). Wiremock-backed end-to-end fetch
-    // coverage lives in mikebom-cli/tests/go_transitive_edges.rs (T027).
+    // coverage lives in waybill-cli/tests/go_transitive_edges.rs (T027).
 
     #[test]
     fn fetch_returns_unavailable_for_off_chain() {

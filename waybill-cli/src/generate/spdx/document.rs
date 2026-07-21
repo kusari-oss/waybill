@@ -25,14 +25,14 @@ use crate::generate::ScanArtifacts;
 /// — a collision here would silently merge two unrelated SBOMs.
 const NAMESPACE_HASH_PREFIX_LEN: usize = 32;
 
-const NAMESPACE_BASE: &str = "https://mikebom.kusari.dev/spdx/";
+const NAMESPACE_BASE: &str = "https://waybill.kusari.dev/spdx/";
 
 /// SPDX 2.3 document namespace URI (research.md R8).
 ///
-/// Scheme: `https://mikebom.kusari.dev/spdx/<hash>` where `<hash>` is
+/// Scheme: `https://waybill.kusari.dev/spdx/<hash>` where `<hash>` is
 /// the base32-encoded SHA-256 of:
 ///   * the scan target description (`ScanArtifacts::target_name`),
-///   * the mikebom version string,
+///   * the waybill version string,
 ///   * the sorted set of component PURLs in the scan result.
 ///
 /// Storing the target name + version separately means a scan of the
@@ -77,8 +77,8 @@ impl SpdxDocumentNamespace {
 
 /// SPDX 2.3 annotation type enum (spec §8.6).
 ///
-/// Mikebom uses `OTHER` for its namespaced JSON-comment envelopes
-/// (FR-016 fallback for `mikebom:*` properties). `REVIEW` is reserved
+/// Waybill uses `OTHER` for its namespaced JSON-comment envelopes
+/// (FR-016 fallback for `waybill:*` properties). `REVIEW` is reserved
 /// for human-curated annotations and is not produced automatically.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "UPPERCASE")]
@@ -90,7 +90,7 @@ pub enum SpdxAnnotationType {
 
 /// One SPDX 2.3 annotation. The `comment` field carries the
 /// serialized `MikebomAnnotationCommentV1` JSON envelope for
-/// mikebom-specific data (US2). Empty in US1 — [`SpdxPackage`] and
+/// waybill-specific data (US2). Empty in US1 — [`SpdxPackage`] and
 /// [`SpdxDocument`] both default to an empty annotations list and
 /// the US2 phase populates them without touching the envelope shape.
 #[derive(Debug, Clone, serde::Serialize)]
@@ -125,16 +125,16 @@ pub struct CreationInfo {
     /// RFC 3339 UTC timestamp — sourced from `OutputConfig.created`,
     /// never `Utc::now()` (determinism contract, data-model §8).
     pub created: String,
-    /// `["Tool: mikebom-<version>"]` at minimum. Experimental
+    /// `["Tool: waybill-<version>"]` at minimum. Experimental
     /// formats append a label to the tool creator string so
     /// consumers reading the document can see it's a stub (FR-019b).
     pub creators: Vec<String>,
     #[serde(rename = "licenseListVersion", skip_serializing_if = "Option::is_none")]
     pub license_list_version: Option<String>,
-    /// SPDX 2.3 §6.13 free-text `comment` slot. mikebom populates it
+    /// SPDX 2.3 §6.13 free-text `comment` slot. waybill populates it
     /// with a document-level scope hint (scope mode + observed
     /// lifecycle phases + pointer to per-component
-    /// `mikebom:sbom-tier` annotations) so SPDX consumers reading
+    /// `waybill:sbom-tier` annotations) so SPDX consumers reading
     /// only `creationInfo` get parity with CDX consumers reading
     /// `metadata.lifecycles[]`. Milestone 047.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -198,7 +198,7 @@ pub struct SpdxDocument {
 /// addressed `LicenseRef-<16-char-base32-sha256-prefix>` (derived
 /// via `SpdxId::for_license_ref`); `extracted_text` is the raw
 /// CycloneDX entries joined by ` AND ` verbatim (lossless); `name`
-/// is the fixed literal `"mikebom-extracted-license"` (SPDX §10.4
+/// is the fixed literal `"waybill-extracted-license"` (SPDX §10.4
 /// requires `name` non-empty but the value is not consumer-
 /// significant).
 #[derive(Debug, Clone, serde::Serialize)]
@@ -216,11 +216,11 @@ pub struct SpdxExtractedLicensingInfo {
 ///
 /// Byte-locked per milestone-153 Clarifications Q1 wire contract:
 /// downstream consumers may pattern-match on this exact string to
-/// distinguish mikebom-placeholder entries from entries with real
+/// distinguish waybill-placeholder entries from entries with real
 /// extracted text (e.g., the milestone-012 hash-fallback path's raw
 /// preserved expression). Changing this string is a downstream break.
 ///
-/// The `<name>` token inside the string is a LITERAL — mikebom does NOT
+/// The `<name>` token inside the string is a LITERAL — waybill does NOT
 /// substitute the package name at emission time. Consumers read it as
 /// "look for /usr/share/licenses/<the-package-name-in-your-context>/".
 ///
@@ -229,7 +229,7 @@ pub struct SpdxExtractedLicensingInfo {
 /// ```text
 /// jq '.hasExtractedLicensingInfos[]
 ///     | select(.extractedText
-///              | startswith("License text not extracted by mikebom."))'
+///              | startswith("License text not extracted by waybill."))'
 /// ```
 // Milestone 154 (closes issue #487): promoted to `pub(crate)` so the
 // SPDX 3 emitter at `v3_licenses.rs::sweep_custom_licenses` can import
@@ -238,7 +238,7 @@ pub struct SpdxExtractedLicensingInfo {
 // field emits this same byte-string, guaranteeing consumers can
 // pattern-match on identical text across both SPDX formats.
 pub(crate) const PLACEHOLDER_EXTRACTED_TEXT: &str =
-    "License text not extracted by mikebom. Consult the original package \
+    "License text not extracted by waybill. Consult the original package \
      (e.g., /usr/share/licenses/<name>/ on Debian/RPM, or upstream project \
      source) for the full text.";
 
@@ -252,7 +252,7 @@ pub(crate) const PLACEHOLDER_EXTRACTED_TEXT: &str =
 /// - The non-capturing prefix `(?:^|[^:])` excludes matches inside
 ///   `DocumentRef-<doc>:LicenseRef-<id>` compound tokens per SPDX 2.3
 ///   §10.1 (the LicenseRef- is defined in the referenced OTHER document,
-///   not this one; mikebom does not emit DocumentRef- forms today but
+///   not this one; waybill does not emit DocumentRef- forms today but
 ///   defensive-code future-proofs the sweep against operator-supplied
 ///   data via supplement-CDX or similar).
 /// - The idstring grammar `[a-zA-Z0-9.-]` matches SPDX 2.3 §10.1 (the
@@ -291,7 +291,7 @@ fn license_ref_regex() -> &'static regex::Regex {
 /// `None` variants contribute nothing).
 ///
 /// **`licenseInfoFromFiles` is NOT swept**: `SpdxPackage` does not carry
-/// this field because mikebom emits `filesAnalyzed: false` uniformly
+/// this field because waybill emits `filesAnalyzed: false` uniformly
 /// (spec §7.9.4 makes `licenseInfoFromFiles` inapplicable when files
 /// aren't analyzed). If a future milestone starts emitting per-file
 /// license info, this sweep MUST be extended.
@@ -397,7 +397,7 @@ pub fn build_document(
     // the first `CreationInfo.creators` entry + `created` value so
     // a consumer can see that annotations were produced in the
     // same run as the document.
-    let annotator = format!("Tool: mikebom-{}", cfg.mikebom_version);
+    let annotator = format!("Tool: waybill-{}", cfg.mikebom_version);
     let date = cfg
         .created
         .to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
@@ -527,7 +527,7 @@ pub fn build_document(
 
     // Root selection: deterministic single-root algorithm.
     //   0. Milestone 053 FR-008 + US3: if exactly one top-level
-    //      component carries `mikebom:component-role: main-module`,
+    //      component carries `waybill:component-role: main-module`,
     //      use it as the document root (the Go workspace's main-
     //      module is the BOM subject by design). Multiple main-
     //      modules (go.work monorepo) → synthesize a super-root that
@@ -778,28 +778,28 @@ pub fn build_document(
         }
     }
 
-    // Two creator entries: a `Tool:` identifying mikebom (used
+    // Two creator entries: a `Tool:` identifying waybill (used
     // throughout the document as the `annotator` field on every
     // annotation we emit), plus an `Organization:` identifying the
-    // mikebom project as the SBOM's sbomqs-facing author.
+    // waybill project as the SBOM's sbomqs-facing author.
     // sbomqs's `sbom_authors` feature checks for a non-Tool creator
     // — giving it an Organization entry mirrors what CDX emits in
     // `metadata.supplier` + `metadata.authors` and closes the
     // cross-format sbomqs Provenance gap.
     //
     // Milestone 073 — per Q2 clarification, redundant
-    // `Tool: mikebom-<version> source: <full-identifier>` text lines
+    // `Tool: waybill-<version> source: <full-identifier>` text lines
     // are appended for each built-in identifier. This is the
     // free-form fallback for SPDX 2.3 consumers that don't decode
     // the typed `Package.externalRefs[PERSISTENT-ID]` rows on the
     // main-module Package. Order: auto-detected first, then manual
     // in supply order (per FR-009 / VR-008). Built-in identifiers
     // only — user-defined identifiers ride the document-level
-    // `mikebom:identifiers` annotation per Constitution
+    // `waybill:identifiers` annotation per Constitution
     // Principle V.
     let mut creators = vec![
         annotator.clone(),
-        "Organization: mikebom contributors".to_string(),
+        "Organization: waybill contributors".to_string(),
     ];
     for id in artifacts.identifiers {
         if id.is_builtin() {
@@ -835,7 +835,7 @@ pub fn build_document(
         }),
     };
 
-    // Document-level mikebom annotations (Sections C21–C23 + E1).
+    // Document-level waybill annotations (Sections C21–C23 + E1).
     let mut annotations =
         super::annotations::annotate_document(&annotator, &date, artifacts, &m158_graph_completeness);
     // Milestone 080 — append user-supplied `--annotator` /
@@ -888,7 +888,7 @@ pub fn build_document(
 /// the observed CDX-style lifecycle phases (sorted
 /// lexicographically via the `lifecycle_phases::aggregate_phases`
 /// helper), and a pointer to the per-component
-/// `mikebom:sbom-tier` annotation for finer-grained scope detail.
+/// `waybill:sbom-tier` annotation for finer-grained scope detail.
 ///
 /// Always returns a string. When no component carries a tier
 /// (atypical), the phases-list line degrades to "no lifecycle
@@ -916,7 +916,7 @@ pub(super) fn build_scope_comment(scan: &ScanArtifacts<'_>) -> String {
     };
     format!(
         "Scope: {mode}. Observed lifecycle phases: {phases_text}. \
-         Per-component scope detail in mikebom:sbom-tier annotations."
+         Per-component scope detail in waybill:sbom-tier annotations."
     )
 }
 
@@ -932,7 +932,7 @@ fn synthesize_root(
     };
 
     // Stable SPDXID for the synthetic root: hash the namespace URI
-    // (already scan-derived + mikebom-version-stamped) plus a fixed
+    // (already scan-derived + waybill-version-stamped) plus a fixed
     // salt so it cannot collide with a PURL-derived package ID.
     let mut hasher = Sha256::new();
     hasher.update(b"synthetic-root\n");
@@ -943,7 +943,7 @@ fn synthesize_root(
 
     // Synthesize identity externalRefs for the synthetic root so
     // sbomqs's Vulnerability/comp_with_purl + comp_with_cpe features
-    // don't ding every mikebom SPDX document for "one component is
+    // don't ding every waybill SPDX document for "one component is
     // missing PURL/CPE" (the synthetic root is the one component).
     // The PURL uses `pkg:generic/<target>@0.0.0` — the same shape
     // CDX uses for the scan-subject metadata.component. The CPE
@@ -967,14 +967,14 @@ fn synthesize_root(
     let synth_purl = format!("pkg:generic/{purl_name}@{version}");
     let cpe_name = sanitize_for_coord(target_name);
     let synth_cpe =
-        format!("cpe:2.3:a:mikebom:{cpe_name}:{version}:*:*:*:*:*:*:*");
+        format!("cpe:2.3:a:waybill:{cpe_name}:{version}:*:*:*:*:*:*:*");
 
     let root = SpdxPackage {
         spdx_id: id.clone(),
         name: target_name.to_string(),
         version_info: version.to_string(),
         download_location: "NOASSERTION".to_string(),
-        supplier: Some("Organization: mikebom contributors".to_string()),
+        supplier: Some("Organization: waybill contributors".to_string()),
         originator: None,
         files_analyzed: false,
         checksums: Vec::new(),
@@ -1047,7 +1047,7 @@ fn synthesize_root_with_override(
     let cpe_name = sanitize_for_coord(name);
     let cpe_version = sanitize_for_coord(version);
     let synth_cpe =
-        format!("cpe:2.3:a:mikebom:{cpe_name}:{cpe_version}:*:*:*:*:*:*:*");
+        format!("cpe:2.3:a:waybill:{cpe_name}:{cpe_version}:*:*:*:*:*:*:*");
 
     let mut external_refs: Vec<SpdxExternalRef> = Vec::with_capacity(2);
     if let Some(synth_purl) = purl_opt {
@@ -1070,7 +1070,7 @@ fn synthesize_root_with_override(
         name: name.to_string(),
         version_info: version.to_string(),
         download_location: "NOASSERTION".to_string(),
-        supplier: Some("Organization: mikebom contributors".to_string()),
+        supplier: Some("Organization: waybill contributors".to_string()),
         originator: None,
         files_analyzed: false,
         checksums: Vec::new(),
@@ -1321,7 +1321,7 @@ mod tests {
             "expected sorted phase list; got: {comment}"
         );
         assert!(
-            comment.contains("mikebom:sbom-tier"),
+            comment.contains("waybill:sbom-tier"),
             "expected pointer to per-component annotation; got: {comment}"
         );
     }
@@ -1452,13 +1452,13 @@ mod tests {
     }
 
     /// Build a main-module-tagged ResolvedComponent (carries the
-    /// `mikebom:component-role = "main-module"` annotation that the
+    /// `waybill:component-role = "main-module"` annotation that the
     /// emitter drops under `--root-name`). Used by the alpha.35
     /// fallback-gating regression tests below.
     fn mk_main_module(purl: &str, name: &str, version: &str) -> ResolvedComponent {
         let mut c = mk_component(purl, name, version);
         c.extra_annotations.insert(
-            "mikebom:component-role".to_string(),
+            "waybill:component-role".to_string(),
             serde_json::Value::String("main-module".to_string()),
         );
         c
@@ -1768,7 +1768,7 @@ mod tests {
     fn sweep_licenseref_variant_dedups_with_milestone_012() {
         // T012 (repurposed from `sweep_covers_licenseInfoFromFiles_field`
         // per implementation discovery: SpdxPackage does not carry
-        // licenseInfoFromFiles because mikebom emits filesAnalyzed:
+        // licenseInfoFromFiles because waybill emits filesAnalyzed:
         // false uniformly). This test instead covers the milestone-012
         // hash-fallback SpdxLicenseField::LicenseRef(...) variant: a
         // wholly-non-canonicalizable expression stored as a
@@ -1783,7 +1783,7 @@ mod tests {
         let existing = vec![SpdxExtractedLicensingInfo {
             license_id: "LicenseRef-hash-fallback-abc123".to_string(),
             extracted_text: "REAL EXTRACTED TEXT FROM M012".to_string(),
-            name: "mikebom-extracted-license".to_string(),
+            name: "waybill-extracted-license".to_string(),
         }];
         let entries = sweep_extracted_license_refs(&[pkg], existing);
         assert_eq!(entries.len(), 1, "must not duplicate the m012 entry");
@@ -1818,7 +1818,7 @@ mod tests {
     #[test]
     fn sweep_ignores_document_ref_prefixed() {
         // Edge Case per spec: `DocumentRef-<doc>:LicenseRef-<id>` compound
-        // refers to a LicenseRef defined in ANOTHER document. mikebom's
+        // refers to a LicenseRef defined in ANOTHER document. waybill's
         // sweep MUST NOT emit an entry for it (that would be technically
         // incorrect — the entry belongs in the OTHER document).
         let pkg = mk_pkg_with_declared("MIT AND DocumentRef-external:LicenseRef-foo");
@@ -1867,7 +1867,7 @@ mod tests {
         // trips this test. Downstream consumers may pattern-match on
         // this exact string (see the const's doc comment for a jq
         // recipe).
-        let expected = "License text not extracted by mikebom. Consult the \
+        let expected = "License text not extracted by waybill. Consult the \
              original package (e.g., /usr/share/licenses/<name>/ on \
              Debian/RPM, or upstream project source) for the full text.";
         assert_eq!(PLACEHOLDER_EXTRACTED_TEXT, expected);

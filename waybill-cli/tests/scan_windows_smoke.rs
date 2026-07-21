@@ -1,5 +1,5 @@
 //! Milestone 101: Windows-host integration smoke test. Validates that
-//! the locally-built `mikebom.exe` (a) exits 0 against two cross-
+//! the locally-built `waybill.exe` (a) exits 0 against two cross-
 //! platform fixtures, (b) emits well-formed CycloneDX 1.6 JSON,
 //! (c) emits >= 1 component per expected ecosystem, (d) forward-slash-
 //! normalizes path-shaped fields per milestone 100 Contract 3, and
@@ -33,12 +33,12 @@ const TIMEOUT_DETECTION_THRESHOLD_SECS: u64 = 58;
 /// false-positive on CPE 2.3 escape sequences (the iteration-6
 /// lesson from milestone 100).
 const PATH_FIELD_NAMES: &[&str] = &[
-    "mikebom:source-files",
-    "mikebom:source-path",
+    "waybill:source-files",
+    "waybill:source-path",
     "location",
 ];
 
-/// Run mikebom.exe sbom scan with a hard 60-second timeout. Returns
+/// Run waybill.exe sbom scan with a hard 60-second timeout. Returns
 /// (exit_status, elapsed). On timeout, kills the subprocess and
 /// panics with a clear hang-regression message.
 fn run_scan_with_timeout(
@@ -58,7 +58,7 @@ fn run_scan_with_timeout(
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
         .spawn()
-        .expect("spawn mikebom.exe");
+        .expect("spawn waybill.exe");
 
     let child_id = child.id();
     let timeout_handle = std::thread::spawn(move || {
@@ -73,13 +73,13 @@ fn run_scan_with_timeout(
     });
 
     let start = Instant::now();
-    let status = child.wait().expect("wait mikebom.exe");
+    let status = child.wait().expect("wait waybill.exe");
     let elapsed = start.elapsed();
     let _ = timeout_handle.join();
 
     if elapsed > Duration::from_secs(TIMEOUT_DETECTION_THRESHOLD_SECS) {
         panic!(
-            "mikebom.exe sbom scan timed out — likely hang regression \
+            "waybill.exe sbom scan timed out — likely hang regression \
              (elapsed: {elapsed:?}, fixture: {})",
             input_path.display()
         );
@@ -97,7 +97,7 @@ fn walk_for_backslash_in_path_fields(val: &serde_json::Value) -> Vec<(String, St
         match val {
             serde_json::Value::Object(map) => {
                 // CDX `properties[]` shape:
-                //   { "name": "mikebom:source-files", "value": "..." }
+                //   { "name": "waybill:source-files", "value": "..." }
                 if let (Some(name_str), Some(value)) =
                     (map.get("name").and_then(|n| n.as_str()), map.get("value"))
                 {
@@ -145,7 +145,7 @@ fn diagnose_and_panic(
     msg: String,
 ) -> ! {
     let tmp = std::env::temp_dir().join(format!(
-        "mikebom-smoke-{label}-{}.cdx.json",
+        "waybill-smoke-{label}-{}.cdx.json",
         std::process::id()
     ));
     let _ = std::fs::write(&tmp, raw);
@@ -167,7 +167,7 @@ fn diagnose_and_panic(
 }
 
 fn run_smoke_case(label: &str, fixture_subpath: &str, expected_purl_prefixes: &[&str]) {
-    let fixtures_root = PathBuf::from(env!("MIKEBOM_FIXTURES_DIR"));
+    let fixtures_root = PathBuf::from(env!("WAYBILL_FIXTURES_DIR"));
     let input = fixtures_root.join(fixture_subpath);
     let tmp = tempfile::tempdir().expect("tempdir");
     let output = tmp.path().join("out.cdx.json");
@@ -176,7 +176,7 @@ fn run_smoke_case(label: &str, fixture_subpath: &str, expected_purl_prefixes: &[
     eprintln!("[smoke:{label}] scan completed in {elapsed:?}");
     assert!(
         status.success(),
-        "smoke [{label}]: mikebom.exe exited non-zero ({status:?})"
+        "smoke [{label}]: waybill.exe exited non-zero ({status:?})"
     );
 
     let raw = std::fs::read_to_string(&output).expect("read emitted SBOM");

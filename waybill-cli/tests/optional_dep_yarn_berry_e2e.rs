@@ -75,10 +75,10 @@ fn t017_yarn_berry_optional_full_mode_end_to_end() {
         "Berry-classified Optional MUST emit CDX scope: \"excluded\""
     );
     assert_eq!(
-        find_property(optional_lib, "mikebom:optional-derivation")
+        find_property(optional_lib, "waybill:optional-derivation")
             .and_then(|v| v.as_str()),
         Some("npm-optional-dependencies"),
-        "Berry-classified Optional MUST carry mikebom:optional-derivation"
+        "Berry-classified Optional MUST carry waybill:optional-derivation"
     );
 
     // Regression guard: runtime-util (regular runtime dep) stays Runtime.

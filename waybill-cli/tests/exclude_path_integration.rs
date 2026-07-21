@@ -1,5 +1,5 @@
 //! Milestone 113 integration tests — user-supplied directory
-//! exclusion for `mikebom scan`.
+//! exclusion for `waybill scan`.
 //!
 //! Coverage:
 //!
@@ -16,19 +16,19 @@
 //!   nested fixture.
 //! - `transparency_annotation_emitted_when_set_non_empty` (T024a /
 //!   FR-014 / SC-007): scanning with `--exclude-path tests/fixtures`
-//!   makes the emitted SBOM carry the `mikebom:exclude-path`
+//!   makes the emitted SBOM carry the `waybill:exclude-path`
 //!   envelope annotation in CDX; scanning without any exclusion
 //!   does NOT emit the annotation.
 //! - `no_flag_scan_is_byte_identical_to_baseline` (T024 / FR-003 /
 //!   SC-002): two back-to-back scans of the same fixture (one with
-//!   `--exclude-path` absent, one with `MIKEBOM_EXCLUDE_PATH=""`)
+//!   `--exclude-path` absent, one with `WAYBILL_EXCLUDE_PATH=""`)
 //!   produce byte-identical CDX output modulo the random
 //!   `serialNumber` field. Exercises the empty-set no-op path.
 //! - `malformed_pattern_exits_nonzero_before_scan` (T024 / FR-007
 //!   / SC-005): supplying `--exclude-path '['` (unmatched bracket)
-//!   causes mikebom to exit non-zero before any walker begins.
+//!   causes waybill to exit non-zero before any walker begins.
 //!
-//! Tests use the `mikebom` binary via `env!("CARGO_BIN_EXE_mikebom")`,
+//! Tests use the `waybill` binary via `env!("CARGO_BIN_EXE_mikebom")`,
 //! the standard cargo-supported way to invoke the integration-test
 //! target without rebuilding. Each test creates its fixture tree
 //! under `tempfile::tempdir()` for isolation.
@@ -50,12 +50,12 @@ fn write_cargo_project(root: &std::path::Path, name: &str, version: &str) {
     );
     std::fs::write(root.join("Cargo.toml"), manifest).unwrap();
     // A bare `src/lib.rs` so the crate is structurally complete; this
-    // doesn't affect mikebom's scan but keeps the fixture realistic.
+    // doesn't affect waybill's scan but keeps the fixture realistic.
     std::fs::create_dir_all(root.join("src")).unwrap();
     std::fs::write(root.join("src/lib.rs"), "").unwrap();
 }
 
-/// Run `mikebom sbom scan --path <dir>` with deterministic env, the
+/// Run `waybill sbom scan --path <dir>` with deterministic env, the
 /// supplied --exclude-path entries, and `--format cdx`. Returns the
 /// parsed CDX value and the process status.
 fn run_scan(
@@ -75,31 +75,31 @@ fn run_scan(
         .arg(root.join("out.cdx.json"))
         // Determinism levers — same env vars used by milestone-112's
         // byte-identity tests.
-        .env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
+        .env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
         .env("RUST_LOG", "warn")
         // Clear inherited values so the test environment is hermetic.
-        .env_remove("MIKEBOM_EXCLUDE_PATH")
-        .env_remove("MIKEBOM_NO_GO_MOD_WHY");
+        .env_remove("WAYBILL_EXCLUDE_PATH")
+        .env_remove("WAYBILL_NO_GO_MOD_WHY");
     for entry in exclude_paths {
         cmd.arg("--exclude-path").arg(entry);
     }
-    let output = cmd.output().expect("failed to invoke mikebom binary");
+    let output = cmd.output().expect("failed to invoke waybill binary");
     if !output.status.success() {
         eprintln!(
-            "mikebom exited non-zero:\nstdout: {}\nstderr: {}",
+            "waybill exited non-zero:\nstdout: {}\nstderr: {}",
             String::from_utf8_lossy(&output.stdout),
             String::from_utf8_lossy(&output.stderr),
         );
     }
     let cdx_text = std::fs::read_to_string(root.join("out.cdx.json"))
-        .expect("mikebom should have written out.cdx.json");
+        .expect("waybill should have written out.cdx.json");
     let cdx: serde_json::Value =
         serde_json::from_str(&cdx_text).expect("CDX output must parse as JSON");
     (cdx, output)
 }
 
 /// Gather every component name in the SBOM — both `metadata.component`
-/// (the scan subject; mikebom promotes the dominant project here when
+/// (the scan subject; waybill promotes the dominant project here when
 /// only one survives the scan) AND every entry in `components[]`. Tests
 /// need both because a fixture that's excluded may have been the
 /// metadata.component in the unfiltered scan and become absent in the
@@ -166,7 +166,7 @@ fn cargo_fixture_suppressed_under_tests_fixtures() {
 
     // With exclusion: the fixture vanishes.
     let (cdx, status) = run_scan(root, &["tests/fixtures"]);
-    assert!(status.status.success(), "mikebom exited non-zero");
+    assert!(status.status.success(), "waybill exited non-zero");
     let names = component_names(&cdx);
     assert!(
         names.iter().any(|n| n == "real-app"),
@@ -226,7 +226,7 @@ fn transparency_annotation_emitted_when_set_non_empty() {
     // operator-typed entry.
     let (cdx, status) = run_scan(root, &["tests/fixtures"]);
     assert!(status.status.success());
-    let value = envelope_property(&cdx, "mikebom:exclude-path");
+    let value = envelope_property(&cdx, "waybill:exclude-path");
     assert_eq!(
         value.as_deref(),
         Some("tests/fixtures"),
@@ -235,7 +235,7 @@ fn transparency_annotation_emitted_when_set_non_empty() {
 
     // Without exclusion: annotation is absent.
     let (cdx_clean, _) = run_scan(root, &[]);
-    let value = envelope_property(&cdx_clean, "mikebom:exclude-path");
+    let value = envelope_property(&cdx_clean, "waybill:exclude-path");
     assert_eq!(
         value, None,
         "exclude-path annotation must be absent when no exclusions in effect",
@@ -276,8 +276,8 @@ fn no_flag_scan_is_byte_identical_to_baseline() {
     );
     // The exclude-path annotation must be absent from both.
     assert!(
-        envelope_property(&a, "mikebom:exclude-path").is_none(),
-        "no-flag scan must not emit mikebom:exclude-path annotation",
+        envelope_property(&a, "waybill:exclude-path").is_none(),
+        "no-flag scan must not emit waybill:exclude-path annotation",
     );
 }
 
@@ -300,16 +300,16 @@ fn malformed_pattern_exits_nonzero_before_scan() {
         .arg(root.join("out.cdx.json"))
         .arg("--exclude-path")
         .arg("foo[")
-        .env("MIKEBOM_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
+        .env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z")
         .env("RUST_LOG", "warn")
-        .env_remove("MIKEBOM_EXCLUDE_PATH")
-        .env_remove("MIKEBOM_NO_GO_MOD_WHY")
+        .env_remove("WAYBILL_EXCLUDE_PATH")
+        .env_remove("WAYBILL_NO_GO_MOD_WHY")
         .output()
-        .expect("failed to invoke mikebom");
+        .expect("failed to invoke waybill");
 
     assert!(
         !output.status.success(),
-        "mikebom must exit non-zero on malformed --exclude-path entry; stdout: {}; stderr: {}",
+        "waybill must exit non-zero on malformed --exclude-path entry; stdout: {}; stderr: {}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr),
     );
@@ -522,7 +522,7 @@ fn dependency_edges_referencing_suppressed_components_dropped() {
 }
 
 /// T004 / FR-004 — when the operator excludes the scan root itself, the
-/// SBOM contains only metadata.component (mikebom's self-description) and
+/// SBOM contains only metadata.component (waybill's self-description) and
 /// no other components.
 #[test]
 fn scan_root_excluded_yields_only_metadata_component() {
@@ -586,7 +586,7 @@ fn multiple_pattern_entries_combine_by_union() {
     );
 
     // FR-005 transparency: the envelope annotation lists BOTH pattern entries.
-    let annotation = envelope_property(&cdx, "mikebom:exclude-path")
+    let annotation = envelope_property(&cdx, "waybill:exclude-path")
         .expect("envelope annotation must be present when set is non-empty");
     assert!(
         annotation.contains("**/testdata") && annotation.contains("**/_archive"),

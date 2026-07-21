@@ -70,7 +70,7 @@ pub(crate) struct MatchResult {
     pub confidence: FusedConfidence,
     /// Numeric fused-confidence value (the source-of-truth from which
     /// the bucket was derived). Used by Slice B's annotation emission to
-    /// populate `mikebom:fingerprint-confidence` losslessly.
+    /// populate `waybill:fingerprint-confidence` losslessly.
     pub confidence_score: Confidence,
     /// Which indicators actually matched, for SBOM-emission annotations.
     pub indicators_matched: Vec<IndicatorKind>,

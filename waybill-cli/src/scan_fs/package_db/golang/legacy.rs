@@ -354,7 +354,7 @@ fn parse_module_version_pair(rest: &str) -> Option<(String, String)> {
 /// resolves the version via the matching `require` entry that
 /// `go mod tidy` adds). Returns the **module path** prefix of the
 /// package path so the result can be cross-referenced against the
-/// module-keyed components mikebom emits — e.g.
+/// module-keyed components waybill emits — e.g.
 /// `github.com/foo/bar/cmd/baz` → `github.com/foo/bar`. We can't know
 /// the module-boundary split without consulting `go.mod` of the target
 /// (the path could be a 2-segment domain + N segments of repo +
@@ -406,7 +406,7 @@ fn is_vn_sibling_of(candidate: &str, base: &str) -> bool {
 }
 
 /// Map a Go 1.24+ `tool` directive package path to the module path that
-/// contains it. Module paths emitted by mikebom are e.g.
+/// contains it. Module paths emitted by waybill are e.g.
 /// `github.com/golangci/golangci-lint`; tool paths in `go.mod` are e.g.
 /// `github.com/golangci/golangci-lint/cmd/golangci-lint`. The tool path
 /// is always a (possibly equal) descendant of the module path, so the
@@ -722,7 +722,7 @@ where
         // accepts any SHA-256. sbomqs's `comp_with_strong_checksums`
         // scorer counts it; humans who care about the specific
         // semantic (tarball vs dirhash) see the disambiguating tier
-        // marker (`mikebom:sbom-tier = source`).
+        // marker (`waybill:sbom-tier = source`).
         let hashes = h1_to_content_hash(&entry.hash).into_iter().collect();
         // Milestone 091: components reached only via step 5 (the
         // go.sum flat fallback) carry a per-component provenance
@@ -732,7 +732,7 @@ where
             Default::default();
         if gosum_fallback_paths.contains(&resolved_path) {
             extra_annotations.insert(
-                "mikebom:resolver-step".to_string(),
+                "waybill:resolver-step".to_string(),
                 serde_json::Value::String("go-sum-fallback".to_string()),
             );
         }
@@ -989,7 +989,7 @@ fn extract_spdx_header(text: &str) -> Option<&str> {
 ///   root-selection (case 1 / case 3 of `build_document::root_id`).
 /// - `sbom_tier: Some("source")` — go.mod is the authoritative source
 ///   of direct requires (FR-006).
-/// - `extra_annotations`: `mikebom:component-role: "main-module"`
+/// - `extra_annotations`: `waybill:component-role: "main-module"`
 ///   per FR-004 (catalog row C40 supplementary signal layered on top
 ///   of the native-field placement that `metadata.rs` /
 ///   `packages.rs` will read).
@@ -1043,7 +1043,7 @@ pub(crate) fn build_main_module_entry(
     let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
         Default::default();
     extra_annotations.insert(
-        "mikebom:component-role".to_string(),
+        "waybill:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
 
@@ -1390,7 +1390,7 @@ pub struct GoScanSignals {
     /// this scan (no Go components exist; signal not applicable).
     /// `Some(Complete)` ⇒ every `pkg:golang/...` component has at
     /// least one incoming `dependsOn`. `Some(Partial)` ⇒ one or more
-    /// orphans (the per-component `mikebom:orphan-reason` annotations
+    /// orphans (the per-component `waybill:orphan-reason` annotations
     /// name the why; the doc-level reason summary lives in
     /// `graph_completeness_reasons`).
     pub graph_completeness:
@@ -1417,8 +1417,8 @@ pub struct GoScanSignals {
     /// were discovered). `Some(_)` when the warmer ran OR the mode
     /// was `Off` / `OfflineInhibited` on a Go-containing scan (still
     /// carries the mode value for C118 emission). Feeds the C118
-    /// (`mikebom:go-cache-warming-mode`) + C119
-    /// (`mikebom:go-cache-warming-failed`) doc-scope annotations.
+    /// (`waybill:go-cache-warming-mode`) + C119
+    /// (`waybill:go-cache-warming-failed`) doc-scope annotations.
     pub cache_warming: Option<
         crate::scan_fs::package_db::golang::warm_cache::CacheWarmingResult,
     >,
@@ -1442,7 +1442,7 @@ pub struct GoScanSignals {
     ///   edges AND the issue-#251 backfill didn't pick it up either
     ///   (rare; only when the per-workspace backfill pass was skipped).
     /// * `flat-attached-fallback` (issue #251) — component had zero
-    ///   incoming edges from non-main entries; mikebom flat-attached
+    ///   incoming edges from non-main entries; waybill flat-attached
     ///   it to main-module's `depends` to restore reachability. The
     ///   incoming edge from main is a synthesized fallback, not a
     ///   real direct require declared in go.mod.
@@ -1483,8 +1483,8 @@ fn join_reasons(a: &str, b: &str) -> String {
 /// Milestone 160 (T022 + T023): stamp per-Go-component transitive-edge
 /// provenance annotations onto a `PackageDbEntry` from the graph
 /// resolver's output. Universal C108 emission per Q2 (every Go
-/// component carries `mikebom:go-transitive-source`); conditional C109
-/// emission (`mikebom:go-transitive-unresolved-reason`) iff C108's
+/// component carries `waybill:go-transitive-source`); conditional C109
+/// emission (`waybill:go-transitive-unresolved-reason`) iff C108's
 /// value is `"unresolved"`. No-op for non-Go entries (PURL does not
 /// start with `pkg:golang/`) and for Go entries the graph didn't cover
 /// (fixture-only edge case where an entry survives dedup without a
@@ -1545,7 +1545,7 @@ fn stamp_go_transitive_annotations(
         return;
     };
     entry.extra_annotations.insert(
-        "mikebom:go-transitive-source".to_string(),
+        "waybill:go-transitive-source".to_string(),
         serde_json::Value::String(graph_entry.source.as_wire_str().to_string()),
     );
     if graph_entry.source
@@ -1553,7 +1553,7 @@ fn stamp_go_transitive_annotations(
     {
         if let Some(reason_class) = graph_map.unresolved_reason(&id) {
             entry.extra_annotations.insert(
-                "mikebom:go-transitive-unresolved-reason".to_string(),
+                "waybill:go-transitive-unresolved-reason".to_string(),
                 serde_json::Value::String(reason_class.as_wire_str().to_string()),
             );
         }
@@ -1636,8 +1636,8 @@ pub fn read(
     // main-module's `depends` during the per-workspace pass below.
     // After all workspaces are processed, the orphan-classifier loop
     // tags each backfilled component with
-    // `mikebom:orphan-reason: flat-attached-fallback` so the diagnostic
-    // signal (mikebom couldn't determine this component's hierarchical
+    // `waybill:orphan-reason: flat-attached-fallback` so the diagnostic
+    // signal (waybill couldn't determine this component's hierarchical
     // parent) survives despite the resolved-incoming-edge from main.
     let mut backfilled_paths: HashSet<String> = HashSet::new();
     // Milestone 055 (T024 + T025): build the GraphResolver once per
@@ -1657,7 +1657,7 @@ pub fn read(
     let resolver = GraphResolver::new(GraphResolverConfig::default());
 
     // Milestone 173: opt-in Go cache warming. Read the effective mode
-    // from the `MIKEBOM_WARM_GO_CACHE_MODE` env var (set by scan_cmd.rs
+    // from the `WAYBILL_WARM_GO_CACHE_MODE` env var (set by scan_cmd.rs
     // after `--offline` reconciliation per FR-003). Warming runs ONCE
     // for all discovered workspaces before the resolver loop below —
     // step 1 (`go mod graph`) then finds every module locally instead
@@ -1665,10 +1665,10 @@ pub fn read(
     //
     // The env-var carrier avoids threading two new params through the
     // 75-callsite `scan_path → read_all → golang::read` chain — same
-    // convention as `MIKEBOM_INCLUDE_VENDORED` / `MIKEBOM_DEEP_HASH`.
+    // convention as `WAYBILL_INCLUDE_VENDORED` / `WAYBILL_DEEP_HASH`.
     let warm_mode: crate::scan_fs::package_db::golang::warm_cache::CacheWarmingMode = {
         use crate::scan_fs::package_db::golang::warm_cache::CacheWarmingMode;
-        match std::env::var("MIKEBOM_WARM_GO_CACHE_MODE").as_deref() {
+        match std::env::var("WAYBILL_WARM_GO_CACHE_MODE").as_deref() {
             Ok("per-workspace") => CacheWarmingMode::PerWorkspace,
             Ok("offline-inhibited") => CacheWarmingMode::OfflineInhibited,
             _ => CacheWarmingMode::Off,
@@ -1682,7 +1682,7 @@ pub fn read(
             parsed_roots.iter().map(|(p, _, _)| p.clone()).collect();
 
         if matches!(warm_mode, warm_cache::CacheWarmingMode::PerWorkspace) {
-            let concurrency_raw: u32 = std::env::var("MIKEBOM_WARM_GO_CACHE_CONCURRENCY")
+            let concurrency_raw: u32 = std::env::var("WAYBILL_WARM_GO_CACHE_CONCURRENCY")
                 .ok()
                 .and_then(|s| s.parse::<u32>().ok())
                 .unwrap_or(4);
@@ -1796,7 +1796,7 @@ pub fn read(
         // `martian@v2.1.0+incompatible` AND `martian/v3@v3.3.3`) where
         // the legacy entry has no incoming dep edge. After PR #253's
         // residual-orphan backfill, the legacy entry gets flat-
-        // attached to root with `mikebom:orphan-reason:
+        // attached to root with `waybill:orphan-reason:
         // flat-attached-fallback` — a false positive.
         //
         // NARROW FILTER: drop a Go component if BOTH:
@@ -1880,7 +1880,7 @@ pub fn read(
             }
             // Issue #250: emit edges from main-module to each Go 1.24+
             // `tool` directive entry. The directive uses package paths
-            // (`example.com/mod/cmd/foo`) but mikebom emits components
+            // (`example.com/mod/cmd/foo`) but waybill emits components
             // keyed by module paths (`example.com/mod`). Resolve each
             // tool path to its enclosing module by longest-prefix-match
             // against the already-discovered Go module set. The tool's
@@ -1934,11 +1934,11 @@ pub fn read(
                     }
                 }
                 // Pass 3: tag the matched components with
-                // `mikebom:component-role: build-tool` so SBOM
+                // `waybill:component-role: build-tool` so SBOM
                 // consumers can distinguish them from regular
                 // runtime/library dependencies. Parallels the existing
                 // `main-module` value emitted on the synthesized
-                // main-module entry. The annotation slot is mikebom-
+                // main-module entry. The annotation slot is waybill-
                 // namespaced; the closest standards-native slots
                 // (CDX `scope: optional` and SPDX 2.3 `BUILD_TOOL_OF`
                 // relationship type) would require deeper emitter
@@ -1951,14 +1951,14 @@ pub fn read(
                             && entry.purl.as_str().starts_with("pkg:golang/")
                         {
                             entry.extra_annotations.insert(
-                                "mikebom:component-role".to_string(),
+                                "waybill:component-role".to_string(),
                                 serde_json::Value::String("build-tool".to_string()),
                             );
                         }
                     }
                     tracing::info!(
                         tool_count = tool_module_paths.len(),
-                        "Issue #250: linked Go 1.24+ tool-directive entries to main-module + tagged with mikebom:component-role: build-tool"
+                        "Issue #250: linked Go 1.24+ tool-directive entries to main-module + tagged with waybill:component-role: build-tool"
                     );
                 }
                 for tool_path in unresolved_tools {
@@ -1982,7 +1982,7 @@ pub fn read(
             //   of the resolver's map (replace pointing at a local path,
             //   the intermediate parent not in go.sum, etc.), the
             //   indirect ends up with no incoming edge attribution and
-            //   reports as `mikebom:orphan-reason:
+            //   reports as `waybill:orphan-reason:
             //   unresolved-indirect-require` per milestone 061.
             //
             // - Modules where step 1 inserted them as parents (because
@@ -2023,7 +2023,7 @@ pub fn read(
                     "Issue #251: flat-attaching residual-orphan Go components to main-module (resolver's hierarchical attribution left them with zero incoming edges)"
                 );
                 // Record paths for the post-loop annotation pass — these
-                // components get `mikebom:orphan-reason:
+                // components get `waybill:orphan-reason:
                 // flat-attached-fallback` so consumers can distinguish
                 // them from real direct requires.
                 for p in &backfilled {
@@ -2093,9 +2093,9 @@ pub fn read(
         //
         // Milestone 061 (closes #119): classify each orphan with a
         // reason and populate the per-component
-        // `mikebom:orphan-reason` annotation. Aggregate the
+        // `waybill:orphan-reason` annotation. Aggregate the
         // completeness state into `signals` for the doc-level
-        // `mikebom:graph-completeness` annotation that the format
+        // `waybill:graph-completeness` annotation that the format
         // emitters surface in `metadata.properties[]`.
         //
         // First pass: build the incoming-edge count over Go components
@@ -2130,7 +2130,7 @@ pub fn read(
         );
 
         // Second pass: classify each orphan + populate the per-
-        // component `mikebom:orphan-reason` annotation. The classifier
+        // component `waybill:orphan-reason` annotation. The classifier
         // is conservative — it picks `unresolved-indirect-require` as
         // the default and would refine to `private-module` /
         // `proxy-fetch-failed` if we had per-module fetch-error data
@@ -2157,7 +2157,7 @@ pub fn read(
                 // serialize extra_annotations — surfacing the gap.
                 let is_main_module = entry
                     .extra_annotations
-                    .get("mikebom:component-role")
+                    .get("waybill:component-role")
                     .and_then(|v| v.as_str())
                     == Some("main-module");
                 if is_main_module {
@@ -2170,7 +2170,7 @@ pub fn read(
                 let reason = "unresolved-indirect-require".to_string();
                 reason_classes.insert(reason.clone());
                 entry.extra_annotations.insert(
-                    "mikebom:orphan-reason".to_string(),
+                    "waybill:orphan-reason".to_string(),
                     serde_json::Value::String(reason),
                 );
             }
@@ -2179,13 +2179,13 @@ pub fn read(
         // Issue #251: tag components that the per-workspace backfill
         // pass flat-attached to main_entry.depends. These are NOT
         // strict orphans anymore (they have an incoming edge from
-        // main-module), but mikebom couldn't determine their
+        // main-module), but waybill couldn't determine their
         // hierarchical parent — the edge from main is a fallback, not
         // a real direct require declared in go.mod. The annotation
         // tells graph-walking SBOM consumers: "treat this incoming
         // edge as inferred, not authoritative."
         //
-        // We use the existing `mikebom:orphan-reason` annotation slot
+        // We use the existing `waybill:orphan-reason` annotation slot
         // (cross-format parity already wired in milestone 061 / row
         // C45) with a new closed-enum value
         // `flat-attached-fallback`. The annotation semantic widens
@@ -2202,7 +2202,7 @@ pub fn read(
                 let reason = "flat-attached-fallback".to_string();
                 reason_classes.insert(reason.clone());
                 entry.extra_annotations.insert(
-                    "mikebom:orphan-reason".to_string(),
+                    "waybill:orphan-reason".to_string(),
                     serde_json::Value::String(reason),
                 );
             }
@@ -2274,7 +2274,7 @@ pub fn read(
             for e in out.iter_mut() {
                 let is_go_mainmod = e.purl.as_str().starts_with("pkg:golang/")
                     && e.extra_annotations
-                        .get("mikebom:component-role")
+                        .get("waybill:component-role")
                         .and_then(|v| v.as_str())
                         == Some("main-module")
                     && e.source_path.starts_with(project_root_str.as_ref());
@@ -2511,7 +2511,7 @@ fn should_skip_descent(path: &std::path::Path) -> bool {
     };
     // Per `go help packages`: "Directory and file names that begin
     // with '.' or '_' are ignored by the go tool, as are directories
-    // named 'testdata'." We mirror the same three rules so mikebom's
+    // named 'testdata'." We mirror the same three rules so waybill's
     // workspace discovery sees exactly what `go list ./...` would.
     if name.starts_with('.') || name.starts_with('_') {
         return true;
@@ -2798,20 +2798,20 @@ tool (
     #[test]
     fn tool_directive_annotation_contract_naming_stable() {
         // Contract test: the per-component annotation that flags
-        // tool-directive entries uses the `mikebom:component-role`
+        // tool-directive entries uses the `waybill:component-role`
         // annotation slot (already wired through CDX + SPDX 2.3 +
         // SPDX 3.0.1 via the existing `main-module` value) with the
         // new closed-enum value `build-tool`. Any accidental rename
         // should be caught here before it ships and breaks consumer
         // policy that relies on these strings.
-        const ANNOTATION_KEY: &str = "mikebom:component-role";
+        const ANNOTATION_KEY: &str = "waybill:component-role";
         const ANNOTATION_VALUE_TOOL: &str = "build-tool";
         const ANNOTATION_VALUE_MAIN: &str = "main-module";
-        assert_eq!(ANNOTATION_KEY, "mikebom:component-role");
+        assert_eq!(ANNOTATION_KEY, "waybill:component-role");
         assert_eq!(ANNOTATION_VALUE_TOOL, "build-tool");
         assert_eq!(ANNOTATION_VALUE_MAIN, "main-module");
         // If you renamed either of the values, update the parity
-        // catalog row for `mikebom:component-role` AND any consumer-
+        // catalog row for `waybill:component-role` AND any consumer-
         // side policy that filters on these strings.
     }
 
@@ -2846,7 +2846,7 @@ tool (
     #[test]
     fn backfill_attaches_module_with_zero_incoming() {
         // Scenario from guac: main directly requires A. A → B WAS the
-        // expected edge but mikebom's resolver lost it. B is in `out`
+        // expected edge but waybill's resolver lost it. B is in `out`
         // (from go.sum) but no entry depends on B. main_entry.depends =
         // [A] (only direct, non-indirect from go.mod).
         // Backfill should add B.
@@ -2920,16 +2920,16 @@ tool (
     fn backfill_annotation_contract_naming_stable() {
         // Contract test: the per-component annotation that flags
         // backfilled entries uses the existing
-        // `mikebom:orphan-reason` annotation slot (milestone 061 /
+        // `waybill:orphan-reason` annotation slot (milestone 061 /
         // parity row C45) with the closed-enum value
         // `flat-attached-fallback`. Both strings are exposed in
         // emitted SBOMs across CDX, SPDX 2.3, and SPDX 3.0.1 — any
         // accidental rename should be caught by this test before it
         // ships and breaks consumer policy.
-        const ANNOTATION_KEY: &str = "mikebom:orphan-reason";
+        const ANNOTATION_KEY: &str = "waybill:orphan-reason";
         const ANNOTATION_VALUE_BACKFILL: &str = "flat-attached-fallback";
         const ANNOTATION_VALUE_ORPHAN: &str = "unresolved-indirect-require";
-        assert_eq!(ANNOTATION_KEY, "mikebom:orphan-reason");
+        assert_eq!(ANNOTATION_KEY, "waybill:orphan-reason");
         assert_eq!(ANNOTATION_VALUE_BACKFILL, "flat-attached-fallback");
         assert_eq!(ANNOTATION_VALUE_ORPHAN, "unresolved-indirect-require");
         // If you renamed either string, update the milestone-061
@@ -3249,7 +3249,7 @@ tool (
         // shape — a Go 1.24+ module with a `tool` directive — should
         // result in the tool's enclosing module appearing in the
         // synthesized main-module's `.depends` AND the tool's
-        // component carrying `mikebom:component-role: build-tool`.
+        // component carrying `waybill:component-role: build-tool`.
         //
         // The fix landed in PR #252 (alpha.37); this test pins the
         // end-to-end behavior so it can't silently regress.
@@ -3279,13 +3279,13 @@ tool (
             .expect("golangci-lint component should be emitted from go.sum");
 
         // Issue #250 (PR #252) tagged: the tool-directive entry's
-        // enclosing module carries `mikebom:component-role:
+        // enclosing module carries `waybill:component-role:
         // build-tool` so SBOM consumers can distinguish it from
         // regular runtime/library deps.
         assert_eq!(
             golangci
                 .extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("build-tool"),
             "tool-directive entry should be tagged build-tool; got: {:?}",
@@ -3318,7 +3318,7 @@ tool (
         assert!(
             !golangci
                 .extra_annotations
-                .contains_key("mikebom:orphan-reason"),
+                .contains_key("waybill:orphan-reason"),
             "tool-directive entry should not be flagged as orphan after #252 fix; got: {:?}",
             golangci.extra_annotations,
         );
@@ -3339,7 +3339,7 @@ tool (
         let (entries, _) = read(dir.path(), false, &Default::default());
         // Milestone 053: the workspace root IS now emitted as a
         // synthetic main-module component (per FR-001), tagged with
-        // `mikebom:component-role: main-module`. Pre-053 the
+        // `waybill:component-role: main-module`. Pre-053 the
         // workspace root was suppressed entirely.
         let main = entries
             .iter()
@@ -3347,7 +3347,7 @@ tool (
             .expect("milestone 053: workspace root must be emitted as main-module");
         assert_eq!(
             main.extra_annotations
-                .get("mikebom:component-role")
+                .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("main-module"),
             "main-module entry must carry the C40 supplementary tag",
@@ -3778,7 +3778,7 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
         // "main-module".
         let role = entry
             .extra_annotations
-            .get("mikebom:component-role")
+            .get("waybill:component-role")
             .and_then(|v| v.as_str());
         assert_eq!(role, Some("main-module"));
         // PURL shape per FR-001 + tarball-style fixture (no .git) →
@@ -4067,13 +4067,13 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
         );
         stamp_go_transitive_annotations(&mut entry, &map);
         assert_eq!(
-            entry.extra_annotations.get("mikebom:go-transitive-source"),
+            entry.extra_annotations.get("waybill:go-transitive-source"),
             Some(&serde_json::Value::String("go-mod-graph".to_string()))
         );
         // C109 must NOT be present when C108 != "unresolved".
         assert!(!entry
             .extra_annotations
-            .contains_key("mikebom:go-transitive-unresolved-reason"));
+            .contains_key("waybill:go-transitive-unresolved-reason"));
     }
 
     #[test]
@@ -4088,12 +4088,12 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
         );
         stamp_go_transitive_annotations(&mut entry, &map);
         assert_eq!(
-            entry.extra_annotations.get("mikebom:go-transitive-source"),
+            entry.extra_annotations.get("waybill:go-transitive-source"),
             Some(&serde_json::Value::String("proxy-fetch".to_string()))
         );
         assert!(!entry
             .extra_annotations
-            .contains_key("mikebom:go-transitive-unresolved-reason"));
+            .contains_key("waybill:go-transitive-unresolved-reason"));
     }
 
     #[test]
@@ -4115,13 +4115,13 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
         map.record_unresolved_reason(id, UnresolvedReasonClass::ProxyFetchNotFound);
         stamp_go_transitive_annotations(&mut entry, &map);
         assert_eq!(
-            entry.extra_annotations.get("mikebom:go-transitive-source"),
+            entry.extra_annotations.get("waybill:go-transitive-source"),
             Some(&serde_json::Value::String("unresolved".to_string()))
         );
         assert_eq!(
             entry
                 .extra_annotations
-                .get("mikebom:go-transitive-unresolved-reason"),
+                .get("waybill:go-transitive-unresolved-reason"),
             Some(&serde_json::Value::String("proxy-fetch-not-found".to_string()))
         );
     }
@@ -4174,6 +4174,6 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
         stamp_go_transitive_annotations(&mut entry, &map);
         assert!(!entry
             .extra_annotations
-            .contains_key("mikebom:go-transitive-source"));
+            .contains_key("waybill:go-transitive-source"));
     }
 }

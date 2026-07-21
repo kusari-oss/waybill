@@ -72,7 +72,7 @@ fn sc004_no_op_on_non_scala_tree() {
     let scala_components: Vec<&Value> = all_components(&doc)
         .into_iter()
         .filter(|c| {
-            property_value(c, "mikebom:source-type")
+            property_value(c, "waybill:source-type")
                 .map(|s| s.starts_with("scala-"))
                 .unwrap_or(false)
         })
@@ -112,7 +112,7 @@ libraryDependencies += "org.typelevel" %% "cats-core" % "2.10.0"
         .into_iter()
         .find(|c| c.get("name").and_then(|v| v.as_str()) == Some("cats-core"))
         .expect("cats-core design-tier fallback");
-    assert_eq!(property_value(cats, "mikebom:sbom-tier"), Some("design"));
+    assert_eq!(property_value(cats, "waybill:sbom-tier"), Some("design"));
 }
 
 #[test]
@@ -128,7 +128,7 @@ fn q3_content_shape_skips_non_sbt_files() {
     let scala_components: Vec<&Value> = all_components(&doc)
         .into_iter()
         .filter(|c| {
-            property_value(c, "mikebom:source-type")
+            property_value(c, "waybill:source-type")
                 .map(|s| s.starts_with("scala-"))
                 .unwrap_or(false)
         })

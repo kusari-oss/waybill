@@ -40,7 +40,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
     }
 
     fn default_filename(&self) -> &'static str {
-        "mikebom.cdx.json"
+        "waybill.cdx.json"
     }
 
     fn serialize(
@@ -62,7 +62,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             .with_go_transitive_coverage(scan.go_transitive_coverage.cloned())
             // Milestone 172 — propagate the doc-scope Go step-5 fallback
             // count from ScanArtifacts into the builder for the C117
-            // `mikebom:go-transitive-fallback-count` metadata property.
+            // `waybill:go-transitive-fallback-count` metadata property.
             .with_go_transitive_fallback_count(scan.go_transitive_fallback_count)
             // Milestone 173 — propagate the doc-scope Go cache-warming
             // outcome from ScanArtifacts into the builder for the
@@ -75,7 +75,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // Milestone 204 (#554) — propagate the doc-scope helm
             // image-extraction-mode signal from ScanArtifacts into the
             // builder for the C123
-            // `mikebom:image-extraction-completeness` metadata property.
+            // `waybill:image-extraction-completeness` metadata property.
             .with_helm_extraction_mode(scan.helm_extraction_mode.copied())
             // Milestone 206 (#440) — propagate the doc-scope
             // image-source signal from ScanArtifacts for the C124
@@ -90,7 +90,7 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // `metadata.component.externalReferences[]` per scheme;
             // user-defined identifiers ride a single
             // `metadata.properties[]` entry under
-            // `mikebom:identifiers`. The Vec is already
+            // `waybill:identifiers`. The Vec is already
             // deduplicated and ordered by the resolution pipeline.
             .with_identifiers(scan.identifiers.to_vec())
             // Milestone 076 — propagate per-component user-defined
@@ -130,14 +130,14 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // SBOM Type override from `--sbom-type <type>`. When set,
             // CDX `metadata.lifecycles[]` collapses to a single-
             // element array via the equivalence table; per-component
-            // `mikebom:sbom-tier` annotations preserve auto-detected
+            // `waybill:sbom-tier` annotations preserve auto-detected
             // values per research §4.
             .with_sbom_type_override(scan.sbom_type_override)
             // Milestone 133 US3 — file-tier walker diagnostic counters.
             .with_file_inventory_stats(scan.file_inventory_stats.cloned())
             // Milestone 133 US4 — propagate `--file-inventory` mode
             // label so `metadata.properties[]` carries the
-            // `mikebom:file-inventory-mode = "full"` override marker
+            // `waybill:file-inventory-mode = "full"` override marker
             // when the operator opted into the dedupe bypass.
             .with_file_inventory_mode(scan.file_inventory_mode.map(String::from))
             // Milestone 134 — document-scope divergent-PURL summary.
@@ -147,8 +147,8 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             .with_collisions_summary(scan.collisions_summary.cloned())
             // Milestone 210 — propagate compiler-pipeline data
             // captured from the eBPF trace so `build_components`
-            // can emit per-component `mikebom:source-read-set` (C130)
-            // + `mikebom:read-set-source` (C131) properties per
+            // can emit per-component `waybill:source-read-set` (C130)
+            // + `waybill:read-set-source` (C131) properties per
             // contracts/annotations.md A-1/A-2. `None` when scan
             // ran without eBPF (default features) OR the trace
             // captured zero compiler invocations — either case

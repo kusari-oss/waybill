@@ -38,7 +38,7 @@ pub struct ResolvedComponent {
     /// matchers can use any candidate that hits. Empty for ecosystems
     /// where the synthesizer has no opinion (rare). Serialized in
     /// CycloneDX as the first entry on `component.cpe` plus the full
-    /// set under `properties["mikebom:cpe-candidates"]`.
+    /// set under `properties["waybill:cpe-candidates"]`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub cpes: Vec<String>,
     pub advisories: Vec<AdvisoryRef>,
@@ -53,7 +53,7 @@ pub struct ResolvedComponent {
     pub occurrences: Vec<FileOccurrence>,
     /// Lifecycle scope (milestone 052). Replaces the prior
     /// boolean `is_dev` field. Maps to native fields per format:
-    /// CDX `scope: "excluded"` + `mikebom:lifecycle-scope` property
+    /// CDX `scope: "excluded"` + `waybill:lifecycle-scope` property
     /// for non-Runtime variants; SPDX 2.3 native
     /// `DEV/BUILD/TEST_DEPENDENCY_OF` relationship types via the
     /// matching `RelationshipType` variant; SPDX 3 `lifecycleScope`
@@ -68,7 +68,7 @@ pub struct ResolvedComponent {
     /// (`Unknown`). `None` means production participation is confirmed
     /// or assumed — pre-feature semantics, byte-identical emission.
     /// Maps per format: CDX `scope: "excluded"` (NotNeeded only) +
-    /// `mikebom:build-inclusion` property; SPDX 2.3 package annotation;
+    /// `waybill:build-inclusion` property; SPDX 2.3 package annotation;
     /// SPDX 3 element annotation (parity bridges — neither SPDX format
     /// has a native excluded-scope construct).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -80,15 +80,15 @@ pub struct ResolvedComponent {
     /// Milestone 199: always-array shape — a single-declaration case
     /// yields a 1-element `Vec`; multi-manifest cases (m191 reconciler
     /// survivors) yield N-element `Vec` sorted lex-ascending 1:1 with
-    /// `mikebom:source-manifests`. Drives the `mikebom:requirement-ranges`
-    /// property; the singular `mikebom:requirement-range` was removed
+    /// `waybill:source-manifests`. Drives the `waybill:requirement-ranges`
+    /// property; the singular `waybill:requirement-range` was removed
     /// in m199 in favor of uniform array shape.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub requirement_ranges: Vec<String>,
     /// Source-kind marker for non-registry dependencies: `"local"`
     /// (`file:` URIs), `"git"` (`git+...`), `"url"` (`http(s)://...`).
     /// `None` for normal registry-sourced components. Drives the
-    /// `mikebom:source-type` property.
+    /// `waybill:source-type` property.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source_type: Option<String>,
     /// Traceability-ladder tier per milestone 002's research R13:
@@ -97,7 +97,7 @@ pub struct ResolvedComponent {
     /// file on disk identified by filename + hash), `"source"` (lockfile
     /// entry without a corresponding install), `"design"` (unlocked
     /// manifest declaration — requirements range, root package.json
-    /// fallback). Drives the `mikebom:sbom-tier` property and the
+    /// fallback). Drives the `waybill:sbom-tier` property and the
     /// envelope-level `metadata.lifecycles[]` aggregation.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sbom_tier: Option<String>,
@@ -105,7 +105,7 @@ pub struct ResolvedComponent {
     /// file was detected as a Go binary but `runtime/debug.BuildInfo`
     /// extraction failed (stripped binary, external `strip` run),
     /// `"unsupported"` for Go <1.18 binaries whose pre-inline format
-    /// we don't parse. Drives the `mikebom:buildinfo-status` property
+    /// we don't parse. Drives the `waybill:buildinfo-status` property
     /// on the file-level component emitted when the module list
     /// couldn't be recovered. `None` on every other component,
     /// including successful Go BuildInfo extractions.
@@ -116,36 +116,36 @@ pub struct ResolvedComponent {
     /// `elf-note-package`, `embedded-version-string`. `None` on every
     /// pre-milestone-004 component (milestones 001–003 non-rpm ecosystems
     /// keep their existing serialization unchanged). Drives the
-    /// `mikebom:evidence-kind` property at CycloneDX serialization time.
+    /// `waybill:evidence-kind` property at CycloneDX serialization time.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub evidence_kind: Option<String>,
     /// Milestone 004 US2 — binary-format classifier for file-level
     /// binary components. `"elf"` / `"macho"` / `"pe"`; `None` for
-    /// non-binary components. Drives `mikebom:binary-class`.
+    /// non-binary components. Drives `waybill:binary-class`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub binary_class: Option<String>,
     /// Milestone 004 US2 — true when the file-level binary lacks
     /// symbol tables / debug info / version resources. Drives
-    /// `mikebom:binary-stripped`.
+    /// `waybill:binary-stripped`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub binary_stripped: Option<bool>,
     /// Milestone 004 US2 — `"dynamic"` / `"static"` / `"mixed"`.
-    /// Drives `mikebom:linkage-kind`.
+    /// Drives `waybill:linkage-kind`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub linkage_kind: Option<String>,
     /// Milestone 004 US2 — set on the file-level binary component when
     /// Go BuildInfo extraction succeeded on the same binary (R8 flat
-    /// cross-link; FR-026). Drives `mikebom:detected-go`.
+    /// cross-link; FR-026). Drives `waybill:detected-go`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub detected_go: Option<bool>,
     /// Milestone 004 US2 — heuristic-confidence marker for components
     /// emitted via the curated embedded-version-string scanner.
-    /// Exactly `"heuristic"` when present. Drives `mikebom:confidence`.
+    /// Exactly `"heuristic"` when present. Drives `waybill:confidence`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub confidence: Option<String>,
     /// Milestone 004 US2 — packer-signature marker on file-level
     /// binary components. `"upx"` when the scanner hit a UPX
-    /// signature (research R7). Drives `mikebom:binary-packed`.
+    /// signature (research R7). Drives `waybill:binary-packed`.
     /// `None` for unpacked binaries + non-binary components.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub binary_packed: Option<String>,
@@ -154,7 +154,7 @@ pub struct ResolvedComponent {
     /// tree (`**/node_modules/npm/node_modules/**`) during `--image`
     /// scans. `None` on application deps and on every `--path`-mode
     /// scan (internals are filtered out before resolution). Drives the
-    /// `mikebom:npm-role` property.
+    /// `waybill:npm-role` property.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub npm_role: Option<String>,
     /// Feature 005 US4 — verbatim `VERSION-RELEASE` string from the
@@ -164,7 +164,7 @@ pub struct ResolvedComponent {
     /// the PURL. Populated on every rpm component (both rpmdb-sourced
     /// via `rpm.rs` and standalone-artefact via `rpm_file.rs`); `None`
     /// elsewhere until another ecosystem adopts the pattern. Drives
-    /// the `mikebom:raw-version` property.
+    /// the `waybill:raw-version` property.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub raw_version: Option<String>,
     /// PURL of a parent/container component that physically bundles
@@ -187,7 +187,7 @@ pub struct ResolvedComponent {
     /// owned by a Fedora RPM AND carrying a Maven coord in its
     /// embedded `META-INF/maven/.../pom.properties`. The Maven coord
     /// emits with `co_owned_by = Some("rpm")`; the RPM coord emits
-    /// independently. Drives the CDX property `mikebom:co-owned-by`
+    /// independently. Drives the CDX property `waybill:co-owned-by`
     /// so downstream consumers can filter to a single-identity view.
     /// `None` on standalone artifacts (no cross-ecosystem overlap).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -197,7 +197,7 @@ pub struct ResolvedComponent {
     /// relocated bytecode inside the enclosing JAR). Vulnerability
     /// scanners can match against these coords even when the classes
     /// are namespace-relocated in the image. Surfaced via CDX property
-    /// `mikebom:shade-relocation = true`.
+    /// `waybill:shade-relocation = true`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub shade_relocation: Option<bool>,
     /// External references for this component — repository URLs,
@@ -211,11 +211,11 @@ pub struct ResolvedComponent {
     pub external_references: Vec<ExternalReference>,
     /// Milestone 023: generic per-component annotation bag mirroring
     /// `PackageDbEntry::extra_annotations`. Each entry is emitted at
-    /// SBOM-generation time as a `mikebom:<key>` annotation across
+    /// SBOM-generation time as a `waybill:<key>` annotation across
     /// all three formats (CDX property, SPDX 2.3 annotation envelope,
     /// SPDX 3 graph-element Annotation). Used by the binary scanner
-    /// for fields like `mikebom:elf-build-id`, `mikebom:elf-runpath`,
-    /// `mikebom:elf-debuglink`. Future per-binary-metadata milestones
+    /// for fields like `waybill:elf-build-id`, `waybill:elf-runpath`,
+    /// `waybill:elf-debuglink`. Future per-binary-metadata milestones
     /// (024 Mach-O LC_UUID, 025 Go VCS, 026 version strings, 027
     /// layer attribution) populate the same bag without per-field
     /// schema migration. `BTreeMap` for deterministic emission order.
@@ -223,7 +223,7 @@ pub struct ResolvedComponent {
     pub extra_annotations: std::collections::BTreeMap<String, serde_json::Value>,
     /// Milestone 104 — role classification for binary-reader-discovered
     /// components. `Some(role)` when this component came from
-    /// `mikebom-cli/src/scan_fs/binary/`; `None` for manifest- and
+    /// `waybill-cli/src/scan_fs/binary/`; `None` for manifest- and
     /// lockfile-driven readers. Emitters map this to the format-native
     /// component-type field (CDX `Component.type`, SPDX 2.3
     /// `Package.primaryPackagePurpose`, SPDX 3
@@ -356,7 +356,7 @@ pub struct Relationship {
 ///
 /// - **CycloneDX 1.6**: `Runtime` / `None` → `scope` field omitted
 ///   (default `required`); `Development` / `Build` / `Test` →
-///   `scope: "excluded"` plus `mikebom:lifecycle-scope` property
+///   `scope: "excluded"` plus `waybill:lifecycle-scope` property
 ///   carrying the finer variant name (CDX's 3-value `scope` enum
 ///   cannot express the dev-vs-build-vs-test split).
 /// - **SPDX 2.3**: maps to the relationship-type variants below
@@ -386,14 +386,14 @@ pub enum LifecycleScope {
     /// (reversed direction, m052 convention). SPDX 3.0.1's
     /// `LifecycleScopeType` enum has no `optional` value at spec
     /// 3.0.1; SPDX 3 emits classification via the
-    /// `mikebom:optional-derivation` component annotation instead
+    /// `waybill:optional-derivation` component annotation instead
     /// (Principle V KEEP-BOTH carve-out).
     Optional,
 }
 
 impl LifecycleScope {
     /// Lower-cased serde-style variant name. Used for the new
-    /// `mikebom:lifecycle-scope` CDX property carry of the finer
+    /// `waybill:lifecycle-scope` CDX property carry of the finer
     /// distinction the standards-native `scope: "excluded"` cannot
     /// express.
     pub fn as_str(&self) -> &'static str {
@@ -476,7 +476,7 @@ pub enum BuildInclusion {
 
 impl BuildInclusion {
     /// Kebab-case serde-style variant name. Used for the
-    /// `mikebom:build-inclusion` property/annotation value.
+    /// `waybill:build-inclusion` property/annotation value.
     pub fn as_str(&self) -> &'static str {
         match self {
             BuildInclusion::Unknown => "unknown",

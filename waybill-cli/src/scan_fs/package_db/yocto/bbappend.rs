@@ -3,7 +3,7 @@
 //!
 //! Per FR-008: when a `.bbappend` file's basename matches an
 //! existing recipe (with the `_%` glob expanded as a wildcard),
-//! the recipe component receives a `mikebom:bbappend-applied`
+//! the recipe component receives a `waybill:bbappend-applied`
 //! annotation listing the matching append paths. Orphan
 //! `.bbappend`s (no matching recipe in scan) emit a
 //! `tracing::warn!` log and do NOT produce phantom components

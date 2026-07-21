@@ -8,14 +8,14 @@ use super::integrity::TraceIntegrity;
 use super::metadata::TraceMetadata;
 use super::network::NetworkTrace;
 
-/// In-toto Statement v1 envelope for a mikebom build-trace attestation.
+/// In-toto Statement v1 envelope for a waybill build-trace attestation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct InTotoStatement {
     /// Always `"https://in-toto.io/Statement/v1"`.
     #[serde(rename = "_type")]
     pub statement_type: String,
     pub subject: Vec<ResourceDescriptor>,
-    /// Always `"https://mikebom.dev/attestation/build-trace/v1"`.
+    /// Always `"https://waybill.dev/attestation/build-trace/v1"`.
     #[serde(rename = "predicateType")]
     pub predicate_type: String,
     pub predicate: BuildTracePredicate,
@@ -28,7 +28,7 @@ pub struct ResourceDescriptor {
     pub digest: BTreeMap<String, String>,
 }
 
-/// The mikebom build-trace predicate containing all traced activity.
+/// The waybill build-trace predicate containing all traced activity.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct BuildTracePredicate {
     pub metadata: TraceMetadata,
@@ -40,7 +40,7 @@ pub struct BuildTracePredicate {
     /// when the trace ran without `--features ebpf-tracing` OR the
     /// host wasn't Linux OR the operator didn't invoke a compiler.
     /// When `Some(_)`, downstream emitters populate per-component
-    /// `mikebom:source-read-set` annotations per FR-006.
+    /// `waybill:source-read-set` annotations per FR-006.
     ///
     /// Backward compatibility: pre-m210 attestation consumers
     /// deserialize this field as `None` (via `serde` default-Option
@@ -56,9 +56,9 @@ impl InTotoStatement {
     /// The in-toto statement type URI.
     pub const STATEMENT_TYPE: &'static str = "https://in-toto.io/Statement/v1";
 
-    /// The mikebom build-trace predicate type URI.
+    /// The waybill build-trace predicate type URI.
     pub const PREDICATE_TYPE: &'static str =
-        "https://mikebom.dev/attestation/build-trace/v1";
+        "https://waybill.dev/attestation/build-trace/v1";
 }
 
 #[cfg(test)]
@@ -89,7 +89,7 @@ mod tests {
             predicate: BuildTracePredicate {
                 metadata: TraceMetadata {
                     tool: ToolInfo {
-                        name: "mikebom".to_string(),
+                        name: "waybill".to_string(),
                         version: "0.1.0".to_string(),
                     },
                     trace_start: Timestamp::now(),

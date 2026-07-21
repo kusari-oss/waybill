@@ -18,7 +18,7 @@ use super::scan::ScanArgs;
 ///   Fulcio/Rekor keyless flow is still scaffold-level.
 ///
 /// For most SBOM use cases (polyglot source trees, container images,
-/// package caches), prefer the stable `mikebom sbom scan` pipeline
+/// package caches), prefer the stable `waybill sbom scan` pipeline
 /// which produces richer output with no privilege requirements.
 #[derive(Args)]
 pub struct TraceCommand {

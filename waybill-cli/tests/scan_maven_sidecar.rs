@@ -2,14 +2,14 @@
 //!
 //! These tests construct synthetic rootfs trees shaped like Fedora-family
 //! images (JARs under `/usr/share/maven/lib/`, sidecar POMs under
-//! `/usr/share/maven-poms/`) and assert that mikebom's scan emits the
+//! `/usr/share/maven-poms/`) and assert that waybill's scan emits the
 //! expected Maven components.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn fedora_fixture_root() -> PathBuf {
-    PathBuf::from(env!("MIKEBOM_FIXTURES_DIR")).join("maven/fedora_sidecar")
+    PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join("maven/fedora_sidecar")
 }
 
 fn scan_path(path: &Path) -> serde_json::Value {
@@ -26,7 +26,7 @@ fn scan_path(path: &Path) -> serde_json::Value {
         .arg(&out_path)
         .arg("--no-deep-hash")
         .output()
-        .expect("mikebom should run");
+        .expect("waybill should run");
     assert!(
         output.status.success(),
         "scan failed: stderr={}",

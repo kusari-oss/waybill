@@ -18,12 +18,12 @@
 //!   `description.path` surfaces as the `#<subpath>` fragment when
 //!   non-trivial).
 //! - **path**:   `pkg:generic/<name>@<version>` placeholder + the
-//!   `mikebom:source-type = "pub-path"` annotation (path-deps have no
+//!   `waybill:source-type = "pub-path"` annotation (path-deps have no
 //!   purl-spec-addressable identity per R1).
 //! - **sdk**:    `pkg:pub/<sdk-name>@0.0.0` (the literal `0.0.0` is
 //!   the purl-spec canonical example for SDK pseudo-deps).
 //!
-//! `mikebom:source-type` values use the `pub-` prefix to avoid
+//! `waybill:source-type` values use the `pub-` prefix to avoid
 //! collision with cargo's existing C1-row values (`git`/`path`/
 //! `registry`) — per R3 and milestone-122's `kmp-` precedent.
 
@@ -312,11 +312,11 @@ fn emit_main_module(
 
     let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     extra_annotations.insert(
-        "mikebom:component-role".to_string(),
+        "waybill:component-role".to_string(),
         serde_json::Value::String("main-module".to_string()),
     );
     extra_annotations.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String("pub-main-module".to_string()),
     );
 
@@ -517,7 +517,7 @@ fn emit_design_tier_components(
         };
         let mut extra_annotations: BTreeMap<String, serde_json::Value> = BTreeMap::new();
         extra_annotations.insert(
-            "mikebom:source-type".to_string(),
+            "waybill:source-type".to_string(),
             serde_json::Value::String("pub-hosted".to_string()),
         );
 
@@ -674,14 +674,14 @@ fn build_extra_annotations(
 ) -> BTreeMap<String, serde_json::Value> {
     let mut out: BTreeMap<String, serde_json::Value> = BTreeMap::new();
     out.insert(
-        "mikebom:source-type".to_string(),
+        "waybill:source-type".to_string(),
         serde_json::Value::String(source_type_value.to_string()),
     );
     match (&entry.source[..], &entry.description) {
         ("git", LockfileDescription::Map(m)) => {
             if let Some(r) = m.ref_.as_deref() {
                 out.insert(
-                    "mikebom:vcs-ref".to_string(),
+                    "waybill:vcs-ref".to_string(),
                     serde_json::Value::String(r.to_string()),
                 );
             }
@@ -689,14 +689,14 @@ fn build_extra_annotations(
         ("path", LockfileDescription::Map(m)) => {
             if let Some(p) = m.path.as_deref() {
                 out.insert(
-                    "mikebom:path".to_string(),
+                    "waybill:path".to_string(),
                     serde_json::Value::String(p.to_string()),
                 );
             }
         }
         ("sdk", LockfileDescription::Sdk(family)) => {
             out.insert(
-                "mikebom:sdk-name".to_string(),
+                "waybill:sdk-name".to_string(),
                 serde_json::Value::String(family.to_string()),
             );
         }
@@ -867,7 +867,7 @@ mod tests {
         let e = hosted_map("https://pub.dev", "a".repeat(64).as_str());
         let ann = build_extra_annotations(&e, "pub-hosted");
         assert_eq!(
-            ann.get("mikebom:source-type").and_then(|v| v.as_str()),
+            ann.get("waybill:source-type").and_then(|v| v.as_str()),
             Some("pub-hosted")
         );
     }
@@ -882,7 +882,7 @@ mod tests {
         );
         let ann = build_extra_annotations(&e, "pub-git");
         assert_eq!(
-            ann.get("mikebom:vcs-ref").and_then(|v| v.as_str()),
+            ann.get("waybill:vcs-ref").and_then(|v| v.as_str()),
             Some("v1.0.0")
         );
     }
@@ -897,7 +897,7 @@ mod tests {
         };
         let ann = build_extra_annotations(&e, "pub-sdk");
         assert_eq!(
-            ann.get("mikebom:sdk-name").and_then(|v| v.as_str()),
+            ann.get("waybill:sdk-name").and_then(|v| v.as_str()),
             Some("flutter")
         );
     }

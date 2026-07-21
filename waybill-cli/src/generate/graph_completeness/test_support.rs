@@ -63,7 +63,7 @@ pub(crate) fn mk_component(purl_str: &str) -> ResolvedComponent {
 pub(crate) fn mk_main_module(purl_str: &str) -> ResolvedComponent {
     let mut c = mk_component(purl_str);
     c.extra_annotations.insert(
-        "mikebom:component-role".to_string(),
+        "waybill:component-role".to_string(),
         json!("main-module"),
     );
     c
@@ -72,7 +72,7 @@ pub(crate) fn mk_main_module(purl_str: &str) -> ResolvedComponent {
 pub(crate) fn mk_workspace_root(purl_str: &str) -> ResolvedComponent {
     let mut c = mk_main_module(purl_str);
     c.extra_annotations
-        .insert("mikebom:is-workspace-root".to_string(), json!(true));
+        .insert("waybill:is-workspace-root".to_string(), json!(true));
     c
 }
 

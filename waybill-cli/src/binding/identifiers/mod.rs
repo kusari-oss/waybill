@@ -3,7 +3,7 @@
 //! `(scheme, value)` pairs attached at document level to emitted
 //! SBOMs. Built-in schemes (`repo:`, `git:`, `image:`, `attestation:`)
 //! ride standards-native carriers per format (Constitution Principle V);
-//! user-defined schemes ride a `mikebom:identifiers` annotation
+//! user-defined schemes ride a `waybill:identifiers` annotation
 //! per Principle V's documented-exception path.
 //!
 //! Naming note: SPDX 3 already calls these "external identifiers"
@@ -212,11 +212,11 @@ impl BuiltinScheme {
 }
 
 /// Two-variant enum classifying whether the scheme is recognized by
-/// mikebom and its built-in validator passed.
+/// waybill and its built-in validator passed.
 ///
 /// `UserDefined` is also the soft-fail destination for a built-in
 /// scheme whose value failed validation (research.md §1) — the
-/// identifier emits as opaque under `mikebom:identifiers`
+/// identifier emits as opaque under `waybill:identifiers`
 /// rather than crashing the scan.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IdentifierKind {
@@ -278,7 +278,7 @@ impl Identifier {
                         reason = %err,
                         "built-in identifier scheme failed value validation; \
                          downgrading to user-defined and emitting via \
-                         mikebom:identifiers annotation"
+                         waybill:identifiers annotation"
                     );
                     IdentifierKind::UserDefined
                 }
@@ -332,7 +332,7 @@ impl Identifier {
 ///
 /// **Tier-agnostic.** Source-tier `--path` scans pass at most one
 /// auto-detected entry (`repo:` or `image:`). Build-tier
-/// `mikebom trace run` invocations pass up to two (`repo:` and
+/// `waybill trace run` invocations pass up to two (`repo:` and
 /// `git:`). Image-tier `--image` scans pass up to one (`image:`).
 /// The override semantics apply per-scheme — manual `--repo` overrides
 /// only the auto-detected `repo:`, leaves auto-detected `git:` alone

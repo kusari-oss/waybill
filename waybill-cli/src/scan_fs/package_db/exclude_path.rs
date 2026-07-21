@@ -1,7 +1,7 @@
-//! Milestone 113 — user-supplied directory exclusion for `mikebom scan`.
+//! Milestone 113 — user-supplied directory exclusion for `waybill scan`.
 //!
 //! The CLI flag `--exclude-path <PATH_OR_PATTERN>` and its env-var
-//! counterpart `MIKEBOM_EXCLUDE_PATH` carry one or more entries into
+//! counterpart `WAYBILL_EXCLUDE_PATH` carry one or more entries into
 //! the scan pipeline. Each entry is classified at parse time:
 //!
 //! - If the text contains any of `*`, `?`, `[`, the entry is a
@@ -270,7 +270,7 @@ impl ExclusionSet {
 //
 // Constitution Principle X (Transparency) requires every SBOM emitted
 // from a scan with active exclusion entries to carry an envelope-level
-// `mikebom:exclude-path` annotation listing those entries (FR-014).
+// `waybill:exclude-path` annotation listing those entries (FR-014).
 // The metadata emitters live deep below the CLI boundary and don't
 // otherwise know about the ExclusionSet. Rather than thread it through
 // every emitter signature (CDX metadata, SPDX 2.3 creationInfo, SPDX 3

@@ -2,7 +2,7 @@
 //! reconciliation integration tests.
 //!
 //! Scans a synthetic npm project where the manifest declares a
-//! dependency that IS resolved by the lockfile. Pre-m191 mikebom
+//! dependency that IS resolved by the lockfile. Pre-m191 waybill
 //! emitted TWO near-duplicate components (design-tier + source-tier);
 //! post-m191 they collapse into ONE source-tier component carrying
 //! the design-tier's requirement-range annotation.
@@ -40,7 +40,7 @@ fn scan(dir: &Path, format: &str) -> Value {
         "--output",
         out_path.to_str().unwrap(),
     ]);
-    let output = cmd.output().expect("spawn mikebom");
+    let output = cmd.output().expect("spawn waybill");
     assert!(
         output.status.success(),
         "scan failed: format={format} stderr={}",
@@ -163,7 +163,7 @@ fn us1_reconciled_component_marked_source_tier() {
     // The reconciliation semantics (annotation transfer, edge rewriting,
     // multi-declaration handling) are exhaustively covered by the
     // reconciler's own unit tests at
-    // `mikebom-cli/src/resolve/reconciler.rs::tests`. This integration
+    // `waybill-cli/src/resolve/reconciler.rs::tests`. This integration
     // test focuses on end-to-end wire-shape assertions the unit tests
     // cannot make.
     //
@@ -175,7 +175,7 @@ fn us1_reconciled_component_marked_source_tier() {
     let doc = scan(&project, "cyclonedx-json");
 
     let component = find_component(&doc, "commander");
-    let sbom_tier = property_value(component, "mikebom:sbom-tier").expect("sbom-tier present");
+    let sbom_tier = property_value(component, "waybill:sbom-tier").expect("sbom-tier present");
     assert_eq!(
         sbom_tier, "source",
         "the emitted commander component MUST be source-tier (concrete version from lockfile)"
