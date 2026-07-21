@@ -11,6 +11,13 @@ pub struct LoaderConfig {
     pub ring_buffer_size: u32,
     pub trace_children: bool,
     pub ebpf_object: Option<PathBuf>,
+    /// Milestone 213 (issue #616) — plumbs `ScanArgs.include_system_reads`
+    /// through to the kernel-side `FILTER_WIDEN[0]` slot per FR-010.
+    /// When `true`, the kernel-side classifier's System-category compare
+    /// short-circuits to `None` — System paths flow through to the ring
+    /// buffer instead of being dropped. UserCache/Ephemeral/CargoFingerprint
+    /// remain active regardless of this flag.
+    pub include_system_reads: bool,
 }
 
 #[cfg(all(target_os = "linux", feature = "ebpf-tracing"))]
@@ -87,6 +94,44 @@ mod inner {
             ) {
                 warn!(error = %e,
                     "CONFIG map set failed; kernel-side will see zeroed TraceConfig defaults");
+            }
+        }
+
+        // Milestone 213 (issue #616) — write the widen-flag config
+        // (FILTER_WIDEN[0]) per FR-010. `1` disables the kernel-side
+        // System-category filter; `0` (default) leaves it active.
+        // On map-attach failure, log WARN + add to the caller's
+        // eventual kprobe_attach_failures[] surface via R9. The trace
+        // continues (fail-open) because the FILTER_WIDEN semantics
+        // are "the kernel-side classifier interprets a missing/absent
+        // FILTER_WIDEN as widen=false = filter active" — matches
+        // pre-m213 System-category filtering behavior.
+        {
+            match aya::maps::PerCpuArray::try_from(
+                bpf.map_mut("FILTER_WIDEN")
+                    .context("FILTER_WIDEN map not found")?,
+            ) {
+                Ok(mut widen_map) => {
+                    let widen_val: u8 = if config.include_system_reads { 1 } else { 0 };
+                    let nr_cpus = aya::util::nr_cpus()
+                        .context("failed to detect online CPU count for FILTER_WIDEN write")?;
+                    let per_cpu_values: aya::maps::PerCpuValues<u8> =
+                        aya::maps::PerCpuValues::try_from(vec![widen_val; nr_cpus])?;
+                    if let Err(e) = widen_map.set(0, per_cpu_values, 0) {
+                        warn!(error = %e,
+                            include_system_reads = config.include_system_reads,
+                            "FILTER_WIDEN set failed; kernel-side will see per-CPU-zero widen flag (System filter active)");
+                    } else {
+                        info!(
+                            include_system_reads = config.include_system_reads,
+                            "m213 widen flag written to FILTER_WIDEN[0]"
+                        );
+                    }
+                }
+                Err(e) => {
+                    warn!(error = %e,
+                        "FILTER_WIDEN map not usable on this kernel; System filter will always be active regardless of --include-system-reads");
+                }
             }
         }
 

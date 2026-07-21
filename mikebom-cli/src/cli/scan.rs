@@ -218,6 +218,9 @@ async fn execute_scan(args: ScanArgs) -> anyhow::Result<()> {
         ring_buffer_size: args.ring_buffer_size,
         ebpf_object: None,
         trace_children: args.trace_children,
+        // Milestone 213 (issue #616) — plumbs --include-system-reads
+        // to the kernel-side FILTER_WIDEN[0] slot per FR-010.
+        include_system_reads: args.include_system_reads,
     })?;
     tracing::info!("eBPF probes attached");
 

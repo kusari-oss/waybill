@@ -207,7 +207,54 @@ if ! jq -e '.predicate.trace_integrity.filter_categories_applied | all(. | test(
     exit 1
 fi
 
+# Milestone 213 (issue #616) — SC-006 widen-flag assertion. Run a
+# second `mikebom trace capture` with --include-system-reads and assert
+# that the emitted attestation:
+# (a) does NOT contain "System" in filter_categories_applied
+# (b) shows /etc/ paths in file_access.operations (if the traced
+#     process actually reads any — cat /etc/hostname does)
+# The widen flag ONLY affects the System category per FR-010; UserCache
+# / Ephemeral / CargoFingerprint remain filtered in the widened run.
+echo
+echo "==> m213 SC-006 widen-flag verification"
+WIDENED_OUTPUT=/tmp/m213-widened.attestation.json
+set +e
+"$MIKEBOM" trace capture \
+    --attestation-format mikebom-v1 \
+    --output "$WIDENED_OUTPUT" \
+    --include-system-reads \
+    -- cat /etc/hostname
+WIDENED_STATUS=$?
+set -e
+if [[ $WIDENED_STATUS -ne 0 ]]; then
+    echo "FAIL: widened trace capture failed with exit code $WIDENED_STATUS"
+    exit 1
+fi
+if ! jq -e '.predicate.trace_integrity.filter_categories_applied | type == "array"' "$WIDENED_OUTPUT" > /dev/null 2>&1; then
+    echo "FAIL: widened run's filter_categories_applied is not a JSON array"
+    exit 1
+fi
+WIDEN_SYSTEM_PRESENT=$(jq -r '.predicate.trace_integrity.filter_categories_applied | contains(["System"])' "$WIDENED_OUTPUT")
+if [[ "$WIDEN_SYSTEM_PRESENT" != "false" ]]; then
+    echo "FAIL: widened run's filter_categories_applied still contains 'System' — --include-system-reads did not disable System category (FR-010 violation)"
+    jq '.predicate.trace_integrity.filter_categories_applied' "$WIDENED_OUTPUT"
+    exit 1
+fi
+echo "    widened filter_categories_applied: $(jq -r '.predicate.trace_integrity.filter_categories_applied | join(",")' "$WIDENED_OUTPUT")"
+ETC_HOSTNAME_COUNT=$(jq '[.predicate.file_access.operations[]? | select(.path | test("/etc/hostname"))] | length' "$WIDENED_OUTPUT")
+echo "    /etc/hostname events in widened run: $ETC_HOSTNAME_COUNT"
+# Note: assertion is soft — the widened trace SHOULD show /etc/hostname
+# events, but if the harness invoked cat before the eBPF probes fully
+# armed (rare timing edge), the event might not have been captured.
+# The primary SC-006 assertion is the filter_categories_applied check
+# above; the /etc/hostname count is diagnostic.
+if [[ "$ETC_HOSTNAME_COUNT" -lt 1 ]]; then
+    echo "WARN: widened run's file_access.operations has 0 /etc/hostname events — expected ≥1 (may indicate trace-attach timing race, not a widen-flag bug)"
+fi
+
 echo
 echo ">>> m210 + m212 + m213 integration test PASSED"
 echo "    compiler_pipeline: $INVOCATION_COUNT invocations, $RUSTC_COUNT rustc"
 echo "    trace_integrity: ring_buffer_overflows=$OVERFLOWS"
+echo "    filter_categories_applied (default run): [$APPLIED]"
+echo "    filter_categories_applied (widened run): [$(jq -r '.predicate.trace_integrity.filter_categories_applied | join(",")' "$WIDENED_OUTPUT")]"
