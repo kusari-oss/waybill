@@ -1,13 +1,13 @@
 [workspace]
-members = ["mikebom-cli", "mikebom-common", "xtask"]
-exclude = ["mikebom-ebpf"]
+members = ["waybill-cli", "waybill-common", "xtask"]
+exclude = ["waybill-ebpf"]
 resolver = "2"
 
 [workspace.package]
 version = "0.1.0-alpha.65"
 edition = "2021"
 license = "Apache-2.0"
-repository = "https://github.com/kusari-sandbox/mikebom"
+repository = "https://github.com/kusari-sandbox/waybill"
 
 [workspace.dependencies]
 anyhow = "1"
@@ -28,5 +28,5 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # in Cargo.lock.
 url = "2"
 
-# mikebom-ebpf is built separately via xtask (different target triple)
+# waybill-ebpf is built separately via xtask (different target triple)
 # and is NOT a workspace member — it uses #![no_std] + nightly + bpf target
