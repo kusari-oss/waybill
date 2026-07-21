@@ -37,6 +37,7 @@ description: "Task list for m213 — kernel-side trace-noise filter for file_ops
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
 - [ ] T004 [P] Create `FilterCategoryTag` `#[repr(u8)]` enum with 4 variants (`System=0`, `UserCache=1`, `Ephemeral=2`, `CargoFingerprint=3`) + `ALL: [FilterCategoryTag; 4]` const + `name(self) -> &'static str` + `TryFrom<u8>` impl in `mikebom-common/src/events.rs`. Include unit tests for round-trip (u8 → variant → u8) and name-stability (variant → &str MUST return exact wire strings per contracts/filter-category-tag.md).
+- [ ] T004a [P] Add wire-shape pin test `file_event_size_is_stable` in `mikebom-common/src/events.rs::tests` guarding FR-005: `assert_eq!(std::mem::size_of::<FileEvent>(), <current-size>);` where `<current-size>` is the value read from the pre-m213 build (run `cargo test -p mikebom-common --lib -- --nocapture` on `main` post-m212 to capture it, then pin in the test). Test FAILS if the struct grows/shrinks post-m213, catching any accidental wire-shape drift (a critical FR-005 guarantee that would otherwise be enforced only by design-time argument).
 - [ ] T005 [P] Add `increment_filter_category_hit(cat: u8)` `#[inline(always)]` helper in `mikebom-ebpf/src/helpers.rs`. Uses `FILTER_CATEGORY_HITS.get_ptr_mut(cat as u32)` + `saturating_add(1)`. Mirrors m212's `increment_drop_counter` pattern verbatim.
 - [ ] T006 Add `FILTER_CATEGORY_HITS: PerCpuArray<u64>` (4 slots) `#[map]` declaration in `mikebom-ebpf/src/maps.rs`. Placement: adjacent to m212's `FILE_EVENT_DROPS` declaration. Comment cites data-model.md E2.
 
@@ -65,7 +66,7 @@ description: "Task list for m213 — kernel-side trace-noise filter for file_ops
 - [ ] T012 [US1] Wire `path_matches_filter_category` into `try_do_filp_open` in `mikebom-ebpf/src/programs/file_ops.rs`: after path is read into local `[u8; 256]` (line ~234) and BEFORE `FILE_EVENTS.reserve()`, call the classifier; if `Some(cat)`, call `increment_filter_category_hit(cat as u8)` and `return Ok(0)` (early exit — no `FILE_EVENTS.reserve()` call, no `FILE_EVENT_DROPS` increment).
 - [ ] T013 [US1] Wire same short-circuit into `try_openat2` (line ~154). Identical pattern to T012 — classifier call before `FILE_EVENTS.reserve()`.
 - [ ] T014 [US1] Extend `scripts/ebpf-integration-test.sh` with SC-001 jq assertion: `RUSTC_FILE_COUNT=$(jq '[.predicate.file_access.operations[] | select(.comm == "rustc")] | length' "$OUTPUT")` and `[[ "$RUSTC_FILE_COUNT" -ge 1 ]] || (echo "FAIL: 0 rustc file events (m213 SC-001 target)" && exit 1)`. Add a parallel `LINKER_FILE_COUNT` assertion for `ld` / `ld.lld` / `mold` comm names.
-- [ ] T015 [US1] Verify US1 end-to-end in Colima: `docker build -f Dockerfile.ebpf-test -t mikebom-ebpf-test . && docker run --rm --privileged -v /sys/kernel/debug:/sys/kernel/debug mikebom-ebpf-test /mikebom/scripts/ebpf-integration-test.sh`. Expected: rustc file events appear; harness passes SC-001. If the verifier rejects the classifier, revert T008–T011 and re-apply per contracts/ebpf-verifier-notes.md Rules 1–5.
+- [ ] T015 [US1] Verify US1 end-to-end in Colima (kernel 6.8 aarch64): `docker build -f Dockerfile.ebpf-test -t mikebom-ebpf-test . && docker run --rm --privileged -v /sys/kernel/debug:/sys/kernel/debug mikebom-ebpf-test /mikebom/scripts/ebpf-integration-test.sh`. Expected: rustc file events appear; harness passes SC-001. **Multi-kernel coverage note per SC-003 + SC-004 + FR-013**: T015 verifies Colima 6.8 locally; the remaining three kernels (5.15 LTS, 6.1 LTS, 6.6) are exercised automatically by CI's `lint-and-test-ebpf` matrix job on PR push. If ANY of the four kernels rejects the classifier (verifier error at load time, visible in the CI job's step output), revert T008–T011 and re-apply per contracts/ebpf-verifier-notes.md Rules 1–5. Do not merge before all four kernel lanes are green.
 
 **Checkpoint**: The kernel-side filter drops events; rustc file events appear in the attestation. **BUT** — per plan.md Principle VIII analysis, this state is NOT mergeable without US2 (the transparent aggregate). Continue to Phase 4.
 
@@ -198,7 +199,7 @@ Task: "Add FilterCategoryHitsSummary struct in mikebom-cli/src/trace/counters.rs
 
 ### Single-developer solo sequencing (recommended for this milestone)
 
-Given the tight cross-file dependencies within mikebom-ebpf and the single-crate `trace/counters.rs` module, solo sequential execution beats parallel-team overhead. Ordered: T001 → T002 → T003 → T004 → T005 → T006 → T007 → T008 → T009 → T010 → T011 → T012 → T013 → T014 → T015 → T016 → T017 → T018 → T019 → T020 → T021 → T022 → T023 → T024 → T025 → T026 → T027 → T028 → T029 → T030 → T031 → T032 → T033 → T034 → T035 → T036 → T037 → T038.
+Given the tight cross-file dependencies within mikebom-ebpf and the single-crate `trace/counters.rs` module, solo sequential execution beats parallel-team overhead. Ordered: T001 → T002 → T003 → T004 → T004a → T005 → T006 → T007 → T008 → T009 → T010 → T011 → T012 → T013 → T014 → T015 → T016 → T017 → T018 → T019 → T020 → T021 → T022 → T023 → T024 → T025 → T026 → T027 → T028 → T029 → T030 → T031 → T032 → T033 → T034 → T035 → T036 → T037 → T038.
 
 ---
 
