@@ -101,6 +101,10 @@ mod inner {
         ///
         /// Reads from `network_rb` and `file_rb`, sending decoded events
         /// through the provided channels. Returns final stats on completion.
+        // Three ring buffers × two channels each (drain + forward) + stop + stats
+        // is intrinsic to the eBPF map fan-in; splitting them into a config
+        // struct would just move the arg count somewhere else.
+        #[allow(clippy::too_many_arguments)]
         pub async fn run(
             mut network_rb: RingBuf<&mut aya::maps::MapData>,
             mut file_rb: RingBuf<&mut aya::maps::MapData>,

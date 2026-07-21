@@ -19,6 +19,19 @@
 //! aggregate is a **partial sum** — a floor, not a total. The caller
 //! reports the failing map name via `TraceIntegrity.kprobe_attach_failures[]`
 //! per Q3 so downstream consumers can tell.
+//!
+//! Dead-code allowance rationale: on default-features / non-Linux
+//! hosts (macOS dev, linux-x86_64 without --features ebpf-tracing),
+//! the caller path in `scan.rs::execute_scan` is `#[cfg(all(
+//! target_os = "linux", feature = "ebpf-tracing"))]`-gated. The
+//! module's public types + functions compile everywhere (so the
+//! unit tests run cross-platform) but are only actively called on
+//! the eBPF-tracing build; hence the module-level dead_code allow.
+
+#![cfg_attr(
+    not(all(target_os = "linux", feature = "ebpf-tracing")),
+    allow(dead_code)
+)]
 
 use std::collections::HashMap;
 
