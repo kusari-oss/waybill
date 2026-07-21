@@ -1,16 +1,16 @@
-Package: mikebom-fixture-libc
+Package: waybill-fixture-libc
 Version: 2.38
-Architecture: mikebom-fixture-arch
+Architecture: waybill-fixture-arch
 License: LGPL-2.1-or-later
 Status: install user installed
 
-Package: mikebom-fixture-libssl
+Package: waybill-fixture-libssl
 Version: 3.0.5
-Architecture: mikebom-fixture-arch
+Architecture: waybill-fixture-arch
 License: Apache-2.0
 Status: install user installed
 
-Package: nativesdk-mikebom-fixture-cmake
+Package: nativesdk-waybill-fixture-cmake
 Version: 3.27.0
 Architecture: x86_64
 License: BSD-3-Clause

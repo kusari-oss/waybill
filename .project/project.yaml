@@ -4,7 +4,7 @@
 # This file contains standard CNCF .project fields.
 # Extension fields are in separate files (darnit.yaml, etc.)
 
-name: mikebom
+name: waybill
 description: ''
 schema_version: '1.0'
 type: software

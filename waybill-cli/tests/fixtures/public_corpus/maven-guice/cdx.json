@@ -32,27 +32,27 @@
       "name": "google_bazel_common",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"WORKSPACE\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:bazel-archive-name",
+          "name": "waybill:bazel-archive-name",
           "value": "google_bazel_common"
         },
         {
-          "name": "mikebom:download-url",
+          "name": "waybill:download-url",
           "value": "https://github.com/google/bazel-common/archive/bf8e5ef95b118d1716b0cb4982cf15b6ed1c896f.zip"
         },
         {
-          "name": "mikebom:source-mechanism",
+          "name": "waybill:source-mechanism",
           "value": "bazel-http-archive"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -85,27 +85,27 @@
       "name": "rules_jvm_external",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"WORKSPACE\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:bazel-archive-name",
+          "name": "waybill:bazel-archive-name",
           "value": "rules_jvm_external"
         },
         {
-          "name": "mikebom:download-url",
+          "name": "waybill:download-url",
           "value": "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip"
         },
         {
-          "name": "mikebom:source-mechanism",
+          "name": "waybill:source-mechanism",
           "value": "bazel-http-archive"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -139,23 +139,23 @@
       "name": "aopalliance",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"core/pom.xml\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"\"]"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
@@ -192,27 +192,27 @@
       "name": "bnd",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:biz.aqute:bnd:0.0.384:*:*:*:*:*:*:* | cpe:2.3:a:aqute:bnd:0.0.384:*:*:*:*:*:*:* | cpe:2.3:a:bnd:bnd:0.0.384:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"core/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "test"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
@@ -250,27 +250,27 @@
       "name": "auto-value-annotations",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:com.google.auto.value:auto-value-annotations:1.6.3:*:*:*:*:*:*:* | cpe:2.3:a:value:auto-value-annotations:1.6.3:*:*:*:*:*:*:* | cpe:2.3:a:auto-value-annotations:auto-value-annotations:1.6.3:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/dagger-adapter/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "test"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/dagger-adapter\"]"
         }
       ],
@@ -308,27 +308,27 @@
       "name": "auto-value",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:com.google.auto.value:auto-value:1.6.3:*:*:*:*:*:*:* | cpe:2.3:a:value:auto-value:1.6.3:*:*:*:*:*:*:* | cpe:2.3:a:auto-value:auto-value:1.6.3:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/dagger-adapter/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "test"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/dagger-adapter\"]"
         }
       ],
@@ -366,27 +366,27 @@
       "name": "jsr305",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:com.google.code.findbugs:jsr305:unknown:*:*:*:*:*:*:* | cpe:2.3:a:findbugs:jsr305:unknown:*:*:*:*:*:*:* | cpe:2.3:a:jsr305:jsr305:unknown:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/throwingproviders/pom.xml\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"\"]"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/throwingproviders\"]"
         }
       ],
@@ -423,27 +423,27 @@
       "name": "dagger-producers",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:com.google.dagger:dagger-producers:2.22.1:*:*:*:*:*:*:* | cpe:2.3:a:dagger:dagger-producers:2.22.1:*:*:*:*:*:*:* | cpe:2.3:a:dagger-producers:dagger-producers:2.22.1:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/dagger-adapter/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "test"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/dagger-adapter\"]"
         }
       ],
@@ -481,31 +481,31 @@
       "name": "dagger",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:com.google.dagger:dagger:2.22.1:*:*:*:*:*:*:* | cpe:2.3:a:dagger:dagger:2.22.1:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/dagger-adapter/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "optional"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:optional-derivation",
+          "name": "waybill:optional-derivation",
           "value": "maven-optional-element"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/dagger-adapter\"]"
         }
       ],
@@ -543,35 +543,35 @@
       "name": "error_prone_annotations",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:com.google.errorprone:error_prone_annotations:unknown:*:*:*:*:*:*:* | cpe:2.3:a:errorprone:error_prone_annotations:unknown:*:*:*:*:*:*:* | cpe:2.3:a:error_prone_annotations:error_prone_annotations:unknown:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"core/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "optional"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"\"]"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:optional-derivation",
+          "name": "waybill:optional-derivation",
           "value": "maven-optional-element"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
@@ -609,31 +609,31 @@
       "name": "guava-testlib",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:com.google.guava:guava-testlib:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guava:guava-testlib:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guava-testlib:guava-testlib:unknown:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"core/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "test"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"\"]"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
@@ -671,27 +671,27 @@
       "name": "guava",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:com.google.guava:guava:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guava:guava:unknown:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"core/pom.xml\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"\"]"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
@@ -728,27 +728,27 @@
       "name": "guice-assistedinject",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:com.google.inject.extensions:guice-assistedinject:unknown:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-assistedinject:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guice-assistedinject:guice-assistedinject:unknown:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/grapher/pom.xml\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"${project.version}\"]"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/grapher\"]"
         }
       ],
@@ -785,27 +785,27 @@
       "name": "guice-servlet",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:com.google.inject.extensions:guice-servlet:unknown:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-servlet:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guice-servlet:guice-servlet:unknown:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/struts2/pom.xml\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"${project.version}\"]"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/struts2\"]"
         }
       ],
@@ -842,27 +842,27 @@
       "name": "guice-testlib",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:com.google.inject.extensions:guice-testlib:5.1.0:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-testlib:5.1.0:*:*:*:*:*:*:* | cpe:2.3:a:guice-testlib:guice-testlib:5.1.0:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"examples/guice-demo/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "test"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"examples/guice-demo\"]"
         }
       ],
@@ -900,27 +900,27 @@
       "name": "guice-throwingproviders",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:com.google.inject.extensions:guice-throwingproviders:unknown:*:*:*:*:*:*:* | cpe:2.3:a:extensions:guice-throwingproviders:unknown:*:*:*:*:*:*:* | cpe:2.3:a:guice-throwingproviders:guice-throwingproviders:unknown:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/testlib/pom.xml\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"${project.version}\"]"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/testlib\"]"
         }
       ],
@@ -957,23 +957,23 @@
       "name": "guice",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:com.google.inject:guice:5.1.0:*:*:*:*:*:*:* | cpe:2.3:a:inject:guice:5.1.0:*:*:*:*:*:*:* | cpe:2.3:a:guice:guice:5.1.0:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"examples/guice-demo/pom.xml\"]"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"examples/guice-demo\"]"
         }
       ],
@@ -1010,31 +1010,31 @@
       "name": "truth-java8-extension",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:com.google.truth.extensions:truth-java8-extension:unknown:*:*:*:*:*:*:* | cpe:2.3:a:extensions:truth-java8-extension:unknown:*:*:*:*:*:*:* | cpe:2.3:a:truth-java8-extension:truth-java8-extension:unknown:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"core/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "test"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"\"]"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
@@ -1072,31 +1072,31 @@
       "name": "truth",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:com.google.truth:truth:unknown:*:*:*:*:*:*:* | cpe:2.3:a:truth:truth:unknown:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"core/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "test"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"\"]"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
@@ -1134,27 +1134,27 @@
       "name": "jakarta.inject-api",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:jakarta.inject:jakarta.inject-api:unknown:*:*:*:*:*:*:* | cpe:2.3:a:inject:jakarta.inject-api:unknown:*:*:*:*:*:*:* | cpe:2.3:a:jakarta.inject-api:jakarta.inject-api:unknown:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"core/pom.xml\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"\"]"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
@@ -1191,31 +1191,31 @@
       "name": "jakarta.inject-tck",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:jakarta.inject:jakarta.inject-tck:unknown:*:*:*:*:*:*:* | cpe:2.3:a:inject:jakarta.inject-tck:unknown:*:*:*:*:*:*:* | cpe:2.3:a:jakarta.inject-tck:jakarta.inject-tck:unknown:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"core/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "test"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"\"]"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
@@ -1253,27 +1253,27 @@
       "name": "jakarta.persistence-api",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:jakarta.persistence:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:* | cpe:2.3:a:persistence:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:* | cpe:2.3:a:jakarta.persistence-api:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/persist/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "build"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/persist\"]"
         }
       ],
@@ -1311,27 +1311,27 @@
       "name": "jakarta.servlet-api",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:jakarta.servlet:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:* | cpe:2.3:a:servlet:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:* | cpe:2.3:a:jakarta.servlet-api:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/persist/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "build"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/persist\"]"
         }
       ],
@@ -1369,19 +1369,19 @@
       "name": "junit",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"pom.xml\"]"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "transitive"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1418,27 +1418,27 @@
       "name": "org.apache.felix.framework",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:org.apache.felix:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:* | cpe:2.3:a:felix:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:* | cpe:2.3:a:org.apache.felix.framework:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"core/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "test"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
@@ -1476,27 +1476,27 @@
       "name": "struts2-core",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:org.apache.struts:struts2-core:2.5.30:*:*:*:*:*:*:* | cpe:2.3:a:struts:struts2-core:2.5.30:*:*:*:*:*:*:* | cpe:2.3:a:struts2-core:struts2-core:2.5.30:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/struts2/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "build"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/struts2\"]"
         }
       ],
@@ -1534,27 +1534,27 @@
       "name": "hamcrest-core",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:org.hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:* | cpe:2.3:a:hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:* | cpe:2.3:a:hamcrest-core:hamcrest-core:1.3:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/persist/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "test"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/persist\"]"
         }
       ],
@@ -1592,27 +1592,27 @@
       "name": "hamcrest-library",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:org.hamcrest:hamcrest-library:1.3:*:*:*:*:*:*:* | cpe:2.3:a:hamcrest:hamcrest-library:1.3:*:*:*:*:*:*:* | cpe:2.3:a:hamcrest-library:hamcrest-library:1.3:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/persist/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "test"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/persist\"]"
         }
       ],
@@ -1650,27 +1650,27 @@
       "name": "hibernate-core-jakarta",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:org.hibernate:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:* | cpe:2.3:a:hibernate:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:* | cpe:2.3:a:hibernate-core-jakarta:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/persist/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "test"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/persist\"]"
         }
       ],
@@ -1708,27 +1708,27 @@
       "name": "hsqldb-j5",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:org.hsqldb:hsqldb-j5:2.0.0:*:*:*:*:*:*:* | cpe:2.3:a:hsqldb:hsqldb-j5:2.0.0:*:*:*:*:*:*:* | cpe:2.3:a:hsqldb-j5:hsqldb-j5:2.0.0:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/persist/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "test"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/persist\"]"
         }
       ],
@@ -1766,27 +1766,27 @@
       "name": "mockito-core",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:org.mockito:mockito-core:4.2.0:*:*:*:*:*:*:* | cpe:2.3:a:mockito:mockito-core:4.2.0:*:*:*:*:*:*:* | cpe:2.3:a:mockito-core:mockito-core:4.2.0:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/persist/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "test"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/persist\"]"
         }
       ],
@@ -1824,35 +1824,35 @@
       "name": "asm",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:org.ow2.asm:asm:unknown:*:*:*:*:*:*:* | cpe:2.3:a:asm:asm:unknown:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"core/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "optional"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"\"]"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:optional-derivation",
+          "name": "waybill:optional-derivation",
           "value": "maven-optional-element"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"core\"]"
         }
       ],
@@ -1890,27 +1890,27 @@
       "name": "slf4j-simple",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:org.slf4j:slf4j-simple:1.6.1:*:*:*:*:*:*:* | cpe:2.3:a:slf4j:slf4j-simple:1.6.1:*:*:*:*:*:*:* | cpe:2.3:a:slf4j-simple:slf4j-simple:1.6.1:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/persist/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "test"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/persist\"]"
         }
       ],
@@ -1948,27 +1948,27 @@
       "name": "spring-beans",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:org.springframework:spring-beans:5.3.18:*:*:*:*:*:*:* | cpe:2.3:a:springframework:spring-beans:5.3.18:*:*:*:*:*:*:* | cpe:2.3:a:spring-beans:spring-beans:5.3.18:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/spring/pom.xml\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "build"
         },
         {
-          "name": "mikebom:source-type",
+          "name": "waybill:source-type",
           "value": "workspace"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"extensions/spring\"]"
         }
       ],
@@ -2005,15 +2005,15 @@
       "name": "deploy-library.sh",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"util/deploy-library.sh\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"util/deploy-library.sh\"]"
         }
       ],
@@ -2045,15 +2045,15 @@
       "name": "install-local-snapshot.sh",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"util/install-local-snapshot.sh\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"util/install-local-snapshot.sh\"]"
         }
       ],
@@ -2085,15 +2085,15 @@
       "name": "diff-jars.sh",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"util/diff-jars.sh\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"util/diff-jars.sh\"]"
         }
       ],
@@ -2125,15 +2125,15 @@
       "name": "pom.xml",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"bom/pom.xml\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"bom/pom.xml\"]"
         }
       ],
@@ -2165,15 +2165,15 @@
       "name": "pom.xml",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/jmx/pom.xml\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"extensions/jmx/pom.xml\"]"
         }
       ],
@@ -2205,15 +2205,15 @@
       "name": "generate-latest-docs.sh",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"util/generate-latest-docs.sh\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"util/generate-latest-docs.sh\"]"
         }
       ],
@@ -2245,15 +2245,15 @@
       "name": "pom.xml",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/servlet/pom.xml\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"extensions/servlet/pom.xml\"]"
         }
       ],
@@ -2285,15 +2285,15 @@
       "name": "pom.xml",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/assistedinject/pom.xml\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"extensions/assistedinject/pom.xml\"]"
         }
       ],
@@ -2325,15 +2325,15 @@
       "name": "deploy-guice.sh",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"util/deploy-guice.sh\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"util/deploy-guice.sh\"]"
         }
       ],
@@ -2365,15 +2365,15 @@
       "name": "pom.xml",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"extensions/jndi/pom.xml\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"extensions/jndi/pom.xml\"]"
         }
       ],
@@ -2405,15 +2405,15 @@
       "name": "publish-latest-docs.sh",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"util/publish-latest-docs.sh\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"util/publish-latest-docs.sh\"]"
         }
       ],
@@ -2728,12 +2728,12 @@
   "metadata": {
     "authors": [
       {
-        "name": "mikebom"
+        "name": "waybill"
       }
     ],
     "component": {
       "bom-ref": "maven-guice@b0e1d0f",
-      "cpe": "cpe:2.3:a:mikebom:maven-guice:b0e1d0f:*:*:*:*:*:*:*",
+      "cpe": "cpe:2.3:a:waybill:maven-guice:b0e1d0f:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",
@@ -2763,51 +2763,51 @@
     ],
     "properties": [
       {
-        "name": "mikebom:generation-context",
+        "name": "waybill:generation-context",
         "value": "filesystem-scan"
       },
       {
-        "name": "mikebom:os-release-missing-fields",
+        "name": "waybill:os-release-missing-fields",
         "value": "ID,VERSION_ID"
       },
       {
-        "name": "mikebom:trace-integrity-ring-buffer-overflows",
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
         "value": "0"
       },
       {
-        "name": "mikebom:trace-integrity-events-dropped",
+        "name": "waybill:trace-integrity-events-dropped",
         "value": "0"
       },
       {
-        "name": "mikebom:trace-integrity-uprobe-attach-failures",
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
         "value": "0"
       },
       {
-        "name": "mikebom:trace-integrity-kprobe-attach-failures",
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
         "value": "0"
       },
       {
-        "name": "mikebom:graph-completeness",
+        "name": "waybill:graph-completeness",
         "value": "partial"
       },
       {
-        "name": "mikebom:graph-completeness-reason",
+        "name": "waybill:graph-completeness-reason",
         "value": "orphaned-components-detected: 9 component(s) not reachable from root; transitive-edges-unresolvable: maven"
       },
       {
-        "name": "mikebom:workspaces-detected",
+        "name": "waybill:workspaces-detected",
         "value": "[\".\",\"core\",\"examples/guice-demo\",\"extensions/dagger-adapter\",\"extensions/grapher\",\"extensions/persist\",\"extensions/spring\",\"extensions/struts2\",\"extensions/testlib\",\"extensions/throwingproviders\"]"
       }
     ],
     "supplier": {
-      "name": "mikebom contributors"
+      "name": "waybill contributors"
     },
     "timestamp": "<masked>",
     "tools": {
       "components": [
         {
-          "name": "mikebom",
-          "publisher": "mikebom contributors",
+          "name": "waybill",
+          "publisher": "waybill contributors",
           "type": "application",
           "version": "0.1.0-alpha.62"
         }

@@ -10,15 +10,15 @@
       "bom-ref": "pkg:golang/example.com/demo-go@v0.1.0",
       "properties": [
         {
-          "name": "mikebom:component-role",
+          "name": "waybill:component-role",
           "value": "main-module"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:source-document-binding",
+          "name": "waybill:source-document-binding",
           "value": "{\"algo\":\"v1\",\"hash\":\"745289decaf84d67e5cc9b333b435e8cc341ac19f7ab16673f05133d459a6111\",\"source_doc_id\":{\"sha256\":\"0000000000000000000000000000000000000000000000000000000000000000\"},\"strength\":\"verified\"}"
         }
       ]

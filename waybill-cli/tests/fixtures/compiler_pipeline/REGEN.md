@@ -15,9 +15,9 @@ A Cargo workspace with:
 
 **Test assertions** (per T035):
 
-1. `safe-only`'s `mikebom:source-read-set` MUST NOT contain any
+1. `safe-only`'s `waybill:source-read-set` MUST NOT contain any
    `libvuln` source path.
-2. `vuln-included`'s `mikebom:source-read-set` MUST contain paths
+2. `vuln-included`'s `waybill:source-read-set` MUST contain paths
    from BOTH `libsafe` AND `libvuln`.
 3. Both binaries' source-read-sets MUST contain `libsafe` paths.
 
@@ -28,12 +28,12 @@ Edit files in place; commit changes.
 
 **Status**: not yet vendored (needs the shell-script + Cargo
 scaffold — deferred to a Linux implementation session where
-`sudo mikebom trace run` can actually exercise it).
+`sudo waybill trace run` can actually exercise it).
 
 Intended shape: a shell script that reads from a synthetic secret
 path THEN compiles a trivial C program. The trace attaches to the
 shell; the fake secret's path lands in the denylist filter, and the
-resulting SBOM carries `mikebom:secrets-read-filtered = "1"` at
+resulting SBOM carries `waybill:secrets-read-filtered = "1"` at
 document scope.
 
 ## `stdin_input/` (T017 — FR-018 coverage)
@@ -42,7 +42,7 @@ document scope.
 to a Linux implementation session).
 
 Intended shape: `gcc -x c - -o /tmp/stdin_output` with the C source
-piped in via stdin. Verifies the `mikebom:stdin-input` marker fires
+piped in via stdin. Verifies the `waybill:stdin-input` marker fires
 correctly.
 
 ## Why the deferrals
@@ -53,5 +53,5 @@ kernel-side code that requires nightly Rust + `bpf-linker` +
 `CAP_BPF` to compile-verify and test. This session (macOS host) can
 land the user-space Rust types + the `two_binaries_diverge` fixture
 which are OS-agnostic; the `secrets_touch` + `stdin_input` fixtures
-depend on `sudo mikebom trace run` actually working, so they land
+depend on `sudo waybill trace run` actually working, so they land
 alongside their tests in the Linux session.

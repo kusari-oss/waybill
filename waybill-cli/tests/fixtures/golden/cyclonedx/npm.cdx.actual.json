@@ -35,15 +35,15 @@
       "name": "express",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"node_modules/express/package.json\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "deployed"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"node_modules/express\"]"
         }
       ],
@@ -88,15 +88,15 @@
       "name": "safe-buffer",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"node_modules/safe-buffer/package.json\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "deployed"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\"node_modules/safe-buffer\"]"
         }
       ],
@@ -126,15 +126,15 @@
       "name": "package.json",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"package.json\"]"
         }
       ],
@@ -195,7 +195,7 @@
   "metadata": {
     "authors": [
       {
-        "name": "mikebom"
+        "name": "waybill"
       }
     ],
     "component": {
@@ -204,19 +204,19 @@
       "name": "node-modules-walk-fixture",
       "properties": [
         {
-          "name": "mikebom:component-role",
+          "name": "waybill:component-role",
           "value": "main-module"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"path+file://<WORKSPACE>/tests/fixtures/npm/node-modules-walk\"]"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -244,47 +244,47 @@
     ],
     "properties": [
       {
-        "name": "mikebom:generation-context",
+        "name": "waybill:generation-context",
         "value": "filesystem-scan"
       },
       {
-        "name": "mikebom:os-release-missing-fields",
+        "name": "waybill:os-release-missing-fields",
         "value": "ID,VERSION_ID"
       },
       {
-        "name": "mikebom:trace-integrity-ring-buffer-overflows",
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
         "value": "0"
       },
       {
-        "name": "mikebom:trace-integrity-events-dropped",
+        "name": "waybill:trace-integrity-events-dropped",
         "value": "0"
       },
       {
-        "name": "mikebom:trace-integrity-uprobe-attach-failures",
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
         "value": "0"
       },
       {
-        "name": "mikebom:trace-integrity-kprobe-attach-failures",
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
         "value": "0"
       },
       {
-        "name": "mikebom:graph-completeness",
+        "name": "waybill:graph-completeness",
         "value": "complete"
       },
       {
-        "name": "mikebom:workspaces-detected",
+        "name": "waybill:workspaces-detected",
         "value": "[\".\",\"node_modules/express\",\"node_modules/safe-buffer\"]"
       }
     ],
     "supplier": {
-      "name": "mikebom contributors"
+      "name": "waybill contributors"
     },
     "timestamp": "1970-01-01T00:00:00Z",
     "tools": {
       "components": [
         {
-          "name": "mikebom",
-          "publisher": "mikebom contributors",
+          "name": "waybill",
+          "publisher": "waybill contributors",
           "type": "application",
           "version": "0.1.0-alpha.61"
         }

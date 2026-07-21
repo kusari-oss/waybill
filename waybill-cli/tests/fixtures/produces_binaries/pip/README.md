@@ -1,4 +1,4 @@
-# pip fixtures — `mikebom:produces-binaries` (milestone 116 PR-B)
+# pip fixtures — `waybill:produces-binaries` (milestone 116 PR-B)
 
 | Sub-fixture | Manifest shape | Expected |
 |---|---|---|

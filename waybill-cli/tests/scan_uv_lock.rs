@@ -18,7 +18,7 @@ use common::normalize::apply_fake_home_env;
 
 /// Path to the in-repo uv_lock/basic fixture. Per research R6,
 /// milestone-106 fixtures live in the local repo (not the external
-/// mikebom-test-fixtures repo) because they're small + tightly
+/// waybill-test-fixtures repo) because they're small + tightly
 /// coupled to the per-reader implementation.
 fn basic_fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))

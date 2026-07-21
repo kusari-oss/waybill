@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://kusari-oss.github.io/mikebom/reference/corpus-record-v2.schema.json",
-  "title": "mikebom fingerprint corpus record (v2)",
-  "description": "A single (library, version-range, ABI) tuple description with multi-indicator match specifications and provenance. Consumed by mikebom-cli's fingerprint matcher. See milestone 110 spec.md + data-model.md for the design intent.",
+  "$id": "https://kusari-oss.github.io/waybill/reference/corpus-record-v2.schema.json",
+  "title": "waybill fingerprint corpus record (v2)",
+  "description": "A single (library, version-range, ABI) tuple description with multi-indicator match specifications and provenance. Consumed by waybill-cli's fingerprint matcher. See milestone 110 spec.md + data-model.md for the design intent.",
   "type": "object",
   "required": ["id", "purl", "version_range", "indicators", "provenance", "schema_version"],
   "additionalProperties": false,

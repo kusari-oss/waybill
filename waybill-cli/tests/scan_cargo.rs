@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 fn fixture(sub: &str) -> PathBuf {
-    // Milestone 090: cargo fixtures moved to mikebom-test-fixtures repo,
+    // Milestone 090: cargo fixtures moved to waybill-test-fixtures repo,
     // resolved via build.rs's WAYBILL_FIXTURES_DIR env var.
     PathBuf::from(env!("WAYBILL_FIXTURES_DIR"))
         .join("cargo")

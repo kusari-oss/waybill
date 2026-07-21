@@ -1,4 +1,4 @@
-# golang fixtures — `mikebom:produces-binaries` (milestone 116 PR-C)
+# golang fixtures — `waybill:produces-binaries` (milestone 116 PR-C)
 
 | Sub-fixture | Layout | Expected |
 |---|---|---|

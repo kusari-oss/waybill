@@ -3,7 +3,7 @@
 Vendored `.ipk` files from the OpenWrt 23.05.5 x86_64 base release feed
 (`https://downloads.openwrt.org/releases/23.05.5/packages/x86_64/base/`).
 Used by the ipk archive-file reader unit tests + integration test at
-`mikebom-cli/tests/ipk_reader.rs`.
+`waybill-cli/tests/ipk_reader.rs`.
 
 ## Provenance
 

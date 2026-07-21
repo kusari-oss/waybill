@@ -1,5 +1,5 @@
 // KMP shared module — declares deps in source-set blocks so the
-// `mikebom:kmp-source-set` provenance annotation surfaces.
+// `waybill:kmp-source-set` provenance annotation surfaces.
 plugins {
     kotlin("multiplatform")
 }

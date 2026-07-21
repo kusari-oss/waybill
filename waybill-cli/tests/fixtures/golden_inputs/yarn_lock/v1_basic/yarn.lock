@@ -7,9 +7,9 @@
   resolved "https://example.invalid/@waybill-fixture/types-pkg/-/types-pkg-4.5.6.tgz"
   integrity sha512-bbb
 
-"mikebom-fixture-lib@^1.0.0":
+"waybill-fixture-lib@^1.0.0":
   version "1.2.3"
-  resolved "https://example.invalid/mikebom-fixture-lib/-/mikebom-fixture-lib-1.2.3.tgz"
+  resolved "https://example.invalid/waybill-fixture-lib/-/waybill-fixture-lib-1.2.3.tgz"
   integrity sha512-aaa
   dependencies:
     "@waybill-fixture/types-pkg" "^4.0.0"

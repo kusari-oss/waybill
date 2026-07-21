@@ -5,7 +5,7 @@
 Please **do not open a public GitHub issue** for vulnerabilities. Report
 them privately through GitHub Security Advisories:
 
-  https://github.com/kusari-sandbox/mikebom/security/advisories/new
+  https://github.com/kusari-sandbox/waybill/security/advisories/new
 
 This routes the report to the maintainers without exposing it publicly.
 
@@ -22,7 +22,7 @@ update).
 
 ## Supported versions
 
-mikebom is pre-1.0 alpha. Only the **most recent alpha release** is
+waybill is pre-1.0 alpha. Only the **most recent alpha release** is
 supported for security fixes. SemVer guarantees do not apply until 1.0.
 
 | Version          | Supported          |
@@ -48,10 +48,10 @@ In scope:
 
 Out of scope:
 
-- Vulnerabilities in mikebom's upstream Rust crate dependencies — those
+- Vulnerabilities in waybill's upstream Rust crate dependencies — those
   go through normal CVE channels and are tracked by the Kusari Inspector
   CI gate that runs on every PR. If you've found a dependency CVE you
-  believe mikebom is exposed to, please mention it in an advisory anyway
+  believe waybill is exposed to, please mention it in an advisory anyway
   — we'd rather have a duplicate than miss one.
 - Bugs that produce wrong SBOM output without a security implication
   (those should be filed as regular GitHub issues).

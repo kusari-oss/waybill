@@ -4,46 +4,46 @@
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.34",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:generation-context\",\"value\":\"filesystem-scan\"}"
+      "annotator": "Tool: waybill-0.1.0-alpha.34",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.34",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":0}"
+      "annotator": "Tool: waybill-0.1.0-alpha.34",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":0}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.34",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-events-dropped\",\"value\":0}"
+      "annotator": "Tool: waybill-0.1.0-alpha.34",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":0}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.34",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
+      "annotator": "Tool: waybill-0.1.0-alpha.34",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.34",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
+      "annotator": "Tool: waybill-0.1.0-alpha.34",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.34",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"apk\"]}}"
+      "annotator": "Tool: waybill-0.1.0-alpha.34",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"apk\"]}}"
     }
   ],
   "creationInfo": {
-    "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: operations. Per-component scope detail in mikebom:sbom-tier annotations.",
+    "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: operations. Per-component scope detail in waybill:sbom-tier annotations.",
     "created": "1970-01-01T00:00:00Z",
     "creators": [
-      "Tool: mikebom-0.1.0-alpha.34",
-      "Organization: mikebom contributors"
+      "Tool: waybill-0.1.0-alpha.34",
+      "Organization: waybill contributors"
     ]
   },
   "dataLicense": "CC0-1.0",
@@ -64,7 +64,7 @@
         },
         {
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:mikebom:synthetic:0.0.0:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:waybill:synthetic:0.0.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -72,7 +72,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "synthetic",
-      "supplier": "Organization: mikebom contributors",
+      "supplier": "Organization: waybill contributors",
       "versionInfo": "0.0.0"
     },
     {
@@ -81,26 +81,26 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.34",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.34",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.34",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/apk/synthetic/lib/apk/db/installed\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.34",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/apk/synthetic/lib/apk/db/installed\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.34",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:alpinelinux:busybox:1.36.1-r15:*:*:*:*:*:*:*\",\"cpe:2.3:a:busybox:busybox:1.36.1-r15:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.34",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:alpinelinux:busybox:1.36.1-r15:*:*:*:*:*:*:*\",\"cpe:2.3:a:busybox:busybox:1.36.1-r15:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.34",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.34",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -128,26 +128,26 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.34",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.34",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.34",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/apk/synthetic/lib/apk/db/installed\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.34",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"<WORKSPACE>/tests/fixtures/apk/synthetic/lib/apk/db/installed\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.34",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:alpinelinux:musl:1.2.4_git20230717-r4:*:*:*:*:*:*:*\",\"cpe:2.3:a:musl:musl:1.2.4_git20230717-r4:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.34",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:alpinelinux:musl:1.2.4_git20230717-r4:*:*:*:*:*:*:*\",\"cpe:2.3:a:musl:musl:1.2.4_git20230717-r4:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.34",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.34",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         }
       ],
       "downloadLocation": "NOASSERTION",

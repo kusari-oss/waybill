@@ -1,5 +1,5 @@
-mikebom-fixture-libc mikebom-fixture-arch 2.38
-mikebom-fixture-openssl mikebom-fixture-arch 3.0.5
-mikebom-fixture-gstreamer mikebom-fixture-arch 1.22.7
-mikebom-fixture-app mikebom-fixture-arch 1.0.0
-nativesdk-mikebom-fixture-cmake x86_64 3.27.0
+waybill-fixture-libc waybill-fixture-arch 2.38
+waybill-fixture-openssl waybill-fixture-arch 3.0.5
+waybill-fixture-gstreamer waybill-fixture-arch 1.22.7
+waybill-fixture-app waybill-fixture-arch 1.0.0
+nativesdk-waybill-fixture-cmake x86_64 3.27.0

@@ -3,7 +3,7 @@
 #
 # Synthetic fixture — the package names below are intentionally
 # non-real (parent-lib / optional-child-lib / transitive-helper /
-# runtime-util) so mikebom's tests don't create false-positive
+# runtime-util) so waybill's tests don't create false-positive
 # vulnerability alerts on real npm registry packages when scanned by
 # security tooling (Kusari Inspector et al.). See spec.md.
 

@@ -7,4 +7,4 @@ Populated via T058. Symlinks to:
 - `tests/fixtures/binaries/macho/*` (Mach-O set).
 - `tests/fixtures/binaries/pe/*` (PE set).
 
-One `mikebom sbom scan --path tests/fixtures/polyglot-rpm-binary/` invocation covers US3 integration assertions.
+One `waybill sbom scan --path tests/fixtures/polyglot-rpm-binary/` invocation covers US3 integration assertions.

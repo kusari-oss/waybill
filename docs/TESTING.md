@@ -2,7 +2,7 @@
 
 ## Running Tests
 
-mikebom is a Rust workspace; tests are run via `cargo`. The
+waybill is a Rust workspace; tests are run via `cargo`. The
 mandatory pre-PR gate runs both clippy and the full test suite:
 
 ```bash
@@ -18,7 +18,7 @@ For SBOM-spec-touching changes, also opt-in to the SPDX-3
 conformance validator:
 
 ```bash
-MIKEBOM_REQUIRE_SPDX3_VALIDATOR=1 ./scripts/pre-pr.sh
+WAYBILL_REQUIRE_SPDX3_VALIDATOR=1 ./scripts/pre-pr.sh
 ```
 
 See [`CONTRIBUTING.md`](../CONTRIBUTING.md) for the full pre-PR

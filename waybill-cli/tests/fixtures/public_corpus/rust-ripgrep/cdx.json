@@ -39,15 +39,15 @@
       "name": "aho-corasick",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -96,15 +96,15 @@
       "name": "anyhow",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -153,15 +153,15 @@
       "name": "bstr",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -210,15 +210,15 @@
       "name": "cc",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -267,15 +267,15 @@
       "name": "cfg-if",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -324,15 +324,15 @@
       "name": "crossbeam-channel",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -381,15 +381,15 @@
       "name": "crossbeam-deque",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -438,15 +438,15 @@
       "name": "crossbeam-epoch",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -495,15 +495,15 @@
       "name": "crossbeam-utils",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -552,15 +552,15 @@
       "name": "encoding_rs",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -609,15 +609,15 @@
       "name": "encoding_rs_io",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -666,15 +666,15 @@
       "name": "glob",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -723,15 +723,15 @@
       "name": "itoa",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -780,15 +780,15 @@
       "name": "jemalloc-sys",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -837,15 +837,15 @@
       "name": "jemallocator",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -894,15 +894,15 @@
       "name": "jobserver",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -951,15 +951,15 @@
       "name": "lexopt",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1008,15 +1008,15 @@
       "name": "libc",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1065,23 +1065,23 @@
       "name": "log",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "optional"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:optional-derivation",
+          "name": "waybill:optional-derivation",
           "value": "cargo-optional-true"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1131,15 +1131,15 @@
       "name": "memchr",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1188,15 +1188,15 @@
       "name": "memmap2",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1245,15 +1245,15 @@
       "name": "pcre2-sys",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1302,15 +1302,15 @@
       "name": "pcre2",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1359,15 +1359,15 @@
       "name": "pkg-config",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1416,15 +1416,15 @@
       "name": "proc-macro2",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1473,15 +1473,15 @@
       "name": "quote",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1530,15 +1530,15 @@
       "name": "regex-automata",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1587,15 +1587,15 @@
       "name": "regex-syntax",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1644,15 +1644,15 @@
       "name": "regex",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1701,15 +1701,15 @@
       "name": "ryu",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1758,15 +1758,15 @@
       "name": "same-file",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1815,23 +1815,23 @@
       "name": "serde",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "optional"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:optional-derivation",
+          "name": "waybill:optional-derivation",
           "value": "cargo-optional-true"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1881,15 +1881,15 @@
       "name": "serde_derive",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1938,23 +1938,23 @@
       "name": "serde_json",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "optional"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:optional-derivation",
+          "name": "waybill:optional-derivation",
           "value": "cargo-optional-true"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2004,15 +2004,15 @@
       "name": "shlex",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2061,15 +2061,15 @@
       "name": "syn",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2118,15 +2118,15 @@
       "name": "termcolor",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2175,15 +2175,15 @@
       "name": "textwrap",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2232,15 +2232,15 @@
       "name": "unicode-ident",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2289,15 +2289,15 @@
       "name": "walkdir",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2346,15 +2346,15 @@
       "name": "winapi-util",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2403,15 +2403,15 @@
       "name": "windows-sys",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2460,15 +2460,15 @@
       "name": "windows-targets",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2517,15 +2517,15 @@
       "name": "windows_aarch64_gnullvm",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2574,15 +2574,15 @@
       "name": "windows_aarch64_msvc",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2631,15 +2631,15 @@
       "name": "windows_i686_gnu",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2688,15 +2688,15 @@
       "name": "windows_i686_gnullvm",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2745,15 +2745,15 @@
       "name": "windows_i686_msvc",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2802,15 +2802,15 @@
       "name": "windows_x86_64_gnu",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2859,15 +2859,15 @@
       "name": "windows_x86_64_gnullvm",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2916,15 +2916,15 @@
       "name": "windows_x86_64_msvc",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"Cargo.lock\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2960,15 +2960,15 @@
       "name": "utils.sh",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"ci/utils.sh\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"ci/utils.sh\"]"
         }
       ],
@@ -3000,15 +3000,15 @@
       "name": "copy-examples",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"scripts/copy-examples\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"scripts/copy-examples\"]"
         }
       ],
@@ -3040,15 +3040,15 @@
       "name": "ubuntu-install-packages",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"ci/ubuntu-install-packages\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"ci/ubuntu-install-packages\"]"
         }
       ],
@@ -3080,15 +3080,15 @@
       "name": "benchsuite",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"benchsuite/benchsuite\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"benchsuite/benchsuite\"]"
         }
       ],
@@ -3120,15 +3120,15 @@
       "name": "sha256-releases",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"ci/sha256-releases\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"ci/sha256-releases\"]"
         }
       ],
@@ -3160,15 +3160,15 @@
       "name": "build-and-publish-m2",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"ci/build-and-publish-m2\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"ci/build-and-publish-m2\"]"
         }
       ],
@@ -3200,15 +3200,15 @@
       "name": "test-complete",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"ci/test-complete\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"ci/test-complete\"]"
         }
       ],
@@ -3703,12 +3703,12 @@
   "metadata": {
     "authors": [
       {
-        "name": "mikebom"
+        "name": "waybill"
       }
     ],
     "component": {
       "bom-ref": "rust-ripgrep@0e8390a",
-      "cpe": "cpe:2.3:a:mikebom:rust-ripgrep:0e8390a:*:*:*:*:*:*:*",
+      "cpe": "cpe:2.3:a:waybill:rust-ripgrep:0e8390a:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",
@@ -3735,51 +3735,51 @@
     ],
     "properties": [
       {
-        "name": "mikebom:generation-context",
+        "name": "waybill:generation-context",
         "value": "filesystem-scan"
       },
       {
-        "name": "mikebom:os-release-missing-fields",
+        "name": "waybill:os-release-missing-fields",
         "value": "ID,VERSION_ID"
       },
       {
-        "name": "mikebom:trace-integrity-ring-buffer-overflows",
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
         "value": "0"
       },
       {
-        "name": "mikebom:trace-integrity-events-dropped",
+        "name": "waybill:trace-integrity-events-dropped",
         "value": "0"
       },
       {
-        "name": "mikebom:trace-integrity-uprobe-attach-failures",
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
         "value": "0"
       },
       {
-        "name": "mikebom:trace-integrity-kprobe-attach-failures",
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
         "value": "0"
       },
       {
-        "name": "mikebom:graph-completeness",
+        "name": "waybill:graph-completeness",
         "value": "partial"
       },
       {
-        "name": "mikebom:graph-completeness-reason",
+        "name": "waybill:graph-completeness-reason",
         "value": "orphaned-components-detected: 5 component(s) not reachable from root"
       },
       {
-        "name": "mikebom:workspaces-detected",
+        "name": "waybill:workspaces-detected",
         "value": "[\".\"]"
       }
     ],
     "supplier": {
-      "name": "mikebom contributors"
+      "name": "waybill contributors"
     },
     "timestamp": "<masked>",
     "tools": {
       "components": [
         {
-          "name": "mikebom",
-          "publisher": "mikebom contributors",
+          "name": "waybill",
+          "publisher": "waybill contributors",
           "type": "application",
           "version": "0.1.0-alpha.62"
         }

@@ -26,7 +26,7 @@
     "tier": "manual-curation",
     "extracted_from": "https://www.openssl.org/source/openssl-3.1.4.tar.gz",
     "extracted_from_sha256": "840af5366ab9b522bde525826be3ef0fb0af81c6a9ebd84caa600fea1731eee3",
-    "extraction_toolchain": "mikebom-corpus-builder@test-fixture",
+    "extraction_toolchain": "waybill-corpus-builder@test-fixture",
     "extracted_at": "2026-06-03T00:00:00Z"
   },
   "schema_version": 2

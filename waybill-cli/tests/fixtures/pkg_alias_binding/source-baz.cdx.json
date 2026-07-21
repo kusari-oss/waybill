@@ -8,7 +8,7 @@
     "tools": [
       {
         "vendor": "kusari",
-        "name": "mikebom",
+        "name": "waybill",
         "version": "test-fixture"
       }
     ],

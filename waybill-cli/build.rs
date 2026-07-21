@@ -7,7 +7,7 @@
 // `cargo xtask ebpf` and included via include_bytes_aligned! in
 // loader.rs.
 //
-// The fixture-fetch side reads the pinned `mikebom-test-fixtures`
+// The fixture-fetch side reads the pinned `waybill-test-fixtures`
 // Git SHA from `<workspace>/tests/fixtures.rev`, ensures the fixture
 // repo is cloned at that SHA into a per-host cache, and exposes the
 // cache path to test code via the `WAYBILL_FIXTURES_DIR` compile-time
@@ -24,7 +24,7 @@
 use std::path::PathBuf;
 use std::process::Command;
 
-const FIXTURE_REPO_URL: &str = "https://github.com/kusari-sandbox/mikebom-test-fixtures.git";
+const FIXTURE_REPO_URL: &str = "https://github.com/kusari-sandbox/waybill-test-fixtures.git";
 
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
@@ -83,7 +83,7 @@ fn fetch_fixtures() {
     // Cache miss — clone + pin to exact SHA. `resolve_cache_parent`
     // already guarantees the parent directory exists.
 
-    println!("cargo:warning=fetching mikebom-test-fixtures @ {sha} (one-time per pin)");
+    println!("cargo:warning=fetching waybill-test-fixtures @ {sha} (one-time per pin)");
 
     let cache_target_str = cache_target
         .to_str()
@@ -95,7 +95,7 @@ fn fetch_fixtures() {
     if !matches!(clone_status, Ok(s) if s.success()) {
         let _ = std::fs::remove_dir_all(&cache_target);
         panic!(
-            "\nFailed to fetch mikebom-test-fixtures revision {sha}:\n    URL:   {url}\n    Cache: {cache}\n    Cause: git clone failed (status {clone_status:?})\n\nWorkaround:\n    1. Verify network access to github.com.\n    2. Manually clone:\n         git clone {url} {cache}\n         git -C {cache} reset --hard {sha}\n    3. Re-run cargo build.\n",
+            "\nFailed to fetch waybill-test-fixtures revision {sha}:\n    URL:   {url}\n    Cache: {cache}\n    Cause: git clone failed (status {clone_status:?})\n\nWorkaround:\n    1. Verify network access to github.com.\n    2. Manually clone:\n         git clone {url} {cache}\n         git -C {cache} reset --hard {sha}\n    3. Re-run cargo build.\n",
             url = FIXTURE_REPO_URL,
             cache = cache_target.display(),
         );

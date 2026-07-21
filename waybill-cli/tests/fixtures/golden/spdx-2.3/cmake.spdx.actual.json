@@ -4,58 +4,58 @@
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.60",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:generation-context\",\"value\":\"filesystem-scan\"}"
+      "annotator": "Tool: waybill-0.1.0-alpha.60",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.60",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
+      "annotator": "Tool: waybill-0.1.0-alpha.60",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.60",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"complete\"}"
+      "annotator": "Tool: waybill-0.1.0-alpha.60",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.60",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"cmake\\\"]\"}"
+      "annotator": "Tool: waybill-0.1.0-alpha.60",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"cmake\\\"]\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.60",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
+      "annotator": "Tool: waybill-0.1.0-alpha.60",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.60",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-events-dropped\",\"value\":\"0\"}"
+      "annotator": "Tool: waybill-0.1.0-alpha.60",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.60",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
+      "annotator": "Tool: waybill-0.1.0-alpha.60",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.60",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
+      "annotator": "Tool: waybill-0.1.0-alpha.60",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
     }
   ],
   "creationInfo": {
-    "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: pre-build. Per-component scope detail in mikebom:sbom-tier annotations.",
+    "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: pre-build. Per-component scope detail in waybill:sbom-tier annotations.",
     "created": "1970-01-01T00:00:00Z",
     "creators": [
-      "Tool: mikebom-0.1.0-alpha.60",
-      "Organization: mikebom contributors"
+      "Tool: waybill-0.1.0-alpha.60",
+      "Organization: waybill contributors"
     ]
   },
   "dataLicense": "CC0-1.0",
@@ -76,7 +76,7 @@
         },
         {
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:mikebom:cmake:0.0.0:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:waybill:cmake:0.0.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -84,7 +84,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "cmake",
-      "supplier": "Organization: mikebom contributors",
+      "supplier": "Organization: waybill contributors",
       "versionInfo": "0.0.0"
     },
     {
@@ -93,44 +93,44 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"cmake/third_party.cmake\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"cmake/third_party.cmake\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"cmake/third_party.cmake\",\"sha256\":\"7352fc9bd0ca39c5efb4b1556e2104c08cc4b54ffa4da9df25b452975a67d8c7\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"cmake/third_party.cmake\",\"sha256\":\"7352fc9bd0ca39c5efb4b1556e2104c08cc4b54ffa4da9df25b452975a67d8c7\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:download-url\",\"value\":\"https://boostorg.jfrog.io/artifactory/main/release/1.84.0/source/boost_1_84_0.tar.gz\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:download-url\",\"value\":\"https://boostorg.jfrog.io/artifactory/main/release/1.84.0/source/boost_1_84_0.tar.gz\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-mechanism\",\"value\":\"cmake-fetchcontent-url\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-mechanism\",\"value\":\"cmake-fetchcontent-url\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"cmake\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"cmake\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -153,44 +153,44 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"CMakeLists.txt\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"CMakeLists.txt\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"CMakeLists.txt\",\"sha256\":\"3ead8cde49fa2c3a749244f05c71fcc85fdee8bbc3248374622e663b3a76a8c9\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"CMakeLists.txt\",\"sha256\":\"3ead8cde49fa2c3a749244f05c71fcc85fdee8bbc3248374622e663b3a76a8c9\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cmake-find-package-name\",\"value\":\"OpenSSL\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cmake-find-package-name\",\"value\":\"OpenSSL\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-mechanism\",\"value\":\"cmake-find-package\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-mechanism\",\"value\":\"cmake-find-package\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -213,44 +213,44 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"CMakeLists.txt\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"CMakeLists.txt\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"CMakeLists.txt\",\"sha256\":\"3ead8cde49fa2c3a749244f05c71fcc85fdee8bbc3248374622e663b3a76a8c9\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"CMakeLists.txt\",\"sha256\":\"3ead8cde49fa2c3a749244f05c71fcc85fdee8bbc3248374622e663b3a76a8c9\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:download-url\",\"value\":\"https://zlib.net/zlib-1.3.1.tar.gz\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:download-url\",\"value\":\"https://zlib.net/zlib-1.3.1.tar.gz\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-mechanism\",\"value\":\"cmake-externalproject\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-mechanism\",\"value\":\"cmake-externalproject\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -278,44 +278,44 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"CMakeLists.txt\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"CMakeLists.txt\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"CMakeLists.txt\",\"sha256\":\"3ead8cde49fa2c3a749244f05c71fcc85fdee8bbc3248374622e663b3a76a8c9\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"CMakeLists.txt\",\"sha256\":\"3ead8cde49fa2c3a749244f05c71fcc85fdee8bbc3248374622e663b3a76a8c9\"}]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:download-url\",\"value\":\"https://github.com/google/googletest.git\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:download-url\",\"value\":\"https://github.com/google/googletest.git\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-mechanism\",\"value\":\"cmake-fetchcontent-git\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-mechanism\",\"value\":\"cmake-fetchcontent-git\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.60",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.60",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",

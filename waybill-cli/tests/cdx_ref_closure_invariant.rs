@@ -48,7 +48,7 @@ struct Fixture {
 }
 
 // Milestone 090: paths are now relative to WAYBILL_FIXTURES_DIR (the
-// cloned `mikebom-test-fixtures` repo); resolved at the call site via
+// cloned `waybill-test-fixtures` repo); resolved at the call site via
 // `common::fixture_path()`.
 const FIXTURES: &[Fixture] = &[
     Fixture { label: "golang", fixture_subpath: "go/simple-module" },

@@ -1,7 +1,7 @@
 target/
 debug/
 release/
-mikebom-ebpf/target/
+waybill-ebpf/target/
 
 .git/
 .github/

@@ -4,62 +4,62 @@
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.62",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:generation-context\",\"value\":\"filesystem-scan\"}"
+      "annotator": "Tool: waybill-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.62",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
+      "annotator": "Tool: waybill-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.62",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness\",\"value\":\"partial\"}"
+      "annotator": "Tool: waybill-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"partial\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.62",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 9 component(s) not reachable from root; transitive-edges-unresolvable: maven\"}"
+      "annotator": "Tool: waybill-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness-reason\",\"value\":\"orphaned-components-detected: 9 component(s) not reachable from root; transitive-edges-unresolvable: maven\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.62",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"core\\\",\\\"examples/guice-demo\\\",\\\"extensions/dagger-adapter\\\",\\\"extensions/grapher\\\",\\\"extensions/persist\\\",\\\"extensions/spring\\\",\\\"extensions/struts2\\\",\\\"extensions/testlib\\\",\\\"extensions/throwingproviders\\\"]\"}"
+      "annotator": "Tool: waybill-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"core\\\",\\\"examples/guice-demo\\\",\\\"extensions/dagger-adapter\\\",\\\"extensions/grapher\\\",\\\"extensions/persist\\\",\\\"extensions/spring\\\",\\\"extensions/struts2\\\",\\\"extensions/testlib\\\",\\\"extensions/throwingproviders\\\"]\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.62",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
+      "annotator": "Tool: waybill-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.62",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-events-dropped\",\"value\":\"0\"}"
+      "annotator": "Tool: waybill-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.62",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
+      "annotator": "Tool: waybill-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.62",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
+      "annotator": "Tool: waybill-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "<masked>",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.62",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"maven\"]}}"
+      "annotator": "Tool: waybill-0.1.0-alpha.62",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"maven\"]}}"
     }
   ],
   "creationInfo": "<masked>",
@@ -81,7 +81,7 @@
         },
         {
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:mikebom:maven-guice:b0e1d0f:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:waybill:maven-guice:b0e1d0f:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -89,7 +89,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "maven-guice",
-      "supplier": "Organization: mikebom contributors",
+      "supplier": "Organization: waybill contributors",
       "versionInfo": "b0e1d0f"
     },
     {
@@ -98,50 +98,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"WORKSPACE\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"WORKSPACE\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"WORKSPACE\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"WORKSPACE\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:bazel-archive-name\",\"value\":\"google_bazel_common\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:bazel-archive-name\",\"value\":\"google_bazel_common\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:download-url\",\"value\":\"https://github.com/google/bazel-common/archive/bf8e5ef95b118d1716b0cb4982cf15b6ed1c896f.zip\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:download-url\",\"value\":\"https://github.com/google/bazel-common/archive/bf8e5ef95b118d1716b0cb4982cf15b6ed1c896f.zip\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-mechanism\",\"value\":\"bazel-http-archive\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-mechanism\",\"value\":\"bazel-http-archive\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
       "checksums": [
@@ -170,50 +170,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"WORKSPACE\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"WORKSPACE\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"WORKSPACE\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"WORKSPACE\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:bazel-archive-name\",\"value\":\"rules_jvm_external\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:bazel-archive-name\",\"value\":\"rules_jvm_external\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:download-url\",\"value\":\"https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:download-url\",\"value\":\"https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-mechanism\",\"value\":\"bazel-http-archive\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-mechanism\",\"value\":\"bazel-http-archive\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -236,44 +236,44 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"core/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -302,50 +302,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"core/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:biz.aqute:bnd:0.0.384:*:*:*:*:*:*:*\",\"cpe:2.3:a:aqute:bnd:0.0.384:*:*:*:*:*:*:*\",\"cpe:2.3:a:bnd:bnd:0.0.384:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:biz.aqute:bnd:0.0.384:*:*:*:*:*:*:*\",\"cpe:2.3:a:aqute:bnd:0.0.384:*:*:*:*:*:*:*\",\"cpe:2.3:a:bnd:bnd:0.0.384:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -374,50 +374,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/dagger-adapter/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/dagger-adapter/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.auto.value:auto-value-annotations:1.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:value:auto-value-annotations:1.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:auto-value-annotations:auto-value-annotations:1.6.3:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.auto.value:auto-value-annotations:1.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:value:auto-value-annotations:1.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:auto-value-annotations:auto-value-annotations:1.6.3:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/dagger-adapter/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/dagger-adapter/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/dagger-adapter\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/dagger-adapter\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -446,50 +446,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/dagger-adapter/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/dagger-adapter/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.auto.value:auto-value:1.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:value:auto-value:1.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:auto-value:auto-value:1.6.3:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.auto.value:auto-value:1.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:value:auto-value:1.6.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:auto-value:auto-value:1.6.3:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/dagger-adapter/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/dagger-adapter/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/dagger-adapter\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/dagger-adapter\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -518,50 +518,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/throwingproviders/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/throwingproviders/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.code.findbugs:jsr305:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:findbugs:jsr305:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:jsr305:jsr305:unknown:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.code.findbugs:jsr305:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:findbugs:jsr305:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:jsr305:jsr305:unknown:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/throwingproviders/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/throwingproviders/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/throwingproviders\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/throwingproviders\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -590,50 +590,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/dagger-adapter/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/dagger-adapter/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.dagger:dagger-producers:2.22.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:dagger:dagger-producers:2.22.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:dagger-producers:dagger-producers:2.22.1:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.dagger:dagger-producers:2.22.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:dagger:dagger-producers:2.22.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:dagger-producers:dagger-producers:2.22.1:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/dagger-adapter/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/dagger-adapter/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/dagger-adapter\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/dagger-adapter\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -662,56 +662,56 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"optional\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/dagger-adapter/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/dagger-adapter/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.dagger:dagger:2.22.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:dagger:dagger:2.22.1:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.dagger:dagger:2.22.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:dagger:dagger:2.22.1:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/dagger-adapter/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/dagger-adapter/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:optional-derivation\",\"value\":\"maven-optional-element\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:optional-derivation\",\"value\":\"maven-optional-element\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/dagger-adapter\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/dagger-adapter\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -740,62 +740,62 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"optional\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"core/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.errorprone:error_prone_annotations:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:errorprone:error_prone_annotations:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:error_prone_annotations:error_prone_annotations:unknown:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.errorprone:error_prone_annotations:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:errorprone:error_prone_annotations:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:error_prone_annotations:error_prone_annotations:unknown:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:optional-derivation\",\"value\":\"maven-optional-element\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:optional-derivation\",\"value\":\"maven-optional-element\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -824,56 +824,56 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"core/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.guava:guava-testlib:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:guava-testlib:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava-testlib:guava-testlib:unknown:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.guava:guava-testlib:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:guava-testlib:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava-testlib:guava-testlib:unknown:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -902,50 +902,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"core/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.guava:guava:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:guava:unknown:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.guava:guava:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:guava:unknown:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -974,50 +974,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/grapher/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/grapher/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-assistedinject:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-assistedinject:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-assistedinject:guice-assistedinject:unknown:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-assistedinject:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-assistedinject:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-assistedinject:guice-assistedinject:unknown:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"${project.version}\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"${project.version}\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/grapher/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/grapher/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/grapher\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/grapher\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -1046,50 +1046,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/struts2/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/struts2/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-servlet:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-servlet:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-servlet:guice-servlet:unknown:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-servlet:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-servlet:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-servlet:guice-servlet:unknown:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"${project.version}\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"${project.version}\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/struts2/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/struts2/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/struts2\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/struts2\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -1118,50 +1118,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"examples/guice-demo/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"examples/guice-demo/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-testlib:5.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-testlib:5.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-testlib:guice-testlib:5.1.0:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-testlib:5.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-testlib:5.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-testlib:guice-testlib:5.1.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"examples/guice-demo/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"examples/guice-demo/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"examples/guice-demo\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"examples/guice-demo\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -1190,50 +1190,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/testlib/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/testlib/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-throwingproviders:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-throwingproviders:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-throwingproviders:guice-throwingproviders:unknown:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject.extensions:guice-throwingproviders:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:guice-throwingproviders:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice-throwingproviders:guice-throwingproviders:unknown:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"${project.version}\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"${project.version}\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/testlib/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/testlib/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/testlib\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/testlib\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -1262,44 +1262,44 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"examples/guice-demo/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"examples/guice-demo/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject:guice:5.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:guice:5.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice:guice:5.1.0:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.inject:guice:5.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:guice:5.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:guice:guice:5.1.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"examples/guice-demo/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"examples/guice-demo/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"examples/guice-demo\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"examples/guice-demo\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -1328,56 +1328,56 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"core/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.truth.extensions:truth-java8-extension:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:truth-java8-extension:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:truth-java8-extension:truth-java8-extension:unknown:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.truth.extensions:truth-java8-extension:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:extensions:truth-java8-extension:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:truth-java8-extension:truth-java8-extension:unknown:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -1406,56 +1406,56 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"core/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.truth:truth:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:truth:truth:unknown:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.truth:truth:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:truth:truth:unknown:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -1484,50 +1484,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"core/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:jakarta.inject:jakarta.inject-api:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:jakarta.inject-api:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:jakarta.inject-api:jakarta.inject-api:unknown:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:jakarta.inject:jakarta.inject-api:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:jakarta.inject-api:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:jakarta.inject-api:jakarta.inject-api:unknown:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -1556,56 +1556,56 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"core/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:jakarta.inject:jakarta.inject-tck:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:jakarta.inject-tck:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:jakarta.inject-tck:jakarta.inject-tck:unknown:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:jakarta.inject:jakarta.inject-tck:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:inject:jakarta.inject-tck:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:jakarta.inject-tck:jakarta.inject-tck:unknown:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -1634,50 +1634,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"build\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"build\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:jakarta.persistence:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:persistence:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:jakarta.persistence-api:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:jakarta.persistence:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:persistence:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:jakarta.persistence-api:jakarta.persistence-api:3.0.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -1706,50 +1706,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"build\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"build\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:jakarta.servlet:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:servlet:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:jakarta.servlet-api:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:jakarta.servlet:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:servlet:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:jakarta.servlet-api:jakarta.servlet-api:5.0.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -1778,38 +1778,38 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"transitive\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"transitive\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -1838,50 +1838,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"core/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.apache.felix:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:felix:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:org.apache.felix.framework:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.apache.felix:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:felix:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:org.apache.felix.framework:org.apache.felix.framework:3.0.5:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -1910,50 +1910,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"build\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"build\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/struts2/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/struts2/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.apache.struts:struts2-core:2.5.30:*:*:*:*:*:*:*\",\"cpe:2.3:a:struts:struts2-core:2.5.30:*:*:*:*:*:*:*\",\"cpe:2.3:a:struts2-core:struts2-core:2.5.30:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.apache.struts:struts2-core:2.5.30:*:*:*:*:*:*:*\",\"cpe:2.3:a:struts:struts2-core:2.5.30:*:*:*:*:*:*:*\",\"cpe:2.3:a:struts2-core:struts2-core:2.5.30:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/struts2/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/struts2/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/struts2\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/struts2\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -1982,50 +1982,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest-core:hamcrest-core:1.3:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest:hamcrest-core:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest-core:hamcrest-core:1.3:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -2054,50 +2054,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.hamcrest:hamcrest-library:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest:hamcrest-library:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest-library:hamcrest-library:1.3:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.hamcrest:hamcrest-library:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest:hamcrest-library:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:hamcrest-library:hamcrest-library:1.3:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -2126,50 +2126,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.hibernate:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*\",\"cpe:2.3:a:hibernate:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*\",\"cpe:2.3:a:hibernate-core-jakarta:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.hibernate:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*\",\"cpe:2.3:a:hibernate:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*\",\"cpe:2.3:a:hibernate-core-jakarta:hibernate-core-jakarta:5.6.15.Final:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -2198,50 +2198,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.hsqldb:hsqldb-j5:2.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:hsqldb:hsqldb-j5:2.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:hsqldb-j5:hsqldb-j5:2.0.0:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.hsqldb:hsqldb-j5:2.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:hsqldb:hsqldb-j5:2.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:hsqldb-j5:hsqldb-j5:2.0.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -2270,50 +2270,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.mockito:mockito-core:4.2.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:mockito:mockito-core:4.2.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:mockito-core:mockito-core:4.2.0:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.mockito:mockito-core:4.2.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:mockito:mockito-core:4.2.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:mockito-core:mockito-core:4.2.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -2342,62 +2342,62 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"design\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"optional\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"optional\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"core/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"core/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.ow2.asm:asm:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:asm:asm:unknown:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.ow2.asm:asm:unknown:*:*:*:*:*:*:*\",\"cpe:2.3:a:asm:asm:unknown:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:requirement-ranges\",\"value\":[\"\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"core/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:optional-derivation\",\"value\":\"maven-optional-element\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:optional-derivation\",\"value\":\"maven-optional-element\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"core\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -2426,50 +2426,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"test\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"test\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/persist/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.slf4j:slf4j-simple:1.6.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:slf4j:slf4j-simple:1.6.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:slf4j-simple:slf4j-simple:1.6.1:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.slf4j:slf4j-simple:1.6.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:slf4j:slf4j-simple:1.6.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:slf4j-simple:slf4j-simple:1.6.1:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/persist/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/persist\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -2498,50 +2498,50 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-type\",\"value\":\"workspace\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"workspace\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"source\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:lifecycle-scope\",\"value\":\"build\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:lifecycle-scope\",\"value\":\"build\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/spring/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/spring/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.springframework:spring-beans:5.3.18:*:*:*:*:*:*:*\",\"cpe:2.3:a:springframework:spring-beans:5.3.18:*:*:*:*:*:*:*\",\"cpe:2.3:a:spring-beans:spring-beans:5.3.18:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.springframework:spring-beans:5.3.18:*:*:*:*:*:*:*\",\"cpe:2.3:a:springframework:spring-beans:5.3.18:*:*:*:*:*:*:*\",\"cpe:2.3:a:spring-beans:spring-beans:5.3.18:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/spring/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"extensions/spring/pom.xml\",\"sha256\":\"<masked-sha256>\"}]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:workspace-member\",\"value\":\"[\\\"extensions/spring\\\"]\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"extensions/spring\\\"]\"}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -2570,26 +2570,26 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"util/deploy-library.sh\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"util/deploy-library.sh\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"util/deploy-library.sh\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"util/deploy-library.sh\"]}"
         }
       ],
       "checksums": [
@@ -2611,26 +2611,26 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"util/install-local-snapshot.sh\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"util/install-local-snapshot.sh\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"util/install-local-snapshot.sh\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"util/install-local-snapshot.sh\"]}"
         }
       ],
       "checksums": [
@@ -2652,26 +2652,26 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"util/diff-jars.sh\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"util/diff-jars.sh\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"util/diff-jars.sh\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"util/diff-jars.sh\"]}"
         }
       ],
       "checksums": [
@@ -2693,26 +2693,26 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"bom/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"bom/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"bom/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"bom/pom.xml\"]}"
         }
       ],
       "checksums": [
@@ -2734,26 +2734,26 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/jmx/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/jmx/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"extensions/jmx/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"extensions/jmx/pom.xml\"]}"
         }
       ],
       "checksums": [
@@ -2775,26 +2775,26 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"util/generate-latest-docs.sh\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"util/generate-latest-docs.sh\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"util/generate-latest-docs.sh\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"util/generate-latest-docs.sh\"]}"
         }
       ],
       "checksums": [
@@ -2816,26 +2816,26 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/servlet/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/servlet/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"extensions/servlet/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"extensions/servlet/pom.xml\"]}"
         }
       ],
       "checksums": [
@@ -2857,26 +2857,26 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/assistedinject/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/assistedinject/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"extensions/assistedinject/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"extensions/assistedinject/pom.xml\"]}"
         }
       ],
       "checksums": [
@@ -2898,26 +2898,26 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"util/deploy-guice.sh\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"util/deploy-guice.sh\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"util/deploy-guice.sh\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"util/deploy-guice.sh\"]}"
         }
       ],
       "checksums": [
@@ -2939,26 +2939,26 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"extensions/jndi/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"extensions/jndi/pom.xml\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"extensions/jndi/pom.xml\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"extensions/jndi/pom.xml\"]}"
         }
       ],
       "checksums": [
@@ -2980,26 +2980,26 @@
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\"util/publish-latest-docs.sh\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"util/publish-latest-docs.sh\"]}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:component-tier\",\"value\":\"file\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
         },
         {
           "annotationDate": "<masked>",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.62",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:file-paths\",\"value\":[\"util/publish-latest-docs.sh\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.62",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"util/publish-latest-docs.sh\"]}"
         }
       ],
       "checksums": [

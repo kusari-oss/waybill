@@ -478,7 +478,7 @@ pub fn workspace_root() -> PathBuf {
 
 pub fn fixture_path(eco_subpath: &str) -> PathBuf {
     // Milestone 090: transitive_parity fixtures moved to the
-    // `mikebom-test-fixtures` repo. Resolve via build.rs's
+    // `waybill-test-fixtures` repo. Resolve via build.rs's
     // WAYBILL_FIXTURES_DIR rather than against workspace_root.
     PathBuf::from(env!("WAYBILL_FIXTURES_DIR"))
         .join("transitive_parity")

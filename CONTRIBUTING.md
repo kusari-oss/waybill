@@ -1,13 +1,13 @@
-# Contributing to mikebom
+# Contributing to waybill
 
-Thanks for your interest in contributing! mikebom is pre-1.0 alpha; we
+Thanks for your interest in contributing! waybill is pre-1.0 alpha; we
 encourage a quick discussion on non-trivial changes before you open a
 PR so we can align on direction.
 
 ## Workflow overview (the speckit lifecycle)
 
 For non-trivial changes (new features, behavior changes, large
-refactors, ecosystem additions), mikebom uses the spec-kit lifecycle:
+refactors, ecosystem additions), waybill uses the spec-kit lifecycle:
 
 1. `/speckit.specify` — write the feature spec (what + why)
 2. `/speckit.clarify` (optional) — resolve open questions
@@ -28,8 +28,8 @@ doc tweaks) skip the lifecycle — just open a PR.
 ## Local development setup
 
 ```bash
-git clone https://github.com/kusari-sandbox/mikebom.git
-cd mikebom
+git clone https://github.com/kusari-sandbox/waybill.git
+cd waybill
 cargo +stable build --release
 ```
 
@@ -37,12 +37,12 @@ The `sbom`, `policy`, `attestation`, and related subcommands build
 under the **stable** toolchain. The eBPF-based `trace` subcommands
 additionally need nightly + bpf-linker — see
 [`docs/user-guide/installation.md`](docs/user-guide/installation.md)
-for the full setup, including the `mikebom-dev` container and Lima VM
+for the full setup, including the `waybill-dev` container and Lima VM
 options for macOS.
 
-Test fixtures live in a sibling repo (`kusari-sandbox/mikebom-test-fixtures`)
+Test fixtures live in a sibling repo (`kusari-sandbox/waybill-test-fixtures`)
 and are cloned automatically by `build.rs` on first build into a
-per-host cache at `~/.cache/mikebom/fixtures/<pinned-sha>/`. The
+per-host cache at `~/.cache/waybill/fixtures/<pinned-sha>/`. The
 pinned SHA lives in `tests/fixtures.rev`.
 
 ## Pre-PR gate (MANDATORY)
@@ -67,7 +67,7 @@ For PRs that touch SBOM emission or output formats, also opt-in to the
 SPDX-3 conformance validator:
 
 ```bash
-MIKEBOM_REQUIRE_SPDX3_VALIDATOR=1 ./scripts/pre-pr.sh
+WAYBILL_REQUIRE_SPDX3_VALIDATOR=1 ./scripts/pre-pr.sh
 ```
 
 This requires the JPEWdev `spdx3-validate` Python package pinned in
@@ -77,7 +77,7 @@ so test locally before release-bump PRs.
 
 ## Walker-audit CI gate
 
-If your PR adds code under `mikebom-cli/src/scan_fs/`, read this section
+If your PR adds code under `waybill-cli/src/scan_fs/`, read this section
 **before** writing the new filesystem-walking logic. The walker-audit gate
 fails fast (under one second) when an unauthorized `fn walk_*` shows up
 outside the shared helper or the documented exception list.
@@ -85,7 +85,7 @@ outside the shared helper or the documented exception list.
 ### What the gate enforces
 
 The post-milestone-114 invariant is that every ecosystem-discovery
-filesystem walker under `mikebom-cli/src/scan_fs/` goes through the
+filesystem walker under `waybill-cli/src/scan_fs/` goes through the
 shared `scan_fs::walk::safe_walk` helper. Hand-rolled `read_dir`
 recursion bypasses the canonicalize-keyed visited-set + depth-bound +
 exclusion-set + skip-debug-log machinery that lives in one place for
@@ -95,12 +95,12 @@ The CI step (in `.github/workflows/ci.yml`'s `Lint + test (linux-x86_64)`
 job, between `actions/checkout` and `Install stable Rust`) runs:
 
 ```bash
-grep -rEn --include='*.rs' 'fn walk[_(]' mikebom-cli/src/scan_fs/ \
+grep -rEn --include='*.rs' 'fn walk[_(]' waybill-cli/src/scan_fs/ \
   | LC_ALL=C sort -u
 ```
 
 and `diff`s the result against the committed allow-list at
-`mikebom-cli/src/scan_fs/walk.audit-allowlist.txt`. Either-direction
+`waybill-cli/src/scan_fs/walk.audit-allowlist.txt`. Either-direction
 drift (new walker without an allow-list entry, OR stale entry pointing
 at deleted code) fails the build.
 
@@ -128,7 +128,7 @@ safe_walk(rootfs, &cfg, |path| {
 });
 ```
 
-See `mikebom-cli/src/scan_fs/walk.rs`'s module-level comment block for
+See `waybill-cli/src/scan_fs/walk.rs`'s module-level comment block for
 the full API + the documented exceptions that already exist. The
 five-minute walkthrough in
 [`specs/114-safe-walk-migration/quickstart.md`](specs/114-safe-walk-migration/quickstart.md)
@@ -171,14 +171,14 @@ but possible (per-descent stateful pruning, parent-name-aware recursion,
 …). In the SAME PR, do two edits:
 
 1. Append the new grep-output line to
-   `mikebom-cli/src/scan_fs/walk.audit-allowlist.txt`, sorted with
+   `waybill-cli/src/scan_fs/walk.audit-allowlist.txt`, sorted with
    `LC_ALL=C sort -u`. The easiest path is to regenerate the whole
    file:
    ```bash
-   grep -rEn --include='*.rs' 'fn walk[_(]' mikebom-cli/src/scan_fs/ \
+   grep -rEn --include='*.rs' 'fn walk[_(]' waybill-cli/src/scan_fs/ \
      | sed 's/^\([^:]*\):[0-9]*:/\1:/' \
      | LC_ALL=C sort -u \
-     > mikebom-cli/src/scan_fs/walk.audit-allowlist.txt
+     > waybill-cli/src/scan_fs/walk.audit-allowlist.txt
    ```
    (The `sed` step strips the absolute line-number column so position
    drift from unrelated code insertions doesn't perturb the allow-list.
@@ -187,7 +187,7 @@ but possible (per-descent stateful pruning, parent-name-aware recursion,
    means either upstream drift (rebase first) or you added more than
    one walker.
 2. Add a one-sentence reason in the comment block at the top of
-   `mikebom-cli/src/scan_fs/walk.rs`'s "Documented known exceptions"
+   `waybill-cli/src/scan_fs/walk.rs`'s "Documented known exceptions"
    subsection naming the new walker + why it can't delegate.
 
 The gate enforces step 1 mechanically; step 2 is reviewer-policed. The
@@ -203,8 +203,8 @@ time as the code change.
 - Adding a function named `fn walker_*` or `fn walking_*`: the regex
   `'fn walk[_(]'` only matches `fn walk_` or `fn walk(` exactly; longer
   prefixes don't match.
-- Working in a different directory (`mikebom-common/`, `mikebom-ebpf/`):
-  the gate is scoped to `mikebom-cli/src/scan_fs/` only.
+- Working in a different directory (`waybill-common/`, `waybill-ebpf/`):
+  the gate is scoped to `waybill-cli/src/scan_fs/` only.
 
 ### Why this is a CI gate and not a clippy lint
 
@@ -251,7 +251,7 @@ skip `#[ignore]`'d tests automatically, matching CI default-lane
 behavior.
 
 A deterministic structural-correctness sibling test
-([`mikebom-cli/tests/triple_format_structural.rs`](mikebom-cli/tests/triple_format_structural.rs))
+([`waybill-cli/tests/triple_format_structural.rs`](waybill-cli/tests/triple_format_structural.rs))
 DOES run in the default lane. It catches single-pass dispatch
 regressions binary pass/fail via stderr log-line counting of the
 existing `"scan starting"` info-line, plus triple-vs-sequential output
@@ -276,11 +276,11 @@ Twelve principles to be aware of:
   (use `anyhow` / `thiserror`).
 - **V. Specification Compliance** — CycloneDX 1.6 + SPDX 2.3 +
   SPDX 3.x conformance is non-negotiable. **Standards-native fields
-  take precedence over `mikebom:*` properties** — every new
-  `mikebom:*` field MUST first audit each target format for an
+  take precedence over `waybill:*` properties** — every new
+  `waybill:*` field MUST first audit each target format for an
   existing native construct.
-- **VI. Three-Crate Architecture** — `mikebom-ebpf/` (no_std kernel
-  programs), `mikebom-common/` (shared structs), `mikebom-cli/`
+- **VI. Three-Crate Architecture** — `waybill-ebpf/` (no_std kernel
+  programs), `waybill-common/` (shared structs), `waybill-cli/`
   (user-space). Additional crates require a constitution amendment.
 - **VII. Test Isolation** — privilege-dependent tests (eBPF) gated
   behind CAP_BPF; unprivileged unit tests run on every CI lane.
@@ -313,7 +313,7 @@ a checkbox for this.
   expected diff symmetry in the PR description (e.g., "+1521/-1521
   tool-version churn only"). Use `./scripts/regen-goldens.sh` to
   refresh every golden in one pass — it runs the workspace test
-  suite under all three `MIKEBOM_UPDATE_*` env vars at once, which
+  suite under all three `WAYBILL_UPDATE_*` env vars at once, which
   covers per-test pinned goldens outside the three main regression
   targets. Narrowing cargo to `--test cdx_regression --test
   spdx_regression --test spdx3_regression` silently skips those.
@@ -321,7 +321,7 @@ a checkbox for this.
 ## Reporting issues + security
 
 - Bugs / feature requests: use the structured templates at
-  https://github.com/kusari-sandbox/mikebom/issues/new/choose.
+  https://github.com/kusari-sandbox/waybill/issues/new/choose.
 - Vulnerabilities: see [`SECURITY.md`](SECURITY.md) — do **not**
   open a public issue.
 

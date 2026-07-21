@@ -1,4 +1,4 @@
-# maven fixtures — `mikebom:produces-binaries` (milestone 116 PR-B)
+# maven fixtures — `waybill:produces-binaries` (milestone 116 PR-B)
 
 | Sub-fixture | POM shape | Expected (extensionless per spec Q2) |
 |---|---|---|

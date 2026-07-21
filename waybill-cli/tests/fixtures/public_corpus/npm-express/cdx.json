@@ -26,19 +26,19 @@
       "name": "accepts",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^2.0.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -73,23 +73,23 @@
       "name": "after",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "development"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"0.8.2\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -125,19 +125,19 @@
       "name": "body-parser",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^2.2.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -172,23 +172,23 @@
       "name": "connect-redis",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "development"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^8.0.1\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -224,19 +224,19 @@
       "name": "content-disposition",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^1.0.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -271,19 +271,19 @@
       "name": "content-type",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^1.0.5\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -318,19 +318,19 @@
       "name": "cookie",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^0.7.1\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -365,23 +365,23 @@
       "name": "cookie-parser",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "development"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"1.4.7\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -417,23 +417,23 @@
       "name": "cookie-session",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "development"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"2.1.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -469,19 +469,19 @@
       "name": "cookie-signature",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^1.2.1\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -516,19 +516,19 @@
       "name": "debug",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^4.4.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -563,23 +563,23 @@
       "name": "ejs",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "development"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^3.1.10\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -615,19 +615,19 @@
       "name": "encodeurl",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^2.0.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -662,19 +662,19 @@
       "name": "escape-html",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^1.0.3\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -709,23 +709,23 @@
       "name": "eslint",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "development"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"8.47.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -761,19 +761,19 @@
       "name": "etag",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^1.8.1\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -808,23 +808,23 @@
       "name": "express-session",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "development"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^1.18.1\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -860,19 +860,19 @@
       "name": "finalhandler",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^2.1.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -907,19 +907,19 @@
       "name": "fresh",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^2.0.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -954,23 +954,23 @@
       "name": "hbs",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "development"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"4.2.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1006,19 +1006,19 @@
       "name": "http-errors",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^2.0.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1053,23 +1053,23 @@
       "name": "marked",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "development"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^15.0.3\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1105,19 +1105,19 @@
       "name": "merge-descriptors",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^2.0.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1152,23 +1152,23 @@
       "name": "method-override",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "development"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"3.0.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1204,19 +1204,19 @@
       "name": "mime-types",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^3.0.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1251,23 +1251,23 @@
       "name": "mocha",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "development"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^10.7.3\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1303,23 +1303,23 @@
       "name": "morgan",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "development"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"1.10.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1355,23 +1355,23 @@
       "name": "nyc",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "development"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^17.1.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1407,19 +1407,19 @@
       "name": "on-finished",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^2.4.1\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1454,19 +1454,19 @@
       "name": "once",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^1.4.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1501,19 +1501,19 @@
       "name": "parseurl",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^1.3.3\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1548,23 +1548,23 @@
       "name": "pbkdf2-password",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "development"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"1.2.1\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1600,19 +1600,19 @@
       "name": "proxy-addr",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^2.0.7\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1647,19 +1647,19 @@
       "name": "qs",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^6.14.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1694,19 +1694,19 @@
       "name": "range-parser",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^1.2.1\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1741,19 +1741,19 @@
       "name": "router",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^2.2.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1788,19 +1788,19 @@
       "name": "send",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^1.1.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1835,19 +1835,19 @@
       "name": "serve-static",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^2.2.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1882,19 +1882,19 @@
       "name": "statuses",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^2.0.1\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1929,23 +1929,23 @@
       "name": "supertest",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "development"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^6.3.0\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -1981,19 +1981,19 @@
       "name": "type-is",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^2.0.1\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2028,19 +2028,19 @@
       "name": "vary",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"^1.1.2\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2075,23 +2075,23 @@
       "name": "vhost",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"package.json\"]"
         },
         {
-          "name": "mikebom:lifecycle-scope",
+          "name": "waybill:lifecycle-scope",
           "value": "development"
         },
         {
-          "name": "mikebom:requirement-ranges",
+          "name": "waybill:requirement-ranges",
           "value": "[\"~3.0.2\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "design"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -2127,15 +2127,15 @@
       "name": "run",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"benchmarks/run\"]"
         },
         {
-          "name": "mikebom:component-tier",
+          "name": "waybill:component-tier",
           "value": "file"
         },
         {
-          "name": "mikebom:file-paths",
+          "name": "waybill:file-paths",
           "value": "[\"benchmarks/run\"]"
         }
       ],
@@ -2479,12 +2479,12 @@
   "metadata": {
     "authors": [
       {
-        "name": "mikebom"
+        "name": "waybill"
       }
     ],
     "component": {
       "bom-ref": "npm-express@e996498",
-      "cpe": "cpe:2.3:a:mikebom:npm-express:e996498:*:*:*:*:*:*:*",
+      "cpe": "cpe:2.3:a:waybill:npm-express:e996498:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",
@@ -2511,51 +2511,51 @@
     ],
     "properties": [
       {
-        "name": "mikebom:generation-context",
+        "name": "waybill:generation-context",
         "value": "filesystem-scan"
       },
       {
-        "name": "mikebom:os-release-missing-fields",
+        "name": "waybill:os-release-missing-fields",
         "value": "ID,VERSION_ID"
       },
       {
-        "name": "mikebom:trace-integrity-ring-buffer-overflows",
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
         "value": "0"
       },
       {
-        "name": "mikebom:trace-integrity-events-dropped",
+        "name": "waybill:trace-integrity-events-dropped",
         "value": "0"
       },
       {
-        "name": "mikebom:trace-integrity-uprobe-attach-failures",
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
         "value": "0"
       },
       {
-        "name": "mikebom:trace-integrity-kprobe-attach-failures",
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
         "value": "0"
       },
       {
-        "name": "mikebom:graph-completeness",
+        "name": "waybill:graph-completeness",
         "value": "partial"
       },
       {
-        "name": "mikebom:graph-completeness-reason",
+        "name": "waybill:graph-completeness-reason",
         "value": "transitive-edges-unresolvable: npm"
       },
       {
-        "name": "mikebom:workspaces-detected",
+        "name": "waybill:workspaces-detected",
         "value": "[\".\"]"
       }
     ],
     "supplier": {
-      "name": "mikebom contributors"
+      "name": "waybill contributors"
     },
     "timestamp": "<masked>",
     "tools": {
       "components": [
         {
-          "name": "mikebom",
-          "publisher": "mikebom contributors",
+          "name": "waybill",
+          "publisher": "waybill contributors",
           "type": "application",
           "version": "0.1.0-alpha.62"
         }

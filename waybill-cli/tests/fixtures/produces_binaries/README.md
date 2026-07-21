@@ -1,11 +1,11 @@
-# Test fixtures — `mikebom:produces-binaries` (milestone 116)
+# Test fixtures — `waybill:produces-binaries` (milestone 116)
 
 These fixtures exercise the per-ecosystem main-module extractors that emit
-`mikebom:produces-binaries` declarations (issue #225 Option B). Each
+`waybill:produces-binaries` declarations (issue #225 Option B). Each
 subdirectory contains a minimal synthetic project whose ecosystem manifest
 or filesystem layout declares one or more produced binary names; the
 corresponding integration test
-(`mikebom-cli/tests/produces_binaries_<ecosystem>.rs`) scans the fixture,
+(`waybill-cli/tests/produces_binaries_<ecosystem>.rs`) scans the fixture,
 parses the emitted SBOM, and asserts the expected declaration shape.
 
 Per-ecosystem subdirs are populated in the PR that ships the extractor:

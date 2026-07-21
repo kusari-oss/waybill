@@ -4,52 +4,52 @@
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.48",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:generation-context\",\"value\":\"filesystem-scan\"}"
+      "annotator": "Tool: waybill-0.1.0-alpha.48",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.48",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
+      "annotator": "Tool: waybill-0.1.0-alpha.48",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.48",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-ring-buffer-overflows\",\"value\":0}"
+      "annotator": "Tool: waybill-0.1.0-alpha.48",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":0}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.48",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-events-dropped\",\"value\":0}"
+      "annotator": "Tool: waybill-0.1.0-alpha.48",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":0}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.48",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
+      "annotator": "Tool: waybill-0.1.0-alpha.48",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.48",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
+      "annotator": "Tool: waybill-0.1.0-alpha.48",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
     },
     {
       "annotationDate": "1970-01-01T00:00:00Z",
       "annotationType": "OTHER",
-      "annotator": "Tool: mikebom-0.1.0-alpha.48",
-      "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"pypi\"]}}"
+      "annotator": "Tool: waybill-0.1.0-alpha.48",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"pypi\"]}}"
     }
   ],
   "creationInfo": {
-    "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: operations. Per-component scope detail in mikebom:sbom-tier annotations.",
+    "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: operations. Per-component scope detail in waybill:sbom-tier annotations.",
     "created": "1970-01-01T00:00:00Z",
     "creators": [
-      "Tool: mikebom-0.1.0-alpha.48",
-      "Organization: mikebom contributors"
+      "Tool: waybill-0.1.0-alpha.48",
+      "Organization: waybill contributors"
     ]
   },
   "dataLicense": "CC0-1.0",
@@ -70,7 +70,7 @@
         },
         {
           "referenceCategory": "SECURITY",
-          "referenceLocator": "cpe:2.3:a:mikebom:simple-venv:0.0.0:*:*:*:*:*:*:*",
+          "referenceLocator": "cpe:2.3:a:waybill:simple-venv:0.0.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
         }
       ],
@@ -78,7 +78,7 @@
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "name": "simple-venv",
-      "supplier": "Organization: mikebom contributors",
+      "supplier": "Organization: waybill contributors",
       "versionInfo": "0.0.0"
     },
     {
@@ -87,32 +87,32 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info/METADATA\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info/METADATA\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:certifi:certifi:2023.7.22:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-certifi:certifi:2023.7.22:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:certifi:certifi:2023.7.22:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-certifi:certifi:2023.7.22:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info/METADATA\",\"sha256\":\"b909abaa5b9c22dfb8e2274c8f3f309ef1488b6ef74baa726fd7e7863bf97e8c\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/certifi-2023.7.22.dist-info/METADATA\",\"sha256\":\"b909abaa5b9c22dfb8e2274c8f3f309ef1488b6ef74baa726fd7e7863bf97e8c\"}]}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -141,32 +141,32 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info/METADATA\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info/METADATA\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:charset-normalizer:charset-normalizer:3.3.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-charset-normalizer:charset-normalizer:3.3.2:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:charset-normalizer:charset-normalizer:3.3.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-charset-normalizer:charset-normalizer:3.3.2:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info/METADATA\",\"sha256\":\"d5a184970c7ef9ceea049bcde19c58cab9c0979f48c2a3274d4f21db57b5dfdf\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/charset_normalizer-3.3.2.dist-info/METADATA\",\"sha256\":\"d5a184970c7ef9ceea049bcde19c58cab9c0979f48c2a3274d4f21db57b5dfdf\"}]}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -195,32 +195,32 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info/METADATA\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info/METADATA\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:flask:flask:3.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-flask:flask:3.0.0:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:flask:flask:3.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-flask:flask:3.0.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info/METADATA\",\"sha256\":\"53e6c8feccc51ba487a150d1bbcbab039db9aedff2b4d9ffef1019ff568bc105\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/flask-3.0.0.dist-info/METADATA\",\"sha256\":\"53e6c8feccc51ba487a150d1bbcbab039db9aedff2b4d9ffef1019ff568bc105\"}]}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -249,32 +249,32 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/idna-3.6.dist-info/METADATA\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/idna-3.6.dist-info/METADATA\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:idna:idna:3.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-idna:idna:3.6:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:idna:idna:3.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-idna:idna:3.6:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/idna-3.6.dist-info/METADATA\",\"sha256\":\"37bf632be18976af3f8dba1491b7544dd1237cae0aef99f07a43401d2a7b8108\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/idna-3.6.dist-info/METADATA\",\"sha256\":\"37bf632be18976af3f8dba1491b7544dd1237cae0aef99f07a43401d2a7b8108\"}]}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -303,32 +303,32 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info/METADATA\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info/METADATA\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:jinja2:jinja2:3.1.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-jinja2:jinja2:3.1.2:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:jinja2:jinja2:3.1.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-jinja2:jinja2:3.1.2:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info/METADATA\",\"sha256\":\"c61109515dd028b28580b694f1e30a2344c8f9d32076dbc22dab382b7dde14e9\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/jinja2-3.1.2.dist-info/METADATA\",\"sha256\":\"c61109515dd028b28580b694f1e30a2344c8f9d32076dbc22dab382b7dde14e9\"}]}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -357,32 +357,32 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info/METADATA\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info/METADATA\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:requests:requests:2.31.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-requests:requests:2.31.0:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:requests:requests:2.31.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-requests:requests:2.31.0:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info/METADATA\",\"sha256\":\"73bca15fbb30049fa2ada6bff0900355dff44797764540ced790b3f7d99b8cd8\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/requests-2.31.0.dist-info/METADATA\",\"sha256\":\"73bca15fbb30049fa2ada6bff0900355dff44797764540ced790b3f7d99b8cd8\"}]}"
         }
       ],
       "downloadLocation": "NOASSERTION",
@@ -411,32 +411,32 @@
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:sbom-tier\",\"value\":\"deployed\"}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info/METADATA\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info/METADATA\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"mikebom:cpe-candidates\",\"value\":[\"cpe:2.3:a:urllib3:urllib3:2.0.7:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-urllib3:urllib3:2.0.7:*:*:*:*:*:*:*\"]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:urllib3:urllib3:2.0.7:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-urllib3:urllib3:2.0.7:*:*:*:*:*:*:*\"]}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
         },
         {
           "annotationDate": "1970-01-01T00:00:00Z",
           "annotationType": "OTHER",
-          "annotator": "Tool: mikebom-0.1.0-alpha.48",
-          "comment": "{\"schema\":\"mikebom-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info/METADATA\",\"sha256\":\"b8411ac5544b741fdd9e47cf56811c689c9c2030f711526ed97cc93aca77d65a\"}]}"
+          "annotator": "Tool: waybill-0.1.0-alpha.48",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\".venv/lib/python3.12/site-packages/urllib3-2.0.7.dist-info/METADATA\",\"sha256\":\"b8411ac5544b741fdd9e47cf56811c689c9c2030f711526ed97cc93aca77d65a\"}]}"
         }
       ],
       "downloadLocation": "NOASSERTION",

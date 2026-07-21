@@ -1,6 +1,6 @@
 // swift-tools-version:5.9
 // Minimal SwiftPM project fixture for milestone 122 US1 integration tests.
-// `Package.swift` content is NEVER parsed by mikebom in v0.1; this file
+// `Package.swift` content is NEVER parsed by waybill in v0.1; this file
 // exists only so the reader's manifest::detect() returns true and the
 // sibling `Package.resolved` flows through the normal happy path.
 import PackageDescription

@@ -377,7 +377,7 @@ fn v1_lockfile_warns_but_does_not_abort_scan() {
 /// pattern used for the cargo-workspace fixture in milestone 064.
 fn cli_local_fixture(sub: &str) -> PathBuf {
     // Milestone 090: waybill-cli/tests/fixtures/<sub> dirs moved to
-    // mikebom-test-fixtures repo; resolve via WAYBILL_FIXTURES_DIR.
+    // waybill-test-fixtures repo; resolve via WAYBILL_FIXTURES_DIR.
     PathBuf::from(env!("WAYBILL_FIXTURES_DIR")).join(sub)
 }
 

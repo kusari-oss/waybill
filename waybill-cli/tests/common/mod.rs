@@ -115,7 +115,7 @@ pub fn workspace_root() -> PathBuf {
 // polyglot-monorepo / python / transitive_parity / cargo-workspace /
 // maven-multi-module-reactor / npm-scoped-package / npm-workspace /
 // pip-pyproject-pep621 / pip-pyproject-poetry-only) live in the
-// separate `mikebom-test-fixtures` repo, fetched by `build.rs` into
+// separate `waybill-test-fixtures` repo, fetched by `build.rs` into
 // `~/.cache/waybill/fixtures/<sha>/`. The `WAYBILL_FIXTURES_DIR`
 // compile-time env var (set by build.rs via cargo:rustc-env) holds
 // the absolute path.
@@ -128,7 +128,7 @@ pub fn workspace_root() -> PathBuf {
 //
 // See specs/090-split-test-fixtures-repo/contracts/fixture-path-helper.md.
 
-/// Path to a moved fixture relative to the cloned `mikebom-test-fixtures`
+/// Path to a moved fixture relative to the cloned `waybill-test-fixtures`
 /// repo root. Resolves against `WAYBILL_FIXTURES_DIR` (set by build.rs).
 ///
 /// Use this for: every manifest-bearing fixture per
@@ -153,7 +153,7 @@ pub fn local_fixture_path(rel: &str) -> PathBuf {
 
 /// Resolve an `EcosystemCase`'s fixture path. As of the post-103
 /// fixture-migration PR, every CASES entry's fixture lives in the
-/// sibling `mikebom-test-fixtures` repo and resolves via
+/// sibling `waybill-test-fixtures` repo and resolves via
 /// `fixture_path`. Earlier history had apk/deb/rpm at workspace-root
 /// `tests/fixtures/` (milestone-090 stay-set) and bazel/cmake at
 /// crate-local `waybill-cli/tests/fixtures/` (milestone-103

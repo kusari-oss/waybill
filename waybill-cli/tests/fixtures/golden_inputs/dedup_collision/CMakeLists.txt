@@ -4,7 +4,7 @@
 # collector (cmake::collect_find_package_targets) picks up "abseil"
 # as a referenced target. When US6's git-submodule reader fires
 # against this fixture (post-US6), the third_party/abseil submodule
-# is classified as `mikebom:build-reference: "declared-and-used"`.
+# is classified as `waybill:build-reference: "declared-and-used"`.
 
 cmake_minimum_required(VERSION 3.16)
 project(dedup_collision_fixture LANGUAGES CXX)

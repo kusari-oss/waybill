@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the governance model for mikebom.
+This document describes the governance model for waybill.
 
 
 ## Roles

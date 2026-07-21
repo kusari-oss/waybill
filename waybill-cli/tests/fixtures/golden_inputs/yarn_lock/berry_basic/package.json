@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "packageManager": "yarn@4.0.0",
   "dependencies": {
-    "mikebom-fixture-lib": "^1.0.0",
+    "waybill-fixture-lib": "^1.0.0",
     "@waybill-fixture/types-pkg": "^4.0.0"
   }
 }

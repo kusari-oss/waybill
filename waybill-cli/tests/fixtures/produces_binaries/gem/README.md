@@ -1,4 +1,4 @@
-# gem fixtures — `mikebom:produces-binaries` (milestone 116 PR-B)
+# gem fixtures — `waybill:produces-binaries` (milestone 116 PR-B)
 
 | Sub-fixture | Gemspec shape | Expected |
 |---|---|---|

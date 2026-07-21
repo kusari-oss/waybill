@@ -39,31 +39,31 @@
       "name": "github.com/cpuguy83/go-md2man/v2",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:github.com\\/cpuguy83\\/go-md2man\\/v2:github.com\\/cpuguy83\\/go-md2man\\/v2:v2.0.6:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/cpuguy83\\/go-md2man:github.com\\/cpuguy83\\/go-md2man\\/v2:v2.0.6:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"go.sum\"]"
         },
         {
-          "name": "mikebom:build-inclusion",
+          "name": "waybill:build-inclusion",
           "value": "unknown"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:go-transitive-source",
+          "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
         },
         {
-          "name": "mikebom:resolver-step",
+          "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -112,31 +112,31 @@
       "name": "github.com/inconshreveable/mousetrap",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:github.com\\/inconshreveable\\/mousetrap:github.com\\/inconshreveable\\/mousetrap:v1.1.0:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/inconshreveable:github.com\\/inconshreveable\\/mousetrap:v1.1.0:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"go.sum\"]"
         },
         {
-          "name": "mikebom:build-inclusion",
+          "name": "waybill:build-inclusion",
           "value": "unknown"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:go-transitive-source",
+          "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
         },
         {
-          "name": "mikebom:resolver-step",
+          "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -185,31 +185,31 @@
       "name": "github.com/russross/blackfriday/v2",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:github.com\\/russross\\/blackfriday\\/v2:github.com\\/russross\\/blackfriday\\/v2:v2.1.0:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/russross\\/blackfriday:github.com\\/russross\\/blackfriday\\/v2:v2.1.0:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"go.sum\"]"
         },
         {
-          "name": "mikebom:build-inclusion",
+          "name": "waybill:build-inclusion",
           "value": "unknown"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:go-transitive-source",
+          "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
         },
         {
-          "name": "mikebom:resolver-step",
+          "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -258,31 +258,31 @@
       "name": "github.com/spf13/pflag",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:github.com\\/spf13\\/pflag:github.com\\/spf13\\/pflag:v1.0.6:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/spf13:github.com\\/spf13\\/pflag:v1.0.6:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"go.sum\"]"
         },
         {
-          "name": "mikebom:build-inclusion",
+          "name": "waybill:build-inclusion",
           "value": "unknown"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:go-transitive-source",
+          "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
         },
         {
-          "name": "mikebom:resolver-step",
+          "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -325,31 +325,31 @@
       "name": "gopkg.in/check.v1",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:gopkg.in\\/check.v1:gopkg.in\\/check.v1:v0.0.0-20161208181325-20d25e280405:*:*:*:*:*:*:* | cpe:2.3:a:gopkg.in:gopkg.in\\/check.v1:v0.0.0-20161208181325-20d25e280405:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"go.sum\"]"
         },
         {
-          "name": "mikebom:build-inclusion",
+          "name": "waybill:build-inclusion",
           "value": "unknown"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:go-transitive-source",
+          "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
         },
         {
-          "name": "mikebom:resolver-step",
+          "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -392,31 +392,31 @@
       "name": "gopkg.in/yaml.v3",
       "properties": [
         {
-          "name": "mikebom:cpe-candidates",
+          "name": "waybill:cpe-candidates",
           "value": "cpe:2.3:a:gopkg.in\\/yaml.v3:gopkg.in\\/yaml.v3:v3.0.1:*:*:*:*:*:*:* | cpe:2.3:a:gopkg.in:gopkg.in\\/yaml.v3:v3.0.1:*:*:*:*:*:*:*"
         },
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"go.sum\"]"
         },
         {
-          "name": "mikebom:build-inclusion",
+          "name": "waybill:build-inclusion",
           "value": "unknown"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:go-transitive-source",
+          "name": "waybill:go-transitive-source",
           "value": "go-sum-fallback"
         },
         {
-          "name": "mikebom:resolver-step",
+          "name": "waybill:resolver-step",
           "value": "go-sum-fallback"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -453,15 +453,15 @@
       "name": "stdlib",
       "properties": [
         {
-          "name": "mikebom:source-files",
+          "name": "waybill:source-files",
           "value": "[\"go.sum\"]"
         },
         {
-          "name": "mikebom:sbom-tier",
+          "name": "waybill:sbom-tier",
           "value": "source"
         },
         {
-          "name": "mikebom:workspace-member",
+          "name": "waybill:workspace-member",
           "value": "[\".\"]"
         }
       ],
@@ -550,12 +550,12 @@
   "metadata": {
     "authors": [
       {
-        "name": "mikebom"
+        "name": "waybill"
       }
     ],
     "component": {
       "bom-ref": "go-cobra@a655097",
-      "cpe": "cpe:2.3:a:mikebom:go-cobra:a655097:*:*:*:*:*:*:*",
+      "cpe": "cpe:2.3:a:waybill:go-cobra:a655097:*:*:*:*:*:*:*",
       "externalReferences": [
         {
           "comment": "auto-detected from git remote `origin`",
@@ -582,63 +582,63 @@
     ],
     "properties": [
       {
-        "name": "mikebom:generation-context",
+        "name": "waybill:generation-context",
         "value": "filesystem-scan"
       },
       {
-        "name": "mikebom:os-release-missing-fields",
+        "name": "waybill:os-release-missing-fields",
         "value": "ID,VERSION_ID"
       },
       {
-        "name": "mikebom:trace-integrity-ring-buffer-overflows",
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
         "value": "0"
       },
       {
-        "name": "mikebom:trace-integrity-events-dropped",
+        "name": "waybill:trace-integrity-events-dropped",
         "value": "0"
       },
       {
-        "name": "mikebom:trace-integrity-uprobe-attach-failures",
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
         "value": "0"
       },
       {
-        "name": "mikebom:trace-integrity-kprobe-attach-failures",
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
         "value": "0"
       },
       {
-        "name": "mikebom:graph-completeness",
+        "name": "waybill:graph-completeness",
         "value": "complete"
       },
       {
-        "name": "mikebom:workspaces-detected",
+        "name": "waybill:workspaces-detected",
         "value": "[\".\"]"
       },
       {
-        "name": "mikebom:go-cache-warming-mode",
+        "name": "waybill:go-cache-warming-mode",
         "value": "off"
       },
       {
-        "name": "mikebom:go-transitive-coverage",
+        "name": "waybill:go-transitive-coverage",
         "value": "unknown"
       },
       {
-        "name": "mikebom:go-transitive-coverage-reason",
+        "name": "waybill:go-transitive-coverage-reason",
         "value": "offline-mode: transitive edges from proxy fetches unavailable"
       },
       {
-        "name": "mikebom:go-transitive-fallback-count",
+        "name": "waybill:go-transitive-fallback-count",
         "value": "6"
       }
     ],
     "supplier": {
-      "name": "mikebom contributors"
+      "name": "waybill contributors"
     },
     "timestamp": "<masked>",
     "tools": {
       "components": [
         {
-          "name": "mikebom",
-          "publisher": "mikebom contributors",
+          "name": "waybill",
+          "publisher": "waybill contributors",
           "type": "application",
           "version": "0.1.0-alpha.62"
         }
