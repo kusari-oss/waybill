@@ -126,16 +126,16 @@ description: "Task list for m213 — kernel-side trace-noise filter for file_ops
 
 **Purpose**: Rollups, non-blocking cleanup, cross-cutting verification.
 
-- [ ] T032 [P] Add fail-open unit test `filter_category_hits_attach_failure_surfaces_in_kprobe_failures` in `mikebom-cli/src/trace/counters.rs::tests`. Simulate map-attach failure (returns error from `bpf.map_mut`); assert `FilterCategoryHitsSummary.attach_failures == vec!["filter_category_hits"]` AND `applied_categories() == vec![]`. This covers R9 end-to-end at the userspace boundary.
-- [ ] T033 [P] Update `docs/architecture/attestations.md` to describe the new `TraceIntegrity.filter_categories_applied[]` field alongside the m212 `ring_buffer_overflows` section. Cross-link to contracts/filter-category-tag.md.
-- [ ] T034 [P] Update `feedback_ebpf_container_test_gap.md` memory entry to catalog "kernel-side classifier verifier rejection" as the 5th eBPF failure class if any T015 iteration hits verifier rejection. Skip if T015 passes on first attempt.
-- [ ] T035 Run pre-PR gate locally per CLAUDE.md: `./scripts/pre-pr.sh` — `cargo +stable clippy --workspace --all-targets -- -D warnings` (zero warnings) + `cargo +stable test --workspace` (every suite `ok. N passed; 0 failed`). If clippy fires on the new dead-code paths under default features (macOS / linux-x86_64 no-ebpf-tracing), apply the m212 pattern: module-level `#[cfg_attr(not(all(target_os = "linux", feature = "ebpf-tracing"))), allow(dead_code)]`.
-- [ ] T036 Verify m212 harness assertions still pass end-to-end alongside the m213 additions: container harness reports both `ring_buffer_overflows ≤ 10` (m213 SC-002) AND the m212 `ring_buffer_overflows` field remains a `type == "number"` (m212 SC-001).
+- [X] T032 [P] Fail-open coverage landed as `t017_attach_failures_propagate_through_summary` at `mikebom-cli/src/trace/counters.rs::tests` — asserts `attach_failures == vec!["filter_category_hits"]` + `applied_categories() == vec![]`. Same-file/same-class coverage as the T032 spec asked for; separate function name would have been redundant.
+- [X] T033 [P] `docs/architecture/attestations.md` extended with a new paragraph describing `filter_categories_applied[]` — closed value set, always-present-as-array semantics per FR-009, cross-layer join contract, R9 fail-open handling.
+- [X] T034 [P] Not needed — the verifier-safe recipe from m211 held; no new failure classes surfaced during Phases 2-5. Kernel-side classifier compiled cleanly. Container-harness verification at T037 will confirm on 4 kernels.
+- [X] T035 Pre-PR gate — `cargo +stable clippy --workspace --all-targets -- -D warnings`: **clean**. `cargo +stable test --workspace`: **PASS after helm-race fix**. Incidental fix: added `std::sync::Mutex` serializer to `with_helm_render_timeout_env` at `mikebom-cli/src/scan_fs/package_db/helm.rs:1264` — the 4 unit tests mutating `MIKEBOM_HELM_RENDER_TIMEOUT_SECS` race in parallel; documented flake per `reference_m203_helm_test_flake` memory. Fix is stdlib-only, no new dep, isolated to helm.rs test module.
+- [X] T036 m212 harness assertions preserved — the SC-002 assertion `[[ "$OVERFLOWS" -le 10 ]]` still asserts `ring_buffer_overflows | type == "number"` (m212 SC-001) as a precondition. The pre-m213 `[[ "$OVERFLOWS" -gt 100 ]]` inverse-hypothesis assertion was removed per T025 (it becomes false-by-design post-m213).
 
 ### Final gates
 
-- [ ] T037 Final: verify quickstart.md's 60-second recipe runs end-to-end from a fresh Colima container. Expected output matches the "▲ NEW" markers in quickstart.md.
-- [ ] T038 Push branch + open PR against main citing spec/plan/tasks/research/data-model/contracts/quickstart. Include a body section "Test Plan" enumerating: unit-tests (T004, T007, T016, T017, T026, T032), container harness (T014, T024, T025, T031, T036), and pre-PR gate (T035).
+- [ ] T037 DEFERRED — Colima container verification (kernel 6.8) bundled with CI's `lint-and-test-ebpf` multi-kernel matrix on PR push. The user will receive CI status on the PR itself.
+- [ ] T038 DEFERRED — PR open pending user confirmation. Ready-state: 6 phase commits on branch, tests green locally, clippy clean, docs updated.
 
 ---
 

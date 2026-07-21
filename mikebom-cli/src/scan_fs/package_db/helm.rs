@@ -1255,13 +1255,29 @@ dependencies:
     // ── T007 m203 (#553) — HelmRenderError + resolve_render_timeout ──
     //
     // These tests mutate the process-wide `MIKEBOM_HELM_RENDER_TIMEOUT_SECS`
-    // env var. Run with `cargo test ... -- --test-threads=1` when the full
-    // suite is invoked, or scope invocation to this file via
-    // `cargo test -- resolve_render_timeout` (which naturally serializes
-    // matching tests). We avoid a `serial_test` dep per plan Technical
-    // Context (zero-new-Cargo-deps).
+    // env var. Cargo test runs test functions in parallel by default,
+    // and the 4 timeout-env tests will race on the shared env var —
+    // observed as flaky pre-PR failures per reference_m203_helm_test_flake.
+    //
+    // Fix (m213 incidental): a module-static `std::sync::Mutex` inside
+    // `with_helm_render_timeout_env` serializes the wrapper across
+    // parallel test threads. Uses `.lock().unwrap_or_else(|e| e.into_inner())`
+    // to survive poisoning if a prior test panicked while holding the
+    // lock — we still need the CURRENT test to run against a known
+    // env-var state, so continuing past poison is correct.
+    //
+    // Zero new deps per plan Technical Context — `std::sync::Mutex` +
+    // `std::sync::OnceLock` are stdlib.
+
+    fn helm_env_mutex() -> &'static std::sync::Mutex<()> {
+        static LOCK: std::sync::OnceLock<std::sync::Mutex<()>> = std::sync::OnceLock::new();
+        LOCK.get_or_init(|| std::sync::Mutex::new(()))
+    }
 
     fn with_helm_render_timeout_env<F: FnOnce()>(value: Option<&str>, f: F) {
+        let _guard = helm_env_mutex()
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         let prev = std::env::var("MIKEBOM_HELM_RENDER_TIMEOUT_SECS").ok();
         match value {
             Some(v) => std::env::set_var("MIKEBOM_HELM_RENDER_TIMEOUT_SECS", v),
