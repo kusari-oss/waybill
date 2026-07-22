@@ -662,6 +662,7 @@ spdx3_anno!(c131_spdx3, "waybill:read-set-source",                  component);
 spdx3_anno!(c132_spdx3, "waybill:compiler-pipeline-completeness",   document);
 spdx3_anno!(c133_spdx3, "waybill:secrets-read-filtered",            document);
 spdx3_anno!(c134_spdx3, "waybill:trace-attach-late",                component);
+spdx3_anno!(c135_spdx3, "waybill:package-shape",                    component);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

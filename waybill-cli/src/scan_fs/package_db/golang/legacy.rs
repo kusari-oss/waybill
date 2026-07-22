@@ -1285,7 +1285,14 @@ pub(crate) fn resolve_workspace_version(project_root: &Path) -> String {
 /// stdout) on success, None on any failure (binary missing, non-zero
 /// exit, timeout, malformed output). Stderr is silenced; stderr output
 /// from `git describe` is normal and non-actionable for our flow.
-fn run_git_describe_with_timeout(
+///
+/// **Visibility (m216)**: `pub(crate)` so gem.rs can reuse the
+/// primitive for its own version-resolution ladder without copying
+/// the subprocess-timeout plumbing. The wrapping `resolve_workspace_version`
+/// stays Go-specific (Go's convention is a `v` prefix on the placeholder);
+/// Ruby applications need a bare `0.0.0-unknown` per m216 FR-004, so
+/// gem.rs implements its own thin 3-step ladder over this primitive.
+pub(crate) fn run_git_describe_with_timeout(
     project_root: &Path,
     args: &[&str],
     timeout: std::time::Duration,

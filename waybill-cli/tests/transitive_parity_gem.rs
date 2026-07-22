@@ -28,7 +28,21 @@ const FIXTURE_SUBPATH: &str = "gem";
 // post-162 waybill emits a synthetic `pkg:gem/bundler` (versionless)
 // component + preserves the edge from source to synthetic. 1 new
 // edge; 217 + 1 = 218.
-const EXPECTED_WAYBILL_EDGE_COUNT: usize = 218;
+//
+// Milestone 216 REDUCED baseline from 218 → 197 (net −21): the m216
+// Gemfile-only main-module emission fires on this fixture (no
+// top-level `.gemspec`), producing a real `pkg:generic/gem@0.0.0-unknown`
+// main-module and suppressing the issue-#236 `synthesize_root` fallback
+// (that fallback was gated on "no main-module exists" — the m216
+// condition change eliminates it). Loss: the 21 synth-root → graph-root
+// edges are no longer emitted. The m216 main-module DOES declare
+// direct-deps in its `depends[]` field (from Gemfile.lock's
+// DEPENDENCIES block), but scan_fs::mod.rs's dep-name resolver is
+// same-ecosystem-scoped (keys on `(ecosystem, name)`), so a
+// pkg:generic/ main-module cannot cross-link to pkg:gem/ deps.
+// Follow-up work: waybill#TBD to bridge cross-ecosystem lookup for
+// application main-modules. Net delta: 218 − 21 = 197.
+const EXPECTED_WAYBILL_EDGE_COUNT: usize = 197;
 
 const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
     // Confirmed in waybill output — fastlane's main module pulls in CFPropertyList.

@@ -497,11 +497,16 @@ end
     );
 }
 
-/// US1 AS#4 + FR-002 + SC-002: application-style Ruby project
-/// (Gemfile + Gemfile.lock, no top-level `*.gemspec`) skips
-/// main-module emission.
+/// Milestone 216 (SUPERSEDES the m069 US1 AS#4 "skip" semantics):
+/// application-style Ruby project (Gemfile + Gemfile.lock, no top-
+/// level `*.gemspec`) now DOES emit a main-module — but with a
+/// `pkg:generic/<slug>@<version>` PURL (not `pkg:gem/`) plus a
+/// `waybill:package-shape = "application"` distinguishing
+/// annotation. Rationale: purl-spec's `pkg:gem/` type is
+/// rubygems.org-published gems; bundler-managed apps don't fit
+/// (waybill#629 + specs/216-gemfile-main-module/).
 #[test]
-fn scan_gem_application_style_skips_main_module() {
+fn scan_gem_application_style_emits_pkg_generic_main_module() {
     let dir = tempfile::tempdir().expect("tempdir");
     std::fs::write(
         dir.path().join("Gemfile"),
@@ -535,8 +540,26 @@ DEPENDENCIES
         .collect();
     assert_eq!(
         app_pkgs.len(),
-        0,
-        "application-style project (Gemfile only, no *.gemspec) MUST NOT emit a main-module per FR-002. Got: {app_pkgs:#?}"
+        1,
+        "m216: application-style project (Gemfile only, no *.gemspec) MUST emit exactly one application main-module. Got: {app_pkgs:#?}"
+    );
+    // PURL type per m216 FR-002 is pkg:generic/ (not pkg:gem/).
+    // SPDX 2.3 emits PURL under externalRefs[] with type=purl.
+    let purl = app_pkgs[0]["externalRefs"]
+        .as_array()
+        .and_then(|refs| {
+            refs.iter().find_map(|r| {
+                if r["referenceType"].as_str() == Some("purl") {
+                    r["referenceLocator"].as_str()
+                } else {
+                    None
+                }
+            })
+        })
+        .expect("main-module has a PURL externalRef");
+    assert!(
+        purl.starts_with("pkg:generic/"),
+        "m216 FR-002: application main-module PURL must be pkg:generic/, got {purl}"
     );
 }
 

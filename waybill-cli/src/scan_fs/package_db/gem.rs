@@ -1084,6 +1084,24 @@ pub fn read(
         }
     }
 
+    // Milestone 216 — Phase B: emit application main-module for every
+    // top-level `Gemfile` in a directory that does NOT carry a
+    // `*.gemspec` (bundler-managed application, not a published gem).
+    // FR-007 gemspec-wins is enforced inside `find_top_level_gemfiles`
+    // (the walker's directory-has-gemspec guard), so there's no PURL
+    // overlap with the m069 gemspec-loop above by construction —
+    // append-only, no augment-existing pattern needed.
+    for gemfile_path in find_top_level_gemfiles(rootfs) {
+        let Some(app_entry) = build_gem_application_main_module_entry(
+            &gemfile_path,
+            rootfs,
+        ) else {
+            continue;
+        };
+        out.push(app_entry);
+        main_modules_emitted += 1;
+    }
+
     // Milestone 069 same-PURL dedup (rare given install-state path
     // exclusion in `find_top_level_gemspecs`, but defensive).
     let dedup_drops = dedup_gem_main_modules_by_purl(&mut out);
@@ -1320,6 +1338,248 @@ pub(crate) fn dedup_gem_main_modules_by_purl(
     *entries = keep;
     dropped
 }
+
+// ---------------------------------------------------------------------------
+// Milestone 216 — Gemfile-only Ruby application main-module
+// ---------------------------------------------------------------------------
+//
+// Emits a `waybill:component-role = "main-module"` component for every
+// directory that carries a `Gemfile` AND does NOT carry a `*.gemspec`
+// (bundler-managed application, not a published gem). Uses the
+// purl-spec-blessed `pkg:generic/<name>@<version>` PURL type (per m216
+// FR-002) with a companion `waybill:package-shape = "application"`
+// annotation (per FR-008) so downstream consumers can distinguish
+// Gemfile-derived main-modules from published-gem main-modules.
+//
+// See specs/216-gemfile-main-module/ for the full spec + design.
+
+const M216_PACKAGE_SHAPE_KEY: &str = "waybill:package-shape";
+const M216_APPLICATION_VALUE: &str = "application";
+const M216_VERSION_PLACEHOLDER: &str = "0.0.0-unknown";
+
+/// Version-resolution ladder for a Gemfile-only Ruby application
+/// (m216 FR-004 + research R3). Two-step ladder over the m053
+/// `run_git_describe_with_timeout` primitive:
+///   1. `git describe --tags --always` in the application dir
+///   2. `git describe --tags --always` at the scan root
+///   3. Literal `"0.0.0-unknown"` placeholder
+///
+/// Deliberately bare `0.0.0-unknown` (NOT `v0.0.0-unknown` as Go
+/// uses) — Ruby versioning convention doesn't prefix `v`. This is
+/// the ONLY reason gem.rs can't call `resolve_workspace_version`
+/// verbatim.
+fn resolve_gem_application_version(
+    application_dir: &Path,
+    scan_root: &Path,
+) -> String {
+    use crate::scan_fs::package_db::golang::legacy::run_git_describe_with_timeout;
+    const TIMEOUT: std::time::Duration = std::time::Duration::from_secs(2);
+    // Step 1 — describe from application dir. Skip if no .git (see
+    // the m053 legacy comment on parent-repo cross-host leakage).
+    if application_dir.join(".git").exists() {
+        if let Some(v) = run_git_describe_with_timeout(
+            application_dir,
+            &["describe", "--tags", "--always"],
+            TIMEOUT,
+        ) {
+            return v;
+        }
+    }
+    // Step 2 — describe from scan root (covers the "single-tag applies
+    // to the whole tree" case for monorepos).
+    if scan_root.join(".git").exists() {
+        if let Some(v) = run_git_describe_with_timeout(
+            scan_root,
+            &["describe", "--tags", "--always"],
+            TIMEOUT,
+        ) {
+            return v;
+        }
+    }
+    M216_VERSION_PLACEHOLDER.to_string()
+}
+
+/// Walk `rootfs` for top-level `Gemfile` files. Excludes install-state
+/// paths (`vendor/`, `gems/`, `specifications/`, `.bundle/`) per m216
+/// R1. Applies the FR-007 gemspec-wins guard: skips any directory
+/// whose contents include ANY `*.gemspec` file (the pre-existing m069
+/// gemspec path already emits the identity for those directories).
+///
+/// Result is sorted lex by path so downstream emit order is
+/// host-agnostic.
+fn find_top_level_gemfiles(rootfs: &Path) -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    let empty = super::exclude_path::ExclusionSet::default();
+    let cfg = crate::scan_fs::walk::WalkConfig {
+        max_depth: MAX_GEMSPEC_WALK_DEPTH,
+        should_skip: &|candidate: &Path, _rootfs: &Path| -> bool {
+            let Some(name) = candidate.file_name().and_then(|s| s.to_str()) else {
+                return true;
+            };
+            should_skip_descent(name)
+                || matches!(
+                    name,
+                    "vendor" | "gems" | "specifications" | ".bundle"
+                )
+        },
+        exclude_set: &empty,
+    };
+    crate::scan_fs::walk::safe_walk(rootfs, &cfg, |path| {
+        if !path.is_file() {
+            return;
+        }
+        // Only exact-name `Gemfile` (case-sensitive) qualifies.
+        let name = path.file_name().and_then(|s| s.to_str());
+        if name != Some("Gemfile") {
+            return;
+        }
+        // FR-007 gemspec-wins: skip if any *.gemspec sibling exists.
+        if let Some(dir) = path.parent() {
+            if directory_has_gemspec(dir) {
+                return;
+            }
+        }
+        out.push(path.to_path_buf());
+    });
+    out.sort();
+    out
+}
+
+/// Returns true iff `dir` contains any file with a `.gemspec`
+/// extension (case-insensitive to match `find_top_level_gemspecs`
+/// behavior). Used by [`find_top_level_gemfiles`] to enforce the
+/// FR-007 gemspec-wins precedence.
+fn directory_has_gemspec(dir: &Path) -> bool {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return false;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if !path.is_file() {
+            continue;
+        }
+        if path
+            .extension()
+            .and_then(|s| s.to_str())
+            .map(|ext| ext.eq_ignore_ascii_case("gemspec"))
+            .unwrap_or(false)
+        {
+            return true;
+        }
+    }
+    false
+}
+
+/// Build the application main-module entry for a `Gemfile`-only
+/// directory (m216 FR-001 + FR-002 + FR-008 + data-model E1).
+///
+/// - PURL: `pkg:generic/<slug>@<version>` where slug comes from the
+///   m215 `subject_slug` rules applied to the directory basename,
+///   and version comes from the [`resolve_gem_application_version`]
+///   ladder (git-describe → placeholder).
+/// - Annotations: `waybill:component-role = "main-module"` (split-axis
+///   + m127 root-selector signal) AND `waybill:package-shape =
+///   "application"` (m216 parity-bridging distinguisher).
+/// - `sbom_tier = Some("source")` — matches the gemspec-derived
+///   builder convention (line 1281).
+///
+/// Returns `None` when the directory basename sanitizes to empty
+/// (pathological case per R2 skip pattern) or when PURL construction
+/// fails.
+fn build_gem_application_main_module_entry(
+    gemfile_path: &Path,
+    scan_root: &Path,
+) -> Option<PackageDbEntry> {
+    let application_dir = gemfile_path.parent()?;
+    let raw_name = application_dir
+        .file_name()
+        .and_then(|n| n.to_str())?
+        .to_string();
+    // Reuse m215's subject_slug rules for lowercase + unsafe-char
+    // stripping + non-ASCII stripping + 100-char truncation. Build a
+    // pseudo-PURL just to route through the same helper; we only
+    // consume the returned slug string.
+    let pseudo_purl_string = format!(
+        "pkg:generic/{}@0.0.0",
+        encode_purl_segment(&raw_name)
+    );
+    let pseudo_purl = Purl::new(&pseudo_purl_string).ok()?;
+    let slug = crate::generate::split::subject_slug(&pseudo_purl);
+    if slug.is_empty() {
+        return None;
+    }
+    let version = resolve_gem_application_version(application_dir, scan_root);
+    let purl_string = format!(
+        "pkg:generic/{}@{}",
+        encode_purl_segment(&slug),
+        encode_purl_segment(&version),
+    );
+    let purl = Purl::new(&purl_string).ok()?;
+
+    let mut extra_annotations: BTreeMap<String, serde_json::Value> =
+        Default::default();
+    extra_annotations.insert(
+        "waybill:component-role".to_string(),
+        serde_json::Value::String("main-module".to_string()),
+    );
+    extra_annotations.insert(
+        M216_PACKAGE_SHAPE_KEY.to_string(),
+        serde_json::Value::String(M216_APPLICATION_VALUE.to_string()),
+    );
+
+    let source_path = format!("path+file://{}", application_dir.display());
+
+    // Populate `depends` from the Gemfile.lock's DEPENDENCIES block
+    // when the sibling lock exists. Without this the application
+    // main-module lands in the graph with zero outgoing edges, and
+    // issue-#236's `synthesize_root` fallback no longer fires (that
+    // fallback was gated on "no main-module exists" — m216 changed
+    // that condition). Result would be an SBOM where the operator-
+    // facing root has no edges to its own declared deps.
+    let depends: Vec<String> = application_dir
+        .join("Gemfile.lock")
+        .canonicalize()
+        .ok()
+        .and_then(|p| std::fs::read_to_string(&p).ok())
+        .map(|text| parse_gemfile_lock(&text).dependencies)
+        .unwrap_or_default();
+
+    Some(PackageDbEntry {
+        build_inclusion: None,
+        purl,
+        name: slug,
+        version,
+        arch: None,
+        source_path,
+        depends,
+        maintainer: None,
+        licenses: Vec::new(),
+        lifecycle_scope: None,
+        requirement_ranges: Vec::new(),
+        source_type: None,
+        buildinfo_status: None,
+        evidence_kind: None,
+        binary_class: None,
+        binary_stripped: None,
+        linkage_kind: None,
+        detected_go: None,
+        confidence: None,
+        binary_packed: None,
+        raw_version: None,
+        parent_purl: None,
+        npm_role: None,
+        co_owned_by: None,
+        hashes: Vec::new(),
+        sbom_tier: Some("source".to_string()),
+        shade_relocation: None,
+        extra_annotations,
+        binary_role: None,
+    })
+}
+
+// ---------------------------------------------------------------------------
+// end of m216 additions
+// ---------------------------------------------------------------------------
 
 /// Production-wins union: a gem with empty group set in ANY source
 /// counts as production (mirrors FR-006). When the existing entry
@@ -2700,5 +2960,140 @@ DEPENDENCIES
     fn build_gem_purl_nonempty_version_byte_identical_to_pre_m191() {
         let p = build_gem_purl("rails", "7.1.3").expect("non-empty");
         assert_eq!(p.as_str(), "pkg:gem/rails@7.1.3");
+    }
+
+    // -------- m216 walker + builder unit tests (T009) --------
+
+    #[test]
+    fn find_top_level_gemfiles_walks_gemfile_only_dirs() {
+        let root = tempfile::tempdir().unwrap();
+        // Gemfile-only dir (no gemspec) — SHOULD be walked.
+        let app = root.path().join("my-app");
+        std::fs::create_dir_all(&app).unwrap();
+        std::fs::write(app.join("Gemfile"), b"source 'https://rubygems.org'\n").unwrap();
+        std::fs::write(app.join("Gemfile.lock"), b"# empty\n").unwrap();
+        let found = find_top_level_gemfiles(root.path());
+        assert_eq!(found.len(), 1, "expected 1 Gemfile, got {found:?}");
+        assert_eq!(found[0], app.join("Gemfile"));
+    }
+
+    #[test]
+    fn find_top_level_gemfiles_skips_gemspec_carrying_dirs() {
+        let root = tempfile::tempdir().unwrap();
+        let pub_gem = root.path().join("published-gem");
+        std::fs::create_dir_all(&pub_gem).unwrap();
+        std::fs::write(pub_gem.join("Gemfile"), b"source 'https://rubygems.org'\n").unwrap();
+        std::fs::write(
+            pub_gem.join("published-gem.gemspec"),
+            b"Gem::Specification.new {|s| s.name = 'x'; s.version = '1.0.0'}\n",
+        )
+        .unwrap();
+        let found = find_top_level_gemfiles(root.path());
+        assert!(
+            found.is_empty(),
+            "FR-007: gemspec-carrying dirs must NOT emit application main-module; got {found:?}"
+        );
+    }
+
+    #[test]
+    fn find_top_level_gemfiles_skips_vendor_gems_bundle() {
+        for excluded in ["vendor", "gems", ".bundle"] {
+            let root = tempfile::tempdir().unwrap();
+            let nested = root.path().join(excluded).join("nested-app");
+            std::fs::create_dir_all(&nested).unwrap();
+            std::fs::write(nested.join("Gemfile"), b"source 'x'\n").unwrap();
+            let found = find_top_level_gemfiles(root.path());
+            assert!(
+                found.is_empty(),
+                "Gemfile under {excluded}/ must be skipped; got {found:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn build_gem_application_main_module_purl_is_pkg_generic() {
+        let root = tempfile::tempdir().unwrap();
+        let app = root.path().join("my-service");
+        std::fs::create_dir_all(&app).unwrap();
+        let gemfile = app.join("Gemfile");
+        std::fs::write(&gemfile, b"source 'x'\n").unwrap();
+        let entry =
+            build_gem_application_main_module_entry(&gemfile, root.path())
+                .expect("build succeeds");
+        assert!(
+            entry.purl.as_str().starts_with("pkg:generic/my-service@"),
+            "expected pkg:generic/my-service@..., got {}",
+            entry.purl.as_str()
+        );
+    }
+
+    #[test]
+    fn build_gem_application_main_module_has_package_shape_annotation() {
+        let root = tempfile::tempdir().unwrap();
+        let app = root.path().join("my-service");
+        std::fs::create_dir_all(&app).unwrap();
+        let gemfile = app.join("Gemfile");
+        std::fs::write(&gemfile, b"source 'x'\n").unwrap();
+        let entry =
+            build_gem_application_main_module_entry(&gemfile, root.path())
+                .expect("build succeeds");
+        assert_eq!(
+            entry
+                .extra_annotations
+                .get("waybill:component-role")
+                .and_then(|v| v.as_str()),
+            Some("main-module")
+        );
+        assert_eq!(
+            entry
+                .extra_annotations
+                .get("waybill:package-shape")
+                .and_then(|v| v.as_str()),
+            Some("application")
+        );
+    }
+
+    #[test]
+    fn build_gem_application_main_module_falls_back_to_unknown_version() {
+        // Non-git tempdir → git-describe ladder returns None at both
+        // steps → fallback to "0.0.0-unknown".
+        let root = tempfile::tempdir().unwrap();
+        let app = root.path().join("my-app");
+        std::fs::create_dir_all(&app).unwrap();
+        let gemfile = app.join("Gemfile");
+        std::fs::write(&gemfile, b"source 'x'\n").unwrap();
+        let entry =
+            build_gem_application_main_module_entry(&gemfile, root.path())
+                .expect("build succeeds");
+        assert_eq!(entry.version, "0.0.0-unknown");
+        assert!(
+            entry.purl.as_str().ends_with("@0.0.0-unknown"),
+            "PURL version must reflect fallback: got {}",
+            entry.purl.as_str()
+        );
+    }
+
+    #[test]
+    fn build_gem_application_main_module_applies_m215_slug_rules() {
+        // Dir name with uppercase + spaces + non-ASCII — slug rules
+        // should lowercase, strip whitespace, and strip non-ASCII.
+        let root = tempfile::tempdir().unwrap();
+        // Note: OS filesystems accept mixed-case names on most platforms
+        // (macOS is HFS+ case-insensitive but preserving; Linux is
+        // case-sensitive). We stick with a name that survives on both.
+        let app = root.path().join("MyService_v2");
+        std::fs::create_dir_all(&app).unwrap();
+        let gemfile = app.join("Gemfile");
+        std::fs::write(&gemfile, b"source 'x'\n").unwrap();
+        let entry =
+            build_gem_application_main_module_entry(&gemfile, root.path())
+                .expect("build succeeds");
+        // subject_slug lowercases; underscore is preserved (not in the
+        // strip set).
+        assert!(
+            entry.name.starts_with("myservice_v2"),
+            "expected lowercased name, got {}",
+            entry.name
+        );
     }
 }

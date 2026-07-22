@@ -954,6 +954,23 @@ pub fn build_metadata(
                 "value": value_str,
             }));
         }
+        // Milestone 216 — propagate `waybill:package-shape` when a
+        // Gemfile-only Ruby application main-module is promoted to
+        // `metadata.component`. Single-crate scans hit this path; the
+        // multi-app split-mode scan emits via components[] and picks up
+        // the property via the general extra_annotations wiring in
+        // builder.rs. Mirrors the milestone-116/134/140/142 propagation
+        // patterns above.
+        if let Some(value) = c.extra_annotations.get("waybill:package-shape") {
+            let value_str = match value {
+                serde_json::Value::String(s) => s.clone(),
+                other => serde_json::to_string(other).unwrap_or_default(),
+            };
+            comp_props.push(json!({
+                "name": "waybill:package-shape",
+                "value": value_str,
+            }));
+        }
         metadata["component"]["properties"] = json!(comp_props);
 
         // Propagate the supplier so the parity Section A `cdx_supplier`
