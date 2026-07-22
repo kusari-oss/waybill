@@ -38,6 +38,32 @@ fn m215_nested_workspace_fixture() -> PathBuf {
         .join("tests/fixtures/split_nested_workspace")
 }
 
+fn m215_shared_deps_fixture() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures/split_shared_deps")
+}
+
+/// Collect the union of `components[].purl` across every emitted
+/// sub-SBOM in `output_dir`. Used by the shared-deps assertions to
+/// cross-reference manifest counts against on-wire content.
+fn union_component_purls(output_dir: &PathBuf) -> Vec<(String, String)> {
+    // Returns (subproject_filename, component_purl).
+    let mut out: Vec<(String, String)> = Vec::new();
+    for f in list_files(output_dir, ".cdx.json") {
+        let text = std::fs::read_to_string(&f).expect("read cdx");
+        let v: serde_json::Value = serde_json::from_str(&text).expect("parse cdx");
+        let name = f.file_name().unwrap().to_string_lossy().to_string();
+        if let Some(comps) = v["components"].as_array() {
+            for c in comps {
+                if let Some(p) = c["purl"].as_str() {
+                    out.push((name.clone(), p.to_string()));
+                }
+            }
+        }
+    }
+    out
+}
+
 fn waybill_bin() -> PathBuf {
     // Cargo sets CARGO_BIN_EXE_<name> for integration-test binaries.
     PathBuf::from(env!("CARGO_BIN_EXE_waybill"))
@@ -478,6 +504,159 @@ fn split_manifest_subproject_ids_are_stable_and_unique() {
     a.sort();
     b.sort();
     assert_eq!(a, b, "subproject_id set drifted between runs: {a:?} vs {b:?}");
+}
+
+// ============ T031 (US4 — shared-dep duplication) ============
+
+#[test]
+fn split_duplicates_shared_transitive_deps() {
+    // Fixture: two npm packages (pkg-a, pkg-b) that share a
+    // transitive dep on lodash. Per FR-007 each sub-SBOM must be
+    // self-contained — lodash appears in BOTH pkg-a and pkg-b
+    // sub-SBOMs.
+    let out = tempdir().expect("output tempdir");
+    let out_path = out.path().to_path_buf();
+    let (ok, _stdout, stderr) = run_split_scan(
+        &m215_shared_deps_fixture(),
+        &out_path,
+        &["--format", "cyclonedx-json"],
+    );
+    assert!(ok, "shared-deps split scan failed:\n{stderr}");
+
+    let pairs = union_component_purls(&out_path);
+    // Count how many distinct sub-SBOMs contain a given PURL.
+    use std::collections::BTreeMap;
+    let mut by_purl: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for (sbom, purl) in &pairs {
+        by_purl.entry(purl.clone()).or_default().push(sbom.clone());
+    }
+
+    // At least one PURL appears in >1 sub-SBOM.
+    let shared: Vec<(&String, &Vec<String>)> = by_purl
+        .iter()
+        .filter(|(_, sboms)| sboms.len() > 1)
+        .collect();
+    assert!(
+        !shared.is_empty(),
+        "expected at least one component duplicated across sub-SBOMs; got by-purl map: {by_purl:?}"
+    );
+
+    // Lodash specifically appears in both sub-SBOMs (per FR-007).
+    let lodash_sboms = by_purl
+        .get("pkg:npm/lodash@4.17.21")
+        .expect("lodash present in at least one sub-SBOM");
+    assert_eq!(
+        lodash_sboms.len(),
+        2,
+        "lodash MUST appear in both pkg-a and pkg-b sub-SBOMs; got {lodash_sboms:?}"
+    );
+}
+
+// ============ T032 (US4 — manifest shared_dep_count accuracy) ============
+
+#[test]
+fn split_manifest_shared_dep_count_accurate() {
+    let out = tempdir().expect("output tempdir");
+    let out_path = out.path().to_path_buf();
+    let (ok, _stdout, stderr) = run_split_scan(
+        &m215_shared_deps_fixture(),
+        &out_path,
+        &["--format", "cyclonedx-json"],
+    );
+    assert!(ok, "shared-deps split scan failed:\n{stderr}");
+
+    // Cross-reference emitted manifest counts against on-wire content.
+    // Manifest's `total_unique_components` = distinct PURLs across the
+    // union of {each sub-SBOM's root PURL} ∪ {each sub-SBOM's components[]}.
+    // Manifest's `shared_dep_count` = distinct PURLs appearing in ≥ 2
+    // sub-SBOMs (counting each sub-SBOM's root + components as the
+    // sub-SBOM's contribution).
+    let manifest: serde_json::Value = serde_json::from_str(
+        &std::fs::read_to_string(out_path.join("split-manifest.json"))
+            .expect("read manifest"),
+    )
+    .expect("parse manifest");
+    let manifest_shared = manifest["shared_dep_count"].as_u64().expect("count");
+    let manifest_total = manifest["total_unique_components"]
+        .as_u64()
+        .expect("total count");
+
+    // Compute the ground-truth from the union of on-wire PURLs.
+    use std::collections::{BTreeMap, BTreeSet};
+    let mut sboms_by_purl: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for p in list_files(&out_path, ".cdx.json") {
+        let text = std::fs::read_to_string(&p).expect("read cdx");
+        let v: serde_json::Value = serde_json::from_str(&text).expect("parse cdx");
+        let sbom = p.file_name().unwrap().to_string_lossy().to_string();
+        // Root PURL counts as part of the sub-SBOM's set.
+        if let Some(root_purl) = v
+            .pointer("/metadata/component/purl")
+            .and_then(|s| s.as_str())
+        {
+            sboms_by_purl
+                .entry(root_purl.to_string())
+                .or_default()
+                .insert(sbom.clone());
+        }
+        // components[] entries count too.
+        if let Some(comps) = v["components"].as_array() {
+            for c in comps {
+                if let Some(purl) = c["purl"].as_str() {
+                    sboms_by_purl
+                        .entry(purl.to_string())
+                        .or_default()
+                        .insert(sbom.clone());
+                }
+            }
+        }
+    }
+    let truth_total = sboms_by_purl.len() as u64;
+    let truth_shared = sboms_by_purl
+        .values()
+        .filter(|sboms| sboms.len() >= 2)
+        .count() as u64;
+    assert_eq!(
+        manifest_total, truth_total,
+        "manifest total_unique_components ({manifest_total}) drift from on-wire truth ({truth_total})"
+    );
+    assert_eq!(
+        manifest_shared, truth_shared,
+        "manifest shared_dep_count ({manifest_shared}) drift from on-wire truth ({truth_shared})"
+    );
+
+    // Per-entry `shared_deps_count`: for each sub-SBOM, count how
+    // many of ITS emitted PURLs (root + components) also appear in
+    // ≥ 1 sibling.
+    let entries = manifest["entries"].as_array().expect("entries");
+    for entry in entries {
+        let id = entry["subproject_id"].as_str().expect("id");
+        let entry_shared = entry["shared_deps_count"].as_u64().expect("count");
+
+        // Find this entry's emitted CDX filename.
+        let filename = entry["files"]["cyclonedx-json"]
+            .as_str()
+            .expect("cdx filename");
+        // Ground truth: sub-SBOM's own set of PURLs that appear in
+        // some sibling's set too.
+        let own_purls: BTreeSet<String> = sboms_by_purl
+            .iter()
+            .filter(|(_, sboms)| sboms.contains(filename))
+            .map(|(p, _)| p.clone())
+            .collect();
+        let truth_entry_shared = own_purls
+            .iter()
+            .filter(|p| {
+                sboms_by_purl
+                    .get(*p)
+                    .map(|s| s.len() >= 2)
+                    .unwrap_or(false)
+            })
+            .count() as u64;
+        assert_eq!(
+            entry_shared, truth_entry_shared,
+            "entry `{id}` shared_deps_count ({entry_shared}) drift from on-wire truth ({truth_entry_shared})"
+        );
+    }
 }
 
 // ============ T018a ============

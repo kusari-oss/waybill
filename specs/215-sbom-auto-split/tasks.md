@@ -135,8 +135,8 @@ Nothing new — US1's T009 (BFS) already produces self-contained projections. T0
 
 ### Test tasks for User Story 4
 
-- [ ] T031 [US4] Extend the existing cargo-workspace integration test with `cargo_workspace_split_duplicates_shared_transitive_deps`. Verifies at least one component present in >1 sub-SBOM (via PURL exact-match). Asserts: for each shared component, it appears in all subprojects whose dep-graph reaches it (per FR-007).
-- [ ] T032 [US4] Add assertion in the same file: `manifest_shared_dep_count_accurate`. Parses the emitted manifest, cross-references with the union of `components[*].purl` across all sub-SBOMs, verifies `shared_dep_count` equals the count of PURLs appearing in ≥ 2 SBOMs, and each `entries[].shared_deps_count` reflects that entry's overlap with siblings.
+- [X] T031 [US4] Extend the existing cargo-workspace integration test with `cargo_workspace_split_duplicates_shared_transitive_deps`. Verifies at least one component present in >1 sub-SBOM (via PURL exact-match). Asserts: for each shared component, it appears in all subprojects whose dep-graph reaches it (per FR-007).
+- [X] T032 [US4] Add assertion in the same file: `manifest_shared_dep_count_accurate`. Parses the emitted manifest, cross-references with the union of `components[*].purl` across all sub-SBOMs, verifies `shared_dep_count` equals the count of PURLs appearing in ≥ 2 SBOMs, and each `entries[].shared_deps_count` reflects that entry's overlap with siblings.
 
 **Checkpoint**: Shared-dep semantics verified. All 4 user stories complete.
 
