@@ -1,0 +1,10 @@
+# m215 nested-workspace fixture — top-level cargo workspace with 2 members,
+# one of which contains a nested npm sub-workspace at apps/. Verifies FR-010
+# (nested boundaries are all surfaced; no boundary is "swallowed" by an
+# outer parent).
+[workspace]
+resolver = "2"
+members = [
+    "cargo-a",
+    "cargo-b-with-npm",
+]

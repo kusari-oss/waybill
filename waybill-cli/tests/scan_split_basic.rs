@@ -28,6 +28,16 @@ fn m212_cargo_workspace_fixture() -> PathBuf {
         .join("tests/fixtures/compiler_pipeline/two_binaries_diverge")
 }
 
+fn m215_heterogeneous_fixture() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures/split_heterogeneous")
+}
+
+fn m215_nested_workspace_fixture() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures/split_nested_workspace")
+}
+
 fn waybill_bin() -> PathBuf {
     // Cargo sets CARGO_BIN_EXE_<name> for integration-test binaries.
     PathBuf::from(env!("CARGO_BIN_EXE_waybill"))
@@ -194,6 +204,215 @@ fn cargo_workspace_split_manifest_lists_all_emitted_files() {
     sorted.sort();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate subproject_id in manifest");
+}
+
+// ============ T024 (US2) ============
+
+#[test]
+fn heterogeneous_split_emits_one_sbom_per_ecosystem() {
+    let out = tempdir().expect("output tempdir");
+    let out_path = out.path().to_path_buf();
+    let (ok, _stdout, stderr) = run_split_scan(
+        &m215_heterogeneous_fixture(),
+        &out_path,
+        &["--format", "cyclonedx-json"],
+    );
+    assert!(ok, "heterogeneous split scan failed:\n{stderr}");
+
+    let cdxs = list_files(&out_path, ".cdx.json");
+    assert_eq!(
+        cdxs.len(),
+        3,
+        "expected 3 sub-SBOMs (npm + pypi + gem), got {}:\n{}",
+        cdxs.len(),
+        cdxs.iter()
+            .map(|p| p.display().to_string())
+            .collect::<Vec<_>>()
+            .join("\n"),
+    );
+
+    // Filename convention: one file per ecosystem, ecosystem token in
+    // filename per contracts/filename-convention.md.
+    let names: Vec<String> = cdxs
+        .iter()
+        .map(|p| p.file_name().unwrap().to_string_lossy().to_string())
+        .collect();
+    assert!(
+        names.iter().any(|n| n == "m215-frontend.npm.cdx.json"),
+        "missing npm sub-SBOM in {names:?}"
+    );
+    assert!(
+        names.iter().any(|n| n == "m215-backend.pypi.cdx.json"),
+        "missing pypi sub-SBOM in {names:?}"
+    );
+    assert!(
+        names.iter().any(|n| n == "m215-ruby-svc.gem.cdx.json"),
+        "missing gem sub-SBOM in {names:?}"
+    );
+
+    // Each sub-SBOM's root PURL uses the ecosystem-appropriate type.
+    let mut ecosystems: Vec<String> = Vec::new();
+    for p in &cdxs {
+        let text = std::fs::read_to_string(p).expect("read cdx");
+        let v: serde_json::Value =
+            serde_json::from_str(&text).expect("parse cdx");
+        let purl = v
+            .pointer("/metadata/component/purl")
+            .and_then(|s| s.as_str())
+            .expect("root PURL")
+            .to_string();
+        // Extract the ecosystem prefix (`pkg:<type>/…`).
+        let prefix = purl
+            .split('/')
+            .next()
+            .and_then(|s| s.strip_prefix("pkg:"))
+            .unwrap_or("")
+            .to_string();
+        ecosystems.push(prefix);
+    }
+    ecosystems.sort();
+    assert_eq!(
+        ecosystems,
+        vec!["gem", "npm", "pypi"],
+        "expected one root per ecosystem, got {ecosystems:?}"
+    );
+
+    // Manifest lists all 3.
+    let manifest_text = std::fs::read_to_string(out_path.join("split-manifest.json"))
+        .expect("read manifest");
+    let manifest: serde_json::Value =
+        serde_json::from_str(&manifest_text).expect("parse manifest");
+    let entries = manifest["entries"].as_array().expect("entries");
+    assert_eq!(entries.len(), 3, "manifest must list all 3 subprojects");
+}
+
+// ============ T026a (US2 — FR-010 nested workspaces) ============
+
+#[test]
+fn split_nested_workspace_emits_all_boundaries() {
+    // Cargo workspace with 2 members, where cargo-b-with-npm carries
+    // an npm sub-workspace with 2 packages under apps/. FR-010: all
+    // 4 boundaries surface — no subproject is "swallowed" by the
+    // outer cargo boundary.
+    let out = tempdir().expect("output tempdir");
+    let out_path = out.path().to_path_buf();
+    let (ok, _stdout, stderr) = run_split_scan(
+        &m215_nested_workspace_fixture(),
+        &out_path,
+        &["--format", "cyclonedx-json"],
+    );
+    assert!(ok, "nested-workspace split scan failed:\n{stderr}");
+
+    let cdxs = list_files(&out_path, ".cdx.json");
+    assert_eq!(
+        cdxs.len(),
+        4,
+        "expected 4 sub-SBOMs (2 outer cargo + 2 inner npm), got {}:\n{}",
+        cdxs.len(),
+        cdxs.iter()
+            .map(|p| p.display().to_string())
+            .collect::<Vec<_>>()
+            .join("\n"),
+    );
+
+    let manifest_text = std::fs::read_to_string(out_path.join("split-manifest.json"))
+        .expect("read manifest");
+    let manifest: serde_json::Value =
+        serde_json::from_str(&manifest_text).expect("parse manifest");
+    let entries = manifest["entries"].as_array().expect("entries");
+    let ids: Vec<String> = entries
+        .iter()
+        .map(|e| e["subproject_id"].as_str().unwrap().to_string())
+        .collect();
+    // Assert every boundary present — no swallowing.
+    for id in &[
+        "cargo-a.cargo",
+        "cargo-b-with-npm.cargo",
+        "npm-svc-1.npm",
+        "npm-svc-2.npm",
+    ] {
+        assert!(
+            ids.iter().any(|entry_id| entry_id == id),
+            "expected subproject_id `{id}` in manifest entries, got {ids:?}"
+        );
+    }
+}
+
+// ============ T025 (US2) ============
+
+#[test]
+fn multi_manifest_per_dir_emits_one_sbom_per_ecosystem() {
+    // Clarification Q2: one directory carrying manifests for TWO
+    // ecosystems produces TWO sub-SBOMs (one per ecosystem manifest).
+    let scratch = tempdir().expect("fixture tempdir");
+    let root = scratch.path();
+    // npm manifest.
+    std::fs::write(
+        root.join("package.json"),
+        r#"{"name":"m215-mixed-npm","version":"1.0.0","dependencies":{"lodash":"^4"}}"#,
+    )
+    .expect("write package.json");
+    std::fs::write(
+        root.join("package-lock.json"),
+        r#"{
+  "name": "m215-mixed-npm",
+  "version": "1.0.0",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {"name": "m215-mixed-npm", "version": "1.0.0", "dependencies": {"lodash": "^4"}},
+    "node_modules/lodash": {"version": "4.17.21", "license": "MIT"}
+  }
+}
+"#,
+    )
+    .expect("write package-lock.json");
+    // pypi manifest in the SAME directory.
+    std::fs::write(
+        root.join("pyproject.toml"),
+        "[project]\nname = \"m215-mixed-pypi\"\nversion = \"9.9.9\"\nrequires-python = \">=3.11\"\n\n[tool.uv]\nmanaged = true\n",
+    )
+    .expect("write pyproject.toml");
+    std::fs::write(
+        root.join("uv.lock"),
+        "version = 1\nrequires-python = \">=3.11\"\n",
+    )
+    .expect("write uv.lock");
+
+    let out = tempdir().expect("output tempdir");
+    let out_path = out.path().to_path_buf();
+    let (ok, _stdout, stderr) = run_split_scan(
+        &root.to_path_buf(),
+        &out_path,
+        &["--format", "cyclonedx-json"],
+    );
+    assert!(ok, "multi-manifest split scan failed:\n{stderr}");
+
+    let cdxs = list_files(&out_path, ".cdx.json");
+    assert_eq!(
+        cdxs.len(),
+        2,
+        "expected 2 sub-SBOMs (one per ecosystem manifest per Q2), got {}:\n{}",
+        cdxs.len(),
+        cdxs.iter()
+            .map(|p| p.display().to_string())
+            .collect::<Vec<_>>()
+            .join("\n"),
+    );
+
+    // Verify one npm + one pypi.
+    let names: Vec<String> = cdxs
+        .iter()
+        .map(|p| p.file_name().unwrap().to_string_lossy().to_string())
+        .collect();
+    assert!(
+        names.iter().any(|n| n.contains(".npm.")),
+        "expected an .npm. sub-SBOM in {names:?}"
+    );
+    assert!(
+        names.iter().any(|n| n.contains(".pypi.")),
+        "expected a .pypi. sub-SBOM in {names:?}"
+    );
 }
 
 // ============ T018a ============

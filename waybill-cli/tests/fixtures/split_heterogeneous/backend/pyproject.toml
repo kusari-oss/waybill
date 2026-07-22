@@ -1,0 +1,7 @@
+[project]
+name = "m215-backend"
+version = "2.5.0"
+requires-python = ">=3.11"
+
+[tool.uv]
+managed = true
