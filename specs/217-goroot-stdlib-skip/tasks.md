@@ -105,6 +105,7 @@ description: "Task list for m217 — skip GOROOT stdlib as a Go main-module cand
   - `c136_spdx23` in `waybill-cli/src/parity/extractors/spdx2.rs`
   - `c136_spdx3` in `waybill-cli/src/parity/extractors/spdx3.rs`
   - Register in `waybill-cli/src/parity/extractors/mod.rs::EXTRACTORS` with `row_id: "C136", label: "waybill:go-toolchain-detected", directional: SymmetricEqual, order_sensitive: false` — same shape as C121-C134 doc-scope rows. Update the `use super::{cdx,spdx2,spdx3}::{...}` lists.
+  - **⚠️ COUPLED WITH T023** (per analyze-phase finding C1): the `parity::extractors::tests::every_catalog_row_has_an_extractor` test verifies BIDIRECTIONAL correspondence between EXTRACTORS entries and the catalog rows in `docs/reference/sbom-format-mapping.md`. T020 without T023 leaves the tree in a red state (`EXTRACTORS entries without catalog rows: ["C136"]`). Commit T023 FIRST (or bundle both in one commit); do NOT commit T020 alone. Same failure mode tripped m216's PR #632 pre-PR gate.
 
 ### Test tasks for User Story 2
 
@@ -119,7 +120,7 @@ description: "Task list for m217 — skip GOROOT stdlib as a Go main-module cand
 
 **Purpose**: Docs update per Constitution Principle V, pre-PR gate, PR open.
 
-- [ ] T023 [P] Add ONE row to `docs/reference/sbom-format-mapping.md` for `waybill:go-toolchain-detected` per research R6. Format matches C121-C134 KEEP-NO-NATIVE rows: annotation name, per-format landing slot, KEEP-NO-NATIVE audit citation naming CDX `metadata.tools[]` / SPDX `creationInfo.creators[]` as REJECTED (producer-scope, not observation-scope). Milestone-217 citation clause.
+- [ ] T023 [P] Add ONE row to `docs/reference/sbom-format-mapping.md` for `waybill:go-toolchain-detected` per research R6. Format matches C121-C134 KEEP-NO-NATIVE rows: annotation name, per-format landing slot, KEEP-NO-NATIVE audit citation naming CDX `metadata.tools[]` / SPDX `creationInfo.creators[]` as REJECTED (producer-scope, not observation-scope). Milestone-217 citation clause. **⚠️ COUPLED WITH T020** (per analyze-phase finding C1): T023 MUST be committed together with T020 (or before T020) to keep the `every_catalog_row_has_an_extractor` bidirectional test green at every commit. Do NOT commit T020 alone.
 - [ ] T024 Pre-PR gate per CLAUDE.md: `./scripts/pre-pr.sh` — `cargo +stable clippy --workspace --all-targets -- -D warnings` (zero warnings) + `cargo +stable test --workspace` (every suite `ok. N passed; 0 failed`). Watch for the pre-existing podman env-var race (see `reference_podman_test_flake.md` memory); rerun failed lane once if it trips.
 - [ ] T025 Verify the m214 CI grep gate stays green: `BADHITS=$(grep -rE '\bmikebom\b' waybill-cli/src waybill-common/src waybill-ebpf/src xtask/src Cargo.toml waybill-cli/Cargo.toml waybill-common/Cargo.toml waybill-ebpf/Cargo.toml xtask/Cargo.toml Dockerfile.ebpf-test scripts 2>/dev/null | grep -v '^Binary file' | grep -vE 'mikebom-test-fixtures' || true)`; expects zero output.
 - [ ] T026 Push branch `git push origin 217-goroot-stdlib-skip`.
@@ -183,7 +184,9 @@ Task: "Add SPDX 3 SpdxDocument Annotation for waybill:go-toolchain-detected"    
 
 ### Solo-dev sequencing (recommended)
 
-T001 → T002 → T003 → T004 → T005 → T006 → T007 → T008 → T009 → T010 → T011 → T012 → T013 → T014 → T015 → T016 → T017 → T018 → T019 → T020 → T021 → T022 → T023 → T024 → T025 → T026 → T027 → T028.
+T001 → T002 → T003 → T004 → T005 → T006 → T007 → T008 → T009 → T010 → T011 → T012 → T013 → T014 → T015 → T016 → T017 → T018 → T019 → T023 → T020 → T021 → T022 → T024 → T025 → T026 → T027 → T028.
+
+(**T023 pulled forward before T020** per analyze-phase C1: `every_catalog_row_has_an_extractor` is a bidirectional test; committing T020 without T023 leaves the tree red between the two. Same failure that tripped m216 PR #632. Alternative: bundle both in one commit.)
 
 (Strict sequential — this milestone is small enough that parallelism overhead exceeds the benefit.)
 
