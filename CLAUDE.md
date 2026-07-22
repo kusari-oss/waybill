@@ -288,6 +288,8 @@ Auto-generated from all feature plans. Last updated: 2026-07-22
 - N/A — pure in-process split. No caches, no persistence. (215-sbom-auto-split)
 - Rust stable (workspace toolchain inherited from milestones 001–215; no nightly required for this user-space-only reader extension). + Existing only. **Zero new Cargo dependencies.** (216-gemfile-main-module)
 - N/A — pure filesystem reads; all state in-process for the lifetime of a scan. (216-gemfile-main-module)
+- Rust stable (workspace toolchain inherited from milestones 001–216; no nightly required). + Existing only. **Zero new Cargo dependencies.** (217-goroot-stdlib-skip)
+- N/A — all state in-process for the lifetime of a scan. (217-goroot-stdlib-skip)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -350,9 +352,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 217-goroot-stdlib-skip: Added Rust stable (workspace toolchain inherited from milestones 001–216; no nightly required). + Existing only. **Zero new Cargo dependencies.**
 - 216-gemfile-main-module: Added Rust stable (workspace toolchain inherited from milestones 001–215; no nightly required for this user-space-only reader extension). + Existing only. **Zero new Cargo dependencies.**
 - 215-sbom-auto-split: Added Rust stable (workspace toolchain inherited from milestones 001–214; no version change). No nightly required. + Existing only. **Zero new Cargo dependencies.** Reuses `serde`/`serde_json` (manifest emission), `clap` (new `--split` flag via `Args`-derive), `mikebom_common::types::purl::Purl` (workspace-root identity), `sha2` + `data-encoding` (deterministic serial numbers per FR-012), `tracing` (INFO summary + WARN on zero-boundary fallback). The m127 root-selector at `waybill-cli/src/generate/root_selector.rs` and the m201 workspace-root disambiguation at `waybill-cli/src/scan_fs/mod.rs::2367` provide the boundary-enumeration substrate.
-- 214-rename-to-waybill: Added Rust stable (workspace toolchain inherited from milestones 001–213; no version change). No nightly required beyond the existing `ebpf-tracing` feature's kernel-side compilation. + Existing only. **Zero new Cargo dependencies.** This milestone is a rename; it introduces no new libraries, deletes none, bumps none. Every `Cargo.toml`'s `[dependencies]` block stays byte-identical *except* for the intra-workspace `waybill-common = { path = "..." }` line which becomes `waybill-common = { path = "..." }` (2 sites: `waybill-cli/Cargo.toml` + `waybill-ebpf/Cargo.toml`).
 
 
 <!-- MANUAL ADDITIONS START -->
