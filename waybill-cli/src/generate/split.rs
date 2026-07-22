@@ -168,6 +168,7 @@ fn source_dir_for(
 fn is_manifest_basename(name: &str) -> bool {
     matches!(
         name,
+        // Declaration manifests.
         "Cargo.toml"
             | "package.json"
             | "pyproject.toml"
@@ -183,6 +184,31 @@ fn is_manifest_basename(name: &str) -> bool {
             | "mix.exs"
             | "rebar.config"
             | "Package.resolved"
+            // Lockfiles — cargo m064 augment-in-place populates
+            // evidence.source_file_paths with the workspace-shared
+            // Cargo.lock path (see waybill-cli/src/scan_fs/mod.rs:960+
+            // for the rationale), and npm's file: local-dep resolver
+            // similarly records the consumer's package-lock.json. In
+            // both cases the file IS a manifest artifact whose parent
+            // dir is the subproject dir; without this arm the
+            // source_dir helper returns the lockfile path itself
+            // instead of the parent (m215 follow-up bug: fixture
+            // scoped-npm-package showed source_dir =
+            // "app-code/vex-analyzer/package-lock.json" instead of
+            // "app-code/shared-js/internalclient").
+            | "Cargo.lock"
+            | "package-lock.json"
+            | "npm-shrinkwrap.json"
+            | "yarn.lock"
+            | "pnpm-lock.yaml"
+            | "bun.lock"
+            | "Gemfile.lock"
+            | "poetry.lock"
+            | "uv.lock"
+            | "Pipfile.lock"
+            | "go.sum"
+            | "composer.lock"
+            | "mix.lock"
     )
 }
 
@@ -239,7 +265,30 @@ pub(crate) fn project_for_root(
             continue;
         }
         if reached.contains(&s) {
-            components.push(c.clone());
+            // Bug: cross-workspace deps (common in Go monorepos where
+            // every module imports a shared internal lib) cause BFS to
+            // pull SIBLING workspace-root main-modules into this
+            // projection. When m127's root-selector runs at emit time
+            // and sees > 1 `waybill:component-role = "main-module"`
+            // component, it falls through past the RepoRoot fast-path
+            // to the multi-lang ecosystem-priority / LCP / synthetic-
+            // placeholder branch — resulting in the wrong
+            // `metadata.component.purl` being emitted for this
+            // sub-SBOM (observed in `~/Projects/iac` where 23 of 25
+            // Go sub-SBOMs emitted `pkg:generic/iac@0.0.0` instead of
+            // their own module PURL).
+            //
+            // Fix: strip the main-module role from every sibling
+            // main-module in this projection. The sibling stays in
+            // the graph (still a legitimate transitive that the root
+            // reached), but no longer confuses m127's ladder — the
+            // ladder sees exactly ONE main-module (the split-axis
+            // root at position 0) and fast-paths to it correctly.
+            let mut demoted = c.clone();
+            if is_main_module(&demoted) {
+                demoted.extra_annotations.remove(COMPONENT_ROLE_KEY);
+            }
+            components.push(demoted);
         }
     }
 
@@ -814,6 +863,72 @@ mod tests {
         assert!(proj.components.iter().any(|c| c.purl.name() == "a"));
         assert!(proj.components.iter().any(|c| c.purl.name() == "dep-a"));
         assert!(!proj.components.iter().any(|c| c.purl.name() == "b"));
+    }
+
+    #[test]
+    fn project_demotes_sibling_main_modules_reached_via_cross_deps() {
+        // Regression for the ~/Projects/iac Go-monorepo bug: cross-
+        // workspace deps (`a` imports `shared`, `b` also imports
+        // `shared`) don't pull sibling main-modules into the projection
+        // with their main-module tag intact — m127's root-selector
+        // sees exactly ONE main-module per projection.
+        let comps = vec![
+            mk_component("pkg:golang/example.com/a@v0.0.0", true),
+            mk_component("pkg:golang/example.com/shared@v0.0.0", true),
+            mk_component("pkg:golang/example.com/leaf@v1.0.0", false),
+        ];
+        let rels = vec![
+            mk_rel(
+                "pkg:golang/example.com/a@v0.0.0",
+                "pkg:golang/example.com/shared@v0.0.0",
+            ),
+            mk_rel(
+                "pkg:golang/example.com/shared@v0.0.0",
+                "pkg:golang/example.com/leaf@v1.0.0",
+            ),
+        ];
+        let roots = enumerate_workspace_roots(&comps, std::path::Path::new("/"));
+        // `a` root's projection reaches `a` → `shared` → `leaf`.
+        let a_root = roots
+            .iter()
+            .find(|r| r.purl.name() == "a")
+            .expect("a is a split root");
+        let proj = project_for_root(a_root, &comps, &rels);
+        assert_eq!(
+            proj.components.len(),
+            3,
+            "a + shared + leaf; got {:?}",
+            proj
+                .components
+                .iter()
+                .map(|c| c.purl.name())
+                .collect::<Vec<_>>()
+        );
+        // The split-axis root (position 0) keeps its main-module tag.
+        assert!(
+            is_main_module(&proj.components[0]),
+            "split-axis root must retain main-module role"
+        );
+        // The sibling main-module `shared` had its role stripped so
+        // downstream m127 sees only ONE main-module in this projection
+        // and correctly fast-paths to the split-axis root at emit time.
+        let shared_in_proj = proj
+            .components
+            .iter()
+            .find(|c| c.purl.name() == "shared")
+            .expect("shared present in projection");
+        assert!(
+            !is_main_module(shared_in_proj),
+            "sibling main-module `shared` must have its component-role demoted \
+             in a's projection so m127 sees exactly one main-module"
+        );
+        // Non-main-module components are untouched.
+        let leaf = proj
+            .components
+            .iter()
+            .find(|c| c.purl.name() == "leaf")
+            .expect("leaf present");
+        assert!(!is_main_module(leaf));
     }
 
     // -------- compute_shared_deps --------
