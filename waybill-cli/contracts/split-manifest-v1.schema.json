@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://waybill.dev/schema/split-manifest/v1.json",
+  "title": "waybill split-manifest (v1)",
+  "description": "Operator-facing index emitted alongside sub-SBOMs when `waybill sbom scan --split` is invoked. Describes the split so downstream tooling can reason about the emitted file set as a whole. See specs/215-sbom-auto-split/contracts/split-manifest-schema.md for the full contract.",
+  "type": "object",
+  "required": [
+    "$schema",
+    "waybill_version",
+    "scan_root",
+    "generated_at",
+    "total_unique_components",
+    "shared_dep_count",
+    "entries"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "https://waybill.dev/schema/split-manifest/v1.json",
+      "description": "Stable v1 schema-version URL. Consumers key on this to select parser version; future breaking schema changes bump to v2."
+    },
+    "waybill_version": {
+      "type": "string",
+      "description": "Which Waybill release emitted this manifest. Value from env!(CARGO_PKG_VERSION) at compile time."
+    },
+    "scan_root": {
+      "type": "string",
+      "description": "The --path argument passed to the scan; absolute or repo-relative depending on how the operator invoked waybill. Under WAYBILL_FIXED_TIMESTAMP the path normalizes to <WORKSPACE> for byte-identical output."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC 3339 timestamp of scan start. Under WAYBILL_FIXED_TIMESTAMP equals the fixed value."
+    },
+    "total_unique_components": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Distinct-PURL count across ALL sub-SBOMs. Equals the pre-feature single-SBOM component count when --split were absent. Diagnostic for SC-004 sanity."
+    },
+    "shared_dep_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Distinct-PURL count of components appearing in >= 2 sub-SBOMs. Diagnostic; downstream tools MAY use for client-side dedup."
+    },
+    "entries": {
+      "type": "array",
+      "description": "One entry per detected workspace member. Sorted lexicographically by subproject_id for deterministic output.",
+      "items": {
+        "type": "object",
+        "required": [
+          "subproject_id",
+          "root_purl",
+          "source_dir",
+          "component_count",
+          "shared_deps_count",
+          "files"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "subproject_id": {
+            "type": "string",
+            "description": "Stable operator-visible primary key of the form <slug>.<ecosystem>; matches the sub-SBOM filename prefix. Deterministic function of the subproject's PURL."
+          },
+          "root_purl": {
+            "type": "string",
+            "pattern": "^pkg:[a-z0-9.-]+/.+",
+            "description": "Full PURL of the subproject's root component."
+          },
+          "source_dir": {
+            "type": "string",
+            "description": "Subproject source directory relative to scan_root. Empty string if the subproject IS the scan root (rare)."
+          },
+          "component_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of components in this sub-SBOM. Includes the root."
+          },
+          "shared_deps_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of THIS sub-SBOM's components that also appear in >= 1 sibling sub-SBOM."
+          },
+          "files": {
+            "type": "object",
+            "description": "Map of format-name -> relative-filename. Keys drawn from the set of --format identifiers Waybill knows.",
+            "minProperties": 1,
+            "propertyNames": {
+              "enum": [
+                "cyclonedx-json",
+                "spdx-2.3-json",
+                "spdx-3-json",
+                "spdx-3-json-experimental"
+              ]
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Relative filename (no path separators) of a sub-SBOM in this format."
+            }
+          }
+        }
+      }
+    }
+  }
+}

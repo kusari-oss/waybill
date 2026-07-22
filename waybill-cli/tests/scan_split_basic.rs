@@ -415,6 +415,71 @@ fn multi_manifest_per_dir_emits_one_sbom_per_ecosystem() {
     );
 }
 
+// ============ T030 (US3 — subproject_id stability + uniqueness) ============
+
+#[test]
+fn split_manifest_subproject_ids_are_stable_and_unique() {
+    // Run the cargo-workspace split TWICE and assert every
+    // entries[].subproject_id (a) appears exactly once per run and
+    // (b) matches across the two runs (stable derivation, no
+    // dependency on scan-start timestamp or per-invocation state).
+    let mut ids_per_run: Vec<Vec<String>> = Vec::new();
+    for _ in 0..2 {
+        let out = tempdir().expect("output tempdir");
+        let out_path = out.path().to_path_buf();
+        let (ok, _stdout, stderr) = run_split_scan(
+            &m212_cargo_workspace_fixture(),
+            &out_path,
+            &["--format", "cyclonedx-json"],
+        );
+        assert!(ok, "split scan failed:\n{stderr}");
+
+        let manifest: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(out_path.join("split-manifest.json"))
+                .expect("read manifest"),
+        )
+        .expect("parse manifest");
+        let entries = manifest["entries"].as_array().expect("entries");
+
+        // Collect IDs + assert uniqueness this run.
+        let ids: Vec<String> = entries
+            .iter()
+            .map(|e| e["subproject_id"].as_str().unwrap().to_string())
+            .collect();
+        let mut deduped = ids.clone();
+        deduped.sort();
+        deduped.dedup();
+        assert_eq!(
+            deduped.len(),
+            ids.len(),
+            "duplicate subproject_id within one run: {ids:?}"
+        );
+
+        // Each id matches its emitted-filename prefix in files{}.
+        for entry in entries {
+            let id = entry["subproject_id"].as_str().unwrap();
+            for (_fmt, filename) in
+                entry["files"].as_object().expect("files map").iter()
+            {
+                let fname = filename.as_str().unwrap();
+                assert!(
+                    fname.starts_with(&format!("{id}.")),
+                    "filename {fname} does not start with subproject_id {id}."
+                );
+            }
+        }
+
+        ids_per_run.push(ids);
+    }
+
+    // Across-run stability: identical sorted sets.
+    let mut a = ids_per_run[0].clone();
+    let mut b = ids_per_run[1].clone();
+    a.sort();
+    b.sort();
+    assert_eq!(a, b, "subproject_id set drifted between runs: {a:?} vs {b:?}");
+}
+
 // ============ T018a ============
 
 #[test]
