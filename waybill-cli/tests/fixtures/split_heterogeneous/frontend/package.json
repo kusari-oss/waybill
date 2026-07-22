@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "description": "m215 split-heterogeneous fixture — npm workspace member",
   "dependencies": {
-    "lodash": "^4"
+    "m215-fake-lib": "^1"
   }
 }

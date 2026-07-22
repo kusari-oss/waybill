@@ -375,7 +375,7 @@ fn multi_manifest_per_dir_emits_one_sbom_per_ecosystem() {
     // npm manifest.
     std::fs::write(
         root.join("package.json"),
-        r#"{"name":"m215-mixed-npm","version":"1.0.0","dependencies":{"lodash":"^4"}}"#,
+        r#"{"name":"m215-mixed-npm","version":"1.0.0","dependencies":{"m215-fake-mixed":"^1"}}"#,
     )
     .expect("write package.json");
     std::fs::write(
@@ -386,8 +386,8 @@ fn multi_manifest_per_dir_emits_one_sbom_per_ecosystem() {
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
-    "": {"name": "m215-mixed-npm", "version": "1.0.0", "dependencies": {"lodash": "^4"}},
-    "node_modules/lodash": {"version": "4.17.21", "license": "MIT"}
+    "": {"name": "m215-mixed-npm", "version": "1.0.0", "dependencies": {"m215-fake-mixed": "^1"}},
+    "node_modules/m215-fake-mixed": {"version": "1.0.0", "license": "MIT"}
   }
 }
 "#,
@@ -511,9 +511,10 @@ fn split_manifest_subproject_ids_are_stable_and_unique() {
 #[test]
 fn split_duplicates_shared_transitive_deps() {
     // Fixture: two npm packages (pkg-a, pkg-b) that share a
-    // transitive dep on lodash. Per FR-007 each sub-SBOM must be
-    // self-contained — lodash appears in BOTH pkg-a and pkg-b
-    // sub-SBOMs.
+    // transitive dep on `m215-shared-fake` (fictional package name
+    // to avoid CVE-DB false positives on the test fixture). Per
+    // FR-007 each sub-SBOM must be self-contained — the shared dep
+    // appears in BOTH pkg-a and pkg-b sub-SBOMs.
     let out = tempdir().expect("output tempdir");
     let out_path = out.path().to_path_buf();
     let (ok, _stdout, stderr) = run_split_scan(
@@ -542,13 +543,13 @@ fn split_duplicates_shared_transitive_deps() {
     );
 
     // Lodash specifically appears in both sub-SBOMs (per FR-007).
-    let lodash_sboms = by_purl
-        .get("pkg:npm/lodash@4.17.21")
-        .expect("lodash present in at least one sub-SBOM");
+    let shared_sboms = by_purl
+        .get("pkg:npm/m215-shared-fake@1.0.0")
+        .expect("m215-shared-fake present in at least one sub-SBOM");
     assert_eq!(
-        lodash_sboms.len(),
+        shared_sboms.len(),
         2,
-        "lodash MUST appear in both pkg-a and pkg-b sub-SBOMs; got {lodash_sboms:?}"
+        "m215-shared-fake MUST appear in both pkg-a and pkg-b sub-SBOMs; got {shared_sboms:?}"
     );
 }
 
