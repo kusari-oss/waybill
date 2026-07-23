@@ -290,6 +290,8 @@ Auto-generated from all feature plans. Last updated: 2026-07-22
 - N/A — pure filesystem reads; all state in-process for the lifetime of a scan. (216-gemfile-main-module)
 - Rust stable (workspace toolchain inherited from milestones 001–216; no nightly required). + Existing only. **Zero new Cargo dependencies.** (217-goroot-stdlib-skip)
 - N/A — all state in-process for the lifetime of a scan. (217-goroot-stdlib-skip)
+- Rust stable (workspace toolchain inherited from milestones 001–217; no nightly required for this user-space-only work). + Existing only — `serde` / `serde_json` (annotation value construction + canonicalization), `tracing` (INFO summary log per FR-013), `anyhow` / `thiserror` (error propagation), `clap` (new opt-in flag via `Args`-derive — same shape as m173 `--warm-go-cache` and m119 `--supplement-cdx`). Reuses milestone-071 parity-extractor infrastructure verbatim. **Zero new Cargo dependencies.** (218-cross-ecosystem-edges)
+- N/A — all state in-process per scan. The cross-ecosystem resolver operates on the same `name_to_purl: HashMap<(String, String), String>` index that today feeds the same-ecosystem path; the flag-on path adds fallback iteration over the index's keyset. (218-cross-ecosystem-edges)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -352,9 +354,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 218-cross-ecosystem-edges: Added Rust stable (workspace toolchain inherited from milestones 001–217; no nightly required for this user-space-only work). + Existing only — `serde` / `serde_json` (annotation value construction + canonicalization), `tracing` (INFO summary log per FR-013), `anyhow` / `thiserror` (error propagation), `clap` (new opt-in flag via `Args`-derive — same shape as m173 `--warm-go-cache` and m119 `--supplement-cdx`). Reuses milestone-071 parity-extractor infrastructure verbatim. **Zero new Cargo dependencies.**
 - 217-goroot-stdlib-skip: Added Rust stable (workspace toolchain inherited from milestones 001–216; no nightly required). + Existing only. **Zero new Cargo dependencies.**
 - 216-gemfile-main-module: Added Rust stable (workspace toolchain inherited from milestones 001–215; no nightly required for this user-space-only reader extension). + Existing only. **Zero new Cargo dependencies.**
-- 215-sbom-auto-split: Added Rust stable (workspace toolchain inherited from milestones 001–214; no version change). No nightly required. + Existing only. **Zero new Cargo dependencies.** Reuses `serde`/`serde_json` (manifest emission), `clap` (new `--split` flag via `Args`-derive), `mikebom_common::types::purl::Purl` (workspace-root identity), `sha2` + `data-encoding` (deterministic serial numbers per FR-012), `tracing` (INFO summary + WARN on zero-boundary fallback). The m127 root-selector at `waybill-cli/src/generate/root_selector.rs` and the m201 workspace-root disambiguation at `waybill-cli/src/scan_fs/mod.rs::2367` provide the boundary-enumeration substrate.
 
 
 <!-- MANUAL ADDITIONS START -->
