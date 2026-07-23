@@ -85,7 +85,8 @@ waybill-cli/
             └── single_dir_polyglot/                             #   <root>/{Gemfile, package.json} (proves empty-source_dir merge)
 
 docs/
-└── user-guide/  OR  reference/                                 # Phase 1 decides — extend m215 --split doc OR new page (see R3)
+└── reference/
+    └── split-modes.md                                          # NEW page — 6 sections per R3 template (matches m218 shape); linked from README
 ```
 
 **Structure Decision**: Extend `waybill-cli/src/generate/split.rs` inline with the `SplitMode` enum + `GroupedProjection` type + a new `group_roots(&[SubprojectRoot], SplitMode) -> Vec<GroupedProjection>` helper. `emit_split` refactors: group → merge-per-group BFS-projections → emit per group. `SplitEntry` schema evolution lives in `split_manifest.rs` as an additive-optional field. Filename computation extends `filename_for` with a new branch that fires when a group covers ≥2 members. CLI flag rewrite in `scan_cmd.rs` uses `clap::ValueEnum` with `default_missing_value` so `--split` bare parses as `Workspace`.
