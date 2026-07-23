@@ -675,6 +675,23 @@ pub fn annotate_document(
         }
     }
 
+    // Milestone 217 (closes #631): C136 doc-scope Go-toolchain-detected
+    // annotation. Emitted iff the Go walker observed one or more
+    // toolchain-reserved `module std` / `module cmd` go.mod files and
+    // skipped them from main-module candidacy. Value is a JSON-encoded
+    // sorted-deduplicated array of $GOROOT paths. Absent when no
+    // toolchain was observed (preserves byte-identity for non-Go and
+    // Go-project-only scans; matches m176 C121 workspaces-detected
+    // precedent).
+    if let Some(toolchains) = artifacts.go_toolchains_detected {
+        if !toolchains.is_empty() {
+            let paths: Vec<String> =
+                toolchains.iter().map(|p| p.display().to_string()).collect();
+            let value = serde_json::to_string(&paths).unwrap_or_default();
+            push(&mut out, "waybill:go-toolchain-detected", json!(value));
+        }
+    }
+
     // Milestone 204 (#554): C123 doc-scope helm image-extraction
     // completeness annotation. Emitted iff helm reader ran. Wire
     // value derived from HelmExtractionMode::as_wire_str().

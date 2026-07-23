@@ -603,6 +603,7 @@ spdx23_anno!(c132_spdx23, "waybill:compiler-pipeline-completeness",   document);
 spdx23_anno!(c133_spdx23, "waybill:secrets-read-filtered",            document);
 spdx23_anno!(c134_spdx23, "waybill:trace-attach-late",                component);
 spdx23_anno!(c135_spdx23, "waybill:package-shape",                    component);
+spdx23_anno!(c136_spdx23, "waybill:go-toolchain-detected",            document);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

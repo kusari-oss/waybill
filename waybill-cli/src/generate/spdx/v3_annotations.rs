@@ -635,6 +635,18 @@ fn push_document_fields(
         }
     }
 
+    // Milestone 217 (closes #631): C136 doc-scope Go-toolchain-detected
+    // annotation (SPDX 3). Emission semantics identical to CDX + SPDX 2.3
+    // per parity contract. Silent when no toolchain observed.
+    if let Some(toolchains) = scan.go_toolchains_detected {
+        if !toolchains.is_empty() {
+            let paths: Vec<String> =
+                toolchains.iter().map(|p| p.display().to_string()).collect();
+            let value = serde_json::to_string(&paths).unwrap_or_default();
+            push(out, "waybill:go-toolchain-detected", json!(value));
+        }
+    }
+
     // Milestone 204 (#554): C123 doc-scope helm image-extraction
     // completeness annotation (SPDX 3). Same emission semantics as
     // the CDX + SPDX 2.3 emitters. Byte-identity preserved for

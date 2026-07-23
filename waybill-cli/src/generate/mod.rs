@@ -109,6 +109,16 @@ pub struct ScanArtifacts<'a> {
     pub go_workspace_mode: Option<
         &'a crate::scan_fs::package_db::golang::gowork::WorkspaceMode,
     >,
+    /// Milestone 217 (waybill#631): document-scope Go-toolchain-detected
+    /// signal driving the C136 `waybill:go-toolchain-detected` annotation.
+    /// `Some(&[<path>, ...])` when the Go walker skipped one or more
+    /// `module std` / `module cmd` `go.mod` files during scan (i.e., the
+    /// scanned rootfs contains a Go toolchain install at those paths).
+    /// Values are toolchain-root paths (parent-of-src, i.e., `$GOROOT`),
+    /// sorted lex + deduplicated. `None` when no toolchain was observed
+    /// (byte-identity for non-Go and Go-project-only scans). Mirrors the
+    /// borrowed-slice pattern of `go_cache_warming` above.
+    pub go_toolchains_detected: Option<&'a [PathBuf]>,
     /// Milestone 204 (#554): document-scope Helm image-extraction-mode
     /// signal driving the C123 `waybill:image-extraction-completeness`
     /// annotation. `None` when no helm reader ran during the scan
@@ -312,6 +322,7 @@ impl<'a> ScanArtifacts<'a> {
             go_transitive_fallback_count: self.go_transitive_fallback_count,
             go_cache_warming: self.go_cache_warming,
             go_workspace_mode: self.go_workspace_mode,
+            go_toolchains_detected: self.go_toolchains_detected,
             helm_extraction_mode: self.helm_extraction_mode,
             image_source: self.image_source,
             source_document_binding: self.source_document_binding,

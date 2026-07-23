@@ -2645,6 +2645,7 @@ pub async fn execute(
         go_transitive_fallback_count,
         go_cache_warming,
         go_workspace_mode,
+        go_toolchains_detected,
         helm_extraction_mode,
         scan_target_coord,
         divergence_records,
@@ -3338,6 +3339,12 @@ pub async fn execute(
         // Milestone 161 (T014): doc-scope Go-workspace-mode signal
         // for the C112 annotation.
         go_workspace_mode: go_workspace_mode.as_ref(),
+        // Milestone 217 (waybill#631): doc-scope Go-toolchain-detected
+        // signal for the C136 `waybill:go-toolchain-detected`
+        // annotation. `None` when no Go toolchain was observed in the
+        // scanned rootfs (byte-identity for non-Go and Go-project-only
+        // scans; annotation absent).
+        go_toolchains_detected: go_toolchains_detected.as_deref(),
         // Milestone 204 (#554): doc-scope helm image-extraction-mode
         // signal for the C123 annotation.
         helm_extraction_mode: helm_extraction_mode.as_ref(),

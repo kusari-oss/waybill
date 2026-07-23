@@ -72,6 +72,11 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // Go-workspace-mode signal from ScanArtifacts into the
             // builder for the C112 metadata property.
             .with_go_workspace_mode(scan.go_workspace_mode.cloned())
+            // Milestone 217 (waybill#631) — propagate the doc-scope
+            // Go-toolchain-detected signal from ScanArtifacts into the
+            // builder for the C136 `waybill:go-toolchain-detected`
+            // metadata property.
+            .with_go_toolchains_detected(scan.go_toolchains_detected.map(|s| s.to_vec()))
             // Milestone 204 (#554) — propagate the doc-scope helm
             // image-extraction-mode signal from ScanArtifacts into the
             // builder for the C123

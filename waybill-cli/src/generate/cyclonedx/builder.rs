@@ -73,6 +73,12 @@ pub struct CycloneDxBuilder {
     /// `None` ⇒ no `go.work` at scanned root (C112 absent).
     go_workspace_mode:
         Option<crate::scan_fs::package_db::golang::gowork::WorkspaceMode>,
+    /// Milestone 217 (waybill#631): doc-scope Go-toolchain-detected
+    /// signal for the C136 `waybill:go-toolchain-detected` annotation.
+    /// `None` ⇒ no Go toolchain observed in the scanned rootfs
+    /// (C136 absent — byte-identity for non-Go and Go-project-only
+    /// scans).
+    go_toolchains_detected: Option<Vec<std::path::PathBuf>>,
     /// Milestone 204 (#554): doc-scope helm image-extraction-mode
     /// signal for the C123 `waybill:image-extraction-completeness`
     /// annotation. `None` ⇒ no helm reader ran (C123 absent).
@@ -168,6 +174,7 @@ impl CycloneDxBuilder {
             go_transitive_fallback_count: None,
             go_cache_warming: None,
             go_workspace_mode: None,
+            go_toolchains_detected: None,
             helm_extraction_mode: None,
             image_source: None,
             source_document_binding: None,
@@ -376,6 +383,18 @@ impl CycloneDxBuilder {
         mode: Option<crate::scan_fs::package_db::golang::gowork::WorkspaceMode>,
     ) -> Self {
         self.go_workspace_mode = mode;
+        self
+    }
+
+    /// Milestone 217 (waybill#631) — record the doc-scope
+    /// Go-toolchain-detected signal. Drives the C136 document-scope
+    /// `waybill:go-toolchain-detected` annotation. `None` ⇒ no Go
+    /// toolchain observed (annotation absent — byte-identity).
+    pub fn with_go_toolchains_detected(
+        mut self,
+        detected: Option<Vec<std::path::PathBuf>>,
+    ) -> Self {
+        self.go_toolchains_detected = detected;
         self
     }
 
@@ -617,6 +636,7 @@ impl CycloneDxBuilder {
             self.go_workspace_mode.as_ref(),
             self.go_transitive_fallback_count,
             self.go_cache_warming.as_ref(),
+            self.go_toolchains_detected.as_deref(),
             self.helm_extraction_mode.as_ref(),
             self.image_source.as_ref(),
             self.compiler_pipeline.as_ref(),
