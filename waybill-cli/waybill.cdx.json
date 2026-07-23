@@ -1,0 +1,88 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [],
+  "compositions": [
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        ".tmpZNrYc4@0.0.0"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [],
+      "ref": ".tmpZNrYc4@0.0.0"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "waybill"
+      }
+    ],
+    "component": {
+      "bom-ref": ".tmpZNrYc4@0.0.0",
+      "cpe": "cpe:2.3:a:waybill:.tmpznryc4:0.0.0:*:*:*:*:*:*:*",
+      "name": ".tmpZNrYc4",
+      "purl": "pkg:generic/.tmpZNrYc4@0.0.0",
+      "type": "application",
+      "version": "0.0.0"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "properties": [
+      {
+        "name": "waybill:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "waybill:os-release-missing-fields",
+        "value": "ID,VERSION_ID"
+      },
+      {
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "waybill:graph-completeness",
+        "value": "complete"
+      }
+    ],
+    "supplier": {
+      "name": "waybill contributors"
+    },
+    "timestamp": "2026-07-23T16:39:01Z",
+    "tools": {
+      "components": [
+        {
+          "name": "waybill",
+          "publisher": "waybill contributors",
+          "type": "application",
+          "version": "0.1.0-alpha.67"
+        }
+      ]
+    }
+  },
+  "serialNumber": "urn:uuid:ecceb041-1ce4-4019-818c-9a7cfe8d216d",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

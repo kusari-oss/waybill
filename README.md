@@ -232,6 +232,11 @@ manifest SBOM" section.
   flag (m218 / waybill#633) and the three cross-ecosystem-inference
   annotations (`waybill:cross-ecosystem-inference`,
   `-ambiguous`, `-unresolved`).
+- [`docs/reference/split-modes.md`](docs/reference/split-modes.md)
+  — consumer + contributor guide to `--split[=<mode>]` (m219): the
+  new `--split=directory` grouping mode + the additive-optional
+  `split-manifest.json` `members[]` field + the extensibility
+  contract for future grouping strategies.
 
 ## Install
 
