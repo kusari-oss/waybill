@@ -221,6 +221,18 @@ relocation ancestors that *aren't actually in the JAR* — see
 [`docs/design-notes.md`](docs/design-notes.md)'s "Scope: artifact vs
 manifest SBOM" section.
 
+### SBOM interpretation
+
+- [`docs/reference/sbom-format-mapping.md`](docs/reference/sbom-format-mapping.md)
+  — the parity catalog: every `waybill:*` annotation with its
+  per-format landing slot + KEEP-NO-NATIVE audit against
+  standards-native constructs (per Constitution Principle V).
+- [`docs/reference/cross-ecosystem-edges.md`](docs/reference/cross-ecosystem-edges.md)
+  — consumer guide to the `--experimental-cross-ecosystem-edges`
+  flag (m218 / waybill#633) and the three cross-ecosystem-inference
+  annotations (`waybill:cross-ecosystem-inference`,
+  `-ambiguous`, `-unresolved`).
+
 ## Install
 
 Pre-built binaries are published with every release as GitHub Release
