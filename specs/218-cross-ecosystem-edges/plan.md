@@ -102,7 +102,7 @@ waybill-cli/
     ├── transitive_parity_gem.rs                                 # extend with flag-on scan asserting recovered edges
     ├── cross_ecosystem_edges.rs                                 # NEW — 5+ scenarios (flag-off byte-identity; flag-on gem edges; flag-on synthetic pip edges; ambiguous multi-eco; unresolved-name)
     └── fixtures/
-        └── cross_ecosystem/                                     # NEW — 2-3 tiny synthetic fixtures (pip-app-lookalike, multi-eco-ambiguous)
+        └── cross_ecosystem/                                     # NEW — golden files only (per T040: `golden_flag_off.cdx.json`). US3 + T036 use hand-constructed `PackageDbEntry` records per analyze-phase C1 remediation; no on-disk pip-app or multi-eco fixtures needed.
 
 docs/
 └── reference/
