@@ -100,6 +100,7 @@ pub fn build_document(
             go_transitive_fallback_count: scan.go_transitive_fallback_count,
             go_cache_warming: scan.go_cache_warming,
             go_workspace_mode: scan.go_workspace_mode,
+            go_toolchains_detected: scan.go_toolchains_detected,
             helm_extraction_mode: scan.helm_extraction_mode,
             image_source: scan.image_source,
             source_document_binding: scan.source_document_binding,

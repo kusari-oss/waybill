@@ -248,6 +248,7 @@ mod tests {
             go_transitive_fallback_count: None,
             go_cache_warming: None,
             go_workspace_mode: None,
+            go_toolchains_detected: None,
             helm_extraction_mode: None,
             image_source: None,
             scan_target_coord: None,

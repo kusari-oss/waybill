@@ -385,6 +385,16 @@ pub struct ScanDiagnostics {
     pub go_workspace_mode:
         Option<golang::gowork::WorkspaceMode>,
 
+    /// Milestone 217 (waybill#631): Go-toolchain root paths detected
+    /// during the walker's scan. Each entry is the parent-of-src path
+    /// (i.e., `$GOROOT`) of a skipped `module std` / `module cmd`
+    /// `go.mod`. Sorted lex + deduplicated. `None` when no toolchain
+    /// was observed (byte-identity for non-Go and Go-project-only
+    /// scans — C136 annotation absent). Feeds the
+    /// `ScanArtifacts.go_toolchains_detected` field for the C136
+    /// `waybill:go-toolchain-detected` document-scope annotation.
+    pub go_toolchains_detected: Option<Vec<std::path::PathBuf>>,
+
     /// Milestone 107 FR-005a: scan-context ambiguities detected by the
     /// Yocto sysroot-vs-rootfs heuristic. Each entry is a free-form
     /// reason string explaining the conflict (e.g. "env-script present
@@ -1543,6 +1553,14 @@ pub fn read_all(
     // Milestone 161 (T011): propagate workspace-mode detection outcome
     // into the doc-level ScanDiagnostics for the C112 annotation.
     diagnostics.go_workspace_mode = go_signals.workspace_mode;
+    // Milestone 217 (waybill#631): propagate the Go-toolchain-detected
+    // observation into the doc-level ScanDiagnostics for the C136
+    // annotation. Empty vec → None (annotation absent); non-empty vec
+    // → Some(vec) (annotation emitted).
+    if !go_signals.toolchain_roots_detected.is_empty() {
+        diagnostics.go_toolchains_detected =
+            Some(go_signals.toolchain_roots_detected.clone());
+    }
     out.extend(rpm::read(rootfs, include_dev, distro_version.as_deref()));
     // v5 Phase B: rpm-owned file claim-skip — mirrors the dpkg / apk /
     // pip pattern. Real RHEL / Fedora rpmdbs store file paths inside

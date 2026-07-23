@@ -1457,6 +1457,15 @@ pub struct GoScanSignals {
     ///   classifications gated on per-module fetch-error data being
     ///   threaded through from the milestone-055 resolver.
     pub graph_completeness_reasons: Vec<String>,
+    /// Milestone 217 (waybill#631): Go-toolchain root paths detected
+    /// during the walker's `candidate_project_roots` scan. Each entry
+    /// is the parent-of-src path (i.e., `$GOROOT`) of a skipped
+    /// `module std` / `module cmd` `go.mod`. Sorted lex + deduplicated.
+    /// Empty when no toolchain was observed (typical scan; C136
+    /// annotation absent). Read at `read_all` aggregator to populate
+    /// `ScanDiagnostics.go_toolchains_detected` for downstream
+    /// `ScanArtifacts.go_toolchains_detected` threading.
+    pub toolchain_roots_detected: Vec<PathBuf>,
 }
 
 /// Milestone 160 (T010): Q1 caution-first precedence for aggregating
@@ -1598,7 +1607,13 @@ pub fn read(
     // build the union of known module paths BEFORE the import-scan
     // pass. The production-import filter (G4) needs to longest-
     // prefix-match import strings against this union.
-    let project_roots = candidate_project_roots(rootfs, exclude_set);
+    let (project_roots, toolchain_roots_detected) =
+        candidate_project_roots(rootfs, exclude_set);
+    // Milestone 217 (waybill#631): capture any observed Go-toolchain
+    // roots for the C136 doc-scope annotation. Empty vec when no
+    // toolchain was observed (typical case) — the caller wraps this
+    // in Option::None → annotation absent.
+    signals.toolchain_roots_detected = toolchain_roots_detected;
     let mut parsed_roots: Vec<(PathBuf, GoModDocument, Vec<GoSumEntry>)> = Vec::new();
     let mut known_modules: Vec<String> = Vec::new();
     for project_root in &project_roots {
@@ -2484,11 +2499,19 @@ fn parse_import_line(line: &str) -> Option<String> {
 /// walker preserves the milestone-113 unconditional `testdata/`/`_`-
 /// prefix skips via `should_skip_descent` (which takes `&Path`,
 /// already path-shaped post-113).
+///
+/// **Milestone 217 (waybill#631)**: returns a tuple `(candidates,
+/// toolchain_roots)` where `toolchain_roots` names any `$GOROOT`
+/// paths whose stdlib (`module std`) or cmd (`module cmd`) go.mod
+/// was observed and skipped. Callers consume `toolchain_roots` to
+/// emit the C136 `waybill:go-toolchain-detected` document-scope
+/// annotation. Empty vec on scans that observed no Go toolchain.
 fn candidate_project_roots(
     rootfs: &Path,
     exclude_set: &super::super::exclude_path::ExclusionSet,
-) -> Vec<PathBuf> {
+) -> (Vec<PathBuf>, Vec<PathBuf>) {
     let mut out = Vec::new();
+    let mut toolchain_roots: Vec<PathBuf> = Vec::new();
     let cfg = crate::scan_fs::walk::WalkConfig {
         max_depth: MAX_PROJECT_ROOT_DEPTH,
         should_skip: &|candidate: &Path, _rootfs: &Path| -> bool {
@@ -2497,11 +2520,58 @@ fn candidate_project_roots(
         exclude_set,
     };
     crate::scan_fs::walk::safe_walk(rootfs, &cfg, |path| {
-        if path.is_dir() && path.join("go.mod").is_file() {
-            out.push(path.to_path_buf());
+        if !(path.is_dir() && path.join("go.mod").is_file()) {
+            return;
         }
+        // Milestone 217 (waybill#631): parse the go.mod's `module`
+        // line eagerly at walker time. If it declares a toolchain-
+        // internal module boundary (`module std` = $GOROOT/src/go.mod,
+        // `module cmd` = $GOROOT/src/cmd/go.mod), skip the directory
+        // outright — no main-module component emitted, no downstream
+        // `go list all` preflight (which would flood stderr with
+        // "use of internal package … not allowed" for every stdlib
+        // package). Record the parent-of-src toolchain root path
+        // for the C136 document-scope annotation.
+        let go_mod_path = path.join("go.mod");
+        if let Ok(text) = std::fs::read_to_string(&go_mod_path) {
+            let doc = parse_go_mod(&text);
+            match doc.module_path.as_deref() {
+                Some("std") => {
+                    tracing::debug!(
+                        path = %go_mod_path.display(),
+                        module = "std",
+                        "gorooted-stdlib go.mod skipped (waybill#631)"
+                    );
+                    // $GOROOT/src/go.mod → $GOROOT
+                    if let Some(root) = go_mod_path.parent().and_then(|p| p.parent()) {
+                        toolchain_roots.push(root.to_path_buf());
+                    }
+                    return;
+                }
+                Some("cmd") => {
+                    tracing::debug!(
+                        path = %go_mod_path.display(),
+                        module = "cmd",
+                        "gorooted-cmd go.mod skipped (waybill#631)"
+                    );
+                    // $GOROOT/src/cmd/go.mod → $GOROOT
+                    if let Some(root) = go_mod_path
+                        .parent()
+                        .and_then(|p| p.parent())
+                        .and_then(|p| p.parent())
+                    {
+                        toolchain_roots.push(root.to_path_buf());
+                    }
+                    return;
+                }
+                _ => {}
+            }
+        }
+        out.push(path.to_path_buf());
     });
-    out
+    toolchain_roots.sort();
+    toolchain_roots.dedup();
+    (out, toolchain_roots)
 }
 
 /// Skip descent into directories that can't legitimately hold a
@@ -4182,5 +4252,114 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
         assert!(!entry
             .extra_annotations
             .contains_key("waybill:go-transitive-source"));
+    }
+
+    // -------- m217 (waybill#631) walker filter unit tests --------
+
+    #[test]
+    fn candidate_project_roots_skips_module_std() {
+        let root = tempfile::tempdir().unwrap();
+        // Stub GOROOT/src/go.mod declaring `module std`.
+        let src = root.path().join("usr/local/go/src");
+        std::fs::create_dir_all(&src).unwrap();
+        std::fs::write(src.join("go.mod"), "module std\n\ngo 1.26\n").unwrap();
+
+        let empty = crate::scan_fs::package_db::exclude_path::ExclusionSet::default();
+        let (candidates, toolchains) = candidate_project_roots(root.path(), &empty);
+        assert!(
+            candidates.is_empty(),
+            "walker MUST skip module std; got {candidates:?}"
+        );
+        assert_eq!(
+            toolchains.len(),
+            1,
+            "toolchain-observation MUST record the parent-of-src path"
+        );
+        assert!(
+            toolchains[0].ends_with("usr/local/go"),
+            "expected $GOROOT-shaped path, got {}",
+            toolchains[0].display()
+        );
+    }
+
+    #[test]
+    fn candidate_project_roots_skips_module_cmd() {
+        let root = tempfile::tempdir().unwrap();
+        let cmd_dir = root.path().join("usr/local/go/src/cmd");
+        std::fs::create_dir_all(&cmd_dir).unwrap();
+        std::fs::write(cmd_dir.join("go.mod"), "module cmd\n\ngo 1.26\n").unwrap();
+
+        let empty = crate::scan_fs::package_db::exclude_path::ExclusionSet::default();
+        let (candidates, toolchains) = candidate_project_roots(root.path(), &empty);
+        assert!(
+            candidates.is_empty(),
+            "walker MUST skip module cmd; got {candidates:?}"
+        );
+        assert_eq!(toolchains.len(), 1, "toolchain-observation MUST fire");
+        assert!(
+            toolchains[0].ends_with("usr/local/go"),
+            "expected $GOROOT path (parent of src/cmd), got {}",
+            toolchains[0].display()
+        );
+    }
+
+    #[test]
+    fn candidate_project_roots_keeps_user_project() {
+        let root = tempfile::tempdir().unwrap();
+        let app = root.path().join("app");
+        std::fs::create_dir_all(&app).unwrap();
+        std::fs::write(
+            app.join("go.mod"),
+            "module example.com/app\n\ngo 1.22\n",
+        )
+        .unwrap();
+
+        let empty = crate::scan_fs::package_db::exclude_path::ExclusionSet::default();
+        let (candidates, toolchains) = candidate_project_roots(root.path(), &empty);
+        assert_eq!(
+            candidates.len(),
+            1,
+            "user project MUST be a candidate; got {candidates:?}"
+        );
+        assert!(
+            toolchains.is_empty(),
+            "no toolchain observed for user-only project; got {toolchains:?}"
+        );
+    }
+
+    #[test]
+    fn candidate_project_roots_dedups_multiple_toolchains() {
+        let root = tempfile::tempdir().unwrap();
+        // TWO stub GOROOTs
+        for prefix in ["usr/local/go", "opt/go"] {
+            let src = root.path().join(prefix).join("src");
+            std::fs::create_dir_all(&src).unwrap();
+            std::fs::write(src.join("go.mod"), "module std\n\ngo 1.26\n").unwrap();
+        }
+        let empty = crate::scan_fs::package_db::exclude_path::ExclusionSet::default();
+        let (candidates, toolchains) = candidate_project_roots(root.path(), &empty);
+        assert!(candidates.is_empty());
+        assert_eq!(toolchains.len(), 2, "expected 2 distinct toolchain roots");
+        // Sorted lex — opt/go before usr/local/go.
+        assert!(toolchains[0].ends_with("opt/go"), "sort order wrong: {toolchains:?}");
+        assert!(toolchains[1].ends_with("usr/local/go"));
+    }
+
+    #[test]
+    fn candidate_project_roots_install_path_independence() {
+        // Same as `dedups_multiple_toolchains` but explicitly asserts
+        // that BOTH non-standard paths (`opt/go` and `srv/go`) get
+        // treated identically. Detection MUST be on the module-path,
+        // not the install location.
+        let root = tempfile::tempdir().unwrap();
+        for prefix in ["opt/go", "srv/go"] {
+            let src = root.path().join(prefix).join("src");
+            std::fs::create_dir_all(&src).unwrap();
+            std::fs::write(src.join("go.mod"), "module std\n\ngo 1.26\n").unwrap();
+        }
+        let empty = crate::scan_fs::package_db::exclude_path::ExclusionSet::default();
+        let (candidates, toolchains) = candidate_project_roots(root.path(), &empty);
+        assert!(candidates.is_empty(), "both non-standard install paths must be skipped");
+        assert_eq!(toolchains.len(), 2);
     }
 }

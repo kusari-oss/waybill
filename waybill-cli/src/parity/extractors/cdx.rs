@@ -837,6 +837,7 @@ cdx_anno!(c132_cdx, "waybill:compiler-pipeline-completeness",   document);
 cdx_anno!(c133_cdx, "waybill:secrets-read-filtered",            document);
 cdx_anno!(c134_cdx, "waybill:trace-attach-late",                component);
 cdx_anno!(c135_cdx, "waybill:package-shape",                    component);
+cdx_anno!(c136_cdx, "waybill:go-toolchain-detected",            document);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

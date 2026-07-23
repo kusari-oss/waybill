@@ -133,6 +133,13 @@ pub struct ScanResult {
     /// `GOWORK=off` (C112 annotation absent per SC-003).
     pub go_workspace_mode:
         Option<crate::scan_fs::package_db::golang::gowork::WorkspaceMode>,
+    /// Milestone 217 (waybill#631): Go-toolchain root paths detected
+    /// during the walker's scan. Each entry is the parent-of-src path
+    /// (i.e., `$GOROOT`) of a skipped `module std` / `module cmd`
+    /// `go.mod`. Sorted lex + deduplicated. `None` when no toolchain
+    /// was observed (byte-identity for non-Go and Go-project-only
+    /// scans; C136 annotation absent).
+    pub go_toolchains_detected: Option<Vec<std::path::PathBuf>>,
     /// Milestone 204 (#554): document-scope Helm image-extraction-mode
     /// signal driving the C123 `waybill:image-extraction-completeness`
     /// annotation. `None` when no helm reader ran during the scan
@@ -323,6 +330,12 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // C112 doc-scope annotation.
     let mut go_workspace_mode:
         Option<package_db::golang::gowork::WorkspaceMode> = None;
+    // Milestone 217 (waybill#631): doc-scope go-toolchain-detected
+    // signal. `None` when no Go toolchain was observed in the scanned
+    // rootfs (byte-identity — C136 annotation absent). Carried through
+    // ScanResult into the format emitters for the C136 doc-scope
+    // annotation.
+    let mut go_toolchains_detected: Option<Vec<std::path::PathBuf>> = None;
     // Milestone 204 (#554): doc-scope helm-extraction-mode signal for
     // the C123 `waybill:image-extraction-completeness` annotation.
     // `None` on non-Helm scans (byte-identity per FR-004).
@@ -368,6 +381,9 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // ScanDiagnostics into the local for the ScanResult return.
         go_cache_warming = scan_result.diagnostics.go_cache_warming.clone();
         go_workspace_mode = scan_result.diagnostics.go_workspace_mode.clone();
+        // Milestone 217 (waybill#631): mirror go-toolchain-detected
+        // from ScanDiagnostics into the local for the ScanResult return.
+        go_toolchains_detected = scan_result.diagnostics.go_toolchains_detected.clone();
         // Milestone 204 (#554): mirror helm-extraction-mode from
         // ScanDiagnostics into the local for the ScanResult return.
         // `HelmExtractionMode` is `Copy` — no clone needed.
@@ -884,6 +900,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         go_transitive_fallback_count,
         go_cache_warming,
         go_workspace_mode,
+        go_toolchains_detected,
         helm_extraction_mode,
         scan_target_coord,
         divergence_records,
