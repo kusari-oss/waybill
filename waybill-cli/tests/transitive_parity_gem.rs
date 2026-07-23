@@ -40,9 +40,23 @@ const FIXTURE_SUBPATH: &str = "gem";
 // DEPENDENCIES block), but scan_fs::mod.rs's dep-name resolver is
 // same-ecosystem-scoped (keys on `(ecosystem, name)`), so a
 // pkg:generic/ main-module cannot cross-link to pkg:gem/ deps.
-// Follow-up work: waybill#TBD to bridge cross-ecosystem lookup for
-// application main-modules. Net delta: 218 − 21 = 197.
+// Follow-up work: waybill#633 (m218) bridges cross-ecosystem lookup
+// for pkg:generic/ main-modules. Net delta: 218 − 21 = 197.
 const EXPECTED_WAYBILL_EDGE_COUNT: usize = 197;
+
+// Milestone 218 (waybill#633) INCREASES the flag-on baseline from
+// 197 → 224 (+27): with the FR-000
+// `--experimental-cross-ecosystem-edges` flag enabled, the resolver
+// falls back to iterating every non-generic ecosystem in the
+// resolver index when a `pkg:generic/`-source main-module lookup
+// misses. fastlane's Gemfile.lock DEPENDENCIES block has 27 entries,
+// all of which resolve to registered `pkg:gem/` components (no
+// unresolved names on this fixture). Every recovered edge emits a
+// per-edge `waybill:cross-ecosystem-inference` annotation with the
+// `{from_eco:"generic", lookup_via:"gemfile-lock-dependencies",
+// target_purl, to_eco:"gem"}` payload. Flag-off baseline (197)
+// unchanged per SC-009 byte-identity contract.
+const EXPECTED_WAYBILL_EDGE_COUNT_FLAG_ON: usize = 224;
 
 const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
     // Confirmed in waybill output — fastlane's main module pulls in CFPropertyList.
@@ -82,6 +96,108 @@ fn transitive_edges_match_baseline() {
             "expected representative edge missing: {from_prefix} → {to_prefix}"
         );
     }
+}
+
+/// Milestone 218 (waybill#633) US1 SC-001 + SC-002: with the
+/// FR-000 experimental flag enabled, the pkg:generic/ main-module
+/// gains outgoing DEPENDS_ON edges to every DEPENDENCIES-declared
+/// gem (27 for fastlane's Gemfile.lock). Total edge count moves
+/// from 197 (flag-off baseline) → 224 (flag-on baseline).
+///
+/// SC-009 (byte-identity flag-off) is enforced by the
+/// `transitive_edges_match_baseline` test above (unchanged from
+/// pre-m218).
+#[test]
+fn m218_flag_on_recovers_edges_from_pkg_generic_main_module() {
+    use std::process::Command;
+    let bin = env!("CARGO_BIN_EXE_waybill");
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let out = tmp.path().join("waybill.spdx.json");
+    let fake_home = tempfile::tempdir().expect("fake-home");
+    let mut cmd = Command::new(bin);
+    // Same fake-HOME isolation as run_mikebom.
+    cmd.env_remove("HOME")
+        .env_remove("XDG_CACHE_HOME")
+        .env("HOME", fake_home.path())
+        .env(
+            "WAYBILL_FIXTURES_DIR",
+            env!("WAYBILL_FIXTURES_DIR"),
+        )
+        // m218: enable the experimental flag via env var.
+        .env("WAYBILL_EXPERIMENTAL_CROSS_ECOSYSTEM_EDGES", "1")
+        .arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(fixture())
+        .arg("--format")
+        .arg("spdx-2.3-json")
+        .arg("--output")
+        .arg(&out)
+        .arg("--no-deep-hash");
+    let output = cmd.output().expect("waybill invokes");
+    assert!(
+        output.status.success(),
+        "waybill flag-on failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let bytes = std::fs::read(&out).expect("read waybill output");
+    let doc: serde_json::Value =
+        serde_json::from_slice(&bytes).expect("parse SPDX 2.3");
+    // Count DEPENDS_ON edges (matches the flag-off baseline path).
+    let edges: Vec<_> = doc
+        .get("relationships")
+        .and_then(|v| v.as_array())
+        .expect("relationships[]")
+        .iter()
+        .filter(|r| {
+            r.get("relationshipType").and_then(|v| v.as_str())
+                == Some("DEPENDS_ON")
+        })
+        .collect();
+    assert_eq!(
+        edges.len(),
+        EXPECTED_WAYBILL_EDGE_COUNT_FLAG_ON,
+        "flag-on baseline drift: expected {}, got {}",
+        EXPECTED_WAYBILL_EDGE_COUNT_FLAG_ON,
+        edges.len()
+    );
+    // SC-001: count of pkg:generic/-source DEPENDS_ON edges MUST
+    // equal the DEPENDENCIES block size (27 for fastlane).
+    let generic_source_spdxid: String = doc
+        .get("packages")
+        .and_then(|v| v.as_array())
+        .expect("packages[]")
+        .iter()
+        .find(|p| {
+            p.get("externalRefs")
+                .and_then(|v| v.as_array())
+                .map(|arr| {
+                    arr.iter().any(|r| {
+                        r.get("referenceLocator")
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.starts_with("pkg:generic/"))
+                            .unwrap_or(false)
+                    })
+                })
+                .unwrap_or(false)
+        })
+        .and_then(|p| {
+            p.get("SPDXID").and_then(|v| v.as_str()).map(String::from)
+        })
+        .expect("pkg:generic/ main-module Package MUST exist");
+    let generic_edges = edges
+        .iter()
+        .filter(|r| {
+            r.get("spdxElementId").and_then(|v| v.as_str())
+                == Some(&generic_source_spdxid)
+        })
+        .count();
+    assert_eq!(
+        generic_edges, 27,
+        "expected 27 pkg:generic/-source DEPENDS_ON edges (all 27 \
+         DEPENDENCIES gems resolve on fastlane), got {generic_edges}"
+    );
 }
 
 #[test]
