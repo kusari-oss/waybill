@@ -4,46 +4,54 @@
 
 ## The invariant
 
-Under `--project-discovery=root-only`, every component tagged `waybill:workspace-member = <root-purl>` where `<root-purl>` matches an in-scope root's PURL MUST be retained in the emitted SBOM. Independent nested projects (not tagged as workspace members) are dropped.
+Under `--project-discovery=root-only`, every component whose `waybill:workspace-member` annotation names a scan-root-relative directory that is in scope MUST be retained in the emitted SBOM. Independent nested projects (living under their own subdirectory, not in scope) are dropped.
 
-Under `--project-discovery=strict`, this rule does NOT apply — workspace members are dropped even if annotated.
+Under `--project-discovery=strict`, the same directory-scoped pass runs but SKIPS main-modules: the root project's own dependencies ride along, its workspace members do not.
 
 ## The signal: `waybill:workspace-member`
 
-This is an EXISTING annotation set by per-ecosystem readers whose ecosystem supports workspaces. m220 consumes it verbatim — no new detection logic.
+This is an EXISTING annotation set by m176's `scan_fs::tag_components_with_workspace_member` on every component whose evidence points at a manifest inside the scan root. m220 consumes it verbatim — no new detection logic.
 
-### Per-ecosystem detection today (as of m219)
+### Value shape (empirically verified, m220)
 
-| Ecosystem | Ecosystem-native workspace signal | Reader tags `waybill:workspace-member`? | Annotation value shape |
+The value is a **JSON-encoded array of scan-root-relative workspace DIRECTORIES** carried in a JSON string — `"[\".\"]"`, `"[\"bench\"]"`, `"[\"services/api\"]"` — each derived by `derive_workspace_root` from the parent directory of one of the component's OWN `evidence.source_file_paths`. Root-level manifests use the `"."` sentinel.
+
+It is **self-descriptive directory provenance**, NOT a back-reference to a workspace root's PURL, and it is stamped on plain transitive dependencies too (`itoa`, `serde`, `rack`), not just on main-modules. Membership is therefore decided by **directory identity**, never by matching a root's identifier.
+
+That shape is exactly what makes it useful here: under m064's augment-in-place, every cargo main-module in a workspace (root AND members) records the SHARED workspace `Cargo.lock` as its only evidence path, so root and members alike carry `"[\".\"]"` and are retained together under RootOnly — while an independent nested project carries its own subdirectory and is not.
+
+### Per-ecosystem coverage today (as of m219)
+
+| Ecosystem | Ecosystem-native workspace signal | Components carry a directory tag? | Effect under RootOnly |
 |--|--|--|--|
-| **Cargo** | `[workspace] members = [...]` in root Cargo.toml | ✅ (via m127) | PURL of the workspace root |
-| **npm / pnpm / yarn** | `"workspaces": [...]` in root package.json | ✅ (m147/m180) | PURL of the workspace root |
-| **Go workspaces** | `use ("...")` in root `go.work` | ✅ (m161) | PURL derived from `go.work` root |
-| **Maven** | `<modules>...</modules>` in root pom.xml | ✅ (m085) | PURL of the parent POM |
-| **pyproject** (poetry/hatch/setuptools) | Varies per tool | ⚠️ Reader-dependent | Whatever the reader decides |
-| **Gem** | No workspace concept | ❌ N/A | (each Gemfile/gemspec is independent) |
-| **Composer/dart/etc.** | Varies | Reader-dependent | Whatever the reader decides |
+| **Cargo** | `[workspace] members = [...]` in root Cargo.toml | ✅ (m176, shared `Cargo.lock` ⇒ `["."]`) | Root + all members retained together |
+| **npm / pnpm / yarn** | `"workspaces": [...]` in root package.json | ✅ (m176, per-manifest directory) | Members under the root directory retained |
+| **Go workspaces** | `use ("...")` in root `go.work` | ✅ (m176, per-`go.mod` directory) | Members under the root directory retained |
+| **Maven** | `<modules>...</modules>` in root pom.xml | ✅ (m176, per-`pom.xml` directory) | Modules under the root directory retained |
+| **pyproject** (poetry/hatch/setuptools) | Varies per tool | ✅ (m176, per-manifest directory) | Directory-scoped, same rule |
+| **Gem** | No workspace concept | ✅ (m176, per-`Gemfile.lock` directory) | Root-directory gems retained; nested Gemfiles dropped |
+| **Composer/dart/etc.** | Varies | ✅ (m176, per-manifest directory) | Directory-scoped, same rule |
 
-**m220 does NOT extend this detection.** If a reader doesn't stamp the annotation, its "workspace members" (if any) look identical to independent nested projects and get dropped under root-only. That's a per-ecosystem reader improvement, not an m220 concern.
+**m220 does NOT extend this detection.** If a reader's evidence paths don't place a component inside an in-scope directory, it looks identical to an independent nested project and gets dropped under root-only. That's a per-ecosystem reader improvement, not an m220 concern.
 
 ## Preservation algorithm
 
-Per `scope-filter-algorithm.md` Step 3:
+Per `scope-filter-algorithm.md` Step 3. The pass runs under BOTH non-default modes; `skip_main_modules` is the Strict lever:
 
 ```rust
-if mode.follows_workspace_members() {  // true for RootOnly; false for Strict
-    let root_purls: BTreeSet<String> = in_scope_roots.iter()
-        .map(|r| r.purl_string.clone()).collect();
-    for c in &components {
-        if reachable.contains(c.purl.as_str()) { continue; }
-        if let Some(v) = c.extra_annotations.get("waybill:workspace-member") {
-            if let Some(root_ref) = v.as_str() {
-                if root_purls.contains(root_ref) {
-                    reachable.insert(c.purl.as_str().to_string());
-                    workspace_members_followed += 1;
-                }
-            }
-        }
+let mut in_scope_dirs: BTreeSet<String> = components.iter()
+    .filter(|c| root_purls.contains(c.purl.as_str()))
+    .flat_map(member_dirs)          // decode the JSON directory array
+    .collect();
+in_scope_dirs.extend(in_scope_roots.iter().map(|r| dir_key(&r.source_dir)));
+
+let skip_main_modules = !mode.follows_workspace_members();  // true for Strict
+for c in &components {
+    if reachable.contains(c.purl.as_str()) { continue; }
+    if skip_main_modules && is_main_module(c) { continue; }
+    if member_dirs(c).iter().any(|d| in_scope_dirs.contains(d)) {
+        reachable.insert(c.purl.as_str().to_string());
+        workspace_members_followed += 1;
     }
 }
 ```
@@ -56,60 +64,37 @@ This is a **belt-and-suspenders** pass:
 
 If a workspace member is ITSELF a workspace (Cargo permits nested workspaces via `[workspace]` in a member's Cargo.toml), its own declared members MUST also be walked.
 
-**How this works via annotations**:
-- The outer workspace's members are tagged `waybill:workspace-member = <outer-root-purl>` by the reader.
-- The inner workspace (which is a member of the outer) is itself a `[workspace]` root — the reader ALSO tags its members with `waybill:workspace-member = <inner-root-purl>`.
-- Under RootOnly:
-  - Outer workspace root is in-scope.
-  - Its members are pulled in via the annotation-based Step 3 pass (annotation value = outer-root-PURL matches in_scope_roots).
-  - The inner workspace root is itself a member → pulled in.
-  - The inner workspace root becomes an "in-scope" root of its own — its members' annotations point at inner-root-PURL.
-  - Currently `in_scope_roots` is fixed after Step 1 (only depth-0 roots). Inner-workspace-root is NOT in `in_scope_roots`.
-  - **This is a correctness gap for FR-005 recursion.**
+**How this works via directory tags**:
+- The outer root's own directory (`"."`) seeds `in_scope_dirs`.
+- Step 2's BFS and/or the Step 3 pass pull the inner workspace root into `reachable`. The inner root's evidence lives under its own subdirectory, so it carries e.g. `["crates/inner"]`.
+- That directory is NOT yet in `in_scope_dirs`, so the inner workspace's own members would be dropped.
+- **Fix**: fold every reachable main-module's directories back into `in_scope_dirs` and re-run the pass. Repeat until fixpoint.
 
-**Fix**: after Step 3 pulls in initial workspace members, expand `in_scope_roots` transitively: any pulled-in component that IS ITSELF a main-module (has `waybill:component-role = main-module`) joins in_scope_roots + gets its own annotation-based follow-up. Repeat until fixpoint.
-
-**Pseudocode addition to Step 3**:
+**Pseudocode addition to Step 3** (RootOnly only — Strict never follows members, so it has no fixpoint):
 
 ```rust
-// FR-005 nested workspaces: fixpoint over annotation follow-up.
-loop {
-    let mut newly_added_root_purls: BTreeSet<String> = BTreeSet::new();
+while follows_members {
+    let mut newly_added: BTreeSet<String> = BTreeSet::new();
     for c in &components {
-        // Component is IN reachable AND is a main-module → it's a NEW root.
-        if reachable.contains(c.purl.as_str())
-            && c.extra_annotations.get("waybill:component-role")
-                .and_then(|v| v.as_str()) == Some("main-module")
-        {
-            let purl = c.purl.as_str().to_string();
-            if !root_purls.contains(&purl) {
-                newly_added_root_purls.insert(purl);
-            }
+        if !reachable.contains(c.purl.as_str()) || !is_main_module(c) { continue; }
+        for d in member_dirs(c) {
+            if !in_scope_dirs.contains(&d) { newly_added.insert(d); }
         }
     }
-    if newly_added_root_purls.is_empty() { break; }
-    root_purls.extend(newly_added_root_purls);
-    // Re-run the workspace-member pass with the expanded root_purls set.
-    for c in &components {
-        if reachable.contains(c.purl.as_str()) { continue; }
-        if let Some(v) = c.extra_annotations.get("waybill:workspace-member") {
-            if let Some(root_ref) = v.as_str() {
-                if root_purls.contains(root_ref) {
-                    reachable.insert(c.purl.as_str().to_string());
-                    workspace_members_followed += 1;
-                }
-            }
-        }
-    }
+    if newly_added.is_empty() { break; }
+    in_scope_dirs.extend(newly_added);
+    annotation_follow_up(&components, &in_scope_dirs, false,
+                         &mut reachable, &mut workspace_members_followed);
 }
 ```
 
-This fixpoint terminates because each iteration only adds; component set is bounded.
+This fixpoint terminates because each iteration only adds directories; the directory set is bounded by the component set.
 
 ## Edge cases
 
 - **A workspace member with NO deps of its own** (e.g., a stub crate in a Cargo workspace with just `[package] name = "stub"`): captured by Step 3's annotation follow-up. Its component is in `filtered_components`; no relationships involve it (empty).
-- **A workspace member whose annotation value doesn't match any in-scope root** (shouldn't happen — the value is stamped by the reader from the workspace root's identity — but defensive check): the component is treated as "independent nested project" and dropped. Consumer-friendly failure mode (root-only was asked for; anything unclear gets dropped).
+- **A component whose directory tag names no in-scope directory**: treated as an independent nested project and dropped. Consumer-friendly failure mode (root-only was asked for; anything unclear gets dropped).
+- **Strict on a cargo workspace**: root and members are indistinguishable by directory (m064 gives them all the shared `Cargo.lock`, hence `["."]`). Step 1b narrows `in_scope_roots` using m201's `waybill:is-workspace-root` flag — the only reader-derived root-vs-member discriminator that exists — and Step 3's `skip_main_modules` keeps the members out while letting the root's own plain dependencies through. When no in-scope root carries that flag (single-crate projects, virtual manifests, every non-cargo ecosystem), Strict deliberately degrades to RootOnly behaviour rather than inventing a new heuristic (FR-006).
 - **A component with BOTH main-module role AND workspace-member annotation** (an inner workspace root under an outer workspace): main-module role is preserved when the component passes into `filtered_components`. Multiple main-module roles in a single SBOM under root-only is EXPECTED — m127 root-selector at emit-time handles this via existing multi-main-module semantics.
 
 ## Test coverage matrix

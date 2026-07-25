@@ -16,6 +16,18 @@
 
 ## R2 — Workspace-member preservation: consuming the existing `waybill:workspace-member` annotation
 
+> **Correction (applied at implement time).** Every pseudocode block in
+> this document that matches the annotation value against an in-scope
+> root's PURL is WRONG and was never reachable. Empirical probing of
+> real scans during implementation showed the value is a JSON-encoded
+> array of scan-root-relative workspace DIRECTORIES (`["."]`,
+> `["bench"]`), stamped by m176 from each component's own
+> `evidence.source_file_paths` — self-descriptive directory provenance,
+> never a back-reference to a root's identifier, and present on plain
+> transitive dependencies too. The shipped filter keys on directory
+> identity. See `contracts/workspace-member-preservation.md` for the
+> authoritative algorithm.
+
 **Decision**: The scope-filter treats a component as "workspace member of a root main-module" iff its `extra_annotations.get("waybill:workspace-member")` is `Some(...)`. Every reader that supports workspaces today (cargo per m127, npm per m147/pnpm/yarn, go per m161, maven per m085) already stamps this annotation on member components. m220 reuses that signal verbatim — NO new per-reader detection heuristics.
 
 **Rationale**: The scan_cmd.rs at :3234-3695 already computes a "workspaces detected" summary by inspecting `waybill:workspace-member` values. m220's filter is trivially additive: when a component carries the annotation AND its value's source-dir is under a root main-module's directory, it's in-scope under root-only. When a component lacks the annotation AND its source-dir is nested under scan-root (not at depth-0), it's an independent nested project → out-of-scope under root-only.

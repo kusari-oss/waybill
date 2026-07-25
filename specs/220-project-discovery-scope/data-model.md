@@ -168,6 +168,11 @@ pub fn apply_scope_filter(
             reachable.insert(c.purl.as_str().to_string());
         }
     }
+    // SUPERSEDED at implement time: the annotation carries a JSON array
+    // of scan-root-relative DIRECTORIES, not a root PURL, so the shipped
+    // pass keys on directory identity and runs under Strict too (with
+    // main-modules skipped). See contracts/workspace-member-preservation.md.
+    //
     // Under RootOnly, additionally include workspace-member components
     // whose `waybill:workspace-member` annotation points at any
     // in-scope root's PURL (belt-and-suspenders for FR-004).

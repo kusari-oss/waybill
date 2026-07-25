@@ -25,10 +25,24 @@ use super::{ProjectDiscoveryMode, ProjectDiscoveryReport};
 /// detect nested workspace roots pulled in by the outer workspace's
 /// annotation follow-up.
 const COMPONENT_ROLE_KEY: &str = "waybill:component-role";
-/// The workspace-member back-reference annotation key stamped by
-/// `scan_cmd::tag_components_with_workspace_member` on every
-/// component under a workspace-root's declared members. Value =
-/// PURL string of the workspace root.
+/// The workspace-provenance annotation key stamped by m176's
+/// `scan_fs::tag_components_with_workspace_member` on every component
+/// whose evidence points at a manifest inside the scan root.
+///
+/// **Value shape**: a JSON-encoded array of scan-root-relative
+/// workspace DIRECTORIES — `"[\".\"]"`, `"[\"services/api\"]"` — each
+/// derived from the parent directory of one of the component's own
+/// `evidence.source_file_paths` (root-level manifests use the `"."`
+/// sentinel). It is self-descriptive provenance, NOT a back-reference
+/// to a workspace root's PURL, and it is stamped on plain transitive
+/// dependencies too — so membership is decided by directory identity,
+/// not by matching a root's identifier.
+///
+/// That shape is exactly what makes it useful here: a cargo workspace
+/// member's only evidence path is the shared workspace `Cargo.lock`,
+/// so root and members alike carry `"[\".\"]"` and are retained
+/// together under `RootOnly`, while an independent nested project
+/// carries its own subdirectory and is not.
 const WORKSPACE_MEMBER_KEY: &str = "waybill:workspace-member";
 const MAIN_MODULE_ROLE: &str = "main-module";
 
@@ -61,11 +75,46 @@ pub fn apply_scope_filter(
     // Step 1: enumerate + filter main-modules.
     let all_roots =
         crate::generate::split::enumerate_workspace_roots(&components, scan_root);
-    let in_scope_roots: Vec<_> = all_roots
+    let mut in_scope_roots: Vec<_> = all_roots
         .iter()
         .filter(|r| mode.is_root_in_scope(r, scan_root))
         .cloned()
         .collect();
+
+    // Step 1b (FR-007, Strict only): separate the workspace ROOT from
+    // its workspace MEMBERS.
+    //
+    // Why this needs its own pass: a cargo workspace member's only
+    // evidence path is the SHARED workspace `Cargo.lock` (m064's
+    // augment-in-place), so `source_dir` is empty for the root AND
+    // every member alike — the Step-1 root-level test cannot tell them
+    // apart. m201 already solved exactly this collision for root
+    // election, and `waybill:is-workspace-root` is the signal it
+    // produced: stamped `true` only when a crate's own manifest
+    // declares both `[package]` and `[workspace]`, `false` for every
+    // other cargo main-module. Reusing it keeps FR-006's "no new
+    // per-ecosystem detection heuristics" promise intact.
+    //
+    // Degradation is deliberate: when NO in-scope root carries the
+    // flag — single-crate projects, virtual workspace manifests (no
+    // root `[package]` to represent), and every non-cargo ecosystem —
+    // the set is left alone so Strict collapses to RootOnly rather
+    // than emptying the SBOM.
+    if mode == ProjectDiscoveryMode::Strict {
+        let workspace_root_purls: BTreeSet<String> = components
+            .iter()
+            .filter(|c| is_workspace_root(c))
+            .map(|c| c.purl.to_string())
+            .collect();
+        if in_scope_roots
+            .iter()
+            .any(|r| workspace_root_purls.contains(&r.purl_string))
+        {
+            in_scope_roots
+                .retain(|r| workspace_root_purls.contains(&r.purl_string));
+        }
+    }
+
     let nested_projects_ignored =
         all_roots.len().saturating_sub(in_scope_roots.len());
 
@@ -85,61 +134,83 @@ pub fn apply_scope_filter(
         }
     }
 
-    // Step 3: workspace-member inclusion (RootOnly only) + FR-005
-    // fixpoint recursion for nested workspaces. Skipped under
-    // Strict — workspace members drop even if annotated.
+    // Step 3: directory-scoped follow-up. BFS alone under-collects:
+    // plenty of readers record a dependency without emitting a
+    // `dependsOn` edge to it (a Gemfile.lock gem, a Cargo
+    // `[workspace] members` entry), leaving it a graph orphan that
+    // Step 2 would discard even though it plainly belongs to the root
+    // project. The `waybill:workspace-member` directory tag is what
+    // recovers those.
+    //
+    // The two non-default modes differ only in whether that recovery
+    // is allowed to cross a main-module boundary:
+    //   * RootOnly  — yes: a sibling main-module sharing an in-scope
+    //     directory IS a workspace member (FR-004), and once pulled in
+    //     it seeds the FR-005 fixpoint for its own sub-members.
+    //   * Strict    — no: workspace members drop (FR-007). Only the
+    //     root project's own non-main-module dependencies ride along,
+    //     and there is no fixpoint.
     let mut workspace_members_followed = 0usize;
-    if mode.follows_workspace_members() {
-        let mut root_purls: BTreeSet<String> = in_scope_roots
+    {
+        // Seed the in-scope directory set from the in-scope roots. The
+        // root's own `waybill:workspace-member` value is preferred
+        // (self-consistent with what members carry); `source_dir` is
+        // the fallback for roots the m176 tagging pass didn't reach.
+        let root_purls: BTreeSet<&str> = in_scope_roots
             .iter()
-            .map(|r| r.purl_string.clone())
+            .map(|r| r.purl_string.as_str())
             .collect();
-        // Initial belt-and-suspenders pass: some workspace-member
-        // components aren't BFS-reachable from a root (e.g., Cargo
-        // `[workspace] members` doesn't automatically create a
-        // root→member dep edge). Annotation-based follow-up
-        // captures them.
+        let mut in_scope_dirs: BTreeSet<String> = components
+            .iter()
+            .filter(|c| root_purls.contains(c.purl.as_str()))
+            .flat_map(member_dirs)
+            .collect();
+        in_scope_dirs
+            .extend(in_scope_roots.iter().map(|r| dir_key(&r.source_dir)));
+
+        let follows_members = mode.follows_workspace_members();
         annotation_follow_up(
             &components,
-            &root_purls,
+            &in_scope_dirs,
+            !follows_members,
             &mut reachable,
             &mut workspace_members_followed,
         );
 
-        // FR-005 nested-workspace fixpoint: any pulled-in component
+        // FR-005 nested-workspace fixpoint: any reachable component
         // tagged `waybill:component-role = main-module` is itself a
-        // nested workspace root. Add its PURL to `root_purls` and
-        // re-run the annotation pass; repeat until no new roots are
-        // added. Terminates because each iteration only adds and the
-        // component set is bounded.
-        loop {
-            let mut newly_added: BTreeSet<String> = BTreeSet::new();
-            for c in &components {
-                if !reachable.contains(c.purl.as_str()) {
-                    continue;
+        // (possibly nested) workspace root. Fold ITS workspace
+        // directories into `in_scope_dirs` and re-run the annotation
+        // pass so that sub-workspace members living under that
+        // directory are followed too. Repeat until no new directory
+        // appears. Terminates because each iteration only adds
+        // directories drawn from a bounded component set.
+        // Strict never follows members, so it has no fixpoint at all.
+        if follows_members {
+            loop {
+                let mut newly_added: BTreeSet<String> = BTreeSet::new();
+                for c in &components {
+                    if !reachable.contains(c.purl.as_str()) || !is_main_module(c) {
+                        continue;
+                    }
+                    for d in member_dirs(c) {
+                        if !in_scope_dirs.contains(&d) {
+                            newly_added.insert(d);
+                        }
+                    }
                 }
-                let is_mm = matches!(
-                    c.extra_annotations.get(COMPONENT_ROLE_KEY),
-                    Some(v) if v.as_str() == Some(MAIN_MODULE_ROLE)
+                if newly_added.is_empty() {
+                    break;
+                }
+                in_scope_dirs.extend(newly_added);
+                annotation_follow_up(
+                    &components,
+                    &in_scope_dirs,
+                    false,
+                    &mut reachable,
+                    &mut workspace_members_followed,
                 );
-                if !is_mm {
-                    continue;
-                }
-                let purl = c.purl.as_str().to_string();
-                if !root_purls.contains(&purl) {
-                    newly_added.insert(purl);
-                }
             }
-            if newly_added.is_empty() {
-                break;
-            }
-            root_purls.extend(newly_added);
-            annotation_follow_up(
-                &components,
-                &root_purls,
-                &mut reachable,
-                &mut workspace_members_followed,
-            );
         }
     }
 
@@ -163,14 +234,78 @@ pub fn apply_scope_filter(
     (filtered_components, filtered_relationships, report)
 }
 
-/// One workspace-member annotation-follow-up pass. Walks
-/// `components`, retains any component whose
-/// `waybill:workspace-member` annotation value matches a PURL in
-/// `root_purls` (and isn't already reachable). Bumps
-/// `workspace_members_followed` per newly-included component.
+/// Read the m201 `waybill:is-workspace-root` flag. Stamped on every
+/// main-module by `scan_fs::tag_main_modules_with_workspace_root`;
+/// absent or non-boolean reads as `false`.
+fn is_workspace_root(c: &ResolvedComponent) -> bool {
+    c.extra_annotations
+        .get(crate::generate::root_selector::IS_WORKSPACE_ROOT_KEY)
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+}
+
+/// Normalize a scan-root-relative directory into the same key space
+/// m176's `derive_workspace_root` emits: the scan root itself is the
+/// `"."` sentinel, everything else is forward-slash separated.
+fn dir_key(rel: &Path) -> String {
+    let s = rel
+        .components()
+        .map(|c| c.as_os_str().to_string_lossy())
+        .collect::<Vec<_>>()
+        .join("/");
+    if s.is_empty() { ".".to_string() } else { s }
+}
+
+/// Decode a `waybill:workspace-member` value into the scan-root-relative
+/// workspace directories it names. Canonical shape is a JSON-encoded
+/// array carried in a string (`"[\".\"]"`); a bare JSON array is
+/// tolerated so a future encoding relaxation doesn't silently
+/// no-op this pass. Anything else yields no directories.
+fn member_dirs(c: &ResolvedComponent) -> BTreeSet<String> {
+    match c.extra_annotations.get(WORKSPACE_MEMBER_KEY) {
+        Some(serde_json::Value::String(s)) => {
+            serde_json::from_str::<Vec<String>>(s).unwrap_or_default()
+        }
+        Some(serde_json::Value::Array(a)) => a
+            .iter()
+            .filter_map(|e| e.as_str().map(str::to_string))
+            .collect(),
+        _ => Vec::new(),
+    }
+    .into_iter()
+    .collect()
+}
+
+/// Is this component a per-ecosystem main-module (i.e. a workspace
+/// member or standalone project root)? Same signal m215's split axis
+/// uses.
+fn is_main_module(c: &ResolvedComponent) -> bool {
+    matches!(
+        c.extra_annotations.get(COMPONENT_ROLE_KEY),
+        Some(v) if v.as_str() == Some(MAIN_MODULE_ROLE)
+    )
+}
+
+/// One directory-scoped follow-up pass. Walks `components`, retaining
+/// any not-yet-reachable component whose `waybill:workspace-member`
+/// annotation names a directory in `in_scope_dirs`. Bumps
+/// `workspace_members_followed` per newly included component.
+///
+/// Directory identity — not PURL back-reference — is the join key,
+/// because that is what the annotation actually carries (see
+/// [`WORKSPACE_MEMBER_KEY`]). This is what lets a cargo workspace
+/// member (whose only evidence is the shared root `Cargo.lock`, hence
+/// `"."`) ride along with its root while an independent nested project
+/// under its own subdirectory does not.
+///
+/// `skip_main_modules` is the Strict-mode lever: with it set, a
+/// component sharing an in-scope directory is retained only if it is
+/// NOT itself a main-module — the root project's own dependencies come
+/// along, its workspace members do not (FR-007).
 fn annotation_follow_up(
     components: &[ResolvedComponent],
-    root_purls: &BTreeSet<String>,
+    in_scope_dirs: &BTreeSet<String>,
+    skip_main_modules: bool,
     reachable: &mut BTreeSet<String>,
     workspace_members_followed: &mut usize,
 ) {
@@ -178,11 +313,10 @@ fn annotation_follow_up(
         if reachable.contains(c.purl.as_str()) {
             continue;
         }
-        let Some(v) = c.extra_annotations.get(WORKSPACE_MEMBER_KEY) else {
+        if skip_main_modules && is_main_module(c) {
             continue;
-        };
-        let Some(root_ref) = v.as_str() else { continue };
-        if root_purls.contains(root_ref) {
+        }
+        if member_dirs(c).iter().any(|d| in_scope_dirs.contains(d)) {
             reachable.insert(c.purl.as_str().to_string());
             *workspace_members_followed += 1;
         }
@@ -195,7 +329,7 @@ mod tests {
     use std::collections::BTreeMap;
     use std::path::PathBuf;
 
-    use serde_json::{Value, json};
+    use serde_json::Value;
     use waybill_common::resolution::{
         Relationship, ResolutionEvidence, ResolutionTechnique, ResolvedComponent,
     };
@@ -265,6 +399,13 @@ mod tests {
         c
     }
 
+    /// Stamp `waybill:workspace-member` the way m176 really does: a
+    /// JSON-encoded array of scan-root-relative workspace directories.
+    fn with_member_dirs(c: ResolvedComponent, dirs: &[&str]) -> ResolvedComponent {
+        let encoded = serde_json::to_string(dirs).unwrap();
+        with_annotation(c, WORKSPACE_MEMBER_KEY, Value::String(encoded))
+    }
+
     #[test]
     fn all_mode_zero_op_preserves_inputs() {
         let comp = vec![mk_component("pkg:cargo/root@0.1.0", Some("main-module"))];
@@ -311,12 +452,10 @@ mod tests {
         // BFS-reachable — no dep edge from root; tagged only via
         // annotation).
         let root_purl = "pkg:cargo/wsroot@0.1.0";
-        let root = mk_component(root_purl, Some("main-module"));
-        let member = with_annotation(
-            mk_component("pkg:cargo/api@0.1.0", None),
-            WORKSPACE_MEMBER_KEY,
-            json!(root_purl),
-        );
+        let root =
+            with_member_dirs(mk_component(root_purl, Some("main-module")), &["."]);
+        let member =
+            with_member_dirs(mk_component("pkg:cargo/api@0.1.0", None), &["."]);
         let comp = vec![root, member];
         let rel: Vec<Relationship> = vec![];
         let scan_root = std::env::current_dir().unwrap();
@@ -335,19 +474,31 @@ mod tests {
 
     #[test]
     fn strict_drops_workspace_member_even_if_annotated() {
-        // Same shape as the preceding test — but Strict must drop the
-        // annotated member.
+        // Real cargo workspace shape: root and member are BOTH
+        // root-level main-modules sharing the workspace `Cargo.lock`
+        // (so both are annotated `["."]`), told apart only by m201's
+        // `waybill:is-workspace-root`. Strict keeps the root and the
+        // root's own plain dependency; the member drops (FR-007).
         let root_purl = "pkg:cargo/wsroot@0.1.0";
-        let root = mk_component(root_purl, Some("main-module"));
-        let member = with_annotation(
-            mk_component("pkg:cargo/api@0.1.0", None),
-            WORKSPACE_MEMBER_KEY,
-            json!(root_purl),
+        let ws_root_key = crate::generate::root_selector::IS_WORKSPACE_ROOT_KEY;
+        let root = with_annotation(
+            with_member_dirs(mk_component(root_purl, Some("main-module")), &["."]),
+            ws_root_key,
+            Value::Bool(true),
         );
-        let comp = vec![root, member];
+        let member = with_annotation(
+            with_member_dirs(
+                mk_component("pkg:cargo/api@0.1.0", Some("main-module")),
+                &["."],
+            ),
+            ws_root_key,
+            Value::Bool(false),
+        );
+        let dep = with_member_dirs(mk_component("pkg:cargo/serde@1.0.0", None), &["."]);
+        let comp = vec![root, member, dep];
         let rel: Vec<Relationship> = vec![];
         let scan_root = std::env::current_dir().unwrap();
-        let (out_c, _out_r, report) = apply_scope_filter(
+        let (out_c, _out_r, _report) = apply_scope_filter(
             comp,
             rel,
             ProjectDiscoveryMode::Strict,
@@ -356,8 +507,14 @@ mod tests {
         let purls: Vec<String> =
             out_c.iter().map(|c| c.purl.as_str().to_string()).collect();
         assert!(purls.contains(&root_purl.to_string()));
-        assert!(!purls.contains(&"pkg:cargo/api@0.1.0".to_string()));
-        assert_eq!(report.workspace_members_followed, 0);
+        assert!(
+            !purls.contains(&"pkg:cargo/api@0.1.0".to_string()),
+            "SC-006: workspace member must drop under Strict"
+        );
+        assert!(
+            purls.contains(&"pkg:cargo/serde@1.0.0".to_string()),
+            "the root project's own dependency must survive Strict"
+        );
     }
 
     #[test]
@@ -390,12 +547,10 @@ mod tests {
         // dep edge to them; annotation is the only signal. Under
         // RootOnly, filter picks the member up via Step 3.
         let root_purl = "pkg:cargo/wsroot@0.1.0";
-        let root = mk_component(root_purl, Some("main-module"));
-        let orphan_member = with_annotation(
-            mk_component("pkg:cargo/api@0.1.0", None),
-            WORKSPACE_MEMBER_KEY,
-            json!(root_purl),
-        );
+        let root =
+            with_member_dirs(mk_component(root_purl, Some("main-module")), &["."]);
+        let orphan_member =
+            with_member_dirs(mk_component("pkg:cargo/api@0.1.0", None), &["."]);
         let comp = vec![root, orphan_member];
         let scan_root = std::env::current_dir().unwrap();
         let (out_c, _out_r, _r) = apply_scope_filter(
@@ -409,28 +564,46 @@ mod tests {
 
     #[test]
     fn nested_workspace_fixpoint_recursion() {
-        // Outer workspace root + inner workspace root (itself a
-        // member of the outer) + inner-workspace member. Under
-        // RootOnly, fixpoint pass should pull the inner member in
-        // via the second iteration.
+        // Outer workspace root at the scan root + inner workspace root
+        // one directory down (reachable from the outer via a dep edge)
+        // + a member of that inner workspace. The inner member's
+        // directory is NOT in scope on the first annotation pass — only
+        // after the fixpoint folds the inner root's own directory in.
         let outer_purl = "pkg:cargo/outer@0.1.0";
         let inner_purl = "pkg:cargo/inner@0.1.0";
-        let outer_root = mk_component(outer_purl, Some("main-module"));
-        let inner_root = with_annotation(
-            mk_component(inner_purl, Some("main-module")),
-            WORKSPACE_MEMBER_KEY,
-            json!(outer_purl),
-        );
-        let inner_member = with_annotation(
-            mk_component("pkg:cargo/inner-sub@0.1.0", None),
-            WORKSPACE_MEMBER_KEY,
-            json!(inner_purl),
-        );
-        let comp = vec![outer_root, inner_root, inner_member];
         let scan_root = std::env::current_dir().unwrap();
+        let outer_root =
+            with_member_dirs(mk_component(outer_purl, Some("main-module")), &["."]);
+        let mut inner_root = with_member_dirs(
+            mk_component(inner_purl, Some("main-module")),
+            &["crates/inner"],
+        );
+        // Nest the inner workspace root one directory down so it is NOT
+        // itself root-level — it enters scope only via the dep edge.
+        inner_root.evidence.source_file_paths = vec![
+            scan_root
+                .join("crates/inner/Cargo.toml")
+                .to_string_lossy()
+                .into_owned(),
+        ];
+        let inner_member = with_member_dirs(
+            mk_component("pkg:cargo/inner-sub@0.1.0", None),
+            &["crates/inner"],
+        );
+        let edge = Relationship {
+            from: outer_purl.to_string(),
+            to: inner_purl.to_string(),
+            relationship_type:
+                waybill_common::resolution::RelationshipType::DependsOn,
+            provenance: waybill_common::resolution::EnrichmentProvenance {
+                source: "Cargo.lock".to_string(),
+                data_type: "dependency".to_string(),
+            },
+        };
+        let comp = vec![outer_root, inner_root, inner_member];
         let (out_c, _out_r, report) = apply_scope_filter(
             comp,
-            vec![],
+            vec![edge],
             ProjectDiscoveryMode::RootOnly,
             &scan_root,
         );
@@ -442,6 +615,8 @@ mod tests {
             purls.contains(&"pkg:cargo/inner-sub@0.1.0".to_string()),
             "FR-005 fixpoint should pull inner workspace member"
         );
-        assert_eq!(report.workspace_members_followed, 2);
+        // Only the inner member arrives via the annotation pass; the
+        // inner root itself came in through BFS.
+        assert_eq!(report.workspace_members_followed, 1);
     }
 }

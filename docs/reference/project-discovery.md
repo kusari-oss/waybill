@@ -38,25 +38,45 @@ groups the remaining set into sub-SBOMs.
 
 ## Per-ecosystem workspace-member detection
 
-Workspace-member detection is reused verbatim from each ecosystem's
-existing reader. m220 does NOT extend or invent detection logic. When a
-reader stamps `waybill:workspace-member = <root-purl>` on a component,
-that component is preserved under `root-only`. When it doesn't, the
-component is treated as an independent nested project and dropped.
+Workspace-member detection is reused verbatim from existing scan-time
+signals. m220 does NOT extend or invent detection logic.
 
-| Ecosystem                          | Ecosystem-native workspace signal                       | Reader stamps `waybill:workspace-member`? | Value shape                                    |
-|------------------------------------|---------------------------------------------------------|-------------------------------------------|------------------------------------------------|
-| **Cargo**                          | `[workspace] members = [...]` in root `Cargo.toml`      | ✅ Yes (m127)                              | PURL of the workspace root                     |
-| **npm / pnpm / yarn**              | `"workspaces": [...]` in root `package.json`            | ✅ Yes (m147 / m180)                       | PURL of the workspace root                     |
-| **Go workspaces**                  | `use (...)` in root `go.work`                           | ✅ Yes (m161)                              | PURL derived from `go.work` root               |
-| **Maven multi-module**             | `<modules>...</modules>` in root `pom.xml`              | ✅ Yes (m085)                              | PURL of the parent POM                         |
-| **pyproject** (poetry/hatch/setuptools) | Varies per tool                                    | ⚠️ Reader-dependent                        | Whatever the reader decides                    |
-| **Gemfile**                        | No workspace concept in Ruby                            | ❌ N/A                                     | Every Gemfile is an independent project        |
-| **Composer / dart / etc.**         | Varies                                                  | ⚠️ Reader-dependent                        | Whatever the reader decides                    |
+The signal is m176's `waybill:workspace-member` annotation. Its value is
+a **JSON-encoded array of scan-root-relative workspace directories**
+carried in a JSON string — `"[\".\"]"`, `"[\"bench\"]"`,
+`"[\"services/api\"]"` — each derived from the parent directory of one
+of the component's own `evidence.source_file_paths`. Root-level
+manifests use the `"."` sentinel. It is self-descriptive directory
+provenance, not a back-reference to a workspace root's identifier, and
+it is stamped on plain transitive dependencies as well as on
+main-modules.
 
-Ecosystems marked ❌ have no workspace concept — `root-only` and
-`strict` produce identical output on scans containing only those
-ecosystems.
+Membership is therefore decided by **directory identity**: a component
+is preserved under `root-only` when one of its annotated directories is
+in scope, and dropped when it lives only under an out-of-scope nested
+directory.
+
+| Ecosystem                          | Ecosystem-native workspace signal                       | Directory tag stamped? | Effect under `root-only`                        |
+|------------------------------------|---------------------------------------------------------|------------------------|-------------------------------------------------|
+| **Cargo**                          | `[workspace] members = [...]` in root `Cargo.toml`      | ✅ shared `Cargo.lock` ⇒ `["."]` | Root + all members retained together   |
+| **npm / pnpm / yarn**              | `"workspaces": [...]` in root `package.json`            | ✅ per-manifest directory | Members under the root directory retained    |
+| **Go workspaces**                  | `use (...)` in root `go.work`                           | ✅ per-`go.mod` directory | Members under the root directory retained    |
+| **Maven multi-module**             | `<modules>...</modules>` in root `pom.xml`              | ✅ per-`pom.xml` directory | Modules under the root directory retained   |
+| **pyproject** (poetry/hatch/setuptools) | Varies per tool                                    | ✅ per-manifest directory | Directory-scoped, same rule                  |
+| **Gemfile**                        | No workspace concept in Ruby                            | ✅ per-`Gemfile.lock` directory | Root-directory gems retained; nested Gemfiles dropped |
+| **Composer / dart / etc.**         | Varies                                                  | ✅ per-manifest directory | Directory-scoped, same rule                  |
+
+Ruby has no workspace concept, so `root-only` and `strict` produce
+identical component sets on a Gemfile-only scan.
+
+Under `strict`, the same directory-scoped pass runs but skips
+main-modules: the root project's own dependencies ride along, its
+workspace members do not. Because a cargo workspace's root and members
+are indistinguishable by directory (they share one `Cargo.lock`),
+`strict` disambiguates them using m201's `waybill:is-workspace-root`
+flag. When no in-scope root carries that flag — single-crate projects,
+virtual manifests, every non-cargo ecosystem — `strict` deliberately
+degrades to `root-only` behaviour rather than inventing a new heuristic.
 
 ## Worked examples
 

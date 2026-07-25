@@ -6,7 +6,7 @@ release/
 *.rlib
 
 # eBPF build artifacts
-mikebom-ebpf/target/
+waybill-ebpf/target/
 
 # IDE
 .idea/
@@ -28,16 +28,19 @@ Thumbs.db
 perf.data*
 flamegraph.svg
 
-# Generated SBOM output from dev/test runs
-mikebom.cdx.json
-mikebom.spdx.json
-mikebom.spdx3-experimental.json
-mikebom.openvex.json
+# Generated SBOM output from dev/test runs. Tests that exercise the
+# m215 zero-boundary `--split` fallback resolve the default output
+# filename against the process CWD, so these can land anywhere cargo
+# runs a test binary from.
+waybill.cdx.json
+waybill.spdx.json
+waybill.spdx3-experimental.json
+waybill.openvex.json
 
 # Goldens diff-debug scratch files written by regression tests on
 # failure (alongside the pinned golden). Never commit; the pinned
 # `.json` is the source of truth.
-mikebom-cli/tests/fixtures/golden/**/*.actual.json
+waybill-cli/tests/fixtures/golden/**/*.actual.json
 
 # Local release-test staging (downloaded tarballs, per-alpha extracts)
 .release-test/

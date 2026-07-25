@@ -320,12 +320,22 @@ fn invalid_mode_value_fails_cli_parse() {
 
 #[test]
 fn compose_with_split_directory_yields_single_sbom() {
-    // On the polyglot fixture, root-only + split=directory yields
-    // exactly 1 sub-SBOM (root's directory group; nested projects
-    // dropped by the scope filter before split-directory sees them).
+    // SC-011: the two flags compose. On the polyglot fixture,
+    // `--project-discovery=root-only` drops both nested projects
+    // BEFORE `--split=directory` groups what remains, leaving a single
+    // boundary (the cargo root's directory group).
+    //
+    // With exactly one boundary left, m215's FR-009 fallback kicks in:
+    // split emits ONE ordinary SBOM at the default output filename
+    // rather than an N-way split + split-manifest.json. That fallback
+    // resolves its path relative to the process CWD, not to
+    // `--output-dir`, so the assertion below reads from the CWD we set.
+    // (`current_dir` is also what keeps this test from dropping a stray
+    // `waybill.cdx.json` into the repo root.)
     let out_dir = tempdir().expect("out tempdir");
     let home = tempdir().expect("home tempdir");
     let status = Command::new(waybill_bin())
+        .current_dir(out_dir.path())
         .env_remove("HOME")
         .env_remove("XDG_CACHE_HOME")
         .env("HOME", home.path())
@@ -345,13 +355,34 @@ fn compose_with_split_directory_yields_single_sbom() {
         .status()
         .expect("waybill invokes");
     assert!(status.success(), "SC-011: waybill MUST succeed under --project-discovery=root-only + --split=directory");
-    let count = std::fs::read_dir(out_dir.path())
+    let emitted: Vec<PathBuf> = std::fs::read_dir(out_dir.path())
         .expect("read out dir")
         .filter_map(|e| e.ok())
-        .filter(|e| e.file_name().to_string_lossy().ends_with(".cdx.json"))
-        .count();
+        .map(|e| e.path())
+        .filter(|p| p.to_string_lossy().ends_with(".cdx.json"))
+        .collect();
     assert_eq!(
-        count, 1,
-        "SC-011: root-only + split=directory on polyglot-nested fixture MUST yield 1 sub-SBOM; got {count}"
+        emitted.len(),
+        1,
+        "SC-011: root-only + split=directory on polyglot-nested fixture MUST yield exactly 1 SBOM; got {emitted:?}"
     );
+    // The scope filter must still have applied: neither nested project
+    // may appear in the surviving document.
+    let bytes = std::fs::read(&emitted[0]).expect("read emitted SBOM");
+    let doc: serde_json::Value =
+        serde_json::from_slice(&bytes).expect("emitted SBOM parses");
+    let purls = doc["components"]
+        .as_array()
+        .map(|a| {
+            a.iter()
+                .filter_map(|c| c["purl"].as_str().map(str::to_string))
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    for dropped in ["p220-nested-api", "p220-nested-worker"] {
+        assert!(
+            !purls.iter().any(|p| p.contains(dropped)),
+            "SC-011: {dropped} MUST be dropped by root-only before split runs; purls={purls:?}"
+        );
+    }
 }

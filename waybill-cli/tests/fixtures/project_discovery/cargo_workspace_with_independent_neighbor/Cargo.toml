@@ -5,3 +5,17 @@ resolver = "2"
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
+
+# The workspace root is itself a package (NOT a virtual manifest). That
+# is what makes `--project-discovery=strict` meaningful here: the cargo
+# reader stamps `waybill:is-cargo-workspace-toplevel` only when a
+# Cargo.toml carries BOTH `[package]` and `[workspace]`, and that is the
+# signal m220 uses to tell the workspace ROOT apart from its MEMBERS
+# (all of which share this manifest's Cargo.lock as their evidence path).
+[package]
+name = "p220-ws-root"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+itoa = "1.0"
