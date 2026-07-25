@@ -1,10 +1,6 @@
 # Waybill
 
-> **Waybill was previously known as Mikebom.** The project was renamed in v0.1.0-alpha.66. Historical release tags (`v0.1.0-alpha.7`..`v0.1.0-alpha.65`) and pre-rename SBOMs using `mikebom:*` annotations remain accessible; see [docs/migration/mikebom-to-waybill.md](docs/migration/mikebom-to-waybill.md) for the drop-in migration recipe.
-
-**NOTE: Waybill is pre-1.0 alpha. The CLI surface, output formats, and per-ecosystem coverage are still being stabilized; expect breaking changes between alpha releases, and expect additional ecosystem readers + binary-analysis surface to keep landing release-over-release.**
-
-A toolkit for working with software bills of materials end-to-end:
+A toolkit for working with software bills of materials (SBOMs) end-to-end:
 
 - **Generates SBOMs** from source trees, package caches, and container
   images with lockfile-aware dep-graph extraction, emitting **CycloneDX
@@ -21,7 +17,14 @@ A toolkit for working with software bills of materials end-to-end:
   workflows (license backfill, supplier resolution, VEX merging) are
   on the roadmap.
 
-> **Status: pre-1.0 alpha.** Pre-built binaries are published as GitHub
+
+> **Waybill was previously known as Mikebom.** The project was renamed in v0.1.0-alpha.66. Historical release tags (`v0.1.0-alpha.7`..`v0.1.0-alpha.65`) and pre-rename SBOMs using `mikebom:*` annotations remain accessible; see [docs/migration/mikebom-to-waybill.md](docs/migration/mikebom-to-waybill.md) for the drop-in migration recipe.
+
+> **Status: pre-1.0 alpha.** The CLI surface, output formats, and
+> per-ecosystem coverage are still being stabilized — expect breaking
+> changes between alpha releases, and expect additional ecosystem
+> readers + binary-analysis surface to keep landing
+> release-over-release. Pre-built binaries are published as GitHub
 > Release assets; no crates.io release yet.
 >
 > - **Stable** — `waybill sbom scan`, `waybill sbom verify`,
@@ -39,209 +42,19 @@ A toolkit for working with software bills of materials end-to-end:
 > for the per-flag operator reference and
 > [`CHANGELOG.md`](CHANGELOG.md) for what shipped when.
 
-## Why
+## Table of contents
 
-Scan-mode reads lockfiles + package manifests + per-module metadata to
-build a proper CycloneDX with:
-
-- **SHA-256 content hashes** on every component, from the bytes on
-  disk.
-- **Real dep-graph edges**, not a flat fan-out. Per-module `go.mod`
-  from the module cache drives the Go graph; `Cargo.lock` drives the
-  Rust graph; for Maven there's a full layered strategy
-  ([design notes](docs/design-notes.md)) that resolves through
-  `~/.m2/` caches, parent POMs, BOM imports, and — when needed —
-  deps.dev.
-- **CycloneDX evidence blocks** pointing back to the specific file
-  path and parser technique that identified each component, with
-  confidence scoring.
-- **Strict PURL encoding** that round-trips through the
-  `packageurl-python` reference implementation (including
-  `+` → `%2B` encoding across every ecosystem; `epoch=0` omission
-  on RPM; lexicographic qualifier sort).
-- **Compiled-binary identity across Linux, macOS, and Windows** —
-  every binary waybill scans carries a cross-platform identity in
-  the SBOM:
-  - **ELF (Linux):** `NT_GNU_BUILD_ID`, `DT_RPATH` / `DT_RUNPATH`,
-    `.gnu_debuglink` → `waybill:elf-build-id` /
-    `waybill:elf-runpath` / `waybill:elf-debuglink`. The build-id is
-    the canonical Linux binary-identity field used by `eu-unstrip`,
-    `coredumpctl`, `debuginfod`, and `*-dbgsym` packaging.
-  - **Mach-O (macOS / iOS):** `LC_UUID`, `LC_RPATH`, and minimum-OS
-    version (`LC_BUILD_VERSION` or `LC_VERSION_MIN_*`) →
-    `waybill:macho-uuid` / `waybill:macho-rpath` /
-    `waybill:macho-min-os`. The UUID is what `dwarfdump`,
-    `xcrun symbolicatecrash`, the macOS crash reporter, and every
-    `*.dSYM` bundle key on for symbol matching. Fat / universal
-    binaries report from the first slice.
-
-    Plus codesign metadata from the `LC_CODE_SIGNATURE` SuperBlob's
-    CodeDirectory: `waybill:macho-codesign-identifier` (e.g.
-    `com.apple.ls`), `waybill:macho-codesign-flags` (decoded names
-    from the flags bitfield — `hardened-runtime`,
-    `library-validation`, `adhoc`, etc.), and
-    `waybill:macho-codesign-team-id` (10-char Apple Team ID for
-    developer-signed binaries). This is what `codesign -dvv` reads.
-  - **PE (Windows):** CodeView pdb-id (`<guid>:<age>` from
-    `IMAGE_DIRECTORY_ENTRY_DEBUG`), machine type
-    (`IMAGE_FILE_HEADER.Machine`), and subsystem
-    (`IMAGE_OPTIONAL_HEADER.Subsystem`) → `waybill:pe-pdb-id` /
-    `waybill:pe-machine` / `waybill:pe-subsystem`. The pdb-id is
-    what Microsoft Symbol Server, Mozilla / Chromium symbol stores,
-    WinDbg, and drmingw use to locate matching `.pdb` files.
-
-  All twelve annotations emit symmetrically across CDX, SPDX 2.3,
-  and SPDX 3, making cross-image binary dedup, debug-symbol
-  correlation, and signing-identity provenance a direct lookup
-  regardless of OS.
-- **Go VCS provenance** — extracts `vcs.revision` (commit SHA),
-  `vcs.time` (RFC 3339 build timestamp), and `vcs.modified` (dirty-tree
-  flag) from every Go binary's BuildInfo. Surfaced as
-  `waybill:go-vcs-revision` / `waybill:go-vcs-time` /
-  `waybill:go-vcs-modified` on the main-module entry. Same data
-  `go version -m` shows, baked into the SBOM so consumers don't have
-  to shell out.
-- **Rust crate-closure provenance** — extracts the full build-time
-  crate dependency closure from the `.dep-v0` linker section that
-  [`cargo auditable build`](https://github.com/rust-secure-code/cargo-auditable)
-  embeds. Each crate becomes a `pkg:cargo/<name>@<version>` component
-  with `evidence-kind = "cargo-auditable"` and `confidence = "high"`
-  (build-time truth — distinct from `embedded-version-string`'s
-  heuristic tier), `parent_purl` cross-linking back to the file-level
-  binary. The binary itself gains a
-  `waybill:detected-cargo-auditable = true` cross-link annotation
-  (the Rust analog of `waybill:detected-go = true`). Cargo wrappers
-  shipped with **Debian Trixie+, Fedora 40+, Alpine Edge, and the
-  official Rust container images** auto-enable the embedding, so most
-  Rust binaries built in those environments surface their full crate
-  closure without source access. Cross-format: ELF / Mach-O / PE.
-- **Curated embedded-version-string detection** for **11
-  high-CVE-volume native libraries** statically-linked into compiled
-  binaries — the heuristic-tier counterpart to source-tree manifest
-  parsing. waybill walks the binary's read-only string region
-  (`.rodata` / `__TEXT,__cstring` / `.rdata` — never the full image,
-  to bound the false-positive surface) and recognises each library's
-  canonical version banner anchored at a NUL boundary:
-  - **Crypto / TLS:** OpenSSL, BoringSSL, LibreSSL, GnuTLS
-  - **Compression / data:** zlib, SQLite
-  - **Networking:** curl
-  - **Regex:** PCRE, PCRE2
-  - **Compiler / runtime:** LLVM, OpenJDK (handles both modern JEP-322
-    `21.0.1+12` and legacy Java-8 `8u362-b09`)
-
-  Each detection emits a `pkg:generic/<library>@<version>` component
-  with `waybill:evidence-kind = "embedded-version-string"` and
-  `waybill:confidence = "heuristic"`, so downstream CVE matchers
-  (Vex / OSV / NVD / Kusari Inspector) have pre-resolved coordinates
-  to query against — no need to know in advance which libraries a
-  binary statically links.
-
-On top of scan-mode, waybill adds:
-
-- **Signed DSSE envelope attestations** via sigstore (local-key or
-  keyless OIDC → Fulcio → Rekor).
-- **In-toto layout verification** for build-policy enforcement.
-- **Witness-collection v0.1** output compatible with `sbomit generate`
-  and any go-witness-aware verifier.
-
-## What kind of SBOM does waybill emit?
-
-A common question when comparing waybill's component count to
-trivy's, syft's, or another scanner's: **are we counting the
-same thing?** Often the answer is no — and the gap is a scope
-choice, not a bug. waybill self-describes its scope on every
-output so consumers can answer the question by reading the SBOM
-rather than reverse-engineering it from the component list.
-
-### Two axes
-
-waybill uses two orthogonal scope axes:
-
-**1. Document-level scope mode** — the answer to "what set of
-things is this SBOM trying to describe?"
-
-| Mode | Meaning | When |
-|---|---|---|
-| **Artifact** (default for `--image`) | On-disk components only — every emitted component has its bytes physically present in the scanned tree or image. CDX phase aggregation typically shows `operations` (deployed runtime) plus build-time tiers from installed packages. | Scanning a container image or a built artifact — answers "what's actually here right now?" |
-| **Manifest** (default for `--path`) | On-disk components plus declared-but-not-on-disk transitives (lockfile-pinned but absent from local caches, deps.dev-resolved, Maven cache-miss BFS). | Scanning a source tree — answers "what would this build pull in?" |
-
-The mode is controlled by `--include-declared-deps` (auto-on for
-`--path`, auto-off for `--image`; explicit override available).
-
-**2. Per-component lifecycle tier** — the answer to "where in
-the build/deploy lifecycle was this component observed?"
-Annotated as `waybill:sbom-tier` on every component, with five
-values:
-
-| Tier | Meaning |
-|---|---|
-| `design` | Declared but not pinned (e.g., `>=1.0` ranges in `requirements.txt`). |
-| `source` | Lockfile-pinned, byte-resolvable (e.g., `Cargo.lock`, `package-lock.json`). |
-| `build` | Captured during a live build event via eBPF tracing. |
-| `deployed` | Installed in the runtime image — dpkg, apk, rpm, populated `node_modules`, populated venv `dist-info`. |
-| `analyzed` | Artifact file on disk, identified by filename + content hash. |
-
-### How waybill self-describes scope in each format
-
-waybill ships scope information through native fields in every
-output format, not as `waybill:`-prefixed extensions, so any
-spec-compliant SBOM reader picks it up:
-
-| Format | Document-level scope hint | Per-component tier |
-|---|---|---|
-| **CycloneDX 1.6** | `metadata.lifecycles[]` (aggregated from per-component tiers, deduplicated, sorted) + `compositions[].aggregate` | `properties[].name = "waybill:sbom-tier"` |
-| **SPDX 2.3** | `creationInfo.comment` (free-text scope summary) | `packages[].annotations[]` with `waybill:sbom-tier` |
-| **SPDX 3.0.1** | `SpdxDocument.comment` (free-text scope summary) + `software_Sbom.software_sbomType[]` (native enum) | top-level `annotations[]` with `waybill:sbom-tier` |
-
-For the operator-facing **SBOM type** classification (CISA Design /
-Source / Build / Analyzed / Deployed / Runtime), per-format `jq`
-recipes, the four-column equivalence table, and the
-`--sbom-type <type>` operator-assert flag, see
-[`docs/reference/sbom-types.md`](docs/reference/sbom-types.md).
-
-### Industry / consumer terminology bridge
-
-When operators compare waybill's count to other scanners, the
-delta usually traces back to a different scope choice rather
-than a real coverage gap. As a rule of thumb:
-
-- waybill's `--image` output ≈ NTIA "deployed" SBOM. CDX phase
-  `operations` dominates. Tighter than tools that walk a build
-  cache (e.g. trivy's `~/.m2/`) but more accurate for "what's
-  actually running in this image."
-- waybill's `--path` output ≈ NTIA "build" SBOM. CDX phases
-  `pre-build` (lockfile entries) and `build` (eBPF-traced
-  events, when applicable) dominate. Closer to a manifest
-  view; useful for license compliance and full transitive
-  coverage.
-
-For the deeper rationale on why waybill takes this stance — and
-why class-presence verification deliberately prunes Maven shade-
-relocation ancestors that *aren't actually in the JAR* — see
-[`docs/design-notes.md`](docs/design-notes.md)'s "Scope: artifact vs
-manifest SBOM" section.
-
-### SBOM interpretation
-
-- [`docs/reference/sbom-format-mapping.md`](docs/reference/sbom-format-mapping.md)
-  — the parity catalog: every `waybill:*` annotation with its
-  per-format landing slot + KEEP-NO-NATIVE audit against
-  standards-native constructs (per Constitution Principle V).
-- [`docs/reference/cross-ecosystem-edges.md`](docs/reference/cross-ecosystem-edges.md)
-  — consumer guide to the `--experimental-cross-ecosystem-edges`
-  flag (m218 / waybill#633) and the three cross-ecosystem-inference
-  annotations (`waybill:cross-ecosystem-inference`,
-  `-ambiguous`, `-unresolved`).
-- [`docs/reference/split-modes.md`](docs/reference/split-modes.md)
-  — consumer + contributor guide to `--split[=<mode>]` (m219): the
-  new `--split=directory` grouping mode + the additive-optional
-  `split-manifest.json` `members[]` field + the extensibility
-  contract for future grouping strategies.
-- [`docs/reference/project-discovery.md`](docs/reference/project-discovery.md)
-  — consumer + contributor guide to `--project-discovery=<mode>`
-  (m220): the three modes (`all` / `root-only` / `strict`), the
-  per-ecosystem workspace-member detection matrix, the C140
-  doc-scope annotation, and the interaction matrix vs `--split`.
+- [Install](#install)
+- [Why Waybill?](#why-waybill)
+- [What kind of SBOM does Waybill emit?](#what-kind-of-sbom-does-waybill-emit)
+- [Supported ecosystems](#supported-ecosystems)
+- [Usage](#usage)
+- [Cross-tier correlation](#cross-tier-correlation)
+- [Experimental: build-time trace (Linux only)](#experimental-build-time-trace-linux-only)
+- [Documentation](#documentation)
+- [Workspace layout](#workspace-layout)
+- [Reporting issues and contributing](#reporting-issues-and-contributing)
+- [License](#license)
 
 ## Install
 
@@ -267,7 +80,7 @@ cargo binstall --git https://github.com/kusari-sandbox/waybill waybill
 
 `waybill-cli`'s [`[package.metadata.binstall]`](waybill-cli/Cargo.toml)
 block pins the URL template to the existing release-tarball naming so
-discovery is deterministic. Once waybill is published to crates.io
+discovery is deterministic. Once Waybill is published to crates.io
 (planned for a future milestone), bare `cargo binstall waybill` will
 work without the `--git` flag.
 
@@ -301,31 +114,85 @@ On macOS, run tracing inside the `waybill-dev` container
 
 ### Windows install
 
-> 🧪 **Experimental.** Windows builds are available as of milestone
-> 100, but are not feature-equivalent to Linux/macOS yet. Known gaps:
-> Linux-only OS package readers (dpkg/rpm/apk), HOME-env-var-derived
-> cache paths, OCI image cache atomic-rename, path-resolver pattern
-> matcher, and Python stdlib collapse. Full Windows runtime test
-> parity + production-code fixes are tracked in
-> [#210](https://github.com/kusari-sandbox/waybill/issues/210).
-> Do not rely on the Windows binary for production SBOM workflows
-> until #210 closes.
-
+🧪 **Experimental** (milestone 100; runtime parity tracked in
+[#210](https://github.com/kusari-sandbox/waybill/issues/210)).
 Download `waybill-v<version>-x86_64-pc-windows-msvc.zip` from the
-[latest release](https://github.com/kusari-sandbox/waybill/releases),
-extract `waybill.exe`, and place it on your `PATH`.
+[latest release](https://github.com/kusari-sandbox/waybill/releases)
+and place `waybill.exe` on your `PATH`. Known gaps and coverage
+details:
+[`docs/user-guide/installation.md`](docs/user-guide/installation.md#windows-install-experimental).
 
-```powershell
-waybill.exe sbom scan --path C:\Users\dev\my-project --output out.cdx.json
+### First scan
+
+```bash
+waybill sbom scan --path ./my-project --output project.cdx.json
+
+jq '.components | length, .dependencies | length' project.cdx.json
 ```
 
-The Windows build covers the cross-platform readers (cargo, npm, pip,
-gem, maven, golang) and the cross-format binary scanner (ELF, Mach-O,
-PE). Linux-specific OS-package readers (dpkg, rpm, apk), Docker-daemon
-scanning, and eBPF tracing are unavailable on Windows hosts; they no-op
-silently. Path strings in emitted SBOMs are forward-slash-normalized
-regardless of host OS so the same input produces the same SBOM bytes
-on Linux, macOS, and Windows.
+
+## Why Waybill?
+
+Many SBOM tools emit a flat component list with heuristic
+identifiers — good enough to eyeball, hard to build automation on.
+Waybill aims for SBOMs that are precise, verifiable, and
+self-describing. Scan-mode reads lockfiles + package manifests +
+per-module metadata to build a proper CycloneDX with:
+
+- **SHA-256 content hashes** on every component, from the bytes on
+  disk.
+- **Real dep-graph edges**, not a flat fan-out. Per-module `go.mod`
+  from the module cache drives the Go graph; `Cargo.lock` drives the
+  Rust graph; for Maven there's a full layered strategy
+  ([design notes](docs/design-notes.md)) that resolves through
+  `~/.m2/` caches, parent POMs, BOM imports, and — when needed —
+  deps.dev.
+- **CycloneDX evidence blocks** pointing back to the specific file
+  path and parser technique that identified each component, with
+  confidence scoring.
+- **Strict PURL encoding** that round-trips through the
+  `packageurl-python` reference implementation (including
+  `+` → `%2B` encoding across every ecosystem; `epoch=0` omission
+  on RPM; lexicographic qualifier sort).
+- **Compiled-binary identity across Linux, macOS, and Windows** —
+  ELF build-id, Mach-O UUID + codesign metadata, and PE pdb-id on
+  every scanned binary, emitted symmetrically across all three
+  output formats. Plus **Go VCS provenance** (commit / timestamp /
+  dirty flag from BuildInfo), **Rust crate-closure provenance**
+  (from `cargo auditable` builds), and **curated
+  embedded-version-string detection** for 11 high-CVE-volume native
+  libraries (OpenSSL, zlib, SQLite, curl, …) statically linked into
+  binaries. Full reference:
+  [`docs/reference/binary-identity.md`](docs/reference/binary-identity.md).
+
+On top of scan-mode, Waybill adds:
+
+- **Signed DSSE envelope attestations** via sigstore (local-key or
+  keyless OIDC → Fulcio → Rekor).
+- **In-toto layout verification** for build-policy enforcement.
+- **Witness-collection v0.1** output compatible with `sbomit generate`
+  and any go-witness-aware verifier.
+
+## What kind of SBOM does Waybill emit?
+
+Comparing Waybill's component count to trivy's or syft's? The gap is
+usually a **scope choice, not a bug** — and Waybill self-describes its
+scope on every output. Two orthogonal axes:
+
+- **Document-level scope mode:** *artifact* (on-disk components only;
+  default for `--image`) vs *manifest* (plus declared-but-not-on-disk
+  transitives; default for `--path`). Controlled by
+  `--include-declared-deps`.
+- **Per-component lifecycle tier:** `waybill:sbom-tier` on every
+  component — `design` / `source` / `build` / `deployed` / `analyzed`.
+
+Rule of thumb: `--image` output ≈ NTIA "deployed" SBOM; `--path`
+output ≈ NTIA "build" SBOM. Full details — the scope tables, how each
+output format carries the scope natively, and the terminology bridge
+to other scanners — in
+[`docs/reference/sbom-scopes.md`](docs/reference/sbom-scopes.md); the
+CISA SBOM-type classification and `--sbom-type` flag in
+[`docs/reference/sbom-types.md`](docs/reference/sbom-types.md).
 
 ## Supported ecosystems
 
@@ -360,340 +227,75 @@ property, gated on bytecode-presence verification so
 declared-but-not-relocated ancestors do not inflate the SBOM. See
 [`specs/009-maven-shade-deps/spec.md`](specs/009-maven-shade-deps/spec.md).
 
-**Go: build the binary for richer per-component classification.**
-A source-only scan (`waybill sbom scan --path .` on a Go project
-before `go build`) emits the full `go.sum` closure — every module
-the resolver ever fetched, including build-tag alternatives the
-linker DCE'd and test scaffolding never linked. With the binary
-present, waybill keeps the same components but annotates each one
-the linker didn't embed with `waybill:not-linked = true`, so
-consumers get both the broad lockfile view AND a precise
-"what shipped" filter on a single SBOM. On `apigatewayv2/config`
-(typical service): 65 modules with binary, 24 of them carrying
-`waybill:not-linked`; consumers wanting the binary-tight view
-filter on the property and see ~41:
+**Go tip:** run `go build` before scanning — with the binary present,
+modules the linker didn't embed get `waybill:not-linked = true`,
+giving both the broad lockfile view and a strict "what shipped"
+filter in one SBOM. Workflow details in
+[`docs/ecosystems.md`](docs/ecosystems.md#golang).
+
+## Usage
 
 ```bash
-go build .                                    # produces ./apigatewayv2-config
-waybill sbom scan --path . --output app.cdx.json
-# → 65 components, 24 carrying waybill:not-linked = true
-jq '[.components[] | select(.properties[]? | select(.name=="waybill:not-linked") | not)]' app.cdx.json
-# → strict "what shipped" view (~41 components, no annotation noise)
-```
-
-When no binary is found, waybill emits a one-line `tracing::info`
-hint pointing you at this workflow — no `waybill:not-linked` data
-is computed in that case.
-
-## Quickstart
-
-Produce a CycloneDX 1.6 SBOM from any source tree:
-
-```bash
-./target/release/waybill sbom scan \
-  --path ./my-project \
-  --output project.cdx.json
-
-jq '.components | length, .dependencies | length' project.cdx.json
-```
-
-## Stable recipes
-
-**1. Scan a source tree.** Any host, no privileges. Lockfile-driven
-dep graph. `--path` defaults to *manifest scope*
-(`--include-declared-deps` is auto-on).
-
-```bash
+# Scan a source tree (any host, no privileges; manifest scope by default)
 waybill sbom scan --path ./my-project --output project.cdx.json
-```
 
-**2. Scan a container image.** Defaults to *artifact scope*
-(on-disk presence required). Pass `--include-declared-deps` for the
-manifest view. `--image` accepts either an OCI reference (`alpine:3.19`,
-`gcr.io/distroless/static-debian12:latest`, or any other registry path)
-or a `docker save` tarball on disk; waybill auto-detects which.
-
-For OCI references, waybill checks the **local docker daemon's cache
-first** and falls back to a registry pull on miss — matching `docker
-run` semantics and the trivy / syft default. So if you've already
-done `docker pull alpine:3.19` (or are scanning an image you just
-built locally), no network round-trip happens.
-
-```bash
-# OCI ref — local docker first, registry fallback.
+# Scan a container image (artifact scope; local docker cache first, registry fallback)
 waybill sbom scan --image alpine:3.19 --output alpine.cdx.json
 
-# Force a fresh registry fetch (skip the local docker cache):
-waybill sbom scan --image alpine:3.19 --image-src remote \
-    --output alpine.cdx.json
-
-# Pre-extracted tarball still works.
-docker save alpine:3.19 -o alpine.tar
-waybill sbom scan --image alpine.tar --output alpine.cdx.json
-```
-
-Authenticated registries are supported via `~/.docker/config.json`
-(both `Bearer`-style — Docker Hub, GHCR, gcr.io — and `Basic`-style
-— AWS ECR — challenges). Run `docker login <registry>` (or
-`aws ecr get-login-password | docker login --username AWS …` for ECR)
-once and waybill picks up the credentials.
-
-**OCI Referrers API (milestone 186 / #442).** When a registry
-publishes a pre-generated SBOM via the OCI Distribution Spec v1.1
-Referrers API (e.g., `docker buildx --sbom=true` output), the
-`--sbom-source` flag lets waybill prefer it over re-scanning the
-image bytes:
-
-```bash
-# Prefer a referrer if published, fall through to scan otherwise.
-waybill sbom scan --image ghcr.io/example/app:v1 \
-    --sbom-source either \
-    --format cyclonedx-json --output app.cdx.json
-
-# Compliance: require a matching upstream SBOM (fail if absent).
-waybill sbom scan --image ghcr.io/example/app:v1 \
-    --sbom-source referrer \
-    --format cyclonedx-json --output app.cdx.json
-
-# Default (`scan`) preserves pre-m186 behavior byte-identically —
-# no network activity on the Referrers endpoint.
-waybill sbom scan --image ghcr.io/example/app:v1 \
-    --format cyclonedx-json --output app.cdx.json
-```
-
-Referrer content is emitted byte-identically to preserve any
-upstream signer's Cosign / in-toto DSSE contracts. Full flag
-reference: `specs/186-oci-referrers-sbom/quickstart.md`.
-
-**3. Scan a package cache.** Treats cached bytes as present-on-disk;
-useful for CI cache audits.
-
-```bash
-waybill sbom scan --path ~/.cargo/registry/cache --output cargo.cdx.json
-```
-
-**4. Scan a Maven fat-jar and see shaded ancestors.** With feature
-009 the SBOM emits one nested component per shade-relocated ancestor
-whose bytecode is actually in the JAR.
-
-```bash
-waybill sbom scan --path ./target/ --output app.cdx.json
-
-jq '
-  .components[]
-  | select(.purl | test("pkg:maven/"))
-  | .components // []
-  | map(select(.properties // [] | any(.name == "waybill:shade-relocation" and .value == "true")))
-  | map({purl, bom_ref: ."bom-ref"})
-' app.cdx.json
-```
-
-**5. Verify a signed DSSE attestation.**
-
-```bash
+# Verify a signed DSSE attestation
 waybill sbom verify some.dsse.json --public-key signer.pub
-# → PASS — verified with public_key sha256:…
 ```
 
-**6. Generate a starter in-toto layout bound to a functionary key.**
-
-```bash
-waybill policy init --functionary-key signer.pub --output layout.json
-waybill sbom verify some.dsse.json --layout layout.json
-```
-
-**7. Enrich an SBOM with an RFC 6902 JSON Patch.** Each patch is
-recorded as a `waybill:enrichment-patch[N]` property on the BOM
-metadata so the provenance of every change survives.
-
-```bash
-waybill sbom enrich project.cdx.json \
-  --patch add-supplier.json --author you@example.com
-```
-
-**Common flags** across every `sbom *` subcommand: `--offline`,
-`--exclude-scope`, `--include-declared-deps`,
-`--include-legacy-rpmdb` (env: `WAYBILL_INCLUDE_LEGACY_RPMDB=1`).
-See [`docs/user-guide/cli-reference.md`](docs/user-guide/cli-reference.md)
-for the full per-flag reference and `waybill sbom <verb> --help` for the
-canonical source.
+Many more recipes — authenticated registries, the OCI Referrers API
+(`--sbom-source`), package-cache scans, Maven fat-jar shade analysis,
+`sbom enrich` JSON patches, in-toto layouts, Kubernetes workload
+tagging — in
+[`docs/user-guide/quickstart.md`](docs/user-guide/quickstart.md).
+Per-flag reference:
+[`docs/user-guide/cli-reference.md`](docs/user-guide/cli-reference.md).
 
 ## Cross-tier correlation
 
 When the same software produces multiple SBOMs across its lifecycle —
-a source SBOM scanned from the repo, a build SBOM captured during
-compilation, and an image SBOM scanned from the resulting container —
-external consumers need a way to tell *which goes with which*. waybill
-ships two complementary mechanisms.
+source, build, and image — Waybill ships the identity plumbing to tie
+them together:
 
-### Stable identifiers (auto-detected)
-
-waybill attaches scheme-prefixed identifiers to every SBOM it emits.
-The five built-in schemes (`repo:`, `git:`, `image:`, `attestation:`,
-`subject:`) are auto-detected when possible; any operator-defined
-scheme like `acme_corp_id:` rides through unchanged.
-
-**Source-tier and build-tier auto-detect from a git checkout.**
-No flags required. `repo:` comes from `git remote get-url` (origin
-→ upstream → first-listed); the build-tier scan additionally captures
-a commit-anchored `git:` from `git rev-parse HEAD`.
-
-```bash
-cd ~/projects/my-rust-app  # any git checkout
-
-# Source-tier — auto-detects `repo:`
-waybill sbom scan --path . --output source.cdx.json
-
-# Build-tier — auto-detects `repo:` and `git:<repo-url>#<sha>`
-waybill trace run -- ./build.sh
-```
-
-**Image-tier auto-detects `image:`** from the resolved registry
-reference + digest:
-
-```bash
-waybill sbom scan --image my-app:v1 --output image.cdx.json
-```
-
-**External consumers correlate by reading identifier fields directly**
-from `metadata.component.externalReferences[]` (CDX) /
-`Package.externalRefs[]` (SPDX 2.3) / `Element.externalIdentifier[]`
-(SPDX 3):
-
-```bash
-jq '.metadata.component.externalReferences[]
-    | select(.type == "vcs" or .type == "distribution")
-    | {url, comment}' source.cdx.json
-# {
-#   "url": "git@github.com:acme/my-rust-app.git",
-#   "comment": "auto-detected from git remote `origin`"
-# }
-```
-
-Manual overrides (`--repo`, `--git-ref`, `--image-id`,
-`--attestation`, `--id <scheme>=<value>`) win over auto-detect on a
-per-scheme basis.
-
-**Credentials in git remote URLs are stripped by default.** If your
-`origin` is configured with embedded credentials
-(`https://USER:TOKEN@github.com/...`, common in CI runners using
-GitHub App tokens or deploy tokens), the userinfo is stripped before
-the URL is embedded in the SBOM — no token leakage in published
-artifacts. Pass `--keep-credentials-in-identifiers` to opt out for
-non-sensitive credentials. Manual flag values are emitted verbatim;
-the operator typed them, the tool respects that.
-
-See [`docs/reference/identifiers.md`](docs/reference/identifiers.md)
-for the full wire format and per-format extraction recipes.
-
-### Cross-tier handshake via `subject:`
-
-The build-tier `subject:` identifier completes the content-addressable
-correlation chain. When `waybill trace run` produces an output binary
-with hash `X`, the build SBOM body carries `subject:sha256:X` as a
-first-class identifier. When the resulting image is scanned with
-`waybill sbom scan --image foo:v1`, the image SBOM carries
-`image:foo:v1@sha256:X` — the `X` portion matches by string.
-
-```bash
-# Build (auto-detects subject:sha256:X from in-toto attestation subjects)
-waybill trace run --signing-key ./key \
-    --sbom-output build.cdx.json \
-    -- docker build -t my-app:v1 .
-
-# Image (auto-detects image:my-app:v1@sha256:X)
-waybill sbom scan --image my-app:v1 --output image.cdx.json
-
-# External tool walks: image's image: digest matches build's subject: hex →
-# build SBOM is found by string match, no waybill resolver needed.
-```
-
-External SBOM-store consumers walk `image-SBOM.components[].hashes[].sha256
-== X → SBOM whose subject:sha256:X matches → that build SBOM's git: commit
-→ matching source SBOM` purely by string match — no waybill-side resolver.
-
-### Per-component user-defined identifiers
-
-Attach internal asset IDs (or any operator-scoped identifier) to
-specific components via `--component-id <PURL>=<scheme>:<value>`.
-Identifiers ride standards-native per-component carriers (CDX
-`components[].properties[]`, SPDX 2.3 `Package.externalRefs[PERSISTENT-ID]`,
-SPDX 3 `Element.externalIdentifier[]`) — any SBOM-aware tool reads
-them as ordinary first-class data.
-
-```bash
-waybill sbom scan --path . \
-    --component-id "pkg:cargo/serde@1.0.0=kusari-id:asset-shared-lib-v2" \
-    --component-id "pkg:cargo/myapp@0.5.1=acme-asset:myapp-prod-001"
-```
-
-Built-in scheme names (`repo`, `git`, `image`, `attestation`, `subject`)
-are reserved for the document level and rejected at parse time on
-`--component-id`. The flag is repeatable; selectors that match zero
-components log a warning and the scan continues.
-
-### Cross-tier SBOM binding (`--bind-to-source`)
-
-A binding is a content-hashed reference embedded in one SBOM that
-points to another. Use it when you want a verifier to be able to
-re-derive that "this image SBOM was built from *this exact* source
-SBOM file" without trusting filename heuristics.
-
-```bash
-# Bind an image SBOM to the source SBOM it was built from.
-waybill sbom scan --image my-app:v1 \
-    --bind-to-source ./source.cdx.json \
-    --output image.cdx.json
-
-# Verify a binding from anywhere — re-hashes the source SBOM and
-# checks against the embedded reference.
-waybill sbom verify-binding \
-    --image-sbom image.cdx.json \
-    --source-sbom ./source.cdx.json
-# → PASS — source-document binding verified
-
-# Trace the chain across an arbitrary set of SBOMs without manual
-# lookups (matches by content hash + identifier overlap):
-waybill sbom trace-binding \
-    --component-purl "pkg:cargo/serde@1.0.0" \
-    --image-sbom image.cdx.json \
-    --candidate-sources-dir ./sboms/
-```
-
-The binding annotation lives in standards-native carriers
-(`waybill:source-document-binding`) so any SPDX/CDX-aware tool can
-extract it. See
-[`docs/reference/cross-tier-binding.md`](docs/reference/cross-tier-binding.md)
-for the full schema and verifier protocol.
+- **Stable identifiers**, auto-detected (`repo:` from the git remote,
+  `git:<url>#<sha>` at build time, `image:<ref>@<digest>` on image
+  scans) and rideable by any operator-defined scheme. Credentials in
+  remote URLs are stripped by default. See
+  [`docs/reference/identifiers.md`](docs/reference/identifiers.md).
+- **Content-addressed handshake** — the build SBOM carries
+  `subject:sha256:X` for its output binary; the image SBOM's digest
+  matches by plain string. No Waybill-side resolver needed.
+- **Explicit binding** — `--bind-to-source` embeds a content-hashed
+  reference to the source SBOM; `sbom verify-binding` /
+  `sbom trace-binding` re-derive and walk the chain. See
+  [`docs/reference/cross-tier-binding.md`](docs/reference/cross-tier-binding.md).
+- **Per-component IDs** — attach internal asset identifiers with
+  `--component-id <PURL>=<scheme>:<value>`.
 
 ## Experimental: build-time trace (Linux only)
 
-> **Status:** experimental. Requires CAP_BPF + CAP_PERFMON. Adds ~2–3×
-> wall-clock overhead on syscall-heavy builds. Coverage varies by
-> syscall path (gaps on `openat2` / `io_uring`). For most SBOM use
-> cases, prefer the scan recipes above — they produce richer output
-> with no privilege requirements. Trace-mode exists for workflows
-> where the SBOM needs to be provably bound to a specific build event
-> (attestation-first provenance).
+eBPF-based capture that binds an SBOM + signed attestation to a
+specific build event. Requires CAP_BPF + CAP_PERFMON; ~2-3x wall-clock
+overhead. For most SBOM use cases prefer the scan pipeline above.
 
 ```bash
-# Trace a cargo build and produce an SBOM + signed attestation in one pass.
 waybill trace run \
   --signing-key ./signing.key \
   --sbom-output ripgrep.cdx.json \
   --attestation-output ripgrep.attestation.dsse.json \
   -- cargo install ripgrep
 
-# Then verify from anywhere (works on macOS; verify is pure-scan):
+# Verify from anywhere (verify is pure-scan, works on macOS):
 waybill sbom verify ripgrep.attestation.dsse.json --public-key ./signing.pub
 ```
 
-See [`docs/architecture/signing.md`](docs/architecture/signing.md),
-[`docs/architecture/attestations.md`](docs/architecture/attestations.md),
-and
-[`specs/006-sbomit-suite/quickstart.md`](specs/006-sbomit-suite/quickstart.md)
-for keyless (Fulcio/Rekor) flows, policy layouts, and the
-witness-v0.1 attestation format (compatible with `sbomit generate`).
+Keyless (Fulcio/Rekor) flows, policy layouts, and the witness-v0.1
+format:
+[`docs/architecture/signing.md`](docs/architecture/signing.md),
+[`docs/architecture/attestations.md`](docs/architecture/attestations.md).
 
 ## Documentation
 
@@ -704,6 +306,12 @@ witness-v0.1 attestation format (compatible with `sbomit generate`).
   license resolution, in-toto attestation schema.
 - **[Ecosystems](docs/ecosystems.md)** — per-ecosystem coverage
   matrix (authoritative).
+- **[SBOM scopes reference](docs/reference/sbom-scopes.md)** —
+  artifact vs manifest scope, lifecycle tiers, terminology bridge
+  to other scanners.
+- **[Binary identity reference](docs/reference/binary-identity.md)** —
+  ELF/Mach-O/PE identity annotations, Go VCS provenance,
+  cargo-auditable closures, embedded-version-string detection.
 - **[Identifiers reference](docs/reference/identifiers.md)** — the
   four built-in schemes, auto-detection rules, per-format wire
   carriers, decode recipes for external consumers.
@@ -716,6 +324,11 @@ witness-v0.1 attestation format (compatible with `sbomit generate`).
   trace flows.
 - **[SBOM format mapping](docs/reference/sbom-format-mapping.md)** —
   per-feature carrier matrix across CDX 1.6, SPDX 2.3, and SPDX 3.
+- **[Project discovery reference](docs/reference/project-discovery.md)**
+  — `--project-discovery=<mode>`: the three modes
+  (`all` / `root-only` / `strict`), the per-ecosystem
+  workspace-member detection matrix, and the interaction matrix
+  vs `--split`.
 - **[Conformance harness guide](docs/reference/conformance-harness-guide.md)**
   — for external implementers writing cross-format conformance suites.
 - **[Design notes](docs/design-notes.md)** — living architectural

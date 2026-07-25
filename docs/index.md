@@ -1,4 +1,4 @@
-# waybill documentation
+# Waybill documentation
 
 **New here?** Read
 [Installation](user-guide/installation.md) → [Quickstart](user-guide/quickstart.md).
@@ -7,7 +7,7 @@ That's enough to produce your first CycloneDX SBOM on any supported OS.
 Two tracks for everyone else. Pick the one that matches what you're
 trying to do.
 
-## Track 1 — Use waybill
+## Track 1 — Use Waybill
 
 Start here if you want to run the tool on a real codebase, container, or build.
 
@@ -21,7 +21,7 @@ are stable and run on any OS. `trace capture` / `trace run` are **experimental,
 Linux-only** — they add ~2-3× wall-clock overhead and require CAP_BPF +
 CAP_PERFMON. For most SBOM use cases, prefer the scan pipeline.
 
-## Track 2 — Understand how waybill works
+## Track 2 — Understand how Waybill works
 
 Start here if you want to know *why* a particular PURL, license, or CPE came out
 the way it did, or contribute to the pipeline.
@@ -38,6 +38,12 @@ the way it did, or contribute to the pipeline.
 
 ## Reference material
 
+- [SBOM scopes](reference/sbom-scopes.md) — what kind of SBOM Waybill
+  emits: artifact vs manifest scope, per-component lifecycle tiers, and
+  the terminology bridge to other scanners.
+- [Binary identity](reference/binary-identity.md) — ELF / Mach-O / PE
+  identity annotations, Go VCS provenance, cargo-auditable crate
+  closures, and embedded-version-string detection.
 - [Identifiers](reference/identifiers.md) — the four-layer identity model
   (`repo:` / `git:` / `image:` / `attestation:` / user-defined) and per-flag
   identity behavior.
@@ -48,8 +54,8 @@ the way it did, or contribute to the pipeline.
   `verify-binding`, `trace-binding`, and the binding-hash-v1 algorithm.
 - [Cross-format SBOM mapping](reference/sbom-format-mapping.md) — per-feature
   carrier matrix across CDX 1.6, SPDX 2.3, and SPDX 3.
-- [Reading a waybill SBOM](reference/reading-a-waybill-sbom.md) — consumer-facing
-  guide to waybill-emitted signals (what they mean, where to find them per
+- [Reading a Waybill SBOM](reference/reading-a-waybill-sbom.md) — consumer-facing
+  guide to Waybill-emitted signals (what they mean, where to find them per
   format, how to use them). Cross-references the
   [SBOM format mapping](reference/sbom-format-mapping.md) catalog for full
   per-row wire-shape detail.

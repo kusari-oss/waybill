@@ -1,18 +1,18 @@
 # Installation
 
-waybill has two modes with different runtime requirements.
+Waybill has two modes with different runtime requirements.
 
 | Mode | Subcommands | Needs |
 |---|---|---|
 | **Scanning** | `waybill sbom scan`, `waybill sbom verify`, `waybill sbom enrich`, `waybill sbom verify-binding`, `waybill sbom trace-binding`, `waybill policy init` | Any OS Rust runs on. No privilege. No eBPF. |
 | **Tracing** | `waybill trace capture`, `waybill trace run` | Linux kernel ≥ 5.8, eBPF privilege (`--privileged` container, root, or CAP_BPF + CAP_PERFMON) |
 
-If you only need the scanning surface, waybill runs natively on macOS,
+If you only need the scanning surface, Waybill runs natively on macOS,
 Linux, or Windows (the Windows binary is 🧪 [experimental](https://github.com/kusari-sandbox/waybill/issues/210); WSL2 also works for both scanning and tracing). `trace` requires Linux with eBPF.
 
 ## Pre-built binaries (recommended)
 
-Every waybill release ships per-platform tarballs as GitHub Release assets.
+Every Waybill release ships per-platform tarballs as GitHub Release assets.
 
 Discover the latest release:
 
@@ -46,8 +46,21 @@ that matches your platform.
 > Do not rely on the Windows binary for production SBOM workflows
 > until #210 closes.
 
-For the latest Windows x86_64 binary, follow the [Windows install
-instructions in the README](../../README.md#windows-install).
+Download `waybill-v<version>-x86_64-pc-windows-msvc.zip` from the
+[latest release](https://github.com/kusari-sandbox/waybill/releases),
+extract `waybill.exe`, and place it on your `PATH`.
+
+```powershell
+waybill.exe sbom scan --path C:\Users\dev\my-project --output out.cdx.json
+```
+
+The Windows build covers the cross-platform readers (cargo, npm, pip,
+gem, maven, golang) and the cross-format binary scanner (ELF, Mach-O,
+PE). Linux-specific OS-package readers (dpkg, rpm, apk), Docker-daemon
+scanning, and eBPF tracing are unavailable on Windows hosts; they no-op
+silently. Path strings in emitted SBOMs are forward-slash-normalized
+regardless of host OS so the same input produces the same SBOM bytes
+on Linux, macOS, and Windows.
 
 ## Build from source
 
@@ -76,7 +89,7 @@ from the repo root produces the CLI binary.
 
 ## Production container image (multi-arch)
 
-Each `v0.1.0-alpha.*` release publishes a multi-arch distroless container image to GitHub Container Registry. The image is signed with cosign keyless via Sigstore (matches waybill's existing attestation philosophy) and is suitable for Kubernetes Pod Security Standards "restricted" profiles — runs as non-root user `65532`, no shell, no package manager.
+Each `v0.1.0-alpha.*` release publishes a multi-arch distroless container image to GitHub Container Registry. The image is signed with cosign keyless via Sigstore (matches Waybill's existing attestation philosophy) and is suitable for Kubernetes Pod Security Standards "restricted" profiles — runs as non-root user `65532`, no shell, no package manager.
 
 **Pull:**
 

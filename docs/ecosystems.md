@@ -1,7 +1,7 @@
 # Ecosystems
 
-Per-ecosystem coverage for all nine ecosystems waybill supports. Use this
-page to answer *"does waybill see my packages the way I expect"* before
+Per-ecosystem coverage for all nine ecosystems Waybill supports. Use this
+page to answer *"does Waybill see my packages the way I expect"* before
 diving into the [architecture docs](architecture/overview.md).
 
 ## Coverage matrix
@@ -54,7 +54,7 @@ listing every entry, and a scan-end `tracing::info!` line surfaces
 `excluded_entries=N excluded_literals=N excluded_patterns=N
 suppressed_dirs=N` for operator inspection (milestone 118 / #343).
 
-Built-in skip-list precedence: waybill-internal skips (`.git`, `target`,
+Built-in skip-list precedence: Waybill-internal skips (`.git`, `target`,
 `node_modules`, `.cargo`, `__pycache__`, `.venv`) take precedence; an
 operator cannot re-include them via `--exclude-path`. See
 [`docs/user-guide/cli-reference.md` § `--exclude-path`](user-guide/cli-reference.md#--exclude-path-path_or_pattern)
@@ -121,7 +121,7 @@ deb and rpm.
 transitive graph — it records only what each package declares.
 
 **Hashes:** none. apk's installed DB doesn't carry per-package content
-hashes waybill can use.
+hashes Waybill can use.
 
 **Enrichment:**
 - deps.dev: skipped (not in deps.dev's supported ecosystems).
@@ -296,18 +296,18 @@ for the plan.
 
 **Build-inclusion clarity (milestone 112):** `go.sum` routinely retains
 entries for modules outside the final build list (test-only transitives,
-pruned graph leftovers). Modules that waybill could only attach via the
+pruned graph leftovers). Modules that Waybill could only attach via the
 lower-fidelity fallback paths (the milestone-091 `go.sum` flat fallback,
 recognizable by `waybill:resolver-step: go-sum-fallback`) get two layers
 of treatment:
 
 1. **Always-on marker:** every fallback-attached module carries
-   `waybill:build-inclusion: unknown` — an explicit "waybill cannot
+   `waybill:build-inclusion: unknown` — an explicit "Waybill cannot
    prove this module participates in the build" signal, instead of
    silently looking like a confirmed dependency. No native scope field
    is set (CDX `scope` absent ≠ `excluded`).
 2. **Default-on classification:** when a `go` toolchain is found on
-   PATH, waybill runs `go mod why -m -vendor` against each main module
+   PATH, Waybill runs `go mod why -m -vendor` against each main module
    (modules batched in chunks of 20, 60-second total budget shared
    across the scan) and upgrades the marker per verdict:
    - outside the build graph → `waybill:build-inclusion: not-needed` +
@@ -383,6 +383,32 @@ a VCS worktree emit no `waybill:go-vcs-*` annotations.
 - ClearlyDefined: concluded licenses via CD's `golang` / `github`
   provider.
 
+### Build the binary for richer per-component classification
+
+A source-only scan (`waybill sbom scan --path .` on a Go project
+before `go build`) emits the full `go.sum` closure — every module
+the resolver ever fetched, including build-tag alternatives the
+linker DCE'd and test scaffolding never linked. With the binary
+present, Waybill keeps the same components but annotates each one
+the linker didn't embed with `waybill:not-linked = true`, so
+consumers get both the broad lockfile view AND a precise
+"what shipped" filter on a single SBOM. On `apigatewayv2/config`
+(typical service): 65 modules with binary, 24 of them carrying
+`waybill:not-linked`; consumers wanting the binary-tight view
+filter on the property and see ~41:
+
+```bash
+go build .                                    # produces ./apigatewayv2-config
+waybill sbom scan --path . --output app.cdx.json
+# → 65 components, 24 carrying waybill:not-linked = true
+jq '[.components[] | select(.properties[]? | select(.name=="waybill:not-linked") | not)]' app.cdx.json
+# → strict "what shipped" view (~41 components, no annotation noise)
+```
+
+When no binary is found, Waybill emits a one-line `tracing::info`
+hint pointing you at this workflow — no `waybill:not-linked` data
+is computed in that case.
+
 ---
 
 ## maven
@@ -435,7 +461,7 @@ is deferred.
 
 **Shade-plugin fat-jars (feature 009):**
 When a JAR contains `META-INF/DEPENDENCIES` (the Apache
-`maven-dependency-plugin`'s declared-transitive manifest), waybill
+`maven-dependency-plugin`'s declared-transitive manifest), Waybill
 parses it into ancestor coords and emits one nested component per
 ancestor under the enclosing JAR's primary coord, tagged
 `waybill:shade-relocation = true`. Emission is gated on
@@ -452,7 +478,7 @@ FR-002b.
 
 **Known limitations:**
 - `<exclusions>` not parsed. If a project excludes a transitive via
-  `<exclusions>`, waybill still emits the excluded coord.
+  `<exclusions>`, Waybill still emits the excluded coord.
 - Version ranges (`[1.0,2.0)`) not resolved.
 - `<profiles>` ignored — profile-conditional deps never emit.
 - Plugin-section deps (`<build><plugins>`) ignored — not runtime deps.
@@ -541,7 +567,7 @@ header comment is stripped before `serde_json::from_str` via the shared
 `npm/jsonc.rs` helper. Parses `lockfileVersion`, `workspaces`,
 `packages`, and `overrides` keys; unknown keys are silently ignored.
 
-**Workspace support:** when `workspaces` declares members, waybill
+**Workspace support:** when `workspaces` declares members, Waybill
 emits a synthetic workspace-root component (PURL: `pkg:generic/<name>`,
 `waybill:component-role: "workspace-root"`) plus a `main-module`
 component per member. Intra-workspace edges are harvested when a
@@ -645,7 +671,7 @@ giving the resolved dep graph. Workspace projects additionally
 declare members under `[tool.uv.workspace]` in the root
 `pyproject.toml`.
 
-**Workspace support:** waybill emits a synthetic workspace-root
+**Workspace support:** Waybill emits a synthetic workspace-root
 component (PURL: `pkg:generic/<name>`,
 `waybill:component-role: "workspace-root"`) plus a `main-module`
 per member. Intra-workspace dep edges are surfaced automatically
@@ -680,7 +706,7 @@ four-step version-resolution ladder.
 
 **PURL format:** `pkg:nuget/<name>@<version>` — names case-preserved
 from the source (NuGet is case-insensitive on the registry but
-waybill records what the source says; dedup handles cross-source
+Waybill records what the source says; dedup handles cross-source
 collation).
 
 **Lifecycle scope:** driven by `PrivateAssets`, `IncludeAssets`,
@@ -743,7 +769,7 @@ Canonicalization:
 **Dep graph:** full tree from rpmdb `REQUIRES` tags.
 
 **Hashes:** **none.** rpmdb doesn't record per-package content hashes
-waybill can use. This is why rpm scans score 6.1/10 on sbomqs (Integrity
+Waybill can use. This is why rpm scans score 6.1/10 on sbomqs (Integrity
 0/10) — the ecosystem itself doesn't provide the data.
 
 **Enrichment:**
@@ -774,7 +800,7 @@ waybill can use. This is why rpm scans score 6.1/10 on sbomqs (Integrity
 + `waybill-cli/src/scan_fs/package_db/yocto/{context,manifest,recipe}.rs`
 
 Yocto / OpenEmbedded coverage (milestone 107). Three complementary
-readers cover the embedded-Linux scan shapes that waybill previously
+readers cover the embedded-Linux scan shapes that Waybill previously
 emitted empty SBOMs for: device rootfs scans, build-directory scans,
 SDK sysroot scans, and layer-tree scans. Together they close the
 largest C/C++ source coverage gap that was deferred from milestone 105
@@ -900,7 +926,7 @@ format doesn't carry licenses, so those entries ship with empty
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
 
-waybill's Kotlin DSL Gradle reader (milestone 122 US2) regex-extracts
+Waybill's Kotlin DSL Gradle reader (milestone 122 US2) regex-extracts
 dependency declarations from `build.gradle.kts` files (the Android
 Studio / IntelliJ default since 2023) and resolves `libs.<alias>`
 references against the workspace's `gradle/libs.versions.toml` version
@@ -938,7 +964,7 @@ declarations get a `tracing::debug!` and a degraded SBOM — adopting a
 full Kotlin parser would require either a tree-sitter Kotlin grammar
 (C code, Principle I violation) or shelling out to `kotlinc` (JVM
 dependency at scan time, Strict Boundary 3 violation), neither of
-which waybill takes on.
+which Waybill takes on.
 
 ### Dep-configuration → lifecycle-scope mapping
 
@@ -954,7 +980,7 @@ Non-listed configurations capture as runtime (no annotation) with a
 
 ### Multi-module workspaces
 
-When waybill finds a `settings.gradle.kts` declaring
+When Waybill finds a `settings.gradle.kts` declaring
 `rootProject.name = "..."` + `include(":mod1", ":mod2")`, it
 synthesizes a workspace-root component:
 
@@ -974,7 +1000,7 @@ edge case from spec).
 
 When a `build.gradle.kts` declares deps inside a
 `kotlin { sourceSets { <name> { dependencies { ... } } } }` block,
-waybill stamps `waybill:kmp-source-set` on the emitted component as a
+Waybill stamps `waybill:kmp-source-set` on the emitted component as a
 JSON-encoded array of every source-set name that declared the dep
 (lex-sorted, deduped). Multiple source-sets declaring the same
 canonical PURL accumulate into one merged array — consumers reading
@@ -1021,7 +1047,7 @@ Workspace-root entries additionally carry `waybill:component-role =
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
 
-waybill's Swift Package Manager (SwiftPM) reader (milestone 122 US1)
+Waybill's Swift Package Manager (SwiftPM) reader (milestone 122 US1)
 parses `Package.resolved` lockfiles at any directory in the scan tree
 and emits one component per `pins[]` entry. Schema versions 1, 2, and 3
 are dispatched on the lockfile's top-level `version` integer. The
@@ -1072,7 +1098,7 @@ Per-component:
 
 Parse failures (malformed JSON, missing `pins[]`, unknown schema
 version) emit a `tracing::warn!` naming the file path + the specific
-failure; waybill continues the walk on sibling files (per spec
+failure; Waybill continues the walk on sibling files (per spec
 FR-009). Per-entry failures (invalid revision, unparseable URL,
 deep-namespace) emit a `tracing::warn!` naming the affected pin's
 identity; other entries in the same file still emit.
@@ -1102,14 +1128,14 @@ identity; other entries in the same file still emit.
 
 ## Binary analysis — symbol-fingerprint corpus (milestone 099 + 108)
 
-waybill's binary scanner identifies statically-linked C libraries from
+Waybill's binary scanner identifies statically-linked C libraries from
 their exported-symbol fingerprints (ELF `.dynsym` + Mach-O `LC_SYMTAB`
 externals — PE deferred). The bundled fallback corpus ships 7 libraries
 (openssl, zlib, libcurl, sqlite, pcre, pcre2, gnutls) and stays at
 that size as a stability floor; the source-of-truth corpus lives in
 the sibling repo
 [`kusari-sandbox/waybill-fingerprints`](https://github.com/kusari-sandbox/waybill-fingerprints)
-and grows independently of waybill releases.
+and grows independently of Waybill releases.
 
 Operators opt into the external corpus per scan via
 `--fingerprints-corpus` (or `WAYBILL_FINGERPRINTS_CORPUS=1`):
@@ -1133,7 +1159,7 @@ The cache-first / fetch-on-miss flow, the
 
 ### Milestone 109 — cross-tier PURL attribution for cmake projects
 
-When waybill scans a cmake project root with `--fingerprints-corpus`
+When Waybill scans a cmake project root with `--fingerprints-corpus`
 (alpha.45+), fingerprint matches in built binaries are attributed to
 the source-tier PURL the cmake reader emitted from
 `FetchContent_Declare` (`pkg:github/madler/zlib@v1.3.1`) instead of
