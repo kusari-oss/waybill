@@ -1283,6 +1283,37 @@ pub struct ScanArgs {
         action = clap::ArgAction::SetTrue,
     )]
     pub experimental_cross_ecosystem_edges: bool,
+
+    /// Milestone 220 — cap main-module discovery scope.
+    ///
+    /// Accepts:
+    /// - `all` (default; current behavior) — every reader discovers
+    ///   main-modules wherever they find qualifying manifests. SC-005
+    ///   byte-identity contract: `--project-discovery=all` (or the
+    ///   flag omitted entirely) produces byte-identical output to
+    ///   alpha.68 on every existing test fixture.
+    /// - `root-only` — discover only root-level main-modules + their
+    ///   ecosystem-native workspace-declared members (via the existing
+    ///   `waybill:workspace-member` annotation). Independent nested
+    ///   projects are dropped from the SBOM entirely.
+    /// - `strict` — discover only the root-level manifest itself.
+    ///   Workspace-member declarations are ignored.
+    ///
+    /// See `docs/reference/project-discovery.md` for the full mode
+    /// table + interaction matrix vs `--split[=<mode>]`.
+    ///
+    /// The env-var equivalent `WAYBILL_PROJECT_DISCOVERY=<mode>` is
+    /// bridged from this flag when set to a non-default value (compat
+    /// shim for env-only invocations in CI scripts that can't easily
+    /// mutate CLI args).
+    #[arg(
+        long = "project-discovery",
+        value_enum,
+        default_value = "all",
+        require_equals = true,
+    )]
+    pub project_discovery:
+        crate::generate::project_discovery::ProjectDiscoveryMode,
 }
 
 /// Milestone 173: CLI-side cache-warming mode. Two variants;
@@ -2292,6 +2323,24 @@ pub async fn execute(
         }
     }
 
+    // Milestone 220: bridge --project-discovery=<mode> to the env
+    // var so env-only invocations (CI scripts that can't easily
+    // mutate CLI args) also work. Same set-only-never-unset pattern
+    // as the m218 cross-ecosystem-edges bridge above — otherwise an
+    // env-var-only invocation (`WAYBILL_PROJECT_DISCOVERY=root-only
+    // waybill ...`, without the CLI flag) would be silently disabled.
+    if args.project_discovery
+        != crate::generate::project_discovery::ProjectDiscoveryMode::All
+    {
+        // SAFETY: see comment above.
+        unsafe {
+            std::env::set_var(
+                "WAYBILL_PROJECT_DISCOVERY",
+                args.project_discovery.to_string(),
+            );
+        }
+    }
+
     // Milestone 108 US5: re-export `--fingerprints-rev` to the env so
     // the matcher's `LoadOptions::from_env()` sees the runtime
     // override (and ignores it if the operator didn't also pass the
@@ -3246,6 +3295,72 @@ pub async fn execute(
         scan_fs::tag_components_with_workspace_member(&mut components, &canonical_root);
     }
 
+    // Milestone 220: post-discovery scope filter. Runs AFTER
+    // `tag_components_with_workspace_member` so the FR-004 belt-and-
+    // suspenders annotation follow-up sees the workspace-member
+    // signal populated. Under `All` mode this is a zero-op (returns
+    // the slices verbatim; SC-005 byte-identity gate). Under
+    // `RootOnly`/`Strict` the filter drops out-of-scope main-modules
+    // + their unreachable transitive components. FR-008 empty-root
+    // fallback: when the filter reports zero in-scope roots under
+    // non-default mode, we WARN + reuse the pre-filter slices (i.e.,
+    // treat as `All` for that scan) so the existing synthetic-
+    // `pkg:generic/` root path fires cleanly; C140 is NOT emitted on
+    // the fallback branch (`project_discovery_mode_for_artifacts`
+    // stays `None`).
+    let project_discovery_mode_for_artifacts:
+        Option<crate::generate::project_discovery::ProjectDiscoveryMode> = {
+        let mode = args.project_discovery;
+        if mode == crate::generate::project_discovery::ProjectDiscoveryMode::All {
+            None
+        } else {
+            let canonical_root = std::fs::canonicalize(&root_path)
+                .unwrap_or_else(|_| root_path.clone());
+            // Filter takes owned Vecs; swap out with placeholder,
+            // run, then either commit or roll back on empty-root
+            // fallback.
+            let comps_owned = std::mem::take(&mut components);
+            let rels_owned = std::mem::take(&mut relationships);
+            let (out_c, out_r, report) =
+                crate::generate::project_discovery::filter::apply_scope_filter(
+                    comps_owned,
+                    rels_owned,
+                    mode,
+                    &canonical_root,
+                );
+            if report.root_main_modules == 0 {
+                // FR-008 fallback — zero root-level manifests found.
+                // Re-run the filter with `All` to get the unfiltered
+                // slices back (zero-op fast-path).
+                tracing::warn!(
+                    mode = %mode,
+                    "scan: project-discovery=<mode> found zero root-level manifests; falling back to full-scope emission",
+                );
+                let (fc, fr, _) =
+                    crate::generate::project_discovery::filter::apply_scope_filter(
+                        out_c,
+                        out_r,
+                        crate::generate::project_discovery::ProjectDiscoveryMode::All,
+                        &canonical_root,
+                    );
+                components = fc;
+                relationships = fr;
+                None
+            } else {
+                tracing::info!(
+                    mode = %report.mode,
+                    root_main_modules = report.root_main_modules,
+                    workspace_members_followed = report.workspace_members_followed,
+                    nested_projects_ignored = report.nested_projects_ignored,
+                    "scan: project-discovery mode complete",
+                );
+                components = out_c;
+                relationships = out_r;
+                Some(mode)
+            }
+        }
+    };
+
     // Issue #363 — operator-asserted license-concluded promotion. Runs
     // AFTER every external enricher (ClearlyDefined, deps.dev) so the
     // empty-concluded check correctly identifies components those
@@ -3509,6 +3624,11 @@ pub async fn execute(
         // `sbom generate --attestation` code path. Preserving `None`
         // here per m208 defensive-default pattern.
         compiler_pipeline: None,
+        // Milestone 220: document-scope project-discovery mode when
+        // the scan ran under a non-default `--project-discovery` value.
+        // `None` under default `All` mode OR under the FR-008 empty-
+        // root fallback branch (SC-005 byte-identity gate).
+        project_discovery_mode: project_discovery_mode_for_artifacts,
     };
     let output_cfg = OutputConfig {
         mikebom_version: env!("CARGO_PKG_VERSION"),
@@ -4618,6 +4738,9 @@ mod tests {
             // Milestone 218 — opt-in cross-ecosystem edges off by
             // default (matches CLI default; preserves SC-009).
             experimental_cross_ecosystem_edges: false,
+            // Milestone 220 — default project-discovery mode = All
+            // (matches CLI default; preserves SC-005 byte-identity).
+            project_discovery: crate::generate::project_discovery::ProjectDiscoveryMode::All,
         }
     }
 

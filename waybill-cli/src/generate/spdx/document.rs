@@ -479,6 +479,7 @@ pub fn build_document(
             spdx2_relationship_compat: artifacts.spdx2_relationship_compat,
             collisions_summary: artifacts.collisions_summary,
             compiler_pipeline: artifacts.compiler_pipeline,
+            project_discovery_mode: artifacts.project_discovery_mode,
         }
     } else {
         ScanArtifacts {
@@ -514,6 +515,7 @@ pub fn build_document(
             spdx2_relationship_compat: artifacts.spdx2_relationship_compat,
             collisions_summary: artifacts.collisions_summary,
             compiler_pipeline: artifacts.compiler_pipeline,
+            project_discovery_mode: artifacts.project_discovery_mode,
         }
     };
     let artifacts: &ScanArtifacts<'_> = &view_artifacts;
@@ -1215,6 +1217,7 @@ mod tests {
             spdx2_relationship_compat: crate::generate::Spdx2RelationshipCompat::Full,
             collisions_summary: None,
             compiler_pipeline: None,
+            project_discovery_mode: None,
         }
     }
 

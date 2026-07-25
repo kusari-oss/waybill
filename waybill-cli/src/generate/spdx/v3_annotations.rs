@@ -737,6 +737,13 @@ fn push_document_fields(
         }
     }
 
+    // Milestone 220: C140 doc-scope `waybill:project-discovery-mode`
+    // annotation (SPDX 3). Silence-on-default per SC-005 byte-identity.
+    // Same emission gate as the CDX + SPDX 2.3 emitters.
+    if let Some(mode) = scan.project_discovery_mode {
+        push(out, "waybill:project-discovery-mode", json!(mode.to_string()));
+    }
+
     // Milestone 204 (#554): C123 doc-scope helm image-extraction
     // completeness annotation (SPDX 3). Same emission semantics as
     // the CDX + SPDX 2.3 emitters. Byte-identity preserved for

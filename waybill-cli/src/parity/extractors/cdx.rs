@@ -842,6 +842,8 @@ cdx_anno!(c136_cdx, "waybill:go-toolchain-detected",            document);
 cdx_anno!(c137_cdx, "waybill:cross-ecosystem-inference",             component);
 cdx_anno!(c138_cdx, "waybill:cross-ecosystem-inference-ambiguous",   component);
 cdx_anno!(c139_cdx, "waybill:cross-ecosystem-inference-unresolved",  document);
+// Milestone 220: C140 doc-scope project-discovery-mode annotation.
+cdx_anno!(c140_cdx, "waybill:project-discovery-mode",                document);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

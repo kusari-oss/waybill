@@ -237,6 +237,11 @@ manifest SBOM" section.
   new `--split=directory` grouping mode + the additive-optional
   `split-manifest.json` `members[]` field + the extensibility
   contract for future grouping strategies.
+- [`docs/reference/project-discovery.md`](docs/reference/project-discovery.md)
+  — consumer + contributor guide to `--project-discovery=<mode>`
+  (m220): the three modes (`all` / `root-only` / `strict`), the
+  per-ecosystem workspace-member detection matrix, the C140
+  doc-scope annotation, and the interaction matrix vs `--split`.
 
 ## Install
 

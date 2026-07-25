@@ -464,6 +464,7 @@ mod tests {
             spdx2_relationship_compat: crate::generate::Spdx2RelationshipCompat::Full,
             collisions_summary: None,
             compiler_pipeline: None,
+            project_discovery_mode: None,
         }
     }
 

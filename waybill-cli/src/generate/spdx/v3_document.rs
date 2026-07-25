@@ -116,6 +116,7 @@ pub fn build_document(
             spdx2_relationship_compat: scan.spdx2_relationship_compat,
             collisions_summary: scan.collisions_summary,
             compiler_pipeline: scan.compiler_pipeline,
+            project_discovery_mode: scan.project_discovery_mode,
         };
         &view_scan_storage
     } else {
