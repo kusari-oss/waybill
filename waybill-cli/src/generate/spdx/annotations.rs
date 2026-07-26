@@ -742,6 +742,14 @@ pub fn annotate_document(
         }
     }
 
+    // Milestone 220: C140 doc-scope `waybill:project-discovery-mode`
+    // annotation. Silence-on-default: emitted iff scan ran under a
+    // non-default mode (`RootOnly` OR `Strict`); absent under `All`
+    // (SC-005 byte-identity gate). Same shape as m217 C136 above.
+    if let Some(mode) = artifacts.project_discovery_mode {
+        push(&mut out, "waybill:project-discovery-mode", json!(mode.to_string()));
+    }
+
     // Milestone 204 (#554): C123 doc-scope helm image-extraction
     // completeness annotation. Emitted iff helm reader ran. Wire
     // value derived from HelmExtractionMode::as_wire_str().

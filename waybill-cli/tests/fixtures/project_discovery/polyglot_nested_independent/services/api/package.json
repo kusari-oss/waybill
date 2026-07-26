@@ -1,0 +1,7 @@
+{
+  "name": "p220-nested-api",
+  "version": "0.1.0",
+  "dependencies": {
+    "waybill-fixture-util": "4.17.21"
+  }
+}

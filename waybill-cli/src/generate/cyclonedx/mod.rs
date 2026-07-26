@@ -164,7 +164,12 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // ran without eBPF (default features) OR the trace
             // captured zero compiler invocations — either case
             // preserves scan-mode byte-identity.
-            .with_compiler_pipeline(scan.compiler_pipeline.cloned());
+            .with_compiler_pipeline(scan.compiler_pipeline.cloned())
+            // Milestone 220 — propagate the doc-scope project-discovery
+            // mode signal from ScanArtifacts into the builder for the
+            // C140 `waybill:project-discovery-mode` metadata property.
+            // `None` under default `All` mode (SC-005 byte-identity).
+            .with_project_discovery_mode(scan.project_discovery_mode);
         let bom = builder.build(
             scan.components,
             scan.relationships,

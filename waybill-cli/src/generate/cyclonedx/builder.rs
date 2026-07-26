@@ -168,6 +168,13 @@ pub struct CycloneDxBuilder {
     /// default pattern).
     compiler_pipeline:
         Option<waybill_common::attestation::compiler_pipeline::CompilerPipelineData>,
+    /// Milestone 220 — doc-scope project-discovery mode driving the
+    /// C140 `waybill:project-discovery-mode` metadata property. `None`
+    /// under default `All` mode (SC-005 byte-identity gate — annotation
+    /// absent). `Some(mode)` for `RootOnly` / `Strict` populated at
+    /// scan time when the `--project-discovery` flag was non-default.
+    project_discovery_mode:
+        Option<crate::generate::project_discovery::ProjectDiscoveryMode>,
 }
 
 impl CycloneDxBuilder {
@@ -195,6 +202,7 @@ impl CycloneDxBuilder {
             file_inventory_mode: None,
             collisions_summary: None,
             compiler_pipeline: None,
+            project_discovery_mode: None,
         }
     }
 
@@ -207,6 +215,18 @@ impl CycloneDxBuilder {
         pipeline: Option<waybill_common::attestation::compiler_pipeline::CompilerPipelineData>,
     ) -> Self {
         self.compiler_pipeline = pipeline;
+        self
+    }
+
+    /// Milestone 220 — record the doc-scope project-discovery mode
+    /// signal so `build_metadata` can emit the C140
+    /// `waybill:project-discovery-mode` annotation. `None` ⇒ default
+    /// `All` mode ⇒ no annotation (SC-005 byte-identity gate).
+    pub fn with_project_discovery_mode(
+        mut self,
+        mode: Option<crate::generate::project_discovery::ProjectDiscoveryMode>,
+    ) -> Self {
+        self.project_discovery_mode = mode;
         self
     }
 
@@ -659,6 +679,7 @@ impl CycloneDxBuilder {
             self.helm_extraction_mode.as_ref(),
             self.image_source.as_ref(),
             self.compiler_pipeline.as_ref(),
+            self.project_discovery_mode,
         );
         // Milestone 076 — track per-component identifier matches so
         // we can emit a warn for any selector that matched zero

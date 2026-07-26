@@ -324,6 +324,11 @@ format:
   trace flows.
 - **[SBOM format mapping](docs/reference/sbom-format-mapping.md)** —
   per-feature carrier matrix across CDX 1.6, SPDX 2.3, and SPDX 3.
+- **[Project discovery reference](docs/reference/project-discovery.md)**
+  — `--project-discovery=<mode>`: the three modes
+  (`all` / `root-only` / `strict`), the per-ecosystem
+  workspace-member detection matrix, and the interaction matrix
+  vs `--split`.
 - **[Conformance harness guide](docs/reference/conformance-harness-guide.md)**
   — for external implementers writing cross-format conformance suites.
 - **[Design notes](docs/design-notes.md)** — living architectural

@@ -29,6 +29,7 @@ pub mod graph_completeness;
 pub mod lifecycle_phases;
 pub mod openvex;
 pub mod orphan_reason;
+pub mod project_discovery;
 pub mod root_selector;
 pub mod spdx;
 pub(crate) mod split;
@@ -299,6 +300,16 @@ pub struct ScanArtifacts<'a> {
     /// (C131) annotations per contracts/annotations.md A-1/A-2.
     pub compiler_pipeline:
         Option<&'a waybill_common::attestation::compiler_pipeline::CompilerPipelineData>,
+    /// Milestone 220: document-scope project-discovery mode when the
+    /// scan ran under a non-default `--project-discovery=<mode>`
+    /// value. `None` under the default `All` mode (SC-005 byte-
+    /// identity gate — C140 annotation absent). `Some(mode)` where
+    /// mode ∈ {`RootOnly`, `Strict`} drives the C140
+    /// `waybill:project-discovery-mode` doc-scope annotation across
+    /// CDX / SPDX 2.3 / SPDX 3 emitters. Silence-on-default matches
+    /// the m217 C136 precedent.
+    pub project_discovery_mode:
+        Option<project_discovery::ProjectDiscoveryMode>,
 }
 
 impl<'a> ScanArtifacts<'a> {
@@ -348,6 +359,7 @@ impl<'a> ScanArtifacts<'a> {
             spdx2_relationship_compat: self.spdx2_relationship_compat,
             collisions_summary: self.collisions_summary,
             compiler_pipeline: self.compiler_pipeline,
+            project_discovery_mode: self.project_discovery_mode,
         }
     }
 }

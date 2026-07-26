@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-07-23
+Auto-generated from all feature plans. Last updated: 2026-07-24
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -294,6 +294,8 @@ Auto-generated from all feature plans. Last updated: 2026-07-23
 - N/A — all state in-process per scan. The cross-ecosystem resolver operates on the same `name_to_purl: HashMap<(String, String), String>` index that today feeds the same-ecosystem path; the flag-on path adds fallback iteration over the index's keyset. (218-cross-ecosystem-edges)
 - Rust stable (workspace toolchain inherited from milestones 001–218; no nightly required for this user-space-only work). + Existing only — `clap` (extend the existing `--split` arg from bool to enum-with-optional-value via `ValueEnum` + `default_missing_value`), `serde` / `serde_json` (SplitManifest additive field with `#[serde(skip_serializing_if = "Option::is_none")]`), `sha2` + `data-encoding` (m215's existing `sha8_hex` helper for slug hashing if needed for collision-safety), `tracing` (FR-010 INFO log). **Zero new Cargo dependencies.** (219-split-modes)
 - N/A — all state in-process per scan. The grouping happens post-`enumerate_workspace_roots`, pre-BFS-projection; the extra grouping table is a `BTreeMap<String, Vec<SubprojectRoot>>` local to `emit_split`. (219-split-modes)
+- Rust stable (workspace toolchain inherited from milestones 001–219; no nightly required for this user-space-only work). + Existing only — `clap` (new `ValueEnum` flag mirroring m219 `--split=<mode>` shape), `serde` / `serde_json` (doc-scope annotation value), `tracing` (FR-012 INFO log). Reuses milestone-215 `SubprojectRoot` + `project_for_root` + `enumerate_workspace_roots` verbatim as the discovery+BFS substrate; reuses milestone-127's `waybill:workspace-member` annotation as the workspace-member detection signal. **Zero new Cargo dependencies.** (220-project-discovery-scope)
+- N/A — all state in-process per scan. The scope filter operates on the already-in-memory `Vec<ResolvedComponent>` + `Vec<Relationship>` slices; no new persistent state. (220-project-discovery-scope)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -356,9 +358,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 220-project-discovery-scope: Added Rust stable (workspace toolchain inherited from milestones 001–219; no nightly required for this user-space-only work). + Existing only — `clap` (new `ValueEnum` flag mirroring m219 `--split=<mode>` shape), `serde` / `serde_json` (doc-scope annotation value), `tracing` (FR-012 INFO log). Reuses milestone-215 `SubprojectRoot` + `project_for_root` + `enumerate_workspace_roots` verbatim as the discovery+BFS substrate; reuses milestone-127's `waybill:workspace-member` annotation as the workspace-member detection signal. **Zero new Cargo dependencies.**
 - 219-split-modes: Added Rust stable (workspace toolchain inherited from milestones 001–218; no nightly required for this user-space-only work). + Existing only — `clap` (extend the existing `--split` arg from bool to enum-with-optional-value via `ValueEnum` + `default_missing_value`), `serde` / `serde_json` (SplitManifest additive field with `#[serde(skip_serializing_if = "Option::is_none")]`), `sha2` + `data-encoding` (m215's existing `sha8_hex` helper for slug hashing if needed for collision-safety), `tracing` (FR-010 INFO log). **Zero new Cargo dependencies.**
 - 218-cross-ecosystem-edges: Added Rust stable (workspace toolchain inherited from milestones 001–217; no nightly required for this user-space-only work). + Existing only — `serde` / `serde_json` (annotation value construction + canonicalization), `tracing` (INFO summary log per FR-013), `anyhow` / `thiserror` (error propagation), `clap` (new opt-in flag via `Args`-derive — same shape as m173 `--warm-go-cache` and m119 `--supplement-cdx`). Reuses milestone-071 parity-extractor infrastructure verbatim. **Zero new Cargo dependencies.**
-- 217-goroot-stdlib-skip: Added Rust stable (workspace toolchain inherited from milestones 001–216; no nightly required). + Existing only. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->
