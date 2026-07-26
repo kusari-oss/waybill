@@ -1,13 +1,13 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    rack (3.0.9.1)
+    waybill-fixture-rack (3.0.9.1)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  rack (= 3.0.9.1)
+  waybill-fixture-rack (= 3.0.9.1)
 
 BUNDLED WITH
    2.5.11
