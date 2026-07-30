@@ -29,6 +29,11 @@ pub struct CycloneDxConfig {
     /// were intentionally included, so downstream consumers can trust
     /// the absence of the property to mean "this component is prod".
     pub include_dev: bool,
+    /// Milestone 221 US4 (feature 221-cisa-2026-elements-audit /
+    /// FR-013) — operator-supplied SBOM document version. Threaded
+    /// through to `metadata.version` in the emitted CDX document.
+    /// `None` preserves the pre-m221 hardcoded `1` per FR-009.
+    pub sbom_version: Option<waybill_common::types::SbomVersion>,
 }
 
 impl Default for CycloneDxConfig {
@@ -38,6 +43,7 @@ impl Default for CycloneDxConfig {
             include_source_files: false,
             generation_context: GenerationContext::BuildTimeTrace,
             include_dev: false,
+            sbom_version: None,
         }
     }
 }
@@ -680,6 +686,10 @@ impl CycloneDxBuilder {
             self.image_source.as_ref(),
             self.compiler_pipeline.as_ref(),
             self.project_discovery_mode,
+            // Milestone 221 US4 — thread operator-supplied SBOM
+            // document version into the metadata block for the
+            // C142 `waybill:sbom-version` property.
+            self.config.sbom_version,
         );
         // Milestone 076 — track per-component identifier matches so
         // we can emit a warn for any selector that matched zero
@@ -809,11 +819,21 @@ impl CycloneDxBuilder {
             Vec::new()
         };
 
+        // Milestone 221 US4 — thread caller-supplied SBOM document
+        // version (via `--sbom-version <N>`) into the CDX
+        // `metadata.version` slot. `None` preserves the pre-m221
+        // hardcoded `1` per FR-009 byte-identity.
+        let bom_version: u32 = self
+            .config
+            .sbom_version
+            .map(|v| v.as_u32())
+            .unwrap_or(1);
+
         let mut bom = json!({
             "bomFormat": "CycloneDX",
             "specVersion": "1.6",
             "serialNumber": serial_number,
-            "version": 1,
+            "version": bom_version,
             "metadata": metadata,
             "components": cdx_components,
             "compositions": compositions,
@@ -2083,6 +2103,8 @@ mod tests {
             include_source_files: false,
             generation_context: GenerationContext::BuildTimeTrace,
             include_dev: false,
+            // Milestone 221 US4 — test default preserves pre-m221 behavior.
+            sbom_version: None,
         };
         let builder = CycloneDxBuilder::new(config);
 
@@ -2706,6 +2728,8 @@ mod tests {
             include_source_files: false,
             generation_context: GenerationContext::BuildTimeTrace,
             include_dev: false,
+            // Milestone 221 US4 — test default preserves pre-m221 behavior.
+            sbom_version: None,
         })
         .with_identifiers(identifiers)
         .with_root_override(crate::generate::RootComponentOverride {

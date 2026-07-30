@@ -670,6 +670,10 @@ spdx3_anno!(c138_spdx3, "waybill:cross-ecosystem-inference-ambiguous",   compone
 spdx3_anno!(c139_spdx3, "waybill:cross-ecosystem-inference-unresolved",  document);
 // Milestone 220: C140 doc-scope project-discovery-mode annotation.
 spdx3_anno!(c140_spdx3, "waybill:project-discovery-mode",                document);
+// Milestone 221 US3 (FR-011 + FR-012): C141 doc-scope CISA 2026 lifecycle alias.
+spdx3_anno!(c141_spdx3, "waybill:cisa-2026-lifecycle",                   document);
+// Milestone 221 US4 (FR-013): C142 doc-scope SBOM document version.
+spdx3_anno!(c142_spdx3, "waybill:sbom-version",                          document);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

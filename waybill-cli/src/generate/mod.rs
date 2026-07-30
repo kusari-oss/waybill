@@ -66,6 +66,16 @@ pub struct ScanArtifacts<'a> {
     pub include_dev: bool,
     pub include_hashes: bool,
     pub include_source_files: bool,
+    /// Milestone 221 US4 (feature 221-cisa-2026-elements-audit /
+    /// FR-013) — operator-supplied SBOM document version from
+    /// `--sbom-version <N>`. Threaded through to:
+    /// - CDX `metadata.version` (native integer slot)
+    /// - SPDX 2.3 doc-scope `Annotation` (`waybill:sbom-version=<N>`)
+    /// - SPDX 3 doc-scope `Annotation` (`waybill:sbom-version=<N>`)
+    ///
+    /// `None` preserves the pre-m221 defaults per FR-009: CDX
+    /// `metadata.version: 1` and no SPDX annotation.
+    pub sbom_version: Option<waybill_common::types::SbomVersion>,
     /// Document-level scope mode. Resolved from
     /// `--include-declared-deps` (with the `--path`/`--image`
     /// auto-default rule). Surfaced in CDX `metadata.lifecycles[]`
@@ -338,6 +348,11 @@ impl<'a> ScanArtifacts<'a> {
             include_dev: self.include_dev,
             include_hashes: self.include_hashes,
             include_source_files: self.include_source_files,
+            // Milestone 221 US4 — propagate the operator-supplied SBOM
+            // version into split sub-artifacts. Same value across every
+            // sub-SBOM in a split-mode fan-out (all fragments describe
+            // the same "SBOM revision N").
+            sbom_version: self.sbom_version,
             scope_mode: self.scope_mode,
             go_transitive_coverage: self.go_transitive_coverage,
             go_transitive_fallback_count: self.go_transitive_fallback_count,

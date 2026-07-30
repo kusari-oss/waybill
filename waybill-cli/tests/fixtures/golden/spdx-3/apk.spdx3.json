@@ -291,6 +291,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-J4AH7XO6QKEYQ46KLGCHX6RR/anno-R7U4ST7YX6JYLNTX",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-J4AH7XO6QKEYQ46KLGCHX6RR",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-J4AH7XO6QKEYQ46KLGCHX6RR/anno-ZYTIQGEYKLR2IISH",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lib/apk/db/installed\"]}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-J4AH7XO6QKEYQ46KLGCHX6RR/pkg-DHDBA3PTGCIRJAUV",

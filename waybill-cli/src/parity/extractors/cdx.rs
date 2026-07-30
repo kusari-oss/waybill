@@ -844,6 +844,15 @@ cdx_anno!(c138_cdx, "waybill:cross-ecosystem-inference-ambiguous",   component);
 cdx_anno!(c139_cdx, "waybill:cross-ecosystem-inference-unresolved",  document);
 // Milestone 220: C140 doc-scope project-discovery-mode annotation.
 cdx_anno!(c140_cdx, "waybill:project-discovery-mode",                document);
+// Milestone 221 US3 (feature 221-cisa-2026-elements-audit / FR-012):
+// C141 doc-scope CISA 2026 lifecycle-vocabulary alias.
+cdx_anno!(c141_cdx, "waybill:cisa-2026-lifecycle",                   document);
+// Milestone 221 US4 (FR-013): C142 doc-scope SBOM document version.
+// Extracted from CDX's `metadata.properties[]` for parity — the
+// native carrier is `metadata.version` (integer at document root),
+// but the annotation is the parity twin of the SPDX 2.3/3
+// waybill:sbom-version emissions.
+cdx_anno!(c142_cdx, "waybill:sbom-version",                          document);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

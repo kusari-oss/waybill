@@ -53,6 +53,10 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             include_source_files: scan.include_source_files,
             generation_context: scan.generation_context.clone(),
             include_dev: scan.include_dev,
+            // Milestone 221 US4 — propagate operator-supplied SBOM
+            // version through to `metadata.version`. None ⇒
+            // pre-m221 hardcoded 1 (FR-009 byte-identity).
+            sbom_version: scan.sbom_version,
         };
         let builder = CycloneDxBuilder::new(cdx_config)
             .with_os_release_missing_fields(scan.os_release_missing_fields.to_vec())

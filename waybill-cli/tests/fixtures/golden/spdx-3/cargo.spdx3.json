@@ -501,6 +501,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-SYEAEBETALUDWNNDGBNUXIAS/anno-4KW6ZK5HHNHKI26Y",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-SYEAEBETALUDWNNDGBNUXIAS",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-SYEAEBETALUDWNNDGBNUXIAS/anno-4NWN3OUQPURBRYNH",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-type\",\"value\":\"git\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-SYEAEBETALUDWNNDGBNUXIAS/pkg-AMQQ7AE3OQIQRIZH",

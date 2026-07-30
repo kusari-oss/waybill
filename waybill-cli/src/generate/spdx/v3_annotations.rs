@@ -527,6 +527,23 @@ fn push_document_fields(
     };
     push(out, "waybill:generation-context", json!(gc));
 
+    // C141 cisa-2026-lifecycle — Milestone 221 US3 (feature
+    // 221-cisa-2026-elements-audit / FR-011 + FR-012). Twin of the
+    // SPDX 2.3 `annotate_document` emission — see the comment there
+    // for the rationale + mapping table.
+    push(
+        out,
+        "waybill:cisa-2026-lifecycle",
+        json!(scan.generation_context.as_cisa_2026_lifecycle()),
+    );
+
+    // C142 sbom-version — Milestone 221 US4 (FR-013). Only emitted
+    // when `--sbom-version` was set. Omission preserves FR-009
+    // byte-identity for pre-m221 SPDX 3 goldens on the default path.
+    if let Some(v) = scan.sbom_version {
+        push(out, "waybill:sbom-version", json!(v.as_u32()));
+    }
+
     // Milestone 133 US4 (Constitution Strict Boundary §5):
     // `--file-inventory=full` opt-in marker.
     if let Some("full") = scan.file_inventory_mode {

@@ -293,6 +293,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-U6WVESCTP5Q533Q6KDWLSP7B/anno-EY4C66PQDY2VQ4AQ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-U6WVESCTP5Q533Q6KDWLSP7B",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-U6WVESCTP5Q533Q6KDWLSP7B/anno-FTDRB23XRYTVROQ7",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:download-url\",\"value\":\"https://boostorg.jfrog.io/artifactory/main/release/1.84.0/source/boost_1_84_0.tar.gz\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-U6WVESCTP5Q533Q6KDWLSP7B/pkg-6JWGJCRVPGZ5RSBG",

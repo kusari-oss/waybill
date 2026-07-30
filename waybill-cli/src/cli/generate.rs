@@ -181,6 +181,12 @@ pub async fn execute(args: GenerateArgs, offline: bool) -> anyhow::Result<()> {
         generation_context: waybill_common::attestation::metadata::GenerationContext::BuildTimeTrace,
         // Trace-mode doesn't distinguish dev/prod at capture time.
         include_dev: false,
+        // Milestone 221 US4 — `waybill sbom generate` doesn't
+        // receive `--sbom-version` (it takes an attestation as input,
+        // not a scan target). Leave as `None` to preserve byte-identity
+        // per FR-009. If a future spec adds an equivalent flag on this
+        // subcommand, thread it through here.
+        sbom_version: None,
     };
     let builder = CycloneDxBuilder::new(cdx_config)
         // Milestone 073 — propagate manual identifier flags to the

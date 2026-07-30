@@ -47,6 +47,7 @@ A toolkit for working with software bills of materials (SBOMs) end-to-end:
 - [Install](#install)
 - [Why Waybill?](#why-waybill)
 - [What kind of SBOM does Waybill emit?](#what-kind-of-sbom-does-waybill-emit)
+- [Standards & compliance](#standards--compliance)
 - [Supported ecosystems](#supported-ecosystems)
 - [Usage](#usage)
 - [Cross-tier correlation](#cross-tier-correlation)
@@ -193,6 +194,21 @@ to other scanners — in
 [`docs/reference/sbom-scopes.md`](docs/reference/sbom-scopes.md); the
 CISA SBOM-type classification and `--sbom-type` flag in
 [`docs/reference/sbom-types.md`](docs/reference/sbom-types.md).
+
+## Standards & compliance
+
+Waybill tracks the **CISA 2026 Minimum Elements for a Software Bill
+of Materials** (TLP:CLEAR, published 2026-07-29) as the primary
+compliance baseline. Every one of the 17 data-field elements + 6
+practices/processes has a per-emitter verdict at
+[`docs/cisa-2026-coverage.md`](docs/cisa-2026-coverage.md) —
+evidence-cited, backed by a machine-verifying integration test that
+runs against every CI build, so regressions surface immediately.
+
+Referenced downstream by EU CRA (Regulation (EU) 2024/2847) Article
+3, BSI TR-03183-2, CERT-In's Technical Guidelines on Bill of
+Materials, and the equivalent guidance from every CISA 2026
+co-authoring national cyber agency.
 
 ## Supported ecosystems
 
