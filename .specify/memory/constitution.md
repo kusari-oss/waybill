@@ -2,6 +2,75 @@
   ============================================================
   SYNC IMPACT REPORT
   ============================================================
+  Version change: 2.0.0 → 2.1.0
+  Bump rationale: MINOR — Principle V (Specification Compliance)
+  first bullet's normative content materially updated: the
+  compliance-target-of-record for waybill's SBOM emission is
+  advanced from "CISA 2025 Minimum Elements" to the
+  "CISA 2026 Minimum Elements for a Software Bill of Materials"
+  (TLP:CLEAR, published 2026-07-29). The 2026 revision is a
+  strict superset of the 2025 baseline: adds 9 data-field
+  elements (SBOM Author Signature, SBOM Data Format Name,
+  SBOM Data Format Version, SBOM Generation Context, SBOM Tool
+  Name, SBOM Tool Version, SBOM Version, Component Hash Value,
+  Component Hash Algorithm, Component License), renames three
+  (Supplier Name → Component Producer, Depth → Coverage, Known
+  Unknowns → Explicitly Identifying Unknown Information), and
+  drops SWID from Machine-Processable Data. No principle is
+  removed, redefined, or made incompatible with prior
+  interpretation; every principle's NORMATIVE CONTENT other
+  than Principle V bullet 1 is unchanged.
+
+  Milestone 221 (feature `221-cisa-2026-elements-audit`,
+  merged as PR #643 at commit 2822ced) landed the full
+  compliance work — the machine-verified per-emitter matrix
+  at `docs/cisa-2026-coverage.md`, opt-in `--sign-key <PATH>`
+  for SBOM Author Signature (US2a; Sigstore keyless deferred
+  to US2b), document-scope SBOM Generation Context in SPDX
+  2.3 + SPDX 3 (US3), and `--sbom-version <N>` for SBOM
+  Version (US4). This amendment brings the constitution's
+  stated compliance target in line with the shipped code.
+
+  Modified sections:
+    - Principle V bullet 1: "CISA 2025 Minimum Elements" →
+      "CISA 2026 Minimum Elements"; added cross-reference to
+      `waybill_common::attestation::metadata::GenerationContext::as_cisa_2026_lifecycle`
+      (the mapping from waybill's variants to CISA's
+      before-build/build/after-build vocabulary) and to
+      `docs/cisa-2026-coverage.md` (the machine-verified
+      per-emitter matrix).
+    - Version field: 2.0.0 → 2.1.0.
+    - Last Amended field: 2026-07-21 → 2026-07-30.
+
+  Added sections: none (the amendment is scoped to a single
+  bullet + boilerplate updates).
+  Removed sections: none.
+
+  Templates requiring updates:
+    - .specify/templates/plan-template.md          ✅ no update needed
+    - .specify/templates/spec-template.md          ✅ no update needed
+    - .specify/templates/tasks-template.md         ✅ no update needed
+    - .specify/templates/agent-file-template.md    ✅ no update needed
+    - .specify/templates/checklist-template.md     ✅ no update needed
+    - CLAUDE.md                                    ✅ auto-generated
+                                                    Active Technologies
+                                                    section already
+                                                    references feature
+                                                    221 as of m221
+                                                    merge
+    - README.md                                    ✅ "Standards &
+                                                    compliance" section
+                                                    already references
+                                                    docs/cisa-2026-coverage.md
+                                                    as of m221 merge
+
+  Follow-up TODOs: none. m221 shipped the code; this amendment
+  is the paperwork.
+
+  ============================================================
+  PRIOR SYNC IMPACT HISTORY (preserved below verbatim)
+  ============================================================
+
   Version change: 1.5.0 → 2.0.0
   Bump rationale: MAJOR — project rename mikebom → Waybill
   (milestone 214). The constitution's project-name identity
@@ -56,10 +125,6 @@
                                                     updated via prose pass
 
   Follow-up TODOs: none. m214 rename is the sole bump content.
-
-  ============================================================
-  PRIOR SYNC IMPACT HISTORY (preserved below verbatim)
-  ============================================================
 
   Version change: 1.4.0 → 1.5.0
   Bump rationale: MINOR — new Strict Boundary §5 codifying
@@ -208,9 +273,14 @@ eliminating an entire class of serialization bugs.
 
 Generated SBOMs MUST strictly conform to:
 
-- **CISA 2025 Minimum Elements** — all required fields
+- **CISA 2026 Minimum Elements** — all required fields
   populated, including "Tool Name" as `waybill` and
   "Generation Context" reflecting active build-time trace.
+  Waybill's `GenerationContext` variants map to CISA's
+  `before-build` / `build` / `after-build` vocabulary via
+  `waybill_common::attestation::metadata::GenerationContext::as_cisa_2026_lifecycle`.
+  See `docs/cisa-2026-coverage.md` for the machine-verified
+  per-emitter coverage matrix.
 - **CycloneDX 1.6** — valid JSON or XML serialization via
   `cyclonedx-bom` or the `sbom-rs` ecosystem.
 - **SPDX 2.3 and SPDX 3.x** — when SPDX output is requested.
@@ -582,4 +652,4 @@ changes do not violate any principle. Violations require
 either a code fix or a constitution amendment — never silent
 deviation.
 
-**Version**: 2.0.0 | **Ratified**: 2026-04-15 | **Last Amended**: 2026-07-21
+**Version**: 2.1.0 | **Ratified**: 2026-04-15 | **Last Amended**: 2026-07-30
