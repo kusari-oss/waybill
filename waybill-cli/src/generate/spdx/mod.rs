@@ -399,6 +399,9 @@ mod tests {
             include_dev: false,
             include_hashes: true,
             include_source_files: false,
+            // Milestone 221 US4 — test-helper default preserves
+            // pre-m221 behavior (no --sbom-version).
+            sbom_version: None,
             scope_mode: crate::generate::ScopeMode::Artifact,
             source_document_binding: None,
             identifiers: &[],

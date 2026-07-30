@@ -149,6 +149,13 @@ pub fn build_metadata(
     project_discovery_mode: Option<
         crate::generate::project_discovery::ProjectDiscoveryMode,
     >,
+    // Milestone 221 US4 (feature 221-cisa-2026-elements-audit /
+    // FR-013) — operator-supplied SBOM document version from
+    // `--sbom-version <N>`. Drives the C142 `waybill:sbom-version`
+    // metadata property. `None` (default) preserves FR-009
+    // byte-identity — no property emitted, and the sibling
+    // `metadata.version` slot stays at the hardcoded `1`.
+    sbom_version: Option<waybill_common::types::SbomVersion>,
 ) -> serde_json::Value {
     let version = env!("CARGO_PKG_VERSION");
     // Determinism: honor `WAYBILL_FIXED_TIMESTAMP` (same env-var
@@ -195,6 +202,33 @@ pub fn build_metadata(
         "name": "waybill:generation-context",
         "value": context_str,
     })];
+
+    // Milestone 221 US3 (feature 221-cisa-2026-elements-audit / FR-012):
+    // CISA 2026 § SBOM Generation Context vocabulary alias. Emitted
+    // alongside the waybill-native `waybill:generation-context` value
+    // so consumers who key on CISA's `before-build` / `build` /
+    // `after-build` categories can look the value up directly without
+    // needing a mapping table. See `as_cisa_2026_lifecycle` at
+    // `waybill-common/src/attestation/metadata.rs`.
+    properties.push(json!({
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": context.as_cisa_2026_lifecycle(),
+    }));
+
+    // Milestone 221 US4 (FR-013) — SBOM document version alias.
+    // The native carrier is `metadata.version` (integer) at the
+    // document root; this annotation is the parity twin of the SPDX
+    // 2.3 + SPDX 3 `waybill:sbom-version` doc-scope annotations so
+    // the m071 C142 extractor sees the same key across all three
+    // formats. Emitted only when the operator passed `--sbom-version`
+    // — omission preserves FR-009 byte-identity for pre-m221 CDX
+    // goldens on the default path.
+    if let Some(v) = sbom_version {
+        properties.push(json!({
+            "name": "waybill:sbom-version",
+            "value": v.as_u32().to_string(),
+        }));
+    }
 
     // Milestone 133 US4 (Constitution Strict Boundary §5): when
     // the operator opted into `--file-inventory=full` (the explicit
@@ -1354,7 +1388,7 @@ mod tests {
 
     #[test]
     fn metadata_has_required_fields() {
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None);
+        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None, None);
 
         assert!(meta["timestamp"].is_string());
         assert_eq!(meta["tools"]["components"][0]["name"], "waybill");
@@ -1375,7 +1409,7 @@ mod tests {
     #[test]
     fn metadata_includes_authors_for_sbom_authors_score() {
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None, None);
         let authors = meta["authors"].as_array().expect("authors must be array");
         assert!(!authors.is_empty(), "authors must be non-empty");
         assert!(authors[0]["name"].is_string());
@@ -1384,7 +1418,7 @@ mod tests {
     #[test]
     fn metadata_includes_supplier_for_sbom_supplier_score() {
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None, None);
         assert!(
             meta["supplier"]["name"].is_string(),
             "supplier.name must be present as a string"
@@ -1396,7 +1430,7 @@ mod tests {
         // sbomqs sbom_data_license scores the SBOM's own license. SPDX
         // convention is CC0-1.0 so SBOM content is free to redistribute.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None, None);
         let licenses = meta["licenses"].as_array().expect("licenses must be array");
         assert!(!licenses.is_empty());
         assert_eq!(licenses[0]["license"]["id"], "CC0-1.0");
@@ -1407,7 +1441,7 @@ mod tests {
         // sbomqs flags metadata.component as invalid without a purl.
         // Waybill synthesizes pkg:generic/<name>@<version>.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None, None);
         assert_eq!(meta["component"]["purl"], "pkg:generic/myapp@0.1.0");
     }
 
@@ -1416,7 +1450,7 @@ mod tests {
         // sbomqs flags empty/absent cpe on metadata.component as invalid.
         // Waybill emits cpe:2.3:a:waybill:<name>:<version>:*:*:*:*:*:*:*.
         let meta =
-            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None);
+            build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None, None);
         assert_eq!(
             meta["component"]["cpe"],
             "cpe:2.3:a:waybill:myapp:0.1.0:*:*:*:*:*:*:*"
@@ -1463,6 +1497,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         );
         let purl = meta["component"]["purl"].as_str().unwrap();
         assert!(
@@ -1478,7 +1513,7 @@ mod tests {
 
     #[test]
     fn metadata_bom_ref_format() {
-        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None);
+        let meta = build_metadata("myapp", "0.1.0", GenerationContext::BuildTimeTrace, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None, None);
         assert_eq!(meta["component"]["bom-ref"], "myapp@0.1.0");
     }
 
@@ -1509,6 +1544,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         );
         let props = meta["properties"].as_array().expect("properties array");
         let c110 = props.iter().find(|p| p["name"] == "waybill:go-transitive-coverage");
@@ -1530,6 +1566,7 @@ mod tests {
             &waybill::binding::user_metadata::UserMetadata::default(),
             None, None, None, None,
             &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            None,
             None,
             None,
             None,
@@ -1577,6 +1614,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         );
         let props = meta["properties"].as_array().expect("properties array");
         let c110 = props.iter().find(|p| p["name"] == "waybill:go-transitive-coverage");
@@ -1604,6 +1642,7 @@ mod tests {
             None, None, None, None,
             &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
             Some(&coverage),
+            None,
             None,
             None,
             None,
@@ -1654,6 +1693,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         );
         let props = meta["properties"].as_array().expect("properties array");
         let c112 = props.iter().find(|p| p["name"] == "waybill:go-workspace-mode");
@@ -1686,6 +1726,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         );
         let props = meta["properties"].as_array().expect("properties array");
         assert!(
@@ -1705,6 +1746,7 @@ mod tests {
             &waybill::binding::user_metadata::UserMetadata::default(),
             None, None, None, None,
             &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            None,
             None,
             None,
             None,
@@ -1748,6 +1790,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         );
         let props = meta["properties"].as_array().expect("properties array");
         let c112 = props.iter().find(|p| p["name"] == "waybill:go-workspace-mode");
@@ -1759,10 +1802,10 @@ mod tests {
 
     #[test]
     fn metadata_context_varies_per_variant() {
-        let fs = build_metadata("myapp", "1.0", GenerationContext::FilesystemScan, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None);
+        let fs = build_metadata("myapp", "1.0", GenerationContext::FilesystemScan, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None, None);
         assert_eq!(fs["properties"][0]["value"], "filesystem-scan");
 
-        let img = build_metadata("myapp", "1.0", GenerationContext::ContainerImageScan, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None);
+        let img = build_metadata("myapp", "1.0", GenerationContext::ContainerImageScan, &[], &[], &TraceIntegrity::default(), None, None, &[], &RootComponentOverride::default(), &waybill::binding::user_metadata::UserMetadata::default(), None, None, None, None, &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(), None, None, None, None, None, None, None, None, None, None, None);
         assert_eq!(img["properties"][0]["value"], "container-image-scan");
     }
 
@@ -1786,6 +1829,7 @@ mod tests {
         None,
         None,
             &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            None,
             None,
             None,
             None,
@@ -1873,6 +1917,7 @@ mod tests {
         None,
         None,
             &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            None,
             None,
             None,
             None,
@@ -1972,6 +2017,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         );
         assert!(
             meta.get("lifecycles").is_none(),
@@ -2006,6 +2052,7 @@ mod tests {
         None,
         None,
             &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            None,
             None,
             None,
             None,
@@ -2067,6 +2114,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         );
         let props = meta["properties"].as_array().expect("properties");
         let entry = props
@@ -2102,6 +2150,7 @@ mod tests {
         None,
         None,
             &crate::generate::graph_completeness::GraphCompletenessResult::trivially_complete(),
+            None,
             None,
             None,
             None,

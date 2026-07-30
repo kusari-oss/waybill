@@ -66,6 +66,39 @@ pub enum GenerationContext {
     ContainerImageScan,
 }
 
+impl GenerationContext {
+    /// CISA 2026 § SBOM Generation Context vocabulary alias
+    /// (`before-build` / `build` / `after-build`). Emitted alongside
+    /// the waybill-native variant so consumers who key on CISA
+    /// vocabulary can look the value up directly.
+    ///
+    /// Mapping (per spec `research.md` §R5):
+    /// - `BuildTimeTrace` → `build` (observes syscalls during compile)
+    /// - `FilesystemScan` → `after-build` (post-build artifacts)
+    /// - `ContainerImageScan` → `after-build` (post-build image)
+    ///
+    /// waybill does not yet ship a `before-build` variant; source-
+    /// only mode without build execution is reserved future work.
+    pub fn as_cisa_2026_lifecycle(&self) -> &'static str {
+        match self {
+            Self::BuildTimeTrace => "build",
+            Self::FilesystemScan => "after-build",
+            Self::ContainerImageScan => "after-build",
+        }
+    }
+
+    /// Wire-format waybill-native identifier — matches the serde
+    /// rename (kebab-case). Available as an owned `&'static str` for
+    /// annotation-string composition without triggering serde.
+    pub fn as_waybill_native(&self) -> &'static str {
+        match self {
+            Self::BuildTimeTrace => "build-time-trace",
+            Self::FilesystemScan => "filesystem-scan",
+            Self::ContainerImageScan => "container-image-scan",
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -109,5 +142,37 @@ mod tests {
         assert_eq!(meta.tool.name, back.tool.name);
         assert_eq!(meta.host.arch, back.host.arch);
         assert_eq!(back.generation_context, GenerationContext::BuildTimeTrace);
+    }
+
+    #[test]
+    fn cisa_2026_lifecycle_alias_maps_all_three_variants() {
+        assert_eq!(
+            GenerationContext::BuildTimeTrace.as_cisa_2026_lifecycle(),
+            "build"
+        );
+        assert_eq!(
+            GenerationContext::FilesystemScan.as_cisa_2026_lifecycle(),
+            "after-build"
+        );
+        assert_eq!(
+            GenerationContext::ContainerImageScan.as_cisa_2026_lifecycle(),
+            "after-build"
+        );
+    }
+
+    #[test]
+    fn waybill_native_string_matches_serde_kebab() {
+        assert_eq!(
+            GenerationContext::BuildTimeTrace.as_waybill_native(),
+            "build-time-trace"
+        );
+        assert_eq!(
+            GenerationContext::FilesystemScan.as_waybill_native(),
+            "filesystem-scan"
+        );
+        assert_eq!(
+            GenerationContext::ContainerImageScan.as_waybill_native(),
+            "container-image-scan"
+        );
     }
 }

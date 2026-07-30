@@ -458,6 +458,10 @@ pub fn build_document(
             include_dev: artifacts.include_dev,
             include_hashes: artifacts.include_hashes,
             include_source_files: artifacts.include_source_files,
+            // Milestone 221 US4 — propagate --sbom-version through
+            // the filtered-components view so SPDX emitters see the
+            // same value the top-level ScanArtifacts had.
+            sbom_version: artifacts.sbom_version,
             scope_mode: artifacts.scope_mode,
             go_transitive_coverage: artifacts.go_transitive_coverage,
             go_transitive_fallback_count: artifacts.go_transitive_fallback_count,
@@ -494,6 +498,10 @@ pub fn build_document(
             include_dev: artifacts.include_dev,
             include_hashes: artifacts.include_hashes,
             include_source_files: artifacts.include_source_files,
+            // Milestone 221 US4 — propagate --sbom-version through
+            // the filtered-components view so SPDX emitters see the
+            // same value the top-level ScanArtifacts had.
+            sbom_version: artifacts.sbom_version,
             scope_mode: artifacts.scope_mode,
             go_transitive_coverage: artifacts.go_transitive_coverage,
             go_transitive_fallback_count: artifacts.go_transitive_fallback_count,
@@ -1204,6 +1212,8 @@ mod tests {
             include_dev: false,
             include_hashes: true,
             include_source_files: false,
+            // Milestone 221 US4 — test default preserves pre-m221 behavior.
+            sbom_version: None,
             scope_mode: crate::generate::ScopeMode::Artifact,
             source_document_binding: None,
             identifiers: &[],

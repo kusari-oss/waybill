@@ -267,6 +267,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-AIHX3K5QINRDNNG3A5ZLP45W/anno-PYHRY5GBHWWJVEHC",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-AIHX3K5QINRDNNG3A5ZLP45W",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-AIHX3K5QINRDNNG3A5ZLP45W/anno-T6XZHDWIPB5ZQF6Z",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-AIHX3K5QINRDNNG3A5ZLP45W",

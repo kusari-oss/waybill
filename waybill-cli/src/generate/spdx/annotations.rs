@@ -482,6 +482,28 @@ pub fn annotate_document(
     };
     push(&mut out, "waybill:generation-context", json!(gc));
 
+    // C141 cisa-2026-lifecycle — Milestone 221 US3 (feature
+    // 221-cisa-2026-elements-audit / FR-010 + FR-012). Document-scope
+    // Annotation carrying the CISA 2026 § SBOM Generation Context
+    // vocabulary alias (`before-build` / `build` / `after-build`)
+    // mapped from waybill's `GenerationContext` variant. Emitted
+    // unconditionally alongside C21 so consumers who key on CISA
+    // vocab can look the value up directly without a mapping table.
+    push(
+        &mut out,
+        "waybill:cisa-2026-lifecycle",
+        json!(artifacts.generation_context.as_cisa_2026_lifecycle()),
+    );
+
+    // C142 sbom-version — Milestone 221 US4 (feature
+    // 221-cisa-2026-elements-audit / FR-013). Emitted at document
+    // scope only when the operator passed `--sbom-version <N>` —
+    // omission preserves FR-009 byte-identity for pre-m221 SPDX 2.3
+    // goldens on the default path.
+    if let Some(v) = artifacts.sbom_version {
+        push(&mut out, "waybill:sbom-version", json!(v.as_u32()));
+    }
+
     // Milestone 133 US4 (Constitution Strict Boundary §5):
     // `--file-inventory=full` opt-in marker. CDX + SPDX 3 twins.
     if let Some("full") = artifacts.file_inventory_mode {

@@ -701,6 +701,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-6DGJS4IRKWL7WGKB5ETGPQCT/anno-MN3HOF2GWFPGJ2H6",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-6DGJS4IRKWL7WGKB5ETGPQCT",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-6DGJS4IRKWL7WGKB5ETGPQCT/anno-NHJOFEY6NG33PEWW",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-6DGJS4IRKWL7WGKB5ETGPQCT/pkg-IGBIL3UCACAQFOM3",

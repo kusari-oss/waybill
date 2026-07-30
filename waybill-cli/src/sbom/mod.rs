@@ -6,3 +6,4 @@
 //! enrichment.
 
 pub mod mutator;
+pub mod signer;

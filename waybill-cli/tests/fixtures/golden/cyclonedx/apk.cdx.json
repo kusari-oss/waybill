@@ -162,6 +162,10 @@
         "value": "filesystem-scan"
       },
       {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
         "name": "waybill:trace-integrity-ring-buffer-overflows",
         "value": "0"
       },

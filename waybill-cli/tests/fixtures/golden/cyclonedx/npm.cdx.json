@@ -248,6 +248,10 @@
         "value": "filesystem-scan"
       },
       {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
         "name": "waybill:os-release-missing-fields",
         "value": "ID,VERSION_ID"
       },

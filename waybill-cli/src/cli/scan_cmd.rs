@@ -433,6 +433,68 @@ pub struct ScanArgs {
     #[arg(long, action = clap::ArgAction::Append, value_name = "[FMT=]PATH")]
     pub output: Vec<String>,
 
+    /// Milestone 221 (feature 221-cisa-2026-elements-audit / US2a) —
+    /// static-key signing.
+    ///
+    /// Path to a PEM-encoded ECDSA-P256 (default), Ed25519, or RSA
+    /// private key. When set, waybill signs each emitted SBOM with
+    /// the referenced key: CDX outputs receive a JSF (JSON Signature
+    /// Format) object populated at `metadata.signature`; SPDX 2.3 and
+    /// SPDX 3 outputs get a companion DSSE envelope at
+    /// `<output>.sig.json`.
+    ///
+    /// Cloud-KMS (`kms://<uri>`) and PKCS#11 (`pkcs11://<uri>`)
+    /// references are out of scope for this feature and deferred to
+    /// a follow-up milestone (plan.md §Follow-ups).
+    ///
+    /// Requires `--output <file>` for every emitted format; combining
+    /// with `--output -` (stdout) is rejected at parse time per
+    /// FR-008a (signing without a durable output path defeats the
+    /// signature's purpose).
+    ///
+    /// When absent, all emitters produce byte-identical output to
+    /// today's goldens per FR-009 (no regression).
+    #[arg(long = "sign-key", value_name = "PATH")]
+    pub sign_key: Option<PathBuf>,
+
+    /// Milestone 221 US2a — environment variable holding the
+    /// passphrase for an encrypted PEM key file. When `--sign-key`
+    /// references an encrypted key, this env var MUST be set.
+    /// Defaults to `WAYBILL_SIGN_KEY_PASSPHRASE` if omitted.
+    /// Never accepts a passphrase directly on the command line
+    /// (avoids `ps`-visible leak).
+    #[arg(long = "sign-key-passphrase-env", value_name = "NAME")]
+    pub sign_key_passphrase_env: Option<String>,
+
+    /// Milestone 221 US4 (feature 221-cisa-2026-elements-audit /
+    /// FR-013) — SBOM document version.
+    ///
+    /// Positive integer matching CDX 1.6's `metadata.version` schema
+    /// (`{"type": "integer", "minimum": 1}`). Wires the value into
+    /// all three emitters: CDX `metadata.version` as a native
+    /// integer, SPDX 2.3 as a document-scope `Annotation` carrying
+    /// `waybill:sbom-version=<N>`, SPDX 3 as the same annotation
+    /// shape on the `SpdxDocument` root IRI.
+    ///
+    /// When unset, CDX emits `metadata.version: 1` (today's default,
+    /// byte-identical per FR-009); SPDX outputs do not emit a
+    /// `waybill:sbom-version` annotation at all.
+    ///
+    /// Rejects non-integer values (`2.0`, `v2`, `latest`, empty
+    /// string, embedded whitespace) and values < 1 at parse time
+    /// per FR-014. CISA 2026 § SBOM Version allows semver at the
+    /// author's discretion, but CDX 1.6 schema forbids it in this
+    /// slot; the integer-only constraint is the intersection.
+    ///
+    /// Note: waybill's existing UUID `serialNumber` (CDX) +
+    /// content-addressed `documentNamespace` / `@id` (SPDX per
+    /// milestone 010) already satisfy CISA's RFC 9562 alternative
+    /// pathway for revision identity. `--sbom-version` covers the
+    /// monotonic-counter pathway consumers who key on
+    /// `metadata.version` expect.
+    #[arg(long = "sbom-version", value_name = "N")]
+    pub sbom_version: Option<waybill_common::types::SbomVersion>,
+
     /// Milestone 215/219 — split monorepo SBOM into per-workspace-
     /// member OR per-directory sub-SBOMs.
     ///
@@ -2436,6 +2498,23 @@ pub async fn execute(
         );
     }
 
+    // Milestone 221 US2a (feature 221-cisa-2026-elements-audit / FR-008a):
+    // `--sign-key` requires a durable `--output <file>`. Combining with
+    // any `--output -` or `--output <fmt>=-` (stdout) is rejected at
+    // parse time because signing without a persisted path defeats the
+    // signature's purpose (nothing to hand a verifier) and multiplexing
+    // signature bytes into stdout has no standard framing.
+    if args.sign_key.is_some() {
+        if let Some(offender) = args.output.iter().find(|s| is_stdout_output(s)) {
+            anyhow::bail!(
+                "--sign-key requires --output <file>; signing does not support \
+                 stdout output because verifiers cannot access uncaptured \
+                 signature bytes.\n  offending flag: --output {offender}\n  \
+                 suggested fix: --output {}", suggest_non_stdout_path(offender),
+            );
+        }
+    }
+
     // Resolve format dispatch BEFORE any scan work so argument errors
     // abort without having paid for a scan.
     let registry = SerializerRegistry::with_defaults();
@@ -3503,6 +3582,11 @@ pub async fn execute(
         include_dev: true,
         include_hashes: !args.no_hashes,
         include_source_files: true, // path-pattern evidence is the whole value prop here
+        // Milestone 221 US4 (feature 221-cisa-2026-elements-audit /
+        // FR-013) — operator-supplied SBOM document version.
+        // `None` when `--sbom-version` is unset (byte-identity path
+        // per FR-009).
+        sbom_version: args.sbom_version,
         scope_mode: if effective_include_declared_deps {
             crate::generate::ScopeMode::Manifest
         } else {
@@ -3679,6 +3763,27 @@ pub async fn execute(
         // else: zero-boundary fallback — fall through to normal emit.
     }
 
+    // Milestone 221 US2a — construct the signing mode from CLI args.
+    // Kept out of `OutputConfig` because signing is a post-serialize
+    // concern that doesn't affect the emit code path; passing it
+    // separately preserves the OutputConfig contract from m011+.
+    let signing_mode = match &args.sign_key {
+        Some(path) => crate::sbom::signer::SigningMode::StaticKey {
+            key_ref: path.clone(),
+            passphrase_env: args
+                .sign_key_passphrase_env
+                .clone()
+                .unwrap_or_else(|| "WAYBILL_SIGN_KEY_PASSPHRASE".to_string()),
+        },
+        None => crate::sbom::signer::SigningMode::Unsigned,
+    };
+
+    // Milestone 221 US2a (FR-009a): fail-close cleanup tracker. Every
+    // file we write goes into this list; on any signing failure we
+    // unlink each one before propagating the error, so consumers never
+    // see a partial `--output <path>` file.
+    let mut written_files: Vec<PathBuf> = Vec::new();
+
     // Dispatch: serialize to every requested format and write each
     // emitted artifact to the chosen path. The first format's first
     // artifact path drives the backwards-compatible `--json` summary
@@ -3724,7 +3829,35 @@ pub async fn execute(
             } else {
                 artifact.relative_path.clone()
             };
-            write_bytes_to(&target, &artifact.bytes)?;
+            // Milestone 221 US2a — inject the signing hook at the
+            // write boundary. Three cases:
+            //   (a) Unsigned mode: write bytes as-emitted (FR-009
+            //       byte-identity guarantee).
+            //   (b) CDX + signing enabled: parse → in-place JSF sign
+            //       → re-serialize → write signed bytes.
+            //   (c) SPDX (2.3 or 3) + signing enabled: write primary
+            //       verbatim, then emit companion DSSE sidecar at
+            //       `<target>.sig.json`.
+            let final_bytes = if signing_mode.is_enabled()
+                && fmt == "cyclonedx-json"
+                && artifact.relative_path == Path::new(serializer.default_filename())
+            {
+                match sign_cdx_bytes_for_write(&artifact.bytes, &signing_mode) {
+                    Ok(signed) => signed,
+                    Err(e) => {
+                        cleanup_written_files(&written_files);
+                        return Err(anyhow::anyhow!(
+                            "signing failed for {} (target: {}): {e}",
+                            fmt,
+                            target.display(),
+                        ));
+                    }
+                }
+            } else {
+                artifact.bytes.clone()
+            };
+            write_bytes_to(&target, &final_bytes)?;
+            written_files.push(target.clone());
             if primary_output_path.is_none() {
                 primary_output_path = Some(target.clone());
                 primary_format = Some(fmt.clone());
@@ -3732,9 +3865,48 @@ pub async fn execute(
             tracing::info!(
                 format = %fmt,
                 path = %target.display(),
-                bytes = artifact.bytes.len(),
+                bytes = final_bytes.len(),
                 "wrote SBOM artifact"
             );
+
+            // Milestone 221 US2a — SPDX sidecar. Only for primary
+            // SPDX artifacts (not OpenVEX side-artifacts).
+            if signing_mode.is_enabled()
+                && (fmt == "spdx-2.3-json" || fmt == "spdx-3-json")
+                && artifact.relative_path == Path::new(serializer.default_filename())
+            {
+                let sidecar = target.with_extension(sidecar_extension(&target));
+                match crate::sbom::signer::sign_spdx_bytes_to_dsse(
+                    &final_bytes,
+                    &signing_mode,
+                ) {
+                    Ok(Some(envelope)) => {
+                        let json = serde_json::to_vec_pretty(&envelope).map_err(|e| {
+                            anyhow::anyhow!("cannot serialize DSSE sidecar: {e}")
+                        })?;
+                        write_bytes_to(&sidecar, &json)?;
+                        written_files.push(sidecar.clone());
+                        tracing::info!(
+                            format = %fmt,
+                            sidecar = %sidecar.display(),
+                            bytes = json.len(),
+                            "wrote SBOM signature sidecar (DSSE)"
+                        );
+                    }
+                    Ok(None) => {
+                        // Unreachable — is_enabled() gate already checked.
+                        unreachable!("Unsigned mode short-circuited above");
+                    }
+                    Err(e) => {
+                        cleanup_written_files(&written_files);
+                        return Err(anyhow::anyhow!(
+                            "signing failed for {} sidecar ({}): {e}",
+                            fmt,
+                            sidecar.display(),
+                        ));
+                    }
+                }
+            }
         }
     }
 
@@ -4125,6 +4297,85 @@ fn attach_bindings_to_components(
 
 /// later phases). Kept local to this CLI module so the generator crate
 /// has no filesystem dependencies.
+/// Milestone 221 US2a (FR-008a support): true when an `--output`
+/// argument value targets stdout — either bare `-` or `<fmt>=-`.
+fn is_stdout_output(value: &str) -> bool {
+    let raw = value.trim();
+    if raw == "-" {
+        return true;
+    }
+    // Per-format form `<fmt>=<path>`; look at the path portion.
+    if let Some((_fmt, path)) = raw.split_once('=') {
+        return path.trim() == "-";
+    }
+    false
+}
+
+/// Milestone 221 US2a: produce a suggested replacement path when the
+/// operator combined `--sign-key` with stdout output. Preserves the
+/// `<fmt>=` prefix when present so the diagnostic reads naturally.
+fn suggest_non_stdout_path(offender: &str) -> String {
+    if let Some((fmt, _)) = offender.split_once('=') {
+        format!("{fmt}=signed.{fmt}.json")
+    } else {
+        "signed.cdx.json".to_string()
+    }
+}
+
+/// Milestone 221 US2a — parse CDX bytes, sign the doc in-place per
+/// FR-007b (JSF into `metadata.signature`), and re-serialize.
+///
+/// Returns the signed bytes ready to write to disk. Any error
+/// bubbles up as `SbomSigningError`; the CLI layer maps that to a
+/// fail-close exit per FR-009a.
+fn sign_cdx_bytes_for_write(
+    bytes: &[u8],
+    mode: &crate::sbom::signer::SigningMode,
+) -> Result<Vec<u8>, crate::sbom::signer::SbomSigningError> {
+    let mut doc: serde_json::Value = serde_json::from_slice(bytes)?;
+    crate::sbom::signer::sign_cdx_document_in_place(&mut doc, mode)?;
+    // Re-serialize with pretty indentation to match the pre-signing
+    // CDX writer's shape. The signer canonicalizes via JCS internally
+    // for the signature bytes, so the on-disk pretty formatting is
+    // decoupled from what actually got signed.
+    Ok(serde_json::to_vec_pretty(&doc)?)
+}
+
+/// Milestone 221 US2a (FR-009a) — best-effort unlink of every file
+/// waybill wrote during this scan. Called on signing failure so
+/// consumers never see a partial `--output <path>` file. Errors on
+/// individual unlinks are logged at WARN but do not mask the
+/// primary signing error.
+fn cleanup_written_files(files: &[PathBuf]) {
+    for path in files {
+        if let Err(e) = std::fs::remove_file(path) {
+            if e.kind() != std::io::ErrorKind::NotFound {
+                tracing::warn!(
+                    path = %path.display(),
+                    error = %e,
+                    "could not clean up partial output on signing failure"
+                );
+            }
+        }
+    }
+}
+
+/// Milestone 221 US2a — derive the DSSE sidecar filename from the
+/// SPDX primary output path. Rule: append `.sig.json` to the full
+/// filename (not to the file stem) so
+/// `waybill.spdx.json` → `waybill.spdx.json.sig.json` matches the
+/// contract in `contracts/sbom-emission-contract.md`.
+fn sidecar_extension(target: &Path) -> std::ffi::OsString {
+    let mut ext = std::ffi::OsString::new();
+    if let Some(existing) = target.extension() {
+        ext.push(existing);
+        ext.push(".sig.json");
+    } else {
+        ext.push("sig.json");
+    }
+    ext
+}
+
 fn write_bytes_to(path: &Path, bytes: &[u8]) -> anyhow::Result<()> {
     use anyhow::Context;
     if let Some(parent) = path.parent() {
@@ -4145,6 +4396,41 @@ mod tests {
 
     fn reg() -> SerializerRegistry {
         SerializerRegistry::with_defaults()
+    }
+
+    // ----- Milestone 221 US2a (FR-008a) — stdout+signing rejection helpers -----
+
+    #[test]
+    fn is_stdout_output_detects_bare_dash_m221() {
+        assert!(is_stdout_output("-"));
+        assert!(is_stdout_output(" - "));
+    }
+
+    #[test]
+    fn is_stdout_output_detects_fmt_dash_m221() {
+        assert!(is_stdout_output("cyclonedx-json=-"));
+        assert!(is_stdout_output("spdx-2.3-json=-"));
+        assert!(is_stdout_output("spdx-3-json= -"));
+    }
+
+    #[test]
+    fn is_stdout_output_ignores_normal_paths_m221() {
+        assert!(!is_stdout_output("/tmp/scan.cdx.json"));
+        assert!(!is_stdout_output("cyclonedx-json=/tmp/scan.cdx.json"));
+        assert!(!is_stdout_output("./scan.spdx.json"));
+        assert!(!is_stdout_output("waybill.cdx.json"));
+        // Filename that happens to contain '-' but isn't stdout.
+        assert!(!is_stdout_output("signed-scan.cdx.json"));
+        assert!(!is_stdout_output("cyclonedx-json=signed-scan.cdx.json"));
+    }
+
+    #[test]
+    fn suggest_non_stdout_path_preserves_fmt_prefix_m221() {
+        assert_eq!(suggest_non_stdout_path("-"), "signed.cdx.json");
+        assert_eq!(
+            suggest_non_stdout_path("cyclonedx-json=-"),
+            "cyclonedx-json=signed.cyclonedx-json.json"
+        );
     }
 
     #[test]
@@ -4659,6 +4945,14 @@ mod tests {
             // FR-016 / SC-005).
             helm_chart: None,
             helm_render: false,
+            // Milestone 221 US2a — test helper defaults preserve pre-m221
+            // behavior (no signing; byte-identity guaranteed per FR-009).
+            sign_key: None,
+            sign_key_passphrase_env: None,
+            // Milestone 221 US4 — no --sbom-version by default; CDX
+            // metadata.version stays at the pre-m221 hardcoded 1 and
+            // SPDX outputs emit no waybill:sbom-version annotation.
+            sbom_version: None,
             split: None,
             output_dir: None,
             output: vec![],

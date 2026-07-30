@@ -980,6 +980,14 @@
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XQW4RTPLXMYD3M3FLS5PMQVX/anno-ISMUCX6NQKYZGUFH",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XQW4RTPLXMYD3M3FLS5PMQVX",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
       "spdxId": "https://waybill.kusari.dev/spdx3/doc-XQW4RTPLXMYD3M3FLS5PMQVX/anno-IUAWCUZPUMJDYSIW",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:build-inclusion\",\"value\":\"unknown\"}",
       "subject": "https://waybill.kusari.dev/spdx3/doc-XQW4RTPLXMYD3M3FLS5PMQVX/pkg-DJ3ZIKWTNBYO26BT",
