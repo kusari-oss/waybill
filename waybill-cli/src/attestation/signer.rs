@@ -450,7 +450,59 @@ fn extract_fulcio_cert_subject(cert_der: &[u8]) -> Result<String, SigningError> 
 /// Every fail-close error propagates up through `SigningError::*`; the
 /// m221 FR-009a cleanup handler at the CLI layer unlinks any partial
 /// output on error.
+///
+/// **Runtime isolation** (bug fix from PR #645 CI run): the entire
+/// keyless flow is moved to a dedicated OS thread via
+/// `std::thread::spawn` + `join()`. Both `reqwest::blocking::Client`
+/// (used inside `identity_token_from_github_actions`) and
+/// `sigstore::bundle::sign::blocking::SigningSession::new` (used inside
+/// `SigningContext::blocking_signer`) construct their own tokio
+/// runtimes internally; calling either from a thread that is already
+/// inside a tokio runtime (which waybill's `#[tokio::main]` establishes
+/// for the entire CLI dispatch) panics with `Cannot start a runtime
+/// from within a runtime`. Moving the work to a fresh OS thread with
+/// no tokio context avoids the panic and preserves the sync API.
 pub fn sign_keyless_sbom(
+    canonical_bytes: &[u8],
+    fulcio_url: &str,
+    rekor_url: &str,
+    rekor_timeout: std::time::Duration,
+) -> Result<KeylessSignSuccess, SigningError> {
+    // Runtime isolation: escape the ambient tokio runtime by moving to
+    // a fresh OS thread. Payload is copied by value into the thread.
+    let bytes = canonical_bytes.to_vec();
+    let fulcio_url_owned = fulcio_url.to_string();
+    let rekor_url_owned = rekor_url.to_string();
+    let handle = std::thread::spawn(move || {
+        sign_keyless_sbom_no_tokio(&bytes, &fulcio_url_owned, &rekor_url_owned, rekor_timeout)
+    });
+    match handle.join() {
+        Ok(result) => result,
+        Err(payload) => {
+            // Preserve the panic message when the thread panicked
+            // rather than returned Err — surfaces upstream sigstore-rs
+            // panics as clean SigningError variants.
+            let msg = payload
+                .downcast_ref::<String>()
+                .cloned()
+                .or_else(|| {
+                    payload
+                        .downcast_ref::<&'static str>()
+                        .map(|s| (*s).to_string())
+                })
+                .unwrap_or_else(|| "keyless sign worker thread panicked".to_string());
+            Err(SigningError::CryptoError {
+                detail: format!("keyless sign worker thread panicked: {msg}"),
+            })
+        }
+    }
+}
+
+/// Inner sign flow — same body that was inline in `sign_keyless_sbom`
+/// before the runtime-isolation wrapper. Runs on a fresh OS thread
+/// with no ambient tokio runtime; sigstore-rs's blocking layer and
+/// reqwest::blocking are both safe to invoke here.
+fn sign_keyless_sbom_no_tokio(
     canonical_bytes: &[u8],
     fulcio_url: &str,
     rekor_url: &str,

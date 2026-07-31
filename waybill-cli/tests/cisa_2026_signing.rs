@@ -409,6 +409,31 @@ fn us2b_keyless_signing_failure_cleans_up_output_m222() {
         "scan MUST fail when Fulcio is unreachable (FR-009a fail-close). stderr={}",
         String::from_utf8_lossy(&out.stderr)
     );
+    // Regression guard (PR #645 CI): assert the failure surfaces as a
+    // clean SigningError variant, NOT a panic. Before the runtime-isolation
+    // fix, sign_keyless_sbom panicked on reqwest::blocking-inside-tokio
+    // BEFORE ever reaching Fulcio, and this test still passed because it
+    // only checked exit status.
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        !stderr.contains("panicked at"),
+        "keyless sign MUST NOT panic — expected clean SigningError. stderr:\n{stderr}"
+    );
+    // Sigstore-rs classifies reqwest network errors (like DNS-fail
+    // on our invalid Fulcio URL) as its own `UnexpectedError` variant,
+    // which our classify_sign_error maps to `CryptoError`. Assert on
+    // the URL being in the error message (proof we actually attempted
+    // the Fulcio round-trip) OR any of the typical network-fail
+    // substrings. What matters is that this is a REAL sign error, not
+    // a panic — the assert!(!"panicked at") check above is the
+    // regression guard for the tokio-runtime bug.
+    assert!(
+        stderr.contains("fulcio.invalid.example.test")
+            || stderr.contains("FulcioError")
+            || stderr.contains("CryptoError")
+            || stderr.contains("error sending request"),
+        "expected network-error diagnostic naming the invalid Fulcio URL, got:\n{stderr}"
+    );
     assert!(
         !output.exists(),
         "partial output file MUST be unlinked on signing failure (FR-009a)"
