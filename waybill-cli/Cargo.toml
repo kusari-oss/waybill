@@ -159,6 +159,13 @@ rpm = { version = "0.22", default-features = false, features = [] }
 # `tough` transitive (see specs/089-bump-sigstore-vulns/research.md §2).
 # See specs/006-sbomit-suite/research.md R1 for the original audit.
 sigstore = { version = "0.11", default-features = false, features = ["cosign-rustls-tls", "fulcio-rustls-tls", "rekor-rustls-tls", "bundle"] }
+# Milestone 222 (US2b keyless signing) — needed to pattern-match the
+# Bundle's `verification_material.content` oneof + read the DER leaf
+# cert out of `X509CertificateChain`. Already in the dep tree
+# transitively via `sigstore` (0.3.7); promoted here to direct-dep so
+# `sign_keyless_sbom` can name `VerificationMaterial` +
+# `verification_material::Content`. Zero net-new lockfile entries.
+sigstore_protobuf_specs = "0.4.3"
 # Feature 006 — PEM + X.509 parsing for cert SAN + SPKI extraction in
 # `waybill sbom verify`. Transitive deps of sigstore, promoted to direct
 # for re-use.

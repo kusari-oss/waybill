@@ -63,9 +63,16 @@ pub enum SigningMode {
         /// omitted `--sign-key-passphrase-env`.
         passphrase_env: String,
     },
-    // NOTE: US2b will add a `Keyless { fulcio_url, rekor_url, oidc }`
-    // variant here. Kept out for this session so no dead code path
-    // references incomplete Sigstore integration.
+    /// `--sign` — Sigstore keyless (US2b, milestone 222). OIDC token
+    /// acquisition is late-bound per FR-008 (resolved at signing time,
+    /// not CLI parse time). Endpoints are env-var-overridable via
+    /// `WAYBILL_FULCIO_URL` / `WAYBILL_REKOR_URL` /
+    /// `WAYBILL_REKOR_TIMEOUT_SECS`.
+    Keyless {
+        fulcio_url: String,
+        rekor_url: String,
+        rekor_timeout: std::time::Duration,
+    },
 }
 
 impl SigningMode {
@@ -87,6 +94,51 @@ pub enum SbomSignatureEnvelope {
     StaticKeyJsf(JsfSignature),
     // Reserved for US2b:
     // Keyless(SigstoreBundle),
+}
+
+/// Return type for `sign_spdx_bytes_to_sidecar`. SPDX outputs get a
+/// separate on-disk sidecar (SPDX has no in-document signature slot);
+/// the shape depends on the `SigningMode` variant.
+///
+/// Milestone 222 US2b — extends the m221 US2a `SignedEnvelope`-only
+/// return to accommodate the Sigstore keyless flow's `Bundle` output.
+#[derive(Debug)]
+pub enum Sidecar {
+    /// DSSE envelope wrapping the SPDX bytes as payload — m221 US2a
+    /// static-key flow. Sidecar filename `.sig.json`.
+    Dsse(SignedEnvelope),
+    /// Sigstore Bundle — m222 US2b keyless flow. Sidecar filename
+    /// `.sig.bundle.json` per FR-004.
+    SigstoreBundle(Box<sigstore::bundle::Bundle>),
+}
+
+impl Sidecar {
+    /// Serialize the sidecar's inner payload to pretty JSON bytes ready
+    /// to write to disk. Both DSSE + Bundle serialize via serde_json.
+    pub fn to_json_bytes(&self) -> Result<Vec<u8>, serde_json::Error> {
+        match self {
+            Sidecar::Dsse(envelope) => serde_json::to_vec_pretty(envelope),
+            Sidecar::SigstoreBundle(bundle) => serde_json::to_vec_pretty(bundle.as_ref()),
+        }
+    }
+
+    /// Filename suffix appended to the primary SPDX output path. DSSE
+    /// gets `.sig.json`; Sigstore Bundle gets `.sig.bundle.json` per
+    /// FR-004.
+    pub fn sidecar_suffix(&self) -> &'static str {
+        match self {
+            Sidecar::Dsse(_) => ".sig.json",
+            Sidecar::SigstoreBundle(_) => ".sig.bundle.json",
+        }
+    }
+
+    /// Human-readable variant name for INFO log messages.
+    pub fn kind_label(&self) -> &'static str {
+        match self {
+            Sidecar::Dsse(_) => "DSSE",
+            Sidecar::SigstoreBundle(_) => "Sigstore Bundle",
+        }
+    }
 }
 
 /// A JSF (JSON Signature Format, draft-cyberphone-jsf-00) signature
@@ -177,6 +229,49 @@ pub fn sign_cdx_document_in_place(
         return Ok(());
     }
 
+    // Milestone 222 US2b — Sigstore keyless dispatch. Per
+    // `specs/222-sigstore-keyless-signing/contracts/keyless-signing-flow.md`
+    // §CDX-embedded Bundle canonical-bytes contract, we canonicalize
+    // the CDX doc WITHOUT `metadata.signature` populated (unlike the
+    // JSF empty-value trick below), sign those bytes, then insert the
+    // Bundle at `metadata.signature`. Verifiers reproduce the signed
+    // bytes by parsing the doc, REMOVING `metadata.signature`, and
+    // re-canonicalizing.
+    if let SigningMode::Keyless {
+        fulcio_url,
+        rekor_url,
+        rekor_timeout,
+    } = mode
+    {
+        // Ensure metadata.signature is absent before canonicalizing.
+        if let Some(meta) = doc.get_mut("metadata").and_then(|m| m.as_object_mut()) {
+            meta.remove("signature");
+        } else {
+            return Err(SbomSigningError::SignFailed {
+                detail: "CDX document has no `metadata` object; cannot insert signature slot"
+                    .to_string(),
+            });
+        }
+        let canonical = canonical_json_bytes(doc)?;
+        let success = crate::attestation::signer::sign_keyless_sbom(
+            &canonical,
+            fulcio_url,
+            rekor_url,
+            *rekor_timeout,
+        )
+        .map_err(|e| SbomSigningError::SignFailed {
+            detail: format!("Sigstore keyless sign failed: {e}"),
+        })?;
+        let bundle_json =
+            serde_json::to_value(&success.bundle).map_err(SbomSigningError::from)?;
+        let meta = doc
+            .get_mut("metadata")
+            .and_then(|m| m.as_object_mut())
+            .expect("metadata presence verified above");
+        meta.insert("signature".to_string(), bundle_json);
+        return Ok(());
+    }
+
     let keypair = load_key(mode)?;
     let algorithm = KeyAlgorithm::EcdsaP256; // See note on scheme in load_key.
     let scheme = signing_scheme_for(algorithm);
@@ -232,18 +327,45 @@ pub fn sign_cdx_document_in_place(
     Ok(())
 }
 
-/// Produce a DSSE envelope wrapping the given SPDX bytes. Returns
+/// Produce a signature sidecar for the given SPDX bytes. Returns
 /// `Ok(None)` when `mode == Unsigned` (no sidecar file written).
 ///
-/// The envelope's `payloadType` is `SBOM_DSSE_PAYLOAD_TYPE` (distinct
-/// from in-toto attestations); the payload is the raw SPDX bytes as
-/// written to the primary output file.
-pub fn sign_spdx_bytes_to_dsse(
+/// - `SigningMode::StaticKey{..}` → `Sidecar::Dsse(SignedEnvelope)`
+///   with `payloadType = SBOM_DSSE_PAYLOAD_TYPE`.
+/// - `SigningMode::Keyless{..}` → `Sidecar::SigstoreBundle(Bundle)`
+///   with the raw SPDX bytes as the signed payload (detached; the
+///   SPDX doc on disk equals the signed bytes byte-for-byte per the
+///   `contracts/keyless-signing-flow.md` CDX/SPDX contract split).
+///
+/// Milestone 222 US2b renamed the entry from `sign_spdx_bytes_to_dsse`
+/// to reflect the Sidecar shape shift; a thin backwards-compatible
+/// alias is preserved for the m221 US2a call site until the CLI
+/// migrates to the new return type.
+pub fn sign_spdx_bytes_to_sidecar(
     spdx_bytes: &[u8],
     mode: &SigningMode,
-) -> Result<Option<SignedEnvelope>, SbomSigningError> {
+) -> Result<Option<Sidecar>, SbomSigningError> {
     if !mode.is_enabled() {
         return Ok(None);
+    }
+
+    // Milestone 222 US2b — Sigstore keyless dispatch.
+    if let SigningMode::Keyless {
+        fulcio_url,
+        rekor_url,
+        rekor_timeout,
+    } = mode
+    {
+        let success = crate::attestation::signer::sign_keyless_sbom(
+            spdx_bytes,
+            fulcio_url,
+            rekor_url,
+            *rekor_timeout,
+        )
+        .map_err(|e| SbomSigningError::SignFailed {
+            detail: format!("Sigstore keyless sign failed: {e}"),
+        })?;
+        return Ok(Some(Sidecar::SigstoreBundle(Box::new(success.bundle))));
     }
 
     let keypair = load_key(mode)?;
@@ -261,7 +383,7 @@ pub fn sign_spdx_bytes_to_dsse(
         detail: format!("signature computation failed: {e}"),
     })?;
 
-    Ok(Some(SignedEnvelope {
+    Ok(Some(Sidecar::Dsse(SignedEnvelope {
         payload_type: SBOM_DSSE_PAYLOAD_TYPE.to_string(),
         payload: BASE64_STD.encode(spdx_bytes),
         signatures: vec![Signature {
@@ -272,7 +394,28 @@ pub fn sign_spdx_bytes_to_dsse(
                 algorithm,
             },
         }],
-    }))
+    })))
+}
+
+/// Milestone 221 US2a legacy alias — returns just the DSSE envelope,
+/// or `Err(NotImplemented)` for the m222 US2b Keyless variant (that
+/// path must go through `sign_spdx_bytes_to_sidecar` for the correct
+/// Bundle return type). Kept during the m222 transition; delete once
+/// the CLI's SPDX sidecar-writer is fully on `Sidecar`.
+pub fn sign_spdx_bytes_to_dsse(
+    spdx_bytes: &[u8],
+    mode: &SigningMode,
+) -> Result<Option<SignedEnvelope>, SbomSigningError> {
+    match sign_spdx_bytes_to_sidecar(spdx_bytes, mode)? {
+        None => Ok(None),
+        Some(Sidecar::Dsse(env)) => Ok(Some(env)),
+        Some(Sidecar::SigstoreBundle(_)) => Err(SbomSigningError::NotImplemented {
+            operation: "sign_spdx_bytes_to_dsse called with SigningMode::Keyless — \
+                        Sigstore keyless signing produces a Bundle sidecar, not DSSE. \
+                        Callers must migrate to sign_spdx_bytes_to_sidecar."
+                .to_string(),
+        }),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -296,6 +439,12 @@ fn load_key(mode: &SigningMode) -> Result<SigStoreKeyPair, SbomSigningError> {
             let keypair = load_local_signer(key_ref, passphrase_env_ref)?;
             Ok(keypair)
         }
+        SigningMode::Keyless { .. } => Err(SbomSigningError::NotImplemented {
+            operation: "load_key called on Keyless mode — keyless sign path does not load \
+                        a local key; it uses an ephemeral Fulcio-issued cert. Callers must \
+                        dispatch on SigningMode::Keyless before reaching load_key."
+                .to_string(),
+        }),
     }
 }
 
@@ -362,6 +511,30 @@ mod tests {
             passphrase_env: "WAYBILL_SIGN_KEY_PASSPHRASE".to_string(),
         }
         .is_enabled());
+    }
+
+    #[test]
+    fn signing_mode_keyless_is_enabled_m222() {
+        let mode = SigningMode::Keyless {
+            fulcio_url: "https://fulcio.sigstore.dev".to_string(),
+            rekor_url: "https://rekor.sigstore.dev".to_string(),
+            rekor_timeout: std::time::Duration::from_secs(30),
+        };
+        assert!(mode.is_enabled());
+    }
+
+    #[test]
+    fn load_key_rejects_keyless_mode_m222() {
+        let mode = SigningMode::Keyless {
+            fulcio_url: "https://fulcio.sigstore.dev".to_string(),
+            rekor_url: "https://rekor.sigstore.dev".to_string(),
+            rekor_timeout: std::time::Duration::from_secs(30),
+        };
+        match load_key(&mode) {
+            Err(SbomSigningError::NotImplemented { .. }) => {}
+            Err(other) => panic!("expected NotImplemented, got {other:?}"),
+            Ok(_) => panic!("expected keyless mode to not go through load_key"),
+        }
     }
 
     #[test]

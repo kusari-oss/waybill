@@ -3,8 +3,8 @@ cisa-publication: "2026 Minimum Elements for a Software Bill of Materials (SBOM)
 cisa-publication-date: 2026-07-29
 cisa-publication-tlp: TLP:CLEAR
 cisa-publication-url: https://www.cisa.gov/sites/default/files/2026-07/2026_cisa_sbom_minimum_elements_508c.pdf
-waybill-milestone: 221
-last-verified: 2026-07-29
+waybill-milestone: 222
+last-verified: 2026-07-31
 ---
 
 # waybill vs CISA 2026 SBOM Minimum Elements — coverage matrix
@@ -34,7 +34,7 @@ subcomponents).
 | # | Element (CISA 2026) | Category | Change (vs 2021) | CDX 1.6 | SPDX 2.3 | SPDX 3.0.1 | Notes |
 |---|---------------------|----------|-------------------|---------|----------|-----------|-------|
 | 1 | SBOM Author | Metadata | Major Update | ✅ `metadata.authors[]` at `waybill-cli/src/generate/cyclonedx/metadata.rs:798` | ✅ `creationInfo.creators[]` at `waybill-cli/src/generate/spdx/document.rs:806` | ✅ `CreationInfo.createdBy` at `waybill-cli/src/generate/spdx/v3_document.rs:229` | m080 wires `--creator` / `--annotator` from `waybill trace run`; standalone `waybill sbom scan` uses waybill as the sole author. Distinct from Component Producer (element 10). |
-| 2 | SBOM Author Signature | Metadata | New | ⚠️ opt-in `--sign-key <PATH>` — populates `metadata.signature` with a JSF (JSON Signature Format, draft-cyberphone-jsf-00) object at `waybill-cli/src/sbom/signer.rs::sign_cdx_document_in_place` (m221 US2a). Sigstore keyless (`--sign`) pending US2b. Absent by default per FR-009. | ⚠️ opt-in `--sign-key <PATH>` — emits DSSE envelope sidecar at `<output>.sig.json` (SPDX 2.3 has no native in-document envelope-signature slot) via `waybill-cli/src/sbom/signer.rs::sign_spdx_bytes_to_dsse` (m221 US2a). Sigstore keyless pending US2b. Absent by default. | ⚠️ opt-in `--sign-key <PATH>` — same DSSE sidecar shape as SPDX 2.3 (SPDX 3 also lacks a native in-document envelope-signature slot). Sigstore keyless pending US2b. Absent by default. | Feature 221 US2a landed static-key signing (PEM path). Sigstore keyless (`--sign`) is the R6 risk item, pending US2b — completing the m006 scaffolded `sign_keyless()` with real Fulcio + Rekor + Sigstore Bundle assembly. Test coverage: 6/6 in `waybill-cli/tests/cisa_2026_signing.rs` (US2b test `#[ignore]`d pending WAYBILL_TEST_KEYLESS=1 + OIDC + Sigstore staging). CLI rejects `--sign-key + --output -` at parse per FR-008a; fails-close on any signing error per FR-009a (cleans up partial output). Verification: `jq .metadata.signature signed.cdx.json` + JSF-verifier tool (any RFC 7515 aware) for CDX; `sigstore-rs` `CosignVerificationKey::from_pem(...)?.verify_signature(...)` for DSSE. |
+| 2 | SBOM Author Signature | Metadata | New | ⚠️ opt-in — either `--sign-key <PATH>` populates `metadata.signature` with a JSF (JSON Signature Format, draft-cyberphone-jsf-00) object (m221 US2a) OR `--sign` populates `metadata.signature` with a Sigstore Bundle (`application/vnd.dev.sigstore.bundle+json;version=0.3`, m222 US2b — v1 requires `SIGSTORE_ID_TOKEN` from an email-emitting OIDC provider). Both paths at `waybill-cli/src/sbom/signer.rs::sign_cdx_document_in_place`. Absent by default per FR-009. See `specs/222-sigstore-keyless-signing/contracts/keyless-signing-flow.md`. | ⚠️ opt-in — either `--sign-key <PATH>` emits a DSSE envelope sidecar at `<output>.sig.json` (m221 US2a) OR `--sign` emits a Sigstore Bundle sidecar at `<output>.sig.bundle.json` (m222 US2b). SPDX 2.3 has no native in-document envelope-signature slot; both shapes routed through `waybill-cli/src/sbom/signer.rs::sign_spdx_bytes_to_sidecar`. Absent by default. | ⚠️ opt-in — same dual-shape sidecar rules as SPDX 2.3 (SPDX 3 also lacks a native in-document envelope-signature slot). Either `--sign-key <PATH>` emits `.sig.json` (DSSE) or `--sign` emits `.sig.bundle.json` (Sigstore Bundle) per FR-004. Absent by default. | **Both signing paths ship as of m222** (Sigstore keyless with the v1 scope constraint below). Feature 221 US2a landed static-key signing (PEM path); feature 222 US2b landed the Sigstore keyless flow — explicit `SIGSTORE_ID_TOKEN` env-var → Fulcio → sign → Rekor inclusion → Sigstore Bundle assembly. **v1 scope constraint**: sigstore-rs 0.11 requires OIDC tokens to emit an `email` claim (used as the CSR subject sent to Fulcio); GitHub Actions ambient tokens do not emit `email`. Compatible providers: `cosign login`, Sigstore-dex, Google, GitLab, any provider emitting `email`. GHA users fetch a token via a helper (e.g., `sigstore/gh-action-sigstore-python`) and export it as `SIGSTORE_ID_TOKEN`. Full GHA-ambient support deferred to a follow-up milestone (requires ~30-50 LOC upstream sigstore-rs change). CLI rejects `--sign` / `--sign-key + --output -` at parse per FR-008a; both signing paths fail-close on any error per FR-009a (unlink partial output). Vendored Sigstore CTFE keys documented in `docs/sigstore-trust-keys.md`. Verification: `jq .metadata.signature signed.cdx.json` + JSF-verifier for CDX static-key; `cosign verify-blob --bundle signed.cdx.json --certificate-identity <expected> --certificate-oidc-issuer <expected>` for keyless. |
 | 3 | SBOM Data Format Name | Metadata | New | ✅ `bomFormat: "CycloneDX"` at `waybill-cli/src/generate/cyclonedx/builder.rs:813` | ⚠️ implicit in `spdxVersion: "SPDX-2.3"` at `waybill-cli/src/generate/spdx/document.rs:152` (format name and version are combined in one slot per SPDX 2.3 § 6.1) | ⚠️ implicit in top-level `@context` at `waybill-cli/src/generate/spdx/v3_document.rs:863` (SPDX 3 uses JSON-LD, format name is the `@context` URL) | SPDX doesn't split format name from format version the way CDX does; the ⚠️ reflects that the CISA element is technically satisfied but the value has to be inferred from a compound slot. |
 | 4 | SBOM Data Format Version | Metadata | New | ✅ `specVersion: "1.6"` at `waybill-cli/src/generate/cyclonedx/builder.rs:814` | ✅ `spdxVersion: "SPDX-2.3"` at `waybill-cli/src/generate/spdx/document.rs:152` | ✅ `CreationInfo.specVersion: "3.0.1"` at `waybill-cli/src/generate/spdx/v3_document.rs:227` | All three formats emit a version literal at document scope. |
 | 5 | SBOM Generation Context | Metadata | New | ✅ native `metadata.lifecycles[]` at `waybill-cli/src/generate/cyclonedx/metadata.rs:1099` (m047 aggregates `ScanArtifacts.generation_context` into CDX-native phases). ✅ courtesy alias `metadata.properties[waybill:cisa-2026-lifecycle]` at `metadata.rs` (m221 US3 / FR-012). | ⚠️ doc-scope `Annotation` on `SPDXRef-DOCUMENT` at `waybill-cli/src/generate/spdx/annotations.rs::annotate_document` — carries both `waybill:generation-context` (waybill-native variant) and `waybill:cisa-2026-lifecycle` (CISA-vocab alias) per m221 US3 / FR-010 + FR-012. | ⚠️ top-level `Annotation` element with `subject: <SpdxDocument @id>` at `waybill-cli/src/generate/spdx/v3_annotations.rs::push_document_fields` — same two-annotation shape as SPDX 2.3 per m221 US3 / FR-011 + FR-012. Validates cleanly against SPDX 3.0.1 schema + SHACL via `spdx3-validate==0.0.5`. | CISA "before-build"/"build"/"after-build" vocab satisfied per CISA page 9 ("more specific identifiers can satisfy this element"). Mapping table lives in `waybill_common::attestation::metadata::GenerationContext::as_cisa_2026_lifecycle`: `build-time-trace → build`; `filesystem-scan → after-build`; `container-image-scan → after-build`. Parity extractor row `C141` at `waybill-cli/src/parity/extractors/mod.rs`. |
@@ -320,6 +320,126 @@ Recipes below assume `/tmp/scan.cdx.json` /
 - CDX: `jq -r '.components[]?.version // empty' /tmp/scan.cdx.json | head -1` (may be empty for unknown-version components per Edge Case #1)
 - SPDX 2.3: `jq -r '.packages[]?.versionInfo // empty' /tmp/scan.spdx.json | head -1` (returns `NOASSERTION` when unknown)
 - SPDX 3: `jq -r '.["@graph"][]? | select(.type=="software_Package") | .software_packageVersion // empty' /tmp/scan.spdx3.json | head -1`
+
+---
+
+## Appendix B — SBOM Author Signature verification (row 2)
+
+Row 2 is `⚠️ opt-in` — the default scan is unsigned per FR-009 /
+FR-015 (byte-identity preserved). When the operator opts in via
+`--sign-key <PATH>` (static PEM) or `--sign` (Sigstore keyless),
+verification recipes differ per path.
+
+### Static-key path (m221 US2a)
+
+```bash
+# 1. Sign at scan time
+waybill sbom scan --path <target> \
+    --format cyclonedx-json --output /tmp/signed.cdx.json \
+    --sign-key ./signing-key.pem
+```
+
+```bash
+# 2. Extract the JSF signature envelope
+jq '.metadata.signature' /tmp/signed.cdx.json
+
+# 3. Verify with any RFC 7515-aware JSF verifier tool, or
+#    programmatically via sigstore-rs:
+#    CosignVerificationKey::from_pem(pubkey_pem)?
+#        .verify_signature(sig_bytes, canonical_bytes_with_empty_value)?
+```
+
+For SPDX outputs, waybill emits a DSSE envelope sidecar at
+`<output>.sig.json`:
+
+```bash
+waybill sbom scan --path <target> \
+    --format spdx-2.3-json --output /tmp/signed.spdx.json \
+    --sign-key ./signing-key.pem
+# → /tmp/signed.spdx.json + /tmp/signed.spdx.json.sig.json
+```
+
+Verify by loading the DSSE envelope, base64-decoding its `payload`
+field, and confirming that value equals the emitted SPDX file
+byte-for-byte.
+
+### Sigstore keyless path (m222 US2b)
+
+**v1 scope**: waybill's `--sign` requires an OIDC token that emits an
+`email` claim (used by sigstore-rs 0.11 as the CSR subject sent to
+Fulcio). Compatible providers: `cosign login`, Sigstore-dex, Google,
+GitLab, any provider emitting `email`. **GitHub Actions ambient
+tokens do NOT emit `email` and are not supported in v1** — GHA users
+must fetch a token via a helper (see below).
+
+**Local laptop / non-GHA CI**:
+
+```bash
+# 1. Fetch an OIDC token via cosign (browser flow, uses Sigstore-dex
+#    which emits email). Alternatively use any other tool that produces
+#    an email-carrying JWT.
+export SIGSTORE_ID_TOKEN=$(cosign login --identity-token)
+
+# 2. Sign at scan time
+waybill sbom scan --path <target> \
+    --format cyclonedx-json --output /tmp/signed.cdx.json \
+    --sign
+
+# 3. Verify against production Sigstore with cosign
+cosign verify-blob \
+    --bundle /tmp/signed.cdx.json \
+    --certificate-identity '<your OIDC subject>' \
+    --certificate-oidc-issuer '<your OIDC issuer>'
+```
+
+**Inside GitHub Actions** (helper action fetches a compatible token):
+
+```yaml
+- name: Fetch OIDC token via sigstore-python
+  uses: sigstore/gh-action-sigstore-python@<sha>  # emits SIGSTORE_ID_TOKEN
+  with:
+    dry-run: true  # we only need the token export, not the signing
+- name: Sign SBOM
+  run: |
+    waybill sbom scan \
+        --path ./my-project \
+        --format cyclonedx-json --output signed.cdx.json \
+        --sign
+```
+
+The `sigstore/gh-action-sigstore-python` action runs sigstore-python
+which does the issuer-aware OIDC dispatch waybill's sigstore-rs 0.11
+substrate can't. Alternative helpers that mint email-carrying tokens
+in GHA are equally valid.
+
+For SPDX outputs, waybill emits a Sigstore Bundle sidecar at
+`<output>.sig.bundle.json` per FR-004:
+
+```bash
+waybill sbom scan --path <target> \
+    --format spdx-2.3-json --output /tmp/signed.spdx.json \
+    --sign
+# → /tmp/signed.spdx.json + /tmp/signed.spdx.json.sig.bundle.json
+
+cosign verify-blob \
+    --bundle /tmp/signed.spdx.json.sig.bundle.json \
+    --certificate-identity <expected> \
+    --certificate-oidc-issuer <expected> \
+    /tmp/signed.spdx.json
+```
+
+**Audit trail**: every successful `--sign` invocation surfaces three
+grep-able fields at INFO level in waybill's own log per FR-016:
+
+```text
+INFO waybill::attestation::signer: SBOM signed via Sigstore keyless
+  rekor_log_index=12345678
+  fulcio_cert_subject=<OIDC email or subject>
+  oidc_provider=explicit-env
+```
+
+SREs can look up the Rekor entry directly via
+`rekor-cli get --log-index <N>` for post-hoc audit.
 
 ---
 

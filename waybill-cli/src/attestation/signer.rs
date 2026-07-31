@@ -206,21 +206,406 @@ pub fn sign_local(
     })
 }
 
-/// Keyless signing skeleton. The full flow is OIDC token → Fulcio cert
-/// → sign → (optional) Rekor upload. v1 of this feature ships the type
-/// plumbing + explicit-token path; full Fulcio/Rekor integration is
-/// gated on a real OIDC token being available in the environment.
+/// Keyless signing skeleton (m006 attestation entry point — DSSE).
+/// This entry is currently unreachable from the CLI; US2b of feature
+/// 222 wires SBOM signing via the separate `sign_keyless_sbom()` entry
+/// which returns a Sigstore Bundle. In-toto attestations still use the
+/// scaffold below and remain unimplemented until an attestation-side
+/// use case emerges.
 pub fn sign_keyless(
     _statement: &InTotoStatement,
     identity: &SigningIdentity,
 ) -> Result<SignedEnvelope, SigningError> {
-    // v1: keyless flow requires live network calls to Fulcio + Rekor.
-    // Return a structured error rather than crashing so CI environments
-    // that want to exercise the hard-fail contract (FR-006a) can.
     let _ = identity;
     Err(SigningError::OidcTokenError {
-        detail: "keyless signing not yet fully implemented — use --signing-key for local signing; keyless flow lands in a follow-on task that adds Fulcio cert issuance + Rekor upload".to_string(),
+        detail: "in-toto keyless attestations not yet implemented — SBOM \
+                 keyless signing is available via `waybill sbom scan --sign` \
+                 (see attestation::signer::sign_keyless_sbom)"
+            .to_string(),
     })
+}
+
+// ---------------------------------------------------------------------------
+// Milestone 222 US2b — Sigstore keyless SBOM signing
+// ---------------------------------------------------------------------------
+
+// Note: the m222-US2b GitHub Actions ambient OIDC helper was removed
+// in a scope-down decision post PR #645's first CI run. sigstore-rs
+// 0.11 requires the OIDC token's Claims struct to include an `email`
+// String field (used as the CSR subject sent to Fulcio), which
+// real GitHub Actions ambient tokens do not emit — they carry `sub`
+// (workflow path) instead. This is not fixable via a minimal patch to
+// our sigstore-rs fork; it requires ~30-50 LOC of behavior change in
+// the CSR builder + issuer-aware claim dispatch. Deferred to a
+// follow-up milestone. v1 keyless signing supports only the
+// `SIGSTORE_ID_TOKEN` explicit-env path with email-emitting OIDC
+// providers (cosign login, Sigstore-dex, Google, GitLab, etc.).
+// GitHub Actions users must fetch a compatible token via a helper
+// action (e.g., sigstore/gh-action-sigstore-python) that populates
+// SIGSTORE_ID_TOKEN.
+
+/// Return type from `sign_keyless_sbom()`. Carries the Sigstore Bundle
+/// for callers to serialize into the CDX `metadata.signature` slot or
+/// SPDX sidecar, plus the three fields FR-016 requires at INFO log.
+///
+/// T014 (feature 222 US2b).
+#[derive(Debug)]
+pub struct KeylessSignSuccess {
+    pub bundle: sigstore::bundle::Bundle,
+    /// FR-016 — Rekor log-index (transparency-log lookup key for
+    /// post-hoc audit; positive integer per Rekor's 1-based indexing).
+    pub rekor_log_index: u64,
+    /// FR-016 — Fulcio-issued cert's Subject Alternative Name (who
+    /// signed). Non-empty per validation in `sign_keyless_sbom`.
+    pub fulcio_cert_subject: String,
+    /// FR-016 — which OIDC provider variant was used. Closed set:
+    /// `"github-actions-ambient"` or `"explicit-env"`.
+    pub oidc_provider: &'static str,
+}
+
+/// T015 (feature 222 US2b) — read `SIGSTORE_ID_TOKEN` env var, parse
+/// via `sigstore::oauth::IdentityToken::try_from(str)`, verify
+/// `in_validity_period()`. Three failure modes → three distinct
+/// `SigningError::OidcTokenError` detail strings.
+fn identity_token_from_env_var() -> Result<sigstore::oauth::IdentityToken, SigningError> {
+    let raw = std::env::var("SIGSTORE_ID_TOKEN").map_err(|_| SigningError::OidcTokenError {
+        detail: "SIGSTORE_ID_TOKEN env var is not set. Fetch a token via \
+                 `cosign login --identity-token` and export it, or run inside \
+                 GitHub Actions with `permissions: id-token: write`."
+            .to_string(),
+    })?;
+    let token = sigstore::oauth::IdentityToken::try_from(raw.as_str()).map_err(|e| {
+        SigningError::OidcTokenError {
+            detail: format!("SIGSTORE_ID_TOKEN could not be parsed as an OIDC JWT: {e}"),
+        }
+    })?;
+    if !token.in_validity_period() {
+        return Err(SigningError::OidcTokenError {
+            detail: "SIGSTORE_ID_TOKEN is outside its validity period (exp/nbf claims). \
+                     Fetch a fresh token via `cosign login --identity-token` and re-export."
+                .to_string(),
+        });
+    }
+    Ok(token)
+}
+
+/// T017 (feature 222 US2b) — dispatcher for OIDC token acquisition.
+/// v1 supports only the `Explicit` variant (`SIGSTORE_ID_TOKEN` env
+/// var). `GitHubActions` (ambient) and `Interactive` (browser) both
+/// return fail-close diagnostics pointing at the explicit-env
+/// workaround.
+///
+/// **v1 scope constraint**: sigstore-rs 0.11's `Claims` struct requires
+/// a non-optional `email: String` field (used as the CSR subject sent
+/// to Fulcio). Real GitHub Actions ambient tokens do not emit `email`
+/// — they use `sub` (workflow path). Support for GHA-ambient requires
+/// upstream sigstore-rs changes and is deferred to a follow-up
+/// milestone. Users inside GitHub Actions must fetch a token via a
+/// helper action that populates `SIGSTORE_ID_TOKEN` (see the
+/// diagnostic message for pointers).
+pub fn resolve_identity_token(
+    provider: &OidcProvider,
+) -> Result<sigstore::oauth::IdentityToken, SigningError> {
+    match provider {
+        OidcProvider::Explicit => identity_token_from_env_var(),
+        OidcProvider::GitHubActions => Err(SigningError::OidcTokenError {
+            detail: "GitHub Actions ambient OIDC is not supported in this version of \
+                     waybill because sigstore-rs 0.11 requires an `email` claim, which \
+                     GHA tokens do not emit. Workaround: fetch a token via a helper \
+                     (e.g., `cosign login --identity-token`, or the \
+                     `sigstore/gh-action-sigstore-python` action) and export it as \
+                     SIGSTORE_ID_TOKEN before running `waybill sbom scan --sign`."
+                .to_string(),
+        }),
+        OidcProvider::Interactive => Err(SigningError::OidcTokenError {
+            detail: "no OIDC token available; set SIGSTORE_ID_TOKEN (e.g. via \
+                     `cosign login --identity-token`). Interactive browser flow and \
+                     GitHub Actions ambient OIDC are both deferred to a follow-up \
+                     milestone."
+                .to_string(),
+        }),
+    }
+}
+
+/// T018 (feature 222 US2b) — map a `sigstore::errors::SigstoreError`
+/// variant to the corresponding `SigningError` variant. Preserves the
+/// original error string in the `detail` field for operator diagnostics.
+/// Contract source: `specs/222-sigstore-keyless-signing/contracts/keyless-signing-flow.md`
+/// §Error variant mapping.
+fn classify_sign_error(err: sigstore::errors::SigstoreError) -> SigningError {
+    use sigstore::errors::SigstoreError as Se;
+    match err {
+        Se::FulcioClientError(detail) => SigningError::FulcioError { detail },
+        Se::RekorClientError(detail) => SigningError::RekorError { detail },
+        Se::PublicKeyUnsupportedAlgorithmError(detail) => SigningError::CryptoError { detail },
+        Se::PublicKeyVerificationError => SigningError::CryptoError {
+            detail: "sigstore-rs public-key verification failed".to_string(),
+        },
+        Se::IdentityTokenError(detail) => SigningError::OidcTokenError { detail },
+        other => SigningError::CryptoError {
+            detail: format!("sigstore-rs sign flow failed: {other}"),
+        },
+    }
+}
+
+/// Extract the Subject Alternative Name from a DER-encoded X.509 leaf
+/// certificate. Fulcio-issued certs place the OIDC identity (e.g.
+/// `https://github.com/kusari-sandbox/waybill/.github/workflows/ci.yml@refs/heads/main`
+/// for a GHA-ambient token, or `mike@kusari.dev` for a personal login)
+/// in a SAN URI or SAN email extension. We return whichever comes first.
+///
+/// Contract source: `specs/222-sigstore-keyless-signing/contracts/keyless-signing-flow.md`
+/// §Step 3 — extraction of `fulcio_cert_subject` for FR-016 log field.
+fn extract_fulcio_cert_subject(cert_der: &[u8]) -> Result<String, SigningError> {
+    use x509_parser::extensions::GeneralName;
+    let (_, cert) =
+        x509_parser::parse_x509_certificate(cert_der).map_err(|e| SigningError::CryptoError {
+            detail: format!("Fulcio cert DER could not be parsed: {e}"),
+        })?;
+    let san_ext = cert
+        .subject_alternative_name()
+        .map_err(|e| SigningError::CryptoError {
+            detail: format!("Fulcio cert SAN extension parse failed: {e}"),
+        })?
+        .ok_or_else(|| SigningError::CryptoError {
+            detail: "Fulcio-issued cert has no Subject Alternative Name extension \
+                     (expected either URI-form workflow-identity or rfc822Name email)"
+                .to_string(),
+        })?;
+    for name in &san_ext.value.general_names {
+        match name {
+            GeneralName::URI(uri) => return Ok((*uri).to_string()),
+            GeneralName::RFC822Name(email) => return Ok((*email).to_string()),
+            _ => continue,
+        }
+    }
+    Err(SigningError::CryptoError {
+        detail: "Fulcio cert SAN extension contains no URI or RFC822 (email) entries \
+                 — cannot determine signer identity"
+            .to_string(),
+    })
+}
+
+/// T019 (feature 222 US2b) — the core Sigstore keyless sign flow.
+///
+/// End-to-end the function detects the OIDC provider, resolves an
+/// identity token, builds a FulcioClient plus a RekorConfiguration
+/// (with `rekor_timeout` applied at the `reqwest::Client` level per
+/// T018a research) plus a CTFE keyring, constructs `SigningContext::new()`,
+/// calls `blocking_signer(token)?.sign(bytes)?`, extracts the Rekor
+/// log-index and Fulcio cert SAN, emits the FR-016 INFO log, and
+/// returns `KeylessSignSuccess`.
+///
+/// Contract: `specs/222-sigstore-keyless-signing/contracts/keyless-signing-flow.md`.
+/// Every fail-close error propagates up through `SigningError::*`; the
+/// m221 FR-009a cleanup handler at the CLI layer unlinks any partial
+/// output on error.
+///
+/// **Runtime isolation** (bug fix from PR #645 CI run): the entire
+/// keyless flow is moved to a dedicated OS thread via
+/// `std::thread::spawn` + `join()`. `sigstore::bundle::sign::blocking::SigningSession::new`
+/// (used inside `SigningContext::blocking_signer`) constructs its own
+/// tokio runtime internally; calling it from a thread already inside a
+/// tokio runtime (which waybill's `#[tokio::main]` establishes for the
+/// entire CLI dispatch) panics with `Cannot start a runtime from
+/// within a runtime`. Moving the work to a fresh OS thread with no
+/// tokio context avoids the panic and preserves the sync API.
+pub fn sign_keyless_sbom(
+    canonical_bytes: &[u8],
+    fulcio_url: &str,
+    rekor_url: &str,
+    rekor_timeout: std::time::Duration,
+) -> Result<KeylessSignSuccess, SigningError> {
+    // Runtime isolation: escape the ambient tokio runtime by moving to
+    // a fresh OS thread. Payload is copied by value into the thread.
+    let bytes = canonical_bytes.to_vec();
+    let fulcio_url_owned = fulcio_url.to_string();
+    let rekor_url_owned = rekor_url.to_string();
+    let handle = std::thread::spawn(move || {
+        sign_keyless_sbom_no_tokio(&bytes, &fulcio_url_owned, &rekor_url_owned, rekor_timeout)
+    });
+    match handle.join() {
+        Ok(result) => result,
+        Err(payload) => {
+            // Preserve the panic message when the thread panicked
+            // rather than returned Err — surfaces upstream sigstore-rs
+            // panics as clean SigningError variants.
+            let msg = payload
+                .downcast_ref::<String>()
+                .cloned()
+                .or_else(|| {
+                    payload
+                        .downcast_ref::<&'static str>()
+                        .map(|s| (*s).to_string())
+                })
+                .unwrap_or_else(|| "keyless sign worker thread panicked".to_string());
+            Err(SigningError::CryptoError {
+                detail: format!("keyless sign worker thread panicked: {msg}"),
+            })
+        }
+    }
+}
+
+/// Inner sign flow — same body that was inline in `sign_keyless_sbom`
+/// before the runtime-isolation wrapper. Runs on a fresh OS thread
+/// with no ambient tokio runtime; sigstore-rs's blocking layer and
+/// reqwest::blocking are both safe to invoke here.
+fn sign_keyless_sbom_no_tokio(
+    canonical_bytes: &[u8],
+    fulcio_url: &str,
+    rekor_url: &str,
+    rekor_timeout: std::time::Duration,
+) -> Result<KeylessSignSuccess, SigningError> {
+    use crate::attestation::sigstore_trust_root::ctfe_keyring;
+    use sigstore::bundle::sign::SigningContext;
+    use sigstore::fulcio::oauth::OauthTokenProvider;
+    use sigstore::fulcio::{FulcioClient, TokenProvider};
+    use sigstore::rekor::apis::configuration::Configuration as RekorConfiguration;
+
+    // Step 1: OIDC token acquisition (late-bound per FR-008).
+    let provider = OidcProvider::detect();
+    let identity_token = resolve_identity_token(&provider)?;
+    let oidc_provider_label: &'static str = match provider {
+        OidcProvider::GitHubActions => "github-actions-ambient",
+        OidcProvider::Explicit => "explicit-env",
+        // Interactive was already rejected inside resolve_identity_token.
+        OidcProvider::Interactive => unreachable!("Interactive fails-close at resolve_identity_token"),
+    };
+
+    // Step 2: SigningContext construction (per research §R1 — vendored
+    // CTFE keys, NOT SigningContext::production()).
+    let fulcio_client_url = url::Url::parse(fulcio_url).map_err(|e| SigningError::FulcioError {
+        detail: format!("--fulcio-url {fulcio_url:?} is not a valid URL: {e}"),
+    })?;
+    // TokenProvider is a placeholder here — request_cert_v2 (the modern
+    // sign path used inside session.sign()) uses the IdentityToken
+    // passed to SigningContext::blocking_signer directly, bypassing the
+    // FulcioClient's stored TokenProvider. Upstream `production()` also
+    // uses OauthTokenProvider::default() as a no-op placeholder.
+    let fulcio = FulcioClient::new(
+        fulcio_client_url,
+        TokenProvider::Oauth(OauthTokenProvider::default()),
+    );
+
+    let mut rekor_cfg = RekorConfiguration::default();
+    if rekor_url != "https://rekor.sigstore.dev" {
+        rekor_cfg.base_path = rekor_url.to_string();
+    }
+    // Per T018a research (§R4): sigstore-rs 0.11 has no dedicated Rekor
+    // timeout knob; instead, override the reqwest::Client on the
+    // RekorConfiguration to apply .timeout(rekor_timeout). The timeout
+    // applies to every Rekor HTTP call including inclusion-proof wait.
+    rekor_cfg.client = reqwest::Client::builder()
+        .timeout(rekor_timeout)
+        .build()
+        .map_err(|e| SigningError::RekorError {
+            detail: format!(
+                "failed to build Rekor HTTP client with timeout {rekor_timeout:?}: {e}"
+            ),
+        })?;
+
+    let ctfe = ctfe_keyring(rekor_url)?;
+    let ctx = SigningContext::new(fulcio, rekor_cfg, ctfe);
+
+    // Step 3-4: Signing session + sign + Rekor upload.
+    // session.sign() runs the entire Fulcio+sign+Rekor+inclusion-proof
+    // flow inside sigstore-rs; any error surfaces as SigstoreError which
+    // classify_sign_error maps to a typed SigningError.
+    let session = ctx
+        .blocking_signer(identity_token)
+        .map_err(classify_sign_error)?;
+    let artifact = session
+        .sign(std::io::Cursor::new(canonical_bytes))
+        .map_err(classify_sign_error)?;
+    let bundle = artifact.to_bundle();
+
+    // Step 5: Extract Rekor log-index from the Bundle's transparency
+    // log entries. The Bundle's `verification_material` is Option-wrapped
+    // in the protobuf; sigstore-rs always populates it on successful
+    // sign, but we treat absence as a RekorError for defense-in-depth.
+    let verification_material =
+        bundle
+            .verification_material
+            .as_ref()
+            .ok_or_else(|| SigningError::RekorError {
+                detail: "Bundle missing verification_material after successful sign — \
+                         sigstore-rs contract violation"
+                    .to_string(),
+            })?;
+    let log_index_i64 = verification_material
+        .tlog_entries
+        .first()
+        .map(|e| e.log_index)
+        .ok_or_else(|| SigningError::RekorError {
+            detail: "Bundle has empty tlog_entries after successful sign — \
+                     Rekor upload apparently silently skipped (FR-007 violation)"
+                .to_string(),
+        })?;
+    if log_index_i64 <= 0 {
+        return Err(SigningError::RekorError {
+            detail: format!(
+                "Rekor returned invalid log-index {log_index_i64} \
+                 (log-index must be positive per Rekor's 1-based indexing)"
+            ),
+        });
+    }
+    let rekor_log_index = log_index_i64 as u64;
+
+    // Extract the leaf Fulcio cert's SAN for FR-016 audit-trail logging.
+    let leaf_cert_der = extract_leaf_cert_der(verification_material)?;
+    let fulcio_cert_subject = extract_fulcio_cert_subject(&leaf_cert_der)?;
+    if fulcio_cert_subject.is_empty() {
+        return Err(SigningError::CryptoError {
+            detail: "Fulcio cert SAN is empty — cannot determine signer identity".to_string(),
+        });
+    }
+
+    // Step 6: FR-016 — INFO log with the three audit-trail fields.
+    tracing::info!(
+        rekor_log_index,
+        fulcio_cert_subject = %fulcio_cert_subject,
+        oidc_provider = oidc_provider_label,
+        "SBOM signed via Sigstore keyless"
+    );
+
+    // Step 7: Return the KeylessSignSuccess.
+    Ok(KeylessSignSuccess {
+        bundle,
+        rekor_log_index,
+        fulcio_cert_subject,
+        oidc_provider: oidc_provider_label,
+    })
+}
+
+/// Pull the DER-encoded leaf certificate out of the Bundle's
+/// `verification_material.content`. The content is a protobuf oneof;
+/// keyless flows always produce the `X509CertificateChain` variant.
+fn extract_leaf_cert_der(
+    vm: &sigstore_protobuf_specs::dev::sigstore::bundle::v1::VerificationMaterial,
+) -> Result<Vec<u8>, SigningError> {
+    use sigstore_protobuf_specs::dev::sigstore::bundle::v1::verification_material::Content;
+    let content = vm.content.as_ref().ok_or_else(|| SigningError::CryptoError {
+        detail: "Bundle verification_material has no content field — \
+                 sigstore-rs contract violation"
+            .to_string(),
+    })?;
+    match content {
+        Content::X509CertificateChain(chain) => {
+            let leaf = chain
+                .certificates
+                .first()
+                .ok_or_else(|| SigningError::CryptoError {
+                    detail: "Bundle X509CertificateChain is empty — no leaf cert".to_string(),
+                })?;
+            Ok(leaf.raw_bytes.clone())
+        }
+        Content::Certificate(cert) => Ok(cert.raw_bytes.clone()),
+        Content::PublicKey(_) => Err(SigningError::CryptoError {
+            detail: "Bundle content is a bare PublicKey, not an X509CertificateChain \
+                     (keyless signing flow always produces a cert chain)"
+                .to_string(),
+        }),
+    }
 }
 
 /// Unified signing entrypoint. Dispatches on `identity`.
@@ -385,12 +770,11 @@ mod tests {
 
     // Env-var tests are consolidated into one serial test because
     // `std::env::set_var` / `remove_var` mutate process-wide state that
-    // races with parallel test execution.
+    // races with parallel test execution. All env-mutating tests in
+    // this module hold `keyless_env_lock()` so nothing races.
     #[test]
     fn oidc_detect_resolves_all_providers_in_precedence_order() {
-        use std::sync::Mutex;
-        static ENV_LOCK: Mutex<()> = Mutex::new(());
-        let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let _guard = keyless_env_lock();
 
         // 1. GitHub Actions wins when its two env vars are set.
         let _g1 = EnvGuard::setup(&[
@@ -506,7 +890,8 @@ mod tests {
             Err(SigningError::OidcTokenError { detail }) => {
                 assert!(detail.contains("keyless"));
             }
-            other => panic!("expected OidcTokenError, got {other:?}"),
+            Err(other) => panic!("expected OidcTokenError variant, got {other:?}"),
+            Ok(_) => panic!("expected fail-close error, got Ok(IdentityToken)"),
         }
     }
 
@@ -528,6 +913,157 @@ mod tests {
         let kid = keyid_for_pem("-----BEGIN PUBLIC KEY-----\nabc\n-----END PUBLIC KEY-----");
         assert!(kid.starts_with("sha256:"));
         assert_eq!(kid.len(), 7 + 64); // "sha256:" + 32 bytes hex
+    }
+
+    // ----- Milestone 222 US2b (feature 222-sigstore-keyless-signing) -----
+
+    /// Cross-test env-mutex re-declaration so keyless helper tests
+    /// serialize with the existing `oidc_detect_resolves_all_providers_in_precedence_order`
+    /// test above (same env-var namespace + process-wide state).
+    fn keyless_env_lock() -> std::sync::MutexGuard<'static, ()> {
+        use std::sync::Mutex;
+        static ENV_LOCK: Mutex<()> = Mutex::new(());
+        ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// Minimal JWT with `aud=sigstore` claim + `exp` far in the future.
+    /// Header + payload base64url, unsigned (sigstore-rs's
+    /// `IdentityToken::try_from` does not verify the signature —
+    /// verification happens Fulcio-side).
+    fn mint_test_jwt() -> String {
+        use base64::engine::general_purpose::URL_SAFE_NO_PAD as B64URL;
+        use base64::Engine as _;
+        // aud=sigstore is REQUIRED by IdentityToken::try_from at
+        // sigstore-0.11.0/src/oauth/token.rs:79.
+        // exp in year 2035 so `in_validity_period()` returns true.
+        let header = B64URL.encode(br#"{"alg":"none","typ":"JWT"}"#);
+        let payload =
+            B64URL.encode(br#"{"aud":"sigstore","exp":2064000000,"email":"test@waybill.dev"}"#);
+        format!("{header}.{payload}.")
+    }
+
+    #[test]
+    fn identity_token_from_env_var_reads_sigstore_id_token_m222() {
+        let _lock = keyless_env_lock();
+        let _g = EnvGuard::setup(&[("SIGSTORE_ID_TOKEN", Some(&mint_test_jwt()))]);
+        let token = identity_token_from_env_var().expect("valid JWT should parse");
+        assert!(token.in_validity_period(), "token should be non-expired");
+    }
+
+    #[test]
+    fn identity_token_from_env_var_missing_env_reports_actionable_m222() {
+        let _lock = keyless_env_lock();
+        let _g = EnvGuard::setup(&[("SIGSTORE_ID_TOKEN", None)]);
+        match identity_token_from_env_var() {
+            Err(SigningError::OidcTokenError { detail }) => {
+                assert!(detail.contains("SIGSTORE_ID_TOKEN"), "detail: {detail}");
+                assert!(detail.contains("cosign login"), "detail: {detail}");
+            }
+            Err(other) => panic!("expected OidcTokenError variant, got {other:?}"),
+            Ok(_) => panic!("expected fail-close error, got Ok(IdentityToken)"),
+        }
+    }
+
+    #[test]
+    fn identity_token_from_env_var_rejects_malformed_jwt_m222() {
+        let _lock = keyless_env_lock();
+        let _g = EnvGuard::setup(&[("SIGSTORE_ID_TOKEN", Some("not.a.jwt"))]);
+        match identity_token_from_env_var() {
+            Err(SigningError::OidcTokenError { detail }) => {
+                assert!(
+                    detail.to_lowercase().contains("parsed") || detail.contains("JWT"),
+                    "detail: {detail}"
+                );
+            }
+            Err(other) => panic!("expected OidcTokenError variant, got {other:?}"),
+            Ok(_) => panic!("expected fail-close error, got Ok(IdentityToken)"),
+        }
+    }
+
+    #[test]
+    fn resolve_identity_token_interactive_returns_fail_close_diagnostic_m222() {
+        // No env-var mutation needed — Interactive variant is pure fail-close.
+        // Post-scope-down (2026-07-31): both Interactive AND GHA-ambient
+        // deferred; diagnostic points at cosign login as the local
+        // workaround.
+        match resolve_identity_token(&OidcProvider::Interactive) {
+            Err(SigningError::OidcTokenError { detail }) => {
+                assert!(detail.contains("no OIDC token available"), "detail: {detail}");
+                assert!(detail.contains("SIGSTORE_ID_TOKEN"), "detail: {detail}");
+                assert!(detail.contains("cosign login"), "detail: {detail}");
+                assert!(
+                    detail.contains("deferred to a follow-up milestone"),
+                    "detail: {detail}"
+                );
+            }
+            Err(other) => panic!("expected OidcTokenError variant, got {other:?}"),
+            Ok(_) => panic!("expected fail-close diagnostic, got Ok(IdentityToken)"),
+        }
+    }
+
+    #[test]
+    fn resolve_identity_token_explicit_delegates_to_env_var_helper_m222() {
+        let _lock = keyless_env_lock();
+        let _g = EnvGuard::setup(&[("SIGSTORE_ID_TOKEN", Some(&mint_test_jwt()))]);
+        resolve_identity_token(&OidcProvider::Explicit).expect("explicit path resolves");
+    }
+
+    #[test]
+    fn resolve_identity_token_github_actions_returns_fail_close_diagnostic_m222() {
+        // v1 scope-down (post PR #645): GHA-ambient returns fail-close
+        // with actionable diagnostic pointing at the helper-action
+        // workaround. sigstore-rs 0.11's email-claim requirement is
+        // the reason (see resolve_identity_token doc-comment).
+        match resolve_identity_token(&OidcProvider::GitHubActions) {
+            Err(SigningError::OidcTokenError { detail }) => {
+                assert!(
+                    detail.contains("GitHub Actions ambient OIDC is not supported"),
+                    "detail: {detail}"
+                );
+                assert!(detail.contains("email"), "detail: {detail}");
+                assert!(detail.contains("SIGSTORE_ID_TOKEN"), "detail: {detail}");
+                assert!(
+                    detail.contains("sigstore/gh-action-sigstore-python")
+                        || detail.contains("cosign login"),
+                    "detail: {detail}"
+                );
+            }
+            Err(other) => panic!("expected OidcTokenError variant, got {other:?}"),
+            Ok(_) => panic!("expected fail-close error, got Ok(IdentityToken)"),
+        }
+    }
+
+    #[test]
+    fn classify_sign_error_maps_fulcio_to_fulcio_error_m222() {
+        use sigstore::errors::SigstoreError as Se;
+        let out = classify_sign_error(Se::FulcioClientError("bad cert".to_string()));
+        assert!(matches!(out, SigningError::FulcioError { detail } if detail == "bad cert"));
+    }
+
+    #[test]
+    fn classify_sign_error_maps_rekor_to_rekor_error_m222() {
+        use sigstore::errors::SigstoreError as Se;
+        let out = classify_sign_error(Se::RekorClientError("timeout".to_string()));
+        assert!(matches!(out, SigningError::RekorError { detail } if detail == "timeout"));
+    }
+
+    #[test]
+    fn classify_sign_error_maps_identity_token_to_oidc_error_m222() {
+        use sigstore::errors::SigstoreError as Se;
+        let out = classify_sign_error(Se::IdentityTokenError("expired".to_string()));
+        assert!(matches!(out, SigningError::OidcTokenError { detail } if detail == "expired"));
+    }
+
+    #[test]
+    fn classify_sign_error_catchall_maps_to_crypto_error_m222() {
+        use sigstore::errors::SigstoreError as Se;
+        let out = classify_sign_error(Se::UnexpectedError("something else".to_string()));
+        match out {
+            SigningError::CryptoError { detail } => {
+                assert!(detail.contains("something else"), "detail: {detail}");
+            }
+            other => panic!("expected CryptoError, got {other:?}"),
+        }
     }
 
     /// RAII guard that snapshots + replaces env vars for the duration of

@@ -68,7 +68,7 @@ fn test_matrix_parses() {
         "cisa-publication:",
         "cisa-publication-date: 2026-07-29",
         "cisa-publication-tlp: TLP:CLEAR",
-        "waybill-milestone: 221",
+        "waybill-milestone: 222",
         "last-verified:",
     ] {
         assert!(
@@ -183,10 +183,15 @@ fn test_annotation_verdicts_have_expected_key() {
             if !cell.starts_with("⚠️") {
                 continue;
             }
-            // Row is either annotation-only or "pending USn". Both are acceptable:
-            //   - "pending US2/3/4" — feature not yet landed; check the USn link.
-            //   - names a `waybill:` prefix — check that some `waybill:*` key
-            //     is mentioned in the cell text.
+            // Row is either annotation-only, "pending USn", or the
+            // signing row (⚠️ opt-in because default emit is unsigned
+            // per FR-009, but both --sign and --sign-key are shipped
+            // paths per m221 US2a + m222 US2b). Acceptable markers:
+            //   - "pending US2/3/4" — feature not yet landed
+            //   - `waybill:` prefix — annotation-based bridging
+            //   - "implicit" — native fallback
+            //   - "omitted" / "asymmetry" — row-17-style CDX quirk
+            //   - "--sign" — either signing flag (row 2 opt-in)
             let has_pending = cell.contains("pending US")
                 || cell.contains("(see US")
                 || cell.contains("US4")
@@ -199,9 +204,15 @@ fn test_annotation_verdicts_have_expected_key() {
             // "omitted" / "asymmetry" and treat as a valid ⚠️ signal.
             let has_asymmetry_marker =
                 cell.contains("omitted") || cell.contains("asymmetry");
+            // Row 2 (SBOM Author Signature) — post-m222 both signing
+            // paths ship; the ⚠️ is because default is unsigned. Any
+            // mention of `--sign` (which includes `--sign-key`)
+            // satisfies the marker requirement.
+            let has_sign_flag = cell.contains("--sign");
             assert!(
-                has_pending || has_key || has_native_fallback || has_asymmetry_marker,
-                "⚠️ row missing waybill:*/implicit/USn/omitted/asymmetry signal — element={} cell={}",
+                has_pending || has_key || has_native_fallback || has_asymmetry_marker
+                    || has_sign_flag,
+                "⚠️ row missing waybill:*/implicit/USn/omitted/asymmetry/--sign signal — element={} cell={}",
                 row.element, cell
             );
         }
