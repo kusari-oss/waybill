@@ -194,17 +194,26 @@ Mutation of any byte in the payload flips verify to non-zero.
   (matches m221 FR-008; the `.sig.bundle.json` extension
   distinguishes keyless bundles from the static-key DSSE
   `.sig.json` sidecars).
-- **FR-005**: The OIDC-token acquisition path MUST support two
-  provider variants in v1 (via the existing
-  `waybill-cli/src/attestation/signer.rs::OidcProvider::detect()`):
-  GitHub Actions ambient (`ACTIONS_ID_TOKEN_REQUEST_URL` +
-  `ACTIONS_ID_TOKEN_REQUEST_TOKEN`) and explicit (`SIGSTORE_ID_TOKEN`
-  env var). Interactive browser flow (`OidcProvider::Interactive`)
-  is deferred to v2 per Clarifications Session 2026-07-30 —
-  `sign_keyless()` MUST return `SigningError::OidcTokenError` with a
-  diagnostic pointing operators at `SIGSTORE_ID_TOKEN` + `cosign` for
-  the token fetch when `OidcProvider::detect()` returns
-  `Interactive`.
+- **FR-005 (revised post PR #645 CI failure — 2026-07-31)**: The
+  OIDC-token acquisition path MUST support exactly ONE provider
+  variant in v1 — explicit (`SIGSTORE_ID_TOKEN` env var). GitHub
+  Actions ambient (`ACTIONS_ID_TOKEN_REQUEST_URL` +
+  `ACTIONS_ID_TOKEN_REQUEST_TOKEN`) was originally in scope per
+  Clarifications Session 2026-07-30 Q1 answer but is deferred to a
+  follow-up milestone. Reason: sigstore-rs 0.11's Claims struct
+  requires a non-optional `email: String` field which it uses as the
+  CSR subject sent to Fulcio; GHA ambient tokens do not emit
+  `email` (they use `sub` = workflow path per Fulcio's issuer-config
+  `challengeClaim`). Fixing this requires ~30-50 LOC upstream
+  sigstore-rs changes (make Claims flexible + make CSR builder
+  issuer-aware) — out of scope for v1's minimal-fork posture.
+  `resolve_identity_token(&OidcProvider::GitHubActions)` MUST return
+  `SigningError::OidcTokenError` with a diagnostic pointing operators
+  at helper actions (e.g., `sigstore/gh-action-sigstore-python`)
+  that mint email-carrying tokens compatible with sigstore-rs 0.11.
+  Interactive browser flow (`OidcProvider::Interactive`) is also
+  deferred — same diagnostic, pointing at `cosign login --identity-token`
+  as the local-laptop workaround.
 - **FR-006**: Fulcio endpoint MUST default to
   `https://fulcio.sigstore.dev` and be overridable via
   `WAYBILL_FULCIO_URL`. Rekor endpoint MUST default to

@@ -474,8 +474,8 @@ fn us2b_keyless_no_oidc_token_fails_close_m222() {
         "stderr missing SIGSTORE_ID_TOKEN pointer: {stderr}"
     );
     assert!(
-        stderr.contains("id-token: write"),
-        "stderr missing GHA workflow-permission pointer: {stderr}"
+        stderr.contains("cosign login"),
+        "stderr missing cosign-login workaround pointer: {stderr}"
     );
     assert!(
         !output.exists(),

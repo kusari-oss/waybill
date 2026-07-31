@@ -682,28 +682,29 @@ jobs:
             -v /sys/kernel/debug:/sys/kernel/debug \
             waybill-ebpf-test
 
-  # Milestone 222 US2b — Sigstore keyless SBOM signing integration
-  # test lane. Isolated from the main lint+test lanes so a Sigstore
-  # staging outage or network hiccup can't block unrelated PRs
-  # (feature 222 FR-012). Runs against staging (fulcio.sigstage.dev
-  # + rekor.sigstage.dev — never production) so we don't pollute
-  # production Rekor with test entries.
+  # Milestone 222 US2b — Sigstore keyless SBOM signing regression
+  # tests. Isolated from the main lint+test lanes so keyless-specific
+  # test authorship changes don't compete with the main lane's cache.
+  # Runs only the unconditional US2b tests: fail-close diagnostics +
+  # runtime-isolation regression guard (PR #645 fix).
   #
-  # Requires `permissions: id-token: write` so GitHub Actions'
-  # ambient OIDC endpoint (ACTIONS_ID_TOKEN_REQUEST_URL +
-  # ACTIONS_ID_TOKEN_REQUEST_TOKEN) is populated for the sign flow.
-  # `contents: read` is the workflow default when explicit
-  # permissions are declared; kept for clarity.
+  # **Scope note (v1)**: this job does NOT exercise the happy-path
+  # sign-and-verify flow against Sigstore staging. sigstore-rs 0.11
+  # requires OIDC tokens to emit an `email` claim, which GitHub
+  # Actions ambient tokens do not. The 3 network-gated
+  # `us2b_keyless_bundle_sign_and_verify` / `_fr016_info_log_fields_m222` /
+  # `_signature_covers_document_mutation_m222` tests remain
+  # `#[ignore]`d in this lane; operators verify the end-to-end flow
+  # manually with a helper-action-supplied SIGSTORE_ID_TOKEN or via
+  # `cosign login`. See `specs/222-sigstore-keyless-signing/quickstart.md`.
+  #
+  # `id-token: write` is intentionally NOT set — with the GHA-ambient
+  # path scoped out of v1, no OIDC endpoint is called in this lane.
   lint-and-test-keyless-sbom:
-    name: Lint + test keyless SBOM signing (sigstore staging)
+    name: Lint + test keyless SBOM signing (regression guard)
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
-    env:
-      WAYBILL_TEST_KEYLESS: "1"
-      WAYBILL_FULCIO_URL: "https://fulcio.sigstage.dev"
-      WAYBILL_REKOR_URL: "https://rekor.sigstage.dev"
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -735,7 +736,10 @@ jobs:
           path: ~/.cache/waybill/fixtures
           key: waybill-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
 
-      # Only the keyless test binary — keeps the lane fast and
-      # isolated from any Sigstore-unrelated failure noise.
-      - name: Run keyless integration tests (Sigstore staging)
-        run: cargo +stable test -p waybill --test cisa_2026_signing -- --include-ignored
+      # Only the keyless test binary. `--include-ignored` is
+      # intentionally OMITTED — the 3 network-gated staging tests
+      # require an email-emitting OIDC token that we can't easily
+      # provide in CI post-scope-down. The unconditional tests
+      # (fail-close scenarios + runtime-isolation guard) run here.
+      - name: Run keyless regression tests (unit + fail-close)
+        run: cargo +stable test -p waybill --test cisa_2026_signing

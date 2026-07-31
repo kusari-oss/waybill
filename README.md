@@ -205,12 +205,17 @@ practices/processes has a per-emitter verdict at
 evidence-cited, backed by a machine-verifying integration test that
 runs against every CI build, so regressions surface immediately.
 
-**Row 2 (SBOM Author Signature)** ships as opt-in but is now
-end-to-end complete: `--sign-key <PATH>` produces JSF static-key
-signatures on CDX (in-slot) and DSSE sidecars on SPDX; `--sign`
-produces Sigstore keyless signatures via OIDC → Fulcio → Rekor with
-the resulting Sigstore Bundle embedded in CDX `metadata.signature`
-or written to `.sig.bundle.json` sidecar for SPDX. Details at
+**Row 2 (SBOM Author Signature)** ships as opt-in: `--sign-key <PATH>`
+produces JSF static-key signatures on CDX (in-slot) and DSSE sidecars
+on SPDX; `--sign` produces Sigstore keyless signatures via OIDC →
+Fulcio → Rekor with the resulting Sigstore Bundle embedded in CDX
+`metadata.signature` or written to `.sig.bundle.json` sidecar for
+SPDX. **v1 scope**: `--sign` requires a token from an email-emitting
+OIDC provider (e.g., `cosign login`, Sigstore-dex, Google, GitLab)
+exported as `SIGSTORE_ID_TOKEN`. GitHub Actions ambient tokens are
+not directly supported in v1; GHA users fetch a compatible token via
+a helper action. Full GHA-ambient support deferred to a follow-up
+milestone. Details at
 [`docs/sigstore-trust-keys.md`](docs/sigstore-trust-keys.md) +
 [`specs/222-sigstore-keyless-signing/quickstart.md`](specs/222-sigstore-keyless-signing/quickstart.md).
 

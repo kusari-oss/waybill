@@ -229,15 +229,20 @@ pub fn sign_keyless(
 // Milestone 222 US2b — Sigstore keyless SBOM signing
 // ---------------------------------------------------------------------------
 
-/// Deserialize target for the GitHub Actions ambient OIDC endpoint
-/// response body. GitHub returns `{"value": "<jwt>", "count": ..., ...}`
-/// — we only need `value`.
-///
-/// T013 (feature 222 US2b) — kept module-private per data-model.md.
-#[derive(Debug, serde::Deserialize)]
-struct GitHubOidcResponse {
-    value: String,
-}
+// Note: the m222-US2b GitHub Actions ambient OIDC helper was removed
+// in a scope-down decision post PR #645's first CI run. sigstore-rs
+// 0.11 requires the OIDC token's Claims struct to include an `email`
+// String field (used as the CSR subject sent to Fulcio), which
+// real GitHub Actions ambient tokens do not emit — they carry `sub`
+// (workflow path) instead. This is not fixable via a minimal patch to
+// our sigstore-rs fork; it requires ~30-50 LOC of behavior change in
+// the CSR builder + issuer-aware claim dispatch. Deferred to a
+// follow-up milestone. v1 keyless signing supports only the
+// `SIGSTORE_ID_TOKEN` explicit-env path with email-emitting OIDC
+// providers (cosign login, Sigstore-dex, Google, GitLab, etc.).
+// GitHub Actions users must fetch a compatible token via a helper
+// action (e.g., sigstore/gh-action-sigstore-python) that populates
+// SIGSTORE_ID_TOKEN.
 
 /// Return type from `sign_keyless_sbom()`. Carries the Sigstore Bundle
 /// for callers to serialize into the CDX `metadata.signature` slot or
@@ -284,94 +289,39 @@ fn identity_token_from_env_var() -> Result<sigstore::oauth::IdentityToken, Signi
     Ok(token)
 }
 
-/// Append the Sigstore audience query parameter to a GitHub Actions
-/// ambient OIDC endpoint URL. Uses `&` when the URL already has a
-/// query string, `?` otherwise. Extracted as a pure function so we
-/// can unit-test the concatenation without spinning up a mock HTTP
-/// server (matches contracts/oidc-provider-dispatch.md §T012 test).
-fn build_github_actions_oidc_url(base_url: &str) -> String {
-    if base_url.contains('?') {
-        format!("{base_url}&audience=sigstore")
-    } else {
-        format!("{base_url}?audience=sigstore")
-    }
-}
-
-/// T016 (feature 222 US2b) — fetch an OIDC token from the GitHub
-/// Actions ambient OIDC endpoint. Uses `ACTIONS_ID_TOKEN_REQUEST_URL` +
-/// `ACTIONS_ID_TOKEN_REQUEST_TOKEN` per GitHub's documented API,
-/// appending `&audience=sigstore` so the resulting JWT is scoped for
-/// Fulcio's `aud=sigstore` claim check.
-fn identity_token_from_github_actions() -> Result<sigstore::oauth::IdentityToken, SigningError> {
-    let url =
-        std::env::var("ACTIONS_ID_TOKEN_REQUEST_URL").map_err(|_| SigningError::OidcTokenError {
-            detail: "ACTIONS_ID_TOKEN_REQUEST_URL env var is not set. Ensure your \
-                     GitHub Actions job has `permissions: id-token: write`."
-                .to_string(),
-        })?;
-    let bearer = std::env::var("ACTIONS_ID_TOKEN_REQUEST_TOKEN").map_err(|_| {
-        SigningError::OidcTokenError {
-            detail: "ACTIONS_ID_TOKEN_REQUEST_TOKEN env var is not set. Ensure your \
-                     GitHub Actions job has `permissions: id-token: write`."
-                .to_string(),
-        }
-    })?;
-    let request_url = build_github_actions_oidc_url(&url);
-    let client = reqwest::blocking::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
-        .build()
-        .map_err(|e| SigningError::OidcTokenError {
-            detail: format!("failed to build HTTP client for GitHub Actions OIDC fetch: {e}"),
-        })?;
-    let response = client
-        .get(&request_url)
-        .bearer_auth(&bearer)
-        .send()
-        .map_err(|e| SigningError::OidcTokenError {
-            detail: format!(
-                "failed to reach GitHub Actions OIDC endpoint at {request_url}: {e}"
-            ),
-        })?
-        .error_for_status()
-        .map_err(|e| SigningError::OidcTokenError {
-            detail: format!(
-                "GitHub Actions OIDC endpoint returned non-success status: {e}"
-            ),
-        })?;
-    let body: GitHubOidcResponse =
-        response.json().map_err(|e| SigningError::OidcTokenError {
-            detail: format!("failed to parse GitHub Actions OIDC response body: {e}"),
-        })?;
-    let token = sigstore::oauth::IdentityToken::try_from(body.value.as_str()).map_err(|e| {
-        SigningError::OidcTokenError {
-            detail: format!("GitHub Actions returned malformed JWT: {e}"),
-        }
-    })?;
-    if !token.in_validity_period() {
-        return Err(SigningError::OidcTokenError {
-            detail: "GitHub Actions issued an OIDC token outside its validity period \
-                     (exp/nbf claims) — this indicates severe clock skew or a broken \
-                     issuer; retry the workflow"
-                .to_string(),
-        });
-    }
-    Ok(token)
-}
-
 /// T017 (feature 222 US2b) — dispatcher for OIDC token acquisition.
-/// Matches on `OidcProvider` variants. `Interactive` returns fail-close
-/// per Q1 clarification (browser flow deferred to v2).
+/// v1 supports only the `Explicit` variant (`SIGSTORE_ID_TOKEN` env
+/// var). `GitHubActions` (ambient) and `Interactive` (browser) both
+/// return fail-close diagnostics pointing at the explicit-env
+/// workaround.
+///
+/// **v1 scope constraint**: sigstore-rs 0.11's `Claims` struct requires
+/// a non-optional `email: String` field (used as the CSR subject sent
+/// to Fulcio). Real GitHub Actions ambient tokens do not emit `email`
+/// — they use `sub` (workflow path). Support for GHA-ambient requires
+/// upstream sigstore-rs changes and is deferred to a follow-up
+/// milestone. Users inside GitHub Actions must fetch a token via a
+/// helper action that populates `SIGSTORE_ID_TOKEN` (see the
+/// diagnostic message for pointers).
 pub fn resolve_identity_token(
     provider: &OidcProvider,
 ) -> Result<sigstore::oauth::IdentityToken, SigningError> {
     match provider {
-        OidcProvider::GitHubActions => identity_token_from_github_actions(),
         OidcProvider::Explicit => identity_token_from_env_var(),
+        OidcProvider::GitHubActions => Err(SigningError::OidcTokenError {
+            detail: "GitHub Actions ambient OIDC is not supported in this version of \
+                     waybill because sigstore-rs 0.11 requires an `email` claim, which \
+                     GHA tokens do not emit. Workaround: fetch a token via a helper \
+                     (e.g., `cosign login --identity-token`, or the \
+                     `sigstore/gh-action-sigstore-python` action) and export it as \
+                     SIGSTORE_ID_TOKEN before running `waybill sbom scan --sign`."
+                .to_string(),
+        }),
         OidcProvider::Interactive => Err(SigningError::OidcTokenError {
             detail: "no OIDC token available; set SIGSTORE_ID_TOKEN (e.g. via \
-                     `cosign login --identity-token`) or run inside GitHub Actions \
-                     with `permissions: id-token: write`. Interactive browser flow \
-                     is deferred to a follow-up milestone."
+                     `cosign login --identity-token`). Interactive browser flow and \
+                     GitHub Actions ambient OIDC are both deferred to a follow-up \
+                     milestone."
                 .to_string(),
         }),
     }
@@ -453,15 +403,13 @@ fn extract_fulcio_cert_subject(cert_der: &[u8]) -> Result<String, SigningError> 
 ///
 /// **Runtime isolation** (bug fix from PR #645 CI run): the entire
 /// keyless flow is moved to a dedicated OS thread via
-/// `std::thread::spawn` + `join()`. Both `reqwest::blocking::Client`
-/// (used inside `identity_token_from_github_actions`) and
-/// `sigstore::bundle::sign::blocking::SigningSession::new` (used inside
-/// `SigningContext::blocking_signer`) construct their own tokio
-/// runtimes internally; calling either from a thread that is already
-/// inside a tokio runtime (which waybill's `#[tokio::main]` establishes
-/// for the entire CLI dispatch) panics with `Cannot start a runtime
-/// from within a runtime`. Moving the work to a fresh OS thread with
-/// no tokio context avoids the panic and preserves the sync API.
+/// `std::thread::spawn` + `join()`. `sigstore::bundle::sign::blocking::SigningSession::new`
+/// (used inside `SigningContext::blocking_signer`) constructs its own
+/// tokio runtime internally; calling it from a thread already inside a
+/// tokio runtime (which waybill's `#[tokio::main]` establishes for the
+/// entire CLI dispatch) panics with `Cannot start a runtime from
+/// within a runtime`. Moving the work to a fresh OS thread with no
+/// tokio context avoids the panic and preserves the sync API.
 pub fn sign_keyless_sbom(
     canonical_bytes: &[u8],
     fulcio_url: &str,
@@ -1035,11 +983,18 @@ mod tests {
     #[test]
     fn resolve_identity_token_interactive_returns_fail_close_diagnostic_m222() {
         // No env-var mutation needed — Interactive variant is pure fail-close.
+        // Post-scope-down (2026-07-31): both Interactive AND GHA-ambient
+        // deferred; diagnostic points at cosign login as the local
+        // workaround.
         match resolve_identity_token(&OidcProvider::Interactive) {
             Err(SigningError::OidcTokenError { detail }) => {
                 assert!(detail.contains("no OIDC token available"), "detail: {detail}");
                 assert!(detail.contains("SIGSTORE_ID_TOKEN"), "detail: {detail}");
-                assert!(detail.contains("id-token: write"), "detail: {detail}");
+                assert!(detail.contains("cosign login"), "detail: {detail}");
+                assert!(
+                    detail.contains("deferred to a follow-up milestone"),
+                    "detail: {detail}"
+                );
             }
             Err(other) => panic!("expected OidcTokenError variant, got {other:?}"),
             Ok(_) => panic!("expected fail-close diagnostic, got Ok(IdentityToken)"),
@@ -1054,61 +1009,28 @@ mod tests {
     }
 
     #[test]
-    fn github_actions_oidc_helper_missing_url_env_reports_actionable_m222() {
-        let _lock = keyless_env_lock();
-        let _g = EnvGuard::setup(&[
-            ("ACTIONS_ID_TOKEN_REQUEST_URL", None),
-            ("ACTIONS_ID_TOKEN_REQUEST_TOKEN", Some("bearer")),
-        ]);
-        match identity_token_from_github_actions() {
+    fn resolve_identity_token_github_actions_returns_fail_close_diagnostic_m222() {
+        // v1 scope-down (post PR #645): GHA-ambient returns fail-close
+        // with actionable diagnostic pointing at the helper-action
+        // workaround. sigstore-rs 0.11's email-claim requirement is
+        // the reason (see resolve_identity_token doc-comment).
+        match resolve_identity_token(&OidcProvider::GitHubActions) {
             Err(SigningError::OidcTokenError { detail }) => {
                 assert!(
-                    detail.contains("ACTIONS_ID_TOKEN_REQUEST_URL"),
+                    detail.contains("GitHub Actions ambient OIDC is not supported"),
                     "detail: {detail}"
                 );
-                assert!(detail.contains("id-token: write"), "detail: {detail}");
-            }
-            Err(other) => panic!("expected OidcTokenError variant, got {other:?}"),
-            Ok(_) => panic!("expected fail-close error, got Ok(IdentityToken)"),
-        }
-    }
-
-    #[test]
-    fn github_actions_oidc_helper_missing_token_env_reports_actionable_m222() {
-        let _lock = keyless_env_lock();
-        let _g = EnvGuard::setup(&[
-            ("ACTIONS_ID_TOKEN_REQUEST_URL", Some("https://example.test/oidc")),
-            ("ACTIONS_ID_TOKEN_REQUEST_TOKEN", None),
-        ]);
-        match identity_token_from_github_actions() {
-            Err(SigningError::OidcTokenError { detail }) => {
+                assert!(detail.contains("email"), "detail: {detail}");
+                assert!(detail.contains("SIGSTORE_ID_TOKEN"), "detail: {detail}");
                 assert!(
-                    detail.contains("ACTIONS_ID_TOKEN_REQUEST_TOKEN"),
+                    detail.contains("sigstore/gh-action-sigstore-python")
+                        || detail.contains("cosign login"),
                     "detail: {detail}"
                 );
             }
             Err(other) => panic!("expected OidcTokenError variant, got {other:?}"),
             Ok(_) => panic!("expected fail-close error, got Ok(IdentityToken)"),
         }
-    }
-
-    #[test]
-    fn build_github_actions_oidc_url_appends_query_separator_m222() {
-        // URL with an existing query string → use `&`.
-        assert_eq!(
-            build_github_actions_oidc_url("https://example.test/oidc?run_id=123"),
-            "https://example.test/oidc?run_id=123&audience=sigstore"
-        );
-        // URL without a query string → use `?`.
-        assert_eq!(
-            build_github_actions_oidc_url("https://example.test/oidc"),
-            "https://example.test/oidc?audience=sigstore"
-        );
-        // Empty query string still counts as "has query".
-        assert_eq!(
-            build_github_actions_oidc_url("https://example.test/oidc?"),
-            "https://example.test/oidc?&audience=sigstore"
-        );
     }
 
     #[test]

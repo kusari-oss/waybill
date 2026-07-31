@@ -5,44 +5,90 @@
 a `cosign login` habit, procurement/compliance stakeholders
 verifying signed SBOMs.
 
-Two tasks. Do them in order.
+---
+
+## v1 scope note (READ FIRST)
+
+waybill's `--sign` uses `sigstore-rs 0.11` under the hood.
+sigstore-rs 0.11 requires OIDC tokens to emit a non-optional
+`email` claim, which it uses as the CSR subject sent to Fulcio.
+That means:
+
+- **Compatible providers** (v1): any OIDC provider that emits
+  `email` — `cosign login` (backed by Sigstore-dex), Google, GitLab,
+  most SSO/dex configurations.
+- **NOT supported in v1**: GitHub Actions ambient tokens
+  (`ACTIONS_ID_TOKEN_REQUEST_URL` + `ACTIONS_ID_TOKEN_REQUEST_TOKEN`).
+  GHA tokens use `sub` (workflow path) instead of `email`.
+
+Full GHA-ambient support is deferred to a follow-up milestone — it
+requires ~30–50 LOC upstream sigstore-rs changes (make Claims.email
+Optional AND make the CSR subject issuer-aware). GHA users today
+should use a helper action that fetches a compatible token (see §1B).
 
 ---
 
-## 1. Sign an SBOM keylessly in GitHub Actions
+## 1A. Local laptop / non-GHA CI (dominant path)
 
-The dominant use case. Add `permissions: id-token: write` to the job
-that runs waybill and pass `--sign`:
+```bash
+# 1. Fetch an OIDC token via cosign — opens a browser once, then
+#    exports a token good for ~15 minutes. Sigstore-dex emits `email`.
+export SIGSTORE_ID_TOKEN=$(cosign login --identity-token)
+
+# 2. Sign the SBOM
+waybill sbom scan \
+    --path ./my-project \
+    --format cyclonedx-json \
+    --output signed.cdx.json \
+    --sign
+```
+
+## 1B. Inside GitHub Actions (helper-action pattern)
 
 ```yaml
 jobs:
   build-and-sign-sbom:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write   # unlocks GitHub Actions ambient OIDC
+      id-token: write     # for the helper action that fetches the token
       contents: read
     steps:
       - uses: actions/checkout@<sha>
-      - name: Generate signed SBOM
+
+      - name: Fetch email-carrying OIDC token via sigstore-python
+        # sigstore-python handles GHA's OIDC issuer-aware claim
+        # dispatch and produces a token in the shape sigstore-rs 0.11
+        # can consume. We only need the token, not the signing step.
+        uses: sigstore/gh-action-sigstore-python@<sha>
+        with:
+          dry-run: true
+
+      - name: Sign SBOM with waybill
         run: |
           waybill sbom scan \
             --path ./my-project \
             --format cyclonedx-json \
             --output signed.cdx.json \
             --sign
+
       - uses: actions/upload-artifact@<sha>
         with:
           name: signed-sbom
           path: signed.cdx.json
 ```
 
-What happens under the hood (per
-`contracts/keyless-signing-flow.md`):
+Verify the helper action's version supports the "fetch a token,
+export it, don't sign" mode you need. Alternatives: any Github
+Action that produces an email-emitting JWT and exports it as
+`SIGSTORE_ID_TOKEN` works.
+
+## 1C. What happens under the hood
+
+Per `contracts/keyless-signing-flow.md`:
 
 1. waybill scans the target normally.
-2. Just before serialization, it hits the ambient OIDC endpoint
-   (`ACTIONS_ID_TOKEN_REQUEST_URL` + `ACTIONS_ID_TOKEN_REQUEST_TOKEN`
-   with `audience=sigstore`) to fetch a JWT.
+2. Just before serialization, it reads `SIGSTORE_ID_TOKEN` (fetched
+   in step 0 by cosign or a helper action).
 3. Posts the JWT + an ephemeral P-256 pubkey to Fulcio; receives
    a short-lived (~10 min) x509 cert.
 4. Signs the SBOM canonical bytes with the ephemeral private key.
@@ -55,8 +101,8 @@ What happens under the hood (per
    `rekor_log_index`, `fulcio_cert_subject`, `oidc_provider`.
 
 **Failure surface** (per m221 FR-009a — inherited):
-- OIDC endpoint unreachable → `SigningError::OidcTokenError`, exit
-  non-zero, partial output unlinked.
+- `SIGSTORE_ID_TOKEN` missing/malformed → `SigningError::OidcTokenError`,
+  exit non-zero, partial output unlinked.
 - Fulcio down → `SigningError::FulcioError`, ditto.
 - Rekor timeout (30s default, tune via `WAYBILL_REKOR_TIMEOUT_SECS`)
   → `SigningError::RekorError`, ditto.
@@ -69,48 +115,20 @@ Use `cosign` (any recent version — bundle spec v0.3 is stable):
 ```bash
 cosign verify-blob \
   --bundle signed.cdx.json \
-  --certificate-identity 'https://github.com/<org>/<repo>/.github/workflows/<name>.yml@refs/heads/main' \
-  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+  --certificate-identity '<expected OIDC subject>' \
+  --certificate-oidc-issuer '<expected OIDC issuer>'
 ```
 
-The `certificate-identity` matches the OIDC subject the token
-carried (visible in your waybill INFO log as `fulcio_cert_subject`).
-`certificate-oidc-issuer` for GitHub Actions is always
-`https://token.actions.githubusercontent.com`.
+The `certificate-identity` matches whatever waybill logged as
+`fulcio_cert_subject` (typically the OIDC token's `email` claim
+value). `certificate-oidc-issuer` is your OIDC provider's issuer URL
+(e.g., `https://oauth2.sigstore.dev/auth` for sigstore-dex,
+`https://accounts.google.com` for Google, etc.).
 
-## Alternative: sign with a pre-fetched token (outside GitHub Actions)
-
-If you're on a laptop or a CI system without GitHub Actions'
-ambient OIDC (e.g. self-hosted Jenkins), fetch a token with
-`cosign login` first, then export + pass to waybill:
-
-```bash
-# One-time (or refresh every 15 minutes)
-export SIGSTORE_ID_TOKEN=$(cosign login --identity-token)
-
-waybill sbom scan \
-  --path ./my-project \
-  --format cyclonedx-json \
-  --output signed.cdx.json \
-  --sign
-```
-
-waybill's `OidcProvider::detect()` picks up `SIGSTORE_ID_TOKEN`
-and uses it directly — no network call to fetch a token, just the
-Fulcio + Rekor round-trips.
-
-**Note**: the interactive browser flow (`waybill --sign` alone
-without either env-var setup) is **deferred to a follow-up
-milestone**. If you run `--sign` with neither ambient nor explicit
-env, you get:
-
-```text
-Error: SigningError::OidcTokenError:
-  no OIDC token available; set SIGSTORE_ID_TOKEN (e.g. via
-  `cosign login`) or run inside GitHub Actions with
-  `id-token: write`. Interactive browser flow is deferred to
-  a follow-up milestone.
-```
+**Interactive browser flow and GitHub Actions ambient OIDC** are
+both deferred to a follow-up milestone. If you run `--sign` with no
+`SIGSTORE_ID_TOKEN` env-var, you get a fail-close diagnostic
+pointing at the workarounds above.
 
 ## SPDX multi-format sign
 
@@ -160,8 +178,8 @@ fields at INFO level in waybill's own log:
 ```text
 INFO waybill::attestation::signer: SBOM signed via Sigstore keyless
   rekor_log_index=12345678
-  fulcio_cert_subject=https://github.com/kusari-oss/waybill/.github/workflows/release.yml@refs/tags/v0.1.0
-  oidc_provider=github-actions-ambient
+  fulcio_cert_subject=you@example.com
+  oidc_provider=explicit-env
 ```
 
 SREs auditing signature provenance can:
@@ -169,8 +187,8 @@ SREs auditing signature provenance can:
   `rekor-cli get --log-index 12345678`
 - Confirm the signing identity matches expectations without
   re-parsing the SBOM Bundle.
-- Verify which OIDC provider path fired (audit trail for CI
-  workflow drift).
+- Verify which OIDC provider path fired — `oidc_provider=explicit-env`
+  is the only supported value in v1 (see scope note above).
 
 No new SBOM annotations for these fields (Q3 decision) — the log is
 the audit surface, the Bundle-in-SBOM carries the same info in
