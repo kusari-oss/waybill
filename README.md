@@ -205,6 +205,15 @@ practices/processes has a per-emitter verdict at
 evidence-cited, backed by a machine-verifying integration test that
 runs against every CI build, so regressions surface immediately.
 
+**Row 2 (SBOM Author Signature)** ships as opt-in but is now
+end-to-end complete: `--sign-key <PATH>` produces JSF static-key
+signatures on CDX (in-slot) and DSSE sidecars on SPDX; `--sign`
+produces Sigstore keyless signatures via OIDC → Fulcio → Rekor with
+the resulting Sigstore Bundle embedded in CDX `metadata.signature`
+or written to `.sig.bundle.json` sidecar for SPDX. Details at
+[`docs/sigstore-trust-keys.md`](docs/sigstore-trust-keys.md) +
+[`specs/222-sigstore-keyless-signing/quickstart.md`](specs/222-sigstore-keyless-signing/quickstart.md).
+
 Referenced downstream by EU CRA (Regulation (EU) 2024/2847) Article
 3, BSI TR-03183-2, CERT-In's Technical Guidelines on Bill of
 Materials, and the equivalent guidance from every CISA 2026

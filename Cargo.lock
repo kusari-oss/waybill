@@ -3601,8 +3601,7 @@ dependencies = [
 [[package]]
 name = "sigstore"
 version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9958ac57dea620d4059784dc0df9f997a873a168828d1028c5c7b9d7a089f5f2"
+source = "git+https://github.com/kusari-sandbox/sigstore-rs.git?tag=v0.11.0-waybill-1#f3ac508ed4d43553d403a0106f6468c4be12148a"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4518,6 +4517,7 @@ dependencies = [
  "serde_yaml",
  "sha2",
  "sigstore",
+ "sigstore_protobuf_specs",
  "spdx",
  "tar",
  "tempfile",

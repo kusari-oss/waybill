@@ -46,6 +46,11 @@ waybill-cli/tests/fixtures/golden/**/*.actual.json
 .release-test/
 .claude/scheduled_tasks.lock
 
+# Claude Code per-project state (private assistant memory + transcripts).
+# Contents are per-user development scratch; never intended for the
+# public repo.
+.claude/projects/
+
 # Milestone 078 — JPEWdev `spdx3-validate` Python virtualenv used by
 # the SPDX 3 conformance integration test. Created on demand by
 # scripts/install-spdx3-validate.sh; never committed.

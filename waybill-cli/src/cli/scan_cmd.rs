@@ -466,6 +466,67 @@ pub struct ScanArgs {
     #[arg(long = "sign-key-passphrase-env", value_name = "NAME")]
     pub sign_key_passphrase_env: Option<String>,
 
+    /// Milestone 222 US2b — Sigstore keyless SBOM signing. When set,
+    /// waybill fetches an OIDC token (ambient GitHub Actions or
+    /// explicit `SIGSTORE_ID_TOKEN`), submits it to Fulcio for a
+    /// short-lived signing cert, signs the emitted SBOM bytes,
+    /// uploads the signature to Rekor for transparency-log inclusion,
+    /// and embeds the resulting Sigstore Bundle in
+    /// `metadata.signature` (CDX) or writes a
+    /// `<output>.sig.bundle.json` sidecar (SPDX 2.3 + SPDX 3).
+    ///
+    /// Mutually exclusive with `--sign-key` (a signed SBOM has ONE
+    /// signature envelope). Requires `--output <file>` — combining
+    /// with stdout is rejected at parse time per FR-008a.
+    ///
+    /// Endpoints are overridable via `WAYBILL_FULCIO_URL` and
+    /// `WAYBILL_REKOR_URL` env vars (defaults: production Sigstore).
+    /// Rekor timeout via `WAYBILL_REKOR_TIMEOUT_SECS` (default 30).
+    ///
+    /// When absent, all emitters produce byte-identical output to
+    /// today's goldens per FR-015 (no regression on the default path).
+    #[arg(long = "sign", conflicts_with = "sign_key")]
+    pub sign: bool,
+
+    /// Milestone 222 US2b — Fulcio endpoint override for Sigstore
+    /// keyless signing. Only relevant with `--sign`; otherwise ignored.
+    /// Defaults to production Sigstore (`https://fulcio.sigstore.dev`).
+    /// Set to `https://fulcio.sigstage.dev` for staging.
+    #[arg(
+        long = "fulcio-url",
+        env = "WAYBILL_FULCIO_URL",
+        default_value = "https://fulcio.sigstore.dev",
+        value_name = "URL"
+    )]
+    pub fulcio_url: String,
+
+    /// Milestone 222 US2b — Rekor transparency-log endpoint override
+    /// for Sigstore keyless signing. Only relevant with `--sign`;
+    /// otherwise ignored. Defaults to production Sigstore
+    /// (`https://rekor.sigstore.dev`). Set to
+    /// `https://rekor.sigstage.dev` for staging.
+    #[arg(
+        long = "rekor-url",
+        env = "WAYBILL_REKOR_URL",
+        default_value = "https://rekor.sigstore.dev",
+        value_name = "URL"
+    )]
+    pub rekor_url: String,
+
+    /// Milestone 222 US2b — Rekor inclusion-proof timeout in seconds.
+    /// Only relevant with `--sign`; otherwise ignored. Default 30s
+    /// per FR-007 (Rekor is mandatory + fail-close on timeout).
+    /// Bump if Sigstore is under abnormal load; do NOT set to 0
+    /// (interpreted as "no timeout" would defeat FR-007's fail-close
+    /// requirement).
+    #[arg(
+        long = "rekor-timeout-secs",
+        env = "WAYBILL_REKOR_TIMEOUT_SECS",
+        default_value_t = 30,
+        value_name = "SECS"
+    )]
+    pub rekor_timeout_secs: u64,
+
     /// Milestone 221 US4 (feature 221-cisa-2026-elements-audit /
     /// FR-013) — SBOM document version.
     ///
@@ -2498,16 +2559,18 @@ pub async fn execute(
         );
     }
 
-    // Milestone 221 US2a (feature 221-cisa-2026-elements-audit / FR-008a):
-    // `--sign-key` requires a durable `--output <file>`. Combining with
-    // any `--output -` or `--output <fmt>=-` (stdout) is rejected at
-    // parse time because signing without a persisted path defeats the
-    // signature's purpose (nothing to hand a verifier) and multiplexing
-    // signature bytes into stdout has no standard framing.
-    if args.sign_key.is_some() {
+    // Milestone 221 US2a (feature 221-cisa-2026-elements-audit / FR-008a)
+    // + milestone 222 US2b (feature 222-sigstore-keyless-signing / FR-008a):
+    // `--sign-key` or `--sign` requires a durable `--output <file>`.
+    // Combining with any `--output -` or `--output <fmt>=-` (stdout) is
+    // rejected at parse time because signing without a persisted path
+    // defeats the signature's purpose (nothing to hand a verifier) and
+    // multiplexing signature bytes into stdout has no standard framing.
+    if args.sign_key.is_some() || args.sign {
         if let Some(offender) = args.output.iter().find(|s| is_stdout_output(s)) {
+            let which = if args.sign { "--sign" } else { "--sign-key" };
             anyhow::bail!(
-                "--sign-key requires --output <file>; signing does not support \
+                "{which} requires --output <file>; signing does not support \
                  stdout output because verifiers cannot access uncaptured \
                  signature bytes.\n  offending flag: --output {offender}\n  \
                  suggested fix: --output {}", suggest_non_stdout_path(offender),
@@ -3763,19 +3826,30 @@ pub async fn execute(
         // else: zero-boundary fallback — fall through to normal emit.
     }
 
-    // Milestone 221 US2a — construct the signing mode from CLI args.
-    // Kept out of `OutputConfig` because signing is a post-serialize
-    // concern that doesn't affect the emit code path; passing it
-    // separately preserves the OutputConfig contract from m011+.
-    let signing_mode = match &args.sign_key {
-        Some(path) => crate::sbom::signer::SigningMode::StaticKey {
-            key_ref: path.clone(),
-            passphrase_env: args
-                .sign_key_passphrase_env
-                .clone()
-                .unwrap_or_else(|| "WAYBILL_SIGN_KEY_PASSPHRASE".to_string()),
-        },
-        None => crate::sbom::signer::SigningMode::Unsigned,
+    // Milestone 221 US2a + milestone 222 US2b — construct the signing
+    // mode from CLI args. Kept out of `OutputConfig` because signing is
+    // a post-serialize concern that doesn't affect the emit code path;
+    // passing it separately preserves the OutputConfig contract from
+    // m011+. `--sign` and `--sign-key` are mutually exclusive (enforced
+    // by clap `conflicts_with = "sign_key"` on the `--sign` flag), so
+    // the two branches cannot both fire.
+    let signing_mode = if args.sign {
+        crate::sbom::signer::SigningMode::Keyless {
+            fulcio_url: args.fulcio_url.clone(),
+            rekor_url: args.rekor_url.clone(),
+            rekor_timeout: std::time::Duration::from_secs(args.rekor_timeout_secs),
+        }
+    } else {
+        match &args.sign_key {
+            Some(path) => crate::sbom::signer::SigningMode::StaticKey {
+                key_ref: path.clone(),
+                passphrase_env: args
+                    .sign_key_passphrase_env
+                    .clone()
+                    .unwrap_or_else(|| "WAYBILL_SIGN_KEY_PASSPHRASE".to_string()),
+            },
+            None => crate::sbom::signer::SigningMode::Unsigned,
+        }
     };
 
     // Milestone 221 US2a (FR-009a): fail-close cleanup tracker. Every
@@ -3869,20 +3943,24 @@ pub async fn execute(
                 "wrote SBOM artifact"
             );
 
-            // Milestone 221 US2a — SPDX sidecar. Only for primary
-            // SPDX artifacts (not OpenVEX side-artifacts).
+            // Milestone 221 US2a + m222 US2b — SPDX sidecar. Only
+            // for primary SPDX artifacts (not OpenVEX side-artifacts).
+            // Static-key path emits `.sig.json` (DSSE); Sigstore
+            // keyless path emits `.sig.bundle.json` per FR-004.
             if signing_mode.is_enabled()
                 && (fmt == "spdx-2.3-json" || fmt == "spdx-3-json")
                 && artifact.relative_path == Path::new(serializer.default_filename())
             {
-                let sidecar = target.with_extension(sidecar_extension(&target));
-                match crate::sbom::signer::sign_spdx_bytes_to_dsse(
+                match crate::sbom::signer::sign_spdx_bytes_to_sidecar(
                     &final_bytes,
                     &signing_mode,
                 ) {
-                    Ok(Some(envelope)) => {
-                        let json = serde_json::to_vec_pretty(&envelope).map_err(|e| {
-                            anyhow::anyhow!("cannot serialize DSSE sidecar: {e}")
+                    Ok(Some(sidecar_payload)) => {
+                        let sidecar = target
+                            .with_extension(sidecar_extension_for(&target, &sidecar_payload));
+                        let kind = sidecar_payload.kind_label();
+                        let json = sidecar_payload.to_json_bytes().map_err(|e| {
+                            anyhow::anyhow!("cannot serialize {kind} sidecar: {e}")
                         })?;
                         write_bytes_to(&sidecar, &json)?;
                         written_files.push(sidecar.clone());
@@ -3890,7 +3968,8 @@ pub async fn execute(
                             format = %fmt,
                             sidecar = %sidecar.display(),
                             bytes = json.len(),
-                            "wrote SBOM signature sidecar (DSSE)"
+                            kind = %kind,
+                            "wrote SBOM signature sidecar"
                         );
                     }
                     Ok(None) => {
@@ -3900,9 +3979,8 @@ pub async fn execute(
                     Err(e) => {
                         cleanup_written_files(&written_files);
                         return Err(anyhow::anyhow!(
-                            "signing failed for {} sidecar ({}): {e}",
+                            "signing failed for {} sidecar: {e}",
                             fmt,
-                            sidecar.display(),
                         ));
                     }
                 }
@@ -4360,18 +4438,23 @@ fn cleanup_written_files(files: &[PathBuf]) {
     }
 }
 
-/// Milestone 221 US2a — derive the DSSE sidecar filename from the
-/// SPDX primary output path. Rule: append `.sig.json` to the full
-/// filename (not to the file stem) so
-/// `waybill.spdx.json` → `waybill.spdx.json.sig.json` matches the
-/// contract in `contracts/sbom-emission-contract.md`.
-fn sidecar_extension(target: &Path) -> std::ffi::OsString {
+/// Milestone 221 US2a + m222 US2b — variant-aware sidecar extension.
+/// Delegates to
+/// the `Sidecar::sidecar_suffix()` method so DSSE gets `.sig.json` and
+/// Sigstore Bundle gets `.sig.bundle.json` per FR-004.
+fn sidecar_extension_for(
+    target: &Path,
+    sidecar: &crate::sbom::signer::Sidecar,
+) -> std::ffi::OsString {
+    let suffix = sidecar.sidecar_suffix(); // includes leading '.'
     let mut ext = std::ffi::OsString::new();
     if let Some(existing) = target.extension() {
         ext.push(existing);
-        ext.push(".sig.json");
+        ext.push(suffix);
     } else {
-        ext.push("sig.json");
+        // Strip the leading '.' for the no-extension case (matches
+        // sidecar_extension's shape).
+        ext.push(&suffix[1..]);
     }
     ext
 }
@@ -4431,6 +4514,66 @@ mod tests {
             suggest_non_stdout_path("cyclonedx-json=-"),
             "cyclonedx-json=signed.cyclonedx-json.json"
         );
+    }
+
+    // ----- Milestone 222 US2b (feature 222-sigstore-keyless-signing) — CLI parsing -----
+
+    #[test]
+    fn sign_flag_defaults_off_m222() {
+        let parsed = <ScanArgsForTest as clap::Parser>::try_parse_from(["scan", "--path", "."])
+            .expect("baseline parse");
+        assert!(!parsed.inner.sign, "sign defaults off");
+        assert_eq!(parsed.inner.fulcio_url, "https://fulcio.sigstore.dev");
+        assert_eq!(parsed.inner.rekor_url, "https://rekor.sigstore.dev");
+        assert_eq!(parsed.inner.rekor_timeout_secs, 30);
+    }
+
+    #[test]
+    fn sign_flag_accepts_bare_toggle_m222() {
+        let parsed =
+            <ScanArgsForTest as clap::Parser>::try_parse_from(["scan", "--path", ".", "--sign"])
+                .expect("bare --sign parses");
+        assert!(parsed.inner.sign);
+    }
+
+    #[test]
+    fn sign_and_sign_key_are_mutually_exclusive_m222() {
+        let err = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan",
+            "--path",
+            ".",
+            "--sign",
+            "--sign-key",
+            "/tmp/x.pem",
+        ])
+        .expect_err("--sign + --sign-key must be rejected by clap");
+        let rendered = err.to_string();
+        assert!(
+            rendered.contains("cannot be used with") || rendered.contains("conflicts_with")
+                || rendered.contains("--sign-key"),
+            "clap conflict-message expected, got: {rendered}"
+        );
+    }
+
+    #[test]
+    fn sign_endpoint_overrides_via_flags_m222() {
+        let parsed = <ScanArgsForTest as clap::Parser>::try_parse_from([
+            "scan",
+            "--path",
+            ".",
+            "--sign",
+            "--fulcio-url",
+            "https://fulcio.sigstage.dev",
+            "--rekor-url",
+            "https://rekor.sigstage.dev",
+            "--rekor-timeout-secs",
+            "60",
+        ])
+        .expect("staging-endpoint override parses");
+        assert!(parsed.inner.sign);
+        assert_eq!(parsed.inner.fulcio_url, "https://fulcio.sigstage.dev");
+        assert_eq!(parsed.inner.rekor_url, "https://rekor.sigstage.dev");
+        assert_eq!(parsed.inner.rekor_timeout_secs, 60);
     }
 
     #[test]
@@ -4949,6 +5092,15 @@ mod tests {
             // behavior (no signing; byte-identity guaranteed per FR-009).
             sign_key: None,
             sign_key_passphrase_env: None,
+            // Milestone 222 US2b — test helper defaults preserve pre-m222
+            // behavior (no keyless signing; byte-identity guaranteed per
+            // FR-015). Fulcio + Rekor URL defaults match the CLI's own
+            // defaults so any test that flips `sign = true` gets the
+            // same endpoint resolution the real CLI would.
+            sign: false,
+            fulcio_url: "https://fulcio.sigstore.dev".to_string(),
+            rekor_url: "https://rekor.sigstore.dev".to_string(),
+            rekor_timeout_secs: 30,
             // Milestone 221 US4 — no --sbom-version by default; CDX
             // metadata.version stays at the pre-m221 hardcoded 1 and
             // SPDX outputs emit no waybill:sbom-version annotation.

@@ -28,5 +28,22 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # in Cargo.lock.
 url = "2"
 
+# Milestone 222 (US2b keyless signing) — sigstore-rs 0.11.0 patch
+# that exposes `pub mod keyring` + `pub use keyring::Keyring`.
+# `SigningContext::new(fulcio, rekor_config, ctfe_keyring: Keyring)`
+# is otherwise unreachable from external crates (Keyring lives in a
+# `pub(crate) mod`), forcing callers onto `SigningContext::production()`
+# which requires the `sigstore-trust-root-*` feature — that feature
+# transitively pulls `aws-lc-rs` via `tough`, violating Constitution
+# Principle I (Pure Rust, Zero C). See specs/222-sigstore-keyless-signing/
+# research.md §R1 + docs/sigstore-trust-keys.md.
+#
+# Un-patch when the upstream PR at sigstore/sigstore-rs lands + a
+# release ships. Fork lives at kusari-sandbox/sigstore-rs, tag
+# `v0.11.0-waybill-1` (rebase-on-release policy documented in
+# docs/sigstore-trust-keys.md).
+[patch.crates-io]
+sigstore = { git = "https://github.com/kusari-sandbox/sigstore-rs.git", tag = "v0.11.0-waybill-1" }
+
 # waybill-ebpf is built separately via xtask (different target triple)
 # and is NOT a workspace member — it uses #![no_std] + nightly + bpf target

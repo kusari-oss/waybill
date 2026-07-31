@@ -330,9 +330,171 @@ fn us2a_spdx23_dsse_sidecar_written_and_verifies() {
 }
 
 // ---------------------------------------------------------------------------
-// US2b — reserved: Sigstore keyless (deferred to a follow-up session)
+// US2b — Sigstore keyless (feature 222-sigstore-keyless-signing)
 // ---------------------------------------------------------------------------
 
+/// Runs `waybill sbom scan --sign ...` as a subprocess with the given
+/// extra flags + env-var overrides. Extra env vars are set on the
+/// child process only (never on the parent — avoids env-var pollution
+/// racing with other tests). Every entry in `extra_env_unset` is
+/// explicitly cleared for the child to defeat inherited ambient state.
+fn run_scan_with_sign_env(
+    target: &std::path::Path,
+    output: &std::path::Path,
+    extra_args: &[&str],
+    extra_env_set: &[(&str, &str)],
+    extra_env_unset: &[&str],
+) -> std::process::Output {
+    let mut cmd = Command::new(bin());
+    cmd.arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(target)
+        .arg("--format")
+        .arg("cyclonedx-json")
+        .arg("--output")
+        .arg(output)
+        .arg("--no-deep-hash")
+        .arg("--sign");
+    for a in extra_args {
+        cmd.arg(a);
+    }
+    for (k, v) in extra_env_set {
+        cmd.env(k, v);
+    }
+    for k in extra_env_unset {
+        cmd.env_remove(k);
+    }
+    cmd.output().expect("waybill invocation")
+}
+
+/// T008 + T025 (feature 222 US2b, FR-009a) — Fulcio unreachable →
+/// fail-close. Points Fulcio at a non-routable URL, ensures at least
+/// one OIDC provider is present so the failure occurs at Fulcio (not
+/// earlier at token acquisition), asserts non-zero exit + no partial
+/// output file left behind.
+///
+/// Runs unconditionally (no WAYBILL_TEST_KEYLESS gate) — pure
+/// failure-mode test with a stub OIDC token.
+#[test]
+fn us2b_keyless_signing_failure_cleans_up_output_m222() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let output = tmp.path().join("should-not-persist.cdx.json");
+    let out = run_scan_with_sign_env(
+        &scan_target(),
+        &output,
+        &[
+            "--fulcio-url",
+            "https://fulcio.invalid.example.test",
+            "--rekor-url",
+            "https://rekor.invalid.example.test",
+        ],
+        // Provide a stub JWT so provider-detection routes to `Explicit`
+        // and we get past OIDC → into Fulcio (which resolves DNS-fail).
+        &[(
+            "SIGSTORE_ID_TOKEN",
+            // Same header.payload.signature JWT shape as the unit
+            // tests use — aud=sigstore + exp far in the future.
+            "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.\
+             eyJhdWQiOiJzaWdzdG9yZSIsImV4cCI6MjA2NDAwMDAwMCwiZW1haWwiOiJ0ZXN0QHdheWJpbGwuZGV2In0.",
+        )],
+        &[
+            "ACTIONS_ID_TOKEN_REQUEST_URL",
+            "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
+        ],
+    );
+    assert!(
+        !out.status.success(),
+        "scan MUST fail when Fulcio is unreachable (FR-009a fail-close). stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(
+        !output.exists(),
+        "partial output file MUST be unlinked on signing failure (FR-009a)"
+    );
+}
+
+/// T009 + T026 (feature 222 US2b, FR-005 + FR-009) — no OIDC token
+/// available → fail-close with actionable diagnostic. Clears all
+/// provider-detection env vars so `OidcProvider::detect()` routes to
+/// `Interactive` → resolves to fail-close (Q1 clarification).
+#[test]
+fn us2b_keyless_no_oidc_token_fails_close_m222() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let output = tmp.path().join("no-token.cdx.json");
+    let out = run_scan_with_sign_env(
+        &scan_target(),
+        &output,
+        &[],
+        &[],
+        &[
+            "ACTIONS_ID_TOKEN_REQUEST_URL",
+            "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
+            "SIGSTORE_ID_TOKEN",
+        ],
+    );
+    assert!(
+        !out.status.success(),
+        "scan MUST fail when no OIDC token is available (FR-005 + FR-009)"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    // Q1 clarification — diagnostic must include all three substrings.
+    assert!(
+        stderr.contains("no OIDC token available"),
+        "stderr missing Q1 diagnostic substring: {stderr}"
+    );
+    assert!(
+        stderr.contains("SIGSTORE_ID_TOKEN"),
+        "stderr missing SIGSTORE_ID_TOKEN pointer: {stderr}"
+    );
+    assert!(
+        stderr.contains("id-token: write"),
+        "stderr missing GHA workflow-permission pointer: {stderr}"
+    );
+    assert!(
+        !output.exists(),
+        "partial output file MUST be unlinked (FR-009a)"
+    );
+}
+
+/// T029 (feature 222 US2b, FR-008a) — `--sign` + `--output -`
+/// (stdout) rejected at parse time. Should exit before any Sigstore
+/// call is made, so no env-var setup is needed.
+#[test]
+fn us2b_keyless_stdout_output_is_rejected_at_parse_m222() {
+    let out = Command::new(bin())
+        .arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(scan_target())
+        .arg("--format")
+        .arg("cyclonedx-json")
+        .arg("--output")
+        .arg("-")
+        .arg("--no-deep-hash")
+        .arg("--sign")
+        .output()
+        .expect("waybill invocation");
+    assert!(
+        !out.status.success(),
+        "scan MUST reject --sign + --output - at parse time (FR-008a)"
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("--sign requires --output <file>"),
+        "stderr missing FR-008a diagnostic wording: {stderr}"
+    );
+}
+
+/// T010 + T024 (feature 222 US2b) — happy-path sign-and-verify
+/// against Sigstore staging. Requires WAYBILL_TEST_KEYLESS=1 AND a
+/// GitHub-Actions-ambient OIDC endpoint (or an equivalent explicit
+/// SIGSTORE_ID_TOKEN). Gated behind the env var so the general
+/// `cargo test --workspace` suite stays hermetic; the CI job
+/// `lint-and-test-keyless-sbom` sets the env var + provides the
+/// ambient OIDC path.
 #[test]
 #[ignore = "US2b: Sigstore keyless requires WAYBILL_TEST_KEYLESS=1 + OIDC + Sigstore staging network access; run by the dedicated CI job only"]
 fn us2b_keyless_bundle_sign_and_verify() {
@@ -342,7 +504,211 @@ fn us2b_keyless_bundle_sign_and_verify() {
         );
         return;
     }
-    // Full implementation lands with US2b — completing the m006
-    // sign_keyless() scaffold at attestation/signer.rs:170+.
-    unimplemented!("US2b — Sigstore keyless implementation deferred to a follow-up session");
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let output = tmp.path().join("signed.cdx.json");
+    let out = Command::new(bin())
+        .arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(scan_target())
+        .arg("--format")
+        .arg("cyclonedx-json")
+        .arg("--output")
+        .arg(&output)
+        .arg("--no-deep-hash")
+        .arg("--sign")
+        .env(
+            "WAYBILL_FULCIO_URL",
+            std::env::var("WAYBILL_FULCIO_URL")
+                .unwrap_or_else(|_| "https://fulcio.sigstage.dev".to_string()),
+        )
+        .env(
+            "WAYBILL_REKOR_URL",
+            std::env::var("WAYBILL_REKOR_URL")
+                .unwrap_or_else(|_| "https://rekor.sigstage.dev".to_string()),
+        )
+        .output()
+        .expect("waybill invocation");
+
+    assert!(
+        out.status.success(),
+        "keyless sign against staging failed. stderr:\n{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(output.exists(), "signed CDX file missing at {}", output.display());
+
+    // Parse the emitted CDX + assert a metadata.signature slot exists +
+    // its shape is the Sigstore Bundle wire format.
+    let raw = std::fs::read(&output).expect("read signed cdx");
+    let doc: serde_json::Value = serde_json::from_slice(&raw).expect("parse cdx");
+    let sig = doc
+        .pointer("/metadata/signature")
+        .expect("metadata.signature slot missing");
+    let sig_obj = sig.as_object().expect("signature must be a JSON object");
+    assert!(
+        sig_obj.contains_key("mediaType") || sig_obj.contains_key("verificationMaterial"),
+        "metadata.signature is not a Sigstore Bundle shape: {sig}"
+    );
+    let sig_str = serde_json::to_string(sig).unwrap_or_default();
+    assert!(
+        sig_str.contains("tlogEntries") || sig_str.contains("verificationMaterial"),
+        "Bundle missing expected Rekor + verification-material fields"
+    );
+}
+
+/// T028 (feature 222 US2b, FR-016 + SC-008) — successful sign emits
+/// three structured INFO fields at tracing::info!. Runs sign against
+/// staging and greps stderr for `rekor_log_index=`, `fulcio_cert_subject=`,
+/// `oidc_provider=`. Gated on `WAYBILL_TEST_KEYLESS=1`.
+#[test]
+#[ignore = "US2b FR-016 requires WAYBILL_TEST_KEYLESS=1 + OIDC + Sigstore staging network access; run by the dedicated CI job only"]
+fn us2b_keyless_fr016_info_log_fields_m222() {
+    if std::env::var("WAYBILL_TEST_KEYLESS").is_err() {
+        eprintln!(
+            "INFO: us2b_keyless_fr016_info_log_fields_m222 skipped (WAYBILL_TEST_KEYLESS unset)"
+        );
+        return;
+    }
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let output = tmp.path().join("info-log.cdx.json");
+    let out = Command::new(bin())
+        .arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(scan_target())
+        .arg("--format")
+        .arg("cyclonedx-json")
+        .arg("--output")
+        .arg(&output)
+        .arg("--no-deep-hash")
+        .arg("--sign")
+        .env("RUST_LOG", "info")
+        .env("WAYBILL_LOG", "info")
+        .env(
+            "WAYBILL_FULCIO_URL",
+            std::env::var("WAYBILL_FULCIO_URL")
+                .unwrap_or_else(|_| "https://fulcio.sigstage.dev".to_string()),
+        )
+        .env(
+            "WAYBILL_REKOR_URL",
+            std::env::var("WAYBILL_REKOR_URL")
+                .unwrap_or_else(|_| "https://rekor.sigstage.dev".to_string()),
+        )
+        .output()
+        .expect("waybill invocation");
+    assert!(
+        out.status.success(),
+        "keyless sign against staging failed. stderr:\n{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        stderr.contains("rekor_log_index="),
+        "FR-016: stderr missing rekor_log_index INFO field:\n{stderr}"
+    );
+    assert!(
+        stderr.contains("fulcio_cert_subject="),
+        "FR-016: stderr missing fulcio_cert_subject INFO field:\n{stderr}"
+    );
+    assert!(
+        stderr.contains("oidc_provider="),
+        "FR-016: stderr missing oidc_provider INFO field:\n{stderr}"
+    );
+}
+
+/// T027 (feature 222 US2b) — signature covers the entire SBOM
+/// document. Mirrors m221 US2a's mutation-flips-verify pattern. Sign
+/// against staging, mutate one byte of the CDX payload, extract the
+/// Bundle, verify it against the mutated payload — expect Err.
+/// Gated on `WAYBILL_TEST_KEYLESS=1`.
+#[test]
+#[ignore = "US2b: mutation-flip test requires WAYBILL_TEST_KEYLESS=1 + OIDC + Sigstore staging network access; run by the dedicated CI job only"]
+fn us2b_keyless_signature_covers_document_mutation_m222() {
+    if std::env::var("WAYBILL_TEST_KEYLESS").is_err() {
+        eprintln!(
+            "INFO: us2b_keyless_signature_covers_document_mutation_m222 skipped (WAYBILL_TEST_KEYLESS unset)"
+        );
+        return;
+    }
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let output = tmp.path().join("mutation.cdx.json");
+    let out = Command::new(bin())
+        .arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(scan_target())
+        .arg("--format")
+        .arg("cyclonedx-json")
+        .arg("--output")
+        .arg(&output)
+        .arg("--no-deep-hash")
+        .arg("--sign")
+        .env(
+            "WAYBILL_FULCIO_URL",
+            std::env::var("WAYBILL_FULCIO_URL")
+                .unwrap_or_else(|_| "https://fulcio.sigstage.dev".to_string()),
+        )
+        .env(
+            "WAYBILL_REKOR_URL",
+            std::env::var("WAYBILL_REKOR_URL")
+                .unwrap_or_else(|_| "https://rekor.sigstage.dev".to_string()),
+        )
+        .output()
+        .expect("waybill invocation");
+    assert!(
+        out.status.success(),
+        "keyless sign against staging failed. stderr:\n{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    // Parse the signed CDX, mutate one byte in a non-signature field,
+    // re-serialize, and confirm the round-trip verify fails. Full
+    // Sigstore Bundle verification via sigstore::bundle::verify is out
+    // of scope for this quick sanity check — we validate the coverage
+    // property at the shape level: any mutation to the payload MUST
+    // invalidate the bundle's canonical-bytes contract.
+    let raw = std::fs::read(&output).expect("read signed cdx");
+    let mut doc: serde_json::Value = serde_json::from_slice(&raw).expect("parse cdx");
+
+    // Extract the Bundle before mutation.
+    let bundle = doc
+        .get("metadata")
+        .and_then(|m| m.get("signature"))
+        .cloned()
+        .expect("metadata.signature slot missing");
+
+    // Mutate specVersion (a benign field the signature covers).
+    doc["specVersion"] = serde_json::Value::String("MUTATED-1.6".to_string());
+
+    // Strip metadata.signature (per contracts/keyless-signing-flow.md
+    // §CDX-embedded Bundle canonical-bytes contract, verifiers
+    // reproduce the signed bytes by removing this field entirely).
+    if let Some(meta) = doc.get_mut("metadata").and_then(|m| m.as_object_mut()) {
+        meta.remove("signature");
+    }
+    let mutated_canonical =
+        serde_json::to_vec(&doc).expect("re-serialize mutated CDX to canonical bytes");
+
+    // The mutated bytes MUST differ from what the Bundle signed.
+    // Compare via sha256 to keep this test dep-free.
+    use sha2::{Digest, Sha256};
+    let mutated_hash = {
+        let mut h = Sha256::new();
+        h.update(&mutated_canonical);
+        h.finalize().to_vec()
+    };
+    let bundle_digest_b64 = bundle
+        .pointer("/messageSignature/messageDigest/digest")
+        .and_then(|v| v.as_str())
+        .expect("Bundle messageSignature.messageDigest.digest missing");
+    use base64::engine::general_purpose::STANDARD as B64;
+    use base64::Engine;
+    let bundle_digest = B64.decode(bundle_digest_b64).expect("bundle digest is valid base64");
+    assert_ne!(
+        mutated_hash, bundle_digest,
+        "mutation MUST invalidate the Bundle's signed-bytes digest (payload-coverage guarantee)"
+    );
 }

@@ -26,10 +26,11 @@ jobs:
   # comment matches what `gh api /repos/<owner>/<repo>/git/ref/tags/<tag>`
   # returns (or the dereferenced commit for annotated tags).
   #
-  # CI matrix (post-milestone-020):
-  #   - lint-and-test           (Linux, default features, stable only)
-  #   - lint-and-test-macos     (macOS, default features, stable only)
-  #   - lint-and-test-ebpf      (Linux, --features ebpf-tracing, stable + nightly + bpf-linker)
+  # CI matrix (post-milestone-020, post-milestone-222):
+  #   - lint-and-test              (Linux, default features, stable only)
+  #   - lint-and-test-macos        (macOS, default features, stable only)
+  #   - lint-and-test-ebpf         (Linux, --features ebpf-tracing, stable + nightly + bpf-linker)
+  #   - lint-and-test-keyless-sbom (Linux, Sigstore staging, id-token: write)
   #
   # The default lanes drop the nightly + bpf-linker + xtask ebpf cost
   # entirely. The ebpf lane runs in parallel and is the regression gate
@@ -680,3 +681,61 @@ jobs:
           docker run --rm --privileged \
             -v /sys/kernel/debug:/sys/kernel/debug \
             waybill-ebpf-test
+
+  # Milestone 222 US2b — Sigstore keyless SBOM signing integration
+  # test lane. Isolated from the main lint+test lanes so a Sigstore
+  # staging outage or network hiccup can't block unrelated PRs
+  # (feature 222 FR-012). Runs against staging (fulcio.sigstage.dev
+  # + rekor.sigstage.dev — never production) so we don't pollute
+  # production Rekor with test entries.
+  #
+  # Requires `permissions: id-token: write` so GitHub Actions'
+  # ambient OIDC endpoint (ACTIONS_ID_TOKEN_REQUEST_URL +
+  # ACTIONS_ID_TOKEN_REQUEST_TOKEN) is populated for the sign flow.
+  # `contents: read` is the workflow default when explicit
+  # permissions are declared; kept for clarity.
+  lint-and-test-keyless-sbom:
+    name: Lint + test keyless SBOM signing (sigstore staging)
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      WAYBILL_TEST_KEYLESS: "1"
+      WAYBILL_FULCIO_URL: "https://fulcio.sigstage.dev"
+      WAYBILL_REKOR_URL: "https://rekor.sigstage.dev"
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
+        with:
+          components: clippy
+
+      - name: Cache cargo + build artifacts
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
+
+      # See lint-and-test-ebpf job for the rationale. Cleans up any
+      # stale rustup-init that would race with `cargo +stable`
+      # dispatch after Swatinem/rust-cache restore.
+      - name: Remove rustup-init + verify cargo works
+        shell: bash
+        run: |
+          rm -f "$HOME/.cargo/bin/rustup-init" "$HOME/.cargo/bin/rustup-init.exe"
+          cargo --version
+
+      # Milestone 090 fixture-repo cache — the integration test
+      # invokes `waybill sbom scan` against a small target tree
+      # exercised elsewhere in the suite.
+      - name: Cache fixture repo
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/waybill/fixtures
+          key: waybill-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
+
+      # Only the keyless test binary — keeps the lane fast and
+      # isolated from any Sigstore-unrelated failure noise.
+      - name: Run keyless integration tests (Sigstore staging)
+        run: cargo +stable test -p waybill --test cisa_2026_signing -- --include-ignored
