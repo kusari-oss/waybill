@@ -42,6 +42,7 @@ pub mod maven_sidecar;
 pub mod npm;
 pub mod nuget;
 pub mod opkg;
+pub mod pants;
 pub mod pip;
 mod project_roots;
 pub mod rpm;
@@ -1465,6 +1466,14 @@ pub fn read_all(
     // No fail-closed: an empty Python section is fine if the scan root
     // doesn't contain any Python artefacts.
     out.extend(pip::read(rootfs, include_dev, exclude_set));
+
+    // Milestone 223: Pants pex-lockfile reader — Python packages from
+    // `3rdparty/python/*.lock` (default glob) + `pants.toml`-declared
+    // paths. Coexists with the pip reader via the m191 reconciler's
+    // PURL-level dedup (lockfile-tier with hashes wins over
+    // requirements.txt-tier without). Reader is a no-op (empty return,
+    // no log) on repos without any Pex lockfiles per FR-007 / SC-003.
+    out.extend(pants::read(rootfs));
     // Collect pip-claimed paths from dist-info RECORD files.
     pip::collect_claimed_paths(
         rootfs,

@@ -614,6 +614,10 @@ spdx23_anno!(c140_spdx23, "waybill:project-discovery-mode",                docum
 spdx23_anno!(c141_spdx23, "waybill:cisa-2026-lifecycle",                   document);
 // Milestone 221 US4 (FR-013): C142 doc-scope SBOM document version.
 spdx23_anno!(c142_spdx23, "waybill:sbom-version",                          document);
+// Milestone 223 US1: per-component pants-resolve name.
+spdx23_anno!(c143_spdx23, "waybill:pants-resolve",                         component);
+// Milestone 223 US1 (Q2 A): per-component source-URL for non-PyPI Pex entries.
+spdx23_anno!(c144_spdx23, "waybill:source-url",                            component);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

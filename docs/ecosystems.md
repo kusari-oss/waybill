@@ -17,6 +17,7 @@ diving into the [architecture docs](architecture/overview.md).
 | [npm](#npm) | `package-lock.json` v2/v3, `pnpm-lock.yaml`, `bun.lock`, `yarn.lock` (v1 + Berry), `node_modules/` | Lockfile (full tree) | Lockfile `integrity` (package-lock / pnpm-lock only) | ✓ / ✓ | Implemented |
 | [nuget](#nuget) | `*.csproj` / `*.vbproj` / `*.fsproj` + `packages.lock.json` + `Directory.Packages.props` | Lockfile (full tree) when present; otherwise direct-deps only | — | ✓ / — | Implemented |
 | [pip](#pip) | venv `dist-info/METADATA` + Poetry/Pipfile + `uv.lock` + `requirements.txt` | Lockfile (Poetry / Pipfile / uv), flat (venv) | `--hash=alg:hex` flags | ✓ / ✓ | Implemented |
+| [pants (Python)](#pants-python) | Pex lockfile at `3rdparty/python/*.lock` (default glob) or `pants.toml`-declared path; multi-resolve support | Lockfile (`requires_dists` PEP 508 → `dependsOn`) | Lockfile per-artifact `sha256` | — / ✓ (via `pkg:pypi/`) | Implemented (milestone 223) |
 | [kotlin](#kotlin) | `build.gradle.kts` (regex) + `gradle/libs.versions.toml` (catalog) + `settings.gradle.kts` (workspace topology) | Manifest (declarations only) | — | ✓ (via `pkg:maven/`) / ✓ | Implemented (milestone 122 US2; design-tier — gated by `--include-declared-deps`) |
 | [rpm](#rpm) | `/var/lib/rpm/rpmdb.sqlite` (pure-Rust reader) | DB (`REQUIRES`) | — (rpmdb has none) | — / — | Implemented (BDB format detected, not parsed) |
 | [swift](#swift) | `Package.resolved` (SwiftPM v1/v2/v3 schema) | Lockfile (full pin set) | — | — / — | Implemented (milestone 122 US1; `Package.swift` not parsed in v0.1) |
@@ -681,6 +682,88 @@ when a member's `[[package.dependencies]]` names a sibling member.
 name (lowercase, runs of non-alphanum collapsed to `-`).
 
 **Dep graph:** full tree from `[[package.dependencies]]`.
+
+---
+
+## pants (Python)
+
+**Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
+
+**Module:** `waybill-cli/src/scan_fs/package_db/pants/`
+
+**Trigger:** any `3rdparty/python/*.lock` file, OR a `pants.toml` at the
+scan root declaring `[python].lockfile = "..."`. Missing / malformed
+`pants.toml` falls back gracefully to the default glob per FR-004
+(milestone 223 US3).
+
+**Reader:** parses [Pex lockfile format](https://pex.readthedocs.io/en/latest/lockfiles.html)
+(JSON, Pex 2.x). One `PackageDbEntry` per locked distribution.
+
+**PURL construction:**
+- PyPI-hosted artifacts (`artifacts[].url` starts with
+  `https://files.pythonhosted.org/`): `pkg:pypi/<name>@<version>` with
+  PyPI-normalized name (lowercase + `_` → `-` via shared
+  `pip::normalize_pypi_name_for_purl` helper).
+- Git URLs (`git+*`), direct download URLs, or `file://` /
+  absolute-path artifacts: `pkg:generic/<name>@<version>` plus
+  `waybill:source-type` (C1) + `waybill:source-url` (C144) annotations
+  identifying the non-PyPI source. Rationale: preserves vuln-scanner
+  PURL semantics (they won't pivot to a fake PyPI CVE lookup on a
+  git-sourced package).
+
+**Dep graph:** full — `LockedRequirement.requires_dists[]` PEP 508
+strings are parsed for project names (strip version specifiers,
+extras, markers) and emitted as `dependsOn` edges.
+
+**Multi-resolve support** (milestone 223 US1 / Q1 B): every discovered
+lockfile is scanned. Every emitted component carries a
+`waybill:pants-resolve` annotation (C143) naming the source resolve
+(lockfile filename stem). Resolves whose name matches a dev-tool
+allowlist (`mypy`, `pytest`, `black`, `ruff`, `isort`, `flake8`,
+`bandit`, `coverage`, `sphinx`, `lint`, `test`, `dev`, `ci`, `check`,
+`tools`, and their case-insensitive variants) tag components with
+`LifecycleScope::Development`. Unknown resolve names default to
+`Runtime` (safe default — matches operator intent for custom resolves
+named after production concerns).
+
+**Hashes:** every `Artifact.hash` field with `algorithm == "sha256"`
+becomes one `ContentHash` on the component.
+
+**Fail-open:** per-lockfile corruption (invalid JSON, unsupported
+`pex_version`, missing `locked_resolves`) logs a WARN naming the
+file + reason and skips it — the whole scan never aborts. Absent
+`pants.toml`, missing `[python].lockfile` key, or malformed TOML all
+fall back to the default glob without failing.
+
+**FR-010 discovery log:** at scan-end, a single INFO log line with
+four structured fields:
+
+```text
+INFO waybill::scan_fs::package_db::pants: pants-pex reader complete
+  lockfiles_discovered=<N>
+  lockfiles_parsed_ok=<N>
+  lockfiles_skipped_corrupt=<N>
+  components_emitted=<N>
+```
+
+Emitted only when at least one lockfile was discovered (silent on
+non-Pants repos per FR-007 byte-identity guarantee).
+
+**Coexistence with pip reader:** if a Pants repo carries a
+`requirements.txt` alongside its Pex lockfile, both readers emit
+entries. The m191 reconciler deduplicates at PURL level — the
+lockfile-tier entry (with hashes) wins over the manifest-tier entry
+(no hashes); `waybill:source-files` records both source paths for
+audit. See US2 in the spec for detail.
+
+**GitHub Actions users**: `sigstore/gh-action-sigstore-python` and
+similar helper actions are for **signing** (feature 222), not
+scanning — the pants reader has nothing to do with OIDC.
+
+**Follow-up ecosystems** (out of scope for milestone 223): coursier
+lockfiles at `3rdparty/jvm/*.lockfile` for Pants JVM targets; `BUILD`
+file walker for design-tier signals; eBPF trace of `pex` / `pants`
+subprocess invocations at build time.
 
 ---
 

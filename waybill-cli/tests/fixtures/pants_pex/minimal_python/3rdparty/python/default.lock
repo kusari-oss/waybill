@@ -1,0 +1,56 @@
+{
+  "pex_version": "2.10.0",
+  "style": "strict",
+  "requirements": [
+    "waybill-fixture-a==1.0.0",
+    "waybill-fixture-b==1.0.0",
+    "waybill-fixture-c==1.0.0"
+  ],
+  "locked_resolves": [
+    {
+      "locked_requirements": [
+        {
+          "project_name": "waybill-fixture-a",
+          "version": "1.0.0",
+          "requires_python": ">=3.8",
+          "requires_dists": [],
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "url": "https://files.pythonhosted.org/packages/aa/aa/waybill_fixture_a-1.0.0-py3-none-any.whl"
+            }
+          ]
+        },
+        {
+          "project_name": "waybill-fixture-b",
+          "version": "1.0.0",
+          "requires_python": ">=3.8",
+          "requires_dists": [
+            "waybill-fixture-a>=1.0.0"
+          ],
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "url": "https://files.pythonhosted.org/packages/bb/bb/waybill_fixture_b-1.0.0-py3-none-any.whl"
+            }
+          ]
+        },
+        {
+          "project_name": "waybill-fixture-c",
+          "version": "1.0.0",
+          "requires_python": ">=3.8",
+          "requires_dists": [],
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "url": "https://files.pythonhosted.org/packages/cc/cc/waybill_fixture_c-1.0.0-py3-none-any.whl"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "pex_version": "2.10.0",
+  "locked_resolves": [
+    {
+      "locked_requirements": [
+        {
+          "project_name": "waybill-fixture-fallback",
+          "version": "1.0.0",
+          "requires_dists": [],
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "aaaabbbbccccddddeeeeffffbeefcafefeed1234567890abcdef1234567890ab",
+              "url": "https://files.pythonhosted.org/packages/ab/ab/waybill_fixture_fallback-1.0.0-py3-none-any.whl"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

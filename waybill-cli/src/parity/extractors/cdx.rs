@@ -853,6 +853,14 @@ cdx_anno!(c141_cdx, "waybill:cisa-2026-lifecycle",                   document);
 // but the annotation is the parity twin of the SPDX 2.3/3
 // waybill:sbom-version emissions.
 cdx_anno!(c142_cdx, "waybill:sbom-version",                          document);
+// Milestone 223 US1 (feature 223-pants-pex-reader): per-component
+// pants-resolve name (e.g., "default", "mypy", "pytest") extracted
+// from the Pex lockfile that produced the component.
+cdx_anno!(c143_cdx, "waybill:pants-resolve",                         component);
+// Milestone 223 US1 (Q2 A): per-component source URL for non-PyPI
+// Pex-lockfile entries (git / direct URL / local file). Composes
+// with C1 waybill:source-type to fully describe non-PyPI provenance.
+cdx_anno!(c144_cdx, "waybill:source-url",                            component);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
