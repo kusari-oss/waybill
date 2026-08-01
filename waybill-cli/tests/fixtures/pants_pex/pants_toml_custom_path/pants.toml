@@ -1,0 +1,7 @@
+# US3 fixture — Pants config declaring a non-default lockfile path.
+# The default `3rdparty/python/*.lock` glob is INTENTIONALLY unmet in
+# this fixture (no such directory). Discovery must succeed via the
+# `pants.toml` path per FR-004.
+
+[python]
+lockfile = "build-support/py.lock"

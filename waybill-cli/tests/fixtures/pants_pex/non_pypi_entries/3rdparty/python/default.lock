@@ -1,0 +1,57 @@
+{
+  "pex_version": "2.10.0",
+  "locked_resolves": [
+    {
+      "locked_requirements": [
+        {
+          "project_name": "waybill-fixture-normal",
+          "version": "1.0.0",
+          "requires_dists": [],
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "1111111111111111111111111111111111111111111111111111111111111111",
+              "url": "https://files.pythonhosted.org/packages/11/11/waybill_fixture_normal-1.0.0-py3-none-any.whl"
+            }
+          ]
+        },
+        {
+          "project_name": "waybill-fixture-git",
+          "version": "0.0.0+git.abc123",
+          "requires_dists": [],
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "2222222222222222222222222222222222222222222222222222222222222222",
+              "url": "git+https://example.test/waybill/waybill-fixture-git.git@abc123"
+            }
+          ]
+        },
+        {
+          "project_name": "waybill-fixture-url",
+          "version": "1.0.0",
+          "requires_dists": [],
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "3333333333333333333333333333333333333333333333333333333333333333",
+              "url": "https://mirror.example.test/wheels/waybill_fixture_url-1.0.0-py3-none-any.whl"
+            }
+          ]
+        },
+        {
+          "project_name": "waybill-fixture-local",
+          "version": "1.0.0",
+          "requires_dists": [],
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "4444444444444444444444444444444444444444444444444444444444444444",
+              "url": "file:///opt/wheels/waybill_fixture_local-1.0.0-py3-none-any.whl"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "pex_version": "2.10.0",
+  "locked_resolves": [
+    {
+      "locked_requirements": [
+        {
+          "project_name": "waybill-fixture-testing-a",
+          "version": "1.0.0",
+          "requires_dists": [],
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "5555555555555555555555555555555555555555555555555555555555555555",
+              "url": "https://files.pythonhosted.org/packages/ee/ee/waybill_fixture_testing_a-1.0.0-py3-none-any.whl"
+            }
+          ]
+        },
+        {
+          "project_name": "waybill-fixture-testing-b",
+          "version": "1.0.0",
+          "requires_dists": [],
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "6666666666666666666666666666666666666666666666666666666666666666",
+              "url": "https://files.pythonhosted.org/packages/ff/ff/waybill_fixture_testing_b-1.0.0-py3-none-any.whl"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
