@@ -18,6 +18,7 @@ diving into the [architecture docs](architecture/overview.md).
 | [nuget](#nuget) | `*.csproj` / `*.vbproj` / `*.fsproj` + `packages.lock.json` + `Directory.Packages.props` | Lockfile (full tree) when present; otherwise direct-deps only | — | ✓ / — | Implemented |
 | [pip](#pip) | venv `dist-info/METADATA` + Poetry/Pipfile + `uv.lock` + `requirements.txt` | Lockfile (Poetry / Pipfile / uv), flat (venv) | `--hash=alg:hex` flags | ✓ / ✓ | Implemented |
 | [pants (Python)](#pants-python) | Pex lockfile at `3rdparty/python/*.lock` (default glob) or `pants.toml`-declared path; multi-resolve support | Lockfile (`requires_dists` PEP 508 → `dependsOn`) | Lockfile per-artifact `sha256` | — / ✓ (via `pkg:pypi/`) | Implemented (milestone 223) |
+| [pants (JVM)](#pants-jvm) | Coursier lockfile at `3rdparty/jvm/*.lock` (default glob) or `pants.toml` `[jvm.resolves]`-declared path; multi-resolve support; Pants-header discriminator vs standalone coursier | Lockfile (`dependencies[]` coord strings → `dependsOn`) | Lockfile per-artifact `sha256` | — / ✓ (via `pkg:maven/`) | Implemented (milestone 224) |
 | [kotlin](#kotlin) | `build.gradle.kts` (regex) + `gradle/libs.versions.toml` (catalog) + `settings.gradle.kts` (workspace topology) | Manifest (declarations only) | — | ✓ (via `pkg:maven/`) / ✓ | Implemented (milestone 122 US2; design-tier — gated by `--include-declared-deps`) |
 | [rpm](#rpm) | `/var/lib/rpm/rpmdb.sqlite` (pure-Rust reader) | DB (`REQUIRES`) | — (rpmdb has none) | — / — | Implemented (BDB format detected, not parsed) |
 | [swift](#swift) | `Package.resolved` (SwiftPM v1/v2/v3 schema) | Lockfile (full pin set) | — | — / — | Implemented (milestone 122 US1; `Package.swift` not parsed in v0.1) |
@@ -824,6 +825,82 @@ annotation. `BTreeSet<PathBuf>` keeps ordering deterministic.
   can promote these to workspace-member style.
 - `Directory.Build.props` `<PackageVersion>` entries (some repos
   use this file for the same purpose).
+
+---
+
+## pants (JVM)
+
+**Modules:** `waybill-cli/src/scan_fs/package_db/pants_jvm/`
+(`mod.rs`, `lockfile.rs`, `config.rs`, `coordinate.rs`,
+`resolve_classifier.rs`).
+
+**Detection:** discovers Pants-generated coursier lockfiles at
+`<scan_root>/3rdparty/jvm/*.lock` (default glob) plus every
+`[jvm.resolves]` path declared in `<scan_root>/pants.toml`.
+Standalone coursier lockfiles (i.e., lockfiles produced by
+`coursier resolve` directly, without Pants) are skipped via the
+FR-011 discriminator: lockfiles that lack the
+`# --- BEGIN PANTS LOCKFILE METADATA` header substring get an
+INFO log and are excluded from ingestion. This prevents the
+JVM reader from double-counting Maven components already picked
+up by the standalone Maven reader.
+
+**PURL construction:** `pkg:maven/<group>/<artifact>@<version>`
+with optional `?classifier=<c>&type=<packaging>` qualifiers when
+the coursier entry sets `classifier` or a non-default `packaging`
+(anything other than `jar` — Maven's default). Segment encoding
+matches the standalone Maven reader.
+
+**Dependency edges:** parsed from each entry's `dependencies[]`
+coord-strings via `coordinate::parse_coord_string`, which handles
+the `"group:artifact:version[,url=X,jar=Y]"` shape by splitting
+on the first `,` then `splitn(3, ':')` the triple. Metadata k/v
+pairs after the triple are ignored (waybill needs only the
+group/artifact for edge resolution). Edges emit as
+`"group:artifact"` strings to align with the standalone Maven
+reader's dep-edge convention.
+
+**Multi-resolve support:** every `.lock` file discovered gets its
+own `waybill:pants-resolve=<name>` annotation. The resolve name
+comes from the lockfile filename stem OR (when config wins) the
+`[jvm.resolves]` map key. Resolve names matching the JVM
+dev-tool allowlist (scalatest, junit, testng, mockito, assertj,
+hamcrest, scalafmt, scalastyle, scalafix, checkstyle, spotbugs,
+pmd, errorprone, jacoco, dokka, ktlint, detekt, plus generics
+lint / test / dev / ci / check / tools / docs) get
+`lifecycle_scope = Development`; everything else gets `Runtime`.
+
+**Dedup with the Maven reader:** the m191 PURL-level reconciler
+handles it. Coursier lockfile entries carry both
+`sbom_tier="source"` AND per-artifact sha256 hashes; standalone
+`pom.xml` entries carry `"source"` tier but no hashes.
+Hash-bearing entries win by rule (2) of the reconciler — the
+lockfile-tier component survives, the pom-tier component is
+absorbed into the winner's `waybill:source-files` annotation.
+
+**FR-010 log:** one INFO line at scan end reports
+`lockfiles_discovered=N`, `lockfiles_parsed_ok=N`,
+`lockfiles_skipped_corrupt=N`,
+`lockfiles_skipped_non_pants=N` (NEW vs m223 — tracks the
+FR-011 discriminator), `components_emitted=N`. The reader
+returns early WITHOUT logging when zero lockfiles are found
+(SC-003 byte-identity guarantee).
+
+**Coexistence with the standalone Maven reader (`pom.xml`,
+Gradle, `~/.m2/`, embedded `META-INF/maven/`):** both readers run
+in every scan. Their outputs merge through the m191 reconciler.
+No behavior changes for repos without any coursier lockfiles.
+
+**Follow-ups deferred:**
+- Standalone coursier lockfile support (no Pants header) —
+  usage segment is small; revisit when operator demand emerges.
+- Coursier v2 schema — handled reactively via the `version`
+  guard.
+- `BUILD`-file walker for `jvm_artifact(...)`, `scala_source(...)`
+  — design-tier signal that duplicates the lockfile.
+
+See [`specs/224-pants-coursier-jvm/quickstart.md`](../specs/224-pants-coursier-jvm/quickstart.md)
+for a walkthrough.
 
 ---
 

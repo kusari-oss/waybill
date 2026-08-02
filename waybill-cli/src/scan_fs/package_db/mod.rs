@@ -43,6 +43,7 @@ pub mod npm;
 pub mod nuget;
 pub mod opkg;
 pub mod pants;
+pub mod pants_jvm;
 pub mod pip;
 mod project_roots;
 pub mod rpm;
@@ -1474,6 +1475,16 @@ pub fn read_all(
     // requirements.txt-tier without). Reader is a no-op (empty return,
     // no log) on repos without any Pex lockfiles per FR-007 / SC-003.
     out.extend(pants::read(rootfs));
+
+    // Milestone 224: Pants coursier JVM lockfile reader — Maven
+    // components from `3rdparty/jvm/*.lock` (default glob) +
+    // `pants.toml` `[jvm.resolves]`-declared paths. Coexists with the
+    // Maven reader (pom.xml, Gradle, ~/.m2/) via the m191 reconciler's
+    // PURL-level dedup (lockfile-tier with hashes wins over pom-tier
+    // without). No-op (empty return, no log) on repos without any
+    // Pants coursier lockfiles per FR-007 / SC-003.
+    out.extend(pants_jvm::read(rootfs));
+
     // Collect pip-claimed paths from dist-info RECORD files.
     pip::collect_claimed_paths(
         rootfs,

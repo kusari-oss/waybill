@@ -226,7 +226,7 @@ co-authoring national cyber agency.
 
 ## Supported ecosystems
 
-Twelve production ecosystem readers plus a generic binary scanner.
+Thirteen production ecosystem readers plus a generic binary scanner.
 [`docs/ecosystems.md`](docs/ecosystems.md) holds the full matrix;
 summary below.
 
@@ -243,6 +243,7 @@ summary below.
 | **npm**           | —                                   | `package-lock.json` v2/v3, `pnpm-lock.yaml`, `node_modules/`                | Full. v1 locks refused.             |
 | **pip**           | venv `dist-info/METADATA`           | `poetry.lock`, `Pipfile.lock`, `requirements.txt`                           | Flat venv; tree in locks            |
 | **pants (Python)** *(223)* | —                          | Pex lockfile at `3rdparty/python/*.lock` (default) or `pants.toml`-declared path; multi-resolve scope-tagging via name allowlist (mypy, pytest, black, …) | Full via `requires_dists` (PEP 508) |
+| **pants (JVM)** *(224)* | —                             | Coursier lockfile at `3rdparty/jvm/*.lock` (default) or `pants.toml` `[jvm.resolves]`-declared path; multi-resolve scope-tagging via JVM dev-tool allowlist (junit, scalatest, ktlint, …); Pants-header discriminator vs standalone coursier | Full via `dependencies[]` coord-string edges |
 | **vcpkg** *(102)* | —                                   | `vcpkg.json` (manifest mode, `dependencies[]` + `overrides[]`)              | Direct only                          |
 | **conan** *(102)* | —                                   | `conanfile.txt` (`[requires]`/`[tool_requires]`) + `conanfile.py` (literal `requires=[...]`) | Direct only                          |
 | *generic binary*  | —                                   | ELF / Mach-O / PE headers (`DT_NEEDED`, `LC_LOAD_DYLIB`, PE IMPORT)         | Linkage only                        |
