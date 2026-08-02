@@ -19,6 +19,7 @@ diving into the [architecture docs](architecture/overview.md).
 | [pip](#pip) | venv `dist-info/METADATA` + Poetry/Pipfile + `uv.lock` + `requirements.txt` | Lockfile (Poetry / Pipfile / uv), flat (venv) | `--hash=alg:hex` flags | ✓ / ✓ | Implemented |
 | [pants (Python)](#pants-python) | Pex lockfile at `3rdparty/python/*.lock` (default glob) or `pants.toml`-declared path; multi-resolve support | Lockfile (`requires_dists` PEP 508 → `dependsOn`) | Lockfile per-artifact `sha256` | — / ✓ (via `pkg:pypi/`) | Implemented (milestone 223) |
 | [pants (JVM)](#pants-jvm) | Coursier lockfile at `3rdparty/jvm/*.lock` (default glob) or `pants.toml` `[jvm.resolves]`-declared path; multi-resolve support; Pants-header discriminator vs standalone coursier | Lockfile (`dependencies[]` coord strings → `dependsOn`) | Lockfile per-artifact `sha256` | — / ✓ (via `pkg:maven/`) | Implemented (milestone 224) |
+| [pants (shell)](#pants-shell) | `BUILD` files declaring `shell_source` / `shell_sources` / `shunit2_test` / `shunit2_tests` targets under scan root; plus `pants.toml` `[shellcheck]` / `[shfmt]` / `[shunit2]` version pins | File-tier (per-`.sh` component with SHA-256) + design-tier (per-pinned-tool `pkg:generic` component) | Per-file SHA-256 (content-addressed) | — / — | Implemented (milestone 225) |
 | [kotlin](#kotlin) | `build.gradle.kts` (regex) + `gradle/libs.versions.toml` (catalog) + `settings.gradle.kts` (workspace topology) | Manifest (declarations only) | — | ✓ (via `pkg:maven/`) / ✓ | Implemented (milestone 122 US2; design-tier — gated by `--include-declared-deps`) |
 | [rpm](#rpm) | `/var/lib/rpm/rpmdb.sqlite` (pure-Rust reader) | DB (`REQUIRES`) | — (rpmdb has none) | — / — | Implemented (BDB format detected, not parsed) |
 | [swift](#swift) | `Package.resolved` (SwiftPM v1/v2/v3 schema) | Lockfile (full pin set) | — | — / — | Implemented (milestone 122 US1; `Package.swift` not parsed in v0.1) |
@@ -900,6 +901,94 @@ No behavior changes for repos without any coursier lockfiles.
   — design-tier signal that duplicates the lockfile.
 
 See [`specs/224-pants-coursier-jvm/quickstart.md`](../specs/224-pants-coursier-jvm/quickstart.md)
+for a walkthrough.
+
+---
+
+## pants (shell)
+
+**Modules:** `waybill-cli/src/scan_fs/package_db/pants_shell/`
+(`mod.rs`, `build_dsl.rs`, `target_resolver.rs`, `config.rs`,
+`component_emit.rs`).
+
+**Detection:** discovers every `BUILD` file under the scan root
+via `safe_walk` (respects `--exclude-path` + symlink-cycle guard),
+extracts `shell_source` / `shell_sources` / `shunit2_test` /
+`shunit2_tests` target declarations via a regex-scoped Pants-DSL
+parser (Constitution Principle I — no embedded Python
+interpreter), resolves each target's `source=` / `sources=[...]`
+expression against the BUILD file's own directory, and emits ONE
+`pkg:generic/<basename>@<sha256[:12]>` file-tier component per
+resolved `.sh` file. Also parses `pants.toml` at the scan root
+for `[shellcheck]` / `[shfmt]` / `[shunit2]` `version = "..."`
+pins and emits each as a design-tier `pkg:generic/<tool>@<version>`
+component.
+
+**Recognized target types:**
+
+- `shell_source(name="X", source="a.sh")` — single file, runtime
+- `shell_sources(name="X", sources=["*.sh", ...])` — glob, runtime
+- `shunit2_test(name="X", source="a_test.sh")` — single file, dev
+- `shunit2_tests(name="X", sources=["*_test.sh"])` — glob, dev
+
+Plugin-registered custom target types are silently ignored.
+`shell_command` targets (Pants's arbitrary-command wrapper) are
+NOT ingested per FR-012 — they describe actions, not artifacts.
+
+**PURL construction:**
+- Scripts: `pkg:generic/<url-encoded-basename>@<sha256[:12]>` —
+  content-addressed, readable in a component listing. The full
+  sha256 lives in the standard `hashes[]` slot.
+- Tool pins: `pkg:generic/<tool>@<version>` — version preserved
+  verbatim (leading `v` prefix kept when present).
+
+**Annotations:**
+- `waybill:pants-target` (NEW catalog row C145 with this milestone)
+  — the Pants target address(es) that own the component. Multiple
+  owners (same file resolved by two targets) merge into ONE
+  annotation, lex-sorted comma-separated.
+- `waybill:source-files` (m080 row) — scan-root-relative file path.
+- Tool components: `waybill:source-file = pants.toml` (m080 row) +
+  `waybill:sbom-tier = design`.
+
+**Lifecycle-scope classification:** `shunit2_test` /
+`shunit2_tests`-owned components tag `Development` (dev-tool
+allowlist convention matches m179's `LifecycleScope::Development`
+emission for `waybill:lifecycle-scope=development` property).
+`shell_source` / `shell_sources`-owned components leave the
+scope absent (Runtime = default, elided per m179 convention).
+When a file is owned by BOTH a runtime and a dev target, the
+merged component tags as Development (dev scope wins — the safer
+default for compliance triage).
+
+**FR-010 log:** one INFO line at scan end reports
+`build_files_discovered=N`, `build_files_parsed_ok=N`,
+`build_files_skipped_corrupt=N`, `shell_targets_found=N`,
+`script_components_emitted=N`, `tool_components_emitted=N`. The
+reader returns early WITHOUT logging when zero BUILD files are
+discovered AND no `pants.toml` is present at the scan root
+(SC-003 byte-identity guarantee).
+
+**Coexistence with existing readers:**
+- The m133 file-tier walker (orphan-file discovery) sees
+  pants-shell-emitted `source_path` values in its dedupe index,
+  so no double-emission occurs for scripts already claimed by a
+  BUILD file target.
+- The `pants` (m223, Python) and `pants_jvm` (m224, JVM) readers
+  are independent modules. All three may activate on the same
+  scan (repos with Python + JVM + shell all use `pants.toml` for
+  different subsystem sections).
+
+**Follow-ups deferred:**
+- `shell_command` targets — architectural addition (model
+  actions as SBOM subjects).
+- Plugin-registered custom shell target types — currently ignored.
+- Nested `pants.toml` files under scan root — only root-level
+  consulted.
+- Pants's embedded shunit2 bundle — only operator-pinned
+  `[shunit2] version = "..."` triggers emission.
+
+See [`specs/225-pants-shell-reader/quickstart.md`](../specs/225-pants-shell-reader/quickstart.md)
 for a walkthrough.
 
 ---

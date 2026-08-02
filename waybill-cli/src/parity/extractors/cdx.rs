@@ -861,6 +861,11 @@ cdx_anno!(c143_cdx, "waybill:pants-resolve",                         component);
 // Pex-lockfile entries (git / direct URL / local file). Composes
 // with C1 waybill:source-type to fully describe non-PyPI provenance.
 cdx_anno!(c144_cdx, "waybill:source-url",                            component);
+// Milestone 225 US1 (feature 225-pants-shell-reader): per-component
+// pants target address (e.g., "scripts:deploy") extracted from the
+// BUILD file whose `shell_source` / `shell_sources` / `shunit2_test` /
+// `shunit2_tests` target owns the emitted shell-script file.
+cdx_anno!(c145_cdx, "waybill:pants-target",                          component);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
