@@ -1,0 +1,66 @@
+# --- BEGIN PANTS LOCKFILE METADATA: DO NOT EDIT OR REMOVE ---
+# {
+#   "version": 1,
+#   "generated_with_requirements": []
+# }
+# --- END PANTS LOCKFILE METADATA ---
+
+[[entries]]
+directDependencies = []
+dependencies = []
+file_name = "plain-1.0.0.jar"
+
+[entries.coord]
+group = "dev.waybill.fixture"
+artifact = "plain"
+version = "1.0.0"
+
+[entries.file_digest]
+fingerprint = "00000000000000000000000000000000000000000000000000000000000000a0"
+serialized_bytes_length = 100
+
+[[entries]]
+directDependencies = []
+dependencies = []
+file_name = "webapp-1.0.0.war"
+
+[entries.coord]
+group = "dev.waybill.fixture"
+artifact = "webapp"
+version = "1.0.0"
+packaging = "war"
+
+[entries.file_digest]
+fingerprint = "00000000000000000000000000000000000000000000000000000000000000a1"
+serialized_bytes_length = 200
+
+[[entries]]
+directDependencies = []
+dependencies = []
+file_name = "native-1.0.0-linux-x86_64.so"
+
+[entries.coord]
+group = "dev.waybill.fixture"
+artifact = "native"
+version = "1.0.0"
+packaging = "so"
+classifier = "linux-x86_64"
+
+[entries.file_digest]
+fingerprint = "00000000000000000000000000000000000000000000000000000000000000a2"
+serialized_bytes_length = 300
+
+[[entries]]
+directDependencies = []
+dependencies = []
+file_name = "internal-source-1.0.0.jar"
+
+[entries.coord]
+group = "dev.waybill.fixture"
+artifact = "internal-source"
+version = "1.0.0"
+url = "https://internal-mirror.example.test/dev/waybill/fixture/internal-source/1.0.0/internal-source-1.0.0.jar"
+
+[entries.file_digest]
+fingerprint = "00000000000000000000000000000000000000000000000000000000000000a3"
+serialized_bytes_length = 400

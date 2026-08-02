@@ -1,0 +1,19 @@
+# --- BEGIN PANTS LOCKFILE METADATA: DO NOT EDIT OR REMOVE ---
+# {
+#   "version": 1,
+#   "generated_with_requirements": []
+# }
+# --- END PANTS LOCKFILE METADATA ---
+
+[[entries]]
+directDependencies = []
+dependencies = []
+file_name = "fallback-1.0.0.jar"
+
+[entries.coord]
+group = "dev.waybill.fixture"
+artifact = "fallback"
+version = "1.0.0"
+
+[entries.file_digest]
+fingerprint = "00000000000000000000000000000000000000000000000000000000000000d0"

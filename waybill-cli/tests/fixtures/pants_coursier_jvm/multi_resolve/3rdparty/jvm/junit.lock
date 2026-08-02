@@ -1,0 +1,34 @@
+# --- BEGIN PANTS LOCKFILE METADATA: DO NOT EDIT OR REMOVE ---
+# {
+#   "version": 1,
+#   "generated_with_requirements": []
+# }
+# --- END PANTS LOCKFILE METADATA ---
+
+[[entries]]
+directDependencies = []
+dependencies = []
+file_name = "testing-junit-a-1.0.0.jar"
+
+[entries.coord]
+group = "dev.waybill.fixture"
+artifact = "testing-junit-a"
+version = "1.0.0"
+
+[entries.file_digest]
+fingerprint = "0000000000000000000000000000000000000000000000000000000000000020"
+serialized_bytes_length = 3000
+
+[[entries]]
+directDependencies = []
+dependencies = []
+file_name = "testing-junit-b-1.0.0.jar"
+
+[entries.coord]
+group = "dev.waybill.fixture"
+artifact = "testing-junit-b"
+version = "1.0.0"
+
+[entries.file_digest]
+fingerprint = "0000000000000000000000000000000000000000000000000000000000000021"
+serialized_bytes_length = 4000

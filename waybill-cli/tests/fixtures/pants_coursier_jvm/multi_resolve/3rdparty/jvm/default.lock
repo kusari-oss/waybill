@@ -1,0 +1,34 @@
+# --- BEGIN PANTS LOCKFILE METADATA: DO NOT EDIT OR REMOVE ---
+# {
+#   "version": 1,
+#   "generated_with_requirements": []
+# }
+# --- END PANTS LOCKFILE METADATA ---
+
+[[entries]]
+directDependencies = []
+dependencies = []
+file_name = "runtime-a-1.0.0.jar"
+
+[entries.coord]
+group = "dev.waybill.fixture"
+artifact = "runtime-a"
+version = "1.0.0"
+
+[entries.file_digest]
+fingerprint = "0000000000000000000000000000000000000000000000000000000000000010"
+serialized_bytes_length = 1000
+
+[[entries]]
+directDependencies = []
+dependencies = []
+file_name = "runtime-b-1.0.0.jar"
+
+[entries.coord]
+group = "dev.waybill.fixture"
+artifact = "runtime-b"
+version = "1.0.0"
+
+[entries.file_digest]
+fingerprint = "0000000000000000000000000000000000000000000000000000000000000011"
+serialized_bytes_length = 2000

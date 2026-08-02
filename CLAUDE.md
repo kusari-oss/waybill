@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-07-31
+Auto-generated from all feature plans. Last updated: 2026-08-01
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -301,6 +301,7 @@ Auto-generated from all feature plans. Last updated: 2026-07-31
 - Rust stable (workspace toolchain inherited + `sigstore = "0.11"` (workspace, already (222-sigstore-keyless-signing)
 - Rust stable (workspace toolchain inherited from milestones + Existing only — `serde_json` (Pex lockfile parsing; (223-pants-pex-reader)
 - N/A — all state in-process per scan; mirrors every language-reader (223-pants-pex-reader)
+- Rust stable (workspace toolchain inherited from + Existing only — `toml = "0.8"` (coursier (224-pants-coursier-jvm)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -363,9 +364,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 224-pants-coursier-jvm: Added Rust stable (workspace toolchain inherited from + Existing only — `toml = "0.8"` (coursier
 - 223-pants-pex-reader: Added Rust stable (workspace toolchain inherited from milestones + Existing only — `serde_json` (Pex lockfile parsing;
 - 222-sigstore-keyless-signing: Added Rust stable (workspace toolchain inherited + `sigstore = "0.11"` (workspace, already
-- 221-cisa-2026-elements-audit: Added Rust stable (workspace toolchain inherited from + Existing only — `sigstore = "0.11"` a
 
 
 <!-- MANUAL ADDITIONS START -->
