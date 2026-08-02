@@ -20,6 +20,8 @@ use std::path::{Path, PathBuf};
 use globset::{Glob, GlobSetBuilder};
 
 use super::{ResolvedTarget, TargetDeclaration, TargetSource};
+use crate::scan_fs::package_db::exclude_path::ExclusionSet;
+use crate::scan_fs::walk::{safe_walk, WalkConfig};
 
 /// Compute the target address for a BUILD file at `build_file_dir`
 /// relative to `scan_root`, given an optional explicit `name=`.
@@ -88,42 +90,34 @@ fn resolve_globs(build_file_dir: &Path, patterns: &[String]) -> Vec<PathBuf> {
             return Vec::new();
         }
     };
-    // Determine whether any pattern uses `**` (recursive) — if so, we
-    // need to walk subdirectories.
+    // Determine whether any pattern uses `**` (recursive). Non-recursive
+    // patterns cap descent at depth 1 (root + immediate children only);
+    // `**` patterns descend up to 32 levels — matches every other reader's
+    // m054/m113 depth-bound convention.
     let recursive = patterns.iter().any(|p| p.contains("**"));
-    let mut out = Vec::new();
-    walk_and_match(build_file_dir, build_file_dir, &set, recursive, &mut out);
-    out.sort();
-    out
-}
-
-fn walk_and_match(
-    dir: &Path,
-    base: &Path,
-    set: &globset::GlobSet,
-    recursive: bool,
-    out: &mut Vec<PathBuf>,
-) {
-    let Ok(read_dir) = std::fs::read_dir(dir) else {
-        return;
+    let max_depth = if recursive { 32 } else { 1 };
+    let exclude_set = ExclusionSet::new_empty();
+    let cfg = WalkConfig {
+        max_depth,
+        should_skip: &|_candidate, _rootfs| false,
+        exclude_set: &exclude_set,
     };
-    for entry in read_dir.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            if recursive {
-                walk_and_match(&path, base, set, recursive, out);
-            }
-            continue;
+    let mut out: Vec<PathBuf> = Vec::new();
+    safe_walk(build_file_dir, &cfg, |path| {
+        if !path.is_file() {
+            return;
         }
-        // Match against the path RELATIVE to the base (BUILD file's dir).
-        let rel = match path.strip_prefix(base) {
+        // Match against the path RELATIVE to the BUILD file's dir.
+        let rel = match path.strip_prefix(build_file_dir) {
             Ok(p) => p,
-            Err(_) => continue,
+            Err(_) => return,
         };
         if set.is_match(rel) {
-            out.push(path);
+            out.push(path.to_path_buf());
         }
-    }
+    });
+    out.sort();
+    out
 }
 
 /// Public: fully resolve a target declaration into address + files.
