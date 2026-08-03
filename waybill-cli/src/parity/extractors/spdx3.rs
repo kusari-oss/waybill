@@ -678,6 +678,8 @@ spdx3_anno!(c142_spdx3, "waybill:sbom-version",                          documen
 spdx3_anno!(c143_spdx3, "waybill:pants-resolve",                         component);
 // Milestone 223 US1 (Q2 A): per-component source-URL for non-PyPI Pex entries.
 spdx3_anno!(c144_spdx3, "waybill:source-url",                            component);
+// Milestone 225 US1: per-component pants target address (BUILD-file-tier).
+spdx3_anno!(c145_spdx3, "waybill:pants-target",                          component);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

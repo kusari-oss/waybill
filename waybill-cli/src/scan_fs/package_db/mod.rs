@@ -44,6 +44,7 @@ pub mod nuget;
 pub mod opkg;
 pub mod pants;
 pub mod pants_jvm;
+pub mod pants_shell;
 pub mod pip;
 mod project_roots;
 pub mod rpm;
@@ -1484,6 +1485,16 @@ pub fn read_all(
     // without). No-op (empty return, no log) on repos without any
     // Pants coursier lockfiles per FR-007 / SC-003.
     out.extend(pants_jvm::read(rootfs));
+
+    // Milestone 225: Pants shell reader — BUILD-file walker for
+    // `shell_source` / `shell_sources` / `shunit2_test` /
+    // `shunit2_tests` targets, plus `pants.toml` `[shellcheck]` /
+    // `[shfmt]` / `[shunit2]` version pins. Emits file-tier
+    // `pkg:generic/*` components per resolved .sh file with SHA-256
+    // + `waybill:pants-target` annotation, plus design-tier
+    // components for pinned tools. No-op (empty return, no log) on
+    // repos without any Pants BUILD files AND no pants.toml.
+    out.extend(pants_shell::read(rootfs, exclude_set));
 
     // Collect pip-claimed paths from dist-info RECORD files.
     pip::collect_claimed_paths(
