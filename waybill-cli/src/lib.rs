@@ -59,3 +59,13 @@ pub mod binding;
 /// git_submodule, ...}`) call into it. Per Constitution Principle VI, only
 /// pure-function code lives here; no I/O, no state.
 pub mod identifiers;
+
+/// Internal testing utilities shared between src-side `#[cfg(test)]`
+/// blocks and integration test binaries under `tests/`. Currently
+/// exposes `testing::EnvGuard`, a save-and-restore RAII guard that
+/// serializes env-var-mutating tests inside a single binary process
+/// (fixes the flake class documented by memories
+/// `reference_podman_test_flake` + `reference_m205_cargo_metadata_env_flake`).
+/// Exposed at lib root because integration test binaries can't see
+/// `#[cfg(test)]`-only items in the parent crate.
+pub mod testing;

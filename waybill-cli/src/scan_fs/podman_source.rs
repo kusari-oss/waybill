@@ -845,13 +845,10 @@ mod tests {
         )
         .unwrap();
 
-        let prev_home = std::env::var_os("HOME");
-        std::env::set_var("HOME", temp_home.path());
+        let mut g = crate::testing::EnvGuard::acquire();
+        g.set("HOME", temp_home.path().as_os_str());
         let result = discover_storage_root(true);
-        match prev_home {
-            Some(v) => std::env::set_var("HOME", v),
-            None => std::env::remove_var("HOME"),
-        }
+        drop(g);
         assert_eq!(result.unwrap(), graphroot);
     }
 
@@ -864,13 +861,10 @@ mod tests {
             .join(".local/share/containers/storage");
         std::fs::create_dir_all(&default_gr).unwrap();
 
-        let prev_home = std::env::var_os("HOME");
-        std::env::set_var("HOME", temp_home.path());
+        let mut g = crate::testing::EnvGuard::acquire();
+        g.set("HOME", temp_home.path().as_os_str());
         let result = discover_storage_root(true);
-        match prev_home {
-            Some(v) => std::env::set_var("HOME", v),
-            None => std::env::remove_var("HOME"),
-        }
+        drop(g);
         assert_eq!(result.unwrap(), default_gr);
     }
 
@@ -1095,13 +1089,10 @@ mod tests {
         std::fs::create_dir_all(&unreachable).unwrap();
         std::fs::set_permissions(&unreachable, std::fs::Permissions::from_mode(0o000)).unwrap();
 
-        let prev_home = std::env::var_os("HOME");
-        std::env::set_var("HOME", temp_home.path());
+        let mut g = crate::testing::EnvGuard::acquire();
+        g.set("HOME", temp_home.path().as_os_str());
         let result = discover_storage_root(true);
-        match prev_home {
-            Some(v) => std::env::set_var("HOME", v),
-            None => std::env::remove_var("HOME"),
-        }
+        drop(g);
 
         // Restore perms so tempdir cleanup works.
         std::fs::set_permissions(&unreachable, std::fs::Permissions::from_mode(0o755)).unwrap();
