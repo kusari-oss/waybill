@@ -43,6 +43,8 @@ mod resolve;
 mod sbom;
 mod scan_fs;
 mod supplement;
+#[cfg(test)]
+mod testing;
 mod trace;
 
 #[derive(Parser)]

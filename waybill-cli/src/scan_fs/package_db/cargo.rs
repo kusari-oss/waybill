@@ -3231,57 +3231,45 @@ version = "0.1.0"
 
     // ── T007 m205 (#593) — cargo metadata resolver + failure enum ──
     //
-    // Env-var-mutating tests require serial execution. Invoke via
-    // `cargo test ... -- --test-threads=1` when running the full
-    // suite; individual `-- resolve_cargo_metadata_timeout` invocations
-    // naturally serialize matching tests. Matches m203 pattern.
-
-    fn with_cargo_metadata_timeout_env<F: FnOnce()>(value: Option<&str>, f: F) {
-        let prev = std::env::var("WAYBILL_CARGO_METADATA_TIMEOUT_SECS").ok();
-        match value {
-            Some(v) => std::env::set_var("WAYBILL_CARGO_METADATA_TIMEOUT_SECS", v),
-            None => std::env::remove_var("WAYBILL_CARGO_METADATA_TIMEOUT_SECS"),
-        }
-        f();
-        match prev {
-            Some(v) => std::env::set_var("WAYBILL_CARGO_METADATA_TIMEOUT_SECS", v),
-            None => std::env::remove_var("WAYBILL_CARGO_METADATA_TIMEOUT_SECS"),
-        }
-    }
+    // Env-var-mutating tests use the workspace-shared `EnvGuard` at
+    // `waybill-cli/src/testing/env_guard.rs` — the guard holds a
+    // process-global mutex that serializes every env-var-mutating
+    // test in the `waybill` bin. Fixes the m205 flake documented by
+    // memory `reference_m205_cargo_metadata_env_flake`.
 
     #[test]
     fn resolve_cargo_metadata_timeout_default_when_env_var_absent_m205() {
-        with_cargo_metadata_timeout_env(None, || {
-            assert_eq!(resolve_cargo_metadata_timeout(), Duration::from_secs(60));
-        });
+        let mut g = crate::testing::EnvGuard::acquire();
+        g.remove("WAYBILL_CARGO_METADATA_TIMEOUT_SECS");
+        assert_eq!(resolve_cargo_metadata_timeout(), Duration::from_secs(60));
     }
 
     #[test]
     fn resolve_cargo_metadata_timeout_honors_env_var_m205() {
-        with_cargo_metadata_timeout_env(Some("42"), || {
-            assert_eq!(resolve_cargo_metadata_timeout(), Duration::from_secs(42));
-        });
+        let mut g = crate::testing::EnvGuard::acquire();
+        g.set("WAYBILL_CARGO_METADATA_TIMEOUT_SECS", "42");
+        assert_eq!(resolve_cargo_metadata_timeout(), Duration::from_secs(42));
     }
 
     #[test]
     fn resolve_cargo_metadata_timeout_clamps_below_min_m205() {
-        with_cargo_metadata_timeout_env(Some("0"), || {
-            assert_eq!(resolve_cargo_metadata_timeout(), Duration::from_secs(1));
-        });
+        let mut g = crate::testing::EnvGuard::acquire();
+        g.set("WAYBILL_CARGO_METADATA_TIMEOUT_SECS", "0");
+        assert_eq!(resolve_cargo_metadata_timeout(), Duration::from_secs(1));
     }
 
     #[test]
     fn resolve_cargo_metadata_timeout_clamps_above_max_m205() {
-        with_cargo_metadata_timeout_env(Some("99999"), || {
-            assert_eq!(resolve_cargo_metadata_timeout(), Duration::from_secs(3600));
-        });
+        let mut g = crate::testing::EnvGuard::acquire();
+        g.set("WAYBILL_CARGO_METADATA_TIMEOUT_SECS", "99999");
+        assert_eq!(resolve_cargo_metadata_timeout(), Duration::from_secs(3600));
     }
 
     #[test]
     fn resolve_cargo_metadata_timeout_ignores_parse_error_m205() {
-        with_cargo_metadata_timeout_env(Some("notanumber"), || {
-            assert_eq!(resolve_cargo_metadata_timeout(), Duration::from_secs(60));
-        });
+        let mut g = crate::testing::EnvGuard::acquire();
+        g.set("WAYBILL_CARGO_METADATA_TIMEOUT_SECS", "notanumber");
+        assert_eq!(resolve_cargo_metadata_timeout(), Duration::from_secs(60));
     }
 
     #[test]

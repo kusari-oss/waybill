@@ -660,6 +660,7 @@ fn _unused_but_reserved(_s: Option<SigStoreSigner>) {}
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+    use crate::testing::EnvGuard;
     use std::io::Write;
 
     fn minimal_statement() -> InTotoStatement {
@@ -1066,34 +1067,12 @@ mod tests {
         }
     }
 
-    /// RAII guard that snapshots + replaces env vars for the duration of
-    /// a test. Restores originals on drop.
-    struct EnvGuard {
-        originals: Vec<(String, Option<String>)>,
-    }
-
-    impl EnvGuard {
-        fn setup(vars: &[(&str, Option<&str>)]) -> Self {
-            let mut originals = Vec::new();
-            for (k, v) in vars {
-                originals.push((k.to_string(), std::env::var(k).ok()));
-                match v {
-                    Some(val) => std::env::set_var(k, val),
-                    None => std::env::remove_var(k),
-                }
-            }
-            Self { originals }
-        }
-    }
-
-    impl Drop for EnvGuard {
-        fn drop(&mut self) {
-            for (k, v) in &self.originals {
-                match v {
-                    Some(val) => std::env::set_var(k, val),
-                    None => std::env::remove_var(k),
-                }
-            }
-        }
-    }
+    // NB: the ad-hoc `EnvGuard` that used to live here was promoted
+    // to the shared workspace helper at `waybill-cli/src/testing/env_guard.rs`
+    // when the pattern was needed by tests outside this file — the
+    // shared version adds a process-global mutex that serializes
+    // env-var-mutating tests across the whole binary, fixing the
+    // podman + cargo m205 flake class. Import shape:
+    // `use crate::testing::EnvGuard;` (see the top-level `use` in
+    // this `mod tests { ... }` block).
 }
