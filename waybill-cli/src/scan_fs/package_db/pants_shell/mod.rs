@@ -32,8 +32,8 @@ use std::path::{Path, PathBuf};
 use waybill_common::resolution::LifecycleScope;
 
 use super::exclude_path::ExclusionSet;
+use super::pants_common;
 use super::PackageDbEntry;
-use crate::scan_fs::walk::{safe_walk, WalkConfig};
 
 /// The four built-in Pants shell backend target types we recognize.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -123,32 +123,13 @@ pub(crate) enum TargetParseError {
     UnbalancedParens { line: u32 },
 }
 
-/// Discover every `BUILD` file under `scan_root`. Uses `safe_walk`
-/// (respects symlink-cycle guard, `--exclude-path`, depth limits).
-fn discover_build_files(scan_root: &Path, exclude_set: &ExclusionSet) -> Vec<PathBuf> {
-    let mut out: Vec<PathBuf> = Vec::new();
-    let cfg = WalkConfig {
-        max_depth: 32,
-        should_skip: &|_candidate, _rootfs| false,
-        exclude_set,
-    };
-    safe_walk(scan_root, &cfg, |path| {
-        if path.is_file()
-            && path.file_name().and_then(|s| s.to_str()) == Some("BUILD")
-        {
-            out.push(path.to_path_buf());
-        }
-    });
-    out
-}
-
 /// Public entry — orchestrates BUILD-file discovery, regex extraction,
 /// target resolution, component emission, and `pants.toml` tool-pin
 /// discovery. Returns `Vec::new()` and emits NO log line when zero
 /// BUILD files are discovered AND no `pants.toml` is present at the
 /// scan root (byte-identity guarantee per FR-011 / SC-003).
 pub fn read(scan_root: &Path, exclude_set: &ExclusionSet) -> Vec<PackageDbEntry> {
-    let build_files = discover_build_files(scan_root, exclude_set);
+    let build_files = pants_common::discover_build_files(scan_root, exclude_set);
     let pants_toml_path = scan_root.join("pants.toml");
     let pants_toml_present = pants_toml_path.is_file();
     if build_files.is_empty() && !pants_toml_present {

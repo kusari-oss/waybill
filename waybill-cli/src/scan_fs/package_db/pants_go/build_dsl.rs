@@ -15,6 +15,7 @@ use std::sync::OnceLock;
 
 use regex::Regex;
 
+use super::super::pants_common::find_matching_close_paren;
 use super::{GoTargetDeclaration, GoTargetKind, GoTargetParseError};
 
 /// Anchoring regex — matches `<target_type>(` at line-start.
@@ -79,49 +80,6 @@ fn main_key_regex() -> &'static Regex {
         Regex::new(r"(?m)(?:^|[,\s(])main\s*=\s*")
             .expect("valid main-key regex")
     })
-}
-
-/// Walk `bytes` from `start` (must point at an opening `(`) and
-/// return the byte offset of the matching closing `)`. Respects
-/// single- + double-quoted string literals (with `\` escapes).
-/// Returns `None` on unbalanced parens / EOF-in-string.
-fn find_matching_close_paren(bytes: &[u8], start: usize) -> Option<usize> {
-    debug_assert_eq!(bytes.get(start), Some(&b'('));
-    let mut depth: i32 = 0;
-    let mut i = start;
-    let mut in_str: Option<u8> = None;
-    let mut escape = false;
-    while i < bytes.len() {
-        let c = bytes[i];
-        if let Some(q) = in_str {
-            if escape {
-                escape = false;
-            } else if c == b'\\' {
-                escape = true;
-            } else if c == q {
-                in_str = None;
-            }
-            i += 1;
-            continue;
-        }
-        match c {
-            b'"' | b'\'' => {
-                in_str = Some(c);
-            }
-            b'(' | b'[' | b'{' => {
-                depth += 1;
-            }
-            b')' | b']' | b'}' => {
-                depth -= 1;
-                if depth == 0 && c == b')' {
-                    return Some(i);
-                }
-            }
-            _ => {}
-        }
-        i += 1;
-    }
-    None
 }
 
 /// Extract every recognized Pants Go target declaration from a
