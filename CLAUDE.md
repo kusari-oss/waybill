@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-08-02
+Auto-generated from all feature plans. Last updated: 2026-08-03
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -365,9 +365,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 226-pants-go-reader: Added Rust stable (workspace toolchain inherited from + Existing only — `regex = "1"` (workspace;
 - 225-pants-shell-reader: Added Rust stable (workspace toolchain inherited from + Existing only — `regex = "1"` (workspace;
 - 224-pants-coursier-jvm: Added Rust stable (workspace toolchain inherited from + Existing only — `toml = "0.8"` (coursier
-- 223-pants-pex-reader: Added Rust stable (workspace toolchain inherited from milestones + Existing only — `serde_json` (Pex lockfile parsing;
 
 
 <!-- MANUAL ADDITIONS START -->

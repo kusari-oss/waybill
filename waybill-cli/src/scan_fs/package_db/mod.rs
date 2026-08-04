@@ -43,6 +43,7 @@ pub mod npm;
 pub mod nuget;
 pub mod opkg;
 pub mod pants;
+pub mod pants_go;
 pub mod pants_jvm;
 pub mod pants_shell;
 pub mod pip;
@@ -1495,6 +1496,16 @@ pub fn read_all(
     // components for pinned tools. No-op (empty return, no log) on
     // repos without any Pants BUILD files AND no pants.toml.
     out.extend(pants_shell::read(rootfs, exclude_set));
+
+    // Milestone 226: Pants Go — toolchain-pin emission only. The
+    // BUILD-walker enrichment portion (attaching
+    // `waybill:pants-target` onto `pkg:golang/*` components) runs
+    // as a post-reconciler pass in `scan_fs/mod.rs` at line ~1001
+    // (see `pants_go::enrich`). Here we emit only the design-tier
+    // `pkg:generic/go@<version>` component from `pants.toml`
+    // `[golang] expected_version` (mirrors m225's shellcheck/shfmt
+    // pattern). No-op when the pin is absent.
+    out.extend(pants_go::read(rootfs, exclude_set));
 
     // Collect pip-claimed paths from dist-info RECORD files.
     pip::collect_claimed_paths(

@@ -226,7 +226,7 @@ co-authoring national cyber agency.
 
 ## Supported ecosystems
 
-Fourteen production ecosystem readers plus a generic binary scanner.
+Fifteen production ecosystem readers plus a generic binary scanner.
 [`docs/ecosystems.md`](docs/ecosystems.md) holds the full matrix;
 summary below.
 
@@ -245,6 +245,7 @@ summary below.
 | **pants (Python)** *(223)* | —                          | Pex lockfile at `3rdparty/python/*.lock` (default) or `pants.toml`-declared path; multi-resolve scope-tagging via name allowlist (mypy, pytest, black, …) | Full via `requires_dists` (PEP 508) |
 | **pants (JVM)** *(224)* | —                             | Coursier lockfile at `3rdparty/jvm/*.lock` (default) or `pants.toml` `[jvm.resolves]`-declared path; multi-resolve scope-tagging via JVM dev-tool allowlist (junit, scalatest, ktlint, …); Pants-header discriminator vs standalone coursier | Full via `dependencies[]` coord-string edges |
 | **pants (shell)** *(225)* | —                           | `BUILD` files declaring `shell_source` / `shell_sources` / `shunit2_test` / `shunit2_tests` targets; `pants.toml` `[shellcheck]` / `[shfmt]` / `[shunit2]` version pins → design-tier tool components | — (shell scripts have no dep graph) |
+| **pants (Go)** *(226)* | —                              | `BUILD` files declaring `go_binary` / `go_package` / `go_third_party_package` / `go_mod` targets → post-scan enrichment of existing `pkg:golang/*` components with `waybill:pants-target` annotation; `pants.toml` `[golang] expected_version` → design-tier `pkg:generic/go@<version>` | Full via the existing Go reader (m053+m055+m160+m161); enrichment adds Pants attribution only |
 | **vcpkg** *(102)* | —                                   | `vcpkg.json` (manifest mode, `dependencies[]` + `overrides[]`)              | Direct only                          |
 | **conan** *(102)* | —                                   | `conanfile.txt` (`[requires]`/`[tool_requires]`) + `conanfile.py` (literal `requires=[...]`) | Direct only                          |
 | *generic binary*  | —                                   | ELF / Mach-O / PE headers (`DT_NEEDED`, `LC_LOAD_DYLIB`, PE IMPORT)         | Linkage only                        |
