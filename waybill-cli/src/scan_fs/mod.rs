@@ -999,6 +999,20 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // design-tier components (byte-identity guarantee for pre-m191 shapes).
     let mut components =
         crate::resolve::reconciler::reconcile_design_source_tiers(components, &mut relationships);
+
+    // Milestone 226: Pants Go enrichment. Walks BUILD files under
+    // scan root, extracts `go_binary` / `go_package` /
+    // `go_third_party_package` / `go_mod` declarations, and injects
+    // `waybill:pants-target` (C145 — broadened by m226 doc update)
+    // onto matching `pkg:golang/*` components. Placement rationale:
+    // AFTER m191 reconciler so the component set is stable (a design-
+    // tier duplicate m191 removed cannot orphan a would-be annotation);
+    // BEFORE m148 canonicalization is safe because m148 only mutates
+    // `evidence.source_file_paths`, not `extra_annotations` (verified
+    // per `resolve/deduplicator.rs::canonicalize_source_files_by_purl`).
+    // Zero fabrication (FR-012 / Principle IX) — enrichment only.
+    crate::scan_fs::package_db::pants_go::enrich(root, exclude_set, &mut components);
+
     // Milestone 148: cross-PURL canonicalization. Some ecosystems (Maven
     // nested-coord case at scan_fs/package_db/maven.rs:3429-3457, Cargo
     // workspace vendoring, Go vendored modules) intentionally retain

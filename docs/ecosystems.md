@@ -20,6 +20,7 @@ diving into the [architecture docs](architecture/overview.md).
 | [pants (Python)](#pants-python) | Pex lockfile at `3rdparty/python/*.lock` (default glob) or `pants.toml`-declared path; multi-resolve support | Lockfile (`requires_dists` PEP 508 → `dependsOn`) | Lockfile per-artifact `sha256` | — / ✓ (via `pkg:pypi/`) | Implemented (milestone 223) |
 | [pants (JVM)](#pants-jvm) | Coursier lockfile at `3rdparty/jvm/*.lock` (default glob) or `pants.toml` `[jvm.resolves]`-declared path; multi-resolve support; Pants-header discriminator vs standalone coursier | Lockfile (`dependencies[]` coord strings → `dependsOn`) | Lockfile per-artifact `sha256` | — / ✓ (via `pkg:maven/`) | Implemented (milestone 224) |
 | [pants (shell)](#pants-shell) | `BUILD` files declaring `shell_source` / `shell_sources` / `shunit2_test` / `shunit2_tests` targets under scan root; plus `pants.toml` `[shellcheck]` / `[shfmt]` / `[shunit2]` version pins | File-tier (per-`.sh` component with SHA-256) + design-tier (per-pinned-tool `pkg:generic` component) | Per-file SHA-256 (content-addressed) | — / — | Implemented (milestone 225) |
+| [pants (Go)](#pants-go) | `BUILD` files declaring `go_binary` / `go_package` / `go_third_party_package` / `go_mod` targets under scan root; plus `pants.toml` `[golang] expected_version` toolchain pin | Enrichment only (attaches `waybill:pants-target` to `pkg:golang/*` components emitted by the existing Go reader) + design-tier `pkg:generic/go@<version>` from `expected_version` | Per-module `sha1` (Go reader's existing go.sum-derived hash — unchanged) | — / — | Implemented (milestone 226) |
 | [kotlin](#kotlin) | `build.gradle.kts` (regex) + `gradle/libs.versions.toml` (catalog) + `settings.gradle.kts` (workspace topology) | Manifest (declarations only) | — | ✓ (via `pkg:maven/`) / ✓ | Implemented (milestone 122 US2; design-tier — gated by `--include-declared-deps`) |
 | [rpm](#rpm) | `/var/lib/rpm/rpmdb.sqlite` (pure-Rust reader) | DB (`REQUIRES`) | — (rpmdb has none) | — / — | Implemented (BDB format detected, not parsed) |
 | [swift](#swift) | `Package.resolved` (SwiftPM v1/v2/v3 schema) | Lockfile (full pin set) | — | — / — | Implemented (milestone 122 US1; `Package.swift` not parsed in v0.1) |
@@ -989,6 +990,96 @@ discovered AND no `pants.toml` is present at the scan root
   `[shunit2] version = "..."` triggers emission.
 
 See [`specs/225-pants-shell-reader/quickstart.md`](../specs/225-pants-shell-reader/quickstart.md)
+for a walkthrough.
+
+---
+
+## pants (Go)
+
+**Modules:** `waybill-cli/src/scan_fs/package_db/pants_go/`
+(`mod.rs`, `build_dsl.rs`, `ownership_index.rs`, `config.rs`,
+`enrichment.rs`).
+
+**Detection:** discovers every `BUILD` file under the scan root
+via `safe_walk` (respects `--exclude-path` + symlink-cycle
+guard), extracts `go_binary` / `go_package` /
+`go_third_party_package` / `go_mod` target declarations via a
+regex-scoped Pants-DSL parser (reuses the m225 pants_shell
+extractor pattern — no embedded Python interpreter per
+Constitution Principle I). Also parses `pants.toml`
+`[golang] expected_version` when present.
+
+**Enrichment-only architecture** (FR-012 / Principle IX — zero
+fabrication): this reader does NOT emit any `pkg:golang/*`
+components of its own. It runs a **post-`read_all` enrichment
+pass** (at `scan_fs/mod.rs:1001`, after m191 reconciler + before
+m148 canonicalization) that iterates every `pkg:golang/*`
+component the existing Go reader emitted from `go.sum` entries
+and injects a `waybill:pants-target` annotation naming the
+Pants target(s) that own the component.
+
+**Recognized target types:**
+
+- `go_mod(name="mod")` — implicit owner of every go.sum entry
+  in the BUILD file's directory (deepest-prefix wins for
+  multi-`go_mod` Go workspaces)
+- `go_third_party_package(name="X", import_path="example.com/foo")`
+  — explicit owner of one third-party module
+- `go_binary(name="X", main="./cmd/foo")` — owns the
+  main-module component when `source_path.parent()` matches
+  `<build_dir>/<normalized_main>`
+- `go_package(name="X")` — owns the main-module component when
+  its `source_path.parent()` starts_with the BUILD file's
+  directory
+
+Plugin-registered custom target types are silently ignored.
+`go_source` / `go_test` file-level targets are deferred.
+
+**Toolchain-pin emission:** when `pants.toml` `[golang]
+expected_version` is set, waybill emits ONE design-tier
+`pkg:generic/go@<version>` component with
+`waybill:source-file=pants.toml`. Version is preserved
+verbatim (waybill does not normalize patch-vs-major.minor).
+
+**Annotations:**
+- `waybill:pants-target` (broadened C145 with this milestone —
+  same catalog row as m225's shell case, doc-only description
+  update; no new row) — comma-sep, lex-sorted list of owning
+  Pants target addresses. Multi-owner merge when the same
+  component is owned by multiple targets.
+
+**Zero-fabrication invariant:** a `go_third_party_package(import_path=X)`
+declaration whose `X` has no matching go.sum entry produces
+NO synthetic component. Waybill emits only an INFO
+diagnostic naming the orphan import path.
+
+**FR-010 log:** one INFO line at scan end reports
+`build_files_discovered=N`, `build_files_parsed_ok=N`,
+`build_files_skipped_corrupt=N`, `go_targets_found=N`,
+`components_annotated=N`, `toolchain_component_emitted=<0|1>`.
+Silent (no log) when no BUILD files AND no `pants.toml` at
+scan root (byte-identity guarantee).
+
+**Coexistence with existing readers:**
+- The existing Go reader (m053 + m055 + m160 + m161) is
+  unchanged. Every `pkg:golang/*` component it emits from
+  `go.sum` still emits; pants_go only ADDS annotations to
+  existing components.
+- m191 reconciler is unaffected — enrichment runs AFTER it on
+  the reconciled component set.
+- m148 canonicalization is unaffected — it operates on
+  `evidence.source_file_paths`, not `extra_annotations`.
+- The `pants` (m223 Python), `pants_jvm` (m224 JVM), and
+  `pants_shell` (m225 shell) readers are unchanged. All four
+  Pants-family readers may activate independently.
+
+**Follow-ups deferred:**
+- `go_source` / `go_test` file-level targets
+- `min_dot_version` from `pants.toml` `[golang]`
+- Plugin-registered custom Go target types
+- Nested `pants.toml` files under scan root
+
+See [`specs/226-pants-go-reader/quickstart.md`](../specs/226-pants-go-reader/quickstart.md)
 for a walkthrough.
 
 ---
