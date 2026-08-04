@@ -26,8 +26,8 @@ use waybill_common::resolution::{LifecycleScope, ResolvedComponent};
 use waybill_common::types::purl::{encode_purl_segment, Purl};
 
 use super::exclude_path::ExclusionSet;
+use super::pants_common;
 use super::PackageDbEntry;
-use crate::scan_fs::walk::{safe_walk, WalkConfig};
 
 /// The four built-in Pants Go backend target types we recognize.
 ///
@@ -118,26 +118,6 @@ pub(crate) enum GoTargetParseError {
     NonStringLiteralValue { line: u32, snippet: String },
     #[error("unbalanced parens starting at line {line}")]
     UnbalancedParens { line: u32 },
-}
-
-/// Discover every `BUILD` file under `scan_root` via `safe_walk`
-/// (respects symlink-cycle guard, `--exclude-path`, depth limits).
-/// Copy of m225 pants_shell's discovery helper.
-fn discover_build_files(scan_root: &Path, exclude_set: &ExclusionSet) -> Vec<PathBuf> {
-    let mut out: Vec<PathBuf> = Vec::new();
-    let cfg = WalkConfig {
-        max_depth: 32,
-        should_skip: &|_candidate, _rootfs| false,
-        exclude_set,
-    };
-    safe_walk(scan_root, &cfg, |path| {
-        if path.is_file()
-            && path.file_name().and_then(|s| s.to_str()) == Some("BUILD")
-        {
-            out.push(path.to_path_buf());
-        }
-    });
-    out
 }
 
 /// Public entry — emits the design-tier `pkg:generic/go@<version>`
@@ -242,7 +222,7 @@ pub fn enrich(
     exclude_set: &ExclusionSet,
     components: &mut [ResolvedComponent],
 ) {
-    let build_files = discover_build_files(scan_root, exclude_set);
+    let build_files = pants_common::discover_build_files(scan_root, exclude_set);
     let pants_toml_present = scan_root.join("pants.toml").is_file();
     if build_files.is_empty() && !pants_toml_present {
         return;
