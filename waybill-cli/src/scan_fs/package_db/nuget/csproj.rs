@@ -12,7 +12,7 @@
 //! available alongside this project file.
 
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use quick_xml::events::attributes::Attribute;
 use quick_xml::events::Event;
@@ -23,11 +23,19 @@ use super::private_assets::PrivateAssetAttrs;
 /// One `<PackageReference>` extracted from a project file. Versions are
 /// stored as `Option<String>` to distinguish "absent" (CPM-resolvable)
 /// from "present but empty" (malformed source).
+///
+/// `source_file` is populated by [`parse_project_file`] with the path
+/// of the file the element was extracted from. Callers that
+/// synthesize references from other sources (e.g., #655's
+/// `directory_build_props::discover`) set this so downstream
+/// consumers can attribute the declaration to the correct file in the
+/// emitted `waybill:source-files` annotation.
 #[derive(Clone, Debug, Default)]
 pub(super) struct NugetPackageReference {
     pub(super) include: String,
     pub(super) version: Option<String>,
     pub(super) attrs: PrivateAssetAttrs,
+    pub(super) source_file: Option<PathBuf>,
 }
 
 /// Parse a single `.csproj`/`.vbproj`/`.fsproj` file and return all
@@ -48,7 +56,15 @@ pub(super) fn parse_project_file(path: &Path) -> Vec<NugetPackageReference> {
             return Vec::new();
         }
     };
-    parse_bytes(&bytes, path)
+    let mut refs = parse_bytes(&bytes, path);
+    // Tag every extracted reference with the file it came from so the
+    // downstream accumulator can attribute inherited references
+    // (#655) to the correct Directory.Build.props path rather than
+    // the consuming csproj.
+    for r in &mut refs {
+        r.source_file = Some(path.to_path_buf());
+    }
+    refs
 }
 
 fn parse_bytes(bytes: &[u8], path: &Path) -> Vec<NugetPackageReference> {
@@ -150,6 +166,10 @@ fn reference_from_attrs(attrs: HashMap<String, String>) -> NugetPackageReference
             include_assets: attrs.get("includeassets").cloned(),
             exclude_assets: attrs.get("excludeassets").cloned(),
         },
+        // Populated by `parse_project_file` after `parse_bytes` returns
+        // (single tagging pass over the whole vec avoids threading
+        // the path through every helper). Default None here.
+        source_file: None,
     }
 }
 

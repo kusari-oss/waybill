@@ -29,6 +29,7 @@
 
 mod csproj;
 mod deps_json;
+mod directory_build_props;
 mod directory_packages_props;
 mod msbuild_properties;
 mod packages_lock;
@@ -114,7 +115,7 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
         Some(d) => d,
         None => return Vec::new(),
     };
-    let project_references = csproj::parse_project_file(project_path);
+    let mut project_references = csproj::parse_project_file(project_path);
     let lockfile_path = project_dir.join("packages.lock.json");
     let lockfile = if lockfile_path.is_file() {
         packages_lock::parse(&lockfile_path)
@@ -128,19 +129,59 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
         None => Default::default(),
     };
 
+    // #655 (FU-001): discover + parse nearest Directory.Build.props +
+    // Directory.Build.targets, walking up from the project directory
+    // bounded by scan_root. Contributes three things:
+    //   - `<PackageReference>` elements the csproj implicitly inherits
+    //     (typically from `test/Directory.Build.props` or
+    //     `samples/Directory.Build.props`);
+    //   - `<PackageVersion>` elements that extend the CPM version map;
+    //   - `<PropertyGroup>` values that feed the FU-002 $()-ref
+    //     substitution.
+    let build_files = directory_build_props::discover(project_dir, scan_root);
+
+    // Prepend build.props/build.targets package references to the
+    // csproj's own list. Prepend order: build.props+build.targets
+    // (imported before csproj) → csproj. The accumulator deduplicates
+    // by (name, version_opt) so identical inherited-then-declared
+    // entries collapse into one component with the source-file paths
+    // merged.
+    let mut merged_refs = build_files.package_references.clone();
+    merged_refs.append(&mut project_references);
+    let project_references = merged_refs;
+
     // #654 (FU-002): build a merged MSBuild `<PropertyGroup>` property
     // map so we can resolve `$(PropertyName)` references in Version
-    // strings from both the csproj and the Directory.Packages.props.
-    // csproj values overlay the props map (csproj is closer to the
-    // consumer in MSBuild evaluation order). Conditional groups
-    // resolve to last-wins per `msbuild_properties::parse_properties`.
+    // strings from every scope MSBuild would evaluate:
+    //   build.props ⊕ build.targets ⊕ packages.props ⊕ csproj
+    // where later overlays override earlier ones on collision. This
+    // matches MSBuild's evaluation order except for the rare case
+    // where a csproj-defined property gets re-overridden by a
+    // Directory.Build.targets (imported LAST in MSBuild); we accept
+    // that corner case for simplicity — the alternative complicates
+    // the merge order without meaningful real-world benefit.
+    let build_property_map = build_files.property_map.clone();
     let props_property_map = match &props_path {
         Some(p) => msbuild_properties::parse_properties_file(p),
         None => Default::default(),
     };
     let csproj_property_map = msbuild_properties::parse_properties_file(project_path);
-    let property_map =
-        msbuild_properties::merge(props_property_map, csproj_property_map);
+    let property_map = msbuild_properties::merge(
+        msbuild_properties::merge(build_property_map, props_property_map),
+        csproj_property_map,
+    );
+
+    // Merge Directory.Build.{props,targets} CPM contributions with
+    // Directory.Packages.props' own. Directory.Packages.props wins on
+    // collision — it's the canonical CPM location; entries in
+    // Directory.Build.props should be treated as fallbacks.
+    let mut merged_cpm: BTreeMap<String, String> = build_files
+        .cpm_extensions
+        .clone()
+        .into_iter()
+        .collect();
+    merged_cpm.extend(cpm_map);
+    let cpm_map = merged_cpm;
 
     // Substitute `$()` refs in every CPM map value up-front so the
     // fall-through consumers below see already-resolved strings.
@@ -157,7 +198,7 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
                     package = %k,
                     raw_version = %v,
                     substituted = %subbed,
-                    "Directory.Packages.props Version= contains unresolved MSBuild property reference; will fall through to design-tier (#654)"
+                    "CPM Version= contains unresolved MSBuild property reference; will fall through to design-tier (#654)"
                 );
             }
             (k, subbed)
@@ -247,7 +288,16 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
         let key = (r.include.clone(), resolved_version.clone());
         let entry = acc.entry(key).or_default();
         entry.lifecycle_scope = entry.lifecycle_scope.or(lifecycle_scope);
-        entry.sources.insert(project_path.to_path_buf());
+        // #655: use the reference's own source_file (populated by
+        // csproj::parse_project_file with the file each element was
+        // extracted from). This correctly attributes inherited
+        // references from Directory.Build.props/targets to the props
+        // path rather than the consuming csproj.
+        entry.sources.insert(
+            r.source_file
+                .clone()
+                .unwrap_or_else(|| project_path.to_path_buf()),
+        );
         if cpm_map.contains_key(&r.include) {
             if let Some(p) = &props_path {
                 entry.sources.insert(p.clone());
@@ -772,6 +822,154 @@ mod tests {
         assert_eq!(entries.len(), 1);
         // csproj's SharedVer=2.0.0 overrides the props' 1.0.0.
         assert_eq!(entries[0].version, "2.0.0");
+    }
+
+    #[test]
+    fn directory_build_props_contributes_inherited_package_references() {
+        // #655 (FU-001) — RestSharp shape. `test/Directory.Build.props`
+        // declares xunit + coverlet; every csproj under `test/`
+        // inherits both. Prior to this fix waybill silently missed
+        // these packages.
+        let tmp = tempfile::tempdir().unwrap();
+        let scan_root = tmp.path();
+        let test_dir = scan_root.join("test");
+        std::fs::create_dir_all(&test_dir).unwrap();
+        write(
+            &test_dir,
+            "Directory.Build.props",
+            r#"<Project>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.Xunit" Version="2.9.2" />
+    <PackageReference Include="MikebomFixture.Coverlet" Version="6.0.2" />
+  </ItemGroup>
+</Project>"#,
+        );
+        // Put an .csproj under test/ that declares its own reference
+        // in addition to the inherited ones.
+        write(
+            &test_dir,
+            "TestProject.csproj",
+            r#"<Project>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.Local" Version="1.0.0" />
+  </ItemGroup>
+</Project>"#,
+        );
+        let entries = read(scan_root, &Default::default());
+        let names: BTreeSet<_> = entries.iter().map(|e| e.name.clone()).collect();
+        assert!(names.contains("MikebomFixture.Xunit"), "inherited xunit missing");
+        assert!(names.contains("MikebomFixture.Coverlet"), "inherited coverlet missing");
+        assert!(names.contains("MikebomFixture.Local"), "csproj-local ref missing");
+        // Inherited references attribute their source_path to the
+        // Directory.Build.props, not the csproj.
+        let xunit = entries
+            .iter()
+            .find(|e| e.name == "MikebomFixture.Xunit")
+            .unwrap();
+        assert!(
+            xunit.source_path.contains("Directory.Build.props"),
+            "inherited ref source_path should point to Directory.Build.props; got {}",
+            xunit.source_path
+        );
+    }
+
+    #[test]
+    fn directory_build_props_property_group_feeds_substitution() {
+        // #655 + #654 — property defined in Directory.Build.props
+        // should resolve $() refs in the csproj's inline Version=.
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "Directory.Build.props",
+            r#"<Project>
+  <PropertyGroup>
+    <MikebomVer>3.0.1</MikebomVer>
+  </PropertyGroup>
+</Project>"#,
+        );
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.PropInherit" Version="$(MikebomVer)" />
+  </ItemGroup>
+</Project>"#,
+        );
+        let entries = read(tmp.path(), &Default::default());
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].version, "3.0.1");
+        assert_eq!(
+            entries[0].purl.as_str(),
+            "pkg:nuget/MikebomFixture.PropInherit@3.0.1"
+        );
+    }
+
+    #[test]
+    fn directory_build_props_package_version_extends_cpm() {
+        // #655 — Directory.Build.props can declare `<PackageVersion>`
+        // elements that behave as CPM fallbacks when
+        // Directory.Packages.props doesn't declare the package.
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "Directory.Build.props",
+            r#"<Project>
+  <ItemGroup>
+    <PackageVersion Include="MikebomFixture.BuildCpm" Version="7.7.7" />
+  </ItemGroup>
+</Project>"#,
+        );
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.BuildCpm" />
+  </ItemGroup>
+</Project>"#,
+        );
+        let entries = read(tmp.path(), &Default::default());
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].version, "7.7.7");
+    }
+
+    #[test]
+    fn packages_props_wins_over_build_props_for_same_cpm_key() {
+        // #655 — when both Directory.Build.props and
+        // Directory.Packages.props declare the same PackageVersion,
+        // Directory.Packages.props wins (canonical CPM location).
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "Directory.Build.props",
+            r#"<Project>
+  <ItemGroup>
+    <PackageVersion Include="MikebomFixture.CpmClash" Version="1.0.0" />
+  </ItemGroup>
+</Project>"#,
+        );
+        write(
+            tmp.path(),
+            "Directory.Packages.props",
+            r#"<Project>
+  <ItemGroup>
+    <PackageVersion Include="MikebomFixture.CpmClash" Version="2.0.0" />
+  </ItemGroup>
+</Project>"#,
+        );
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.CpmClash" />
+  </ItemGroup>
+</Project>"#,
+        );
+        let entries = read(tmp.path(), &Default::default());
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].version, "2.0.0", "packages.props should win");
     }
 
     #[test]

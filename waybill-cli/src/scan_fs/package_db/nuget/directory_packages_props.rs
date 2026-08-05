@@ -91,20 +91,36 @@ fn is_package_version(name: &[u8]) -> bool {
 }
 
 /// Walk up from `start_dir` looking for `Directory.Packages.props`.
-/// Returns the path of the CLOSEST props file (MSBuild semantics).
-/// Returns `None` if no props file is found before reaching either
-/// `scan_root` or the filesystem root.
-///
-/// `scan_root` bounds the search — we never walk outside the scanned
-/// rootfs. Both arguments should be absolute paths or both should be
-/// under the same logical base; the comparison uses path-prefix.
+/// Thin wrapper around [`find_msbuild_file_walking_up`] preserved for
+/// call-site stability.
 pub(super) fn find_props_walking_up(
     start_dir: &Path,
     scan_root: &Path,
 ) -> Option<PathBuf> {
+    find_msbuild_file_walking_up(start_dir, scan_root, "Directory.Packages.props")
+}
+
+/// General ancestor-walker: walk up from `start_dir` looking for a file
+/// named `filename` in each ancestor directory. Returns the path of the
+/// CLOSEST matching file (MSBuild semantics — nearest wins). Returns
+/// `None` if no match is found before reaching either `scan_root` or
+/// the filesystem root.
+///
+/// `scan_root` bounds the search — we never walk outside the scanned
+/// rootfs. Both arguments should be absolute paths or both should be
+/// under the same logical base; the comparison uses path-prefix.
+///
+/// Shared entry point for `Directory.Packages.props`,
+/// `Directory.Build.props`, and `Directory.Build.targets` lookups
+/// (#655 / FU-001).
+pub(super) fn find_msbuild_file_walking_up(
+    start_dir: &Path,
+    scan_root: &Path,
+    filename: &str,
+) -> Option<PathBuf> {
     let mut cursor: Option<&Path> = Some(start_dir);
     while let Some(dir) = cursor {
-        let candidate = dir.join("Directory.Packages.props");
+        let candidate = dir.join(filename);
         if candidate.is_file() {
             return Some(candidate);
         }
