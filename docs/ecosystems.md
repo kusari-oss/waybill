@@ -32,6 +32,430 @@ concluded licenses apply to the ecosystem. Both honour the global
 
 ---
 
+## SBOM tiers: source, design, binary
+
+Every component waybill emits carries a **tier** — a per-component classification
+indicating the strength of provenance backing the version claim. Understanding
+tiers is critical for consumers deciding whether to trust the SBOM for their use
+case (compliance, vulnerability scanning, license analysis, etc.).
+
+The three tiers reflect three fundamentally different provenance stories:
+**source-tier** components are backed by a lockfile or resolved manifest and
+carry an exact version; **design-tier** components are declared in a manifest
+but no authoritative resolution is available (usually because no lockfile is
+committed); **binary-tier** components are extracted from an actual compiled
+artifact (ELF / PE / Mach-O / `.deps.json` sidecar / RPM header). A single scan
+can — and often does — produce a mix of all three tiers in one output SBOM.
+
+### 1. Concept — what are source, design, binary tiers
+
+| Tier | Waybill emits when… | PURL shape | `waybill:sbom-tier` value | Detection recipe |
+|---|---|---|---|---|
+| **source** | A lockfile pins the version, OR the manifest carries an unambiguous version (e.g., `Cargo.toml` `[package] version = "1.2.3"`). | `pkg:<type>/<name>@<version>` | `"source"` | [Recipe 1](#3-detection-recipes-jq-for-cyclonedx--spdx) |
+| **design** | A manifest declares the dependency but resolution cannot produce a version (no lockfile, no CPM entry, unresolvable `$()` MSBuild ref, etc.). Waybill emits a **versionless PURL** so downstream vuln scanners don't false-match on an invalid `@unresolved` literal. | `pkg:<type>/<name>` (no `@`) | `"design"` | [Recipe 2](#3-detection-recipes-jq-for-cyclonedx--spdx) |
+| **binary** | A compiled artifact is scanned directly — ELF / PE / Mach-O symbol extraction, PE CLR `.deps.json` parsing, `runtime/debug.BuildInfo` from a Go binary, RPM header from a `.rpm` file, etc. | `pkg:<type>/<name>@<version>` (version comes from binary metadata) | `"binary"` | Grep for `"waybill:sbom-tier": "binary"` |
+| _file_ | A file is unattributed by any package/binary reader — surfaced under the [file-tier orphan fallback](reference/component-tiers.md). Not covered further in this section; see the [component-tiers reference](reference/component-tiers.md). | No PURL (identified by SHA-256 + path) | `"file"` | See [component-tiers.md](reference/component-tiers.md). |
+
+**Multi-tier scans are the norm, not the exception.** A monorepo with a Cargo
+workspace (source-tier — has `Cargo.lock`) AND a Python subproject with only
+`pyproject.toml` (design-tier — no `uv.lock` / `poetry.lock`) produces both
+tiers in the same output SBOM. The `waybill:sbom-tier` property on each
+component tells consumers which is which. See §5 for guidance on when
+design-tier is enough and when it isn't.
+
+> **Why `waybill:sbom-tier` is a `waybill:*` property, not a native CDX/SPDX
+> field**: neither CycloneDX 1.6, SPDX 2.3, nor SPDX 3.0.1 has a native field
+> carrying the "was this version resolved authoritatively vs declared-only"
+> semantic. Per constitution Principle V (standards-native fields take
+> precedence over `waybill:*` properties), this annotation is a parity-bridge
+> introduced only because no native construct exists. See
+> [sbom-format-mapping.md](reference/sbom-format-mapping.md) for the catalog
+> entry.
+
+### 2. Per-ecosystem design-tier fallback matrix
+
+This matrix covers the 17 ecosystems documented in the coverage matrix above.
+For every ecosystem, it answers: does waybill emit design-tier components
+when the operator's project lacks a lockfile? What triggers the fallback?
+What PURL shape results? Is the `waybill:unresolved-reason` annotation
+attached?
+
+| Ecosystem | Design-tier fallback? | Trigger condition | PURL shape | `waybill:unresolved-reason` emitted? |
+|---|---|---|---|---|
+| [apk](#apk) | No — always source | Installed-DB scan: version is always known. | `pkg:apk/<distro>/<name>@<version>` | N/A |
+| [cargo](#cargo) | Yes — automatic | `Cargo.toml` declares a dep with no matching `Cargo.lock` entry, OR version field is empty. | `pkg:cargo/<name>` (versionless) or `pkg:cargo/<name>@<version>` | No (not yet — universal adoption is [follow-up](#follow-up)) |
+| [deb](#deb) | No — always source | Installed-DB scan: version is always known. | `pkg:deb/<distro>/<name>@<version>` | N/A |
+| [gem](#gem) | Yes — automatic | Gemfile declaration with no matching `Gemfile.lock` entry (design-tier), OR synthetic Ruby built-in gems (allowlist). | `pkg:gem/<name>` (versionless) | No |
+| [golang](#golang) | Rare | `go.mod` present but no `go.sum` — resolver falls back to design-tier for the missing modules. Ordinarily go.sum is authoritative. | `pkg:golang/<module>@<version>` (if pseudo-version can be inferred) or versionless | No |
+| [maven](#maven) | Yes — automatic | `pom.xml` declares a dep with no `<version>` element (typically inherited-scope declarations that would resolve via `mvn` subprocess — waybill doesn't shell to mvn), OR version contains `${…}` property syntax and the property isn't in the parsed POM chain. | `pkg:maven/<group>/<name>` (versionless) or `@<literal-${…}>` legacy | No |
+| [npm](#npm) | Yes — automatic | `package.json` declares a dep but no lockfile (`package-lock.json` / `pnpm-lock.yaml` / `yarn.lock` / `bun.lock`) covers it. | `pkg:npm/<name>@<declared-range>` or versionless | No |
+| [nuget](#nuget) | Yes — automatic (post [#653](https://github.com/kusari-oss/waybill/pull/656)) | 4-step resolution ladder exhausted: no `packages.lock.json`, no CPM entry in `Directory.Packages.props`, no inline `Version=`, no matching `<PackageVersion>` in `Directory.Build.props`/`targets`. | `pkg:nuget/<name>` (versionless) | **Yes** — the only reader today emitting `waybill:unresolved-reason` |
+| [pip](#pip) | Yes — automatic | `requirements.txt` declares a dep with no matching resolved lockfile (`uv.lock` / `pip-tools` / `poetry.lock`), OR extras cause an unresolved constraint. | `pkg:pypi/<name>` or `pkg:pypi/<name>@<constraint>` | No |
+| [pants (Python)](#pants-python) | No — always source (Pex lockfile is the authoritative source) | Every `pkg:pypi/*` entry comes from a Pex lockfile that pins exact versions + sha256. | `pkg:pypi/<name>@<version>` | N/A |
+| [pants (JVM)](#pants-jvm) | No — always source (Coursier lockfile is authoritative) | Every `pkg:maven/*` entry comes from a Coursier lockfile. | `pkg:maven/<group>/<name>@<version>` | N/A |
+| [pants (shell)](#pants-shell) | Yes — synthetic design-tier | `pants.toml` `[shellcheck]` / `[shfmt]` / `[shunit2]` tool pins emit ONE synthetic design-tier `pkg:generic/<tool>@<version>` per pinned tool. | `pkg:generic/<tool>@<version>` (version present but design-classified) | No |
+| [pants (Go)](#pants-go) | Yes — synthetic design-tier | `pants.toml` `[golang] expected_version` emits ONE synthetic design-tier `pkg:generic/go@<version>` (toolchain pin, not a package dep). | `pkg:generic/go@<version>` | No |
+| [rpm](#rpm) | No — always source | Installed-DB scan: version + release always known. | `pkg:rpm/<distro>/<name>@<version>-<release>` | N/A |
+| [swift](#swift) | No — always source | `Package.resolved` is authoritative. Note: `Package.swift` NOT parsed in v0.1, so projects with only `Package.swift` (no `Package.resolved`) emit no components at all — see [swift limitations](#known-limitations-swift-v01). | `pkg:swift/<host>/<name>@<version>` | N/A |
+| [kotlin](#kotlin) | Yes — **opt-in only** | `--include-declared-deps` flag enables Kotlin DSL declaration emission at design-tier. Default: no emission. Rationale: Gradle KTS DSL cannot be fully resolved without a Gradle daemon. | `pkg:maven/<group>/<name>@<constraint>` | No |
+| [yocto](#yocto) | Yes — recipe scope always design-tier | `.bb` recipes have no "resolved" state — every recipe-derived component is inherently design-tier. Yocto installed-DB (opkg) is source-tier separately. | `pkg:generic/<recipe>@<pv>` | No |
+
+**Cross-reader consistency gap** (see §4): only NuGet emits the
+`waybill:unresolved-reason` annotation today. Other design-tier readers set
+`waybill:sbom-tier: "design"` and use a versionless PURL, but don't attach a
+human-readable reason. Consumers should treat annotation ABSENCE as "no
+reason provided", not "component was resolved".
+
+**Readers without per-ecosystem sections in this doc**: waybill supports
+additional ecosystems whose readers exist in source but don't yet have
+dedicated sections here — **cocoapods, composer, dart, elixir, erlang,
+haskell, helm, scala, ipk**. Each of those readers emits design-tier
+fallback per the same convention (versionless PURL + `sbom_tier: "design"`).
+Documenting these ecosystems' per-section coverage is a separate follow-up.
+
+### 3. Detection recipes (jq for CycloneDX + SPDX)
+
+The `waybill:sbom-tier` property is emitted on every component that carries
+a tier classification. Consumers filter by grepping this property.
+All recipes below use jq 1.6+ syntax and have been verified against real
+waybill-emitted SBOMs.
+
+**Recipe 1 — Filter to source-tier only (CycloneDX)**:
+
+```bash
+jq '[.components[] | select(any(.properties[]?; .name == "waybill:sbom-tier" and .value == "source"))]' <sbom.cdx.json>
+```
+
+Returns a JSON array of components whose `waybill:sbom-tier` property is
+`"source"`. Verified 2026-08-05 against `orleans.postfix.cdx.json`
+(1020 source-tier components returned; 20 design-tier excluded).
+
+**Recipe 2 — Filter to design-tier only (CycloneDX)**:
+
+```bash
+jq '[.components[] | select(any(.properties[]?; .name == "waybill:sbom-tier" and .value == "design"))]' <sbom.cdx.json>
+```
+
+Returns design-tier components (versionless PURLs). Verified against
+`orleans.postfix.cdx.json` (20 design-tier components returned).
+
+**Recipe 3 — Filter to source-tier only (SPDX 2.3)**:
+
+```bash
+jq '[.packages[] | select(any(.annotations[]?; .comment | test("\"waybill:sbom-tier\"[^\"]*\"source\"")))]' <sbom.spdx.json>
+```
+
+The `waybill:sbom-tier` value is embedded inside a JSON envelope in the
+`annotations[].comment` field (waybill's milestone-071 annotation envelope).
+The regex matches the specific field:value pair inside that envelope.
+
+**Recipe 4 — Filter to design-tier only (SPDX 2.3)**:
+
+```bash
+jq '[.packages[] | select(any(.annotations[]?; .comment | test("\"waybill:sbom-tier\"[^\"]*\"design\"")))]' <sbom.spdx.json>
+```
+
+Same pattern as Recipe 3 for the design-tier value.
+
+**Recipe 5 — Extract `waybill:unresolved-reason` per design-tier component (CycloneDX)**:
+
+```bash
+jq '.components[] | select(any(.properties[]?; .name == "waybill:sbom-tier" and .value == "design")) | {purl, reason: (.properties[]? | select(.name == "waybill:unresolved-reason") | .value)}' <sbom.cdx.json>
+```
+
+Returns one object per design-tier component with its unresolved-reason.
+**Note**: only NuGet-emitted design-tier components currently include
+this annotation (see §4). Non-NuGet design-tier components return
+`{"purl": "…", "reason": null}` from this recipe — treat null as "no
+reason provided", not "component was resolved".
+
+**Recipe 6 — Count components per tier**:
+
+CycloneDX:
+
+```bash
+jq -r '.components[]? | .properties[]? | select(.name == "waybill:sbom-tier") | .value' <sbom.cdx.json> | sort | uniq -c
+```
+
+SPDX 2.3:
+
+```bash
+jq -r '.packages[]? | .annotations[]?.comment | capture("\"waybill:sbom-tier\"[^\"]*\"(?<v>[a-z]+)\"") | .v' <sbom.spdx.json> | sort | uniq -c
+```
+
+Both return a per-tier count line like:
+
+```text
+      20 design
+    1020 source
+```
+
+The counts sum to the total component count of components that carry
+a tier annotation. Components without a `waybill:sbom-tier` (rare — mostly
+operator-supplemented components from `--supplement-cdx`) are excluded from
+these totals.
+
+### 4. The waybill:unresolved-reason annotation
+
+When waybill emits a design-tier component because its version can't be
+resolved, it MAY attach a human-readable string annotation explaining why.
+This helps operators quickly identify the missing input (lockfile? CPM
+entry? something else?) and remediate.
+
+**Where the annotation appears**:
+
+- **CycloneDX**: as a `properties[]` entry alongside `waybill:sbom-tier`:
+
+  ```json
+  {
+    "purl": "pkg:nuget/Aspire.Hosting.AppHost",
+    "properties": [
+      {"name": "waybill:sbom-tier", "value": "design"},
+      {"name": "waybill:unresolved-reason", "value": "no Version= on <PackageReference>, no CPM entry in Directory.Packages.props, no packages.lock.json entry"}
+    ]
+  }
+  ```
+
+- **SPDX 2.3**: embedded in an `annotations[].comment` field inside the
+  milestone-071 annotation envelope (schema `mikebom-annotation/v1`, field
+  `waybill:unresolved-reason`, value the reason string).
+
+- **SPDX 3.0.1**: as an `Annotation` element attached to the component.
+
+**Adoption status (as of 2026-08-05)**: **only the NuGet reader** emits this
+annotation today. Discovered via `grep -rn '"waybill:unresolved-reason"'
+waybill-cli/src/` — the annotation was introduced by [#653](https://github.com/kusari-oss/waybill/pull/656)
+as part of the 2026-08-04 NuGet audit follow-up.
+
+**Consumer interpretation guidance**:
+
+- **Present** — the string tells the operator which lockfile or manifest field
+  is missing. Downstream tools SHOULD surface the string verbatim to human
+  reviewers as remediation guidance.
+- **Absent** — treat as "no reason provided", NOT as "component was
+  resolved". Consumers MUST rely on `waybill:sbom-tier: "design"` as the
+  authoritative tier signal; the reason string is supplementary.
+
+**Cross-reader consistency gap** — the other 17 design-tier-emitting readers
+(cargo, gem, maven, npm, pip, kotlin_dsl, yocto, cocoapods, composer, dart,
+elixir, erlang, haskell, helm, scala, pants_shell, pants_go) do NOT emit
+this annotation. A follow-up issue tracks universalizing it across all
+readers so consumers get consistent explanations regardless of ecosystem.
+
+**Concrete value shape** — the one currently-emitted example, from NuGet:
+
+> `no Version= on <PackageReference>, no CPM entry in Directory.Packages.props, no packages.lock.json entry`
+
+The string names the specific waybill resolution ladder that ran out. Other
+readers adopting this annotation SHOULD use similar
+"named-inputs-that-failed" strings so operators can identify the specific
+remediation.
+
+### 5. When design-tier is enough vs when it isn't
+
+The single most important consumer-facing question about design-tier SBOMs
+is: **can I make decisions from this data?** The answer depends on the
+decision.
+
+**Design-tier is enough for**:
+
+- **Compliance attribution** — CISA 2026 Minimum Elements requires component
+  identity but doesn't mandate exact-version resolution for every entry.
+  Design-tier components with versionless PURLs satisfy component-name
+  disclosure obligations.
+- **Contract audits** — "does the vendor use component X?" is answerable
+  from a design-tier PURL that shows `pkg:cargo/tokio` even without an
+  exact version.
+- **Declared-inventory manifests** — legal / procurement reviews focused on
+  what the developer authored (not what was actually pulled in transitively).
+- **Third-party-code disclosure** — enumerating direct dependencies for
+  license-attribution notices in shipped software.
+- **First-pass architectural review** — understanding what a project _intends_
+  to depend on, without needing the build to have run.
+
+**Design-tier is NOT enough for**:
+
+- **Exact-version CVE scanning** — this is the highest-impact caveat. A
+  vulnerability scanner running an exact-version CVE match against a
+  versionless PURL like `pkg:cargo/serde` produces **silent false negatives**:
+  the query returns "no matching CVEs" not because the component is safe,
+  but because there's no version to match against. This is not a loud error;
+  it's a quiet miss. Consumers running vuln scans MUST filter to source-tier
+  only (see [Recipe 1](#3-detection-recipes-jq-for-cyclonedx--spdx)) OR
+  upgrade the SBOM to source-tier first (see §7).
+- **Transitive-graph analysis** — design-tier reflects declared dependencies
+  only, not the full resolved transitive closure. Analysis that depends on
+  the full graph (e.g., "does anything I depend on transitively pull in
+  log4j?") requires source-tier resolution via a lockfile.
+- **Transitive license-conflict analysis** — determining GPL contamination
+  through transitive deps requires the resolved graph, not the declared set.
+- **Dependency-confusion detection** — this requires knowing exactly which
+  package resolved from which registry, which is a source-tier artifact.
+- **SLSA level-3+ provenance claims** — SLSA build-integrity requirements
+  presume the full resolved dependency graph is captured.
+
+**The interpretive frame** — think of design-tier as **"declared inventory"**
+and source-tier as **"resolved inventory"**. Both are legitimate SBOM shapes
+for different questions. A design-tier SBOM answers "what did the developer
+write into their manifests?"; a source-tier SBOM answers "what did the build
+actually pull in?". Consumers acting on the wrong tier for their question
+get systematically-wrong answers.
+
+Waybill emits both tiers side-by-side when the input source tree contains
+both lockfile-covered and lockfile-less projects — see §1's multi-tier
+statement. Downstream filtering to the right tier for the task is the
+consumer's responsibility; §3 provides the `jq` recipes.
+
+### 6. Design-tier and the graph-completeness annotation
+
+Waybill emits a document-scope `waybill:graph-completeness` annotation
+(milestone 158) that summarizes whether the emitted SBOM has full transitive
+coverage. Design-tier components interact with this signal directly: because
+design-tier means the resolver ran out of authoritative inputs, transitive
+edges below those components are often missing, and the completeness value
+degrades to `"partial"`.
+
+**The annotation shape** (CycloneDX `metadata.properties[]`):
+
+```json
+{"name": "waybill:graph-completeness", "value": "partial"}
+{"name": "waybill:graph-completeness-reason", "value": "orphaned-components-detected: 570 component(s) not reachable from root"}
+```
+
+**Two distinct "partial" causes to distinguish**:
+
+1. **Design-tier fallback** — components with `sbom_tier: "design"` exist,
+   and their transitive edges are unknown to waybill. This is a
+   resolver-input limitation, not a scanner bug.
+2. **Unreachable-from-root orphans** — components exist in the SBOM but no
+   dependency edge points from a root component to them. This can happen
+   when a package-DB reader (e.g., dpkg) discovers system-installed
+   packages that no application manifest references.
+
+Both classes surface as `waybill:graph-completeness: partial`, but they
+have different reason codes in the `waybill:graph-completeness-reason`
+string. Consumers wanting to distinguish them should parse the reason
+string OR count design-tier components separately.
+
+**Recipe — extract completeness signal + reason**:
+
+```bash
+jq '.metadata.properties[]? | select(.name | startswith("waybill:graph-completeness"))' <sbom.cdx.json>
+```
+
+Returns both the completeness classification (`full` / `partial`) and the
+reason string. For a design-tier-heavy scan the reason often names
+"orphaned-components-detected" (design-tier components are orphans from
+the perspective of the transitive graph pass) OR a design-tier-specific
+reason code depending on the scan shape.
+
+**Cross-reference**: see [component-tiers.md](reference/component-tiers.md)
+for the file-tier orphan-fallback contract (a related but distinct
+completeness surface).
+
+### 7. Upgrading design-tier to source-tier
+
+For each ecosystem with a design-tier fallback, there's a specific action the
+operator can take to promote the components to source-tier before the next
+scan:
+
+- **cargo** — `cargo generate-lockfile` (or `cargo update`) writes `Cargo.lock`.
+  Every dep gets a resolved version + checksum on the next waybill scan.
+- **gem** — `bundle install` (or `bundle lock --update`) writes `Gemfile.lock`.
+- **maven** — There's no in-tree solution for maven without shelling out to
+  `mvn dependency:tree` (waybill doesn't shell to mvn today). Operators wanting
+  full transitive resolution should either (a) commit a Gradle dependency-lock
+  file (`gradle.lockfile` / `buildscript-gradle.lockfile` — waybill parses
+  these) or (b) supply externally-known versions via `--supplement-cdx`.
+- **npm** — Any of `npm install` / `pnpm install` / `yarn install` / `bun
+  install` writes the ecosystem's lockfile.
+- **nuget** — Add `<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>`
+  to the `.csproj`, then run `dotnet restore`. Writes `packages.lock.json`
+  alongside the project.
+- **pip** — `uv lock` (or `pip-compile` / `poetry lock`) writes a resolved
+  lockfile waybill's pip reader can consume.
+- **kotlin** — `--include-declared-deps` opts into design-tier emission (this
+  is the "trigger", not an upgrade). Full source-tier requires either a
+  Gradle daemon (waybill can't invoke) OR external supplementation.
+- **yocto** — Recipe scope is inherently design-tier; source-tier is provided
+  separately by the yocto opkg installed-DB reader when a built image is
+  available.
+- **golang** — Rare in practice (go.sum is usually committed alongside go.mod).
+  If missing, run `go mod tidy` locally to regenerate go.sum, then re-scan.
+- **swift** — Commit `Package.resolved` (usually generated by `swift package
+  resolve` or by Xcode on first build). `Package.swift`-only projects will
+  emit nothing (see [swift limitations](#known-limitations-swift-v01)).
+
+**Universal operator-supplied override** — the `--supplement-cdx <file>` flag
+(milestone 119) lets the operator overlay externally-known versions onto
+components waybill couldn't resolve. Format: a CycloneDX SBOM whose
+components carry the missing versions. Waybill merges by PURL name; the
+supplement file's versions win for any design-tier components with matching
+names.
+
+**Per-ecosystem opt-in resolver flags** — waybill also exposes some ecosystem-
+specific network-fetching resolvers as opt-in flags. Notable one:
+`--warm-go-cache` (milestone 173) — pre-warms the Go module cache so
+transitive resolution succeeds even in an offline environment. Not a
+design-tier fix, but a related "how do I get more resolved components?"
+lever.
+
+### 8. Contributor guidance (implementing design-tier in a new reader)
+
+Contributors implementing a new ecosystem reader should follow the
+cross-reader design-tier convention when resolution can't produce a
+version:
+
+**The 4-field convention**:
+
+1. **PURL shape**: emit a **versionless** PURL when the version is empty —
+   `pkg:<type>/<name>` (no `@` segment). Consumer vulnerability scanners
+   doing exact-version CVE lookups get "no match" instead of a false
+   positive on an `@unresolved` literal.
+2. **`sbom_tier: Some("design".to_string())`** on the `PackageDbEntry`.
+   This is the authoritative tier classifier.
+3. **`waybill:unresolved-reason` annotation** — a human-readable string
+   explaining WHY the version couldn't be resolved (which lockfile is
+   missing, which manifest field was empty, etc.). Currently only NuGet
+   emits this; adopting it in your new reader helps close the [cross-
+   reader consistency gap](#4-the-waybillunresolved-reason-annotation).
+4. **Explicit trigger condition** documented in the reader's module doc-
+   comment — spell out the specific "when X and Y and Z, fall through
+   to design-tier" logic. Ambiguous fallbacks are hard for consumers
+   to interpret and for future maintainers to reason about.
+
+**Precedent readers to copy from** (verified 2026-08-05):
+
+- `waybill-cli/src/scan_fs/package_db/gem.rs:385-402` — `build_gem_purl`
+  handles the versionless-when-empty pattern cleanly. Look at how the
+  `if version.is_empty()` branch produces `pkg:gem/<name>` vs the else
+  branch producing `pkg:gem/<name>@<version>`.
+- `waybill-cli/src/scan_fs/package_db/nuget/mod.rs:113` — `read_one_project`
+  demonstrates the complete pattern post-[#653](https://github.com/kusari-oss/waybill/pull/656):
+  4-step resolution ladder, versionless PURL fallback, `sbom_tier: "design"`
+  emission, AND the `waybill:unresolved-reason` annotation.
+- `waybill-cli/src/scan_fs/package_db/nuget/mod.rs:435` — `build_nuget_purl`
+  is the constructor showing the branching `if version.is_empty()` /
+  `format!("pkg:nuget/{}")` vs `format!("pkg:nuget/{}@{}")` shape.
+
+**Anti-pattern to avoid — the `@unresolved` sentinel bug**: prior to
+[#653](https://github.com/kusari-oss/waybill/pull/656), the NuGet reader
+used a hardcoded `UNRESOLVED_VERSION_SENTINEL = "unresolved"` string,
+emitting invalid PURLs like `pkg:nuget/Foo@unresolved`. Downstream SBOM
+consumers (Trivy fs-scanning the emitted CDX, DependencyTrack)
+**dropped these entries silently** — the string `unresolved` is not a
+valid SemVer, so purl-spec-validating tools skip the components. **Do
+not invent your own sentinel string.** The design-tier + versionless-PURL
+convention above is the correct fallback shape.
+
+**Testing your new reader's design-tier path** — add regression tests
+following the pattern in
+`waybill-cli/src/scan_fs/package_db/nuget/mod.rs::tests::unresolved_version_emits_design_tier_versionless_purl`
+(post-#653): verify the PURL is versionless, verify `sbom_tier` is
+`Some("design")`, and verify the annotation shape.
+
+---
+
 ## Directory exclusion (--exclude-path)
 
 Every ecosystem reader below honors operator-supplied directory exclusion via
@@ -137,6 +561,10 @@ hashes Waybill can use.
 
 ---
 
+> **Design-tier fallback**: No — always source (installed-DB scan; version is always known). See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
+
+---
+
 ## cargo
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
@@ -168,6 +596,10 @@ CycloneDX `components[].hashes[]`.
 - `workspace` — workspace-local crates (no `source`).
 - `git`, `path`, `url` — non-registry sources.
 - `(none)` — normal registry crates.
+
+---
+
+> **Design-tier fallback**: Yes — automatic when a `Cargo.toml` declaration has no matching `Cargo.lock` entry. Versionless `pkg:cargo/<name>` emitted. See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix) and [§7 upgrade](#7-upgrading-design-tier-to-source-tier).
 
 ---
 
@@ -233,6 +665,10 @@ base libs that ship license grants verbatim).
 
 ---
 
+> **Design-tier fallback**: No — always source (installed-DB scan; version is always known). See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
+
+---
+
 ## gem
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
@@ -269,6 +705,10 @@ work — see the sbomqs-score-lift items in
 - Interpolated gemspec versions (`"#{FOO_VERSION}"`) produce garbage
   strings — downstream PURL construction rejects them. Theoretical edge
   case; in practice gemspec versions are always literal strings.
+
+---
+
+> **Design-tier fallback**: Yes — automatic when a Gemfile declaration has no matching `Gemfile.lock` entry (via `build_gem_purl` at `gem.rs:385`). Also synthetic Ruby built-in gems (allowlist, milestone 162). Versionless `pkg:gem/<name>` emitted. See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
 
 ---
 
@@ -415,6 +855,10 @@ is computed in that case.
 
 ---
 
+> **Design-tier fallback**: Rare — go.mod present but no go.sum. Ordinarily go.sum is committed alongside go.mod. See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
+
+---
+
 ## maven
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
@@ -516,6 +960,10 @@ by `compileClasspath` / `testRuntimeClasspath` / etc.).
 
 **Dep graph:** flat. Gradle lockfiles don't encode parent → child
 edges; each row is an already-resolved coord.
+
+---
+
+> **Design-tier fallback**: Yes — automatic when a `pom.xml` declaration has no `<version>` element (typically inherited-scope declarations that would resolve via `mvn` subprocess — waybill doesn't shell to mvn), or when the version contains unresolved `${…}` property syntax. Versionless `pkg:maven/<group>/<name>` emitted. See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
 
 ---
 
@@ -627,6 +1075,10 @@ yet — tracked as a follow-up.
 
 ---
 
+> **Design-tier fallback**: Yes — automatic when a `package.json` declaration has no matching lockfile entry (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, or `bun.lock`). See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
+
+---
+
 ## pip
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
@@ -685,6 +1137,10 @@ when a member's `[[package.dependencies]]` names a sibling member.
 name (lowercase, runs of non-alphanum collapsed to `-`).
 
 **Dep graph:** full tree from `[[package.dependencies]]`.
+
+---
+
+> **Design-tier fallback**: Yes — automatic when a `requirements.txt` declaration has no matching resolved lockfile (`uv.lock` / `pip-tools` / `poetry.lock`), or when extras cause an unresolved constraint. See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
 
 ---
 
@@ -770,6 +1226,10 @@ subprocess invocations at build time.
 
 ---
 
+> **Design-tier fallback**: No — always source. Pex lockfile pins exact versions + sha256 for every entry. See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
+
+---
+
 ## nuget
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
@@ -827,6 +1287,10 @@ annotation. `BTreeSet<PathBuf>` keeps ordering deterministic.
   can promote these to workspace-member style.
 - `Directory.Build.props` `<PackageVersion>` entries (some repos
   use this file for the same purpose).
+
+---
+
+> **Design-tier fallback**: Yes — automatic when the 4-step resolution ladder is exhausted (no `packages.lock.json`, no CPM entry, no inline `Version=`, no matching `<PackageVersion>` in `Directory.Build.props`/`targets`). Versionless `pkg:nuget/<name>` emitted. **NuGet is the only reader today that also emits `waybill:unresolved-reason`** — see [§4](#4-the-waybillunresolved-reason-annotation). Post-[#653](https://github.com/kusari-oss/waybill/pull/656). See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
 
 ---
 
@@ -903,6 +1367,10 @@ No behavior changes for repos without any coursier lockfiles.
 
 See [`specs/224-pants-coursier-jvm/quickstart.md`](../specs/224-pants-coursier-jvm/quickstart.md)
 for a walkthrough.
+
+---
+
+> **Design-tier fallback**: No — always source. Coursier lockfile pins exact versions + sha256 for every entry. See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
 
 ---
 
@@ -991,6 +1459,10 @@ discovered AND no `pants.toml` is present at the scan root
 
 See [`specs/225-pants-shell-reader/quickstart.md`](../specs/225-pants-shell-reader/quickstart.md)
 for a walkthrough.
+
+---
+
+> **Design-tier fallback**: Yes — synthetic. `pants.toml` `[shellcheck]` / `[shfmt]` / `[shunit2]` tool pins emit ONE synthetic `pkg:generic/<tool>@<version>` per pinned tool at design-tier. See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
 
 ---
 
@@ -1084,6 +1556,10 @@ for a walkthrough.
 
 ---
 
+> **Design-tier fallback**: Yes — synthetic. `pants.toml` `[golang] expected_version` emits ONE synthetic `pkg:generic/go@<version>` toolchain-pin component at design-tier. See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
+
+---
+
 ## rpm
 
 **Modules:** `waybill-cli/src/scan_fs/package_db/rpm.rs`,
@@ -1129,6 +1605,10 @@ Waybill can use. This is why rpm scans score 6.1/10 on sbomqs (Integrity
 - **Pure-Rust SQLite reader** handles leaf-table + interior-table pages
   only. Overflow pages are refused. RHEL rpmdbs don't use overflow pages
   in practice.
+
+---
+
+> **Design-tier fallback**: No — always source. Installed-DB scan; version + release always known. See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
 
 ---
 
@@ -1262,6 +1742,10 @@ format doesn't carry licenses, so those entries ship with empty
 
 ---
 
+> **Design-tier fallback**: Yes — recipe scope is inherently design-tier (`.bb` recipes have no "resolved" state). Yocto's opkg installed-DB reader emits source-tier separately when a built image is available. See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
+
+---
+
 ## kotlin
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
@@ -1383,6 +1867,10 @@ Workspace-root entries additionally carry `waybill:component-role =
 
 ---
 
+> **Design-tier fallback**: Yes — **opt-in only**. `--include-declared-deps` flag enables Kotlin DSL declaration emission at design-tier. Default: no emission. Rationale: Gradle KTS DSL cannot be fully resolved without a Gradle daemon. See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
+
+---
+
 ## swift
 
 **Path exclusion**: see [Directory exclusion (--exclude-path)](#directory-exclusion---exclude-path).
@@ -1451,6 +1939,10 @@ identity; other entries in the same file still emit.
   supported. SwiftPM is the modern Apple-blessed dependency manager;
   CocoaPods adoption is declining. Adding either is a future
   milestone if operator demand surfaces.
+
+---
+
+> **Design-tier fallback**: No — always source. `Package.resolved` is authoritative. **Caveat**: `Package.swift`-only projects (no `Package.resolved`) emit NO components at all — see [Known limitations (Swift v0.1)](#known-limitations-swift-v01). See [SBOM tiers → §2 matrix](#2-per-ecosystem-design-tier-fallback-matrix).
 
 ---
 

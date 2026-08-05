@@ -760,6 +760,8 @@ jq '{
 
 #### Design-tier components
 
+> **See also**: [`docs/ecosystems.md` → SBOM tiers](../ecosystems.md#sbom-tiers-source-design-binary) — the operator-facing per-ecosystem view of design-tier fallback behavior, including a per-ecosystem trigger-condition matrix and `jq` recipes for filtering by tier. This subsection here (consumer-guide) covers what design-tier MEANS for downstream tools; the ecosystems.md section covers how each reader arrives at it.
+>
 > **What they are**: components emitted from a *constraint-only* manifest — a Python `requirements.txt` line like `pyyaml>=6.0` (no lockfile), a Ruby `Gemfile` line naming a gem without a `Gemfile.lock`, an npm root `package.json` without `package-lock.json`, a `Cargo.toml` without `Cargo.lock`, and equivalents. waybill's ecosystem readers tag these with `sbom_tier = "design"` (native `waybill:sbom-tier` per-component annotation) and emit them with an **empty `version` field** — because the operator's manifest DECLARED the dependency but no lockfile or install evidence pins the resolved version. Empty version is Constitution Principle IX-honest behavior: waybill refuses to fabricate a resolved version when the scan input doesn't carry one.
 >
 > **The problem this signal is solving**: two empirical audits ([2026-07 langflow](audits/2026-07-05-kubernetes-argocd.md), [2026-07 test-tensorflow-models](audits/2026-07-06-tauri-airflow.md)) produced the same operator confusion — SBOMs contained dozens of components with empty version strings, and consumers couldn't tell if it was a waybill bug or intentional. It's intentional. This subsection + the milestone-175 advisory log make it discoverable.
