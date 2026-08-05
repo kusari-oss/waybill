@@ -12,8 +12,13 @@
 //!    (FR-007a, CPM) — `<PackageVersion Include="X" Version="..."/>`
 //!    map for `.csproj` references that omit `Version=`.
 //! 3. Inline `Version=` on the `<PackageReference>` itself (FR-007).
-//! 4. `unresolved` sentinel + `tracing::warn!` if none of the above
-//!    resolves.
+//! 4. If none of the above resolves, emit a design-tier component
+//!    (empty `version` field, versionless PURL `pkg:nuget/<name>`,
+//!    `waybill:unresolved-reason` annotation) + `tracing::warn!`.
+//!    This matches waybill's cross-ecosystem posture for operator-
+//!    declared-but-not-resolved deps (see gem/cargo/opkg readers).
+//!    Fixes #653 — previously emitted `pkg:nuget/<name>@unresolved`
+//!    which is an invalid PURL that downstream SBOM consumers drop.
 //!
 //! Per FR-007b, `PrivateAssets="All"` / `IncludeAssets=...` /
 //! `ExcludeAssets=...` map to `LifecycleScope::Build`, which flows
@@ -37,7 +42,6 @@ use waybill_common::types::purl::{encode_purl_segment, Purl};
 use super::PackageDbEntry;
 
 const PROJECT_EXTENSIONS: &[&str] = &["csproj", "vbproj", "fsproj"];
-const UNRESOLVED_VERSION_SENTINEL: &str = "unresolved";
 
 /// Walk `rootfs` for NuGet project files and emit one `PackageDbEntry`
 /// per resolved `<PackageReference>` (or `packages.lock.json` entry).
@@ -127,7 +131,12 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
     // (name, version) coord collected from .csproj + props +
     // packages.lock.json merges into a single component with a
     // comma-joined `waybill:source-files` annotation.
-    let mut acc: BTreeMap<(String, String), AccEntry> = BTreeMap::new();
+    //
+    // Version is `Option<String>` so unresolved declarations
+    // (`(name, None)`) don't collide with resolved ones
+    // (`(name, Some("1.2.3"))`), and get separately materialized as
+    // design-tier versionless components per #653.
+    let mut acc: BTreeMap<(String, Option<String>), AccEntry> = BTreeMap::new();
 
     // Build per-name dependency edges from the lockfile (one merged
     // set across all frameworks; the dedup pipeline collapses by
@@ -146,7 +155,9 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
         }
         let lifecycle_scope = private_assets::classify(&r.attrs);
         // Resolve version with the precedence:
-        //   lockfile (any framework) > inline Version= > CPM map > unresolved
+        //   lockfile (any framework) > inline Version= > CPM map > None
+        // `None` triggers a design-tier + versionless-PURL emission
+        // downstream instead of an `@unresolved` PURL literal (#653).
         let lock_resolved = lockfile.as_ref().and_then(|f| {
             f.dependencies
                 .values()
@@ -154,17 +165,16 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
                 .map(|p| p.resolved.clone())
                 .find(|v| !v.is_empty())
         });
-        let resolved_version = lock_resolved
+        let resolved_version: Option<String> = lock_resolved
             .or_else(|| r.version.clone().filter(|v| !v.is_empty()))
-            .or_else(|| cpm_map.get(&r.include).cloned())
-            .unwrap_or_else(|| {
-                tracing::warn!(
-                    project = %project_path.display(),
-                    package = %r.include,
-                    "<PackageReference> version unresolved (no Version=, no CPM, no lockfile entry)"
-                );
-                UNRESOLVED_VERSION_SENTINEL.to_string()
-            });
+            .or_else(|| cpm_map.get(&r.include).cloned());
+        if resolved_version.is_none() {
+            tracing::warn!(
+                project = %project_path.display(),
+                package = %r.include,
+                "<PackageReference> version unresolved (no Version=, no CPM, no lockfile entry) — emitting design-tier versionless component"
+            );
+        }
 
         let key = (r.include.clone(), resolved_version.clone());
         let entry = acc.entry(key).or_default();
@@ -196,7 +206,7 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
                     // per contracts/nuget-packages-lock.md.
                     continue;
                 }
-                let key = (name.clone(), pkg.resolved.clone());
+                let key = (name.clone(), Some(pkg.resolved.clone()));
                 let entry = acc.entry(key).or_default();
                 entry.sources.insert(lockfile_path.clone());
                 if pkg.entry_type.eq_ignore_ascii_case("Transitive")
@@ -210,11 +220,12 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
 
     // Materialize accumulated entries into PackageDbEntries.
     let mut out = Vec::new();
-    for ((name, version), acc_entry) in acc {
-        let Some(purl) = build_nuget_purl(&name, &version) else {
+    for ((name, version_opt), acc_entry) in acc {
+        let version_str = version_opt.as_deref().unwrap_or("");
+        let Some(purl) = build_nuget_purl(&name, version_str) else {
             tracing::warn!(
                 package = %name,
-                version = %version,
+                version = %version_str,
                 "nuget coord produced invalid PURL; skipping"
             );
             continue;
@@ -237,6 +248,21 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
             );
         }
 
+        // #653: unresolved (None) → design-tier, versionless PURL,
+        // empty version field, waybill:unresolved-reason annotation.
+        // Resolved (Some) → source-tier as before.
+        let sbom_tier = if version_opt.is_some() {
+            "source"
+        } else {
+            extra_annotations.insert(
+                "waybill:unresolved-reason".to_string(),
+                serde_json::Value::String(
+                    "no Version= on <PackageReference>, no CPM entry in Directory.Packages.props, no packages.lock.json entry".to_string(),
+                ),
+            );
+            "design"
+        };
+
         let primary_source = acc_entry
             .sources
             .iter()
@@ -248,7 +274,7 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
             build_inclusion: None,
             purl,
             name,
-            version,
+            version: version_str.to_string(),
             arch: None,
             source_path: primary_source,
             depends,
@@ -270,7 +296,7 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
             npm_role: None,
             co_owned_by: None,
             hashes: Vec::new(),
-            sbom_tier: Some("source".to_string()),
+            sbom_tier: Some(sbom_tier.to_string()),
             shade_relocation: None,
             extra_annotations,
             binary_role: None,
@@ -289,12 +315,21 @@ struct AccEntry {
 }
 
 pub(super) fn build_nuget_purl(name: &str, version: &str) -> Option<Purl> {
-    Purl::new(&format!(
-        "pkg:nuget/{}@{}",
-        encode_purl_segment(name),
-        encode_purl_segment(version),
-    ))
-    .ok()
+    // #653: emit a versionless PURL when version is empty (design-tier
+    // fall-through path from `read_one_project`). Matches the
+    // gem/cargo/opkg readers' convention. `Purl::new` accepts the
+    // no-`@` form; downstream consumers treat a versionless nuget PURL
+    // as a design declaration rather than a vulnerability-scan target.
+    let purl_str = if version.is_empty() {
+        format!("pkg:nuget/{}", encode_purl_segment(name))
+    } else {
+        format!(
+            "pkg:nuget/{}@{}",
+            encode_purl_segment(name),
+            encode_purl_segment(version),
+        )
+    };
+    Purl::new(&purl_str).ok()
 }
 
 fn build_lock_edges(
@@ -468,7 +503,14 @@ mod tests {
     }
 
     #[test]
-    fn unresolved_version_uses_sentinel_and_warns() {
+    fn unresolved_version_emits_design_tier_versionless_purl() {
+        // #653: previously emitted `pkg:nuget/<name>@unresolved`
+        // which is an invalid PURL literal that downstream SBOM
+        // consumers (Trivy, DependencyTrack) drop or error on.
+        // Now the reader falls through to a design-tier component
+        // with a versionless PURL + `waybill:unresolved-reason`
+        // annotation, matching the cross-ecosystem convention
+        // (see gem/cargo/opkg readers).
         let tmp = tempfile::tempdir().unwrap();
         write(
             tmp.path(),
@@ -481,7 +523,57 @@ mod tests {
         );
         let entries = read(tmp.path(), &Default::default());
         assert_eq!(entries.len(), 1);
-        assert_eq!(entries[0].version, "unresolved");
+        let e = &entries[0];
+        assert_eq!(e.name, "MikebomFixture.NoVersion");
+        assert_eq!(e.version, "");
+        assert_eq!(e.purl.as_str(), "pkg:nuget/MikebomFixture.NoVersion");
+        assert!(!e.purl.as_str().contains("@unresolved"));
+        assert!(!e.purl.as_str().contains('@'));
+        assert_eq!(e.sbom_tier.as_deref(), Some("design"));
+        let reason = e
+            .extra_annotations
+            .get("waybill:unresolved-reason")
+            .and_then(|v| v.as_str())
+            .unwrap();
+        assert!(reason.contains("no Version="));
+        assert!(reason.contains("no CPM entry"));
+        assert!(reason.contains("no packages.lock.json"));
+    }
+
+    #[test]
+    fn unresolved_and_resolved_declarations_dedup_separately() {
+        // A csproj that declares one resolved and one unresolved
+        // dep should emit exactly two components — one source-tier
+        // versioned, one design-tier versionless. Prior to #653 the
+        // unresolved one collided at (name, "unresolved") which was
+        // accidentally distinguishing but produced an invalid PURL.
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.Resolved" Version="1.0.0" />
+    <PackageReference Include="MikebomFixture.Unresolved" />
+  </ItemGroup>
+</Project>"#,
+        );
+        let entries = read(tmp.path(), &Default::default());
+        assert_eq!(entries.len(), 2);
+        let resolved = entries
+            .iter()
+            .find(|e| e.name == "MikebomFixture.Resolved")
+            .unwrap();
+        assert_eq!(resolved.version, "1.0.0");
+        assert_eq!(resolved.purl.as_str(), "pkg:nuget/MikebomFixture.Resolved@1.0.0");
+        assert_eq!(resolved.sbom_tier.as_deref(), Some("source"));
+        let unresolved = entries
+            .iter()
+            .find(|e| e.name == "MikebomFixture.Unresolved")
+            .unwrap();
+        assert_eq!(unresolved.version, "");
+        assert_eq!(unresolved.purl.as_str(), "pkg:nuget/MikebomFixture.Unresolved");
+        assert_eq!(unresolved.sbom_tier.as_deref(), Some("design"));
     }
 
     #[test]
