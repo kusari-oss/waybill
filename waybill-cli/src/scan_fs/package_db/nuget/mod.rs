@@ -30,6 +30,7 @@
 mod csproj;
 mod deps_json;
 mod directory_packages_props;
+mod msbuild_properties;
 mod packages_lock;
 mod pe_clr;
 mod private_assets;
@@ -127,6 +128,42 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
         None => Default::default(),
     };
 
+    // #654 (FU-002): build a merged MSBuild `<PropertyGroup>` property
+    // map so we can resolve `$(PropertyName)` references in Version
+    // strings from both the csproj and the Directory.Packages.props.
+    // csproj values overlay the props map (csproj is closer to the
+    // consumer in MSBuild evaluation order). Conditional groups
+    // resolve to last-wins per `msbuild_properties::parse_properties`.
+    let props_property_map = match &props_path {
+        Some(p) => msbuild_properties::parse_properties_file(p),
+        None => Default::default(),
+    };
+    let csproj_property_map = msbuild_properties::parse_properties_file(project_path);
+    let property_map =
+        msbuild_properties::merge(props_property_map, csproj_property_map);
+
+    // Substitute `$()` refs in every CPM map value up-front so the
+    // fall-through consumers below see already-resolved strings.
+    // Values that still contain `$(` after substitution stay raw and
+    // trip the design-tier fallback (#653) at emission time.
+    let cpm_map: BTreeMap<String, String> = cpm_map
+        .into_iter()
+        .map(|(k, v)| {
+            let (subbed, unresolved) =
+                msbuild_properties::substitute_and_check(&v, &property_map);
+            if unresolved {
+                tracing::warn!(
+                    project = %project_path.display(),
+                    package = %k,
+                    raw_version = %v,
+                    substituted = %subbed,
+                    "Directory.Packages.props Version= contains unresolved MSBuild property reference; will fall through to design-tier (#654)"
+                );
+            }
+            (k, subbed)
+        })
+        .collect();
+
     // Build a (name -> source-paths) accumulator so the same
     // (name, version) coord collected from .csproj + props +
     // packages.lock.json merges into a single component with a
@@ -165,9 +202,40 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
                 .map(|p| p.resolved.clone())
                 .find(|v| !v.is_empty())
         });
+        // #654: substitute `$(PropertyName)` refs in the inline
+        // Version= against the merged property map. Unresolved refs
+        // (`$(Foo)` where `Foo` isn't defined) leave the raw form in
+        // place; the containment check below then treats the whole
+        // value as unresolved and falls through to design-tier.
+        let inline_version = r
+            .version
+            .clone()
+            .filter(|v| !v.is_empty())
+            .and_then(|v| {
+                let (subbed, unresolved) =
+                    msbuild_properties::substitute_and_check(&v, &property_map);
+                if unresolved {
+                    tracing::warn!(
+                        project = %project_path.display(),
+                        package = %r.include,
+                        raw_version = %v,
+                        substituted = %subbed,
+                        "<PackageReference> Version= contains unresolved MSBuild property reference; will fall through to design-tier (#654)"
+                    );
+                    None
+                } else {
+                    Some(subbed)
+                }
+            });
+        // CPM map values are already property-substituted above; drop
+        // any residual `$(` here (defensive — belt + suspenders).
+        let cpm_resolved = cpm_map
+            .get(&r.include)
+            .cloned()
+            .filter(|v| !v.contains("$("));
         let resolved_version: Option<String> = lock_resolved
-            .or_else(|| r.version.clone().filter(|v| !v.is_empty()))
-            .or_else(|| cpm_map.get(&r.include).cloned());
+            .or(inline_version)
+            .or(cpm_resolved);
         if resolved_version.is_none() {
             tracing::warn!(
                 project = %project_path.display(),
@@ -574,6 +642,136 @@ mod tests {
         assert_eq!(unresolved.version, "");
         assert_eq!(unresolved.purl.as_str(), "pkg:nuget/MikebomFixture.Unresolved");
         assert_eq!(unresolved.sbom_tier.as_deref(), Some("design"));
+    }
+
+    #[test]
+    fn msbuild_property_ref_in_csproj_version_resolves_via_same_file_propertygroup() {
+        // #654: `<PackageReference Version="$(Ver)">` with `<Ver>1.2.3</Ver>`
+        // in the same csproj's `<PropertyGroup>` resolves cleanly.
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <PropertyGroup>
+    <MikebomFixtureVer>1.2.3</MikebomFixtureVer>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.PropRef" Version="$(MikebomFixtureVer)" />
+  </ItemGroup>
+</Project>"#,
+        );
+        let entries = read(tmp.path(), &Default::default());
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].version, "1.2.3");
+        assert_eq!(
+            entries[0].purl.as_str(),
+            "pkg:nuget/MikebomFixture.PropRef@1.2.3"
+        );
+        assert!(!entries[0].purl.as_str().contains("$("));
+    }
+
+    #[test]
+    fn msbuild_property_ref_in_props_version_resolves_via_props_propertygroup() {
+        // #654: RestSharp-shape — Directory.Packages.props declares
+        // both the property AND the CPM PackageVersion Version=$(Ver).
+        // The csproj references it CPM-style (no inline Version=).
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "Directory.Packages.props",
+            r#"<Project>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <SystemTextJsonVer>10.0.0</SystemTextJsonVer>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="MikebomFixture.CpmProp" Version="$(SystemTextJsonVer)" />
+  </ItemGroup>
+</Project>"#,
+        );
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.CpmProp" />
+  </ItemGroup>
+</Project>"#,
+        );
+        let entries = read(tmp.path(), &Default::default());
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].version, "10.0.0");
+        assert_eq!(
+            entries[0].purl.as_str(),
+            "pkg:nuget/MikebomFixture.CpmProp@10.0.0"
+        );
+        assert!(!entries[0].purl.as_str().contains("$("));
+    }
+
+    #[test]
+    fn unresolved_msbuild_property_falls_through_to_design_tier() {
+        // #654 + #653: when `$(SomeProp)` isn't defined anywhere the
+        // parser can see (e.g., because SomeProp lives in an unimported
+        // Directory.Build.props — see FU-001), the component emits as
+        // design-tier + versionless PURL rather than shipping a broken
+        // `pkg:nuget/X@$(SomeProp)` literal.
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.MissingProp" Version="$(NotDefinedAnywhere)" />
+  </ItemGroup>
+</Project>"#,
+        );
+        let entries = read(tmp.path(), &Default::default());
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].name, "MikebomFixture.MissingProp");
+        assert_eq!(entries[0].version, "");
+        assert_eq!(
+            entries[0].purl.as_str(),
+            "pkg:nuget/MikebomFixture.MissingProp"
+        );
+        assert_eq!(entries[0].sbom_tier.as_deref(), Some("design"));
+        assert!(!entries[0].purl.as_str().contains("$("));
+        assert!(!entries[0].purl.as_str().contains("@"));
+    }
+
+    #[test]
+    fn csproj_property_group_overlays_props_property_group() {
+        // MSBuild evaluation order: the csproj is closer to the
+        // consumer than an ancestor Directory.Packages.props, so a
+        // property defined in both takes the csproj's value.
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "Directory.Packages.props",
+            r#"<Project>
+  <PropertyGroup>
+    <SharedVer>1.0.0</SharedVer>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="MikebomFixture.Overlay" Version="$(SharedVer)" />
+  </ItemGroup>
+</Project>"#,
+        );
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <PropertyGroup>
+    <SharedVer>2.0.0</SharedVer>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.Overlay" />
+  </ItemGroup>
+</Project>"#,
+        );
+        let entries = read(tmp.path(), &Default::default());
+        assert_eq!(entries.len(), 1);
+        // csproj's SharedVer=2.0.0 overrides the props' 1.0.0.
+        assert_eq!(entries[0].version, "2.0.0");
     }
 
     #[test]
