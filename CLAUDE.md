@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-08-03
+Auto-generated from all feature plans. Last updated: 2026-08-05
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -303,6 +303,7 @@ Auto-generated from all feature plans. Last updated: 2026-08-03
 - N/A — all state in-process per scan; mirrors every language-reader (223-pants-pex-reader)
 - Rust stable (workspace toolchain inherited from + Existing only — `toml = "0.8"` (coursier (224-pants-coursier-jvm)
 - Rust stable (workspace toolchain inherited from + Existing only — `regex = "1"` (workspace; (225-pants-shell-reader)
+- N/A — Markdown documentation. The waybill binary is unchanged; every reader, every emitter, every CLI flag remains byte-identical pre/post merge. + None new. Documentation targets GitHub-flavored Markdown rendered by the standard `docs/` viewer per existing convention. (227-design-sbom-docs)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -365,9 +366,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 227-design-sbom-docs: Added N/A — Markdown documentation. The waybill binary is unchanged; every reader, every emitter, every CLI flag remains byte-identical pre/post merge. + None new. Documentation targets GitHub-flavored Markdown rendered by the standard `docs/` viewer per existing convention.
 - 226-pants-go-reader: Added Rust stable (workspace toolchain inherited from + Existing only — `regex = "1"` (workspace;
 - 225-pants-shell-reader: Added Rust stable (workspace toolchain inherited from + Existing only — `regex = "1"` (workspace;
-- 224-pants-coursier-jvm: Added Rust stable (workspace toolchain inherited from + Existing only — `toml = "0.8"` (coursier
 
 
 <!-- MANUAL ADDITIONS START -->
