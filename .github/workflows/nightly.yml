@@ -1,0 +1,173 @@
+name: Nightly release
+
+# Feature 229 (release-flow implementation) US2 — automated nightly channel.
+#
+# Cron at 06:00 UTC daily. Skip-if-unchanged discipline avoids duplicate
+# tags on days without merges. Delegates the actual multi-arch build +
+# signed-SBOM artifact-production to `release.yml` via `workflow_dispatch`
+# (matches the pattern the retired `auto-tag-release.yml` used, because
+# GitHub's anti-loop policy prevents GITHUB_TOKEN-pushed tags from
+# triggering downstream workflows via `push:` filters).
+#
+# Retention: nightlies older than 30 days are auto-deleted per Q1
+# clarification of 229 (see spec.md Clarifications). Cleanup step uses
+# an anchored regex to protect stables + bridge pre-releases from
+# accidental deletion.
+#
+# Signing: nightlies ARE signed via Sigstore keyless (Q2 clarification
+# — all releases signed uniformly). release.yml's --sign step is
+# unconditional; nightlies pass through it identically to stables.
+#
+# References:
+# - Spec: specs/229-release-flow-impl/spec.md
+# - Survey: docs/design/2026-08-05-release-flow-survey.md §4 (Recommendation)
+# - Contracts: specs/229-release-flow-impl/contracts/nightly-workflow.md
+
+on:
+  schedule:
+    # 06:00 UTC daily. Chosen per 228 survey precedent (Rust nightly builds
+    # ~24h after main-tree tip). Configurable but discouraged from changing
+    # without documenting the rationale.
+    - cron: '0 6 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write   # required for tag creation via GITHUB_TOKEN
+  actions: write    # required for `gh workflow run` dispatch
+
+concurrency:
+  group: nightly-release
+  cancel-in-progress: false
+
+jobs:
+  nightly-tag-and-dispatch:
+    name: Nightly tag + dispatch release.yml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # Full history for tag-lookup — needed to compare HEAD SHA
+          # against the last nightly tag's target commit.
+          fetch-depth: 0
+          ref: main
+          persist-credentials: true   # need this true for tag push below
+
+      - name: Determine skip condition
+        id: skip
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Find the most-recent nightly tag by version-sort. Empty output
+          # if none exist yet (fresh setup).
+          LAST_NIGHTLY=$(git tag -l 'v*-nightly.*' | sort -V | tail -1)
+          if [ -z "$LAST_NIGHTLY" ]; then
+            echo "no prior nightly tag; proceeding"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          else
+            LAST_SHA=$(git rev-list -n 1 "$LAST_NIGHTLY")
+            HEAD_SHA=$(git rev-parse HEAD)
+            if [ "$LAST_SHA" = "$HEAD_SHA" ]; then
+              # This stable log substring is asserted by SC-004
+              # verification — do not change without updating spec.
+              echo "no new commits since last nightly at $LAST_NIGHTLY"
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "changes present since $LAST_NIGHTLY (was $LAST_SHA, now $HEAD_SHA); proceeding"
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+      - name: Verify stable-model baseline exists
+        if: steps.skip.outputs.skip != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASELINE=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          if echo "$BASELINE" | grep -q -- '-alpha\.'; then
+            echo "::warning::Baseline version is still on the retiring alpha.N model ($BASELINE)."
+            echo "::warning::Nightly cannot be produced until the v0.2.0 release-bump PR merges (Phase 8 of feature 229)."
+            echo "Graceful no-op: exiting successfully without tagging."
+            # Rewrite the skip output so subsequent steps also no-op.
+            # Note: this can't overwrite $GITHUB_OUTPUT from an earlier
+            # step, so we exit here + rely on later `if:` guards being
+            # true. Simplest: fail the job with a well-marked reason.
+            echo "BASELINE_NOT_READY=true" >> "$GITHUB_ENV"
+          else
+            echo "Baseline $BASELINE is stable-model-ready"
+          fi
+
+      - name: Compute nightly tag
+        if: steps.skip.outputs.skip != 'true' && env.BASELINE_NOT_READY != 'true'
+        id: tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASELINE=$(grep '^version' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          DATE=$(date -u +%Y%m%d)
+          TAG="v${BASELINE}-nightly.${DATE}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Will tag: $TAG (baseline=$BASELINE, date=$DATE)"
+
+      - name: Create and push nightly tag
+        if: steps.skip.outputs.skip != 'true' && env.BASELINE_NOT_READY != 'true'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Annotated tag with workflow-run URL as message for traceability.
+          git tag -a "$TAG" -m "Nightly release $TAG"$'\n\n'"Automated by .github/workflows/nightly.yml — feature 229 US2"$'\n'"Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          git push origin "$TAG"
+
+      - name: Dispatch release workflow
+        if: steps.skip.outputs.skip != 'true' && env.BASELINE_NOT_READY != 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          # Anti-loop workaround: a GITHUB_TOKEN-pushed tag does NOT
+          # trigger downstream workflows via `push:` filters. Explicitly
+          # invoke release.yml's workflow_dispatch entry-point with
+          # the tag as input.
+          gh workflow run release.yml \
+            -f tag="$TAG" \
+            --ref main
+          echo "Dispatched release.yml against tag $TAG"
+
+      - name: Cleanup nightlies older than 30 days
+        if: always() && steps.skip.outputs.skip != 'true'
+        continue-on-error: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Q1 clarification of feature 229: 30-day retention on nightlies.
+          # Stables + bridge pre-releases are preserved forever — the
+          # anchored regex `^v[0-9]+\.[0-9]+\.[0-9]+-nightly\.[0-9]{8}$`
+          # matches ONLY nightly-shaped tags. Bridge tags with other
+          # pre-release suffixes (-alpha, -rc, -preview, etc.) do NOT
+          # match and are safe.
+          CUTOFF=$(date -u -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          echo "Deleting nightlies created before $CUTOFF"
+
+          gh release list --limit 200 --exclude-drafts \
+            --json name,tagName,createdAt,isPrerelease \
+          | jq -r --arg cutoff "$CUTOFF" \
+              '.[] | select(
+                .isPrerelease
+                and (.tagName | test("^v[0-9]+\\.[0-9]+\\.[0-9]+-nightly\\.[0-9]{8}$"))
+                and (.createdAt < $cutoff)
+              ) | .tagName' \
+          | while read -r OLD_TAG; do
+              [ -z "$OLD_TAG" ] && continue
+              echo "  Deleting expired nightly: $OLD_TAG"
+              gh release delete "$OLD_TAG" --yes --cleanup-tag \
+                || echo "::warning::Failed to delete $OLD_TAG (may already be gone)"
+            done
+          echo "Cleanup pass complete"

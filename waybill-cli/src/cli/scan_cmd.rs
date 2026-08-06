@@ -3778,7 +3778,7 @@ pub async fn execute(
         project_discovery_mode: project_discovery_mode_for_artifacts,
     };
     let output_cfg = OutputConfig {
-        mikebom_version: env!("CARGO_PKG_VERSION"),
+        mikebom_version: crate::version::VERSION,
         created: scan_created_timestamp(),
         overrides: plan.overrides.clone(),
     };

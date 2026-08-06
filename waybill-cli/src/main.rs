@@ -46,11 +46,12 @@ mod supplement;
 #[cfg(test)]
 mod testing;
 mod trace;
+mod version;
 
 #[derive(Parser)]
 #[command(
     name = "waybill",
-    version,
+    version = crate::version::VERSION,
     about = "SBOM generator with optional eBPF build-tracing",
     long_about = "SBOM generator.\n\n\
                   - `waybill sbom scan` (stable): filesystem / image scanning with \

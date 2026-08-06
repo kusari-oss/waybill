@@ -41,10 +41,9 @@ impl ClearlyDefinedClient {
     pub fn new(timeout: Duration) -> Self {
         let http = reqwest::Client::builder()
             .timeout(timeout)
-            .user_agent(concat!(
-                "waybill/",
-                env!("CARGO_PKG_VERSION"),
-                " (+https://github.com/waybill)"
+            .user_agent(format!(
+                "waybill/{} (+https://github.com/waybill)",
+                crate::version::VERSION
             ))
             .build()
             .unwrap_or_else(|_| reqwest::Client::new());

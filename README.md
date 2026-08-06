@@ -59,6 +59,24 @@ A toolkit for working with software bills of materials (SBOMs) end-to-end:
 
 ## Install
 
+### Which release channel should I use?
+
+Waybill ships **two release channels** plus a bridge escape hatch (see
+[the release-flow survey](docs/design/2026-08-05-release-flow-survey.md)
+for the full design rationale):
+
+- **stable** (`v<X>.<Y>.<Z>` bare-SemVer tags) — the default for
+  production SBOM pipelines. Manual-cadence releases; every artifact
+  is Sigstore-signed. Pin to this if you need CISA 2026 compliance.
+- **nightly** (`v<X>.<Y>.<Z>-nightly.YYYYMMDD` pre-release tags) — 1×/day
+  built from `main` (skipped on no-change days), 30-day retention.
+  Pin to this if you want the freshest features and accept
+  breakage-per-day. Also Sigstore-signed.
+
+See [`RELEASING.md`](RELEASING.md) if you're cutting a release.
+
+### Downloading a release
+
 Pre-built binaries are published with every release as GitHub Release
 assets. Discover the latest tag and download:
 

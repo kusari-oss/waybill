@@ -39,6 +39,17 @@
 
 pub mod parity;
 
+// Feature 229 US3: effective waybill version string — TEST-VISIBLE
+// mirror of the bin's `crate::version::VERSION`. Both bin and lib
+// `include!()` the same generated file at `$OUT_DIR/waybill_version.rs`
+// written by `waybill-cli/build.rs`, ensuring the const's value is
+// cache-invalidated when `WAYBILL_VERSION` changes (via build.rs's
+// `rerun-if-env-changed` — which does NOT work for `option_env!()`
+// directly). The `pub const VERSION: &str = "..."` declaration is
+// inside the generated file, so it's part of this lib crate's public
+// surface. Reference: feature 229 FR-005, FR-012.
+include!(concat!(env!("OUT_DIR"), "/waybill_version.rs"));
+
 /// Milestone 072: cross-tier SBOM binding — pure-data + pure-function code
 /// for computing binding hashes, verifying bindings, and serializing the
 /// `waybill:source-document-binding` annotation. Exposed at lib root so
