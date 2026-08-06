@@ -304,6 +304,7 @@ Auto-generated from all feature plans. Last updated: 2026-08-05
 - Rust stable (workspace toolchain inherited from + Existing only — `toml = "0.8"` (coursier (224-pants-coursier-jvm)
 - Rust stable (workspace toolchain inherited from + Existing only — `regex = "1"` (workspace; (225-pants-shell-reader)
 - N/A — Markdown documentation. The waybill binary is unchanged; every reader, every emitter, every CLI flag remains byte-identical pre/post merge. + None new. Documentation targets GitHub-flavored Markdown rendered by the standard `docs/` viewer per existing convention. (227-design-sbom-docs)
+- N/A — Markdown documentation. The waybill binary is unchanged; every reader, every emitter, every CLI flag remains byte-identical pre/post merge. No workflow YAML changes. + None new. Documentation targets GitHub-flavored Markdown rendered by the standard `docs/` viewer per existing convention. Research phase reads external OSS project docs, CHANGELOGs, release pages, and GitHub Actions workflows — no runtime dependency on those sources beyond source-citation at survey-authoring time. (228-release-flow-exploration)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -366,9 +367,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 228-release-flow-exploration: Added N/A — Markdown documentation. The waybill binary is unchanged; every reader, every emitter, every CLI flag remains byte-identical pre/post merge. No workflow YAML changes. + None new. Documentation targets GitHub-flavored Markdown rendered by the standard `docs/` viewer per existing convention. Research phase reads external OSS project docs, CHANGELOGs, release pages, and GitHub Actions workflows — no runtime dependency on those sources beyond source-citation at survey-authoring time.
 - 227-design-sbom-docs: Added N/A — Markdown documentation. The waybill binary is unchanged; every reader, every emitter, every CLI flag remains byte-identical pre/post merge. + None new. Documentation targets GitHub-flavored Markdown rendered by the standard `docs/` viewer per existing convention.
 - 226-pants-go-reader: Added Rust stable (workspace toolchain inherited from + Existing only — `regex = "1"` (workspace;
-- 225-pants-shell-reader: Added Rust stable (workspace toolchain inherited from + Existing only — `regex = "1"` (workspace;
 
 
 <!-- MANUAL ADDITIONS START -->

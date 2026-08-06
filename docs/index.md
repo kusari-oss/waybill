@@ -66,5 +66,10 @@ the way it did, or contribute to the pipeline.
 - [Design notes](design-notes.md) — architectural decisions at the
   cross-cutting level. Maven layered resolution, source-type markers,
   CycloneDX shape decisions, known limitations.
+- [Design surveys](design/) — point-in-time research + decision docs that
+  inform follow-up implementation. E.g., the [2026-08-05 release-flow
+  survey](design/2026-08-05-release-flow-survey.md) surveys peer OSS
+  projects' release-track models and recommends a two-channel
+  (nightly + stable) model for waybill.
 - [Changelog](../CHANGELOG.md) — what shipped in which release.
 - [Research](research/) — one-off investigations (e.g. Go binary scope analysis).
