@@ -131,12 +131,13 @@ git push origin v<X>.<Y>.<Z>
 ```bash
 gh release view v<X>.<Y>.<Z> --json isPrerelease,assets
 # expect: isPrerelease: false; assets includes 4 platform archives +
-# SHA256SUMS + waybill-source.cdx.json (with embedded Sigstore signature)
+# SHA256SUMS + waybill-source.cdx.json + waybill-source.cdx.json.bundle
 
+# Download the SBOM + Sigstore bundle from the release, then verify:
 cosign verify-blob \
   --certificate-identity-regexp "https://github.com/kusari-oss/waybill/.*" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-  --signature waybill-source.cdx.json \
+  --bundle waybill-source.cdx.json.bundle \
   waybill-source.cdx.json
 # expect: Verified OK
 ```
