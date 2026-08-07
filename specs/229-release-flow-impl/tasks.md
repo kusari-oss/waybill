@@ -211,7 +211,7 @@ Touched surfaces (per plan.md):
 
 - [X] T019 [P] Commented on #666 explaining the OIDC-audience setup + expected SC-011 close in Phase 9 T030. (Sigstore OIDC identity for cron-triggered workflows) — comment on the issue confirming the T009 nightly.yml is set up with `id-token: write` + `contents: write` and expect Sigstore keyless to work via the same GHA ambient OIDC token used by tag-triggered release.yml. Close #666 IF SC-005 verifies successfully in Phase 9; else re-open with the failure mode. Runs in parallel with T018.
 
-- [ ] T020 Commit + push branch `229-release-flow-impl`, open **infrastructure PR** against `main`. PR title: `impl(229): release-flow implementation — nightly.yml + WAYBILL_VERSION + release.yml modifications`. PR body links to spec 229, survey 228, and enumerates the 3 clarifications (Q1 retention / Q2 sign-all / Q3 bridge governance). Explicitly note that this is PART 1 of 2 — the release-bump PR (Phase 8) follows separately. Verify visual GitHub-render of the PR body.
+- [X] T020 Commit + push branch `229-release-flow-impl`, open **infrastructure PR** — [#670](https://github.com/kusari-oss/waybill/pull/670) against `main`. PR title: `impl(229): release-flow implementation — nightly.yml + WAYBILL_VERSION + release.yml modifications`. PR body links to spec 229, survey 228, and enumerates the 3 clarifications (Q1 retention / Q2 sign-all / Q3 bridge governance). Explicitly note that this is PART 1 of 2 — the release-bump PR (Phase 8) follows separately. Verify visual GitHub-render of the PR body.
 
 **Checkpoint**: infrastructure PR opened. Await merge.
 
