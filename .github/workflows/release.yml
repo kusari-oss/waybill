@@ -656,20 +656,17 @@ jobs:
       - name: Sign SBOM via cosign sign-blob (Sigstore keyless, GHA ambient OIDC)
         run: |
           set -euo pipefail
-          # cosign 2.6+ made --new-bundle-format the default, which silently
-          # ignores --output-signature/--output-certificate and requires
-          # --bundle=<path>. Pin the legacy format explicitly so the
-          # detached .sig/.pem outputs (and the consumer `cosign verify-blob`
-          # recipe in RELEASING.md) stay stable.
+          # cosign 2.6+ requires --bundle for keyless signing under the
+          # active signing-config path. The bundle is a self-contained
+          # JSON blob carrying both signature and certificate; consumers
+          # verify via `cosign verify-blob --bundle <path> <blob>` (see
+          # RELEASING.md §Step 9).
           cosign sign-blob \
             --yes \
-            --new-bundle-format=false \
-            --output-signature waybill-source.cdx.json.sig \
-            --output-certificate waybill-source.cdx.json.pem \
+            --bundle waybill-source.cdx.json.bundle \
             waybill-source.cdx.json
           echo "Signed SBOM at waybill-source.cdx.json"
-          echo "  Signature: waybill-source.cdx.json.sig"
-          echo "  Certificate: waybill-source.cdx.json.pem"
+          echo "  Bundle: waybill-source.cdx.json.bundle"
 
       - name: Compute prerelease flag from tag
         id: prerelease_flag
@@ -705,5 +702,4 @@ jobs:
             waybill-*.zip
             SHA256SUMS
             waybill-source.cdx.json
-            waybill-source.cdx.json.sig
-            waybill-source.cdx.json.pem
+            waybill-source.cdx.json.bundle
