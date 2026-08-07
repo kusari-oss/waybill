@@ -1,0 +1,78 @@
+# Feature 229 follow-up — signing-path smoke test.
+#
+# Purpose: reproduce the cosign sign-blob + verify-blob round-trip from
+# release.yml in ~90 seconds so we don't burn 7-minute full release matrices
+# on flag-syntax bugs when upstream cosign-installer bumps the tool.
+#
+# Trigger: workflow_dispatch only. Runs on ubuntu-latest, needs id-token: write
+# for Sigstore keyless OIDC. Creates a throwaway text blob, signs it, verifies
+# it, and asserts on the outputs. No release-tag side effects; no artifacts
+# uploaded to any release; nothing published to a registry.
+#
+# Use this workflow to lock in a known-good cosign invocation before touching
+# release.yml. When upstream cosign-installer bumps cosign to a version whose
+# defaults change, this workflow will fail first — cheaply, on a throwaway
+# blob — instead of failing during a real tagged release.
+
+name: Test signing (cosign sign-blob smoke test)
+
+on:
+  workflow_dispatch:
+    inputs:
+      cosign_installer_ref:
+        description: >-
+          Optional override for the sigstore/cosign-installer version pin.
+          Defaults to the same SHA pin release.yml uses.
+        required: false
+        default: "6f9f17788090df1f26f669e9d70d6ae9567deba6"  # v4.1.2
+
+permissions:
+  contents: read
+  id-token: write  # required for Sigstore keyless OIDC token exchange
+
+jobs:
+  smoke-test:
+    name: Sign + verify round-trip
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Print cosign version
+        run: |
+          set -euo pipefail
+          cosign version
+
+      - name: Create scratch blob to sign
+        run: |
+          set -euo pipefail
+          printf 'waybill test-signing smoke test — %s\n' "$(date -u +%Y%m%dT%H%M%SZ)" > scratch.txt
+          echo "Blob:"
+          cat scratch.txt
+
+      - name: Sign scratch blob (mirrors release.yml invocation)
+        run: |
+          set -euo pipefail
+          cosign sign-blob \
+            --yes \
+            --bundle scratch.txt.bundle \
+            scratch.txt
+          test -s scratch.txt.bundle
+          echo "Bundle size: $(wc -c < scratch.txt.bundle) bytes"
+
+      - name: Verify scratch blob (mirrors RELEASING.md verify recipe)
+        run: |
+          set -euo pipefail
+          cosign verify-blob \
+            --certificate-identity-regexp "https://github.com/kusari-oss/waybill/.*" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+            --bundle scratch.txt.bundle \
+            scratch.txt
+
+      - name: Report success
+        run: |
+          set -euo pipefail
+          echo "cosign sign-blob + verify-blob round-trip: OK"
+          echo "This workflow-run's invocation is safe to use in release.yml."
