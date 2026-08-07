@@ -630,15 +630,40 @@ jobs:
           chmod +x /tmp/waybill-bin/waybill
           /tmp/waybill-bin/waybill --version
 
-      - name: Generate + sign source-tree SBOM (waybill-of-waybill, Sigstore keyless)
+      # Feature 229 US1 T004 — cosign sign-blob path (recovery from v0.2.0
+      # release attempt). `waybill sbom scan --sign` was the original design
+      # per 229 §4.4, but sigstore-rs 0.11 requires an `email` OIDC claim
+      # which GitHub Actions ambient tokens do NOT emit — GHA emits `sub`
+      # instead (memory feedback_sigstore_rs_011_email_limitation). Workaround
+      # per Q2 clarification (all releases MUST be signed): generate the SBOM
+      # without --sign, then use cosign's own ambient-GHA OIDC path (which
+      # accepts `sub` claim) to sign the resulting file. Byte-identical
+      # verifier-facing output — `cosign verify-blob --signature <sig>
+      # --certificate <cert>` works the same way. See follow-up issue for
+      # tracking the sigstore-rs upstream fix.
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Generate source-tree SBOM (waybill-of-waybill, unsigned)
         run: |
           set -euo pipefail
           /tmp/waybill-bin/waybill sbom scan \
             --path . \
             --format cyclonedx-json \
-            --sign \
             --output waybill-source.cdx.json \
             --no-deep-hash
+
+      - name: Sign SBOM via cosign sign-blob (Sigstore keyless, GHA ambient OIDC)
+        run: |
+          set -euo pipefail
+          cosign sign-blob \
+            --yes \
+            --output-signature waybill-source.cdx.json.sig \
+            --output-certificate waybill-source.cdx.json.pem \
+            waybill-source.cdx.json
+          echo "Signed SBOM at waybill-source.cdx.json"
+          echo "  Signature: waybill-source.cdx.json.sig"
+          echo "  Certificate: waybill-source.cdx.json.pem"
 
       - name: Compute prerelease flag from tag
         id: prerelease_flag
@@ -674,3 +699,5 @@ jobs:
             waybill-*.zip
             SHA256SUMS
             waybill-source.cdx.json
+            waybill-source.cdx.json.sig
+            waybill-source.cdx.json.pem
