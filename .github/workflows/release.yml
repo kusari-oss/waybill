@@ -656,8 +656,14 @@ jobs:
       - name: Sign SBOM via cosign sign-blob (Sigstore keyless, GHA ambient OIDC)
         run: |
           set -euo pipefail
+          # cosign 2.6+ made --new-bundle-format the default, which silently
+          # ignores --output-signature/--output-certificate and requires
+          # --bundle=<path>. Pin the legacy format explicitly so the
+          # detached .sig/.pem outputs (and the consumer `cosign verify-blob`
+          # recipe in RELEASING.md) stay stable.
           cosign sign-blob \
             --yes \
+            --new-bundle-format=false \
             --output-signature waybill-source.cdx.json.sig \
             --output-certificate waybill-source.cdx.json.pem \
             waybill-source.cdx.json
