@@ -133,7 +133,12 @@ gh release view v<X>.<Y>.<Z> --json isPrerelease,assets
 # expect: isPrerelease: false; assets includes 4 platform archives +
 # SHA256SUMS + waybill-source.cdx.json + waybill-source.cdx.json.bundle
 
-# Download the SBOM + Sigstore bundle from the release, then verify:
+# Download the SBOM + Sigstore bundle from the release, then verify.
+# If your cosign install has a stale TUF cache (last used against
+# Rekor v1), refresh the trust root first — v0.2.0+ bundles are logged
+# to Rekor v2 and need the newer log key:
+cosign initialize
+
 cosign verify-blob \
   --certificate-identity-regexp "https://github.com/kusari-oss/waybill/.*" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
