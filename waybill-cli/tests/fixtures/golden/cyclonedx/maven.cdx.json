@@ -308,7 +308,7 @@
           "name": "waybill",
           "publisher": "waybill contributors",
           "type": "application",
-          "version": "0.1.0-alpha.70"
+          "version": "0.2.0"
         }
       ]
     }
