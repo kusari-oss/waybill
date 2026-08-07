@@ -94,7 +94,7 @@ impl RegistryClient {
         tls_config: &RegistryTlsConfig,
     ) -> Result<Self> {
         let mut builder = reqwest::Client::builder()
-            .user_agent(concat!("waybill/", env!("CARGO_PKG_VERSION")));
+            .user_agent(format!("waybill/{}", crate::version::VERSION));
 
         // m182 CA bundle: additive to webpki-roots — nothing removed.
         for cert in &tls_config.ca_bundle {

@@ -98,10 +98,9 @@ fn build_client() -> Result<reqwest::blocking::Client, FetchError> {
     reqwest::blocking::Client::builder()
         .timeout(REQUEST_TIMEOUT)
         .redirect(reqwest::redirect::Policy::limited(MAX_REDIRECTS))
-        .user_agent(concat!(
-            "waybill/",
-            env!("CARGO_PKG_VERSION"),
-            " (corpus-fetch)"
+        .user_agent(format!(
+            "waybill/{} (corpus-fetch)",
+            crate::version::VERSION
         ))
         .build()
         .map_err(|e| FetchError::Network(e.to_string()))

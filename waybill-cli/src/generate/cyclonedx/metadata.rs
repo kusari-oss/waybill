@@ -157,7 +157,7 @@ pub fn build_metadata(
     // `metadata.version` slot stays at the hardcoded `1`.
     sbom_version: Option<waybill_common::types::SbomVersion>,
 ) -> serde_json::Value {
-    let version = env!("CARGO_PKG_VERSION");
+    let version = crate::version::VERSION;
     // Determinism: honor `WAYBILL_FIXED_TIMESTAMP` (same env-var
     // contract as `scan_cmd::scan_created_timestamp`) so two
     // back-to-back scans inside a test produce byte-identical

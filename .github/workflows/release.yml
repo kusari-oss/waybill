@@ -3,9 +3,19 @@ name: Release
 on:
   push:
     tags:
-      - 'v*-alpha.*'
-      - 'v*-beta.*'
-      - 'v*-rc.*'
+      # Feature 229 (release-flow implementation) expanded this list from
+      # the pre-229 3-pattern set to cover the new two-channel model:
+      #   - stable channel: bare-SemVer `v<X>.<Y>.<Z>` (v0.2.0+)
+      #   - nightly channel: `v<X>.<Y>.<Z>-nightly.YYYYMMDD` (m229 US2)
+      #   - bridge pre-releases (Q3 always-acceptable): -alpha.*, -beta.*,
+      #     -rc.*, -preview.* — retiring `alpha.N` sequence still supported
+      #     for emergency bridges via `v0.1.0-alpha.71`+ tags.
+      - 'v*-alpha.*'       # bridge alphas (Q3 always-acceptable)
+      - 'v*-beta.*'        # future beta channel + bridge betas
+      - 'v*-rc.*'          # bridge RCs (Q3 always-acceptable)
+      - 'v*-nightly.*'     # 229 US2 nightly channel
+      - 'v*-preview.*'     # 229 Q3 bridge with -preview suffix
+      - 'v[0-9]+.[0-9]+.[0-9]+'  # 229 US1 stable channel (bare SemVer, no suffix)
   # Manual escape hatch (issue #171). Lets a maintainer kick off a
   # release against an existing tag without a workstation
   # `git push origin v*-alpha.*` — useful when an existing tag's
@@ -569,23 +579,84 @@ jobs:
           echo "Signed image: ghcr.io/${OWNER}/waybill@${DIGEST}"
 
   release:
-    name: Create GitHub pre-release
+    name: Create GitHub release
     needs: [build-linux-x86_64, build-linux-aarch64, build-macos-aarch64, build-windows-x86_64]
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write   # Feature 229 FR-004: Sigstore keyless OIDC for --sign
     steps:
+      # Feature 229 US1 T004: checkout source tree so waybill can scan it.
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ env.TAG_NAME }}
+          persist-credentials: false
+
       - name: Download all tarball artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           pattern: waybill-${{ env.TAG_NAME }}-*
+          path: ./artifacts
           merge-multiple: true
+
+      - name: Move tarballs to workspace root
+        run: |
+          set -euo pipefail
+          mv ./artifacts/*.tar.gz ./artifacts/*.zip .
 
       - name: Generate SHA256SUMS
         run: |
           set -euo pipefail
           sha256sum waybill-*.tar.gz waybill-*.zip > SHA256SUMS
           cat SHA256SUMS
+
+      # Feature 229 US1 T004 + FR-003/FR-004: generate + sign a waybill-of-waybill
+      # SBOM of the source tree at the released tag. UNCONDITIONAL — no
+      # tag-format branching (Q2 clarification). Fail-closed via
+      # `set -euo pipefail`: any signing failure fails the workflow.
+      #
+      # m222 CLI surface (verified 2026-08-06 via
+      # `grep -B 2 -A 3 "pub sign:" waybill-cli/src/cli/scan_cmd.rs`):
+      # `--sign` is a FLAG on `sbom scan`, not a separate sub-command.
+      # Uses ambient GHA OIDC token via the id-token: write permission.
+      - name: Extract waybill Linux x86_64 binary
+        run: |
+          set -euo pipefail
+          # Find the extracted tarball's `waybill` executable — the
+          # tarballs unpack to `waybill-<tag>-<target>/waybill` inside.
+          # Move-and-extract in a scratch dir to avoid polluting workspace.
+          mkdir -p /tmp/waybill-bin
+          tar -xzf "./waybill-${TAG_NAME}-x86_64-unknown-linux-gnu.tar.gz" -C /tmp/waybill-bin --strip-components=1
+          chmod +x /tmp/waybill-bin/waybill
+          /tmp/waybill-bin/waybill --version
+
+      - name: Generate + sign source-tree SBOM (waybill-of-waybill, Sigstore keyless)
+        run: |
+          set -euo pipefail
+          /tmp/waybill-bin/waybill sbom scan \
+            --path . \
+            --format cyclonedx-json \
+            --sign \
+            --output waybill-source.cdx.json \
+            --no-deep-hash
+
+      - name: Compute prerelease flag from tag
+        id: prerelease_flag
+        env:
+          REF_NAME: ${{ env.TAG_NAME }}
+        run: |
+          set -euo pipefail
+          # Feature 229 US1: stable tags (bare-SemVer `v<X>.<Y>.<Z>`) are
+          # full releases; anything else with a pre-release suffix is a
+          # prerelease. This matters for GitHub's "Latest release" badge —
+          # only full releases can be "Latest".
+          if [[ "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "Stable tag detected — full release"
+          else
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+            echo "Pre-release tag detected — prerelease flag set"
+          fi
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
@@ -594,9 +665,12 @@ jobs:
           # invocations (where github.ref is the dispatched-from branch,
           # not the tag) target the correct existing tag.
           tag_name: ${{ env.TAG_NAME }}
-          prerelease: true
+          # Feature 229 US1: dynamic prerelease flag — stables are full
+          # releases, nightlies + bridges are prereleases.
+          prerelease: ${{ steps.prerelease_flag.outputs.prerelease }}
           generate_release_notes: true
           files: |
             waybill-*.tar.gz
             waybill-*.zip
             SHA256SUMS
+            waybill-source.cdx.json

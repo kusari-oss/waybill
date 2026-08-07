@@ -242,10 +242,9 @@ pub fn build_http_client(
         .timeout(config.fetch_total_timeout)
         // Default no proxy — we manage `$GOPROXY` chain ourselves.
         .no_proxy()
-        .user_agent(concat!(
-            "waybill/",
-            env!("CARGO_PKG_VERSION"),
-            " (https://github.com/Kusari-OSS/waybill; +go-transitive-resolver)"
+        .user_agent(format!(
+            "waybill/{} (https://github.com/Kusari-OSS/waybill; +go-transitive-resolver)",
+            crate::version::VERSION
         ))
         .build()
 }

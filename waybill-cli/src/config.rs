@@ -25,8 +25,10 @@ pub const DEFAULT_DEPS_DEV_TIMEOUT: Duration = Duration::from_millis(5000);
 /// Tool name used in SBOM metadata and CISA 2025 fields.
 pub const TOOL_NAME: &str = "waybill";
 
-/// Tool version from Cargo.toml.
-pub const TOOL_VERSION: &str = env!("CARGO_PKG_VERSION");
+/// Tool version from Cargo.toml, honoring the `WAYBILL_VERSION`
+/// build-time env-var override (229 FR-005) when set by
+/// `waybill-cli/build.rs`. See `crate::version::VERSION`.
+pub const TOOL_VERSION: &str = crate::version::VERSION;
 
 /// In-toto statement type URI.
 pub const INTOTO_STATEMENT_TYPE: &str = "https://in-toto.io/Statement/v1";

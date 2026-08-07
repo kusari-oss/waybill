@@ -1018,7 +1018,7 @@ pub(crate) fn emit_split(
 }
 
 fn env_pkg_version() -> &'static str {
-    env!("CARGO_PKG_VERSION")
+    crate::version::VERSION
 }
 
 // ---------- Tests ----------
