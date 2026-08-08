@@ -226,3 +226,38 @@ comm -13 <name>-trivy-purls.txt <name>-waybill-purls.txt  # waybill has, trivy m
 ```
 
 Waybill version pinned via `git rev-parse HEAD` at the audit branch's tip (currently `974ad1a`). Any future re-run against a later waybill build should reference its own commit SHA.
+
+---
+
+## Post-milestone-230 update
+
+**Gap closed**: root→direct dependency edges from a per-project main-module component. Pre-m230, every NuGet package's incoming-edge count was ≤ its use as a transitive dependency of some other package — so any direct dep that wasn't pulled in transitively (e.g., `OpenTelemetry.Exporter.OpenTelemetryProtocol` in the reporter's `dotnet/eShop` scan) had zero incoming edges and was orphaned from the dependency graph.
+
+**Measured impact against the `packages_lock_present` fixture** (which reproduces the same failure shape):
+
+| Metric | Pre-m230 | Post-m230 |
+|---|---|---|
+| NuGet components (Direct/CentralTransitive class) with ≥1 incoming edge | 0/1 (SampleLib orphaned) | 1/1 |
+| Main-module components emitted | 0 | 1 per `.csproj` (promoted to `metadata.component` when the scan surfaces a single project) |
+| `waybill:graph-completeness-reason` includes `multi-ecosystem-partial-root: nuget` | yes | no |
+
+Behavior shipped by m230:
+- Reader emits one main-module component per project file (`.csproj` / `.vbproj` / `.fsproj`), tagged `waybill:component-role: "main-module"`, `sbom_tier: "source"`.
+- Main-module PURL is `pkg:nuget/<AssemblyName>@<version>` when a version resolves via the FR-010 ladder (`<Version>` → `<VersionPrefix>` (+ `<VersionSuffix>`) → `<AssemblyVersion>`), falling back to `pkg:generic/<project-stem>@0.0.0`.
+- Root→direct edges populate from lockfile entries typed `Direct` or `CentralTransitive` (union across every TFM; deduplicated by name). When no `packages.lock.json` is present, edges derive from `<PackageReference Include=...>` items on the project itself (design-tier fallback).
+
+Explicitly deferred:
+- `ProjectReference`-style main-module→main-module edges (FR-007) — needed for multi-project solutions but out of scope for m230. The lockfile-side `entry_type: "Project"` continues to be skipped.
+
+Verify no Direct/CentralTransitive package remains orphaned:
+```bash
+jq -r '
+  ([.dependencies[] | .dependsOn[]?] | unique) as $has_incoming
+  | [.components[] | select(.purl // "" | startswith("pkg:nuget/"))
+     | select(((.properties // []) | any(.name == "waybill:component-role"
+                                          and .value == "main-module")) | not)
+     | ."bom-ref"]
+    - $has_incoming
+' <name>.waybill.cdx.json
+# Expect: [] (empty)
+```
