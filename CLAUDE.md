@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-08-06
+Auto-generated from all feature plans. Last updated: 2026-08-07
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -307,6 +307,8 @@ Auto-generated from all feature plans. Last updated: 2026-08-06
 - N/A — Markdown documentation. The waybill binary is unchanged; every reader, every emitter, every CLI flag remains byte-identical pre/post merge. No workflow YAML changes. + None new. Documentation targets GitHub-flavored Markdown rendered by the standard `docs/` viewer per existing convention. Research phase reads external OSS project docs, CHANGELOGs, release pages, and GitHub Actions workflows — no runtime dependency on those sources beyond source-citation at survey-authoring time. (228-release-flow-exploration)
 - Rust stable (workspace toolchain inherited from milestones 001–228; no nightly required for this user-space-only work). GitHub Actions YAML for workflows. Bash for cleanup logic (retention step). + Existing only — `std::env` (for the `build.rs` env-var read), `std::process::Command` (already used by nightly cleanup for `gh` CLI shell-out if needed; alternatively pure API via `actions/github-script` in-workflow). GitHub Actions workflow uses existing `actions/checkout`, `sigstore/cosign-installer` (already present per m222), plus a lightweight retention-cleanup step invoking `gh release list` + `gh release delete-with-tag`. **No new Cargo dependencies. No new GitHub Actions the release.yml doesn't already invoke.** (229-release-flow-impl)
 - N/A for runtime; nightlies stored as GitHub release-artifact archives (existing storage surface — 4 platform tarballs + multi-arch OCI image per release). (229-release-flow-impl)
+- Rust stable (workspace toolchain inherited from milestones 001–229; no nightly required for this user-space-only ecosystem-parity work) + Existing only — `quick-xml = "0.31"` (already used pervasively in the NuGet reader for `.csproj`/`Directory.Packages.props`/`Directory.Build.props` parsing), `serde_json` (already used for `packages.lock.json`), `waybill_common::types::purl::Purl` + `encode_purl_segment` (main-module PURL construction), `tracing`, `anyhow`, `thiserror`. **Zero new Cargo dependencies.** No subprocess calls. No network access. (230-nuget-main-module)
+- N/A — all state in-process per scan; mirrors every reader milestone since 002. (230-nuget-main-module)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -369,9 +371,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 230-nuget-main-module: Added Rust stable (workspace toolchain inherited from milestones 001–229; no nightly required for this user-space-only ecosystem-parity work) + Existing only — `quick-xml = "0.31"` (already used pervasively in the NuGet reader for `.csproj`/`Directory.Packages.props`/`Directory.Build.props` parsing), `serde_json` (already used for `packages.lock.json`), `waybill_common::types::purl::Purl` + `encode_purl_segment` (main-module PURL construction), `tracing`, `anyhow`, `thiserror`. **Zero new Cargo dependencies.** No subprocess calls. No network access.
 - 229-release-flow-impl: Added Rust stable (workspace toolchain inherited from milestones 001–228; no nightly required for this user-space-only work). GitHub Actions YAML for workflows. Bash for cleanup logic (retention step). + Existing only — `std::env` (for the `build.rs` env-var read), `std::process::Command` (already used by nightly cleanup for `gh` CLI shell-out if needed; alternatively pure API via `actions/github-script` in-workflow). GitHub Actions workflow uses existing `actions/checkout`, `sigstore/cosign-installer` (already present per m222), plus a lightweight retention-cleanup step invoking `gh release list` + `gh release delete-with-tag`. **No new Cargo dependencies. No new GitHub Actions the release.yml doesn't already invoke.**
 - 228-release-flow-exploration: Added N/A — Markdown documentation. The waybill binary is unchanged; every reader, every emitter, every CLI flag remains byte-identical pre/post merge. No workflow YAML changes. + None new. Documentation targets GitHub-flavored Markdown rendered by the standard `docs/` viewer per existing convention. Research phase reads external OSS project docs, CHANGELOGs, release pages, and GitHub Actions workflows — no runtime dependency on those sources beyond source-citation at survey-authoring time.
-- 227-design-sbom-docs: Added N/A — Markdown documentation. The waybill binary is unchanged; every reader, every emitter, every CLI flag remains byte-identical pre/post merge. + None new. Documentation targets GitHub-flavored Markdown rendered by the standard `docs/` viewer per existing convention.
 
 
 <!-- MANUAL ADDITIONS START -->
