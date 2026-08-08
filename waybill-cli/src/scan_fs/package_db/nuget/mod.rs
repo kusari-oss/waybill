@@ -420,6 +420,46 @@ fn read_one_project(scan_root: &Path, project_path: &Path) -> Vec<PackageDbEntry
             binary_role: None,
         });
     }
+
+    // Milestone 230 (FR-001 / FR-004 / FR-005 / FR-009) — emit one
+    // main-module component per project file, populate its `depends`
+    // with the root→direct dependency name set:
+    //  * US1 (locked): union across every framework block in
+    //    packages.lock.json of every entry typed Direct or
+    //    CentralTransitive. Project entries stay skipped per FR-008.
+    //  * US2 (unlocked): fall back to the project's
+    //    <PackageReference Include=...> values.
+    // Names are resolved to PURLs by the shared edge-emission loop
+    // in `scan_fs/mod.rs:560+` at scan time (see research §R1).
+    let main_module_depends: Vec<String> = if let Some(lock) = &lockfile {
+        let mut names: BTreeSet<String> = BTreeSet::new();
+        for framework in lock.dependencies.values() {
+            for (name, pkg) in framework {
+                if pkg.entry_type.eq_ignore_ascii_case("Direct")
+                    || pkg.entry_type.eq_ignore_ascii_case("CentralTransitive")
+                {
+                    names.insert(name.clone());
+                }
+            }
+        }
+        names.into_iter().collect()
+    } else {
+        let mut names: BTreeSet<String> = BTreeSet::new();
+        for r in &project_references {
+            if !r.include.is_empty() {
+                names.insert(r.include.clone());
+            }
+        }
+        names.into_iter().collect()
+    };
+    if let Some(mm) = build_nuget_main_module_entry(
+        project_path,
+        &property_map,
+        main_module_depends,
+    ) {
+        out.push(mm);
+    }
+
     out
 }
 
@@ -448,6 +488,173 @@ pub(super) fn build_nuget_purl(name: &str, version: &str) -> Option<Purl> {
         )
     };
     Purl::new(&purl_str).ok()
+}
+
+/// Milestone 230 (FR-010) — main-module version-derivation ladder.
+///
+/// Consults the merged MSBuild property map assembled by `read_one_project`
+/// (build.props ⊕ build.targets ⊕ packages.props ⊕ csproj) for the
+/// SDK-style version elements in this order:
+///
+/// 1. `<Version>` (canonical SDK-style version)
+/// 2. `<VersionPrefix>` (+ `<VersionSuffix>` joined with `-` when set)
+/// 3. `<AssemblyVersion>`
+///
+/// Values may contain `$(PropertyName)` references; each candidate is
+/// property-substituted via `msbuild_properties::substitute_and_check`
+/// and skipped when the result still holds an unresolved `$(...)`.
+///
+/// Returns an empty string when nothing resolves — the caller then
+/// falls back to the `pkg:generic/<stem>@0.0.0` PURL shape per FR-003.
+fn resolve_main_module_version(property_map: &msbuild_properties::PropertyMap) -> String {
+    // (1) Direct <Version> element.
+    if let Some(raw) = property_map.get("version") {
+        let (subbed, unresolved) =
+            msbuild_properties::substitute_and_check(raw, property_map);
+        if !unresolved && !subbed.is_empty() {
+            return subbed;
+        }
+    }
+    // (2) <VersionPrefix> [+ <VersionSuffix>].
+    if let Some(prefix_raw) = property_map.get("versionprefix") {
+        let (prefix, prefix_unresolved) =
+            msbuild_properties::substitute_and_check(prefix_raw, property_map);
+        if !prefix_unresolved && !prefix.is_empty() {
+            let suffix = property_map
+                .get("versionsuffix")
+                .and_then(|raw| {
+                    let (subbed, unresolved) =
+                        msbuild_properties::substitute_and_check(raw, property_map);
+                    if unresolved || subbed.is_empty() {
+                        None
+                    } else {
+                        Some(subbed)
+                    }
+                });
+            return match suffix {
+                Some(s) => format!("{}-{}", prefix, s),
+                None => prefix,
+            };
+        }
+    }
+    // (3) <AssemblyVersion>.
+    if let Some(raw) = property_map.get("assemblyversion") {
+        let (subbed, unresolved) =
+            msbuild_properties::substitute_and_check(raw, property_map);
+        if !unresolved && !subbed.is_empty() {
+            return subbed;
+        }
+    }
+    // Nothing resolved.
+    String::new()
+}
+
+/// Milestone 230 (research R3 + R5) — main-module name resolution.
+/// Reads `<AssemblyName>` from the merged property map (running through
+/// `msbuild_properties::substitute` for any `$(...)` refs); falls back
+/// to the project file's filename stem when unset or unresolvable.
+fn resolve_main_module_name(
+    project_path: &Path,
+    property_map: &msbuild_properties::PropertyMap,
+) -> String {
+    if let Some(raw) = property_map.get("assemblyname") {
+        let (subbed, unresolved) =
+            msbuild_properties::substitute_and_check(raw, property_map);
+        if !unresolved && !subbed.is_empty() {
+            return subbed;
+        }
+    }
+    project_path
+        .file_stem()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or_default()
+}
+
+/// Milestone 230 (FR-001 / FR-002 / FR-003) — build the NuGet main-
+/// module `PackageDbEntry` for one project file. Mirrors the shape
+/// established by cargo m064's `build_cargo_main_module_entry`
+/// (`cargo.rs:504+`) and gem m069's `build_gem_main_module_entry`.
+///
+/// `depends` is the pre-computed root→direct dependency name list
+/// (union across TFMs for locked projects; `<PackageReference Include>`
+/// names for unlocked projects). Names are resolved to PURLs by the
+/// shared edge-emission loop in `scan_fs/mod.rs:560+` at scan time.
+///
+/// Returns `None` only when both PURL construction paths fail
+/// (unreachable in practice — matches m064's defensive-None convention).
+fn build_nuget_main_module_entry(
+    project_path: &Path,
+    property_map: &msbuild_properties::PropertyMap,
+    depends: Vec<String>,
+) -> Option<PackageDbEntry> {
+    let name = resolve_main_module_name(project_path, property_map);
+    if name.is_empty() {
+        return None;
+    }
+    let version = resolve_main_module_version(property_map);
+    // Milestone 230 FR-003: pkg:nuget/<AssemblyName>@<version> when a
+    // version resolves; pkg:generic/<project-stem>@0.0.0 fallback when
+    // nothing does. The fallback matches the reporter's proposed shape
+    // and matches waybill's cross-ecosystem posture for unversioned
+    // source-tree entities.
+    let purl = if version.is_empty() {
+        let stem = project_path
+            .file_stem()
+            .map(|s| s.to_string_lossy().to_string())
+            .unwrap_or_else(|| name.clone());
+        Purl::new(&format!(
+            "pkg:generic/{}@0.0.0",
+            encode_purl_segment(&stem)
+        ))
+        .ok()?
+    } else {
+        build_nuget_purl(&name, &version)?
+    };
+
+    let mut extra_annotations: BTreeMap<String, serde_json::Value> = Default::default();
+    extra_annotations.insert(
+        "waybill:component-role".to_string(),
+        serde_json::Value::String("main-module".to_string()),
+    );
+
+    let source_path = format!("path+file://{}", project_path.display());
+    let effective_version = if version.is_empty() {
+        "0.0.0".to_string()
+    } else {
+        version
+    };
+
+    Some(PackageDbEntry {
+        build_inclusion: None,
+        purl,
+        name,
+        version: effective_version,
+        arch: None,
+        source_path,
+        depends,
+        maintainer: None,
+        licenses: Vec::new(),
+        lifecycle_scope: None,
+        requirement_ranges: Vec::new(),
+        source_type: None,
+        buildinfo_status: None,
+        evidence_kind: None,
+        binary_class: None,
+        binary_stripped: None,
+        linkage_kind: None,
+        detected_go: None,
+        confidence: None,
+        binary_packed: None,
+        raw_version: None,
+        parent_purl: None,
+        npm_role: None,
+        co_owned_by: None,
+        hashes: Vec::new(),
+        sbom_tier: Some("source".to_string()),
+        shade_relocation: None,
+        extra_annotations,
+        binary_role: None,
+    })
 }
 
 fn build_lock_edges(
@@ -493,6 +700,24 @@ mod tests {
         std::fs::write(dir.join(name), body).unwrap();
     }
 
+    /// Milestone 230 — filter `read()` output to package-level entries
+    /// only (i.e., strip main-module components introduced in m230).
+    /// Existing tests below were written pre-m230 and assert exact
+    /// package-component counts; the FR-006 byte-parity contract lets
+    /// those assertions stand as-is when read through this filter.
+    /// Main-module-specific behavior is exercised by new m230 tests.
+    fn read_pkgs(root: &Path) -> Vec<PackageDbEntry> {
+        read(root, &Default::default())
+            .into_iter()
+            .filter(|e| {
+                e.extra_annotations
+                    .get("waybill:component-role")
+                    .and_then(|v| v.as_str())
+                    != Some("main-module")
+            })
+            .collect()
+    }
+
     #[test]
     fn resolves_legacy_csproj_version() {
         let tmp = tempfile::tempdir().unwrap();
@@ -505,7 +730,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read_pkgs(tmp.path());
         assert_eq!(entries.len(), 1);
         assert_eq!(
             entries[0].purl.as_str(),
@@ -535,7 +760,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read_pkgs(tmp.path());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "MikebomFixture.Cpm");
         assert_eq!(entries[0].version, "9.0.1");
@@ -584,7 +809,7 @@ mod tests {
                 }
             }"#,
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read_pkgs(tmp.path());
         // SampleLib should pick up the lockfile's 1.2.4 (not csproj's 1.2.3).
         let sample = entries
             .iter()
@@ -612,7 +837,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read_pkgs(tmp.path());
         assert_eq!(entries.len(), 1);
         assert!(matches!(
             entries[0].lifecycle_scope,
@@ -639,7 +864,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read_pkgs(tmp.path());
         assert_eq!(entries.len(), 1);
         let e = &entries[0];
         assert_eq!(e.name, "MikebomFixture.NoVersion");
@@ -676,7 +901,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read_pkgs(tmp.path());
         assert_eq!(entries.len(), 2);
         let resolved = entries
             .iter()
@@ -711,7 +936,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read_pkgs(tmp.path());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].version, "1.2.3");
         assert_eq!(
@@ -748,7 +973,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read_pkgs(tmp.path());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].version, "10.0.0");
         assert_eq!(
@@ -775,7 +1000,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read_pkgs(tmp.path());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "MikebomFixture.MissingProp");
         assert_eq!(entries[0].version, "");
@@ -818,7 +1043,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read_pkgs(tmp.path());
         assert_eq!(entries.len(), 1);
         // csproj's SharedVer=2.0.0 overrides the props' 1.0.0.
         assert_eq!(entries[0].version, "2.0.0");
@@ -855,7 +1080,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(scan_root, &Default::default());
+        let entries = read_pkgs(scan_root);
         let names: BTreeSet<_> = entries.iter().map(|e| e.name.clone()).collect();
         assert!(names.contains("MikebomFixture.Xunit"), "inherited xunit missing");
         assert!(names.contains("MikebomFixture.Coverlet"), "inherited coverlet missing");
@@ -896,7 +1121,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read_pkgs(tmp.path());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].version, "3.0.1");
         assert_eq!(
@@ -929,7 +1154,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read_pkgs(tmp.path());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].version, "7.7.7");
     }
@@ -967,7 +1192,7 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read_pkgs(tmp.path());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].version, "2.0.0", "packages.props should win");
     }
@@ -993,10 +1218,467 @@ mod tests {
   </ItemGroup>
 </Project>"#,
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read_pkgs(tmp.path());
         assert_eq!(entries.len(), 2);
         let names: BTreeSet<_> = entries.iter().map(|e| e.name.clone()).collect();
         assert!(names.contains("MikebomFixture.VbLib"));
         assert!(names.contains("MikebomFixture.FsLib"));
+    }
+
+    // =========================================================
+    // Milestone 230 — main-module + root→direct edges
+    // =========================================================
+
+    fn read_main_modules(root: &Path) -> Vec<PackageDbEntry> {
+        read(root, &Default::default())
+            .into_iter()
+            .filter(|e| {
+                e.extra_annotations
+                    .get("waybill:component-role")
+                    .and_then(|v| v.as_str())
+                    == Some("main-module")
+            })
+            .collect()
+    }
+
+    #[test]
+    fn main_module_edges_from_lockfile_direct() {
+        // T005 (US1) — locked project, single TFM, Direct entry produces
+        // main-module → package edge.
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.SampleLib" />
+  </ItemGroup>
+</Project>"#,
+        );
+        write(
+            tmp.path(),
+            "packages.lock.json",
+            r#"{
+  "version": 1,
+  "dependencies": {
+    "net8.0": {
+      "MikebomFixture.SampleLib": {
+        "type": "Direct",
+        "requested": "1.2.3",
+        "resolved": "1.2.3",
+        "contentHash": "aaaa",
+        "dependencies": {}
+      }
+    }
+  }
+}"#,
+        );
+        let main_modules = read_main_modules(tmp.path());
+        assert_eq!(main_modules.len(), 1, "one main-module per project");
+        let mm = &main_modules[0];
+        assert_eq!(mm.name, "App");
+        assert_eq!(mm.version, "1.0.0");
+        assert_eq!(mm.purl.as_str(), "pkg:nuget/App@1.0.0");
+        assert_eq!(mm.sbom_tier.as_deref(), Some("source"));
+        assert!(
+            mm.depends.iter().any(|d| d == "MikebomFixture.SampleLib"),
+            "main-module depends must include the Direct lockfile entry; got {:?}",
+            mm.depends
+        );
+    }
+
+    #[test]
+    fn main_module_edges_from_lockfile_central_transitive() {
+        // T006 (US1) — CPM versionless PackageReference resolved to a
+        // CentralTransitive entry in the lockfile still counts as
+        // root→direct per FR-004.
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "Directory.Packages.props",
+            r#"<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="MikebomFixture.SharedLib" Version="5.6.7" />
+  </ItemGroup>
+</Project>"#,
+        );
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.SharedLib" />
+  </ItemGroup>
+</Project>"#,
+        );
+        write(
+            tmp.path(),
+            "packages.lock.json",
+            r#"{
+  "version": 1,
+  "dependencies": {
+    "net8.0": {
+      "MikebomFixture.SharedLib": {
+        "type": "CentralTransitive",
+        "requested": "5.6.7",
+        "resolved": "5.6.7",
+        "contentHash": "bbbb",
+        "dependencies": {}
+      }
+    }
+  }
+}"#,
+        );
+        let main_modules = read_main_modules(tmp.path());
+        assert_eq!(main_modules.len(), 1);
+        assert!(
+            main_modules[0]
+                .depends
+                .iter()
+                .any(|d| d == "MikebomFixture.SharedLib"),
+            "CentralTransitive should feed main-module depends per FR-004; got {:?}",
+            main_modules[0].depends
+        );
+    }
+
+    #[test]
+    fn main_module_excludes_transitive_and_project_entries() {
+        // T007 (US1) — Transitive entries MUST NOT appear on the
+        // main-module's depends per FR-004. Project entries MUST NOT
+        // appear per FR-007 + FR-008 (verified transitively via the
+        // existing Project-skip at nuget/mod.rs:321). C1 remediation.
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.RootLib" />
+  </ItemGroup>
+</Project>"#,
+        );
+        write(
+            tmp.path(),
+            "packages.lock.json",
+            r#"{
+  "version": 1,
+  "dependencies": {
+    "net8.0": {
+      "MikebomFixture.RootLib": {
+        "type": "Direct",
+        "requested": "1.0.0",
+        "resolved": "1.0.0",
+        "contentHash": "aaaa",
+        "dependencies": { "MikebomFixture.OnlyTransitive": "2.0.0" }
+      },
+      "MikebomFixture.OnlyTransitive": {
+        "type": "Transitive",
+        "resolved": "2.0.0",
+        "contentHash": "bbbb",
+        "dependencies": {}
+      },
+      "MikebomFixture.NestedProject": {
+        "type": "Project",
+        "dependencies": {}
+      }
+    }
+  }
+}"#,
+        );
+        let main_modules = read_main_modules(tmp.path());
+        assert_eq!(main_modules.len(), 1);
+        let deps: BTreeSet<_> = main_modules[0].depends.iter().cloned().collect();
+        assert!(
+            deps.contains("MikebomFixture.RootLib"),
+            "Direct entry present; got {:?}",
+            deps
+        );
+        assert!(
+            !deps.contains("MikebomFixture.OnlyTransitive"),
+            "Transitive entry MUST NOT be on main-module.depends; got {:?}",
+            deps
+        );
+        assert!(
+            !deps.contains("MikebomFixture.NestedProject"),
+            "Project entry MUST NOT be on main-module.depends (FR-007 + FR-008); got {:?}",
+            deps
+        );
+    }
+
+    #[test]
+    fn main_module_multi_tfm_union() {
+        // T008 (US1) — multi-TFM projects emit one main-module whose
+        // depends is the UNION of Direct+CentralTransitive across every
+        // framework block (FR-009). Same-name entries dedup by name.
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+  </PropertyGroup>
+</Project>"#,
+        );
+        write(
+            tmp.path(),
+            "packages.lock.json",
+            r#"{
+  "version": 1,
+  "dependencies": {
+    "net6.0": {
+      "MikebomFixture.Shared": {
+        "type": "Direct",
+        "resolved": "1.0.0",
+        "contentHash": "aaaa",
+        "dependencies": {}
+      }
+    },
+    "net8.0": {
+      "MikebomFixture.Shared": {
+        "type": "Direct",
+        "resolved": "1.0.0",
+        "contentHash": "aaaa",
+        "dependencies": {}
+      },
+      "MikebomFixture.OnlyNet8": {
+        "type": "Direct",
+        "resolved": "3.0.0",
+        "contentHash": "cccc",
+        "dependencies": {}
+      }
+    }
+  }
+}"#,
+        );
+        let main_modules = read_main_modules(tmp.path());
+        assert_eq!(main_modules.len(), 1);
+        let deps: BTreeSet<_> = main_modules[0].depends.iter().cloned().collect();
+        assert!(deps.contains("MikebomFixture.Shared"));
+        assert!(deps.contains("MikebomFixture.OnlyNet8"));
+        assert_eq!(deps.len(), 2, "dedup by name across TFMs; got {:?}", deps);
+    }
+
+    #[test]
+    fn main_module_assembly_name_override() {
+        // T009 (US1) — <AssemblyName> takes precedence over the project
+        // filename stem for the PURL name segment (research §R3).
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <PropertyGroup>
+    <Version>2.0.0</Version>
+    <AssemblyName>Contoso.Framework</AssemblyName>
+  </PropertyGroup>
+</Project>"#,
+        );
+        let main_modules = read_main_modules(tmp.path());
+        assert_eq!(main_modules.len(), 1);
+        assert_eq!(main_modules[0].name, "Contoso.Framework");
+        assert_eq!(
+            main_modules[0].purl.as_str(),
+            "pkg:nuget/Contoso.Framework@2.0.0",
+            "AssemblyName drives PURL name segment"
+        );
+    }
+
+    #[test]
+    fn main_module_version_ladder_falls_through_to_generic() {
+        // T010 (US1) — no <Version>, no <VersionPrefix>, no
+        // <AssemblyVersion> → pkg:generic/<stem>@0.0.0 per FR-003 + FR-010.
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+</Project>"#,
+        );
+        let main_modules = read_main_modules(tmp.path());
+        assert_eq!(main_modules.len(), 1);
+        assert_eq!(main_modules[0].purl.as_str(), "pkg:generic/App@0.0.0");
+        assert_eq!(main_modules[0].version, "0.0.0");
+    }
+
+    #[test]
+    fn main_module_version_ladder_prefers_version_prefix_suffix() {
+        // T010b (US1) — <VersionPrefix> + <VersionSuffix> concatenate
+        // with "-" per FR-010.
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <PropertyGroup>
+    <VersionPrefix>3.1.4</VersionPrefix>
+    <VersionSuffix>preview.1</VersionSuffix>
+  </PropertyGroup>
+</Project>"#,
+        );
+        let main_modules = read_main_modules(tmp.path());
+        assert_eq!(main_modules.len(), 1);
+        assert_eq!(main_modules[0].version, "3.1.4-preview.1");
+    }
+
+    #[test]
+    fn main_module_unlocked_derives_from_package_reference() {
+        // T015 (US2) — no packages.lock.json → design-tier fallback
+        // from <PackageReference> per FR-005.
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.SampleLib" Version="1.2.3" />
+  </ItemGroup>
+</Project>"#,
+        );
+        let main_modules = read_main_modules(tmp.path());
+        assert_eq!(main_modules.len(), 1);
+        assert!(
+            main_modules[0]
+                .depends
+                .iter()
+                .any(|d| d == "MikebomFixture.SampleLib"),
+            "unlocked fallback: <PackageReference> feeds main-module depends; got {:?}",
+            main_modules[0].depends
+        );
+    }
+
+    #[test]
+    fn main_module_unlocked_cpm_versionless_still_edges() {
+        // T017 (US2) — CPM versionless <PackageReference> resolved via
+        // Directory.Packages.props, no packages.lock.json. The
+        // main-module's depends still includes the include-name.
+        let tmp = tempfile::tempdir().unwrap();
+        write(
+            tmp.path(),
+            "Directory.Packages.props",
+            r#"<Project>
+  <ItemGroup>
+    <PackageVersion Include="MikebomFixture.SharedLib" Version="5.6.7" />
+  </ItemGroup>
+</Project>"#,
+        );
+        write(
+            tmp.path(),
+            "App.csproj",
+            r#"<Project>
+  <PropertyGroup>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.SharedLib" />
+  </ItemGroup>
+</Project>"#,
+        );
+        let main_modules = read_main_modules(tmp.path());
+        assert_eq!(main_modules.len(), 1);
+        assert!(
+            main_modules[0]
+                .depends
+                .iter()
+                .any(|d| d == "MikebomFixture.SharedLib"),
+            "unlocked CPM: main-module still edges to the include-name; got {:?}",
+            main_modules[0].depends
+        );
+    }
+
+    #[test]
+    fn main_module_mixed_locked_and_unlocked_solution() {
+        // T016 (US2) — two projects, one locked one not; each
+        // main-module reaches its own direct deps, no crossover.
+        let tmp = tempfile::tempdir().unwrap();
+        // Locked project
+        std::fs::create_dir_all(tmp.path().join("locked")).unwrap();
+        write(
+            &tmp.path().join("locked"),
+            "Locked.csproj",
+            r#"<Project>
+  <PropertyGroup><Version>1.0.0</Version></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.LockedLib" />
+  </ItemGroup>
+</Project>"#,
+        );
+        write(
+            &tmp.path().join("locked"),
+            "packages.lock.json",
+            r#"{"version":1,"dependencies":{"net8.0":{
+                "MikebomFixture.LockedLib":{
+                    "type":"Direct","resolved":"1.0.0","contentHash":"aaaa","dependencies":{}
+                }
+            }}}"#,
+        );
+        // Unlocked project
+        std::fs::create_dir_all(tmp.path().join("unlocked")).unwrap();
+        write(
+            &tmp.path().join("unlocked"),
+            "Unlocked.csproj",
+            r#"<Project>
+  <PropertyGroup><Version>2.0.0</Version></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MikebomFixture.UnlockedLib" Version="9.9.9" />
+  </ItemGroup>
+</Project>"#,
+        );
+        let mut main_modules = read_main_modules(tmp.path());
+        main_modules.sort_by(|a, b| a.name.cmp(&b.name));
+        assert_eq!(main_modules.len(), 2);
+        // Locked project depends
+        let locked = main_modules
+            .iter()
+            .find(|m| m.name == "Locked")
+            .expect("Locked main-module missing");
+        assert!(
+            locked.depends.contains(&"MikebomFixture.LockedLib".to_string()),
+            "Locked main-module misses lockfile dep; got {:?}",
+            locked.depends
+        );
+        assert!(
+            !locked.depends.contains(&"MikebomFixture.UnlockedLib".to_string()),
+            "Locked main-module leaked unlocked dep; got {:?}",
+            locked.depends
+        );
+        // Unlocked project depends
+        let unlocked = main_modules
+            .iter()
+            .find(|m| m.name == "Unlocked")
+            .expect("Unlocked main-module missing");
+        assert!(
+            unlocked
+                .depends
+                .contains(&"MikebomFixture.UnlockedLib".to_string()),
+            "Unlocked main-module misses PackageReference dep; got {:?}",
+            unlocked.depends
+        );
+        assert!(
+            !unlocked
+                .depends
+                .contains(&"MikebomFixture.LockedLib".to_string()),
+            "Unlocked main-module leaked locked dep; got {:?}",
+            unlocked.depends
+        );
     }
 }
