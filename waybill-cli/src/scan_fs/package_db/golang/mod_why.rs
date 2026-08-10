@@ -23,7 +23,7 @@
 // `golang/go_mod_graph.rs:81–158`.
 
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{Duration, Instant};
 
@@ -80,6 +80,83 @@ pub struct MainModuleAnalysis {
     /// preflight gate). `BudgetExhausted` ⇒ verdicts already obtained
     /// are kept; the rest are `Unresolved`.
     pub skip_reason: Option<SkipReason>,
+    /// Milestone 231 (FR-006): true when workspace mode was active for
+    /// this main module (a `go.work` was found via ancestor walk OR
+    /// `GOWORK` pointed at an explicit workspace file). Aggregated by
+    /// the scan-level classifier into the `workspace_modules=` counter
+    /// on the summary log line.
+    pub workspace_active: bool,
+}
+
+/// Milestone 231 — Go workspace-mode state for one main-module
+/// preflight invocation. Determines whether `-mod=mod` is safe to
+/// force in the child-process env (it is NOT, when workspace mode is
+/// active — Go rejects the flag with an error). Detection algorithm
+/// lives in `detect_workspace_mode`; consequences in `apply_offline_env`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) enum WorkspaceMode {
+    /// `GOWORK=off` — workspace mode explicitly disabled by operator.
+    Off,
+    /// `GOWORK=auto` or unset AND no `go.work` on disk.
+    Inactive,
+    /// `GOWORK=auto` or unset AND `go.work` found via ancestor walk.
+    /// The variant carries the discovered `go.work` path for logging.
+    Active(PathBuf),
+    /// `GOWORK=<explicit-path>` — explicit override; path is the
+    /// (existing) file the operator pointed at.
+    Explicit(PathBuf),
+}
+
+impl WorkspaceMode {
+    /// True when Go's toolchain is in workspace mode for this module.
+    /// Determines whether `-mod=mod` is safe to force in the env.
+    fn is_active(&self) -> bool {
+        matches!(self, WorkspaceMode::Active(_) | WorkspaceMode::Explicit(_))
+    }
+}
+
+/// Milestone 231 — detect the Go workspace state for a single main-
+/// module directory. Mirrors the Go toolchain's own resolution:
+/// (1) honor `GOWORK` env var; (2) otherwise walk ancestors looking
+/// for a `go.work` file. See `specs/231-fix-go-work-preflight/
+/// contracts/go-work-detection.md § Detection algorithm` for the
+/// authoritative contract.
+///
+/// Never errors: any filesystem-metadata failure at any level is
+/// treated as "no `go.work` here, keep walking". The actual `go`
+/// invocation is the source of truth on filesystem-actual failures.
+pub(super) fn detect_workspace_mode(main_module_dir: &Path) -> WorkspaceMode {
+    // (1) GOWORK env-var precedence.
+    if let Ok(raw) = std::env::var("GOWORK") {
+        let normalized = raw.trim();
+        if normalized.eq_ignore_ascii_case("off") {
+            return WorkspaceMode::Off;
+        }
+        if !normalized.is_empty() && !normalized.eq_ignore_ascii_case("auto") {
+            // Treat as explicit path. If it exists, honor it.
+            let explicit = PathBuf::from(normalized);
+            if explicit.is_file() {
+                let canon = std::fs::canonicalize(&explicit).unwrap_or(explicit);
+                return WorkspaceMode::Explicit(canon);
+            }
+            // Missing explicit path → fall through to on-disk detection
+            // (Go's own behavior on an invalid GOWORK is to error at
+            // build time; waybill degrades to on-disk so the preflight
+            // still runs. The `go list all` invocation itself will
+            // surface any real error via the existing WARN path.)
+        }
+        // Empty string or "auto" → fall through.
+    }
+
+    // (2) Ancestor walk for go.work.
+    for ancestor in main_module_dir.ancestors() {
+        let candidate = ancestor.join("go.work");
+        if candidate.is_file() {
+            let canon = std::fs::canonicalize(&candidate).unwrap_or(candidate);
+            return WorkspaceMode::Active(canon);
+        }
+    }
+    WorkspaceMode::Inactive
 }
 
 /// Shared wall-clock budget across every subprocess in a scan.
@@ -131,10 +208,19 @@ pub fn toolchain_available() -> bool {
 /// `WAYBILL_OFFLINE` is in effect so the toolchain answers from local
 /// cache or fails fast (and `GOTOOLCHAIN=local` blocks go.mod
 /// `toolchain`-directive downloads).
-fn apply_offline_env(cmd: &mut Command, offline: bool) {
+///
+/// Milestone 231: `GOFLAGS=-mod=mod` is INCOMPATIBLE with Go workspace
+/// mode (Go rejects the flag with `-mod may only be set to readonly or
+/// vendor when in workspace mode`). When `workspace_mode.is_active()`,
+/// omit `GOFLAGS` entirely so Go's workspace default `-mod=readonly`
+/// applies. Non-workspace paths preserve pre-231 behavior verbatim
+/// (FR-003 byte-parity guarantee).
+fn apply_offline_env(cmd: &mut Command, offline: bool, workspace_mode: &WorkspaceMode) {
     if offline {
         cmd.env("GOPROXY", "off");
-        cmd.env("GOFLAGS", "-mod=mod");
+        if !workspace_mode.is_active() {
+            cmd.env("GOFLAGS", "-mod=mod");
+        }
         cmd.env("GOTOOLCHAIN", "local");
     }
 }
@@ -151,17 +237,24 @@ enum Invocation {
 /// `go_mod_graph.rs:113–146`: the worker thread keeps running past a
 /// timeout but the subprocess gets reaped eventually; we simply stop
 /// waiting.
-fn run_bounded(cwd: &Path, args: &[String], offline: bool, timeout: Duration) -> Invocation {
+fn run_bounded(
+    cwd: &Path,
+    args: &[String],
+    offline: bool,
+    timeout: Duration,
+    workspace_mode: &WorkspaceMode,
+) -> Invocation {
     use std::sync::mpsc;
     use std::thread;
 
     let (tx, rx) = mpsc::channel();
     let cwd = cwd.to_path_buf();
     let args = args.to_vec();
+    let workspace_mode = workspace_mode.clone();
     thread::spawn(move || {
         let mut cmd = Command::new("go");
         cmd.args(&args).current_dir(&cwd);
-        apply_offline_env(&mut cmd, offline);
+        apply_offline_env(&mut cmd, offline, &workspace_mode);
         let _ = tx.send(cmd.output());
     });
 
@@ -190,6 +283,12 @@ pub fn analyze_main_module(
         return analysis;
     }
 
+    // Milestone 231 (FR-001) — detect Go workspace mode once per main
+    // module. Passed to every `run_bounded` invocation below so their
+    // child-process env is workspace-compatible when appropriate.
+    let workspace_mode = detect_workspace_mode(main_module_dir);
+    analysis.workspace_active = workspace_mode.is_active();
+
     // Reliability preflight: `go list all` must succeed before ANY
     // `go mod why` verdict is trusted for this main module.
     let Some(remaining) = budget.remaining() else {
@@ -203,7 +302,7 @@ pub fn analyze_main_module(
         mark_unresolved(&mut analysis, module_paths);
         return analysis;
     };
-    match run_bounded(main_module_dir, &["list".into(), "all".into()], offline, remaining) {
+    match run_bounded(main_module_dir, &["list".into(), "all".into()], offline, remaining, &workspace_mode) {
         Invocation::Completed(output) if output.status.success() => {}
         Invocation::Completed(output) => {
             tracing::warn!(
@@ -257,7 +356,7 @@ pub fn analyze_main_module(
         let mut args: Vec<String> =
             vec!["mod".into(), "why".into(), "-m".into(), "-vendor".into()];
         args.extend(chunk.iter().cloned());
-        match run_bounded(main_module_dir, &args, offline, remaining) {
+        match run_bounded(main_module_dir, &args, offline, remaining, &workspace_mode) {
             Invocation::Completed(output) if output.status.success() => {
                 let parsed = parse_go_mod_why(&String::from_utf8_lossy(&output.stdout));
                 for module in chunk {
@@ -528,5 +627,150 @@ mod tests {
         assert_eq!(chunk_and_rest(&all, chunks[1]).len(), 25);
         assert_eq!(chunk_and_rest(&all, chunks[2]).len(), 5);
         assert_eq!(chunk_and_rest(&all, chunks[0]).len(), 45);
+    }
+
+    // =========================================================
+    // Milestone 231 — WorkspaceMode detection + env-effect tests
+    // =========================================================
+
+    use crate::testing::env_guard::EnvGuard;
+
+    fn write_gowork(dir: &Path) {
+        std::fs::write(dir.join("go.work"), "go 1.22\n").unwrap();
+    }
+
+    #[test]
+    fn detect_workspace_mode_returns_off_when_env_off() {
+        // Contract invariant #1 (SC-005) — GOWORK=off + go.work on disk → Off.
+        let mut env = EnvGuard::acquire();
+        env.set("GOWORK", "off");
+        let tmp = tempfile::tempdir().unwrap();
+        write_gowork(tmp.path());
+        assert_eq!(detect_workspace_mode(tmp.path()), WorkspaceMode::Off);
+    }
+
+    #[test]
+    fn detect_workspace_mode_returns_inactive_when_no_go_work() {
+        // Contract invariant #2 — GOWORK unset + no go.work → Inactive.
+        let mut env = EnvGuard::acquire();
+        env.remove("GOWORK");
+        let tmp = tempfile::tempdir().unwrap();
+        assert_eq!(detect_workspace_mode(tmp.path()), WorkspaceMode::Inactive);
+    }
+
+    #[test]
+    fn detect_workspace_mode_active_from_immediate_parent() {
+        // Contract invariant #3 — go.work at parent of module dir.
+        let mut env = EnvGuard::acquire();
+        env.remove("GOWORK");
+        let tmp = tempfile::tempdir().unwrap();
+        write_gowork(tmp.path());
+        let module = tmp.path().join("sub");
+        std::fs::create_dir(&module).unwrap();
+        match detect_workspace_mode(&module) {
+            WorkspaceMode::Active(p) => assert!(
+                p.ends_with("go.work"),
+                "Active variant must carry the go.work path; got {}",
+                p.display()
+            ),
+            other => panic!("expected Active(_), got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn detect_workspace_mode_active_from_two_levels_up() {
+        // Contract invariant #4 — go.work at grandparent (multi-level walk).
+        let mut env = EnvGuard::acquire();
+        env.remove("GOWORK");
+        let tmp = tempfile::tempdir().unwrap();
+        write_gowork(tmp.path());
+        let module = tmp.path().join("a").join("b");
+        std::fs::create_dir_all(&module).unwrap();
+        assert!(matches!(
+            detect_workspace_mode(&module),
+            WorkspaceMode::Active(_)
+        ));
+    }
+
+    #[test]
+    fn detect_workspace_mode_explicit_path_returns_explicit() {
+        // Contract invariant #5 — GOWORK=<existing-path> → Explicit.
+        let mut env = EnvGuard::acquire();
+        let tmp = tempfile::tempdir().unwrap();
+        write_gowork(tmp.path());
+        let explicit = tmp.path().join("go.work");
+        env.set("GOWORK", &explicit);
+        // Detection is called against an unrelated directory; the explicit
+        // path takes precedence regardless.
+        let unrelated = tempfile::tempdir().unwrap();
+        match detect_workspace_mode(unrelated.path()) {
+            WorkspaceMode::Explicit(p) => assert!(
+                p.ends_with("go.work"),
+                "Explicit variant must carry the pointed-at path; got {}",
+                p.display()
+            ),
+            other => panic!("expected Explicit(_), got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn detect_workspace_mode_falls_through_when_explicit_missing() {
+        // Contract invariant #6 — GOWORK=<nonexistent> + go.work on disk
+        // → fall through to on-disk detection (Active).
+        let mut env = EnvGuard::acquire();
+        env.set("GOWORK", "/nonexistent/nowhere/go.work");
+        let tmp = tempfile::tempdir().unwrap();
+        write_gowork(tmp.path());
+        assert!(matches!(
+            detect_workspace_mode(tmp.path()),
+            WorkspaceMode::Active(_)
+        ));
+    }
+
+    #[test]
+    fn apply_offline_env_workspace_omits_goflags() {
+        // FR-002 — workspace active + offline → omit GOFLAGS.
+        let mut cmd = Command::new("echo");
+        let mode = WorkspaceMode::Active(PathBuf::from("/tmp/fake-go.work"));
+        apply_offline_env(&mut cmd, true, &mode);
+        let envs: HashMap<_, _> = cmd
+            .get_envs()
+            .map(|(k, v)| (k.to_string_lossy().to_string(), v.map(|v| v.to_string_lossy().to_string())))
+            .collect();
+        assert_eq!(envs.get("GOPROXY"), Some(&Some("off".to_string())));
+        assert_eq!(envs.get("GOTOOLCHAIN"), Some(&Some("local".to_string())));
+        assert!(
+            !envs.contains_key("GOFLAGS"),
+            "GOFLAGS must NOT be set when workspace mode is active; env: {:?}",
+            envs
+        );
+    }
+
+    #[test]
+    fn apply_offline_env_non_workspace_keeps_mod_mod() {
+        // FR-003 — non-workspace + offline → pre-231 byte-parity:
+        // GOFLAGS=-mod=mod.
+        let mut cmd = Command::new("echo");
+        apply_offline_env(&mut cmd, true, &WorkspaceMode::Inactive);
+        let envs: HashMap<_, _> = cmd
+            .get_envs()
+            .map(|(k, v)| (k.to_string_lossy().to_string(), v.map(|v| v.to_string_lossy().to_string())))
+            .collect();
+        assert_eq!(envs.get("GOFLAGS"), Some(&Some("-mod=mod".to_string())));
+        assert_eq!(envs.get("GOPROXY"), Some(&Some("off".to_string())));
+        assert_eq!(envs.get("GOTOOLCHAIN"), Some(&Some("local".to_string())));
+    }
+
+    #[test]
+    fn apply_offline_env_gowork_off_keeps_mod_mod() {
+        // FR-003 + SC-005 — GOWORK=off drops workspace mode; the
+        // resulting Off variant preserves pre-231 GOFLAGS=-mod=mod.
+        let mut cmd = Command::new("echo");
+        apply_offline_env(&mut cmd, true, &WorkspaceMode::Off);
+        let envs: HashMap<_, _> = cmd
+            .get_envs()
+            .map(|(k, v)| (k.to_string_lossy().to_string(), v.map(|v| v.to_string_lossy().to_string())))
+            .collect();
+        assert_eq!(envs.get("GOFLAGS"), Some(&Some("-mod=mod".to_string())));
     }
 }
