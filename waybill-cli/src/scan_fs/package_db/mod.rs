@@ -1125,6 +1125,10 @@ fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOu
         if let Some(reason) = analysis.skip_reason {
             outcome.skipped.get_or_insert(reason.as_str());
         }
+        // Milestone 231 (FR-006): tally workspace-active main-modules.
+        if analysis.workspace_active {
+            outcome.workspace_modules += 1;
+        }
         for (module, verdict) in analysis.verdicts {
             merged
                 .entry(module)
@@ -1171,6 +1175,13 @@ struct GoModWhyOutcome {
     /// kebab-case token (`skipped=<reason|none>` in the summary).
     skipped: Option<&'static str>,
     elapsed_ms: u128,
+    /// Milestone 231 (FR-006): number of main-modules whose preflight
+    /// ran with Go workspace mode active (a `go.work` was found in the
+    /// ancestor chain OR `GOWORK` pointed at an explicit workspace).
+    /// Reported as `workspace_modules=` on the summary log line so
+    /// operators can correlate workspace scans with classification
+    /// coverage.
+    workspace_modules: usize,
 }
 
 /// Needed-by-ANY merge precedence (spec edge case: a module needed by
@@ -1898,14 +1909,15 @@ pub fn read_all(
     if go_mod_why_outcome.go_workspaces_found {
         tracing::info!(
             "go-mod-why classification: analyzed={} prod={} test={} \
-             not_needed={} unresolved={} unknown_marked={} skipped={} \
-             elapsed_ms={}",
+             not_needed={} unresolved={} unknown_marked={} \
+             workspace_modules={} skipped={} elapsed_ms={}",
             go_mod_why_outcome.analyzed,
             go_mod_why_outcome.prod,
             go_mod_why_outcome.test,
             go_mod_why_outcome.not_needed,
             go_mod_why_outcome.unresolved,
             unknown_marked,
+            go_mod_why_outcome.workspace_modules,
             go_mod_why_outcome.skipped.unwrap_or("none"),
             go_mod_why_outcome.elapsed_ms,
         );
