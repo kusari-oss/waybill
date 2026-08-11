@@ -91,6 +91,35 @@ pub enum SbomSourceMode {
     Either,
 }
 
+/// Milestone 232 (#660) — `--tier=<mode>` output-filter flag. Filters
+/// the emitted SBOM's component set by `sbom_tier` per operator
+/// choice. See `specs/232-tier-filter-flag/spec.md` for the mode
+/// inventory and downstream-consumer rationale.
+///
+/// Default is `All` (no-op filter). Per FR-002 / SC-003, pre-232
+/// invocations that don't set the flag produce byte-identical output.
+#[derive(ValueEnum, Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[clap(rename_all = "kebab-case")]
+pub enum TierMode {
+    /// Default: emit all resolved components regardless of tier.
+    /// Byte-identical to pre-232 emission for any given scan input.
+    #[default]
+    All,
+    /// Emit only components tagged `sbom_tier: "source"`. Recommended
+    /// for vulnerability-scanner pipelines that want resolved versions
+    /// only.
+    SourceOnly,
+    /// Emit only components tagged `sbom_tier: "design"`. Recommended
+    /// for compliance-attribution pipelines that want the developer-
+    /// declared graph without resolver-tier probes.
+    DesignOnly,
+    /// Emit components tagged `sbom_tier: "source"` OR "binary".
+    /// Recommended for container-artifact pipelines that want
+    /// everything "actually shipped" but not "declared but not
+    /// resolved".
+    SourceAndBinary,
+}
+
 /// Milestone 188 (#455) — resolve `--helm-chart <path>` input.
 ///
 /// When `<path>` ends in `.tgz`, extract to a tempdir + find the
@@ -1437,6 +1466,28 @@ pub struct ScanArgs {
     )]
     pub project_discovery:
         crate::generate::project_discovery::ProjectDiscoveryMode,
+
+    /// Milestone 232 (#660) — filter the emitted SBOM's component set
+    /// by `sbom_tier`. Default `all` preserves pre-232 behavior byte-
+    /// for-byte (FR-002 / SC-003 guarantee). See
+    /// `docs/reference/component-tiers.md` for the tier taxonomy.
+    ///
+    /// Modes:
+    /// - `all` (default) — emit every resolved component.
+    /// - `source-only` — emit only `sbom_tier: "source"` components.
+    ///   Recommended for vulnerability-scanner pipelines.
+    /// - `design-only` — emit only `sbom_tier: "design"` components.
+    ///   Recommended for compliance-attribution pipelines.
+    /// - `source-and-binary` — emit `source` OR `binary` components
+    ///   (drops `design`, `analyzed`, `file`). Recommended for
+    ///   container-artifact pipelines.
+    ///
+    /// Composes cleanly with every other flag; no mutual exclusions.
+    /// Degenerate combinations (filter drops main-module referenced
+    /// by `--sign-key`, etc.) produce a WARN log and continue —
+    /// never a hard error.
+    #[arg(long, value_enum, default_value_t = TierMode::All)]
+    pub tier: TierMode,
 }
 
 /// Milestone 173: CLI-side cache-warming mode. Two variants;
@@ -2337,6 +2388,61 @@ async fn resolve_image_ref(
     )
 }
 
+/// Milestone 232 (#660) — `--tier` filter's `sbom_tier` predicate.
+/// Returns `true` when the given component's tier value should be
+/// retained under the requested mode. See
+/// `specs/232-tier-filter-flag/data-model.md § New helper`.
+fn tier_matches(tier: Option<&str>, mode: TierMode) -> bool {
+    match mode {
+        TierMode::All => true,
+        TierMode::SourceOnly => tier == Some("source"),
+        TierMode::DesignOnly => tier == Some("design"),
+        TierMode::SourceAndBinary => tier == Some("source") || tier == Some("binary"),
+    }
+}
+
+/// Milestone 232 (#660) — apply the `--tier=<mode>` filter over the
+/// resolved-component set. Early-returns on `TierMode::All` (no-op
+/// filter; preserves FR-002 / SC-003 byte-parity). For non-default
+/// modes: drops components not matching the mode's predicate, then
+/// drops any dependency edge whose source OR target references a
+/// dropped component (FR-006). Emits an INFO log with the drop count.
+/// Emits an additional WARN log when the post-filter component set
+/// is empty (FR-008 observability).
+///
+/// See `specs/232-tier-filter-flag/data-model.md § New helper`.
+fn apply_tier_filter(
+    components: &mut Vec<waybill_common::resolution::ResolvedComponent>,
+    relationships: &mut Vec<waybill_common::resolution::Relationship>,
+    mode: TierMode,
+) {
+    if mode == TierMode::All {
+        return;
+    }
+    let pre_filter_count = components.len();
+    let dropped_purls: std::collections::HashSet<String> = components
+        .iter()
+        .filter(|c| !tier_matches(c.sbom_tier.as_deref(), mode))
+        .map(|c| c.purl.as_str().to_string())
+        .collect();
+    components.retain(|c| !dropped_purls.contains(c.purl.as_str()));
+    relationships.retain(|r| {
+        !dropped_purls.contains(&r.from) && !dropped_purls.contains(&r.to)
+    });
+    let dropped = pre_filter_count.saturating_sub(components.len());
+    tracing::info!(
+        dropped,
+        mode = ?mode,
+        "applied --tier filter",
+    );
+    if components.is_empty() {
+        tracing::warn!(
+            mode = ?mode,
+            "tier filter dropped all components; emitting empty SBOM",
+        );
+    }
+}
+
 pub async fn execute(
     mut args: ScanArgs,
     offline: bool,
@@ -3197,6 +3303,15 @@ pub async fn execute(
             );
         }
     }
+
+    // Milestone 232 (#660): `--tier=<mode>` output-filter flag.
+    // Runs AFTER --exclude-scope and BEFORE format-builder dispatch
+    // (SC-004: format builders' internal graph-completeness passes
+    // must observe the filtered slice). Sibling to the --exclude-scope
+    // filter above; same retain-on-predicate + drop-dangling-edges
+    // shape. See `specs/232-tier-filter-flag/data-model.md § New
+    // helper` for the FR-003/FR-004/FR-005/FR-006/FR-008 contract.
+    apply_tier_filter(&mut components, &mut relationships, args.tier);
 
     // Milestone 111 (issue #225 Option A): assemble the operator's
     // `--pkg-alias` declarations into a deterministic AliasMap. CLI-
@@ -5187,6 +5302,7 @@ mod tests {
             // Milestone 220 — default project-discovery mode = All
             // (matches CLI default; preserves SC-005 byte-identity).
             project_discovery: crate::generate::project_discovery::ProjectDiscoveryMode::All,
+            tier: TierMode::All,
         }
     }
 
@@ -6209,5 +6325,147 @@ mod tests {
         ])
         .unwrap();
         assert_eq!(parsed.inner.rpm_distro.as_deref(), Some("poky"));
+    }
+
+    // =========================================================
+    // Milestone 232 — --tier=<mode> output-filter flag
+    // =========================================================
+
+    fn mk_tier_component(purl_str: &str, tier: &str) -> ResolvedComponent {
+        let mut c = make_component(purl_str);
+        c.sbom_tier = Some(tier.to_string());
+        c
+    }
+
+    fn mk_edge(from: &str, to: &str) -> waybill_common::resolution::Relationship {
+        use waybill_common::resolution::{
+            EnrichmentProvenance, Relationship, RelationshipType,
+        };
+        Relationship {
+            from: from.to_string(),
+            to: to.to_string(),
+            relationship_type: RelationshipType::DependsOn,
+            provenance: EnrichmentProvenance {
+                source: "test".to_string(),
+                data_type: "dependency".to_string(),
+            },
+        }
+    }
+
+    #[test]
+    fn apply_tier_filter_source_only_drops_design() {
+        let mut components = vec![
+            mk_tier_component("pkg:cargo/src1@1.0.0", "source"),
+            mk_tier_component("pkg:cargo/src2@1.0.0", "source"),
+            mk_tier_component("pkg:cargo/src3@1.0.0", "source"),
+            mk_tier_component("pkg:cargo/dsn1@1.0.0", "design"),
+            mk_tier_component("pkg:cargo/dsn2@1.0.0", "design"),
+            mk_tier_component("pkg:cargo/bin1@1.0.0", "binary"),
+        ];
+        let mut edges: Vec<waybill_common::resolution::Relationship> = vec![];
+        apply_tier_filter(&mut components, &mut edges, TierMode::SourceOnly);
+        assert_eq!(components.len(), 3);
+        assert!(components.iter().all(|c| c.sbom_tier.as_deref() == Some("source")));
+    }
+
+    #[test]
+    fn apply_tier_filter_drops_dangling_edges() {
+        let mut components = vec![
+            mk_tier_component("pkg:cargo/src1@1.0.0", "source"),
+            mk_tier_component("pkg:cargo/src2@1.0.0", "source"),
+            mk_tier_component("pkg:cargo/dsn1@1.0.0", "design"),
+            mk_tier_component("pkg:cargo/dsn2@1.0.0", "design"),
+        ];
+        let mut edges = vec![
+            mk_edge("pkg:cargo/src1@1.0.0", "pkg:cargo/src2@1.0.0"),
+            mk_edge("pkg:cargo/src1@1.0.0", "pkg:cargo/dsn1@1.0.0"),
+            mk_edge("pkg:cargo/dsn1@1.0.0", "pkg:cargo/src2@1.0.0"),
+            mk_edge("pkg:cargo/dsn1@1.0.0", "pkg:cargo/dsn2@1.0.0"),
+        ];
+        apply_tier_filter(&mut components, &mut edges, TierMode::SourceOnly);
+        assert_eq!(edges.len(), 1, "only src→src survives; got {:?}", edges);
+        assert_eq!(edges[0].from, "pkg:cargo/src1@1.0.0");
+        assert_eq!(edges[0].to, "pkg:cargo/src2@1.0.0");
+    }
+
+    #[test]
+    fn apply_tier_filter_design_only_keeps_only_design() {
+        let mut components = vec![
+            mk_tier_component("pkg:cargo/src1@1.0.0", "source"),
+            mk_tier_component("pkg:cargo/src2@1.0.0", "source"),
+            mk_tier_component("pkg:cargo/src3@1.0.0", "source"),
+            mk_tier_component("pkg:cargo/dsn1@1.0.0", "design"),
+            mk_tier_component("pkg:cargo/dsn2@1.0.0", "design"),
+            mk_tier_component("pkg:cargo/bin1@1.0.0", "binary"),
+        ];
+        let mut edges: Vec<waybill_common::resolution::Relationship> = vec![];
+        apply_tier_filter(&mut components, &mut edges, TierMode::DesignOnly);
+        assert_eq!(components.len(), 2);
+        assert!(components.iter().all(|c| c.sbom_tier.as_deref() == Some("design")));
+    }
+
+    #[test]
+    fn apply_tier_filter_source_and_binary_keeps_both() {
+        let mut components = vec![
+            mk_tier_component("pkg:cargo/src1@1.0.0", "source"),
+            mk_tier_component("pkg:cargo/src2@1.0.0", "source"),
+            mk_tier_component("pkg:cargo/src3@1.0.0", "source"),
+            mk_tier_component("pkg:cargo/dsn1@1.0.0", "design"),
+            mk_tier_component("pkg:cargo/dsn2@1.0.0", "design"),
+            mk_tier_component("pkg:cargo/bin1@1.0.0", "binary"),
+        ];
+        let mut edges: Vec<waybill_common::resolution::Relationship> = vec![];
+        apply_tier_filter(&mut components, &mut edges, TierMode::SourceAndBinary);
+        assert_eq!(components.len(), 4, "3 source + 1 binary survive");
+        assert!(components
+            .iter()
+            .all(|c| matches!(c.sbom_tier.as_deref(), Some("source") | Some("binary"))));
+    }
+
+    #[test]
+    fn apply_tier_filter_all_is_noop() {
+        let mut components = vec![
+            mk_tier_component("pkg:cargo/src1@1.0.0", "source"),
+            mk_tier_component("pkg:cargo/dsn1@1.0.0", "design"),
+        ];
+        let mut edges = vec![mk_edge(
+            "pkg:cargo/src1@1.0.0",
+            "pkg:cargo/dsn1@1.0.0",
+        )];
+        apply_tier_filter(&mut components, &mut edges, TierMode::All);
+        assert_eq!(components.len(), 2, "All mode is a no-op filter");
+        assert_eq!(edges.len(), 1);
+    }
+
+    #[test]
+    fn apply_tier_filter_empty_result() {
+        // FR-008 unit-level check — an all-design fixture with
+        // TierMode::SourceOnly leaves both components and edges empty.
+        // The WARN log emission is asserted at integration-test tier
+        // via T017b.
+        let mut components = vec![
+            mk_tier_component("pkg:cargo/dsn1@1.0.0", "design"),
+            mk_tier_component("pkg:cargo/dsn2@1.0.0", "design"),
+        ];
+        let mut edges: Vec<waybill_common::resolution::Relationship> =
+            vec![mk_edge("pkg:cargo/dsn1@1.0.0", "pkg:cargo/dsn2@1.0.0")];
+        apply_tier_filter(&mut components, &mut edges, TierMode::SourceOnly);
+        assert!(components.is_empty());
+        assert!(edges.is_empty());
+    }
+
+    #[test]
+    fn apply_tier_filter_analyzed_and_file_dropped_under_source_only() {
+        // FR-010 strict-literal-match — analyzed and file tiers do NOT
+        // survive source-only per Clarifications §1.
+        let mut components = vec![
+            mk_tier_component("pkg:cargo/src1@1.0.0", "source"),
+            mk_tier_component("pkg:cargo/ana1@1.0.0", "analyzed"),
+            mk_tier_component("pkg:generic/file1@0.0.0", "file"),
+        ];
+        let mut edges: Vec<waybill_common::resolution::Relationship> = vec![];
+        apply_tier_filter(&mut components, &mut edges, TierMode::SourceOnly);
+        assert_eq!(components.len(), 1);
+        assert_eq!(components[0].sbom_tier.as_deref(), Some("source"));
     }
 }
