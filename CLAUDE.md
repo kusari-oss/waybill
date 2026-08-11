@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-08-09
+Auto-generated from all feature plans. Last updated: 2026-08-10
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -310,6 +310,8 @@ Auto-generated from all feature plans. Last updated: 2026-08-09
 - Rust stable (workspace toolchain inherited from milestones 001–229; no nightly required for this user-space-only ecosystem-parity work) + Existing only — `quick-xml = "0.31"` (already used pervasively in the NuGet reader for `.csproj`/`Directory.Packages.props`/`Directory.Build.props` parsing), `serde_json` (already used for `packages.lock.json`), `waybill_common::types::purl::Purl` + `encode_purl_segment` (main-module PURL construction), `tracing`, `anyhow`, `thiserror`. **Zero new Cargo dependencies.** No subprocess calls. No network access. (230-nuget-main-module)
 - N/A — all state in-process per scan; mirrors every reader milestone since 002. (230-nuget-main-module)
 - Rust stable (workspace toolchain inherited from milestones 001–230; no nightly required for this user-space-only bug fix). + Existing only — `std::path::{Path, PathBuf}`, `std::env`, `std::process::Command`, `tracing`, `anyhow`. **Zero new Cargo dependencies.** No new subprocess types beyond the existing `Command`-with-timeout pattern at `mod_why.rs:154-173`. No network. No filesystem writes. (231-fix-go-work-preflight)
+- Rust stable (workspace toolchain inherited from milestones 001–231; no nightly required). + Existing only — `clap` (workspace, for the new `ValueEnum` derive + flag), `tracing` (INFO log for FR-008 empty-result path + FR-011 warn-and-continue on degenerate combos), `waybill_common::resolution::{ResolvedComponent, Relationship}` (the existing types the filter operates on). **Zero new Cargo dependencies.** (232-tier-filter-flag)
+- N/A — pure in-memory filter over the already-resolved component slice. (232-tier-filter-flag)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -372,9 +374,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 232-tier-filter-flag: Added Rust stable (workspace toolchain inherited from milestones 001–231; no nightly required). + Existing only — `clap` (workspace, for the new `ValueEnum` derive + flag), `tracing` (INFO log for FR-008 empty-result path + FR-011 warn-and-continue on degenerate combos), `waybill_common::resolution::{ResolvedComponent, Relationship}` (the existing types the filter operates on). **Zero new Cargo dependencies.**
 - 231-fix-go-work-preflight: Added Rust stable (workspace toolchain inherited from milestones 001–230; no nightly required for this user-space-only bug fix). + Existing only — `std::path::{Path, PathBuf}`, `std::env`, `std::process::Command`, `tracing`, `anyhow`. **Zero new Cargo dependencies.** No new subprocess types beyond the existing `Command`-with-timeout pattern at `mod_why.rs:154-173`. No network. No filesystem writes.
 - 230-nuget-main-module: Added Rust stable (workspace toolchain inherited from milestones 001–229; no nightly required for this user-space-only ecosystem-parity work) + Existing only — `quick-xml = "0.31"` (already used pervasively in the NuGet reader for `.csproj`/`Directory.Packages.props`/`Directory.Build.props` parsing), `serde_json` (already used for `packages.lock.json`), `waybill_common::types::purl::Purl` + `encode_purl_segment` (main-module PURL construction), `tracing`, `anyhow`, `thiserror`. **Zero new Cargo dependencies.** No subprocess calls. No network access.
-- 229-release-flow-impl: Added Rust stable (workspace toolchain inherited from milestones 001–228; no nightly required for this user-space-only work). GitHub Actions YAML for workflows. Bash for cleanup logic (retention step). + Existing only — `std::env` (for the `build.rs` env-var read), `std::process::Command` (already used by nightly cleanup for `gh` CLI shell-out if needed; alternatively pure API via `actions/github-script` in-workflow). GitHub Actions workflow uses existing `actions/checkout`, `sigstore/cosign-installer` (already present per m222), plus a lightweight retention-cleanup step invoking `gh release list` + `gh release delete-with-tag`. **No new Cargo dependencies. No new GitHub Actions the release.yml doesn't already invoke.**
 
 
 <!-- MANUAL ADDITIONS START -->
