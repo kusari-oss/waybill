@@ -413,10 +413,13 @@ pub fn build_workspace_peer_edges(
     if selection.losers.is_empty() {
         return Vec::new();
     }
-    let root_purl = match &selection.subject {
+    let (root_purl, subject_ws_members) = match &selection.subject {
         ResolvedRootSubject::MainModule(idx) => {
             match components.get(*idx) {
-                Some(c) => c.purl.as_str().to_string(),
+                Some(c) => (
+                    c.purl.as_str().to_string(),
+                    workspace_member_dirs(c),
+                ),
                 None => return Vec::new(),
             }
         }
@@ -426,19 +429,72 @@ pub fn build_workspace_peer_edges(
         // root_selector bug, not a 158 concern. Degrade to empty.
         _ => return Vec::new(),
     };
+    // Milestone 233 (FR-002) — for GOLANG-subject scans, only synthesize
+    // peer edges to losers that share at least one
+    // `waybill:workspace-member` directory with the subject. Truly
+    // independent Go main-modules (each declaring its own workspace
+    // directory, no overlap with the subject) are NOT peers; a phantom
+    // `subject dependsOn independent-mainmod` edge here is the
+    // reporter's ticket failure class.
+    //
+    // Other ecosystems (cargo, npm workspaces) have legitimate cross-
+    // main-module peer relationships expressed via `workspaces` /
+    // `[workspace.members]` in the root manifest — the workspace-member
+    // annotation there does NOT literally overlap (root: `.`; member:
+    // `subdir/`), but the peer edge is real. Preserve pre-m233 behavior
+    // for non-golang subjects to avoid regressing npm/cargo workspace
+    // completeness.
+    let subject_purl_is_golang = root_purl.starts_with("pkg:golang/");
+    let subject_is_scoped = subject_purl_is_golang && !subject_ws_members.is_empty();
     selection
         .losers
         .iter()
-        .map(|loser| Relationship {
-            from: root_purl.clone(),
-            to: loser.as_str().to_string(),
-            relationship_type: RelationshipType::DependsOn,
-            provenance: EnrichmentProvenance {
-                source: "milestone-158-workspace-peer-linkage".to_string(),
-                data_type: "dependency-graph".to_string(),
-            },
+        .filter_map(|loser_purl| {
+            if subject_is_scoped {
+                let loser_component =
+                    components.iter().find(|c| c.purl.as_str() == loser_purl.as_str())?;
+                let loser_ws_members = workspace_member_dirs(loser_component);
+                if !loser_ws_members
+                    .iter()
+                    .any(|d| subject_ws_members.contains(d))
+                {
+                    return None;
+                }
+            }
+            Some(Relationship {
+                from: root_purl.clone(),
+                to: loser_purl.as_str().to_string(),
+                relationship_type: RelationshipType::DependsOn,
+                provenance: EnrichmentProvenance {
+                    source: "milestone-158-workspace-peer-linkage".to_string(),
+                    data_type: "dependency-graph".to_string(),
+                },
+            })
         })
         .collect()
+}
+
+/// Milestone 233 helper — decode a component's `waybill:workspace-member`
+/// annotation into the set of directories it names. Empty set means the
+/// annotation is absent or unparseable; callers may treat that as "no
+/// workspace scoping information available."
+fn workspace_member_dirs(c: &ResolvedComponent) -> std::collections::HashSet<String> {
+    let Some(v) = c.extra_annotations.get("waybill:workspace-member") else {
+        return std::collections::HashSet::new();
+    };
+    match v {
+        serde_json::Value::String(s) => {
+            serde_json::from_str::<Vec<String>>(s)
+                .unwrap_or_default()
+                .into_iter()
+                .collect()
+        }
+        serde_json::Value::Array(a) => a
+            .iter()
+            .filter_map(|e| e.as_str().map(str::to_string))
+            .collect(),
+        _ => std::collections::HashSet::new(),
+    }
 }
 
 /// Milestone 192 pre-rewrite: re-anchor DependsOn edges whose `.from`
