@@ -321,6 +321,33 @@ impl ModuleGraphMap {
         paths
     }
 
+    /// Milestone 233 (FR-001) — per-main-module scoped variant of
+    /// `gosum_fallback_paths()`. Returns only fallback modules whose
+    /// module path is present in the provided `sums` slice (a specific
+    /// project's own `go.sum` entries). Closes the leak the reporter
+    /// surfaced: pre-233, every main-module's `build_main_module_entry`
+    /// consumed the scan-global fallback set, causing sibling-module
+    /// versions to bleed into every main-module's `depends`.
+    ///
+    /// See `specs/233-go-per-mainmod-scope/spec.md` FR-001 and
+    /// `contracts/go-per-mainmod-edges.md § Invariant 1`.
+    pub fn gosum_fallback_paths_for(
+        &self,
+        sums: &[crate::scan_fs::package_db::golang::legacy::GoSumEntry],
+    ) -> Vec<String> {
+        let allowed: std::collections::HashSet<&str> =
+            sums.iter().map(|e| e.module.as_str()).collect();
+        let mut paths: Vec<String> = self
+            .entries
+            .values()
+            .filter(|e| e.source == ResolutionStep::GoSumFallback)
+            .filter(|e| allowed.contains(e.module.path()))
+            .map(|e| e.module.path().to_string())
+            .collect();
+        paths.sort();
+        paths
+    }
+
     // --- mutating API used internally by GraphResolver ---
 
     pub(crate) fn insert(&mut self, entry: ModuleGraphEntry) {

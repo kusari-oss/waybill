@@ -603,7 +603,13 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             // than the hoisted one. Without the nested entry, the
             // bare-name key from line 380 above still wins (matches
             // the hoisted version).
-            if ecosystem == "cargo" || ecosystem == "npm" {
+            if ecosystem == "cargo" || ecosystem == "npm" || ecosystem == "golang" {
+                // Milestone 233 (FR-003) — golang joined the name-
+                // version disambiguation set. Multi-module workspaces
+                // where sibling go.mods require the same package at
+                // different versions produce N components sharing a
+                // name; name-only lookup last-writes-wins and mis-
+                // attributes edges. See spec.md § Background.
                 let nv_key = format!("{} {}", e.name, e.version);
                 name_to_purl.insert(
                     (ecosystem, normalize_dep_name(e.purl.ecosystem(), &nv_key)),

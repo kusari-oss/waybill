@@ -456,15 +456,27 @@ fn compute_orphan_backfill(
         golang_names.iter().map(|&n| (n, 0)).collect();
     for (_, depends) in all_edges {
         for child in *depends {
-            if go_set.contains(child.as_str()) {
-                if let Some(c) = incoming.get_mut(child.as_str()) {
+            // Milestone 233: depends may carry either bare `name` or
+            // `name version` (post-m233 disambiguation form). Compare
+            // against the name-only golang_names set on the leading
+            // token.
+            let child_name = child.split_whitespace().next().unwrap_or(child.as_str());
+            if go_set.contains(child_name) {
+                if let Some(c) = incoming.get_mut(child_name) {
                     *c += 1;
                 }
             }
         }
     }
-    let existing: std::collections::HashSet<&str> =
-        main_entry_depends.iter().map(|s| s.as_str()).collect();
+    // Milestone 233: main_entry_depends may carry either bare `name`
+    // (pre-m233 form) or `name version` (post-m233 disambiguation).
+    // Split on whitespace to get the name-only prefix for the
+    // exclusion check so a direct-require doesn't get double-attached
+    // as a backfilled orphan.
+    let existing: std::collections::HashSet<&str> = main_entry_depends
+        .iter()
+        .map(|s| s.split_whitespace().next().unwrap_or(s.as_str()))
+        .collect();
     let mut backfilled: Vec<String> = Vec::new();
     for &name in golang_names {
         if incoming.get(name).copied().unwrap_or(0) == 0 && !existing.contains(name) {
@@ -1025,6 +1037,12 @@ pub(crate) fn build_main_module_entry(
     // transitive edges), or become orphans (Trivy-style trade-off,
     // accepted per spec Q&A). Orphan visibility comes from the
     // end-of-scan tracing summary in `read()` per FR-004.
+    // Milestone 233 (FR-003) — emit direct-require depends in
+    // "name version" form so the scan_fs/mod.rs:606-612 name-version
+    // disambiguation resolves to the correct sibling-version PURL in
+    // multi-module workspaces where different sub-modules require the
+    // same package at different versions. Pre-233 used bare
+    // `resolved_path`, which name-only-lookup last-wrote-wins.
     let depends: Vec<String> = doc
         .requires
         .iter()
@@ -1036,7 +1054,13 @@ pub(crate) fn build_main_module_entry(
                 &doc.replaces,
                 &doc.excludes,
             )
-            .map(|(resolved_path, _)| resolved_path)
+            .map(|(resolved_path, resolved_version)| {
+                if resolved_version.is_empty() {
+                    resolved_path
+                } else {
+                    format!("{} {}", resolved_path, resolved_version)
+                }
+            })
         })
         .collect();
 
@@ -1890,14 +1914,69 @@ pub fn read(
             // go.sum content alone. Existing `// indirect`-filtered
             // direct-deps already in `main_entry.depends` are deduped
             // via the HashSet pass.
-            let fallback_paths = graph_map.gosum_fallback_paths();
+            // Milestone 233 (FR-001) — filter fallback paths to those
+            // present in THIS main-module's own `go.sum`. Pre-233 used
+            // `gosum_fallback_paths()` (scan-global aggregate), which
+            // leaked sibling modules' go.sum entries into every main-
+            // module's `depends`. See spec.md § Background.
+            //
+            // Milestone 233 (FR-003) — emit fallback paths in "name
+            // version" form using THIS project's go.sum entries.
+            // Multi-module workspaces with same-name different-version
+            // fallback modules resolve to the correct per-project
+            // version via scan_fs/mod.rs:606-612 disambiguation.
+            let fallback_paths = graph_map.gosum_fallback_paths_for(sums);
             if !fallback_paths.is_empty() {
                 let existing: std::collections::HashSet<String> =
                     main_entry.depends.iter().cloned().collect();
+                let path_to_version: std::collections::HashMap<&str, &str> = sums
+                    .iter()
+                    .filter(|e| e.kind == GoSumKind::Module)
+                    .map(|e| (e.module.as_str(), e.version.as_str()))
+                    .collect();
                 for path in fallback_paths {
-                    if !existing.contains(&path) {
-                        main_entry.depends.push(path);
+                    let dep_string = match path_to_version.get(path.as_str()) {
+                        Some(v) => format!("{} {}", path, v),
+                        None => path.clone(),
+                    };
+                    if !existing.contains(&dep_string) && !existing.contains(&path) {
+                        main_entry.depends.push(dep_string);
                     }
+                }
+            }
+
+            // Milestone 233 (FR-002 + Clarifications §2) — replace-
+            // directive → sibling main-module edges. For each `replace
+            // old => new-path` in this module's go.mod where `new-path`
+            // is a filesystem path pointing at another discovered
+            // main-module's project_root, add an edge from this main-
+            // module to the sibling's module_path. Matches Go's own
+            // `go mod graph` behavior.
+            for ((_old_path, _old_ver), (new_path, _new_ver)) in &doc.replaces {
+                // Only filesystem-path replaces (relative or absolute).
+                // Module-path replaces (like `replace foo v1 => foo v2`)
+                // leave `new_path` as a module path, which won't
+                // canonicalize to any project_root.
+                if !new_path.starts_with('.') && !new_path.starts_with('/') {
+                    continue;
+                }
+                let target_abs = project_root.join(new_path);
+                let Ok(target_canon) = std::fs::canonicalize(&target_abs) else {
+                    continue;
+                };
+                for (other_root, other_doc, _other_sums) in &parsed_roots {
+                    let Ok(other_canon) = std::fs::canonicalize(other_root) else {
+                        continue;
+                    };
+                    if other_canon != target_canon {
+                        continue;
+                    }
+                    if let Some(sibling_module) = &other_doc.module_path {
+                        if !main_entry.depends.contains(sibling_module) {
+                            main_entry.depends.push(sibling_module.clone());
+                        }
+                    }
+                    break;
                 }
             }
             // Issue #250: emit edges from main-module to each Go 1.24+
@@ -2028,9 +2107,36 @@ pub fn read(
             // synth-root gate symmetry is preserved (CDX's
             // `target_has_no_edges` check and SPDX's symmetric
             // `synth_has_outgoing` check both observe the new edges).
+            // Milestone 233 (FR-001) — restrict the eligible-orphan set
+            // to components whose LONGEST-matching project_root prefix
+            // is THIS project_root. In multi-module workspaces, a
+            // nested module's go.sum-derived component's source_path
+            // literally starts with the outer project's directory too;
+            // scoping by simple prefix-match would attach every
+            // nested-module orphan to the root. The longest-prefix
+            // check picks the actual "owning" project_root instead.
+            // See spec.md § Background / reporter's ticket.
+            let project_root_str = project_root.to_string_lossy();
+            let all_project_root_strs: Vec<String> = parsed_roots
+                .iter()
+                .map(|(pr, _, _)| pr.to_string_lossy().into_owned())
+                .collect();
+            let owns_component = |source_path: &str| -> bool {
+                if !source_path.starts_with(project_root_str.as_ref()) {
+                    return false;
+                }
+                // Every other project_root that is ALSO a prefix must be
+                // shorter than THIS project_root; otherwise the other
+                // one owns the component.
+                all_project_root_strs.iter().all(|other| {
+                    !source_path.starts_with(other.as_str())
+                        || other.len() <= project_root_str.len()
+                })
+            };
             let golang_names: Vec<&str> = out
                 .iter()
                 .filter(|e| e.purl.as_str().starts_with("pkg:golang/"))
+                .filter(|e| owns_component(&e.source_path))
                 .map(|e| e.name.as_str())
                 .collect();
             let all_edges: Vec<(&str, &[String])> = out
@@ -2051,7 +2157,29 @@ pub fn read(
                 for p in &backfilled {
                     backfilled_paths.insert(p.clone());
                 }
-                main_entry.depends.extend(backfilled);
+                // Milestone 233 (FR-003): resolve each backfilled name to
+                // the (name, version) tuple of the owning component in
+                // `out` (limited to components whose source_path is under
+                // THIS project_root — same longest-prefix rule as
+                // `owns_component`). Emit "name version" form so the
+                // scan_fs/mod.rs disambiguation resolves to the correct
+                // per-project-owned version. Pre-233 emitted bare names,
+                // which name-only-lookup last-writes-wins to a sibling
+                // module's version when multiple exist.
+                let versioned_backfilled: Vec<String> = backfilled
+                    .into_iter()
+                    .map(|name| {
+                        out.iter()
+                            .find(|e| {
+                                e.name == name
+                                    && e.purl.as_str().starts_with("pkg:golang/")
+                                    && owns_component(&e.source_path)
+                            })
+                            .map(|e| format!("{} {}", e.name, e.version))
+                            .unwrap_or(name)
+                    })
+                    .collect();
+                main_entry.depends.extend(versioned_backfilled);
             }
             let purl_key = main_entry.purl.as_str().to_string();
             if seen_purls.insert(purl_key) {
@@ -3376,15 +3504,19 @@ tool (
             .iter()
             .find(|e| e.name == "example.com/repro")
             .expect("main-module entry must be emitted");
+        // Milestone 233 FR-003: direct-require deps emit in "name version"
+        // form for disambiguation.
         assert!(
             main.depends
-                .contains(&"github.com/spf13/cobra".to_string()),
+                .iter()
+                .any(|d| d.starts_with("github.com/spf13/cobra")),
             "main.depends should include cobra (direct require); got: {:?}",
             main.depends,
         );
         assert!(
             main.depends
-                .contains(&"github.com/golangci/golangci-lint".to_string()),
+                .iter()
+                .any(|d| d == "github.com/golangci/golangci-lint" || d.starts_with("github.com/golangci/golangci-lint ")),
             "main.depends should include golangci-lint (tool-directive resolved to its enclosing module); got: {:?}",
             main.depends,
         );
@@ -3755,9 +3887,11 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
             .expect("main-module entry constructed");
         assert_eq!(entry.name, "example.com/x");
         assert_eq!(entry.depends.len(), 3);
-        assert!(entry.depends.contains(&"a.example.com/r1".to_string()));
-        assert!(entry.depends.contains(&"b.example.com/r2".to_string()));
-        assert!(entry.depends.contains(&"c.example.com/r3".to_string()));
+        // Milestone 233 FR-003: depends now include version for
+        // disambiguation ("name version" form).
+        assert!(entry.depends.contains(&"a.example.com/r1 v1.0.0".to_string()));
+        assert!(entry.depends.contains(&"b.example.com/r2 v2.0.0".to_string()));
+        assert!(entry.depends.contains(&"c.example.com/r3 v3.0.0".to_string()));
     }
 
     #[test]
@@ -3784,9 +3918,10 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
         let entry = build_main_module_entry(&doc, tmp.path(), "/p/go.mod")
             .expect("main-module entry constructed");
         assert_eq!(entry.depends.len(), 1, "only the non-indirect require makes a direct edge");
-        assert!(entry.depends.contains(&"a.example.com/direct".to_string()));
+        // Milestone 233 FR-003: "name version" disambiguation form.
+        assert!(entry.depends.contains(&"a.example.com/direct v1.0.0".to_string()));
         assert!(
-            !entry.depends.contains(&"b.example.com/indirect".to_string()),
+            !entry.depends.iter().any(|d| d.starts_with("b.example.com/indirect")),
             "indirect requires MUST NOT appear as direct edges from main-module post-059",
         );
     }
@@ -3803,8 +3938,9 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
         let entry = build_main_module_entry(&doc, tmp.path(), "/p/go.mod")
             .expect("main-module entry constructed");
         assert_eq!(entry.depends.len(), 1);
+        // Milestone 233 FR-003: "name version" disambiguation form.
         assert!(
-            entry.depends.contains(&"z.example.com/replaced".to_string()),
+            entry.depends.contains(&"z.example.com/replaced v1.0.0".to_string()),
             "replace should rewrite the target: {:?}",
             entry.depends
         );
