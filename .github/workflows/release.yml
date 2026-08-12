@@ -29,6 +29,11 @@ on:
         description: 'Tag to release (e.g., v0.1.0-alpha.47). Must already exist on the repo.'
         required: true
         type: string
+      skip_ebpf:
+        description: 'Skip the eBPF build entirely (emit userspace-only tarballs). Emergency escape hatch when the bpf-linker install regresses (e.g. LLVM path drift on ubuntu-latest). Produced tarballs have `waybill sbom scan` etc. but NO `waybill trace` mode. Default false.'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -47,6 +52,13 @@ jobs:
   # it with both Linux userspace-build jobs via artifact upload.
   build-ebpf:
     name: Build eBPF object
+    # Skip the eBPF build entirely when the operator sets
+    # workflow_dispatch input `skip_ebpf=true`. Emergency escape hatch
+    # for the bpf-linker install regression documented at:
+    # https://github.com/aya-rs/bpf-linker/issues (LLVM path drift on
+    # ubuntu-latest). Downstream Linux userspace jobs treat this job's
+    # non-success as a signal to package a userspace-only tarball.
+    if: ${{ !inputs.skip_ebpf }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -101,7 +113,13 @@ jobs:
           echo "rustup-init absent from \$HOME/.cargo/bin (good)."
 
       - name: Install bpf-linker
-        run: cargo +nightly install bpf-linker --locked
+        # Pinned to v0.10.4 — 2026-08-12 upstream published v0.11.0 which
+        # broke on ubuntu-latest with `unable to find library -lLLVM`
+        # (LLVM path drift). The v0.10.4 install line worked on the
+        # 2026-08-12 06:36 UTC nightly cron; we pin it here until v0.11.x
+        # is fixed upstream. Un-pin only after verifying a clean build
+        # on ubuntu-latest.
+        run: cargo +nightly install bpf-linker --locked --version 0.10.4
 
       - name: Build eBPF object
         run: cargo run --package xtask -- ebpf
@@ -117,6 +135,10 @@ jobs:
   build-linux-x86_64:
     name: Build — linux-x86_64
     needs: build-ebpf
+    # When `skip_ebpf=true` the build-ebpf job is skipped; without
+    # this override the linux jobs would also skip. Run whenever the
+    # eBPF job either succeeded OR was intentionally skipped.
+    if: ${{ !cancelled() && (needs.build-ebpf.result == 'success' || needs.build-ebpf.result == 'skipped') }}
     runs-on: ubuntu-latest
     env:
       TARGET: x86_64-unknown-linux-gnu
@@ -169,12 +191,14 @@ jobs:
         run: cargo install cross --locked
 
       - name: Download eBPF artifact
+        if: ${{ !inputs.skip_ebpf }}
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: waybill-ebpf-object
           path: ebpf-download
 
       - name: Place eBPF at loader's expected path
+        if: ${{ !inputs.skip_ebpf }}
         run: |
           mkdir -p waybill-ebpf/target/bpfel-unknown-none/release
           cp ebpf-download/waybill-ebpf waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf
@@ -194,7 +218,12 @@ jobs:
           # had (waybill-ebpf as a sibling file vs. as a directory).
           mkdir -p "$stage/waybill-ebpf/target/bpfel-unknown-none/release"
           cp "target/${TARGET}/release/waybill" "$stage/waybill"
-          cp ebpf-download/waybill-ebpf "$stage/waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf"
+          # When --skip_ebpf is set the eBPF blob is absent; the tarball
+          # ships without it. `waybill trace` will fail with a missing-
+          # eBPF diagnostic; `waybill sbom scan` etc. work unchanged.
+          if [[ -f ebpf-download/waybill-ebpf ]]; then
+            cp ebpf-download/waybill-ebpf "$stage/waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf"
+          fi
           cp README.md "$stage/README.md"
           if [[ -f LICENSE ]]; then cp LICENSE "$stage/LICENSE"; fi
           cat > "$stage/waybill.sh" <<'WRAPPER'
@@ -228,6 +257,7 @@ jobs:
   build-linux-aarch64:
     name: Build — linux-aarch64
     needs: build-ebpf
+    if: ${{ !cancelled() && (needs.build-ebpf.result == 'success' || needs.build-ebpf.result == 'skipped') }}
     runs-on: ubuntu-latest
     env:
       TARGET: aarch64-unknown-linux-gnu
@@ -275,12 +305,14 @@ jobs:
         run: cargo install cross --locked
 
       - name: Download eBPF artifact
+        if: ${{ !inputs.skip_ebpf }}
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: waybill-ebpf-object
           path: ebpf-download
 
       - name: Place eBPF at loader's expected path
+        if: ${{ !inputs.skip_ebpf }}
         run: |
           mkdir -p waybill-ebpf/target/bpfel-unknown-none/release
           cp ebpf-download/waybill-ebpf waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf
@@ -294,7 +326,10 @@ jobs:
           stage="waybill-${{ env.TAG_NAME }}-${TARGET}"
           mkdir -p "$stage/waybill-ebpf/target/bpfel-unknown-none/release"
           cp "target/${TARGET}/release/waybill" "$stage/waybill"
-          cp ebpf-download/waybill-ebpf "$stage/waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf"
+          # skip_ebpf-safe (see linux-x86_64 comment).
+          if [[ -f ebpf-download/waybill-ebpf ]]; then
+            cp ebpf-download/waybill-ebpf "$stage/waybill-ebpf/target/bpfel-unknown-none/release/waybill-ebpf"
+          fi
           cp README.md "$stage/README.md"
           if [[ -f LICENSE ]]; then cp LICENSE "$stage/LICENSE"; fi
           cat > "$stage/waybill.sh" <<'WRAPPER'
