@@ -28,9 +28,12 @@ RUN apt-get update && apt-get install -y \
     jq \
     && rm -rf /var/lib/apt/lists/*
 
+# Pinned to v0.10.4 per release.yml / ci.yml comments — v0.11.0
+# (published 2026-08-12) broke on the ubuntu-latest layer with
+# `unable to find library -lLLVM`. Un-pin only after upstream fix.
 RUN rustup toolchain install nightly --profile minimal \
     && rustup component add rust-src --toolchain nightly \
-    && cargo +nightly install bpf-linker
+    && cargo +nightly install bpf-linker --version 0.10.4
 
 WORKDIR /waybill
 
