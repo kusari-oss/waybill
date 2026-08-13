@@ -1,0 +1,86 @@
+name: Pin consistency
+
+# m234 T011 — guardrail against future accidental re-inlining of a
+# literal bpf-linker version outside .github/env/bpf-linker.env.
+#
+# The check greps for the pattern
+#     cargo +<toolchain> install bpf-linker ... --version <literal>
+# in workflows / Dockerfiles / scripts. If it fires, someone bypassed
+# the single-source-of-truth env file and the pin has drifted.
+#
+# Also checks that Dockerfile.ebpf-test's ARG default matches the env
+# file value — those are the only two literal-version sites in the
+# repo, and they MUST stay in sync.
+#
+# Spec: specs/234-fix-ebpf-linker-regression/spec.md FR-001
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/**'
+      - 'Dockerfile*'
+      - 'scripts/**'
+  pull_request:
+    paths:
+      - '.github/**'
+      - 'Dockerfile*'
+      - 'scripts/**'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  pin-consistency:
+    name: bpf-linker pin consistency
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Guard — no ad-hoc literal-version bpf-linker installs
+        run: |
+          set -euo pipefail
+          # Match `cargo install bpf-linker ... --version <literal>` in
+          # any workflow, Dockerfile, or script. The env file itself is
+          # excluded because its shape is `BPF_LINKER_VERSION=X.Y.Z`,
+          # not `bpf-linker ... --version`.
+          matches=$(git grep -nE 'install bpf-linker.*--version [0-9]' -- \
+              '.github/workflows/' \
+              '.github/actions/' \
+              'Dockerfile*' \
+              'scripts/' \
+              || true)
+          if [ -n "$matches" ]; then
+            echo "::error::Literal bpf-linker version(s) found outside .github/env/bpf-linker.env:"
+            echo "$matches"
+            echo ""
+            echo "Route the install through the composite action instead:"
+            echo "  uses: ./.github/actions/install-bpf-linker"
+            echo ""
+            echo "If you MUST hardcode a version (test fixture, etc.), add the"
+            echo "location to this workflow's exclude list with a rationale."
+            exit 1
+          fi
+          echo "No ad-hoc literal-version bpf-linker installs found — OK."
+
+      - name: Guard — Dockerfile.ebpf-test ARG matches env file
+        run: |
+          set -euo pipefail
+          env_version=$(grep -E '^BPF_LINKER_VERSION=' .github/env/bpf-linker.env | head -1 | cut -d= -f2)
+          docker_version=$(grep -E '^ARG BPF_LINKER_VERSION=' Dockerfile.ebpf-test | head -1 | cut -d= -f2)
+          if [ -z "$env_version" ]; then
+            echo "::error::BPF_LINKER_VERSION missing from .github/env/bpf-linker.env"
+            exit 1
+          fi
+          if [ -z "$docker_version" ]; then
+            echo "::error::ARG BPF_LINKER_VERSION default missing from Dockerfile.ebpf-test"
+            exit 1
+          fi
+          if [ "$env_version" != "$docker_version" ]; then
+            echo "::error::.github/env/bpf-linker.env ($env_version) and Dockerfile.ebpf-test ARG default ($docker_version) disagree."
+            echo "Update the Dockerfile's ARG default to match the env file value."
+            exit 1
+          fi
+          echo "Env file and Dockerfile ARG default agree on $env_version — OK."

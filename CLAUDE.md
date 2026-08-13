@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-08-11
+Auto-generated from all feature plans. Last updated: 2026-08-12
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -313,6 +313,8 @@ Auto-generated from all feature plans. Last updated: 2026-08-11
 - Rust stable (workspace toolchain inherited from milestones 001–231; no nightly required). + Existing only — `clap` (workspace, for the new `ValueEnum` derive + flag), `tracing` (INFO log for FR-008 empty-result path + FR-011 warn-and-continue on degenerate combos), `waybill_common::resolution::{ResolvedComponent, Relationship}` (the existing types the filter operates on). **Zero new Cargo dependencies.** (232-tier-filter-flag)
 - N/A — pure in-memory filter over the already-resolved component slice. (232-tier-filter-flag)
 - Rust stable (workspace toolchain inherited from milestones 001–232; no nightly required). + Existing only — `std::collections::{HashMap, HashSet}`, `tracing`, `anyhow`. The existing `parse_go_mod` + `parse_go_sum` helpers in `legacy.rs`, `graph_resolver.rs::ModuleGraphMap`, `waybill_common::resolution::{ResolvedComponent, Relationship}`. **Zero new Cargo dependencies.** (233-go-per-mainmod-scope)
+- N/A — this milestone modifies GitHub Actions YAML + `bpf-linker` (currently pinned to `0.10.4`; (234-fix-ebpf-linker-regression)
+- N/A. All state is per-workflow-run (canary logs) or (234-fix-ebpf-linker-regression)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -329,6 +331,17 @@ Auto-generated from all feature plans. Last updated: 2026-08-11
   feature-on path in the dedicated `lint-and-test-ebpf` job. See
   `specs/020-ebpf-feature-gate/contracts/feature-flag.md` for the full
   contract.
+
+### eBPF toolchain pin (m234)
+
+The `bpf-linker` version consumed by every eBPF build site is pinned
+in a single file — `.github/env/bpf-linker.env`. All CI install sites
+route through `.github/actions/install-bpf-linker/` (composite action).
+Un-pin by editing the env file; verify locally with
+`scripts/verify-ebpf.sh`. A daily canary
+(`.github/workflows/ebpf-canary.yml`) tests `latest` bpf-linker and
+auto-opens a deduped GitHub issue on regression. Full flow:
+`docs/development/ebpf-toolchain.md`.
 
 ## Project Structure
 
@@ -375,9 +388,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 234-fix-ebpf-linker-regression: Added N/A — this milestone modifies GitHub Actions YAML + `bpf-linker` (currently pinned to `0.10.4`;
 - 233-go-per-mainmod-scope: Added Rust stable (workspace toolchain inherited from milestones 001–232; no nightly required). + Existing only — `std::collections::{HashMap, HashSet}`, `tracing`, `anyhow`. The existing `parse_go_mod` + `parse_go_sum` helpers in `legacy.rs`, `graph_resolver.rs::ModuleGraphMap`, `waybill_common::resolution::{ResolvedComponent, Relationship}`. **Zero new Cargo dependencies.**
 - 232-tier-filter-flag: Added Rust stable (workspace toolchain inherited from milestones 001–231; no nightly required). + Existing only — `clap` (workspace, for the new `ValueEnum` derive + flag), `tracing` (INFO log for FR-008 empty-result path + FR-011 warn-and-continue on degenerate combos), `waybill_common::resolution::{ResolvedComponent, Relationship}` (the existing types the filter operates on). **Zero new Cargo dependencies.**
-- 231-fix-go-work-preflight: Added Rust stable (workspace toolchain inherited from milestones 001–230; no nightly required for this user-space-only bug fix). + Existing only — `std::path::{Path, PathBuf}`, `std::env`, `std::process::Command`, `tracing`, `anyhow`. **Zero new Cargo dependencies.** No new subprocess types beyond the existing `Command`-with-timeout pattern at `mod_why.rs:154-173`. No network. No filesystem writes.
 
 
 <!-- MANUAL ADDITIONS START -->

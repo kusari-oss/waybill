@@ -640,13 +640,12 @@ jobs:
           key: waybill-fixtures-${{ runner.os }}-${{ hashFiles('tests/fixtures.rev') }}
 
       - name: Install bpf-linker
-        # Pinned to v0.10.4 per release.yml comment — v0.11.0 (published
-        # 2026-08-12) broke on ubuntu-latest with `unable to find
-        # library -lLLVM`. Un-pin only after upstream fix verified.
-        run: |
-          if ! command -v bpf-linker >/dev/null 2>&1; then
-            cargo +nightly install bpf-linker --locked --version 0.10.4
-          fi
+        # m234 (2026-08-12): version pin now lives at
+        # .github/env/bpf-linker.env and this step routes through the
+        # composite action at .github/actions/install-bpf-linker/.
+        # Bump the pin by editing the env file (one-line change);
+        # every install site picks up the new value automatically.
+        uses: ./.github/actions/install-bpf-linker
 
       - name: Build eBPF object
         run: cargo run --package xtask -- ebpf

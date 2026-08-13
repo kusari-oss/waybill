@@ -113,13 +113,15 @@ jobs:
           echo "rustup-init absent from \$HOME/.cargo/bin (good)."
 
       - name: Install bpf-linker
-        # Pinned to v0.10.4 — 2026-08-12 upstream published v0.11.0 which
-        # broke on ubuntu-latest with `unable to find library -lLLVM`
-        # (LLVM path drift). The v0.10.4 install line worked on the
-        # 2026-08-12 06:36 UTC nightly cron; we pin it here until v0.11.x
-        # is fixed upstream. Un-pin only after verifying a clean build
-        # on ubuntu-latest.
-        run: cargo +nightly install bpf-linker --locked --version 0.10.4
+        # m234 (2026-08-12): version pin now lives at
+        # .github/env/bpf-linker.env and this step routes through the
+        # composite action at .github/actions/install-bpf-linker/.
+        # Bump the pin by editing the env file (one-line change);
+        # every install site picks up the new value automatically.
+        # The `skip_ebpf` workflow_dispatch input (m234 FR-009) gates
+        # this whole job, not just this step — see the job-level
+        # `if:` at the top of build-ebpf.
+        uses: ./.github/actions/install-bpf-linker
 
       - name: Build eBPF object
         run: cargo run --package xtask -- ebpf
