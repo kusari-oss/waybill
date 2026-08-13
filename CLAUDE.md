@@ -333,6 +333,26 @@ Auto-generated from all feature plans. Last updated: 2026-08-13
   `specs/020-ebpf-feature-gate/contracts/feature-flag.md` for the full
   contract.
 
+### Gradle transitive resolution (m235; Phase 3 US1 live on main)
+
+The `--gradle-resolve` opt-in flag enables the m235 subprocess tier
+of the Gradle resolution ladder — invokes `./gradlew :sub:dependencies
+--no-daemon` per subproject × configuration and parses the ASCII-tree
+output into transitive edges. Default configurations resolved:
+`runtimeClasspath` + `testRuntimeClasspath` (per clarify Q1). Without
+the flag, waybill falls back to m106 lockfile reading (byte-identical
+pre-m235 behavior; FR-009).
+
+Companion flags: `--gradle-daemon` (opts out of `--no-daemon` default),
+`--gradle-resolve-buildscript` (also resolves plugin classpath),
+`--gradle-timeout-secs <N>` (default 300), `--gradle-extra-configurations
+<c>` (repeatable). All 4 require `--gradle-resolve`.
+
+Ladder tiers not yet wired: US2 cache reader (stubs at
+`gradle/cache_reader.rs`), US3 full static parser (stubs at
+`gradle/static_parser.rs`), US4 tier annotations. Spec:
+`specs/235-gradle-transitive-ladder/spec.md`.
+
 ### eBPF toolchain pin (m234)
 
 The `bpf-linker` version consumed by every eBPF build site is pinned

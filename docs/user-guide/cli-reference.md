@@ -505,6 +505,118 @@ one-line `go-mod-why classification: …` summary on stderr. See the
 matrix. With `--offline`, the `go` children are pinned to `GOPROXY=off`,
 `GOFLAGS=-mod=mod`, `GOTOOLCHAIN=local`.
 
+### `--gradle-resolve`
+
+Opt in to the milestone-235 Gradle transitive dependency resolver.
+
+Without this flag, waybill's Gradle support is milestone-106's
+lockfile reader only: `gradle.lockfile` +
+`buildscript-gradle.lockfile` produce flat resolved components with
+no transitive-edge information. Gradle projects WITHOUT a lockfile
+produce zero components.
+
+With `--gradle-resolve` set, waybill discovers each Gradle project
+directory (any dir containing `build.gradle(.kts)` or
+`settings.gradle(.kts)`), locates the `./gradlew` wrapper (or a
+`gradle` on `$PATH`), and spawns `./gradlew :<sub>:dependencies
+--configuration <config> --no-daemon` per subproject × configuration.
+The ASCII-tree output is parsed into transitive dependency edges.
+
+Default configurations resolved: `runtimeClasspath` +
+`testRuntimeClasspath` — extendable via
+`--gradle-extra-configurations`.
+
+Requires a JDK on `$PATH`. If the wrapper isn't found, `gradle`
+isn't on `$PATH`, or the subprocess times out (default 5 min per
+call), waybill falls back to the milestone-106 lockfile reader
+(when a lockfile is present) or emits nothing for that project
+(when it's not). No silent failure — the future milestone-235 US4
+`waybill:gradle-resolution-tier` annotation will surface the
+outcome per-scan.
+
+```bash
+waybill sbom scan --path ./my-gradle-project \
+    --gradle-resolve \
+    --output my-project.cdx.json
+```
+
+The other four `--gradle-*` flags (below) are inert without
+`--gradle-resolve`.
+
+### `--gradle-daemon`
+
+By default, waybill passes `--no-daemon` to every `./gradlew`
+invocation so it doesn't leave a Gradle JVM sitting in the
+operator's process list after a scan. Each subprocess call pays
+the ~20–30s JVM cold-start cost.
+
+`--gradle-daemon` opts out of `--no-daemon`. Subprocess calls
+after the first become significantly faster (the daemon reuses
+the same JVM), but a Gradle daemon may keep running after the
+scan exits. Useful for iterative local scanning; not recommended
+for CI.
+
+Requires `--gradle-resolve`.
+
+### `--gradle-resolve-buildscript`
+
+Also resolves the buildscript classpath (Gradle plugins the build
+itself uses) via `./gradlew :<sub>:buildEnvironment`. Doubles the
+subprocess-call count. Default off; the buildscript classpath is
+functionally distinct from the runtime classpath — it doesn't
+ship in the artifact.
+
+The pre-existing milestone-106 `buildscript-gradle.lockfile`
+reader remains the primary path for buildscript coverage when a
+lockfile is present (FR-009 non-regression). This flag adds
+subprocess-tier coverage for projects without buildscript
+lockfiles.
+
+Requires `--gradle-resolve`.
+
+### `--gradle-timeout-secs <SECONDS>`
+
+Per-subprocess timeout for each `./gradlew :sub:dependencies`
+invocation. Default: `300` (5 minutes). Minimum: `1`.
+
+When a subprocess exceeds the timeout, waybill sends SIGTERM,
+waits 2 seconds, then sends SIGKILL. The project's resolution
+degrades to the next ladder tier (m106 lockfile if present;
+otherwise no components for that project). Larger values are
+appropriate when scanning a project whose Gradle wrapper points
+at a distribution that isn't yet downloaded locally (first
+invocation stalls on Gradle distribution download):
+
+```bash
+waybill sbom scan --path ./stale-wrapper-project \
+    --gradle-resolve \
+    --gradle-timeout-secs 900 \
+    --output project.cdx.json
+```
+
+### `--gradle-extra-configurations <NAME>`
+
+Extend the default `runtimeClasspath` + `testRuntimeClasspath`
+configuration set with additional Gradle configurations. Repeatable:
+
+```bash
+waybill sbom scan --path ./my-gradle-project \
+    --gradle-resolve \
+    --gradle-extra-configurations compileClasspath \
+    --gradle-extra-configurations testCompileClasspath \
+    --output my-project.cdx.json
+```
+
+Total subprocess invocations = (subprojects) × (default configs +
+extras). Each configuration adds ~3–5s of daemon-hot scan time.
+
+Configuration names are validated to reject shell metacharacters
+(space, `;`, backtick, `$`, `|`, `&`, `>`, `<`, newlines) so
+attacker-controlled values can't reach the shell. Empty values
+are rejected.
+
+Requires `--gradle-resolve`.
+
 ---
 
 ## `waybill sbom scan`
