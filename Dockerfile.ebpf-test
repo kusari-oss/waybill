@@ -16,7 +16,8 @@
 FROM rust:1.88-bookworm
 
 # eBPF build deps + runtime tools the trace-run needs (gcc for the
-# fixture's compiler-invocation traffic; jq for the assertion script).
+# fixture's compiler-invocation traffic; jq for the assertion script;
+# zstd + curl for the bpf-linker binary download below).
 RUN apt-get update && apt-get install -y \
     clang \
     llvm \
@@ -26,19 +27,34 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     gcc \
     jq \
+    curl \
+    zstd \
     && rm -rf /var/lib/apt/lists/*
 
-# m234 (2026-08-12): the pinned bpf-linker version lives at
-# .github/env/bpf-linker.env. CI + local users pass it in via
-# --build-arg BPF_LINKER_VERSION=$(grep '^BPF_LINKER_VERSION=' \
-# .github/env/bpf-linker.env | cut -d= -f2). The ARG default here
-# is a safety net for direct `docker build` without --build-arg —
-# it MUST match the current env-file value (see pin-consistency.yml
-# CI guard, which flags drift between them).
-ARG BPF_LINKER_VERSION=0.10.4
+# m234 US1b (2026-08-13): install method switched from `cargo install`
+# to pre-built binary from aya-rs/bpf-linker GH releases. Rationale:
+# v0.11.0 removed the rustc-llvm-proxy shim and now requires system
+# LLVM 22, which Debian bookworm doesn't ship. The pre-built musl
+# binary statically links LLVM 22 in.
+#
+# The ARG default MUST match .github/env/bpf-linker.env (guarded by
+# .github/workflows/pin-consistency.yml). CI passes the env value in
+# via `docker build --build-arg BPF_LINKER_VERSION=$(...)`.
+ARG BPF_LINKER_VERSION=0.11.0
 RUN rustup toolchain install nightly --profile minimal \
     && rustup component add rust-src --toolchain nightly \
-    && cargo +nightly install bpf-linker --locked --version "${BPF_LINKER_VERSION}"
+    && arch=$(uname -m) \
+    && case "$arch" in \
+         x86_64|amd64) triple="x86_64-unknown-linux-musl" ;; \
+         aarch64|arm64) triple="aarch64-unknown-linux-musl" ;; \
+         *) echo "unsupported arch $arch" && exit 1 ;; \
+       esac \
+    && url="https://github.com/aya-rs/bpf-linker/releases/download/v${BPF_LINKER_VERSION}/bpf-linker-${triple}.tar.zst" \
+    && curl -sSL --retry 3 --fail -o /tmp/bpf-linker.tar.zst "$url" \
+    && tar --zstd -xf /tmp/bpf-linker.tar.zst -C /usr/local/bin bpf-linker \
+    && chmod +x /usr/local/bin/bpf-linker \
+    && rm /tmp/bpf-linker.tar.zst \
+    && bpf-linker --help >/dev/null 2>&1 || true
 
 WORKDIR /waybill
 

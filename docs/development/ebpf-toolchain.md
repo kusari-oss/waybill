@@ -4,6 +4,26 @@
 **Audience**: waybill release lead, maintainers, contributors touching
 the eBPF build path.
 
+## Install method: pre-built binary (v0.11+)
+
+Starting with `bpf-linker` v0.11.0 (upstream 2026-08-12), the
+`cargo install bpf-linker` install path requires system LLVM 22.
+ubuntu-24.04 (the default `ubuntu-latest` GHA runner) does not ship
+LLVM 22, so `cargo install` fails with `unable to find library -lLLVM`.
+
+**Fix**: install the pre-built musl binary from
+[aya-rs/bpf-linker releases](https://github.com/aya-rs/bpf-linker/releases).
+The pre-built binary statically links LLVM 22 in — no system
+dependency required. This is the composite action's DEFAULT
+(`install-method: binary`).
+
+The `cargo install` path is still available via
+`install-method: cargo` if you have LLVM 22 installed locally and
+want to build from source (e.g., testing a patched fork).
+
+Upstream docs-feedback issue tracking the switch:
+[aya-rs/bpf-linker#399](https://github.com/aya-rs/bpf-linker/issues/399).
+
 ## What lives where
 
 | Path | Purpose |
@@ -36,6 +56,10 @@ rm .github/env/bpf-linker.env.bak  # macOS/BSD sed leaves a backup
 sed -i.bak 's/^ARG BPF_LINKER_VERSION=.*/ARG BPF_LINKER_VERSION=0.12.1/' \
     Dockerfile.ebpf-test
 rm Dockerfile.ebpf-test.bak
+
+# NOTE: no other files to edit. Both the composite action and
+# `scripts/verify-ebpf.sh` read from `.github/env/bpf-linker.env`
+# and download the pre-built binary directly.
 
 # 4. Open the bump PR.
 git checkout -b bump/bpf-linker-0.12.1

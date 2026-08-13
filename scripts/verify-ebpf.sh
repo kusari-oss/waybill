@@ -187,35 +187,89 @@ if ! rustup toolchain list | grep -q '^nightly'; then
 fi
 rustup component add rust-src --toolchain nightly >/dev/null 2>&1 || true
 
-# Install bpf-linker at target version.
-if [ "$target_version" = "latest" ]; then
-  echo "verify-ebpf: cargo +nightly install bpf-linker --locked (latest, unpinned)..."
-  install_ok=1
-  cargo +nightly install bpf-linker --locked 2>&1 | tee "$log_file" || install_ok=0
-else
-  echo "verify-ebpf: cargo +nightly install bpf-linker --locked --version $target_version..."
-  install_ok=1
-  cargo +nightly install bpf-linker --locked --version "$target_version" 2>&1 | tee "$log_file" || install_ok=0
+# Install bpf-linker at target version — pre-built binary path.
+# Matches .github/actions/install-bpf-linker/action.yml default
+# (install-method: binary). Rationale: from v0.11.0 upstream, cargo
+# install requires system LLVM 22 which most hosts don't ship; the
+# pre-built musl binary statically links LLVM 22 in.
+
+os=$(uname -s)
+arch=$(uname -m)
+case "$os-$arch" in
+  Linux-x86_64|Linux-amd64)    triple="x86_64-unknown-linux-musl" ;;
+  Linux-aarch64|Linux-arm64)   triple="aarch64-unknown-linux-musl" ;;
+  Darwin-x86_64)               triple="x86_64-apple-darwin" ;;
+  Darwin-arm64|Darwin-aarch64) triple="aarch64-apple-darwin" ;;
+  *)
+    echo "error: unsupported host platform $os-$arch for pre-built bpf-linker binary" >&2
+    exit 1
+    ;;
+esac
+
+resolve_version="$target_version"
+if [ "$resolve_version" = "latest" ]; then
+  echo "verify-ebpf: resolving 'latest' via GitHub API..."
+  tag=$(curl -sSL --retry 3 \
+      -H "Accept: application/vnd.github+json" \
+      https://api.github.com/repos/aya-rs/bpf-linker/releases/latest \
+      | grep '"tag_name"' | head -1 | cut -d'"' -f4)
+  if [ -z "$tag" ]; then
+    echo "error: failed to resolve 'latest' tag from GitHub API" >&2
+    exit 1
+  fi
+  resolve_version="${tag#v}"
+  echo "verify-ebpf: 'latest' → v${resolve_version}"
+fi
+
+url="https://github.com/aya-rs/bpf-linker/releases/download/v${resolve_version}/bpf-linker-${triple}.tar.zst"
+echo "verify-ebpf: downloading pre-built bpf-linker v${resolve_version} for ${triple}..."
+
+if ! command -v zstd >/dev/null 2>&1; then
+  echo "error: zstd not on PATH — install via 'brew install zstd' or 'apt install zstd'" >&2
+  exit 1
+fi
+
+install_dir="${HOME}/.cargo/bin"
+mkdir -p "$install_dir"
+tmp_archive=$(mktemp "${TMPDIR:-/tmp}/bpf-linker-XXXXXXXX")
+trap 'rm -f "$tmp_archive"' EXIT INT TERM
+
+install_ok=1
+if ! curl -sSL --retry 3 --fail -o "$tmp_archive" "$url" 2>&1 | tee "$log_file"; then
+  install_ok=0
+fi
+if [ "$install_ok" -eq 1 ]; then
+  if ! tar --zstd -xf "$tmp_archive" -C "$install_dir" bpf-linker 2>&1 | tee -a "$log_file"; then
+    install_ok=0
+  fi
+fi
+if [ "$install_ok" -eq 1 ]; then
+  chmod +x "$install_dir/bpf-linker"
 fi
 
 if [ "$install_ok" -eq 0 ]; then
   installed_report=$(bpf-linker --version 2>/dev/null | awk '{print $2}' || echo "<install failed>")
   cat <<EOF >&2
 
-verify-ebpf: FAIL — cargo install failed
+verify-ebpf: FAIL — pre-built binary install failed
   Tool: bpf-linker
-  Version requested: $target_version
+  Version requested: $resolve_version
+  Platform: $triple
+  URL: $url
   Version currently on PATH: $installed_report
   Log: $log_file
-  Next step: inspect the log; if it names LLVM path drift or a linker
-             error, file upstream at https://github.com/aya-rs/bpf-linker
+  Next step: check that the release tag + platform triple exist at
+             https://github.com/aya-rs/bpf-linker/releases/tag/v${resolve_version}
 EOF
   trap - EXIT INT TERM
   exit 1
 fi
 
-installed_version=$(bpf-linker --version 2>&1 | awk '{print $2}')
-echo "verify-ebpf: installed bpf-linker $installed_version"
+# The pre-built binary reports "bpf-linker 0.0.0" (upstream quirk —
+# release-build doesn't propagate the crate version). Use the resolved
+# request version instead.
+installed_version="$resolve_version"
+echo "verify-ebpf: installed bpf-linker $installed_version (pre-built binary)"
 echo ""
 
 # Build eBPF kernel object.
