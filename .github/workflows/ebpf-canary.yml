@@ -1,0 +1,248 @@
+name: eBPF Build Canary
+
+# m234 US2 — daily canary that validates the eBPF build path against
+# an unpinned (latest) bpf-linker version. On failure, auto-opens a
+# deduped GitHub issue so the maintainer group learns about upstream
+# regressions before they hit a release cut.
+#
+# Spec:     specs/234-fix-ebpf-linker-regression/spec.md
+# Contract: specs/234-fix-ebpf-linker-regression/contracts/canary-workflow.md
+# Cadence:  daily 06:00 UTC (colocated with nightly.yml per Phase 0 R1)
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'bpf-linker version to test (default: latest)'
+        required: false
+        default: 'latest'
+        type: string
+      dry_run:
+        description: 'If true, skip issue create/update on failure'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: ebpf-canary
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  canary:
+    name: eBPF canary
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    outputs:
+      installed_version: ${{ steps.install.outputs.installed-version }}
+      target_version: ${{ steps.resolve_target.outputs.target }}
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Resolve target version
+        id: resolve_target
+        env:
+          # Route input through env: so bash reads it as a shell variable
+          # (defense in depth against injection via workflow_dispatch input).
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+          # Default to 'latest' on schedule trigger (no inputs context);
+          # on workflow_dispatch, use the input.
+          target="$INPUT_VERSION"
+          if [ -z "$target" ]; then
+            target="latest"
+          fi
+          echo "target=$target" >> "$GITHUB_OUTPUT"
+          echo "Canary target: $target"
+
+      - name: Install stable Rust toolchain
+        uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17 # stable
+        with:
+          toolchain: stable
+
+      - name: Install bpf-linker (via m234 composite)
+        id: install
+        uses: ./.github/actions/install-bpf-linker
+        with:
+          version: ${{ steps.resolve_target.outputs.target }}
+          toolchain: nightly
+
+      - name: Assert latest-mode actually differs from pin
+        if: steps.resolve_target.outputs.target == 'latest'
+        env:
+          INSTALLED_VERSION: ${{ steps.install.outputs.installed-version }}
+        run: |
+          set -euo pipefail
+          pinned=$(grep -E '^BPF_LINKER_VERSION=' .github/env/bpf-linker.env | head -1 | cut -d= -f2)
+          installed="$INSTALLED_VERSION"
+          echo "Pinned:    $pinned"
+          echo "Installed: $installed"
+          if [ "$installed" = "$pinned" ]; then
+            echo "::warning::Canary latest-mode installed the same version as the pin ($pinned). Cargo may be reusing a cached binary; treat this run as covering only the pinned version. Manual runs can pass an explicit version to force a fresh install."
+          else
+            echo "Canary latest-mode installed $installed (pin is $pinned) — different, good."
+          fi
+
+      - name: Build eBPF kernel object
+        run: cargo run -p xtask -- ebpf
+
+      - name: Build userspace binary with ebpf-tracing feature
+        run: cargo build --release --features ebpf-tracing --bin waybill
+
+  report-failure:
+    name: Report canary failure
+    needs: canary
+    if: failure() && github.event.inputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Ensure canary labels exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Idempotent — `|| true` swallows "already exists" errors.
+          gh label create canary --color EDEDED --description "Auto-opened by eBPF canary" --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
+          gh label create ebpf --color 1D76DB --description "eBPF toolchain / build path" --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
+          gh label create regression --color B60205 --description "Something that used to work broke" --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
+
+      - name: Open or update canary issue
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v8.0.0
+        env:
+          # Route needs-outputs through env: so github-script reads them via
+          # process.env rather than github interpolating them into the JS
+          # source (defense in depth against script injection).
+          TARGET_VERSION: ${{ needs.canary.outputs.target_version }}
+          INSTALLED_VERSION: ${{ needs.canary.outputs.installed_version }}
+        with:
+          script: |
+            const title = '[canary] bpf-linker eBPF build regression';
+            const target = process.env.TARGET_VERSION || '';
+            const installed = process.env.INSTALLED_VERSION || '<unknown, install failed>';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            const timestamp = new Date().toISOString();
+            const commentBody = [
+              `## Canary run ${context.runId} — ${timestamp}`,
+              ``,
+              `- Target bpf-linker: \`${target}\``,
+              `- Installed bpf-linker version: \`${installed}\``,
+              `- Run URL: ${runUrl}`,
+              ``,
+              `Reproduce locally:`,
+              `  \`scripts/verify-ebpf.sh --version ${installed !== '<unknown, install failed>' ? installed : target}\``,
+            ].join('\n');
+
+            const issueBody = [
+              `The eBPF-build canary at \`.github/workflows/ebpf-canary.yml\` has detected a`,
+              `regression in the bpf-linker install / build path.`,
+              ``,
+              `## Details`,
+              ``,
+              `- Installed bpf-linker version: \`${installed}\``,
+              `- Target requested: \`${target}\``,
+              `- Runner OS: ubuntu-latest`,
+              `- Run URL: ${runUrl}`,
+              ``,
+              `## Next steps`,
+              ``,
+              `1. Reproduce locally: \`scripts/verify-ebpf.sh --version ${installed !== '<unknown, install failed>' ? installed : target}\``,
+              `2. If confirmed, file upstream at https://github.com/aya-rs/bpf-linker with the log from step 1.`,
+              `3. Track upstream response; if unresponsive within the 30-day fallback window (spec.md FR-011), execute downstream mitigation.`,
+              ``,
+              `---`,
+              `_This issue was auto-opened by the eBPF canary. Comments will be`,
+              `appended by subsequent canary runs. Do not manually edit the`,
+              `body — canary uses title match for dedupe._`,
+              ``,
+              commentBody,
+            ].join('\n');
+
+            // Search for an existing open issue with the exact title.
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'canary,ebpf,regression',
+              per_page: 100,
+            });
+            const match = existing.data.find(i => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: commentBody,
+              });
+              core.info(`Appended comment to existing issue #${match.number}`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body: issueBody,
+                labels: ['canary', 'ebpf', 'regression'],
+              });
+              core.info(`Created new issue #${created.data.number}`);
+            }
+
+  report-success:
+    name: Close canary issue on recovery
+    needs: canary
+    if: success()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Close matching canary issue if open
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v8.0.0
+        with:
+          script: |
+            const title = '[canary] bpf-linker eBPF build regression';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const timestamp = new Date().toISOString();
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'canary,ebpf,regression',
+              per_page: 100,
+            });
+            const match = existing.data.find(i => i.title === title);
+            if (!match) {
+              core.info('No open canary issue to close — nothing to do.');
+              return;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: match.number,
+              body: `Canary green as of ${timestamp} (run ${runUrl}). Closing.`,
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: match.number,
+              state: 'closed',
+              state_reason: 'completed',
+            });
+            core.info(`Closed issue #${match.number}`);

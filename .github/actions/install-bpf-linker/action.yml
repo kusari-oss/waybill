@@ -1,0 +1,89 @@
+name: 'Install bpf-linker'
+description: 'Install pinned bpf-linker via cargo. Reads version from .github/env/bpf-linker.env by default. Contract: specs/234-fix-ebpf-linker-regression/contracts/install-bpf-linker-action.md'
+
+inputs:
+  version:
+    description: 'bpf-linker version (default: read from .github/env/bpf-linker.env). Special value "latest" installs unpinned (used by canary).'
+    required: false
+    default: ''
+  toolchain:
+    description: 'Rust toolchain to install bpf-linker under (default: nightly).'
+    required: false
+    default: 'nightly'
+
+outputs:
+  installed-version:
+    description: 'Installed bpf-linker version, as reported by `bpf-linker --version`.'
+    value: ${{ steps.report.outputs.version }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Resolve target version
+      id: resolve
+      shell: bash
+      env:
+        # Pipe inputs through env: so bash reads them as shell variables
+        # instead of GitHub interpolating them into the script pre-parse
+        # (defense in depth against shell injection).
+        INPUT_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        if [ -n "$INPUT_VERSION" ]; then
+          target="$INPUT_VERSION"
+          echo "Using version from input: $target"
+        else
+          env_file=".github/env/bpf-linker.env"
+          if [ ! -f "$env_file" ]; then
+            echo "::error::$env_file not found — pin file missing"
+            exit 1
+          fi
+          target=$(grep -E '^BPF_LINKER_VERSION=' "$env_file" | head -1 | cut -d= -f2)
+          if [ -z "$target" ]; then
+            echo "::error::BPF_LINKER_VERSION not set in $env_file"
+            exit 1
+          fi
+          echo "Using version from $env_file: $target"
+        fi
+        echo "target=$target" >> "$GITHUB_OUTPUT"
+
+    - name: Install rust toolchain (${{ inputs.toolchain }})
+      shell: bash
+      env:
+        INPUT_TOOLCHAIN: ${{ inputs.toolchain }}
+      run: |
+        set -euo pipefail
+        rustup toolchain install "$INPUT_TOOLCHAIN" --profile minimal
+        rustup component add rust-src --toolchain "$INPUT_TOOLCHAIN"
+
+    - name: Install bpf-linker
+      shell: bash
+      env:
+        TARGET_VERSION: ${{ steps.resolve.outputs.target }}
+        INPUT_TOOLCHAIN: ${{ inputs.toolchain }}
+      run: |
+        set -euo pipefail
+        target="$TARGET_VERSION"
+        if command -v bpf-linker >/dev/null 2>&1; then
+          current=$(bpf-linker --version 2>&1 | awk '{print $2}' || echo "")
+          if [ "$target" != "latest" ] && [ "$current" = "$target" ]; then
+            echo "bpf-linker $current already installed; skipping"
+            exit 0
+          fi
+        fi
+        if [ "$target" = "latest" ]; then
+          # Unpinned install — canary path. Intentionally NO literal version
+          # here so the pin-consistency guard doesn't flag it.
+          cargo "+$INPUT_TOOLCHAIN" install bpf-linker --locked
+        else
+          cargo "+$INPUT_TOOLCHAIN" install bpf-linker --locked --version "$target"
+        fi
+
+    - name: Report installed version
+      id: report
+      shell: bash
+      run: |
+        set -euo pipefail
+        version=$(bpf-linker --version 2>&1 | awk '{print $2}')
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+        echo "installed-version=$version"
