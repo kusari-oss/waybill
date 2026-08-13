@@ -22,10 +22,15 @@ runs:
     - name: Resolve target version
       id: resolve
       shell: bash
+      env:
+        # Pipe inputs through env: so bash reads them as shell variables
+        # instead of GitHub interpolating them into the script pre-parse
+        # (defense in depth against shell injection).
+        INPUT_VERSION: ${{ inputs.version }}
       run: |
         set -euo pipefail
-        if [ -n "${{ inputs.version }}" ]; then
-          target="${{ inputs.version }}"
+        if [ -n "$INPUT_VERSION" ]; then
+          target="$INPUT_VERSION"
           echo "Using version from input: $target"
         else
           env_file=".github/env/bpf-linker.env"
@@ -42,18 +47,23 @@ runs:
         fi
         echo "target=$target" >> "$GITHUB_OUTPUT"
 
-    - name: Install ${{ inputs.toolchain }} toolchain
+    - name: Install rust toolchain (${{ inputs.toolchain }})
       shell: bash
+      env:
+        INPUT_TOOLCHAIN: ${{ inputs.toolchain }}
       run: |
         set -euo pipefail
-        rustup toolchain install ${{ inputs.toolchain }} --profile minimal
-        rustup component add rust-src --toolchain ${{ inputs.toolchain }}
+        rustup toolchain install "$INPUT_TOOLCHAIN" --profile minimal
+        rustup component add rust-src --toolchain "$INPUT_TOOLCHAIN"
 
     - name: Install bpf-linker
       shell: bash
+      env:
+        TARGET_VERSION: ${{ steps.resolve.outputs.target }}
+        INPUT_TOOLCHAIN: ${{ inputs.toolchain }}
       run: |
         set -euo pipefail
-        target="${{ steps.resolve.outputs.target }}"
+        target="$TARGET_VERSION"
         if command -v bpf-linker >/dev/null 2>&1; then
           current=$(bpf-linker --version 2>&1 | awk '{print $2}' || echo "")
           if [ "$target" != "latest" ] && [ "$current" = "$target" ]; then
@@ -64,9 +74,9 @@ runs:
         if [ "$target" = "latest" ]; then
           # Unpinned install — canary path. Intentionally NO literal version
           # here so the pin-consistency guard doesn't flag it.
-          cargo "+${{ inputs.toolchain }}" install bpf-linker --locked
+          cargo "+$INPUT_TOOLCHAIN" install bpf-linker --locked
         else
-          cargo "+${{ inputs.toolchain }}" install bpf-linker --locked --version "$target"
+          cargo "+$INPUT_TOOLCHAIN" install bpf-linker --locked --version "$target"
         fi
 
     - name: Report installed version

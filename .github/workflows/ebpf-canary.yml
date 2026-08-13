@@ -52,11 +52,15 @@ jobs:
 
       - name: Resolve target version
         id: resolve_target
+        env:
+          # Route input through env: so bash reads it as a shell variable
+          # (defense in depth against injection via workflow_dispatch input).
+          INPUT_VERSION: ${{ github.event.inputs.version }}
         run: |
           set -euo pipefail
           # Default to 'latest' on schedule trigger (no inputs context);
           # on workflow_dispatch, use the input.
-          target="${{ github.event.inputs.version }}"
+          target="$INPUT_VERSION"
           if [ -z "$target" ]; then
             target="latest"
           fi
@@ -77,10 +81,12 @@ jobs:
 
       - name: Assert latest-mode actually differs from pin
         if: steps.resolve_target.outputs.target == 'latest'
+        env:
+          INSTALLED_VERSION: ${{ steps.install.outputs.installed-version }}
         run: |
           set -euo pipefail
           pinned=$(grep -E '^BPF_LINKER_VERSION=' .github/env/bpf-linker.env | head -1 | cut -d= -f2)
-          installed="${{ steps.install.outputs.installed-version }}"
+          installed="$INSTALLED_VERSION"
           echo "Pinned:    $pinned"
           echo "Installed: $installed"
           if [ "$installed" = "$pinned" ]; then
@@ -117,11 +123,17 @@ jobs:
 
       - name: Open or update canary issue
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v8.0.0
+        env:
+          # Route needs-outputs through env: so github-script reads them via
+          # process.env rather than github interpolating them into the JS
+          # source (defense in depth against script injection).
+          TARGET_VERSION: ${{ needs.canary.outputs.target_version }}
+          INSTALLED_VERSION: ${{ needs.canary.outputs.installed_version }}
         with:
           script: |
             const title = '[canary] bpf-linker eBPF build regression';
-            const target = '${{ needs.canary.outputs.target_version }}';
-            const installed = '${{ needs.canary.outputs.installed_version }}' || '<unknown, install failed>';
+            const target = process.env.TARGET_VERSION || '';
+            const installed = process.env.INSTALLED_VERSION || '<unknown, install failed>';
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
 
             const timestamp = new Date().toISOString();
