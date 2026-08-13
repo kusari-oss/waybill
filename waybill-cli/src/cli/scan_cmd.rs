@@ -230,6 +230,113 @@ fn referrer_media_type_for_format(fmt: &str) -> Option<&'static str> {
     }
 }
 
+/// Milestone 235 — Gradle transitive dependency resolution flags.
+///
+/// Flattened into `ScanArgs` via `#[command(flatten)]`. Spec:
+/// `specs/235-gradle-transitive-ladder/spec.md` FR-001, FR-002, FR-003.
+///
+/// The 5 flags below all default to the safe/off state so waybill's
+/// no-flag behavior is unchanged (`--gradle-resolve` is opt-in; the
+/// other 4 have no effect without it).
+///
+/// Flag values are surfaced to the `gradle::read` reader via env vars
+/// (`WAYBILL_GRADLE_*`) so we don't have to plumb through the
+/// 75-callsite `scan_path` -> `read_all` signature chain (matches the
+/// m102 `WAYBILL_INCLUDE_VENDORED` precedent at
+/// `waybill-cli/src/scan_fs/package_db/mod.rs:1315`).
+#[derive(Args, Debug, Default)]
+pub struct GradleCliFlags {
+    /// Opt-in: resolve Gradle transitive dependencies via `./gradlew
+    /// :sub:dependencies` subprocess. Requires JDK on `$PATH`.
+    /// Default: off (waybill falls back to m106 lockfile reading).
+    #[arg(long)]
+    pub gradle_resolve: bool,
+
+    /// When `--gradle-resolve` is set, also resolve the buildscript
+    /// classpath (Gradle plugins the build itself uses) via
+    /// `./gradlew :sub:buildEnvironment`. Doubles subprocess call
+    /// count. Default: off. Requires `--gradle-resolve`.
+    #[arg(long, requires = "gradle_resolve")]
+    pub gradle_resolve_buildscript: bool,
+
+    /// When `--gradle-resolve` is set, use the Gradle daemon (faster
+    /// on repeated invocations, but leaves a JVM in the operator's
+    /// process list). Default: off (waybill passes `--no-daemon`).
+    /// Requires `--gradle-resolve`.
+    #[arg(long, requires = "gradle_resolve")]
+    pub gradle_daemon: bool,
+
+    /// Per-subprocess timeout in seconds. Applies to each
+    /// `./gradlew :sub:dependencies` invocation individually.
+    /// Default: 300 (5 minutes).
+    #[arg(long, default_value_t = 300, value_parser = clap::value_parser!(u64).range(1..))]
+    pub gradle_timeout_secs: u64,
+
+    /// Additional Gradle configurations to resolve beyond the default
+    /// `runtimeClasspath` + `testRuntimeClasspath` set. Repeatable
+    /// (`--gradle-extra-configurations compileClasspath
+    /// --gradle-extra-configurations testCompileClasspath`).
+    /// Requires `--gradle-resolve`.
+    #[arg(long, action = clap::ArgAction::Append)]
+    pub gradle_extra_configurations: Vec<String>,
+}
+
+impl GradleCliFlags {
+    /// Reject shell-metacharacter names to prevent injection via the
+    /// `--configuration <name>` argument. Called by `SbomSubcommand::Scan`
+    /// before waybill spawns any Gradle subprocess.
+    pub fn validate_configuration_names(&self) -> Result<(), String> {
+        for name in &self.gradle_extra_configurations {
+            if name.chars().any(|c| {
+                matches!(c, ' ' | ';' | '`' | '$' | '|' | '&' | '>' | '<' | '\n' | '\r')
+            }) {
+                return Err(format!(
+                    "--gradle-extra-configurations value contains unsafe characters: {:?}",
+                    name
+                ));
+            }
+            if name.is_empty() {
+                return Err("--gradle-extra-configurations values cannot be empty".to_string());
+            }
+        }
+        Ok(())
+    }
+
+    /// Convert to the env vars the `gradle::read` reader consumes.
+    /// Matches the m102 `WAYBILL_INCLUDE_VENDORED` env-bridge pattern
+    /// (see `scan_cmd.rs:2562`).
+    ///
+    /// SAFETY: caller must ensure single-threaded execution at this
+    /// point in the scan-cmd lifecycle (matches m102 precedent).
+    pub fn export_env(&self) {
+        // SAFETY: single-threaded at scan-cmd entry.
+        unsafe {
+            std::env::set_var(
+                "WAYBILL_GRADLE_RESOLVE",
+                if self.gradle_resolve { "1" } else { "0" },
+            );
+            std::env::set_var(
+                "WAYBILL_GRADLE_RESOLVE_BUILDSCRIPT",
+                if self.gradle_resolve_buildscript { "1" } else { "0" },
+            );
+            std::env::set_var(
+                "WAYBILL_GRADLE_DAEMON",
+                if self.gradle_daemon { "1" } else { "0" },
+            );
+            std::env::set_var(
+                "WAYBILL_GRADLE_TIMEOUT_SECS",
+                self.gradle_timeout_secs.to_string(),
+            );
+            // Configurations passed as comma-separated (the validator has
+            // already rejected shell metacharacters, so comma is safe).
+            std::env::set_var(
+                "WAYBILL_GRADLE_EXTRA_CONFIGURATIONS",
+                self.gradle_extra_configurations.join(","),
+            );
+        }
+    }
+}
+
 #[derive(Args, Debug)]
 pub struct ScanArgs {
     /// Directory to walk for package artifacts.
@@ -835,6 +942,11 @@ pub struct ScanArgs {
     /// `WAYBILL_INCLUDE_VENDORED` env-var propagation pattern).
     #[arg(long)]
     pub cmake_third_party_recursive: bool,
+
+    /// Milestone 235 — Gradle transitive dependency resolution flags.
+    /// See `GradleCliFlags` docstring for individual flag semantics.
+    #[command(flatten)]
+    pub gradle: GradleCliFlags,
 
     /// Skip the deps.dev transitive dep-graph enrichment step ONLY.
     /// Keeps deps.dev license enrichment and ClearlyDefined active.
@@ -2466,6 +2578,14 @@ pub async fn execute(
             std::env::set_var("WAYBILL_INCLUDE_VENDORED", "1");
         }
     }
+
+    // Milestone 235 — validate + propagate Gradle ladder flags.
+    // Validation rejects shell metacharacters in
+    // `--gradle-extra-configurations` values before any subprocess spawn.
+    args.gradle
+        .validate_configuration_names()
+        .map_err(anyhow::Error::msg)?;
+    args.gradle.export_env();
 
     // Milestone 188 (#455) — propagate `--helm-render` to the env var
     // that the helm reader consumes. Same zero-plumbing pattern as
@@ -5278,6 +5398,9 @@ mod tests {
             include_vendored: false,
             // Milestone 156 — default third_party/ recursive-walk OFF.
             cmake_third_party_recursive: false,
+            // Milestone 235 — default Gradle ladder opt-out (subprocess off,
+            // no daemon, no buildscript, 300s timeout, no extra configs).
+            gradle: GradleCliFlags::default(),
             // Milestone 108 — default external fingerprint-corpus opt-in OFF.
             fingerprints_corpus: false,
             // Milestone 110 Phase 5-Slim — defaults for new multi-
