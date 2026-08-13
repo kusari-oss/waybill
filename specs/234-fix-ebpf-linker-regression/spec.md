@@ -313,3 +313,80 @@ same command against a known-broken version (bpf-linker v0.11.0 as of
   other.
 - No MSRV bump is required to un-pin bpf-linker (as of research time —
   the plan phase will re-verify).
+
+## Close-out (post-implementation)
+
+**Status**: Complete. All three user stories shipped.
+
+**Un-pin path taken**: US1b-happy — but via T018 option **(b)**
+(pre-built binary from upstream GH releases) rather than option (a)
+(explicit LLVM install) or option (c) (fork bpf-linker). The
+30-day fallback window (T016) never activated; upstream's v0.11.0
+release turned out to ship pre-built musl binaries that
+statically-link LLVM 22, so we swapped install method and un-pinned
+same-day.
+
+**Root cause (definitive)**: `bpf-linker` v0.11.0 (upstream 2026-08-12)
+intentionally removed the `aya-rustc-llvm-proxy` shim and pinned to
+rustc nightly's LLVM 22 (upstream PRs
+[#382](https://github.com/aya-rs/bpf-linker/pull/382),
+[#387](https://github.com/aya-rs/bpf-linker/pull/387),
+[#388](https://github.com/aya-rs/bpf-linker/pull/388),
+[#389](https://github.com/aya-rs/bpf-linker/pull/389)). This made
+`cargo install bpf-linker` require a system LLVM 22 which
+`ubuntu-24.04` GHA runners don't ship. **Not a regression** —
+intentional upstream change; downstream install method needed to
+follow suit.
+
+**Constitution Principle I check**: Passed. The pre-built binary is a
+statically-linked Rust artifact byte-copy; no new C source, no libbpf
+bindings, no C toolchain in the build pipeline.
+
+**Final state pinned in `.github/env/bpf-linker.env`**:
+`BPF_LINKER_VERSION=0.11.0`
+
+**Merged PR chain**:
+
+- **#681** (2026-08-12) — interim hotfix: pinned to `0.10.4`,
+  added `skip_ebpf` workflow_dispatch escape hatch.
+- **#682** (2026-08-12) — durable resilience: single source of truth
+  (`.github/env/bpf-linker.env`), composite action, canary workflow,
+  pin-consistency guard, `verify-ebpf.sh`, docs.
+- **#684** — tracking-links PR; closed as superseded by #686.
+- **#686** (2026-08-13) — US1b un-pin: switched install-method to
+  pre-built binary; bumped to `0.11.0`.
+
+**Upstream contribution left open**:
+[aya-rs/bpf-linker#399](https://github.com/aya-rs/bpf-linker/issues/399)
+— documentation feedback requesting a CHANGELOG/README note that
+v0.11+ requires system LLVM 22 for `cargo install` OR the pre-built
+binaries as the recommended install path. Not blocking our closure.
+
+**Internal tracker closed**:
+[kusari-oss/waybill#683](https://github.com/kusari-oss/waybill/issues/683)
+— closed 2026-08-13 on #686 merge.
+
+**Canary state**: live, running daily at 06:00 UTC against `latest`.
+First scheduled run: 2026-08-14 06:00 UTC. The `Assert latest-mode
+actually differs from pin` step will emit a warn-only signal if
+cargo's install cache reuses the pinned version rather than fetching
+fresh — this is expected on runs where `latest` == pinned, and is
+still useful because the composite's build steps still exercise the
+real bpf-linker binary end-to-end.
+
+**Verification against SC list**:
+
+- **SC-001** ✅ — #686 was a single focused bump PR, passed CI green
+  on first push, merged without special handling.
+- **SC-002** ⏳ — 90-day clock started 2026-08-13; ambient
+  observation via the canary + release-run history.
+- **SC-003** ✅ — `scripts/verify-ebpf.sh --version 0.11.0` verified
+  end-to-end in under 30 min on macOS via the container path (bump PR
+  was validated using exactly this command).
+- **SC-004** ⏳ — cadence bounds validated by design (daily <
+  48h); actual regression-detection time observable at first future
+  external-tool break.
+- **SC-005** ⏳ — canary body format matches contract; usability at
+  first real regression will confirm. Manual smoke test (T024)
+  remains as a follow-up if the operator wants explicit validation
+  before waiting for a natural incident.
