@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# m235 US1 fixture — mock ./gradlew for wrapper_single_subproject.
+#
+# Emits canned ASCII-tree output that matches Gradle 8.x's
+# `:dependencies` shape. Does NOT require a JDK; runs anywhere bash
+# runs. Waybill's subprocess resolver at
+# `waybill-cli/src/scan_fs/package_db/gradle/subprocess.rs`
+# discovers this script via `discover_wrapper` and treats it as the
+# project's Gradle wrapper.
+#
+# Recognized invocations (matching the subprocess resolver's calls):
+#   ./gradlew projects --no-daemon --quiet
+#     → empty output (waybill parses this as "single-project build").
+#
+#   ./gradlew dependencies --configuration runtimeClasspath --no-daemon --quiet
+#     → tree with direct + transitive dep.
+#
+#   ./gradlew dependencies --configuration testRuntimeClasspath --no-daemon --quiet
+#     → tree with test-scope dep.
+#
+#   ./gradlew dependencies --configuration <other> ...
+#     → empty output (unknown config).
+#
+# Synthetic package coordinates per memory
+# feedback_fixture_synthetic_package_names.
+
+set -euo pipefail
+
+CMD=""
+CONFIG=""
+prev=""
+for arg in "$@"; do
+    case "$arg" in
+        projects) CMD="projects" ;;
+        dependencies|:dependencies) CMD="dependencies" ;;
+    esac
+    if [ "$prev" = "--configuration" ]; then
+        CONFIG="$arg"
+    fi
+    prev="$arg"
+done
+
+case "$CMD" in
+    projects)
+        # Single-project build — no subprojects. Waybill's
+        # enumerate_subprojects parser will return vec![""] on empty output.
+        exit 0
+        ;;
+    dependencies)
+        case "$CONFIG" in
+            runtimeClasspath)
+                cat <<'GRADLE_OUTPUT'
+runtimeClasspath - Runtime classpath of source set 'main'.
++--- com.example.waybillfixture:direct:1.0.0
+|    \--- com.example.waybillfixture:transitive:0.5.0
+GRADLE_OUTPUT
+                ;;
+            testRuntimeClasspath)
+                cat <<'GRADLE_OUTPUT'
+testRuntimeClasspath - Runtime classpath of source set 'test'.
++--- com.example.waybillfixture:test-only:2.0.0
+GRADLE_OUTPUT
+                ;;
+            *)
+                # Unknown config — empty output.
+                ;;
+        esac
+        exit 0
+        ;;
+    *)
+        echo "mock gradlew: unknown command in args: $*" >&2
+        exit 1
+        ;;
+esac

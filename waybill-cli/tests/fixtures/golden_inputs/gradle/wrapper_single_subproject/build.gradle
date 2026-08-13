@@ -1,0 +1,22 @@
+// m235 US1 fixture — mocked build script.
+//
+// The mock `./gradlew` script in this directory doesn't actually parse
+// this file; it emits canned ASCII-tree output for `:dependencies`
+// invocations. This file exists so waybill's `is_gradle_project`
+// detection at `waybill-cli/src/scan_fs/package_db/gradle/mod.rs`
+// recognizes the directory as a Gradle project.
+//
+// If you're reading this as a template for a real Gradle project:
+// don't. Real projects use plugin blocks and dependency declarations.
+//
+// Synthetic package names per memory
+// feedback_fixture_synthetic_package_names.
+
+plugins {
+    id 'java'
+}
+
+dependencies {
+    implementation 'com.example.waybillfixture:direct:1.0.0'
+    testImplementation 'com.example.waybillfixture:test-only:2.0.0'
+}
