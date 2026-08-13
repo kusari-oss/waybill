@@ -1,5 +1,5 @@
 name: 'Install bpf-linker'
-description: 'Install pinned bpf-linker via cargo. Reads version from .github/env/bpf-linker.env by default. Contract: specs/234-fix-ebpf-linker-regression/contracts/install-bpf-linker-action.md'
+description: 'Install pinned bpf-linker via pre-built binary (default) or cargo install. Reads version from .github/env/bpf-linker.env by default. Contract: specs/234-fix-ebpf-linker-regression/contracts/install-bpf-linker-action.md'
 
 inputs:
   version:
@@ -7,9 +7,13 @@ inputs:
     required: false
     default: ''
   toolchain:
-    description: 'Rust toolchain to install bpf-linker under (default: nightly).'
+    description: 'Rust toolchain to install bpf-linker under (cargo install-method only; default: nightly).'
     required: false
     default: 'nightly'
+  install-method:
+    description: 'How to install bpf-linker: "binary" (default; download pre-built release artifact from aya-rs/bpf-linker GH releases) or "cargo" (build from source via cargo install; requires system LLVM 22+ for v0.11+).'
+    required: false
+    default: 'binary'
 
 outputs:
   installed-version:
@@ -47,7 +51,11 @@ runs:
         fi
         echo "target=$target" >> "$GITHUB_OUTPUT"
 
-    - name: Install rust toolchain (${{ inputs.toolchain }})
+    # Only install the rust toolchain when we're going to invoke
+    # `cargo install`. The binary path doesn't need it (the calling
+    # workflow installs its own toolchain for the actual eBPF build).
+    - name: Install rust toolchain (cargo install-method only)
+      if: inputs.install-method == 'cargo'
       shell: bash
       env:
         INPUT_TOOLCHAIN: ${{ inputs.toolchain }}
@@ -56,7 +64,89 @@ runs:
         rustup toolchain install "$INPUT_TOOLCHAIN" --profile minimal
         rustup component add rust-src --toolchain "$INPUT_TOOLCHAIN"
 
-    - name: Install bpf-linker
+    - name: Install bpf-linker (binary — pre-built from GH releases)
+      if: inputs.install-method == 'binary'
+      shell: bash
+      env:
+        TARGET_VERSION: ${{ steps.resolve.outputs.target }}
+      run: |
+        set -euo pipefail
+        target="$TARGET_VERSION"
+
+        # Idempotency short-circuit — if a matching version is already
+        # on PATH, skip the download.
+        if command -v bpf-linker >/dev/null 2>&1; then
+          current=$(bpf-linker --version 2>&1 | awk '{print $2}' || echo "")
+          if [ "$target" != "latest" ] && [ "$current" = "$target" ]; then
+            echo "bpf-linker $current already installed; skipping"
+            exit 0
+          fi
+        fi
+
+        # Resolve `latest` to a concrete release tag via GH API. This
+        # keeps the download URL construction deterministic.
+        if [ "$target" = "latest" ]; then
+          tag=$(curl -sSL --retry 3 \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              https://api.github.com/repos/aya-rs/bpf-linker/releases/latest \
+              | grep '"tag_name"' | head -1 | cut -d'"' -f4)
+          if [ -z "$tag" ]; then
+            echo "::error::Failed to resolve 'latest' tag from GitHub API"
+            exit 1
+          fi
+          target="${tag#v}"
+          echo "Resolved 'latest' → v${target}"
+        fi
+
+        # Platform triple. bpf-linker publishes musl for Linux, apple
+        # for macOS. Windows is not exercised by waybill CI (eBPF is
+        # Linux-only), but we support it anyway for local dev parity.
+        arch=$(uname -m)
+        os=$(uname -s)
+        case "$os-$arch" in
+          Linux-x86_64|Linux-amd64)    triple="x86_64-unknown-linux-musl" ;;
+          Linux-aarch64|Linux-arm64)   triple="aarch64-unknown-linux-musl" ;;
+          Darwin-x86_64)               triple="x86_64-apple-darwin" ;;
+          Darwin-arm64|Darwin-aarch64) triple="aarch64-apple-darwin" ;;
+          *) echo "::error::Unsupported platform: $os-$arch — use install-method: cargo (requires system LLVM)"; exit 1 ;;
+        esac
+
+        url="https://github.com/aya-rs/bpf-linker/releases/download/v${target}/bpf-linker-${triple}.tar.zst"
+        echo "Downloading: $url"
+
+        # zstd is preinstalled on ubuntu-latest + macos-latest runners.
+        # If missing, apt-get install (Linux only fallback).
+        if ! command -v zstd >/dev/null 2>&1; then
+          if command -v apt-get >/dev/null 2>&1; then
+            sudo apt-get update -y && sudo apt-get install -y zstd
+          else
+            echo "::error::zstd not available and no apt-get to install it"
+            exit 1
+          fi
+        fi
+
+        install_dir="$HOME/.cargo/bin"
+        mkdir -p "$install_dir"
+        tmp_archive=$(mktemp)
+        trap 'rm -f "$tmp_archive"' EXIT
+        curl -sSL --retry 3 --fail -o "$tmp_archive" "$url"
+        # Extract the `bpf-linker` binary directly to ~/.cargo/bin.
+        # The archive contains a single file named `bpf-linker` at the
+        # top level (verified against v0.11.0 aarch64-apple-darwin).
+        tar --zstd -xf "$tmp_archive" -C "$install_dir" bpf-linker
+        chmod +x "$install_dir/bpf-linker"
+
+        # Confirm PATH pickup — ~/.cargo/bin is on PATH via rustup init
+        # on both runner images.
+        if ! command -v bpf-linker >/dev/null 2>&1; then
+          echo "::error::bpf-linker not on PATH after install; $install_dir is not being picked up"
+          exit 1
+        fi
+        echo "Installed bpf-linker to $install_dir/bpf-linker"
+
+    - name: Install bpf-linker (cargo — build from source; requires system LLVM)
+      if: inputs.install-method == 'cargo'
       shell: bash
       env:
         TARGET_VERSION: ${{ steps.resolve.outputs.target }}
@@ -84,6 +174,19 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        version=$(bpf-linker --version 2>&1 | awk '{print $2}')
+        # Upstream release binaries currently report "0.0.0" from
+        # `bpf-linker --version` (known quirk — the crate-version macro
+        # doesn't propagate through the binary release build). Fall back
+        # to the resolved target-version when the binary reports empty
+        # or "0.0.0".
+        raw=$(bpf-linker --version 2>&1 | awk '{print $2}' || echo "")
+        target="${TARGET_VERSION:-}"
+        if [ -z "$raw" ] || [ "$raw" = "0.0.0" ]; then
+          version="$target"
+        else
+          version="$raw"
+        fi
         echo "version=$version" >> "$GITHUB_OUTPUT"
         echo "installed-version=$version"
+      env:
+        TARGET_VERSION: ${{ steps.resolve.outputs.target }}
