@@ -374,9 +374,12 @@ scan:
   alongside the project.
 - **pip** — `uv lock` (or `pip-compile` / `poetry lock`) writes a resolved
   lockfile waybill's pip reader can consume.
-- **kotlin** — `--include-declared-deps` opts into design-tier emission (this
-  is the "trigger", not an upgrade). Full source-tier requires either a
-  Gradle daemon (waybill can't invoke) OR external supplementation.
+- **kotlin** — `--include-declared-deps` opts into design-tier emission
+  (this is the "trigger", not an upgrade). Full source-tier is
+  available via milestone-235 `--gradle-resolve` (invokes the Gradle
+  wrapper — requires JDK on `$PATH`) OR by committing a
+  `gradle.lockfile` (milestone-106 flat-list). External
+  supplementation via `--supplement-cdx` remains available.
 - **yocto** — Recipe scope is inherently design-tier; source-tier is provided
   separately by the yocto opkg installed-DB reader when a built image is
   available.
@@ -959,7 +962,71 @@ comma-joined configuration list (informational; downstream filterable
 by `compileClasspath` / `testRuntimeClasspath` / etc.).
 
 **Dep graph:** flat. Gradle lockfiles don't encode parent → child
-edges; each row is an already-resolved coord.
+edges; each row is an already-resolved coord. The transitive-edge
+gap is closed by milestone 235's subprocess resolver (below).
+
+### Gradle transitive resolution (milestone 235; US1 subprocess live)
+
+**Module:** `waybill-cli/src/scan_fs/package_db/gradle/` (siblings to
+the milestone-106 `lockfile.rs`: `subprocess.rs`, `ladder.rs`,
+`tier.rs`, plus stubs for the follow-on US2/US3 tiers).
+
+**Opt-in:** `--gradle-resolve` — see the [CLI reference](user-guide/cli-reference.md#--gradle-resolve).
+Absent the flag, Gradle projects fall through to milestone-106
+lockfile reading (byte-identical pre-m235 behavior; FR-009
+non-regression).
+
+**Ladder** (spec: `specs/235-gradle-transitive-ladder/`):
+
+| Tier | Mechanism | State |
+|---|---|---|
+| US1 subprocess | `./gradlew :<sub>:dependencies --no-daemon` → ASCII-tree parse | ✅ Live on `main` |
+| US2 cache | Walks `~/.gradle/caches/modules-2/` cached POMs | 🟡 Stub; follow-on |
+| US3 static | Regex-scoped extract from `build.gradle(.kts)` | 🟡 Partial (direct-dep helper only) |
+| US4 annotations | `waybill:gradle-resolution-tier` transparency | 🟡 Follow-on |
+
+**Detection:** any directory containing `build.gradle`,
+`build.gradle.kts`, `settings.gradle`, or `settings.gradle.kts`.
+
+**Subprocess flow (US1):**
+
+1. Discover `./gradlew` in the project dir (or `gradlew.bat` on
+   Windows). Fall back to `gradle` on `$PATH`.
+2. Enumerate subprojects: `./gradlew projects --no-daemon --quiet`
+   — parses `+--- Project ':<name>'` / `\--- Project ':<name>'`
+   lines. Empty list → single-project build.
+3. Per subproject × configuration (default set:
+   `runtimeClasspath` + `testRuntimeClasspath` per clarify Q1):
+   `./gradlew :<sub>:dependencies --configuration <config>
+   --no-daemon --quiet`
+4. Parse ASCII tree (`+--- g:a:v`, `\--- g:a:v (*)`, `g:a:v -> resolved`).
+   Depth-based parent-child edge reconstruction. `(*)` dedup-marker
+   entries record the coord but don't descend; `(c)` constraint
+   markers are skipped entirely.
+5. Assemble `Vec<PackageDbEntry>` + edges. Configurations map to
+   `LifecycleScope`: `runtime*` → `Runtime`, `test*` → `Test`.
+
+**Timeout:** 5 minutes per subprocess call by default; configurable
+via `--gradle-timeout-secs`. On timeout: SIGTERM → 2s grace → SIGKILL,
+then fall through to the next tier (m106 lockfile if present,
+otherwise no components for that project).
+
+**PURL format:** `pkg:maven/<group>/<name>@<version>` — same as m106
+and the Maven ecosystem, so downstream deps.dev enrichment applies
+unchanged.
+
+**Configurations resolved:** default `runtimeClasspath` +
+`testRuntimeClasspath`. Extend via `--gradle-extra-configurations
+<name>` (repeatable). Buildscript classpath (Gradle plugins) reached
+via `--gradle-resolve-buildscript`.
+
+**Daemon:** default `--no-daemon` — waybill doesn't want to leave a
+JVM in the operator's process list after a scan (see clarify Q2).
+`--gradle-daemon` opts out for iterative local scanning.
+
+**Constitution:** Principle I preserved. JDK is a runtime prerequisite
+of the invoked wrapper, not a compile-time waybill dep — same posture
+as m173's `go` shell-out and m053's `git describe` ladder.
 
 ---
 
