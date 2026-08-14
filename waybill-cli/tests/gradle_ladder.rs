@@ -297,3 +297,142 @@ fn fr014_summary_log_emits_once_per_scan() {
         "expected `subprocess` in FR-014 summary; got:\n{stderr}"
     );
 }
+
+// -----------------------------------------------------------
+// FR-009 non-regression + tier annotation — no-wrapper-with-lockfile
+// fixture emits m106 components AND doc-scope tier=`lockfile-only`.
+// -----------------------------------------------------------
+
+fn scan_fixture_no_flag(name: &str) -> serde_json::Value {
+    let workdir = tempfile::tempdir().expect("workdir tempdir");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let out_path = workdir.path().join("sbom.cdx.json");
+    let fixture_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("golden_inputs")
+        .join("gradle")
+        .join(name);
+    assert!(fixture_path.is_dir(), "fixture missing at {}", fixture_path.display());
+
+    let mut cmd = Command::new(bin());
+    apply_fake_home_env(&mut cmd, fake_home.path());
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.args([
+        "--offline",
+        "sbom",
+        "scan",
+        "--path",
+        fixture_path.to_str().unwrap(),
+        "--format",
+        "cyclonedx-json",
+        "--output",
+        out_path.to_str().unwrap(),
+        "--no-deep-hash",
+    ]);
+    let output = cmd.output().expect("spawn waybill");
+    assert!(
+        output.status.success(),
+        "scan failed: stderr={}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+    let bytes = std::fs::read(&out_path).expect("read emitted SBOM");
+    serde_json::from_slice(&bytes).expect("parse JSON")
+}
+
+#[test]
+fn no_wrapper_with_lockfile_emits_lockfile_only_tier() {
+    // Fixture has NO gradlew AND has `gradle.lockfile`. The m106
+    // reader emits the lockfile components; the m235 ladder falls
+    // through to `LockfileOnly` with the walker recording the
+    // lockfile-only entry. Tier annotation MUST be `lockfile-only`.
+    let json = scan_fixture_no_flag("no_wrapper_with_lockfile");
+
+    // FR-009: m106 lockfile components MUST appear (byte-identity
+    // preserved for pre-m235 scan behavior).
+    let purls = maven_purls(&json);
+    assert!(
+        purls
+            .iter()
+            .any(|p| p == "pkg:maven/com.example.waybillfixture/lockfile-dep@1.0.0"),
+        "expected m106 lockfile-dep component; got: {purls:?}"
+    );
+
+    // FR-006: tier annotation MUST be `lockfile-only`.
+    let tier = doc_scope_property(&json, "waybill:gradle-resolution-tier");
+    assert_eq!(
+        tier.as_deref(),
+        Some("lockfile-only"),
+        "expected `lockfile-only` tier; got {tier:?}"
+    );
+}
+
+// -----------------------------------------------------------
+// FR-007 aggregate — mixed_tier fixture (one subproject with mock
+// gradlew, one with lockfile-only) produces `mixed` tier value.
+// -----------------------------------------------------------
+
+#[test]
+fn mixed_tier_fixture_produces_mixed_tier_annotation() {
+    let workdir = tempfile::tempdir().expect("workdir tempdir");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let out_path = workdir.path().join("sbom.cdx.json");
+    let fixture_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("golden_inputs")
+        .join("gradle")
+        .join("mixed_tier");
+
+    let mut cmd = Command::new(bin());
+    apply_fake_home_env(&mut cmd, fake_home.path());
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.args([
+        "--offline",
+        "sbom",
+        "scan",
+        "--path",
+        fixture_path.to_str().unwrap(),
+        "--format",
+        "cyclonedx-json",
+        "--output",
+        out_path.to_str().unwrap(),
+        "--gradle-resolve",
+        "--gradle-timeout-secs",
+        "30",
+        "--no-deep-hash",
+    ]);
+    let output = cmd.output().expect("spawn waybill");
+    assert!(
+        output.status.success(),
+        "scan failed:\n  stderr={}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+    let bytes = std::fs::read(&out_path).expect("read emitted SBOM");
+    let json: serde_json::Value = serde_json::from_slice(&bytes).expect("parse JSON");
+
+    // Both subprojects' expected components should appear (FR-009 for
+    // the lockfile-only side; US1 subprocess for the wrapper side).
+    let purls = maven_purls(&json);
+    assert!(
+        purls
+            .iter()
+            .any(|p| p == "pkg:maven/com.example.waybillfixture/wrapper-direct@1.0.0"),
+        "expected subprocess-tier wrapper-direct component; got: {purls:?}"
+    );
+    assert!(
+        purls
+            .iter()
+            .any(|p| p == "pkg:maven/com.example.waybillfixture/mixed-lockfile-dep@2.0.0"),
+        "expected lockfile-tier mixed-lockfile-dep component; got: {purls:?}"
+    );
+
+    // FR-006 + FR-007: aggregate tier MUST be `mixed` when subprojects
+    // resolved via different tiers.
+    let tier = doc_scope_property(&json, "waybill:gradle-resolution-tier");
+    assert_eq!(
+        tier.as_deref(),
+        Some("mixed"),
+        "expected `mixed` tier annotation when subprojects differ; got {tier:?}"
+    );
+}
