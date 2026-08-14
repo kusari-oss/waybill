@@ -92,6 +92,10 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // builder for the C123
             // `waybill:image-extraction-completeness` metadata property.
             .with_helm_extraction_mode(scan.helm_extraction_mode.copied())
+            // Milestone 235 US4 — propagate the doc-scope
+            // Gradle-resolution-tier signal from ScanArtifacts for the
+            // C146 `waybill:gradle-resolution-tier` metadata property.
+            .with_gradle_scan_summary(scan.gradle_scan_summary.cloned())
             // Milestone 206 (#440) — propagate the doc-scope
             // image-source signal from ScanArtifacts for the C124
             // metadata property.

@@ -783,6 +783,23 @@ pub fn annotate_document(
         );
     }
 
+    // Milestone 235 US4: C146 doc-scope Gradle-resolution-tier
+    // annotation. Emitted iff any Gradle project was touched.
+    // Value: `"mixed"` when subprojects resolved via different tiers,
+    // else the aggregate tier's wire string.
+    if let Some(summary) = artifacts.gradle_scan_summary {
+        let value = if summary.aggregate_mixed {
+            "mixed"
+        } else {
+            summary.aggregate_tier.as_annotation_str()
+        };
+        push(
+            &mut out,
+            "waybill:gradle-resolution-tier",
+            json!(value),
+        );
+    }
+
     // Milestone 206 (#440): C124 doc-scope image-source annotation.
     // Emitted iff artifacts.image_source == Some(Podman) — conditional
     // emission preserves FR-005 byte-identity for docker/remote/path

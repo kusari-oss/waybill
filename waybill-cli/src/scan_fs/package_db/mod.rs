@@ -438,6 +438,17 @@ pub struct ScanDiagnostics {
     /// at `generate/cyclonedx/metadata.rs`, `generate/spdx/*` (SPDX
     /// 2.3), and `generate/spdx/v3_*` (SPDX 3).
     pub helm_extraction_mode: Option<HelmExtractionMode>,
+
+    /// Milestone 235 (Phase 6 US4): aggregate Gradle-resolution tier
+    /// summary for the doc-scope `waybill:gradle-resolution-tier`
+    /// annotation. `None` iff no Gradle project was touched
+    /// (byte-identity per FR-006 for non-Gradle scans).
+    /// `Some(summary)` when at least one Gradle project directory was
+    /// discovered by the m235 walker; `aggregate_tier` names the
+    /// winning tier (`subprocess` / `cache` / `static` / `lockfile-only`).
+    /// `aggregate_mixed == true` when subprojects resolved via
+    /// different tiers — the emitter surfaces `"mixed"` in that case.
+    pub gradle_scan_summary: Option<gradle::ladder::GradleScanSummary>,
 }
 
 /// Milestone 188 (#455) — result-side classification of Helm
@@ -1727,7 +1738,7 @@ pub fn read_all(
     // `LifecycleScope::Build` so the existing milestone-052 emission
     // path tags them `scope: "excluded"` (CDX) /
     // `BUILD_DEPENDENCY_OF` (SPDX 2.3) automatically.
-    out.extend(gradle::read(rootfs, exclude_set));
+    out.extend(gradle::read(rootfs, exclude_set, &mut diagnostics));
     // Milestone 122 US2: Kotlin DSL Gradle source-tree reader. Regex-
     // extracts deps from `build.gradle.kts` + resolves `libs.<alias>`
     // references against `gradle/libs.versions.toml` version catalogs.

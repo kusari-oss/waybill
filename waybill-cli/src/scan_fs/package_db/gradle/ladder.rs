@@ -15,10 +15,10 @@
 //! `NoSourceFiles` / `CacheMiss` reasons. Follow-on milestones fill
 //! them in.
 //!
-//! Some types below (`SubprojectRoot`, `GradleScanSummary`,
-//! `GradleEdge.edge_scope`, `GradleLadderConfig.gradle_resolve_buildscript`,
-//! etc.) are scaffolding for the m235 US4 emitter and future US2/US3
-//! branches. `#[allow(dead_code)]` at the module level suppresses the
+//! Some types below (`SubprojectRoot`, `GradleEdge.edge_scope`,
+//! `GradleLadderConfig.gradle_resolve_buildscript`, etc.) are
+//! scaffolding for future US2/US3/US4 branches.
+//! `#[allow(dead_code)]` at the module level suppresses the
 //! dead-code lint until those follow-ons wire them.
 #![allow(dead_code)]
 

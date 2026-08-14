@@ -124,6 +124,16 @@ fn has_edge(json: &serde_json::Value, source_purl: &str, target_purl: &str) -> b
     false
 }
 
+/// Extract the value of a CDX document-scope `metadata.properties[]`
+/// entry with the given name. Returns `None` if the property is absent.
+fn doc_scope_property(json: &serde_json::Value, name: &str) -> Option<String> {
+    json["metadata"]["properties"]
+        .as_array()?
+        .iter()
+        .find(|p| p["name"].as_str() == Some(name))
+        .and_then(|p| p["value"].as_str().map(str::to_string))
+}
+
 // -----------------------------------------------------------
 // SC-001 — US1 fixture emits transitive edge in CDX
 // -----------------------------------------------------------
@@ -208,5 +218,25 @@ fn without_gradle_resolve_the_fixture_produces_no_maven_components() {
     assert!(
         fixture_maven.is_empty(),
         "expected zero m235-fixture components without --gradle-resolve; got: {fixture_maven:?}"
+    );
+}
+
+// -----------------------------------------------------------
+// FR-006 / SC-004 — US4 tier annotation appears on Gradle-touching
+// scans (subprocess variant).
+// -----------------------------------------------------------
+
+#[test]
+fn us4_tier_annotation_present_on_subprocess_scan() {
+    let json = run_scan_with_gradle_resolve();
+    // FR-006: every scan touching a Gradle project MUST carry the
+    // `waybill:gradle-resolution-tier` document-scope annotation.
+    // With `--gradle-resolve` set and the mock wrapper emitting real
+    // dependency output, the tier MUST be `subprocess`.
+    let tier = doc_scope_property(&json, "waybill:gradle-resolution-tier");
+    assert_eq!(
+        tier.as_deref(),
+        Some("subprocess"),
+        "expected doc-scope waybill:gradle-resolution-tier=subprocess; got {tier:?}"
     );
 }
