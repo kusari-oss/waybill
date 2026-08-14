@@ -1,0 +1,17 @@
+// m235 US4 fixture — no wrapper, has gradle.lockfile.
+//
+// This shape represents a Gradle project that has enabled
+// dependency-locking (m106 US3) but the operator scanning it either
+// (a) doesn't have --gradle-resolve set OR (b) doesn't have gradlew.
+// In either case the m235 ladder falls back to `LockfileOnly` tier
+// and the FR-009 non-regression contract requires the emitted
+// components to match pre-m235 (m106 lockfile reader) output exactly.
+//
+// The `is_gradle_project` detection in gradle::read looks for
+// build.gradle presence to know whether the directory is a Gradle
+// project; the actual DSL content is not parsed by waybill in this
+// tier — the gradle.lockfile beside this file is authoritative.
+
+plugins {
+    id 'java'
+}

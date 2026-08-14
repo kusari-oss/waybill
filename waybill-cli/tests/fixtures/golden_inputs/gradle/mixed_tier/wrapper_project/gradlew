@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# m235 US4 mixed-tier fixture — mock ./gradlew for wrapper_project.
+# Emits canned ASCII-tree output identical shape to
+# wrapper_single_subproject's mock. Distinct fixture coordinates so
+# the mixed test can differentiate this project's components from
+# the lockfile_project's components.
+set -euo pipefail
+
+CMD=""
+CONFIG=""
+prev=""
+for arg in "$@"; do
+    case "$arg" in
+        projects) CMD="projects" ;;
+        dependencies|:dependencies) CMD="dependencies" ;;
+    esac
+    if [ "$prev" = "--configuration" ]; then
+        CONFIG="$arg"
+    fi
+    prev="$arg"
+done
+
+case "$CMD" in
+    projects) exit 0 ;;
+    dependencies)
+        case "$CONFIG" in
+            runtimeClasspath)
+                cat <<'GRADLE_OUTPUT'
+runtimeClasspath - Runtime classpath of source set 'main'.
++--- com.example.waybillfixture:wrapper-direct:1.0.0
+GRADLE_OUTPUT
+                ;;
+            testRuntimeClasspath) : ;;
+        esac
+        exit 0
+        ;;
+    *)
+        echo "mock gradlew: unknown args" >&2
+        exit 1
+        ;;
+esac

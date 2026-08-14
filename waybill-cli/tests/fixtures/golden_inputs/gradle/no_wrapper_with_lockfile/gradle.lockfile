@@ -1,0 +1,7 @@
+# m235 US4 fixture — lockfile-only tier verification.
+# Synthetic package coordinates per memory feedback_fixture_synthetic_package_names.
+# This is a Gradle generated file for dependency locking.
+# Manual edits can break the build and are not advised.
+# This file is expected to be part of source control.
+com.example.waybillfixture:lockfile-dep:1.0.0=runtimeClasspath,testRuntimeClasspath
+empty=annotationProcessor

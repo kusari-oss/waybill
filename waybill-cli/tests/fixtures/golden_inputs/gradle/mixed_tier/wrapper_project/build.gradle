@@ -1,0 +1,4 @@
+// m235 US4 mixed-tier fixture — subproject A (has mock gradlew → Subprocess tier).
+plugins {
+    id 'java'
+}
