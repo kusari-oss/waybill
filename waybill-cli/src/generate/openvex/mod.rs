@@ -251,6 +251,7 @@ mod tests {
             go_toolchains_detected: None,
             cross_ecosystem_edges_report: None,
             helm_extraction_mode: None,
+            gradle_scan_summary: None,
             image_source: None,
             scan_target_coord: None,
             generation_context: GenerationContext::FilesystemScan,

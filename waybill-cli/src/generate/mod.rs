@@ -151,6 +151,17 @@ pub struct ScanArtifacts<'a> {
     pub helm_extraction_mode: Option<
         &'a crate::scan_fs::package_db::HelmExtractionMode,
     >,
+    /// Milestone 235 US4: aggregate Gradle-resolution tier summary
+    /// driving the C146 `waybill:gradle-resolution-tier` doc-scope
+    /// annotation. `None` iff no Gradle project was touched
+    /// (byte-identity for non-Gradle scans per FR-006). `Some(_)`
+    /// when the m235 walker discovered at least one Gradle project.
+    /// Consumed by each format's document-scope emit code (CDX
+    /// `metadata.properties[]`, SPDX 2.3 doc-scope `Annotation`,
+    /// SPDX 3 `Annotation` element).
+    pub gradle_scan_summary: Option<
+        &'a crate::scan_fs::package_db::gradle::ladder::GradleScanSummary,
+    >,
     /// Milestone 206 (#440): document-scope image-source signal
     /// driving the C124 `waybill:image-source` annotation. `None`
     /// when scanning `--path` (not an image); `Some(ImageSource::
@@ -361,6 +372,7 @@ impl<'a> ScanArtifacts<'a> {
             go_toolchains_detected: self.go_toolchains_detected,
             cross_ecosystem_edges_report: self.cross_ecosystem_edges_report,
             helm_extraction_mode: self.helm_extraction_mode,
+            gradle_scan_summary: self.gradle_scan_summary,
             image_source: self.image_source,
             source_document_binding: self.source_document_binding,
             identifiers: self.identifiers,

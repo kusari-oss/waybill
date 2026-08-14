@@ -3132,6 +3132,7 @@ pub async fn execute(
         go_toolchains_detected,
         cross_ecosystem_edges_report,
         helm_extraction_mode,
+        gradle_scan_summary,
         scan_target_coord,
         divergence_records,
     } = scan_fs::scan_path(
@@ -3914,6 +3915,7 @@ pub async fn execute(
         // Milestone 204 (#554): doc-scope helm image-extraction-mode
         // signal for the C123 annotation.
         helm_extraction_mode: helm_extraction_mode.as_ref(),
+        gradle_scan_summary: gradle_scan_summary.as_ref(),
         // Milestone 206 (#440): doc-scope image-source signal for
         // the C124 annotation. Conditional emission (podman-only)
         // preserves FR-005 byte-identity for docker/remote scans.

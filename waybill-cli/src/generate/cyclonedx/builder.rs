@@ -96,6 +96,11 @@ pub struct CycloneDxBuilder {
     /// annotation. `None` ⇒ no helm reader ran (C123 absent).
     helm_extraction_mode:
         Option<crate::scan_fs::package_db::HelmExtractionMode>,
+    /// Milestone 235 US4: doc-scope Gradle-resolution-tier signal for
+    /// the C146 `waybill:gradle-resolution-tier` annotation. `None` ⇒
+    /// no Gradle project touched (C146 absent).
+    gradle_scan_summary:
+        Option<crate::scan_fs::package_db::gradle::ladder::GradleScanSummary>,
     /// Milestone 206 (#440): doc-scope image-source signal for the
     /// C124 `waybill:image-source` annotation. Conditional emission
     /// (podman-only) preserves FR-005 byte-identity for docker/remote
@@ -196,6 +201,7 @@ impl CycloneDxBuilder {
             go_toolchains_detected: None,
             cross_ecosystem_edges_report: None,
             helm_extraction_mode: None,
+            gradle_scan_summary: None,
             image_source: None,
             source_document_binding: None,
             identifiers: Vec::new(),
@@ -455,6 +461,18 @@ impl CycloneDxBuilder {
         self
     }
 
+    /// Milestone 235 US4 — record the doc-scope Gradle-resolution tier
+    /// summary. Drives the C146 `waybill:gradle-resolution-tier`
+    /// document-scope annotation. `None` ⇒ no Gradle project touched
+    /// (annotation absent per FR-006 byte-identity for non-Gradle scans).
+    pub fn with_gradle_scan_summary(
+        mut self,
+        summary: Option<crate::scan_fs::package_db::gradle::ladder::GradleScanSummary>,
+    ) -> Self {
+        self.gradle_scan_summary = summary;
+        self
+    }
+
     /// Milestone 206 (#440) — record the doc-scope image-source signal
     /// per FR-014. Drives the C124 `waybill:image-source` annotation.
     /// Conditional emission (podman-only in MVP) preserves FR-005
@@ -683,6 +701,7 @@ impl CycloneDxBuilder {
             self.go_toolchains_detected.as_deref(),
             self.cross_ecosystem_edges_report.as_ref(),
             self.helm_extraction_mode.as_ref(),
+            self.gradle_scan_summary.as_ref(),
             self.image_source.as_ref(),
             self.compiler_pipeline.as_ref(),
             self.project_discovery_mode,

@@ -769,6 +769,17 @@ fn push_document_fields(
         push(out, "waybill:image-extraction-completeness", json!(mode.as_wire_str()));
     }
 
+    // Milestone 235 US4: C146 doc-scope Gradle-resolution-tier
+    // annotation (SPDX 3). Same emission semantics as CDX + SPDX 2.3.
+    if let Some(summary) = scan.gradle_scan_summary {
+        let value = if summary.aggregate_mixed {
+            "mixed"
+        } else {
+            summary.aggregate_tier.as_annotation_str()
+        };
+        push(out, "waybill:gradle-resolution-tier", json!(value));
+    }
+
     // Milestone 206 (#440): C124 doc-scope image-source annotation
     // (SPDX 3). Same emission semantics as CDX + SPDX 2.3 emitters.
     if matches!(

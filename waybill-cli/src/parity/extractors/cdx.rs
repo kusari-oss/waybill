@@ -867,6 +867,10 @@ cdx_anno!(c144_cdx, "waybill:source-url",                            component);
 // `shunit2_tests` target owns the emitted shell-script file.
 cdx_anno!(c145_cdx, "waybill:pants-target",                          component);
 
+// Milestone 235 US4 (feature 235-gradle-transitive-ladder): C146
+// document-scope Gradle resolution tier.
+cdx_anno!(c146_cdx, "waybill:gradle-resolution-tier",                document);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 cdx_anno!(c113_cdx, "waybill:synthetic-built-in",               component);

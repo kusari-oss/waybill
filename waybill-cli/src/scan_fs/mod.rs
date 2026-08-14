@@ -157,6 +157,14 @@ pub struct ScanResult {
     /// `scan_result.diagnostics.helm_extraction_mode` below.
     pub helm_extraction_mode:
         Option<crate::scan_fs::package_db::HelmExtractionMode>,
+    /// Milestone 235 Phase 6 US4: aggregate Gradle-resolution tier
+    /// signal for the doc-scope `waybill:gradle-resolution-tier`
+    /// annotation. `None` iff no Gradle project was touched; otherwise
+    /// carries the tier + mixed-flag for the emitter to consume.
+    /// Mirrored from `scan_result.diagnostics.gradle_scan_summary`.
+    pub gradle_scan_summary: Option<
+        crate::scan_fs::package_db::gradle::ladder::GradleScanSummary,
+    >,
     /// M3 — Maven scan-subject coord identified during the JAR walk,
     /// promoted from the `PackageDbEntry` layer to drive CDX
     /// `metadata.component`. `None` when no Maven fat-jar matched
@@ -363,6 +371,9 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // `None` on non-Helm scans (byte-identity per FR-004).
     let mut helm_extraction_mode:
         Option<package_db::HelmExtractionMode> = None;
+    // Milestone 235 US4: aggregate Gradle-resolution tier signal.
+    let mut gradle_scan_summary:
+        Option<package_db::gradle::ladder::GradleScanSummary> = None;
     let mut scan_target_coord: Option<package_db::maven::ScanTargetCoord> = None;
     // Milestone 134 — divergent-PURL collision records collected by
     // per-ecosystem dedup. Routed into ScanResult.divergence_records
@@ -410,6 +421,9 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         // ScanDiagnostics into the local for the ScanResult return.
         // `HelmExtractionMode` is `Copy` — no clone needed.
         helm_extraction_mode = scan_result.diagnostics.helm_extraction_mode;
+        // m235 US4: same clone-copy pattern — `GradleScanSummary` is
+        // `Clone` but not `Copy`, so we `.clone()`.
+        gradle_scan_summary = scan_result.diagnostics.gradle_scan_summary.clone();
         scan_target_coord = scan_result.scan_target_coord.clone();
         divergence_records = scan_result.diagnostics.divergence_records.clone();
         let mut db_entries = scan_result.entries;
@@ -1087,6 +1101,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         go_toolchains_detected,
         cross_ecosystem_edges_report,
         helm_extraction_mode,
+        gradle_scan_summary,
         scan_target_coord,
         divergence_records,
     })
