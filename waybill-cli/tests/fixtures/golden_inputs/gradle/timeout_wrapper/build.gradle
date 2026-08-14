@@ -1,0 +1,8 @@
+// m235 T044 fixture — sleepy-gradlew scenario for the timeout
+// fallback test. The mock `./gradlew` in this dir sleeps for 15s on
+// `dependencies` invocations so that a `--gradle-timeout-secs 3`
+// scan hits the timeout path and degrades cleanly.
+
+plugins {
+    id 'java'
+}

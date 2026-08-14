@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# m235 T044 fixture — mock ./gradlew that sleeps forever on
+# `:dependencies` invocations. Used to prove waybill's subprocess
+# timeout kills the child cleanly and the ladder degrades to
+# LockfileOnly (SC-005).
+#
+# `projects` returns immediately so waybill's subproject enumeration
+# succeeds. Only the `dependencies` call sleeps, so timeout fires
+# exactly on the subprocess resolver's per-config invocation.
+set -euo pipefail
+
+CMD=""
+prev=""
+for arg in "$@"; do
+    case "$arg" in
+        projects) CMD="projects" ;;
+        dependencies|:dependencies) CMD="dependencies" ;;
+    esac
+    prev="$arg"
+done
+
+case "$CMD" in
+    projects)
+        # Empty (single-project build) — resolves immediately.
+        exit 0
+        ;;
+    dependencies)
+        # Sleep well beyond the test's timeout so waybill's
+        # spawn_with_timeout hits its Duration and returns Timeout.
+        # 15s gives comfortable margin for a 3s timeout + subprocess
+        # kill grace + CI runner startup jitter.
+        sleep 15
+        exit 0
+        ;;
+    *)
+        echo "mock timeout-gradlew: unknown args" >&2
+        exit 1
+        ;;
+esac

@@ -436,3 +436,103 @@ fn mixed_tier_fixture_produces_mixed_tier_annotation() {
         "expected `mixed` tier annotation when subprojects differ; got {tier:?}"
     );
 }
+
+// -----------------------------------------------------------
+// SC-005 — subprocess timeout: scan completes without hanging;
+// ladder degrades to `LockfileOnly` when subprocess is killed.
+// -----------------------------------------------------------
+
+#[test]
+fn sc005_subprocess_timeout_degrades_gracefully() {
+    // Fixture's mock `./gradlew` sleeps 15s on any `:dependencies`
+    // call. With `--gradle-timeout-secs 3` the scan MUST return
+    // within a bounded time (5s cap gives generous CI headroom over
+    // the 3s timeout + wait-thread + walker overhead) AND fall back
+    // to `LockfileOnly` since no components were parsed.
+
+    let workdir = tempfile::tempdir().expect("workdir tempdir");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let out_path = workdir.path().join("sbom.cdx.json");
+    let fixture_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("golden_inputs")
+        .join("gradle")
+        .join("timeout_wrapper");
+    assert!(
+        fixture_path.is_dir(),
+        "fixture missing at {}",
+        fixture_path.display()
+    );
+
+    let mut cmd = Command::new(bin());
+    apply_fake_home_env(&mut cmd, fake_home.path());
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.args([
+        "--offline",
+        "sbom",
+        "scan",
+        "--path",
+        fixture_path.to_str().unwrap(),
+        "--format",
+        "cyclonedx-json",
+        "--output",
+        out_path.to_str().unwrap(),
+        "--gradle-resolve",
+        "--gradle-timeout-secs",
+        "3",
+        "--no-deep-hash",
+    ]);
+
+    let start = std::time::Instant::now();
+    let output = cmd.output().expect("spawn waybill");
+    let elapsed = start.elapsed();
+
+    assert!(
+        output.status.success(),
+        "scan MUST succeed even when subprocess times out (fail-closed → LockfileOnly \
+         graceful degrade). stderr={}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+
+    // Two `:dependencies` invocations at 3s each = ~6s upper bound
+    // for subprocess-side wall time (default configs =
+    // runtimeClasspath + testRuntimeClasspath per clarify Q1).
+    // Extra 4s headroom accommodates walker + CI cold-start jitter.
+    // Well under the 15s sleep the mock uses — proves the timeout
+    // actually kills the subprocess rather than waiting for its
+    // natural exit.
+    let upper_bound = std::time::Duration::from_secs(10);
+    assert!(
+        elapsed < upper_bound,
+        "scan MUST complete within {upper_bound:?} of --gradle-timeout-secs 3 \
+         (would take 15s+ if timeout didn't kill subprocess); took {elapsed:?}"
+    );
+
+    let bytes = std::fs::read(&out_path).expect("read emitted SBOM");
+    let json: serde_json::Value = serde_json::from_slice(&bytes).expect("parse JSON");
+
+    // FR-003 / FR-015: on subprocess timeout, ladder degrades to
+    // `LockfileOnly`. Since the fixture has no gradle.lockfile
+    // either, the tier annotation MUST reflect the LockfileOnly
+    // sentinel (recorded by the walker via the ladder's empty
+    // fallback graph).
+    let tier = doc_scope_property(&json, "waybill:gradle-resolution-tier");
+    assert_eq!(
+        tier.as_deref(),
+        Some("lockfile-only"),
+        "expected `lockfile-only` tier after subprocess timeout \
+         (ladder degrades gracefully); got {tier:?}"
+    );
+
+    // No fixture components should appear (the mock never emitted any).
+    let purls = maven_purls(&json);
+    let fixture_maven: Vec<&String> = purls
+        .iter()
+        .filter(|p| p.contains("waybillfixture"))
+        .collect();
+    assert!(
+        fixture_maven.is_empty(),
+        "timed-out subprocess must not contribute components; got: {fixture_maven:?}"
+    );
+}
