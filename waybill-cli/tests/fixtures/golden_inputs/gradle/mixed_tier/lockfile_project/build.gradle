@@ -1,7 +1,0 @@
-// m235 US4 mixed-tier fixture — subproject B (no wrapper, has
-// gradle.lockfile → LockfileOnly tier). The absence of a `gradlew`
-// script here forces the ladder to record LockfileOnly for this
-// project even when --gradle-resolve is set.
-plugins {
-    id 'java'
-}
