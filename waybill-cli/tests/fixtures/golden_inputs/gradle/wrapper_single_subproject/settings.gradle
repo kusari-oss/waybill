@@ -1,0 +1,3 @@
+// m235 US1 fixture — settings for waybill-fixture-app.
+// Synthetic project name (per memory feedback_fixture_synthetic_package_names).
+rootProject.name = 'waybill-fixture-app'

@@ -404,7 +404,14 @@ fn assemble_graph(
 
     let mut components: Vec<PackageDbEntry> = Vec::new();
     let mut edges: Vec<super::ladder::GradleEdge> = Vec::new();
+    // (group, artifact, version) → index into `components` for the
+    // first emission of that coord. Used to populate `depends` on the
+    // parent when a child edge is discovered — the scan_fs pipeline at
+    // `waybill-cli/src/scan_fs/mod.rs:868` resolves `entry.depends`
+    // (Vec<String> of `group:artifact` names) against a per-scan
+    // name→purl index into concrete SBOM Relationship edges.
     let mut seen: HashMap<(String, String, String), Purl> = HashMap::new();
+    let mut coord_to_component_idx: HashMap<(String, String, String), usize> = HashMap::new();
     let mut depth_stack: Vec<(String, String, String)> = Vec::new();
 
     for entry in parsed {
@@ -418,8 +425,10 @@ fn assemble_graph(
                 continue;
             };
             let purl = pkg.purl.clone();
+            let idx = components.len();
             components.push(pkg);
             seen.insert(coord_key.clone(), purl.clone());
+            coord_to_component_idx.insert(coord_key.clone(), idx);
             purl
         };
 
@@ -428,13 +437,27 @@ fn assemble_graph(
 
         // If there's a parent at depth-1, emit an edge.
         if entry.depth > 0 {
-            if let Some(parent_key) = depth_stack.last() {
-                if let Some(parent_purl) = seen.get(parent_key) {
+            if let Some(parent_key) = depth_stack.last().cloned() {
+                if let Some(parent_purl) = seen.get(&parent_key) {
                     edges.push(super::ladder::GradleEdge {
                         source: parent_purl.clone(),
                         target: purl.clone(),
                         edge_scope,
                     });
+                }
+                // ALSO populate the parent component's `depends` field
+                // with this child's `group:artifact` name. The scan_fs
+                // dispatcher at `waybill-cli/src/scan_fs/mod.rs:868`
+                // walks `entry.depends` and resolves each name against
+                // the per-scan name→purl index to synthesize a
+                // Relationship in the emitted SBOM. Without this line
+                // the m235 ladder's edges vanish at emission time
+                // (until US4's separate emitter lands).
+                if let Some(&parent_idx) = coord_to_component_idx.get(&parent_key) {
+                    let child_name = format!("{}:{}", entry.group, entry.artifact);
+                    if !components[parent_idx].depends.contains(&child_name) {
+                        components[parent_idx].depends.push(child_name);
+                    }
                 }
             }
         }
