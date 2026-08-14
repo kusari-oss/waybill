@@ -240,3 +240,60 @@ fn us4_tier_annotation_present_on_subprocess_scan() {
         "expected doc-scope waybill:gradle-resolution-tier=subprocess; got {tier:?}"
     );
 }
+
+// -----------------------------------------------------------
+// FR-014 — per-scan INFO log summary lines emit once per scan
+// with a `gradle-resolver:` prefix + per-project `<dir>=<tier>` pairs.
+// -----------------------------------------------------------
+
+#[test]
+fn fr014_summary_log_emits_once_per_scan() {
+    let workdir = tempfile::tempdir().expect("workdir tempdir");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let out_path = workdir.path().join("sbom.cdx.json");
+    let fixture_path = fixture();
+
+    let mut cmd = Command::new(bin());
+    apply_fake_home_env(&mut cmd, fake_home.path());
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    // Enable INFO-level tracing so the FR-014 summary line reaches
+    // stderr where the test can inspect it. Only the gradle target
+    // is enabled to keep the stderr scrubbable.
+    cmd.env("RUST_LOG", "waybill::gradle=info");
+    cmd.args([
+        "--offline",
+        "sbom",
+        "scan",
+        "--path",
+        fixture_path.to_str().unwrap(),
+        "--format",
+        "cyclonedx-json",
+        "--output",
+        out_path.to_str().unwrap(),
+        "--gradle-resolve",
+        "--gradle-timeout-secs",
+        "30",
+        "--no-deep-hash",
+    ]);
+    let output = cmd.output().expect("spawn waybill");
+    assert!(
+        output.status.success(),
+        "scan failed:\n  stderr={}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let count = stderr.matches("gradle-resolver:").count();
+    assert_eq!(
+        count, 1,
+        "expected exactly ONE `gradle-resolver:` summary log line per scan (FR-014); got {count}. \
+         stderr:\n{stderr}"
+    );
+    // The wrapper_single_subproject fixture has one project directory
+    // and the ladder ran (--gradle-resolve set + mock gradlew emits
+    // real output) → tier MUST be `subprocess`.
+    assert!(
+        stderr.contains("subprocess"),
+        "expected `subprocess` in FR-014 summary; got:\n{stderr}"
+    );
+}

@@ -84,7 +84,11 @@ pub fn read(
     // `GradleScanSummary` on `ScanDiagnostics` — the m235 US4 emitters
     // read the aggregate and emit `waybill:gradle-resolution-tier` at
     // document scope.
-    let mut per_project_tiers: Vec<tier::GradleResolutionTier> = Vec::new();
+    //
+    // Also drives the FR-014 per-scan INFO log summary — the pairs
+    // below (project-dir → tier) are formatted into the one-line
+    // summary at the end of the walker.
+    let mut per_project_pairs: Vec<(std::path::PathBuf, tier::GradleResolutionTier)> = Vec::new();
 
     crate::scan_fs::walk::safe_walk(rootfs, &cfg, |project_dir| {
         if !project_dir.is_dir() {
@@ -105,7 +109,7 @@ pub fn read(
             let graph = ladder::resolve(project_dir, &ladder_config);
             let ladder_tier = graph.tier;
             out.extend(graph.components);
-            per_project_tiers.push(ladder_tier);
+            per_project_pairs.push((project_dir.to_path_buf(), ladder_tier));
             ladder_ran = true;
         }
 
@@ -125,19 +129,50 @@ pub fn read(
             saw_lockfile = true;
         }
         if saw_lockfile && !ladder_ran {
-            per_project_tiers.push(tier::GradleResolutionTier::LockfileOnly);
+            per_project_pairs.push((
+                project_dir.to_path_buf(),
+                tier::GradleResolutionTier::LockfileOnly,
+            ));
         }
     });
 
     // Compute the aggregate summary for the doc-scope annotation.
-    if !per_project_tiers.is_empty() {
-        let first_tier = per_project_tiers[0];
-        let all_same = per_project_tiers.iter().all(|t| *t == first_tier);
+    if !per_project_pairs.is_empty() {
+        let first_tier = per_project_pairs[0].1;
+        let all_same = per_project_pairs.iter().all(|(_, t)| *t == first_tier);
         diagnostics.gradle_scan_summary = Some(ladder::GradleScanSummary {
             subprojects: Vec::new(), // per-subproject detail is a follow-on
             aggregate_tier: first_tier,
             aggregate_mixed: !all_same,
         });
+
+        // FR-014: emit a single INFO-level summary line naming which
+        // tier fired for each project this scan touched. Format is
+        // designed to be greppable (`gradle-resolver:` prefix + a
+        // simple `,`-separated list of `<project-dir>=<tier>` pairs).
+        // Project dirs are made scan-root-relative for readability
+        // when possible; absolute paths otherwise.
+        let items: Vec<String> = per_project_pairs
+            .iter()
+            .map(|(dir, tier_val)| {
+                let display = dir
+                    .strip_prefix(rootfs)
+                    .map(|p| {
+                        if p.as_os_str().is_empty() {
+                            std::path::PathBuf::from(".")
+                        } else {
+                            p.to_path_buf()
+                        }
+                    })
+                    .unwrap_or_else(|_| dir.clone());
+                format!("{}={}", display.display(), tier_val.as_annotation_str())
+            })
+            .collect();
+        tracing::info!(
+            target: "waybill::gradle",
+            "gradle-resolver: {}",
+            items.join(", "),
+        );
     }
 
     out
