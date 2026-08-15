@@ -1,0 +1,25 @@
+// m235 US2 fixture — cache-warm scan without --gradle-resolve.
+//
+// The fixture ships a fake Gradle-cache tree at ./gradle-cache/ that
+// mirrors the real `~/.gradle/caches/modules-2/files-2.1/` layout.
+// The integration test sets WAYBILL_TEST_GRADLE_CACHE=<fixture>/gradle-cache
+// so the m235 cache reader targets it.
+//
+// The build script declares `cache-root:1.0.0` as a direct dep. The
+// cache reader will:
+//   1. Extract this coord via static_parser::extract_direct_coords
+//   2. Look up cache-root's POM in the fake cache
+//   3. Parse `cache-leaf:2.0.0` from that POM's <dependencies>
+//   4. Look up cache-leaf's POM
+//   5. Emit both coords + a transitive edge from root → leaf
+//
+// The scan runs WITHOUT --gradle-resolve so US1 short-circuits at
+// OperatorOptOut; US2 fires and produces the resolved graph.
+
+plugins {
+    id 'java'
+}
+
+dependencies {
+    implementation 'com.example.waybillfixture:cache-root:1.0.0'
+}

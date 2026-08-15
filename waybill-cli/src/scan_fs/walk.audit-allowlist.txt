@@ -1,5 +1,6 @@
 waybill-cli/src/scan_fs/binary/source_binding/cmake_observer.rs:fn walk_for_cmake_build_dirs(
 waybill-cli/src/scan_fs/file_tier/walker.rs:pub(crate) fn walk_file_tier(
+waybill-cli/src/scan_fs/package_db/gradle/cache_reader.rs:pub(super) fn walk_transitives(
 waybill-cli/src/scan_fs/package_db/maven.rs:    pub(crate) fn walk_rootfs_poms(
 waybill-cli/src/scan_fs/package_db/maven.rs:fn walk_m2_jars(repo_cache: &MavenRepoCache) -> Vec<PathBuf> {
 waybill-cli/src/scan_fs/package_db/maven_sidecar.rs:    fn walk(dir: &Path, depth: usize, out: &mut HashMap<String, PathBuf>) {

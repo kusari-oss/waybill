@@ -536,3 +536,82 @@ fn sc005_subprocess_timeout_degrades_gracefully() {
         "timed-out subprocess must not contribute components; got: {fixture_maven:?}"
     );
 }
+
+// -----------------------------------------------------------
+// US2 (Phase 4) — no-wrapper-warm-cache fixture emits cache-tier
+// components + transitive edge via US2 cache reader.
+// -----------------------------------------------------------
+
+#[test]
+fn us2_warm_cache_produces_transitive_edge_and_cache_tier() {
+    let workdir = tempfile::tempdir().expect("workdir tempdir");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let out_path = workdir.path().join("sbom.cdx.json");
+    let fixture_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("golden_inputs")
+        .join("gradle")
+        .join("no_wrapper_warm_cache");
+    let cache_path = fixture_path.join("gradle-cache");
+    assert!(cache_path.is_dir(), "cache fixture missing at {}", cache_path.display());
+
+    let mut cmd = Command::new(bin());
+    apply_fake_home_env(&mut cmd, fake_home.path());
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    // Point the m235 cache reader at the fixture's fake gradle cache.
+    cmd.env("WAYBILL_TEST_GRADLE_CACHE", cache_path.to_str().unwrap());
+    // Deliberately DO NOT pass --gradle-resolve. US1 should short-
+    // circuit at OperatorOptOut, US2 fires and produces the graph.
+    cmd.args([
+        "--offline",
+        "sbom",
+        "scan",
+        "--path",
+        fixture_path.to_str().unwrap(),
+        "--format",
+        "cyclonedx-json",
+        "--output",
+        out_path.to_str().unwrap(),
+        "--no-deep-hash",
+    ]);
+    let output = cmd.output().expect("spawn waybill");
+    assert!(
+        output.status.success(),
+        "scan failed:\n  stderr={}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+    let bytes = std::fs::read(&out_path).expect("read emitted SBOM");
+    let json: serde_json::Value = serde_json::from_slice(&bytes).expect("parse JSON");
+
+    let purls = maven_purls(&json);
+    let root = "pkg:maven/com.example.waybillfixture/cache-root@1.0.0";
+    let leaf = "pkg:maven/com.example.waybillfixture/cache-leaf@2.0.0";
+
+    // Both direct seed AND transitive dep (parsed from the seed's
+    // cached POM) MUST appear.
+    assert!(
+        purls.iter().any(|p| p == root),
+        "expected direct seed component from cache; got: {purls:?}"
+    );
+    assert!(
+        purls.iter().any(|p| p == leaf),
+        "expected transitive component from cached POM's <dependencies>; got: {purls:?}"
+    );
+
+    // Transitive edge from root → leaf synthesized via scan_fs's
+    // depends-resolution.
+    assert!(
+        has_edge(&json, root, leaf),
+        "expected dependencies[] edge {root} -> {leaf}; got: {}",
+        serde_json::to_string_pretty(&json["dependencies"]).unwrap_or_default()
+    );
+
+    // FR-006: doc-scope tier annotation MUST be `cache`.
+    let tier = doc_scope_property(&json, "waybill:gradle-resolution-tier");
+    assert_eq!(
+        tier.as_deref(),
+        Some("cache"),
+        "expected `cache` tier annotation when US2 succeeded; got {tier:?}"
+    );
+}

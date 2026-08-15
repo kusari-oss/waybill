@@ -24,6 +24,7 @@
 
 use std::path::{Path, PathBuf};
 
+use super::cache_reader;
 use super::subprocess::{self, SubprocessOutcome};
 use super::tier::{GradleFallbackReason, GradleResolutionTier};
 use crate::scan_fs::package_db::PackageDbEntry;
@@ -195,25 +196,65 @@ pub(super) fn try_subprocess(
     }
 }
 
-/// MVP ladder entry point — attempts US1 only.
+/// Try the US2 cache tier for one project directory.
 ///
-/// US2 (cache) + US3 (static) stubs return `LockfileOnly` with an
-/// empty graph in follow-on milestones. When the ladder produces no
-/// components, `mod.rs::read` falls back to m106 lockfile output.
+/// `Ok(graph)` when the Gradle cache is warm for this project's
+/// declared coords; `Err(reason)` when the cache is absent, empty,
+/// or missing all declared coords.
+pub(super) fn try_cache(
+    project_dir: &Path,
+) -> Result<GradleResolvedGraph, GradleFallbackReason> {
+    match cache_reader::resolve_via_cache(project_dir) {
+        Ok(graph) => Ok(graph),
+        Err(err) => {
+            let reason = match err {
+                cache_reader::GradleCacheError::CacheAbsent => {
+                    GradleFallbackReason::MissingTool
+                }
+                cache_reader::GradleCacheError::NoSeedsHit => {
+                    GradleFallbackReason::CacheMiss
+                }
+            };
+            tracing::debug!(
+                target: "waybill::gradle",
+                "US2 cache resolution failed at {} — reason={} — degrading to next tier",
+                project_dir.display(),
+                reason.as_annotation_str()
+            );
+            Err(reason)
+        }
+    }
+}
+
+/// Ladder entry point — attempts US1 (subprocess) → US2 (cache) →
+/// US3 (static, stub).
+///
+/// When all tiers fail to produce components, returns an empty
+/// `LockfileOnly` graph with the fallback history recorded — the
+/// caller (`mod.rs::read`) then relies on m106 lockfile output (if
+/// any) to populate the SBOM.
 pub fn resolve(
     project_dir: &Path,
     config: &GradleLadderConfig,
 ) -> GradleResolvedGraph {
     let mut history: Vec<(GradleResolutionTier, GradleFallbackReason)> = Vec::new();
 
-    // US1 subprocess (m235 MVP).
+    // US1 subprocess (m235 Phase 3).
     match try_subprocess(project_dir, config) {
         Ok(graph) => return graph,
         Err(reason) => history.push((GradleResolutionTier::Subprocess, reason)),
     }
 
-    // MVP stub — US2/US3 land in follow-on milestones. When they do,
-    // insert their `try_*` calls here in the same `match` shape.
+    // US2 cache (m235 Phase 4).
+    match try_cache(project_dir) {
+        Ok(mut graph) => {
+            graph.fallback_history = history;
+            return graph;
+        }
+        Err(reason) => history.push((GradleResolutionTier::Cache, reason)),
+    }
+
+    // MVP stub — US3 static parser lands in Phase 5.
 
     GradleResolvedGraph {
         components: Vec::new(),
