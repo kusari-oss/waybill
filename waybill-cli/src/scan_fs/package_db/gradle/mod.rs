@@ -104,21 +104,24 @@ pub fn read(
             .iter()
             .any(|name| project_dir.join(name).is_file());
 
-        let mut ladder_ran = false;
+        // Track the tier that ACTUALLY contributed components for this
+        // project (the "effective tier"). If the ladder produced
+        // output, its tier wins. Otherwise m106 lockfile output (if
+        // any) is what shows up in the SBOM, so the tier is
+        // `LockfileOnly`. If neither contributed, we don't record a
+        // tier for this project at all — no annotation drift toward
+        // `mixed` from settings-only roots or empty build.gradle
+        // stubs.
+        let mut effective_tier: Option<tier::GradleResolutionTier> = None;
         if is_gradle_project {
             let graph = ladder::resolve(project_dir, &ladder_config);
-            let ladder_tier = graph.tier;
+            if !graph.components.is_empty() {
+                effective_tier = Some(graph.tier);
+            }
             out.extend(graph.components);
-            per_project_pairs.push((project_dir.to_path_buf(), ladder_tier));
-            ladder_ran = true;
         }
 
-        // m106 lockfile pass — unchanged behaviorally. Tier accounting:
-        // when we saw a lockfile AND the ladder ran but produced only
-        // the `LockfileOnly` sentinel (e.g., operator opt-out), the
-        // ladder's tier stays `LockfileOnly`. When we saw a lockfile
-        // WITHOUT a ladder pass (rare — lockfile in a dir with no
-        // build script), record `LockfileOnly` explicitly.
+        // m106 lockfile pass — unchanged behaviorally.
         let mut saw_lockfile = false;
         for filename in ["gradle.lockfile", "buildscript-gradle.lockfile"] {
             let path = project_dir.join(filename);
@@ -128,11 +131,15 @@ pub fn read(
             out.extend(lockfile::read_gradle_lockfile(&path));
             saw_lockfile = true;
         }
-        if saw_lockfile && !ladder_ran {
-            per_project_pairs.push((
-                project_dir.to_path_buf(),
-                tier::GradleResolutionTier::LockfileOnly,
-            ));
+
+        // Fold lockfile contribution into the tier record if the
+        // ladder didn't contribute.
+        if effective_tier.is_none() && saw_lockfile {
+            effective_tier = Some(tier::GradleResolutionTier::LockfileOnly);
+        }
+
+        if let Some(t) = effective_tier {
+            per_project_pairs.push((project_dir.to_path_buf(), t));
         }
     });
 

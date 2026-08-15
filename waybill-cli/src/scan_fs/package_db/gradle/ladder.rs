@@ -25,6 +25,7 @@
 use std::path::{Path, PathBuf};
 
 use super::cache_reader;
+use super::static_parser;
 use super::subprocess::{self, SubprocessOutcome};
 use super::tier::{GradleFallbackReason, GradleResolutionTier};
 use crate::scan_fs::package_db::PackageDbEntry;
@@ -254,12 +255,46 @@ pub fn resolve(
         Err(reason) => history.push((GradleResolutionTier::Cache, reason)),
     }
 
-    // MVP stub — US3 static parser lands in Phase 5.
+    // US3 static parser (m235 Phase 5).
+    match try_static(project_dir) {
+        Ok(mut graph) => {
+            graph.fallback_history = history;
+            return graph;
+        }
+        Err(reason) => history.push((GradleResolutionTier::Static, reason)),
+    }
 
     GradleResolvedGraph {
         components: Vec::new(),
         edges: Vec::new(),
         tier: GradleResolutionTier::LockfileOnly,
         fallback_history: history,
+    }
+}
+
+/// Try the US3 static-parser tier for one project directory.
+///
+/// `Ok(graph)` when at least one `build.gradle(.kts)` was parsed;
+/// `Err(NoSourceFiles)` when no build files exist in the project
+/// tree (ladder degrades to lockfile-only).
+pub(super) fn try_static(
+    project_dir: &Path,
+) -> Result<GradleResolvedGraph, GradleFallbackReason> {
+    match static_parser::resolve_via_static_parse(project_dir) {
+        Ok(graph) => Ok(graph),
+        Err(err) => {
+            let reason = match err {
+                static_parser::GradleStaticError::NoSourceFiles => {
+                    GradleFallbackReason::NoSourceFiles
+                }
+            };
+            tracing::debug!(
+                target: "waybill::gradle",
+                "US3 static parse failed at {} — reason={} — degrading to next tier",
+                project_dir.display(),
+                reason.as_annotation_str()
+            );
+            Err(reason)
+        }
     }
 }

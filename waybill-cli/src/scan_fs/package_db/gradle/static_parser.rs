@@ -1,21 +1,46 @@
 //! Milestone 235 US3 — Gradle static parser.
 //!
-//! MVP scope (m235 Phase 3): only the `extract_direct_coords`
-//! helper (T007) that US2 uses to seed its declared-coords list.
-//! Full US3 static parser (regex table for 7 patterns × 10
-//! configurations × 2 DSLs) lands in a follow-on milestone.
+//! Regex-scoped DSL extractor for `build.gradle` (Groovy) +
+//! `build.gradle.kts` (Kotlin) direct-dependency declarations.
+//! Runs when neither US1 subprocess nor US2 cache produces
+//! components — the lowest-value but always-available tier of the
+//! ladder.
+//!
+//! MVP scope (Phase 5 core):
+//! - Direct string coord patterns: `<config> "g:a:v"` and
+//!   `<config>("g:a:v")`
+//! - 10 recognized configurations mapped to lifecycle scopes
+//! - Multi-subproject enumeration via `settings.gradle(.kts)`
+//!   `include(...)` lines
+//!
+//! Deferred to Phase 5b follow-on:
+//! - Version catalog resolution (`libs.foo.bar` → coord lookup via
+//!   `gradle/libs.versions.toml`); the m122 kotlin_dsl reader has
+//!   the resolver — this milestone will delegate once the
+//!   visibility is promoted
+//! - Platform BOM detection (`platform(...)`) — emits an annotation
+//!   rather than a component
+//! - Complex Groovy expressions (helper methods, dynamic `include`,
+//!   Kotlin lambda-based dep declarations) — warn-and-skip
 //!
 //! See contracts/gradle-static-parser.md for the full contract.
 
-use std::path::Path;
+#![allow(dead_code)]
+
+use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 use regex::Regex;
 
-/// Lightweight direct-dep coordinate representation used by the
-/// (future) US2 cache reader as a seed set. Kept intentionally
-/// minimal — the full `MavenCoord` type will land alongside the
-/// US2 implementation.
+use super::ladder::{EdgeScope, GradleResolvedGraph};
+use super::tier::GradleResolutionTier;
+use crate::scan_fs::package_db::PackageDbEntry;
+use waybill_common::types::purl::{encode_purl_segment, Purl};
+
+/// Lightweight direct-dep coordinate representation.
+///
+/// Shared with the US2 cache reader (which converts via
+/// `impl From<&DirectCoord> for MavenCoord`) as its seed input.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(super) struct DirectCoord {
     pub group: String,
@@ -23,34 +48,75 @@ pub(super) struct DirectCoord {
     pub version: String,
 }
 
+/// Failure modes for the static parser.
+#[derive(Debug)]
+pub enum GradleStaticError {
+    /// No `build.gradle` / `build.gradle.kts` files found under the
+    /// project tree — the ladder degrades to lockfile-only.
+    NoSourceFiles,
+}
+
 /// Extract direct-dep coordinates from `build.gradle(.kts)` in the
-/// given project directory.
+/// given project directory (US2 seed input — coords only, no scope).
 ///
-/// Covers ONLY the direct-string-coord patterns (skips version catalog
-/// references, platform BOMs, project refs). Enough to seed US2's cache
-/// lookup; the full US3 parser handles the rest.
-///
-/// Returns an empty Vec if no `build.gradle(.kts)` file exists.
-#[allow(dead_code)] // MVP: not called until US2 lands
+/// Covers ONLY the direct-string-coord patterns (skips version
+/// catalog references, platform BOMs, project refs). Enough to seed
+/// US2's cache lookup.
 pub(super) fn extract_direct_coords(project_dir: &Path) -> Vec<DirectCoord> {
-    let mut out: Vec<DirectCoord> = Vec::new();
+    extract_direct_coords_with_scope(project_dir)
+        .into_iter()
+        .map(|(coord, _scope)| coord)
+        .collect()
+}
+
+/// Extract direct-dep coordinates paired with their EdgeScope (US3).
+///
+/// The scope is derived from the configuration name that declared
+/// the dependency (per contracts/gradle-static-parser.md §step 8):
+///
+/// | Configuration | Scope |
+/// |---|---|
+/// | `implementation`, `api`, `runtimeOnly`, `compileOnly` | `Runtime` |
+/// | `testImplementation`, `testRuntimeOnly`, `testCompileOnly` | `Test` |
+/// | `annotationProcessor`, `kapt`, `ksp` | `Buildscript` |
+pub(super) fn extract_direct_coords_with_scope(
+    project_dir: &Path,
+) -> Vec<(DirectCoord, EdgeScope)> {
+    let mut out: Vec<(DirectCoord, EdgeScope)> = Vec::new();
     for name in ["build.gradle", "build.gradle.kts"] {
         let path = project_dir.join(name);
         let Ok(content) = std::fs::read_to_string(&path) else {
             continue;
         };
         for cap in groovy_string_coord_re().captures_iter(&content) {
-            if let Some(coord) = parse_coord_str(&cap[1]) {
-                out.push(coord);
+            let config = &cap[1];
+            let coord_str = &cap[2];
+            if let Some(coord) = parse_coord_str(coord_str) {
+                out.push((coord, config_to_scope(config)));
             }
         }
         for cap in kotlin_string_coord_re().captures_iter(&content) {
-            if let Some(coord) = parse_coord_str(&cap[1]) {
-                out.push(coord);
+            let config = &cap[1];
+            let coord_str = &cap[2];
+            if let Some(coord) = parse_coord_str(coord_str) {
+                out.push((coord, config_to_scope(config)));
             }
         }
     }
     out
+}
+
+/// Map a Gradle configuration name to the corresponding EdgeScope.
+///
+/// Unknown configs default to `Runtime` (defensive — new configs
+/// added by the Gradle ecosystem are more often runtime-like than
+/// test-like).
+fn config_to_scope(config: &str) -> EdgeScope {
+    match config {
+        "testImplementation" | "testRuntimeOnly" | "testCompileOnly" => EdgeScope::Test,
+        "annotationProcessor" | "kapt" | "ksp" => EdgeScope::Buildscript,
+        _ => EdgeScope::Runtime,
+    }
 }
 
 fn parse_coord_str(s: &str) -> Option<DirectCoord> {
@@ -64,20 +130,170 @@ fn parse_coord_str(s: &str) -> Option<DirectCoord> {
     Some(DirectCoord { group, artifact, version })
 }
 
-// Matches Groovy: `implementation 'g:a:v'` or `implementation "g:a:v"`.
-// Also matches `api`, `runtimeOnly`, `testImplementation`, etc.
+// Groovy: `implementation 'g:a:v'` or `implementation "g:a:v"`.
+// Captures: [1] = config name, [2] = coord string.
 fn groovy_string_coord_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r#"(?m)^\s*(?:implementation|api|runtimeOnly|compileOnly|testImplementation|testRuntimeOnly|testCompileOnly|annotationProcessor|kapt|ksp)\s+['"]([^'"]+)['"]"#).expect("valid regex")
+        Regex::new(r#"(?m)^\s*(implementation|api|runtimeOnly|compileOnly|testImplementation|testRuntimeOnly|testCompileOnly|annotationProcessor|kapt|ksp)\s+['"]([^'"]+)['"]"#).expect("valid regex")
     })
 }
 
-// Matches Kotlin: `implementation("g:a:v")`.
+// Kotlin: `implementation("g:a:v")`.
+// Captures: [1] = config name, [2] = coord string.
 fn kotlin_string_coord_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r#"(?m)^\s*(?:implementation|api|runtimeOnly|compileOnly|testImplementation|testRuntimeOnly|testCompileOnly|annotationProcessor|kapt|ksp)\s*\(\s*"([^"]+)"\s*\)"#).expect("valid regex")
+        Regex::new(r#"(?m)^\s*(implementation|api|runtimeOnly|compileOnly|testImplementation|testRuntimeOnly|testCompileOnly|annotationProcessor|kapt|ksp)\s*\(\s*"([^"]+)"\s*\)"#).expect("valid regex")
+    })
+}
+
+/// Enumerate subprojects declared in `settings.gradle(.kts)`
+/// `include(...)` lines.
+///
+/// Recognized patterns:
+/// - Groovy: `include 'app', 'core'`, `include ":app"`
+/// - Kotlin: `include("app", "core")`, `include(":app")`
+///
+/// Returns absolute paths of subproject directories. Empty when no
+/// `settings.gradle(.kts)` present or `include(...)` has no
+/// recognized args.
+pub(super) fn enumerate_subprojects_static(project_dir: &Path) -> Vec<PathBuf> {
+    let mut names: Vec<String> = Vec::new();
+    for name in ["settings.gradle", "settings.gradle.kts"] {
+        let path = project_dir.join(name);
+        let Ok(content) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        for cap in include_line_re().captures_iter(&content) {
+            let args = &cap[1];
+            for token in args.split(',') {
+                let raw = token.trim();
+                // Strip surrounding quotes.
+                let unquoted = raw
+                    .trim_start_matches('\'')
+                    .trim_end_matches('\'')
+                    .trim_start_matches('"')
+                    .trim_end_matches('"')
+                    .trim_start_matches(':')
+                    .trim();
+                if !unquoted.is_empty() && !unquoted.contains(char::is_whitespace) {
+                    names.push(unquoted.to_string());
+                }
+            }
+        }
+    }
+    names
+        .into_iter()
+        .map(|n| project_dir.join(n.replace(':', "/")))
+        .filter(|p| p.is_dir())
+        .collect()
+}
+
+// Matches `include(...)` or `include ...` — captures the arg tuple/list.
+fn include_line_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        // Groovy: `include 'a', 'b'` or Kotlin: `include("a", "b")`.
+        // Non-greedy inner match to stay on one line.
+        Regex::new(r#"(?m)^\s*include\s*\(?\s*(['"][^\n]+?)\s*\)?\s*$"#)
+            .expect("valid regex")
+    })
+}
+
+/// Top-level US3 entry point — parses ONLY the project_dir's own
+/// `build.gradle(.kts)`.
+///
+/// The multi-subproject case is handled by the outer walker
+/// (`gradle::read` visits each subproject directory in turn), NOT
+/// by recursing into subprojects here. The `enumerate_subprojects_static`
+/// function is kept for the future US4 per-subproject annotation
+/// emitter — it isn't invoked from this entry point.
+///
+/// Returns `Err(NoSourceFiles)` when no `build.gradle(.kts)` is
+/// found in `project_dir` so the ladder falls through to
+/// lockfile-only. `Ok(graph)` with an empty component list is a
+/// valid outcome (build file exists but declares no direct deps)
+/// — the tier annotation still emits `static`.
+pub fn resolve_via_static_parse(
+    project_dir: &Path,
+) -> Result<GradleResolvedGraph, GradleStaticError> {
+    let has_build_file = ["build.gradle", "build.gradle.kts"]
+        .iter()
+        .any(|n| project_dir.join(n).is_file());
+    if !has_build_file {
+        return Err(GradleStaticError::NoSourceFiles);
+    }
+
+    let pairs = extract_direct_coords_with_scope(project_dir);
+    let source_path = project_dir.to_string_lossy().to_string();
+    let components: Vec<PackageDbEntry> = pairs
+        .into_iter()
+        .filter_map(|(coord, scope)| build_entry(&coord, &source_path, scope))
+        .collect();
+
+    // US3 emits COMPONENTS ONLY — no transitive edges (that's the
+    // domain of US1 subprocess + US2 cache reader). `edges` is
+    // intentionally empty.
+    Ok(GradleResolvedGraph {
+        components,
+        edges: Vec::new(),
+        tier: GradleResolutionTier::Static,
+        fallback_history: Vec::new(),
+    })
+}
+
+/// Build a `PackageDbEntry` from a resolved Maven coord.
+///
+/// Field set mirrors the m106 lockfile reader + m235 US1/US2 entry
+/// construction. Scope determines the `LifecycleScope` value on the
+/// emitted component; scan_fs's downstream emission path maps this
+/// to CDX `scope` and SPDX relationship types.
+fn build_entry(
+    coord: &DirectCoord,
+    source_path: &str,
+    scope: EdgeScope,
+) -> Option<PackageDbEntry> {
+    let purl = Purl::new(&format!(
+        "pkg:maven/{}/{}@{}",
+        encode_purl_segment(&coord.group),
+        encode_purl_segment(&coord.artifact),
+        encode_purl_segment(&coord.version),
+    ))
+    .ok()?;
+    Some(PackageDbEntry {
+        build_inclusion: None,
+        purl,
+        name: format!("{}:{}", coord.group, coord.artifact),
+        version: coord.version.clone(),
+        arch: None,
+        source_path: source_path.to_string(),
+        depends: Vec::new(),
+        maintainer: None,
+        licenses: Vec::new(),
+        lifecycle_scope: Some(scope.into()),
+        requirement_ranges: Vec::new(),
+        source_type: None,
+        buildinfo_status: None,
+        evidence_kind: None,
+        binary_class: None,
+        binary_stripped: None,
+        linkage_kind: None,
+        detected_go: None,
+        confidence: None,
+        binary_packed: None,
+        raw_version: None,
+        parent_purl: None,
+        npm_role: None,
+        co_owned_by: None,
+        hashes: Vec::new(),
+        // "design" tier — US3 static-parse output is manifest-only
+        // (no resolution took place); mirrors m106 lockfile-tier
+        // semantics for the design/source distinction.
+        sbom_tier: Some("design".to_string()),
+        shade_relocation: None,
+        extra_annotations: std::collections::BTreeMap::new(),
+        binary_role: None,
     })
 }
 
@@ -138,5 +354,88 @@ dependencies {
     fn empty_when_no_build_files() {
         let td = TempDir::new().unwrap();
         assert!(extract_direct_coords(td.path()).is_empty());
+    }
+
+    #[test]
+    fn config_to_scope_maps_test_configs_to_test_scope() {
+        let td = TempDir::new().unwrap();
+        write_file(
+            td.path(),
+            "build.gradle.kts",
+            r#"
+dependencies {
+    implementation("com.example:runtime-dep:1.0.0")
+    testImplementation("com.example:test-dep:2.0.0")
+    annotationProcessor("com.example:proc-dep:3.0.0")
+}
+"#,
+        );
+        let pairs = extract_direct_coords_with_scope(td.path());
+        assert_eq!(pairs.len(), 3);
+        let runtime = pairs
+            .iter()
+            .find(|(c, _)| c.artifact == "runtime-dep")
+            .expect("runtime dep");
+        assert_eq!(runtime.1, EdgeScope::Runtime);
+        let test = pairs
+            .iter()
+            .find(|(c, _)| c.artifact == "test-dep")
+            .expect("test dep");
+        assert_eq!(test.1, EdgeScope::Test);
+        let proc = pairs
+            .iter()
+            .find(|(c, _)| c.artifact == "proc-dep")
+            .expect("proc dep");
+        assert_eq!(proc.1, EdgeScope::Buildscript);
+    }
+
+    #[test]
+    fn enumerate_subprojects_from_kotlin_include() {
+        let td = TempDir::new().unwrap();
+        write_file(
+            td.path(),
+            "settings.gradle.kts",
+            r#"
+rootProject.name = "myapp"
+include("app")
+include(":core")
+"#,
+        );
+        // Create the subproject dirs so is_dir() filter passes.
+        std::fs::create_dir(td.path().join("app")).unwrap();
+        std::fs::create_dir(td.path().join("core")).unwrap();
+        let subs = enumerate_subprojects_static(td.path());
+        assert_eq!(subs.len(), 2);
+        assert!(subs.iter().any(|p| p.ends_with("app")));
+        assert!(subs.iter().any(|p| p.ends_with("core")));
+    }
+
+    #[test]
+    fn resolve_via_static_parse_single_project() {
+        let td = TempDir::new().unwrap();
+        write_file(
+            td.path(),
+            "build.gradle.kts",
+            r#"
+plugins { id("java") }
+dependencies {
+    implementation("com.example:root-dep:1.0.0")
+    testImplementation("com.example:root-test-dep:2.0.0")
+}
+"#,
+        );
+        let graph = resolve_via_static_parse(td.path()).expect("single-project static parse");
+        assert_eq!(graph.tier, GradleResolutionTier::Static);
+        assert!(graph.edges.is_empty(), "US3 emits no transitive edges");
+        assert_eq!(graph.components.len(), 2);
+    }
+
+    #[test]
+    fn resolve_via_static_parse_no_source_files_errors() {
+        let td = TempDir::new().unwrap();
+        assert!(matches!(
+            resolve_via_static_parse(td.path()),
+            Err(GradleStaticError::NoSourceFiles)
+        ));
     }
 }
