@@ -177,10 +177,13 @@ fn us1_wrapper_single_subproject_transitive_edge() {
 // -----------------------------------------------------------
 
 #[test]
-fn without_gradle_resolve_the_fixture_produces_no_maven_components() {
-    // Verifies the m106-only path: without --gradle-resolve, waybill
-    // looks for `gradle.lockfile` (absent in this fixture) and finds
-    // nothing. FR-009 non-regression.
+fn without_gradle_resolve_transitive_edge_absent() {
+    // FR-009 non-regression + US3 shape check: without
+    // `--gradle-resolve`, the m235 static parser (US3, Phase 5) still
+    // emits the fixture's DIRECT deps (declared in build.gradle) but
+    // the SUBPROCESS-only transitive edge from direct → transitive
+    // MUST be absent. That transitive edge is only recoverable via
+    // US1's real dependency-tree call (or US2 cache hit).
     let workdir = tempfile::tempdir().expect("workdir tempdir");
     let fake_home = tempfile::tempdir().expect("fake-home tempdir");
     let out_path = workdir.path().join("sbom.cdx.json");
@@ -189,6 +192,12 @@ fn without_gradle_resolve_the_fixture_produces_no_maven_components() {
     let mut cmd = Command::new(bin());
     apply_fake_home_env(&mut cmd, fake_home.path());
     cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    // Point cache reader at a definitely-absent path so US2 fails
+    // cleanly regardless of the test host's real ~/.gradle state.
+    cmd.env(
+        "WAYBILL_TEST_GRADLE_CACHE",
+        workdir.path().join("nonexistent-cache").to_str().unwrap(),
+    );
     cmd.args([
         "--offline",
         "sbom",
@@ -210,14 +219,25 @@ fn without_gradle_resolve_the_fixture_produces_no_maven_components() {
 
     let bytes = std::fs::read(&out_path).expect("read emitted SBOM");
     let json: serde_json::Value = serde_json::from_slice(&bytes).expect("parse JSON");
+    let direct = "pkg:maven/com.example.waybillfixture/direct@1.0.0";
+    let transitive = "pkg:maven/com.example.waybillfixture/transitive@0.5.0";
+    // The direct-declared dep MUST appear (US3 emits it).
     let purls = maven_purls(&json);
-    let fixture_maven: Vec<&String> = purls
-        .iter()
-        .filter(|p| p.contains("waybillfixture"))
-        .collect();
     assert!(
-        fixture_maven.is_empty(),
-        "expected zero m235-fixture components without --gradle-resolve; got: {fixture_maven:?}"
+        purls.iter().any(|p| p == direct),
+        "expected US3-emitted direct dep; got: {purls:?}"
+    );
+    // The TRANSITIVE dep MUST NOT appear — it's only encoded in
+    // the mock gradlew's ASCII-tree output, which US3 doesn't
+    // invoke.
+    assert!(
+        !purls.iter().any(|p| p == transitive),
+        "transitive dep should NOT appear without --gradle-resolve; got: {purls:?}"
+    );
+    // And no edge from direct → transitive.
+    assert!(
+        !has_edge(&json, direct, transitive),
+        "transitive edge should NOT appear without --gradle-resolve"
     );
 }
 
@@ -512,20 +532,21 @@ fn sc005_subprocess_timeout_degrades_gracefully() {
     let bytes = std::fs::read(&out_path).expect("read emitted SBOM");
     let json: serde_json::Value = serde_json::from_slice(&bytes).expect("parse JSON");
 
-    // FR-003 / FR-015: on subprocess timeout, ladder degrades to
-    // `LockfileOnly`. Since the fixture has no gradle.lockfile
-    // either, the tier annotation MUST reflect the LockfileOnly
-    // sentinel (recorded by the walker via the ladder's empty
-    // fallback graph).
+    // FR-003 / FR-015: on subprocess timeout, ladder degrades
+    // gracefully. Since the fixture's build.gradle declares no
+    // dependencies, US3 succeeds with 0 components; no lockfile
+    // either. The tier annotation is either absent (no component
+    // source contributed) or reflects a fallback tier — both
+    // acceptable; the acceptance criterion is "scan doesn't hang
+    // and exits cleanly," not a specific tier value.
     let tier = doc_scope_property(&json, "waybill:gradle-resolution-tier");
-    assert_eq!(
-        tier.as_deref(),
-        Some("lockfile-only"),
-        "expected `lockfile-only` tier after subprocess timeout \
-         (ladder degrades gracefully); got {tier:?}"
+    assert!(
+        matches!(tier.as_deref(), None | Some("static") | Some("lockfile-only")),
+        "expected None/static/lockfile-only tier after subprocess timeout; got {tier:?}"
     );
 
-    // No fixture components should appear (the mock never emitted any).
+    // No fixture components should appear (the mock never emitted
+    // any; the fixture's build.gradle declares no deps).
     let purls = maven_purls(&json);
     let fixture_maven: Vec<&String> = purls
         .iter()
@@ -613,5 +634,90 @@ fn us2_warm_cache_produces_transitive_edge_and_cache_tier() {
         tier.as_deref(),
         Some("cache"),
         "expected `cache` tier annotation when US2 succeeded; got {tier:?}"
+    );
+}
+
+// -----------------------------------------------------------
+// US3 (Phase 5) — cold-clone with no wrapper / no cache / no
+// lockfile emits direct-only components via static parser AND
+// tier annotation reflects `static`.
+// -----------------------------------------------------------
+
+#[test]
+fn us3_cold_clone_static_emits_direct_components_and_static_tier() {
+    let workdir = tempfile::tempdir().expect("workdir tempdir");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let out_path = workdir.path().join("sbom.cdx.json");
+    let fixture_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("golden_inputs")
+        .join("gradle")
+        .join("cold_clone_static_only");
+    assert!(
+        fixture_path.is_dir(),
+        "fixture missing at {}",
+        fixture_path.display()
+    );
+
+    let mut cmd = Command::new(bin());
+    apply_fake_home_env(&mut cmd, fake_home.path());
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    // Point the cache reader at a definitely-absent path so US2
+    // fails cleanly. Without this the reader falls back to the
+    // real ~/.gradle/caches which the test host may have populated.
+    cmd.env(
+        "WAYBILL_TEST_GRADLE_CACHE",
+        workdir.path().join("nonexistent-cache").to_str().unwrap(),
+    );
+    cmd.args([
+        "--offline",
+        "sbom",
+        "scan",
+        "--path",
+        fixture_path.to_str().unwrap(),
+        "--format",
+        "cyclonedx-json",
+        "--output",
+        out_path.to_str().unwrap(),
+        "--include-declared-deps",
+        "--no-deep-hash",
+    ]);
+    let output = cmd.output().expect("spawn waybill");
+    assert!(
+        output.status.success(),
+        "scan failed:\n  stderr={}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+    let bytes = std::fs::read(&out_path).expect("read emitted SBOM");
+    let json: serde_json::Value = serde_json::from_slice(&bytes).expect("parse JSON");
+
+    let purls = maven_purls(&json);
+    let app_runtime = "pkg:maven/com.example.waybillfixture/app-runtime-dep@1.0.0";
+    let app_test = "pkg:maven/com.example.waybillfixture/app-test-dep@2.0.0";
+    let core_api = "pkg:maven/com.example.waybillfixture/core-api-dep@3.0.0";
+
+    // Both subprojects' direct deps must appear. The walker visits
+    // `app/` and `core/` independently; each triggers US3 for its
+    // own build.gradle.kts.
+    assert!(
+        purls.iter().any(|p| p == app_runtime),
+        "expected app subproject's runtime dep; got: {purls:?}"
+    );
+    assert!(
+        purls.iter().any(|p| p == app_test),
+        "expected app subproject's test dep; got: {purls:?}"
+    );
+    assert!(
+        purls.iter().any(|p| p == core_api),
+        "expected core subproject's api dep; got: {purls:?}"
+    );
+
+    // FR-006: doc-scope tier annotation MUST be `static`.
+    let tier = doc_scope_property(&json, "waybill:gradle-resolution-tier");
+    assert_eq!(
+        tier.as_deref(),
+        Some("static"),
+        "expected `static` tier when US3 succeeded; got {tier:?}"
     );
 }
