@@ -470,6 +470,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_ prefix of the unit under test
     fn walk_transitives_bfs_two_levels() {
         let td = TempDir::new().unwrap();
         write_pom(
@@ -493,6 +494,7 @@ mod tests {
     }
 
     #[test]
+    // walker-audit: false-positive — #[test] function name shares the walk_ prefix of the unit under test
     fn walk_transitives_cycle_detection() {
         // A → B → A cycle — walker must terminate.
         let td = TempDir::new().unwrap();
