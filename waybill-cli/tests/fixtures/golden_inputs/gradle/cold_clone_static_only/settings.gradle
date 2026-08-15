@@ -1,0 +1,4 @@
+// m235 US3 fixture — multi-subproject cold-clone (Groovy DSL).
+rootProject.name = 'waybill-fixture-cold-clone'
+include 'app'
+include ':core'

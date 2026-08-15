@@ -1,8 +1,8 @@
 // m235 US3 fixture — subproject B (core) with an `api` dep.
 plugins {
-    id("java-library")
+    id 'java-library'
 }
 
 dependencies {
-    api("com.example.waybillfixture:core-api-dep:3.0.0")
+    api 'com.example.waybillfixture:core-api-dep:3.0.0'
 }

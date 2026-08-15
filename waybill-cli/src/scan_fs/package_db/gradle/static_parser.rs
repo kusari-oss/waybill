@@ -79,28 +79,29 @@ pub(super) fn extract_direct_coords(project_dir: &Path) -> Vec<DirectCoord> {
 /// | `implementation`, `api`, `runtimeOnly`, `compileOnly` | `Runtime` |
 /// | `testImplementation`, `testRuntimeOnly`, `testCompileOnly` | `Test` |
 /// | `annotationProcessor`, `kapt`, `ksp` | `Buildscript` |
+///
+/// **DSL scoping.** This function reads ONLY `build.gradle` (Groovy
+/// DSL). `build.gradle.kts` (Kotlin DSL) is delegated to the m122
+/// `kotlin_dsl` reader, which understands KMP source-set provenance
+/// (`waybill:kmp-source-set`), workspace-root synthesis, and version
+/// catalog resolution. Emitting Kotlin DSL deps from BOTH readers
+/// would cause dedupe-order-dependent annotation loss (see
+/// `us3_kmp_workspace_root_and_kmp_source_set_provenance_present`
+/// test in `scan_kmp_polyglot.rs`).
 pub(super) fn extract_direct_coords_with_scope(
     project_dir: &Path,
 ) -> Vec<(DirectCoord, EdgeScope)> {
     let mut out: Vec<(DirectCoord, EdgeScope)> = Vec::new();
-    for name in ["build.gradle", "build.gradle.kts"] {
-        let path = project_dir.join(name);
-        let Ok(content) = std::fs::read_to_string(&path) else {
-            continue;
-        };
-        for cap in groovy_string_coord_re().captures_iter(&content) {
-            let config = &cap[1];
-            let coord_str = &cap[2];
-            if let Some(coord) = parse_coord_str(coord_str) {
-                out.push((coord, config_to_scope(config)));
-            }
-        }
-        for cap in kotlin_string_coord_re().captures_iter(&content) {
-            let config = &cap[1];
-            let coord_str = &cap[2];
-            if let Some(coord) = parse_coord_str(coord_str) {
-                out.push((coord, config_to_scope(config)));
-            }
+    // Groovy DSL only — Kotlin DSL is m122's responsibility.
+    let path = project_dir.join("build.gradle");
+    let Ok(content) = std::fs::read_to_string(&path) else {
+        return out;
+    };
+    for cap in groovy_string_coord_re().captures_iter(&content) {
+        let config = &cap[1];
+        let coord_str = &cap[2];
+        if let Some(coord) = parse_coord_str(coord_str) {
+            out.push((coord, config_to_scope(config)));
         }
     }
     out
@@ -218,10 +219,11 @@ fn include_line_re() -> &'static Regex {
 pub fn resolve_via_static_parse(
     project_dir: &Path,
 ) -> Result<GradleResolvedGraph, GradleStaticError> {
-    let has_build_file = ["build.gradle", "build.gradle.kts"]
-        .iter()
-        .any(|n| project_dir.join(n).is_file());
-    if !has_build_file {
+    // Groovy DSL only. Kotlin `.kts` files are delegated to the m122
+    // `kotlin_dsl` reader (see `extract_direct_coords_with_scope`'s
+    // docstring for the rationale).
+    let has_groovy_build = project_dir.join("build.gradle").is_file();
+    if !has_groovy_build {
         return Err(GradleStaticError::NoSourceFiles);
     }
 
@@ -332,7 +334,13 @@ dependencies {
     }
 
     #[test]
-    fn extract_kotlin_direct_string_coord() {
+    fn kotlin_dsl_delegated_to_m122_reader() {
+        // US3 static parser is Groovy-DSL-only. Kotlin `.kts` files
+        // are delegated to the m122 `kotlin_dsl` reader. This test
+        // verifies that a project with ONLY a `build.gradle.kts`
+        // (no Groovy sibling) returns zero coords from US3 — m122
+        // handles those separately when `--include-declared-deps` is
+        // set. See `extract_direct_coords_with_scope` docstring.
         let td = TempDir::new().unwrap();
         write_file(
             td.path(),
@@ -345,9 +353,10 @@ dependencies {
 "#,
         );
         let coords = extract_direct_coords(td.path());
-        assert_eq!(coords.len(), 2);
-        assert!(coords.iter().any(|c| c.artifact == "foo"));
-        assert!(coords.iter().any(|c| c.artifact == "bar"));
+        assert!(
+            coords.is_empty(),
+            ".kts extraction is delegated to m122; got: {coords:?}"
+        );
     }
 
     #[test]
@@ -361,12 +370,12 @@ dependencies {
         let td = TempDir::new().unwrap();
         write_file(
             td.path(),
-            "build.gradle.kts",
+            "build.gradle",
             r#"
 dependencies {
-    implementation("com.example:runtime-dep:1.0.0")
-    testImplementation("com.example:test-dep:2.0.0")
-    annotationProcessor("com.example:proc-dep:3.0.0")
+    implementation 'com.example:runtime-dep:1.0.0'
+    testImplementation 'com.example:test-dep:2.0.0'
+    annotationProcessor 'com.example:proc-dep:3.0.0'
 }
 "#,
         );
@@ -415,12 +424,12 @@ include(":core")
         let td = TempDir::new().unwrap();
         write_file(
             td.path(),
-            "build.gradle.kts",
+            "build.gradle",
             r#"
-plugins { id("java") }
+plugins { id 'java' }
 dependencies {
-    implementation("com.example:root-dep:1.0.0")
-    testImplementation("com.example:root-test-dep:2.0.0")
+    implementation 'com.example:root-dep:1.0.0'
+    testImplementation 'com.example:root-test-dep:2.0.0'
 }
 "#,
         );
