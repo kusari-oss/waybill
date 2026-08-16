@@ -140,6 +140,43 @@ fn groovy_string_coord_re() -> &'static Regex {
     })
 }
 
+// C150: `implementation platform('g:a:v')` / `api(platform("g:a:v"))` etc.
+// BOM imports don't produce a component — they're constraint-only
+// declarations. But we DO surface them as a component-scope
+// annotation so operators can trace which BOMs govern the emitted
+// dep set.
+//
+// Captures: [1] = coord string (`g:a:v`).
+fn groovy_platform_import_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r#"(?m)^\s*(?:implementation|api|runtimeOnly|compileOnly|testImplementation|testRuntimeOnly|testCompileOnly|annotationProcessor|kapt|ksp)\s*\(?\s*(?:enforcedPlatform|platform)\s*\(\s*['"]([^'"]+)['"]\s*\)"#).expect("valid regex")
+    })
+}
+
+/// Extract the `platform(...)` / `enforcedPlatform(...)` BOM coord
+/// imports declared in the project's `build.gradle`. These are
+/// version-constraint declarations that don't contribute a component
+/// but DO appear as C150 per-component annotations on every US3
+/// component emitted from this project.
+///
+/// Returns sorted, deduplicated `g:a:v` strings. Empty when no BOM
+/// import is declared. Groovy DSL only (Kotlin DSL is m122's turf).
+pub(super) fn extract_platform_imports(project_dir: &Path) -> Vec<String> {
+    let path = project_dir.join("build.gradle");
+    let Ok(content) = std::fs::read_to_string(&path) else {
+        return Vec::new();
+    };
+    let mut out: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+    for cap in groovy_platform_import_re().captures_iter(&content) {
+        let coord_str = &cap[1];
+        if parse_coord_str(coord_str).is_some() {
+            out.insert(coord_str.to_string());
+        }
+    }
+    out.into_iter().collect()
+}
+
 // Kotlin: `implementation("g:a:v")`.
 // Captures: [1] = config name, [2] = coord string.
 fn kotlin_string_coord_re() -> &'static Regex {
@@ -229,9 +266,26 @@ pub fn resolve_via_static_parse(
 
     let pairs = extract_direct_coords_with_scope(project_dir);
     let source_path = project_dir.to_string_lossy().to_string();
+    // C150: sorted, comma-joined `g:a:v` list of BOM imports for this
+    // project. Empty (→ None) when no platform imports.
+    let platform_imports = extract_platform_imports(project_dir);
+    let platform_import_value = if platform_imports.is_empty() {
+        None
+    } else {
+        Some(platform_imports.join(","))
+    };
     let components: Vec<PackageDbEntry> = pairs
         .into_iter()
         .filter_map(|(coord, scope)| build_entry(&coord, &source_path, scope))
+        .map(|mut entry| {
+            if let Some(ref v) = platform_import_value {
+                entry.extra_annotations.insert(
+                    "waybill:gradle-platform-import".to_string(),
+                    serde_json::Value::String(v.clone()),
+                );
+            }
+            entry
+        })
         .collect();
 
     // US3 emits COMPONENTS ONLY — no transitive edges (that's the
@@ -446,5 +500,62 @@ dependencies {
             resolve_via_static_parse(td.path()),
             Err(GradleStaticError::NoSourceFiles)
         ));
+    }
+
+    #[test]
+    fn extract_platform_imports_matches_platform_and_enforced_platform() {
+        let td = TempDir::new().unwrap();
+        let build = td.path().join("build.gradle");
+        std::fs::write(
+            &build,
+            r#"
+plugins { id 'java' }
+dependencies {
+    implementation platform('com.example.waybillfixture:bom-a:1.0.0')
+    implementation platform("com.example.waybillfixture:bom-b:2.0.0")
+    api(enforcedPlatform('com.example.waybillfixture:bom-c:3.0.0'))
+    implementation 'com.example.waybillfixture:app-dep:4.0.0'
+}
+"#,
+        )
+        .unwrap();
+        let mut got = extract_platform_imports(td.path());
+        got.sort();
+        assert_eq!(
+            got,
+            vec![
+                "com.example.waybillfixture:bom-a:1.0.0".to_string(),
+                "com.example.waybillfixture:bom-b:2.0.0".to_string(),
+                "com.example.waybillfixture:bom-c:3.0.0".to_string(),
+            ],
+            "expected 3 BOM imports from platform() + enforcedPlatform(); regular dep NOT included"
+        );
+    }
+
+    #[test]
+    fn resolve_via_static_parse_tags_components_with_platform_import() {
+        let td = TempDir::new().unwrap();
+        std::fs::write(
+            td.path().join("build.gradle"),
+            r#"
+plugins { id 'java' }
+dependencies {
+    implementation platform('com.example.waybillfixture:bom-parent:1.0.0')
+    implementation 'com.example.waybillfixture:app-dep:2.0.0'
+}
+"#,
+        )
+        .unwrap();
+        let graph = resolve_via_static_parse(td.path()).expect("static parse");
+        assert_eq!(graph.components.len(), 1, "BOM MUST NOT appear as a component");
+        let entry = &graph.components[0];
+        let annotation = entry
+            .extra_annotations
+            .get("waybill:gradle-platform-import")
+            .expect("C150 annotation present");
+        assert_eq!(
+            annotation.as_str().unwrap(),
+            "com.example.waybillfixture:bom-parent:1.0.0",
+        );
     }
 }

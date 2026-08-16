@@ -886,6 +886,12 @@ cdx_anno!(c148_cdx, "waybill:gradle-subproject-tier",                component);
 // mtimes — conservative default).
 cdx_anno!(c149_cdx, "waybill:cache-freshness",                       component);
 
+// Milestone 235 US4 follow-on: C150 per-component Gradle platform-import
+// BOM coord list. Emitted on every US3 static-parser component when
+// the enclosing project's build.gradle declares one or more
+// `platform(...)` / `enforcedPlatform(...)` BOM imports.
+cdx_anno!(c150_cdx, "waybill:gradle-platform-import",                component);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 cdx_anno!(c113_cdx, "waybill:synthetic-built-in",               component);

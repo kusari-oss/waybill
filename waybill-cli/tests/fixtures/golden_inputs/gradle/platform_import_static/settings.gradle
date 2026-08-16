@@ -1,0 +1,5 @@
+// m235 C150 fixture — single-project scan that declares a BOM
+// import via `platform(...)`. The BOM MUST NOT appear as a
+// component; the declared implementation dep MUST carry the C150
+// `waybill:gradle-platform-import` annotation.
+rootProject.name = 'waybill-fixture-platform-import'

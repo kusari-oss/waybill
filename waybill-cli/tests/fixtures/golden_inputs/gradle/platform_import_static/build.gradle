@@ -1,0 +1,8 @@
+plugins {
+    id 'java'
+}
+
+dependencies {
+    implementation platform('com.example.waybillfixture:bom-parent:1.0.0')
+    implementation 'com.example.waybillfixture:app-runtime-dep:2.0.0'
+}

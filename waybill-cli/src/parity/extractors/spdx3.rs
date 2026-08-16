@@ -688,6 +688,8 @@ spdx3_anno!(c147_spdx3, "waybill:gradle-fallback-reason",                documen
 spdx3_anno!(c148_spdx3, "waybill:gradle-subproject-tier",                component);
 // Milestone 235 US4 follow-on: C149 per-component cache-freshness.
 spdx3_anno!(c149_spdx3, "waybill:cache-freshness",                       component);
+// Milestone 235 US4 follow-on: C150 per-component Gradle platform-import.
+spdx3_anno!(c150_spdx3, "waybill:gradle-platform-import",                component);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
