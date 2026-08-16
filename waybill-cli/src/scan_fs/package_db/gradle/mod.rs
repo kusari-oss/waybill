@@ -132,17 +132,41 @@ pub fn read(
                     all_fallbacks.insert((*t, *r));
                 }
             }
-            out.extend(graph.components);
+            // C148 per-component tier annotation: tag every ladder
+            // component with the tier that produced it. Complementary
+            // to C146 doc-scope (the aggregate) — this gives per-
+            // component audit trail in both homogeneous and mixed
+            // scans without any emit-time conditional.
+            let tier_str = graph.tier.as_annotation_str();
+            for mut entry in graph.components {
+                entry.extra_annotations.insert(
+                    "waybill:gradle-subproject-tier".to_string(),
+                    serde_json::Value::String(tier_str.to_string()),
+                );
+                out.push(entry);
+            }
         }
 
-        // m106 lockfile pass — unchanged behaviorally.
+        // m106 lockfile pass — unchanged behaviorally, plus the same
+        // C148 per-component tag using the `LockfileOnly` tier so
+        // lockfile-only components carry the same audit trail.
         let mut saw_lockfile = false;
         for filename in ["gradle.lockfile", "buildscript-gradle.lockfile"] {
             let path = project_dir.join(filename);
             if !path.is_file() {
                 continue;
             }
-            out.extend(lockfile::read_gradle_lockfile(&path));
+            for mut entry in lockfile::read_gradle_lockfile(&path) {
+                entry.extra_annotations.insert(
+                    "waybill:gradle-subproject-tier".to_string(),
+                    serde_json::Value::String(
+                        tier::GradleResolutionTier::LockfileOnly
+                            .as_annotation_str()
+                            .to_string(),
+                    ),
+                );
+                out.push(entry);
+            }
             saw_lockfile = true;
         }
 
