@@ -443,11 +443,11 @@ Pre-PR Verification posture — CI stays fast + hermetic).
   cache warm, that's a lower-tier variant we may or may not
   address (plan-phase decision).
 
-## Close-out (post-implementation) *(2026-08-15)*
+## Close-out (post-implementation) *(2026-08-15 initial, amended 2026-08-16)*
 
-Milestone 235 shipped across six PRs. The critical operator-facing
-signals (ladder tier + fallback-reason) are live end-to-end; the
-per-component annotations remain deferred per plan-phase scoping.
+Milestone 235 shipped across 11 PRs. Every spec-defined annotation
+is live — no per-component signal remains deferred after the
+2026-08-16 follow-on PRs.
 
 ### PRs
 
@@ -462,9 +462,16 @@ per-component annotations remain deferred per plan-phase scoping.
   annotation (C147)` — also lit up C146
   `waybill:gradle-resolution-tier` doc-scope across CDX / SPDX 2.3
   / SPDX 3, plus FR-014 INFO log summary
+- **US4 follow-on: per-component C148** — #699 `feat(m235 US4
+  follow-on): per-component gradle-subproject-tier (C148)`
+- **US4 follow-on: per-component C149** — #700 `feat(m235 US4
+  follow-on): per-component cache-freshness (C149)`
+- **US4 follow-on: per-component C150** — #701 `feat(m235 US4
+  follow-on): per-component gradle-platform-import (C150)`
 - **Docs** — #689 `docs(m235): CLAUDE.md flag subsection + CLI
-  reference + ecosystems companion` and #694 `test(m235 T044): SC-005
-  subprocess timeout fallback test`
+  reference + ecosystems companion`, #694 `test(m235 T044): SC-005
+  subprocess timeout fallback test`, and #698 (this file's original
+  close-out).
 
 ### Final CLI flag surface
 
@@ -493,17 +500,44 @@ None fire without the operator explicitly passing `--gradle-resolve`:
   three-format goldens. Integration tests structurally assert
   emitted `dependencies[]` edges + tier annotations. Deferred to a
   follow-on if operators need byte-equivalent regression guards.
-- **T038 per-component annotations** — `waybill:gradle-subproject-tier`,
-  `waybill:cache-freshness`, `waybill:gradle-platform-import` all
-  deferred. Would require populating `GradleScanSummary.subprojects`
-  for real (currently `Vec::new()` per m235 mod.rs:151). The
-  doc-scope tier (C146) + doc-scope fallback (C147) cover the
-  aggregate signal; per-component detail is a future enrichment.
+- **T038 per-component annotations** — **all three now shipped**
+  (C148 via #699, C149 via #700, C150 via #701) via a design
+  simpler than the T038 spec proposed: tag components at read-time
+  in `mod.rs::read` via the standard `PackageDbEntry.extra_annotations`
+  channel. No emitter-time conditional on `aggregate_mixed`;
+  `GradleScanSummary.subprojects` remains `Vec::new()` (never
+  needed to be populated once we simplified the emission model).
 - **T042/T043 additional fixture scenarios** — three of the four
   planned fixtures shipped (`wrapper_single_subproject`,
   `no_wrapper_with_lockfile`, `mixed_tier`); a fourth
   (`wrapper_multi_subproject` distinct from `mixed_tier`) landed
-  as part of the m235 test corpus but isn't goldened.
+  as part of the m235 test corpus but isn't goldened. A fifth
+  (`platform_import_static`) landed in #701 for the C150 test.
+
+### Annotation inventory (shipped)
+
+**Doc-scope** (aggregated across all Gradle projects in the scan):
+
+- **C146** `waybill:gradle-resolution-tier` — which mechanism produced
+  the emitted graph (`subprocess`/`cache`/`static`/`lockfile-only`/`mixed`)
+- **C147** `waybill:gradle-fallback-reason` — sorted comma-joined
+  `<tier>:<reason>` pairs of tiers that were tried and failed
+  before the winner won (`operator-opt-out` filtered)
+
+**Log-only** (structured tracing at INFO level):
+
+- **FR-014** `gradle-resolver: :app=subprocess, :lib=cache, ...` —
+  greppable per-project tier record, one line per scan
+
+**Per-component** (on emitted `PackageDbEntry.extra_annotations`):
+
+- **C148** `waybill:gradle-subproject-tier` — which tier produced
+  this specific component (audit trail; consistent per project)
+- **C149** `waybill:cache-freshness` — `fresh` when newest cache
+  entry > build.gradle mtime; `stale` otherwise. **US2-tier only.**
+- **C150** `waybill:gradle-platform-import` — sorted comma-joined
+  BOM coord list when the enclosing project declares one or more
+  `platform(...)` / `enforcedPlatform(...)` imports. **US3-tier only.**
 
 ### SC verification
 
