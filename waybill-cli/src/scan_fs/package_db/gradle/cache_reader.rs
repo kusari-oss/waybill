@@ -27,10 +27,13 @@
 //!
 //! - `.module` Gradle Module Metadata parsing (JSON; carries
 //!   variant-aware info the POM lacks for KMP / Android AAR variants).
-//! - Cache-freshness annotation (`waybill:cache-freshness =
-//!   fresh|stale` per-component).
 //! - Strict miss threshold (currently we walk best-effort; a large
 //!   fraction of missing seeds should degrade to the next tier).
+//!
+//! ## Landed follow-on
+//!
+//! - C149 `waybill:cache-freshness = fresh|stale` per-component
+//!   annotation on cache-tier components (see `cache_freshness` below).
 
 #![allow(dead_code)]
 
@@ -282,6 +285,75 @@ pub(super) fn walk_transitives(
 /// entry construction. `depends` is populated by the caller with the
 /// child coordinates' `group:artifact` names so the scan_fs pipeline
 /// at `mod.rs:868` synthesizes the SBOM Relationship edges.
+/// C149 wire enum. Per-component cache freshness signal.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum CacheFreshness {
+    /// Newest resolved cache entry is newer than the project's
+    /// build.gradle(.kts) — cache reflects the currently-declared deps.
+    Fresh,
+    /// build.gradle(.kts) is newer than the newest resolved cache
+    /// entry (or the mtimes couldn't be read). The cache MAY have
+    /// missed newer deps the operator added; downstream tools should
+    /// treat cache-tier components as potentially incomplete.
+    Stale,
+}
+
+impl CacheFreshness {
+    pub(super) fn as_annotation_str(&self) -> &'static str {
+        match self {
+            Self::Fresh => "fresh",
+            Self::Stale => "stale",
+        }
+    }
+}
+
+/// Compare the newest resolved cache-entry mtime vs the project's
+/// build.gradle(.kts) mtime. Returns `Fresh` iff at least one cache
+/// entry is strictly newer than the newest build script. Missing
+/// mtimes on either side → `Stale` (conservative default: prefer
+/// false-flagging over silently claiming cache freshness).
+pub(super) fn cache_freshness(
+    cache_root: &Path,
+    project_dir: &Path,
+    coords: &[MavenCoord],
+) -> CacheFreshness {
+    use std::time::SystemTime;
+
+    let build_script_mtime = {
+        let mut newest: Option<SystemTime> = None;
+        for name in ["build.gradle", "build.gradle.kts"] {
+            let path = project_dir.join(name);
+            if let Ok(meta) = std::fs::metadata(&path) {
+                if let Ok(mtime) = meta.modified() {
+                    newest = Some(newest.map_or(mtime, |cur| cur.max(mtime)));
+                }
+            }
+        }
+        newest
+    };
+    let Some(build_mtime) = build_script_mtime else {
+        return CacheFreshness::Stale;
+    };
+
+    // For each coord, look up its .pom in the cache and take that
+    // file's mtime; track the newest across all resolved coords.
+    let newest_cache_mtime: Option<SystemTime> = coords
+        .iter()
+        .filter_map(|c| resolve_pom_path(cache_root, c))
+        .filter_map(|p| std::fs::metadata(&p).ok())
+        .filter_map(|m| m.modified().ok())
+        .max();
+    let Some(cache_mtime) = newest_cache_mtime else {
+        return CacheFreshness::Stale;
+    };
+
+    if cache_mtime > build_mtime {
+        CacheFreshness::Fresh
+    } else {
+        CacheFreshness::Stale
+    }
+}
+
 fn build_entry(
     coord: &MavenCoord,
     source_path: &str,
@@ -360,6 +432,13 @@ pub fn resolve_via_cache(
 
     let source_path = project_dir.to_string_lossy().to_string();
 
+    // C149 per-project cache-freshness signal: is the newest cache
+    // entry across the resolved coords older or newer than the
+    // project's build.gradle(.kts)? Attached identically to every
+    // cache-derived component so downstream tools can flag scans
+    // where the cache no longer reflects the declared deps.
+    let freshness = cache_freshness(&cache_root, project_dir, &resolved_coords);
+
     // Group edges by source coord for `depends` population.
     use std::collections::HashMap;
     let mut source_to_depends: HashMap<MavenCoord, Vec<String>> = HashMap::new();
@@ -374,7 +453,11 @@ pub fn resolve_via_cache(
     let mut edges: Vec<GradleEdge> = Vec::new();
     for coord in &resolved_coords {
         let depends = source_to_depends.remove(coord).unwrap_or_default();
-        if let Some(entry) = build_entry(coord, &source_path, depends) {
+        if let Some(mut entry) = build_entry(coord, &source_path, depends) {
+            entry.extra_annotations.insert(
+                "waybill:cache-freshness".to_string(),
+                serde_json::Value::String(freshness.as_annotation_str().to_string()),
+            );
             components.push(entry);
         }
     }

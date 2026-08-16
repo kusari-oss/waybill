@@ -880,6 +880,12 @@ cdx_anno!(c147_cdx, "waybill:gradle-fallback-reason",                document);
 // produced this specific component). Complementary to C146 doc-scope.
 cdx_anno!(c148_cdx, "waybill:gradle-subproject-tier",                component);
 
+// Milestone 235 US4 follow-on: C149 per-component cache-freshness on
+// US2 cache-tier components. Value: `fresh` when newest resolved cache
+// entry > build.gradle(.kts) mtime; `stale` otherwise (or on missing
+// mtimes — conservative default).
+cdx_anno!(c149_cdx, "waybill:cache-freshness",                       component);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 cdx_anno!(c113_cdx, "waybill:synthetic-built-in",               component);
