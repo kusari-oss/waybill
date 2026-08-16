@@ -172,8 +172,8 @@ Repository root is `/Users/mlieberman/Projects/mikebom/`. All paths below are re
 - [ ] T046 [P] Update `CLAUDE.md` `## Active Technologies` to reference m235 (auto-added by `update-agent-context.sh claude` run during plan phase; verify the line is correctly formatted and not truncated per the m234 experience).
 - [ ] T047 Run pre-PR gate locally: `./scripts/pre-pr.sh`. MUST pass clean (zero clippy warnings; every test suite green with `ok. N passed; 0 failed`). Per Constitution `Pre-PR Verification` section.
 - [ ] T048 Open PR titled `feat(m235): Gradle transitive dependency resolution ladder` with description linking spec + plan + tasks + the SC-verification checklist. Include a "Test plan" section enumerating the fixtures + goldens + tier-annotation verification. Include a "Deferred" section naming T3 (network POM fetch) as out of scope.
-- [ ] T049 Add spec close-out note to `specs/235-gradle-transitive-ladder/spec.md` under a new `## Close-out (post-implementation)` section (per FR-010 tradition): (a) final CLI flag surface as landed; (b) any deviations from the plan; (c) link to the merged PR; (d) SC verification pass/fail per SC.
-- [ ] T050 Add `memory/reference_gradle_ladder.md` auto-memory entry: SoT locations (composite paths + CLI flags), which tier fires when, tie-in with m106.
+- [X] T049 Add spec close-out note to `specs/235-gradle-transitive-ladder/spec.md` under a new `## Close-out (post-implementation)` section (per FR-010 tradition): (a) final CLI flag surface as landed; (b) any deviations from the plan; (c) link to the merged PR; (d) SC verification pass/fail per SC.
+- [X] T050 Add `memory/reference_gradle_ladder.md` auto-memory entry: SoT locations (composite paths + CLI flags), which tier fires when, tie-in with m106.
 
 ---
 

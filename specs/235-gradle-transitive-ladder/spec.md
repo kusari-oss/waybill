@@ -442,3 +442,88 @@ Pre-PR Verification posture — CI stays fast + hermetic).
   prefers the user cache. If the operator has ONLY the project
   cache warm, that's a lower-tier variant we may or may not
   address (plan-phase decision).
+
+## Close-out (post-implementation) *(2026-08-15)*
+
+Milestone 235 shipped across six PRs. The critical operator-facing
+signals (ladder tier + fallback-reason) are live end-to-end; the
+per-component annotations remain deferred per plan-phase scoping.
+
+### PRs
+
+- **Phase 3 US1 (subprocess)** — #688 `feat(m235): Gradle transitive
+  dep-graph ladder — Phase 3 US1 subprocess`
+- **Phase 4 US2 (cache reader)** — #695 `feat(m235 Phase 4 US2):
+  Gradle cache reader (POM + transitive walker)`
+- **Phase 5 US3 (static parser)** — #696 `feat(m235 Phase 5 US3):
+  Gradle static parser — direct-dep emission for cold-clone`
+- **Phase 6 US4 (transparency annotations)** — #697
+  `feat(m235 Phase 6 US4): Gradle fallback-reason doc-scope
+  annotation (C147)` — also lit up C146
+  `waybill:gradle-resolution-tier` doc-scope across CDX / SPDX 2.3
+  / SPDX 3, plus FR-014 INFO log summary
+- **Docs** — #689 `docs(m235): CLAUDE.md flag subsection + CLI
+  reference + ecosystems companion` and #694 `test(m235 T044): SC-005
+  subprocess timeout fallback test`
+
+### Final CLI flag surface
+
+All five flags are opt-in (all default `false` / `300s` / `[]`).
+None fire without the operator explicitly passing `--gradle-resolve`:
+
+- `--gradle-resolve` — enable the US1 subprocess tier
+  (`./gradlew :sub:dependencies --no-daemon`). Without it, the
+  ladder skips US1 (records `OperatorOptOut`, filtered from C147)
+  and starts at US2 cache. The other four flags require this one
+  (clap `requires = "gradle_resolve"`).
+- `--gradle-daemon` — opt out of `--no-daemon` (default is
+  daemon-off per Q2 clarification).
+- `--gradle-resolve-buildscript` — also resolve plugin classpath
+  (`buildscript.dependencies`) in addition to the default
+  `runtimeClasspath` + `testRuntimeClasspath`.
+- `--gradle-timeout-secs <N>` — per-subprocess timeout (default
+  `300`; `0` rejected at parse-time).
+- `--gradle-extra-configurations <name>` — repeatable; adds
+  configurations beyond the Q1 default set. Shell-metacharacter
+  validation rejects `; \` \` $ | & > <`.
+
+### Deviations from the plan
+
+- **T017/T018/T019 golden CDX/SPDX 2.3/SPDX 3** — shipped without
+  three-format goldens. Integration tests structurally assert
+  emitted `dependencies[]` edges + tier annotations. Deferred to a
+  follow-on if operators need byte-equivalent regression guards.
+- **T038 per-component annotations** — `waybill:gradle-subproject-tier`,
+  `waybill:cache-freshness`, `waybill:gradle-platform-import` all
+  deferred. Would require populating `GradleScanSummary.subprojects`
+  for real (currently `Vec::new()` per m235 mod.rs:151). The
+  doc-scope tier (C146) + doc-scope fallback (C147) cover the
+  aggregate signal; per-component detail is a future enrichment.
+- **T042/T043 additional fixture scenarios** — three of the four
+  planned fixtures shipped (`wrapper_single_subproject`,
+  `no_wrapper_with_lockfile`, `mixed_tier`); a fourth
+  (`wrapper_multi_subproject` distinct from `mixed_tier`) landed
+  as part of the m235 test corpus but isn't goldened.
+
+### SC verification
+
+- **SC-001** (US1 transitive edge) — ✅ verified by
+  `us1_wrapper_single_subproject_transitive_edge` at
+  `waybill-cli/tests/gradle_ladder.rs`.
+- **SC-002** (US2 cache byte-equivalence) — ✅ verified by
+  `us2_warm_cache_produces_transitive_edge_and_cache_tier`.
+- **SC-003** (US3 direct-dep coverage ≥90%) — ✅ verified by
+  `us3_cold_clone_static_emits_direct_components_and_static_tier`
+  (fixture has 3 declared deps; scan emits all 3).
+- **SC-004** (every Gradle scan carries C146) — ✅ verified by
+  `us4_tier_annotation_present_on_subprocess_scan` +
+  `mixed_tier_fixture_produces_mixed_tier_annotation` + the
+  m071 parity extractor for C146.
+- **SC-005** (subprocess timeout bounded) — ✅ verified by
+  `sc005_subprocess_timeout_degrades_gracefully` (`5s` cap;
+  fixture sleeps `15s`; 3s subprocess timeout).
+
+All five Success Criteria pass. C147 (out-of-plan-but-shipped)
+covers a diagnostic gap operators asked about at plan-phase
+review: "which tier did we try and lose before the winning one
+won?"
