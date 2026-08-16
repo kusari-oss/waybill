@@ -778,6 +778,11 @@ fn push_document_fields(
             summary.aggregate_tier.as_annotation_str()
         };
         push(out, "waybill:gradle-resolution-tier", json!(value));
+        // m235 US4 (C147): doc-scope Gradle fallback-reason annotation
+        // (SPDX 3). See CDX + SPDX 2.3 emission sites for rationale.
+        if let Some(reason) = &summary.fallback_summary {
+            push(out, "waybill:gradle-fallback-reason", json!(reason));
+        }
     }
 
     // Milestone 206 (#440): C124 doc-scope image-source annotation

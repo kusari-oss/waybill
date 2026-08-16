@@ -798,6 +798,16 @@ pub fn annotate_document(
             "waybill:gradle-resolution-tier",
             json!(value),
         );
+        // m235 US4 (C147): doc-scope Gradle fallback-reason annotation.
+        // See CDX-side emission at
+        // `generate/cyclonedx/metadata.rs::C147` for shape + rationale.
+        if let Some(reason) = &summary.fallback_summary {
+            push(
+                &mut out,
+                "waybill:gradle-fallback-reason",
+                json!(reason),
+            );
+        }
     }
 
     // Milestone 206 (#440): C124 doc-scope image-source annotation.

@@ -755,6 +755,18 @@ pub fn build_metadata(
             "name": "waybill:gradle-resolution-tier",
             "value": value,
         }));
+        // m235 US4 (C147): doc-scope Gradle fallback-reason annotation.
+        // Emitted iff at least one ladder tier was tried and failed
+        // BEFORE the winner won (pure `operator-opt-out` is filtered
+        // upstream). Value: sorted comma-joined `<tier>:<reason>` pairs.
+        // Absent when no failed attempts (default no-flag path or clean
+        // subprocess success) — byte-identity preserved per FR-006.
+        if let Some(reason) = &summary.fallback_summary {
+            properties.push(json!({
+                "name": "waybill:gradle-fallback-reason",
+                "value": reason,
+            }));
+        }
     }
 
     // Milestone 206 (#440): C124 doc-scope image-source annotation.

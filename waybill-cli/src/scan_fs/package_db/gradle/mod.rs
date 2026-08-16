@@ -89,6 +89,15 @@ pub fn read(
     // below (project-dir → tier) are formatted into the one-line
     // summary at the end of the walker.
     let mut per_project_pairs: Vec<(std::path::PathBuf, tier::GradleResolutionTier)> = Vec::new();
+    // m235 US4 (C147): accumulate every tier-attempt failure across all
+    // Gradle projects encountered. Pure `OperatorOptOut` is filtered out
+    // — that's the default no-flag path, not something to surface. The
+    // set is deduplicated + sorted (BTreeSet gives free ordering via the
+    // `Ord` derive on both enums) and joined at the end.
+    let mut all_fallbacks: std::collections::BTreeSet<(
+        tier::GradleResolutionTier,
+        tier::GradleFallbackReason,
+    )> = std::collections::BTreeSet::new();
 
     crate::scan_fs::walk::safe_walk(rootfs, &cfg, |project_dir| {
         if !project_dir.is_dir() {
@@ -118,6 +127,11 @@ pub fn read(
             if !graph.components.is_empty() {
                 effective_tier = Some(graph.tier);
             }
+            for (t, r) in &graph.fallback_history {
+                if !matches!(r, tier::GradleFallbackReason::OperatorOptOut) {
+                    all_fallbacks.insert((*t, *r));
+                }
+            }
             out.extend(graph.components);
         }
 
@@ -144,13 +158,40 @@ pub fn read(
     });
 
     // Compute the aggregate summary for the doc-scope annotation.
-    if !per_project_pairs.is_empty() {
-        let first_tier = per_project_pairs[0].1;
-        let all_same = per_project_pairs.iter().all(|(_, t)| *t == first_tier);
+    // Fire the summary whenever we either produced components OR
+    // recorded a real fallback attempt — the fallback set alone is
+    // enough to warrant emission so the operator can see the failed
+    // attempt even when nothing landed downstream.
+    if !per_project_pairs.is_empty() || !all_fallbacks.is_empty() {
+        let (first_tier, all_same) = if per_project_pairs.is_empty() {
+            // No tier contributed components; the honest default is
+            // `lockfile-only` (the pre-ladder baseline). C147 will
+            // still carry the diagnostic explaining why the ladder
+            // itself didn't land.
+            (tier::GradleResolutionTier::LockfileOnly, true)
+        } else {
+            let ft = per_project_pairs[0].1;
+            let same = per_project_pairs.iter().all(|(_, t)| *t == ft);
+            (ft, same)
+        };
+        let fallback_summary = if all_fallbacks.is_empty() {
+            None
+        } else {
+            Some(
+                all_fallbacks
+                    .iter()
+                    .map(|(t, r)| {
+                        format!("{}:{}", t.as_annotation_str(), r.as_annotation_str())
+                    })
+                    .collect::<Vec<_>>()
+                    .join(","),
+            )
+        };
         diagnostics.gradle_scan_summary = Some(ladder::GradleScanSummary {
             subprojects: Vec::new(), // per-subproject detail is a follow-on
             aggregate_tier: first_tier,
             aggregate_mixed: !all_same,
+            fallback_summary,
         });
 
         // FR-014: emit a single INFO-level summary line naming which
@@ -175,11 +216,13 @@ pub fn read(
                 format!("{}={}", display.display(), tier_val.as_annotation_str())
             })
             .collect();
-        tracing::info!(
-            target: "waybill::gradle",
-            "gradle-resolver: {}",
-            items.join(", "),
-        );
+        if !items.is_empty() {
+            tracing::info!(
+                target: "waybill::gradle",
+                "gradle-resolver: {}",
+                items.join(", "),
+            );
+        }
     }
 
     out

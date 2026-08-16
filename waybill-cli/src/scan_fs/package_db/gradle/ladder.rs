@@ -109,6 +109,16 @@ pub struct GradleScanSummary {
     /// the annotation writer emits `"mixed"` at doc scope.
     pub aggregate_tier: GradleResolutionTier,
     pub aggregate_mixed: bool,
+    /// Sorted, deduplicated `<tier>:<reason>` pairs of tiers that
+    /// were TRIED and FAILED across all Gradle projects in this scan
+    /// before the winning tier won. Comma-joined for wire emission.
+    /// `None` when no tier was tried (e.g., pure `lockfile-only` scan)
+    /// or when every attempt succeeded on first try. Drives the
+    /// document-scope `waybill:gradle-fallback-reason` annotation
+    /// (C147). Pure `operator-opt-out` reasons are excluded — that's
+    /// the default no-flag path, not a failure the operator needs
+    /// visibility into.
+    pub fallback_summary: Option<String>,
 }
 
 impl GradleScanSummary {
@@ -117,6 +127,7 @@ impl GradleScanSummary {
             subprojects: Vec::new(),
             aggregate_tier: GradleResolutionTier::LockfileOnly,
             aggregate_mixed: false,
+            fallback_summary: None,
         }
     }
 
@@ -132,6 +143,7 @@ impl GradleScanSummary {
             aggregate_mixed: !all_same,
             aggregate_tier: first_tier,
             subprojects: std::mem::take(&mut roots),
+            fallback_summary: None,
         }
     }
 }

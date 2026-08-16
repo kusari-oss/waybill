@@ -871,6 +871,10 @@ cdx_anno!(c145_cdx, "waybill:pants-target",                          component);
 // document-scope Gradle resolution tier.
 cdx_anno!(c146_cdx, "waybill:gradle-resolution-tier",                document);
 
+// Milestone 235 US4 (feature 235-gradle-transitive-ladder): C147
+// document-scope Gradle fallback-reason (sorted `<tier>:<reason>` list).
+cdx_anno!(c147_cdx, "waybill:gradle-fallback-reason",                document);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 cdx_anno!(c113_cdx, "waybill:synthetic-built-in",               component);
