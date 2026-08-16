@@ -871,6 +871,72 @@ fn us3_cold_clone_static_emits_direct_components_and_static_tier() {
 }
 
 // -----------------------------------------------------------
+// US4 follow-on (C150) — `platform(...)` BOM imports do not emit
+// as components; instead every US3-emitted component from the same
+// project carries the sorted comma-joined BOM coord list on
+// `waybill:gradle-platform-import`.
+// -----------------------------------------------------------
+
+#[test]
+fn c150_platform_import_tags_components_and_omits_bom_from_components() {
+    let workdir = tempfile::tempdir().expect("workdir tempdir");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let out_path = workdir.path().join("sbom.cdx.json");
+    let fixture_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("golden_inputs")
+        .join("gradle")
+        .join("platform_import_static");
+
+    let mut cmd = Command::new(bin());
+    apply_fake_home_env(&mut cmd, fake_home.path());
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.args([
+        "--offline",
+        "sbom",
+        "scan",
+        "--path",
+        fixture_path.to_str().unwrap(),
+        "--format",
+        "cyclonedx-json",
+        "--output",
+        out_path.to_str().unwrap(),
+        "--no-deep-hash",
+    ]);
+    let output = cmd.output().expect("spawn waybill");
+    assert!(
+        output.status.success(),
+        "scan failed:\n  stderr={}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+    let bytes = std::fs::read(&out_path).expect("read emitted SBOM");
+    let json: serde_json::Value = serde_json::from_slice(&bytes).expect("parse JSON");
+
+    let purls = maven_purls(&json);
+
+    // BOM is NOT a component — it's a version-constraint declaration.
+    assert!(
+        !purls.iter().any(|p| p.contains("bom-parent")),
+        "platform() BOM MUST NOT appear as a component; got: {purls:?}"
+    );
+
+    // The regular dep IS a component, and it carries the C150
+    // annotation naming the BOM.
+    let target = "pkg:maven/com.example.waybillfixture/app-runtime-dep@2.0.0";
+    assert!(
+        purls.iter().any(|p| p == target),
+        "expected app-runtime-dep component; got: {purls:?}"
+    );
+    let platform = component_property(&json, target, "waybill:gradle-platform-import");
+    assert_eq!(
+        platform.as_deref(),
+        Some("com.example.waybillfixture:bom-parent:1.0.0"),
+        "expected C150 annotation naming the BOM coord; got {platform:?}"
+    );
+}
+
+// -----------------------------------------------------------
 // US4 follow-on (C149) — no_wrapper_warm_cache fixture emits
 // `waybill:cache-freshness` per-component on cache-tier components.
 // -----------------------------------------------------------
