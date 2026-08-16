@@ -684,6 +684,8 @@ spdx3_anno!(c145_spdx3, "waybill:pants-target",                          compone
 spdx3_anno!(c146_spdx3, "waybill:gradle-resolution-tier",                document);
 // Milestone 235 US4: C147 doc-scope Gradle fallback-reason.
 spdx3_anno!(c147_spdx3, "waybill:gradle-fallback-reason",                document);
+// Milestone 235 US4 follow-on: C148 per-component Gradle subproject-tier.
+spdx3_anno!(c148_spdx3, "waybill:gradle-subproject-tier",                component);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

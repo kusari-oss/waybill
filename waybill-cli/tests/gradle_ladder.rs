@@ -134,6 +134,25 @@ fn doc_scope_property(json: &serde_json::Value, name: &str) -> Option<String> {
         .and_then(|p| p["value"].as_str().map(str::to_string))
 }
 
+/// Return the value of the named per-component `properties[]` entry
+/// on the CDX component whose `purl == target_purl`. `None` when the
+/// component is absent OR the property is absent on that component.
+fn component_property(
+    json: &serde_json::Value,
+    target_purl: &str,
+    name: &str,
+) -> Option<String> {
+    let component = json["components"]
+        .as_array()?
+        .iter()
+        .find(|c| c["purl"].as_str() == Some(target_purl))?;
+    component["properties"]
+        .as_array()?
+        .iter()
+        .find(|p| p["name"].as_str() == Some(name))
+        .and_then(|p| p["value"].as_str().map(str::to_string))
+}
+
 // -----------------------------------------------------------
 // SC-001 — US1 fixture emits transitive edge in CDX
 // -----------------------------------------------------------
@@ -848,5 +867,75 @@ fn us3_cold_clone_static_emits_direct_components_and_static_tier() {
         tier.as_deref(),
         Some("static"),
         "expected `static` tier when US3 succeeded; got {tier:?}"
+    );
+}
+
+// -----------------------------------------------------------
+// US4 follow-on (C148) — mixed_tier fixture emits per-component
+// `waybill:gradle-subproject-tier` tagging each component with the
+// ladder tier that produced it (`subprocess` vs `lockfile-only`).
+// -----------------------------------------------------------
+
+#[test]
+fn c148_mixed_tier_fixture_tags_components_with_subproject_tier() {
+    let workdir = tempfile::tempdir().expect("workdir tempdir");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let out_path = workdir.path().join("sbom.cdx.json");
+    let fixture_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("golden_inputs")
+        .join("gradle")
+        .join("mixed_tier");
+
+    let mut cmd = Command::new(bin());
+    apply_fake_home_env(&mut cmd, fake_home.path());
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.args([
+        "--offline",
+        "sbom",
+        "scan",
+        "--path",
+        fixture_path.to_str().unwrap(),
+        "--format",
+        "cyclonedx-json",
+        "--output",
+        out_path.to_str().unwrap(),
+        "--gradle-resolve",
+        "--gradle-timeout-secs",
+        "30",
+        "--no-deep-hash",
+    ]);
+    let output = cmd.output().expect("spawn waybill");
+    assert!(
+        output.status.success(),
+        "scan failed:\n  stderr={}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+    let bytes = std::fs::read(&out_path).expect("read emitted SBOM");
+    let json: serde_json::Value = serde_json::from_slice(&bytes).expect("parse JSON");
+
+    // Wrapper-project component came from US1 subprocess.
+    let wrapper_tier = component_property(
+        &json,
+        "pkg:maven/com.example.waybillfixture/wrapper-direct@1.0.0",
+        "waybill:gradle-subproject-tier",
+    );
+    assert_eq!(
+        wrapper_tier.as_deref(),
+        Some("subprocess"),
+        "wrapper-direct should carry C148 subproject-tier=subprocess; got {wrapper_tier:?}"
+    );
+
+    // Lockfile-project component came from the m106 lockfile pass.
+    let lockfile_tier = component_property(
+        &json,
+        "pkg:maven/com.example.waybillfixture/mixed-lockfile-dep@2.0.0",
+        "waybill:gradle-subproject-tier",
+    );
+    assert_eq!(
+        lockfile_tier.as_deref(),
+        Some("lockfile-only"),
+        "mixed-lockfile-dep should carry C148 subproject-tier=lockfile-only; got {lockfile_tier:?}"
     );
 }
