@@ -559,6 +559,135 @@ fn sc005_subprocess_timeout_degrades_gracefully() {
 }
 
 // -----------------------------------------------------------
+// US4 (C147) — subprocess timeout records
+// `waybill:gradle-fallback-reason = "subprocess:timeout"` at doc scope.
+// -----------------------------------------------------------
+
+#[test]
+fn c147_subprocess_timeout_emits_fallback_reason_annotation() {
+    // Same fixture as sc005 — mock gradlew sleeps 15s; --gradle-resolve
+    // with --gradle-timeout-secs 3 kills the subprocess, the ladder
+    // degrades, and the fallback_history captures (Subprocess, Timeout).
+    // C147 aggregates that into `subprocess:timeout` at doc scope
+    // (excluding pure operator-opt-out reasons).
+
+    let workdir = tempfile::tempdir().expect("workdir tempdir");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let out_path = workdir.path().join("sbom.cdx.json");
+    let fixture_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("golden_inputs")
+        .join("gradle")
+        .join("timeout_wrapper");
+
+    let mut cmd = Command::new(bin());
+    apply_fake_home_env(&mut cmd, fake_home.path());
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.args([
+        "--offline",
+        "sbom",
+        "scan",
+        "--path",
+        fixture_path.to_str().unwrap(),
+        "--format",
+        "cyclonedx-json",
+        "--output",
+        out_path.to_str().unwrap(),
+        "--gradle-resolve",
+        "--gradle-timeout-secs",
+        "3",
+        "--no-deep-hash",
+    ]);
+
+    let output = cmd.output().expect("spawn waybill");
+    assert!(
+        output.status.success(),
+        "scan MUST succeed even when subprocess times out. stderr={}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+
+    let bytes = std::fs::read(&out_path).expect("read emitted SBOM");
+    let json: serde_json::Value = serde_json::from_slice(&bytes).expect("parse JSON");
+
+    let reason = doc_scope_property(&json, "waybill:gradle-fallback-reason");
+    // Sorted BTreeSet iteration on the tier enum: Subprocess (declared
+    // first) < Cache. Timeout is real; MissingTool comes from the cache
+    // reader having no gradle-caches dir. Both survive the opt-out
+    // filter. Result: `subprocess:timeout,cache:missing-tool`.
+    assert_eq!(
+        reason.as_deref(),
+        Some("subprocess:timeout,cache:missing-tool"),
+        "expected C147 doc-scope waybill:gradle-fallback-reason with sorted timeout+missing-tool; got {reason:?}"
+    );
+}
+
+// -----------------------------------------------------------
+// US4 (C147) — cold-clone scan aggregates cache-miss + partial
+// static-miss into `cache:missing-tool,static:no-source-files` and
+// filters `subprocess:operator-opt-out` (the default no-flag path).
+// -----------------------------------------------------------
+
+#[test]
+fn c147_aggregates_multi_subproject_fallbacks_and_filters_opt_out() {
+    // The cold-clone US3 fixture: no --gradle-resolve, so US1 records
+    // `OperatorOptOut` — which C147 explicitly filters. US2 records
+    // `MissingTool` (no cache set). US3 succeeds for app/ + core/ but
+    // fails at the settings-only root with `NoSourceFiles`. Both
+    // survivors of the opt-out filter aggregate into the annotation.
+
+    let workdir = tempfile::tempdir().expect("workdir tempdir");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let out_path = workdir.path().join("sbom.cdx.json");
+    let fixture_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("golden_inputs")
+        .join("gradle")
+        .join("cold_clone_static_only");
+
+    let mut cmd = Command::new(bin());
+    apply_fake_home_env(&mut cmd, fake_home.path());
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.args([
+        "--offline",
+        "sbom",
+        "scan",
+        "--path",
+        fixture_path.to_str().unwrap(),
+        "--format",
+        "cyclonedx-json",
+        "--output",
+        out_path.to_str().unwrap(),
+        "--no-deep-hash",
+    ]);
+
+    let output = cmd.output().expect("spawn waybill");
+    assert!(
+        output.status.success(),
+        "scan failed. stderr={}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+
+    let bytes = std::fs::read(&out_path).expect("read emitted SBOM");
+    let json: serde_json::Value = serde_json::from_slice(&bytes).expect("parse JSON");
+
+    let reason = doc_scope_property(&json, "waybill:gradle-fallback-reason");
+    // Multi-subproject fixture: US2 cache fails (MissingTool) for
+    // every project; US3 succeeds for app/ + core/ (they have
+    // build.gradle) but fails at the root (settings.gradle only).
+    // C147 aggregates + sorts + dedups — expected value is exactly
+    // `cache:missing-tool,static:no-source-files`. Crucially, this
+    // MUST NOT include `subprocess:operator-opt-out` — that's the
+    // whole point of the filter.
+    assert_eq!(
+        reason.as_deref(),
+        Some("cache:missing-tool,static:no-source-files"),
+        "expected sorted-joined cache+static fallbacks (opt-out filtered); got {reason:?}"
+    );
+}
+
+// -----------------------------------------------------------
 // US2 (Phase 4) — no-wrapper-warm-cache fixture emits cache-tier
 // components + transitive edge via US2 cache reader.
 // -----------------------------------------------------------

@@ -26,7 +26,7 @@ use serde::Serialize;
 ///
 /// The `Mixed` aggregate is NOT a variant here — it's computed at
 /// emission time by the annotation writer per Clarifications Q1.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum GradleResolutionTier {
     /// US1 — `./gradlew :sub:dependencies --no-daemon`.
@@ -56,7 +56,7 @@ impl GradleResolutionTier {
 /// Attached to the `waybill:gradle-fallback-reason` annotation so
 /// consumers can distinguish "operator didn't opt in" from "tool
 /// missing" from "subprocess timed out".
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum GradleFallbackReason {
     /// Subprocess killed at the operator-configured timeout.
