@@ -871,6 +871,83 @@ fn us3_cold_clone_static_emits_direct_components_and_static_tier() {
 }
 
 // -----------------------------------------------------------
+// US4 follow-on (C149) — no_wrapper_warm_cache fixture emits
+// `waybill:cache-freshness` per-component on cache-tier components.
+// -----------------------------------------------------------
+
+#[test]
+fn c149_warm_cache_emits_cache_freshness_annotation() {
+    // Same fixture + env-override as us2_warm_cache_produces_transitive_edge.
+    // The mock cache tree's .pom mtimes are set at fixture-materialization
+    // time (i.e., NOW) — build.gradle is committed to git so its mtime
+    // is at checkout time (older). Cache-freshness comparison: newest
+    // .pom > build.gradle → `fresh`.
+
+    let workdir = tempfile::tempdir().expect("workdir tempdir");
+    let fake_home = tempfile::tempdir().expect("fake-home tempdir");
+    let out_path = workdir.path().join("sbom.cdx.json");
+    let fixture_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests")
+        .join("fixtures")
+        .join("golden_inputs")
+        .join("gradle")
+        .join("no_wrapper_warm_cache");
+    let cache_path = fixture_path.join("gradle-cache");
+
+    let mut cmd = Command::new(bin());
+    apply_fake_home_env(&mut cmd, fake_home.path());
+    cmd.env("WAYBILL_FIXED_TIMESTAMP", "2026-01-01T00:00:00Z");
+    cmd.env("WAYBILL_TEST_GRADLE_CACHE", cache_path.to_str().unwrap());
+    cmd.args([
+        "--offline",
+        "sbom",
+        "scan",
+        "--path",
+        fixture_path.to_str().unwrap(),
+        "--format",
+        "cyclonedx-json",
+        "--output",
+        out_path.to_str().unwrap(),
+        "--no-deep-hash",
+    ]);
+    let output = cmd.output().expect("spawn waybill");
+    assert!(
+        output.status.success(),
+        "scan failed:\n  stderr={}",
+        String::from_utf8_lossy(&output.stderr),
+    );
+    let bytes = std::fs::read(&out_path).expect("read emitted SBOM");
+    let json: serde_json::Value = serde_json::from_slice(&bytes).expect("parse JSON");
+
+    // C149 present on both the direct seed AND the transitive leaf
+    // (both came from cache-tier resolution).
+    let root_freshness = component_property(
+        &json,
+        "pkg:maven/com.example.waybillfixture/cache-root@1.0.0",
+        "waybill:cache-freshness",
+    );
+    assert!(
+        matches!(root_freshness.as_deref(), Some("fresh") | Some("stale")),
+        "expected C149 waybill:cache-freshness on cache-root; got {root_freshness:?}"
+    );
+    let leaf_freshness = component_property(
+        &json,
+        "pkg:maven/com.example.waybillfixture/cache-leaf@2.0.0",
+        "waybill:cache-freshness",
+    );
+    assert!(
+        matches!(leaf_freshness.as_deref(), Some("fresh") | Some("stale")),
+        "expected C149 waybill:cache-freshness on cache-leaf; got {leaf_freshness:?}"
+    );
+    // Both components come from the same cache resolution — freshness
+    // MUST agree.
+    assert_eq!(
+        root_freshness, leaf_freshness,
+        "C149 freshness should be identical across components from the same project"
+    );
+}
+
+// -----------------------------------------------------------
 // US4 follow-on (C148) — mixed_tier fixture emits per-component
 // `waybill:gradle-subproject-tier` tagging each component with the
 // ladder tier that produced it (`subprocess` vs `lockfile-only`).
