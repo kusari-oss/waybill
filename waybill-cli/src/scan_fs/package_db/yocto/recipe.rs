@@ -192,6 +192,14 @@ fn build_layer_root_entry(layer: &super::layer_conf::LayerConf) -> PackageDbEntr
         "waybill:source-mechanism".to_string(),
         serde_json::Value::String("yocto-layer-root".to_string()),
     );
+    // Milestone 236 (C151): yocto layer-root components always emit
+    // design-tier (see sbom_tier below); tag with reason string.
+    extra_annotations.insert(
+        "waybill:unresolved-reason".to_string(),
+        serde_json::Value::String(
+            "recipe .bb declaration; no PV/PR resolution".to_string(),
+        ),
+    );
     // FR-007 / milestone-127 interaction: the root selector's
     // `is_workspace_root` heuristic compares the PARENT of
     // `source-files[0]` to the scan root. For a layer rooted at
@@ -506,6 +514,14 @@ fn process_recipe(
     extra_annotations.insert(
         "waybill:source-mechanism".to_string(),
         serde_json::Value::String("bitbake-recipe".to_string()),
+    );
+    // Milestone 236 (C151): yocto recipe components always emit
+    // design-tier (see sbom_tier below); tag with reason string.
+    extra_annotations.insert(
+        "waybill:unresolved-reason".to_string(),
+        serde_json::Value::String(
+            "recipe .bb declaration; no PV/PR resolution".to_string(),
+        ),
     );
     if let Some(layer) = &layer_name {
         extra_annotations.insert(
@@ -1110,5 +1126,32 @@ mod tests {
         let entries = read(tmp.path(), &Default::default());
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].version, "1.2.3+git0abc123");
+    }
+
+    #[test]
+    fn m236_yocto_design_tier_carries_unresolved_reason() {
+        // Milestone 236 (C151): every yocto design-tier component MUST
+        // carry `waybill:unresolved-reason` naming the recipe boundary.
+        let tmp = tempfile::tempdir().unwrap();
+        touch(
+            &tmp.path()
+                .join("meta-waybill-fixture")
+                .join("recipes-waybill")
+                .join("waybill-fixture-lib")
+                .join("waybill-fixture-lib_1.0.bb"),
+        );
+        let entries = read(tmp.path(), &Default::default());
+        for e in &entries {
+            assert_eq!(e.sbom_tier.as_deref(), Some("design"));
+            let reason = e
+                .extra_annotations
+                .get("waybill:unresolved-reason")
+                .unwrap_or_else(|| panic!("C151 annotation present on {}", e.name));
+            assert_eq!(
+                reason.as_str().unwrap(),
+                "recipe .bb declaration; no PV/PR resolution",
+            );
+        }
+        assert!(!entries.is_empty(), "at least one component expected");
     }
 }

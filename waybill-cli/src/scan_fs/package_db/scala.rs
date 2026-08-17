@@ -1130,6 +1130,16 @@ fn build_main_module_component(
     );
 
     let sbom_tier = if doc_has_lockfile { "source" } else { "design" };
+    // Milestone 236 (C151): tag design-tier main-module with the
+    // reader-specific resolution boundary.
+    if sbom_tier == "design" {
+        extra_annotations.insert(
+            "waybill:unresolved-reason".to_string(),
+            serde_json::Value::String(
+                "declared in build.sbt; no coursier-resolved lockfile".to_string(),
+            ),
+        );
+    }
 
     Some(PackageDbEntry {
         purl,
@@ -1215,6 +1225,14 @@ fn build_design_tier_component(
             serde_json::Value::String(scala_version_source.to_annotation_value().to_string()),
         );
     }
+    // Milestone 236 (C151): sbt %/%% dep components always emit
+    // design-tier (see sbom_tier below); tag with reason string.
+    extra_annotations.insert(
+        "waybill:unresolved-reason".to_string(),
+        serde_json::Value::String(
+            "declared in build.sbt; no coursier-resolved lockfile".to_string(),
+        ),
+    );
 
     let lifecycle_scope = match dep.configuration.as_deref() {
         Some("Test") => LifecycleScope::Development,
@@ -1552,5 +1570,37 @@ object Dependencies {
         let c1 = build_lockfile_component(&cats_2_13);
         let c2 = build_lockfile_component(&cats_3);
         assert_ne!(c1.purl.as_str(), c2.purl.as_str());
+    }
+
+    #[test]
+    fn m236_scala_design_tier_carries_unresolved_reason() {
+        // Milestone 236 (C151): scala design-tier %/%% deps must carry
+        // the reason string.
+        let tmp = tempfile::tempdir().unwrap();
+        std::fs::write(
+            tmp.path().join("build.sbt"),
+            r#"
+name := "waybill-fixture-scala"
+scalaVersion := "2.13.12"
+libraryDependencies += "com.example.waybillfixture" %% "scala-dep" % "1.0.0"
+"#,
+        )
+        .unwrap();
+        let entries = read(tmp.path(), false, &Default::default());
+        let design_entries: Vec<_> = entries
+            .iter()
+            .filter(|e| e.sbom_tier.as_deref() == Some("design"))
+            .collect();
+        assert!(!design_entries.is_empty(), "expected ≥1 scala design-tier component");
+        for e in design_entries {
+            let reason = e
+                .extra_annotations
+                .get("waybill:unresolved-reason")
+                .unwrap_or_else(|| panic!("C151 annotation present on {}", e.name));
+            assert_eq!(
+                reason.as_str().unwrap(),
+                "declared in build.sbt; no coursier-resolved lockfile",
+            );
+        }
     }
 }

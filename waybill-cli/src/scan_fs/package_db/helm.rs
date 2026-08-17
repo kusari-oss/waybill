@@ -1029,8 +1029,16 @@ fn build_helm_entry(
     version: String,
     source_path: String,
     evidence_kind: String,
-    extra_annotations: BTreeMap<String, serde_json::Value>,
+    mut extra_annotations: BTreeMap<String, serde_json::Value>,
 ) -> PackageDbEntry {
+    // Milestone 236 (C151): helm components always emit design-tier
+    // (see `sbom_tier` below); tag every one with the reason string.
+    extra_annotations.insert(
+        "waybill:unresolved-reason".to_string(),
+        serde_json::Value::String(
+            "unrendered Chart.yaml dependency; --helm-render subprocess disabled or unavailable".to_string(),
+        ),
+    );
     PackageDbEntry {
         build_inclusion: None,
         purl,
@@ -1360,5 +1368,29 @@ dependencies:
         let bytes = b"only";
         let capped = cap_stderr_lines(bytes, 20);
         assert_eq!(capped, "only");
+    }
+
+    #[test]
+    fn m236_helm_design_tier_carries_unresolved_reason() {
+        // Milestone 236 (C151): every helm-emitted component carries
+        // the reason string.
+        let purl = Purl::new("pkg:helm/example/waybill-fixture-chart@1.0.0").unwrap();
+        let entry = build_helm_entry(
+            purl,
+            "waybill-fixture-chart".to_string(),
+            "1.0.0".to_string(),
+            "/tmp/Chart.yaml".to_string(),
+            "chart-yaml".to_string(),
+            BTreeMap::new(),
+        );
+        assert_eq!(entry.sbom_tier.as_deref(), Some("design"));
+        let reason = entry
+            .extra_annotations
+            .get("waybill:unresolved-reason")
+            .expect("C151 annotation present");
+        assert_eq!(
+            reason.as_str().unwrap(),
+            "unrendered Chart.yaml dependency; --helm-render subprocess disabled or unavailable",
+        );
     }
 }
