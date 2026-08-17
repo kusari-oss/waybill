@@ -892,6 +892,13 @@ cdx_anno!(c149_cdx, "waybill:cache-freshness",                       component);
 // `platform(...)` / `enforcedPlatform(...)` BOM imports.
 cdx_anno!(c150_cdx, "waybill:gradle-platform-import",                component);
 
+// Milestone 236: C151 per-component unresolved-reason. Emitted on
+// every component that carries `waybill:sbom-tier: "design"` — names
+// the reader-specific resolution boundary. Universalized across all
+// design-tier-emitting readers (extends the NuGet-only precedent
+// from PR #656). Display-only string per Q1 clarification.
+cdx_anno!(c151_cdx, "waybill:unresolved-reason",                     component);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 cdx_anno!(c113_cdx, "waybill:synthetic-built-in",               component);
