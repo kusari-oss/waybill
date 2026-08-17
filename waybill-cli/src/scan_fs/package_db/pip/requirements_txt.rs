@@ -83,6 +83,22 @@ impl RequirementsTxtEntry {
         } else {
             "source"
         };
+        // Milestone 236 (C151): on the design-tier branch, tag with
+        // `waybill:unresolved-reason` naming the resolution boundary.
+        // The requirement has no `==X.Y` pin and no lockfile fallback
+        // resolved it upstream.
+        let mut extra_annotations: std::collections::BTreeMap<
+            String,
+            serde_json::Value,
+        > = Default::default();
+        if tier == "design" {
+            extra_annotations.insert(
+                "waybill:unresolved-reason".to_string(),
+                serde_json::Value::String(
+                    "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback".to_string(),
+                ),
+            );
+        }
         Some(PackageDbEntry {
             build_inclusion: None,
             purl,
@@ -111,7 +127,7 @@ impl RequirementsTxtEntry {
             hashes: self.hashes,
             sbom_tier: Some(tier.to_string()),
             shade_relocation: None,
-            extra_annotations: Default::default(),
+            extra_annotations,
             binary_role: None,
         })
     }
@@ -499,6 +515,49 @@ urllib3>=2 \\
         };
         let pdb = entry.into_package_db_entry("/req.txt").expect("converts");
         assert_eq!(pdb.sbom_tier.as_deref(), Some("design"));
+    }
+
+    #[test]
+    fn m236_pip_design_tier_carries_unresolved_reason() {
+        // Milestone 236 (C151): unpinned requirement (design-tier)
+        // MUST carry `waybill:unresolved-reason` naming pip's
+        // resolution boundary.
+        let entry = RequirementsTxtEntry {
+            name: "waybill-fixture-pip".into(),
+            version: String::new(),
+            range_spec: "waybill-fixture-pip>=2.0".into(),
+            source_type: None,
+            hashes: Vec::new(),
+        };
+        let pdb = entry.into_package_db_entry("/req.txt").expect("converts");
+        assert_eq!(pdb.sbom_tier.as_deref(), Some("design"));
+        let reason = pdb
+            .extra_annotations
+            .get("waybill:unresolved-reason")
+            .expect("C151 annotation present on design-tier pip component");
+        assert_eq!(
+            reason.as_str().unwrap(),
+            "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback",
+        );
+    }
+
+    #[test]
+    fn m236_pip_source_tier_does_not_carry_unresolved_reason() {
+        // FR-004 negative assertion: source-tier components MUST NOT
+        // carry the C151 annotation.
+        let entry = RequirementsTxtEntry {
+            name: "waybill-fixture-pip".into(),
+            version: "1.2.3".into(),
+            range_spec: "waybill-fixture-pip==1.2.3".into(),
+            source_type: None,
+            hashes: Vec::new(),
+        };
+        let pdb = entry.into_package_db_entry("/req.txt").expect("converts");
+        assert_eq!(pdb.sbom_tier.as_deref(), Some("source"));
+        assert!(
+            !pdb.extra_annotations.contains_key("waybill:unresolved-reason"),
+            "source-tier components MUST NOT carry C151 annotation",
+        );
     }
 
     #[test]

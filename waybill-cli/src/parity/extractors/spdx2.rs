@@ -630,6 +630,8 @@ spdx23_anno!(c148_spdx23, "waybill:gradle-subproject-tier",                compo
 spdx23_anno!(c149_spdx23, "waybill:cache-freshness",                       component);
 // Milestone 235 US4 follow-on: C150 per-component Gradle platform-import.
 spdx23_anno!(c150_spdx23, "waybill:gradle-platform-import",                component);
+// Milestone 236: C151 per-component unresolved-reason (all design-tier readers).
+spdx23_anno!(c151_spdx23, "waybill:unresolved-reason",                     component);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

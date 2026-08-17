@@ -2454,6 +2454,19 @@ fn pom_dep_to_entry(
             serde_json::Value::String("maven-optional-element".to_string()),
         );
     }
+    // Milestone 236 (C151): universalize `waybill:unresolved-reason`
+    // on design-tier components. The maven reader's design-tier path
+    // fires when a `<dependency>` has an empty `<version>` or an
+    // unresolved `${property}` placeholder — see the tier decision
+    // above at `resolve_maven_property`.
+    if tier == "design" {
+        extra_annotations.insert(
+            "waybill:unresolved-reason".to_string(),
+            serde_json::Value::String(
+                "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback".to_string(),
+            ),
+        );
+    }
 
     Some(PackageDbEntry {
         build_inclusion: None,
@@ -6028,6 +6041,42 @@ mod tests {
         assert_eq!(
             sibling.requirement_ranges.as_slice(),
             &["${unresolved.version}".to_string()],
+        );
+    }
+
+    #[test]
+    fn m236_maven_design_tier_carries_unresolved_reason() {
+        // Milestone 236 (C151): every design-tier component MUST carry
+        // `waybill:unresolved-reason` naming maven's specific
+        // resolution boundary.
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::write(
+            dir.path().join("pom.xml"),
+            r#"<?xml version="1.0"?>
+<project>
+  <groupId>com.example.waybillfixture</groupId>
+  <artifactId>root</artifactId>
+  <version>1.0.0</version>
+  <dependencies>
+    <dependency>
+      <groupId>com.example.waybillfixture</groupId>
+      <artifactId>sibling</artifactId>
+      <version>${unresolved.version}</version>
+    </dependency>
+  </dependencies>
+</project>"#,
+        )
+        .unwrap();
+        let entries = read(dir.path(), false, &Default::default());
+        let sibling = entries.iter().find(|e| e.name == "sibling").unwrap();
+        assert_eq!(sibling.sbom_tier.as_deref(), Some("design"));
+        let reason = sibling
+            .extra_annotations
+            .get("waybill:unresolved-reason")
+            .expect("C151 annotation present on design-tier maven component");
+        assert_eq!(
+            reason.as_str().unwrap(),
+            "no <version> in pom.xml; no dependency-reduced-pom.xml or effective-pom fallback",
         );
     }
 

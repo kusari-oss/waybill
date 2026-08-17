@@ -422,6 +422,16 @@ pub(crate) fn parse_root_package_json(
                     serde_json::json!([local]),
                 );
             }
+            // Milestone 236 (C151): universalize `waybill:unresolved-reason`
+            // on design-tier components. This code path always emits
+            // design-tier (see sbom_tier below); the component came from
+            // a workspace-member package.json without a lockfile hit.
+            extra_annotations.insert(
+                "waybill:unresolved-reason".to_string(),
+                serde_json::Value::String(
+                    "workspace member; no lockfile-resolved version".to_string(),
+                ),
+            );
             out.push(PackageDbEntry {
                 build_inclusion: None,
                 purl,
@@ -1043,6 +1053,28 @@ mod tests {
         assert_eq!(out[0].requirement_ranges.as_slice(), &["^1.0.0".to_string()]);
         assert!(acc.resolved_deps.is_empty());
         assert!(acc.unresolved_deps.is_empty());
+    }
+
+    #[test]
+    fn m236_npm_walk_design_tier_carries_unresolved_reason() {
+        // Milestone 236 (C151): every design-tier component emitted by
+        // the npm workspace-walker MUST carry `waybill:unresolved-reason`.
+        let src = serde_json::json!({
+            "dependencies": {
+                "waybill-fixture-npm": "^1.0.0"
+            }
+        });
+        let (out, _acc) = parse_root_package_json(&src, "/pkg/package.json", false, None);
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0].sbom_tier.as_deref(), Some("design"));
+        let reason = out[0]
+            .extra_annotations
+            .get("waybill:unresolved-reason")
+            .expect("C151 annotation present on design-tier npm/walk component");
+        assert_eq!(
+            reason.as_str().unwrap(),
+            "workspace member; no lockfile-resolved version",
+        );
     }
 
     // T027: verify the wire-shape helper used by npm::read() — bare
