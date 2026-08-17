@@ -952,6 +952,15 @@ fn emit_main_module(
     }
 
     let sbom_tier = if doc_has_lockfile { "source" } else { "design" };
+    // Milestone 236 (C151): elixir main-module design-tier reason.
+    if sbom_tier == "design" {
+        extra_annotations.insert(
+            "waybill:unresolved-reason".to_string(),
+            serde_json::Value::String(
+                "no matching entry in mix.lock".to_string(),
+            ),
+        );
+    }
 
     Some(PackageDbEntry {
         purl,
@@ -1171,6 +1180,13 @@ fn emit_design_tier_components(
                 serde_json::Value::String("conditional-flattened".to_string()),
             );
         }
+        // Milestone 236 (C151): elixir declared-dep design-tier reason.
+        extra_annotations.insert(
+            "waybill:unresolved-reason".to_string(),
+            serde_json::Value::String(
+                "no matching entry in mix.lock".to_string(),
+            ),
+        );
 
         let (version_field, requirement_ranges) = match &decl.source_kind {
             DeclaredDepSource::Hex => (

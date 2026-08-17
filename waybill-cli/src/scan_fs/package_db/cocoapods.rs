@@ -688,6 +688,13 @@ fn emit_design_tier_components(
             "waybill:source-type".to_string(),
             serde_json::Value::String("cocoapods-trunk".to_string()),
         );
+        // Milestone 236 (C151): cocoapods design-tier reason.
+        extra_annotations.insert(
+            "waybill:unresolved-reason".to_string(),
+            serde_json::Value::String(
+                "no matching entry in Podfile.lock".to_string(),
+            ),
+        );
 
         out.push(PackageDbEntry {
             purl,

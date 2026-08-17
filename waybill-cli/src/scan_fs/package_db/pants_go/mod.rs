@@ -176,6 +176,11 @@ pub fn read(scan_root: &Path, _exclude_set: &ExclusionSet) -> Vec<PackageDbEntry
         .unwrap_or_else(|_| "pants.toml".to_string());
     let mut extra_annotations = BTreeMap::new();
     extra_annotations.insert("waybill:source-file".to_string(), json!(rel));
+    // Milestone 236 (C151): pants_go expected_version design-tier reason.
+    extra_annotations.insert(
+        "waybill:unresolved-reason".to_string(),
+        json!("pants_go expected_version declared; no matching go corpus component"),
+    );
     vec![PackageDbEntry {
         purl,
         name: "go".to_string(),
