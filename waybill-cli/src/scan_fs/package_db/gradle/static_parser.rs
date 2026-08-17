@@ -348,7 +348,19 @@ fn build_entry(
         // semantics for the design/source distinction.
         sbom_tier: Some("design".to_string()),
         shade_relocation: None,
-        extra_annotations: std::collections::BTreeMap::new(),
+        // Milestone 236 (C151): US3 static parser emits design-tier
+        // when the m235 US2 cache reader didn't hit for these seeds.
+        extra_annotations: {
+            let mut m: std::collections::BTreeMap<String, serde_json::Value> =
+                Default::default();
+            m.insert(
+                "waybill:unresolved-reason".to_string(),
+                serde_json::Value::String(
+                    "declared in build.gradle; US2 cache reader had no matching seed".to_string(),
+                ),
+            );
+            m
+        },
         binary_role: None,
     })
 }
@@ -530,6 +542,36 @@ dependencies {
             ],
             "expected 3 BOM imports from platform() + enforcedPlatform(); regular dep NOT included"
         );
+    }
+
+    #[test]
+    fn m236_gradle_static_design_tier_carries_unresolved_reason() {
+        // Milestone 236 (C151): every gradle US3 static component
+        // carries the reason string.
+        let td = TempDir::new().unwrap();
+        std::fs::write(
+            td.path().join("build.gradle"),
+            r#"
+plugins { id 'java' }
+dependencies {
+    implementation 'com.example.waybillfixture:app-dep:1.0.0'
+}
+"#,
+        )
+        .unwrap();
+        let graph = resolve_via_static_parse(td.path()).expect("static parse");
+        assert!(!graph.components.is_empty());
+        for entry in &graph.components {
+            assert_eq!(entry.sbom_tier.as_deref(), Some("design"));
+            let reason = entry
+                .extra_annotations
+                .get("waybill:unresolved-reason")
+                .expect("C151 annotation present");
+            assert_eq!(
+                reason.as_str().unwrap(),
+                "declared in build.gradle; US2 cache reader had no matching seed",
+            );
+        }
     }
 
     #[test]

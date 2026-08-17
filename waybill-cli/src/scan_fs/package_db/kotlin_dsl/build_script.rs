@@ -263,6 +263,15 @@ pub(super) fn resolve_and_emit(
             "waybill:source-files".to_string(),
             JsonValue::String(source_path_str.clone()),
         );
+        // Milestone 236 (C151): buildscript-classpath declarations
+        // always emit design-tier (see sbom_tier below); tag every
+        // component with the Kotlin DSL buildscript reason string.
+        extra_annotations.insert(
+            "waybill:unresolved-reason".to_string(),
+            JsonValue::String(
+                "Kotlin DSL buildscript declaration; --include-declared-deps enables emission".to_string(),
+            ),
+        );
         // Record the source-set hit BEFORE pushing the entry; the
         // tracker's finalize() runs later and stamps the merged array
         // onto every duplicate.
@@ -440,5 +449,35 @@ mod tests {
             config_to_lifecycle_scope("ksp"),
             Some(LifecycleScope::Build)
         );
+    }
+
+    #[test]
+    fn m236_kotlin_dsl_buildscript_design_tier_carries_unresolved_reason() {
+        // Milestone 236 (C151): every buildscript-derived component
+        // carries the reason string.
+        let entries = extract_deps(
+            r#"dependencies {
+    implementation("com.example.waybillfixture:kts-dep:1.0.0")
+}"#,
+        );
+        let mut tracker = KmpSourceSetTracker::default();
+        let out = resolve_and_emit(
+            entries,
+            None,
+            std::path::Path::new("/tmp/build.gradle.kts"),
+            &mut tracker,
+        );
+        assert!(!out.is_empty(), "expected ≥1 kotlin_dsl component");
+        for e in &out {
+            assert_eq!(e.sbom_tier.as_deref(), Some("design"));
+            let reason = e
+                .extra_annotations
+                .get("waybill:unresolved-reason")
+                .unwrap_or_else(|| panic!("C151 annotation present on {}", e.name));
+            assert_eq!(
+                reason.as_str().unwrap(),
+                "Kotlin DSL buildscript declaration; --include-declared-deps enables emission",
+            );
+        }
     }
 }
