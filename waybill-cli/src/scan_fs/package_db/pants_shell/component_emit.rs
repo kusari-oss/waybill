@@ -197,6 +197,11 @@ pub(crate) fn tool_to_package_db_entry(
         "waybill:source-file".to_string(),
         json!(rel),
     );
+    // Milestone 236 (C151): pants_shell tool-pin design-tier reason.
+    extra_annotations.insert(
+        "waybill:unresolved-reason".to_string(),
+        json!("pants shell tool pin without version specifier"),
+    );
 
     Some(PackageDbEntry {
         purl,
@@ -369,6 +374,25 @@ mod tests {
         let out = tool_to_package_db_entry("shfmt", "3.7.0", &pants_toml, dir.path())
             .expect("emit ok");
         assert_eq!(out.purl.as_str(), "pkg:generic/shfmt@3.7.0");
+    }
+
+    #[test]
+    fn m236_pants_shell_design_tier_carries_unresolved_reason() {
+        // Milestone 236 (C151): pants_shell tool pins carry the reason string.
+        let dir = tempdir().unwrap();
+        let pants_toml = dir.path().join("pants.toml");
+        std::fs::write(&pants_toml, "").unwrap();
+        let out = tool_to_package_db_entry("shellcheck", "v0.9.0", &pants_toml, dir.path())
+            .expect("emit ok");
+        assert_eq!(out.sbom_tier.as_deref(), Some("design"));
+        let reason = out
+            .extra_annotations
+            .get("waybill:unresolved-reason")
+            .expect("C151 annotation present");
+        assert_eq!(
+            reason.as_str().unwrap(),
+            "pants shell tool pin without version specifier",
+        );
     }
 
     #[test]

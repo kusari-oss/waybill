@@ -1322,6 +1322,15 @@ fn build_main_module_component(
     );
 
     let sbom_tier = if doc_has_lockfile { "source" } else { "design" };
+    // Milestone 236 (C151): erlang main-module design-tier reason.
+    if sbom_tier == "design" {
+        extra_annotations.insert(
+            "waybill:unresolved-reason".to_string(),
+            serde_json::Value::String(
+                "no matching entry in rebar.lock".to_string(),
+            ),
+        );
+    }
 
     Some(PackageDbEntry {
         purl,
@@ -1617,6 +1626,13 @@ fn build_design_tier_component(decl: &DeclaredDep, config_dir: &Path) -> Option<
     for (k, v) in source_anns {
         extra_annotations.insert(k, v);
     }
+    // Milestone 236 (C151): erlang declared-dep design-tier reason.
+    extra_annotations.insert(
+        "waybill:unresolved-reason".to_string(),
+        serde_json::Value::String(
+            "no matching entry in rebar.lock".to_string(),
+        ),
+    );
 
     // Profile-scoped → waybill:lifecycle-scope per FR-008.
     let lifecycle_scope = match decl.profile.as_deref() {

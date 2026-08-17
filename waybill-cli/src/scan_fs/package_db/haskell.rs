@@ -953,6 +953,13 @@ fn build_freeze_component(entry: &CabalFreezeEntry) -> PackageDbEntry {
             let purl = Purl::new(&purl_str).unwrap_or_else(|_| fallback_purl());
             let mut extra_annotations = base_annotations("hackage-freeze");
             apply_ghc_stdlib_annotation(&mut extra_annotations, name);
+            // Milestone 236 (C151): haskell cabal-freeze range design-tier reason.
+            extra_annotations.insert(
+                "waybill:unresolved-reason".to_string(),
+                serde_json::Value::String(
+                    "declared in stack.yaml / .cabal; no stack.yaml.lock fallback".to_string(),
+                ),
+            );
             PackageDbEntry {
                 purl,
                 name: name.clone(),
@@ -1206,6 +1213,13 @@ fn build_design_tier_components(
             serde_json::json!([dep.range.clone().unwrap_or_default()]),
         );
         apply_ghc_stdlib_annotation(&mut extra_annotations, &dep.name);
+        // Milestone 236 (C151): haskell cabal design-tier reason.
+        extra_annotations.insert(
+            "waybill:unresolved-reason".to_string(),
+            serde_json::Value::String(
+                "declared in stack.yaml / .cabal; no stack.yaml.lock fallback".to_string(),
+            ),
+        );
         out.push(PackageDbEntry {
             purl,
             name: dep.name.clone(),

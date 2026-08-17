@@ -693,6 +693,13 @@ fn emit_design_tier_components(
             "waybill:source-type".to_string(),
             serde_json::Value::String("composer-packagist".to_string()),
         );
+        // Milestone 236 (C151): composer design-tier reason.
+        extra_annotations.insert(
+            "waybill:unresolved-reason".to_string(),
+            serde_json::Value::String(
+                "no matching entry in composer.lock".to_string(),
+            ),
+        );
 
         out.push(PackageDbEntry {
             purl,
