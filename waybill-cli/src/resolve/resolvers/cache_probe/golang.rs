@@ -93,14 +93,14 @@ pub(super) fn try_match_golang(path: &Path) -> Option<Purl> {
 mod tests {
     use super::*;
 
+    use crate::testing::EnvGuard;
+
     #[test]
     fn m663_golang_cache_hit_extracts_module_coord() {
         let td = tempfile::tempdir().unwrap();
-        // SAFETY: single-threaded test.
-        unsafe {
-            std::env::set_var("GOMODCACHE", td.path());
-            std::env::remove_var("GOPATH");
-        }
+        let mut env = EnvGuard::acquire();
+        env.set("GOMODCACHE", td.path().to_str().unwrap());
+        env.remove("GOPATH");
         let full_path = td
             .path()
             .join("example.com")
@@ -113,18 +113,15 @@ mod tests {
             purl.as_str(),
             "pkg:golang/example.com/waybill/fixture@v2.0.0"
         );
-
-        unsafe {
-            std::env::remove_var("GOMODCACHE");
-        }
     }
 
     #[test]
     fn m663_golang_non_cache_path_declines() {
-        unsafe {
-            std::env::remove_var("GOMODCACHE");
-            std::env::remove_var("GOPATH");
-        }
+        let mut env = EnvGuard::acquire();
+        env.remove("GOMODCACHE");
+        env.remove("GOPATH");
+        env.remove("HOME");
+        env.remove("USERPROFILE");
         let purl = try_match_golang(std::path::Path::new("/tmp/random/main.go"));
         assert!(purl.is_none());
     }
