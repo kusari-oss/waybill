@@ -15,6 +15,9 @@ source of truth.
 > axis** (design / source / analyzed / deployed / build — how strongly
 > the resolved *version* is pinned) is orthogonal and documented at
 > [reading-a-waybill-sbom.md → Design-tier components](reading-a-waybill-sbom.md).
+> For the per-ecosystem story on when each `sbom_tier` value fires,
+> see [ecosystems.md → SBOM tiers: source, design, binary](../ecosystems.md#sbom-tiers-source-design-binary)
+> (concept + jq detection recipes + per-ecosystem breakdown).
 > Milestone 175 adds an INFO-level advisory log at scan time when the
 > scan produces ≥1 `sbom_tier = "design"` component; the advisory can
 > be suppressed in CI via `WAYBILL_NO_DESIGN_TIER_ADVISORY=1`.
