@@ -49,6 +49,11 @@ pub const RESOLVER_REGISTRY: &[(&str, u32)] = &[
     ("maven", 96),
     ("rubygems", 95),
     ("deb", 94),
+    // Milestone 663 — cache-probe resolver (feature 663-cache-probe-
+    // resolver, closes issue #605). Slots between URL-pattern
+    // resolvers (94-100) and deps.dev-hash (90). Emits at confidence
+    // 0.92 for paths under ecosystem-authoritative cache roots.
+    ("cache_probe", 92),
     ("deps_dev_hash", 90),
     ("path", 70),
     ("hostname_fallback", 40),
@@ -114,6 +119,7 @@ impl ResolverChain {
             Box::new(resolvers::maven::MavenResolver),
             Box::new(resolvers::rubygems::RubyGemsResolver),
             Box::new(resolvers::deb::DebResolver),
+            Box::new(resolvers::cache_probe::CacheProbeResolver::new()),
             Box::new(resolvers::deps_dev_hash::DepsDevHashResolver::new(
                 deps_dev_timeout,
             )),
@@ -222,6 +228,7 @@ mod tests {
             "maven",
             "rubygems",
             "deb",
+            "cache_probe",
             "deps_dev_hash",
             "path",
             "hostname_fallback",
@@ -231,9 +238,9 @@ mod tests {
     }
 
     #[test]
-    fn new_default_wires_all_ten_resolvers() {
+    fn new_default_wires_all_eleven_resolvers() {
         let chain = ResolverChain::new_default(Duration::from_secs(10));
-        assert_eq!(chain.registered_count(), 10);
+        assert_eq!(chain.registered_count(), 11);
     }
 
     /// T044 (Phase 5 / SC-005): every registered resolver's
@@ -250,7 +257,7 @@ mod tests {
         // registered resolvers. resolvers is private; use registered_count
         // as a sanity + iterate via the sorted RESOLVER_REGISTRY.
         // We assert count first, then check each expected mapping.
-        assert_eq!(chain.registered_count(), 10);
+        assert_eq!(chain.registered_count(), 11);
 
         let expected: &[(&str, ResolutionTechnique)] = &[
             ("cargo", ResolutionTechnique::UrlPattern),
@@ -260,6 +267,7 @@ mod tests {
             ("maven", ResolutionTechnique::UrlPattern),
             ("rubygems", ResolutionTechnique::UrlPattern),
             ("deb", ResolutionTechnique::UrlPattern),
+            ("cache_probe", ResolutionTechnique::LocalCacheHit),
             ("deps_dev_hash", ResolutionTechnique::HashMatch),
             ("path", ResolutionTechnique::FilePathPattern),
             ("hostname_fallback", ResolutionTechnique::HostnameHeuristic),

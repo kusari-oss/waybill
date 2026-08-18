@@ -899,6 +899,15 @@ cdx_anno!(c150_cdx, "waybill:gradle-platform-import",                component);
 // from PR #656). Display-only string per Q1 clarification.
 cdx_anno!(c151_cdx, "waybill:unresolved-reason",                     component);
 
+// Milestone 663: C152 per-component resolver-tier annotation. Names
+// which resolver tier produced this component's identity. Closed
+// enum: url_pattern / local_cache_hit / hash_match / package_database
+// / file_path_pattern / hostname_heuristic (matches
+// `ResolutionTechnique` variants). MVP scope: cache-probe-emitted
+// components only; universal emission across all resolvers is
+// planned as a follow-on.
+cdx_anno!(c152_cdx, "waybill:resolver-tier",                         component);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 cdx_anno!(c113_cdx, "waybill:synthetic-built-in",               component);

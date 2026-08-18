@@ -24,6 +24,9 @@ pub(crate) mod golang;
 pub(crate) mod maven;
 pub(crate) mod rubygems;
 pub(crate) mod deb;
+// Milestone 663 (feature 663-cache-probe-resolver): local-cache-probe
+// resolver at priority 92 between URL-family (94-100) and deps.dev (90).
+pub(crate) mod cache_probe;
 pub(crate) mod deps_dev_hash;
 pub(crate) mod path;
 pub(crate) mod hostname_fallback;
