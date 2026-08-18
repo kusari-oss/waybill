@@ -311,6 +311,16 @@ pub enum ResolutionTechnique {
     /// content hashes and didn't observe the install event.
     /// Confidence 0.85.
     PackageDatabase,
+    /// A file path matched an ecosystem-authoritative local cache
+    /// root (Maven `~/.m2/repository/`, Go `$GOMODCACHE`, Cargo
+    /// `~/.cargo/registry/`, etc.) and the resolver extracted the
+    /// exact coord from the path structure (± a bounded metadata
+    /// read for npm / PyPi). Confidence 0.92 — higher than
+    /// deps.dev's 0.90 (the artifact IS on this machine) but lower
+    /// than URL-pattern's 0.95 (which corroborates the cache with
+    /// a network trace). Milestone 663 (feature 663-cache-probe-
+    /// resolver, closes issue #605).
+    LocalCacheHit,
     /// A file matching a recognised cache path pattern
     /// (`~/.cargo/registry/cache/...*.crate`, `/var/cache/apt/archives/...deb`,
     /// etc.) present on disk. Confidence 0.70.

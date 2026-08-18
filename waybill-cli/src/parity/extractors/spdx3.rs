@@ -692,6 +692,8 @@ spdx3_anno!(c149_spdx3, "waybill:cache-freshness",                       compone
 spdx3_anno!(c150_spdx3, "waybill:gradle-platform-import",                component);
 // Milestone 236: C151 per-component unresolved-reason (all design-tier readers).
 spdx3_anno!(c151_spdx3, "waybill:unresolved-reason",                     component);
+// Milestone 663: C152 per-component resolver-tier annotation.
+spdx3_anno!(c152_spdx3, "waybill:resolver-tier",                         component);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

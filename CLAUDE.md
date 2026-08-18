@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-08-16
+Auto-generated from all feature plans. Last updated: 2026-08-18
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -318,6 +318,8 @@ Auto-generated from all feature plans. Last updated: 2026-08-16
 - Rust stable (workspace toolchain inherited from + Existing only — `std::process::Command` (235-gradle-transitive-ladder)
 - Rust stable (workspace toolchain inherited from milestones 001–235; no nightly required for this user-space-only feature). + Existing only — `serde_json` (annotation value construction; pervasive), `tracing` (existing warn logs on the reader-side design-tier code paths), `anyhow`/`thiserror` (existing error propagation). Reuses the m071 parity extractor infrastructure (`parity/extractors/*.rs`) and the standard `PackageDbEntry.extra_annotations` channel. **Zero new Cargo dependencies.** (236-unresolved-reason)
 - N/A — annotation is per-component in-process during a single scan; persisted only in the emitted SBOM. (236-unresolved-reason)
+- Rust stable (workspace toolchain inherited from milestones 001–236; no nightly required). + Existing only — (663-cache-probe-resolver)
+- N/A — path-parsing + tiny metadata reads are stateless. (663-cache-probe-resolver)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -411,9 +413,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 663-cache-probe-resolver: Added Rust stable (workspace toolchain inherited from milestones 001–236; no nightly required). + Existing only —
 - 236-unresolved-reason: Added Rust stable (workspace toolchain inherited from milestones 001–235; no nightly required for this user-space-only feature). + Existing only — `serde_json` (annotation value construction; pervasive), `tracing` (existing warn logs on the reader-side design-tier code paths), `anyhow`/`thiserror` (existing error propagation). Reuses the m071 parity extractor infrastructure (`parity/extractors/*.rs`) and the standard `PackageDbEntry.extra_annotations` channel. **Zero new Cargo dependencies.**
 - 235-gradle-transitive-ladder: Added Rust stable (workspace toolchain inherited from + Existing only — `std::process::Command`
-- 234-fix-ebpf-linker-regression: Added N/A — this milestone modifies GitHub Actions YAML + `bpf-linker` (currently pinned to `0.10.4`;
 
 
 <!-- MANUAL ADDITIONS START -->

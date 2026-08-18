@@ -70,6 +70,7 @@ pub fn build_evidence(
         ResolutionTechnique::UrlPattern => "instrumentation",
         ResolutionTechnique::HashMatch => "hash-comparison",
         ResolutionTechnique::PackageDatabase => "manifest-analysis",
+        ResolutionTechnique::LocalCacheHit => "filename",
         ResolutionTechnique::FilePathPattern => "filename",
         ResolutionTechnique::HostnameHeuristic => "other",
     };

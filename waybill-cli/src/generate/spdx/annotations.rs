@@ -334,6 +334,7 @@ pub fn annotate_component(
         ResolutionTechnique::UrlPattern => "url-pattern",
         ResolutionTechnique::HashMatch => "hash-match",
         ResolutionTechnique::PackageDatabase => "package-database",
+        ResolutionTechnique::LocalCacheHit => "local-cache-hit",
         ResolutionTechnique::FilePathPattern => "file-path-pattern",
         ResolutionTechnique::HostnameHeuristic => "hostname-heuristic",
     };
