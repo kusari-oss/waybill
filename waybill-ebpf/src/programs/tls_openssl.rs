@@ -78,11 +78,14 @@ fn try_ssl_read_return(ctx: &RetProbeContext) -> Result<u32, i64> {
         SCRATCH_BUF.get_ptr_mut(idx).ok_or(1i64)?
     };
 
-    let capture_len = if payload_size < 512 {
-        payload_size as usize
-    } else {
-        512usize
-    };
+    // Verifier-friendly bound. Stricter kernels (5.15+) reject the
+    // `dst.len() as u32` cast inside aya's `bpf_probe_read_user_buf`
+    // wrapper with "R2 min value is negative" because the verifier
+    // can't tie the slice length back to a proven bound. Force the
+    // length through a u32 local with an explicit bitmask, then
+    // build the sub-slice via `from_raw_parts_mut` (no bounds-check
+    // wrapper). Costs 1 byte of max capture; last byte stays zero.
+    let capture_len_u32: u32 = payload_size & 0x1ff;
 
     unsafe {
         // Zero the scratch buffer first
@@ -93,10 +96,12 @@ fn try_ssl_read_return(ctx: &RetProbeContext) -> Result<u32, i64> {
         for b in scratch_slice.iter_mut() {
             *b = 0;
         }
-        let _ = bpf_probe_read_user_buf(
-            buf_ptr as *const u8,
-            &mut scratch_slice[..capture_len],
+        // Build the sub-slice from an explicitly-bounded u32 length.
+        let sub_slice = core::slice::from_raw_parts_mut(
+            scratch as *mut u8,
+            capture_len_u32 as usize,
         );
+        let _ = bpf_probe_read_user_buf(buf_ptr as *const u8, sub_slice);
     }
 
     // Write directly into ring buffer entry
@@ -154,11 +159,8 @@ fn try_ssl_write_entry(ctx: &ProbeContext) -> Result<u32, i64> {
     let comm = current_comm();
     let timestamp = unsafe { bpf_ktime_get_ns() };
 
-    let capture_len = if buf_len < 512 {
-        buf_len as usize
-    } else {
-        512usize
-    };
+    // Verifier-friendly bound (see ssl_read for the full rationale).
+    let capture_len_u32: u32 = buf_len & 0x1ff;
 
     // Use per-CPU scratch buffer
     let scratch = unsafe {
@@ -174,10 +176,11 @@ fn try_ssl_write_entry(ctx: &ProbeContext) -> Result<u32, i64> {
         for b in scratch_slice.iter_mut() {
             *b = 0;
         }
-        let _ = bpf_probe_read_user_buf(
-            buf_ptr as *const u8,
-            &mut scratch_slice[..capture_len],
+        let sub_slice = core::slice::from_raw_parts_mut(
+            scratch as *mut u8,
+            capture_len_u32 as usize,
         );
+        let _ = bpf_probe_read_user_buf(buf_ptr as *const u8, sub_slice);
     }
 
     if let Some(mut entry) = NETWORK_EVENTS.reserve::<NetworkEvent>(0) {
