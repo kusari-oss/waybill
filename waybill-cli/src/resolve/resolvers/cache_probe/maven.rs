@@ -88,13 +88,13 @@ pub(super) fn try_match_maven(path: &Path) -> Option<Purl> {
 mod tests {
     use super::*;
 
+    use crate::testing::EnvGuard;
+
     #[test]
     fn m663_maven_cache_hit_extracts_gav() {
         let td = tempfile::tempdir().unwrap();
-        // SAFETY: single-threaded test; env var reset in teardown below.
-        unsafe {
-            std::env::set_var("M2_HOME", td.path());
-        }
+        let mut env = EnvGuard::acquire();
+        env.set("M2_HOME", td.path().to_str().unwrap());
 
         let full_path = td
             .path()
@@ -111,18 +111,15 @@ mod tests {
             purl.as_str(),
             "pkg:maven/com.example.waybillfixture/waybill-fixture-lib@1.0.0"
         );
-
-        unsafe {
-            std::env::remove_var("M2_HOME");
-        }
     }
 
     #[test]
     fn m663_maven_non_cache_path_declines() {
-        // Guarantee no M2_HOME set for this test.
-        unsafe {
-            std::env::remove_var("M2_HOME");
-        }
+        let mut env = EnvGuard::acquire();
+        env.remove("M2_HOME");
+        // Also remove HOME so the fallback ~/.m2/repository doesn't accidentally match.
+        env.remove("HOME");
+        env.remove("USERPROFILE");
         let purl = try_match_maven(std::path::Path::new("/tmp/random/file.jar"));
         assert!(purl.is_none());
     }
