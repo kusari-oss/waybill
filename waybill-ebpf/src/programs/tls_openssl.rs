@@ -78,11 +78,15 @@ fn try_ssl_read_return(ctx: &RetProbeContext) -> Result<u32, i64> {
         SCRATCH_BUF.get_ptr_mut(idx).ok_or(1i64)?
     };
 
-    let capture_len = if payload_size < 512 {
-        payload_size as usize
-    } else {
-        512usize
-    };
+    // Verifier-friendly bound. The `if payload_size < 512` branch
+    // used to merge two scalar states with different upper bounds,
+    // which stricter kernels (5.15+) reject with "R2 min value is
+    // negative" because the merged range analysis widens on the
+    // negative side. Mask instead: bitwise-and with 0x1FF gives an
+    // unconditional 0..=511 bound the verifier proves in one pass.
+    // Costs 1 byte of max capture (511 instead of 512); the fragment
+    // buffer is 512 bytes so the last byte stays zero.
+    let capture_len = (payload_size & 0x1ff) as usize;
 
     unsafe {
         // Zero the scratch buffer first
