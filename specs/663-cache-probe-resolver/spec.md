@@ -177,3 +177,41 @@ Precedent is SBOMit's file-path-first offline-only resolver model: per-ecosystem
 - Attestation-consumer path only. Zero impact on `sbom scan` filesystem walkers. Zero impact on `sbom generate` when there's no attestation input.
 
 - Tests use synthetic fixture caches per the `feedback_fixture_synthetic_package_names` project convention. Never real coord names.
+
+## Close-out (post-implementation) *(2026-08-20)*
+
+Milestone 663 shipped across 5 PRs. All 6 planned ecosystems live; every SC verified.
+
+### PRs
+
+- **US1 MVP** — #708 `feat(m663 US1 MVP): local-cache-probe resolver — Maven + Go (C152)` — 5 tests
+- **US2** — #709 `feat(m663 US2): cache-probe — Cargo + RubyGems` — 7 new tests; env-var-race fix via `EnvGuard`
+- **US3** — #710 `feat(m663 US3): cache-probe — npm + Python probes with metadata reads` — 9 new tests including Q1 decline coverage
+- **Ebpf fix** (bonus) — #711 `fix(ebpf): verifier-friendly bound in tls_openssl::probe_ssl_read` — unblocked CI after kernel-verifier regression that started with #708
+- **Polish** — this branch. SC-003 cross-ecosystem dispatch, SC-005 fall-through, SC-006 microbenchmark, spec close-out, memory ref.
+
+### Final tally
+
+| Metric | Count |
+|---|---|
+| Ecosystems covered | 6 (Maven, Go, Cargo, Ruby, npm, Python) |
+| Emission call-sites | 1 resolver, 6 probes |
+| Priority slot | 92 (between deb=94 and deps_dev_hash=90) |
+| New parity row | C152 `waybill:resolver-tier` (component scope, SymmetricEqual) |
+| Unit tests | 21 per-probe + 3 SC = 24 |
+
+### Deviations from plan
+
+- **Pnpm content-addressed store deferred** — the `~/.local/share/pnpm/store/v3/files/<hash>/` layout doesn't yield a coord from the path alone (needs `.package-lock.json` cross-ref). Noted in `contracts/per-ecosystem-cache-shapes.md`.
+- **Universal `waybill:resolver-tier` emission (Q2 clarification) scoped to cache-probe only in MVP.** Universal wiring across the other 10 pre-existing resolvers is deferred as a follow-on. The catalog row + extractor register unconditionally, so the follow-on wiring is purely at the emit-site.
+- **Env-var-race fix via `EnvGuard`** was not pre-planned; discovered during US2 when parallel test runs collided on `CARGO_HOME`. All cache-probe tests route through `crate::testing::EnvGuard` (matches the m205 podman precedent).
+
+### SC verification
+
+- **SC-001** Maven + Go emit at 0.92 — ✅ verified by `m663_maven_cache_hit_extracts_gav` + `m663_golang_cache_hit_extracts_module_coord`.
+- **SC-002** deps.dev skipped for cache hits — ✅ structurally enforced by resolver-chain first-match-wins (`ResolverChain::resolve` returns after first non-empty).
+- **SC-003** 6-ecosystem cross-dispatch — ✅ verified by `m663_sc003_cross_ecosystem_dispatch_matches_correct_probe`.
+- **SC-004** env-var override honored — ✅ verified structurally by every per-probe test using `EnvGuard.set()` to override.
+- **SC-005** non-cache path falls through — ✅ verified by `m663_sc005_non_cache_path_all_probes_decline`.
+- **SC-006** p95 ≤ 5 ms per path across ≥100k paths — ✅ verified by `m663_sc006_microbenchmark_p95_bounded`.
+- **SC-007** Linux/macOS/Windows CI green — ✅ verified across every m663 PR's platform matrix (Linux + macOS + Windows Lint+test lanes all green).
