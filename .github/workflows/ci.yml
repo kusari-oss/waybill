@@ -581,9 +581,17 @@ jobs:
           persist-credentials: false  # see lint-and-test job for rationale
 
       - name: Install eBPF build deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang llvm libelf-dev pkg-config libssl-dev
+        # Wrapped in nick-fields/retry after m663 experience: apt-get
+        # can hang for 45+ minutes on GHA runner network issues (m663 US3
+        # #710 + Polish #712 both saw this). Timeout+retry caps each
+        # attempt at 5 min and retries up to 3 times before failing.
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
+        with:
+          max_attempts: 3
+          timeout_minutes: 5
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y clang llvm libelf-dev pkg-config libssl-dev
 
       # Install nightly first so stable ends up as the default toolchain
       # for unpinned `cargo` invocations. dtolnay/rust-toolchain sets the
@@ -678,11 +686,21 @@ jobs:
       # This is the SC-003 CI gate. --privileged + debugfs mount are
       # required for eBPF + tracepoint attach per m211 quickstart.
       - name: Container harness (m212 ring_buffer_overflows verification)
-        run: |
-          docker build -f Dockerfile.ebpf-test -t waybill-ebpf-test .
-          docker run --rm --privileged \
-            -v /sys/kernel/debug:/sys/kernel/debug \
-            waybill-ebpf-test
+        # Wrapped in nick-fields/retry after m663 experience: the
+        # docker build step (which itself runs apt-get + cargo build
+        # inside the Rust base image) can hang for 45+ minutes on
+        # runner network / Docker Hub issues. Timeout+retry caps each
+        # attempt at 20 min (build ~7 min + run ~2 min + headroom) and
+        # retries up to 2 times before failing.
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
+        with:
+          max_attempts: 2
+          timeout_minutes: 20
+          command: |
+            docker build -f Dockerfile.ebpf-test -t waybill-ebpf-test .
+            docker run --rm --privileged \
+              -v /sys/kernel/debug:/sys/kernel/debug \
+              waybill-ebpf-test
 
   # Milestone 222 US2b — Sigstore keyless SBOM signing regression
   # tests. Isolated from the main lint+test lanes so keyless-specific
