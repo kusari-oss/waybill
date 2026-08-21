@@ -102,23 +102,54 @@ fn run_validator(fixture_path: &Path) -> ValidationResult {
         );
         return ValidationResult::Skipped;
     }
-    let output = Command::new(&bin_path)
-        .arg("--quiet")
-        .arg("-j")
-        .arg(fixture_path)
-        .output()
-        .expect("validator command should be invocable when binary exists");
-    let mut combined = Vec::new();
-    combined.extend_from_slice(&output.stdout);
-    combined.extend_from_slice(&output.stderr);
-    let combined_text = String::from_utf8_lossy(&combined).into_owned();
-    let has_violation_marker = combined_text.contains("Violation of type");
-    if output.status.success() && !has_violation_marker {
-        ValidationResult::Pass
-    } else {
-        ValidationResult::Fail {
-            combined_output: combined_text,
+    // Retry wrapper for transient network flakes. `spdx3-validate`
+    // fetches SPDX schemas (spdx-model.ttl, spdx-json-schema.json,
+    // spdx-context.jsonld) from spdx.org on EVERY invocation via
+    // `urllib.request.urlopen` and `rdflib.Graph.parse(url)`. When
+    // the GHA runner sees a transient reset, the tool fails with
+    // `ConnectionResetError: [Errno 104] Connection reset by peer`
+    // and the test panics — but the underlying SBOM output was
+    // fine. Retry up to 3 times with exponential backoff; only
+    // treat the LAST attempt as authoritative.
+    const MAX_ATTEMPTS: u32 = 3;
+    let mut last_combined_text = String::new();
+    for attempt in 1..=MAX_ATTEMPTS {
+        let output = Command::new(&bin_path)
+            .arg("--quiet")
+            .arg("-j")
+            .arg(fixture_path)
+            .output()
+            .expect("validator command should be invocable when binary exists");
+        let mut combined = Vec::new();
+        combined.extend_from_slice(&output.stdout);
+        combined.extend_from_slice(&output.stderr);
+        let combined_text = String::from_utf8_lossy(&combined).into_owned();
+        let has_violation_marker = combined_text.contains("Violation of type");
+        if output.status.success() && !has_violation_marker {
+            return ValidationResult::Pass;
         }
+        last_combined_text = combined_text;
+        // Retry only on transient network signatures. Real
+        // violations don't match — return immediately.
+        let is_transient_network = last_combined_text.contains("ConnectionResetError")
+            || last_combined_text.contains("Connection reset by peer")
+            || last_combined_text.contains("URLError")
+            || last_combined_text.contains("urlopen error")
+            || last_combined_text.contains("TimeoutError")
+            || last_combined_text.contains("temporary failure in name resolution");
+        if !is_transient_network || attempt == MAX_ATTEMPTS {
+            break;
+        }
+        eprintln!(
+            "[spdx3_conformance] transient network failure on attempt {attempt}/{MAX_ATTEMPTS} for {}; retrying after backoff",
+            fixture_path.display(),
+        );
+        std::thread::sleep(std::time::Duration::from_millis(
+            500 * (1 << (attempt - 1)) as u64,
+        ));
+    }
+    ValidationResult::Fail {
+        combined_output: last_combined_text,
     }
 }
 
