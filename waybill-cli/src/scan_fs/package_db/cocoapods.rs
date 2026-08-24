@@ -35,7 +35,7 @@
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
+use std::sync::{Arc, Mutex, OnceLock};
 
 use regex::Regex;
 
@@ -45,6 +45,11 @@ use waybill_common::types::purl::Purl;
 
 use super::exclude_path::ExclusionSet;
 use super::PackageDbEntry;
+
+// Milestone 664 US2 T048: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, SharedWalkerContext,
+};
 
 const MAX_COCOAPODS_WALK_DEPTH: usize = 12;
 
@@ -108,11 +113,152 @@ struct DeclaredPod {
     constraint: Option<String>,
 }
 
+/// Milestone 664 US2 T048: shared-walker discovery state — 3 vectors
+/// matching the legacy 3 walker sites' outputs.
+#[derive(Default, Debug)]
+pub(crate) struct CocoapodsDiscoveredPaths {
+    pub(crate) podfile_locks: Vec<PathBuf>,
+    pub(crate) manifest_locks: Vec<PathBuf>,
+    pub(crate) podfiles: Vec<PathBuf>,
+}
+
+/// True iff any ancestor of `path` has the given basename. Used to
+/// enforce the legacy per-walker skip predicates
+/// (`should_skip_manifest_descent` includes `Pods` + `DerivedData`;
+/// `should_skip_installed_descent` includes `DerivedData` but NOT
+/// `Pods` since Manifest.lock legitimately lives inside `Pods/`).
+fn any_ancestor_matches(path: &Path, name: &str) -> bool {
+    path.ancestors()
+        .filter_map(|a| a.file_name().and_then(|n| n.to_str()))
+        .any(|n| n == name)
+}
+
+fn on_cocoapods_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(state) = ctx.state::<Mutex<CocoapodsDiscoveredPaths>>(ReaderId::COCOAPODS) else {
+        return;
+    };
+    let Some(basename) = path.file_name().and_then(|s| s.to_str()) else {
+        return;
+    };
+
+    // The shared walker's default skip set covers `.git`, `.svn`,
+    // `.hg`, `node_modules`, `build`, `dist`, `out`, `target`,
+    // `__pycache__`, `venv`, `bower_components`, `vendor`, `coverage`.
+    // We still need to filter `Pods/` (for Podfile.lock + Podfile) and
+    // `DerivedData/` (for all three) since the shared walker does not
+    // skip those. Manifest.lock intentionally passes through the `Pods/`
+    // check (it lives inside `Pods/` by design).
+    let under_derived_data = any_ancestor_matches(path, "DerivedData");
+    if under_derived_data {
+        return;
+    }
+    let under_pods = any_ancestor_matches(path, "Pods");
+
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    match basename {
+        "Podfile.lock" if !under_pods => {
+            guard.podfile_locks.push(path.to_path_buf());
+        }
+        "Manifest.lock" => {
+            // Canonical `<project>/Pods/Manifest.lock` — parent dir
+            // basename MUST be `Pods` (mirrors legacy filter at
+            // `find_manifest_locks:360`).
+            let parent_is_pods = path
+                .parent()
+                .and_then(|p| p.file_name())
+                .and_then(|n| n.to_str())
+                == Some("Pods");
+            if parent_is_pods {
+                guard.manifest_locks.push(path.to_path_buf());
+            }
+        }
+        "Podfile" if !under_pods => {
+            guard.podfiles.push(path.to_path_buf());
+        }
+        _ => {}
+    }
+}
+
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns(&[
+        "**/Podfile.lock",
+        "**/Manifest.lock",
+        "**/Podfile",
+    ])?;
+    // Post-2026-08-23 byte-identity fix: legacy `should_skip_manifest_descent`
+    // skipped ONLY `.git`/`.svn`/`.hg`/`Pods`/`node_modules`/`build`/`DerivedData`;
+    // the shared walker default ALSO skips `target`/`dist`/`out`/`coverage`/
+    // `__pycache__`/`venv`/`vendor`/`bower_components`. Vendored-third-party
+    // Podfile examples under `dist/` (e.g., mongo's
+    // `src/third_party/grpc/dist/examples/cpp/helloworld/cocoapods/Podfile`)
+    // legacy visited. Contract C10 `descend_into` opens those back up.
+    // Note: legacy DOES skip `build` (Xcode build output), so we DO NOT
+    // put build in descend_into.
+    let descend_into = crate::scan_fs::walk_registry::globset_from_patterns(&[
+        "target", "dist", "out", "coverage", "vendor", "bower_components",
+    ])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::COCOAPODS,
+        state: Some(Arc::new(Mutex::new(CocoapodsDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_cocoapods_file),
+        on_dir: None,
+        descend_into: Some(descend_into),
+    })
+}
+
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> CocoapodsDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return CocoapodsDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<CocoapodsDiscoveredPaths>>() else {
+        return CocoapodsDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Legacy public entry — retained during FR-004 coexistence. Callers
+/// outside the shared-walker pilot still route through here.
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
     _include_dev: bool,
     exclude_set: &ExclusionSet,
 ) -> Vec<PackageDbEntry> {
+    let paths = CocoapodsDiscoveredPaths {
+        podfile_locks: find_podfile_locks(rootfs, exclude_set),
+        manifest_locks: find_manifest_locks(rootfs, exclude_set),
+        podfiles: find_podfiles(rootfs, exclude_set),
+    };
+    finalize(paths, rootfs)
+}
+
+/// Post-walker entry — takes precomputed paths + runs the 3-pass
+/// pipeline (Podfile.lock → Manifest.lock → Podfile design-tier) with
+/// FR-011 dedup between passes.
+pub(crate) fn finalize(
+    paths: CocoapodsDiscoveredPaths,
+    rootfs: &Path,
+) -> Vec<PackageDbEntry> {
+    // Defensive sort — shared walker sorts per-dir; safe_walk did not.
+    // Legacy find_* fns sort() before returning; sort here so pipeline
+    // input order matches for FR-006 identity.
+    let CocoapodsDiscoveredPaths {
+        mut podfile_locks,
+        mut manifest_locks,
+        mut podfiles,
+    } = paths;
+    podfile_locks.sort();
+    manifest_locks.sort();
+    podfiles.sort();
+
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
     // Track parsed Podfile.lock project dirs so Pass B can skip
@@ -125,7 +271,7 @@ pub fn read(
     let mut emitted_design = 0usize;
 
     // Pass A — Podfile.lock walker.
-    for lockfile_path in find_podfile_locks(rootfs, exclude_set) {
+    for lockfile_path in podfile_locks {
         let doc = match parse_podfile_lock(&lockfile_path) {
             Ok(d) => d,
             Err(err) => {
@@ -192,7 +338,7 @@ pub fn read(
 
     // Pass B — Pods/Manifest.lock walker. Skip when sibling Podfile.lock
     // already parsed (FR-011 dedup).
-    for manifest_path in find_manifest_locks(rootfs, exclude_set) {
+    for manifest_path in manifest_locks {
         // Project root = parent of Pods/ = grandparent of Manifest.lock.
         let project_root = manifest_path
             .parent() // .../Pods
@@ -255,7 +401,7 @@ pub fn read(
     }
 
     // Pass C — design-tier (Podfile only, no sibling Podfile.lock).
-    for podfile_path in find_podfiles(rootfs, exclude_set) {
+    for podfile_path in podfiles {
         let Some(project_dir) = podfile_path.parent() else {
             continue;
         };

@@ -269,6 +269,57 @@ See `waybill-cli/src/scan_fs/walk.rs`'s module-level doc-comment for the authori
 
 ---
 
+## Shared-walker reader registry (milestone 664)
+
+Milestone 664 introduced a single-pass filesystem walker + reader-registry that consolidates ~28 ecosystem-reader `safe_walk` calls into ONE tree traversal per scan. The perf motivation: prior to m664, scanning a mongo/pytorch/ansible checkout walked the source tree 20+ times (once per ecosystem reader). Post-m664, the shared walker traverses once and dispatches per-file matches to every interested reader's callback in registration order.
+
+### What the shared walker is
+
+- `waybill-cli/src/scan_fs/walk_registry/` — the crate module.
+  - `walker.rs::SharedWalker` — the single-pass tree walker. Inherits `safe_walk`-equivalent semantics: canonicalize-keyed visited-set (m054 loop guard), m113 `ExclusionSet`, m114 permissive canonicalize/read_dir errors.
+  - `registry.rs::ReaderRegistry` — the dispatch table. Each `ReaderRegistration` carries a `globset::GlobSet` of filename patterns plus optional `on_file` + `on_dir` callbacks and opaque per-scan `state` (an `Arc<dyn Any>` slot).
+  - `dispatch.rs` — the per-file/per-dir dispatch loop. Iterates registrations in insertion order (contract C1); every callback runs inside `catch_unwind` for panic isolation (contract C4).
+  - `dir_index.rs::DirIndex` — the in-memory (directory → sorted-filenames) map that reader callbacks consult for sibling-lookup (FR-003 / Clarify Q1 zero-extra-syscalls contract).
+  - `walk_context.rs::SharedWalkerContext` — the reader-facing handle exposing `dir_index()`, `exclude_set()`, `push(reader_id, entry)`, and typed state retrieval via `state::<T>(reader_id)`.
+
+### How a reader migrates
+
+Full walkthrough at `specs/664-single-pass-walker/quickstart.md`. Short form:
+
+1. **Add a `ReaderId::YOUR_READER` const** in `walk_registry/mod.rs` plus append it to `ALL_READER_IDS` (contract C9 uniqueness).
+2. **Add a `YourReaderDiscoveredPaths` state struct** in `<reader>.rs` — usually one `Vec<PathBuf>` per legacy walker site.
+3. **Write the `on_file` (or `on_dir`) callback** that filters + pushes into state.
+4. **Write `registration()` + `extract_paths()` + `finalize(paths, ...)` helpers**.
+5. **Refactor `pub fn read()` → `#[allow(dead_code)]` shim** that calls `pants_common::discover_build_files`-style safe_walk then delegates to `finalize` (retained per FR-004 coexistence for test paths).
+6. **Wire into `SharedPilotOutput` + `run_shared_walker_pilot`** in `waybill-cli/src/scan_fs/package_db/mod.rs`.
+7. **Swap `read_all`** — `<reader>::read(...)` becomes `std::mem::take(&mut shared_pilot.<reader>)`.
+8. **Verify FR-006 byte-identity**: 5017/0 test suite + walker-audit diff empty + goldens byte-identical.
+
+For readers whose skip set is a strict subset of the shared walker default (e.g., dart, elixir), no filter is needed in the callback. Readers with legacy-only skip additions (`_`-prefix, `testdata`, `Pods/`, `DerivedData/`, `deps/`, `go/pkg/mod`) use ancestor-path filtering inside the callback to preserve byte-identity.
+
+### FR-005 escape-hatch conditions
+
+A walker CANNOT migrate to the shared registry when it's one of:
+
+- **Per-project-anchored** (bounded to a subtree already discovered by the outer walker; e.g., npm's `walk_node_modules`, pants_shell's per-target glob resolver, golang's per-project `package main` enumeration).
+- **Non-scan-tree** (walks a cache like `~/.m2/`, `~/.cache/go-build/`, or an archive-internal structure via the `zip` crate).
+- **Descend-into-required** (needs to enter dirs the shared walker skips by default: `vendor/`, `target/`, `build/`, `dist/`, `venv/`). The per-registration `descend_into` API extension (contract C10) landed 2026-08-23 and same-day unblocked **T039 maven** (target/ descent via `descend_into: [target]` + ancestor-path filter in `finalize` for the top-level-pom semantic) plus **T057 go_binary** (build-output dirs via `descend_into: [build, dist, out, coverage, venv]` + a two-phase candidate-collection pilot pattern for `claimed_paths` availability from OS-package readers). **All three originally-deferred m664 readers (T029/T039/T057) are now resolved** — every production-path scan-tree walker uses the shared walker.
+
+The `descend_into` API (contract C10 in `contracts/registry-api.md`) adds a `Option<globset::GlobSet>` field to `ReaderRegistration`. When set, the walker descends into normally-skipped dirs whose basename matches. **Byte-identity guarantee**: dispatch under a descended-only subtree is scoped to the reader(s) whose `descend_into` opened the door — non-requesting readers never see files under that subtree. This preserves the 21 already-migrated readers' skip semantics without any code change on their side.
+
+Every escape-hatch site carries an inline `// FR-005 permanent escape hatch — <reason>` annotation citing its milestone number. The CI walker-audit gate (T065) points contributors to the T064 rationale doc at `waybill-cli/src/scan_fs/walk.audit-allowlist.rationale.md` which classifies every retained allowlist entry into (A) FR-005 escape hatch / (B) deferred reader / (C) non-scan-tree walker / (D) shared-walker infrastructure.
+
+### Reference
+
+- Spec: `specs/664-single-pass-walker/spec.md`
+- Migration guide: `specs/664-single-pass-walker/quickstart.md`
+- API contracts (C1–C9): `specs/664-single-pass-walker/contracts/registry-api.md`
+- Data model: `specs/664-single-pass-walker/data-model.md`
+- Rationale for retained walker-audit entries: `waybill-cli/src/scan_fs/walk.audit-allowlist.rationale.md`
+- SC-005 microbenchmark: `waybill-cli/tests/perf_walk_dispatch.rs::sc005_synthetic_10k_file_tree_p95_dispatch_overhead`
+
+---
+
 ## Key code landmarks
 
 ### Maven (most complex)

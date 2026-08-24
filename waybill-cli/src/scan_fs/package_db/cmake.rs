@@ -42,13 +42,18 @@
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
+use std::sync::{Arc, Mutex, OnceLock};
 
 use waybill_common::types::hash::ContentHash;
 use waybill_common::types::purl::{encode_purl_segment, Purl};
 use regex::Regex;
 
 use super::PackageDbEntry;
+
+// Milestone 664 US2 T056: shared-walker marker-detect registration.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns_case_insensitive, ReaderId, ReaderRegistration, SharedWalkerContext,
+};
 
 /// Milestone 155 — one hit per successfully matched `find_package(<Name>
 /// [<Version>])` call site. Accumulated across all discovered CMake
@@ -115,6 +120,81 @@ fn pick_highest_version(versions: &[Option<String>]) -> Option<String> {
         .iter()
         .max()
         .map(|s| (*s).clone())
+}
+
+/// Milestone 664 US2 T056: marker-detect state. CMake's discovery
+/// is subdir-targeted; the shared walker registration only gates the
+/// existing `read()` on presence of a `CMakeLists.txt` OR `*.cmake`
+/// marker anywhere in the tree.
+#[derive(Default, Debug)]
+pub(crate) struct CMakeMarkerState {
+    pub(crate) seen: bool,
+}
+
+fn on_cmake_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    // `is_cmake_file` matches basename `CMakeLists.txt`
+    // (case-insensitive) OR extension `.cmake` (case-insensitive).
+    if !is_cmake_file(path) {
+        return;
+    }
+    let Some(state) = ctx.state::<Mutex<CMakeMarkerState>>(ReaderId::CMAKE) else {
+        return;
+    };
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    guard.seen = true;
+}
+
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    // Match `CMakeLists.txt` + `*.cmake` case-insensitive.
+    let patterns = globset_from_patterns_case_insensitive(&[
+        "**/CMakeLists.txt",
+        "**/*.cmake",
+    ])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::CMAKE,
+        state: Some(Arc::new(Mutex::new(CMakeMarkerState::default()))),
+        patterns,
+        on_file: Some(on_cmake_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+pub(crate) fn extract_marker(registration: &ReaderRegistration) -> CMakeMarkerState {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return CMakeMarkerState::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<CMakeMarkerState>>() else {
+        return CMakeMarkerState::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Post-walker entry — gates the subdir-targeted discovery on marker
+/// presence + defensive fs-existence fallback (scan-root
+/// `CMakeLists.txt` OR any of the three targeted subdirs).
+pub(crate) fn finalize(
+    marker: CMakeMarkerState,
+    scan_root: &Path,
+    include_vendored: bool,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    if !marker.seen
+        && !scan_root.join("CMakeLists.txt").is_file()
+        && !scan_root.join("cmake").is_dir()
+        && !scan_root.join("Modules").is_dir()
+        && !scan_root.join("third_party").is_dir()
+    {
+        return Vec::new();
+    }
+    read(scan_root, include_vendored, exclude_set)
 }
 
 pub fn read(
@@ -604,6 +684,11 @@ fn collect_cmake_files_recursive(
         should_skip: &|_candidate: &Path, _rootfs: &Path| false,
         exclude_set: &empty,
     };
+    // FR-005 permanent escape hatch — this walker cannot migrate to
+    // walk_registry because it's anchored to a specific cmake-family
+    // subdirectory (`cmake/`, `Modules/`, `third_party/`), not to the
+    // scan root. CMake discovery is subdir-targeted; a whole-tree
+    // shared walker would over-visit. Milestone 664 US2 T056.
     safe_walk(subdir_root, &cfg, |path: &Path| {
         if !path.is_file() || !is_cmake_file(path) {
             return;

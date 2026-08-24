@@ -32,6 +32,7 @@ pub(crate) mod produces_binaries;
 pub mod sbom_path;
 pub(crate) mod walk;
 pub mod walker;
+pub(crate) mod walk_registry;
 pub(crate) mod workspace_root;
 
 use std::path::Path;
@@ -380,6 +381,10 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // for document-scope `waybill:purl-collisions-detected` emission.
     let mut divergence_records: Vec<waybill_common::divergence::DivergenceRecord> =
         Vec::new();
+    // Milestone 664 US2 T047: BUILD file list from the shared-walker
+    // pilot, hoisted here so `pants_go::enrich` (called outside the
+    // `if read_package_db` block below) can pick it up.
+    let mut pants_go_build_files: Vec<std::path::PathBuf> = Vec::new();
     if read_package_db {
         // Milestone 134 US2 — surface the `--deep-hash` choice to the
         // cargo reader via env var (same plumbing pattern as
@@ -403,7 +408,7 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             Some(s) => std::env::set_var("WAYBILL_RPM_DISTRO", s),
             None => std::env::remove_var("WAYBILL_RPM_DISTRO"),
         }
-        let scan_result = package_db::read_all(root, deb_codename, include_dev, include_legacy_rpmdb, scan_mode, include_declared_deps, scan_target_name, exclude_set)?;
+        let mut scan_result = package_db::read_all(root, deb_codename, include_dev, include_legacy_rpmdb, scan_mode, include_declared_deps, scan_target_name, exclude_set)?;
         os_release_missing_fields = scan_result.diagnostics.os_release_missing_fields.clone();
         go_transitive_coverage = scan_result.diagnostics.go_transitive_coverage.clone();
         // Milestone 172: mirror gosum_fallback_count from
@@ -426,6 +431,10 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
         gradle_scan_summary = scan_result.diagnostics.gradle_scan_summary.clone();
         scan_target_coord = scan_result.scan_target_coord.clone();
         divergence_records = scan_result.diagnostics.divergence_records.clone();
+        // Milestone 664 US2 T047: capture the pilot-collected BUILD
+        // file list before `scan_result.entries` is moved. Threaded to
+        // `pants_go::enrich` below to skip the m226 double-walk.
+        pants_go_build_files = std::mem::take(&mut scan_result.pants_go_build_files);
         let mut db_entries = scan_result.entries;
         let claimed_paths = scan_result.claimed_paths;
         #[cfg(unix)]
@@ -1031,7 +1040,21 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
     // `evidence.source_file_paths`, not `extra_annotations` (verified
     // per `resolve/deduplicator.rs::canonicalize_source_files_by_purl`).
     // Zero fabrication (FR-012 / Principle IX) — enrichment only.
-    crate::scan_fs::package_db::pants_go::enrich(root, exclude_set, &mut components);
+    // Milestone 664 US2 T047: pass the shared-walker pilot's BUILD
+    // list to `enrich` so it doesn't re-walk the scan tree. Falls back
+    // to `pants_common::discover_build_files` when the list is empty
+    // (pilot didn't run OR truly no BUILD files present).
+    let precomputed_pants_go_builds = if pants_go_build_files.is_empty() {
+        None
+    } else {
+        Some(pants_go_build_files)
+    };
+    crate::scan_fs::package_db::pants_go::enrich(
+        root,
+        exclude_set,
+        &mut components,
+        precomputed_pants_go_builds,
+    );
 
     // Milestone 148: cross-PURL canonicalization. Some ecosystems (Maven
     // nested-coord case at scan_fs/package_db/maven.rs:3429-3457, Cargo

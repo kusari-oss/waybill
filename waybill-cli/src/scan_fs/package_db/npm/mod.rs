@@ -32,6 +32,133 @@ use waybill_common::types::purl::{encode_purl_segment, Purl};
 
 use super::PackageDbEntry;
 
+// Milestone 664 US2 T043: shared-walker migration types.
+// Outer project-root discovery only. Inner `node_modules/**` walk in
+// `npm/walk.rs::walk_node_modules` stays on legacy safe_walk per FR-005.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, ReaderRegistryBuilder,
+    SharedWalker, SharedWalkerContext,
+};
+use std::sync::{Arc, Mutex};
+
+/// Per-scan state — HashSet of project-root dirs (auto-dedupes when
+/// multiple markers land in the same dir, e.g. package.json + yarn.lock).
+#[derive(Default, Debug)]
+pub(crate) struct NpmDiscoveredPaths {
+    pub(crate) project_roots: std::collections::HashSet<PathBuf>,
+}
+
+/// Per-file callback. Records the marker file's parent directory.
+/// The shared walker's default skip predicate includes `node_modules`
+/// so we never see marker files INSIDE a node_modules tree — this
+/// matches legacy `should_skip_default_descent` in the outer walker.
+fn on_npm_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(state) = ctx.state::<Mutex<NpmDiscoveredPaths>>(ReaderId::NPM) else {
+        return;
+    };
+    let Some(dir) = path.parent() else { return };
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    guard.project_roots.insert(dir.to_path_buf());
+}
+
+/// Per-directory callback — sibling-lookup for the SIXTH npm project
+/// signal: a directory containing a `node_modules/` subdir (legacy
+/// `has_npm_signal` treats this as a project root even without any of
+/// the 5 marker files at that level — e.g., `/app` with only
+/// `/app/node_modules/lodash/package.json` inside). Discovered via
+/// `path_scan_emits_no_npm_role_property` test fixture.
+fn on_npm_dir(dir: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(state) = ctx.state::<Mutex<NpmDiscoveredPaths>>(ReaderId::NPM) else {
+        return;
+    };
+    if !ctx
+        .dir_index()
+        .contains(dir, std::ffi::OsStr::new("node_modules"))
+    {
+        return;
+    }
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    guard.project_roots.insert(dir.to_path_buf());
+}
+
+/// Build the `ReaderRegistration`. Note: `node_modules/` as a directory
+/// signal (legacy `has_npm_signal` treated a dir containing `node_modules/`
+/// as a project root) is intentionally NOT captured here — in practice
+/// every `node_modules/`-containing dir also has `package.json` (npm
+/// creates node_modules by reading package.json). If a fixture surfaces
+/// a `node_modules`-only case, add an `on_dir` fallback that consults
+/// `ctx.dir_index().contains(dir, "node_modules")`.
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns(&[
+        "**/package.json",
+        "**/package-lock.json",
+        "**/pnpm-lock.yaml",
+        "**/bun.lock",
+        "**/yarn.lock",
+    ])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::NPM,
+        state: Some(Arc::new(Mutex::new(NpmDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_npm_file),
+        on_dir: Some(on_npm_dir),
+        descend_into: None,
+    })
+}
+
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> NpmDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return NpmDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<NpmDiscoveredPaths>>() else {
+        return NpmDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+#[allow(dead_code)]
+pub(crate) fn build_and_run(
+    rootfs: &Path,
+    include_dev: bool,
+    scan_mode: crate::scan_fs::ScanMode,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Result<Vec<PackageDbEntry>, NpmError> {
+    let reg = match registration() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(error = %err, "npm: registration() failed");
+            return Ok(Vec::new());
+        }
+    };
+    let registry = match ReaderRegistryBuilder::new().register(reg).build() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(error = %err, "npm: build() failed");
+            return Ok(Vec::new());
+        }
+    };
+    let mut walker = SharedWalker::new(rootfs, &registry, exclude_set).with_max_depth(6);
+    walker.run();
+    let _ = walker.finish();
+    let npm_reg = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::NPM)
+        .expect("npm registration must be present");
+    let paths = extract_paths(npm_reg);
+    finalize(paths, rootfs, include_dev, scan_mode, exclude_set)
+}
+
 /// Errors the npm reader can raise. Only `LockfileV1Unsupported` is
 /// fatal (FR-006 + CLI contract); the rest are soft failures that the
 /// dispatcher logs and swallows.
@@ -52,12 +179,39 @@ pub enum NpmError {
 /// `/usr/lib/node_modules/`, `/app/`, `/usr/src/app/`, `/opt/*/`,
 /// `/srv/*/` — so the reader finds node_modules trees that don't sit
 /// at the rootfs root. See FR-010 of the 002 spec.
+/// Legacy `pub fn read()` — retained during FR-004 coexistence.
+/// Discovers project roots via legacy `candidate_project_roots` +
+/// delegates to `finalize()`.
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
     include_dev: bool,
     scan_mode: crate::scan_fs::ScanMode,
     exclude_set: &super::exclude_path::ExclusionSet,
 ) -> Result<Vec<PackageDbEntry>, NpmError> {
+    let paths = NpmDiscoveredPaths {
+        project_roots: candidate_project_roots(rootfs, exclude_set)
+            .into_iter()
+            .collect(),
+    };
+    finalize(paths, rootfs, include_dev, scan_mode, exclude_set)
+}
+
+/// Post-walker entry — takes precomputed project_roots and runs the
+/// existing 4-tier discovery pipeline.
+pub(crate) fn finalize(
+    paths: NpmDiscoveredPaths,
+    rootfs: &Path,
+    include_dev: bool,
+    scan_mode: crate::scan_fs::ScanMode,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Result<Vec<PackageDbEntry>, NpmError> {
+    // Sort project_roots deterministically (HashSet iteration order is
+    // non-deterministic; legacy `candidate_project_roots` sorted
+    // implicitly via safe_walk's ordered descent).
+    let mut project_roots: Vec<PathBuf> = paths.project_roots.into_iter().collect();
+    project_roots.sort();
+
     let mut entries: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: std::collections::HashSet<String> = std::collections::HashSet::new();
     // Milestone 163 (T012, closes #498): per-workspace-peer accumulators
@@ -76,7 +230,7 @@ pub fn read(
     let mut ms163_resolved_total: usize = 0;
     let mut ms163_unresolved_total: usize = 0;
 
-    for project_root in candidate_project_roots(rootfs, exclude_set) {
+    for project_root in &project_roots {
         // Detect v1 first — fail closed before emitting anything partial.
         let pkg_lock = project_root.join("package-lock.json");
         if pkg_lock.is_file() {
@@ -95,16 +249,16 @@ pub fn read(
         let mut project_entries: Vec<PackageDbEntry> = Vec::new();
 
         // Tier A: lockfile (authoritative).
-        if let Some(lockfile_entries) = package_lock::read_package_lock(&project_root, include_dev) {
+        if let Some(lockfile_entries) = package_lock::read_package_lock(project_root, include_dev) {
             project_entries.extend(lockfile_entries);
-        } else if let Some(pnpm_entries) = pnpm_lock::read_pnpm_lock(&project_root, include_dev) {
+        } else if let Some(pnpm_entries) = pnpm_lock::read_pnpm_lock(project_root, include_dev) {
             project_entries.extend(pnpm_entries);
-        } else if let Some(bun_entries) = bun_lock::read_bun_lock(&project_root, include_dev) {
+        } else if let Some(bun_entries) = bun_lock::read_bun_lock(project_root, include_dev) {
             // Milestone 106 US2 (issue #278): Bun support. Same
             // tier-A authority as package-lock / pnpm-lock. The
             // legacy binary `bun.lockb` format is out of scope.
             project_entries.extend(bun_entries);
-        } else if let Some(yarn_entries) = yarn_lock::read_yarn_lock(&project_root, include_dev) {
+        } else if let Some(yarn_entries) = yarn_lock::read_yarn_lock(project_root, include_dev) {
             // Milestone 106 US5 (issue #274): Yarn support. Handles
             // both v1 (Classic) and Berry (v2+) formats, auto-
             // detected via the `__metadata:` block sentinel.
@@ -120,14 +274,14 @@ pub fn read(
         // versions or add components beyond what the lockfile
         // declared.
         if !project_entries.is_empty() {
-            enrich::enrich_entries_with_installed_authors(&project_root, &mut project_entries);
+            enrich::enrich_entries_with_installed_authors(project_root, &mut project_entries);
         }
 
         // Tier B: flat node_modules walk (fires when the lockfile didn't
         // produce anything — typical for images where the lockfile has
         // been stripped at build time but the installed tree remains).
         if project_entries.is_empty() {
-            if let Some(nm_entries) = walk::read_node_modules(&project_root, scan_mode) {
+            if let Some(nm_entries) = walk::read_node_modules(project_root, scan_mode) {
                 project_entries.extend(nm_entries);
             }
         }
@@ -155,7 +309,7 @@ pub fn read(
         if project_entries.is_empty() {
             let cross_workspace_index = walk::build_cross_workspace_index(&entries);
             let ctx = walk::CrossWorkspaceContext {
-                peer_root: &project_root,
+                peer_root: project_root,
                 index: &cross_workspace_index,
             };
             let effective_ctx = if cross_workspace_index.is_empty() {
@@ -164,7 +318,7 @@ pub fn read(
                 Some(&ctx) // workspace-peer context — cross-resolve
             };
             if let Some((fb_entries, acc)) =
-                walk::read_root_package_json(&project_root, include_dev, effective_ctx)
+                walk::read_root_package_json(project_root, include_dev, effective_ctx)
             {
                 project_entries.extend(fb_entries);
                 ms163_resolved_total += acc.resolved_deps.len();
@@ -181,7 +335,7 @@ pub fn read(
         // which tier (A / B / C) produced the entries, since aliases can
         // reference either a lockfile-resolved component (Tier A) or a
         // design-tier phantom (Tier C).
-        stamp_alias_declared_as(&project_root, &mut project_entries);
+        stamp_alias_declared_as(project_root, &mut project_entries);
 
         for entry in project_entries {
             let purl_key = entry.purl.as_str().to_string();
@@ -200,8 +354,8 @@ pub fn read(
     // collided, emit a net-new main-module (library packages without
     // committed lockfiles).
     let mut main_modules_emitted = 0usize;
-    for project_root in candidate_project_roots(rootfs, exclude_set) {
-        let Some(mut synthesized) = walk::build_npm_main_module_entry(&project_root) else {
+    for project_root in &project_roots {
+        let Some(mut synthesized) = walk::build_npm_main_module_entry(project_root) else {
             continue;
         };
         // Milestone 163 (T013, closes #498): stamp the synthesized
@@ -214,7 +368,7 @@ pub fn read(
         // `waybill:unresolved-declared-dep` annotation on the peer's
         // main-module (bare string when 1; JSON array
         // sorted+deduplicated when ≥2).
-        if let Some(acc) = peer_accumulators.remove(&project_root) {
+        if let Some(acc) = peer_accumulators.remove(project_root.as_path()) {
             let existing_deps: std::collections::HashSet<String> =
                 synthesized.depends.iter().cloned().collect();
             for name in &acc.resolved_deps {
@@ -307,7 +461,7 @@ pub fn read(
     // catalog row needed today; row C45 / milestone 061's annotation
     // infrastructure is the natural place to extend if we want
     // cross-format parity guarantees on source-manifest.
-    apply_nameless_secondary_umbrella(rootfs, include_dev, &mut entries, exclude_set);
+    apply_nameless_secondary_umbrella(rootfs, include_dev, &mut entries, exclude_set, &project_roots);
 
     // Milestone 194 US2 (issue #572) — synthesize a nested mainmod
     // for each nameless `package.json` that has an adjacent
@@ -317,7 +471,7 @@ pub fn read(
     // (e.g., pico's `pkg/db/integrationtest/schemalint/`); this
     // pass ensures every lockfile-anchored nameless workspace gets
     // a graph anchor, so its transitive deps aren't orphaned.
-    synthesize_nameless_nested_mainmods(rootfs, &mut entries, exclude_set);
+    synthesize_nameless_nested_mainmods(rootfs, &mut entries, exclude_set, &project_roots);
 
     // Milestone 066 same-PURL dedup. Collapses same-PURL collisions
     // (rare for npm given `node_modules/` exclusion in
@@ -449,13 +603,15 @@ fn synthesize_nameless_nested_mainmods(
     rootfs: &Path,
     entries: &mut Vec<PackageDbEntry>,
     exclude_set: &super::exclude_path::ExclusionSet,
+    project_roots: &[PathBuf],
 ) {
+    let _ = (rootfs, exclude_set);
     let existing_purls: std::collections::HashSet<String> = entries
         .iter()
         .map(|e| e.purl.as_str().to_string())
         .collect();
     let mut synthesized = 0usize;
-    for project_root in candidate_project_roots(rootfs, exclude_set) {
+    for project_root in project_roots {
         let manifest_path = project_root.join("package.json");
         let lock_path = project_root.join("package-lock.json");
         if !manifest_path.is_file() || !lock_path.is_file() {
@@ -612,7 +768,9 @@ fn apply_nameless_secondary_umbrella(
     include_dev: bool,
     entries: &mut [PackageDbEntry],
     exclude_set: &super::exclude_path::ExclusionSet,
+    project_roots: &[PathBuf],
 ) {
+    let _ = exclude_set;
     // Pre-pass: enumerate project_root directories whose `package.json`
     // produced an actual main-module entry in `entries`. This is the
     // pool of "umbrella targets" — manifests an orphan-source manifest
@@ -626,7 +784,8 @@ fn apply_nameless_secondary_umbrella(
     // the strictly correct condition — it captures every manifest the
     // main-module-build loop above DIDN'T handle (whether due to
     // nameless OR private+no-version).
-    let project_roots = candidate_project_roots(rootfs, exclude_set);
+    // Uses the `project_roots` param — passed in from `finalize` so all
+    // three iteration sites share the same list.
     let main_module_dirs: Vec<PathBuf> = entries
         .iter()
         .filter(|e| {
@@ -643,7 +802,7 @@ fn apply_nameless_secondary_umbrella(
         })
         .collect();
 
-    for project_root in &project_roots {
+    for project_root in project_roots {
         let manifest_path = project_root.join("package.json");
         if !manifest_path.is_file() {
             continue;
@@ -695,7 +854,7 @@ fn apply_nameless_secondary_umbrella(
         // directory, with the longest path.
         let target_project_root: Option<&PathBuf> = main_module_dirs
             .iter()
-            .filter(|nd| nd != &project_root && project_root.starts_with(nd))
+            .filter(|nd| nd.as_path() != project_root.as_path() && project_root.starts_with(nd))
             .max_by_key(|nd| nd.as_os_str().len());
 
         let relative_manifest = manifest_path

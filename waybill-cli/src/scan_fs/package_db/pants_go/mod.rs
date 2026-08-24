@@ -20,6 +20,7 @@ pub mod ownership_index;
 
 use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
 use serde_json::json;
 use waybill_common::resolution::{LifecycleScope, ResolvedComponent};
@@ -28,6 +29,11 @@ use waybill_common::types::purl::{encode_purl_segment, Purl};
 use super::exclude_path::ExclusionSet;
 use super::pants_common;
 use super::PackageDbEntry;
+
+// Milestone 664 US2 T047: shared-walker enrichment-only registration.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, SharedWalkerContext,
+};
 
 /// The four built-in Pants Go backend target types we recognize.
 ///
@@ -118,6 +124,60 @@ pub(crate) enum GoTargetParseError {
     NonStringLiteralValue { line: u32, snippet: String },
     #[error("unbalanced parens starting at line {line}")]
     UnbalancedParens { line: u32 },
+}
+
+/// Milestone 664 US2 T047: shared-walker discovery state. Collects
+/// `BUILD` file paths during the single-pass descent so `enrich` can
+/// reuse the pilot's precomputed set instead of double-walking via
+/// `pants_common::discover_build_files`.
+#[derive(Default, Debug)]
+pub(crate) struct PantsGoDiscoveredPaths {
+    pub(crate) build_files: Vec<PathBuf>,
+}
+
+/// Per-file callback. Matches basename exactly `BUILD` (Pants
+/// convention — case-sensitive).
+fn on_pants_go_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    if path.file_name().and_then(|s| s.to_str()) != Some("BUILD") {
+        return;
+    }
+    let Some(state) = ctx.state::<Mutex<PantsGoDiscoveredPaths>>(ReaderId::PANTS_GO) else {
+        return;
+    };
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    guard.build_files.push(path.to_path_buf());
+}
+
+/// Build the `ReaderRegistration`. This reader is enrichment-only: its
+/// state is drained AFTER `read_all` returns and threaded to
+/// `pants_go::enrich` via `DbScanResult.pants_go_build_files`.
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns(&["**/BUILD"])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::PANTS_GO,
+        state: Some(Arc::new(Mutex::new(PantsGoDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_pants_go_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> PantsGoDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return PantsGoDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<PantsGoDiscoveredPaths>>() else {
+        return PantsGoDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
 }
 
 /// Public entry — emits the design-tier `pkg:generic/go@<version>`
@@ -220,14 +280,35 @@ pub fn read(scan_root: &Path, _exclude_set: &ExclusionSet) -> Vec<PackageDbEntry
 /// `scan_fs/mod.rs` at line ~1001 (post-m191, pre-m148). Runs on
 /// the already-reconciled component set.
 ///
+/// Milestone 664 US2 T047: the `precomputed_build_files` parameter
+/// carries BUILD paths already collected during the shared-walker
+/// pilot's descent. When `Some`, the enrichment reuses that set (no
+/// double-walk). When `None`, falls back to
+/// `pants_common::discover_build_files` for legacy call sites (tests,
+/// direct API consumers). This eliminates the previous
+/// pilot-plus-enrich double walk of the scan tree for Pants Go repos.
+///
 /// **Zero fabrication** (FR-012 / Principle IX): NEVER pushes new
 /// components; only mutates `extra_annotations` in place.
 pub fn enrich(
     scan_root: &Path,
     exclude_set: &ExclusionSet,
     components: &mut [ResolvedComponent],
+    precomputed_build_files: Option<Vec<PathBuf>>,
 ) {
-    let build_files = pants_common::discover_build_files(scan_root, exclude_set);
+    let build_files = match precomputed_build_files {
+        Some(mut paths) => {
+            // Match legacy safe_walk-driven order: sorted ascending.
+            // pants_common::discover_build_files does not sort, but
+            // downstream (ownership_index::build_index + enrichment
+            // annotation) is order-invariant per m226 R3. Sort here
+            // defensively so the WARN emission order is stable across
+            // pilot vs legacy paths.
+            paths.sort();
+            paths
+        }
+        None => pants_common::discover_build_files(scan_root, exclude_set),
+    };
     let pants_toml_present = scan_root.join("pants.toml").is_file();
     if build_files.is_empty() && !pants_toml_present {
         return;

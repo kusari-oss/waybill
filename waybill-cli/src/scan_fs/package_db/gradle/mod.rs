@@ -30,23 +30,175 @@ pub(super) mod subprocess;
 pub mod tier;
 pub(super) mod version_catalog;
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use super::PackageDbEntry;
 
-/// Walk `rootfs` for `gradle.lockfile` and `buildscript-gradle.lockfile`
-/// files; parse each one; return all emitted entries. Empty when neither
-/// file appears anywhere in the scan tree.
-///
-/// Milestone 235: ALSO invokes the m235 resolution ladder on every
-/// Gradle project directory encountered. The ladder's output SUPPLEMENTS
-/// the m106 lockfile output per FR-009 non-regression — when a lockfile
-/// is present, m106's flat entries are unchanged; the ladder adds
-/// transitive-edge information (once US4 emitters land, m235 MVP only
-/// adds the components right now).
+// Milestone 664 US2 T041: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    ReaderId, ReaderRegistration, ReaderRegistryBuilder, SharedWalker, SharedWalkerContext,
+};
+use std::ffi::OsStr;
+use std::sync::{Arc, Mutex};
+
+/// Per-scan state — accumulates Gradle project directories discovered
+/// via `on_dir` callback + sibling-lookup. This is the first reader to
+/// use the sibling-lookup pattern from FR-003 + quickstart.md's
+/// "two-phase reader" recipe.
+#[derive(Default, Debug)]
+pub(crate) struct GradleDiscoveredPaths {
+    pub(crate) project_dirs: Vec<PathBuf>,
+}
+
+/// Per-directory callback. Fires once per dir descended into. Consults
+/// `ctx.dir_index()` (populated by the shared walker before dispatch)
+/// to check for Gradle-marker files — no fresh `read_dir()` syscalls.
+/// This is the FR-003 sibling-lookup pattern.
+fn on_gradle_dir(dir: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(state) = ctx.state::<Mutex<GradleDiscoveredPaths>>(ReaderId::GRADLE) else {
+        return;
+    };
+    // Sibling lookup — zero extra syscalls per FR-003 / contract C2.
+    let is_gradle_project = [
+        OsStr::new("build.gradle"),
+        OsStr::new("build.gradle.kts"),
+        OsStr::new("settings.gradle"),
+        OsStr::new("settings.gradle.kts"),
+        // m106 lockfile presence also qualifies — some projects have
+        // lockfiles without build.gradle (Gradle 7+ supports
+        // settings-only projects with per-subproject build files).
+        OsStr::new("gradle.lockfile"),
+        OsStr::new("buildscript-gradle.lockfile"),
+    ]
+    .iter()
+    .any(|marker| ctx.dir_index().contains(dir, marker));
+    if !is_gradle_project {
+        return;
+    }
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    guard.project_dirs.push(dir.to_path_buf());
+}
+
+/// Build the `ReaderRegistration`. Uses `on_dir` (not `on_file`) since
+/// the sibling-lookup pattern needs one dispatch per directory, not per
+/// file. Empty pattern set is fine — on_dir fires unconditionally on
+/// every descent per the m664 dispatch design.
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    // Empty GlobSet: on_dir fires unconditionally; on_file is None so
+    // no file dispatches occur.
+    let patterns = crate::scan_fs::walk_registry::globset_from_patterns(&[])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::GRADLE,
+        state: Some(Arc::new(Mutex::new(GradleDiscoveredPaths::default()))),
+        patterns,
+        on_file: None,
+        on_dir: Some(on_gradle_dir),
+        descend_into: None,
+    })
+}
+
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> GradleDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return GradleDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<GradleDiscoveredPaths>>() else {
+        return GradleDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Coexistence-period entry point — mini-registry per reader.
+/// **Post-T033**: `read_all` uses the consolidated shared-walker pilot;
+/// this fn is retained as a shortcut for tests + single-reader debug.
+#[allow(dead_code)]
+pub(crate) fn build_and_run(
+    rootfs: &Path,
+    exclude_set: &super::exclude_path::ExclusionSet,
+    diagnostics: &mut super::ScanDiagnostics,
+) -> Vec<PackageDbEntry> {
+    let reg = match registration() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(error = %err, "gradle: registration() failed");
+            return Vec::new();
+        }
+    };
+    let registry = match ReaderRegistryBuilder::new().register(reg).build() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(error = %err, "gradle: build() failed");
+            return Vec::new();
+        }
+    };
+    let mut walker = SharedWalker::new(rootfs, &registry, exclude_set).with_max_depth(6);
+    walker.run();
+    let _ = walker.finish();
+    let gradle_reg = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::GRADLE)
+        .expect("gradle registration must be present");
+    let paths = extract_paths(gradle_reg);
+    finalize(paths, rootfs, exclude_set, diagnostics)
+}
+
+/// Legacy `pub fn read()` — retained during FR-004 coexistence.
+/// Discovers Gradle project dirs via safe_walk + delegates to
+/// `finalize()`.
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
     exclude_set: &super::exclude_path::ExclusionSet,
+    diagnostics: &mut super::ScanDiagnostics,
+) -> Vec<PackageDbEntry> {
+    let cfg = crate::scan_fs::walk::WalkConfig {
+        max_depth: 6,
+        should_skip: &|candidate: &Path, _rootfs: &Path| -> bool {
+            candidate
+                .file_name()
+                .and_then(|s| s.to_str())
+                .map(super::project_roots::should_skip_default_descent)
+                .unwrap_or(true)
+        },
+        exclude_set,
+    };
+    let mut project_dirs: Vec<PathBuf> = Vec::new();
+    crate::scan_fs::walk::safe_walk(rootfs, &cfg, |project_dir| {
+        if !project_dir.is_dir() {
+            return;
+        }
+        let is_gradle_project = [
+            "build.gradle",
+            "build.gradle.kts",
+            "settings.gradle",
+            "settings.gradle.kts",
+            "gradle.lockfile",
+            "buildscript-gradle.lockfile",
+        ]
+        .iter()
+        .any(|name| project_dir.join(name).is_file());
+        if is_gradle_project {
+            project_dirs.push(project_dir.to_path_buf());
+        }
+    });
+    let paths = GradleDiscoveredPaths { project_dirs };
+    finalize(paths, rootfs, exclude_set, diagnostics)
+}
+
+/// Post-walker entry — takes discovered project dirs and runs the
+/// m235 ladder + m106 lockfile pass per dir. Mutates `diagnostics`
+/// with the aggregated summary.
+pub(crate) fn finalize(
+    paths: GradleDiscoveredPaths,
+    rootfs: &Path,
+    _exclude_set: &super::exclude_path::ExclusionSet,
     diagnostics: &mut super::ScanDiagnostics,
 ) -> Vec<PackageDbEntry> {
     // Milestone 235: read the ladder config from env vars set by
@@ -67,17 +219,12 @@ pub fn read(
             .unwrap_or_default(),
     };
 
-    let cfg = crate::scan_fs::walk::WalkConfig {
-        max_depth: 6,
-        should_skip: &|candidate: &Path, _rootfs: &Path| -> bool {
-            candidate
-                .file_name()
-                .and_then(|s| s.to_str())
-                .map(super::project_roots::should_skip_default_descent)
-                .unwrap_or(true)
-        },
-        exclude_set,
-    };
+    // Defensive sort — the shared walker's on_dir dispatch fires in
+    // descent order which is already lex-sorted per contract, but the
+    // legacy read()'s safe_walk output would also be sorted. Ensure
+    // matching output between the two entry points.
+    let mut project_dirs = paths.project_dirs;
+    project_dirs.sort();
     let mut out = Vec::new();
     // Milestone 235 US4: per-scan record of every Gradle project touched
     // and which ladder tier won for it. Aggregated at the end into a
@@ -99,11 +246,7 @@ pub fn read(
         tier::GradleFallbackReason,
     )> = std::collections::BTreeSet::new();
 
-    crate::scan_fs::walk::safe_walk(rootfs, &cfg, |project_dir| {
-        if !project_dir.is_dir() {
-            return;
-        }
-
+    for project_dir in &project_dirs {
         // m235 ladder pass — runs for every project directory that
         // looks like a Gradle project. Also detects whether m106 later
         // matches a lockfile in this project so we know whether to
@@ -179,7 +322,7 @@ pub fn read(
         if let Some(t) = effective_tier {
             per_project_pairs.push((project_dir.to_path_buf(), t));
         }
-    });
+    }
 
     // Compute the aggregate summary for the doc-scope annotation.
     // Fire the summary whenever we either produced components OR

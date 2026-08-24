@@ -31,6 +31,13 @@ use waybill_common::types::purl::Purl;
 use super::{rpm_vendor_from_id, PackageDbEntry};
 use crate::scan_fs::os_release;
 
+// Milestone 664 US1 T027: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns_case_insensitive, ReaderId, ReaderRegistration,
+    ReaderRegistryBuilder, SharedWalker, SharedWalkerContext,
+};
+use std::sync::Arc;
+
 /// Milestone 054 FR-003: max recursion depth for the `walk_dir`
 /// filesystem traversal. Default ceiling per the spec; not tightened
 /// because `.rpm` artifacts can sit anywhere in a rootfs (no
@@ -210,6 +217,12 @@ pub fn resolve_rpm_vendor_slug(
 /// Missing `.rpm` files → empty vector (not an error; FR-005). Single
 /// `.rpm` file passed as `rootfs` → still works (treated as its own
 /// scan root with no nested walk needed).
+/// Legacy `pub fn read()` — retained during FR-004 coexistence.
+/// Post-m664-US1-T027, `read_all` calls `build_and_run()` instead.
+/// Semantics-preserving: both paths invoke `parse_rpm_file` with the
+/// same args on identical file sets (case-insensitive `.rpm` extension
+/// filter + RPM lead-block magic-byte check inside the callback).
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
     distro_version: Option<&str>,
@@ -226,6 +239,103 @@ pub fn read(
         }
     }
     out
+}
+
+/// Milestone 664 US1 T027: per-scan state carried through
+/// `ReaderRegistration.state`. Read-only after registration — no Mutex.
+/// Holds the reader's `RpmReaderConfig` + the two per-scan derived
+/// values `distro_version` (from operator flag / auto-detect) and
+/// `os_release_id` (from rootfs `/etc/os-release`).
+#[derive(Debug)]
+pub(crate) struct RpmReaderState {
+    pub(crate) config: RpmReaderConfig,
+    pub(crate) distro_version: Option<String>,
+    pub(crate) os_release_id: Option<String>,
+}
+
+/// Per-file callback. Called by the shared walker for every file whose
+/// basename matches `**/*.rpm` (case-insensitive). Re-verifies the RPM
+/// lead-block magic before parsing (matches legacy `is_rpm_candidate`).
+fn on_rpm_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(state) = ctx.state::<RpmReaderState>(ReaderId::RPM_FILE) else {
+        return;
+    };
+    // Defense in depth: glob matched the extension case-insensitively;
+    // re-check magic bytes (matches legacy `is_rpm_candidate`).
+    if !is_rpm_candidate(path) {
+        return;
+    }
+    if let Some(entry) = parse_rpm_file(
+        path,
+        state.os_release_id.as_deref(),
+        state.distro_version.as_deref(),
+        &state.config,
+    ) {
+        ctx.push(ReaderId::RPM_FILE, entry);
+    }
+}
+
+/// Build the `ReaderRegistration` for this reader. Takes the same
+/// inputs the legacy `read()` accepts (`rootfs` + `distro_version` +
+/// `config`), computes the per-scan `os_release_id`, and packs
+/// everything into the state slot.
+pub(crate) fn registration(
+    rootfs: &Path,
+    distro_version: Option<&str>,
+    config: &RpmReaderConfig,
+) -> anyhow::Result<ReaderRegistration> {
+    let os_release_id = os_release::read_id_from_rootfs(rootfs);
+    let patterns = globset_from_patterns_case_insensitive(&["**/*.rpm"])?;
+    let state = RpmReaderState {
+        config: config.clone(),
+        distro_version: distro_version.map(String::from),
+        os_release_id,
+    };
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::RPM_FILE,
+        state: Some(Arc::new(state)),
+        patterns,
+        on_file: Some(on_rpm_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+/// Coexistence-period entry point — same shape as `ipk_file::build_and_run`.
+/// **Post-T033**: retained as a shortcut; `read_all` uses
+/// `run_shared_walker_pilot`.
+#[allow(dead_code)]
+pub(crate) fn build_and_run(
+    rootfs: &Path,
+    distro_version: Option<&str>,
+    config: &RpmReaderConfig,
+) -> Vec<PackageDbEntry> {
+    let reg = match registration(rootfs, distro_version, config) {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(
+                error = %err,
+                "rpm_file: registration() failed — falling back to empty output",
+            );
+            return Vec::new();
+        }
+    };
+    let registry = match ReaderRegistryBuilder::new().register(reg).build() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(
+                error = %err,
+                "rpm_file: ReaderRegistryBuilder::build() failed — falling back to empty output",
+            );
+            return Vec::new();
+        }
+    };
+    let empty_excludes = super::exclude_path::ExclusionSet::new_empty();
+    let mut walker = SharedWalker::new(rootfs, &registry, &empty_excludes)
+        .with_max_depth(MAX_WALK_DEPTH);
+    walker.run();
+    let mut per_reader = walker.finish();
+    per_reader.remove(&ReaderId::RPM_FILE).unwrap_or_default()
 }
 
 /// Walk a scan root for files ending in `.rpm` (case-insensitive)

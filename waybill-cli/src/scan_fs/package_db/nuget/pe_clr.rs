@@ -46,11 +46,18 @@ use crate::scan_fs::walk;
 /// culture variants into a single component per `(name, version)` via
 /// `AssemblyAccumulator`; emit one `PackageDbEntry` per unique
 /// coordinate.
+/// Legacy `pub fn read()` — retained during FR-004 coexistence.
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
     exclude_set: &super::super::exclude_path::ExclusionSet,
 ) -> Vec<PackageDbEntry> {
     let dll_paths = collect_dll_paths(rootfs, exclude_set);
+    finalize(dll_paths, rootfs)
+}
+
+/// Post-walker entry — takes precomputed `.dll` paths.
+pub(super) fn finalize(dll_paths: Vec<PathBuf>, _rootfs: &Path) -> Vec<PackageDbEntry> {
     if dll_paths.is_empty() {
         return Vec::new();
     }
@@ -79,7 +86,7 @@ pub fn read(
 }
 
 /// Walk via milestone-114's `safe_walk` for `*.dll` extension.
-fn collect_dll_paths(
+pub(super) fn collect_dll_paths(
     rootfs: &Path,
     exclude_set: &super::super::exclude_path::ExclusionSet,
 ) -> Vec<PathBuf> {

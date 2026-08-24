@@ -18,9 +18,15 @@ pub mod lockfile;
 pub mod resolve_classifier;
 
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
 use super::PackageDbEntry;
 use lockfile::SkipReason;
+
+// Milestone 664 US2 T045: shared-walker marker-detect registration.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, SharedWalkerContext,
+};
 
 /// Discovered lockfile candidate — absolute path plus the resolve
 /// name to tag its components with. The `resolve_name` comes from
@@ -106,6 +112,101 @@ fn discover_lockfiles(scan_root: &Path) -> Vec<DiscoveredLockfile> {
     }
 
     out
+}
+
+/// Milestone 664 US2 T045: marker-detect state. The pants_jvm reader
+/// has no tree walker of its own (fixed-root scan), so its shared-walker
+/// registration exists only to record whether ANY pants signal was seen
+/// during the single-pass descent. Finalize gates the O(1) `read()` on
+/// this flag (plus a defensive fs-existence fallback) so repos with no
+/// pants presence save two fs syscalls per scan.
+#[derive(Default, Debug)]
+pub(crate) struct PantsJvmMarkerState {
+    pub(crate) seen: bool,
+}
+
+/// Per-file callback. Marks `seen = true` iff either:
+///   - basename == `pants.toml` (definitive pants signal), OR
+///   - basename ends in `.lock` AND the immediate parent dir is `jvm`
+///     with `3rdparty/` anywhere in the ancestor chain (US3 T024
+///     fixture: `3rdparty/jvm/*.lock` without a `pants.toml`).
+fn on_pants_jvm_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(state) = ctx.state::<Mutex<PantsJvmMarkerState>>(ReaderId::PANTS_JVM) else {
+        return;
+    };
+    let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
+        return;
+    };
+    let matches = if name == "pants.toml" {
+        true
+    } else if name.ends_with(".lock") {
+        let parent_is_jvm = path
+            .parent()
+            .and_then(|p| p.file_name())
+            .and_then(|n| n.to_str())
+            == Some("jvm");
+        let under_3rdparty = path
+            .ancestors()
+            .filter_map(|a| a.file_name().and_then(|n| n.to_str()))
+            .any(|n| n == "3rdparty");
+        parent_is_jvm && under_3rdparty
+    } else {
+        false
+    };
+    if !matches {
+        return;
+    }
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    guard.seen = true;
+}
+
+/// Build the `ReaderRegistration`. Matches `pants.toml` + `*.lock` at
+/// basename level; the callback's path filter narrows `.lock` matches
+/// to the `3rdparty/jvm/` subtree so unrelated lockfiles (Cargo.lock,
+/// Gemfile.lock, uv.lock, ...) don't trip the flag.
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns(&["**/pants.toml", "**/*.lock"])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::PANTS_JVM,
+        state: Some(Arc::new(Mutex::new(PantsJvmMarkerState::default()))),
+        patterns,
+        on_file: Some(on_pants_jvm_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+/// Extract the marker flag out of the registration's state slot.
+pub(crate) fn extract_marker(registration: &ReaderRegistration) -> PantsJvmMarkerState {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return PantsJvmMarkerState::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<PantsJvmMarkerState>>() else {
+        return PantsJvmMarkerState::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Post-walker entry — gates the O(1) read on marker presence with a
+/// defensive fs-existence fallback for pathological layouts (e.g. a
+/// walker exclusion that skipped `3rdparty/`). Preserves FR-006
+/// byte-identity: any repo that previously emitted pants-jvm components
+/// will still emit them via at least one signal path.
+pub(crate) fn finalize(
+    marker: PantsJvmMarkerState,
+    scan_root: &Path,
+) -> Vec<PackageDbEntry> {
+    if !marker.seen && !scan_root.join("3rdparty").join("jvm").is_dir() {
+        return Vec::new();
+    }
+    read(scan_root)
 }
 
 /// Public entry — orchestrates lockfile discovery + parsing + entry

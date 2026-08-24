@@ -32,43 +32,97 @@ const RECIPE_FILENAME_REGEX: &str =
 /// established source-tree-walker convention) to avoid runaway
 /// traversal in deep monorepos.
 /// Milestone 114: delegates to `scan_fs::walk::safe_walk`.
+///
+/// Milestone 664 US2 T059: `precomputed_layer_conf_paths` and
+/// `precomputed_bbappend_paths` carry paths already collected by the
+/// shared-walker pilot. When `Some`, the pilot-collected set is used
+/// instead of running the reader's own `layer_conf::build_index` /
+/// `bbappend::build_from_walk` safe_walk. When `None`, legacy
+/// safe_walk-driven discovery runs unchanged (test-path fallback).
+///
+/// Milestone 664 US2 T029: `precomputed_bb_paths` carries `.bb`
+/// recipe paths already collected by the shared-walker pilot. When
+/// `Some`, iterates the precomputed set directly, skipping the
+/// primary safe_walk site (was the last remaining scan-tree walker
+/// in the yocto reader family). When `None`, legacy safe_walk-
+/// driven discovery runs unchanged (test-path fallback). Per-file
+/// `process_recipe` logic is preserved verbatim regardless of source.
 pub fn read(
     rootfs: &Path,
     exclude_set: &super::super::exclude_path::ExclusionSet,
+    precomputed_layer_conf_paths: Option<Vec<PathBuf>>,
+    precomputed_bbappend_paths: Option<Vec<PathBuf>>,
+    precomputed_bb_paths: Option<Vec<PathBuf>>,
 ) -> Vec<PackageDbEntry> {
     let Ok(regex) = Regex::new(RECIPE_FILENAME_REGEX) else {
         return Vec::new();
     };
     // Milestone 128 FR-006: build the layer.conf index first so each
     // recipe can be attributed to its nearest-ancestor layer.
-    let layer_index = super::layer_conf::build_index(rootfs, exclude_set);
+    let layer_index = match precomputed_layer_conf_paths {
+        Some(paths) => super::layer_conf::build_index_from_paths(paths),
+        None => super::layer_conf::build_index(rootfs, exclude_set),
+    };
 
     let mut out = Vec::new();
-    let cfg = crate::scan_fs::walk::WalkConfig {
-        max_depth: 8,
-        should_skip: &|candidate: &Path, _rootfs: &Path| -> bool {
-            candidate
-                .file_name()
-                .and_then(|s| s.to_str())
-                .map(super::super::project_roots::should_skip_default_descent)
-                .unwrap_or(true)
-        },
-        exclude_set,
-    };
-    crate::scan_fs::walk::safe_walk(rootfs, &cfg, |path| {
-        if !path.is_file() {
-            return;
+    // Milestone 664 US2 T029: primary `.bb` recipe walker migrated
+    // to the shared walker. When precomputed paths are available,
+    // iterate them + run process_recipe per file (same logic as the
+    // legacy safe_walk closure). Fall back to legacy safe_walk for
+    // test callers that pass None.
+    match precomputed_bb_paths {
+        Some(mut bb_paths) => {
+            // Safe_walk was unsorted; sort defensively so per-file
+            // WARN emission order is stable across pilot vs legacy paths.
+            bb_paths.sort();
+            for path in &bb_paths {
+                let Some(filename) = path.file_name().and_then(|s| s.to_str()) else {
+                    continue;
+                };
+                if !filename.ends_with(".bb") {
+                    continue;
+                }
+                if let Some(entry) = process_recipe(path, filename, &regex, &layer_index)
+                {
+                    out.push(entry);
+                }
+            }
         }
-        let Some(filename) = path.file_name().and_then(|s| s.to_str()) else {
-            return;
-        };
-        if !filename.ends_with(".bb") {
-            return;
+        None => {
+            // Milestone 664 US2 T029 (2026-08-23): production path now
+            // uses the shared-walker pilot's `precomputed_bb_paths`; this
+            // safe_walk fallback fires only for test callers passing
+            // `None`. Deferral marker removed; T029 resolved via the
+            // T047/T058/T059 `Option<Vec<PathBuf>>` precomputed-paths
+            // pattern rather than a `process_recipe` refactor.
+            let cfg = crate::scan_fs::walk::WalkConfig {
+                max_depth: 8,
+                should_skip: &|candidate: &Path, _rootfs: &Path| -> bool {
+                    candidate
+                        .file_name()
+                        .and_then(|s| s.to_str())
+                        .map(super::super::project_roots::should_skip_default_descent)
+                        .unwrap_or(true)
+                },
+                exclude_set,
+            };
+            crate::scan_fs::walk::safe_walk(rootfs, &cfg, |path| {
+                if !path.is_file() {
+                    return;
+                }
+                let Some(filename) = path.file_name().and_then(|s| s.to_str()) else {
+                    return;
+                };
+                if !filename.ends_with(".bb") {
+                    return;
+                }
+                if let Some(entry) = process_recipe(path, filename, &regex, &layer_index)
+                {
+                    out.push(entry);
+                }
+            });
         }
-        if let Some(entry) = process_recipe(path, filename, &regex, &layer_index) {
-            out.push(entry);
-        }
-    });
+    }
 
     // Milestone 128 FR-007: emit one synthesized layer-root
     // PackageDbEntry per detected `conf/layer.conf`. Each carries
@@ -97,7 +151,10 @@ pub fn read(
     // appends (no matching recipe in scan) emit warn logs + are
     // recorded in the orphans Vec; no phantom components per
     // Constitution Principle VIII completeness.
-    let mut bbappend_idx = super::bbappend::build_from_walk(rootfs, exclude_set);
+    let mut bbappend_idx = match precomputed_bbappend_paths {
+        Some(paths) => super::bbappend::build_index_from_paths(paths),
+        None => super::bbappend::build_from_walk(rootfs, exclude_set),
+    };
     let recipe_keys: std::collections::BTreeSet<(String, String)> = out
         .iter()
         .filter(|e| {
@@ -997,7 +1054,7 @@ mod tests {
             .join("waybill-fixture-lib")
             .join("waybill-fixture-lib_1.2.3.bb");
         touch(&recipe);
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read(tmp.path(), &Default::default(), None, None, None);
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "waybill-fixture-lib");
         assert_eq!(entries[0].version, "1.2.3");
@@ -1013,7 +1070,7 @@ mod tests {
             .join("waybill-fixture-lib")
             .join("waybill-fixture-lib_1.2.3.bb");
         touch(&recipe);
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read(tmp.path(), &Default::default(), None, None, None);
         assert_eq!(entries.len(), 1);
         // PURL qualifiers are canonicalized to alphabetical order by
         // `Purl::new` — `layer` lex-sorts before `openembedded`.
@@ -1055,7 +1112,7 @@ mod tests {
                 .join("waybill-fixture-real")
                 .join("waybill-fixture-real_1.0.bb"),
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read(tmp.path(), &Default::default(), None, None, None);
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "waybill-fixture-real");
     }
@@ -1070,7 +1127,7 @@ mod tests {
                 .join("waybill-fixture-noversion")
                 .join("waybill-fixture-noversion.bb"),
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read(tmp.path(), &Default::default(), None, None, None);
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "waybill-fixture-noversion");
         assert_eq!(entries[0].version, "unknown");
@@ -1108,7 +1165,7 @@ mod tests {
                 .join("waybill-fixture-lib")
                 .join("waybill-fixture-lib_1.0.bb"),
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read(tmp.path(), &Default::default(), None, None, None);
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "waybill-fixture-lib");
     }
@@ -1123,7 +1180,7 @@ mod tests {
                 .join("waybill-fixture-lib")
                 .join("waybill-fixture-lib_1.2.3+git0abc123.bb"),
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read(tmp.path(), &Default::default(), None, None, None);
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].version, "1.2.3+git0abc123");
     }
@@ -1140,7 +1197,7 @@ mod tests {
                 .join("waybill-fixture-lib")
                 .join("waybill-fixture-lib_1.0.bb"),
         );
-        let entries = read(tmp.path(), &Default::default());
+        let entries = read(tmp.path(), &Default::default(), None, None, None);
         for e in &entries {
             assert_eq!(e.sbom_tier.as_deref(), Some("design"));
             let reason = e

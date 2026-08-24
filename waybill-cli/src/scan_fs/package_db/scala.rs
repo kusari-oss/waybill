@@ -79,7 +79,141 @@ use waybill_common::types::purl::Purl;
 use super::exclude_path::ExclusionSet;
 use super::PackageDbEntry;
 
+// Milestone 664 US1 T031: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, ReaderRegistryBuilder,
+    SharedWalker, SharedWalkerContext,
+};
+use std::sync::{Arc, Mutex};
+
 const MAX_SCALA_WALK_DEPTH: usize = 12;
+
+/// Milestone 664 US1 T031: per-scan state passed via
+/// `ReaderRegistration.state`. Accumulates discovered paths during the
+/// shared walker's traversal; the post-walker `finalize()` step reads
+/// these vectors and runs the existing parse-and-emit pipeline.
+#[derive(Default, Debug)]
+pub(crate) struct ScalaDiscoveredPaths {
+    pub(crate) lockfile_candidates: Vec<PathBuf>,
+    pub(crate) build_sbt_paths: Vec<PathBuf>,
+    pub(crate) build_properties_paths: Vec<PathBuf>,
+    pub(crate) dependencies_scala_paths: Vec<PathBuf>,
+}
+
+/// True iff the file's parent-directory basename is `project` — this
+/// mirrors the legacy `discover_build_properties` + `discover_dependencies_scala`
+/// filter (both files are only meaningful inside `project/`).
+fn parent_is_project(path: &Path) -> bool {
+    path.parent()
+        .and_then(|p| p.file_name())
+        .and_then(|s| s.to_str())
+        == Some("project")
+}
+
+/// Per-file callback invoked by the shared walker.
+fn on_scala_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(state) = ctx.state::<Mutex<ScalaDiscoveredPaths>>(ReaderId::SCALA) else {
+        return;
+    };
+    let Some(name) = path.file_name().and_then(|s| s.to_str()) else {
+        return;
+    };
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    if name == "build.sbt" {
+        guard.build_sbt_paths.push(path.to_path_buf());
+    } else if name.ends_with(".sbt.lock") {
+        guard.lockfile_candidates.push(path.to_path_buf());
+    } else if name == "build.properties" && parent_is_project(path) {
+        guard.build_properties_paths.push(path.to_path_buf());
+    } else if name == "Dependencies.scala" && parent_is_project(path) {
+        guard.dependencies_scala_paths.push(path.to_path_buf());
+    }
+}
+
+/// Build the `ReaderRegistration` for this reader.
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    // Note: glob `**/build.properties` catches candidates from ANY parent
+    // dir, not just `project/`. The callback re-filters via
+    // `parent_is_project`. This matches the legacy safe_walk shape which
+    // also visits every `build.properties` and filters in-callback.
+    let patterns = globset_from_patterns(&[
+        "**/*.sbt.lock",
+        "**/build.sbt",
+        "**/build.properties",
+        "**/Dependencies.scala",
+    ])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::SCALA,
+        state: Some(Arc::new(Mutex::new(ScalaDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_scala_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+/// Extract the accumulated per-scan state via `std::mem::take`.
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> ScalaDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return ScalaDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<ScalaDiscoveredPaths>>() else {
+        return ScalaDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Coexistence-period entry point.
+/// **Post-T033**: retained as a shortcut; `read_all` uses
+/// `run_shared_walker_pilot`.
+#[allow(dead_code)]
+pub(crate) fn build_and_run(
+    rootfs: &Path,
+    include_dev: bool,
+    exclude_set: &ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    let reg = match registration() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(
+                error = %err,
+                "scala: registration() failed — falling back to empty output",
+            );
+            return Vec::new();
+        }
+    };
+    let registry = match ReaderRegistryBuilder::new().register(reg).build() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(
+                error = %err,
+                "scala: ReaderRegistryBuilder::build() failed — falling back to empty output",
+            );
+            return Vec::new();
+        }
+    };
+    let mut walker = SharedWalker::new(rootfs, &registry, exclude_set)
+        .with_max_depth(MAX_SCALA_WALK_DEPTH);
+    walker.run();
+    let _ = walker.finish();
+
+    let scala_reg = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::SCALA)
+        .expect("scala registration must be present — we just registered it");
+    let paths = extract_paths(scala_reg);
+
+    finalize(paths, rootfs, include_dev, exclude_set)
+}
+
 
 fn should_skip_descent(name: &str) -> bool {
     matches!(
@@ -177,19 +311,49 @@ impl ScalaVersionSource {
 // pub fn read — entry point (T012 / T018 / T024)
 // -----------------------------------------------------------------------
 
+/// Legacy `pub fn read()` — retained during FR-004 coexistence.
+/// Post-m664-US1-T031, `read_all` calls `build_and_run()`.
+/// Both paths feed `finalize()` — byte-identity gate (FR-006).
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
-    _include_dev: bool,
+    include_dev: bool,
     exclude_set: &ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    let paths = ScalaDiscoveredPaths {
+        lockfile_candidates: discover_sbt_locks(rootfs, exclude_set),
+        build_sbt_paths: discover_build_sbts(rootfs, exclude_set),
+        build_properties_paths: discover_build_properties(rootfs, exclude_set),
+        dependencies_scala_paths: discover_dependencies_scala(rootfs, exclude_set),
+    };
+    finalize(paths, rootfs, include_dev, exclude_set)
+}
+
+/// Post-walker entry — takes discovered paths (from legacy `discover_*`
+/// or shared-walker `on_scala_file`) and runs the parse-and-emit pipeline.
+pub(crate) fn finalize(
+    paths: ScalaDiscoveredPaths,
+    rootfs: &Path,
+    _include_dev: bool,
+    _exclude_set: &ExclusionSet,
 ) -> Vec<PackageDbEntry> {
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
 
-    // Phase A — discover all artifacts.
-    let lockfile_candidates = discover_sbt_locks(rootfs, exclude_set);
-    let build_sbt_paths = discover_build_sbts(rootfs, exclude_set);
-    let build_properties_paths = discover_build_properties(rootfs, exclude_set);
-    let dependencies_scala_paths = discover_dependencies_scala(rootfs, exclude_set);
+    let ScalaDiscoveredPaths {
+        mut lockfile_candidates,
+        mut build_sbt_paths,
+        mut build_properties_paths,
+        mut dependencies_scala_paths,
+    } = paths;
+
+    // Defensive sort — the legacy discover_* helpers all sort; the shared
+    // walker sorts per-dir but cross-dir order depends on descent. Sort
+    // here so the two entry points produce byte-identical output.
+    lockfile_candidates.sort();
+    build_sbt_paths.sort();
+    build_properties_paths.sort();
+    dependencies_scala_paths.sort();
 
     // FR-006 / SC-004: clean no-op when no Scala artifacts present.
     if lockfile_candidates.is_empty()

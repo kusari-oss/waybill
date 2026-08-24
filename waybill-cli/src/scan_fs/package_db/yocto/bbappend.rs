@@ -61,6 +61,37 @@ impl BbAppendIndex {
 const BBAPPEND_FILENAME_RE: &str =
     r"^(?P<name>[a-zA-Z0-9_\-\+\.]+)_(?P<version>%|[a-zA-Z0-9_\-\+\.\~%]+)\.bbappend$";
 
+/// Milestone 664 US2 T059: same as `build_from_walk` but consumes a
+/// precomputed path list from the shared-walker pilot.
+pub(crate) fn build_index_from_paths(paths: Vec<PathBuf>) -> BbAppendIndex {
+    let mut idx = BbAppendIndex::default();
+    let Ok(regex) = regex::Regex::new(BBAPPEND_FILENAME_RE) else {
+        return idx;
+    };
+    let mut sorted = paths;
+    sorted.sort();
+    for path in &sorted {
+        let Some(filename) = path.file_name().and_then(|s| s.to_str()) else {
+            continue;
+        };
+        if !filename.ends_with(".bbappend") {
+            continue;
+        }
+        let Some(captures) = regex.captures(filename) else {
+            continue;
+        };
+        let name = captures.name("name").map(|m| m.as_str().to_string());
+        let version = captures.name("version").map(|m| m.as_str().to_string());
+        if let (Some(name), Some(version)) = (name, version) {
+            idx.by_recipe
+                .entry((name, version))
+                .or_default()
+                .push(path.clone());
+        }
+    }
+    idx
+}
+
 /// Walk the scan tree for `.bbappend` files; build the recipe-match
 /// index. Bounded to depth 8 (matches the established Yocto-walker
 /// convention).

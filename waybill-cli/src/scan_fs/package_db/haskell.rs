@@ -83,7 +83,158 @@ use waybill_common::types::purl::Purl;
 use super::exclude_path::ExclusionSet;
 use super::PackageDbEntry;
 
+// Milestone 664 US1 T032: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, ReaderRegistryBuilder,
+    SharedWalker, SharedWalkerContext,
+};
+use std::sync::{Arc, Mutex};
+
 const MAX_HASKELL_WALK_DEPTH: usize = 12;
+
+/// Milestone 664 US1 T032: per-scan state passed via
+/// `ReaderRegistration.state`. Accumulates discovered paths during the
+/// shared walker's traversal; the post-walker `finalize()` step reads
+/// these vectors and runs the existing parse-and-emit pipeline
+/// (Phases B–G of the pre-milestone `read()`).
+#[derive(Default, Debug)]
+pub(crate) struct HaskellDiscoveredPaths {
+    pub(crate) cabal_paths: Vec<PathBuf>,
+    pub(crate) freeze_paths: Vec<PathBuf>,
+    pub(crate) cabal_project_paths: Vec<PathBuf>,
+    pub(crate) stack_lock_paths: Vec<PathBuf>,
+    pub(crate) stack_yaml_paths: Vec<PathBuf>,
+    pub(crate) package_yaml_paths: Vec<PathBuf>,
+}
+
+/// Per-file callback invoked by the shared walker. Dispatches by basename
+/// into the appropriate Vec in the reader's state. Mutex-guarded so this
+/// is future-compatible with reader parallelism (FR-012's post-milestone
+/// follow-on).
+fn on_haskell_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(state) = ctx.state::<Mutex<HaskellDiscoveredPaths>>(ReaderId::HASKELL) else {
+        return;
+    };
+    let Some(name) = path.file_name().and_then(|s| s.to_str()) else {
+        return;
+    };
+    // Mutex-lock recovery: if a prior reader panicked while holding the
+    // lock (contract C4), take the poison and continue.
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    // Match by exact basename first, then fall through to *.cabal
+    // extension. Basenames are mutually exclusive by construction; the
+    // *.cabal branch cannot match any exact-name basename because none
+    // of them end in `.cabal`.
+    match name {
+        "cabal.project.freeze" => guard.freeze_paths.push(path.to_path_buf()),
+        "cabal.project" => guard.cabal_project_paths.push(path.to_path_buf()),
+        "stack.yaml.lock" => guard.stack_lock_paths.push(path.to_path_buf()),
+        "stack.yaml" => guard.stack_yaml_paths.push(path.to_path_buf()),
+        "package.yaml" => guard.package_yaml_paths.push(path.to_path_buf()),
+        _ => {
+            if path.extension().and_then(|e| e.to_str()) == Some("cabal") {
+                guard.cabal_paths.push(path.to_path_buf());
+            }
+        }
+    }
+}
+
+/// Build the `ReaderRegistration` for this reader. Called from
+/// `read_all` (or from `build_and_run` for the coexistence-period
+/// standalone shortcut).
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns(&[
+        "**/*.cabal",
+        "**/cabal.project",
+        "**/cabal.project.freeze",
+        "**/stack.yaml",
+        "**/stack.yaml.lock",
+        "**/package.yaml",
+    ])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::HASKELL,
+        state: Some(Arc::new(Mutex::new(HaskellDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_haskell_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+/// Extract the accumulated per-scan state from a haskell `ReaderRegistration`
+/// after the shared walker has run. The registration is left with an
+/// empty `HaskellDiscoveredPaths` (via `std::mem::take`) so calling this
+/// twice is safe (second call returns empty).
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> HaskellDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return HaskellDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<HaskellDiscoveredPaths>>() else {
+        return HaskellDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Coexistence-period entry point — build a mini-registry containing
+/// only this reader, run the shared walker, and finalize. Direct
+/// drop-in replacement for the legacy `read(rootfs, include_dev,
+/// exclude_set)` call from `read_all`.
+///
+/// **Post-T033**: `read_all` uses the consolidated shared walker
+/// (`run_shared_walker_pilot`) rather than per-reader `build_and_run`.
+/// This fn is retained as a coexistence-period shortcut for tests +
+/// future single-reader debugging; `#[allow(dead_code)]` suppresses
+/// the not-called-anywhere warning.
+#[allow(dead_code)]
+pub(crate) fn build_and_run(
+    rootfs: &Path,
+    include_dev: bool,
+    exclude_set: &ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    let reg = match registration() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(
+                error = %err,
+                "haskell: registration() failed — falling back to empty output",
+            );
+            return Vec::new();
+        }
+    };
+    let registry = match ReaderRegistryBuilder::new().register(reg).build() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(
+                error = %err,
+                "haskell: ReaderRegistryBuilder::build() failed — falling back to empty output",
+            );
+            return Vec::new();
+        }
+    };
+    let mut walker = SharedWalker::new(rootfs, &registry, exclude_set)
+        .with_max_depth(MAX_HASKELL_WALK_DEPTH);
+    walker.run();
+    let _ = walker.finish();
+
+    // Extract accumulated paths. Registry outlives `walker.finish()`
+    // (the walker only borrows `&registry`), so this is safe.
+    let haskell_reg = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::HASKELL)
+        .expect("haskell registration must be present — we just registered it");
+    let paths = extract_paths(haskell_reg);
+
+    finalize(paths, include_dev, exclude_set)
+}
+
 
 /// Hardcoded GHC boot-library allowlist per Q1 + FR-014. Allowlisted
 /// entries emit as regular `pkg:hackage/<name>@<version>` components AND
@@ -371,21 +522,66 @@ fn validate_stack_lock_shape(value: &serde_yaml::Value) -> bool {
 // pub fn read — entry point
 // -----------------------------------------------------------------------
 
+/// Legacy `pub fn read()` — retained for backward compatibility during
+/// the FR-004 coexistence window. Post-m664-US1-T032, `read_all` calls
+/// `build_and_run()` instead. This fn still discovers via `safe_walk`;
+/// `build_and_run()` uses the shared registry.
+///
+/// Semantics-preserving delegation: the two paths must produce identical
+/// output (FR-006 byte-identity gate).
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
-    _include_dev: bool,
+    include_dev: bool,
     exclude_set: &ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    // Phase A — discover all artifacts via the LEGACY safe_walk path.
+    let paths = HaskellDiscoveredPaths {
+        cabal_paths: discover_cabal_files(rootfs, exclude_set),
+        freeze_paths: discover_cabal_freezes(rootfs, exclude_set),
+        cabal_project_paths: discover_cabal_projects(rootfs, exclude_set),
+        stack_lock_paths: discover_stack_locks(rootfs, exclude_set),
+        stack_yaml_paths: discover_stack_yamls(rootfs, exclude_set),
+        package_yaml_paths: discover_package_yamls(rootfs, exclude_set),
+    };
+    finalize(paths, include_dev, exclude_set)
+}
+
+/// Post-walker entry — takes the discovered path lists (from either
+/// the legacy `discover_*` or the shared-walker `on_haskell_file`) and
+/// runs the parse-and-emit pipeline. Preserves the original `read()`
+/// behavior byte-for-byte on the emitted `Vec<PackageDbEntry>`.
+pub(crate) fn finalize(
+    paths: HaskellDiscoveredPaths,
+    _include_dev: bool,
+    _exclude_set: &ExclusionSet,
 ) -> Vec<PackageDbEntry> {
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
 
-    // Phase A — discover all artifacts.
-    let cabal_paths = discover_cabal_files(rootfs, exclude_set);
-    let freeze_paths = discover_cabal_freezes(rootfs, exclude_set);
-    let cabal_project_paths = discover_cabal_projects(rootfs, exclude_set);
-    let stack_lock_paths = discover_stack_locks(rootfs, exclude_set);
-    let stack_yaml_paths = discover_stack_yamls(rootfs, exclude_set);
-    let package_yaml_paths = discover_package_yamls(rootfs, exclude_set);
+    let HaskellDiscoveredPaths {
+        mut cabal_paths,
+        mut freeze_paths,
+        mut cabal_project_paths,
+        mut stack_lock_paths,
+        mut stack_yaml_paths,
+        mut package_yaml_paths,
+    } = paths;
+
+    // The legacy `discover_*` helpers sort their outputs before
+    // returning (see `discover_by_filename` line ~629). The shared
+    // walker also emits paths in filesystem-sorted order (contract C3),
+    // but the on_file callback dispatches per-basename into disjoint
+    // vectors, and cross-directory ordering follows the walker's
+    // descent — which is the same lexicographic order for a given
+    // rootfs. Sort here defensively to guarantee identical output
+    // between the two entry points regardless of dispatch nuance.
+    cabal_paths.sort();
+    freeze_paths.sort();
+    cabal_project_paths.sort();
+    stack_lock_paths.sort();
+    stack_yaml_paths.sort();
+    package_yaml_paths.sort();
 
     // FR-008 / SC-004: no-op when no Haskell artifacts present.
     if cabal_paths.is_empty()

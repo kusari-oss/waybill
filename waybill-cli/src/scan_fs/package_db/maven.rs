@@ -29,6 +29,137 @@ use waybill_common::types::purl::{encode_purl_segment, Purl};
 
 use super::PackageDbEntry;
 
+// Milestone 664 US2 T039: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, globset_from_patterns_case_insensitive, ReaderId,
+    ReaderRegistration, ReaderRegistryBuilder, SharedWalker, SharedWalkerContext,
+};
+use std::sync::{Arc, Mutex};
+
+/// Per-scan state — 2 vectors matching the legacy 2 walker sites'
+/// distinct outputs. Post-T039 both walkers see the SAME set of poms
+/// (since the shared walker's default skip includes `target/` and the
+/// two legacy walkers were only differentiated by target-visiting
+/// behavior). Kept as two vectors for API consistency with legacy call
+/// sites in `finalize()`.
+#[derive(Default, Debug)]
+pub(crate) struct MavenDiscoveredPaths {
+    pub(crate) pom_files: Vec<PathBuf>,
+    pub(crate) jar_files: Vec<PathBuf>,
+}
+
+/// Per-file callback. Dispatches by basename / extension
+/// case-insensitively per legacy `to_ascii_lowercase` checks.
+fn on_maven_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(state) = ctx.state::<Mutex<MavenDiscoveredPaths>>(ReaderId::MAVEN) else {
+        return;
+    };
+    let Some(name) = path.file_name().and_then(|s| s.to_str()) else { return };
+    let name_lower = name.to_ascii_lowercase();
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    if name_lower == "pom.xml" {
+        guard.pom_files.push(path.to_path_buf());
+    } else if name_lower.ends_with(".jar")
+        || name_lower.ends_with(".war")
+        || name_lower.ends_with(".ear")
+    {
+        guard.jar_files.push(path.to_path_buf());
+    }
+}
+
+/// Build the `ReaderRegistration`.
+///
+/// T039 (2026-08-23): declares `descend_into: ["target"]` per
+/// contract C10 so the shared walker enters `target/` subtrees.
+/// Legacy behavior: `find_maven_artifacts` visited target/ (for
+/// jars + poms); `find_top_level_poms` skipped target/ (for main-
+/// module emission). The C10 scoping guarantee keeps target/-
+/// visibility maven-only — non-maven readers still see target/ as
+/// skipped, preserving byte-identity for the 21 other migrated readers.
+/// The main-module target/-skip is enforced inside `finalize()` via
+/// ancestor-path filter (see `pom_paths_for_main_modules` below).
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns_case_insensitive(&[
+        "**/pom.xml",
+        "**/*.jar",
+        "**/*.war",
+        "**/*.ear",
+    ])?;
+    let descend_into = globset_from_patterns(&["target"])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::MAVEN,
+        state: Some(Arc::new(Mutex::new(MavenDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_maven_file),
+        on_dir: None,
+        descend_into: Some(descend_into),
+    })
+}
+
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> MavenDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return MavenDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<MavenDiscoveredPaths>>() else {
+        return MavenDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+#[allow(dead_code)]
+pub(crate) fn build_and_run(
+    rootfs: &Path,
+    include_dev: bool,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    let reg = match registration() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(error = %err, "maven: registration() failed");
+            return Vec::new();
+        }
+    };
+    let registry = match ReaderRegistryBuilder::new().register(reg).build() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(error = %err, "maven: build() failed");
+            return Vec::new();
+        }
+    };
+    let mut walker = SharedWalker::new(rootfs, &registry, exclude_set)
+        .with_max_depth(MAX_PROJECT_ROOT_DEPTH);
+    walker.run();
+    let _ = walker.finish();
+    let maven_reg = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::MAVEN)
+        .expect("maven registration must be present");
+    let paths = extract_paths(maven_reg);
+    let claimed = std::collections::HashSet::new();
+    #[cfg(unix)]
+    let claimed_inodes = std::collections::HashSet::new();
+    let (entries, _scan_target) = finalize(
+        paths,
+        rootfs,
+        include_dev,
+        true,
+        &claimed,
+        #[cfg(unix)]
+        &claimed_inodes,
+        None,
+        exclude_set,
+    );
+    entries
+}
+
 /// Milestone 052/part-2: map a Maven `<scope>` string to
 /// `LifecycleScope`. `test` → Test; `provided` → Build (compile-only,
 /// not bundled at runtime); `compile` / `runtime` / `system` / `import`
@@ -2881,6 +3012,8 @@ fn jar_pom_to_entry(
 /// `read_with_claims` directly via the package-db walker's claim set
 /// so RPM-owned Maven JARs are skipped (conformance bug 2b).
 #[cfg(test)]
+/// Legacy `pub fn read()` — retained during FR-004 coexistence.
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
     include_dev: bool,
@@ -2926,6 +3059,7 @@ pub fn read(
 /// a first-class CLI flag, this parameter becomes the kind selector
 /// rather than a raw bool. Default auto-detection stays the same
 /// (image → artifact, path → manifest).
+#[allow(dead_code, clippy::too_many_arguments)] // T039: legacy shim kept for backward compat; no longer called from read_all.
 pub fn read_with_claims(
     rootfs: &Path,
     include_dev: bool,
@@ -2935,6 +3069,45 @@ pub fn read_with_claims(
     scan_target_name: Option<&str>,
     exclude_set: &super::exclude_path::ExclusionSet,
 ) -> (Vec<PackageDbEntry>, Option<ScanTargetCoord>) {
+    // Legacy shim: discover paths via the safe_walk-based walkers, then
+    // delegate to finalize().
+    let (pom_files, jar_files) = find_maven_artifacts(rootfs, exclude_set);
+    let paths = MavenDiscoveredPaths {
+        pom_files,
+        jar_files,
+    };
+    finalize(
+        paths,
+        rootfs,
+        include_dev,
+        include_declared_deps,
+        claimed,
+        #[cfg(unix)]
+        claimed_inodes,
+        scan_target_name,
+        exclude_set,
+    )
+}
+
+/// Post-walker entry — takes precomputed pom + jar paths. Called from
+/// `read_with_claims` (legacy path) and from `run_shared_walker_pilot`
+/// (shared-walker path).
+#[allow(clippy::too_many_arguments)] // Legacy signature inherited from read_with_claims.
+pub(crate) fn finalize(
+    paths: MavenDiscoveredPaths,
+    rootfs: &Path,
+    include_dev: bool,
+    include_declared_deps: bool,
+    claimed: &std::collections::HashSet<std::path::PathBuf>,
+    #[cfg(unix)] claimed_inodes: &std::collections::HashSet<(u64, u64)>,
+    scan_target_name: Option<&str>,
+    // T039 (2026-08-23): `exclude_set` is no longer used inside
+    // finalize — main-module pom filtering now derives from the
+    // pilot-collected `pom_files` ancestor-path filter instead of
+    // calling `find_top_level_poms(rootfs, exclude_set)`. Kept in
+    // the signature for callers passing it (backward compat).
+    _exclude_set: &super::exclude_path::ExclusionSet,
+) -> (Vec<PackageDbEntry>, Option<ScanTargetCoord>) {
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
     // Populated when the JAR walker identifies a scan-subject
@@ -2942,7 +3115,14 @@ pub fn read_with_claims(
     // caller promotes this to `metadata.component` instead of the
     // generic placeholder.
     let mut scan_target_coord: Option<ScanTargetCoord> = None;
-    let (pom_files, jar_files) = find_maven_artifacts(rootfs, exclude_set);
+    // Defensive sort — shared walker + legacy safe_walk both sort but
+    // via different code paths.
+    let MavenDiscoveredPaths {
+        mut pom_files,
+        mut jar_files,
+    } = paths;
+    pom_files.sort();
+    jar_files.sort();
     // Discover M2 repo cache once per scan. Each dep's own pom.xml
     // sits at <repo>/<group-as-path>/<artifact>/<version>/<artifact>-<version>.pom;
     // fetching it gives us that dep's own <dependencies> block for
@@ -3166,8 +3346,8 @@ pub fn read_with_claims(
         on_disk_coords.insert((group.clone(), artifact.clone()));
     }
 
-    for pom_path in pom_files {
-        let Ok(bytes) = std::fs::read(&pom_path) else {
+    for pom_path in &pom_files {
+        let Ok(bytes) = std::fs::read(pom_path) else {
             continue;
         };
         let doc = parse_pom_xml(&bytes);
@@ -3698,7 +3878,29 @@ pub fn read_with_claims(
     // gem (069). Multi-module reactor builds emit per-submodule
     // (FR-002) via the parent's <modules> traversal.
     let mut main_modules_emitted = 0usize;
-    let pom_paths = find_top_level_poms(rootfs, exclude_set);
+    // T039 (2026-08-23): filter pilot-collected `pom_files` for the
+    // main-module emission pass to match legacy `find_top_level_poms`
+    // semantics (skip target/ + .m2/ ancestors). `pom_files` includes
+    // target/ subtree entries because maven's `descend_into: [target]`
+    // opens that dir for the jar walker — but main-module emission
+    // must not see shadow poms under target/ (per
+    // `scan_maven_install_state_paths_skipped`). Ancestor-path filter
+    // mirrors legacy `find_top_level_poms:4071` skip set: `target`,
+    // `.m2`, `node_modules`, `vendor`.
+    let pom_paths: Vec<PathBuf> = pom_files
+        .iter()
+        .filter(|p| {
+            !p.ancestors().any(|a| {
+                a.file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|name| {
+                        matches!(name, "target" | ".m2" | "node_modules" | "vendor")
+                    })
+                    .unwrap_or(false)
+            })
+        })
+        .cloned()
+        .collect();
     let inheritance_ctx = MavenInheritanceContext::build_from_poms(&pom_paths);
     for pom_path in &pom_paths {
         let Some(doc) = inheritance_ctx.doc_for_path(pom_path) else {
@@ -3800,6 +4002,7 @@ pub fn read_with_claims(
 /// Yields two output Vecs (poms + jars) via the same descent. The
 /// visit callback dispatches on file extension/name; the helper's
 /// max_depth governs both.
+#[allow(dead_code)] // T039: kept for the legacy `read_with_claims` code path that's no longer called from read_all.
 fn find_maven_artifacts(
     rootfs: &Path,
     exclude_set: &super::exclude_path::ExclusionSet,
@@ -3817,6 +4020,10 @@ fn find_maven_artifacts(
         },
         exclude_set,
     };
+    // T039 (2026-08-23): resolved via contract C10 `descend_into` API
+    // extension. Production path uses `run_shared_walker_pilot` +
+    // `maven::finalize()`; this legacy safe_walk fires only for the
+    // `#[allow(dead_code)]` `read_with_claims` shim (test callers).
     crate::scan_fs::walk::safe_walk(rootfs, &cfg, |path| {
         if path.is_file() {
             if let Some(name) = path.file_name().and_then(|s| s.to_str()) {
@@ -3877,6 +4084,12 @@ enum PropertyResolution {
 /// Milestone 114: delegates to `scan_fs::walk::safe_walk`. Output is
 /// sorted lex by path to preserve pre-114 deterministic discovery
 /// order.
+///
+/// T039 (2026-08-23): retained as `#[allow(dead_code)]` for FR-004
+/// coexistence. Production path derives the target-filtered pom set
+/// from pilot-collected `pom_files` via ancestor-path filter inside
+/// `finalize` (equivalent semantic).
+#[allow(dead_code)]
 fn find_top_level_poms(
     rootfs: &Path,
     exclude_set: &super::exclude_path::ExclusionSet,

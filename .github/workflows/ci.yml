@@ -85,6 +85,12 @@ jobs:
           FAIL_HEADLINE="[FAIL] Walker-audit allow-list mismatch — see waybill-cli/src/scan_fs/walk.rs's module-level comment for the exception policy."
           FAIL_POINTER_NEW="If your PR intentionally adds a new walker exception, see CONTRIBUTING.md § Walker-audit CI gate."
           FAIL_POINTER_BAD="If your PR did NOT intend to add a walker, remove the new fn walk_* function and use scan_fs::walk::safe_walk instead."
+          # Milestone 664 US3 T065 (FR-008 diagnostic): every new
+          # scan-tree walker MUST route through the shared
+          # `walk_registry` — direct `safe_walk` callers or new
+          # `fn walk_*` functions are only allowed in the 4
+          # categories documented in the T064 rationale doc.
+          FAIL_POINTER_M664="New safe_walk caller detected outside shared registry. See specs/664-single-pass-walker/spec.md FR-008 for the migration policy. Per-entry classification lives at waybill-cli/src/scan_fs/walk.audit-allowlist.rationale.md — new entries MUST fall into (A) FR-005 permanent escape hatch, (B) deferred-reader retention, (C) non-scan-tree walker, or (D) shared-walker infrastructure. If your new walker is a scan-tree package_db reader, migrate to walk_registry per specs/664-single-pass-walker/quickstart.md."
 
           # Precheck: missing or empty allow-list → fail closed per
           # FR-010 strict-enforcement bootstrap. A future PR that
@@ -158,6 +164,8 @@ jobs:
             echo "" >&2
             echo "$FAIL_POINTER_NEW" >&2
             echo "$FAIL_POINTER_BAD" >&2
+            echo "" >&2
+            echo "$FAIL_POINTER_M664" >&2
             exit 1
           fi
 

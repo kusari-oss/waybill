@@ -39,7 +39,7 @@
 
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
+use std::sync::{Arc, Mutex, OnceLock};
 
 use regex::Regex;
 
@@ -49,6 +49,11 @@ use waybill_common::types::purl::Purl;
 
 use super::exclude_path::ExclusionSet;
 use super::PackageDbEntry;
+
+// Milestone 664 US2 T051: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, SharedWalkerContext,
+};
 
 const MAX_ELIXIR_WALK_DEPTH: usize = 12;
 
@@ -132,11 +137,106 @@ enum DeclaredDepSource {
     },
 }
 
+/// Milestone 664 US2 T051: shared-walker discovery state.
+#[derive(Default, Debug)]
+pub(crate) struct ElixirDiscoveredPaths {
+    pub(crate) mix_locks: Vec<PathBuf>,
+    pub(crate) mix_exs: Vec<PathBuf>,
+}
+
+/// True iff any ancestor of `path` has one of the given basenames.
+/// Used to enforce the legacy elixir skip set additions (`_build`,
+/// `deps`, `priv`, `cover`) that are NOT in the shared walker's
+/// default. Without this filter, nested `mix.exs` inside `deps/<pkg>/`
+/// (Elixir's per-project dep vendor tree) would be dispatched.
+fn any_ancestor_matches_any(path: &Path, names: &[&str]) -> bool {
+    path.ancestors()
+        .filter_map(|a| a.file_name().and_then(|n| n.to_str()))
+        .any(|n| names.contains(&n))
+}
+
+fn on_elixir_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(basename) = path.file_name().and_then(|s| s.to_str()) else {
+        return;
+    };
+    if basename != "mix.lock" && basename != "mix.exs" {
+        return;
+    }
+    // Legacy skip predicate additions not covered by shared walker
+    // default: `_build`, `deps`, `priv`, `cover`. The leading-`.`
+    // shared default handles `.git` / `.svn` / `.hg`; `node_modules`
+    // is a shared default explicit entry.
+    if any_ancestor_matches_any(path, &["_build", "deps", "priv", "cover"]) {
+        return;
+    }
+    let Some(state) = ctx.state::<Mutex<ElixirDiscoveredPaths>>(ReaderId::ELIXIR) else {
+        return;
+    };
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    match basename {
+        "mix.lock" => guard.mix_locks.push(path.to_path_buf()),
+        "mix.exs" => guard.mix_exs.push(path.to_path_buf()),
+        _ => unreachable!(),
+    }
+}
+
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns(&["**/mix.lock", "**/mix.exs"])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::ELIXIR,
+        state: Some(Arc::new(Mutex::new(ElixirDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_elixir_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> ElixirDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return ElixirDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<ElixirDiscoveredPaths>>() else {
+        return ElixirDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Legacy public entry — retained during FR-004 coexistence.
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
     _include_dev: bool,
     exclude_set: &ExclusionSet,
 ) -> Vec<PackageDbEntry> {
+    let paths = ElixirDiscoveredPaths {
+        mix_locks: find_mix_locks(rootfs, exclude_set),
+        mix_exs: find_mix_exs(rootfs, exclude_set),
+    };
+    finalize(paths, rootfs)
+}
+
+/// Post-walker entry — takes precomputed paths + runs the 3-pass
+/// pipeline (mix.lock source-tier → mix.exs design-tier → umbrella
+/// root aggregation).
+pub(crate) fn finalize(
+    paths: ElixirDiscoveredPaths,
+    rootfs: &Path,
+) -> Vec<PackageDbEntry> {
+    let ElixirDiscoveredPaths {
+        mut mix_locks,
+        mut mix_exs,
+    } = paths;
+    mix_locks.sort();
+    mix_exs.sort();
+
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
     let mut lockfile_dirs: HashSet<PathBuf> = HashSet::new();
@@ -145,7 +245,7 @@ pub fn read(
     let mut emitted_design = 0usize;
 
     // Pass A — mix.lock walker.
-    for lockfile_path in find_mix_locks(rootfs, exclude_set) {
+    for lockfile_path in mix_locks {
         let Some(project_dir) = lockfile_path.parent() else {
             continue;
         };
@@ -231,7 +331,7 @@ pub fn read(
     // Pass B — mix.exs design-tier walker (only for projects without
     // a sibling mix.lock that Pass A processed).
     let mut umbrella_roots: Vec<(PathBuf, String)> = Vec::new(); // (project_dir, root_app_name)
-    for mix_exs_path in find_mix_exs(rootfs, exclude_set) {
+    for mix_exs_path in mix_exs {
         let Some(project_dir) = mix_exs_path.parent() else {
             continue;
         };

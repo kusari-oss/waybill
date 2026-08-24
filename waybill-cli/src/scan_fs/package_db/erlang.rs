@@ -76,7 +76,123 @@ use waybill_common::types::purl::Purl;
 use super::exclude_path::ExclusionSet;
 use super::PackageDbEntry;
 
+// Milestone 664 US1 T030: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, ReaderRegistryBuilder,
+    SharedWalker, SharedWalkerContext,
+};
+use std::sync::{Arc, Mutex};
+
 const MAX_ERLANG_WALK_DEPTH: usize = 12;
+
+/// Milestone 664 US1 T030: per-scan state passed via
+/// `ReaderRegistration.state`. Accumulates discovered paths during the
+/// shared walker's traversal; the post-walker `finalize()` step reads
+/// these vectors and runs the existing parse-and-emit pipeline.
+#[derive(Default, Debug)]
+pub(crate) struct ErlangDiscoveredPaths {
+    pub(crate) lockfile_paths: Vec<PathBuf>,
+    pub(crate) config_paths: Vec<PathBuf>,
+    pub(crate) app_src_paths: Vec<PathBuf>,
+}
+
+/// Per-file callback invoked by the shared walker. Dispatches by basename
+/// into the appropriate Vec in the reader's state.
+fn on_erlang_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(state) = ctx.state::<Mutex<ErlangDiscoveredPaths>>(ReaderId::ERLANG) else {
+        return;
+    };
+    let Some(name) = path.file_name().and_then(|s| s.to_str()) else {
+        return;
+    };
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    match name {
+        "rebar.lock" => guard.lockfile_paths.push(path.to_path_buf()),
+        "rebar.config" => guard.config_paths.push(path.to_path_buf()),
+        n if n.ends_with(".app.src") => guard.app_src_paths.push(path.to_path_buf()),
+        _ => {}
+    }
+}
+
+/// Build the `ReaderRegistration` for this reader.
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns(&[
+        "**/rebar.lock",
+        "**/rebar.config",
+        "**/*.app.src",
+    ])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::ERLANG,
+        state: Some(Arc::new(Mutex::new(ErlangDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_erlang_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+/// Extract the accumulated per-scan state via `std::mem::take`.
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> ErlangDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return ErlangDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<ErlangDiscoveredPaths>>() else {
+        return ErlangDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Coexistence-period entry point — same pattern as `haskell::build_and_run`.
+/// **Post-T033**: retained as a shortcut; `read_all` uses the
+/// consolidated `run_shared_walker_pilot`.
+#[allow(dead_code)]
+pub(crate) fn build_and_run(
+    rootfs: &Path,
+    include_dev: bool,
+    exclude_set: &ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    let reg = match registration() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(
+                error = %err,
+                "erlang: registration() failed — falling back to empty output",
+            );
+            return Vec::new();
+        }
+    };
+    let registry = match ReaderRegistryBuilder::new().register(reg).build() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(
+                error = %err,
+                "erlang: ReaderRegistryBuilder::build() failed — falling back to empty output",
+            );
+            return Vec::new();
+        }
+    };
+    let mut walker = SharedWalker::new(rootfs, &registry, exclude_set)
+        .with_max_depth(MAX_ERLANG_WALK_DEPTH);
+    walker.run();
+    let _ = walker.finish();
+
+    let erlang_reg = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::ERLANG)
+        .expect("erlang registration must be present — we just registered it");
+    let paths = extract_paths(erlang_reg);
+
+    finalize(paths, include_dev, exclude_set)
+}
+
 
 /// Hardcoded set of Ericsson-distributed OTP runtime apps. Per Q1
 /// clarification, the allowlist is INFORMATIONAL ONLY — apps in
@@ -218,17 +334,46 @@ impl AppDepKind {
     }
 }
 
+/// Legacy `pub fn read()` — retained during the FR-004 coexistence window.
+/// Post-m664-US1-T030, `read_all` calls `build_and_run()` instead.
+/// Semantics-preserving delegation to `finalize()` (FR-006 gate).
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
-    _include_dev: bool,
+    include_dev: bool,
     exclude_set: &ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    let paths = ErlangDiscoveredPaths {
+        lockfile_paths: discover_rebar_locks(rootfs, exclude_set),
+        config_paths: discover_rebar_configs(rootfs, exclude_set),
+        app_src_paths: discover_app_src_files(rootfs, exclude_set),
+    };
+    finalize(paths, include_dev, exclude_set)
+}
+
+/// Post-walker entry — takes discovered paths (from legacy `discover_*` or
+/// shared-walker `on_erlang_file`) and runs the parse-and-emit pipeline.
+/// Preserves original `read()` behavior byte-for-byte on emitted entries.
+pub(crate) fn finalize(
+    paths: ErlangDiscoveredPaths,
+    _include_dev: bool,
+    _exclude_set: &ExclusionSet,
 ) -> Vec<PackageDbEntry> {
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
 
-    let lockfile_paths = discover_rebar_locks(rootfs, exclude_set);
-    let config_paths = discover_rebar_configs(rootfs, exclude_set);
-    let app_src_paths = discover_app_src_files(rootfs, exclude_set);
+    let ErlangDiscoveredPaths {
+        mut lockfile_paths,
+        mut config_paths,
+        mut app_src_paths,
+    } = paths;
+
+    // Defensive sort — the legacy discover_* helpers sort; the shared walker
+    // sorts per-dir but cross-dir order depends on descent, so re-sort here
+    // to guarantee identical output between the two entry points.
+    lockfile_paths.sort();
+    config_paths.sort();
+    app_src_paths.sort();
 
     // FR-006: clean no-op when no Erlang artifacts present.
     if lockfile_paths.is_empty() && config_paths.is_empty() && app_src_paths.is_empty() {

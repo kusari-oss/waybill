@@ -7,5 +7,6 @@ waybill-cli/src/scan_fs/package_db/maven_sidecar.rs:    fn walk(dir: &Path, dept
 waybill-cli/src/scan_fs/package_db/npm/walk.rs:fn walk_node_modules(
 waybill-cli/src/scan_fs/walk.rs://! `fn walk_*` recursion implementing the same canonicalize-keyed
 waybill-cli/src/scan_fs/walk.rs:fn walk_inner<F: FnMut(&Path)>(
+waybill-cli/src/scan_fs/walk_registry/walker.rs:    fn walk_inner(
 waybill-cli/src/scan_fs/walker.rs:fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
 waybill-cli/src/scan_fs/walker.rs:pub fn walk_and_hash(
