@@ -29,12 +29,18 @@
 
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
 use waybill_common::types::hash::ContentHash;
 use waybill_common::types::purl::Purl;
 
 use super::exclude_path::ExclusionSet;
 use super::PackageDbEntry;
+
+// Milestone 664 US2 T050: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, SharedWalkerContext,
+};
 
 /// Per-project source-tree depth bound for the pubspec walker. Mirrors
 /// the gem reader's MAX_PROJECT_ROOT_DEPTH (6) — Dart projects are
@@ -136,11 +142,76 @@ struct LockfileDescriptionMap {
 
 /// Lifetime is per-scan; no persistence (matches every language-reader
 /// since milestone 002).
+/// Milestone 664 US2 T050: shared-walker discovery state.
+#[derive(Default, Debug)]
+pub(crate) struct DartDiscoveredPaths {
+    pub(crate) pubspecs: Vec<PathBuf>,
+}
+
+fn on_dart_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    if path.file_name().and_then(|s| s.to_str()) != Some("pubspec.yaml") {
+        return;
+    }
+    let Some(state) = ctx.state::<Mutex<DartDiscoveredPaths>>(ReaderId::DART) else {
+        return;
+    };
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    guard.pubspecs.push(path.to_path_buf());
+}
+
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns(&["**/pubspec.yaml"])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::DART,
+        state: Some(Arc::new(Mutex::new(DartDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_dart_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> DartDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return DartDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<DartDiscoveredPaths>>() else {
+        return DartDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Legacy public entry — retained during FR-004 coexistence.
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
     include_dev: bool,
     exclude_set: &ExclusionSet,
 ) -> Vec<PackageDbEntry> {
+    let paths = DartDiscoveredPaths {
+        pubspecs: find_dart_projects(rootfs, exclude_set),
+    };
+    finalize(paths, rootfs, include_dev)
+}
+
+/// Post-walker entry — takes precomputed pubspec paths + runs the
+/// legacy pipeline (main-module emission → lockfile parse OR design-
+/// tier fallback per project).
+pub(crate) fn finalize(
+    paths: DartDiscoveredPaths,
+    rootfs: &Path,
+    include_dev: bool,
+) -> Vec<PackageDbEntry> {
+    let mut pubspecs = paths.pubspecs;
+    pubspecs.sort();
+
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
     let mut projects = 0usize;
@@ -148,7 +219,7 @@ pub fn read(
     let mut design_tier_projects = 0usize;
     let mut warned_lockfile_parse_failures = 0usize;
 
-    for pubspec_path in find_dart_projects(rootfs, exclude_set) {
+    for pubspec_path in pubspecs {
         let pubspec_yaml = match parse_pubspec_yaml(&pubspec_path) {
             Ok(y) if !y.name.is_empty() => y,
             Ok(_) => {

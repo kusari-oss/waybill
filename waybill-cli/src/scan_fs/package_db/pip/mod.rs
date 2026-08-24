@@ -33,6 +33,14 @@ use waybill_common::types::purl::encode_purl_segment;
 
 use super::PackageDbEntry;
 
+// Milestone 664 US2 T036: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, ReaderRegistryBuilder,
+    SharedWalker, SharedWalkerContext,
+};
+use std::collections::HashSet;
+use std::sync::{Arc, Mutex};
+
 
 // ========================================================================
 // Module structure (milestone 018)
@@ -90,19 +98,166 @@ fn build_pypi_purl_str(name: &str, version: &str) -> String {
     }
 }
 
-/// Public entry point. Walks the scan root for Python package sources
-/// and emits one `PackageDbEntry` per unique package identity. Drift
-/// between sources is resolved per R8 (venv > lockfile > requirements).
+// Milestone 664 US2 T036: shared-walker types + registration + finalize.
+// The legacy `pub fn read()` doc block that follows describes the LEGACY
+// entry point's behavior; the shared-walker path (via `run_shared_walker_pilot`
+// in package_db/mod.rs) invokes `finalize()` directly with precomputed paths.
+
+/// Milestone 664 US2 T036: per-scan state carried through
+/// `ReaderRegistration.state`. Accumulates the set of directories
+/// containing at least one Python project-root marker as the shared
+/// walker traverses; post-walker `finalize()` iterates the sorted
+/// unique dirs and runs the existing Tier-1 venv + Tier-2/3 lockfile
+/// pipeline. `HashSet` here provides free dedup — the same marker
+/// file only ever has ONE parent directory, but different marker
+/// files (pyproject.toml + poetry.lock) in the SAME dir would both
+/// try to insert; the set collapses them.
 ///
-/// * `include_dev` — when true, Poetry / Pipfile entries flagged as
-///   dev-only are included; when false they're filtered out at source.
-///   Venv dist-info and requirements.txt entries don't carry a dev/prod
-///   distinction and are always emitted.
+/// Wrapped in `Mutex` for future-parallel-dispatch safety per FR-012's
+/// post-milestone follow-on.
+#[derive(Default, Debug)]
+pub(crate) struct PipDiscoveredPaths {
+    pub(crate) project_roots: HashSet<PathBuf>,
+}
+
+/// True if any ancestor directory (including `dir` itself) is named
+/// `site-packages`. Mirrors pip's legacy `candidate_python_project_roots`
+/// skip predicate, which excluded `site-packages` on top of the shared
+/// `should_skip_default_descent` set. Tier-1 venv reading handles those
+/// paths on its own separate pass.
+fn has_site_packages_ancestor(dir: &Path) -> bool {
+    dir.ancestors().any(|d| {
+        d.file_name()
+            .and_then(|s| s.to_str())
+            .map(|name| name == "site-packages")
+            .unwrap_or(false)
+    })
+}
+
+/// Per-file callback. Records the marker file's parent directory in
+/// state. The HashSet inside state auto-dedupes multi-marker dirs.
+fn on_pip_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(state) = ctx.state::<Mutex<PipDiscoveredPaths>>(ReaderId::PIP) else {
+        return;
+    };
+    let Some(dir) = path.parent() else { return };
+    if has_site_packages_ancestor(dir) {
+        return;
+    }
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    guard.project_roots.insert(dir.to_path_buf());
+}
+
+/// Build the `ReaderRegistration` for this reader.
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns(&[
+        "**/pyproject.toml",
+        "**/poetry.lock",
+        "**/Pipfile.lock",
+        "**/uv.lock",
+        "**/requirements*.txt",
+    ])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::PIP,
+        state: Some(Arc::new(Mutex::new(PipDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_pip_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+/// Extract the accumulated per-scan state via `std::mem::take`.
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> PipDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return PipDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<PipDiscoveredPaths>>() else {
+        return PipDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Coexistence-period entry point — mini-registry per reader.
+/// **Post-T033**: `read_all` uses the consolidated shared-walker pilot;
+/// this fn is retained as a shortcut for tests + single-reader debug.
+#[allow(dead_code)]
+pub(crate) fn build_and_run(
+    rootfs: &Path,
+    include_dev: bool,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    let reg = match registration() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(error = %err, "pip: registration() failed");
+            return Vec::new();
+        }
+    };
+    let registry = match ReaderRegistryBuilder::new().register(reg).build() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(error = %err, "pip: build() failed");
+            return Vec::new();
+        }
+    };
+    let mut walker = SharedWalker::new(rootfs, &registry, exclude_set)
+        .with_max_depth(MAX_PROJECT_ROOT_DEPTH);
+    walker.run();
+    let _ = walker.finish();
+    let pip_reg = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::PIP)
+        .expect("pip registration must be present");
+    let paths = extract_paths(pip_reg);
+    finalize(rootfs, paths, include_dev, exclude_set)
+}
+
+/// Legacy `pub fn read()` — retained during FR-004 coexistence.
+/// Post-m664-US2-T036, `read_all` calls the consolidated shared-walker
+/// pilot which invokes `finalize()` directly with precomputed
+/// `project_roots`.
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
     include_dev: bool,
     exclude_set: &super::exclude_path::ExclusionSet,
 ) -> Vec<PackageDbEntry> {
+    // Legacy path: compute project_roots via the LEGACY safe_walk-based
+    // `candidate_python_project_roots`.
+    let project_root_vec = candidate_python_project_roots(rootfs, exclude_set);
+    let paths = PipDiscoveredPaths {
+        project_roots: project_root_vec.into_iter().collect(),
+    };
+    finalize(rootfs, paths, include_dev, exclude_set)
+}
+
+/// Post-walker entry — takes discovered project_roots and runs the
+/// full Tier-1 venv + Tier-2/3 lockfile pipeline. Semantics-preserving
+/// with the pre-milestone `read()` via defensive sort of project_roots
+/// before iteration (so lexicographic order of processing is stable
+/// regardless of walker vs safe_walk entry-point).
+pub(crate) fn finalize(
+    rootfs: &Path,
+    paths: PipDiscoveredPaths,
+    include_dev: bool,
+    _exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    // Sort project_roots deterministically for FR-006 byte-identity.
+    // HashSet iteration order is nondeterministic; the pre-milestone
+    // `candidate_python_project_roots` sorted implicitly via `Vec::sort`
+    // inside `safe_walk`-driven discovery.
+    let mut project_roots: Vec<PathBuf> = paths.project_roots.into_iter().collect();
+    project_roots.sort();
+
     let mut entries: Vec<PackageDbEntry> = Vec::new();
 
     // Tier 1: installed venvs. The venv enumerator already handles
@@ -125,17 +280,17 @@ pub fn read(
     //   `services/worker/Pipfile.lock`, etc. — each becomes its own
     //   root, so per-service declarations surface.
     let mut had_project_marker = false;
-    for project_root in candidate_python_project_roots(rootfs, exclude_set) {
+    for project_root in &project_roots {
         // A project is anything holding a lockfile / requirements /
         // pyproject; track this for the "pyproject.toml only" skip log
         // below. Tier 1 venv does NOT count as a project root here —
         // that's installed state, not a project declaration.
         had_project_marker = true;
 
-        if let Some(lockfile_entries) = poetry::read_poetry_lock(&project_root, include_dev) {
+        if let Some(lockfile_entries) = poetry::read_poetry_lock(project_root, include_dev) {
             merge_without_override(&mut entries, lockfile_entries);
         }
-        if let Some(lockfile_entries) = pipfile::read_pipfile_lock(&project_root, include_dev) {
+        if let Some(lockfile_entries) = pipfile::read_pipfile_lock(project_root, include_dev) {
             merge_without_override(&mut entries, lockfile_entries);
         }
         // Milestone 106 US1 (issue #276): uv.lock support. Sibling to
@@ -143,10 +298,10 @@ pub fn read(
         // the same merge_without_override dedup semantics. Returns
         // workspace-root + members + transitives when the root
         // pyproject.toml declares [tool.uv.workspace].
-        if let Some(lockfile_entries) = uv_lock::read_uv_lock(&project_root, include_dev) {
+        if let Some(lockfile_entries) = uv_lock::read_uv_lock(project_root, include_dev) {
             merge_without_override(&mut entries, lockfile_entries);
         }
-        if let Some(req_entries) = requirements_txt::read_requirements_files(&project_root) {
+        if let Some(req_entries) = requirements_txt::read_requirements_files(project_root) {
             merge_without_override(&mut entries, req_entries);
         }
     }
@@ -182,10 +337,10 @@ pub fn read(
     // classification.
     let mut optional_names_from_manifests: std::collections::HashSet<String> =
         std::collections::HashSet::new();
-    for project_root in candidate_python_project_roots(rootfs, exclude_set) {
-        optional_names_from_manifests.extend(optional_deps_from_pyproject(&project_root));
+    for project_root in &project_roots {
+        optional_names_from_manifests.extend(optional_deps_from_pyproject(project_root));
         let (synthesized, was_poetry_only) =
-            build_pip_main_module_entry(&project_root);
+            build_pip_main_module_entry(project_root);
         if was_poetry_only {
             poetry_skips += 1;
             tracing::info!(

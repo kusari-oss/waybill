@@ -49,6 +49,190 @@ use waybill_common::types::purl::{encode_purl_segment, Purl};
 
 use super::PackageDbEntry;
 
+// Milestone 664 US2 T038: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, globset_from_patterns_case_insensitive, ReaderId,
+    ReaderRegistration, ReaderRegistryBuilder, SharedWalker, SharedWalkerContext,
+};
+use std::sync::{Arc, Mutex};
+
+/// Per-scan state — 4 vectors matching the legacy 4 walker sites'
+/// distinct outputs. Callback dispatches by basename + ancestor-path
+/// filtering to route each match to the appropriate bucket.
+#[derive(Default, Debug)]
+pub(crate) struct GemDiscoveredPaths {
+    /// From legacy `find_top_level_gemspecs`. `.gemspec` files NOT
+    /// under `vendor/gems/specifications/.bundle` ancestors.
+    pub(crate) top_level_gemspecs: Vec<PathBuf>,
+    /// From legacy `find_top_level_gemfiles`. `Gemfile` files NOT
+    /// under legacy skip-ancestors AND with no sibling `.gemspec`
+    /// (FR-007 gemspec-wins).
+    pub(crate) top_level_gemfiles: Vec<PathBuf>,
+    /// From legacy `find_gemfile_locks`. Full path to each `Gemfile.lock`.
+    pub(crate) gemfile_locks: Vec<PathBuf>,
+    /// From legacy `find_gemspecs`. `.gemspec` files under a
+    /// `specifications/` ancestor (canonical install-tree location).
+    pub(crate) install_gemspecs: Vec<PathBuf>,
+}
+
+/// True if any ancestor directory has the given basename.
+fn any_ancestor_named(path: &Path, name: &str) -> bool {
+    path.ancestors().any(|a| {
+        a.file_name()
+            .and_then(|s| s.to_str())
+            .map(|n| n == name)
+            .unwrap_or(false)
+    })
+}
+
+/// Per-file callback. Dispatches by basename + ancestor path.
+fn on_gem_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(state) = ctx.state::<Mutex<GemDiscoveredPaths>>(ReaderId::GEM) else {
+        return;
+    };
+    let Some(name) = path.file_name().and_then(|s| s.to_str()) else { return };
+
+    // Check ancestor names ONCE — used by multiple dispatch branches.
+    let under_specifications = any_ancestor_named(path, "specifications");
+    let under_vendor_gems_bundle = any_ancestor_named(path, "vendor")
+        || any_ancestor_named(path, "gems")
+        || any_ancestor_named(path, ".bundle");
+
+    let is_gemspec = path
+        .extension()
+        .and_then(|s| s.to_str())
+        .map(|ext| ext.eq_ignore_ascii_case("gemspec"))
+        .unwrap_or(false);
+
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+
+    if is_gemspec {
+        if under_specifications {
+            // Install-tree location — matches legacy `find_gemspecs`.
+            guard.install_gemspecs.push(path.to_path_buf());
+        } else if !under_vendor_gems_bundle {
+            // Top-level project — matches legacy `find_top_level_gemspecs`.
+            guard.top_level_gemspecs.push(path.to_path_buf());
+        }
+        // else: under vendor/gems/.bundle but NOT specifications —
+        // legacy walkers 1 and 4 both skip; discard.
+        return;
+    }
+
+    if name == "Gemfile.lock" {
+        // Walker 3 doesn't filter by ancestor path. Record verbatim.
+        guard.gemfile_locks.push(path.to_path_buf());
+        return;
+    }
+
+    if name == "Gemfile" {
+        // Walker 2: skip if under legacy skip-ancestors.
+        if under_specifications || under_vendor_gems_bundle {
+            return;
+        }
+        // FR-007 gemspec-wins: skip if sibling `.gemspec` exists.
+        // Sibling-lookup via ctx.dir_index() — zero extra syscalls.
+        if let Some(dir) = path.parent() {
+            if let Some(siblings) = ctx.dir_index().siblings_of(path) {
+                let has_sibling_gemspec = siblings.iter().any(|s| {
+                    Path::new(s)
+                        .extension()
+                        .and_then(|e| e.to_str())
+                        .map(|ext| ext.eq_ignore_ascii_case("gemspec"))
+                        .unwrap_or(false)
+                });
+                if has_sibling_gemspec {
+                    return;
+                }
+            }
+            let _ = dir; // silence unused
+        }
+        guard.top_level_gemfiles.push(path.to_path_buf());
+    }
+}
+
+/// Build the `ReaderRegistration`.
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    // Case-insensitive for `.gemspec` per legacy `eq_ignore_ascii_case`.
+    // `Gemfile` and `Gemfile.lock` are exact-name (legacy code doesn't
+    // do case-insensitive check on those).
+    // Note: registering both a case-insensitive + case-sensitive glob
+    // set requires two separate registrations. Simpler: use one CI
+    // registration for everything and re-check case in the callback for
+    // Gemfile/Gemfile.lock. The wire-in cost is negligible.
+    let patterns = globset_from_patterns_case_insensitive(&[
+        "**/*.gemspec",
+        "**/Gemfile",
+        "**/Gemfile.lock",
+    ])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::GEM,
+        state: Some(Arc::new(Mutex::new(GemDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_gem_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> GemDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return GemDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<GemDiscoveredPaths>>() else {
+        return GemDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+#[allow(dead_code)]
+pub(crate) fn build_and_run(
+    rootfs: &Path,
+    include_dev: bool,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    let reg = match registration() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(error = %err, "gem: registration() failed");
+            return Vec::new();
+        }
+    };
+    let registry = match ReaderRegistryBuilder::new().register(reg).build() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(error = %err, "gem: build() failed");
+            return Vec::new();
+        }
+    };
+    let mut walker = SharedWalker::new(rootfs, &registry, exclude_set)
+        .with_max_depth(MAX_GEMSPEC_WALK_DEPTH);
+    walker.run();
+    let _ = walker.finish();
+    let gem_reg = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::GEM)
+        .expect("gem registration must be present");
+    let paths = extract_paths(gem_reg);
+    finalize(paths, rootfs, include_dev, exclude_set)
+}
+
+// Suppress unused-import warnings for globset_from_patterns — future
+// gem-adjacent readers may want it; currently only the case-insensitive
+// variant is used above.
+#[allow(dead_code)]
+fn _unused_import_silencer() -> Option<globset::GlobSet> {
+    globset_from_patterns(&[]).ok()
+}
+
 // Ruby gem projects are typically a flat or shallow Gemfile +
 // Gemfile.lock at root + lib/ + spec/; 6 covers any realistic
 // layout. Defense-in-depth backstop for the canonicalize-keyed
@@ -897,16 +1081,51 @@ fn find_grouping_sources(lock_path: &Path) -> (Option<PathBuf>, Vec<PathBuf>) {
 /// production wins when sources disagree); compute prod-reachable
 /// closure; tag entries OUTSIDE the prod set with `is_dev = Some(true)`;
 /// drop tagged entries when `!include_dev`.
+/// Legacy `pub fn read()` — retained during FR-004 coexistence.
+/// Discovers paths via safe_walk + delegates to `finalize()`.
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
     include_dev: bool,
     exclude_set: &super::exclude_path::ExclusionSet,
 ) -> Vec<PackageDbEntry> {
+    let paths = GemDiscoveredPaths {
+        top_level_gemspecs: find_top_level_gemspecs(rootfs),
+        top_level_gemfiles: find_top_level_gemfiles(rootfs),
+        gemfile_locks: find_gemfile_locks(rootfs, exclude_set),
+        install_gemspecs: find_gemspecs(rootfs, exclude_set),
+    };
+    finalize(paths, rootfs, include_dev, exclude_set)
+}
+
+/// Post-walker entry — takes discovered paths and runs the parse/emit
+/// pipeline. `rootfs` + `exclude_set` retained for downstream helpers
+/// that still may consult them.
+pub(crate) fn finalize(
+    paths: GemDiscoveredPaths,
+    rootfs: &Path,
+    include_dev: bool,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    let _ = (rootfs, exclude_set);
+    let GemDiscoveredPaths {
+        mut top_level_gemspecs,
+        mut top_level_gemfiles,
+        mut gemfile_locks,
+        mut install_gemspecs,
+    } = paths;
+    // Defensive sort — the shared walker sorts per-dir but cross-dir
+    // order depends on descent; legacy discover_* sorted implicitly.
+    top_level_gemspecs.sort();
+    top_level_gemfiles.sort();
+    gemfile_locks.sort();
+    install_gemspecs.sort();
+
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
     let mut tagged_dev = 0usize;
     let mut dropped = 0usize;
-    for lock_path in find_gemfile_locks(rootfs, exclude_set) {
+    for lock_path in gemfile_locks {
         let Ok(text) = std::fs::read_to_string(&lock_path) else {
             continue;
         };
@@ -1024,8 +1243,8 @@ pub fn read(
     // and are invisible to Gemfile.lock scanning. Also catches any
     // system-wide `gem install` outputs living in the standard
     // specifications dirs.
-    for spec_path in find_gemspecs(rootfs, exclude_set) {
-        let Ok(text) = std::fs::read_to_string(&spec_path) else {
+    for spec_path in &install_gemspecs {
+        let Ok(text) = std::fs::read_to_string(spec_path) else {
             continue;
         };
         let Some(spec) = parse_gemspec_full(&text) else {
@@ -1053,8 +1272,8 @@ pub fn read(
     // on top while preserving the existing entry's (richer) `depends`
     // list. When no same-PURL match exists, emit net-new.
     let mut main_modules_emitted = 0usize;
-    for gemspec_path in find_top_level_gemspecs(rootfs) {
-        let Some(synthesized) = build_gem_main_module_entry(&gemspec_path) else {
+    for gemspec_path in &top_level_gemspecs {
+        let Some(synthesized) = build_gem_main_module_entry(gemspec_path) else {
             continue;
         };
         let purl_key = synthesized.purl.as_str().to_string();
@@ -1091,9 +1310,9 @@ pub fn read(
     // (the walker's directory-has-gemspec guard), so there's no PURL
     // overlap with the m069 gemspec-loop above by construction —
     // append-only, no augment-existing pattern needed.
-    for gemfile_path in find_top_level_gemfiles(rootfs) {
+    for gemfile_path in &top_level_gemfiles {
         let Some(app_entry) = build_gem_application_main_module_entry(
-            &gemfile_path,
+            gemfile_path,
             rootfs,
         ) else {
             continue;

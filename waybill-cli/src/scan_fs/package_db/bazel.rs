@@ -18,6 +18,7 @@
 //! uses workspace `regex` + std.
 
 use std::path::Path;
+use std::sync::{Arc, Mutex};
 
 use waybill_common::resolution::LifecycleScope;
 use waybill_common::types::hash::ContentHash;
@@ -25,6 +26,11 @@ use waybill_common::types::purl::{encode_purl_segment, Purl};
 use regex::Regex;
 
 use super::PackageDbEntry;
+
+// Milestone 664 US2 T055: shared-walker marker-detect registration.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, SharedWalkerContext,
+};
 
 const MODULE_BAZEL: &str = "MODULE.bazel";
 const WORKSPACE_BAZEL: &str = "WORKSPACE.bazel";
@@ -36,6 +42,78 @@ const SHORT_SHA_LEN: usize = 7;
 /// Full git-SHA length (the threshold above which we treat the version
 /// as a SHA worth truncating; below it, it's a tag, used verbatim).
 const FULL_SHA_LEN: usize = 40;
+
+/// Milestone 664 US2 T055: marker-detect state. Bazel has no tree
+/// walker (fixed-root scan of `MODULE.bazel` / `WORKSPACE.bazel` /
+/// `WORKSPACE` at scan root); registration exists to gate the read
+/// on presence of any Bazel marker anywhere in the tree.
+#[derive(Default, Debug)]
+pub(crate) struct BazelMarkerState {
+    pub(crate) seen: bool,
+}
+
+fn on_bazel_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(name) = path.file_name().and_then(|s| s.to_str()) else {
+        return;
+    };
+    if name != MODULE_BAZEL && name != WORKSPACE_BAZEL && name != WORKSPACE {
+        return;
+    }
+    let Some(state) = ctx.state::<Mutex<BazelMarkerState>>(ReaderId::BAZEL) else {
+        return;
+    };
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    guard.seen = true;
+}
+
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns(&[
+        "**/MODULE.bazel",
+        "**/WORKSPACE.bazel",
+        "**/WORKSPACE",
+    ])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::BAZEL,
+        state: Some(Arc::new(Mutex::new(BazelMarkerState::default()))),
+        patterns,
+        on_file: Some(on_bazel_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+pub(crate) fn extract_marker(registration: &ReaderRegistration) -> BazelMarkerState {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return BazelMarkerState::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<BazelMarkerState>>() else {
+        return BazelMarkerState::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Post-walker entry — gates the O(1) fixed-root read on marker
+/// presence + defensive fs-existence fallback.
+pub(crate) fn finalize(
+    marker: BazelMarkerState,
+    scan_root: &Path,
+) -> Vec<PackageDbEntry> {
+    if !marker.seen
+        && !scan_root.join(MODULE_BAZEL).is_file()
+        && !scan_root.join(WORKSPACE_BAZEL).is_file()
+        && !scan_root.join(WORKSPACE).is_file()
+    {
+        return Vec::new();
+    }
+    read(scan_root)
+}
 
 /// Walk `scan_root` for Bazel manifests and emit one `PackageDbEntry`
 /// per declared dependency. MODULE.bazel deps come first; WORKSPACE

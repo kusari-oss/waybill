@@ -46,6 +46,13 @@ use std::path::{Path, PathBuf};
 use flate2::read::GzDecoder;
 use waybill_common::types::purl::{encode_purl_segment, Purl};
 
+// Milestone 664 US1 T026: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns_case_insensitive, ReaderId, ReaderRegistration,
+    ReaderRegistryBuilder, SharedWalker, SharedWalkerContext,
+};
+use std::sync::Arc;
+
 use super::control_file::{
     parse_depends_field_with_alternatives, parse_stanzas, DepsWithAlternatives,
 };
@@ -54,6 +61,117 @@ use super::PackageDbEntry;
 /// Depth cap for the walker per m069 rpm_file precedent. Deep-nested
 /// `tmp/deploy/ipk/<arch>/**` layouts still resolve well within 12.
 const MAX_WALK_DEPTH: usize = 12;
+
+/// Milestone 664 US1 T026: per-scan state carried through
+/// `ReaderRegistration.state`. Read-only after registration — no Mutex
+/// needed. Holds the reader's `IpkReaderConfig` (currently always
+/// default) + the per-scan `distro_tag` derived from `os_release`.
+#[derive(Debug)]
+pub(crate) struct IpkReaderState {
+    pub(crate) config: IpkReaderConfig,
+    pub(crate) distro_tag: Option<String>,
+}
+
+/// Per-file callback. Called by the shared walker for every file whose
+/// basename matches `**/*.ipk` (case-insensitive). Parses inline and
+/// pushes entries directly — no accumulation needed (unlike haskell /
+/// erlang / scala, ipk has no cross-file dependency logic).
+fn on_ipk_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(state) = ctx.state::<IpkReaderState>(ReaderId::IPK_FILE) else {
+        return;
+    };
+    let distro_tag_ref = state.distro_tag.as_deref();
+    match parse_ipk_file(path, &state.config, distro_tag_ref) {
+        Ok(entry) => ctx.push(ReaderId::IPK_FILE, entry),
+        Err(err) => match err {
+            IpkParseError::FilenameNonConforming => {
+                tracing::warn!(
+                    path = %path.display(),
+                    "skipping .ipk file: filename does not match <name>_<version>_<arch>.ipk convention"
+                );
+            }
+            other => match filename_fallback_entry(path, distro_tag_ref) {
+                Some(entry) => {
+                    tracing::warn!(
+                        path = %path.display(),
+                        reason = %other,
+                        "salvaging .ipk via filename fallback"
+                    );
+                    ctx.push(ReaderId::IPK_FILE, entry);
+                }
+                None => {
+                    tracing::warn!(
+                        path = %path.display(),
+                        reason = %other,
+                        "skipping .ipk file: parse failed and filename fallback unavailable"
+                    );
+                }
+            },
+        },
+    }
+}
+
+/// Build the `ReaderRegistration` for this reader. Takes the same
+/// inputs the legacy `read()` accepts (`rootfs` + `config`), computes
+/// the per-scan `distro_tag`, and packs both into the state slot.
+pub(crate) fn registration(
+    rootfs: &Path,
+    config: &IpkReaderConfig,
+) -> anyhow::Result<ReaderRegistration> {
+    let distro_tag = super::super::os_release::read_distro_tag_from_rootfs(rootfs);
+    let patterns = globset_from_patterns_case_insensitive(&["**/*.ipk"])?;
+    let state = IpkReaderState {
+        config: config.clone(),
+        distro_tag,
+    };
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::IPK_FILE,
+        state: Some(Arc::new(state)),
+        patterns,
+        on_file: Some(on_ipk_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+/// Coexistence-period entry point — same pattern as haskell / erlang /
+/// scala `build_and_run`, but retrieves discovered entries from the
+/// walker's per-reader output map (not from state, since ipk pushes
+/// entries in-callback rather than accumulating paths).
+/// **Post-T033**: retained as a shortcut; `read_all` uses
+/// `run_shared_walker_pilot`.
+#[allow(dead_code)]
+pub(crate) fn build_and_run(
+    rootfs: &Path,
+    config: &IpkReaderConfig,
+) -> Vec<PackageDbEntry> {
+    let reg = match registration(rootfs, config) {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(
+                error = %err,
+                "ipk_file: registration() failed — falling back to empty output",
+            );
+            return Vec::new();
+        }
+    };
+    let registry = match ReaderRegistryBuilder::new().register(reg).build() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(
+                error = %err,
+                "ipk_file: ReaderRegistryBuilder::build() failed — falling back to empty output",
+            );
+            return Vec::new();
+        }
+    };
+    let empty_excludes = super::exclude_path::ExclusionSet::new_empty();
+    let mut walker = SharedWalker::new(rootfs, &registry, &empty_excludes)
+        .with_max_depth(MAX_WALK_DEPTH);
+    walker.run();
+    let mut per_reader = walker.finish();
+    per_reader.remove(&ReaderId::IPK_FILE).unwrap_or_default()
+}
 
 /// Reader configuration for the ipk archive-file scanner. Env-var
 /// override plumbing (mirroring m069's `RpmReaderConfig`) is deferred
@@ -316,6 +434,11 @@ struct ParsedFilename {
 /// present, its `<ID>-<VERSION_ID>` tag is read once here and appended
 /// to every emitted PURL as a `distro=` qualifier. When absent (headless
 /// ipk-directory scan), the qualifier is omitted — no hardcoded default.
+/// Legacy `pub fn read()` — retained during FR-004 coexistence.
+/// Post-m664-US1-T026, `read_all` calls `build_and_run()`.
+/// Semantics-preserving: both paths invoke `parse_ipk_file` with the
+/// same `(config, distro_tag_ref)` args on identical file sets.
+#[allow(dead_code)]
 pub fn read(rootfs: &Path, config: &IpkReaderConfig) -> Vec<PackageDbEntry> {
     let distro_tag = super::super::os_release::read_distro_tag_from_rootfs(rootfs);
     let distro_tag_ref = distro_tag.as_deref();

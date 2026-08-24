@@ -44,6 +44,7 @@
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
 use waybill_common::resolution::LifecycleScope;
 use waybill_common::types::hash::{ContentHash, HashAlgorithm};
@@ -51,6 +52,11 @@ use waybill_common::types::purl::Purl;
 
 use super::exclude_path::ExclusionSet;
 use super::PackageDbEntry;
+
+// Milestone 664 US2 T049: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns_case_insensitive, ReaderId, ReaderRegistration, SharedWalkerContext,
+};
 
 const MAX_COMPOSER_WALK_DEPTH: usize = 12;
 
@@ -163,11 +169,96 @@ struct InstalledJson {
     dev_package_names: Vec<String>,
 }
 
+/// Milestone 664 US2 T049: shared-walker discovery state — collects
+/// `composer.json` manifest paths (Pass A). The `installed.json` Pass
+/// B stays on legacy `safe_walk` because installed.json lives inside
+/// `vendor/`, which the shared walker skips by default.
+#[derive(Default, Debug)]
+pub(crate) struct ComposerDiscoveredPaths {
+    pub(crate) manifests: Vec<PathBuf>,
+}
+
+/// Per-file callback. Case-insensitive `composer.json` match preserves
+/// legacy `eq_ignore_ascii_case` behavior.
+fn on_composer_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let matches = path
+        .file_name()
+        .and_then(|s| s.to_str())
+        .map(|n| n.eq_ignore_ascii_case("composer.json"))
+        .unwrap_or(false);
+    if !matches {
+        return;
+    }
+    let Some(state) = ctx.state::<Mutex<ComposerDiscoveredPaths>>(ReaderId::COMPOSER) else {
+        return;
+    };
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    guard.manifests.push(path.to_path_buf());
+}
+
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns_case_insensitive(&["**/composer.json"])?;
+    // Post-2026-08-23 byte-identity fix: legacy `should_skip_manifest_descent`
+    // skipped ONLY `.git`/`.svn`/`.hg`/`vendor`/`node_modules`; the shared
+    // walker default ALSO skips `target`/`dist`/`build`/`out`/`coverage`/
+    // `__pycache__`/`venv`/`bower_components`. Real-world repos (e.g., mongo's
+    // `src/third_party/grpc/dist/composer.json`) place vendored-third-party
+    // manifests under `dist/`, which legacy composer visited. Contract C10
+    // `descend_into` opens those back up (composer-only per C10 scoping).
+    let descend_into = crate::scan_fs::walk_registry::globset_from_patterns(&[
+        "target", "dist", "build", "out", "coverage", "bower_components",
+    ])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::COMPOSER,
+        state: Some(Arc::new(Mutex::new(ComposerDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_composer_file),
+        on_dir: None,
+        descend_into: Some(descend_into),
+    })
+}
+
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> ComposerDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return ComposerDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<ComposerDiscoveredPaths>>() else {
+        return ComposerDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Legacy public entry — retained during FR-004 coexistence.
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
     _include_dev: bool,
     exclude_set: &ExclusionSet,
 ) -> Vec<PackageDbEntry> {
+    let paths = ComposerDiscoveredPaths {
+        manifests: find_composer_manifests(rootfs, exclude_set),
+    };
+    finalize(paths, rootfs, exclude_set)
+}
+
+/// Post-walker entry — Pass A over precomputed manifests + Pass B via
+/// legacy `safe_walk` (installed.json lives under `vendor/`, which the
+/// shared walker skips by default).
+pub(crate) fn finalize(
+    paths: ComposerDiscoveredPaths,
+    rootfs: &Path,
+    exclude_set: &ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    let mut manifests = paths.manifests;
+    manifests.sort();
+
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
     // Per-project lockfile PURL set, keyed by the project root path
@@ -182,7 +273,7 @@ pub fn read(
     let mut warnings_emitted = 0usize;
 
     // Pass A: walk for composer.json manifests.
-    for composer_json_path in find_composer_manifests(rootfs, exclude_set) {
+    for composer_json_path in manifests {
         let manifest = match parse_composer_json(&composer_json_path) {
             Ok(m) => m,
             Err(err) => {
@@ -347,6 +438,12 @@ fn find_installed_jsons(rootfs: &Path, exclude_set: &ExclusionSet) -> Vec<PathBu
         },
         exclude_set,
     };
+    // FR-005 permanent escape hatch — this walker cannot migrate to
+    // walk_registry because `installed.json` lives at
+    // `vendor/composer/installed.json`, under `vendor/` which the
+    // shared walker skips by default. Wiring Pass B would need a
+    // per-registration `descend_into` override (same blocker as
+    // deferred T039 maven `target/`). Milestone 664 US2 T049.
     crate::scan_fs::walk::safe_walk(rootfs, &cfg, |path| {
         if !path.is_file() {
             return;

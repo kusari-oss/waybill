@@ -28,12 +28,18 @@ pub mod target_resolver;
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
 use waybill_common::resolution::LifecycleScope;
 
 use super::exclude_path::ExclusionSet;
 use super::pants_common;
 use super::PackageDbEntry;
+
+// Milestone 664 US2 T046: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, SharedWalkerContext,
+};
 
 /// The four built-in Pants shell backend target types we recognize.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -123,13 +129,89 @@ pub(crate) enum TargetParseError {
     UnbalancedParens { line: u32 },
 }
 
-/// Public entry — orchestrates BUILD-file discovery, regex extraction,
-/// target resolution, component emission, and `pants.toml` tool-pin
-/// discovery. Returns `Vec::new()` and emits NO log line when zero
-/// BUILD files are discovered AND no `pants.toml` is present at the
-/// scan root (byte-identity guarantee per FR-011 / SC-003).
+/// Milestone 664 US2 T046: shared-walker discovery state — collects
+/// `BUILD` file paths during the single-pass descent, replacing the
+/// m225 `pants_common::discover_build_files` call inside `read()`.
+#[derive(Default, Debug)]
+pub(crate) struct PantsShellDiscoveredPaths {
+    pub(crate) build_files: Vec<PathBuf>,
+}
+
+/// Per-file callback. Matches basename exactly `BUILD` (case-sensitive
+/// per Pants convention — `BUILD.py` / `Build` / `build` are NOT Pants
+/// BUILD files).
+fn on_pants_shell_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    if path.file_name().and_then(|s| s.to_str()) != Some("BUILD") {
+        return;
+    }
+    let Some(state) = ctx.state::<Mutex<PantsShellDiscoveredPaths>>(ReaderId::PANTS_SHELL)
+    else {
+        return;
+    };
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    guard.build_files.push(path.to_path_buf());
+}
+
+/// Build the `ReaderRegistration`.
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns(&["**/BUILD"])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::PANTS_SHELL,
+        state: Some(Arc::new(Mutex::new(PantsShellDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_pants_shell_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> PantsShellDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return PantsShellDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<PantsShellDiscoveredPaths>>() else {
+        return PantsShellDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Legacy public entry — retained during FR-004 coexistence. Callers
+/// outside the shared-walker pilot still route through here.
+#[allow(dead_code)]
 pub fn read(scan_root: &Path, exclude_set: &ExclusionSet) -> Vec<PackageDbEntry> {
-    let build_files = pants_common::discover_build_files(scan_root, exclude_set);
+    let paths = PantsShellDiscoveredPaths {
+        build_files: pants_common::discover_build_files(scan_root, exclude_set),
+    };
+    finalize(paths, scan_root, exclude_set)
+}
+
+/// Post-walker entry — takes precomputed BUILD paths + runs the full
+/// m225 pipeline: regex extraction, target resolution, component emit,
+/// and `pants.toml` tool-pin discovery at scan root. Returns
+/// `Vec::new()` and emits NO log line when zero BUILD files were
+/// discovered AND no `pants.toml` is present at the scan root
+/// (byte-identity guarantee per FR-011 / SC-003).
+pub(crate) fn finalize(
+    paths: PantsShellDiscoveredPaths,
+    scan_root: &Path,
+    _exclude_set: &ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    // Defensive sort — shared walker sorts per-dir but cross-dir order
+    // depends on descent. Legacy safe_walk returned in OS-natural order
+    // (unsorted), but m225's downstream pipeline (BTreeMap-keyed file
+    // dedup + sorted-address emission) makes final output order
+    // deterministic regardless of input order. Sort here to keep the
+    // per-BUILD-file `tracing::warn!` diagnostic order deterministic
+    // across pilot vs legacy paths.
+    let mut build_files = paths.build_files;
+    build_files.sort();
     let pants_toml_path = scan_root.join("pants.toml");
     let pants_toml_present = pants_toml_path.is_file();
     if build_files.is_empty() && !pants_toml_present {

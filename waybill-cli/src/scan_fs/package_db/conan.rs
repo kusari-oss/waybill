@@ -14,6 +14,7 @@
 //! No new Cargo deps — uses workspace `regex` + std.
 
 use std::path::Path;
+use std::sync::{Arc, Mutex};
 
 use waybill_common::resolution::LifecycleScope;
 use waybill_common::types::purl::{encode_purl_segment, Purl};
@@ -21,8 +22,82 @@ use regex::Regex;
 
 use super::PackageDbEntry;
 
+// Milestone 664 US2 T054: shared-walker marker-detect registration.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, SharedWalkerContext,
+};
+
 const CONANFILE_TXT: &str = "conanfile.txt";
 const CONANFILE_PY: &str = "conanfile.py";
+
+/// Milestone 664 US2 T054: marker-detect state. Conan has no tree
+/// walker (fixed-root scan of `conanfile.txt` + `conanfile.py` at
+/// scan root); registration exists to gate the two-file read on
+/// presence of either marker anywhere in the tree.
+#[derive(Default, Debug)]
+pub(crate) struct ConanMarkerState {
+    pub(crate) seen: bool,
+}
+
+fn on_conan_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(name) = path.file_name().and_then(|s| s.to_str()) else {
+        return;
+    };
+    if name != CONANFILE_TXT && name != CONANFILE_PY {
+        return;
+    }
+    let Some(state) = ctx.state::<Mutex<ConanMarkerState>>(ReaderId::CONAN) else {
+        return;
+    };
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    guard.seen = true;
+}
+
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns(&["**/conanfile.txt", "**/conanfile.py"])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::CONAN,
+        state: Some(Arc::new(Mutex::new(ConanMarkerState::default()))),
+        patterns,
+        on_file: Some(on_conan_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+pub(crate) fn extract_marker(registration: &ReaderRegistration) -> ConanMarkerState {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return ConanMarkerState::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<ConanMarkerState>>() else {
+        return ConanMarkerState::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Post-walker entry — gates the O(1) fixed-root read on marker
+/// presence + defensive fs-existence fallback (preserves FR-006
+/// byte-identity when the walker missed the marker via exclusion or
+/// symlink resolution).
+pub(crate) fn finalize(
+    marker: ConanMarkerState,
+    scan_root: &Path,
+) -> Vec<PackageDbEntry> {
+    if !marker.seen
+        && !scan_root.join(CONANFILE_TXT).is_file()
+        && !scan_root.join(CONANFILE_PY).is_file()
+    {
+        return Vec::new();
+    }
+    read(scan_root)
+}
 
 /// Walk `scan_root` for conanfile.txt and conanfile.py; emit one
 /// `PackageDbEntry` per declared dependency from both. `[tool_requires]`

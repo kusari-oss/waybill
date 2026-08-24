@@ -38,6 +38,13 @@ use waybill_common::types::purl::{encode_purl_segment, Purl};
 
 use super::PackageDbEntry;
 
+// Milestone 664 US2 T037: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, ReaderRegistryBuilder,
+    SharedWalker, SharedWalkerContext,
+};
+use std::sync::{Arc, Mutex};
+
 /// Errors the cargo reader can raise. Only `LockfileUnsupportedVersion`
 /// is fatal (FR-040 + CLI contract, mirroring the npm v1 refusal).
 #[derive(Debug, thiserror::Error)]
@@ -192,6 +199,107 @@ pub(super) fn resolve_activated_deps_via_cargo_metadata(
 // for the canonicalize-keyed visited-set primary mechanism. Per
 // milestone-054 FR-003.
 const MAX_PROJECT_ROOT_DEPTH: usize = 6;
+
+// -------------------------------------------------------------------------
+// Milestone 664 US2 T037: shared-walker registration + finalize plumbing.
+// See specs/664-single-pass-walker/quickstart.md for the reader-migration
+// recipe. Note: cargo does NOT use the sibling-lookup pattern
+// (`ctx.dir_index().contains(...)`) even though it fits — direct globset
+// matches for BOTH `Cargo.toml` AND `Cargo.lock` are simpler and give
+// correctness for orphan-lockfile edge cases (a `Cargo.lock` without a
+// sibling `Cargo.toml` is uncommon but well-defined per Cargo docs).
+// -------------------------------------------------------------------------
+
+/// Per-scan state carried through `ReaderRegistration.state`. Callback
+/// dispatches by basename and pushes each match into the appropriate
+/// vector. Post-walker: `finalize()` sorts and iterates.
+#[derive(Default, Debug)]
+pub(crate) struct CargoDiscoveredPaths {
+    pub(crate) manifest_paths: Vec<PathBuf>,
+    pub(crate) lockfile_paths: Vec<PathBuf>,
+}
+
+/// Per-file callback invoked by the shared walker.
+fn on_cargo_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(state) = ctx.state::<Mutex<CargoDiscoveredPaths>>(ReaderId::CARGO) else {
+        return;
+    };
+    let Some(name) = path.file_name().and_then(|s| s.to_str()) else {
+        return;
+    };
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    match name {
+        "Cargo.toml" => guard.manifest_paths.push(path.to_path_buf()),
+        "Cargo.lock" => guard.lockfile_paths.push(path.to_path_buf()),
+        _ => {}
+    }
+}
+
+/// Build the `ReaderRegistration` for this reader.
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns(&["**/Cargo.toml", "**/Cargo.lock"])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::CARGO,
+        state: Some(Arc::new(Mutex::new(CargoDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_cargo_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+/// Extract the accumulated per-scan state via `std::mem::take`.
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> CargoDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return CargoDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<CargoDiscoveredPaths>>() else {
+        return CargoDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Coexistence-period entry point — mini-registry per reader.
+/// **Post-T033**: `read_all` uses the consolidated shared-walker pilot.
+#[allow(dead_code)]
+pub(crate) fn build_and_run(
+    rootfs: &Path,
+    include_dev: bool,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Result<CargoReadOutput, CargoError> {
+    let reg = match registration() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(error = %err, "cargo: registration() failed");
+            return Ok(CargoReadOutput::default());
+        }
+    };
+    let registry = match ReaderRegistryBuilder::new().register(reg).build() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(error = %err, "cargo: build() failed");
+            return Ok(CargoReadOutput::default());
+        }
+    };
+    let mut walker = SharedWalker::new(rootfs, &registry, exclude_set)
+        .with_max_depth(MAX_PROJECT_ROOT_DEPTH);
+    walker.run();
+    let _ = walker.finish();
+    let cargo_reg = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::CARGO)
+        .expect("cargo registration must be present");
+    let paths = extract_paths(cargo_reg);
+    finalize(paths, rootfs, include_dev, exclude_set)
+}
 
 // ---------------------------------------------------------------------------
 // Cargo.lock shape (serde deserialization)
@@ -1352,11 +1460,45 @@ pub struct CargoReadOutput {
     pub divergences: Vec<DivergenceRecord>,
 }
 
+/// Legacy `pub fn read()` — retained during FR-004 coexistence.
+/// Post-m664-US2-T037, `read_all` calls the consolidated shared-walker
+/// pilot which invokes `finalize()` directly with precomputed paths.
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
     include_dev: bool,
     exclude_set: &super::exclude_path::ExclusionSet,
 ) -> Result<CargoReadOutput, CargoError> {
+    let paths = CargoDiscoveredPaths {
+        manifest_paths: find_cargo_manifests(rootfs, exclude_set),
+        lockfile_paths: find_cargo_lockfiles(rootfs, exclude_set),
+    };
+    finalize(paths, rootfs, include_dev, exclude_set)
+}
+
+/// Post-walker entry — takes discovered manifest + lockfile paths and
+/// runs the existing read pipeline (Phase A workspace context + Phase B
+/// per-lockfile emission + main-module tagging).
+pub(crate) fn finalize(
+    paths: CargoDiscoveredPaths,
+    rootfs: &Path,
+    include_dev: bool,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Result<CargoReadOutput, CargoError> {
+    // Silence unused-arg warnings for the two params consumed only
+    // indirectly by helpers below (safe_walk-based inner walkers still
+    // use exclude_set / rootfs for m051 dep classification etc.).
+    let _ = (rootfs, exclude_set);
+    // Defensive sort — legacy find_* sorted before returning; the shared
+    // walker sorts per-dir but cross-dir order depends on descent, so
+    // re-sort here for FR-006 byte-identity across both entry points.
+    let CargoDiscoveredPaths {
+        mut manifest_paths,
+        mut lockfile_paths,
+    } = paths;
+    manifest_paths.sort();
+    lockfile_paths.sort();
+
     // Milestone 134 — gate per-manifest deep-hash via env var so the
     // candidate-accumulation loop doesn't add cost on the default path.
     // Plumbed in from `scan_fs::scan_path` (which reads the `--deep-hash`
@@ -1383,7 +1525,7 @@ pub fn read(
     // Order matters: Phase B FIRST (builds the dep graph), Phase A
     // SECOND (adds main-modules for crates not seen in any lockfile,
     // and tags lockfile-derived workspace-member entries with C40).
-    let all_manifests = find_cargo_manifests(rootfs, exclude_set);
+    let all_manifests = manifest_paths;
     let workspace_ctx = WorkspaceContext::build_from_manifests(&all_manifests);
 
     // Milestone 064 — Phase B: per-lockfile dependency emission
@@ -1392,7 +1534,7 @@ pub fn read(
     // (which honors `[workspace] members = [...]` rather than walking
     // the filesystem) so dev/build classification works exactly as
     // before. Phase A's main-module emission is layered on top below.
-    for lock_path in find_cargo_lockfiles(rootfs, exclude_set) {
+    for lock_path in lockfile_paths {
         let manifests = discover_workspace_manifests(&lock_path);
         let mut workspace_sections = CargoTomlSections::default();
         for manifest_path in &manifests {

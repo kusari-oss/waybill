@@ -103,6 +103,12 @@ fn resolve_globs(build_file_dir: &Path, patterns: &[String]) -> Vec<PathBuf> {
         exclude_set: &exclude_set,
     };
     let mut out: Vec<PathBuf> = Vec::new();
+    // FR-005 permanent escape hatch — this walker cannot migrate to
+    // walk_registry because it's a per-target glob resolver anchored
+    // to a specific BUILD file's directory (not scan-root-anchored).
+    // The shared walker traverses the scan tree once for cross-reader
+    // discovery; this walker runs per-target within an already-
+    // discovered BUILD file's subtree. Milestone 664 US2 T046.
     safe_walk(build_file_dir, &cfg, |path| {
         if !path.is_file() {
             return;

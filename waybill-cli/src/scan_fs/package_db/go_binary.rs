@@ -21,11 +21,21 @@
 //! still present) work fine because we also fall back to memmem scan.
 
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
 use waybill_common::types::purl::{encode_purl_segment, Purl};
 use object::{Object, ObjectSection};
 
 use super::PackageDbEntry;
+
+// Milestone 664 US4 T057 (2026-08-23): shared-walker migration.
+// Two-phase pattern: pilot collects candidate binary paths (files
+// matching size + non-intermediate-extension checks); post-pilot
+// finalize runs the read_binary probe once `claimed_paths` +
+// `claimed_inodes` are available from the OS-package readers.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, SharedWalkerContext,
+};
 
 /// Magic byte sequence that prefixes every embedded Go BuildInfo blob.
 /// `go tool objdump -s runtime.buildInfo` reveals this; the source of
@@ -489,50 +499,144 @@ pub fn read_binary(path: &Path) -> (BuildInfoStatus, Option<GoBinaryInfo>) {
 /// parse successfully (BuildInfoStatus::Ok) are still emitted
 /// regardless of claims — they carry real module information that
 /// the package metadata doesn't.
-pub fn read(
+/// Discovered candidate binary paths — files matching size +
+/// non-intermediate-extension checks. Populated during the shared-
+/// walker pilot phase; consumed post-pilot once `claimed_paths` +
+/// `claimed_inodes` are available.
+#[derive(Default, Debug)]
+pub(crate) struct GoBinaryDiscoveredPaths {
+    pub(crate) candidate_paths: Vec<PathBuf>,
+}
+
+/// Legacy-only ancestor-path skip additions (NOT in shared walker
+/// default): `_`-prefix, `testdata`, `proc`, `sys`, `go/pkg/mod`.
+/// The shared walker's default skip covers `.`-prefix + `vendor` +
+/// `node_modules` + `target` + `__pycache__`; the `descend_into: [
+/// build, dist, out, coverage, venv]` re-opens the build-output
+/// dirs that legacy visited. This helper filters remaining
+/// legacy-only skips at callback time.
+fn under_legacy_only_skip_dir(path: &Path) -> bool {
+    let components: Vec<&str> = path
+        .components()
+        .filter_map(|c| c.as_os_str().to_str())
+        .collect();
+    // Skip if any ancestor dir has `_`-prefix or matches testdata/proc/sys.
+    for name in &components[..components.len().saturating_sub(1)] {
+        if name.starts_with('_') || matches!(*name, "testdata" | "proc" | "sys") {
+            return true;
+        }
+    }
+    // Skip if 3-component sliding window matches `go/pkg/mod`.
+    for window in components.windows(3) {
+        if window == ["go", "pkg", "mod"] {
+            return true;
+        }
+    }
+    false
+}
+
+fn on_go_binary_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    // Legacy-only skip additions.
+    if under_legacy_only_skip_dir(path) {
+        return;
+    }
+    // Skip compiler/linker intermediate extensions cheaply first —
+    // avoids the stat syscall for `.o` / `.a` / `.rlib` / `.rmeta`.
+    if matches!(
+        path.extension().and_then(|e| e.to_str()),
+        Some("o") | Some("a") | Some("rlib") | Some("rmeta")
+    ) {
+        return;
+    }
+    // Size gate. Matches legacy `pub fn read` line 539 check.
+    let Ok(meta) = std::fs::metadata(path) else {
+        return;
+    };
+    if !meta.is_file()
+        || meta.len() < MIN_BINARY_SIZE_BYTES
+        || meta.len() > MAX_BINARY_SIZE_BYTES
+    {
+        return;
+    }
+    let Some(state) = ctx.state::<Mutex<GoBinaryDiscoveredPaths>>(ReaderId::GO_BINARY)
+    else {
+        return;
+    };
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    guard.candidate_paths.push(path.to_path_buf());
+}
+
+/// Build the `ReaderRegistration`. Declares `descend_into: [build,
+/// dist, out, coverage, venv]` per contract C10 — Go binaries live
+/// in these build-output dirs, which the shared walker skips by
+/// default. C10 scoping keeps that visibility go_binary-only.
+/// Legacy skips NOT in the shared walker default (`_`-prefix,
+/// `testdata`, `proc`, `sys`, `go/pkg/mod`) are enforced in-callback
+/// via `under_legacy_only_skip_dir`.
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    // Match every file — Go binaries have no reliable filename
+    // pattern (they're identified by size + content magic). Callback
+    // does the actual filtering.
+    let patterns = globset_from_patterns(&["**/*"])?;
+    let descend_into = globset_from_patterns(&[
+        "build",
+        "dist",
+        "out",
+        "coverage",
+        "venv",
+    ])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::GO_BINARY,
+        state: Some(Arc::new(Mutex::new(GoBinaryDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_go_binary_file),
+        on_dir: None,
+        descend_into: Some(descend_into),
+    })
+}
+
+pub(crate) fn extract_paths(reg: &ReaderRegistration) -> GoBinaryDiscoveredPaths {
+    let Some(state_arc) = reg.state.as_ref() else {
+        return GoBinaryDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<GoBinaryDiscoveredPaths>>() else {
+        return GoBinaryDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Post-pilot entry — runs the `read_binary` probe over each
+/// precomputed candidate path with the claimed-paths / claimed-inodes
+/// available. Same emission logic as legacy `pub fn read`; only the
+/// path-discovery step differs.
+pub(crate) fn finalize(
+    paths: GoBinaryDiscoveredPaths,
     rootfs: &Path,
-    _include_dev: bool,
     claimed_paths: &std::collections::HashSet<std::path::PathBuf>,
     #[cfg(unix)] claimed_inodes: &std::collections::HashSet<(u64, u64)>,
-    exclude_set: &super::exclude_path::ExclusionSet,
 ) -> (
     Vec<PackageDbEntry>,
     std::collections::HashSet<String>,
 ) {
     let mut out: Vec<PackageDbEntry> = Vec::new();
-    let mut seen_purls: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut seen_purls: std::collections::HashSet<String> =
+        std::collections::HashSet::new();
     let mut main_modules: std::collections::HashSet<String> =
         std::collections::HashSet::new();
-    // Milestone 114: delegates to scan_fs::walk::safe_walk. The
-    // closure captures the mutable accumulators + the claimed-path
-    // refs by reference.
-    let cfg = crate::scan_fs::walk::WalkConfig {
-        max_depth: MAX_BINARY_WALK_DEPTH,
-        should_skip: &|candidate: &Path, _rootfs: &Path| -> bool {
-            should_skip_binary_descent(candidate)
-        },
-        exclude_set,
-    };
-    crate::scan_fs::walk::safe_walk(rootfs, &cfg, |path| {
-        // Only act on files large enough to plausibly be Go binaries.
-        let Ok(meta) = std::fs::metadata(path) else {
-            return;
-        };
-        if !meta.is_file() || meta.len() < MIN_BINARY_SIZE_BYTES {
-            return;
-        }
-        // Go binaries never carry compiler/linker intermediate
-        // extensions. Skipping them here avoids full-file probe reads
-        // across e.g. a Rust `target/` tree, where hundreds of
-        // thousands of `.o`/`.rlib` files otherwise dominate scan
-        // wall-time.
-        if matches!(
-            path.extension().and_then(|e| e.to_str()),
-            Some("o") | Some("a") | Some("rlib") | Some("rmeta")
-        ) {
-            return;
-        }
+    // Sort defensively — safe_walk returned OS-natural order; the
+    // shared walker sorts per-dir but not cross-dir. Sort so per-
+    // binary WARN emission order is stable across pilot vs legacy paths.
+    let mut candidate_paths = paths.candidate_paths;
+    candidate_paths.sort();
 
+    for path in &candidate_paths {
         let (status, info) = read_binary(path);
         match status {
             BuildInfoStatus::Ok => {
@@ -560,7 +664,7 @@ pub fn read(
                         status = status_str,
                         "go binary is package-claimed — suppressing diagnostic",
                     );
-                    return;
+                    continue;
                 }
                 tracing::warn!(
                     binary = %path.display(),
@@ -571,7 +675,7 @@ pub fn read(
             }
             BuildInfoStatus::NotGoBinary => {}
         }
-    });
+    }
     if !out.is_empty() {
         tracing::info!(
             rootfs = %rootfs.display(),
@@ -583,6 +687,55 @@ pub fn read(
         tracing::debug!(rootfs = %rootfs.display(), "no Go binaries found");
     }
     (out, main_modules)
+}
+
+/// Legacy public entry — retained per FR-004 coexistence for test
+/// callers + direct API consumers. Production path (read_all) uses
+/// the shared-walker pilot + `finalize()` above.
+#[allow(dead_code)]
+pub fn read(
+    rootfs: &Path,
+    _include_dev: bool,
+    claimed_paths: &std::collections::HashSet<std::path::PathBuf>,
+    #[cfg(unix)] claimed_inodes: &std::collections::HashSet<(u64, u64)>,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> (
+    Vec<PackageDbEntry>,
+    std::collections::HashSet<String>,
+) {
+    // Discover candidate paths via legacy safe_walk (byte-identity
+    // shim), then delegate to finalize() for probe + emit.
+    let cfg = crate::scan_fs::walk::WalkConfig {
+        max_depth: MAX_BINARY_WALK_DEPTH,
+        should_skip: &|candidate: &Path, _rootfs: &Path| -> bool {
+            should_skip_binary_descent(candidate)
+        },
+        exclude_set,
+    };
+    let mut candidate_paths: Vec<PathBuf> = Vec::new();
+    // T057 (2026-08-23): legacy safe_walk shim retained for test
+    // callers. Production path uses `run_shared_walker_pilot` +
+    // `finalize()`.
+    crate::scan_fs::walk::safe_walk(rootfs, &cfg, |path| {
+        let Ok(meta) = std::fs::metadata(path) else { return };
+        if !meta.is_file() || meta.len() < MIN_BINARY_SIZE_BYTES {
+            return;
+        }
+        if matches!(
+            path.extension().and_then(|e| e.to_str()),
+            Some("o") | Some("a") | Some("rlib") | Some("rmeta")
+        ) {
+            return;
+        }
+        candidate_paths.push(path.to_path_buf());
+    });
+    finalize(
+        GoBinaryDiscoveredPaths { candidate_paths },
+        rootfs,
+        claimed_paths,
+        #[cfg(unix)]
+        claimed_inodes,
+    )
 }
 
 // Go binaries land under bin/, /usr/local/bin/, ~/.local/bin/, or

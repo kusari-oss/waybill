@@ -48,7 +48,11 @@ pub mod pants_go;
 pub mod pants_jvm;
 pub mod pants_shell;
 pub mod pip;
-mod project_roots;
+// Milestone 664: promoted to pub(crate) so the shared walker in
+// scan_fs/walk_registry/ can reuse should_skip_default_descent for its
+// FR-002 base-name skip predicate (matches every reader's existing skip
+// behavior — no operator-visible change).
+pub(crate) mod project_roots;
 pub mod rpm;
 pub mod rpm_file;
 pub mod rpmdb_bdb;
@@ -303,6 +307,14 @@ pub struct DbScanResult {
     /// The orchestrator uses this to promote the real Maven PURL
     /// into `metadata.component` instead of the generic placeholder.
     pub scan_target_coord: Option<maven::ScanTargetCoord>,
+    /// Milestone 664 US2 T047: BUILD file paths collected during the
+    /// shared-walker pilot's single-pass descent. Threaded to
+    /// `pants_go::enrich` (called from `scan_fs/mod.rs` outside
+    /// `read_all`) to eliminate the previous pilot-plus-enrich double
+    /// walk. Empty when the pilot did not run (feature-off / early
+    /// return path) — `enrich` falls back to
+    /// `pants_common::discover_build_files` in that case.
+    pub pants_go_build_files: Vec<std::path::PathBuf>,
 }
 
 /// Non-fatal scan-time diagnostics accumulated during `read_all`. Drives
@@ -1486,12 +1498,76 @@ pub fn read_all(
     // milestone-105 dedup pipeline via `waybill:also-detected-via`
     // per FR-014a; the recipe-tier's license + provenance fields
     // propagate onto the post-dedup winning component.
-    out.extend(yocto::recipe::read(rootfs, exclude_set));
+    // Milestone 664 US2 T059: yocto::recipe::read is now called
+    // AFTER the shared-walker pilot binding below so it can consume
+    // pilot-collected `.bbappend` + `layer.conf` paths. See the
+    // yocto splice site right after `run_shared_walker_pilot`.
+
+    // Milestone 664 US1 T033 + US2 T036+: consolidated shared-walker
+    // registry for the migrated readers. Runs ONE walker over the
+    // scan tree instead of N. Placed before the first migrated
+    // reader's splice site so `shared_pilot` is in scope for every
+    // splice below.
+    //
+    // Both rpm + ipk configs must be built up-front here so the shared
+    // registry can pack them into their state slots.
+    let rpm_config = rpm_file::RpmReaderConfig {
+        cap_bytes: std::env::var("WAYBILL_MAX_RPM_BYTES")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .filter(|&v: &u64| v > 0)
+            .unwrap_or(rpm_file::DEFAULT_RPM_FILE_BYTES),
+        distro_override: std::env::var("WAYBILL_RPM_DISTRO")
+            .ok()
+            .filter(|s| !s.is_empty()),
+    };
+    let ipk_config = ipk_file::IpkReaderConfig::default();
+    let mut shared_pilot = run_shared_walker_pilot(
+        rootfs,
+        exclude_set,
+        include_dev,
+        include_vendored,
+        distro_version.as_deref(),
+        &ipk_config,
+        &rpm_config,
+        &mut diagnostics,
+        scan_mode,
+    );
+
+    // Milestone 664 US2 T059+T029: yocto::recipe::read moved down
+    // from its legacy position so it can consume pilot-collected
+    // `.bbappend` + `layer.conf` + `.bb` paths. T029 (2026-08-23)
+    // added `.bb` recipe paths — the last remaining scan-tree
+    // safe_walk in the yocto reader family. Emission-order preserved
+    // relative to downstream splices (pip / pants / etc. all follow this).
+    let yocto_layer_conf_precomputed = if shared_pilot.yocto_layer_conf_paths.is_empty() {
+        None
+    } else {
+        Some(std::mem::take(&mut shared_pilot.yocto_layer_conf_paths))
+    };
+    let yocto_bbappend_precomputed = if shared_pilot.yocto_bbappend_paths.is_empty() {
+        None
+    } else {
+        Some(std::mem::take(&mut shared_pilot.yocto_bbappend_paths))
+    };
+    let yocto_bb_precomputed = if shared_pilot.yocto_bb_paths.is_empty() {
+        None
+    } else {
+        Some(std::mem::take(&mut shared_pilot.yocto_bb_paths))
+    };
+    out.extend(yocto::recipe::read(
+        rootfs,
+        exclude_set,
+        yocto_layer_conf_precomputed,
+        yocto_bbappend_precomputed,
+        yocto_bb_precomputed,
+    ));
 
     // Python: venv dist-info + lockfiles + requirements.txt per R13 tiers.
     // No fail-closed: an empty Python section is fine if the scan root
     // doesn't contain any Python artefacts.
-    out.extend(pip::read(rootfs, include_dev, exclude_set));
+    // Milestone 664 US2 T036: pip splice from consolidated shared-walker pilot.
+    out.extend(std::mem::take(&mut shared_pilot.pip));
 
     // Milestone 223: Pants pex-lockfile reader — Python packages from
     // `3rdparty/python/*.lock` (default glob) + `pants.toml`-declared
@@ -1508,7 +1584,8 @@ pub fn read_all(
     // PURL-level dedup (lockfile-tier with hashes wins over pom-tier
     // without). No-op (empty return, no log) on repos without any
     // Pants coursier lockfiles per FR-007 / SC-003.
-    out.extend(pants_jvm::read(rootfs));
+    // Milestone 664 US2 T045: pants_jvm splice from shared-walker pilot.
+    out.extend(std::mem::take(&mut shared_pilot.pants_jvm));
 
     // Milestone 225: Pants shell reader — BUILD-file walker for
     // `shell_source` / `shell_sources` / `shunit2_test` /
@@ -1518,7 +1595,8 @@ pub fn read_all(
     // + `waybill:pants-target` annotation, plus design-tier
     // components for pinned tools. No-op (empty return, no log) on
     // repos without any Pants BUILD files AND no pants.toml.
-    out.extend(pants_shell::read(rootfs, exclude_set));
+    // Milestone 664 US2 T046: pants_shell splice from shared-walker pilot.
+    out.extend(std::mem::take(&mut shared_pilot.pants_shell));
 
     // Milestone 226: Pants Go — toolchain-pin emission only. The
     // BUILD-walker enrichment portion (attaching
@@ -1552,7 +1630,10 @@ pub fn read_all(
     // `Err` for callers that want to handle it explicitly; the
     // dispatcher just chooses warn-and-continue for the polyglot
     // safety case.
-    match npm::read(rootfs, include_dev, scan_mode, exclude_set) {
+    // Milestone 664 US2 T043: npm splice from shared-walker pilot.
+    // The shared_pilot.npm may be None (registration failed) — treat
+    // as empty-Ok in that case.
+    match shared_pilot.npm.take().unwrap_or_else(|| Ok(Vec::new())) {
         Ok(entries) => out.extend(entries),
         Err(npm::NpmError::LockfileV1Unsupported { path }) => {
             tracing::warn!(
@@ -1579,7 +1660,20 @@ pub fn read_all(
     // triggers the proxy-fetch path, so the headline US1 behavior works
     // even without the flag being threaded — T010 records this as a
     // known limitation.
-    let (golang_entries, go_signals) = golang::read(rootfs, include_dev, exclude_set);
+    // Milestone 664 US2 T058: thread pilot-collected go.mod paths so
+    // `golang::read` can skip its internal `candidate_project_roots`
+    // safe_walk. `None` on empty means legacy fallback still runs.
+    let golang_precomputed = if shared_pilot.golang_go_mod_paths.is_empty() {
+        None
+    } else {
+        Some(std::mem::take(&mut shared_pilot.golang_go_mod_paths))
+    };
+    let (golang_entries, go_signals) = golang::read(
+        rootfs,
+        include_dev,
+        exclude_set,
+        golang_precomputed,
+    );
     out.extend(golang_entries);
 
     // Milestone 061 (closes #119): propagate the Go ecosystem's
@@ -1650,48 +1744,38 @@ pub fn read_all(
     // the time go_binary iterates, and golang-owned `link`/`compile`/
     // `asm` tools (which ship with intentionally unreadable BuildInfo)
     // would leak as `pkg:generic/link` etc.
-    let (go_binary_entries, go_binary_main_modules) = go_binary::read(
+    // T057 (2026-08-23): go_binary splice from shared-walker pilot.
+    // Two-phase: pilot collected candidate paths above; here we run
+    // the read_binary probe with claimed sets available. `_include_dev`
+    // + `exclude_set` no longer needed since path discovery moved to
+    // the pilot. Fall back to legacy `read()` when the pilot pass
+    // produced zero candidates AND we're in a non-pilot code path
+    // (defensive — realistic scans always populate at least a few
+    // candidates from /usr/bin etc.).
+    let go_binary_paths = go_binary::GoBinaryDiscoveredPaths {
+        candidate_paths: std::mem::take(&mut shared_pilot.go_binary_candidate_paths),
+    };
+    let _ = include_dev;
+    let _ = exclude_set;
+    let (go_binary_entries, go_binary_main_modules) = go_binary::finalize(
+        go_binary_paths,
         rootfs,
-        include_dev,
         &claimed,
         #[cfg(unix)]
         &claimed_inodes,
-        exclude_set,
     );
     // Milestone 050: capture binary count BEFORE moving entries
     // into `out`, for the source-tree-no-binary scope hint emitted
     // after the G3/G4/G5 chain finishes.
     let go_binary_entries_count = go_binary_entries.len();
     out.extend(go_binary_entries);
-    // Milestone 004 US1: standalone `.rpm` artefact reader.
-    // Milestone 144: build per-scan `RpmReaderConfig` from env vars
-    // populated by `scan_cmd.rs` (`WAYBILL_MAX_RPM_BYTES`,
-    // `WAYBILL_RPM_DISTRO`) — same plumbing pattern as the existing
-    // `WAYBILL_INCLUDE_VENDORED` (milestone 102) and `WAYBILL_DEEP_HASH`
-    // (milestone 134) knobs; avoids churning the 75-callsite
-    // `scan_path -> read_all -> rpm_file::read` signature chain for
-    // a pair of scan-wide config values. Tests pass
-    // `&RpmReaderConfig::default()` directly via `rpm_file::read`'s
-    // explicit arg, bypassing env-var coupling.
-    let rpm_config = rpm_file::RpmReaderConfig {
-        cap_bytes: std::env::var("WAYBILL_MAX_RPM_BYTES")
-            .ok()
-            .and_then(|s| s.parse().ok())
-            .filter(|&v: &u64| v > 0)
-            .unwrap_or(rpm_file::DEFAULT_RPM_FILE_BYTES),
-        distro_override: std::env::var("WAYBILL_RPM_DISTRO")
-            .ok()
-            .filter(|s| !s.is_empty()),
-    };
-    out.extend(rpm_file::read(rootfs, distro_version.as_deref(), &rpm_config));
-    // Milestone 169 US1 (T013, closes #500): ipk archive-file reader.
-    // Analogous to rpm_file above — walks the scan target for `.ipk`
-    // files (build outputs at `tmp/deploy/ipk/` or downloaded OpenWrt
-    // feed artifacts) and emits `pkg:opkg/*` components. Sibling to
-    // the milestone-107 `opkg::read` installed-DB reader which fires
-    // separately at line ~1341.
-    let ipk_config = ipk_file::IpkReaderConfig::default();
-    out.extend(ipk_file::read(rootfs, &ipk_config));
+    // Milestone 664 US1 T033: rpm_file + ipk_file splices at their
+    // original read_all positions (splice source: shared_pilot bound
+    // earlier, before the pip splice). Order preserved to minimize
+    // diff surface + preserve any read_all-scoped positional
+    // dependencies with non-migrated readers.
+    out.extend(std::mem::take(&mut shared_pilot.rpm));
+    out.extend(std::mem::take(&mut shared_pilot.ipk));
 
     // Milestone 188 (#455) — Helm chart reader. Auto-detects
     // `<rootfs>/Chart.yaml` presence per research §R1. `HelmRenderMode`
@@ -1720,16 +1804,32 @@ pub fn read_all(
     // Milestone 004 US4: legacy BDB rpmdb reader (stub until T061–T065
     // land). Gated behind --include-legacy-rpmdb; no-op when flag unset.
     out.extend(rpmdb_bdb::read(rootfs, include_legacy_rpmdb));
-    let (maven_entries, scan_target_coord) = maven::read_with_claims(
-        rootfs,
-        include_dev,
-        include_declared_deps,
-        &claimed,
-        #[cfg(unix)]
-        &claimed_inodes,
-        scan_target_name,
-        exclude_set,
-    );
+    // T039 (2026-08-23): maven splice from shared-walker pilot.
+    // When the pilot ran, use pilot-collected pom/jar paths; otherwise
+    // fall back to the legacy safe_walk-based `read_with_claims`.
+    let (maven_entries, scan_target_coord) = match shared_pilot.maven_paths.take() {
+        Some(paths) => maven::finalize(
+            paths,
+            rootfs,
+            include_dev,
+            include_declared_deps,
+            &claimed,
+            #[cfg(unix)]
+            &claimed_inodes,
+            scan_target_name,
+            exclude_set,
+        ),
+        None => maven::read_with_claims(
+            rootfs,
+            include_dev,
+            include_declared_deps,
+            &claimed,
+            #[cfg(unix)]
+            &claimed_inodes,
+            scan_target_name,
+            exclude_set,
+        ),
+    };
     out.extend(maven_entries);
     // Milestone 106 US3 (closes #277): Gradle source-tree readers
     // (`gradle.lockfile` + `buildscript-gradle.lockfile`). Emits
@@ -1738,7 +1838,9 @@ pub fn read_all(
     // `LifecycleScope::Build` so the existing milestone-052 emission
     // path tags them `scope: "excluded"` (CDX) /
     // `BUILD_DEPENDENCY_OF` (SPDX 2.3) automatically.
-    out.extend(gradle::read(rootfs, exclude_set, &mut diagnostics));
+    // Milestone 664 US2 T041: gradle splice from shared-walker pilot.
+    // gradle::finalize() already wrote its summary into `diagnostics`.
+    out.extend(std::mem::take(&mut shared_pilot.gradle));
     // Milestone 122 US2: Kotlin DSL Gradle source-tree reader. Regex-
     // extracts deps from `build.gradle.kts` + resolves `libs.<alias>`
     // references against `gradle/libs.versions.toml` version catalogs.
@@ -1747,20 +1849,23 @@ pub fn read_all(
     // workspaces synthesize a `pkg:generic/<rootProject.name>@0.0.0`
     // workspace-root per FR-007. KMP source-set provenance rides
     // `waybill:kmp-source-set` as a JSON-encoded array per FR-006.
-    out.extend(kotlin_dsl::read(rootfs, include_dev, exclude_set));
+    // Milestone 664 US2 T042: kotlin_dsl splice from shared-walker pilot.
+    out.extend(std::mem::take(&mut shared_pilot.kotlin_dsl));
     // Milestone 122 US1: Swift Package Manager source-tree reader.
     // Parses `Package.resolved` lockfiles (v1/v2/v3 schema) and emits
     // `pkg:swift/<host>/<namespace>/<name>@<version>` PURLs per the
     // purl-spec swift type. `Package.swift` is detected (signals
     // SwiftPM project root) but never parsed for content in v0.1.
-    out.extend(swift::read(rootfs, exclude_set));
+    // Milestone 664 US2 T052: swift splice from shared-walker pilot.
+    out.extend(std::mem::take(&mut shared_pilot.swift));
     // Milestone 106 US4 (closes #275): NuGet source-tree reader for
     // `.csproj` / `.vbproj` / `.fsproj` with packages.lock.json
     // precedence, Directory.Packages.props (CPM) fallback, and
     // PrivateAssets-driven lifecycle-scope mapping. Emits
     // `pkg:nuget/<name>@<version>` PURLs feeding the existing
     // deps.dev enrichment path.
-    out.extend(nuget::read(rootfs, exclude_set));
+    // Milestone 664 US2 T044: nuget splice from shared-walker pilot.
+    out.extend(std::mem::take(&mut shared_pilot.nuget));
     // Cargo is fail-closed on v1/v2 lockfiles (FR-040), mirroring the
     // npm v1 refusal pattern.
     //
@@ -1768,40 +1873,57 @@ pub fn read_all(
     // `DivergenceRecord`s. They land in `diagnostics.divergence_records`
     // for downstream aggregation into the document-scope
     // `waybill:purl-collisions-detected` annotation.
-    let cargo_out = cargo::read(rootfs, include_dev, exclude_set)?;
+    // Milestone 664 US2 T037: cargo splice from consolidated
+    // shared-walker pilot. `shared_pilot.cargo` is an
+    // `Option<Result<CargoReadOutput, CargoError>>`; None here would
+    // indicate the cargo registration failed to build (already logged
+    // via warn), in which case we treat it as an empty output.
+    let cargo_out = shared_pilot
+        .cargo
+        .take()
+        .unwrap_or_else(|| Ok(cargo::CargoReadOutput::default()))?;
     out.extend(cargo_out.entries);
     diagnostics.divergence_records.extend(cargo_out.divergences);
-    out.extend(gem::read(rootfs, include_dev, exclude_set));
+    // Milestone 664 US2 T038: gem splice from shared-walker pilot.
+    out.extend(std::mem::take(&mut shared_pilot.gem));
 
     // Milestone 102: C/C++ source-tree readers (Bazel + CMake +
     // vcpkg + Conan). Skip-with-warn on parse errors per FR-015;
     // cross-platform (no `#[cfg(unix)]` per FR-013); zero new
     // Cargo deps (workspace `regex` + `serde_json` reused).
-    out.extend(bazel::read(rootfs));
-    out.extend(cmake::read(rootfs, include_vendored, exclude_set));
-    out.extend(vcpkg::read(rootfs));
-    out.extend(conan::read(rootfs));
+    // Milestone 664 US2 T055: bazel splice from shared-walker pilot.
+    out.extend(std::mem::take(&mut shared_pilot.bazel));
+    // Milestone 664 US2 T056: cmake splice from shared-walker pilot.
+    out.extend(std::mem::take(&mut shared_pilot.cmake));
+    // Milestone 664 US2 T053: vcpkg splice from shared-walker pilot.
+    out.extend(std::mem::take(&mut shared_pilot.vcpkg));
+    // Milestone 664 US2 T054: conan splice from shared-walker pilot.
+    out.extend(std::mem::take(&mut shared_pilot.conan));
 
     // Milestone 139: CocoaPods (iOS) ecosystem reader. One main-module
     // per project root (FR-012 + Q1 cascade) + lockfile-driven (FR-002)
     // + design-tier from Podfile (FR-005) + deployed-tier from
     // Pods/Manifest.lock (FR-006 + Q3). Subspecs encode via PURL
     // `#subpath` (per purl-spec). Zero new Cargo deps.
-    out.extend(cocoapods::read(rootfs, include_dev, exclude_set));
+    // Milestone 664 US2 T048: cocoapods splice from shared-walker pilot.
+    let _ = include_dev; // cocoapods reader ignores this arg.
+    out.extend(std::mem::take(&mut shared_pilot.cocoapods));
 
     // Milestone 138: PHP/Composer ecosystem reader. One main-module
     // per `composer.json` (FR-012) + lockfile-driven (FR-002) +
     // design-tier (FR-005) + deployed-tier (FR-006 via installed.json)
     // emission with lockfile-orphan drift detection. Pure-Rust JSON
     // via `serde_json`; zero new Cargo deps.
-    out.extend(composer::read(rootfs, include_dev, exclude_set));
+    // Milestone 664 US2 T049: composer splice from shared-walker pilot.
+    out.extend(std::mem::take(&mut shared_pilot.composer));
 
     // Milestone 137: Dart/Flutter pub ecosystem reader. One
     // main-module per `pubspec.yaml` (FR-012) + one component per
     // lockfile entry when sibling `pubspec.lock` present (FR-002);
     // design-tier fallback (FR-005) when lockfile absent. Pure-Rust
     // YAML via `serde_yaml`; zero new Cargo deps.
-    out.extend(dart::read(rootfs, include_dev, exclude_set));
+    // Milestone 664 US2 T050: dart splice from shared-walker pilot.
+    out.extend(std::mem::take(&mut shared_pilot.dart));
 
     // Milestone 140: Elixir/Mix ecosystem reader. One main-module
     // per `mix.exs` (FR-012) + lockfile-driven (FR-002) + design-tier
@@ -1811,7 +1933,8 @@ pub fn read_all(
     // path. Dual SHA-256 (inner + outer) emission per FR-011 + Q3.
     // Umbrella project handling per FR-009 + Q2. Conditional-flattened
     // design-tier extraction per Q1. Zero new Cargo deps.
-    out.extend(elixir::read(rootfs, include_dev, exclude_set));
+    // Milestone 664 US2 T051: elixir splice from shared-walker pilot.
+    out.extend(std::mem::take(&mut shared_pilot.elixir));
 
     // Erlang/OTP rebar3 ecosystem reader (milestone 141). Source-tier
     // emission from rebar.lock (FR-002) + design-tier fallback from
@@ -1825,7 +1948,9 @@ pub fn read_all(
     // annotation (required > included > optional precedence). Umbrella
     // project handling per FR-009 (one main-module per *.app.src). Zero
     // new Cargo deps.
-    out.extend(erlang::read(rootfs, include_dev, exclude_set));
+    // Milestone 664 US1 T033: erlang splice from consolidated
+    // shared-walker pilot (see run_shared_walker_pilot above).
+    out.extend(std::mem::take(&mut shared_pilot.erlang));
 
     // Scala/SBT ecosystem reader (milestone 142). Source-tier emission
     // from *.sbt.lock (FR-002 + Q3 content-shape gate) + design-tier
@@ -1838,7 +1963,9 @@ pub fn read_all(
     // from milestone 070); the Scala-version suffix (_2.13 / _3) is
     // part of the artifactId per Maven Central convention. SHA-256
     // hashes from schema-v2 checksums per FR-011. Zero new Cargo deps.
-    out.extend(scala::read(rootfs, include_dev, exclude_set));
+    // Milestone 664 US1 T033: scala splice from consolidated
+    // shared-walker pilot.
+    out.extend(std::mem::take(&mut shared_pilot.scala));
 
     // Haskell ecosystem reader (milestone 143). Source-tier emission
     // from cabal.project.freeze (FR-002) + stack.yaml.lock (FR-003 +
@@ -1850,7 +1977,9 @@ pub fn read_all(
     // Stackage snapshot placeholders. Q1 GHC boot-library annotation
     // (FR-014). Q2 multi-stanza union with most-binding-scope merging.
     // Q3 Hpack detect-and-warn (FR-015). Zero new Cargo deps.
-    out.extend(haskell::read(rootfs, include_dev, exclude_set));
+    // Milestone 664 US1 T033: haskell splice from consolidated
+    // shared-walker pilot.
+    out.extend(std::mem::take(&mut shared_pilot.haskell));
 
     // G3: when a scan produced BOTH `pkg:golang` source-tier entries
     // (from `golang.rs`'s go.sum parsing) AND `pkg:golang` analyzed-
@@ -1992,7 +2121,647 @@ pub fn read_all(
         claimed_inodes,
         diagnostics,
         scan_target_coord,
+        // Milestone 664 US2 T047: BUILD files collected by the pilot for
+        // `pants_go::enrich` (called from `scan_fs/mod.rs` outside
+        // `read_all`).
+        pants_go_build_files: std::mem::take(&mut shared_pilot.pants_go_build_files),
     })
+}
+
+/// Milestone 664 US1 T033 + US2 T036+: consolidated output of every
+/// reader migrated to the shared walker. `read_all` splices each Vec
+/// into its original emission point via `std::mem::take`.
+///
+/// Members added per migration task:
+/// - T033: haskell, erlang, scala, ipk, rpm (US1)
+/// - T036: pip (US2)
+/// - T037: cargo (US2) — cargo returns `Result<CargoReadOutput, CargoError>`,
+///   not `Vec<PackageDbEntry>`. Handled via the `cargo_output` field
+///   whose extraction path in `read_all` mirrors the legacy
+///   `cargo::read(...)` call semantics.
+/// - T042: kotlin_dsl (US2)
+/// - T041: gradle (US2) — first reader to use `on_dir` + sibling-lookup;
+///   also mutates `ScanDiagnostics` from finalize.
+/// - T038: gem (US2) — 4 legacy walker sites consolidated to 1
+///   registration via ancestor-path filtering in the callback.
+/// - T039: maven (US2) — returns `(entries, Option<ScanTargetCoord>)`.
+/// - T043: npm (US2) — outer project-root only per FR-005.
+/// - T044: nuget (US2) — 3 sub-modules consolidated (csproj/deps_json/pe_clr).
+/// - T045: pants_jvm (US2) — marker-detect only (no tree walker to
+///   consolidate); gates the fixed-root read on presence signals.
+/// - T046: pants_shell (US2) — collects `BUILD` files (replaces the
+///   m225 `pants_common::discover_build_files` safe_walk call). Per-
+///   target glob resolver in `target_resolver.rs` stays on safe_walk.
+/// - T047: pants_go (US2) — enrichment-only. Collects `BUILD` files
+///   (parallel dispatch alongside pants_shell) and threads them into
+///   `DbScanResult.pants_go_build_files` for `pants_go::enrich`,
+///   eliminating the previous pilot-plus-enrich double walk.
+/// - T048: cocoapods (US2) — 3 walker sites consolidated (`Podfile.lock`
+///   / `Manifest.lock` / `Podfile`); ancestor-path filter preserves
+///   the legacy per-walker `Pods/` + `DerivedData/` skip predicates.
+/// - T049: composer (US2) — Pass A (`composer.json`) consolidated;
+///   Pass B (`vendor/composer/installed.json`) stays on `safe_walk`
+///   because `vendor/` is in the shared walker's default skip set.
+/// - T050: dart (US2) — single walker (`pubspec.yaml`) consolidated;
+///   legacy skip set is a strict subset of the shared walker default
+///   so no ancestor-path filter is needed.
+/// - T051: elixir (US2) — 2 walkers consolidated (`mix.lock` +
+///   `mix.exs`); ancestor-path filter enforces `_build`/`deps`/
+///   `priv`/`cover` skips that are NOT in the shared walker default.
+/// - T052: swift (US2) — sibling-lookup via `on_dir`, records
+///   directories containing `Package.resolved` (source) or bare
+///   `Package.swift` (design warn-and-skip).
+/// - T053: vcpkg (US2) — marker-detect only (fixed-root scan of
+///   `vcpkg.json` at scan root); gates the O(1) read on presence
+///   signal plus fs-existence fallback.
+/// - T054: conan (US2) — marker-detect only (fixed-root scan of
+///   `conanfile.txt` + `conanfile.py` at scan root); same shape as
+///   T053 vcpkg.
+/// - T055: bazel (US2) — marker-detect only (fixed-root scan of
+///   `MODULE.bazel` / `WORKSPACE.bazel` / `WORKSPACE` at scan root).
+/// - T056: cmake (US2) — marker-detect only (subdir-targeted read of
+///   `CMakeLists.txt` + `cmake/` + `Modules/` + `third_party/`).
+///   Subdir-scoped `safe_walk` calls inside `discover_cmake_files`
+///   stay on legacy — analogous to FR-005 npm inner-tree escape hatch.
+/// - T058: golang (US2) — collects `go.mod` paths (replaces the
+///   `candidate_project_roots` safe_walk site inside `legacy::read`).
+///   Per-project-root `extract_go_package_main_directory_names`
+///   safe_walk stays on legacy.
+/// - T059: yocto_layers (US2) — collects `.bbappend` + `layer.conf`
+///   paths (replaces the two secondary yocto walkers). Primary `.bb`
+///   recipe walker stays on legacy (deferred T029).
+#[derive(Default)]
+struct SharedPilotOutput {
+    haskell: Vec<PackageDbEntry>,
+    erlang: Vec<PackageDbEntry>,
+    scala: Vec<PackageDbEntry>,
+    ipk: Vec<PackageDbEntry>,
+    rpm: Vec<PackageDbEntry>,
+    pip: Vec<PackageDbEntry>,
+    cargo: Option<Result<cargo::CargoReadOutput, cargo::CargoError>>,
+    kotlin_dsl: Vec<PackageDbEntry>,
+    gradle: Vec<PackageDbEntry>,
+    gem: Vec<PackageDbEntry>,
+    /// T039 (2026-08-23): maven paths threaded to `maven::finalize()`
+    /// in `read_all` (replaced the legacy `maven::read_with_claims`
+    /// call site). `Some(paths)` when the pilot ran + the maven reader
+    /// registered; `None` fallback → legacy safe_walk-based
+    /// `read_with_claims` still available for test callers.
+    maven_paths: Option<maven::MavenDiscoveredPaths>,
+    /// npm returns `Result<Vec<...>, NpmError>` — Option<Result<...>>
+    /// mirrors the cargo pattern.
+    npm: Option<Result<Vec<PackageDbEntry>, npm::NpmError>>,
+    nuget: Vec<PackageDbEntry>,
+    pants_jvm: Vec<PackageDbEntry>,
+    pants_shell: Vec<PackageDbEntry>,
+    /// Milestone 664 US2 T047: BUILD file paths collected for
+    /// `pants_go::enrich`. Not a component vector — this is post-
+    /// walker enrichment state threaded to `DbScanResult`.
+    pants_go_build_files: Vec<std::path::PathBuf>,
+    cocoapods: Vec<PackageDbEntry>,
+    composer: Vec<PackageDbEntry>,
+    dart: Vec<PackageDbEntry>,
+    elixir: Vec<PackageDbEntry>,
+    swift: Vec<PackageDbEntry>,
+    vcpkg: Vec<PackageDbEntry>,
+    conan: Vec<PackageDbEntry>,
+    bazel: Vec<PackageDbEntry>,
+    cmake: Vec<PackageDbEntry>,
+    /// Milestone 664 US2 T058: `go.mod` paths threaded to
+    /// `golang::read`'s new `precomputed_go_mod_paths` parameter to
+    /// skip the reader's internal `candidate_project_roots` walk.
+    golang_go_mod_paths: Vec<std::path::PathBuf>,
+    /// Milestone 664 US2 T059: `.bbappend` + `conf/layer.conf` paths
+    /// threaded to `yocto::recipe::read`'s new `precomputed_*_paths`
+    /// parameters to skip the two secondary yocto walkers.
+    yocto_bbappend_paths: Vec<std::path::PathBuf>,
+    yocto_layer_conf_paths: Vec<std::path::PathBuf>,
+    /// Milestone 664 US2 T029 (2026-08-23): `.bb` recipe paths threaded
+    /// to `yocto::recipe::read`'s new `precomputed_bb_paths` parameter
+    /// to skip the primary recipe walker (last scan-tree walker in the
+    /// yocto reader family).
+    yocto_bb_paths: Vec<std::path::PathBuf>,
+    /// T057 (2026-08-23): candidate binary paths (files matching size
+    /// plus non-intermediate-extension filter) for `go_binary::finalize`.
+    /// Two-phase: pilot collects paths; post-pilot finalize runs the
+    /// read_binary probe with `claimed_paths` and `claimed_inodes`
+    /// available from OS-package readers.
+    go_binary_candidate_paths: Vec<std::path::PathBuf>,
+}
+
+/// Milestone 664 US1 T033: build a single `ReaderRegistry` containing
+/// all 5 migrated pilot readers, run the shared walker once, extract
+/// per-reader outputs.
+///
+/// Design notes:
+/// - **Exclusion set**: uses the operator's `exclude_set` uniformly.
+///   Pre-T033, ipk_file + rpm_file ignored operator excludes (their
+///   discover_* passed `ExclusionSet::default()`); consolidation makes
+///   them honor operator excludes — a behavior EXPANSION but arguably
+///   more correct. If any golden diverges, we know the fixture depends
+///   on the legacy behavior; revisit then.
+/// - **Depth cap**: 16 = max across the 5 readers (rpm=16, others=12).
+///   Slight depth-cap expansion for the four <16 readers; test fixtures
+///   at depths 13-16 with these patterns are unlikely.
+/// - **Registration failures**: any single reader's `registration()`
+///   failing (glob compile / config error) logs a warn and yields an
+///   empty output for THAT reader only. The other 4 still run. If the
+///   registry `.build()` itself fails, all 5 fall back to empty.
+#[allow(clippy::too_many_arguments)] // Grows as readers migrate.
+fn run_shared_walker_pilot(
+    rootfs: &Path,
+    exclude_set: &exclude_path::ExclusionSet,
+    include_dev: bool,
+    include_vendored: bool,
+    distro_version: Option<&str>,
+    ipk_config: &ipk_file::IpkReaderConfig,
+    rpm_config: &rpm_file::RpmReaderConfig,
+    diagnostics: &mut ScanDiagnostics,
+    scan_mode: crate::scan_fs::ScanMode,
+) -> SharedPilotOutput {
+    use crate::scan_fs::walk_registry::{
+        ReaderId, ReaderRegistryBuilder, SharedWalker,
+    };
+
+    // Build the 5 registrations. Each failure logs + degrades gracefully
+    // to empty for its reader; other readers still participate.
+    let mut builder = ReaderRegistryBuilder::new();
+    let register = |reader_name: &'static str,
+                        reg: Result<
+                            crate::scan_fs::walk_registry::ReaderRegistration,
+                            anyhow::Error,
+                        >|
+     -> Option<crate::scan_fs::walk_registry::ReaderRegistration> {
+        match reg {
+            Ok(r) => Some(r),
+            Err(err) => {
+                tracing::warn!(
+                    reader = reader_name,
+                    error = %err,
+                    "shared-walker pilot: reader registration failed; falling back to empty for this reader",
+                );
+                None
+            }
+        }
+    };
+    if let Some(r) = register("haskell", haskell::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("erlang", erlang::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("scala", scala::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("ipk_file", ipk_file::registration(rootfs, ipk_config)) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register(
+        "rpm_file",
+        rpm_file::registration(rootfs, distro_version, rpm_config),
+    ) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("pip", pip::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("cargo", cargo::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("kotlin_dsl", kotlin_dsl::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("gradle", gradle::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("gem", gem::registration()) {
+        builder = builder.register(r);
+    }
+    // T039 (2026-08-23): maven now registered. Its `descend_into:
+    // ["target"]` opts into target/ descent per contract C10.
+    if let Some(r) = register("maven", maven::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("npm", npm::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("nuget", nuget::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("pants_jvm", pants_jvm::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("pants_shell", pants_shell::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("pants_go", pants_go::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("cocoapods", cocoapods::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("composer", composer::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("dart", dart::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("elixir", elixir::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("swift", swift::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("vcpkg", vcpkg::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("conan", conan::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("bazel", bazel::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("cmake", cmake::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("golang", golang::legacy::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("yocto_layers", yocto::registration()) {
+        builder = builder.register(r);
+    }
+    if let Some(r) = register("go_binary", go_binary::registration()) {
+        builder = builder.register(r);
+    }
+    // Milestone 664 T039 DEFERRED: maven registration NOT wired here.
+    // Reason: legacy `find_maven_artifacts` deliberately visits `target/`
+    // to find jars produced by `mvn package` with custom `finalName`
+    // configs. The shared walker's `should_skip_default_descent` skips
+    // `target/` uniformly across all readers, which breaks the
+    // `maven_target_dir_jar_with_mismatched_stem_is_emitted` fixture
+    // (scan_maven_executable_jar.rs). Migration requires either (a) a
+    // per-reader `descend_into` allowlist API extension, or (b) a
+    // hybrid split-walker design for maven. Deferred to a follow-on
+    // once the API extension pattern is settled.
+
+    let registry = match builder.build() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(
+                error = %err,
+                "shared-walker pilot: registry.build() failed; falling back to empty outputs across all 5 readers",
+            );
+            return SharedPilotOutput::default();
+        }
+    };
+
+    let mut walker = SharedWalker::new(rootfs, &registry, exclude_set).with_max_depth(16);
+    walker.run();
+    let mut per_reader = walker.finish();
+
+    // Haskell / erlang / scala accumulate paths in state, then finalize.
+    // Extract state via each reader's `extract_paths` + call `finalize`.
+    let haskell_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::HASKELL)
+        .map(|reg| {
+            let paths = haskell::extract_paths(reg);
+            haskell::finalize(paths, include_dev, exclude_set)
+        })
+        .unwrap_or_default();
+    let erlang_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::ERLANG)
+        .map(|reg| {
+            let paths = erlang::extract_paths(reg);
+            erlang::finalize(paths, include_dev, exclude_set)
+        })
+        .unwrap_or_default();
+    let scala_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::SCALA)
+        .map(|reg| {
+            let paths = scala::extract_paths(reg);
+            scala::finalize(paths, rootfs, include_dev, exclude_set)
+        })
+        .unwrap_or_default();
+
+    // Pip accumulates project-root dirs in state, then finalize()
+    // handles Tier-1 venv + Tier-2/3 lockfile emission.
+    let pip_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::PIP)
+        .map(|reg| {
+            let paths = pip::extract_paths(reg);
+            pip::finalize(rootfs, paths, include_dev, exclude_set)
+        })
+        .unwrap_or_default();
+
+    // Cargo returns Result<CargoReadOutput, CargoError>. Extract as-is
+    // so the caller can preserve legacy error-handling semantics.
+    let cargo_output: Option<Result<cargo::CargoReadOutput, cargo::CargoError>> =
+        registry
+            .registrations()
+            .iter()
+            .find(|r| r.reader_id == ReaderId::CARGO)
+            .map(|reg| {
+                let paths = cargo::extract_paths(reg);
+                cargo::finalize(paths, rootfs, include_dev, exclude_set)
+            });
+
+    // Kotlin DSL — same pattern as haskell/pip.
+    let kotlin_dsl_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::KOTLIN_DSL)
+        .map(|reg| {
+            let paths = kotlin_dsl::extract_paths(reg);
+            kotlin_dsl::finalize(paths, include_dev, exclude_set)
+        })
+        .unwrap_or_default();
+
+    // Gradle — first reader with on_dir + sibling-lookup + diagnostics
+    // mutation. finalize() writes to `diagnostics.gradle_scan_summary`.
+    let gradle_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::GRADLE)
+        .map(|reg| {
+            let paths = gradle::extract_paths(reg);
+            gradle::finalize(paths, rootfs, exclude_set, diagnostics)
+        })
+        .unwrap_or_default();
+
+    // Gem — 4-walker consolidation via ancestor-path filtering.
+    let gem_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::GEM)
+        .map(|reg| {
+            let paths = gem::extract_paths(reg);
+            gem::finalize(paths, rootfs, include_dev, exclude_set)
+        })
+        .unwrap_or_default();
+
+    // T039 (2026-08-23): maven paths from the pilot. `read_all`
+    // consumes these + calls `maven::finalize()` (instead of the
+    // legacy `maven::read_with_claims`) to eliminate the last
+    // scan-tree safe_walk on the maven path.
+    let maven_paths: Option<maven::MavenDiscoveredPaths> = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::MAVEN)
+        .map(maven::extract_paths);
+
+    // Npm — outer project-root discovery. Inner node_modules/** walk
+    // stays on legacy safe_walk per FR-005 (called inside finalize
+    // via read_node_modules).
+    let npm_output = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::NPM)
+        .map(|reg| {
+            let paths = npm::extract_paths(reg);
+            npm::finalize(paths, rootfs, include_dev, scan_mode, exclude_set)
+        });
+
+    // Nuget — 3 sub-modules consolidated (csproj/vbproj/fsproj +
+    // deps.json + dll paths).
+    let nuget_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::NUGET)
+        .map(|reg| {
+            let paths = nuget::extract_paths(reg);
+            nuget::finalize(paths, rootfs, exclude_set)
+        })
+        .unwrap_or_default();
+
+    // Pants coursier-JVM — marker-detect only; finalize gates the
+    // fixed-root read (3rdparty/jvm/*.lock + pants.toml) on the marker
+    // flag plus a defensive fs-existence fallback.
+    let pants_jvm_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::PANTS_JVM)
+        .map(|reg| {
+            let marker = pants_jvm::extract_marker(reg);
+            pants_jvm::finalize(marker, rootfs)
+        })
+        .unwrap_or_default();
+
+    // Pants shell — collects BUILD files during the shared descent;
+    // finalize runs the m225 pipeline over the precomputed set + reads
+    // pants.toml directly at scan root.
+    let pants_shell_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::PANTS_SHELL)
+        .map(|reg| {
+            let paths = pants_shell::extract_paths(reg);
+            pants_shell::finalize(paths, rootfs, exclude_set)
+        })
+        .unwrap_or_default();
+
+    // Pants Go — enrichment-only. Collects BUILD files in parallel
+    // with pants_shell (both dispatch on the same basename); the
+    // returned Vec threads to `DbScanResult.pants_go_build_files` so
+    // `pants_go::enrich` (called from `scan_fs/mod.rs` outside
+    // `read_all`) skips the m226 double-walk.
+    let pants_go_build_files = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::PANTS_GO)
+        .map(|reg| pants_go::extract_paths(reg).build_files)
+        .unwrap_or_default();
+
+    // Cocoapods — 3 walker sites consolidated; finalize runs the 3-pass
+    // pipeline over the precomputed paths.
+    let cocoapods_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::COCOAPODS)
+        .map(|reg| {
+            let paths = cocoapods::extract_paths(reg);
+            cocoapods::finalize(paths, rootfs)
+        })
+        .unwrap_or_default();
+
+    // Composer — Pass A consolidated (`composer.json`); Pass B stays
+    // on `safe_walk` for `vendor/composer/installed.json` since the
+    // shared walker skips `vendor/` by default.
+    let composer_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::COMPOSER)
+        .map(|reg| {
+            let paths = composer::extract_paths(reg);
+            composer::finalize(paths, rootfs, exclude_set)
+        })
+        .unwrap_or_default();
+
+    // Dart — single walker (`pubspec.yaml`) consolidated.
+    let dart_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::DART)
+        .map(|reg| {
+            let paths = dart::extract_paths(reg);
+            dart::finalize(paths, rootfs, include_dev)
+        })
+        .unwrap_or_default();
+
+    // Elixir — 2 walkers consolidated (`mix.lock` + `mix.exs`) with
+    // ancestor-path filter for `_build`/`deps`/`priv`/`cover`.
+    let elixir_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::ELIXIR)
+        .map(|reg| {
+            let paths = elixir::extract_paths(reg);
+            elixir::finalize(paths, rootfs)
+        })
+        .unwrap_or_default();
+
+    // Swift — sibling-lookup `on_dir` records SwiftPM project roots.
+    let swift_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::SWIFT)
+        .map(|reg| {
+            let paths = swift::extract_paths(reg);
+            swift::finalize(paths)
+        })
+        .unwrap_or_default();
+
+    // Vcpkg — marker-detect only; finalize gates the fixed-root read
+    // (`vcpkg.json` at scan root) on the marker flag + fs fallback.
+    let vcpkg_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::VCPKG)
+        .map(|reg| {
+            let marker = vcpkg::extract_marker(reg);
+            vcpkg::finalize(marker, rootfs)
+        })
+        .unwrap_or_default();
+
+    // Conan — marker-detect only; finalize gates the fixed-root read
+    // (`conanfile.txt` + `conanfile.py` at scan root) on the marker
+    // flag + fs fallback.
+    let conan_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::CONAN)
+        .map(|reg| {
+            let marker = conan::extract_marker(reg);
+            conan::finalize(marker, rootfs)
+        })
+        .unwrap_or_default();
+
+    // Bazel — marker-detect only; finalize gates the fixed-root read
+    // (`MODULE.bazel` / `WORKSPACE.bazel` / `WORKSPACE` at scan root)
+    // on the marker flag + fs fallback.
+    let bazel_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::BAZEL)
+        .map(|reg| {
+            let marker = bazel::extract_marker(reg);
+            bazel::finalize(marker, rootfs)
+        })
+        .unwrap_or_default();
+
+    // CMake — marker-detect only; the subdir-scoped safe_walk of
+    // `cmake/`/`Modules/`/`third_party/` inside `cmake::read` stays
+    // on legacy (targeted per-subdir glob, analogous to FR-005 npm
+    // inner-tree escape hatch). Finalize gates the subdir-existence
+    // checks on the marker flag + fs fallback.
+    let cmake_entries = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::CMAKE)
+        .map(|reg| {
+            let marker = cmake::extract_marker(reg);
+            cmake::finalize(marker, rootfs, include_vendored, exclude_set)
+        })
+        .unwrap_or_default();
+
+    // Golang — collects `go.mod` paths for `legacy::read`'s
+    // `precomputed_go_mod_paths` parameter (skips the internal
+    // `candidate_project_roots` safe_walk).
+    let golang_go_mod_paths = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::GOLANG)
+        .map(|reg| golang::legacy::extract_paths(reg).go_mod_paths)
+        .unwrap_or_default();
+
+    // Yocto layers — collects `.bbappend` + `conf/layer.conf` paths
+    // for `recipe::read`'s two `precomputed_*_paths` parameters
+    // (skips the two secondary yocto walkers).
+    let yocto_paths = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::YOCTO_LAYERS)
+        .map(yocto::extract_paths)
+        .unwrap_or_default();
+    let yocto_bbappend_paths = yocto_paths.bbappend_paths;
+    let yocto_layer_conf_paths = yocto_paths.layer_conf_paths;
+    // T029 (2026-08-23): `.bb` recipe paths for the primary recipe walker.
+    let yocto_bb_paths = yocto_paths.bb_paths;
+
+    // T057 (2026-08-23): candidate binary paths from the pilot.
+    // Post-pilot `go_binary::finalize()` runs the read_binary probe
+    // once `claimed_paths` + `claimed_inodes` are available.
+    let go_binary_candidate_paths = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::GO_BINARY)
+        .map(|reg| go_binary::extract_paths(reg).candidate_paths)
+        .unwrap_or_default();
+
+    // Ipk / rpm push entries directly in-callback; already in the walker's
+    // per-reader output map.
+    let ipk_entries = per_reader.remove(&ReaderId::IPK_FILE).unwrap_or_default();
+    let rpm_entries = per_reader.remove(&ReaderId::RPM_FILE).unwrap_or_default();
+
+    SharedPilotOutput {
+        haskell: haskell_entries,
+        erlang: erlang_entries,
+        scala: scala_entries,
+        ipk: ipk_entries,
+        rpm: rpm_entries,
+        pip: pip_entries,
+        cargo: cargo_output,
+        kotlin_dsl: kotlin_dsl_entries,
+        gradle: gradle_entries,
+        gem: gem_entries,
+        maven_paths,
+        npm: npm_output,
+        nuget: nuget_entries,
+        pants_jvm: pants_jvm_entries,
+        pants_shell: pants_shell_entries,
+        pants_go_build_files,
+        cocoapods: cocoapods_entries,
+        composer: composer_entries,
+        dart: dart_entries,
+        elixir: elixir_entries,
+        swift: swift_entries,
+        vcpkg: vcpkg_entries,
+        conan: conan_entries,
+        bazel: bazel_entries,
+        cmake: cmake_entries,
+        golang_go_mod_paths,
+        yocto_bbappend_paths,
+        yocto_layer_conf_paths,
+        yocto_bb_paths,
+        go_binary_candidate_paths,
+    }
 }
 
 /// Milestone 169 T030 (US4 FR-016): partition emissions by

@@ -24,6 +24,7 @@
 
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
 use waybill_common::types::license::SpdxExpression;
 use waybill_common::types::purl::{encode_purl_segment, Purl};
@@ -32,6 +33,11 @@ use waybill_common::types::purl::{encode_purl_segment, Purl};
 // directory promotion. Import via crate-absolute path so the reference
 // is unambiguous regardless of where this module nests in the tree.
 use crate::scan_fs::package_db::PackageDbEntry;
+
+// Milestone 664 US2 T058: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, SharedWalkerContext,
+};
 
 /// Max depth for the recursive project-root search. Matches the npm
 /// walker's budget — enough to cover monorepo shapes without running
@@ -1166,6 +1172,12 @@ fn extract_go_package_main_directory_names(project_root: &Path) -> Vec<String> {
 
     let mut dirs_with_main: std::collections::BTreeSet<std::path::PathBuf> =
         std::collections::BTreeSet::new();
+    // FR-005 permanent escape hatch — this walker cannot migrate to
+    // walk_registry because it's a per-project-root subwalker bounded
+    // to a single project subtree (called once per discovered
+    // `go.mod` dir to enumerate `package main` directories). The
+    // shared walker runs once across the scan tree; this walker runs
+    // N times, one per project. Milestone 664 US2 T058.
     crate::scan_fs::walk::safe_walk(project_root, &cfg, |path| {
         if !path.is_file() {
             return;
@@ -1604,6 +1616,7 @@ pub fn read(
     rootfs: &Path,
     _include_dev: bool,
     exclude_set: &super::super::exclude_path::ExclusionSet,
+    precomputed_go_mod_paths: Option<Vec<PathBuf>>,
 ) -> (Vec<PackageDbEntry>, GoScanSignals) {
     let mut out: Vec<PackageDbEntry> = Vec::new();
     let mut seen_purls: HashSet<String> = HashSet::new();
@@ -1631,8 +1644,13 @@ pub fn read(
     // build the union of known module paths BEFORE the import-scan
     // pass. The production-import filter (G4) needs to longest-
     // prefix-match import strings against this union.
-    let (project_roots, toolchain_roots_detected) =
-        candidate_project_roots(rootfs, exclude_set);
+    // Milestone 664 US2 T058: when the shared-walker pilot ran
+    // upstream, use the precomputed go.mod list. Fall back to
+    // safe_walk-driven discovery for legacy direct callers.
+    let (project_roots, toolchain_roots_detected) = match precomputed_go_mod_paths {
+        Some(paths) => candidate_project_roots_from_paths(paths),
+        None => candidate_project_roots(rootfs, exclude_set),
+    };
     // Milestone 217 (waybill#631): capture any observed Go-toolchain
     // roots for the C136 doc-scope annotation. Empty vec when no
     // toolchain was observed (typical case) — the caller wraps this
@@ -2623,6 +2641,137 @@ fn parse_import_line(line: &str) -> Option<String> {
     Some(after[..quote_end].to_string())
 }
 
+/// Milestone 664 US2 T058: shared-walker discovery state. Collects
+/// `go.mod` paths passing the legacy-parity ancestor-path filter.
+#[derive(Default, Debug)]
+pub(crate) struct GolangDiscoveredPaths {
+    pub(crate) go_mod_paths: Vec<PathBuf>,
+}
+
+/// True iff any ancestor of `path` (a) has basename `testdata`, (b)
+/// has basename starting with `_`, or (c) participates in a
+/// `go/pkg/mod` 3-component sliding window. Mirrors legacy
+/// `should_skip_descent` for the ancestors of matched `go.mod` files.
+fn go_mod_ancestor_filter(path: &Path) -> bool {
+    let components: Vec<&str> = path
+        .components()
+        .filter_map(|c| c.as_os_str().to_str())
+        .collect();
+    // Iterate over ancestor dir names (all but the last component,
+    // which is `go.mod` itself).
+    for name in &components[..components.len().saturating_sub(1)] {
+        if name.starts_with('_') || *name == "testdata" {
+            return true;
+        }
+    }
+    for window in components.windows(3) {
+        if window == ["go", "pkg", "mod"] {
+            return true;
+        }
+    }
+    false
+}
+
+fn on_go_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    if path.file_name().and_then(|s| s.to_str()) != Some("go.mod") {
+        return;
+    }
+    if go_mod_ancestor_filter(path) {
+        return;
+    }
+    let Some(state) = ctx.state::<Mutex<GolangDiscoveredPaths>>(ReaderId::GOLANG) else {
+        return;
+    };
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    guard.go_mod_paths.push(path.to_path_buf());
+}
+
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns(&["**/go.mod"])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::GOLANG,
+        state: Some(Arc::new(Mutex::new(GolangDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_go_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> GolangDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return GolangDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<GolangDiscoveredPaths>>() else {
+        return GolangDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Convert a precomputed list of `go.mod` paths (from the shared-walker
+/// pilot) into the same `(candidates, toolchain_roots)` tuple that
+/// `candidate_project_roots` produces. Runs the `module std` / `module
+/// cmd` classification inline against each `go.mod`.
+fn candidate_project_roots_from_paths(
+    mut go_mod_paths: Vec<PathBuf>,
+) -> (Vec<PathBuf>, Vec<PathBuf>) {
+    // Deterministic order — safe_walk was not sorted, but the callers'
+    // downstream (parsed_roots.iter, known_modules union build) is
+    // order-invariant. Sort defensively so pilot vs legacy paths emit
+    // per-project log lines in the same order.
+    go_mod_paths.sort();
+    let mut out = Vec::new();
+    let mut toolchain_roots: Vec<PathBuf> = Vec::new();
+    for go_mod_path in &go_mod_paths {
+        let Some(dir) = go_mod_path.parent() else {
+            continue;
+        };
+        // Milestone 217 (waybill#631): mirror the toolchain-detection
+        // classification from `candidate_project_roots` verbatim.
+        if let Ok(text) = std::fs::read_to_string(go_mod_path) {
+            let doc = parse_go_mod(&text);
+            match doc.module_path.as_deref() {
+                Some("std") => {
+                    tracing::debug!(
+                        path = %go_mod_path.display(),
+                        module = "std",
+                        "gorooted-stdlib go.mod skipped (waybill#631)"
+                    );
+                    if let Some(root) = go_mod_path.parent().and_then(|p| p.parent()) {
+                        toolchain_roots.push(root.to_path_buf());
+                    }
+                    continue;
+                }
+                Some("cmd") => {
+                    tracing::debug!(
+                        path = %go_mod_path.display(),
+                        module = "cmd",
+                        "gorooted-cmd go.mod skipped (waybill#631)"
+                    );
+                    if let Some(root) = go_mod_path
+                        .parent()
+                        .and_then(|p| p.parent())
+                        .and_then(|p| p.parent())
+                    {
+                        toolchain_roots.push(root.to_path_buf());
+                    }
+                    continue;
+                }
+                _ => {}
+            }
+        }
+        out.push(dir.to_path_buf());
+    }
+    (out, toolchain_roots)
+}
+
 /// Milestone 114: delegates to `scan_fs::walk::safe_walk`. The Go
 /// walker preserves the milestone-113 unconditional `testdata/`/`_`-
 /// prefix skips via `should_skip_descent` (which takes `&Path`,
@@ -3444,7 +3593,7 @@ tool (
     #[test]
     fn read_empty_rootfs_returns_zero() {
         let dir = tempfile::tempdir().unwrap();
-        let (entries, _signals) = read(dir.path(), false, &Default::default());
+        let (entries, _signals) = read(dir.path(), false, &Default::default(), None);
         assert!(entries.is_empty());
     }
 
@@ -3474,7 +3623,7 @@ tool (
         )
         .unwrap();
 
-        let (entries, _) = read(dir.path(), false, &Default::default());
+        let (entries, _) = read(dir.path(), false, &Default::default(), None);
 
         // The tool's enclosing module is emitted as a component
         // (from go.sum).
@@ -3545,7 +3694,7 @@ tool (
         .unwrap();
         std::fs::write(svc.join("go.sum"), "github.com/x/y v1.0.0 h1:ok=\n")
             .unwrap();
-        let (entries, _) = read(dir.path(), false, &Default::default());
+        let (entries, _) = read(dir.path(), false, &Default::default(), None);
         // Milestone 053: the workspace root IS now emitted as a
         // synthetic main-module component (per FR-001), tagged with
         // `waybill:component-role: main-module`. Pre-053 the
@@ -3595,7 +3744,7 @@ tool (
         let cache =
             dir.path().join("root/go/pkg/mod/github.com/foo/bar@v1.0.0");
         write_go_project(&cache, "github.com/foo/bar", &[("github.com/x/y", "v2.0.0")]);
-        let (entries, _) = read(dir.path(), false, &Default::default());
+        let (entries, _) = read(dir.path(), false, &Default::default(), None);
         assert!(
             entries.is_empty(),
             "walker must skip /root/go/pkg/mod cache tree: {entries:?}",
@@ -3608,7 +3757,7 @@ tool (
         let cache =
             dir.path().join("home/alice/go/pkg/mod/github.com/foo/bar@v1.0.0");
         write_go_project(&cache, "github.com/foo/bar", &[("github.com/x/y", "v2.0.0")]);
-        let (entries, _) = read(dir.path(), false, &Default::default());
+        let (entries, _) = read(dir.path(), false, &Default::default(), None);
         assert!(
             entries.is_empty(),
             "walker must skip $HOME/go/pkg/mod cache tree: {entries:?}",
@@ -3622,7 +3771,7 @@ tool (
         let dir = tempfile::tempdir().unwrap();
         let app = dir.path().join("app");
         write_go_project(&app, "example.com/app", &[("github.com/real/dep", "v1.2.3")]);
-        let (entries, _) = read(dir.path(), false, &Default::default());
+        let (entries, _) = read(dir.path(), false, &Default::default(), None);
         assert!(
             entries.iter().any(|e| e.name == "github.com/real/dep"),
             "legitimate project root must still emit: {entries:?}",
@@ -3638,7 +3787,7 @@ tool (
             .path()
             .join("workspace/go/pkg/mod/github.com/foo/bar@v1.0.0");
         write_go_project(&cache, "github.com/foo/bar", &[("github.com/x/y", "v2.0.0")]);
-        let (entries, _) = read(dir.path(), false, &Default::default());
+        let (entries, _) = read(dir.path(), false, &Default::default(), None);
         assert!(
             entries.is_empty(),
             "walker must skip /workspace/go/pkg/mod cache tree: {entries:?}",
@@ -3662,7 +3811,7 @@ tool (
             "example.com/fixture",
             &[("example.com/app", "v0.0.0-fake")],
         );
-        let (entries, _) = read(dir.path(), false, &Default::default());
+        let (entries, _) = read(dir.path(), false, &Default::default(), None);
         assert!(
             entries.iter().any(|e| e.name == "example.com/app"),
             "real workspace must still emit: {entries:?}",
@@ -3683,7 +3832,7 @@ tool (
         write_go_project(&real, "example.com/app", &[("github.com/real/dep", "v1.0.0")]);
         let archived = real.join("_archive/oldproject");
         write_go_project(&archived, "example.com/archived", &[]);
-        let (entries, _) = read(dir.path(), false, &Default::default());
+        let (entries, _) = read(dir.path(), false, &Default::default(), None);
         assert!(
             entries.iter().any(|e| e.name == "example.com/app"),
             "real workspace must still emit: {entries:?}",

@@ -124,6 +124,20 @@ fn strip_quotes(raw: &str) -> &str {
     trimmed
 }
 
+/// Milestone 664 US2 T059: same as `build_index` but consumes a
+/// precomputed path list from the shared-walker pilot. The
+/// callback-side canonical-layout filter (parent basename == `conf`)
+/// is enforced at collection time; this helper just parses.
+pub(crate) fn build_index_from_paths(paths: Vec<PathBuf>) -> Vec<LayerConf> {
+    let mut out: Vec<LayerConf> = Vec::new();
+    let mut sorted = paths;
+    sorted.sort();
+    for path in &sorted {
+        out.extend(parse(path));
+    }
+    out
+}
+
 /// Walk the scan tree for `conf/layer.conf` files; parse each into
 /// one or more `LayerConf` entries. Bounded to depth 8 to match the
 /// other Yocto-readers' convention.

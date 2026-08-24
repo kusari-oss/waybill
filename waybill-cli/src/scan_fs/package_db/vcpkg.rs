@@ -13,11 +13,17 @@
 //! No new Cargo deps — uses workspace `serde` + `serde_json`.
 
 use std::path::Path;
+use std::sync::{Arc, Mutex};
 
 use waybill_common::types::purl::{encode_purl_segment, Purl};
 use serde::Deserialize;
 
 use super::PackageDbEntry;
+
+// Milestone 664 US2 T053: shared-walker marker-detect registration.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, SharedWalkerContext,
+};
 
 const VCPKG_MANIFEST: &str = "vcpkg.json";
 
@@ -53,6 +59,70 @@ enum Dependency {
 struct Override {
     name: String,
     version: String,
+}
+
+/// Milestone 664 US2 T053: marker-detect state. Vcpkg has no tree
+/// walker (fixed-root scan); its shared-walker registration exists
+/// only to record whether ANY `vcpkg.json` was seen during descent.
+/// Finalize gates the O(1) `read()` on the flag + defensive fs
+/// fallback so non-vcpkg repos save the manifest-path stat.
+#[derive(Default, Debug)]
+pub(crate) struct VcpkgMarkerState {
+    pub(crate) seen: bool,
+}
+
+fn on_vcpkg_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    if path.file_name().and_then(|s| s.to_str()) != Some(VCPKG_MANIFEST) {
+        return;
+    }
+    let Some(state) = ctx.state::<Mutex<VcpkgMarkerState>>(ReaderId::VCPKG) else {
+        return;
+    };
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    guard.seen = true;
+}
+
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns(&["**/vcpkg.json"])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::VCPKG,
+        state: Some(Arc::new(Mutex::new(VcpkgMarkerState::default()))),
+        patterns,
+        on_file: Some(on_vcpkg_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+pub(crate) fn extract_marker(registration: &ReaderRegistration) -> VcpkgMarkerState {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return VcpkgMarkerState::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<VcpkgMarkerState>>() else {
+        return VcpkgMarkerState::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+/// Post-walker entry — gates the O(1) fixed-root read on marker
+/// presence + defensive fs-existence fallback (preserves FR-006
+/// byte-identity for pathological layouts where the walker missed
+/// the manifest via exclusion or symlink resolution).
+pub(crate) fn finalize(
+    marker: VcpkgMarkerState,
+    scan_root: &Path,
+) -> Vec<PackageDbEntry> {
+    if !marker.seen && !scan_root.join(VCPKG_MANIFEST).is_file() {
+        return Vec::new();
+    }
+    read(scan_root)
 }
 
 /// Walk `scan_root` for `vcpkg.json` and emit one `PackageDbEntry`

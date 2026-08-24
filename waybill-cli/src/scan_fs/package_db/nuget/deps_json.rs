@@ -78,11 +78,18 @@ struct LibraryEntry {
 /// Returns empty when no `.deps.json` files are found — single-language
 /// images (pure-Go, pure-Python) see this as a no-op and pay zero
 /// SBOM bytes for the new reader.
+/// Legacy `pub fn read()` — retained during FR-004 coexistence.
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
     exclude_set: &super::super::exclude_path::ExclusionSet,
 ) -> Vec<PackageDbEntry> {
     let deps_files = collect_deps_json_files(rootfs, exclude_set);
+    finalize(deps_files, rootfs)
+}
+
+/// Post-walker entry — takes precomputed `.deps.json` paths.
+pub(super) fn finalize(deps_files: Vec<PathBuf>, rootfs: &Path) -> Vec<PackageDbEntry> {
     if deps_files.is_empty() {
         return Vec::new();
     }
@@ -95,7 +102,7 @@ pub fn read(
 
 /// Milestone 114 routing: walk via `safe_walk` for `*.deps.json`
 /// extension. Skip default-descent skips (e.g. `.git/`, `target/`).
-fn collect_deps_json_files(
+pub(super) fn collect_deps_json_files(
     rootfs: &Path,
     exclude_set: &super::super::exclude_path::ExclusionSet,
 ) -> Vec<PathBuf> {

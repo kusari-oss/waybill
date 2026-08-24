@@ -38,6 +38,110 @@ use super::PackageDbEntry;
 use settings::SettingsScript;
 use version_catalog::VersionCatalog;
 
+// Milestone 664 US2 T042: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns, ReaderId, ReaderRegistration, ReaderRegistryBuilder,
+    SharedWalker, SharedWalkerContext,
+};
+use std::sync::{Arc, Mutex};
+
+/// Per-scan state — three separate vectors matching the legacy walker's
+/// output shape. Callback dispatches by basename + parent-dir check
+/// (`libs.versions.toml` is only meaningful under `gradle/`).
+#[derive(Default, Debug)]
+pub(crate) struct KotlinDslDiscoveredPaths {
+    pub(crate) settings_files: Vec<PathBuf>,
+    pub(crate) build_files: Vec<PathBuf>,
+    pub(crate) catalog_files: Vec<PathBuf>,
+}
+
+fn on_kotlin_dsl_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(state) = ctx.state::<Mutex<KotlinDslDiscoveredPaths>>(ReaderId::KOTLIN_DSL) else {
+        return;
+    };
+    let Some(name) = path.file_name().and_then(|s| s.to_str()) else { return };
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    let parent_basename = path
+        .parent()
+        .and_then(|p| p.file_name())
+        .and_then(|s| s.to_str());
+    match name {
+        "settings.gradle.kts" => guard.settings_files.push(path.to_path_buf()),
+        "build.gradle.kts" => guard.build_files.push(path.to_path_buf()),
+        // Legacy shape: `<project_dir>/gradle/libs.versions.toml`.
+        // Filter by parent-dir basename to preserve behavior.
+        "libs.versions.toml" if parent_basename == Some("gradle") => {
+            guard.catalog_files.push(path.to_path_buf());
+        }
+        _ => {}
+    }
+}
+
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns(&[
+        "**/settings.gradle.kts",
+        "**/build.gradle.kts",
+        "**/libs.versions.toml",
+    ])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::KOTLIN_DSL,
+        state: Some(Arc::new(Mutex::new(KotlinDslDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_kotlin_dsl_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> KotlinDslDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return KotlinDslDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<KotlinDslDiscoveredPaths>>() else {
+        return KotlinDslDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+#[allow(dead_code)]
+pub(crate) fn build_and_run(
+    rootfs: &Path,
+    include_dev: bool,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    let reg = match registration() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(error = %err, "kotlin_dsl: registration() failed");
+            return Vec::new();
+        }
+    };
+    let registry = match ReaderRegistryBuilder::new().register(reg).build() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(error = %err, "kotlin_dsl: build() failed");
+            return Vec::new();
+        }
+    };
+    let mut walker = SharedWalker::new(rootfs, &registry, exclude_set).with_max_depth(8);
+    walker.run();
+    let _ = walker.finish();
+    let kd_reg = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::KOTLIN_DSL)
+        .expect("kotlin_dsl registration must be present");
+    let paths = extract_paths(kd_reg);
+    finalize(paths, include_dev, exclude_set)
+}
+
 /// Tracks which KMP source-set(s) declared each PURL. Per FR-006
 /// timing contract: the reader emits one `PackageDbEntry` per
 /// `(dep × source-set)` pre-dedup; this tracker collects the merged
@@ -89,6 +193,8 @@ impl KmpSourceSetTracker {
 /// components drop from the output; when `true`, they emit. The
 /// dispatcher threads the `--include-declared-deps` flag here (auto-on
 /// for `--path`, opt-in for `--image`).
+/// Legacy `pub fn read()` — retained during FR-004 coexistence.
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
     include_dev: bool,
@@ -130,6 +236,35 @@ pub fn read(
             catalog_files.push(cat);
         }
     });
+
+    let paths = KotlinDslDiscoveredPaths {
+        settings_files,
+        build_files,
+        catalog_files,
+    };
+    finalize(paths, include_dev, exclude_set)
+}
+
+/// Post-walker entry — takes discovered paths and runs the emission
+/// pipeline.
+pub(crate) fn finalize(
+    paths: KotlinDslDiscoveredPaths,
+    include_dev: bool,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    let _ = exclude_set;
+    let KotlinDslDiscoveredPaths {
+        mut settings_files,
+        mut build_files,
+        mut catalog_files,
+    } = paths;
+
+    // Defensive sort — shared walker sorts per-dir but cross-dir order
+    // depends on descent; legacy discover sorted implicitly via
+    // safe_walk deterministic order.
+    settings_files.sort();
+    build_files.sort();
+    catalog_files.sort();
 
     if settings_files.is_empty() && build_files.is_empty() {
         return Vec::new();

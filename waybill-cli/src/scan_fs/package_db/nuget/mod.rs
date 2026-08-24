@@ -43,35 +43,171 @@ use waybill_common::types::purl::{encode_purl_segment, Purl};
 
 use super::PackageDbEntry;
 
+// Milestone 664 US2 T044: shared-walker migration types.
+use crate::scan_fs::walk_registry::{
+    globset_from_patterns_case_insensitive, ReaderId, ReaderRegistration,
+    ReaderRegistryBuilder, SharedWalker, SharedWalkerContext,
+};
+use std::sync::{Arc, Mutex};
+
 const PROJECT_EXTENSIONS: &[&str] = &["csproj", "vbproj", "fsproj"];
+
+/// Per-scan state — 3 vectors matching the legacy 3 walker sites'
+/// outputs. Callback dispatches by extension.
+#[derive(Default, Debug)]
+pub(crate) struct NugetDiscoveredPaths {
+    pub(crate) project_files: Vec<PathBuf>,
+    pub(crate) deps_files: Vec<PathBuf>,
+    pub(crate) dll_paths: Vec<PathBuf>,
+}
+
+/// Per-file callback. Case-insensitive extension check preserves legacy
+/// `eq_ignore_ascii_case` behavior.
+fn on_nuget_file(path: &Path, ctx: &SharedWalkerContext<'_>) {
+    let Some(state) = ctx.state::<Mutex<NugetDiscoveredPaths>>(ReaderId::NUGET) else {
+        return;
+    };
+    let Some(name) = path.file_name().and_then(|s| s.to_str()) else { return };
+    let name_lower = name.to_ascii_lowercase();
+
+    let mut guard = match state.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+
+    // `.deps.json` — matches `foo.deps.json` (compound extension).
+    if name_lower.ends_with(".deps.json") {
+        guard.deps_files.push(path.to_path_buf());
+        return;
+    }
+    // `.dll` — case-insensitive extension.
+    if name_lower.ends_with(".dll") {
+        guard.dll_paths.push(path.to_path_buf());
+        return;
+    }
+    // Project files: `.csproj`, `.vbproj`, `.fsproj` — case-insensitive.
+    if let Some(ext) = path.extension().and_then(|s| s.to_str()) {
+        if PROJECT_EXTENSIONS
+            .iter()
+            .any(|target| ext.eq_ignore_ascii_case(target))
+        {
+            guard.project_files.push(path.to_path_buf());
+        }
+    }
+}
+
+/// Build the `ReaderRegistration`.
+pub(crate) fn registration() -> anyhow::Result<ReaderRegistration> {
+    let patterns = globset_from_patterns_case_insensitive(&[
+        "**/*.csproj",
+        "**/*.vbproj",
+        "**/*.fsproj",
+        "**/*.deps.json",
+        "**/*.dll",
+    ])?;
+    Ok(ReaderRegistration {
+        reader_id: ReaderId::NUGET,
+        state: Some(Arc::new(Mutex::new(NugetDiscoveredPaths::default()))),
+        patterns,
+        on_file: Some(on_nuget_file),
+        on_dir: None,
+        descend_into: None,
+    })
+}
+
+pub(crate) fn extract_paths(registration: &ReaderRegistration) -> NugetDiscoveredPaths {
+    let Some(state_arc) = registration.state.as_ref() else {
+        return NugetDiscoveredPaths::default();
+    };
+    let Some(mutex) = state_arc.downcast_ref::<Mutex<NugetDiscoveredPaths>>() else {
+        return NugetDiscoveredPaths::default();
+    };
+    let mut guard = match mutex.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    std::mem::take(&mut *guard)
+}
+
+#[allow(dead_code)]
+pub(crate) fn build_and_run(
+    rootfs: &Path,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    let reg = match registration() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(error = %err, "nuget: registration() failed");
+            return Vec::new();
+        }
+    };
+    let registry = match ReaderRegistryBuilder::new().register(reg).build() {
+        Ok(r) => r,
+        Err(err) => {
+            tracing::warn!(error = %err, "nuget: build() failed");
+            return Vec::new();
+        }
+    };
+    // Use max depth across the 3 legacy walkers (deps_json + pe_clr both
+    // use 32; project_files uses 8). max=32 to preserve all three's
+    // reachability.
+    let mut walker = SharedWalker::new(rootfs, &registry, exclude_set).with_max_depth(32);
+    walker.run();
+    let _ = walker.finish();
+    let nuget_reg = registry
+        .registrations()
+        .iter()
+        .find(|r| r.reader_id == ReaderId::NUGET)
+        .expect("nuget registration must be present");
+    let paths = extract_paths(nuget_reg);
+    finalize(paths, rootfs, exclude_set)
+}
 
 /// Walk `rootfs` for NuGet project files and emit one `PackageDbEntry`
 /// per resolved `<PackageReference>` (or `packages.lock.json` entry).
 /// Empty when no project files are found.
+/// Legacy `pub fn read()` — retained during FR-004 coexistence.
+#[allow(dead_code)]
 pub fn read(
     rootfs: &Path,
     exclude_set: &super::exclude_path::ExclusionSet,
 ) -> Vec<PackageDbEntry> {
-    let project_files = collect_project_files(rootfs, exclude_set);
+    let paths = NugetDiscoveredPaths {
+        project_files: collect_project_files(rootfs, exclude_set),
+        deps_files: deps_json::collect_deps_json_files(rootfs, exclude_set),
+        dll_paths: pe_clr::collect_dll_paths(rootfs, exclude_set),
+    };
+    finalize(paths, rootfs, exclude_set)
+}
+
+/// Post-walker entry — takes precomputed paths + runs the 3-sub-reader
+/// pipeline in the legacy order.
+pub(crate) fn finalize(
+    paths: NugetDiscoveredPaths,
+    rootfs: &Path,
+    exclude_set: &super::exclude_path::ExclusionSet,
+) -> Vec<PackageDbEntry> {
+    let _ = exclude_set;
+    // Defensive sort — shared walker sorts per-dir but cross-dir order
+    // depends on descent. Legacy `collect_*_files` output was returned
+    // in walker's natural order; sort both paths for FR-006 identity.
+    let NugetDiscoveredPaths {
+        mut project_files,
+        mut deps_files,
+        mut dll_paths,
+    } = paths;
+    project_files.sort();
+    deps_files.sort();
+    dll_paths.sort();
+
     let mut out = Vec::new();
-    for project_path in project_files {
-        out.extend(read_one_project(rootfs, &project_path));
+    for project_path in &project_files {
+        out.extend(read_one_project(rootfs, project_path));
     }
-    // Milestone 129 US1A: also walk the rootfs for `.deps.json`
-    // files (the .NET runtime dependency sidecar emitted by
-    // `dotnet publish` and shipped throughout the SDK / runtime
-    // store layouts). This is the path that closes the 1,489-package
-    // nuget gap surfaced by the remediation-planner image audit
-    // where no source manifests are present.
-    out.extend(deps_json::read(rootfs, exclude_set));
-    // Milestone 130 US3: walk the rootfs for `*.dll` files carrying
-    // CLR managed-assembly metadata (PE files with a non-zero
-    // IMAGE_OPTIONAL_HEADER.DataDirectory[14] / COR20 header). Closes
-    // the .NET reference-assemblies + MSBuild-tasks-DLL gap on
-    // images that ship the dotnet SDK or runtime store. Resource
-    // assemblies (de/fr/ja/... resources.dll) dedup per FR-024 via
-    // an intra-reader culture-set accumulator.
-    out.extend(pe_clr::read(rootfs, exclude_set));
+    // Milestone 129 US1A: `.deps.json` — the .NET runtime dependency sidecar.
+    out.extend(deps_json::finalize(deps_files, rootfs));
+    // Milestone 130 US3: `*.dll` CLR managed-assembly metadata.
+    out.extend(pe_clr::finalize(dll_paths, rootfs));
     out
 }
 
