@@ -122,7 +122,7 @@ jobs:
           gh label create regression --color B60205 --description "Something that used to work broke" --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
 
       - name: Open or update canary issue
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v8.0.0
         env:
           # Route needs-outputs through env: so github-script reads them via
           # process.env rather than github interpolating them into the JS
@@ -212,7 +212,7 @@ jobs:
 
     steps:
       - name: Close matching canary issue if open
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v8.0.0
         with:
           script: |
             const title = '[canary] bpf-linker eBPF build regression';
