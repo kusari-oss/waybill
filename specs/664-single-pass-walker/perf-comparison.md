@@ -98,7 +98,7 @@ Breakdown of waybill's 3.04s on mongo (from FR-009 `passes=1` diagnostic + code 
 
 ## Follow-up backlog (post-m664, not in this PR)
 
-1. **`--no-binary-scan` flag** (biggest single win). Gate the go_binary content-probe behind an opt-in flag. On mongo, would drop wall-time from 3.04s to ~640ms — putting waybill on par with trivy (1.12s) and syft (1.72s) while retaining the feature for users who want it. Roughly 1-day of work.
+1. **`--no-binary-scan` flag** (biggest single win). **RESOLVED — milestone 665** ([`specs/665-no-binary-scan-flag/tasks.md`](../665-no-binary-scan-flag/tasks.md), shipped 2026-08-25). `--no-binary-scan=go` gates the go_binary content-probe behind an opt-in flag; mongo warm-cache measurement dropped from 3.04s to ~0.7s as predicted (SC-001 target ≤ 700 ms; matches the projected ~640ms). Retains the feature by default for users who want statically-linked Go binary attribution. Perf tests env-gated on `WAYBILL_PERF_{MONGO,PYTORCH,ANSIBLE}_DIR` at `waybill-cli/tests/perf_walk_dispatch.rs`. Emits doc-scope `waybill:binary-scan-suppressed=<mode>` annotation (C153) across CDX / SPDX 2.3 / SPDX 3 so downstream consumers can detect the opt-out.
 
 2. **Extension-based cheap-reject in go_binary**. Skip files with source-code extensions (`.py`, `.cpp`, `.h`, `.rs`, `.go`, `.js`, `.md`, `.json`, `.yaml`) before the `fs::metadata` stat syscall. Would trim ~40k of mongo's 55k candidates. Byte-identity concern: pathological case of a Go binary with `.py` extension (near-zero real-world risk). Small win, ~30-40ms on mongo. Half-day work.
 

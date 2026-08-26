@@ -96,6 +96,11 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // Gradle-resolution-tier signal from ScanArtifacts for the
             // C146 `waybill:gradle-resolution-tier` metadata property.
             .with_gradle_scan_summary(scan.gradle_scan_summary.cloned())
+            // Milestone 665 T021 — propagate the operator's
+            // `--no-binary-scan=<MODE>` choice from ScanArtifacts to the
+            // builder for the C-row `waybill:binary-scan-suppressed=<mode>`
+            // metadata property.
+            .with_no_binary_scan_mode(scan.no_binary_scan_mode)
             // Milestone 206 (#440) — propagate the doc-scope
             // image-source signal from ScanArtifacts for the C124
             // metadata property.

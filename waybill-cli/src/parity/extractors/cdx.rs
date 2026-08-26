@@ -908,6 +908,14 @@ cdx_anno!(c151_cdx, "waybill:unresolved-reason",                     component);
 // planned as a follow-on.
 cdx_anno!(c152_cdx, "waybill:resolver-tier",                         component);
 
+// Milestone 665 (feature 665-no-binary-scan-flag): C153 document-scope
+// `--no-binary-scan=<MODE>` suppression annotation. Emitted iff the
+// operator opted out of a binary-content reader via the CLI flag or the
+// `WAYBILL_NO_BINARY_SCAN` env-var equivalent. Value: closed-enum string
+// naming the mode (v1: `go`). Absent on the default (unset) path per
+// FR-003 byte-identity. See `contracts/cli-flag.md` C2 + C5.
+cdx_anno!(c153_cdx, "waybill:binary-scan-suppressed",                document);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 cdx_anno!(c113_cdx, "waybill:synthetic-built-in",               component);

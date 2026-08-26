@@ -272,6 +272,21 @@ async fn main() -> anyhow::Result<std::process::ExitCode> {
         .with_writer(std::io::stderr)
         .init();
 
+    // Milestone 665: honor the contract clause "Empty string treated
+    // as absent" for `WAYBILL_NO_BINARY_SCAN`. clap-derive's `env`
+    // attribute reads an empty env-var as a present-but-empty value,
+    // which then fails `value_enum` parsing. Strip it before clap
+    // sees it so an empty env-var behaves the same as an unset one.
+    // See `specs/665-no-binary-scan-flag/contracts/cli-flag.md`
+    // §Environment variable.
+    if std::env::var_os("WAYBILL_NO_BINARY_SCAN").is_some_and(|v| v.is_empty()) {
+        // SAFETY: single-threaded prelude before any async runtime
+        // workers spawn — env mutation here is race-free.
+        unsafe {
+            std::env::remove_var("WAYBILL_NO_BINARY_SCAN");
+        }
+    }
+
     let cli = Cli::parse();
 
     // Milestone 055 (T010): expose --offline as WAYBILL_OFFLINE env var

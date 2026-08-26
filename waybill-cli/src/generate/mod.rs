@@ -162,6 +162,14 @@ pub struct ScanArtifacts<'a> {
     pub gradle_scan_summary: Option<
         &'a crate::scan_fs::package_db::gradle::ladder::GradleScanSummary,
     >,
+    /// Milestone 665: the operator's `--no-binary-scan=<MODE>` choice
+    /// driving the C-row `waybill:binary-scan-suppressed=<mode>`
+    /// document-scope annotation across CDX, SPDX 2.3, and SPDX 3.
+    /// `None` when the flag was absent — the annotation is elided per
+    /// FR-003 (byte-identity default path). `Some(_)` triggers
+    /// emission in every format.
+    pub no_binary_scan_mode:
+        Option<crate::cli::scan_cmd::BinaryScanMode>,
     /// Milestone 206 (#440): document-scope image-source signal
     /// driving the C124 `waybill:image-source` annotation. `None`
     /// when scanning `--path` (not an image); `Some(ImageSource::
@@ -373,6 +381,7 @@ impl<'a> ScanArtifacts<'a> {
             cross_ecosystem_edges_report: self.cross_ecosystem_edges_report,
             helm_extraction_mode: self.helm_extraction_mode,
             gradle_scan_summary: self.gradle_scan_summary,
+            no_binary_scan_mode: self.no_binary_scan_mode,
             image_source: self.image_source,
             source_document_binding: self.source_document_binding,
             identifiers: self.identifiers,

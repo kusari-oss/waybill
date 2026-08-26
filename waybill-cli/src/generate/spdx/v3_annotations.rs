@@ -786,6 +786,20 @@ fn push_document_fields(
         }
     }
 
+    // Milestone 665 T023: doc-scope `waybill:binary-scan-suppressed`
+    // annotation (SPDX 3). Same emission semantics as CDX + SPDX 2.3
+    // emitters. Wire value: the mode's canonical string via
+    // `BinaryScanMode::as_annotation_value()`. Byte-identity preserved
+    // for the default (unset) path per FR-003. Contract:
+    // `contracts/cli-flag.md` C2.
+    if let Some(mode) = scan.no_binary_scan_mode {
+        push(
+            out,
+            "waybill:binary-scan-suppressed",
+            json!(mode.as_annotation_value()),
+        );
+    }
+
     // Milestone 206 (#440): C124 doc-scope image-source annotation
     // (SPDX 3). Same emission semantics as CDX + SPDX 2.3 emitters.
     if matches!(

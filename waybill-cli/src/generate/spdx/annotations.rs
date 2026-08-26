@@ -811,6 +811,20 @@ pub fn annotate_document(
         }
     }
 
+    // Milestone 665 T022: doc-scope `waybill:binary-scan-suppressed`
+    // annotation. Emitted iff the operator set `--no-binary-scan=<mode>`
+    // (CLI or env). Wire value: the mode's canonical string via
+    // `BinaryScanMode::as_annotation_value()` — matches CDX + SPDX 3.
+    // Byte-identity preserved for the default (unset) path per FR-003.
+    // Contract: `contracts/cli-flag.md` C2.
+    if let Some(mode) = artifacts.no_binary_scan_mode {
+        push(
+            &mut out,
+            "waybill:binary-scan-suppressed",
+            json!(mode.as_annotation_value()),
+        );
+    }
+
     // Milestone 206 (#440): C124 doc-scope image-source annotation.
     // Emitted iff artifacts.image_source == Some(Podman) — conditional
     // emission preserves FR-005 byte-identity for docker/remote/path

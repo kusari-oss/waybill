@@ -446,6 +446,7 @@ mod tests {
             cross_ecosystem_edges_report: None,
             helm_extraction_mode: None,
             gradle_scan_summary: None,
+            no_binary_scan_mode: None,
             image_source: None,
             scan_target_coord: None,
             generation_context: GenerationContext::FilesystemScan,

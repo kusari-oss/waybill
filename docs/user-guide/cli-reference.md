@@ -644,6 +644,7 @@ Exactly one of `--path` or `--image` is required.
 | `--no-hashes` | bool | off | Omit per-component content hashes. |
 | `--deb-codename <VALUE>` | string | auto-detect | Override `distro=` qualifier on deb PURLs. |
 | `--no-package-db` | bool | off | Skip installed-package DB reads (dpkg/apk). |
+| `--no-binary-scan <MODE>` | enum (`go`) | (unset) | Skip specified binary-scanning reader(s) to trade Go-binary module attribution for scan speed on large trees. Also via `WAYBILL_NO_BINARY_SCAN=<MODE>`. See [`--no-binary-scan`](#--no-binary-scan-mode). |
 | `--include-vendored` | bool | off | Emit CMake `add_subdirectory(third_party/\|vendor/...)` entries. |
 | `--no-deep-hash` | bool | off | Skip per-file SHA-256 of installed-package contents. |
 | `--json` | bool | off | Print a JSON summary to stdout. |
@@ -911,6 +912,71 @@ Skip reading installed-package databases (`/var/lib/dpkg/status`,
 `/lib/apk/db/installed`). On by default because production container images
 routinely clean up `.deb`/`.apk` artefact caches and the db is then the only
 complete source. Pass this flag to fall back to pure artefact-file scanning.
+
+### `--no-binary-scan <MODE>`
+
+Skip specified binary-scanning reader(s) at scan time. Trades Go-binary
+module attribution for scan speed on large trees. v1 recognizes one
+mode: `go`.
+
+`--no-binary-scan=go` skips the `go_binary` reader — no
+`runtime/debug.BuildInfo` probing on statically linked Go binaries.
+Components claimed via OS-package readers (dpkg / apk / rpm / pip
+RECORD) remain emitted from those sources; only the BuildInfo-derived
+`pkg:golang/*` entries drop out.
+
+**Perf reference** (macOS APFS, warm cache):
+
+| Fixture   | Files | Baseline | With `--no-binary-scan=go` |
+|-----------|-------|----------|-----------------------------|
+| ansible   | 5.8k  | 0.777s   | ~0.3s                       |
+| pytorch   | 21k   | 1.117s   | ~0.4s                       |
+| mongo     | 55k   | 3.04s    | ~0.7s                       |
+
+**When to use**:
+
+- Scanning a large repo that DOESN'T contain statically linked Go
+  binaries you need to identify by module.
+- Downstream consumer doesn't care about `pkg:golang/*` components
+  derived from binary probing.
+- Scan wall-time is a CI-pipeline bottleneck.
+
+**When NOT to use**:
+
+- You need statically linked Go binary module attribution (e.g.,
+  auditing container images that ship Go binaries not owned by any
+  OS-package manager).
+- You're producing SBOMs for compliance regimes that require
+  binary-content-based provenance. A suppressed reader still emits
+  the completeness signal via the `waybill:binary-scan-suppressed`
+  annotation, but consumers must interpret it.
+
+**Transparency annotation**: when the flag is set, waybill emits a
+document-scope `waybill:binary-scan-suppressed=<mode>` annotation in
+every output format (CDX `metadata.properties[]`, SPDX 2.3
+document-scope `annotations[]`, SPDX 3 `@graph[]` Annotation). Default
+(unset) is byte-identical to pre-m665 emission — no annotation. See
+[C153 in the SBOM format-mapping reference](../reference/sbom-format-mapping.md).
+
+**Env-var equivalent**: `WAYBILL_NO_BINARY_SCAN=<MODE>` sets the same
+value; CLI flag wins when both are present. Empty env-var is treated
+as absent.
+
+**Examples**:
+
+```bash
+# Fast scan mode — no Go-binary content probing.
+waybill sbom scan --path /large/repo --no-binary-scan=go --output sbom.cdx.json
+
+# Detect the suppression in the emitted CDX.
+jq '.metadata.properties[] | select(.name == "waybill:binary-scan-suppressed")' sbom.cdx.json
+# → {"name": "waybill:binary-scan-suppressed", "value": "go"}
+
+# CI-wide default via env-var.
+env WAYBILL_NO_BINARY_SCAN=go waybill sbom scan --path . --output sbom.cdx.json
+```
+
+Full recipe: `specs/665-no-binary-scan-flag/quickstart.md`.
 
 ### `--include-vendored`
 
