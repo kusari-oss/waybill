@@ -494,3 +494,332 @@ fn us2_mongo_wall_time() {
         warm_elapsed, cold_elapsed,
     );
 }
+
+/// Milestone 665 US1 T013 — `--no-binary-scan=go` wall-time SC-001.
+///
+/// Companion to `us2_mongo_wall_time` above. Same fixture, same
+/// warm-cache methodology (2-run: discard cold, measure warm),
+/// same env gate (`WAYBILL_PERF_MONGO_DIR`) — only difference is
+/// the `--no-binary-scan=go` flag on the scan invocation.
+///
+/// SC-001 (spec.md): mongo checkout scan wall-time ≤ **700 ms**
+/// when go_binary is suppressed. Baseline post-m664 warm-cache
+/// timing is ~3.04s (see `specs/664-single-pass-walker/perf-
+/// comparison.md`); the ~2.4s residual attributed to go_binary
+/// content probing (`go_binary::finalize`'s `read_binary` on
+/// ~1500 candidate binaries at 1-2 ms/binary) collapses to zero
+/// once the reader is skipped. Remaining ~600 ms is the shared-
+/// walker single-pass work (unchanged from m664).
+///
+/// Run locally:
+/// ```sh
+/// git clone --depth=1 https://github.com/mongodb/mongo.git /tmp/mongo
+/// WAYBILL_PERF_MONGO_DIR=/tmp/mongo cargo test --release --test perf_walk_dispatch -- us1_mongo_no_binary_scan
+/// ```
+#[test]
+fn us1_mongo_no_binary_scan() {
+    let Some(mongo_dir) = std::env::var_os("WAYBILL_PERF_MONGO_DIR") else {
+        eprintln!(
+            "us1_mongo_no_binary_scan: skipping — set WAYBILL_PERF_MONGO_DIR to \
+             a mongo checkout (git clone --depth=1 mongodb/mongo) to enable.",
+        );
+        return;
+    };
+    let mongo_path = std::path::PathBuf::from(&mongo_dir);
+    if !mongo_path.is_dir() {
+        panic!(
+            "WAYBILL_PERF_MONGO_DIR is set to {:?} but that path is not a directory",
+            mongo_dir,
+        );
+    }
+
+    let bin_path = std::path::PathBuf::from(env!("CARGO_BIN_EXE_waybill"));
+    let is_release = bin_path
+        .components()
+        .any(|c| c.as_os_str() == "release");
+    if !is_release {
+        eprintln!(
+            "us1_mongo_no_binary_scan: skipping — binary at {:?} appears to be a \
+             debug build. Re-run with `cargo test --release --test perf_walk_dispatch \
+             -- us1_mongo_no_binary_scan` to measure the SC-001 ≤ 700 ms target.",
+            bin_path,
+        );
+        return;
+    }
+
+    let tmpdir = tempfile::tempdir().unwrap();
+    let out_json = tmpdir.path().join("out.cdx.json");
+
+    let run_scan = || -> Duration {
+        let start = Instant::now();
+        let status = Command::new(&bin_path)
+            .args([
+                "sbom",
+                "scan",
+                "--offline",
+                "--file-inventory=off",
+                "--no-binary-scan=go",
+                "--path",
+            ])
+            .arg(&mongo_path)
+            .arg("--format")
+            .arg("cyclonedx-json")
+            .arg("--output")
+            .arg(&out_json)
+            .status()
+            .unwrap();
+        let elapsed = start.elapsed();
+        assert!(
+            status.success(),
+            "waybill sbom scan (--no-binary-scan=go) failed against mongo checkout at {:?}",
+            mongo_path,
+        );
+        elapsed
+    };
+    let cold_elapsed = run_scan();
+    let warm_elapsed = run_scan();
+
+    eprintln!(
+        "us1_mongo_no_binary_scan: mongo checkout at {:?} — \
+         cold={:?} warm={:?} (target ≤ 700 ms on warm run, per SC-001)",
+        mongo_path, cold_elapsed, warm_elapsed,
+    );
+
+    // SC-001: mongo with --no-binary-scan=go ≤ 700 ms. Baseline
+    // post-m664 warm-cache timing is ~3.04s; the ~2.4s residual is
+    // go_binary content probing and collapses to zero when the
+    // reader is skipped. Remaining ~600 ms is the shared-walker
+    // single-pass work (unchanged from m664).
+    let target = Duration::from_millis(700);
+    assert!(
+        warm_elapsed <= target,
+        "SC-001 warm-cache wall-time regression: mongo scan with \
+         --no-binary-scan=go took {:?}, target ≤ 700 ms. Baseline \
+         post-m664 without the flag is ~3.04s; the ~2.4s residual \
+         attributed to go_binary content probing should have dropped \
+         to zero. Check whether: (a) the T009 registration gate at \
+         `run_shared_walker_pilot` is firing (grep the FR-005 log \
+         line — `go_binary` should be ABSENT from the \
+         per_reader_dispatch_counts map, not present with value 0 or \
+         positive), (b) `go_binary::finalize` still runs post-pilot \
+         (should be a no-op on the empty candidate list), (c) some \
+         other reader silently reintroduced BuildInfo probing. \
+         Cold-cache reading was {:?} for reference.",
+        warm_elapsed, cold_elapsed,
+    );
+}
+
+/// Milestone 665 US1 T014 — `--no-binary-scan=go` wall-time SC-002.
+///
+/// Companion to `us2_pytorch_wall_time` above. Same fixture, same
+/// warm-cache methodology (2-run: discard cold, measure warm),
+/// same env gate (`WAYBILL_PERF_PYTORCH_DIR`) — only difference is
+/// the `--no-binary-scan=go` flag on the scan invocation.
+///
+/// SC-002 (spec.md): pytorch checkout scan wall-time ≤ **400 ms**
+/// when go_binary is suppressed. Baseline post-m664 warm-cache
+/// timing is ~1.117s (see `specs/664-single-pass-walker/perf-
+/// comparison.md`); the residual attributed to go_binary content
+/// probing collapses to zero once the reader is skipped. Pytorch
+/// has fewer Go binaries than mongo, so the delta is smaller in
+/// absolute terms — but the ratio holds.
+///
+/// Run locally:
+/// ```sh
+/// git clone --depth=1 https://github.com/pytorch/pytorch.git /tmp/pytorch
+/// WAYBILL_PERF_PYTORCH_DIR=/tmp/pytorch cargo test --release --test perf_walk_dispatch -- us1_pytorch_no_binary_scan
+/// ```
+#[test]
+fn us1_pytorch_no_binary_scan() {
+    let Some(pytorch_dir) = std::env::var_os("WAYBILL_PERF_PYTORCH_DIR") else {
+        eprintln!(
+            "us1_pytorch_no_binary_scan: skipping — set WAYBILL_PERF_PYTORCH_DIR to \
+             a pytorch checkout (git clone --depth=1 pytorch/pytorch) to enable.",
+        );
+        return;
+    };
+    let pytorch_path = std::path::PathBuf::from(&pytorch_dir);
+    if !pytorch_path.is_dir() {
+        panic!(
+            "WAYBILL_PERF_PYTORCH_DIR is set to {:?} but that path is not a directory",
+            pytorch_dir,
+        );
+    }
+
+    let bin_path = std::path::PathBuf::from(env!("CARGO_BIN_EXE_waybill"));
+    let is_release = bin_path
+        .components()
+        .any(|c| c.as_os_str() == "release");
+    if !is_release {
+        eprintln!(
+            "us1_pytorch_no_binary_scan: skipping — binary at {:?} appears to be a \
+             debug build. Re-run with `cargo test --release --test perf_walk_dispatch \
+             -- us1_pytorch_no_binary_scan` to measure the SC-002 ≤ 400 ms target.",
+            bin_path,
+        );
+        return;
+    }
+
+    let tmpdir = tempfile::tempdir().unwrap();
+    let out_json = tmpdir.path().join("out.cdx.json");
+
+    let run_scan = || -> Duration {
+        let start = Instant::now();
+        let status = Command::new(&bin_path)
+            .args([
+                "sbom",
+                "scan",
+                "--offline",
+                "--file-inventory=off",
+                "--no-binary-scan=go",
+                "--path",
+            ])
+            .arg(&pytorch_path)
+            .arg("--format")
+            .arg("cyclonedx-json")
+            .arg("--output")
+            .arg(&out_json)
+            .status()
+            .unwrap();
+        let elapsed = start.elapsed();
+        assert!(
+            status.success(),
+            "waybill sbom scan (--no-binary-scan=go) failed against pytorch checkout at {:?}",
+            pytorch_path,
+        );
+        elapsed
+    };
+    let cold_elapsed = run_scan();
+    let warm_elapsed = run_scan();
+
+    eprintln!(
+        "us1_pytorch_no_binary_scan: pytorch checkout at {:?} — \
+         cold={:?} warm={:?} (target ≤ 400 ms on warm run, per SC-002)",
+        pytorch_path, cold_elapsed, warm_elapsed,
+    );
+
+    // SC-002: pytorch with --no-binary-scan=go ≤ 400 ms. Baseline
+    // post-m664 warm-cache timing is ~1.117s; the residual is
+    // go_binary content probing and collapses to zero when the
+    // reader is skipped.
+    let target = Duration::from_millis(400);
+    assert!(
+        warm_elapsed <= target,
+        "SC-002 warm-cache wall-time regression: pytorch scan with \
+         --no-binary-scan=go took {:?}, target ≤ 400 ms. Baseline \
+         post-m664 without the flag is ~1.117s. Same diagnostic \
+         checklist as `us1_mongo_no_binary_scan` — verify the T009 \
+         registration gate is firing (grep FR-005 log line for \
+         `go_binary` absent from per_reader_dispatch_counts map). \
+         Cold-cache reading was {:?} for reference.",
+        warm_elapsed, cold_elapsed,
+    );
+}
+
+/// Milestone 665 US1 T015 — `--no-binary-scan=go` wall-time SC-003.
+///
+/// Companion to `us1_ansible_wall_time` above (m664 US1 US2 gate).
+/// Same fixture, same warm-cache methodology (2-run: discard cold,
+/// measure warm), same env gate (`WAYBILL_PERF_ANSIBLE_DIR`) —
+/// only difference is the `--no-binary-scan=go` flag on the scan
+/// invocation.
+///
+/// SC-003 (spec.md): ansible checkout scan wall-time ≤ **300 ms**
+/// when go_binary is suppressed. Baseline post-m664 warm-cache
+/// timing is ~0.777s (see `specs/664-single-pass-walker/perf-
+/// comparison.md`); the residual attributed to go_binary content
+/// probing collapses to zero once the reader is skipped. Ansible
+/// has the fewest Go binaries of the three fixtures — the absolute
+/// delta is small, but the SC-003 300 ms target still requires
+/// the suppression to land.
+///
+/// Run locally:
+/// ```sh
+/// git clone --depth=1 https://github.com/ansible/ansible.git /tmp/ansible
+/// WAYBILL_PERF_ANSIBLE_DIR=/tmp/ansible cargo test --release --test perf_walk_dispatch -- us1_ansible_no_binary_scan
+/// ```
+#[test]
+fn us1_ansible_no_binary_scan() {
+    let Some(ansible_dir) = std::env::var_os("WAYBILL_PERF_ANSIBLE_DIR") else {
+        eprintln!(
+            "us1_ansible_no_binary_scan: skipping — set WAYBILL_PERF_ANSIBLE_DIR to \
+             an ansible checkout (git clone --depth=1 ansible/ansible) to enable.",
+        );
+        return;
+    };
+    let ansible_path = std::path::PathBuf::from(&ansible_dir);
+    if !ansible_path.is_dir() {
+        panic!(
+            "WAYBILL_PERF_ANSIBLE_DIR is set to {:?} but that path is not a directory",
+            ansible_dir,
+        );
+    }
+
+    let bin_path = std::path::PathBuf::from(env!("CARGO_BIN_EXE_waybill"));
+    let is_release = bin_path
+        .components()
+        .any(|c| c.as_os_str() == "release");
+    if !is_release {
+        eprintln!(
+            "us1_ansible_no_binary_scan: skipping — binary at {:?} appears to be a \
+             debug build. Re-run with `cargo test --release --test perf_walk_dispatch \
+             -- us1_ansible_no_binary_scan` to measure the SC-003 ≤ 300 ms target.",
+            bin_path,
+        );
+        return;
+    }
+
+    let tmpdir = tempfile::tempdir().unwrap();
+    let out_json = tmpdir.path().join("out.cdx.json");
+
+    let run_scan = || -> Duration {
+        let start = Instant::now();
+        let status = Command::new(&bin_path)
+            .args([
+                "sbom",
+                "scan",
+                "--offline",
+                "--file-inventory=off",
+                "--no-binary-scan=go",
+                "--path",
+            ])
+            .arg(&ansible_path)
+            .arg("--format")
+            .arg("cyclonedx-json")
+            .arg("--output")
+            .arg(&out_json)
+            .status()
+            .unwrap();
+        let elapsed = start.elapsed();
+        assert!(
+            status.success(),
+            "waybill sbom scan (--no-binary-scan=go) failed against ansible checkout at {:?}",
+            ansible_path,
+        );
+        elapsed
+    };
+    let cold_elapsed = run_scan();
+    let warm_elapsed = run_scan();
+
+    eprintln!(
+        "us1_ansible_no_binary_scan: ansible checkout at {:?} — \
+         cold={:?} warm={:?} (target ≤ 300 ms on warm run, per SC-003)",
+        ansible_path, cold_elapsed, warm_elapsed,
+    );
+
+    // SC-003: ansible with --no-binary-scan=go ≤ 300 ms. Baseline
+    // post-m664 warm-cache timing is ~0.777s. Same diagnostic
+    // checklist as `us1_mongo_no_binary_scan`.
+    let target = Duration::from_millis(300);
+    assert!(
+        warm_elapsed <= target,
+        "SC-003 warm-cache wall-time regression: ansible scan with \
+         --no-binary-scan=go took {:?}, target ≤ 300 ms. Baseline \
+         post-m664 without the flag is ~0.777s. Same diagnostic \
+         checklist as `us1_mongo_no_binary_scan` — verify the T009 \
+         registration gate is firing (grep FR-005 log line for \
+         `go_binary` absent from per_reader_dispatch_counts map). \
+         Cold-cache reading was {:?} for reference.",
+        warm_elapsed, cold_elapsed,
+    );
+}

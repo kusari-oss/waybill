@@ -318,6 +318,12 @@ Every escape-hatch site carries an inline `// FR-005 permanent escape hatch — 
 - Rationale for retained walker-audit entries: `waybill-cli/src/scan_fs/walk.audit-allowlist.rationale.md`
 - SC-005 microbenchmark: `waybill-cli/tests/perf_walk_dispatch.rs::sc005_synthetic_10k_file_tree_p95_dispatch_overhead`
 
+### Operator-controlled reader gating (milestone 665)
+
+The registration site inside `run_shared_walker_pilot` is also an operator-visible gate. Milestone 665 (`--no-binary-scan=<MODE>` / `WAYBILL_NO_BINARY_SCAN=<MODE>`) uses this seam to elide `go_binary::registration()` at pilot time when the operator opts out of statically-linked-Go BuildInfo probing — trading module attribution for wall-time on large trees (mongo 3.04s → ~0.7s). The gate is a one-line `if !skip_go_binary { ... }` around the existing `register("go_binary", ...)` call; `finalize()` downstream self-elides on the empty candidate-path list, so no separate suppression is needed at the post-pilot site. Setting the flag also emits a document-scope `waybill:binary-scan-suppressed=<mode>` annotation (C153) across CDX / SPDX 2.3 / SPDX 3 so downstream consumers can detect the opt-out without inspecting waybill invocation state. See `specs/665-no-binary-scan-flag/`.
+
+The design intent: `run_shared_walker_pilot` becomes the natural place to gate reader participation by operator preference (or, future, by scan-tier / trust-level policy). The m665 pattern is extensible — the `BinaryScanMode` enum reserves `all` / `elf` / `symbols` variants for future opt-outs of m096 ELF section reader, m099 symbol fingerprint, and m104 binary-role classification without new C-rows.
+
 ---
 
 ## Key code landmarks

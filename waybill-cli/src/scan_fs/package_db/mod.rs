@@ -315,6 +315,13 @@ pub struct DbScanResult {
     /// return path) — `enrich` falls back to
     /// `pants_common::discover_build_files` in that case.
     pub pants_go_build_files: Vec<std::path::PathBuf>,
+    /// Milestone 665: the active `--no-binary-scan` mode for this scan,
+    /// echoed back from the CLI layer so the emitter can add a
+    /// document-scope `waybill:binary-scan-suppressed=<mode>` annotation
+    /// in every output format. `None` when the flag was absent — the
+    /// annotation is elided per FR-003 (byte-identity default path).
+    #[allow(dead_code)] // consumed by T024 (emitter wire-up in scan_fs/mod.rs + generate/*)
+    pub no_binary_scan_mode: Option<crate::cli::scan_cmd::BinaryScanMode>,
 }
 
 /// Non-fatal scan-time diagnostics accumulated during `read_all`. Drives
@@ -1332,6 +1339,7 @@ pub fn read_all(
     include_declared_deps: bool,
     scan_target_name: Option<&str>,
     exclude_set: &exclude_path::ExclusionSet,
+    no_binary_scan: Option<crate::cli::scan_cmd::BinaryScanMode>,
 ) -> Result<DbScanResult, PackageDbError> {
     // Milestone 102 FR-016: opt-in vendored-dep emission for CMake
     // `add_subdirectory(third_party/...)`. Read via env var so the
@@ -1532,6 +1540,7 @@ pub fn read_all(
         &rpm_config,
         &mut diagnostics,
         scan_mode,
+        no_binary_scan,
     );
 
     // Milestone 664 US2 T059+T029: yocto::recipe::read moved down
@@ -2125,6 +2134,10 @@ pub fn read_all(
         // `pants_go::enrich` (called from `scan_fs/mod.rs` outside
         // `read_all`).
         pants_go_build_files: std::mem::take(&mut shared_pilot.pants_go_build_files),
+        // Milestone 665: echo the operator's binary-scan suppression
+        // mode back to the caller so the emitter can attach the
+        // document-scope annotation. `None` when the flag was absent.
+        no_binary_scan_mode: no_binary_scan,
     })
 }
 
@@ -2278,7 +2291,17 @@ fn run_shared_walker_pilot(
     rpm_config: &rpm_file::RpmReaderConfig,
     diagnostics: &mut ScanDiagnostics,
     scan_mode: crate::scan_fs::ScanMode,
+    no_binary_scan: Option<crate::cli::scan_cmd::BinaryScanMode>,
 ) -> SharedPilotOutput {
+    // Milestone 665 T009: registration-gate flags derived from
+    // `--no-binary-scan=<MODE>`. Per contract C1, the go_binary reader
+    // is skipped when mode = Go; `finalize()` downstream is a no-op on
+    // an empty candidate-path list, so the gate at the pilot's
+    // registration site suffices.
+    let skip_go_binary = matches!(
+        no_binary_scan,
+        Some(crate::cli::scan_cmd::BinaryScanMode::Go),
+    );
     use crate::scan_fs::walk_registry::{
         ReaderId, ReaderRegistryBuilder, SharedWalker,
     };
@@ -2390,8 +2413,15 @@ fn run_shared_walker_pilot(
     if let Some(r) = register("yocto_layers", yocto::registration()) {
         builder = builder.register(r);
     }
-    if let Some(r) = register("go_binary", go_binary::registration()) {
-        builder = builder.register(r);
+    // Milestone 665 T009 (contract C1): skip go_binary registration
+    // when the operator set `--no-binary-scan=go` (CLI or env). The
+    // downstream `go_binary::finalize()` self-elides on an empty
+    // candidate-path list, so one gate at the registration site
+    // suffices to eliminate the ~2.4s BuildInfo probing cost.
+    if !skip_go_binary {
+        if let Some(r) = register("go_binary", go_binary::registration()) {
+            builder = builder.register(r);
+        }
     }
     // Milestone 664 T039 DEFERRED: maven registration NOT wired here.
     // Reason: legacy `find_maven_artifacts` deliberately visits `target/`
@@ -2941,6 +2971,7 @@ Architecture: arm64
             true,
             None,
             &Default::default(),
+            None,
         )
         .unwrap();
 

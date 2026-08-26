@@ -120,6 +120,41 @@ pub enum TierMode {
     SourceAndBinary,
 }
 
+/// Milestone 665 — modes for the `--no-binary-scan=<MODE>` flag.
+///
+/// Names a subset of binary-content-scanning readers to skip at pilot
+/// registration time. v1 recognizes `Go` only; the enum is designed
+/// for extension without CLI-surface churn. See `specs/665-no-binary-
+/// scan-flag/data-model.md` for the entity contract.
+///
+/// Future variants (reserved; NOT currently emitted):
+/// - `All`  — skip go_binary + m096 ELF section + m099 symbol
+///   fingerprint + m104 binary-role classification. Broadest.
+/// - `Elf`  — skip m096 ELF `.dep-v0` section reader only.
+/// - `Symbols` — skip m099 symbol fingerprinting only.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, clap::ValueEnum)]
+pub enum BinaryScanMode {
+    /// Skip the `go_binary` reader — no BuildInfo content probing.
+    /// Statically-linked Go binary attribution via BuildInfo is
+    /// suppressed; components claimed via OS-package readers
+    /// (dpkg / apk / rpm / pip RECORD) remain emitted from those
+    /// sources. See specs/665-no-binary-scan-flag/spec.md FR-002.
+    #[clap(name = "go")]
+    Go,
+}
+
+impl BinaryScanMode {
+    /// The canonical string used in `waybill:binary-scan-suppressed`
+    /// annotation values AND in `--help` output AND in FR-009
+    /// error messages. Kept in sync with the `#[clap(name = ...)]`
+    /// attributes above — single source of truth per data-model.md V1.
+    pub fn as_annotation_value(&self) -> &'static str {
+        match self {
+            Self::Go => "go",
+        }
+    }
+}
+
 /// Milestone 188 (#455) — resolve `--helm-chart <path>` input.
 ///
 /// When `<path>` ends in `.tgz`, extract to a tempdir + find the
@@ -1600,6 +1635,61 @@ pub struct ScanArgs {
     /// never a hard error.
     #[arg(long, value_enum, default_value_t = TierMode::All)]
     pub tier: TierMode,
+
+    /// Skip binary-scanning reader(s), trading Go-binary module
+    /// attribution for scan speed on large trees (mongo: ~3.04s →
+    /// ~0.7s). Accepted values: `go`.
+    ///
+    /// v1 mode `go` skips the `go_binary` reader — no BuildInfo
+    /// probing for statically linked Go binaries; components claimed
+    /// via OS-package readers (dpkg / apk / rpm / pip RECORD)
+    /// remain emitted from those sources.
+    ///
+    /// When set, waybill emits a document-scope
+    /// `waybill:binary-scan-suppressed=<mode>` annotation in every
+    /// output format so downstream consumers can detect the
+    /// suppression. Default (unset) is byte-identical to pre-m665
+    /// behavior — FR-003.
+    ///
+    /// The env-var `WAYBILL_NO_BINARY_SCAN=<mode>` provides the
+    /// same value; CLI flag wins when both are set.
+    #[arg(
+        long = "no-binary-scan",
+        value_enum,
+        value_name = "MODE",
+        env = "WAYBILL_NO_BINARY_SCAN",
+        long_help = "\
+Skip binary-scanning reader(s), trading Go-binary module attribution for scan speed on large trees.
+
+v1 mode `go` skips the go_binary reader — no BuildInfo probing for statically linked Go binaries. \
+Components claimed via OS-package readers (dpkg / apk / rpm / pip RECORD) remain emitted from those sources.
+
+WHEN TO USE:
+  * Scanning a large repo (thousands of files) that doesn't contain statically-linked Go binaries \
+    you need to identify by module.
+  * Your downstream SBOM consumer doesn't consume `pkg:golang/*` components derived from binary probing.
+  * Scan wall-time is a bottleneck for your CI pipeline.
+
+WHEN NOT TO USE:
+  * You need statically-linked Go binary module attribution (e.g., auditing container images that ship \
+    Go binaries not owned by any OS-package manager).
+  * You're producing SBOMs for compliance regimes that require binary-content-based provenance \
+    (CISA 2026 § Explicitly Identifying Unknown Information — a suppressed reader still emits the \
+    completeness signal via `waybill:binary-scan-suppressed`, but consumers must be able to interpret it).
+
+PERF (macOS APFS, warm cache):
+  * ansible (5.8k files):  0.777s → ~0.3s
+  * pytorch (21k files):   1.117s → ~0.4s
+  * mongo   (55k files):   3.04s  → ~0.7s
+
+When set, waybill emits a document-scope `waybill:binary-scan-suppressed=<mode>` annotation in every \
+output format so downstream consumers can detect the suppression. Default (unset) is byte-identical \
+to pre-m665 behavior.
+
+The env-var `WAYBILL_NO_BINARY_SCAN=<mode>` provides the same value; the CLI flag wins when both are set.\
+",
+    )]
+    pub no_binary_scan: Option<BinaryScanMode>,
 }
 
 /// Milestone 173: CLI-side cache-warming mode. Two variants;
@@ -3120,6 +3210,25 @@ pub async fn execute(
     let effective_include_declared_deps =
         include_declared_deps || matches!(scan_mode, scan_fs::ScanMode::Path);
     tracing::info!(root = %root_path.display(), "scan starting");
+    // Milestone 665 T010 (contract C3): FR-009 diagnostic. Emit an
+    // INFO log when the operator opted out of binary-content probing
+    // via `--no-binary-scan=<mode>` (CLI or env), naming the affected
+    // reader(s) so the choice is visible in scan logs without an
+    // SBOM diff.
+    if let Some(mode) = args.no_binary_scan {
+        let (mode_str, affected) = match mode {
+            BinaryScanMode::Go => (
+                mode.as_annotation_value(),
+                "go_binary reader (statically-linked Go BuildInfo probing)",
+            ),
+        };
+        tracing::info!(
+            mode = mode_str,
+            "--no-binary-scan={} — skipping {}",
+            mode_str,
+            affected,
+        );
+    }
     let scan_fs::ScanResult {
         mut components,
         mut relationships,
@@ -3135,6 +3244,7 @@ pub async fn execute(
         gradle_scan_summary,
         scan_target_coord,
         divergence_records,
+        no_binary_scan_mode,
     } = scan_fs::scan_path(
 
         &root_path,
@@ -3159,6 +3269,7 @@ pub async fn execute(
         args.max_rpm_bytes,
         args.rpm_distro.as_deref(),
         &exclude_set,
+        args.no_binary_scan,
     )
     .with_context(|| format!("scan failed for {}", root_path.display()))?;
 
@@ -3916,6 +4027,11 @@ pub async fn execute(
         // signal for the C123 annotation.
         helm_extraction_mode: helm_extraction_mode.as_ref(),
         gradle_scan_summary: gradle_scan_summary.as_ref(),
+        // Milestone 665: propagate the operator's `--no-binary-scan=<MODE>`
+        // choice so every emitter can attach the doc-scope
+        // `waybill:binary-scan-suppressed=<mode>` annotation. `None` on
+        // the default (unset) path preserves byte-identity per FR-003.
+        no_binary_scan_mode,
         // Milestone 206 (#440): doc-scope image-source signal for
         // the C124 annotation. Conditional emission (podman-only)
         // preserves FR-005 byte-identity for docker/remote scans.
@@ -5428,6 +5544,10 @@ mod tests {
             // (matches CLI default; preserves SC-005 byte-identity).
             project_discovery: crate::generate::project_discovery::ProjectDiscoveryMode::All,
             tier: TierMode::All,
+            // Milestone 665 — test helper defaults preserve pre-665
+            // behavior (no binary-scan suppression; byte-identity
+            // per FR-003).
+            no_binary_scan: None,
         }
     }
 

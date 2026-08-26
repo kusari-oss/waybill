@@ -634,6 +634,8 @@ spdx23_anno!(c150_spdx23, "waybill:gradle-platform-import",                compo
 spdx23_anno!(c151_spdx23, "waybill:unresolved-reason",                     component);
 // Milestone 663: C152 per-component resolver-tier annotation.
 spdx23_anno!(c152_spdx23, "waybill:resolver-tier",                         component);
+// Milestone 665: C153 document-scope binary-scan-suppressed annotation.
+spdx23_anno!(c153_spdx23, "waybill:binary-scan-suppressed",                document);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-08-21
+Auto-generated from all feature plans. Last updated: 2026-08-23
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -322,6 +322,7 @@ Auto-generated from all feature plans. Last updated: 2026-08-21
 - N/A — path-parsing + tiny metadata reads are stateless. (663-cache-probe-resolver)
 - Rust stable (workspace toolchain inherited from milestones 001–663; no nightly required for this user-space-only work). + Existing only — `globset = "0.4"` (already a direct workspace dep since milestones 113 + 118; used here for filename-pattern matching), `std::path::{Path, PathBuf}`, `std::fs::{read_dir, canonicalize}`, `std::collections::{HashMap, HashSet}`, `tracing` (INFO-level FR-009 diagnostic log), `anyhow`/`thiserror` (error surface), `serde`/`serde_json` (existing — no new schema). **Zero new Cargo dependencies.** (664-single-pass-walker)
 - N/A — the (directory → filenames) index is in-process per scan; dropped at `read_all` return. Mirrors every scan_fs milestone since 002. (664-single-pass-walker)
+- Rust stable (workspace toolchain inherited from milestones 001–664; no nightly required) + Existing only — `clap` (workspace; `ValueEnum` derive for the mode enum), `serde`/`serde_json` (annotation values), `tracing` (FR-005 diagnostic log). **Zero new Cargo dependencies.** (665-no-binary-scan-flag)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -415,9 +416,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 665-no-binary-scan-flag: Added Rust stable (workspace toolchain inherited from milestones 001–664; no nightly required) + Existing only — `clap` (workspace; `ValueEnum` derive for the mode enum), `serde`/`serde_json` (annotation values), `tracing` (FR-005 diagnostic log). **Zero new Cargo dependencies.**
 - 664-single-pass-walker: Added Rust stable (workspace toolchain inherited from milestones 001–663; no nightly required for this user-space-only work). + Existing only — `globset = "0.4"` (already a direct workspace dep since milestones 113 + 118; used here for filename-pattern matching), `std::path::{Path, PathBuf}`, `std::fs::{read_dir, canonicalize}`, `std::collections::{HashMap, HashSet}`, `tracing` (INFO-level FR-009 diagnostic log), `anyhow`/`thiserror` (error surface), `serde`/`serde_json` (existing — no new schema). **Zero new Cargo dependencies.**
 - 663-cache-probe-resolver: Added Rust stable (workspace toolchain inherited from milestones 001–236; no nightly required). + Existing only —
-- 236-unresolved-reason: Added Rust stable (workspace toolchain inherited from milestones 001–235; no nightly required for this user-space-only feature). + Existing only — `serde_json` (annotation value construction; pervasive), `tracing` (existing warn logs on the reader-side design-tier code paths), `anyhow`/`thiserror` (existing error propagation). Reuses the m071 parity extractor infrastructure (`parity/extractors/*.rs`) and the standard `PackageDbEntry.extra_annotations` channel. **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->
