@@ -393,13 +393,59 @@ mod tests {
     //! lib-exposing every binary-internal module (see `lib.rs` doc-comment).
 
     use std::fs;
-    use std::sync::Mutex;
+    use std::sync::{Arc, Mutex};
 
     use crate::scan_fs::package_db::exclude_path::ExclusionSet;
     use crate::scan_fs::walk_registry::{
         globset_from_patterns, ReaderId, ReaderRegistration, ReaderRegistryBuilder,
         SharedWalker, SharedWalkerContext,
     };
+
+    // Milestone 666: per-test observation buffer for walker file-visit
+    // callbacks. Each `#[test]` fn that observes visits constructs its
+    // own instance on its stack frame; two Arc clones exist for the
+    // duration of the walker's run — one held by the test (for post-
+    // run assertions), one held by the `ReaderRegistration.state` slot
+    // (for the walker's callback lookup via `ctx.state::<Mutex<Vec<String>>>`).
+    // Both drop when the test exits. No cross-test sharing, no static
+    // mutable state, no global lock. See `specs/666-walker-test-flake-fix/
+    // contracts/test-visit-sink.md` for the C1-C6 contracts.
+    type VisitSink = Arc<Mutex<Vec<String>>>;
+
+    /// Milestone 666: shared helper called by each test's `record_visit_*`
+    /// wrapper. Fetches the test's own sink from the ReaderRegistration's
+    /// state slot (populated by the test with `Some(sink.clone())`) and
+    /// pushes the visited filename. Silent no-op if the sink is absent
+    /// (reader_id mismatch or downcast failure) — keeps the walker's
+    /// dispatch loop unblocked. See contracts/test-visit-sink.md §C1.
+    fn push_visit_to_sink(
+        path: &std::path::Path,
+        ctx: &SharedWalkerContext<'_>,
+        reader_id: ReaderId,
+    ) {
+        let Some(sink) = ctx.state::<Mutex<Vec<String>>>(reader_id) else {
+            return;
+        };
+        sink.lock()
+            .unwrap()
+            .push(path.file_name().unwrap().to_string_lossy().into_owned());
+    }
+
+    // Per-test callback wrappers. Each hardcodes ITS OWN reader_id at
+    // compile time because `FileCallback` is a bare `fn` pointer (no
+    // captures) and the walker's dispatch loop invokes the pointer
+    // without passing the reader_id (see `dispatch::dispatch_file`).
+    // So the reader_id must be baked in via distinct wrapper fns per
+    // test. See contracts/test-visit-sink.md §C3.
+    fn record_visit_loop(path: &std::path::Path, ctx: &SharedWalkerContext<'_>) {
+        push_visit_to_sink(path, ctx, ReaderId::new("visitor-loop"));
+    }
+    fn record_visit_exclude(path: &std::path::Path, ctx: &SharedWalkerContext<'_>) {
+        push_visit_to_sink(path, ctx, ReaderId::new("visitor-exclude"));
+    }
+    fn record_visit_noise(path: &std::path::Path, ctx: &SharedWalkerContext<'_>) {
+        push_visit_to_sink(path, ctx, ReaderId::new("visitor-noise"));
+    }
 
     // ------------------------------------------------------------
     // T013 — contract C4: reader-callback panic isolation
@@ -472,21 +518,19 @@ mod tests {
 
     // ------------------------------------------------------------
     // T014 — contract C5: safe_walk-equivalent semantics
+    //
+    // Each of the three tests below constructs its own per-test
+    // `VisitSink` (see the type alias + `push_visit_to_sink` helper
+    // above) and threads an Arc clone through `ReaderRegistration.state`
+    // (m664 contract C4 slot). Post-run assertions read from the test's
+    // own Arc — never from a static — so cargo's parallel test-runner
+    // cannot race entries between tests. Milestone 666 (issue #720).
     // ------------------------------------------------------------
-
-    static SEMANTICS_LOG: Mutex<Vec<String>> = Mutex::new(Vec::new());
-
-    fn record_visit(path: &std::path::Path, _ctx: &SharedWalkerContext<'_>) {
-        SEMANTICS_LOG
-            .lock()
-            .unwrap()
-            .push(path.file_name().unwrap().to_string_lossy().into_owned());
-    }
 
     #[test]
     #[cfg(unix)]
     fn walker_survives_symlink_loop() {
-        SEMANTICS_LOG.lock().unwrap().clear();
+        let sink: VisitSink = Arc::new(Mutex::new(Vec::new()));
 
         let tmpdir = tempfile::tempdir().unwrap();
         let root = tmpdir.path();
@@ -498,9 +542,9 @@ mod tests {
         let registry = ReaderRegistryBuilder::new()
             .register(ReaderRegistration {
                 reader_id: ReaderId::new("visitor-loop"),
-                state: None,
+                state: Some(sink.clone()),
                 patterns: globset_from_patterns(&["**/*.marker"]).unwrap(),
-                on_file: Some(record_visit),
+                on_file: Some(record_visit_loop),
                 on_dir: None,
                 descend_into: None,
             })
@@ -512,7 +556,7 @@ mod tests {
         walker.run();
         let _ = walker.finish();
 
-        let log = SEMANTICS_LOG.lock().unwrap();
+        let log = sink.lock().unwrap();
         let visits = log.iter().filter(|s| s.as_str() == "target.marker").count();
         assert_eq!(
             visits, 1,
@@ -523,7 +567,7 @@ mod tests {
 
     #[test]
     fn walker_respects_exclusion_set() {
-        SEMANTICS_LOG.lock().unwrap().clear();
+        let sink: VisitSink = Arc::new(Mutex::new(Vec::new()));
 
         let tmpdir = tempfile::tempdir().unwrap();
         let root = tmpdir.path();
@@ -537,9 +581,9 @@ mod tests {
         let registry = ReaderRegistryBuilder::new()
             .register(ReaderRegistration {
                 reader_id: ReaderId::new("visitor-exclude"),
-                state: None,
+                state: Some(sink.clone()),
                 patterns: globset_from_patterns(&["**/*.marker"]).unwrap(),
-                on_file: Some(record_visit),
+                on_file: Some(record_visit_exclude),
                 on_dir: None,
                 descend_into: None,
             })
@@ -551,7 +595,7 @@ mod tests {
         walker.run();
         let _ = walker.finish();
 
-        let log = SEMANTICS_LOG.lock().unwrap();
+        let log = sink.lock().unwrap();
         assert!(
             !log.iter().any(|s| s == "in_excluded.marker"),
             "excluded contents should not be visited; log={:?}",
@@ -566,7 +610,7 @@ mod tests {
 
     #[test]
     fn walker_skips_default_noise_dirs() {
-        SEMANTICS_LOG.lock().unwrap().clear();
+        let sink: VisitSink = Arc::new(Mutex::new(Vec::new()));
 
         let tmpdir = tempfile::tempdir().unwrap();
         let root = tmpdir.path();
@@ -581,9 +625,9 @@ mod tests {
         let registry = ReaderRegistryBuilder::new()
             .register(ReaderRegistration {
                 reader_id: ReaderId::new("visitor-noise"),
-                state: None,
+                state: Some(sink.clone()),
                 patterns: globset_from_patterns(&["**/*.marker"]).unwrap(),
-                on_file: Some(record_visit),
+                on_file: Some(record_visit_noise),
                 on_dir: None,
                 descend_into: None,
             })
@@ -595,7 +639,7 @@ mod tests {
         walker.run();
         let _ = walker.finish();
 
-        let log = SEMANTICS_LOG.lock().unwrap();
+        let log = sink.lock().unwrap();
         assert!(
             !log.iter().any(|s| s == "in_git.marker"),
             ".git contents should be skipped; log={:?}",
