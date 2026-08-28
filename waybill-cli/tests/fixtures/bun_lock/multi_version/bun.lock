@@ -1,0 +1,18 @@
+{
+  "lockfileVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "multi-version-repro",
+      "dependencies": {
+        "big": "1.0.0",
+        "small": "2.0.0"
+      }
+    }
+  },
+  "packages": {
+    "big": ["big@1.0.0", "", { "dependencies": { "minimatch": "^3.0.0" } }, "sha512-BIGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG=="],
+    "big/minimatch": ["minimatch@3.1.2", "", {}, "sha512-MMMMMMMM33333333333333333333333333333333333333333333333333333333333333333333333333333333333333=="],
+    "small": ["small@2.0.0", "", { "dependencies": { "minimatch": "^5.0.0" } }, "sha512-SMLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL=="],
+    "small/minimatch": ["minimatch@5.1.6", "", {}, "sha512-MMMMMMMM55555555555555555555555555555555555555555555555555555555555555555555555555555555555555=="]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "lockfileVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "optional-deps-repro",
+      "dependencies": {
+        "parent": "1.0.0"
+      }
+    }
+  },
+  "packages": {
+    "parent": ["parent@1.0.0", "", { "optionalDependencies": { "opt-child": "^1.0.0" } }, "sha512-PARENTOPTIONAL00000000000000000000000000000000000000000000000000000000000000000000000000000000=="],
+    "opt-child": ["opt-child@1.0.0", "", {}, "sha512-OPTCHILDOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO=="]
+  }
+}

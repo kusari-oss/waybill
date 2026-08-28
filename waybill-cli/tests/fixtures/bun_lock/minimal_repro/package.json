@@ -1,0 +1,7 @@
+{
+  "name": "repro",
+  "version": "1.0.0",
+  "dependencies": {
+    "parent-pkg": "1.0.0"
+  }
+}
