@@ -1,0 +1,15 @@
+{
+  "lockfileVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "scoped-name-repro",
+      "dependencies": {
+        "@fast-csv/format": "^4.0.0"
+      }
+    }
+  },
+  "packages": {
+    "@fast-csv/format": ["@fast-csv/format@4.3.6", "", { "dependencies": { "@types/node": "^22.0.0" } }, "sha512-FCSVFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF=="],
+    "@fast-csv/format/@types/node": ["@types/node@22.5.0", "", {}, "sha512-TYPESNODE22222222222222222222222222222222222222222222222222222222222222222222222222222222222222=="]
+  }
+}

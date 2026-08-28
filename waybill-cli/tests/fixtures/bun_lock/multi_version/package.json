@@ -1,0 +1,8 @@
+{
+  "name": "multi-version-repro",
+  "version": "1.0.0",
+  "dependencies": {
+    "big": "1.0.0",
+    "small": "2.0.0"
+  }
+}

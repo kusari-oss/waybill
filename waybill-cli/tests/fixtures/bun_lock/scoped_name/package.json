@@ -1,0 +1,7 @@
+{
+  "name": "scoped-name-repro",
+  "version": "1.0.0",
+  "dependencies": {
+    "@fast-csv/format": "^4.0.0"
+  }
+}

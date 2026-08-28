@@ -1,0 +1,7 @@
+{
+  "name": "optional-deps-repro",
+  "version": "1.0.0",
+  "dependencies": {
+    "parent": "1.0.0"
+  }
+}

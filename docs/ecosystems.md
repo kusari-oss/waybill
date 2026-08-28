@@ -1099,6 +1099,23 @@ emitted as a separate component.
 **PURL format:** `pkg:npm/<name>@<version>` — scoped names
 URL-encode the `@` (`@scope/name` → `pkg:npm/%40scope/name@version`).
 
+**Dep graph:** full tree from `packages`-map metadata (position-2
+tuple element). Each entry's `dependencies` / `peerDependencies` /
+`optionalDependencies` / `optionalPeers` sub-maps are walked with a
+scope-atomic key-path resolver that walks bun's isolated-linker
+install-chain keys from most-specific to root-hoisted at each level,
+mirroring bun runtime's own resolution ladder. Targets reached
+exclusively via `optionalDependencies` / `optionalPeers` get
+`LifecycleScope::Optional` + a `waybill:optional-derivation`
+annotation (values `bun-optional-dependencies` / `bun-optional-peers`).
+Same pattern as pnpm-lock and yarn Berry.
+
+> **History**: pre-milestone-667, only workspace-member edges
+> (`workspace:*` source-specs) were emitted; the `packages`-map
+> metadata was unread, so all registry-side transitive edges dropped
+> silently. See [issue #723](https://github.com/kusari-oss/waybill/issues/723)
+> for the observation and milestone 667 for the fix.
+
 ### Yarn lockfile (milestone 106)
 
 **Module:** `waybill-cli/src/scan_fs/package_db/npm/yarn_lock.rs`

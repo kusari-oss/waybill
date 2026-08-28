@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-08-26
+Auto-generated from all feature plans. Last updated: 2026-08-27
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -325,6 +325,8 @@ Auto-generated from all feature plans. Last updated: 2026-08-26
 - Rust stable (workspace toolchain inherited from milestones 001–664; no nightly required) + Existing only — `clap` (workspace; `ValueEnum` derive for the mode enum), `serde`/`serde_json` (annotation values), `tracing` (FR-005 diagnostic log). **Zero new Cargo dependencies.** (665-no-binary-scan-flag)
 - Rust stable (workspace toolchain inherited from milestones 001–665; no nightly required for this user-space test-only fix). + Existing only — `std::sync::{Arc, Mutex}` (stdlib), `ReaderRegistration.state: Option<Arc<dyn Any + Send + Sync>>` (m664 contract C4 slot at `waybill-cli/src/scan_fs/walk_registry/mod.rs:378-385`), `SharedWalkerContext::state::<T>(reader_id) -> Option<&T>` (accessor at `walk_context.rs:53`). **Zero new Cargo dependencies at any layer (production or dev).** (666-walker-test-flake-fix)
 - N/A — per-test in-memory sink dropped at test-scope exit. (666-walker-test-flake-fix)
+- Rust stable (workspace toolchain inherited from milestones 001–666; no nightly required for this user-space-only work). + Existing only — `serde_json` (already used pervasively; parses the JSONC-stripped `bun.lock`), `std::collections::{HashMap, BTreeMap}` (stdlib; two-pass key-path→disambiguator lookup + deterministic edge-map dedup), `tracing` (FR-011 warn-on-drop), `waybill_common::resolution::{LifecycleScope, RelationshipType}` (workspace types; reused verbatim from m179/m180). **No new Cargo dependencies.** (667-bun-lock-edges)
+- N/A — all state in-process per scan; per-reader HashMap for pass-1 key→disambiguator, per-entry BTreeMap for pass-2 depends-set dedup. (667-bun-lock-edges)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -418,9 +420,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 667-bun-lock-edges: Added Rust stable (workspace toolchain inherited from milestones 001–666; no nightly required for this user-space-only work). + Existing only — `serde_json` (already used pervasively; parses the JSONC-stripped `bun.lock`), `std::collections::{HashMap, BTreeMap}` (stdlib; two-pass key-path→disambiguator lookup + deterministic edge-map dedup), `tracing` (FR-011 warn-on-drop), `waybill_common::resolution::{LifecycleScope, RelationshipType}` (workspace types; reused verbatim from m179/m180). **No new Cargo dependencies.**
 - 666-walker-test-flake-fix: Added Rust stable (workspace toolchain inherited from milestones 001–665; no nightly required for this user-space test-only fix). + Existing only — `std::sync::{Arc, Mutex}` (stdlib), `ReaderRegistration.state: Option<Arc<dyn Any + Send + Sync>>` (m664 contract C4 slot at `waybill-cli/src/scan_fs/walk_registry/mod.rs:378-385`), `SharedWalkerContext::state::<T>(reader_id) -> Option<&T>` (accessor at `walk_context.rs:53`). **Zero new Cargo dependencies at any layer (production or dev).**
 - 665-no-binary-scan-flag: Added Rust stable (workspace toolchain inherited from milestones 001–664; no nightly required) + Existing only — `clap` (workspace; `ValueEnum` derive for the mode enum), `serde`/`serde_json` (annotation values), `tracing` (FR-005 diagnostic log). **Zero new Cargo dependencies.**
-- 664-single-pass-walker: Added Rust stable (workspace toolchain inherited from milestones 001–663; no nightly required for this user-space-only work). + Existing only — `globset = "0.4"` (already a direct workspace dep since milestones 113 + 118; used here for filename-pattern matching), `std::path::{Path, PathBuf}`, `std::fs::{read_dir, canonicalize}`, `std::collections::{HashMap, HashSet}`, `tracing` (INFO-level FR-009 diagnostic log), `anyhow`/`thiserror` (error surface), `serde`/`serde_json` (existing — no new schema). **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->

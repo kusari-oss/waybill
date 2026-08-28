@@ -1,0 +1,15 @@
+{
+  "lockfileVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "repro",
+      "dependencies": {
+        "parent-pkg": "1.0.0"
+      }
+    }
+  },
+  "packages": {
+    "parent-pkg": ["parent-pkg@1.0.0", "", { "dependencies": { "child-pkg": "^1.0.0" } }, "sha512-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="],
+    "child-pkg": ["child-pkg@1.0.0", "", {}, "sha512-BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=="]
+  }
+}
