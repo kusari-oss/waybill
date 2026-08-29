@@ -142,6 +142,14 @@ jobs:
     # eBPF job either succeeded OR was intentionally skipped.
     if: ${{ !cancelled() && (needs.build-ebpf.result == 'success' || needs.build-ebpf.result == 'skipped') }}
     runs-on: ubuntu-latest
+    # Milestone 668: id-token + attestations write for SLSA provenance
+    # emission via actions/attest-build-provenance (FR-001) + FR-015
+    # self-verify via `gh attestation verify`. contents: read preserves
+    # the top-level default explicitly.
+    permissions:
+      id-token: write
+      attestations: write
+      contents: read
     env:
       TARGET: x86_64-unknown-linux-gnu
     steps:
@@ -256,11 +264,41 @@ jobs:
           path: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
           if-no-files-found: error
 
+      # Milestone 668 FR-001 + contract workflow-step.md C-1/C-2/C-3.
+      # Emit SLSA build provenance for the tarball. Wrapper delegates to
+      # actions/attest@v4.2.1 which auto-generates the SLSA Provenance
+      # v1.0 predicate when no predicate-type is supplied.
+      - name: Emit SLSA build provenance for tarball (m668 FR-001)
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
+
+      # Milestone 668 FR-015 + contract workflow-step.md C-4/C-5/C-6.
+      # Self-verify the just-emitted attestation before publication so
+      # emission bugs surface inside the same job, not at consumer time.
+      # Context expressions bound via env: per C-6 (no direct ${{ }}
+      # interpolation into shell blocks).
+      - name: Self-verify tarball provenance (m668 FR-015)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACT_PATH: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
+          REPO_NAME: ${{ github.repository }}
+        run: |
+          gh attestation verify "$ARTIFACT_PATH" --repo "$REPO_NAME"
+
   build-linux-aarch64:
     name: Build — linux-aarch64
     needs: build-ebpf
     if: ${{ !cancelled() && (needs.build-ebpf.result == 'success' || needs.build-ebpf.result == 'skipped') }}
     runs-on: ubuntu-latest
+    # Milestone 668: id-token + attestations write for SLSA provenance
+    # emission via actions/attest-build-provenance (FR-001) + FR-015
+    # self-verify via `gh attestation verify`. contents: read preserves
+    # the top-level default explicitly.
+    permissions:
+      id-token: write
+      attestations: write
+      contents: read
     env:
       TARGET: aarch64-unknown-linux-gnu
     steps:
@@ -355,9 +393,32 @@ jobs:
           path: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
           if-no-files-found: error
 
+      # Milestone 668 FR-001 + contract workflow-step.md C-1/C-2/C-3.
+      - name: Emit SLSA build provenance for tarball (m668 FR-001)
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
+
+      # Milestone 668 FR-015 + contract workflow-step.md C-4/C-5/C-6.
+      - name: Self-verify tarball provenance (m668 FR-015)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACT_PATH: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
+          REPO_NAME: ${{ github.repository }}
+        run: |
+          gh attestation verify "$ARTIFACT_PATH" --repo "$REPO_NAME"
+
   build-macos-aarch64:
     name: Build — macos-aarch64
     runs-on: macos-14
+    # Milestone 668: id-token + attestations write for SLSA provenance
+    # emission via actions/attest-build-provenance (FR-001) + FR-015
+    # self-verify via `gh attestation verify`. contents: read preserves
+    # the top-level default explicitly.
+    permissions:
+      id-token: write
+      attestations: write
+      contents: read
     env:
       TARGET: aarch64-apple-darwin
     steps:
@@ -421,6 +482,21 @@ jobs:
           path: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
           if-no-files-found: error
 
+      # Milestone 668 FR-001 + contract workflow-step.md C-1/C-2/C-3.
+      - name: Emit SLSA build provenance for tarball (m668 FR-001)
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
+
+      # Milestone 668 FR-015 + contract workflow-step.md C-4/C-5/C-6.
+      - name: Self-verify tarball provenance (m668 FR-015)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACT_PATH: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.tar.gz
+          REPO_NAME: ${{ github.repository }}
+        run: |
+          gh attestation verify "$ARTIFACT_PATH" --repo "$REPO_NAME"
+
   # Milestone 100 — Windows x86_64 release artifact. Produces a .zip
   # containing waybill.exe + README + (if present) LICENSE, matching
   # the layout of the Linux/macOS tarballs. waybill-ebpf is excluded
@@ -428,6 +504,14 @@ jobs:
   build-windows-x86_64:
     name: Build — windows-x86_64
     runs-on: windows-latest
+    # Milestone 668: id-token + attestations write for SLSA provenance
+    # emission via actions/attest-build-provenance (FR-001) + FR-015
+    # self-verify via `gh attestation verify`. contents: read preserves
+    # the top-level default explicitly.
+    permissions:
+      id-token: write
+      attestations: write
+      contents: read
     env:
       TARGET: x86_64-pc-windows-msvc
     steps:
@@ -494,6 +578,28 @@ jobs:
           path: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.zip
           if-no-files-found: error
 
+      # Milestone 668 FR-001 + contract workflow-step.md C-1/C-2/C-3.
+      # Windows artifact is a .zip (not .tar.gz); actions/attest-build-
+      # provenance handles either transparently — subject hashing is over
+      # the file bytes regardless of container format.
+      - name: Emit SLSA build provenance for zip (m668 FR-001)
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.zip
+
+      # Milestone 668 FR-015 + contract workflow-step.md C-4/C-5/C-6.
+      # Windows runners default to pwsh; `gh attestation verify`'s
+      # subject-path argument works either shell but we force bash for
+      # env-var quoting parity with the Linux/macOS jobs (contract C-6).
+      - name: Self-verify zip provenance (m668 FR-015)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACT_PATH: waybill-${{ env.TAG_NAME }}-${{ env.TARGET }}.zip
+          REPO_NAME: ${{ github.repository }}
+        run: |
+          gh attestation verify "$ARTIFACT_PATH" --repo "$REPO_NAME"
+
   # Issue #234 — multi-arch production container image. Reuses the
   # per-arch tarballs uploaded by build-linux-x86_64 and
   # build-linux-aarch64 so the binary inside the image is byte-
@@ -508,6 +614,7 @@ jobs:
       contents: read
       packages: write
       id-token: write # Required for cosign keyless OIDC token exchange.
+      attestations: write # Milestone 668 FR-002: SLSA build provenance emission.
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -599,9 +706,37 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.tags.outputs.tags }}
+          # BuildKit-emitted provenance (NOT the SLSA v1.0 predicate that
+          # actions/attest-build-provenance emits below). BuildKit's
+          # `mode=max` produces a build-tool-specific provenance annotation
+          # attached to the image manifest — complementary to the SLSA
+          # attestation, retained per research R1's alternatives-considered
+          # note ("kept as-is; attest-build-provenance runs alongside").
           provenance: mode=max
           sbom: true
           # No build args needed; buildx auto-passes TARGETARCH.
+
+      # Milestone 668 FR-002 + contract workflow-step.md C-1/C-2/C-3.
+      # Emit SLSA build provenance for the OCI image using subject-digest
+      # from the buildx output. push-to-registry: true attaches the
+      # attestation to the image manifest via OCI referrers, broadening
+      # verifier compatibility (cosign download attestation, crane, etc.)
+      # in addition to `gh attestation verify`.
+      - name: Emit SLSA build provenance for OCI image (m668 FR-002)
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ghcr.io/${{ github.repository_owner }}/waybill
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+      # Milestone 668 FR-015 + contract workflow-step.md C-4/C-5/C-6.
+      - name: Self-verify OCI image provenance (m668 FR-015)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_REF: ghcr.io/${{ github.repository_owner }}/waybill@${{ steps.build.outputs.digest }}
+          REPO_NAME: ${{ github.repository }}
+        run: |
+          gh attestation verify "oci://$IMAGE_REF" --repo "$REPO_NAME"
 
       - name: Install cosign
         uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
@@ -622,6 +757,7 @@ jobs:
     permissions:
       contents: write
       id-token: write   # Feature 229 FR-004: Sigstore keyless OIDC for --sign
+      attestations: write # Milestone 668 FR-003: SLSA build provenance for source SBOM sidecar.
     steps:
       # Feature 229 US1 T004: checkout source tree so waybill can scan it.
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -690,6 +826,24 @@ jobs:
             --output waybill-source.cdx.json \
             --no-deep-hash
 
+      # Milestone 668 FR-003 + contract workflow-step.md C-1/C-2/C-3.
+      # Emit SLSA build provenance for the source-tree SBOM. Coexists
+      # with the cosign sign-blob step below (contract C-8) — the two
+      # signing paths are independent and both required for release.
+      - name: Emit SLSA build provenance for source SBOM (m668 FR-003)
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: waybill-source.cdx.json
+
+      # Milestone 668 FR-015 + contract workflow-step.md C-4/C-5/C-6.
+      - name: Self-verify source SBOM provenance (m668 FR-015)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACT_PATH: waybill-source.cdx.json
+          REPO_NAME: ${{ github.repository }}
+        run: |
+          gh attestation verify "$ARTIFACT_PATH" --repo "$REPO_NAME"
+
       - name: Sign SBOM via cosign sign-blob (Sigstore keyless, GHA ambient OIDC)
         run: |
           set -euo pipefail
@@ -734,6 +888,26 @@ jobs:
           # releases, nightlies + bridges are prereleases.
           prerelease: ${{ steps.prerelease_flag.outputs.prerelease }}
           generate_release_notes: true
+          # Milestone 668 FR-009 discoverability: prepend a one-line
+          # verification-recipe pointer to the auto-generated notes so
+          # first-time consumers know how to verify every artifact
+          # this release ships. `body:` here is prepended to the
+          # softprops action's auto-generated changelog (verified by
+          # inspection of softprops/action-gh-release@v3 behavior).
+          body: |
+            ## Verify this release
+
+            Every artifact in this release ships with a SLSA build provenance
+            attestation. Verify any artifact with:
+
+            ```bash
+            gh attestation verify <artifact> --repo kusari-oss/waybill
+            ```
+
+            Full recipes (tarball / OCI image / source SBOM sidecar / mirrored
+            artifact): [docs/verifying-releases.md](https://github.com/kusari-oss/waybill/blob/main/docs/verifying-releases.md).
+
+            ---
           files: |
             waybill-*.tar.gz
             waybill-*.zip

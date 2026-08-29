@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-08-27
+Auto-generated from all feature plans. Last updated: 2026-08-28
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -327,6 +327,8 @@ Auto-generated from all feature plans. Last updated: 2026-08-27
 - N/A — per-test in-memory sink dropped at test-scope exit. (666-walker-test-flake-fix)
 - Rust stable (workspace toolchain inherited from milestones 001–666; no nightly required for this user-space-only work). + Existing only — `serde_json` (already used pervasively; parses the JSONC-stripped `bun.lock`), `std::collections::{HashMap, BTreeMap}` (stdlib; two-pass key-path→disambiguator lookup + deterministic edge-map dedup), `tracing` (FR-011 warn-on-drop), `waybill_common::resolution::{LifecycleScope, RelationshipType}` (workspace types; reused verbatim from m179/m180). **No new Cargo dependencies.** (667-bun-lock-edges)
 - N/A — all state in-process per scan; per-reader HashMap for pass-1 key→disambiguator, per-entry BTreeMap for pass-2 depends-set dedup. (667-bun-lock-edges)
+- GitHub Actions YAML + Markdown (workflow-only feature). Rust workspace toolchain inherited but untouched. + `actions/attest-build-provenance@v3` (SHA-pinned per FR-013), `gh` CLI (preinstalled on GitHub-hosted runners; used for FR-015 self-verify). No new Cargo deps at any layer (FR-012 + SC-007). No new external Actions marketplace additions besides `attest-build-provenance` itself. (668-slsa-provenance)
+- N/A — attestations land in GitHub's attestation store (Sigstore Rekor + GitHub-native indexing). Free/unlimited for public repos. No waybill-side persistence. (668-slsa-provenance)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -420,9 +422,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 668-slsa-provenance: Added GitHub Actions YAML + Markdown (workflow-only feature). Rust workspace toolchain inherited but untouched. + `actions/attest-build-provenance@v3` (SHA-pinned per FR-013), `gh` CLI (preinstalled on GitHub-hosted runners; used for FR-015 self-verify). No new Cargo deps at any layer (FR-012 + SC-007). No new external Actions marketplace additions besides `attest-build-provenance` itself.
 - 667-bun-lock-edges: Added Rust stable (workspace toolchain inherited from milestones 001–666; no nightly required for this user-space-only work). + Existing only — `serde_json` (already used pervasively; parses the JSONC-stripped `bun.lock`), `std::collections::{HashMap, BTreeMap}` (stdlib; two-pass key-path→disambiguator lookup + deterministic edge-map dedup), `tracing` (FR-011 warn-on-drop), `waybill_common::resolution::{LifecycleScope, RelationshipType}` (workspace types; reused verbatim from m179/m180). **No new Cargo dependencies.**
 - 666-walker-test-flake-fix: Added Rust stable (workspace toolchain inherited from milestones 001–665; no nightly required for this user-space test-only fix). + Existing only — `std::sync::{Arc, Mutex}` (stdlib), `ReaderRegistration.state: Option<Arc<dyn Any + Send + Sync>>` (m664 contract C4 slot at `waybill-cli/src/scan_fs/walk_registry/mod.rs:378-385`), `SharedWalkerContext::state::<T>(reader_id) -> Option<&T>` (accessor at `walk_context.rs:53`). **Zero new Cargo dependencies at any layer (production or dev).**
-- 665-no-binary-scan-flag: Added Rust stable (workspace toolchain inherited from milestones 001–664; no nightly required) + Existing only — `clap` (workspace; `ValueEnum` derive for the mode enum), `serde`/`serde_json` (annotation values), `tracing` (FR-005 diagnostic log). **Zero new Cargo dependencies.**
 
 
 <!-- MANUAL ADDITIONS START -->
