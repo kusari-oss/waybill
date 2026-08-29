@@ -1051,7 +1051,15 @@ dependency graphs.
 
 **Evidence:** `PackageDatabase` / `manifest-analysis` at 0.85.
 
-**Dep graph:** full tree from `package-lock.json` `packages` entries.
+**Dep graph:** full tree from any of the four supported lockfile
+formats — `package-lock.json` (`packages`-map entries), `pnpm-lock.yaml`
+(m106 + m157 v9 graph fix + m164 multi-version-edges + m180 optional
+tagging), `yarn.lock` (v1 + Berry per m106; m159 alias mapping;
+m181 optional tagging), and `bun.lock` (m106 workspace shape + m667
+`packages`-map metadata + m180 optional tagging). See the per-lockfile
+subsections below for reader-specific detail on scope-atomic key-path
+resolution, m147 issue #262 `<name> <version>` disambiguation, and
+optional-derivation annotations.
 
 **Hashes:** `package-lock.json` `integrity` field (SRI format). Supports
 sha256, sha384, sha512; flows through to CycloneDX `components[].hashes[]`.
