@@ -1,17 +1,31 @@
 use std::process::Command;
 
 use clap::Parser;
+use xtask::bench;
 
 #[derive(Parser)]
 enum Cli {
     /// Build the eBPF programs
     Ebpf,
+    /// Run the perf benchmark suite (milestone 669)
+    Bench(bench::BenchArgs),
+    /// Regenerate docs/perf/numbers.md from the committed baseline (milestone 669)
+    BenchDocs(bench::docs::BenchDocsArgs),
 }
 
 fn main() {
     let cli = Cli::parse();
-    match cli {
-        Cli::Ebpf => build_ebpf(),
+    let result = match cli {
+        Cli::Ebpf => {
+            build_ebpf();
+            Ok(())
+        }
+        Cli::Bench(args) => bench::run(args),
+        Cli::BenchDocs(args) => bench::docs::run(args),
+    };
+    if let Err(err) = result {
+        eprintln!("xtask error: {err}");
+        std::process::exit(1);
     }
 }
 
