@@ -374,6 +374,10 @@ format:
 - **[Cross-tier binding reference](docs/reference/cross-tier-binding.md)**
   — `--bind-to-source` schema, verifier protocol, multi-tier
   trace flows.
+- **[Verifying releases](docs/verifying-releases.md)** —
+  copy-paste `gh attestation verify` recipes for the SLSA build
+  provenance attestations shipped on every waybill release
+  (tarballs, OCI image, source SBOM sidecar).
 - **[SBOM format mapping](docs/reference/sbom-format-mapping.md)** —
   per-feature carrier matrix across CDX 1.6, SPDX 2.3, and SPDX 3.
 - **[Project discovery reference](docs/reference/project-discovery.md)**
