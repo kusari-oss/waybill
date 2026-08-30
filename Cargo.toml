@@ -17,6 +17,14 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "rus
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"
+# Perf-parallel-deep-hash — CPU-bound data-parallel SHA-256 across
+# file lists. Rayon is pure Rust, already in the transitive graph via
+# sysinfo; promoting to a direct workspace dep so waybill-cli can use
+# `.par_iter()` in the deep-hash paths (waybill-cli/src/scan_fs/walker.rs
+# + package_db/file_hashes.rs). Preserves output determinism because
+# rayon's ordered collect from an indexed source (Vec/&[T]) preserves
+# input order.
+rayon = "1"
 thiserror = "2"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
