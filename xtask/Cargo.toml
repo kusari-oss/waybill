@@ -7,7 +7,7 @@ edition = "2021"
 clap = { version = "4", features = ["derive"] }
 # Milestone 669: cross-platform peak-RSS measurement for `xtask bench`.
 # Dev-only per FR-015 + SC-009 (zero waybill-runtime dep additions).
-sysinfo = "0.39.6"
+sysinfo = "0.32"
 # Milestone 669: JSON schema (baseline.json + run.json) round-trip.
 # Dev-only.
 serde = { version = "1", features = ["derive"] }

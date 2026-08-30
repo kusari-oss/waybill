@@ -6,7 +6,9 @@ Seven decisions with rationale + rejected alternatives.
 
 ## R1: Peak-RSS measurement — `sysinfo` crate
 
-**Decision**: Add `sysinfo = "0.39.6"` (verified 2026-08-29 via `cargo search sysinfo`; the initial research pass had v0.32 as a knowledge-cutoff artifact — same drift-caught-at-T002 pattern as m668 R1) as a **dev-only** dependency under `xtask/Cargo.toml`. Poll the child `waybill` process at ~10 Hz for peak resident-memory usage; record the max observed value as the fixture-run's `max_rss_kb`.
+**Decision**: Add `sysinfo = "0.32"` as a **dev-only** dependency under `xtask/Cargo.toml`. Poll the child `waybill` process at ~10 Hz for peak resident-memory usage; record the max observed value as the fixture-run's `max_rss_kb`.
+
+**MSRV constraint discovered post-PR#728-CI**: sysinfo 0.39.6 (latest at 2026-08-29) requires rustc 1.95. The workspace's eBPF-test container uses rust:1.88-bookworm — 1.95 is too new. Downgraded to sysinfo 0.32.x, which supports rustc 1.75+ and is compatible with both the container's 1.88 AND the workspace stable (1.97 at time of writing). The `refresh_processes(ProcessesToUpdate::Some(&[pid]), true)` + `Process::memory()` API surface I use is source-compatible across 0.32–0.39, so no code change was needed — only the manifest pin + lockfile regen. **Anchor**: verify sysinfo MSRV alongside any future bump; if the eBPF container bumps its rust version, the sysinfo pin can move too.
 
 **Rationale**: Cross-platform peak-RSS on Linux/macOS/Windows is the design constraint (SC-002 reproducibility target + m100 Windows-host stance). Alternatives evaluated:
 - `libc::getrusage(RUSAGE_CHILDREN, ...)` — POSIX-only; needs different code path for Windows via `GetProcessMemoryInfo`. Adds Windows/POSIX split in `measure.rs`.
