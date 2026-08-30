@@ -182,6 +182,9 @@ reqwest.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
+# Perf-parallel-deep-hash — parallel per-file SHA-256 across walker
+# candidates + dpkg/apk/rpm .list manifests.
+rayon.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true

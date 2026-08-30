@@ -8,6 +8,7 @@
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
+use rayon::prelude::*;
 use waybill_common::types::hash::ContentHash;
 
 use crate::trace::hasher::sha256_file_hex;
@@ -52,51 +53,56 @@ pub fn walk_and_hash(
     let mut candidates: Vec<PathBuf> = Vec::new();
     walk(root, &mut candidates);
 
-    let mut out = Vec::with_capacity(candidates.len());
-    for path in candidates {
-        let Some(name) = path.file_name().and_then(|s| s.to_str()) else {
-            continue;
-        };
-        let lc = name.to_ascii_lowercase();
-        if !ARTIFACT_SUFFIXES.iter().any(|s| lc.ends_with(s)) {
-            continue;
-        }
-        let Ok(meta) = path.metadata() else { continue };
-        let Ok(mtime) = meta.modified() else { continue };
-        if let Some(t) = since {
-            if mtime < t {
-                continue;
+    // Parallel per-file hashing via rayon. `.par_iter().filter_map(...).collect()`
+    // preserves input order because `candidates` is an indexed source
+    // (Vec) — rayon's ordered collect from indexed sources emits in the
+    // sequential order, so the emitted SBOM stays byte-identical to the
+    // pre-parallel path. Verified locally via cargo test --workspace.
+    let out: Vec<HashedArtifact> = candidates
+        .par_iter()
+        .filter_map(|path| {
+            let name = path.file_name().and_then(|s| s.to_str())?;
+            let lc = name.to_ascii_lowercase();
+            if !ARTIFACT_SUFFIXES.iter().any(|s| lc.ends_with(s)) {
+                return None;
             }
-        }
-        if meta.len() > size_cap {
-            tracing::debug!(
-                path = %path.display(),
-                size = meta.len(),
-                "walk_and_hash: skipping oversized artifact"
-            );
-            continue;
-        }
-        let hex = match sha256_file_hex(&path, size_cap) {
-            Ok(h) => h,
-            Err(e) => {
-                tracing::debug!(path = %path.display(), error = %e, "hash failed");
-                continue;
+            let meta = path.metadata().ok()?;
+            let mtime = meta.modified().ok()?;
+            if let Some(t) = since {
+                if mtime < t {
+                    return None;
+                }
             }
-        };
-        let hash = match ContentHash::sha256(&hex) {
-            Ok(h) => h,
-            Err(e) => {
-                tracing::debug!(error = %e, "invalid sha256 hex");
-                continue;
+            if meta.len() > size_cap {
+                tracing::debug!(
+                    path = %path.display(),
+                    size = meta.len(),
+                    "walk_and_hash: skipping oversized artifact"
+                );
+                return None;
             }
-        };
-        out.push(HashedArtifact {
-            path,
-            size: meta.len(),
-            hash,
-            mtime,
-        });
-    }
+            let hex = match sha256_file_hex(path, size_cap) {
+                Ok(h) => h,
+                Err(e) => {
+                    tracing::debug!(path = %path.display(), error = %e, "hash failed");
+                    return None;
+                }
+            };
+            let hash = match ContentHash::sha256(&hex) {
+                Ok(h) => h,
+                Err(e) => {
+                    tracing::debug!(error = %e, "invalid sha256 hex");
+                    return None;
+                }
+            };
+            Some(HashedArtifact {
+                path: path.clone(),
+                size: meta.len(),
+                hash,
+                mtime,
+            })
+        })
+        .collect();
     out
 }
 

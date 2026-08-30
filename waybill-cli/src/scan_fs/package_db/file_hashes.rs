@@ -17,6 +17,7 @@
 use std::collections::HashMap;
 use std::path::Path;
 
+use rayon::prelude::*;
 use waybill_common::resolution::FileOccurrence;
 use waybill_common::types::hash::ContentHash;
 use sha2::{Digest, Sha256};
@@ -84,53 +85,60 @@ pub fn hash_package_files(
 
     let md5_lookup = read_md5sums(rootfs, pkg_name, arch);
 
-    let mut occurrences: Vec<FileOccurrence> = Vec::new();
-    for raw in list_text.lines() {
-        let path_in_pkg = raw.trim();
-        if path_in_pkg.is_empty() || path_in_pkg == "/." {
-            continue;
-        }
-        // dpkg's .list paths are absolute (`/usr/bin/jq`); resolve
-        // against the rootfs so the same code works for "scan / on a
-        // live host" and "scan an extracted image rootfs."
-        let abs = rootfs.join(path_in_pkg.trim_start_matches('/'));
-        let Ok(meta) = abs.symlink_metadata() else {
-            continue;
-        };
-        if !meta.is_file() {
-            continue;
-        }
-        if meta.len() > MAX_PER_FILE_BYTES {
-            tracing::debug!(
-                path = %abs.display(),
-                size = meta.len(),
-                "skipping oversized file in deep hash"
-            );
-            continue;
-        }
-        let sha256 = match sha256_file_hex(&abs, MAX_PER_FILE_BYTES) {
-            Ok(h) => h,
-            Err(e) => {
-                tracing::debug!(path = %abs.display(), error = %e, "could not hash file");
-                continue;
+    // Materialize path list first — rayon needs an indexed source
+    // (`&[T]` / `Vec<T>`) to preserve input order on `.collect()`.
+    // Line-based `.lines()` returns a single-pass iterator which
+    // `.par_bridge()` would parallelize but with unordered emission;
+    // ordered `.collect()` from a Vec is the determinism-preserving path.
+    let paths: Vec<&str> = list_text
+        .lines()
+        .map(str::trim)
+        .filter(|p| !p.is_empty() && *p != "/.")
+        .collect();
+
+    let occurrences: Vec<FileOccurrence> = paths
+        .par_iter()
+        .filter_map(|path_in_pkg| {
+            // dpkg's .list paths are absolute (`/usr/bin/jq`); resolve
+            // against the rootfs so the same code works for "scan / on
+            // a live host" and "scan an extracted image rootfs."
+            let abs = rootfs.join(path_in_pkg.trim_start_matches('/'));
+            let meta = abs.symlink_metadata().ok()?;
+            if !meta.is_file() {
+                return None;
             }
-        };
-        // dpkg's .md5sums uses paths relative to root with no leading
-        // slash (`usr/bin/jq`); look up via the same form.
-        let md5_key = path_in_pkg.trim_start_matches('/');
-        let md5_legacy = md5_lookup.get(md5_key).cloned();
-        // Store the dpkg-declared path (the canonical deployed-filesystem
-        // path), not the absolute path on the scanner. That keeps the
-        // Merkle root stable across scans of the same package regardless
-        // of where the rootfs was extracted.
-        occurrences.push(FileOccurrence {
-            location: path_in_pkg.to_string(),
-            sha256,
-            md5_legacy,
-            apk_sha1: None,
-            rpm_file_digest: None,
-        });
-    }
+            if meta.len() > MAX_PER_FILE_BYTES {
+                tracing::debug!(
+                    path = %abs.display(),
+                    size = meta.len(),
+                    "skipping oversized file in deep hash"
+                );
+                return None;
+            }
+            let sha256 = match sha256_file_hex(&abs, MAX_PER_FILE_BYTES) {
+                Ok(h) => h,
+                Err(e) => {
+                    tracing::debug!(path = %abs.display(), error = %e, "could not hash file");
+                    return None;
+                }
+            };
+            // dpkg's .md5sums uses paths relative to root with no leading
+            // slash (`usr/bin/jq`); look up via the same form.
+            let md5_key = path_in_pkg.trim_start_matches('/');
+            let md5_legacy = md5_lookup.get(md5_key).cloned();
+            // Store the dpkg-declared path (the canonical deployed-
+            // filesystem path), not the absolute path on the scanner.
+            // Keeps the Merkle root stable across scans regardless of
+            // where the rootfs was extracted.
+            Some(FileOccurrence {
+                location: path_in_pkg.to_string(),
+                sha256,
+                md5_legacy,
+                apk_sha1: None,
+                rpm_file_digest: None,
+            })
+        })
+        .collect();
 
     let root = compute_merkle_root(&occurrences);
     (occurrences, root)
@@ -250,46 +258,48 @@ pub fn hash_apk_package_files(
     rootfs: &Path,
     files: &[super::apk::ApkFileEntry],
 ) -> (Vec<FileOccurrence>, Option<ContentHash>) {
-    let mut occurrences: Vec<FileOccurrence> = Vec::new();
-    for entry in files {
-        let rel = entry.path.trim_start_matches('/');
-        if rel.is_empty() {
-            continue;
-        }
-        let abs = rootfs.join(rel);
-        let Ok(meta) = abs.symlink_metadata() else {
-            continue;
-        };
-        if !meta.is_file() {
-            continue;
-        }
-        if meta.len() > MAX_PER_FILE_BYTES {
-            tracing::debug!(
-                path = %abs.display(),
-                size = meta.len(),
-                "skipping oversized file in apk deep hash"
-            );
-            continue;
-        }
-        let sha256 = match sha256_file_hex(&abs, MAX_PER_FILE_BYTES) {
-            Ok(h) => h,
-            Err(e) => {
-                tracing::debug!(path = %abs.display(), error = %e, "could not hash apk file");
-                continue;
+    // `files` is already an indexed source — rayon's ordered collect
+    // preserves the pre-parallel iteration order → byte-identical SBOM.
+    let occurrences: Vec<FileOccurrence> = files
+        .par_iter()
+        .filter_map(|entry| {
+            let rel = entry.path.trim_start_matches('/');
+            if rel.is_empty() {
+                return None;
             }
-        };
-        // Store the absolute deployed-filesystem path (matches the
-        // legacy convention used on the dpkg side — keeps SBOM
-        // consumers from having to detect ecosystem-specific
-        // location prefixes).
-        occurrences.push(FileOccurrence {
-            location: format!("/{rel}"),
-            sha256,
-            md5_legacy: None,
-            apk_sha1: entry.sha1.clone(),
-            rpm_file_digest: None,
-        });
-    }
+            let abs = rootfs.join(rel);
+            let meta = abs.symlink_metadata().ok()?;
+            if !meta.is_file() {
+                return None;
+            }
+            if meta.len() > MAX_PER_FILE_BYTES {
+                tracing::debug!(
+                    path = %abs.display(),
+                    size = meta.len(),
+                    "skipping oversized file in apk deep hash"
+                );
+                return None;
+            }
+            let sha256 = match sha256_file_hex(&abs, MAX_PER_FILE_BYTES) {
+                Ok(h) => h,
+                Err(e) => {
+                    tracing::debug!(path = %abs.display(), error = %e, "could not hash apk file");
+                    return None;
+                }
+            };
+            // Store the absolute deployed-filesystem path (matches the
+            // legacy convention used on the dpkg side — keeps SBOM
+            // consumers from having to detect ecosystem-specific
+            // location prefixes).
+            Some(FileOccurrence {
+                location: format!("/{rel}"),
+                sha256,
+                md5_legacy: None,
+                apk_sha1: entry.sha1.clone(),
+                rpm_file_digest: None,
+            })
+        })
+        .collect();
 
     let root = compute_merkle_root(&occurrences);
     (occurrences, root)
@@ -316,51 +326,54 @@ pub fn hash_rpm_package_files(
     rootfs: &Path,
     files: &[super::rpm::RpmFileListEntry],
 ) -> (Vec<FileOccurrence>, Option<ContentHash>) {
-    let mut occurrences: Vec<FileOccurrence> = Vec::new();
-    for entry in files {
-        let trimmed = entry.path.trim();
-        if trimmed.is_empty() {
-            continue;
-        }
-        // Normalize to an absolute deployed path for `location`
-        // (rpm sources already provide them this way) and to a
-        // rootfs-relative form for the actual filesystem read.
-        let absolute_location = if trimmed.starts_with('/') {
-            trimmed.to_string()
-        } else {
-            format!("/{trimmed}")
-        };
-        let rel = absolute_location.trim_start_matches('/');
-        let abs = rootfs.join(rel);
-        let Ok(meta) = abs.symlink_metadata() else {
-            continue;
-        };
-        if !meta.is_file() {
-            continue;
-        }
-        if meta.len() > MAX_PER_FILE_BYTES {
-            tracing::debug!(
-                path = %abs.display(),
-                size = meta.len(),
-                "skipping oversized file in rpm deep hash"
-            );
-            continue;
-        }
-        let sha256 = match sha256_file_hex(&abs, MAX_PER_FILE_BYTES) {
-            Ok(h) => h,
-            Err(e) => {
-                tracing::debug!(path = %abs.display(), error = %e, "could not hash rpm file");
-                continue;
+    // Same parallelization pattern as `hash_apk_package_files` —
+    // `files` is an indexed source so ordered `.collect()` preserves
+    // the pre-parallel iteration order → byte-identical SBOM.
+    let occurrences: Vec<FileOccurrence> = files
+        .par_iter()
+        .filter_map(|entry| {
+            let trimmed = entry.path.trim();
+            if trimmed.is_empty() {
+                return None;
             }
-        };
-        occurrences.push(FileOccurrence {
-            location: absolute_location,
-            sha256,
-            md5_legacy: None,
-            apk_sha1: None,
-            rpm_file_digest: entry.digest.clone(),
-        });
-    }
+            // Normalize to an absolute deployed path for `location`
+            // (rpm sources already provide them this way) and to a
+            // rootfs-relative form for the actual filesystem read.
+            let absolute_location = if trimmed.starts_with('/') {
+                trimmed.to_string()
+            } else {
+                format!("/{trimmed}")
+            };
+            let rel = absolute_location.trim_start_matches('/').to_string();
+            let abs = rootfs.join(&rel);
+            let meta = abs.symlink_metadata().ok()?;
+            if !meta.is_file() {
+                return None;
+            }
+            if meta.len() > MAX_PER_FILE_BYTES {
+                tracing::debug!(
+                    path = %abs.display(),
+                    size = meta.len(),
+                    "skipping oversized file in rpm deep hash"
+                );
+                return None;
+            }
+            let sha256 = match sha256_file_hex(&abs, MAX_PER_FILE_BYTES) {
+                Ok(h) => h,
+                Err(e) => {
+                    tracing::debug!(path = %abs.display(), error = %e, "could not hash rpm file");
+                    return None;
+                }
+            };
+            Some(FileOccurrence {
+                location: absolute_location,
+                sha256,
+                md5_legacy: None,
+                apk_sha1: None,
+                rpm_file_digest: entry.digest.clone(),
+            })
+        })
+        .collect();
 
     let root = compute_merkle_root(&occurrences);
     (occurrences, root)

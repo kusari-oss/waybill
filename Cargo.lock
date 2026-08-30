@@ -4570,6 +4570,7 @@ dependencies = [
  "oci-spec 0.9.0",
  "pem",
  "quick-xml",
+ "rayon",
  "rcgen",
  "regex",
  "reqwest",
