@@ -37,10 +37,12 @@ pub(crate) mod workspace_root;
 
 use std::path::Path;
 
+use rayon::prelude::*;
 use waybill_common::resolution::{
-    EnrichmentProvenance, Relationship, RelationshipType, ResolutionEvidence,
+    EnrichmentProvenance, FileOccurrence, Relationship, RelationshipType, ResolutionEvidence,
     ResolutionTechnique, ResolvedComponent,
 };
+use waybill_common::types::hash::ContentHash;
 
 use crate::generate::cpe::synthesize_cpes;
 use crate::resolve::deduplicator::{canonicalize_source_files_by_purl, deduplicate};
@@ -707,7 +709,64 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             std::collections::HashSet::new()
         };
 
-        for entry in &db_entries {
+        // Perf follow-up to #732: parallel pre-computation of every
+        // OS-package (dpkg/apk/rpm) deep-hash result BEFORE the
+        // sequential loop starts. Each `hash_*_package_files` call is
+        // independent (pure function over `root` + package inputs), so
+        // rayon can schedule them across cores. The result vec is
+        // aligned 1:1 with `db_entries` and consumed by index in the
+        // sequential loop below via `.take()`. Preserves the loop's
+        // mutable state (`manifest_sha_cache`, resolver-index lookups)
+        // untouched — this is a pure work-shift optimization.
+        //
+        // Gated on both `deep_hash` AND presence of at least one
+        // OS-package entry — source-tier-only scans (npm/cargo/pip/etc.)
+        // hit this path with zero OS-package work, so we skip the
+        // parallel dispatch entirely to avoid rayon setup overhead on
+        // 40-50-entry source-tier vecs (measured +30% regression on
+        // cargo/npm before adding this gate).
+        let has_os_pkgs = db_entries.iter().any(|entry| {
+            entry.source_path.contains("dpkg/status")
+                || entry.source_path.contains("apk/db/installed")
+                || entry.source_path.contains("lib/rpm/")
+        });
+        let mut precomputed_pkg_hashes: Vec<
+            Option<(Vec<FileOccurrence>, Option<ContentHash>)>,
+        > = if deep_hash && has_os_pkgs {
+            db_entries
+                .par_iter()
+                .map(|entry| {
+                    let is_dpkg = entry.source_path.contains("dpkg/status");
+                    let is_apk = entry.source_path.contains("apk/db/installed");
+                    let is_rpm = entry.source_path.contains("lib/rpm/");
+                    if is_dpkg {
+                        Some(package_db::file_hashes::hash_package_files(
+                            root,
+                            &entry.name,
+                            entry.arch.as_deref(),
+                        ))
+                    } else if is_apk {
+                        let files: &[package_db::apk::ApkFileEntry] = apk_file_lists
+                            .get(&entry.name)
+                            .map(|v| v.as_slice())
+                            .unwrap_or(&[]);
+                        Some(package_db::file_hashes::hash_apk_package_files(root, files))
+                    } else if is_rpm {
+                        let files: &[package_db::rpm::RpmFileListEntry] = rpm_file_lists
+                            .get(&entry.name)
+                            .map(|v| v.as_slice())
+                            .unwrap_or(&[]);
+                        Some(package_db::file_hashes::hash_rpm_package_files(root, files))
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        } else {
+            (0..db_entries.len()).map(|_| None).collect()
+        };
+
+        for (entry_idx, entry) in db_entries.iter().enumerate() {
             let purl_str = entry.purl.as_str().to_string();
             let ecosystem = entry.purl.ecosystem().to_string();
             // Only dpkg ships a per-package copyright file we can read.
@@ -745,13 +804,14 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
             // hash_apk_package_files (deep) / hash_apk_db_only (fast).
             let (occurrences, mut component_hashes) = if is_dpkg {
                 if deep_hash {
-                    let (occs, root_hash) = package_db::file_hashes::hash_package_files(
-                        root,
-                        &entry.name,
-                        entry.arch.as_deref(),
-                    );
+                    // Deep-hash result was pre-computed in parallel above;
+                    // move it out via `.take()` (avoids clone on large
+                    // FileOccurrence vecs).
+                    let (occs, root_hash) = precomputed_pkg_hashes[entry_idx]
+                        .take()
+                        .unwrap_or_default();
                     (occs, root_hash.into_iter().collect::<Vec<_>>())
-            } else {
+                } else {
                     let h = package_db::file_hashes::hash_md5sums_only(
                         root,
                         &entry.name,
@@ -761,12 +821,9 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 }
             } else if is_apk {
                 if deep_hash {
-                    let files: &[package_db::apk::ApkFileEntry] = apk_file_lists
-                        .get(&entry.name)
-                        .map(|v| v.as_slice())
-                        .unwrap_or(&[]);
-                    let (occs, root_hash) =
-                        package_db::file_hashes::hash_apk_package_files(root, files);
+                    let (occs, root_hash) = precomputed_pkg_hashes[entry_idx]
+                        .take()
+                        .unwrap_or_default();
                     (occs, root_hash.into_iter().collect::<Vec<_>>())
                 } else {
                     let h = package_db::file_hashes::hash_apk_db_only(root, &entry.name);
@@ -774,12 +831,9 @@ pub fn scan_path(root: &Path, deb_codename: Option<&str>, size_cap: u64, read_pa
                 }
             } else if is_rpm {
                 if deep_hash {
-                    let files: &[package_db::rpm::RpmFileListEntry] = rpm_file_lists
-                        .get(&entry.name)
-                        .map(|v| v.as_slice())
-                        .unwrap_or(&[]);
-                    let (occs, root_hash) =
-                        package_db::file_hashes::hash_rpm_package_files(root, files);
+                    let (occs, root_hash) = precomputed_pkg_hashes[entry_idx]
+                        .take()
+                        .unwrap_or_default();
                     (occs, root_hash.into_iter().collect::<Vec<_>>())
                 } else {
                     let h = package_db::file_hashes::hash_rpm_db_only(root, &entry.name);
