@@ -52,7 +52,7 @@ The 10 Hz poll rate is a compromise: high enough to catch spike allocation patte
       "path": "source-tier/cargo-workspace-medium",
       "kind": "source-tree",
       "ecosystem": "cargo",
-      "supported_modes": ["default", "no-deep-hash", "triple-format", "no-deep-hash+triple-format"],
+      "supported_modes": ["default", "no-deep-hash", "triple-format", "no-deep-hash-plus-triple-format"],
       "expected_scan_class": "medium"
     },
     ...

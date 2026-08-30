@@ -195,6 +195,77 @@ fn is_valid_sha(s: &str) -> bool {
 }
 
 // ────────────────────────────────────────────────────────────────
+// T028 — RegressionDiff + RegressionEntry + MatrixAsymmetryEntry
+// (data-model.md §5). Computed subject-vs-baseline at CI time; not
+// persisted (except as `target/bench/regression-diff-<sha>.json`
+// per T032 emission).
+// ────────────────────────────────────────────────────────────────
+
+/// Result of `bench::compare::compare(subject, baseline, threshold)`.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct RegressionDiff {
+    /// Waybill SHA of the subject run.
+    pub subject_sha: String,
+    /// Waybill SHA of the baseline run.
+    pub baseline_sha: String,
+    /// Comparison threshold used. Default 0.25 per SC-003 / V7.
+    pub threshold: f64,
+    /// One entry per fixture-mode-dimension whose subject value
+    /// crossed the threshold in the "worse" direction. Non-empty
+    /// ⟹ CI workflow exits 1 (V8).
+    pub regressions: Vec<RegressionEntry>,
+    /// One entry per fixture-mode-dimension whose subject value
+    /// improved by ≥ threshold in absolute magnitude. Informational,
+    /// never a failure signal (SC-004).
+    pub improvements: Vec<RegressionEntry>,
+    /// Fixture-mode combinations present in baseline OR subject but
+    /// not both. Surfaces the diff for human review; not a failure.
+    pub matrix_asymmetry: Vec<MatrixAsymmetryEntry>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct RegressionEntry {
+    pub fixture_name: String,
+    pub mode: Mode,
+    pub dimension: Dimension,
+    pub baseline_value: f64,
+    pub subject_value: f64,
+    /// Positive = worse for regressions, negative = better for
+    /// improvements. Computed as
+    /// `(subject - baseline) / baseline` — baseline is the anchor.
+    pub percentage_delta: f64,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "kebab-case")]
+pub enum Dimension {
+    WallClockMs,
+    MaxRssKb,
+    OutputBytes,
+    /// Threshold breach here means the SBOM shape changed;
+    /// investigation warranted, not always a regression.
+    ComponentCount,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct MatrixAsymmetryEntry {
+    pub fixture_name: String,
+    pub mode: Mode,
+    pub side: MatrixSide,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "kebab-case")]
+pub enum MatrixSide {
+    /// Fixture-mode is in baseline but not in subject — dropped since
+    /// baseline was captured.
+    BaselineOnly,
+    /// Fixture-mode is in subject but not in baseline — new coverage
+    /// since baseline was captured.
+    SubjectOnly,
+}
+
+// ────────────────────────────────────────────────────────────────
 // T010 — BenchRun + RunMetadata + NoiseClass (data-model.md §3)
 // ────────────────────────────────────────────────────────────────
 

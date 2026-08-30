@@ -12,7 +12,9 @@ sysinfo = "0.39.6"
 # Dev-only.
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-
-[dev-dependencies]
-# Milestone 669: per-test scratch dirs for schema round-trip tests.
+# Milestone 669 T023: RFC 3339 timestamps for RunMetadata. Pulled from
+# the workspace pin (no new version churn).
+chrono = { workspace = true }
+# Milestone 669 T022/T025: per-invocation scratch dir (--output <path>
+# files) + atomic writes for run.json / baseline.json.
 tempfile = "3"
