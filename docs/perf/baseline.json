@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "metadata": {
+    "waybill_commit_sha": "6e5148e967cc9c7c1cbba93fafcb77d3e8a95690",
+    "fixture_sha": "4de48e97a9771a884cfe1c64279bb428657a4161",
+    "runner_uname": "Darwin Michaels-MacBook-Pro.local 25.5.0 arm64",
+    "noise_class": "noisy",
+    "started_at": "2026-08-29T19:29:27.785487+00:00",
+    "finished_at": "2026-08-29T19:29:39.252477+00:00",
+    "total_duration_sec": 11
+  },
+  "results": [
+    {
+      "fixture_name": "cargo-workspace-medium",
+      "mode": "default",
+      "median_wall_clock_ms": 486,
+      "max_rss_kb": 18912,
+      "output_bytes": 13729,
+      "component_count": 6,
+      "exit_status": "success",
+      "waybill_commit_sha": "6e5148e967cc9c7c1cbba93fafcb77d3e8a95690",
+      "fixture_sha": "4de48e97a9771a884cfe1c64279bb428657a4161",
+      "raw_samples_ms": [
+        536,
+        537,
+        426,
+        486,
+        433
+      ]
+    },
+    {
+      "fixture_name": "cargo-workspace-medium",
+      "mode": "no-deep-hash",
+      "median_wall_clock_ms": 379,
+      "max_rss_kb": 18976,
+      "output_bytes": 13729,
+      "component_count": 6,
+      "exit_status": "success",
+      "waybill_commit_sha": "6e5148e967cc9c7c1cbba93fafcb77d3e8a95690",
+      "fixture_sha": "4de48e97a9771a884cfe1c64279bb428657a4161",
+      "raw_samples_ms": [
+        483,
+        374,
+        437,
+        370,
+        379
+      ]
+    },
+    {
+      "fixture_name": "cargo-workspace-medium",
+      "mode": "triple-format",
+      "median_wall_clock_ms": 375,
+      "max_rss_kb": 19040,
+      "output_bytes": 70122,
+      "component_count": 6,
+      "exit_status": "success",
+      "waybill_commit_sha": "6e5148e967cc9c7c1cbba93fafcb77d3e8a95690",
+      "fixture_sha": "4de48e97a9771a884cfe1c64279bb428657a4161",
+      "raw_samples_ms": [
+        372,
+        434,
+        375,
+        375,
+        370
+      ]
+    },
+    {
+      "fixture_name": "cargo-workspace-medium",
+      "mode": "no-deep-hash-plus-triple-format",
+      "median_wall_clock_ms": 378,
+      "max_rss_kb": 18960,
+      "output_bytes": 70122,
+      "component_count": 6,
+      "exit_status": "success",
+      "waybill_commit_sha": "6e5148e967cc9c7c1cbba93fafcb77d3e8a95690",
+      "fixture_sha": "4de48e97a9771a884cfe1c64279bb428657a4161",
+      "raw_samples_ms": [
+        423,
+        328,
+        377,
+        378,
+        381
+      ]
+    }
+  ]
+}

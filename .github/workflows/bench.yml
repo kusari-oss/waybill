@@ -1,0 +1,221 @@
+name: bench (m669)
+
+# Milestone 669 — persisted reproducible benchmark suite.
+# Contract: specs/669-bench-harness/contracts/ci-workflow.md.
+#
+# Triggers (per contract § Triggers):
+#   - push on stable release tags (v<major>.<minor>.<patch>)
+#   - weekly cron (Sunday 06:00 UTC — off-peak)
+#   - manual workflow_dispatch with optional --filter input
+#
+# Steps (per contract § Job-graph diff summary): checkout →
+# rust-toolchain → rust-cache → build xtask → build release waybill →
+# xtask bench → xtask bench --baseline (regression detection) →
+# upload artifacts → post/edit PR comment (release-tag runs only).
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  schedule:
+    - cron: '0 6 * * 0'
+  workflow_dispatch:
+    inputs:
+      filter:
+        description: 'Optional --filter glob (e.g., "cargo-*")'
+        required: false
+        default: ''
+
+# Fail-fast is a per-job setting (this workflow has one job); explicit
+# permission scoping keeps the token surface tight per Kusari Inspector
+# discipline.
+permissions:
+  contents: read
+  pull-requests: write  # PR-comment edit-in-place (release-tag runs only)
+
+jobs:
+  bench:
+    # C-4: runner class pinned to ubuntu-latest (Linux x86_64) — the
+    # reference architecture for docs perf numbers per spec Assumption 1.
+    runs-on: ubuntu-latest
+    # SC-008: 90-minute budget for the full matrix.
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          # Kusari Inspector finding: keep GITHUB_TOKEN out of git
+          # config so a hypothetical shell-injection in a later step
+          # cannot exfiltrate it (defense-in-depth alongside the
+          # env-var indirection on the run-bench step below).
+          persist-credentials: false
+
+      - name: Install Rust stable toolchain
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
+
+      - name: Restore cargo build cache
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
+
+      # C-5: `cargo build -p xtask` triggers m090's build.rs fixture-cache
+      # fetch as a side effect. Cache lives at
+      # ~/.cache/waybill/fixtures/<sha>/. Cache-hit runs skip fetch;
+      # cache-miss pays ~60s per SC-007.
+      - name: Build xtask (warms fixtures cache via m090 build.rs)
+        run: cargo build -p xtask
+
+      - name: Build waybill (release)
+        run: cargo build --release -p waybill
+
+      # C-6 step 1: capture-only run — writes target/bench/run-<sha>.json.
+      # Filter input is honored only for workflow_dispatch invocations.
+      # Kusari Inspector finding: interpolate the untrusted input via
+      # a per-step env var — NOT via `${{ github.event.inputs.filter }}`
+      # directly in the run: block — so an attacker triggering
+      # workflow_dispatch can't break out of the string and inject
+      # shell commands. See
+      # https://securitylab.github.com/research/github-actions-untrusted-input/
+      - name: Run bench (capture-only)
+        env:
+          FILTER_INPUT: ${{ github.event.inputs.filter }}
+        run: |
+          FILTER="$FILTER_INPUT"
+          if [ -n "$FILTER" ]; then
+            cargo run -p xtask --release -- bench --filter "$FILTER"
+          else
+            cargo run -p xtask --release -- bench
+          fi
+
+      # C-6 step 2: regression comparison against the committed
+      # baseline. C-3: fail-closed — no continue-on-error. This step
+      # returns exit 1 if any dimension crosses the 25% threshold.
+      # The --output path re-uses the JSON emitted in the previous
+      # step so we don't run the matrix twice.
+      - name: Run bench (regression comparison)
+        id: bench_compare
+        run: |
+          RUN_JSON=$(ls target/bench/run-*.json | head -1)
+          if [ -z "$RUN_JSON" ]; then
+            echo "no run-*.json produced by the capture-only step" >&2
+            exit 1
+          fi
+          cargo run -p xtask --release -- bench \
+            --baseline docs/perf/baseline.json \
+            --output "$RUN_JSON"
+
+      # Always upload artifacts (even on regression-fail) so operators
+      # can inspect the diff. C-6 step 3.
+      - name: Upload run + regression-diff artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: bench-run-${{ github.sha }}
+          path: |
+            target/bench/run-*.json
+            target/bench/regression-diff-*.json
+          if-no-files-found: warn
+          retention-days: 90
+
+      # C-7: PR-comment edit-in-place via magic marker. Only fires on
+      # release-tag runs where a related release PR exists.
+      # Skipped for schedule + workflow_dispatch (no PR context).
+      - name: Post/edit PR comment (release-tag runs only)
+        if: always() && startsWith(github.ref, 'refs/tags/v')
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v8.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const MARKER = '<!-- bench-regression-comment-v1 -->';
+
+            // Locate the regression-diff JSON emitted by xtask.
+            const diffFiles = fs
+              .readdirSync('target/bench')
+              .filter(f => f.startsWith('regression-diff-') && f.endsWith('.json'));
+            if (diffFiles.length === 0) {
+              core.info('no regression-diff-*.json emitted — skipping PR comment');
+              return;
+            }
+            const diffPath = path.join('target/bench', diffFiles[0]);
+            const diff = JSON.parse(fs.readFileSync(diffPath, 'utf8'));
+
+            // Format the Markdown table.
+            const lines = [MARKER, '', '## waybill perf regression check', ''];
+            lines.push(
+              `- subject: \`${diff.subject_sha}\``,
+              `- baseline: \`${diff.baseline_sha}\``,
+              `- threshold: ${(diff.threshold * 100).toFixed(0)}%`,
+              '',
+            );
+            if (diff.regressions.length === 0) {
+              lines.push('### Regressions', '', '_none — threshold not breached in the worse direction._', '');
+            } else {
+              lines.push('### Regressions', '');
+              lines.push('| fixture | mode | dimension | baseline | subject | delta |');
+              lines.push('|---|---|---|---:|---:|---:|');
+              for (const e of diff.regressions) {
+                lines.push(
+                  `| ${e.fixture_name} | ${e.mode} | ${e.dimension} | ${e.baseline_value} | ${e.subject_value} | +${(e.percentage_delta * 100).toFixed(1)}% |`,
+                );
+              }
+              lines.push('');
+            }
+            if (diff.improvements.length > 0) {
+              lines.push('### Improvements (informational)', '');
+              lines.push('| fixture | mode | dimension | baseline | subject | delta |');
+              lines.push('|---|---|---|---:|---:|---:|');
+              for (const e of diff.improvements) {
+                lines.push(
+                  `| ${e.fixture_name} | ${e.mode} | ${e.dimension} | ${e.baseline_value} | ${e.subject_value} | ${(e.percentage_delta * 100).toFixed(1)}% |`,
+                );
+              }
+              lines.push('');
+            }
+            if (diff.matrix_asymmetry.length > 0) {
+              lines.push('### Matrix asymmetry', '');
+              for (const a of diff.matrix_asymmetry) {
+                lines.push(`- \`${a.fixture_name}\` [${a.mode}] — ${a.side}`);
+              }
+              lines.push('');
+            }
+            const body = lines.join('\n');
+
+            // Find the PR associated with the tag (if any) via the
+            // commit → associatedPullRequests link.
+            const tagCommit = context.sha;
+            const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: tagCommit,
+            });
+            if (prs.data.length === 0) {
+              core.info(`no PR associated with commit ${tagCommit}; skipping PR comment`);
+              return;
+            }
+            const prNumber = prs.data[0].number;
+
+            // Find an existing comment with the magic marker.
+            const existing = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              per_page: 100,
+            });
+            const marked = existing.data.find(c => c.body && c.body.startsWith(MARKER));
+            if (marked) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: marked.id,
+                body,
+              });
+              core.info(`updated existing bench-regression comment ${marked.id} on PR #${prNumber}`);
+            } else {
+              const created = await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body,
+              });
+              core.info(`created new bench-regression comment ${created.data.id} on PR #${prNumber}`);
+            }

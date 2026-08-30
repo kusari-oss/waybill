@@ -5,3 +5,16 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
+# Milestone 669: cross-platform peak-RSS measurement for `xtask bench`.
+# Dev-only per FR-015 + SC-009 (zero waybill-runtime dep additions).
+sysinfo = "0.32"
+# Milestone 669: JSON schema (baseline.json + run.json) round-trip.
+# Dev-only.
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Milestone 669 T023: RFC 3339 timestamps for RunMetadata. Pulled from
+# the workspace pin (no new version churn).
+chrono = { workspace = true }
+# Milestone 669 T022/T025: per-invocation scratch dir (--output <path>
+# files) + atomic writes for run.json / baseline.json.
+tempfile = "3"
