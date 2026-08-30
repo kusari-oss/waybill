@@ -2,10 +2,10 @@
 
 Generated from `docs/perf/baseline.json` captured at:
 
-- **waybill commit**: `55039a4a7bb12211a42299161913766927e5fe3b`
-- **fixtures pin**: `4de48e97a9771a884cfe1c64279bb428657a4161`
+- **waybill commit**: `6bfbc70829982f253f8de3d088315fe5666b02c0`
+- **fixtures pin**: `891f63429480554cd2fedd48de8e5c0bdd6ba943`
 - **runner**: `Darwin Michaels-MacBook-Pro.local 25.5.0 arm64` (noise class: `Noisy`)
-- **duration**: 150s
+- **duration**: 858s
 - **schema version**: 1
 
 ## Reference architecture
@@ -20,131 +20,131 @@ macOS runners (m094 noise-class = `Noisy`).
 
 | mode | median wall-clock (ms) | peak RSS (KB) | output bytes | components | exit | fixture-sha | waybill-sha |
 |---|---:|---:|---:|---:|---|---|---|
-| `default` | 56 | 608 | 6320 | 3 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash` | 55 | 624 | 6320 | 3 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash-plus-triple-format` | 56 | 576 | 36071 | 3 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `triple-format` | 54 | 464 | 36071 | 3 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
+| `default` | 52 | 608 | 47058 | 33 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash` | 55 | 656 | 47058 | 33 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash-plus-triple-format` | 55 | 656 | 268735 | 33 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `triple-format` | 55 | 608 | 268735 | 33 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
 
 ## `cargo-workspace-medium`
 
 | mode | median wall-clock (ms) | peak RSS (KB) | output bytes | components | exit | fixture-sha | waybill-sha |
 |---|---:|---:|---:|---:|---|---|---|
-| `default` | 429 | 18896 | 13729 | 6 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash` | 427 | 18944 | 13729 | 6 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash-plus-triple-format` | 381 | 20608 | 70122 | 6 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `triple-format` | 372 | 19008 | 70122 | 6 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
+| `default` | 2589 | 19808 | 83019 | 41 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash` | 1940 | 19776 | 83019 | 41 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash-plus-triple-format` | 1663 | 20400 | 410473 | 41 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `triple-format` | 1715 | 22048 | 410473 | 41 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
 
 ## `cmake-project-medium`
 
 | mode | median wall-clock (ms) | peak RSS (KB) | output bytes | components | exit | fixture-sha | waybill-sha |
 |---|---:|---:|---:|---:|---|---|---|
-| `default` | 55 | 592 | 10123 | 6 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `fingerprints-corpus` | 0 | 0 | 0 | 0 | corpus-unreachable | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash` | 55 | 592 | 10123 | 6 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash-plus-triple-format` | 56 | 576 | 58716 | 6 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `triple-format` | 55 | 576 | 58716 | 6 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
+| `default` | 110 | 608 | 101070 | 75 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `fingerprints-corpus` | 0 | 0 | 0 | 0 | corpus-unreachable | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash` | 107 | 656 | 101070 | 75 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash-plus-triple-format` | 107 | 624 | 581533 | 75 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `triple-format` | 110 | 608 | 581533 | 75 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
 
 ## `conan-project-medium`
 
 | mode | median wall-clock (ms) | peak RSS (KB) | output bytes | components | exit | fixture-sha | waybill-sha |
 |---|---:|---:|---:|---:|---|---|---|
-| `default` | 56 | 640 | 6301 | 3 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `fingerprints-corpus` | 0 | 0 | 0 | 0 | corpus-unreachable | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash` | 54 | 576 | 6301 | 3 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash-plus-triple-format` | 56 | 576 | 36018 | 3 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `triple-format` | 56 | 624 | 36018 | 3 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
+| `default` | 54 | 624 | 53499 | 38 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `fingerprints-corpus` | 0 | 0 | 0 | 0 | corpus-unreachable | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash` | 55 | 656 | 53499 | 38 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash-plus-triple-format` | 55 | 656 | 306588 | 38 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `triple-format` | 55 | 688 | 306588 | 38 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
 
 ## `debian-slim`
 
 | mode | median wall-clock (ms) | peak RSS (KB) | output bytes | components | exit | fixture-sha | waybill-sha |
 |---|---:|---:|---:|---:|---|---|---|
-| `default` | 110 | 576 | 0 | 0 | non-zero-exit-code | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash` | 108 | 608 | 0 | 0 | non-zero-exit-code | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `triple-format` | 106 | 608 | 0 | 0 | non-zero-exit-code | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
+| `default` | 1835 | 156144 | 1262187 | 358 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash` | 1635 | 159008 | 1288046 | 922 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `triple-format` | 1844 | 161632 | 4410305 | 358 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
 
 ## `gem-bundler-small`
 
 | mode | median wall-clock (ms) | peak RSS (KB) | output bytes | components | exit | fixture-sha | waybill-sha |
 |---|---:|---:|---:|---:|---|---|---|
-| `default` | 53 | 528 | 9098 | 4 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash` | 56 | 656 | 9098 | 4 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash-plus-triple-format` | 55 | 624 | 48935 | 4 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `triple-format` | 56 | 560 | 48935 | 4 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
+| `default` | 107 | 576 | 57317 | 35 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash` | 55 | 640 | 57317 | 35 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash-plus-triple-format` | 109 | 512 | 296589 | 35 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `triple-format` | 106 | 640 | 296589 | 35 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
 
 ## `go-module-medium`
 
 | mode | median wall-clock (ms) | peak RSS (KB) | output bytes | components | exit | fixture-sha | waybill-sha |
 |---|---:|---:|---:|---:|---|---|---|
-| `default` | 2105 | 19200 | 17220 | 5 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash` | 1979 | 19760 | 17220 | 5 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash-plus-triple-format` | 1973 | 19248 | 94715 | 5 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `triple-format` | 1947 | 19264 | 94715 | 5 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
+| `default` | 13149 | 21696 | 152160 | 71 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash` | 13013 | 21632 | 152160 | 71 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash-plus-triple-format` | 12795 | 21776 | 753606 | 71 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `triple-format` | 12791 | 21248 | 753606 | 71 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
 
 ## `gradle-multi-project-medium`
 
 | mode | median wall-clock (ms) | peak RSS (KB) | output bytes | components | exit | fixture-sha | waybill-sha |
 |---|---:|---:|---:|---:|---|---|---|
-| `default` | 377 | 20400 | 14343 | 5 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash` | 327 | 20384 | 14343 | 5 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash-plus-triple-format` | 271 | 20432 | 75651 | 5 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `triple-format` | 317 | 20432 | 75651 | 5 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
+| `default` | 2994 | 22368 | 127097 | 47 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash` | 2625 | 22128 | 127097 | 47 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash-plus-triple-format` | 2188 | 22096 | 641262 | 47 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `triple-format` | 2309 | 24720 | 641262 | 47 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
 
 ## `linux-binaries-50`
 
 | mode | median wall-clock (ms) | peak RSS (KB) | output bytes | components | exit | fixture-sha | waybill-sha |
 |---|---:|---:|---:|---:|---|---|---|
-| `default` | 55 | 608 | 0 | 0 | non-zero-exit-code | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `fingerprints-corpus` | 0 | 0 | 0 | 0 | corpus-unreachable | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash` | 56 | 608 | 0 | 0 | non-zero-exit-code | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
+| `default` | 54 | 656 | 139695 | 61 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `fingerprints-corpus` | 0 | 0 | 0 | 0 | corpus-unreachable | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash` | 54 | 656 | 139695 | 61 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
 
 ## `maven-multi-module-medium`
 
 | mode | median wall-clock (ms) | peak RSS (KB) | output bytes | components | exit | fixture-sha | waybill-sha |
 |---|---:|---:|---:|---:|---|---|---|
-| `default` | 545 | 19104 | 20020 | 8 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash` | 433 | 19136 | 20020 | 8 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash-plus-triple-format` | 427 | 18928 | 96634 | 8 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `triple-format` | 476 | 20688 | 96634 | 8 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
+| `default` | 3338 | 20560 | 124355 | 53 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash` | 2797 | 20288 | 124355 | 53 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash-plus-triple-format` | 2448 | 20736 | 612754 | 53 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `triple-format` | 2492 | 20768 | 612754 | 53 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
 
 ## `npm-monorepo-medium`
 
 | mode | median wall-clock (ms) | peak RSS (KB) | output bytes | components | exit | fixture-sha | waybill-sha |
 |---|---:|---:|---:|---:|---|---|---|
-| `default` | 427 | 18832 | 16170 | 9 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash` | 374 | 18384 | 16170 | 9 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash-plus-triple-format` | 323 | 18416 | 80115 | 9 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `triple-format` | 321 | 18352 | 80115 | 9 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
+| `default` | 2690 | 19168 | 92904 | 45 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash` | 1842 | 19200 | 92904 | 45 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash-plus-triple-format` | 1663 | 19216 | 458816 | 45 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `triple-format` | 1616 | 19232 | 458816 | 45 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
 
 ## `nuget-solution-medium`
 
 | mode | median wall-clock (ms) | peak RSS (KB) | output bytes | components | exit | fixture-sha | waybill-sha |
 |---|---:|---:|---:|---:|---|---|---|
-| `default` | 272 | 18496 | 12278 | 6 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash` | 267 | 18496 | 12278 | 6 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash-plus-triple-format` | 215 | 18752 | 66437 | 6 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `triple-format` | 212 | 19792 | 66437 | 6 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
+| `default` | 2097 | 19120 | 73100 | 41 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash` | 1983 | 19120 | 73100 | 41 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash-plus-triple-format` | 1505 | 19152 | 392486 | 41 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `triple-format` | 1609 | 19552 | 392486 | 41 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
 
 ## `pip-poetry-medium`
 
 | mode | median wall-clock (ms) | peak RSS (KB) | output bytes | components | exit | fixture-sha | waybill-sha |
 |---|---:|---:|---:|---:|---|---|---|
-| `default` | 274 | 18336 | 9417 | 4 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash` | 261 | 18432 | 9417 | 4 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash-plus-triple-format` | 219 | 19968 | 51493 | 4 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `triple-format` | 269 | 18400 | 51493 | 4 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
+| `default` | 1926 | 20000 | 82818 | 36 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash` | 1722 | 19552 | 82818 | 36 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash-plus-triple-format` | 1437 | 19616 | 407146 | 36 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `triple-format` | 1645 | 20032 | 407146 | 36 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
 
 ## `vcpkg-project-medium`
 
 | mode | median wall-clock (ms) | peak RSS (KB) | output bytes | components | exit | fixture-sha | waybill-sha |
 |---|---:|---:|---:|---:|---|---|---|
-| `default` | 56 | 640 | 6139 | 3 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `fingerprints-corpus` | 0 | 0 | 0 | 0 | corpus-unreachable | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash` | 55 | 608 | 6139 | 3 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `no-deep-hash-plus-triple-format` | 55 | 592 | 35670 | 3 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
-| `triple-format` | 56 | 544 | 35670 | 3 | success | `4de48e97a9771a884cfe1c64279bb428657a4161` | `55039a4a7bb12211a42299161913766927e5fe3b` |
+| `default` | 55 | 576 | 105399 | 79 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `fingerprints-corpus` | 0 | 0 | 0 | 0 | corpus-unreachable | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash` | 55 | 656 | 105399 | 79 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `no-deep-hash-plus-triple-format` | 55 | 608 | 599466 | 79 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
+| `triple-format` | 53 | 544 | 599466 | 79 | success | `891f63429480554cd2fedd48de8e5c0bdd6ba943` | `6bfbc70829982f253f8de3d088315fe5666b02c0` |
 
 ---
 
-_Baseline captured at 2026-08-30T09:14:30.021811+00:00 (150s). Regenerate this page after
+_Baseline captured at 2026-08-30T17:25:10.455758+00:00 (858s). Regenerate this page after
 each `docs/perf/baseline.json` refresh via
 `cargo run -p xtask -- bench-docs`._
