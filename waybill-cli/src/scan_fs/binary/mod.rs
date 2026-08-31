@@ -201,7 +201,7 @@ pub fn read(
         source_binding::BuildAttributionRegistry::from_observations(Vec::new())
     };
 
-    for path in discover_binaries(rootfs, exclude_set) {
+    for path in discover_binaries(rootfs, claimed_paths, exclude_set) {
         // Size bounds via metadata BEFORE the full-file read. A
         // multi-GB file that exceeds MAX_BINARY_SIZE_BYTES used to be
         // slurped into memory in its entirety just to be rejected by
