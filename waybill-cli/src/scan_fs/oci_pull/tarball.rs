@@ -200,7 +200,7 @@ mod tests {
             .expect("tarball assembly should succeed");
         assert!(tarball.exists(), "tarball file was not created");
 
-        let extracted = docker_image::extract(&tarball)
+        let extracted = docker_image::extract(&tarball, docker_image::ExtractMode::Full)
             .expect("extract should accept the assembled tarball");
 
         let os_release = extracted.rootfs.join("etc/os-release");
