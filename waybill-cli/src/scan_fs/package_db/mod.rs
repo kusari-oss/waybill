@@ -559,7 +559,12 @@ impl ScanDiagnostics {
 // production callers moved to `insert_claim_with_canonical_cached`
 // after the perf-follow-up profiling (measured 91ms → 27ms on
 // dpkg::collect_claimed_paths).
-#[cfg_attr(not(test), allow(dead_code))]
+//
+// `#[allow(dead_code)]` (unconditional) — the test callers in
+// binary/mod.rs are `#[cfg(unix)]`-gated too, so under
+// `--all-targets` on Windows/CI the function otherwise trips
+// `-D dead-code`. Keeping the wrapper documented + available.
+#[allow(dead_code)]
 pub(crate) fn insert_claim_with_canonical(
     claimed: &mut std::collections::HashSet<std::path::PathBuf>,
     #[cfg(unix)] claimed_inodes: &mut std::collections::HashSet<(u64, u64)>,
