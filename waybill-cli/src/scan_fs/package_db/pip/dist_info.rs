@@ -39,6 +39,12 @@ pub fn collect_claimed_paths(
     claimed: &mut std::collections::HashSet<std::path::PathBuf>,
     #[cfg(unix)] claimed_inodes: &mut std::collections::HashSet<(u64, u64)>,
 ) {
+    // Perf: cache canonicalized parents across every RECORD file
+    // (see dpkg::collect_claimed_paths for rationale).
+    let mut parent_cache: std::collections::HashMap<
+        std::path::PathBuf,
+        Option<std::path::PathBuf>,
+    > = std::collections::HashMap::new();
     for site_packages in candidate_site_packages_roots(rootfs) {
         if !site_packages.is_dir() {
             continue;
@@ -68,11 +74,12 @@ pub fn collect_claimed_paths(
                 // entries use `../` to escape for shared data
                 // (`../../../bin/jq` etc.) — preserve that form.
                 let abs = site_packages.join(rel);
-                super::super::insert_claim_with_canonical(
+                super::super::insert_claim_with_canonical_cached(
                     claimed,
                     #[cfg(unix)]
                     claimed_inodes,
                     abs,
+                    &mut parent_cache,
                 );
             }
         }

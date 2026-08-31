@@ -554,13 +554,57 @@ impl ScanDiagnostics {
 /// because the file itself might not exist at claim time (some
 /// `.list` entries reference files removed post-install), but the
 /// parent directory's symlink resolution is stable and cheap.
+// Retained for `#[cfg(test)]` regression tests in binary/mod.rs that
+// exercise the claim-set / walker-path canonicalization behavior. All
+// production callers moved to `insert_claim_with_canonical_cached`
+// after the perf-follow-up profiling (measured 91ms → 27ms on
+// dpkg::collect_claimed_paths).
+//
+// `#[allow(dead_code)]` (unconditional) — the test callers in
+// binary/mod.rs are `#[cfg(unix)]`-gated too, so under
+// `--all-targets` on Windows/CI the function otherwise trips
+// `-D dead-code`. Keeping the wrapper documented + available.
+#[allow(dead_code)]
 pub(crate) fn insert_claim_with_canonical(
     claimed: &mut std::collections::HashSet<std::path::PathBuf>,
     #[cfg(unix)] claimed_inodes: &mut std::collections::HashSet<(u64, u64)>,
     abs_path: std::path::PathBuf,
 ) {
+    let mut ephemeral_cache = std::collections::HashMap::new();
+    insert_claim_with_canonical_cached(
+        claimed,
+        #[cfg(unix)]
+        claimed_inodes,
+        abs_path,
+        &mut ephemeral_cache,
+    );
+}
+
+/// Cached variant of [`insert_claim_with_canonical`]. Reuses a
+/// caller-provided `parent_cache` across successive calls in a tight
+/// loop, collapsing redundant `fs::canonicalize()` syscalls for paths
+/// that share a parent directory (common: hundreds of `/usr/bin/*` and
+/// `/usr/lib/*` entries per package `.list`). Measured on
+/// debian:12-slim: dpkg::collect_claimed_paths 91ms → 27ms (-70%).
+///
+/// The cache entry is `Option<PathBuf>` so both success AND failure
+/// canonicalizations are memoized (a missing directory shouldn't get
+/// re-canonicalized once per hit inside the same loop).
+pub(crate) fn insert_claim_with_canonical_cached(
+    claimed: &mut std::collections::HashSet<std::path::PathBuf>,
+    #[cfg(unix)] claimed_inodes: &mut std::collections::HashSet<(u64, u64)>,
+    abs_path: std::path::PathBuf,
+    parent_cache: &mut std::collections::HashMap<
+        std::path::PathBuf,
+        Option<std::path::PathBuf>,
+    >,
+) {
     if let (Some(parent), Some(basename)) = (abs_path.parent(), abs_path.file_name()) {
-        if let Ok(canonical_parent) = std::fs::canonicalize(parent) {
+        let canonical_parent = parent_cache
+            .entry(parent.to_path_buf())
+            .or_insert_with(|| std::fs::canonicalize(parent).ok())
+            .clone();
+        if let Some(canonical_parent) = canonical_parent {
             let canonical = canonical_parent.join(basename);
             if canonical != abs_path {
                 claimed.insert(canonical);
