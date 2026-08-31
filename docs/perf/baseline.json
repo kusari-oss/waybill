@@ -1,136 +1,118 @@
 {
   "schema_version": 1,
   "metadata": {
-    "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+    "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
     "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-    "runner_uname": "Darwin Michaels-MacBook-Pro.local 25.5.0 arm64",
+    "runner_uname": "Darwin Michaels-MBP.localdomain 25.5.0 arm64",
     "noise_class": "noisy",
-    "started_at": "2026-08-31T01:43:02.446172+00:00",
-    "finished_at": "2026-08-31T01:44:21.442935+00:00",
-    "total_duration_sec": 78
+    "started_at": "2026-08-31T21:04:27.139151+00:00",
+    "finished_at": "2026-08-31T21:05:40.264430+00:00",
+    "total_duration_sec": 73
   },
   "results": [
     {
       "fixture_name": "cargo-workspace-medium",
       "mode": "default",
-      "median_wall_clock_ms": 110,
-      "max_rss_kb": 20192,
+      "median_wall_clock_ms": 109,
+      "max_rss_kb": 20160,
       "output_bytes": 83019,
       "component_count": 41,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        156,
+        109,
+        110,
         110,
         107,
-        105,
-        110
+        106
       ]
     },
     {
       "fixture_name": "cargo-workspace-medium",
       "mode": "no-deep-hash",
-      "median_wall_clock_ms": 109,
-      "max_rss_kb": 352,
+      "median_wall_clock_ms": 108,
+      "max_rss_kb": 640,
       "output_bytes": 83019,
       "component_count": 41,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        106,
         110,
         110,
-        109,
+        105,
+        108,
+        108
+      ]
+    },
+    {
+      "fixture_name": "cargo-workspace-medium",
+      "mode": "triple-format",
+      "median_wall_clock_ms": 107,
+      "max_rss_kb": 20896,
+      "output_bytes": 410473,
+      "component_count": 41,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        107,
+        104,
+        104,
+        107,
+        110
+      ]
+    },
+    {
+      "fixture_name": "cargo-workspace-medium",
+      "mode": "no-deep-hash-plus-triple-format",
+      "median_wall_clock_ms": 108,
+      "max_rss_kb": 624,
+      "output_bytes": 410473,
+      "component_count": 41,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        108,
+        160,
+        110,
+        108,
         107
       ]
     },
     {
-      "fixture_name": "cargo-workspace-medium",
-      "mode": "triple-format",
-      "median_wall_clock_ms": 109,
-      "max_rss_kb": 640,
-      "output_bytes": 410473,
-      "component_count": 41,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        104,
-        107,
-        109,
-        110,
-        110
-      ]
-    },
-    {
-      "fixture_name": "cargo-workspace-medium",
-      "mode": "no-deep-hash-plus-triple-format",
-      "median_wall_clock_ms": 106,
-      "max_rss_kb": 656,
-      "output_bytes": 410473,
-      "component_count": 41,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        110,
-        105,
-        102,
-        106,
-        110
-      ]
-    },
-    {
       "fixture_name": "npm-monorepo-medium",
       "mode": "default",
-      "median_wall_clock_ms": 55,
-      "max_rss_kb": 464,
+      "median_wall_clock_ms": 53,
+      "max_rss_kb": 576,
       "output_bytes": 92904,
       "component_count": 45,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        55,
-        55,
-        51,
         53,
-        55
-      ]
-    },
-    {
-      "fixture_name": "npm-monorepo-medium",
-      "mode": "no-deep-hash",
-      "median_wall_clock_ms": 55,
-      "max_rss_kb": 608,
-      "output_bytes": 92904,
-      "component_count": 45,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        55,
-        55,
-        55,
-        55,
+        54,
+        53,
+        53,
         54
       ]
     },
     {
       "fixture_name": "npm-monorepo-medium",
-      "mode": "triple-format",
+      "mode": "no-deep-hash",
       "median_wall_clock_ms": 55,
-      "max_rss_kb": 608,
-      "output_bytes": 458816,
+      "max_rss_kb": 656,
+      "output_bytes": 92904,
       "component_count": 45,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        53,
-        55,
+        54,
+        50,
         55,
         55,
         55
@@ -138,199 +120,217 @@
     },
     {
       "fixture_name": "npm-monorepo-medium",
+      "mode": "triple-format",
+      "median_wall_clock_ms": 52,
+      "max_rss_kb": 608,
+      "output_bytes": 458816,
+      "component_count": 45,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        55,
+        52,
+        52,
+        55,
+        51
+      ]
+    },
+    {
+      "fixture_name": "npm-monorepo-medium",
       "mode": "no-deep-hash-plus-triple-format",
-      "median_wall_clock_ms": 55,
+      "median_wall_clock_ms": 54,
       "max_rss_kb": 656,
       "output_bytes": 458816,
       "component_count": 45,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        55,
-        55,
-        53,
         54,
-        55
+        51,
+        50,
+        55,
+        106
       ]
     },
     {
       "fixture_name": "pip-poetry-medium",
       "mode": "default",
       "median_wall_clock_ms": 55,
-      "max_rss_kb": 640,
+      "max_rss_kb": 656,
       "output_bytes": 82818,
       "component_count": 36,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        54,
-        55,
+        106,
+        56,
         55,
         53,
-        55
+        52
       ]
     },
     {
       "fixture_name": "pip-poetry-medium",
       "mode": "no-deep-hash",
       "median_wall_clock_ms": 55,
-      "max_rss_kb": 464,
+      "max_rss_kb": 560,
       "output_bytes": 82818,
       "component_count": 36,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
         55,
         55,
-        51,
         55,
-        55
+        55,
+        53
       ]
     },
     {
       "fixture_name": "pip-poetry-medium",
       "mode": "triple-format",
-      "median_wall_clock_ms": 54,
-      "max_rss_kb": 464,
+      "median_wall_clock_ms": 55,
+      "max_rss_kb": 656,
       "output_bytes": 407146,
       "component_count": 36,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
+        51,
         55,
         54,
-        53,
-        50,
+        55,
         55
       ]
     },
     {
       "fixture_name": "pip-poetry-medium",
       "mode": "no-deep-hash-plus-triple-format",
-      "median_wall_clock_ms": 55,
-      "max_rss_kb": 640,
+      "median_wall_clock_ms": 53,
+      "max_rss_kb": 656,
       "output_bytes": 407146,
       "component_count": 36,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        55,
-        55,
+        53,
+        50,
+        53,
         52,
-        55,
         55
       ]
     },
     {
       "fixture_name": "go-module-medium",
       "mode": "default",
-      "median_wall_clock_ms": 102,
+      "median_wall_clock_ms": 107,
       "max_rss_kb": 656,
       "output_bytes": 147289,
       "component_count": 71,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        102,
-        105,
-        55,
-        55,
-        104
+        106,
+        109,
+        107,
+        110,
+        106
       ]
     },
     {
       "fixture_name": "go-module-medium",
       "mode": "no-deep-hash",
-      "median_wall_clock_ms": 105,
+      "median_wall_clock_ms": 106,
       "max_rss_kb": 608,
       "output_bytes": 147289,
       "component_count": 71,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
         106,
-        55,
-        105,
-        104,
-        105
+        110,
+        106,
+        106,
+        106
       ]
     },
     {
       "fixture_name": "go-module-medium",
       "mode": "triple-format",
-      "median_wall_clock_ms": 106,
-      "max_rss_kb": 640,
-      "output_bytes": 720758,
-      "component_count": 71,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        106,
-        105,
-        103,
-        108,
-        110
-      ]
-    },
-    {
-      "fixture_name": "go-module-medium",
-      "mode": "no-deep-hash-plus-triple-format",
-      "median_wall_clock_ms": 108,
-      "max_rss_kb": 608,
-      "output_bytes": 720758,
-      "component_count": 71,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        105,
-        108,
-        110,
-        110,
-        105
-      ]
-    },
-    {
-      "fixture_name": "maven-multi-module-medium",
-      "mode": "default",
       "median_wall_clock_ms": 107,
-      "max_rss_kb": 304,
-      "output_bytes": 124355,
-      "component_count": 53,
+      "max_rss_kb": 656,
+      "output_bytes": 720758,
+      "component_count": 71,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        105,
-        106,
-        109,
+        108,
         107,
+        107,
+        101,
         109
       ]
     },
     {
+      "fixture_name": "go-module-medium",
+      "mode": "no-deep-hash-plus-triple-format",
+      "median_wall_clock_ms": 107,
+      "max_rss_kb": 528,
+      "output_bytes": 720758,
+      "component_count": 71,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        107,
+        108,
+        109,
+        107,
+        107
+      ]
+    },
+    {
       "fixture_name": "maven-multi-module-medium",
-      "mode": "no-deep-hash",
-      "median_wall_clock_ms": 105,
-      "max_rss_kb": 640,
+      "mode": "default",
+      "median_wall_clock_ms": 106,
+      "max_rss_kb": 656,
       "output_bytes": 124355,
       "component_count": 53,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        109,
-        105,
+        106,
         110,
+        106,
+        109,
+        105
+      ]
+    },
+    {
+      "fixture_name": "maven-multi-module-medium",
+      "mode": "no-deep-hash",
+      "median_wall_clock_ms": 107,
+      "max_rss_kb": 608,
+      "output_bytes": 124355,
+      "component_count": 53,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
         105,
+        107,
+        109,
+        110,
         104
       ]
     },
@@ -338,36 +338,36 @@
       "fixture_name": "maven-multi-module-medium",
       "mode": "triple-format",
       "median_wall_clock_ms": 108,
-      "max_rss_kb": 624,
+      "max_rss_kb": 608,
       "output_bytes": 612754,
       "component_count": 53,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
+        105,
+        110,
         108,
-        110,
-        107,
-        110,
-        108
+        108,
+        105
       ]
     },
     {
       "fixture_name": "maven-multi-module-medium",
       "mode": "no-deep-hash-plus-triple-format",
-      "median_wall_clock_ms": 109,
-      "max_rss_kb": 640,
+      "median_wall_clock_ms": 106,
+      "max_rss_kb": 608,
       "output_bytes": 612754,
       "component_count": 53,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        110,
+        106,
+        106,
         103,
-        109,
         110,
-        105
+        110
       ]
     },
     {
@@ -378,284 +378,284 @@
       "output_bytes": 127097,
       "component_count": 47,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
+        106,
         110,
-        107,
-        105,
         110,
+        106,
         108
       ]
     },
     {
       "fixture_name": "gradle-multi-project-medium",
       "mode": "no-deep-hash",
-      "median_wall_clock_ms": 109,
-      "max_rss_kb": 640,
+      "median_wall_clock_ms": 108,
+      "max_rss_kb": 496,
       "output_bytes": 127097,
       "component_count": 47,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
         110,
-        107,
-        101,
-        109,
-        110
+        106,
+        104,
+        108,
+        109
       ]
     },
     {
       "fixture_name": "gradle-multi-project-medium",
       "mode": "triple-format",
-      "median_wall_clock_ms": 108,
-      "max_rss_kb": 608,
+      "median_wall_clock_ms": 110,
+      "max_rss_kb": 19360,
       "output_bytes": 641262,
       "component_count": 47,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        110,
-        105,
+        156,
         109,
-        108,
-        106
+        106,
+        110,
+        110
       ]
     },
     {
       "fixture_name": "gradle-multi-project-medium",
       "mode": "no-deep-hash-plus-triple-format",
       "median_wall_clock_ms": 105,
-      "max_rss_kb": 656,
+      "max_rss_kb": 640,
       "output_bytes": 641262,
       "component_count": 47,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        105,
+        103,
+        105,
+        106,
+        105
+      ]
+    },
+    {
+      "fixture_name": "gem-bundler-small",
+      "mode": "default",
+      "median_wall_clock_ms": 109,
+      "max_rss_kb": 608,
+      "output_bytes": 57317,
+      "component_count": 35,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        109,
+        109,
+        106,
+        109,
+        106
+      ]
+    },
+    {
+      "fixture_name": "gem-bundler-small",
+      "mode": "no-deep-hash",
+      "median_wall_clock_ms": 55,
+      "max_rss_kb": 608,
+      "output_bytes": 57317,
+      "component_count": 35,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        102,
+        55,
+        55,
+        52,
+        53
+      ]
+    },
+    {
+      "fixture_name": "gem-bundler-small",
+      "mode": "triple-format",
+      "median_wall_clock_ms": 107,
+      "max_rss_kb": 608,
+      "output_bytes": 296589,
+      "component_count": 35,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        105,
+        107,
+        109,
+        106,
+        109
+      ]
+    },
+    {
+      "fixture_name": "gem-bundler-small",
+      "mode": "no-deep-hash-plus-triple-format",
+      "median_wall_clock_ms": 108,
+      "max_rss_kb": 464,
+      "output_bytes": 296589,
+      "component_count": 35,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        110,
+        110,
+        104,
+        108,
+        104
+      ]
+    },
+    {
+      "fixture_name": "nuget-solution-medium",
+      "mode": "default",
+      "median_wall_clock_ms": 53,
+      "max_rss_kb": 496,
+      "output_bytes": 73100,
+      "component_count": 41,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        54,
+        54,
+        52,
+        53,
+        51
+      ]
+    },
+    {
+      "fixture_name": "nuget-solution-medium",
+      "mode": "no-deep-hash",
+      "median_wall_clock_ms": 53,
+      "max_rss_kb": 608,
+      "output_bytes": 73100,
+      "component_count": 41,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        53,
+        55,
+        51,
+        50,
+        54
+      ]
+    },
+    {
+      "fixture_name": "nuget-solution-medium",
+      "mode": "triple-format",
+      "median_wall_clock_ms": 55,
+      "max_rss_kb": 608,
+      "output_bytes": 392486,
+      "component_count": 41,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        51,
+        55,
+        55,
+        55,
+        55
+      ]
+    },
+    {
+      "fixture_name": "nuget-solution-medium",
+      "mode": "no-deep-hash-plus-triple-format",
+      "median_wall_clock_ms": 55,
+      "max_rss_kb": 640,
+      "output_bytes": 392486,
+      "component_count": 41,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        52,
+        55,
+        55,
+        55,
+        55
+      ]
+    },
+    {
+      "fixture_name": "cmake-project-medium",
+      "mode": "default",
+      "median_wall_clock_ms": 106,
+      "max_rss_kb": 544,
+      "output_bytes": 101070,
+      "component_count": 75,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
         106,
-        108,
-        105,
-        103,
+        104,
+        106,
+        109,
         101
       ]
     },
     {
-      "fixture_name": "gem-bundler-small",
-      "mode": "default",
-      "median_wall_clock_ms": 55,
-      "max_rss_kb": 576,
-      "output_bytes": 57317,
-      "component_count": 35,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        54,
-        55,
-        55,
-        54,
-        55
-      ]
-    },
-    {
-      "fixture_name": "gem-bundler-small",
-      "mode": "no-deep-hash",
-      "median_wall_clock_ms": 55,
-      "max_rss_kb": 640,
-      "output_bytes": 57317,
-      "component_count": 35,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        55,
-        54,
-        55,
-        53,
-        55
-      ]
-    },
-    {
-      "fixture_name": "gem-bundler-small",
-      "mode": "triple-format",
-      "median_wall_clock_ms": 55,
-      "max_rss_kb": 608,
-      "output_bytes": 296589,
-      "component_count": 35,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        55,
-        55,
-        55,
-        105,
-        55
-      ]
-    },
-    {
-      "fixture_name": "gem-bundler-small",
-      "mode": "no-deep-hash-plus-triple-format",
-      "median_wall_clock_ms": 55,
-      "max_rss_kb": 656,
-      "output_bytes": 296589,
-      "component_count": 35,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        55,
-        55,
-        55,
-        55,
-        54
-      ]
-    },
-    {
-      "fixture_name": "nuget-solution-medium",
-      "mode": "default",
-      "median_wall_clock_ms": 54,
-      "max_rss_kb": 624,
-      "output_bytes": 73100,
-      "component_count": 41,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        50,
-        55,
-        52,
-        55,
-        54
-      ]
-    },
-    {
-      "fixture_name": "nuget-solution-medium",
-      "mode": "no-deep-hash",
-      "median_wall_clock_ms": 55,
-      "max_rss_kb": 608,
-      "output_bytes": 73100,
-      "component_count": 41,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        55,
-        55,
-        55,
-        55,
-        54
-      ]
-    },
-    {
-      "fixture_name": "nuget-solution-medium",
-      "mode": "triple-format",
-      "median_wall_clock_ms": 54,
-      "max_rss_kb": 560,
-      "output_bytes": 392486,
-      "component_count": 41,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        55,
-        52,
-        51,
-        54,
-        55
-      ]
-    },
-    {
-      "fixture_name": "nuget-solution-medium",
-      "mode": "no-deep-hash-plus-triple-format",
-      "median_wall_clock_ms": 55,
-      "max_rss_kb": 640,
-      "output_bytes": 392486,
-      "component_count": 41,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        51,
-        53,
-        55,
-        55,
-        55
-      ]
-    },
-    {
       "fixture_name": "cmake-project-medium",
-      "mode": "default",
-      "median_wall_clock_ms": 105,
-      "max_rss_kb": 608,
+      "mode": "no-deep-hash",
+      "median_wall_clock_ms": 104,
+      "max_rss_kb": 528,
       "output_bytes": 101070,
       "component_count": 75,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        108,
-        110,
-        105,
-        105,
-        105
-      ]
-    },
-    {
-      "fixture_name": "cmake-project-medium",
-      "mode": "no-deep-hash",
-      "median_wall_clock_ms": 110,
-      "max_rss_kb": 656,
-      "output_bytes": 101070,
-      "component_count": 75,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        110,
-        110,
-        107,
-        109,
-        110
-      ]
-    },
-    {
-      "fixture_name": "cmake-project-medium",
-      "mode": "triple-format",
-      "median_wall_clock_ms": 108,
-      "max_rss_kb": 560,
-      "output_bytes": 581533,
-      "component_count": 75,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        108,
-        108,
-        106,
+        55,
+        104,
+        102,
         110,
         106
       ]
     },
     {
       "fixture_name": "cmake-project-medium",
-      "mode": "no-deep-hash-plus-triple-format",
-      "median_wall_clock_ms": 107,
-      "max_rss_kb": 656,
+      "mode": "triple-format",
+      "median_wall_clock_ms": 106,
+      "max_rss_kb": 624,
       "output_bytes": 581533,
       "component_count": 75,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        102,
+        107,
+        106,
+        106,
+        106
+      ]
+    },
+    {
+      "fixture_name": "cmake-project-medium",
+      "mode": "no-deep-hash-plus-triple-format",
+      "median_wall_clock_ms": 106,
+      "max_rss_kb": 512,
+      "output_bytes": 581533,
+      "component_count": 75,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
         105,
-        107,
-        107,
-        105,
-        108
+        108,
+        109,
+        106,
+        104
       ]
     },
     {
@@ -666,7 +666,7 @@
       "output_bytes": 0,
       "component_count": 0,
       "exit_status": "corpus-unreachable",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
         0,
@@ -679,16 +679,16 @@
     {
       "fixture_name": "bazel-monorepo-medium",
       "mode": "default",
-      "median_wall_clock_ms": 55,
-      "max_rss_kb": 656,
+      "median_wall_clock_ms": 53,
+      "max_rss_kb": 608,
       "output_bytes": 47058,
       "component_count": 33,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        55,
-        55,
+        53,
+        51,
         52,
         54,
         55
@@ -697,138 +697,138 @@
     {
       "fixture_name": "bazel-monorepo-medium",
       "mode": "no-deep-hash",
-      "median_wall_clock_ms": 55,
-      "max_rss_kb": 704,
+      "median_wall_clock_ms": 51,
+      "max_rss_kb": 656,
       "output_bytes": 47058,
       "component_count": 33,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        55,
-        55,
-        55,
-        55,
-        51
+        51,
+        50,
+        54,
+        50,
+        55
       ]
     },
     {
       "fixture_name": "bazel-monorepo-medium",
       "mode": "triple-format",
-      "median_wall_clock_ms": 55,
-      "max_rss_kb": 608,
+      "median_wall_clock_ms": 54,
+      "max_rss_kb": 624,
       "output_bytes": 268735,
       "component_count": 33,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
+        52,
+        52,
         54,
         55,
-        55,
-        55,
-        54
+        55
       ]
     },
     {
       "fixture_name": "bazel-monorepo-medium",
       "mode": "no-deep-hash-plus-triple-format",
-      "median_wall_clock_ms": 53,
-      "max_rss_kb": 656,
+      "median_wall_clock_ms": 54,
+      "max_rss_kb": 640,
       "output_bytes": 268735,
       "component_count": 33,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
         55,
-        53,
+        54,
         55,
-        53,
-        51
+        50,
+        54
       ]
     },
     {
       "fixture_name": "conan-project-medium",
       "mode": "default",
-      "median_wall_clock_ms": 52,
-      "max_rss_kb": 656,
+      "median_wall_clock_ms": 55,
+      "max_rss_kb": 608,
       "output_bytes": 53499,
       "component_count": 38,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
         55,
-        52,
-        51,
-        52,
-        55
+        55,
+        55,
+        54,
+        50
       ]
     },
     {
       "fixture_name": "conan-project-medium",
       "mode": "no-deep-hash",
-      "median_wall_clock_ms": 55,
-      "max_rss_kb": 656,
+      "median_wall_clock_ms": 52,
+      "max_rss_kb": 608,
       "output_bytes": 53499,
       "component_count": 38,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        54,
+        50,
+        50,
         55,
-        55,
-        55,
-        55
-      ]
-    },
-    {
-      "fixture_name": "conan-project-medium",
-      "mode": "triple-format",
-      "median_wall_clock_ms": 55,
-      "max_rss_kb": 640,
-      "output_bytes": 306588,
-      "component_count": 38,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        55,
-        55,
-        53,
-        55,
-        55
-      ]
-    },
-    {
-      "fixture_name": "conan-project-medium",
-      "mode": "no-deep-hash-plus-triple-format",
-      "median_wall_clock_ms": 52,
-      "max_rss_kb": 656,
-      "output_bytes": 306588,
-      "component_count": 38,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        54,
-        52,
-        52,
         55,
         52
       ]
     },
     {
       "fixture_name": "conan-project-medium",
+      "mode": "triple-format",
+      "median_wall_clock_ms": 55,
+      "max_rss_kb": 656,
+      "output_bytes": 306588,
+      "component_count": 38,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        51,
+        55,
+        55,
+        54,
+        55
+      ]
+    },
+    {
+      "fixture_name": "conan-project-medium",
+      "mode": "no-deep-hash-plus-triple-format",
+      "median_wall_clock_ms": 52,
+      "max_rss_kb": 672,
+      "output_bytes": 306588,
+      "component_count": 38,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        52,
+        54,
+        55,
+        51,
+        51
+      ]
+    },
+    {
+      "fixture_name": "conan-project-medium",
       "mode": "fingerprints-corpus",
       "median_wall_clock_ms": 0,
       "max_rss_kb": 0,
       "output_bytes": 0,
       "component_count": 0,
       "exit_status": "corpus-unreachable",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
         0,
@@ -841,73 +841,73 @@
     {
       "fixture_name": "vcpkg-project-medium",
       "mode": "default",
-      "median_wall_clock_ms": 55,
-      "max_rss_kb": 656,
+      "median_wall_clock_ms": 51,
+      "max_rss_kb": 608,
       "output_bytes": 105399,
       "component_count": 79,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        55,
-        55,
-        55,
-        52,
-        54
-      ]
-    },
-    {
-      "fixture_name": "vcpkg-project-medium",
-      "mode": "no-deep-hash",
-      "median_wall_clock_ms": 55,
-      "max_rss_kb": 656,
-      "output_bytes": 105399,
-      "component_count": 79,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
-      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
-      "raw_samples_ms": [
-        55,
-        55,
-        55,
-        54,
-        55
-      ]
-    },
-    {
-      "fixture_name": "vcpkg-project-medium",
-      "mode": "triple-format",
-      "median_wall_clock_ms": 54,
-      "max_rss_kb": 640,
-      "output_bytes": 599466,
-      "component_count": 79,
-      "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
         54,
-        53,
+        51,
         55,
-        54,
+        50,
         51
       ]
     },
     {
       "fixture_name": "vcpkg-project-medium",
-      "mode": "no-deep-hash-plus-triple-format",
+      "mode": "no-deep-hash",
       "median_wall_clock_ms": 55,
+      "max_rss_kb": 608,
+      "output_bytes": 105399,
+      "component_count": 79,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        50,
+        55,
+        55,
+        55,
+        55
+      ]
+    },
+    {
+      "fixture_name": "vcpkg-project-medium",
+      "mode": "triple-format",
+      "median_wall_clock_ms": 51,
       "max_rss_kb": 656,
       "output_bytes": 599466,
       "component_count": 79,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        55,
-        55,
+        51,
+        50,
+        50,
         53,
-        54,
         55
+      ]
+    },
+    {
+      "fixture_name": "vcpkg-project-medium",
+      "mode": "no-deep-hash-plus-triple-format",
+      "median_wall_clock_ms": 53,
+      "max_rss_kb": 576,
+      "output_bytes": 599466,
+      "component_count": 79,
+      "exit_status": "success",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
+      "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
+      "raw_samples_ms": [
+        50,
+        51,
+        53,
+        55,
+        54
       ]
     },
     {
@@ -918,7 +918,7 @@
       "output_bytes": 0,
       "component_count": 0,
       "exit_status": "corpus-unreachable",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
         0,
@@ -931,91 +931,91 @@
     {
       "fixture_name": "debian-slim",
       "mode": "default",
-      "median_wall_clock_ms": 1963,
-      "max_rss_kb": 162288,
+      "median_wall_clock_ms": 1494,
+      "max_rss_kb": 157312,
       "output_bytes": 1262187,
       "component_count": 358,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        1935,
-        1968,
-        1985,
-        1950,
-        1963
+        1518,
+        1499,
+        1388,
+        1494,
+        1456
       ]
     },
     {
       "fixture_name": "debian-slim",
       "mode": "no-deep-hash",
-      "median_wall_clock_ms": 1931,
-      "max_rss_kb": 143264,
+      "median_wall_clock_ms": 1403,
+      "max_rss_kb": 140032,
       "output_bytes": 1288046,
       "component_count": 922,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        1931,
-        1936,
-        1899,
-        1937,
-        1916
+        1397,
+        1441,
+        1454,
+        1382,
+        1403
       ]
     },
     {
       "fixture_name": "debian-slim",
       "mode": "triple-format",
-      "median_wall_clock_ms": 1949,
-      "max_rss_kb": 164624,
+      "median_wall_clock_ms": 1456,
+      "max_rss_kb": 164784,
       "output_bytes": 4410305,
       "component_count": 358,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        1969,
-        1950,
-        1936,
-        1949,
-        1936
+        1454,
+        1435,
+        1725,
+        1456,
+        1711
       ]
     },
     {
       "fixture_name": "linux-binaries-50",
       "mode": "default",
-      "median_wall_clock_ms": 53,
+      "median_wall_clock_ms": 55,
       "max_rss_kb": 608,
       "output_bytes": 139695,
       "component_count": 61,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
-        51,
-        52,
         55,
-        54,
-        53
+        106,
+        56,
+        51,
+        52
       ]
     },
     {
       "fixture_name": "linux-binaries-50",
       "mode": "no-deep-hash",
       "median_wall_clock_ms": 53,
-      "max_rss_kb": 608,
+      "max_rss_kb": 656,
       "output_bytes": 139695,
       "component_count": 61,
       "exit_status": "success",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
+        53,
+        53,
         55,
         51,
-        54,
-        50,
-        53
+        55
       ]
     },
     {
@@ -1026,7 +1026,7 @@
       "output_bytes": 0,
       "component_count": 0,
       "exit_status": "corpus-unreachable",
-      "waybill_commit_sha": "d4fd4f5848be79a387bfba0aab9426b4dd2e2a6f",
+      "waybill_commit_sha": "eea2fab7d342b6e6dedd4b210e8efdc6838c50e8",
       "fixture_sha": "891f63429480554cd2fedd48de8e5c0bdd6ba943",
       "raw_samples_ms": [
         0,
