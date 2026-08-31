@@ -154,6 +154,17 @@ fn build_waybill_cmd(
 ) -> (Command, Vec<PathBuf>) {
     let mut c = Command::new(&cfg.waybill_bin);
     c.arg("sbom").arg("scan");
+    // Perf-baseline follow-up: `--no-deps-dev` disables the deps.dev
+    // license + dep-graph enrichment (both network-bound). Profiling on
+    // 2026-08-30 revealed that the default deps.dev license call
+    // dominates ~93% of the wall-clock on source-tier fixtures
+    // (1952ms of 2110ms on cargo-workspace-medium). Including it in
+    // the harness turns every m669 baseline into a measurement of
+    // deps.dev's response time rather than waybill's code cost, which
+    // defeats the point of a regression-detection harness. The
+    // baseline captured with this flag reflects waybill's actual
+    // scan pipeline — the number people actually can act on.
+    c.arg("--no-deps-dev");
 
     match fixture.kind {
         FixtureKind::SourceTree | FixtureKind::BinarySet => {
@@ -429,13 +440,18 @@ mod tests {
         let args: Vec<_> = cmd.get_args().collect();
         assert_eq!(args[0], "sbom");
         assert_eq!(args[1], "scan");
-        assert_eq!(args[2], "--path");
-        assert_eq!(args[3], "/x/cargo-workspace-medium");
+        assert_eq!(args[2], "--no-deps-dev");
+        assert_eq!(args[3], "--path");
+        assert_eq!(args[4], "/x/cargo-workspace-medium");
         // Default mode: single CDX output.
         assert_eq!(outs.len(), 1);
         assert!(outs[0].to_str().unwrap().ends_with("out.cdx.json"));
         // No --no-deep-hash for Default.
         assert!(!args.iter().any(|a| *a == "--no-deep-hash"));
+        // --no-deps-dev is always injected to keep bench measurements
+        // isolated from deps.dev's response-time variance (see
+        // build_waybill_cmd comment).
+        assert!(args.iter().any(|a| *a == "--no-deps-dev"));
     }
 
     #[test]
