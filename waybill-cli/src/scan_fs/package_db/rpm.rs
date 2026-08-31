@@ -153,6 +153,12 @@ pub fn collect_claimed_paths(
     // `distro_version` isn't needed here — we only care about file
     // paths, not PURLs. Pass None to keep the helper signature
     // uniform.
+    // Perf: cache canonicalized parents across the whole rpm claim loop
+    // (see dpkg::collect_claimed_paths for rationale).
+    let mut parent_cache: std::collections::HashMap<
+        std::path::PathBuf,
+        Option<std::path::PathBuf>,
+    > = std::collections::HashMap::new();
     iter_rpmdb(rootfs, None, |_entry, files| {
         for entry in files {
             let rel = entry.path;
@@ -161,11 +167,12 @@ pub fn collect_claimed_paths(
             // rootfs to get the on-disk path.
             let tail = rel.strip_prefix("/").unwrap_or(&rel);
             let abs = rootfs.join(tail);
-            super::insert_claim_with_canonical(
+            super::insert_claim_with_canonical_cached(
                 claimed,
                 #[cfg(unix)]
                 claimed_inodes,
                 abs,
+                &mut parent_cache,
             );
         }
     });

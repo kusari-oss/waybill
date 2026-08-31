@@ -77,6 +77,12 @@ pub fn collect_claimed_paths(
     let Ok(text) = std::fs::read_to_string(&path) else {
         return;
     };
+    // Perf: cache canonicalized parents across the whole apk claim loop
+    // (see dpkg::collect_claimed_paths for rationale).
+    let mut parent_cache: std::collections::HashMap<
+        std::path::PathBuf,
+        Option<std::path::PathBuf>,
+    > = std::collections::HashMap::new();
     let mut current_dir: Option<String> = None;
     for line in text.lines() {
         if line.is_empty() {
@@ -102,11 +108,12 @@ pub fn collect_claimed_paths(
                     // rootfs. Resolve to absolute form (rootfs-joined)
                     // and dual-insert (raw + parent-canonical) so the
                     // walker matches regardless of symlinked layout.
-                    super::insert_claim_with_canonical(
+                    super::insert_claim_with_canonical_cached(
                         claimed,
                         #[cfg(unix)]
                         claimed_inodes,
                         rootfs.join(&rel),
+                        &mut parent_cache,
                     );
                 }
             }
