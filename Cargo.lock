@@ -4552,7 +4552,7 @@ dependencies = [
 
 [[package]]
 name = "waybill"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "aya",
@@ -4599,7 +4599,7 @@ dependencies = [
 
 [[package]]
 name = "waybill-common"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "aya",
  "base64 0.22.1",
