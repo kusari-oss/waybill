@@ -27,6 +27,48 @@ use anyhow::{bail, Context, Result};
 use serde::Deserialize;
 use tempfile::TempDir;
 
+/// Controls how much of each layer to write to disk during container
+/// image extraction.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExtractMode {
+    /// Extract every file, symlink, directory. Byte-identical rootfs
+    /// reconstruction — required for `--deep-hash` where waybill
+    /// per-file SHA-256s package contents.
+    Full,
+    /// Extract only OS-package-manager metadata files (dpkg / apk / rpm
+    /// databases), package copyright files, and os-release. Skip
+    /// content writes for all other regular files. Symlinks and
+    /// directories are always preserved so path resolution + walker
+    /// traversal remain correct.
+    ///
+    /// Suitable when the caller only needs component-level identity
+    /// (name / version / license / dependencies) and NOT per-file
+    /// provenance — pair with `--no-deep-hash`. Cuts extract time by
+    /// ~90% on typical OS-only container images by skipping the
+    /// ~3000+ binary + library file writes that dominate wall-clock.
+    OsPackageMetadataOnly,
+}
+
+/// Returns true iff the tar-entry path should have its contents written
+/// under [`ExtractMode::OsPackageMetadataOnly`]. Paths use forward-slash
+/// separators and no leading `/`, matching the extract loop's convention.
+fn is_os_package_metadata_path(rel_path: &Path) -> bool {
+    let p = rel_path.to_string_lossy();
+    // dpkg installed package DB (Debian/Ubuntu/derivatives)
+    p.starts_with("var/lib/dpkg/")
+        // apk installed package DB (Alpine)
+        || p.starts_with("var/lib/apk/")
+        || p.starts_with("etc/apk/")
+        // rpm installed package DB (RHEL/Fedora legacy + modern SLE/Fedora)
+        || p.starts_with("var/lib/rpm/")
+        || p.starts_with("usr/lib/sysimage/rpm/")
+        // dpkg per-package copyright files (waybill's license extraction)
+        || (p.starts_with("usr/share/doc/") && p.ends_with("/copyright"))
+        // Distro identity — read by waybill to stamp deb/apk/rpm PURLs
+        || p == "etc/os-release"
+        || p == "usr/lib/os-release"
+}
+
 /// Outcome of extracting a docker-save tarball.
 #[derive(Debug)]
 pub struct ExtractedImage {
@@ -93,7 +135,7 @@ struct DockerManifestEntry {
 
 /// Extract a docker-save tarball at `archive_path` into a fresh tempdir
 /// and return the resulting rootfs.
-pub fn extract(archive_path: &Path) -> Result<ExtractedImage> {
+pub fn extract(archive_path: &Path, mode: ExtractMode) -> Result<ExtractedImage> {
     // We make two passes over the outer tarball: one to read the
     // manifest, one to extract each named layer. `tar::Archive` can't
     // rewind, so we reopen the file each time.
@@ -135,7 +177,7 @@ pub fn extract(archive_path: &Path) -> Result<ExtractedImage> {
             format!("reading layer {layer_name} from {}", archive_path.display())
         })?;
         let layer_digest = format!("sha256:{}", sha256_hex(&layer_bytes));
-        let paths_written = extract_layer_over_rootfs(&layer_bytes, &rootfs)
+        let paths_written = extract_layer_over_rootfs(&layer_bytes, &rootfs, mode)
             .with_context(|| format!("extracting layer {layer_name}"))?;
         // Later-layer-wins overlay semantics: unconditional insert overwrites
         // any earlier-layer entry for the same path.
@@ -240,7 +282,11 @@ fn read_entry(archive_path: &Path, entry_name: &str) -> Result<Vec<u8>> {
 /// components' source paths are always files). Paths use forward-slash
 /// separators and have no leading `/` to match the rest of the milestone-
 /// 133 path-emission convention (FR-007 / FR-012 / FR-014).
-fn extract_layer_over_rootfs(layer_bytes: &[u8], rootfs: &Path) -> Result<Vec<String>> {
+fn extract_layer_over_rootfs(
+    layer_bytes: &[u8],
+    rootfs: &Path,
+    mode: ExtractMode,
+) -> Result<Vec<String>> {
     // Layers may be plain tar (legacy docker save) or gzipped tar (OCI
     // format emitted by modern docker save + most registries). Detect
     // by magic bytes so callers don't need to know which they have.
@@ -468,6 +514,23 @@ fn extract_layer_over_rootfs(layer_bytes: &[u8], rootfs: &Path) -> Result<Vec<St
             entry_type,
             tar::EntryType::Regular | tar::EntryType::Symlink | tar::EntryType::Continuous,
         );
+
+        // Metadata-only fast path: skip regular-file content for paths
+        // outside the OS-package metadata allow-list. Symlinks + dirs
+        // fall through to `unpack_in` unchanged (they're needed for
+        // path resolution + walker traversal). Callers pair this mode
+        // with `--no-deep-hash` so the skipped file content is never
+        // touched downstream (fast-path fingerprints via `.md5sums`,
+        // not per-file hash of on-disk bytes).
+        if mode == ExtractMode::OsPackageMetadataOnly {
+            let is_regular = matches!(
+                entry_type,
+                tar::EntryType::Regular | tar::EntryType::Continuous,
+            );
+            if is_regular && !is_os_package_metadata_path(&path) {
+                continue;
+            }
+        }
 
         // Issue #401 — symlink-target host-fs escape. Container
         // images legitimately ship absolute symlinks for distro
@@ -712,7 +775,7 @@ mod tests {
             &[("usr/local/bin/rg", b"rg-binary-bytes")],
         );
 
-        let img = extract(&tarball).expect("extract");
+        let img = extract(&tarball, ExtractMode::Full).expect("extract");
         assert_eq!(img.repo_tag.as_deref(), Some("demo:latest"));
         assert_eq!(img.manifest_digest.len(), 64);
         let rg = img.rootfs.join("usr/local/bin/rg");
@@ -731,7 +794,7 @@ mod tests {
             &[("usr/local/bin/rg", b"rg-binary-bytes")],
         );
 
-        let img = extract(&tarball).expect("extract");
+        let img = extract(&tarball, ExtractMode::Full).expect("extract");
         let digest = img.layer_path_map.get("usr/local/bin/rg");
         assert!(digest.is_some(), "rootfs file should appear in layer_path_map");
         let d = digest.unwrap();
@@ -796,7 +859,7 @@ mod tests {
             path
         };
 
-        let img = extract(&outer).expect("extract");
+        let img = extract(&outer, ExtractMode::Full).expect("extract");
         // Compute the digest we expect: SHA-256 of l1's bytes.
         let l1_bytes = read_entry(&outer, "l1/layer.tar").unwrap();
         let expected = format!("sha256:{}", sha256_hex(&l1_bytes));
@@ -862,7 +925,7 @@ mod tests {
             path
         };
 
-        let img = extract(&outer).expect("extract");
+        let img = extract(&outer, ExtractMode::Full).expect("extract");
         let etc_config = img.rootfs.join("etc/config");
         assert!(!etc_config.exists(), "whiteout should have removed etc/config");
     }
@@ -875,7 +938,7 @@ mod tests {
         // Empty archive — no manifest.json
         outer.into_inner().unwrap().flush().unwrap();
 
-        let err = extract(tmp.path()).expect_err("expected failure");
+        let err = extract(tmp.path(), ExtractMode::Full).expect_err("expected failure");
         let msg = format!("{err:#}");
         assert!(msg.contains("manifest.json"), "error should mention manifest: {msg}");
     }
@@ -919,7 +982,7 @@ mod tests {
     fn hardlink_out_of_order_extracts_correctly() {
         let dir = tempfile::tempdir().unwrap();
         let tar = build_tar_with_out_of_order_hardlink();
-        extract_layer_over_rootfs(&tar, dir.path()).unwrap();
+        extract_layer_over_rootfs(&tar, dir.path(), ExtractMode::Full).unwrap();
 
         let target = dir.path().join("usr/bin/rpm");
         let link = dir.path().join("usr/bin/rpm2archive");
@@ -1029,7 +1092,7 @@ mod tests {
             ar.into_inner().unwrap();
         }
 
-        extract_layer_over_rootfs(&buf, &rootfs).unwrap();
+        extract_layer_over_rootfs(&buf, &rootfs, ExtractMode::Full).unwrap();
 
         assert_eq!(
             std::fs::read_link(rootfs.join("var/run")).unwrap(),
@@ -1079,7 +1142,7 @@ mod tests {
             ar.append(&h, std::io::empty()).unwrap();
             ar.into_inner().unwrap();
         }
-        extract_layer_over_rootfs(&buf, &rootfs).unwrap();
+        extract_layer_over_rootfs(&buf, &rootfs, ExtractMode::Full).unwrap();
 
         assert_eq!(
             std::fs::read_link(rootfs.join("opt/symlink")).unwrap(),
@@ -1115,7 +1178,7 @@ mod tests {
 
         // Extraction should complete cleanly — the unsafe whiteout
         // is silently dropped, not propagated.
-        extract_layer_over_rootfs(&buf, &rootfs).unwrap();
+        extract_layer_over_rootfs(&buf, &rootfs, ExtractMode::Full).unwrap();
 
         assert!(
             sentinel.is_file(),
@@ -1143,7 +1206,7 @@ mod tests {
         }
         let dir = tempfile::tempdir().unwrap();
         // Should not panic or error — the hardlink is silently dropped.
-        extract_layer_over_rootfs(&buf, dir.path()).unwrap();
+        extract_layer_over_rootfs(&buf, dir.path(), ExtractMode::Full).unwrap();
         assert!(
             !dir.path().join("usr/bin/orphan").exists(),
             "orphan hardlink should not exist when target is missing"
@@ -1174,7 +1237,7 @@ mod tests {
             ar.into_inner().unwrap();
         }
         let dir = tempfile::tempdir().unwrap();
-        extract_layer_over_rootfs(&buf, dir.path()).unwrap();
+        extract_layer_over_rootfs(&buf, dir.path(), ExtractMode::Full).unwrap();
         let target = dir.path().join("usr/lib/sysimage/rpm/rpmdb.sqlite");
         assert!(
             target.is_file(),
@@ -1217,7 +1280,7 @@ mod tests {
         }
 
         let dir = tempfile::tempdir().unwrap();
-        extract_layer_over_rootfs(&buf, dir.path()).unwrap();
+        extract_layer_over_rootfs(&buf, dir.path(), ExtractMode::Full).unwrap();
 
         assert!(dir.path().join("readonly").is_dir());
         let f = dir.path().join("readonly/file.txt");
@@ -1260,7 +1323,7 @@ mod tests {
         }
 
         let dir = tempfile::tempdir().unwrap();
-        extract_layer_over_rootfs(&buf, dir.path()).unwrap();
+        extract_layer_over_rootfs(&buf, dir.path(), ExtractMode::Full).unwrap();
 
         for i in 0..5 {
             let p = dir.path().join(format!("trust/hashes/hash_{i}.0"));
@@ -1359,7 +1422,7 @@ mod tests {
         // `<rootfs>/ko-app/<binary>`.
         let layer = build_raw_layer_tar(&[("/ko-app/myapp", b"go-binary-bytes")]);
         let dir = tempfile::tempdir().unwrap();
-        extract_layer_over_rootfs(&layer, dir.path()).expect("extract layer");
+        extract_layer_over_rootfs(&layer, dir.path(), ExtractMode::Full).expect("extract layer");
         let app = dir.path().join("ko-app/myapp");
         assert!(
             app.is_file(),
@@ -1378,7 +1441,7 @@ mod tests {
             ("/ko-app/koapp", b"ko-style"),
         ]);
         let dir = tempfile::tempdir().unwrap();
-        extract_layer_over_rootfs(&layer, dir.path()).expect("extract layer");
+        extract_layer_over_rootfs(&layer, dir.path(), ExtractMode::Full).expect("extract layer");
         let regular = dir.path().join("usr/bin/regular");
         let koapp = dir.path().join("ko-app/koapp");
         assert!(regular.is_file(), "relative-path entry should extract at {regular:?}");
@@ -1402,7 +1465,7 @@ mod tests {
         // The extract may return an error or succeed silently (the
         // current code uses `tracing::debug!` + continue per entry);
         // either way, the assertions below check the on-disk result.
-        let _ = extract_layer_over_rootfs(&layer, dir.path());
+        let _ = extract_layer_over_rootfs(&layer, dir.path(), ExtractMode::Full);
 
         assert!(
             dir.path().join("safe/file").is_file(),
@@ -1427,7 +1490,7 @@ mod tests {
         // leading slash.
         let layer = build_raw_layer_tar(&[("/../../escaped", b"should-be-dropped")]);
         let dir = tempfile::tempdir().unwrap();
-        let _ = extract_layer_over_rootfs(&layer, dir.path());
+        let _ = extract_layer_over_rootfs(&layer, dir.path(), ExtractMode::Full);
         // Check several candidate escape targets.
         let parent = dir.path().parent().unwrap();
         let candidates = [

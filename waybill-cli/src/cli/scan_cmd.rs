@@ -869,6 +869,25 @@ pub struct ScanArgs {
     #[arg(long)]
     pub no_deep_hash: bool,
 
+    /// Container-scan perf optimization for `--image` mode. When set,
+    /// waybill's docker-image extractor skips writing file contents for
+    /// everything OUTSIDE the OS-package metadata allow-list
+    /// (`/var/lib/{dpkg,apk,rpm}/`, `/usr/share/doc/*/copyright`,
+    /// `/etc/os-release`, `/usr/lib/os-release`). Symlinks and
+    /// directories are still preserved for correct path resolution.
+    ///
+    /// Requires `--no-deep-hash` (deep-hash reads the skipped file
+    /// contents, so this flag would corrupt its output). Cuts the
+    /// `docker_image::extract` step by ~90% on typical OS-only images
+    /// (measured 690ms → ~50ms on debian:12-slim).
+    ///
+    /// NOT recommended when scanning application containers that ship
+    /// source-tier content (Python venvs, node_modules, cargo vendor
+    /// trees) inside the image — those readers will miss the component
+    /// files when they're not extracted. For OS-image scans only.
+    #[arg(long, requires = "no_deep_hash")]
+    pub fast_container_extract: bool,
+
     /// Milestone 133 US1 — emit file-tier components for unattributed
     /// content (custom binaries, vendored libraries with no manifest,
     /// embedded archives) surviving the FR-005 content-shape allowlist.
@@ -3132,7 +3151,13 @@ pub async fn execute(
                     .await?
             };
             tracing::info!(archive = %archive_path.display(), "extracting docker image");
-            let extracted = scan_fs::docker_image::extract(&archive_path)?;
+            let extract_mode = if args.fast_container_extract {
+                // Clap `requires = "no_deep_hash"` guarantees pairing.
+                scan_fs::docker_image::ExtractMode::OsPackageMetadataOnly
+            } else {
+                scan_fs::docker_image::ExtractMode::Full
+            };
+            let extracted = scan_fs::docker_image::extract(&archive_path, extract_mode)?;
             let target = extracted
                 .repo_tag
                 .clone()
@@ -5472,6 +5497,7 @@ mod tests {
             deb_codename: None,
             no_package_db: false,
             no_deep_hash: false,
+            fast_container_extract: false,
             conclude_licenses: false,
             // Test helper preserves byte-identity on enrichment-
             // focused unit tests by keeping file-tier emission off.
