@@ -154,17 +154,19 @@ fn build_waybill_cmd(
 ) -> (Command, Vec<PathBuf>) {
     let mut c = Command::new(&cfg.waybill_bin);
     c.arg("sbom").arg("scan");
-    // Perf-baseline follow-up: `--no-deps-dev` disables the deps.dev
-    // license + dep-graph enrichment (both network-bound). Profiling on
-    // 2026-08-30 revealed that the default deps.dev license call
-    // dominates ~93% of the wall-clock on source-tier fixtures
-    // (1952ms of 2110ms on cargo-workspace-medium). Including it in
-    // the harness turns every m669 baseline into a measurement of
-    // deps.dev's response time rather than waybill's code cost, which
-    // defeats the point of a regression-detection harness. The
-    // baseline captured with this flag reflects waybill's actual
-    // scan pipeline — the number people actually can act on.
-    c.arg("--no-deps-dev");
+    // Perf-baseline: `--offline` disables EVERY network path — deps.dev
+    // license + dep-graph enrichment, ClearlyDefined, and (critically)
+    // the Go graph resolver's proxy.golang.org fetches for transitive
+    // module edges. Measured 2026-08-31 on go-module-medium: 17.7s
+    // with `--no-deps-dev` (which leaves the Go proxy fetch alive)
+    // vs 56ms with `--offline` — a 315× drop for identical component
+    // output (72 components in both). Any network path in the scan
+    // pipeline turns the baseline into a measurement of the remote
+    // service's response time rather than waybill's code cost, which
+    // defeats the point of a regression-detection harness. `--offline`
+    // is the single catch-all flag propagating through every enrich
+    // source + the golang graph resolver's proxy_fetch gate.
+    c.arg("--offline");
 
     match fixture.kind {
         FixtureKind::SourceTree | FixtureKind::BinarySet => {
@@ -440,7 +442,7 @@ mod tests {
         let args: Vec<_> = cmd.get_args().collect();
         assert_eq!(args[0], "sbom");
         assert_eq!(args[1], "scan");
-        assert_eq!(args[2], "--no-deps-dev");
+        assert_eq!(args[2], "--offline");
         assert_eq!(args[3], "--path");
         assert_eq!(args[4], "/x/cargo-workspace-medium");
         // Default mode: single CDX output.
@@ -448,10 +450,10 @@ mod tests {
         assert!(outs[0].to_str().unwrap().ends_with("out.cdx.json"));
         // No --no-deep-hash for Default.
         assert!(!args.iter().any(|a| *a == "--no-deep-hash"));
-        // --no-deps-dev is always injected to keep bench measurements
-        // isolated from deps.dev's response-time variance (see
-        // build_waybill_cmd comment).
-        assert!(args.iter().any(|a| *a == "--no-deps-dev"));
+        // --offline is always injected to isolate bench measurements
+        // from ANY remote service's response-time variance — deps.dev,
+        // ClearlyDefined, proxy.golang.org (see build_waybill_cmd comment).
+        assert!(args.iter().any(|a| *a == "--offline"));
     }
 
     #[test]
