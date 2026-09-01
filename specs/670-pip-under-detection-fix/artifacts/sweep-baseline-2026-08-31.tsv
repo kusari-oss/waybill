@@ -1,0 +1,22 @@
+repo	clone_s	size	scan_ms	exit	comps	error_note
+test-bat	2s	12M	744ms	0	432	
+test-bun	10s	285M	38160ms	0	8788	
+test-codex	2s	74M	39326ms	0	2063	
+test-cpython	6s	189M	575ms	0	187	
+test-guac-visualizer	1s	3.9M	54ms	0	908	
+test-kubernetes	10s	380M	82585ms	0	817	
+test-langflow	8s	343M	1343ms	0	3267	
+test-markitdown	1s	28M	49ms	0	5	
+test-OctoPrint	2s	30M	180ms	0	13	
+test-podman	4s	134M	3319ms	0	500	
+test-podman-desktop	10s	360M	602ms	0	2731	
+test-pytorch	12s	320M	1895ms	0	293	
+test-rails	3s	63M	736ms	0	1072	
+test-ripgrep	1s	4.3M	344ms	0	88	
+test-rustdesk	1s	24M	340ms	0	1473	
+test-rustlang	13s	451M	54380ms	1	0	    2: Cargo.lock v1/v2 not supported; regenerate with cargo ≥1.53 
+test-sphinx	1s	34M	328ms	0	221	
+test-tauri	4s	38M	511ms	0	1684	
+test-tensorflow-models	5s	191M	540ms	0	1439	
+test-vaultwarden	1s	5.5M	9775ms	0	843	
+test-yt-dlp	0s	18M	113ms	0	65	

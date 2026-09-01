@@ -916,6 +916,20 @@ cdx_anno!(c152_cdx, "waybill:resolver-tier",                         component);
 // FR-003 byte-identity. See `contracts/cli-flag.md` C2 + C5.
 cdx_anno!(c153_cdx, "waybill:binary-scan-suppressed",                document);
 
+// Milestone 670 T012 PR-3: C154 per-component PEP 508 direct-URL source
+// metadata annotation. JSON-stringified object with `{url, kind,
+// resolved_rev}` shape matching pip's PEP 610 `direct_url.json`.
+// Emitted on requirements-line entries recognized as `pkg @ URL` shape
+// OR bare-URL entries (`git+.../@rev`).
+cdx_anno!(c154_cdx, "waybill:direct-url-source",                     component);
+
+// Milestone 670 T013 PR-3: C155 per-component FR-005a lifecycle-scope
+// classification for requirements*.txt files. Closed enum value: `dev`
+// / `test` / `docs` / `ci`. Emitted iff the source file classified as
+// Optional-scope; absent on Main-scope files (bare requirements.txt at
+// project-standard locations).
+cdx_anno!(c155_cdx, "waybill:python-req-file-scope",                 component);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 cdx_anno!(c113_cdx, "waybill:synthetic-built-in",               component);

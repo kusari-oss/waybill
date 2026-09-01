@@ -306,12 +306,44 @@ fn requirements_only_emits_mixed_tier_components() {
 }
 
 #[test]
-fn pyproject_only_emits_zero_pypi_components() {
+fn pyproject_only_emits_declared_deps_as_design_tier() {
+    // Pre-m670: this test asserted `pypi.len() == 0` under the m018
+    // "pyproject-only = phantoms; suppress" policy. Milestone 670 (PR-1)
+    // reverses that policy — pyproject.toml-declared deps ARE emitted
+    // as design-tier `@unresolved` components with a m236 unresolved-
+    // reason annotation. See specs/670-pip-under-detection-fix/spec.md.
+    //
+    // The fixture (`waybill-test-fixtures/python/pyproject-only/`)
+    // declares `dependencies = ["requests"]`. Post-m670 expected shape:
+    // one design-tier `pkg:pypi/requests@unresolved` component + the
+    // `bare-app` main-module (which is emitted by m068 as `pkg:pypi/
+    // bare-app@0.1.0`, so also counts as a pypi component).
     let sbom = scan("pyproject-only", false);
     let pypi = pypi_components(&sbom);
+    // Note: the `bare-app` main-module is the SBOM's root — it lands in
+    // `.metadata.component`, NOT `.components[]`. So `pypi_components`
+    // (which filters `.components[]`) returns 1: just the declared dep.
     assert_eq!(
         pypi.len(),
-        0,
-        "pyproject-only MUST emit no pypi components (FR-005)"
+        1,
+        "m670: pyproject-only emits one declared dep in components[] (main-module is metadata.component)"
+    );
+    let requests = &pypi[0];
+    assert_eq!(requests["name"].as_str(), Some("requests"));
+    assert_eq!(
+        requests["purl"].as_str(),
+        Some("pkg:pypi/requests@unresolved")
+    );
+    assert_eq!(
+        prop_value(requests, "waybill:unresolved-reason"),
+        Some("declared in pyproject.toml; no uv.lock / poetry.lock / Pipfile.lock fallback"),
+        "m670: manifest-declared deps carry the m236 unresolved-reason"
+    );
+    // Confirm the main-module still emits at metadata.component (m068
+    // behavior preserved through m670).
+    assert_eq!(
+        sbom["metadata"]["component"]["name"].as_str(),
+        Some("bare-app"),
+        "m068 main-module emission preserved: bare-app is the SBOM root"
     );
 }

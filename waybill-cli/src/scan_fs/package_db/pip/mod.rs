@@ -1,31 +1,50 @@
 //! Read Python package metadata from a scanned filesystem.
 //!
-//! Three layered sources in order of authority (per spec FR-001..FR-005
-//! and research.md R2 / R3):
+//! Four layered sources in order of authority (per spec FR-001..FR-005,
+//! research.md R2 / R3, and milestone 670's m018-policy reversal):
 //!
 //! 1. **Installed venv**: `<root>/.../site-packages/<name>-<version>.dist-info/METADATA`
 //!    — confidence 0.85, tier `deployed`. Ground truth: these packages are
 //!    actually resolved and sitting on disk.
-//! 2. **Lockfile**: `poetry.lock` (v1 and v2 formats) or `Pipfile.lock`
-//!    — confidence 0.85, tier `source`. Authoritative about what WILL be
-//!    installed if the lockfile is honoured.
+//! 2. **Lockfile**: `poetry.lock` (v1 and v2 formats), `Pipfile.lock`, or
+//!    `uv.lock` — confidence 0.85, tier `source`. Authoritative about
+//!    what WILL be installed if the lockfile is honoured.
 //! 3. **Requirements file**: `requirements.txt` (and any `*.txt` matching
 //!    pip's convention) — confidence 0.70, tier `design`. Best-guess:
 //!    range specs may resolve to different versions depending on the
 //!    registry state at install time.
+//! 4. **Manifest (`pyproject.toml`)**: PEP 621 `[project.dependencies]`,
+//!    PEP 735 `[dependency-groups]`, and Poetry-legacy
+//!    `[tool.poetry.dependencies]` / `[tool.poetry.group.*.dependencies]`
+//!    sections — tier `design`. Emitted with `version = "unresolved"` and
+//!    a m236 `waybill:unresolved-reason = "declared in pyproject.toml; no
+//!    uv.lock / poetry.lock / Pipfile.lock fallback"` when the tier-2/3
+//!    sources are absent for a given package. Enables SBOM coverage for
+//!    modern Python projects that ship `pyproject.toml` without pinning a
+//!    lockfile in-tree (e.g. `microsoft/markitdown`).
 //!
 //! The public entry point [`read`] walks these in order and applies
 //! drift resolution per research.md R8: a venv entry wins over a
 //! lockfile entry for the same package; a lockfile entry wins over a
-//! requirements.txt entry. Conversion to [`PackageDbEntry`] happens at
+//! requirements.txt entry; a requirements.txt entry wins over a
+//! manifest entry. Conversion to [`PackageDbEntry`] happens at
 //! the module boundary so the rest of the scan pipeline (dedup, CPE
 //! synthesis, compositions, deps.dev enrichment) handles Python the
 //! same way it handles deb / apk today.
 //!
-//! `pyproject.toml`-only projects (no venv, no lockfile, no
-//! requirements) emit zero components per FR-005 — `[project.dependencies]`
-//! holds build specs, not resolved versions, so fabricating components
-//! from it would bloat SBOMs with phantoms.
+//! **History**: The milestone-018-era policy was "`pyproject.toml`-only
+//! projects emit zero components — `[project.dependencies]` holds build
+//! specs, not resolved versions, so fabricating components from it would
+//! bloat SBOMs with phantoms." Milestone 670 reverses this: pyproject-
+//! declared deps ARE emitted as design-tier components with the m236
+//! `unresolved-reason` annotation surfacing the boundary. The
+//! phantoms-argument doesn't apply once we tier them as `design` +
+//! `waybill:unresolved-reason` — downstream consumers can filter design-
+//! tier or the specific reason string when they only want resolved
+//! components. The under-detection surfaced by the 2026-08-31 sweep
+//! (issue #743) made the completeness cost of the m018 policy visible:
+//! markitdown (4 → target ≥30), OctoPrint (3 → target ≥30), cpython
+//! (16 → target ≥25).
 
 use std::path::{Path, PathBuf};
 
@@ -306,6 +325,30 @@ pub(crate) fn finalize(
         }
     }
 
+    // Milestone 670 PR-1 T004 — m018 policy reversal. After Tier-1/2/3
+    // readers have exhausted their sources, emit design-tier components
+    // for every pyproject.toml-declared dep whose NAME is not already
+    // covered. Name-based dedup preserves lockfile-authoritative
+    // precedence: `pkg:pypi/requests@2.31.0` from `poetry.lock` blocks
+    // `pkg:pypi/requests@unresolved` from `[project.dependencies]`. Cross-
+    // project-root dedup grows the covered set as manifest entries land,
+    // so a name declared in two sibling pyprojects surfaces exactly once
+    // (with the first-project-root's evidence).
+    //
+    // See the module-level docstring (updated by T002) and
+    // specs/670-pip-under-detection-fix/plan.md for the m018 → m670
+    // policy transition.
+    let mut covered_names: std::collections::HashSet<String> =
+        entries.iter().map(|e| e.name.clone()).collect();
+    for project_root in &project_roots {
+        let manifest_entries = pyproject_declared_deps(project_root);
+        for entry in manifest_entries {
+            if covered_names.insert(entry.name.clone()) {
+                entries.push(entry);
+            }
+        }
+    }
+
     // If the root has a `pyproject.toml` but nothing else, log the skip
     // so operators can tell an empty-output run from "we didn't find
     // anything to scan." Per FR-024. The rootfs-level check stays
@@ -328,7 +371,12 @@ pub(crate) fn finalize(
     // same PURL, augment in-place — venv evidence wins for sbom_tier /
     // hashes, Phase A adds the C40 tag + parent_purl: None.
     let mut main_modules_emitted = 0usize;
-    let mut poetry_skips = 0usize;
+    // Milestone 670 T005: `poetry_skips` retained as a always-zero
+    // counter so the diagnostic log below preserves its wire shape.
+    // Poetry-legacy manifests no longer skip main-module emission —
+    // the counter's continued 0 value is the wire-visible signal that
+    // the pre-m670 skip is deprecated.
+    let poetry_skips = 0usize;
     // Milestone 183 US2 — accumulate the union of optional direct-dep
     // names across every project root's pyproject.toml. Applied via
     // `apply_optional_derivation_annotation` at the end of `read`. The
@@ -339,16 +387,12 @@ pub(crate) fn finalize(
         std::collections::HashSet::new();
     for project_root in &project_roots {
         optional_names_from_manifests.extend(optional_deps_from_pyproject(project_root));
-        let (synthesized, was_poetry_only) =
+        // Milestone 670 T005: Poetry-legacy pyproject.tomls now emit a
+        // main-module component (previously suppressed per issue #104).
+        // The second tuple element (`_was_poetry_legacy`) is retained
+        // for future telemetry but no longer gates emission.
+        let (synthesized, _was_poetry_legacy) =
             build_pip_main_module_entry(project_root);
-        if was_poetry_only {
-            poetry_skips += 1;
-            tracing::info!(
-                manifest = %project_root.join("pyproject.toml").display(),
-                "pip: skipping main-module emission for [tool.poetry]-only pyproject.toml — Poetry schema deferred per #104",
-            );
-            continue;
-        }
         let Some(synthesized) = synthesized else {
             continue;
         };
@@ -564,10 +608,17 @@ pub(crate) struct DroppedDuplicate {
 ///   how `requirements_txt.rs` handles the same shape — markers and
 ///   version specifiers are stripped).
 ///
-/// Returns `(Option<PackageDbEntry>, bool)` where the bool flag is
-/// `true` if this manifest was Poetry-only (`[tool.poetry]` present
-/// AND `[project]` absent), so the caller can emit FR-002's
-/// info-level skip log without re-reading the manifest.
+/// Returns `(Option<PackageDbEntry>, bool)`. Second tuple element is
+/// `is_poetry_legacy` — `true` when the entry was built from the
+/// `[tool.poetry]` fallback path (no PEP 621 `[project]` table present).
+///
+/// Pre-m670 this flag was `was_poetry_only` and gated a caller-side
+/// skip (issue #104). Milestone 670 T005 reverses that policy: Poetry-
+/// legacy manifests DO emit a main-module (sourced from
+/// `[tool.poetry].name/.version`) and declared deps come from
+/// [`pyproject_declared_deps`] as separate design-tier components.
+/// The flag is retained as an informational signal (unused by callers
+/// today; kept for future telemetry).
 pub(crate) fn build_pip_main_module_entry(
     project_root: &Path,
 ) -> (Option<PackageDbEntry>, bool) {
@@ -579,18 +630,25 @@ pub(crate) fn build_pip_main_module_entry(
         return (None, false);
     };
     let project_table = parsed.get("project");
-    let has_poetry_table = parsed
-        .get("tool")
-        .and_then(|t| t.get("poetry"))
-        .is_some();
-    // FR-002: Poetry-only (no [project], yes [tool.poetry]) → skip
-    // emission and signal to caller for the info-level log.
-    if project_table.is_none() {
-        return (None, has_poetry_table);
-    }
-    let project = project_table.expect("checked above");
+    let poetry_table = parsed.get("tool").and_then(|t| t.get("poetry"));
+    let has_poetry_table = poetry_table.is_some();
+    // Milestone 670 T005 — reverses the pre-m670 "Poetry-legacy = skip
+    // main-module" policy (issue #104). Poetry-legacy pyproject.tomls
+    // NOW emit a main-module component, sourced from `[tool.poetry]`
+    // when PEP 621 `[project]` is absent. Declared deps from the
+    // Poetry-legacy sections are handled by `pyproject_declared_deps`
+    // (m670 PR-1 T003) as separate design-tier components; the
+    // `depends` list on this main-module stays empty for the
+    // Poetry-legacy branch (v1 scope — depends fabrication for graph
+    // edges is a follow-up).
+    let (source_table, is_poetry_legacy) = match (project_table, poetry_table) {
+        (Some(project), _) => (project, false),
+        (None, Some(poetry)) => (poetry, true),
+        (None, None) => return (None, false),
+    };
+    let project = source_table;
     let Some(name) = project.get("name").and_then(|v| v.as_str()) else {
-        return (None, false);
+        return (None, has_poetry_table);
     };
     // Resolve version per FR-001 + spec Q1:
     //   1. literal `[project].version` string → use verbatim
@@ -610,11 +668,17 @@ pub(crate) fn build_pip_main_module_entry(
         (Some(v), _) => v.to_string(),
         (None, true) => "0.0.0-unknown".to_string(),
         (None, false) => {
-            tracing::warn!(
-                manifest = %manifest_path.display(),
-                name = %name,
-                "pip: pyproject.toml [project] has neither `version` nor `dynamic = [\"version\"]` — using 0.0.0-unknown placeholder",
-            );
+            // Poetry-legacy pyproject.tomls that omit `[tool.poetry].version`
+            // are common (pyproject templates leave it blank; setuptools-scm
+            // populates it at build time). Don't spam a warn log for the
+            // Poetry-legacy branch — the placeholder is expected there.
+            if !is_poetry_legacy {
+                tracing::warn!(
+                    manifest = %manifest_path.display(),
+                    name = %name,
+                    "pip: pyproject.toml [project] has neither `version` nor `dynamic = [\"version\"]` — using 0.0.0-unknown placeholder",
+                );
+            }
             "0.0.0-unknown".to_string()
         }
     };
@@ -625,34 +689,44 @@ pub(crate) fn build_pip_main_module_entry(
     // Direct deps from [project.dependencies] and
     // [project.optional-dependencies].* per FR-007. PEP 508 strings:
     // take the first whitespace-or-`[<>=;`-delimited token as the name.
+    //
+    // Milestone 670 T005: PEP 621 branch only. Poetry-legacy declared
+    // deps come from [tool.poetry.dependencies] (dict-shape, not
+    // array-shape) and are emitted as first-class design-tier
+    // components by `pyproject_declared_deps` (T003). Populating this
+    // `depends` list from Poetry-legacy is deferred — v1 emits an
+    // empty depends for that branch (graph-edge fabrication is a
+    // follow-up).
     let mut depends: Vec<String> = Vec::new();
-    let take_first_token = |s: &str| -> String {
-        s.chars()
-            .take_while(|c| {
-                !matches!(c, ' ' | '\t' | '[' | ']' | '<' | '>' | '=' | ';' | '~' | '!')
-            })
-            .collect::<String>()
-            .trim()
-            .to_string()
-    };
-    if let Some(deps) = project.get("dependencies").and_then(|v| v.as_array()) {
-        for d in deps.iter().filter_map(|v| v.as_str()) {
-            let token = take_first_token(d);
-            if !token.is_empty() {
-                depends.push(token);
+    if !is_poetry_legacy {
+        let take_first_token = |s: &str| -> String {
+            s.chars()
+                .take_while(|c| {
+                    !matches!(c, ' ' | '\t' | '[' | ']' | '<' | '>' | '=' | ';' | '~' | '!')
+                })
+                .collect::<String>()
+                .trim()
+                .to_string()
+        };
+        if let Some(deps) = project.get("dependencies").and_then(|v| v.as_array()) {
+            for d in deps.iter().filter_map(|v| v.as_str()) {
+                let token = take_first_token(d);
+                if !token.is_empty() {
+                    depends.push(token);
+                }
             }
         }
-    }
-    if let Some(opt_table) = project
-        .get("optional-dependencies")
-        .and_then(|v| v.as_table())
-    {
-        for (_extra_name, deps) in opt_table {
-            if let Some(arr) = deps.as_array() {
-                for d in arr.iter().filter_map(|v| v.as_str()) {
-                    let token = take_first_token(d);
-                    if !token.is_empty() {
-                        depends.push(token);
+        if let Some(opt_table) = project
+            .get("optional-dependencies")
+            .and_then(|v| v.as_table())
+        {
+            for (_extra_name, deps) in opt_table {
+                if let Some(arr) = deps.as_array() {
+                    for d in arr.iter().filter_map(|v| v.as_str()) {
+                        let token = take_first_token(d);
+                        if !token.is_empty() {
+                            depends.push(token);
+                        }
                     }
                 }
             }
@@ -722,7 +796,10 @@ pub(crate) fn build_pip_main_module_entry(
         extra_annotations,
         binary_role: None,
     };
-    (Some(entry), false)
+    // Milestone 670 T005: second tuple element = `is_poetry_legacy`
+    // (was `was_poetry_only` pre-m670). Informational only; the caller
+    // no longer treats `true` as a skip signal.
+    (Some(entry), is_poetry_legacy)
 }
 
 /// Dedup main-module entries by PURL, preserving the first occurrence.
@@ -774,6 +851,365 @@ fn extract_pip_setupcfg_scripts(project_root: &Path) -> Vec<String> {
         }
     }
     out
+}
+
+/// Milestone 670 PR-1 — locked m236 reason string for pyproject.toml-declared
+/// deps. Reserved in `specs/236-unresolved-reason/contracts/per-reader-strings.md`
+/// (milestone 670 section). Wired into
+/// `waybill-cli/tests/unresolved_reason_universal.rs::locked_reason_strings()`
+/// alongside the source-side emission.
+pub(crate) const MANIFEST_UNRESOLVED_REASON: &str =
+    "declared in pyproject.toml; no uv.lock / poetry.lock / Pipfile.lock fallback";
+
+/// Milestone 670 PR-1 — emit design-tier `PackageDbEntry` components for
+/// every dependency declared in a `project_root`'s `pyproject.toml`.
+/// Reverses the milestone-018 "pyproject-only = 0 components" policy that
+/// was documented at `mod.rs:1-28` prior to milestone 670 T002.
+///
+/// Reads (precedence: PEP 621 wins over Poetry-legacy when `[project]`
+/// is present):
+///
+/// 1. **PEP 621** `[project.dependencies]` (Runtime).
+/// 2. **PEP 621** `[project.optional-dependencies].<group>` (Optional).
+/// 3. **PEP 735** `[dependency-groups].<group>` (Optional).
+/// 4. **Poetry-legacy** `[tool.poetry.dependencies]` — read ONLY when
+///    `[project]` is absent (Runtime).
+/// 5. **Poetry-legacy** `[tool.poetry.dev-dependencies]` (Development).
+/// 6. **Poetry-legacy** `[tool.poetry.group.<name>.dependencies]`
+///    (Development when `<name>` ∈ {`dev`, `test`}; else Optional).
+///
+/// Each emitted entry carries:
+/// - PURL `pkg:pypi/<pep503-normalized-name>@unresolved`
+/// - `version = "unresolved"`
+/// - `sbom_tier = Some("design")`
+/// - `source_path = "path+file://<pyproject.toml>"`
+/// - `requirement_ranges = vec![<raw-constraint>]` when a constraint was declared
+/// - `extra_annotations`:
+///   - `waybill:unresolved-reason` = [`MANIFEST_UNRESOLVED_REASON`]
+///   - `waybill:version-constraint` = raw constraint string (when present)
+///   - `waybill:optional-derivation` = per-section derivation label
+///     (for Optional / Development scopes only)
+///
+/// Skips:
+/// - `python` itself under `[tool.poetry.dependencies]` (Poetry declares
+///   the Python interpreter here; not a package)
+/// - Environment-marker-filtered entries (e.g. `; extra == 'dev'`) via
+///   [`tokenise_requires_dist_name`]
+/// - Empty / malformed entries
+///
+/// Diamond precedence (mirrors m183 Decision 3): if the same name appears
+/// in `[project.dependencies]` AND `[project.optional-dependencies]`,
+/// Runtime wins — one entry with `LifecycleScope::Runtime` and no
+/// `waybill:optional-derivation` annotation.
+///
+/// Returns `Vec<PackageDbEntry>`. Empty when the manifest is missing,
+/// unparseable, or declares no deps. Callers use a name-based dedup at
+/// wire-in (T004) so lockfile-resolved entries retain priority over
+/// manifest-unresolved ones.
+pub(crate) fn pyproject_declared_deps(project_root: &Path) -> Vec<PackageDbEntry> {
+    let manifest_path = project_root.join("pyproject.toml");
+    let Ok(text) = std::fs::read_to_string(&manifest_path) else {
+        return Vec::new();
+    };
+    let Ok(parsed) = toml::from_str::<toml::Value>(&text) else {
+        return Vec::new();
+    };
+
+    // Extract the raw PEP 508 constraint substring — everything after the
+    // name (and any `[extras]` block) up to a `;` marker separator. Empty
+    // string means unpinned (no constraint declared).
+    let take_constraint = |raw: &str| -> String {
+        let raw = raw.trim();
+        let head = match raw.split_once(';') {
+            Some((h, _marker)) => h.trim(),
+            None => raw,
+        };
+        // Skip past name — first non-name char (mirrors take_first_token
+        // in build_pip_main_module_entry).
+        let name_end = head
+            .find([' ', '\t', '[', '(', '<', '>', '=', '~', '!'])
+            .unwrap_or(head.len());
+        let after_name = &head[name_end..];
+        // Skip past `[extras]` block if present.
+        let after_extras = if let Some(rest) = after_name.trim_start().strip_prefix('[') {
+            if let Some(idx) = rest.find(']') {
+                &rest[idx + 1..]
+            } else {
+                after_name
+            }
+        } else {
+            after_name
+        };
+        after_extras.trim().to_string()
+    };
+
+    // Match the m068 main-module convention: `source_path` points at the
+    // PROJECT ROOT directory (URI form), NOT the manifest file. Two reasons:
+    // (a) m176's `derive_workspace_root` at scan_fs/workspace_root.rs:38
+    //     expects the URI-form path to be a directory; passing the manifest
+    //     path would yield `subproject_a/pyproject.toml` as a workspace
+    //     member instead of the intended `subproject_a`, breaking m176's
+    //     `waybill:workspace-member` deduplication (regression caught by
+    //     workspace_visibility::t007). (b) The m068 main-module entry from
+    //     `build_pip_main_module_entry` uses this exact shape, so the m191
+    //     reconciler merges by same source_path when it collides.
+    let source_path = format!("path+file://{}", project_root.display());
+
+    // Constructor for one entry — reused across every section below.
+    let build_entry =
+        |raw_dep: &str,
+         scope: waybill_common::resolution::LifecycleScope,
+         optional_derivation: Option<&str>|
+         -> Option<PackageDbEntry> {
+            let name = tokenise_requires_dist_name(raw_dep)?;
+            if name.is_empty() {
+                return None;
+            }
+            let purl_str = build_pypi_purl_str(&name, "unresolved");
+            let purl = waybill_common::types::purl::Purl::new(&purl_str).ok()?;
+            let constraint = take_constraint(raw_dep);
+            let requirement_ranges = if constraint.is_empty() {
+                Vec::new()
+            } else {
+                vec![constraint.clone()]
+            };
+            let mut extra_annotations: std::collections::BTreeMap<String, serde_json::Value> =
+                Default::default();
+            extra_annotations.insert(
+                "waybill:unresolved-reason".to_string(),
+                serde_json::Value::String(MANIFEST_UNRESOLVED_REASON.to_string()),
+            );
+            if !constraint.is_empty() {
+                extra_annotations.insert(
+                    "waybill:version-constraint".to_string(),
+                    serde_json::Value::String(constraint),
+                );
+            }
+            if let Some(derivation) = optional_derivation {
+                extra_annotations.insert(
+                    "waybill:optional-derivation".to_string(),
+                    serde_json::Value::String(derivation.to_string()),
+                );
+            }
+            Some(PackageDbEntry {
+                build_inclusion: None,
+                purl,
+                name,
+                version: "unresolved".to_string(),
+                arch: None,
+                source_path: source_path.clone(),
+                depends: Vec::new(),
+                maintainer: None,
+                licenses: Vec::new(),
+                lifecycle_scope: Some(scope),
+                requirement_ranges,
+                source_type: None,
+                buildinfo_status: None,
+                evidence_kind: None,
+                binary_class: None,
+                binary_stripped: None,
+                linkage_kind: None,
+                detected_go: None,
+                confidence: None,
+                binary_packed: None,
+                raw_version: None,
+                parent_purl: None,
+                npm_role: None,
+                co_owned_by: None,
+                hashes: Vec::new(),
+                sbom_tier: Some("design".to_string()),
+                shade_relocation: None,
+                extra_annotations,
+                binary_role: None,
+            })
+        };
+
+    // De-duplicate by name across the whole manifest — Runtime wins over
+    // Optional / Development (m183 Decision 3 diamond precedence).
+    // Insertion order tracked so PEP 621 -> PEP 735 -> Poetry-legacy
+    // ordering is stable in output.
+    let mut by_name: std::collections::BTreeMap<String, PackageDbEntry> =
+        std::collections::BTreeMap::new();
+    let mut push_or_upgrade = |entry: PackageDbEntry| {
+        use waybill_common::resolution::LifecycleScope;
+        let existing = by_name.get(&entry.name);
+        let new_is_runtime = matches!(entry.lifecycle_scope, Some(LifecycleScope::Runtime));
+        let existing_is_runtime = matches!(
+            existing.and_then(|e| e.lifecycle_scope),
+            Some(LifecycleScope::Runtime)
+        );
+        match existing {
+            None => {
+                by_name.insert(entry.name.clone(), entry);
+            }
+            Some(_) if new_is_runtime && !existing_is_runtime => {
+                by_name.insert(entry.name.clone(), entry);
+            }
+            Some(_) => { /* preserve existing */ }
+        }
+    };
+
+    let project_table = parsed.get("project");
+    let has_project = project_table.is_some();
+    let tool_poetry = parsed.get("tool").and_then(|t| t.get("poetry"));
+
+    // Section 1: PEP 621 [project.dependencies]
+    if let Some(project) = project_table {
+        if let Some(deps) = project.get("dependencies").and_then(|v| v.as_array()) {
+            for d in deps.iter().filter_map(|v| v.as_str()) {
+                if let Some(entry) = build_entry(
+                    d,
+                    waybill_common::resolution::LifecycleScope::Runtime,
+                    None,
+                ) {
+                    push_or_upgrade(entry);
+                }
+            }
+        }
+
+        // Section 2: PEP 621 [project.optional-dependencies].<group>
+        if let Some(opt_table) = project
+            .get("optional-dependencies")
+            .and_then(|v| v.as_table())
+        {
+            for (group_name, deps) in opt_table {
+                if let Some(arr) = deps.as_array() {
+                    let derivation =
+                        format!("pip-pyproject-optional-dependencies:{group_name}");
+                    for d in arr.iter().filter_map(|v| v.as_str()) {
+                        if let Some(entry) = build_entry(
+                            d,
+                            waybill_common::resolution::LifecycleScope::Optional,
+                            Some(&derivation),
+                        ) {
+                            push_or_upgrade(entry);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Section 3: PEP 735 [dependency-groups].<group> (parallel to PEP 621).
+    if let Some(dep_groups) = parsed.get("dependency-groups").and_then(|v| v.as_table()) {
+        for (group_name, deps) in dep_groups {
+            if let Some(arr) = deps.as_array() {
+                let derivation = format!("pep-735-dependency-groups:{group_name}");
+                for d in arr.iter().filter_map(|v| v.as_str()) {
+                    if let Some(entry) = build_entry(
+                        d,
+                        waybill_common::resolution::LifecycleScope::Optional,
+                        Some(&derivation),
+                    ) {
+                        push_or_upgrade(entry);
+                    }
+                }
+            }
+        }
+    }
+
+    // Section 4-6: Poetry-legacy — only when [project] is absent so PEP
+    // 621 stays authoritative for mid-migration projects (matching how
+    // uv reads them).
+    if !has_project {
+        if let Some(poetry) = tool_poetry {
+            // Section 4: [tool.poetry.dependencies] → Runtime (skip `python`)
+            if let Some(deps) = poetry.get("dependencies").and_then(|v| v.as_table()) {
+                for (name, spec) in deps {
+                    if name == "python" {
+                        continue;
+                    }
+                    // Poetry deps are TOML tables; the constraint can be
+                    // either a string ("^1.0") or a subtable ({version =
+                    // "^1.0", extras = [...], ...}). Reconstruct a PEP 508-
+                    // shaped string so the shared build_entry closure works.
+                    let raw = poetry_dep_to_pep508(name, spec);
+                    if let Some(entry) = build_entry(
+                        &raw,
+                        waybill_common::resolution::LifecycleScope::Runtime,
+                        None,
+                    ) {
+                        push_or_upgrade(entry);
+                    }
+                }
+            }
+            // Section 5: [tool.poetry.dev-dependencies] → Development
+            if let Some(deps) = poetry.get("dev-dependencies").and_then(|v| v.as_table()) {
+                for (name, spec) in deps {
+                    if name == "python" {
+                        continue;
+                    }
+                    let raw = poetry_dep_to_pep508(name, spec);
+                    if let Some(entry) = build_entry(
+                        &raw,
+                        waybill_common::resolution::LifecycleScope::Development,
+                        Some("poetry-legacy-dev-dependencies"),
+                    ) {
+                        push_or_upgrade(entry);
+                    }
+                }
+            }
+            // Section 6: [tool.poetry.group.<name>.dependencies]
+            if let Some(groups) = poetry.get("group").and_then(|v| v.as_table()) {
+                for (group_name, group_val) in groups {
+                    if let Some(deps) = group_val
+                        .get("dependencies")
+                        .and_then(|v| v.as_table())
+                    {
+                        // dev / test → Development; everything else → Optional
+                        let (scope, derivation) = match group_name.as_str() {
+                            "dev" | "test" => (
+                                waybill_common::resolution::LifecycleScope::Development,
+                                format!("poetry-legacy-group:{group_name}"),
+                            ),
+                            _ => (
+                                waybill_common::resolution::LifecycleScope::Optional,
+                                format!("poetry-legacy-group:{group_name}"),
+                            ),
+                        };
+                        for (name, spec) in deps {
+                            if name == "python" {
+                                continue;
+                            }
+                            let raw = poetry_dep_to_pep508(name, spec);
+                            if let Some(entry) = build_entry(&raw, scope, Some(&derivation)) {
+                                push_or_upgrade(entry);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    by_name.into_values().collect()
+}
+
+/// Reconstruct a PEP 508-shaped string from a Poetry-legacy dep entry.
+///
+/// Poetry deps can be either:
+/// - String scalar: `requests = "^2.28"` — `spec.as_str() = Some("^2.28")`
+/// - Table: `requests = { version = "^2.28", extras = ["security"] }` —
+///   `spec.as_table()` with a `version` key
+/// - Path / git / url: table without a `version` key — surfaced with an
+///   empty constraint so build_entry treats it as unpinned.
+///
+/// The returned string is fed back through [`tokenise_requires_dist_name`]
+/// and `take_constraint` in [`pyproject_declared_deps`], which recover the
+/// name and constraint respectively. Extras and markers are intentionally
+/// dropped for v1 — Poetry-legacy fidelity is scope-limited per spec Q3.
+fn poetry_dep_to_pep508(name: &str, spec: &toml::Value) -> String {
+    match spec {
+        toml::Value::String(constraint) => format!("{name} {constraint}"),
+        toml::Value::Table(t) => {
+            if let Some(constraint) = t.get("version").and_then(|v| v.as_str()) {
+                format!("{name} {constraint}")
+            } else {
+                name.to_string()
+            }
+        }
+        _ => name.to_string(),
+    }
 }
 
 pub(crate) fn dedup_pip_main_modules_by_purl(
@@ -1230,7 +1666,14 @@ dynamic = ["version"]
     }
 
     #[test]
-    fn build_pip_main_module_poetry_only_returns_none_with_flag() {
+    fn build_pip_main_module_poetry_only_emits_main_module_post_m670() {
+        // Milestone 670 T005: reverses the pre-m670 policy that suppressed
+        // main-module emission for [tool.poetry]-only pyproject.tomls
+        // (issue #104). The main-module now emits from [tool.poetry].name/
+        // .version; declared deps come from `pyproject_declared_deps`
+        // as separate design-tier components (T003). The tuple's second
+        // element flips to `true` (informational — no longer gates the
+        // caller's skip).
         let tmp = tempfile::tempdir().unwrap();
         write_pyproject(
             tmp.path(),
@@ -1240,9 +1683,23 @@ name = "poetry-only-app"
 version = "1.0.0"
 "#,
         );
-        let (entry, was_poetry_only) = build_pip_main_module_entry(tmp.path());
-        assert!(entry.is_none());
-        assert!(was_poetry_only);
+        let (entry, is_poetry_legacy) = build_pip_main_module_entry(tmp.path());
+        let entry = entry.expect("m670: Poetry-only pyproject.toml emits main-module");
+        assert_eq!(entry.name, "poetry-only-app");
+        assert_eq!(entry.version, "1.0.0");
+        assert_eq!(entry.purl.as_str(), "pkg:pypi/poetry-only-app@1.0.0");
+        assert_eq!(
+            entry
+                .extra_annotations
+                .get("waybill:component-role")
+                .and_then(|v| v.as_str()),
+            Some("main-module")
+        );
+        assert!(
+            entry.depends.is_empty(),
+            "m670 v1: Poetry-legacy main-module emits empty depends; deps handled by pyproject_declared_deps"
+        );
+        assert!(is_poetry_legacy);
     }
 
     #[test]
@@ -1621,5 +2078,371 @@ dependencies = ["requests"]
     fn build_pypi_purl_str_nonempty_version_byte_identical_to_pre_m191() {
         let s = build_pypi_purl_str("requests", "2.31.0");
         assert_eq!(s, "pkg:pypi/requests@2.31.0");
+    }
+
+    // -----------------------------------------------------------------
+    // Milestone 670 PR-1 (T003): pyproject_declared_deps tests
+    // -----------------------------------------------------------------
+
+    fn m670_write_pyproject(tmp: &tempfile::TempDir, contents: &str) {
+        std::fs::write(tmp.path().join("pyproject.toml"), contents).unwrap();
+    }
+
+    fn m670_find_entry<'a>(entries: &'a [PackageDbEntry], name: &str) -> &'a PackageDbEntry {
+        entries
+            .iter()
+            .find(|e| e.name == name)
+            .unwrap_or_else(|| panic!("no entry named {name}; got: {:?}",
+                entries.iter().map(|e| &e.name).collect::<Vec<_>>()))
+    }
+
+    #[test]
+    fn m670_pyproject_missing_returns_empty() {
+        let tmp = tempfile::tempdir().unwrap();
+        // No pyproject.toml at all.
+        assert!(pyproject_declared_deps(tmp.path()).is_empty());
+    }
+
+    #[test]
+    fn m670_pyproject_unparseable_returns_empty() {
+        let tmp = tempfile::tempdir().unwrap();
+        m670_write_pyproject(&tmp, "this is [not valid = toml");
+        assert!(pyproject_declared_deps(tmp.path()).is_empty());
+    }
+
+    #[test]
+    fn m670_pep621_dependencies_emit_runtime_design_tier() {
+        let tmp = tempfile::tempdir().unwrap();
+        m670_write_pyproject(
+            &tmp,
+            r#"
+[project]
+name = "example"
+version = "1.0.0"
+dependencies = [
+    "requests>=2.28",
+    "click>=8.0",
+    "urllib3",
+]
+"#,
+        );
+        let entries = pyproject_declared_deps(tmp.path());
+        assert_eq!(entries.len(), 3);
+        for e in &entries {
+            assert_eq!(e.version, "unresolved");
+            assert_eq!(e.sbom_tier.as_deref(), Some("design"));
+            assert_eq!(
+                e.lifecycle_scope,
+                Some(waybill_common::resolution::LifecycleScope::Runtime)
+            );
+            assert_eq!(
+                e.extra_annotations
+                    .get("waybill:unresolved-reason")
+                    .and_then(|v| v.as_str()),
+                Some(MANIFEST_UNRESOLVED_REASON)
+            );
+            // No optional-derivation on Runtime entries.
+            assert!(!e.extra_annotations.contains_key("waybill:optional-derivation"));
+        }
+        let requests = m670_find_entry(&entries, "requests");
+        assert_eq!(requests.purl.as_str(), "pkg:pypi/requests@unresolved");
+        assert_eq!(
+            requests.extra_annotations
+                .get("waybill:version-constraint")
+                .and_then(|v| v.as_str()),
+            Some(">=2.28")
+        );
+        // Unpinned entry has no version-constraint annotation.
+        let urllib3 = m670_find_entry(&entries, "urllib3");
+        assert!(!urllib3.extra_annotations.contains_key("waybill:version-constraint"));
+    }
+
+    #[test]
+    fn m670_pep621_optional_dependencies_emit_optional_scope_with_derivation() {
+        let tmp = tempfile::tempdir().unwrap();
+        m670_write_pyproject(
+            &tmp,
+            r#"
+[project]
+name = "example"
+version = "1.0.0"
+
+[project.optional-dependencies]
+docs = ["sphinx>=7"]
+test = ["pytest>=8"]
+"#,
+        );
+        let entries = pyproject_declared_deps(tmp.path());
+        assert_eq!(entries.len(), 2);
+        let sphinx = m670_find_entry(&entries, "sphinx");
+        assert_eq!(
+            sphinx.lifecycle_scope,
+            Some(waybill_common::resolution::LifecycleScope::Optional)
+        );
+        assert_eq!(
+            sphinx.extra_annotations
+                .get("waybill:optional-derivation")
+                .and_then(|v| v.as_str()),
+            Some("pip-pyproject-optional-dependencies:docs")
+        );
+        let pytest = m670_find_entry(&entries, "pytest");
+        assert_eq!(
+            pytest.extra_annotations
+                .get("waybill:optional-derivation")
+                .and_then(|v| v.as_str()),
+            Some("pip-pyproject-optional-dependencies:test")
+        );
+    }
+
+    #[test]
+    fn m670_pep735_dependency_groups_emit_optional_scope() {
+        let tmp = tempfile::tempdir().unwrap();
+        m670_write_pyproject(
+            &tmp,
+            r#"
+[project]
+name = "example"
+version = "1.0.0"
+
+[dependency-groups]
+lint = ["ruff>=0.5"]
+"#,
+        );
+        let entries = pyproject_declared_deps(tmp.path());
+        assert_eq!(entries.len(), 1);
+        let ruff = m670_find_entry(&entries, "ruff");
+        assert_eq!(
+            ruff.lifecycle_scope,
+            Some(waybill_common::resolution::LifecycleScope::Optional)
+        );
+        assert_eq!(
+            ruff.extra_annotations
+                .get("waybill:optional-derivation")
+                .and_then(|v| v.as_str()),
+            Some("pep-735-dependency-groups:lint")
+        );
+    }
+
+    #[test]
+    fn m670_poetry_legacy_only_emits_runtime_and_skips_python() {
+        let tmp = tempfile::tempdir().unwrap();
+        m670_write_pyproject(
+            &tmp,
+            r#"
+[tool.poetry]
+name = "example"
+version = "1.0.0"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+requests = "^2.28"
+click = { version = "^8.0", extras = ["colorama"] }
+"#,
+        );
+        let entries = pyproject_declared_deps(tmp.path());
+        assert_eq!(entries.len(), 2, "python should be skipped");
+        assert!(entries.iter().all(|e| e.name != "python"));
+        let requests = m670_find_entry(&entries, "requests");
+        assert_eq!(
+            requests.lifecycle_scope,
+            Some(waybill_common::resolution::LifecycleScope::Runtime)
+        );
+        assert_eq!(
+            requests.extra_annotations
+                .get("waybill:version-constraint")
+                .and_then(|v| v.as_str()),
+            Some("^2.28")
+        );
+        let click = m670_find_entry(&entries, "click");
+        // Table-form constraint (`version = "^8.0"`) is recovered.
+        assert_eq!(
+            click.extra_annotations
+                .get("waybill:version-constraint")
+                .and_then(|v| v.as_str()),
+            Some("^8.0")
+        );
+    }
+
+    #[test]
+    fn m670_poetry_dev_dependencies_emit_development_scope() {
+        let tmp = tempfile::tempdir().unwrap();
+        m670_write_pyproject(
+            &tmp,
+            r#"
+[tool.poetry]
+name = "example"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.dev-dependencies]
+pytest = "^8.0"
+"#,
+        );
+        let entries = pyproject_declared_deps(tmp.path());
+        let pytest = m670_find_entry(&entries, "pytest");
+        assert_eq!(
+            pytest.lifecycle_scope,
+            Some(waybill_common::resolution::LifecycleScope::Development)
+        );
+        assert_eq!(
+            pytest.extra_annotations
+                .get("waybill:optional-derivation")
+                .and_then(|v| v.as_str()),
+            Some("poetry-legacy-dev-dependencies")
+        );
+    }
+
+    #[test]
+    fn m670_poetry_group_test_emits_development_group_docs_emits_optional() {
+        let tmp = tempfile::tempdir().unwrap();
+        m670_write_pyproject(
+            &tmp,
+            r#"
+[tool.poetry]
+name = "example"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8"
+
+[tool.poetry.group.docs.dependencies]
+sphinx = "^7"
+"#,
+        );
+        let entries = pyproject_declared_deps(tmp.path());
+        let pytest = m670_find_entry(&entries, "pytest");
+        assert_eq!(
+            pytest.lifecycle_scope,
+            Some(waybill_common::resolution::LifecycleScope::Development)
+        );
+        assert_eq!(
+            pytest.extra_annotations
+                .get("waybill:optional-derivation")
+                .and_then(|v| v.as_str()),
+            Some("poetry-legacy-group:test")
+        );
+        let sphinx = m670_find_entry(&entries, "sphinx");
+        assert_eq!(
+            sphinx.lifecycle_scope,
+            Some(waybill_common::resolution::LifecycleScope::Optional)
+        );
+        assert_eq!(
+            sphinx.extra_annotations
+                .get("waybill:optional-derivation")
+                .and_then(|v| v.as_str()),
+            Some("poetry-legacy-group:docs")
+        );
+    }
+
+    #[test]
+    fn m670_pep621_diamond_runtime_wins_over_optional() {
+        let tmp = tempfile::tempdir().unwrap();
+        m670_write_pyproject(
+            &tmp,
+            r#"
+[project]
+name = "example"
+version = "1.0.0"
+dependencies = ["shared>=1"]
+
+[project.optional-dependencies]
+extras = ["shared>=1.5"]
+"#,
+        );
+        let entries = pyproject_declared_deps(tmp.path());
+        assert_eq!(entries.len(), 1, "diamond should collapse to one entry");
+        let shared = m670_find_entry(&entries, "shared");
+        assert_eq!(
+            shared.lifecycle_scope,
+            Some(waybill_common::resolution::LifecycleScope::Runtime),
+            "Runtime should win over Optional per m183 Decision 3"
+        );
+        assert!(!shared.extra_annotations.contains_key("waybill:optional-derivation"));
+    }
+
+    #[test]
+    fn m670_pep621_precedence_over_poetry_legacy() {
+        // When [project] is present, Poetry-legacy sections are ignored.
+        let tmp = tempfile::tempdir().unwrap();
+        m670_write_pyproject(
+            &tmp,
+            r#"
+[project]
+name = "example"
+version = "1.0.0"
+dependencies = ["pep621-only"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+poetry-only = "^1"
+"#,
+        );
+        let entries = pyproject_declared_deps(tmp.path());
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].name, "pep621-only");
+        assert!(entries.iter().all(|e| e.name != "poetry-only"));
+    }
+
+    #[test]
+    fn m670_extras_stripped_from_name_but_constraint_preserved() {
+        let tmp = tempfile::tempdir().unwrap();
+        m670_write_pyproject(
+            &tmp,
+            r#"
+[project]
+name = "example"
+version = "1.0.0"
+dependencies = ["requests[security]>=2.28"]
+"#,
+        );
+        let entries = pyproject_declared_deps(tmp.path());
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].name, "requests");
+        assert_eq!(
+            entries[0].extra_annotations
+                .get("waybill:version-constraint")
+                .and_then(|v| v.as_str()),
+            Some(">=2.28")
+        );
+    }
+
+    #[test]
+    fn m670_source_path_points_at_project_root_directory() {
+        // m670: source_path uses the m068 main-module convention —
+        // `path+file://<project_root>` (directory), NOT the manifest file
+        // itself. This is required so m176's workspace-member derivation
+        // (which strips scan-root prefix from URI-form paths without
+        // calling `parent()`) yields the correct workspace member name.
+        // See workspace_visibility::t007 for the regression this shape
+        // prevents.
+        let tmp = tempfile::tempdir().unwrap();
+        m670_write_pyproject(
+            &tmp,
+            r#"
+[project]
+name = "example"
+version = "1.0.0"
+dependencies = ["requests"]
+"#,
+        );
+        let entries = pyproject_declared_deps(tmp.path());
+        assert_eq!(entries.len(), 1);
+        assert!(entries[0].source_path.starts_with("path+file://"));
+        // The suffix is the temp-dir path itself, not `pyproject.toml`.
+        assert!(
+            !entries[0].source_path.ends_with("pyproject.toml"),
+            "source_path should NOT point at the manifest file: {}",
+            entries[0].source_path
+        );
+        assert!(
+            entries[0].source_path.ends_with(
+                tmp.path().to_string_lossy().as_ref()
+            ),
+            "source_path should point at the project-root directory: {}",
+            entries[0].source_path
+        );
     }
 }

@@ -95,11 +95,19 @@ dynamic = ["version"]
     );
 }
 
-/// US1 AS#4 + FR-002: `[tool.poetry]`-only manifest skips main-module
-/// emission. `documentDescribes` falls through to a synthetic root
-/// (no `pkg:pypi/poetry-only-app` package emitted).
+/// US1 AS#4 + FR-002 + m670 T005 reversal:
+///
+/// Pre-m670: `[tool.poetry]`-only manifests skipped main-module
+/// emission (issue #104). This test asserted that skip: `packages[]`
+/// had zero APPLICATION-purpose entries and no `pkg:pypi/poetry-only-app`
+/// PURL anywhere.
+///
+/// Post-m670 T005: Poetry-legacy pyproject.tomls DO emit a main-module,
+/// sourced from `[tool.poetry].name/.version`. This test now asserts
+/// the opposite: exactly one APPLICATION-purpose package emits and it
+/// carries the `pkg:pypi/poetry-only-app` PURL.
 #[test]
-fn scan_pip_poetry_only_skips_main_module() {
+fn scan_pip_poetry_only_emits_main_module_post_m670() {
     let path = cli_local_fixture("pip-pyproject-poetry-only");
     let spdx = scan_path(&path, "spdx-2.3-json");
     let app_pkgs: Vec<&serde_json::Value> = spdx["packages"]
@@ -113,11 +121,11 @@ fn scan_pip_poetry_only_skips_main_module() {
         .collect();
     assert_eq!(
         app_pkgs.len(),
-        0,
-        "Poetry-only manifest must NOT emit a main-module per FR-002. \
-         Got APPLICATION-purpose packages: {app_pkgs:#?}"
+        1,
+        "m670 T005: Poetry-legacy manifest emits exactly one APPLICATION-purpose main-module. \
+         Got: {app_pkgs:#?}"
     );
-    // Verify no pkg:pypi/poetry-only-app PURL anywhere.
+    // Verify the pkg:pypi/poetry-only-app PURL is present.
     let any_poetry_main = spdx["packages"]
         .as_array()
         .map(|a| {
@@ -136,8 +144,8 @@ fn scan_pip_poetry_only_skips_main_module() {
         })
         .unwrap_or(false);
     assert!(
-        !any_poetry_main,
-        "no pkg:pypi/poetry-only-app should appear when [tool.poetry] is the only schema"
+        any_poetry_main,
+        "m670 T005: pkg:pypi/poetry-only-app main-module MUST appear post-m018-reversal"
     );
 }
 

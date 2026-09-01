@@ -509,13 +509,19 @@ License: Ignored
     }
 
     #[test]
-    fn pyproject_only_project_emits_only_main_module() {
+    fn pyproject_only_project_emits_main_module_and_manifest_declared_deps() {
         // Bare pyproject.toml; no venv, no lockfile, no requirements.
-        // Pre-milestone-068 this emitted zero components; post-068 it
-        // emits exactly one main-module component for the project
-        // itself per FR-001 (PEP 621 [project] table). Phantom dep
-        // components from `[project.dependencies]` are still NOT
-        // emitted — those build specs aren't resolved versions.
+        //
+        // Timeline of this test's expected shape:
+        //   * Pre-m068: emitted zero components (m018 "pyproject-only =
+        //     bloat" policy).
+        //   * m068 through m669: emitted exactly one main-module component
+        //     for the project itself; declared deps stayed suppressed.
+        //   * m670 (PR-1): reverses the m018 policy — declared deps in
+        //     `[project.dependencies]` ARE emitted as design-tier
+        //     components with `version = "unresolved"` and a m236
+        //     `waybill:unresolved-reason` annotation surfacing the
+        //     boundary. Total emitted = 1 main-module + N declared deps.
         let dir = tempfile::tempdir().unwrap();
         fs::write(
             dir.path().join("pyproject.toml"),
@@ -525,18 +531,34 @@ License: Ignored
         let out = read(dir.path(), false, &Default::default());
         assert_eq!(
             out.len(),
-            1,
-            "pyproject-only project emits exactly one component (the main-module)"
+            2,
+            "m670: main-module + one declared dep (`requests`)"
         );
-        assert_eq!(out[0].name, "myapp");
-        assert_eq!(out[0].purl.as_str(), "pkg:pypi/myapp@0.1.0");
+        let main_module = out
+            .iter()
+            .find(|e| e.name == "myapp")
+            .expect("main-module component present");
+        assert_eq!(main_module.purl.as_str(), "pkg:pypi/myapp@0.1.0");
         assert_eq!(
-            out[0]
+            main_module
                 .extra_annotations
                 .get("waybill:component-role")
                 .and_then(|v| v.as_str()),
             Some("main-module"),
             "milestone 068: pyproject-only emits a C40-tagged main-module"
+        );
+        let requests = out
+            .iter()
+            .find(|e| e.name == "requests")
+            .expect("m670: declared dep `requests` emitted as design-tier");
+        assert_eq!(requests.purl.as_str(), "pkg:pypi/requests@unresolved");
+        assert_eq!(requests.sbom_tier.as_deref(), Some("design"));
+        assert_eq!(
+            requests
+                .extra_annotations
+                .get("waybill:unresolved-reason")
+                .and_then(|v| v.as_str()),
+            Some(super::super::MANIFEST_UNRESOLVED_REASON)
         );
     }
 

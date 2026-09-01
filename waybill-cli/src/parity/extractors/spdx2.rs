@@ -636,6 +636,10 @@ spdx23_anno!(c151_spdx23, "waybill:unresolved-reason",                     compo
 spdx23_anno!(c152_spdx23, "waybill:resolver-tier",                         component);
 // Milestone 665: C153 document-scope binary-scan-suppressed annotation.
 spdx23_anno!(c153_spdx23, "waybill:binary-scan-suppressed",                document);
+// Milestone 670 T012 PR-3: C154 per-component PEP 508 direct-URL source metadata.
+spdx23_anno!(c154_spdx23, "waybill:direct-url-source",                     component);
+// Milestone 670 T013 PR-3: C155 per-component requirements-file scope classification.
+spdx23_anno!(c155_spdx23, "waybill:python-req-file-scope",                 component);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
