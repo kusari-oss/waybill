@@ -20,10 +20,20 @@
 //! **Hard exclusion** (FR-005): source-code / plain-text /
 //! structured-config extensions, plus the path-prefix list captured
 //! in [`ORPHAN_PATH_EXCLUSIONS`].
+//!
+//! **Milestone 671** — the hard exclusion for source-code extensions
+//! is conditionally bypassed when [`FileInventoryMode::SourceTree`]
+//! is active (opt-in). Under that mode, files matching the FR-002
+//! 21-extension allowlist ([`super::source_shape::SourceShape`])
+//! qualify for a new [`ContentShape::SourceFile`] variant. Docs +
+//! structured-config extensions stay excluded under all modes. See
+//! `specs/671-file-tier-cpython/` for the full flow.
 
 use std::path::Path;
 
 use globset::{Glob, GlobSetBuilder};
+
+use super::source_shape::{SourceShape, SourceShapeSet};
 
 /// FR-005 content-shape classification for a single file. Variants
 /// are mutually exclusive — the classifier picks the first matching
@@ -59,6 +69,25 @@ pub(crate) enum ContentShape {
     /// not enforced — image rootfs scans frequently lose POSIX perms in
     /// transit, and a shebang is signal enough).
     ExecScript,
+    /// **Milestone 671** — a file matching the FR-002 21-extension
+    /// source-code allowlist ([`super::source_shape::SourceShape`]).
+    /// This variant is emitted ONLY when the caller passes a
+    /// [`super::FileInventoryMode::SourceTree`] mode value to
+    /// [`classify`] AND the file's extension is (a) in the FR-002
+    /// allowlist AND (b) not filtered out by the mode's optional
+    /// restriction subset. Under the DEFAULT ([`Orphan`]/[`Off`]/[`Full`])
+    /// modes this variant is never produced — the `EXCLUDED_EXTENSIONS`
+    /// check at [`classify`] short-circuits to `None` for source-code
+    /// extensions, preserving pre-m671 byte-identity (FR-007).
+    ///
+    /// Wired into [`classify`] by T007. Downstream emission
+    /// (walker + reconciler + emitters) treats this variant the same
+    /// as other file-tier variants — SHA-256 + path-evidence, no PURL.
+    ///
+    /// [`Orphan`]: super::FileInventoryMode::Orphan
+    /// [`Off`]: super::FileInventoryMode::Off
+    /// [`Full`]: super::FileInventoryMode::Full
+    SourceFile,
 }
 
 /// FR-005 path-prefix exclusion list. Known package install roots
@@ -173,15 +202,57 @@ pub(crate) fn build_orphan_exclusion_globs() -> globset::GlobSet {
 /// adjacent-lockfile filesystem probes happen in the caller
 /// (`walker.rs`). This keeps the function unit-testable without
 /// touching the filesystem and lets the walker batch I/O.
+///
+/// **Milestone 671**: this is a thin wrapper around
+/// [`classify_with_source_tree`] with `source_tree_restriction = None`,
+/// preserving pre-m671 byte-identity for every existing call site.
+/// The walker (T008) invokes the extended function directly when
+/// `--file-inventory=source-tree` is active.
 pub(crate) fn classify(
     rel_path: &Path,
     head_bytes: &[u8],
     exclusion_globs: &globset::GlobSet,
     lockfile_check: impl FnOnce() -> bool,
 ) -> Option<ContentShape> {
+    classify_with_source_tree(rel_path, head_bytes, exclusion_globs, lockfile_check, None)
+}
+
+/// Milestone 671 extension of [`classify`] with an optional
+/// source-tree bypass. Existing byte-identity is preserved when
+/// `source_tree_restriction = None`.
+///
+/// Parameter semantics:
+/// - `source_tree_restriction = None` — `--file-inventory=source-tree`
+///   is NOT active; classifier behaves byte-identically to pre-m671.
+///   Source-code extensions (`.py`, `.c`, etc.) get shape-skipped by
+///   the m133 [`EXCLUDED_EXTENSIONS`] check.
+/// - `source_tree_restriction = Some(None)` — mode is active with
+///   no restriction; every FR-002 21-extension source-code file
+///   classifies as [`ContentShape::SourceFile`] instead of being
+///   shape-skipped.
+/// - `source_tree_restriction = Some(Some(&set))` — mode is active
+///   with a restriction subset; only extensions in `set` classify
+///   as `SourceFile`; the remainder (still FR-002 allowlist members
+///   but not in the operator's subset) get shape-skipped like the
+///   default mode.
+///
+/// **Non-source extensions stay hard-excluded under all modes** —
+/// docs (`.md`, `.rst`), configs (`.toml`, `.yaml`, `.json`),
+/// build-glue (`Dockerfile`, `Makefile`) always shape-skip. The mode
+/// carve-out is limited to the FR-002 21-extension source-code set.
+pub(crate) fn classify_with_source_tree(
+    rel_path: &Path,
+    head_bytes: &[u8],
+    exclusion_globs: &globset::GlobSet,
+    lockfile_check: impl FnOnce() -> bool,
+    source_tree_restriction: Option<Option<&SourceShapeSet>>,
+) -> Option<ContentShape> {
     // 1. Path-prefix exclusion list. Anything under `**/node_modules/**`
     //    or `**/.cargo/registry/**` etc. is package-tier territory —
-    //    silently skip regardless of shape.
+    //    silently skip regardless of shape (INCLUDING SourceTree mode
+    //    — package-DB readers own that content; m133 FR-011 dedupe
+    //    otherwise handles the overlap, but path-prefix stripping
+    //    stays authoritative for the well-known package roots).
     if exclusion_globs.is_match(rel_path) {
         return None;
     }
@@ -210,6 +281,24 @@ pub(crate) fn classify(
                 .map(|s| LONE_MANIFEST_FILENAMES.contains(&s))
                 .unwrap_or(false);
             if !is_lone_candidate {
+                // Milestone 671: check the source-tree mode-gated
+                // bypass BEFORE returning None. Only source-code
+                // extensions in the FR-002 allowlist qualify — docs
+                // / configs / build-glue stay shape-skipped even
+                // under SourceTree mode.
+                if let Some(restriction) = source_tree_restriction {
+                    if let Some(shape) = source_shape_for_filename(name) {
+                        // Restriction check: None → all shapes eligible;
+                        // Some(set) → shape must be in the set.
+                        let allowed = match restriction {
+                            None => true,
+                            Some(set) => set.contains(&shape),
+                        };
+                        if allowed {
+                            return Some(ContentShape::SourceFile);
+                        }
+                    }
+                }
                 return None;
             }
         }
@@ -300,6 +389,20 @@ pub(crate) fn sibling_lockfiles_for(manifest_filename: &str) -> &'static [&'stat
 /// not vendored source-tree signal". Caller probes for the
 /// directory; this helper just exposes the name string.
 pub(crate) const POM_BUILD_OUTPUT_DIR: &str = "target";
+
+/// Milestone 671 T007 helper — resolve a lowercase filename to its
+/// [`SourceShape`] if the extension is in the FR-002 allowlist.
+/// Filename must already be lowercase (the caller does this once in
+/// [`classify_with_source_tree`] to avoid repeated allocation).
+///
+/// Uses `Path::extension`-equivalent logic: takes the substring after
+/// the LAST `.`. Files with no extension return `None`. Multi-dot
+/// filenames (e.g., `foo.tar.gz`) resolve on the final extension only
+/// (`gz` → not in FR-002 → `None`).
+fn source_shape_for_filename(lower_filename: &str) -> Option<SourceShape> {
+    let ext = lower_filename.rsplit_once('.')?.1;
+    SourceShape::from_extension(ext)
+}
 
 fn magic_classify(head: &[u8]) -> Option<ContentShape> {
     if head.len() >= 4 && &head[0..4] == b"\x7FELF" {
@@ -510,5 +613,128 @@ mod tests {
         assert!(g.is_match("foo/dotnet/packs/bar"));
         assert!(g.is_match("foo/node_modules/baz"));
         assert!(g.is_match("foo/lib/python3.11/site-packages/qux"));
+    }
+
+    // -----------------------------------------------------------------
+    // Milestone 671 T007: source-tree classifier bypass
+    // -----------------------------------------------------------------
+
+    /// FR-007 byte-identity: default-mode (source_tree_restriction=None)
+    /// preserves pre-m671 behavior. `.py` returns None (hard-excluded).
+    #[test]
+    fn m671_default_mode_shape_skips_py() {
+        let g = build_orphan_exclusion_globs();
+        let shape = classify_with_source_tree(
+            &PathBuf::from("app/src/main.py"),
+            b"import os",
+            &g,
+            || false,
+            None,
+        );
+        assert_eq!(shape, None, "default mode must shape-skip .py source");
+    }
+
+    /// SC-001 / FR-002: SourceTree mode without restriction surfaces
+    /// every FR-002 allowlist extension as `SourceFile`.
+    #[test]
+    fn m671_source_tree_no_restriction_emits_py_c_h_as_sourcefile() {
+        let g = build_orphan_exclusion_globs();
+        for path in [
+            "app/main.py",
+            "src/foo.c",
+            "include/bar.h",
+            "lib/baz.cpp",
+            "app/quux.rs",
+        ] {
+            let shape = classify_with_source_tree(
+                &PathBuf::from(path),
+                b"whatever",
+                &g,
+                || false,
+                Some(None),
+            );
+            assert_eq!(
+                shape,
+                Some(ContentShape::SourceFile),
+                "SourceTree mode (no restriction) must surface {path} as SourceFile"
+            );
+        }
+    }
+
+    /// FR-009 / SC-006: restriction subset filters out non-listed
+    /// extensions. `.py` allowed; `.c` filtered.
+    #[test]
+    fn m671_source_tree_restriction_filters_out_non_listed_extensions() {
+        let g = build_orphan_exclusion_globs();
+        let mut restriction = SourceShapeSet::new();
+        restriction.insert(SourceShape::Py);
+        // .py allowed → SourceFile.
+        let py_shape = classify_with_source_tree(
+            &PathBuf::from("app/main.py"),
+            b"",
+            &g,
+            || false,
+            Some(Some(&restriction)),
+        );
+        assert_eq!(py_shape, Some(ContentShape::SourceFile));
+        // .c not in restriction → shape-skipped.
+        let c_shape = classify_with_source_tree(
+            &PathBuf::from("src/foo.c"),
+            b"",
+            &g,
+            || false,
+            Some(Some(&restriction)),
+        );
+        assert_eq!(c_shape, None,
+            ".c must be shape-skipped when restriction is Py-only");
+    }
+
+    /// FR-002 scope-limitation: docs / configs / build-glue stay
+    /// shape-skipped even under SourceTree mode. Only source-code
+    /// extensions in the FR-002 allowlist qualify.
+    #[test]
+    fn m671_source_tree_still_excludes_docs_and_configs() {
+        let g = build_orphan_exclusion_globs();
+        // .md is a doc; not in FR-002. Under any mode → None.
+        for restriction in [None, Some(None), Some(None)] {
+            let shape = classify_with_source_tree(
+                &PathBuf::from("README.md"),
+                b"# Hello",
+                &g,
+                || false,
+                restriction,
+            );
+            assert_eq!(shape, None,
+                "docs must never surface under SourceTree mode (restriction={restriction:?})");
+        }
+        // Config extensions: .yaml, .toml, .json — all excluded.
+        for path in ["config.yaml", "Cargo.toml", "package-lock.json"] {
+            let shape = classify_with_source_tree(
+                &PathBuf::from(path),
+                b"",
+                &g,
+                || false,
+                Some(None),
+            );
+            assert!(
+                shape != Some(ContentShape::SourceFile),
+                "{path} must not classify as SourceFile"
+            );
+        }
+    }
+
+    /// T007 helper: `source_shape_for_filename` handles multi-dot
+    /// paths + case-insensitivity + no-extension files.
+    #[test]
+    fn source_shape_for_filename_edge_cases() {
+        assert_eq!(source_shape_for_filename("main.py"), Some(SourceShape::Py));
+        // Multi-dot: only the last extension matters. `foo.tar.gz` →
+        // `gz` → not in FR-002 → None.
+        assert_eq!(source_shape_for_filename("foo.tar.gz"), None);
+        // No extension → None.
+        assert_eq!(source_shape_for_filename("makefile"), None);
+        // Empty → None.
+        assert_eq!(source_shape_for_filename(""), None);
+        // Note: caller lowercase-normalizes before calling.
     }
 }

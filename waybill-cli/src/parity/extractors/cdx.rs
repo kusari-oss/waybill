@@ -930,6 +930,14 @@ cdx_anno!(c154_cdx, "waybill:direct-url-source",                     component);
 // project-standard locations).
 cdx_anno!(c155_cdx, "waybill:python-req-file-scope",                 component);
 
+// Milestone 671 T010/T011: C156 doc-scope file-inventory-source-shapes
+// activation annotation. JSON-stringified object with
+// `{mode: "source-tree", restriction: <sorted-lex-array-or-null>}` shape
+// per data-model.md §"C156". Emitted iff `--file-inventory=source-tree`
+// is active. Absent on the default (`orphan`) path per FR-007
+// byte-identity.
+cdx_anno!(c156_cdx, "waybill:file-inventory-source-shapes-active",    document);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 cdx_anno!(c113_cdx, "waybill:synthetic-built-in",               component);

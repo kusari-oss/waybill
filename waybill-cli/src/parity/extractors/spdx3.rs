@@ -700,6 +700,8 @@ spdx3_anno!(c153_spdx3, "waybill:binary-scan-suppressed",                documen
 spdx3_anno!(c154_spdx3, "waybill:direct-url-source",                     component);
 // Milestone 670 T013 PR-3: C155 per-component requirements-file scope classification.
 spdx3_anno!(c155_spdx3, "waybill:python-req-file-scope",                 component);
+// Milestone 671 T010/T011: C156 doc-scope file-inventory-source-shapes-active annotation.
+spdx3_anno!(c156_spdx3, "waybill:file-inventory-source-shapes-active",   document);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

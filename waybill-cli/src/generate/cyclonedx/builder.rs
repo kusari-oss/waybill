@@ -168,6 +168,11 @@ pub struct CycloneDxBuilder {
     /// `Some("full")` triggers the document-level override marker
     /// (Constitution Strict Boundary §5).
     file_inventory_mode: Option<String>,
+    /// Milestone 671 (C156) — sorted-lex list of `SourceShape` names
+    /// from `--file-inventory-source-shapes=<...>`. Meaningful only
+    /// when `file_inventory_mode == Some("source-tree")`; `None` else.
+    /// See [`ScanArtifacts::file_inventory_source_shapes`].
+    file_inventory_source_shapes: Option<Vec<String>>,
     /// Milestone 134 — document-scope aggregate of divergent-PURL
     /// collision records detected in the scan. `None` ⇒ no
     /// collisions ⇒ no document-scope annotation (FR-009).
@@ -218,6 +223,7 @@ impl CycloneDxBuilder {
             sbom_type_override: None,
             file_inventory_stats: None,
             file_inventory_mode: None,
+            file_inventory_source_shapes: None,
             collisions_summary: None,
             compiler_pipeline: None,
             project_discovery_mode: None,
@@ -275,6 +281,17 @@ impl CycloneDxBuilder {
     /// the document-level override marker.
     pub fn with_file_inventory_mode(mut self, mode: Option<String>) -> Self {
         self.file_inventory_mode = mode;
+        self
+    }
+
+    /// Milestone 671 (C156) — record the operator-supplied
+    /// `--file-inventory-source-shapes` restriction (already parsed +
+    /// sorted lex). `None` on non-source-tree paths.
+    pub fn with_file_inventory_source_shapes(
+        mut self,
+        shapes: Option<Vec<String>>,
+    ) -> Self {
+        self.file_inventory_source_shapes = shapes;
         self
     }
 
@@ -710,6 +727,7 @@ impl CycloneDxBuilder {
             self.sbom_type_override,
             self.file_inventory_stats.as_ref(),
             self.file_inventory_mode.as_deref(),
+            self.file_inventory_source_shapes.as_deref(),
             self.collisions_summary.as_ref(),
             &graph_completeness,
             self.go_transitive_coverage.as_ref(),

@@ -19,9 +19,7 @@ use std::path::{Path, PathBuf};
 
 use sha2::Digest;
 
-use super::content_shape::{
-    classify, sibling_lockfiles_for, ContentShape, POM_BUILD_OUTPUT_DIR,
-};
+use super::content_shape::{sibling_lockfiles_for, ContentShape, POM_BUILD_OUTPUT_DIR};
 use super::dedupe::DedupeIndex;
 use super::FileTierEntry;
 
@@ -97,6 +95,21 @@ pub(crate) struct WalkerConfig<'a> {
     /// suppresses `tests/fixtures/**` doesn't get every test fixture
     /// emitted as file-tier components in its place.
     pub exclude_set: &'a crate::scan_fs::package_db::exclude_path::ExclusionSet,
+    /// **Milestone 671 T008**: source-tree mode restriction subset,
+    /// threaded through to [`super::content_shape::classify_with_source_tree`].
+    ///
+    /// - `None` — `--file-inventory=source-tree` is NOT active.
+    ///   Walker calls the classifier with default behavior;
+    ///   pre-m671 byte-identity preserved.
+    /// - `Some(None)` — mode is active, no restriction; all 21
+    ///   FR-002 source-code extensions are eligible.
+    /// - `Some(Some(&set))` — mode is active with a subset;
+    ///   only shapes in `set` emit as `ContentShape::SourceFile`.
+    ///
+    /// The caller (scan_cmd.rs) derives this value from the
+    /// operator's `--file-inventory=<value>` +
+    /// `--file-inventory-source-shapes=<comma-list>` flag pair.
+    pub source_tree_restriction: Option<Option<&'a super::source_shape::SourceShapeSet>>,
 }
 
 /// Diagnostic skip-counters. Emitted as document-level annotations
@@ -213,7 +226,13 @@ pub(crate) fn walk_file_tier(
         let abs_path_owned = abs_path.to_path_buf();
         let lockfile_check = move || lockfile_present_for(&abs_path_owned, manifest_name.as_deref());
 
-        let shape = match classify(&rel_path, head_slice, cfg.exclusion_globs, lockfile_check) {
+        let shape = match super::content_shape::classify_with_source_tree(
+            &rel_path,
+            head_slice,
+            cfg.exclusion_globs,
+            lockfile_check,
+            cfg.source_tree_restriction,
+        ) {
             Some(s) => s,
             None => {
                 stats.shape_skipped += 1;
@@ -382,6 +401,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         assert!(entries.is_empty());
@@ -400,6 +420,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         assert_eq!(entries.len(), 1);
@@ -421,6 +442,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         assert!(entries.is_empty());
@@ -441,6 +463,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        source_tree_restriction: None,
         };
         let (entries, _stats) = walk_file_tier(tmp.path(), &cfg);
         assert_eq!(entries.len(), 1);
@@ -515,6 +538,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         assert!(entries.is_empty());
@@ -535,6 +559,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         assert!(entries.is_empty());
@@ -553,6 +578,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         assert_eq!(entries.len(), 1);
@@ -572,6 +598,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         // Cargo.lock is the locked manifest, ends with .lock → excluded.
@@ -594,6 +621,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        source_tree_restriction: None,
         };
         let (entries, _stats) = walk_file_tier(tmp.path(), &cfg);
         assert_eq!(entries.len(), 2);
@@ -630,6 +658,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         assert!(
@@ -653,6 +682,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         assert!(entries.is_empty(), "expected zero entries under .hg/");
@@ -676,6 +706,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        source_tree_restriction: None,
         };
         let (entries, stats) = walk_file_tier(tmp.path(), &cfg);
         assert!(entries.is_empty(), "expected zero entries under .svn/");
@@ -709,6 +740,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        source_tree_restriction: None,
         };
         let (entries, _stats) = walk_file_tier(tmp.path(), &cfg);
         // No entry represents `.git` (file-form).
@@ -773,6 +805,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        source_tree_restriction: None,
         };
         let (entries, _stats) = walk_file_tier(tmp.path(), &cfg);
         // The walker DID descend into `.githooks/` (proven by the
@@ -861,6 +894,7 @@ mod tests {
                 exclusion_globs: &g,
                 dedupe_index: &d,
                 exclude_set: &empty_exclude(),
+            source_tree_restriction: None,
             };
             let (_entries, _stats) = walk_file_tier(tmp.path(), &cfg);
         });
@@ -904,6 +938,7 @@ mod tests {
             exclusion_globs: &g,
             dedupe_index: &d,
             exclude_set: &empty_exclude(),
+        source_tree_restriction: None,
         };
         // The call returns without panic. Component count is NOT
         // asserted — per FR-007 post-remediation, m174 does NOT

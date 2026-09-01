@@ -47,6 +47,7 @@
 
 pub(crate) mod content_shape;
 pub(crate) mod dedupe;
+pub(crate) mod source_shape;
 pub(crate) mod walker;
 
 use std::collections::BTreeMap;
@@ -288,7 +289,13 @@ impl FileTierEntry {
 
 /// Operator-facing file-inventory mode per FR-015. Wired through
 /// from the `--file-inventory` CLI flag to the orphan walker.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+///
+/// **Milestone 671**: added [`FileInventoryMode::SourceTree`] variant.
+/// Because the new variant carries an `Option<SourceShapeSet>` (a
+/// `BTreeSet`, not `Copy`), the enum no longer derives `Copy`.
+/// Existing call sites in `scan_cmd.rs` compare via `!=` /  `match`
+/// / borrow — no by-value dispatch broke.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FileInventoryMode {
     /// **Default (US1.B)**: no file-tier emission. Preserves
     /// byte-identity with pre-milestone-133 SBOMs. US1.C flips
@@ -303,18 +310,40 @@ pub enum FileInventoryMode {
     /// coverage. Used by forensic / compliance consumers cataloguing
     /// every hash on disk.
     Full,
+    /// **Milestone 671** — surfaces source-code file extensions
+    /// (`.py`, `.c`, `.h`, etc., per `source_shape::SourceShape::ALL`)
+    /// as file-tier components. Opt-in only; default-mode byte-
+    /// identity preserved (FR-007).
+    ///
+    /// - `restriction: None` → all 21 FR-002 shapes eligible.
+    /// - `restriction: Some(set)` → only shapes in the set are
+    ///   eligible; remaining FR-002 extensions get `shape_skipped`.
+    ///
+    /// The restriction subset arrives via a companion CLI flag
+    /// (`--file-inventory-source-shapes`, wired by T009 in
+    /// `scan_cmd.rs`). The [`Self::parse`] function's string layer
+    /// only handles the mode value (`"source-tree"`); the CLI
+    /// combines the two flag values into the final variant.
+    SourceTree {
+        restriction: Option<source_shape::SourceShapeSet>,
+    },
 }
 
 impl FileInventoryMode {
     /// Parse the operator-facing string form. Accepts `off`,
-    /// `orphan`, `full` case-insensitively. Returns `None` for
-    /// unknown values so the CLI layer can produce a clap-style
-    /// error message.
+    /// `orphan`, `full`, `source-tree` case-insensitively. Returns
+    /// `None` for unknown values so the CLI layer can produce a
+    /// clap-style error message.
+    ///
+    /// The `source-tree` value maps to `SourceTree { restriction: None }`;
+    /// the restriction subset arrives via `--file-inventory-source-shapes`
+    /// and is combined at the CLI layer.
     pub fn parse(s: &str) -> Option<Self> {
         match s.to_ascii_lowercase().as_str() {
             "off" => Some(Self::Off),
             "orphan" => Some(Self::Orphan),
             "full" => Some(Self::Full),
+            "source-tree" => Some(Self::SourceTree { restriction: None }),
             _ => None,
         }
     }
@@ -513,5 +542,23 @@ mod tests {
             Some(FileInventoryMode::Full)
         );
         assert_eq!(FileInventoryMode::parse("bogus"), None);
+    }
+
+    /// Milestone 671 T005: `source-tree` is accepted (case-insensitive)
+    /// and produces `SourceTree { restriction: None }`. The restriction
+    /// subset arrives via a separate CLI flag; parse() has no way to
+    /// carry it.
+    #[test]
+    fn file_inventory_mode_parse_accepts_source_tree() {
+        assert_eq!(
+            FileInventoryMode::parse("source-tree"),
+            Some(FileInventoryMode::SourceTree { restriction: None })
+        );
+        assert_eq!(
+            FileInventoryMode::parse("SOURCE-TREE"),
+            Some(FileInventoryMode::SourceTree { restriction: None })
+        );
+        // Regression guard — `sourcetree` (no dash) is NOT accepted.
+        assert_eq!(FileInventoryMode::parse("sourcetree"), None);
     }
 }
