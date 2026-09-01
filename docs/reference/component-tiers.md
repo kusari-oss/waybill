@@ -130,6 +130,54 @@ annotation per Constitution Strict Boundary §5 (1.5.0) so
 consumers can detect the override at parse time and filter the
 file-tier set when the duplication is unwanted.
 
+In `--file-inventory=source-tree` mode (milestone 671, opt-in),
+step 3 emits file-tier components for source-code files whose
+extension appears in the FR-002 21-extension allowlist (`c`, `cc`,
+`cpp`, `cs`, `cxx`, `go`, `h`, `hh`, `hpp`, `java`, `js`, `kt`,
+`m`, `mm`, `php`, `py`, `pyi`, `rb`, `rs`, `swift`, `ts`). This
+narrower list is a **restrictive subset** of the extensions that
+default (`orphan`) mode hard-excludes under §"Content shapes
+EXPLICITLY excluded from orphan mode" below — the source-tree mode
+mode-gates a bypass of that exclusion so consumers can surface
+source-code inventory when they explicitly opt in. Docs (`.md`,
+`.rst`, ...), structured configs (`.json`, `.yaml`, `.toml`, ...),
+and build glue stay hard-excluded under all modes.
+
+The mode composes with a companion `--file-inventory-source-shapes=
+<comma-list>` flag that further restricts emission to a subset of
+the FR-002 allowlist (e.g. `--file-inventory-source-shapes=py,c`
+emits only `.py` and `.c` files). Unknown extensions fail at CLI
+parse time (exit code 2) with a stderr diagnostic listing the full
+allowlist. The passed subset appears in the emitted SBOM as a
+JSON-stringified `restriction` array (sorted lex) under the
+document-level `waybill:file-inventory-source-shapes-active`
+annotation (C156) — value shape:
+
+```json
+{"mode": "source-tree", "restriction": ["c", "py"]}
+```
+
+or when no restriction is supplied:
+
+```json
+{"mode": "source-tree", "restriction": null}
+```
+
+The annotation is emitted **iff and only if** the mode is active
+(FR-007 byte-identity is preserved on every non-source-tree scan).
+See `specs/671-file-tier-cpython/` for the full plan and the T012
+integration test at `waybill-cli/tests/scan_file_tier_source_tree_
+m671.rs` for the end-to-end contract.
+
+**Interaction with the m133 orphan fallback**: source-tree mode
+sits alongside orphan mode as a peer, not a superset. The mode
+does NOT change orphan-mode behavior on the excluded-extension
+list; it just bypasses the FR-002-subset exclusion when
+`source-tree` is active. Binaries + package manifests still emit
+via steps 1 + 2 + orphan's default step 3 regardless of the mode
+choice — source-tree mode is additive for source files, not a
+replacement for the default file-tier logic.
+
 ## Orphan content-shape allowlist (FR-005)
 
 Default-mode file-tier emission applies a content-shape allowlist

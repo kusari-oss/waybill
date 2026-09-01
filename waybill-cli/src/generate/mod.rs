@@ -244,6 +244,15 @@ pub struct ScanArtifacts<'a> {
     /// emitting the override marker (preserves byte-identity on
     /// default-mode SBOMs).
     pub file_inventory_mode: Option<&'a str>,
+    /// Milestone 671 (C156) — sorted-lex list of `SourceShape` names
+    /// from `--file-inventory-source-shapes=<...>` (or `None` if that
+    /// flag was absent). Only meaningful when
+    /// `file_inventory_mode == Some("source-tree")` — the C156 emission
+    /// site gates on the mode string. `Some(vec![])` is not
+    /// distinguished from `None` for emission purposes (both project
+    /// to `"restriction": null`); use `None` for both to avoid
+    /// spurious struct-literal churn. Sorted lex per T003/T004.
+    pub file_inventory_source_shapes: Option<Vec<String>>,
     /// Milestone 077: operator-supplied overrides for the root
     /// component's name + version. When `name` or `version` is
     /// `Some(_)`, the override replaces the corresponding auto-derived
@@ -388,6 +397,9 @@ impl<'a> ScanArtifacts<'a> {
             component_identifiers: self.component_identifiers,
             file_inventory_stats: self.file_inventory_stats,
             file_inventory_mode: self.file_inventory_mode,
+            file_inventory_source_shapes: self
+                .file_inventory_source_shapes
+                .clone(),
             root_override: self.root_override.clone(),
             preserve_manifest_main_module: self.preserve_manifest_main_module,
             user_metadata: self.user_metadata.clone(),

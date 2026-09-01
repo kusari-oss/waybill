@@ -461,6 +461,7 @@ mod tests {
             component_identifiers: &[],
             file_inventory_stats: None,
             file_inventory_mode: None,
+            file_inventory_source_shapes: None,
             root_override: crate::generate::RootComponentOverride::default(),
             preserve_manifest_main_module: false,
             user_metadata: waybill::binding::user_metadata::UserMetadata::default(),

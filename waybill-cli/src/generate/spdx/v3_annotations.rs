@@ -551,6 +551,34 @@ fn push_document_fields(
         push(out, "waybill:file-inventory-mode", json!("full"));
     }
 
+    // Milestone 671 T010 (C156): doc-scope
+    // `waybill:file-inventory-source-shapes-active` annotation.
+    // Emitted iff `file_inventory_mode == Some("source-tree")`. Value
+    // is a JSON-stringified object per data-model.md §"C156". CDX +
+    // SPDX 2.3 twins. Byte-identity preserved for every non-source-
+    // tree scan (FR-007).
+    if let Some("source-tree") = scan.file_inventory_mode {
+        let value_obj = json!({
+            "mode": "source-tree",
+            "restriction": match scan.file_inventory_source_shapes.as_deref() {
+                Some(shapes) if !shapes.is_empty() => serde_json::Value::Array(
+                    shapes
+                        .iter()
+                        .map(|s| serde_json::Value::String(s.clone()))
+                        .collect(),
+                ),
+                _ => serde_json::Value::Null,
+            },
+        });
+        push(
+            out,
+            "waybill:file-inventory-source-shapes-active",
+            json!(serde_json::to_string(&value_obj).expect(
+                "C156 value object is JSON-serializable"
+            )),
+        );
+    }
+
     // Milestone 133 US3 (C93/C94/C95): file-tier walker diagnostic
     // skip counters. Constitution Principle X. See CDX +
     // SPDX 2.3 twins.

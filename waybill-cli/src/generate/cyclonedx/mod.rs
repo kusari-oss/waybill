@@ -164,6 +164,14 @@ impl SbomSerializer for CycloneDxJsonSerializer {
             // `waybill:file-inventory-mode = "full"` override marker
             // when the operator opted into the dedupe bypass.
             .with_file_inventory_mode(scan.file_inventory_mode.map(String::from))
+            // Milestone 671 (C156) — propagate the parsed
+            // `--file-inventory-source-shapes` restriction so the
+            // metadata builder can emit
+            // `waybill:file-inventory-source-shapes-active` when the
+            // mode is `source-tree`.
+            .with_file_inventory_source_shapes(
+                scan.file_inventory_source_shapes.clone(),
+            )
             // Milestone 134 — document-scope divergent-PURL summary.
             // `None` when no collisions were detected (FR-009 — no
             // annotation in clean SBOMs; bytes stay identical to

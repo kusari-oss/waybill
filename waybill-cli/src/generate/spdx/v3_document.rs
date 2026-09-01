@@ -113,6 +113,7 @@ pub fn build_document(
             component_identifiers: scan.component_identifiers,
             file_inventory_stats: None,
             file_inventory_mode: None,
+            file_inventory_source_shapes: None,
             root_override: scan.root_override.clone(),
             preserve_manifest_main_module: scan.preserve_manifest_main_module,
             user_metadata: scan.user_metadata.clone(),

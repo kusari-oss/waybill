@@ -903,6 +903,12 @@ pub struct ScanArgs {
     ///   FR-005 allowlist, regardless of dedupe coverage. Useful for
     ///   forensic / compliance use cases cataloguing every hash on
     ///   disk.
+    /// - `source-tree` (m671): opt-in mode that surfaces source-code
+    ///   file extensions (`.py`, `.c`, `.h`, etc. per the FR-002
+    ///   21-extension allowlist) as file-tier components. Optional
+    ///   restriction subset via `--file-inventory-source-shapes`.
+    ///   Docs / configs / build-glue stay hard-excluded. See
+    ///   `docs/reference/component-tiers.md` for the full flow.
     ///
     /// Emitted file-tier components carry a `waybill:component-tier =
     /// "file"` annotation and a `waybill:file-paths` JSON-encoded
@@ -924,6 +930,25 @@ pub struct ScanArgs {
     /// the skip count. Default 100 MB per FR-010.
     #[arg(long, default_value_t = 100 * 1024 * 1024)]
     pub file_inventory_size_limit: u64,
+
+    /// Milestone 671 — comma-separated subset of the FR-002 source-
+    /// shape allowlist that gets surfaced under
+    /// `--file-inventory=source-tree`. Accepted extensions
+    /// (case-insensitive, leading dot optional):
+    /// `py, pyi, c, cc, cpp, cxx, h, hh, hpp, rs, go, java, kt, js, ts,
+    /// rb, php, cs, swift, m, mm`.
+    ///
+    /// Unknown extensions fail loudly at CLI-parse time per FR-009
+    /// (`SourceShapeParseError::UnknownExtension`); adding new
+    /// extensions requires a follow-up milestone (curation review,
+    /// not operator-time override).
+    ///
+    /// **Cross-arg constraint**: this flag is only meaningful under
+    /// `--file-inventory=source-tree`. Combining it with any other
+    /// mode value fails at parse time with a clear diagnostic (see
+    /// `specs/671-file-tier-cpython/contracts/source_shape_restriction.md`).
+    #[arg(long, value_name = "SHAPES", value_parser = parse_source_shape_restriction_arg)]
+    pub file_inventory_source_shapes: Option<scan_fs::file_tier::source_shape::SourceShapeSet>,
 
     /// Print a JSON summary to stdout after writing the SBOM.
     #[arg(long)]
@@ -1912,6 +1937,17 @@ fn parse_nonzero_u64(s: &str) -> Result<u64, String> {
         return Err("must be > 0".to_string());
     }
     Ok(v)
+}
+
+/// Milestone 671 T009: `--file-inventory-source-shapes` value parser.
+/// Thin wrapper over `source_shape::parse_restriction` that stringifies
+/// the `SourceShapeParseError` for `clap`'s `Result<_, String>`
+/// contract. Diagnostic messages remain byte-identical to the
+/// contract in `contracts/source_shape_restriction.md`.
+fn parse_source_shape_restriction_arg(
+    raw: &str,
+) -> Result<scan_fs::file_tier::source_shape::SourceShapeSet, String> {
+    scan_fs::file_tier::source_shape::parse_restriction(raw).map_err(|e| e.to_string())
 }
 
 fn parse_user_defined_id_flag(
@@ -3900,10 +3936,38 @@ pub async fn execute(
     let file_inventory_mode = scan_fs::file_tier::FileInventoryMode::parse(&args.file_inventory)
         .ok_or_else(|| {
             anyhow::anyhow!(
-                "--file-inventory expects one of: off, orphan, full (got: {:?})",
+                "--file-inventory expects one of: off, orphan, full, source-tree (got: {:?})",
                 args.file_inventory
             )
         })?;
+    // Milestone 671 T009: cross-arg validation + composition. The
+    // companion flag `--file-inventory-source-shapes` is ONLY
+    // meaningful under `--file-inventory=source-tree` (FR-001). When
+    // both are present, combine into a single
+    // `FileInventoryMode::SourceTree { restriction: Some(set) }`; if
+    // the companion flag is present under any other mode, fail loudly.
+    let file_inventory_mode = match (
+        file_inventory_mode,
+        args.file_inventory_source_shapes.take(),
+    ) {
+        (scan_fs::file_tier::FileInventoryMode::SourceTree { .. }, Some(set)) => {
+            scan_fs::file_tier::FileInventoryMode::SourceTree {
+                restriction: Some(set),
+            }
+        }
+        (scan_fs::file_tier::FileInventoryMode::SourceTree { .. }, None) => {
+            scan_fs::file_tier::FileInventoryMode::SourceTree { restriction: None }
+        }
+        (_, Some(_)) => {
+            return Err(anyhow::anyhow!(
+                "--file-inventory-source-shapes is only meaningful when \
+                 --file-inventory=source-tree (got: --file-inventory={:?}). \
+                 See specs/671-file-tier-cpython/contracts/source_shape_restriction.md.",
+                args.file_inventory
+            ));
+        }
+        (other, None) => other,
+    };
     // Milestone 133 US3: hoist `WalkerStats` so the per-format
     // document-level annotation emission paths can read the
     // diagnostic counters via `ScanArtifacts::file_inventory_stats`.
@@ -3937,11 +4001,24 @@ pub async fn execute(
             }
             _ => scan_fs::file_tier::dedupe::DedupeIndex::build(&components),
         };
+        // Milestone 671 T008: derive the source-tree-restriction
+        // parameter from the effective mode. `SourceTree { restriction }`
+        // → `Some(restriction.as_ref())`; every other mode → `None`
+        // (default classifier behavior preserved).
+        let source_tree_restriction: Option<
+            Option<&scan_fs::file_tier::source_shape::SourceShapeSet>,
+        > = match &file_inventory_mode {
+            scan_fs::file_tier::FileInventoryMode::SourceTree { restriction } => {
+                Some(restriction.as_ref())
+            }
+            _ => None,
+        };
         let walker_cfg = scan_fs::file_tier::walker::WalkerConfig {
             size_limit_bytes: args.file_inventory_size_limit,
             exclusion_globs: &exclusion_globs,
             dedupe_index: &dedupe_index,
             exclude_set: &exclude_set,
+            source_tree_restriction,
         };
         let (entries, stats) =
             scan_fs::file_tier::walker::walk_file_tier(&root_path, &walker_cfg);
@@ -4086,6 +4163,37 @@ pub async fn execute(
             scan_fs::file_tier::FileInventoryMode::Off => None,
             scan_fs::file_tier::FileInventoryMode::Orphan => Some("orphan"),
             scan_fs::file_tier::FileInventoryMode::Full => Some("full"),
+            // Milestone 671 T005 placeholder: `source-tree` is a new
+            // opt-in mode. Emits the same doc-level marker as `full`
+            // in terms of triggering non-orphan-mode metadata; the
+            // finer-grained C156 annotation carries mode+restriction
+            // and is emitted separately by T010.
+            scan_fs::file_tier::FileInventoryMode::SourceTree { .. } => Some("source-tree"),
+        },
+        // Milestone 671 T010 — projects the parsed `--file-inventory-
+        // source-shapes` restriction (if any) into a sorted-lex list
+        // consumed by the C156 doc-scope emission. `None` on every
+        // non-source-tree path so pre-671 SBOMs remain byte-identical
+        // (SC-005). Also `None` under source-tree without a companion
+        // restriction — the emitter treats that as
+        // `"restriction": null`.
+        file_inventory_source_shapes: match &file_inventory_mode {
+            scan_fs::file_tier::FileInventoryMode::SourceTree {
+                restriction: Some(set),
+            } => {
+                // `BTreeSet<SourceShape>` iterates in enum-discriminant
+                // order (grouped by language family, NOT lex). C156
+                // wants a strictly lex-sorted `Array<String>` per
+                // data-model.md §"C156 Constraints"; sort explicitly
+                // after `as_str()` conversion.
+                let mut v: Vec<String> = set
+                    .iter()
+                    .map(|s| s.as_str().to_string())
+                    .collect();
+                v.sort();
+                Some(v)
+            }
+            _ => None,
         },
         // Milestone 077 + issue #359: operator-supplied overrides for
         // the root component's name + version + PURL. Constructed
@@ -5505,6 +5613,9 @@ mod tests {
             // milestone 133 US1.C.
             file_inventory: "off".to_string(),
             file_inventory_size_limit: 100 * 1024 * 1024,
+            // Milestone 671 T009 — test helper default: no source-shape
+            // restriction. `None` on the `Option<SourceShapeSet>` field.
+            file_inventory_source_shapes: None,
             json: false,
             no_clearly_defined,
             no_deps_dev,

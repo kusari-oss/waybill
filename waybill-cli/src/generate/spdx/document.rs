@@ -477,7 +477,15 @@ pub fn build_document(
             identifiers: artifacts.identifiers,
             component_identifiers: artifacts.component_identifiers,
             file_inventory_stats: None,
-            file_inventory_mode: None,
+            // Milestone 671 T010 — propagate the outer mode + source-
+            // shape restriction so the C156 (source-tree) + m133 US4
+            // (`full`) markers reach `annotate_document`. The
+            // `view_artifacts` swap is a components-only rewrite;
+            // doc-scope inventory metadata should NOT be dropped.
+            file_inventory_mode: artifacts.file_inventory_mode,
+            file_inventory_source_shapes: artifacts
+                .file_inventory_source_shapes
+                .clone(),
             root_override: artifacts.root_override.clone(),
             preserve_manifest_main_module: artifacts.preserve_manifest_main_module,
             user_metadata: artifacts.user_metadata.clone(),
@@ -519,7 +527,15 @@ pub fn build_document(
             identifiers: artifacts.identifiers,
             component_identifiers: artifacts.component_identifiers,
             file_inventory_stats: None,
-            file_inventory_mode: None,
+            // Milestone 671 T010 — propagate the outer mode + source-
+            // shape restriction so the C156 (source-tree) + m133 US4
+            // (`full`) markers reach `annotate_document`. The
+            // `view_artifacts` swap is a components-only rewrite;
+            // doc-scope inventory metadata should NOT be dropped.
+            file_inventory_mode: artifacts.file_inventory_mode,
+            file_inventory_source_shapes: artifacts
+                .file_inventory_source_shapes
+                .clone(),
             root_override: artifacts.root_override.clone(),
             preserve_manifest_main_module: artifacts.preserve_manifest_main_module,
             user_metadata: artifacts.user_metadata.clone(),
@@ -1226,6 +1242,7 @@ mod tests {
             component_identifiers: &[],
             file_inventory_stats: None,
             file_inventory_mode: None,
+            file_inventory_source_shapes: None,
             root_override: crate::generate::RootComponentOverride::default(),
             preserve_manifest_main_module: false,
             user_metadata: waybill::binding::user_metadata::UserMetadata::default(),
