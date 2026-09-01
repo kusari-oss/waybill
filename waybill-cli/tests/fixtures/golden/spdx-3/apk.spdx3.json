@@ -4,25 +4,25 @@
     {
       "creationInfo": "_:creation-info",
       "name": "waybill contributors",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/agent/waybill-contributors",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/agent/waybill-contributors",
       "type": "Organization"
     },
     {
       "@id": "_:creation-info",
       "created": "1970-01-01T00:00:00Z",
       "createdBy": [
-        "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/agent/waybill-contributors"
+        "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/agent/waybill-contributors"
       ],
       "createdUsing": [
-        "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/tool/waybill"
+        "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/tool/waybill"
       ],
       "specVersion": "3.0.1",
       "type": "CreationInfo"
     },
     {
       "creationInfo": "_:creation-info",
-      "name": "waybill-0.4.0",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/tool/waybill",
+      "name": "waybill-0.5.0",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/tool/waybill",
       "type": "Tool"
     },
     {
@@ -37,21 +37,21 @@
       "dataLicense": "https://spdx.org/licenses/CC0-1.0",
       "name": "synthetic",
       "rootElement": [
-        "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-root-PEPQMV5CGEDHQJI2"
+        "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-root-PEPQMV5CGEDHQJI2"
       ],
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI",
       "type": "SpdxDocument"
     },
     {
       "creationInfo": "_:creation-info",
       "name": "synthetic",
       "rootElement": [
-        "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-root-PEPQMV5CGEDHQJI2"
+        "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-root-PEPQMV5CGEDHQJI2"
       ],
       "software_sbomType": [
         "deployed"
       ],
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/sbom",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/sbom",
       "type": "software_Sbom"
     },
     {
@@ -71,7 +71,7 @@
       "name": "synthetic",
       "software_packageUrl": "pkg:generic/synthetic@0.0.0",
       "software_packageVersion": "0.0.0",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-root-PEPQMV5CGEDHQJI2",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-root-PEPQMV5CGEDHQJI2",
       "type": "software_Package"
     },
     {
@@ -96,8 +96,8 @@
       "name": "busybox",
       "software_packageUrl": "pkg:apk/alpine/busybox@1.36.1-r15?arch=x86_64&distro=alpine-3.19",
       "software_packageVersion": "1.36.1-r15",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-DHDBA3PTGCIRJAUV",
-      "suppliedBy": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/agent-org-NY3MAZNYZ6DIOZ3A",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-DHDBA3PTGCIRJAUV",
+      "suppliedBy": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/agent-org-NY3MAZNYZ6DIOZ3A",
       "type": "software_Package"
     },
     {
@@ -122,186 +122,186 @@
       "name": "musl",
       "software_packageUrl": "pkg:apk/alpine/musl@1.2.4_git20230717-r4?arch=x86_64&distro=alpine-3.19",
       "software_packageVersion": "1.2.4_git20230717-r4",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-NJ6CH7QTZDKJ74FQ",
-      "suppliedBy": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/agent-org-NY3MAZNYZ6DIOZ3A",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-NJ6CH7QTZDKJ74FQ",
+      "suppliedBy": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/agent-org-NY3MAZNYZ6DIOZ3A",
       "type": "software_Package"
     },
     {
       "creationInfo": "_:creation-info",
       "name": "Alpine Package Maintainer",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/agent-org-NY3MAZNYZ6DIOZ3A",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/agent-org-NY3MAZNYZ6DIOZ3A",
       "type": "Organization"
     },
     {
       "creationInfo": "_:creation-info",
-      "from": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-root-PEPQMV5CGEDHQJI2",
+      "from": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-root-PEPQMV5CGEDHQJI2",
       "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/rel-NXC5DZM6U6YYSMSS",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/rel-LFMDZXLYQ4GZDBVU",
       "to": [
-        "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-NJ6CH7QTZDKJ74FQ"
+        "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-NJ6CH7QTZDKJ74FQ"
       ],
       "type": "Relationship"
     },
     {
       "creationInfo": "_:creation-info",
-      "from": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-root-PEPQMV5CGEDHQJI2",
+      "from": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-root-PEPQMV5CGEDHQJI2",
       "relationshipType": "dependsOn",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/rel-O6TXC2424TXJGS6U",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/rel-LPMZ66U3HM4TE7I4",
       "to": [
-        "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-DHDBA3PTGCIRJAUV"
+        "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-DHDBA3PTGCIRJAUV"
       ],
       "type": "Relationship"
     },
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-3NZ5Z7ISBCFSGQDZ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"apk\"]}}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-6G2CF3BRWHVFOSFQ",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lib/apk/db/installed\"]}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-DHDBA3PTGCIRJAUV",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-ALL2ABINOPAUGFWA",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-DHDBA3PTGCIRJAUV",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-BMDU4QS7WGXHIBAG",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-2PUGO7ESRTMXQMWS",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":[]}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI",
       "type": "Annotation"
     },
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-C6ACEMJ4AYAIKISA",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-FHQZKF7ZRF5PDGAT",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-HUG3NVJJOJEPLJBH",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-NJ6CH7QTZDKJ74FQ",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-IJANQNPX2ZRBVFPD",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lib/apk/db\\\"]\"}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-NJ6CH7QTZDKJ74FQ",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-J7PAA76X5FUHCJCC",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lib/apk/db\\\"]\"}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-DHDBA3PTGCIRJAUV",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-JZAN6XNFNKASSEHA",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-6IW3GUNNT3JYZTWH",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI",
       "type": "Annotation"
     },
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-KAZBU3C6RXUH74CR",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\"lib/apk/db\\\"]\"}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-MSLYBR4G74L6ZZXO",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lib/apk/db/installed\"]}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-NJ6CH7QTZDKJ74FQ",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-NMNDXRAKLFCAPGG7",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:alpinelinux:musl:1.2.4_git20230717-r4:*:*:*:*:*:*:*\",\"cpe:2.3:a:musl:musl:1.2.4_git20230717-r4:*:*:*:*:*:*:*\"]}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-NJ6CH7QTZDKJ74FQ",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-RAHZSXLLDV5BD2AA",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-RV4QQKY6WNOIWXR5",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-TMHK5Y27EE7YHRV4",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:alpinelinux:busybox:1.36.1-r15:*:*:*:*:*:*:*\",\"cpe:2.3:a:busybox:busybox:1.36.1-r15:*:*:*:*:*:*:*\"]}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-DHDBA3PTGCIRJAUV",
-      "type": "Annotation"
-    },
-    {
-      "annotationType": "other",
-      "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-UYKCJWDGNB4EXWAB",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-AQ66NFZ25TTT53C6",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":[]}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI",
       "type": "Annotation"
     },
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-XEWCCLKEZBAJ7OMC",
-      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-NJ6CH7QTZDKJ74FQ",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-D3Y75KR4CEGR6ZRN",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lib/apk/db/installed\"]}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-DHDBA3PTGCIRJAUV",
       "type": "Annotation"
     },
     {
       "annotationType": "other",
       "creationInfo": "_:creation-info",
-      "spdxId": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/anno-ZF5U3F2CMBDEV2EV",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-DUDIERBVKOH232KE",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lib/apk/db\\\"]\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-NJ6CH7QTZDKJ74FQ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-EHHIZMEZ6GA37R24",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-DHDBA3PTGCIRJAUV",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-F6FWEUHCNFGJ4EIR",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:alpinelinux:musl:1.2.4_git20230717-r4:*:*:*:*:*:*:*\",\"cpe:2.3:a:musl:musl:1.2.4_git20230717-r4:*:*:*:*:*:*:*\"]}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-NJ6CH7QTZDKJ74FQ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-HF2ZTH3ZJIO2D7UF",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-NJ6CH7QTZDKJ74FQ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-IM4EFN3CVNIXATOE",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lib/apk/db\\\"]\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-DHDBA3PTGCIRJAUV",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-IZXXYNB3AWIBISTR",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:alpinelinux:busybox:1.36.1-r15:*:*:*:*:*:*:*\",\"cpe:2.3:a:busybox:busybox:1.36.1-r15:*:*:*:*:*:*:*\"]}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-DHDBA3PTGCIRJAUV",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-KFPNUD5R24KA4SED",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-P4MHFEPA6RDLCNTF",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\"lib/apk/db\\\"]\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-PG4DATFROTYNFHJK",
       "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}",
-      "subject": "https://waybill.kusari.dev/spdx3/doc-H6FA5QZKT2OT3PZJLTBSNQFI/pkg-DHDBA3PTGCIRJAUV",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-DHDBA3PTGCIRJAUV",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-RLNKEMXBNF3ROGWZ",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-SMQ4KCKM5TO3SBWI",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"apk\"]}}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-SNWDGDIBSKELPZCB",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lib/apk/db/installed\"]}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-NJ6CH7QTZDKJ74FQ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-U3YX6DWXJ6VBMJLK",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"deployed\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/pkg-NJ6CH7QTZDKJ74FQ",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-UNA5IR2ROTJTJAL2",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI",
+      "type": "Annotation"
+    },
+    {
+      "annotationType": "other",
+      "creationInfo": "_:creation-info",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI/anno-V7VACFIEKBGTTUSB",
+      "statement": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}",
+      "subject": "https://waybill.kusari.dev/spdx3/doc-XPY5YFYQIWYL7H73KOMCOCHI",
       "type": "Annotation"
     }
   ]
