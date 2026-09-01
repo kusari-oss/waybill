@@ -47,6 +47,21 @@ Locked reason strings per reader. Byte-stable within a waybill build. Display-on
 
 **FR-006 assertion**: this string is preserved verbatim across the milestone. Byte-identity test in `waybill-cli/tests/unresolved_reason_universal.rs` asserts the NuGet reader emits this exact string on the existing NuGet fixture pre/post merge.
 
+## Milestone 670 — Python under-detection fix (reservations)
+
+Reason strings reserved for milestone 670 (`670-pip-under-detection-fix`). Documentation-only reservations at T001; each string is source-inlined + registered in `unresolved_reason_universal.rs::locked_reason_strings()` when its owning PR lands.
+
+| Reader | Reason string | Wired by |
+|---|---|---|
+| **pip/mod (pyproject_declared_deps)** | `declared in pyproject.toml; no uv.lock / poetry.lock / Pipfile.lock fallback` | m670 PR-1 (m018 policy reversal) |
+| **pip/setup_py** | `declared in setup.py install_requires; no uv.lock / poetry.lock / Pipfile.lock fallback` | m670 PR-2 (static var-indirection parser) |
+| **pip/requirements_txt (direct-URL)** | `PEP 508 direct-URL entry; no rev extractable from URL` | m670 PR-3 (extended direct-URL handling) |
+
+Notes:
+
+- The existing pip row above (`no version specifier in requirements.txt; no uv.lock / poetry.lock fallback`) remains authoritative for the unpinned-requirements-line case. The m670 additions cover distinct wire paths: manifest-declared, setup.py-declared, and PEP 508 direct-URL respectively.
+- The m236 spec-Q2 lock at `unresolved_reason_universal.rs::m236_scope_matches_q2_clarification` (asserts `entries.len() == 17`) remains at 17 for the m236 milestone shipment. m670's source-side landings will introduce a separate assertion (or bump the count with a matching Q2 amendment) when PR-1/PR-2/PR-3 wire the strings in.
+
 ## Constraints
 
 - Each string is ASCII English, <200 chars.

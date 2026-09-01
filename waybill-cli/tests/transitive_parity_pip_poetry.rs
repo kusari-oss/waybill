@@ -11,12 +11,29 @@ use transitive_parity_common::*;
 
 const FIXTURE_SUBPATH: &str = "pip_poetry";
 
-// Issue #236 bumped the baseline from 62 → 88: pip-poetry projects
-// without a top-level main-module annotation fall through to
-// `synthesize_root`, and the issue-#236 fix adds synth-root →
-// graph-root `DEPENDS_ON` edges (mirrors CDX's primary-dependency
-// fallback). 26 graph-root packages → 26 new edges; 62 + 26 = 88.
-const EXPECTED_WAYBILL_EDGE_COUNT: usize = 88;
+// Baseline timeline for the python-poetry/poetry @ 1.8.4 fixture:
+//
+// Pre-#236 (alpha.23 and earlier):  62 edges.
+// Issue #236 (alpha.24):             88 edges.
+//   Pip-poetry projects without a top-level main-module annotation
+//   fell through to `synthesize_root`, and #236 added synth-root →
+//   graph-root `DEPENDS_ON` edges (mirrors CDX's primary-dependency
+//   fallback). 26 graph-root packages → 26 new edges; 62 + 26 = 88.
+// Milestone 670 T005:                63 edges.
+//   T005 reverses the m018 "Poetry-legacy = skip main-module" policy.
+//   `python-poetry/poetry` (whose pyproject.toml is `[tool.poetry]`-only)
+//   NOW emits a real main-module → `synthesize_root` no longer fires
+//   for this fixture, dropping the 26 synth-root DEPENDS_ON edges
+//   (88 - 26 = 62 baseline + 1 for the main-module's own presence
+//   in the graph = 63). The Poetry-legacy main-module has an empty
+//   depends list per T005 v1 scope (depends fabrication for graph
+//   edges is a follow-up; see reference_pip_manifest_declared_deps
+//   memory-note). Downstream consumers who want the pre-m670 fan-out
+//   should treat this as a known reduction accompanying the m018
+//   policy reversal — the semantic signal is preserved via the
+//   emitted main-module component + separate design-tier components
+//   for Poetry-legacy declared deps.
+const EXPECTED_WAYBILL_EDGE_COUNT: usize = 63;
 
 const EXPECTED_REPRESENTATIVE_EDGES: &[(&str, &str)] = &[
     // build → packaging.
