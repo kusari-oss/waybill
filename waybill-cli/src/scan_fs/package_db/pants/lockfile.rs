@@ -8,6 +8,14 @@
 //! plus extraction rules, and
 //! `specs/223-pants-pex-reader/contracts/pex-lockfile-schema.md`
 //! for the fail-open behavior boundaries.
+//!
+//! Milestone 672 extension: `strip_pants_frontmatter` recovers the
+//! JSON body from Pants ≤ 2.29 lockfile files that prepend a
+//! `//`-comment metadata block. See
+//! `specs/672-pants-reader-follow-up/contracts/front_matter_stripper.md`
+//! for the full behavioral contract (C1–C7) and
+//! `specs/672-pants-reader-follow-up/research.md` §R2 for the
+//! algorithm rationale.
 
 use std::path::Path;
 
@@ -137,8 +145,73 @@ impl ArtifactSourceType {
 ///
 /// The caller is responsible for adding the source path context to
 /// any WARN log (this function doesn't know the file's path).
-pub(crate) fn parse(bytes: &[u8]) -> Option<PexLockfile> {
-    let lock: PexLockfile = serde_json::from_slice(bytes)
+/// Milestone 672: strip a leading `//`-comment metadata block (Pants
+/// ≤ 2.29 lockfile shape) from `bytes`. Returns the slice starting at
+/// the first non-`//` non-whitespace line, or `&[]` if the entire
+/// input was `//`-commented.
+///
+/// This is a pure function — no allocation, no error path, no
+/// persistent state. Callers pass its output directly to
+/// `serde_json::from_slice`.
+///
+/// Complexity: O(prefix-length) — the loop bails out at the first
+/// non-`//` line. On clean-JSON input (first non-whitespace byte is
+/// `{`), the function returns after examining a single line
+/// (contract C3 + C4 idempotence).
+///
+/// See `specs/672-pants-reader-follow-up/contracts/front_matter_stripper.md`
+/// for the full behavioral contract.
+pub(crate) fn strip_pants_frontmatter(bytes: &[u8]) -> &[u8] {
+    let mut pos = 0;
+    loop {
+        // Save the start of this line; we may need to return it as
+        // the body if it isn't a `//` line.
+        let line_start = pos;
+        // Skip leading whitespace within this line (space + tab
+        // only per contract C1; other whitespace treated as
+        // non-`//` and terminates the strip loop).
+        while pos < bytes.len() && matches!(bytes[pos], b' ' | b'\t') {
+            pos += 1;
+        }
+        // Check for `//`. If EOF or the next 2 bytes aren't `//`,
+        // this line is the JSON body's start — return from
+        // `line_start` (contract C1: whitespace before the JSON body
+        // is preserved so operators see byte-identity for files that
+        // don't need stripping).
+        if pos + 1 >= bytes.len() || &bytes[pos..pos + 2] != b"//" {
+            return &bytes[line_start..];
+        }
+        // This line is a `//` comment. Advance to just past the next
+        // `\n` (contract C2 — content is opaque; we don't interpret
+        // the metadata).
+        match bytes[pos..].iter().position(|&b| b == b'\n') {
+            Some(offset) => pos += offset + 1,
+            // No trailing newline → entire remaining input is a `//`
+            // comment (contract C6). Return empty slice; downstream
+            // `serde_json::from_slice(&[])` fails with standard EOF
+            // error → m223 fail-open WARN + skip.
+            None => return &[],
+        }
+    }
+}
+
+/// Parse a Pex lockfile from raw file bytes.
+///
+/// Returns `Some((lockfile, was_legacy_shape))` on success. The
+/// `was_legacy_shape` flag is `true` when the m672 front-matter
+/// stripper consumed at least one leading `//` line (Pants ≤ 2.29
+/// legacy shape) — callers thread this into `LegacyShapeCounter` to
+/// feed the FR-013 log field.
+///
+/// Milestone 672 (clarify Q3, uniform-strip): every parse attempt
+/// routes through `strip_pants_frontmatter` before handing bytes to
+/// `serde_json`. On clean-JSON files the stripper is a no-op
+/// (contract C4 idempotence) — the byte slice's start address is
+/// unchanged.
+pub(crate) fn parse(bytes: &[u8]) -> Option<(PexLockfile, bool)> {
+    let body = strip_pants_frontmatter(bytes);
+    let was_legacy_shape = body.len() < bytes.len();
+    let lock: PexLockfile = serde_json::from_slice(body)
         .map_err(|e| {
             tracing::warn!(
                 error = %e,
@@ -153,7 +226,7 @@ pub(crate) fn parse(bytes: &[u8]) -> Option<PexLockfile> {
         );
         return None;
     }
-    Some(lock)
+    Some((lock, was_legacy_shape))
 }
 
 /// Extract the project name from a PEP 508 requirement string.
@@ -332,6 +405,119 @@ pub(crate) fn locked_req_to_entry(
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
     use super::*;
+
+    // -----------------------------------------------------------------
+    // Milestone 672 T004 (US1): `strip_pants_frontmatter` unit tests.
+    // Covers the 9-row test matrix at
+    // `specs/672-pants-reader-follow-up/contracts/front_matter_stripper.md`.
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn strip_clean_json_is_idempotent_noop() {
+        // Contract C4: on clean-JSON input the returned slice must
+        // begin at the same byte address as the input.
+        let bytes: &[u8] = br#"{"pex_version":"2.10.0"}"#;
+        let out = strip_pants_frontmatter(bytes);
+        assert_eq!(out, bytes);
+        // Same start address guarantees zero-copy on the happy path.
+        assert_eq!(out.as_ptr(), bytes.as_ptr());
+    }
+
+    #[test]
+    fn strip_single_leading_comment_line() {
+        let bytes: &[u8] = b"// header\n{\"pex_version\":\"2.10.0\"}";
+        let out = strip_pants_frontmatter(bytes);
+        assert_eq!(out, br#"{"pex_version":"2.10.0"}"#);
+    }
+
+    #[test]
+    fn strip_indented_leading_comment() {
+        let bytes: &[u8] = b"  // indent\n{\"pex_version\":\"2.10.0\"}";
+        let out = strip_pants_frontmatter(bytes);
+        assert_eq!(out, br#"{"pex_version":"2.10.0"}"#);
+    }
+
+    #[test]
+    fn strip_tab_prefixed_leading_comment() {
+        let bytes: &[u8] = b"\t\t// tabbed\n{\"pex_version\":\"2.10.0\"}";
+        let out = strip_pants_frontmatter(bytes);
+        assert_eq!(out, br#"{"pex_version":"2.10.0"}"#);
+    }
+
+    #[test]
+    fn strip_multi_line_comment_block() {
+        let bytes: &[u8] = b"// a\n// b\n// c\n{\"pex_version\":\"2.10.0\"}";
+        let out = strip_pants_frontmatter(bytes);
+        assert_eq!(out, br#"{"pex_version":"2.10.0"}"#);
+    }
+
+    #[test]
+    fn strip_fully_commented_no_trailing_newline_returns_empty() {
+        // Contract C6: fully-commented input with no trailing
+        // newline returns `&[]`.
+        let bytes: &[u8] = b"// only comments";
+        let out = strip_pants_frontmatter(bytes);
+        assert!(out.is_empty());
+    }
+
+    #[test]
+    fn strip_fully_commented_with_trailing_newline_returns_empty() {
+        // Contract C6: fully-commented input with a trailing newline
+        // (but no JSON body) returns `&[]`.
+        let bytes: &[u8] = b"// hdr\n// hdr\n";
+        let out = strip_pants_frontmatter(bytes);
+        assert!(out.is_empty());
+    }
+
+    #[test]
+    fn strip_blank_line_terminates_loop() {
+        // A leading blank line is NOT a `//` comment — the loop
+        // bails at the first line and preserves the blank lines
+        // (implementation detail: whitespace-only lines are treated
+        // as non-`//` and terminate the strip).
+        let bytes: &[u8] = b"\n\n{\"pex_version\":\"2.10.0\"}";
+        let out = strip_pants_frontmatter(bytes);
+        assert_eq!(out, b"\n\n{\"pex_version\":\"2.10.0\"}");
+    }
+
+    #[test]
+    fn strip_preserves_embedded_slash_slash_in_string() {
+        // Contract C7: `//` bytes that appear AFTER the first non-
+        // `//` line are untouched. The stripper is bounded to the
+        // leading prefix only.
+        let bytes: &[u8] =
+            br#"{"foo": "// this is inside a JSON string; must survive"}"#;
+        let out = strip_pants_frontmatter(bytes);
+        assert_eq!(out, bytes);
+    }
+
+    #[test]
+    fn strip_realistic_pants_frontmatter() {
+        // Real-world happy path (Altana adopter shape observed
+        // 2026-09-01, per research.md §R1).
+        let bytes: &[u8] = b"\
+// This lockfile was autogenerated by Pants. To regenerate, run:
+//
+//    ./pants generate-lockfiles --resolve=python-default
+//
+// --- BEGIN PANTS LOCKFILE METADATA: DO NOT EDIT OR REMOVE ---
+// {
+//   \"version\": 3,
+//   \"valid_for_interpreter_constraints\": []
+// }
+// --- END PANTS LOCKFILE METADATA ---
+{
+  \"allow_builds\": true,
+  \"pex_version\": \"2.10.0\"
+}
+";
+        let out = strip_pants_frontmatter(bytes);
+        assert!(
+            out.starts_with(b"{\n  \"allow_builds\": true"),
+            "expected JSON body to start after the metadata block, got: {:?}",
+            std::str::from_utf8(&out[..out.len().min(60)]).unwrap_or("<non-utf8>")
+        );
+    }
 
     #[test]
     fn artifact_source_type_pypi_url() {
