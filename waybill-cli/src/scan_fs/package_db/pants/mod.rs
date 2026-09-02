@@ -17,15 +17,18 @@ use std::path::{Path, PathBuf};
 
 use super::PackageDbEntry;
 
-/// Milestone 672: where a discovered lockfile came from. Drives the
-/// FR-009 map-wins-on-dedup logic — when two `DiscoveredLockfile`s
-/// share the same canonicalized path, the one with `origin ==
-/// PythonResolvesMap` REPLACES the sibling because the pants.toml
-/// map key is authoritative over the file-stem-derived name.
-#[allow(dead_code)] // `PythonResolvesMap` constructed by T012; `origin` read by T013.
+/// Milestone 672 + 673: where a discovered lockfile came from.
+/// Drives the FR-009 map-wins-on-dedup logic — when two
+/// `DiscoveredLockfile`s share the same canonicalized path, the one
+/// with `origin == PythonResolvesMap` REPLACES the sibling because
+/// the pants.toml map key is authoritative over the file-stem-derived
+/// name. `PythonLockfileSingular` wins over the auto-discovery peers.
+/// The three auto-discovery peers (`DefaultGlob`, `RepoRootGlob`,
+/// `LockfilesGlob` from m673) fall to a lex-min `resolve_name`
+/// tie-break (see `dedup_by_canonical_path`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum DiscoverySource {
-    /// Found via the `3rdparty/python/*.lock` default glob.
+    /// Found via the `3rdparty/python/*.lock` default glob (m223).
     /// Resolve name derived from `path.file_stem()`.
     DefaultGlob,
     /// Found via `pants.toml` `[python].lockfile` singular key
@@ -36,6 +39,18 @@ enum DiscoverySource {
     /// Resolve name is the map's KEY (authoritative over file-stem
     /// derivation per FR-009).
     PythonResolvesMap,
+    /// Milestone 673 FR-001: found via `<scan_root>/*.lock`
+    /// enumeration (Pants 2.31+ default layout — no `3rdparty/python/`).
+    /// Gated by `is_pex_lockfile_content` content-detection per FR-003;
+    /// files that fail the gate silent-skip per FR-004. Resolve name
+    /// derived from `path.file_stem()`.
+    RepoRootGlob,
+    /// Milestone 673 FR-002: found via `<scan_root>/lockfiles/*.lock`
+    /// enumeration (Pants convention for dedicated lockfile directories,
+    /// e.g. `pantsbuild/example-django`). Non-recursive per FR-009.
+    /// Gated by `is_pex_lockfile_content`; silent-skip on gate failure.
+    /// Resolve name derived from `path.file_stem()`.
+    LockfilesGlob,
 }
 
 /// Discovered lockfile: absolute path + resolve name (derived from
@@ -184,6 +199,74 @@ fn discover_lockfiles(scan_root: &Path) -> Vec<DiscoveredLockfile> {
         }
     }
 
+    // Milestone 673 T004 (US1, FR-001): enumerate `<scan_root>/*.lock`
+    // (Pants 2.31+ default layout — `<resolve>.lock` at repo root).
+    // Non-recursive. Files gated by `is_pex_lockfile_content`
+    // (contract C3); files that FAIL the gate silent-skip per FR-004
+    // (no WARN, no counter). Files that PASS append as candidates
+    // with `origin: RepoRootGlob` and resolve name from file stem.
+    if let Ok(read_dir) = std::fs::read_dir(scan_root) {
+        for entry in read_dir.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|e| e.to_str()) != Some("lock") {
+                continue;
+            }
+            let Ok(bytes) = std::fs::read(&path) else {
+                // Read failure is silent-skip on wide-scope paths
+                // (may be a directory named `*.lock`, permission
+                // denied on an unrelated file, etc. — FR-004).
+                continue;
+            };
+            if !lockfile::is_pex_lockfile_content(&bytes) {
+                // FR-004 silent-skip — this is a non-PEX `.lock` file
+                // (Cargo, Poetry, bun, etc.) or a corrupted PEX shape.
+                continue;
+            }
+            let resolve_name = path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("default")
+                .to_string();
+            out.push(DiscoveredLockfile {
+                path,
+                resolve_name,
+                origin: DiscoverySource::RepoRootGlob,
+            });
+        }
+    }
+
+    // Milestone 673 T008 (US2, FR-002): enumerate
+    // `<scan_root>/lockfiles/*.lock` (Pants convention for dedicated
+    // multi-resolve lockfile directories, e.g. `pantsbuild/example-django`).
+    // Non-recursive per FR-009 — only immediate children of the
+    // `lockfiles/` directory are candidates. Gate + silent-skip
+    // semantics identical to the repo-root loop above.
+    let lockfiles_dir = scan_root.join("lockfiles");
+    if let Ok(read_dir) = std::fs::read_dir(&lockfiles_dir) {
+        for entry in read_dir.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|e| e.to_str()) != Some("lock") {
+                continue;
+            }
+            let Ok(bytes) = std::fs::read(&path) else {
+                continue;
+            };
+            if !lockfile::is_pex_lockfile_content(&bytes) {
+                continue;
+            }
+            let resolve_name = path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("default")
+                .to_string();
+            out.push(DiscoveredLockfile {
+                path,
+                resolve_name,
+                origin: DiscoverySource::LockfilesGlob,
+            });
+        }
+    }
+
     // Milestone 672 T013 (US2): canonicalize + dedup per FR-009.
     // Two candidates that resolve to the same file on disk are
     // parsed exactly once. When dedup fires, the `PythonResolvesMap`
@@ -193,15 +276,19 @@ fn discover_lockfiles(scan_root: &Path) -> Vec<DiscoveredLockfile> {
     dedup_by_canonical_path(out)
 }
 
-/// Milestone 672 T013 (US2, FR-009): canonicalize every candidate's
-/// path via `std::fs::canonicalize` (follows symlinks per research.md
-/// §R4) then group by canonical form. For each collision group:
+/// Milestone 672 T013 (US2, FR-009) + m673 T002 (extended for
+/// `RepoRootGlob`/`LockfilesGlob`): canonicalize every candidate's
+/// path via `std::fs::canonicalize` (follows symlinks per m672
+/// research.md §R4) then group by canonical form. For each collision
+/// group, apply the precedence rule:
 ///
-/// - If any entry has `origin == PythonResolvesMap`, that one wins
-///   (the pants.toml map key is authoritative).
-/// - Else keep the entry with the LEXICALLY FIRST `resolve_name`
-///   (deterministic tie-breaker for the `DefaultGlob` ×
-///   `PythonLockfileSingular` case).
+/// 1. Any entry with `origin == PythonResolvesMap` wins
+///    (pants.toml map key is authoritative — m672 FR-009).
+/// 2. Else any entry with `origin == PythonLockfileSingular` wins
+///    (m223 explicit `[python].lockfile` beats auto-discovery).
+/// 3. Else the entry with the lexically-first `resolve_name` wins
+///    (deterministic tie-break among the three auto-discovery
+///    peers: `DefaultGlob`, `RepoRootGlob`, `LockfilesGlob`).
 ///
 /// Paths that fail `canonicalize` (rare — e.g. race with a delete
 /// between discovery and here) are dropped with a WARN.
@@ -232,9 +319,19 @@ fn dedup_by_canonical_path(candidates: Vec<DiscoveredLockfile>) -> Vec<Discovere
             .iter()
             .find(|d| d.origin == DiscoverySource::PythonResolvesMap)
         {
+            // Precedence tier 1: `[python.resolves]` map key.
             map_entry.clone()
+        } else if let Some(singular_entry) = group
+            .iter()
+            .find(|d| d.origin == DiscoverySource::PythonLockfileSingular)
+        {
+            // Precedence tier 2: `[python].lockfile` singular
+            // (m673 extension per research.md §R4).
+            singular_entry.clone()
         } else {
-            // Lex-min resolve_name tie-breaker.
+            // Precedence tier 3: lex-min `resolve_name` among the
+            // three auto-discovery peers (`DefaultGlob`,
+            // `RepoRootGlob`, `LockfilesGlob`).
             group
                 .iter()
                 .min_by(|a, b| a.resolve_name.cmp(&b.resolve_name))
@@ -264,7 +361,15 @@ fn dedup_by_canonical_path(candidates: Vec<DiscoveredLockfile>) -> Vec<Discovere
 pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
     let default_dir_exists = scan_root.join("3rdparty").join("python").exists();
     let pants_toml_exists = scan_root.join("pants.toml").exists();
-    let pants_signal_present = default_dir_exists || pants_toml_exists;
+    // Milestone 673 T009 (US2, FR-006): the `<scan_root>/lockfiles/`
+    // directory counts as a Pants signal so the m672 US3 zero-
+    // discovered diagnostic INFO log fires for repos that use ONLY
+    // the `lockfiles/` convention (no `pants.toml`, no
+    // `3rdparty/python/`). Directory-existence check only — its
+    // contents don't matter for the signal.
+    let lockfiles_dir_exists = scan_root.join("lockfiles").exists();
+    let pants_signal_present =
+        default_dir_exists || pants_toml_exists || lockfiles_dir_exists;
 
     let candidates = discover_lockfiles(scan_root);
     if candidates.is_empty() {
