@@ -405,7 +405,34 @@ pub fn read(scan_root: &Path) -> Vec<PackageDbEntry> {
             }
         };
         let Some((lock, was_legacy_shape)) = lockfile::parse(&bytes) else {
-            // lockfile::parse already emitted a WARN with the reason.
+            // Milestone 674 FR-002 (Pants uv-backend fallback): if the
+            // PEX parse failed, try to parse as a uv.lock. Modern
+            // Pants can use `uv` as its Python resolver backend and
+            // generates uv-shape TOML lockfiles at Pants-declared
+            // paths. When uv.lock parse succeeds, emit its components
+            // with the Pants resolve-name annotation preserved.
+            if let Some(uv_entries) =
+                crate::scan_fs::package_db::pip::uv_lock::parse_uv_lock_bytes(
+                    &bytes,
+                    &candidate.path.display().to_string(),
+                    &candidate.resolve_name,
+                )
+            {
+                let n = uv_entries.len();
+                tracing::info!(
+                    lockfile = %candidate.path.display(),
+                    packages = n,
+                    resolve = %candidate.resolve_name,
+                    "uv-lock reader: recognized as uv.lock format after Pex parse rejection"
+                );
+                components.extend(uv_entries);
+                lockfiles_parsed_ok += 1;
+                continue;
+            }
+            // Neither PEX nor uv — genuine parse failure. lockfile::parse
+            // already emitted a WARN with the PEX reason;
+            // parse_uv_lock_bytes emitted its own WARN (or silent None
+            // on non-JSON/TOML). Skip the file.
             tracing::warn!(
                 lockfile = %candidate.path.display(),
                 "pants-pex reader: parse failed for the file above; skipping"

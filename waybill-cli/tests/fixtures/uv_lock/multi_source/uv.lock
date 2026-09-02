@@ -1,0 +1,32 @@
+version = 1
+requires-python = ">=3.10"
+
+[[package]]
+name = "waybill-fixture-reg"
+version = "1.0.0"
+source = { registry = "https://internal.pypi.example/simple" }
+
+[[package]]
+name = "waybill-fixture-git"
+version = "0.5.0"
+source = { git = "https://github.com/kusari-sandbox/waybill-fixture-git.git", rev = "abc123def456" }
+
+[[package]]
+name = "waybill-fixture-path"
+version = "1.0.0"
+source = { path = "../local-package" }
+
+[[package]]
+name = "waybill-fixture-url"
+version = "1.0.0"
+source = { url = "https://example.test/wheel.whl" }
+
+[[package]]
+name = "waybill-fixture-editable"
+version = "0.1.0"
+source = { editable = "." }
+
+[[package]]
+name = "waybill-fixture-virtual"
+version = "0.0.0"
+source = { virtual = "workspace-root" }

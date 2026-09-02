@@ -642,6 +642,8 @@ spdx23_anno!(c154_spdx23, "waybill:direct-url-source",                     compo
 spdx23_anno!(c155_spdx23, "waybill:python-req-file-scope",                 component);
 // Milestone 671 T010/T011: C156 doc-scope file-inventory-source-shapes-active annotation.
 spdx23_anno!(c156_spdx23, "waybill:file-inventory-source-shapes-active",   document);
+// Milestone 674: C157 per-component python-lockfile-format annotation.
+spdx23_anno!(c157_spdx23, "waybill:python-lockfile-format",                component);
 
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.

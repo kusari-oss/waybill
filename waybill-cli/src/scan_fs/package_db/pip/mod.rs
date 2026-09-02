@@ -82,7 +82,7 @@ mod dist_info;
 mod pipfile;
 mod poetry;
 mod requirements_txt;
-mod uv_lock;
+pub(crate) mod uv_lock;
 
 pub use dist_info::collect_claimed_paths;
 

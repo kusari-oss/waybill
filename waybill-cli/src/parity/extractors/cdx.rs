@@ -938,6 +938,11 @@ cdx_anno!(c155_cdx, "waybill:python-req-file-scope",                 component);
 // byte-identity.
 cdx_anno!(c156_cdx, "waybill:file-inventory-source-shapes-active",    document);
 
+// Milestone 674 (feature 674-uv-lock-reader): C157 per-component
+// python-lockfile-format annotation identifying the source-format
+// for downstream consumers. v1 value: "uv".
+cdx_anno!(c157_cdx, "waybill:python-lockfile-format",                 component);
+
 // Milestone 162 (closes #496): C113/C114 per-component Ruby built-in
 // gem synthetic-component annotations.
 cdx_anno!(c113_cdx, "waybill:synthetic-built-in",               component);
