@@ -195,6 +195,35 @@ pub(crate) fn strip_pants_frontmatter(bytes: &[u8]) -> &[u8] {
     }
 }
 
+/// Milestone 673 FR-003: content-detect a `.lock` file as a valid
+/// PEX lockfile by checking for `pex_version: "2.x"` at the JSON
+/// top level. Used as the wide-scope FR-001/FR-002 discovery gate
+/// per `specs/673-pants-lockfile-layouts/contracts/content_detection.md`.
+///
+/// Steps:
+/// 1. Strip `//`-frontmatter (m672 `strip_pants_frontmatter`).
+/// 2. Parse as `serde_json::Value` (permissive top-level JSON).
+/// 3. Return `obj["pex_version"].as_str().is_some_and(|s| s.starts_with("2."))`.
+///
+/// Returns `false` on any parse failure or missing / wrong-version
+/// field — caller silent-skips per m673 FR-004.
+///
+/// Pure function — no allocation beyond the parse buffer, no error
+/// path (returns `bool`), no persistent state.
+///
+/// Complexity: O(file-size) linear parse. Sub-millisecond on non-JSON
+/// rejects (parse errors early); < 5 ms on real PEX shapes.
+pub(crate) fn is_pex_lockfile_content(bytes: &[u8]) -> bool {
+    let body = strip_pants_frontmatter(bytes);
+    let Ok(value) = serde_json::from_slice::<serde_json::Value>(body) else {
+        return false;
+    };
+    value
+        .get("pex_version")
+        .and_then(|v| v.as_str())
+        .is_some_and(|s| s.starts_with("2."))
+}
+
 /// Parse a Pex lockfile from raw file bytes.
 ///
 /// Returns `Some((lockfile, was_legacy_shape))` on success. The
@@ -517,6 +546,128 @@ mod tests {
             "expected JSON body to start after the metadata block, got: {:?}",
             std::str::from_utf8(&out[..out.len().min(60)]).unwrap_or("<non-utf8>")
         );
+    }
+
+    // -----------------------------------------------------------------
+    // Milestone 673 T003 (US1/US2/US3): `is_pex_lockfile_content` unit
+    // tests. Covers the 15-row test matrix at
+    // `specs/673-pants-lockfile-layouts/contracts/content_detection.md`.
+    // -----------------------------------------------------------------
+
+    #[test]
+    fn is_pex_content_accepts_clean_pex_2x() {
+        // Contract C1: accept `{"pex_version": "2.10.0", ...}`.
+        let bytes = br#"{"pex_version":"2.10.0","locked_resolves":[]}"#;
+        assert!(is_pex_lockfile_content(bytes));
+    }
+
+    #[test]
+    fn is_pex_content_accepts_pex_2x_with_slash_slash_frontmatter() {
+        // Contract C1 + C6: `//`-frontmatter stripping applies before
+        // content-detection.
+        let bytes = b"// header\n{\"pex_version\":\"2.10.0\"}";
+        assert!(is_pex_lockfile_content(bytes));
+    }
+
+    #[test]
+    fn is_pex_content_accepts_pex_20_prerelease() {
+        // Contract C1: any string starting with `2.` accepts.
+        let bytes = br#"{"pex_version":"2.0.0-rc.1"}"#;
+        assert!(is_pex_lockfile_content(bytes));
+    }
+
+    #[test]
+    fn is_pex_content_rejects_pex_1x() {
+        // Contract C2: Pex 1.x is out of scope (m223 accept-criterion).
+        let bytes = br#"{"pex_version":"1.9.0"}"#;
+        assert!(!is_pex_lockfile_content(bytes));
+    }
+
+    #[test]
+    fn is_pex_content_rejects_hypothetical_pex_3x() {
+        // Contract C2: prefix-match `^2\.` only.
+        let bytes = br#"{"pex_version":"3.0.0"}"#;
+        assert!(!is_pex_lockfile_content(bytes));
+    }
+
+    #[test]
+    fn is_pex_content_rejects_cargo_lockfile_toml_shape() {
+        // Contract C3: non-JSON reject.
+        let bytes = b"version = 3\n[[package]]\nname = \"foo\"\nversion = \"1.0.0\"\n";
+        assert!(!is_pex_lockfile_content(bytes));
+    }
+
+    #[test]
+    fn is_pex_content_rejects_poetry_lockfile_toml_shape() {
+        // Contract C3: non-JSON reject.
+        let bytes = b"[metadata]\nlock-version = \"2.0\"\npython-versions = \"^3.10\"\n";
+        assert!(!is_pex_lockfile_content(bytes));
+    }
+
+    #[test]
+    fn is_pex_content_rejects_bun_lock_jsonc_shape() {
+        // Contract C3: bun.lock uses JSONC with embedded `//` comments
+        // AFTER the first byte (so the m672 stripper doesn't help).
+        // `serde_json` rejects the comments as invalid JSON.
+        let bytes = b"{\n  \"lockfileVersion\": 1,\n  // bun uses JSONC\n  \"workspaces\": {}\n}";
+        assert!(!is_pex_lockfile_content(bytes));
+    }
+
+    #[test]
+    fn is_pex_content_rejects_empty_file() {
+        // Contract C4: empty input rejects (empty JSON parse fails).
+        assert!(!is_pex_lockfile_content(&[]));
+    }
+
+    #[test]
+    fn is_pex_content_rejects_empty_object() {
+        // Contract C5: valid JSON without `pex_version` field.
+        let bytes = b"{}";
+        assert!(!is_pex_lockfile_content(bytes));
+    }
+
+    #[test]
+    fn is_pex_content_rejects_integer_pex_version() {
+        // Contract C5: `pex_version` must be a string, not integer.
+        let bytes = br#"{"pex_version":2}"#;
+        assert!(!is_pex_lockfile_content(bytes));
+    }
+
+    #[test]
+    fn is_pex_content_rejects_null_pex_version() {
+        // Contract C5: `pex_version` must be a string, not null.
+        let bytes = br#"{"pex_version":null}"#;
+        assert!(!is_pex_lockfile_content(bytes));
+    }
+
+    #[test]
+    fn is_pex_content_rejects_top_level_array() {
+        // Contract C5: top-level must be an object.
+        // `.get("pex_version")` on a Value::Array returns None.
+        let bytes = br#"["pex_version","2.10.0"]"#;
+        assert!(!is_pex_lockfile_content(bytes));
+    }
+
+    #[test]
+    fn is_pex_content_rejects_unterminated_json() {
+        // Contract C3: partial JSON that fails to parse.
+        let bytes = br#"{"pex_version":"2.10.0","corrupted":"#;
+        assert!(!is_pex_lockfile_content(bytes));
+    }
+
+    #[test]
+    fn is_pex_content_rejects_binary_garbage() {
+        // Contract C3: non-UTF-8 binary content.
+        let bytes = &[0xff, 0xfe, 0xfd, 0xfc, 0xfb][..];
+        assert!(!is_pex_lockfile_content(bytes));
+    }
+
+    #[test]
+    fn is_pex_content_rejects_fully_commented_input() {
+        // Contract C4 + m672 stripper C6: after `//`-stripping the
+        // slice is empty, which fails the JSON parse (empty-input).
+        let bytes = b"// only comments\n// no json body\n";
+        assert!(!is_pex_lockfile_content(bytes));
     }
 
     #[test]
