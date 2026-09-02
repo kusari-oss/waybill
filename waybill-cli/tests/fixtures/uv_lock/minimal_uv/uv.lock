@@ -1,0 +1,42 @@
+version = 1
+revision = 1
+requires-python = ">=3.10"
+
+[[package]]
+name = "waybill-fixture-alpha"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "waybill-fixture-alpha-dep" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/aa/aa/waybill_fixture_alpha-1.0.0.tar.gz", hash = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", size = 1024 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/aa/aa/waybill_fixture_alpha-1.0.0-py3-none-any.whl", hash = "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaab", size = 2048 },
+]
+
+[[package]]
+name = "waybill-fixture-alpha-dep"
+version = "0.5.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ad/ad/waybill_fixture_alpha_dep-0.5.0.tar.gz", hash = "sha256:ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc0", size = 512 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ad/ad/waybill_fixture_alpha_dep-0.5.0-py3-none-any.whl", hash = "sha256:ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc1", size = 1024 },
+]
+
+[[package]]
+name = "waybill-fixture-beta"
+version = "2.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/bb/bb/waybill_fixture_beta-2.0.0.tar.gz", hash = "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba", size = 1024 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bb/bb/waybill_fixture_beta-2.0.0-py3-none-any.whl", hash = "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", size = 2048 },
+]
+
+[[package]]
+name = "waybill-fixture-gamma"
+version = "3.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/cc/cc/waybill_fixture_gamma-3.0.0.tar.gz", hash = "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", size = 1024 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cc/cc/waybill_fixture_gamma-3.0.0-py3-none-any.whl", hash = "sha256:ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddde", size = 2048 },
+]

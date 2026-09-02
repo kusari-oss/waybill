@@ -1,0 +1,9 @@
+[project]
+name = "waybill-fixture-minimal-uv-root"
+version = "1.0.0"
+requires-python = ">=3.10"
+dependencies = [
+    "waybill-fixture-alpha>=1.0.0",
+    "waybill-fixture-beta>=2.0.0",
+    "waybill-fixture-gamma>=3.0.0",
+]

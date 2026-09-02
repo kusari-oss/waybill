@@ -36,11 +36,118 @@
 use std::collections::HashSet;
 use std::path::Path;
 
-use waybill_common::types::purl::Purl;
+use waybill_common::types::hash::ContentHash;
+use waybill_common::types::purl::{encode_purl_segment, Purl};
 
 use super::super::workspace::{synthesize_workspace_root, workspace_root_name};
 use super::super::PackageDbEntry;
 use super::build_pypi_purl_str;
+
+/// Milestone 674: default PyPI registry URL. Non-default values
+/// trigger emission of the `waybill:pypi-source-url` annotation so
+/// downstream consumers can distinguish public-PyPI resolves from
+/// private-mirror resolves.
+const DEFAULT_PYPI_REGISTRY: &str = "https://pypi.org/simple";
+
+/// Milestone 674: parsed representation of the `source = { ... }`
+/// inline table on a uv.lock `[[package]]` entry. Six variants match
+/// uv's own source-model enumeration.
+///
+/// See `specs/674-uv-lock-reader/contracts/source_variants.md` for
+/// per-variant PURL construction rules + annotation emission rules.
+/// Extracted from the caller-side `toml::Value` (rather than serde-
+/// deserialized) to preserve m106's permissive shape-drift tolerance.
+enum UvSourceShape<'a> {
+    /// `source = { registry = "..." }` — the common case. Emits as
+    /// `pkg:pypi/*`.
+    Registry { url: &'a str },
+    /// `source = { git = "URL", rev = "SHA" }` — cloned git repo.
+    /// Emits as `pkg:generic/*` with source-type + source-url
+    /// annotations naming `<git-url>@<rev>`.
+    Git { url: &'a str, rev: &'a str },
+    /// `source = { path = "..." }` — local filesystem package.
+    /// Emits as `pkg:generic/*` with source-type=path.
+    Path { path: &'a str },
+    /// `source = { url = "..." }` — direct HTTP(s) install source.
+    /// Emits as `pkg:generic/*` with source-type=url.
+    Url { url: &'a str },
+    /// `source = { editable = "..." }` — pyproject-in-place install.
+    /// KEPT as `pkg:pypi/*` for m106 workspace-mode backward-compat.
+    /// Workspace members get `waybill:component-role=main-module`
+    /// per m106 Clarification Q1.
+    Editable,
+    /// `source = { virtual = "..." }` — no-code pseudo-package.
+    /// KEPT as `pkg:pypi/*` for m106 backward-compat (m183 US3 test
+    /// uses `virtual = "."` on the pyproject's own package).
+    Virtual,
+    /// Unknown / missing `source` table — treated as source-only /
+    /// permissive fallback. Emits as `pkg:pypi/*` (m106 behavior).
+    Unknown,
+}
+
+impl<'a> UvSourceShape<'a> {
+    /// Extract the source variant from a `[[package]].source` table.
+    /// Returns `UvSourceShape::Unknown` when the source key doesn't
+    /// match any of the 6 known variants — permissive-tolerance for
+    /// future uv schema drift.
+    fn from_table(source_tbl: Option<&'a toml::value::Table>) -> Self {
+        let Some(tbl) = source_tbl else {
+            return UvSourceShape::Unknown;
+        };
+        if let Some(url) = tbl.get("registry").and_then(|v| v.as_str()) {
+            return UvSourceShape::Registry { url };
+        }
+        if let Some(url) = tbl.get("git").and_then(|v| v.as_str()) {
+            let rev = tbl.get("rev").and_then(|v| v.as_str()).unwrap_or("");
+            return UvSourceShape::Git { url, rev };
+        }
+        if let Some(path) = tbl.get("path").and_then(|v| v.as_str()) {
+            return UvSourceShape::Path { path };
+        }
+        if let Some(url) = tbl.get("url").and_then(|v| v.as_str()) {
+            return UvSourceShape::Url { url };
+        }
+        if tbl.contains_key("editable") {
+            return UvSourceShape::Editable;
+        }
+        if tbl.contains_key("virtual") {
+            return UvSourceShape::Virtual;
+        }
+        UvSourceShape::Unknown
+    }
+}
+
+/// Milestone 674: extract SHA-256 hashes from a uv.lock `[[package]]`
+/// entry's `sdist` (Option<Table>) + `wheels` (Array<Table>). Every
+/// hash is stored as `sha256:<hex>` in uv.lock; we extract just the
+/// hex and construct a `ContentHash`. Dedup by hex-value to avoid
+/// duplicate hashes when many wheel platforms share the same content
+/// hash.
+fn extract_sha256_hashes(pkg_tbl: &toml::value::Table) -> Vec<ContentHash> {
+    let mut hashes: Vec<ContentHash> = Vec::new();
+    let push_from_table = |out: &mut Vec<ContentHash>, tbl: &toml::value::Table| {
+        if let Some(hash_str) = tbl.get("hash").and_then(|v| v.as_str()) {
+            if let Some(hex) = hash_str.strip_prefix("sha256:") {
+                if let Ok(h) = ContentHash::sha256(hex) {
+                    out.push(h);
+                }
+            }
+        }
+    };
+    if let Some(sdist_tbl) = pkg_tbl.get("sdist").and_then(|v| v.as_table()) {
+        push_from_table(&mut hashes, sdist_tbl);
+    }
+    if let Some(wheels_arr) = pkg_tbl.get("wheels").and_then(|v| v.as_array()) {
+        for wheel in wheels_arr {
+            if let Some(wheel_tbl) = wheel.as_table() {
+                push_from_table(&mut hashes, wheel_tbl);
+            }
+        }
+    }
+    hashes.sort_by(|a, b| a.value.as_str().cmp(b.value.as_str()));
+    hashes.dedup_by(|a, b| a.value.as_str() == b.value.as_str());
+    hashes
+}
 
 /// Read `<rootfs>/uv.lock` if present. Returns None when absent or
 /// unparseable. Mirrors `read_poetry_lock` and `read_pipfile_lock` in
@@ -61,6 +168,56 @@ pub(super) fn read_uv_lock(rootfs: &Path, _include_dev: bool) -> Option<Vec<Pack
     };
     let source_path = path.to_string_lossy().into_owned();
     Some(parse_uv_lock(&parsed, &source_path, rootfs))
+}
+
+/// Milestone 674 FR-002 Pants fallback entry-point: parse a
+/// uv.lock byte-slice into `PackageDbEntry` records. Used by
+/// `pants::mod::read` when `pants::lockfile::parse` fails on a
+/// Pants-declared file (the file may be a uv.lock, not a Pex JSON
+/// lockfile — modern Pants supports uv as a resolver backend).
+///
+/// `pants_resolve_name` is threaded into every emitted component
+/// as a `waybill:pants-resolve` annotation, matching the m223
+/// Pants scope-tag convention.
+///
+/// Returns `None` on parse failure (WARN-and-skip per m223 contract).
+pub(crate) fn parse_uv_lock_bytes(
+    bytes: &[u8],
+    source_path: &str,
+    pants_resolve_name: &str,
+) -> Option<Vec<PackageDbEntry>> {
+    let text = std::str::from_utf8(bytes).ok()?;
+    let parsed: toml::Value = toml::from_str(text)
+        .map_err(|e| {
+            tracing::warn!(
+                source_path = %source_path,
+                error = %e,
+                "uv.lock (Pants FR-002 fallback) parse failed; skipping"
+            );
+        })
+        .ok()?;
+    // Version-gate: only accept version=1 (matches milestone 106).
+    let version = parsed.get("version").and_then(|v| v.as_integer()).unwrap_or(-1);
+    if version != 1 {
+        tracing::warn!(
+            source_path = %source_path,
+            version = version,
+            "uv.lock (Pants FR-002 fallback): unsupported schema version (expected 1); skipping"
+        );
+        return None;
+    }
+    let mut entries = parse_uv_lock(&parsed, source_path, Path::new("/tmp/nonexistent"));
+    // Retroactively decorate every emitted entry with the Pants
+    // resolve-name annotation. Simpler than threading the param
+    // through the parse loop — the annotation bag is a BTreeMap
+    // that the emit loop already populates.
+    for entry in &mut entries {
+        entry.extra_annotations.insert(
+            "waybill:pants-resolve".to_string(),
+            serde_json::Value::String(pants_resolve_name.to_string()),
+        );
+    }
+    Some(entries)
 }
 
 /// Parse an already-deserialised `uv.lock` TOML document. Public-in-
@@ -167,10 +324,25 @@ pub(crate) fn parse_uv_lock(
             .unwrap_or_default();
 
 
-        // Build the PyPI PURL. Workspace members and PyPI packages
-        // both use this form per the data-model; the difference is
-        // the C40 component-role annotation added below for members.
-        let purl_str = build_pypi_purl_str(name, version);
+        // Milestone 674: parse the `source = { ... }` inline table
+        // into a UvSourceShape. Drives per-variant PURL selection
+        // + variant-specific annotations. Registry / Editable /
+        // Virtual / Unknown all emit as `pkg:pypi/*` (preserves
+        // m106 workspace-mode backward-compat); Git / Path / Url
+        // emit as `pkg:generic/*` per m674 FR-005 through FR-007.
+        let source_tbl = tbl.get("source").and_then(|v| v.as_table());
+        let source_shape = UvSourceShape::from_table(source_tbl);
+
+        let purl_str = match &source_shape {
+            UvSourceShape::Git { .. }
+            | UvSourceShape::Path { .. }
+            | UvSourceShape::Url { .. } => format!(
+                "pkg:generic/{}@{}",
+                encode_purl_segment(name),
+                encode_purl_segment(version),
+            ),
+            _ => build_pypi_purl_str(name, version),
+        };
         let Ok(purl) = Purl::new(&purl_str) else {
             tracing::warn!(
                 package = %name,
@@ -180,10 +352,63 @@ pub(crate) fn parse_uv_lock(
             continue;
         };
 
-        // Component-role annotation for workspace members (per
-        // Clarification Q1 of milestone 106).
         let mut extra: std::collections::BTreeMap<String, serde_json::Value> =
             Default::default();
+
+        // Milestone 674 (C157): every uv.lock-emitted component
+        // carries a `waybill:python-lockfile-format=uv` annotation
+        // for downstream format-provenance visibility.
+        extra.insert(
+            "waybill:python-lockfile-format".to_string(),
+            serde_json::Value::String("uv".to_string()),
+        );
+
+        // Milestone 674: per-variant annotations for non-registry
+        // sources + non-default registry URLs.
+        let source_kind: Option<String> = match &source_shape {
+            UvSourceShape::Registry { url } => {
+                if *url != DEFAULT_PYPI_REGISTRY {
+                    extra.insert(
+                        "waybill:pypi-source-url".to_string(),
+                        serde_json::Value::String(url.to_string()),
+                    );
+                }
+                None
+            }
+            UvSourceShape::Git { url, rev } => {
+                // Milestone 674: waybill:source-url annotation carries
+                // the resolved git URL + rev. The `source_type` field
+                // below drives the `waybill:source-type` emission via
+                // the standard PackageDbEntry serialization (no
+                // manual annotation insert here to avoid emit-pipeline
+                // collision).
+                extra.insert(
+                    "waybill:source-url".to_string(),
+                    serde_json::Value::String(format!("{}@{}", url, rev)),
+                );
+                Some("git".to_string())
+            }
+            UvSourceShape::Path { path } => {
+                extra.insert(
+                    "waybill:source-url".to_string(),
+                    serde_json::Value::String(format!("file://{}", path)),
+                );
+                Some("local".to_string())
+            }
+            UvSourceShape::Url { url } => {
+                extra.insert(
+                    "waybill:source-url".to_string(),
+                    serde_json::Value::String(url.to_string()),
+                );
+                Some("url".to_string())
+            }
+            UvSourceShape::Editable
+            | UvSourceShape::Virtual
+            | UvSourceShape::Unknown => None,
+        };
+
+        // Component-role annotation for workspace members (per
+        // Clarification Q1 of milestone 106).
         if let Some(ws) = &workspace_info {
             if ws.member_names.contains(name) {
                 extra.insert(
@@ -192,6 +417,17 @@ pub(crate) fn parse_uv_lock(
                 );
             }
         }
+
+        // Milestone 674: FR-002 Pants integration — the caller can
+        // pre-populate `pants_resolve_name` when this parse is
+        // invoked from the Pants FR-002 fallback path. See
+        // `pants/mod.rs::read` for the caller-side wiring.
+        // (For the standalone-uv path — `read_uv_lock` — this is
+        // always None; a helper wrapper `parse_uv_lock_bytes` below
+        // exposes the pants-context entry.)
+
+        // Milestone 674: hash extraction from sdist + wheels.
+        let hashes = extract_sha256_hashes(tbl);
 
         out.push(PackageDbEntry {
             build_inclusion: None,
@@ -205,7 +441,7 @@ pub(crate) fn parse_uv_lock(
             licenses: Vec::new(),
             lifecycle_scope: None,
             requirement_ranges: Vec::new(),
-            source_type: None,
+            source_type: source_kind,
             buildinfo_status: None,
             evidence_kind: None,
             binary_class: None,
@@ -218,7 +454,7 @@ pub(crate) fn parse_uv_lock(
             parent_purl: None,
             npm_role: None,
             co_owned_by: None,
-            hashes: Vec::new(),
+            hashes,
             sbom_tier: Some("source".to_string()),
             shade_relocation: None,
             extra_annotations: extra,

@@ -1,0 +1,9 @@
+[GLOBAL]
+pants_version = "2.33.0"
+
+[python]
+enable_resolves = true
+
+[python.resolves]
+python-default = "3rdparty/python/python-default.lock"
+tools = "3rdparty/python/tools.lock"
