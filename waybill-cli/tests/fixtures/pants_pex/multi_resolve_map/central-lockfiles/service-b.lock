@@ -1,0 +1,33 @@
+{
+  "pex_version": "2.10.0",
+  "locked_resolves": [
+    {
+      "locked_requirements": [
+        {
+          "project_name": "waybill-fixture-service-b-core",
+          "version": "2.0.0",
+          "requires_dists": [],
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "url": "https://files.pythonhosted.org/packages/bb/bb/waybill_fixture_service_b_core-2.0.0-py3-none-any.whl"
+            }
+          ]
+        },
+        {
+          "project_name": "waybill-fixture-service-b-api",
+          "version": "2.0.0",
+          "requires_dists": [],
+          "artifacts": [
+            {
+              "algorithm": "sha256",
+              "hash": "bcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbc",
+              "url": "https://files.pythonhosted.org/packages/bc/bc/waybill_fixture_service_b_api-2.0.0-py3-none-any.whl"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
