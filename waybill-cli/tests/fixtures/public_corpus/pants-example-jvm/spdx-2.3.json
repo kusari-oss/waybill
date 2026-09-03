@@ -1,0 +1,2644 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "annotations": [
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"maven\"]}}"
+    }
+  ],
+  "creationInfo": "<masked>",
+  "dataLicense": "CC0-1.0",
+  "documentDescribes": [
+    "SPDXRef-DocumentRoot-6RDZ6CVEA7BNN4YO"
+  ],
+  "documentNamespace": "<masked>",
+  "name": "repo",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-DocumentRoot-6RDZ6CVEA7BNN4YO",
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:generic/pants-example-jvm@675ee75",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:waybill:pants-example-jvm:675ee75:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "pants-example-jvm",
+      "supplier": "Organization: waybill contributors",
+      "versionInfo": "675ee75"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-5ESIEVSH4YOE6RXV",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.code.findbugs:jsr305:3.0.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:findbugs:jsr305:3.0.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:jsr305:jsr305:3.0.2:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "766ad2a0783f2687962c8ad74ceecc38a28b9f72a2d085ee438b7813e928d0c7"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.code.findbugs/jsr305@3.0.2",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.code.findbugs:jsr305:3.0.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "jsr305",
+      "supplier": "Organization: com.google.code.findbugs",
+      "versionInfo": "3.0.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-QLUZ2IWLLKGSHHMO",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.errorprone:error_prone_annotations:2.7.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:errorprone:error_prone_annotations:2.7.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:error_prone_annotations:error_prone_annotations:2.7.1:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "cd5257c08a246cf8628817ae71cb822be192ef91f6881ca4a3fcff4f1de1cff3"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.errorprone/error_prone_annotations@2.7.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.errorprone:error_prone_annotations:2.7.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "error_prone_annotations",
+      "supplier": "Organization: com.google.errorprone",
+      "versionInfo": "2.7.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-A77OVNE5IHELYAGA",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.guava:failureaccess:1.0.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:failureaccess:1.0.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:failureaccess:failureaccess:1.0.1:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a171ee4c734dd2da837e4b16be9df4661afab72a41adaf31eb84dfdaf936ca26"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.guava/failureaccess@1.0.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.guava:failureaccess:1.0.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "failureaccess",
+      "supplier": "Organization: com.google.guava",
+      "versionInfo": "1.0.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-HK45AOV4QQFGKRG6",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.guava:guava:31.0.1-jre:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:guava:31.0.1-jre:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d5be94d65e87bd219fb3193ad1517baa55a3b88fc91d21cf735826ab5af087b9"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.guava/guava@31.0.1-jre",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.guava:guava:31.0.1-jre:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "guava",
+      "supplier": "Organization: com.google.guava",
+      "versionInfo": "31.0.1-jre"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Y2IV4UUKN5NONJLX",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:*:*:*:*:*:*:*\",\"cpe:2.3:a:guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:*:*:*:*:*:*:*\",\"cpe:2.3:a:listenablefuture:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b372a037d4230aa57fbeffdef30fd6123f9c0c2db85d0aced00c91b974f33f99"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "listenablefuture",
+      "supplier": "Organization: com.google.guava",
+      "versionInfo": "9999.0-empty-to-avoid-conflict-with-guava"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-S6DXMRFHQ7GE24WU",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.google.j2objc:j2objc-annotations:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:j2objc:j2objc-annotations:1.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:j2objc-annotations:j2objc-annotations:1.3:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "21af30c92267bd6122c0e0b4d20cccb6641a37eaf956c6540ec471d584e64a7b"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.google.j2objc/j2objc-annotations@1.3",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.google.j2objc:j2objc-annotations:1.3:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "j2objc-annotations",
+      "supplier": "Organization: com.google.j2objc",
+      "versionInfo": "1.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-54655UW5SDEKR2J6",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:com.lihaoyi:acyclic_2.13:0.2.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:lihaoyi:acyclic_2.13:0.2.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:acyclic_2.13:acyclic_2.13:0.2.1:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4bc4656140ad5e4802fedcdbe920ec7c92dbebf5e76d1c60d35676a314481944"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/com.lihaoyi/acyclic_2.13@0.2.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:com.lihaoyi:acyclic_2.13:0.2.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "acyclic_2.13",
+      "supplier": "Organization: com.lihaoyi",
+      "versionInfo": "0.2.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-UP56PSRQYR4EL2CX",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.checkerframework:checker-qual:3.12.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:checkerframework:checker-qual:3.12.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:checker-qual:checker-qual:3.12.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ff10785ac2a357ec5de9c293cb982a2cbb605c0309ea4cc1cb9b9bc6dbe7f3cb"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.checkerframework/checker-qual@3.12.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.checkerframework:checker-qual:3.12.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "checker-qual",
+      "supplier": "Organization: org.checkerframework",
+      "versionInfo": "3.12.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-4KWZKW3VT72SS5CM",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scala-lang.modules:scala-xml_2.13:1.3.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:modules:scala-xml_2.13:1.3.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:scala-xml_2.13:scala-xml_2.13:1.3.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6d96d45a7fc6fc7ab69bdbac841b48cf67ab109f048c8db375ae4effae524f39"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scala-lang.modules:scala-xml_2.13:1.3.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scala-xml_2.13",
+      "supplier": "Organization: org.scala-lang.modules",
+      "versionInfo": "1.3.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scala-lang:scala-library:2.13.8:*:*:*:*:*:*:*\",\"cpe:2.3:a:scala-lang:scala-library:2.13.8:*:*:*:*:*:*:*\",\"cpe:2.3:a:scala-library:scala-library:2.13.8:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a0882b82514190c2bac7d1a459872a75f005fc0f3e88b2bc0390367146e35db7"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scala-lang/scala-library@2.13.8",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scala-lang:scala-library:2.13.8:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scala-library",
+      "supplier": "Organization: org.scala-lang",
+      "versionInfo": "2.13.8"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-4QY5F62D6ZUGC4IM",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scala-lang:scala-reflect:2.13.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:scala-lang:scala-reflect:2.13.6:*:*:*:*:*:*:*\",\"cpe:2.3:a:scala-reflect:scala-reflect:2.13.6:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f713593809b387c60935bb9a940dfcea53bd0dbf8fdc8d10739a2896f8ac56fa"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scala-lang:scala-reflect:2.13.6:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scala-reflect",
+      "supplier": "Organization: org.scala-lang",
+      "versionInfo": "2.13.6"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-NVQN2NQQEHMIWFPR",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scalactic:scalactic_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalactic:scalactic_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalactic_2.13:scalactic_2.13:3.2.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "73a094a12ad95e2aff2b4861e1b8dcf78a724e3979ee3eb9bafdab878c79199e"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scalactic:scalactic_2.13:3.2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scalactic_2.13",
+      "supplier": "Organization: org.scalactic",
+      "versionInfo": "3.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-JLBSH6HZKELPW6KX",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scalatest:scalatest-compatible:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest:scalatest-compatible:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest-compatible:scalatest-compatible:3.2.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fbc803990b400f41f48fb64d169a66eb5645a667e05a6d73d835a8cbe6c31c06"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scalatest:scalatest-compatible:3.2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scalatest-compatible",
+      "supplier": "Organization: org.scalatest",
+      "versionInfo": "3.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-BT55U23AP5M2M24O",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scalatest:scalatest-core_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest:scalatest-core_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest-core_2.13:scalatest-core_2.13:3.2.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b760c723768346792d7a041b9bdf3f61b58bef34f996ebe1b7f1318d8da1ea96"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scalatest:scalatest-core_2.13:3.2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scalatest-core_2.13",
+      "supplier": "Organization: org.scalatest",
+      "versionInfo": "3.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-HEYIEPGNXD3ODLZP",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scalatest:scalatest-diagrams_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest:scalatest-diagrams_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest-diagrams_2.13:scalatest-diagrams_2.13:3.2.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a31d872c4e18cd4c2a0e1af0318c8b2f5837e28553cca88e95260b1d8fabd77b"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scalatest/scalatest-diagrams_2.13@3.2.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scalatest:scalatest-diagrams_2.13:3.2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scalatest-diagrams_2.13",
+      "supplier": "Organization: org.scalatest",
+      "versionInfo": "3.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-7NUEQZ6ZZD35HJ7X",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scalatest:scalatest-featurespec_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest:scalatest-featurespec_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest-featurespec_2.13:scalatest-featurespec_2.13:3.2.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "04927c2a5507c4d64944be91ac2376f51600a35f805d054c68b4b6c46ff86f01"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scalatest/scalatest-featurespec_2.13@3.2.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scalatest:scalatest-featurespec_2.13:3.2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scalatest-featurespec_2.13",
+      "supplier": "Organization: org.scalatest",
+      "versionInfo": "3.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-VQ73KXVMACPHGHIR",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scalatest:scalatest-flatspec_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest:scalatest-flatspec_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest-flatspec_2.13:scalatest-flatspec_2.13:3.2.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7657ee10a6e8b03e96835988438f1c0901968b089657cf124f57abdb7bc7c20c"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scalatest/scalatest-flatspec_2.13@3.2.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scalatest:scalatest-flatspec_2.13:3.2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scalatest-flatspec_2.13",
+      "supplier": "Organization: org.scalatest",
+      "versionInfo": "3.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-SWPIYJFPFMM7ANAH",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scalatest:scalatest-freespec_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest:scalatest-freespec_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest-freespec_2.13:scalatest-freespec_2.13:3.2.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "822b3a9a1e2189b6a3e4a43f87b9627d446f764d3b86d0e93f21e0bf7fb3c229"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scalatest/scalatest-freespec_2.13@3.2.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scalatest:scalatest-freespec_2.13:3.2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scalatest-freespec_2.13",
+      "supplier": "Organization: org.scalatest",
+      "versionInfo": "3.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-ZNMMW5HAHNDRKETF",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scalatest:scalatest-funspec_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest:scalatest-funspec_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest-funspec_2.13:scalatest-funspec_2.13:3.2.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b77764eb1149d76ad6ba671d2d27140a35d1c6f2055e8c946fcc02ad7490e08d"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scalatest/scalatest-funspec_2.13@3.2.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scalatest:scalatest-funspec_2.13:3.2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scalatest-funspec_2.13",
+      "supplier": "Organization: org.scalatest",
+      "versionInfo": "3.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-2EKPG74AJAAWRIR6",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scalatest:scalatest-funsuite_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest:scalatest-funsuite_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest-funsuite_2.13:scalatest-funsuite_2.13:3.2.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e948d33c6526c0da3bf5cc9b0bb127dad76ce82d0edf1220b2c6b7cff23a5a69"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scalatest/scalatest-funsuite_2.13@3.2.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scalatest:scalatest-funsuite_2.13:3.2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scalatest-funsuite_2.13",
+      "supplier": "Organization: org.scalatest",
+      "versionInfo": "3.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-YTNHYTTQUTHUHKMK",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scalatest:scalatest-matchers-core_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest:scalatest-matchers-core_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest-matchers-core_2.13:scalatest-matchers-core_2.13:3.2.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6a23c628c711f257cc4f346429cacc463dd065f8b0039ad5f063cba0b6db8518"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scalatest/scalatest-matchers-core_2.13@3.2.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scalatest:scalatest-matchers-core_2.13:3.2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scalatest-matchers-core_2.13",
+      "supplier": "Organization: org.scalatest",
+      "versionInfo": "3.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-2V2O4ML3XPVVL4RY",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scalatest:scalatest-mustmatchers_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest:scalatest-mustmatchers_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest-mustmatchers_2.13:scalatest-mustmatchers_2.13:3.2.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f994a1b0e9cb77beb0174bf171083b502125507989c3efcfb2d29a8476041bbf"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scalatest/scalatest-mustmatchers_2.13@3.2.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scalatest:scalatest-mustmatchers_2.13:3.2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scalatest-mustmatchers_2.13",
+      "supplier": "Organization: org.scalatest",
+      "versionInfo": "3.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-ULFVL7ZQRIPO75WZ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scalatest:scalatest-propspec_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest:scalatest-propspec_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest-propspec_2.13:scalatest-propspec_2.13:3.2.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "621fb80fb18b58e3fa44691f6d2e5606d5aea2d471433e94f5910dea200ae86f"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scalatest/scalatest-propspec_2.13@3.2.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scalatest:scalatest-propspec_2.13:3.2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scalatest-propspec_2.13",
+      "supplier": "Organization: org.scalatest",
+      "versionInfo": "3.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-ZU2AFOSTHDBD7S4L",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scalatest:scalatest-refspec_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest:scalatest-refspec_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest-refspec_2.13:scalatest-refspec_2.13:3.2.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c850db9983aed1c541d7489ec6a316e2abdaa88287cd85a747f92116ee3f8b7f"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scalatest/scalatest-refspec_2.13@3.2.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scalatest:scalatest-refspec_2.13:3.2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scalatest-refspec_2.13",
+      "supplier": "Organization: org.scalatest",
+      "versionInfo": "3.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-5VUOIFLFCAEFNGNU",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scalatest:scalatest-shouldmatchers_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest:scalatest-shouldmatchers_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest-shouldmatchers_2.13:scalatest-shouldmatchers_2.13:3.2.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "175266bf78309ac99d58f571d17b0505b30d0a638912248965e0699a1376405d"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scalatest/scalatest-shouldmatchers_2.13@3.2.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scalatest:scalatest-shouldmatchers_2.13:3.2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scalatest-shouldmatchers_2.13",
+      "supplier": "Organization: org.scalatest",
+      "versionInfo": "3.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-UWBXPHEVF435QOHG",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scalatest:scalatest-wordspec_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest:scalatest-wordspec_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest-wordspec_2.13:scalatest-wordspec_2.13:3.2.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "08f983b45ef2306eaca35e9280aae2b8691a063e1f2d04b0f5d38f910cda7c19"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scalatest/scalatest-wordspec_2.13@3.2.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scalatest:scalatest-wordspec_2.13:3.2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scalatest-wordspec_2.13",
+      "supplier": "Organization: org.scalatest",
+      "versionInfo": "3.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-L45T4MAMFYFDURA4",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"3rdparty/jvm/default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:org.scalatest:scalatest_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest:scalatest_2.13:3.2.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:scalatest_2.13:scalatest_2.13:3.2.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"3rdparty/jvm/default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"3rdparty/jvm\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5cdde7f43bd4e287cd9302c2a80c5badc82cd442b392d6aaf28f16b4d6f1321c"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:maven/org.scalatest/scalatest_2.13@3.2.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:org.scalatest:scalatest_2.13:3.2.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "scalatest_2.13",
+      "supplier": "Organization: org.scalatest",
+      "versionInfo": "3.2.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-CZPDKXG3L7MLDPWR",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"get-pants.sh\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"get-pants.sh\"]}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8b8ba722dd787ede20b01259a974a1f8f5798e9a4a8f94d72a2dfb2298a2a981"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "get-pants.sh",
+      "versionInfo": "NOASSERTION"
+    }
+  ],
+  "relationships": [
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-6RDZ6CVEA7BNN4YO",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-Y2IV4UUKN5NONJLX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-HK45AOV4QQFGKRG6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-S6DXMRFHQ7GE24WU",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-HK45AOV4QQFGKRG6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-5ESIEVSH4YOE6RXV",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-HK45AOV4QQFGKRG6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-QLUZ2IWLLKGSHHMO",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-HK45AOV4QQFGKRG6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-UP56PSRQYR4EL2CX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-HK45AOV4QQFGKRG6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-A77OVNE5IHELYAGA",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-HK45AOV4QQFGKRG6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4KWZKW3VT72SS5CM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-4QY5F62D6ZUGC4IM"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-NVQN2NQQEHMIWFPR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4QY5F62D6ZUGC4IM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-NVQN2NQQEHMIWFPR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4QY5F62D6ZUGC4IM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-BT55U23AP5M2M24O"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4KWZKW3VT72SS5CM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-BT55U23AP5M2M24O"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JLBSH6HZKELPW6KX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-BT55U23AP5M2M24O"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-NVQN2NQQEHMIWFPR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-BT55U23AP5M2M24O"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-BT55U23AP5M2M24O"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4QY5F62D6ZUGC4IM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-HEYIEPGNXD3ODLZP"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4KWZKW3VT72SS5CM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-HEYIEPGNXD3ODLZP"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JLBSH6HZKELPW6KX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-HEYIEPGNXD3ODLZP"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BT55U23AP5M2M24O",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-HEYIEPGNXD3ODLZP"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-NVQN2NQQEHMIWFPR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-HEYIEPGNXD3ODLZP"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-HEYIEPGNXD3ODLZP"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4QY5F62D6ZUGC4IM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-7NUEQZ6ZZD35HJ7X"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4KWZKW3VT72SS5CM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-7NUEQZ6ZZD35HJ7X"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JLBSH6HZKELPW6KX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-7NUEQZ6ZZD35HJ7X"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BT55U23AP5M2M24O",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-7NUEQZ6ZZD35HJ7X"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-NVQN2NQQEHMIWFPR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-7NUEQZ6ZZD35HJ7X"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-7NUEQZ6ZZD35HJ7X"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4QY5F62D6ZUGC4IM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-VQ73KXVMACPHGHIR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4KWZKW3VT72SS5CM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-VQ73KXVMACPHGHIR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JLBSH6HZKELPW6KX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-VQ73KXVMACPHGHIR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BT55U23AP5M2M24O",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-VQ73KXVMACPHGHIR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-NVQN2NQQEHMIWFPR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-VQ73KXVMACPHGHIR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-VQ73KXVMACPHGHIR"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4QY5F62D6ZUGC4IM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-SWPIYJFPFMM7ANAH"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4KWZKW3VT72SS5CM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-SWPIYJFPFMM7ANAH"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JLBSH6HZKELPW6KX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-SWPIYJFPFMM7ANAH"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BT55U23AP5M2M24O",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-SWPIYJFPFMM7ANAH"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-NVQN2NQQEHMIWFPR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-SWPIYJFPFMM7ANAH"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-SWPIYJFPFMM7ANAH"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4QY5F62D6ZUGC4IM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ZNMMW5HAHNDRKETF"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4KWZKW3VT72SS5CM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ZNMMW5HAHNDRKETF"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JLBSH6HZKELPW6KX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ZNMMW5HAHNDRKETF"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BT55U23AP5M2M24O",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ZNMMW5HAHNDRKETF"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-NVQN2NQQEHMIWFPR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ZNMMW5HAHNDRKETF"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ZNMMW5HAHNDRKETF"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4QY5F62D6ZUGC4IM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-2EKPG74AJAAWRIR6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4KWZKW3VT72SS5CM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-2EKPG74AJAAWRIR6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JLBSH6HZKELPW6KX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-2EKPG74AJAAWRIR6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BT55U23AP5M2M24O",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-2EKPG74AJAAWRIR6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-NVQN2NQQEHMIWFPR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-2EKPG74AJAAWRIR6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-2EKPG74AJAAWRIR6"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4QY5F62D6ZUGC4IM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-YTNHYTTQUTHUHKMK"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4KWZKW3VT72SS5CM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-YTNHYTTQUTHUHKMK"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JLBSH6HZKELPW6KX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-YTNHYTTQUTHUHKMK"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BT55U23AP5M2M24O",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-YTNHYTTQUTHUHKMK"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-NVQN2NQQEHMIWFPR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-YTNHYTTQUTHUHKMK"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-YTNHYTTQUTHUHKMK"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4QY5F62D6ZUGC4IM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-2V2O4ML3XPVVL4RY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4KWZKW3VT72SS5CM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-2V2O4ML3XPVVL4RY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JLBSH6HZKELPW6KX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-2V2O4ML3XPVVL4RY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BT55U23AP5M2M24O",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-2V2O4ML3XPVVL4RY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-NVQN2NQQEHMIWFPR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-2V2O4ML3XPVVL4RY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-YTNHYTTQUTHUHKMK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-2V2O4ML3XPVVL4RY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-2V2O4ML3XPVVL4RY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4QY5F62D6ZUGC4IM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ULFVL7ZQRIPO75WZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4KWZKW3VT72SS5CM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ULFVL7ZQRIPO75WZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JLBSH6HZKELPW6KX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ULFVL7ZQRIPO75WZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BT55U23AP5M2M24O",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ULFVL7ZQRIPO75WZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-NVQN2NQQEHMIWFPR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ULFVL7ZQRIPO75WZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ULFVL7ZQRIPO75WZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4QY5F62D6ZUGC4IM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ZU2AFOSTHDBD7S4L"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4KWZKW3VT72SS5CM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ZU2AFOSTHDBD7S4L"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JLBSH6HZKELPW6KX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ZU2AFOSTHDBD7S4L"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BT55U23AP5M2M24O",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ZU2AFOSTHDBD7S4L"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-NVQN2NQQEHMIWFPR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ZU2AFOSTHDBD7S4L"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ZU2AFOSTHDBD7S4L"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4QY5F62D6ZUGC4IM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-5VUOIFLFCAEFNGNU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4KWZKW3VT72SS5CM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-5VUOIFLFCAEFNGNU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JLBSH6HZKELPW6KX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-5VUOIFLFCAEFNGNU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BT55U23AP5M2M24O",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-5VUOIFLFCAEFNGNU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-NVQN2NQQEHMIWFPR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-5VUOIFLFCAEFNGNU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-YTNHYTTQUTHUHKMK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-5VUOIFLFCAEFNGNU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-5VUOIFLFCAEFNGNU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4QY5F62D6ZUGC4IM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-UWBXPHEVF435QOHG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4KWZKW3VT72SS5CM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-UWBXPHEVF435QOHG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JLBSH6HZKELPW6KX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-UWBXPHEVF435QOHG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BT55U23AP5M2M24O",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-UWBXPHEVF435QOHG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-NVQN2NQQEHMIWFPR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-UWBXPHEVF435QOHG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-UWBXPHEVF435QOHG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-HEYIEPGNXD3ODLZP",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-VQ73KXVMACPHGHIR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZNMMW5HAHNDRKETF",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4QY5F62D6ZUGC4IM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZU2AFOSTHDBD7S4L",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-UWBXPHEVF435QOHG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-4KWZKW3VT72SS5CM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ULFVL7ZQRIPO75WZ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JLBSH6HZKELPW6KX",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-5VUOIFLFCAEFNGNU",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-BT55U23AP5M2M24O",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-2V2O4ML3XPVVL4RY",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-SWPIYJFPFMM7ANAH",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-2EKPG74AJAAWRIR6",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-NVQN2NQQEHMIWFPR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-YTNHYTTQUTHUHKMK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-OXBRQU5PMTPMLHXG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-7NUEQZ6ZZD35HJ7X",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-L45T4MAMFYFDURA4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CZPDKXG3L7MLDPWR",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-6RDZ6CVEA7BNN4YO"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-HK45AOV4QQFGKRG6",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-6RDZ6CVEA7BNN4YO"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-54655UW5SDEKR2J6",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-6RDZ6CVEA7BNN4YO"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-L45T4MAMFYFDURA4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-6RDZ6CVEA7BNN4YO"
+    }
+  ],
+  "spdxVersion": "SPDX-2.3"
+}
