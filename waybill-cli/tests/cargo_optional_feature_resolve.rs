@@ -59,13 +59,24 @@ fn scan_workspace_with_env(
     ws_root: &Path,
     path_env: Option<&str>,
 ) -> (serde_json::Value, String, bool) {
+    // Default to offline=false so pre-#771 m205 tests continue to
+    // exercise the cargo-metadata subprocess. Individual tests that
+    // need to exercise the #771 offline-skip branch call the
+    // `_offline` variant explicitly.
+    scan_workspace_with_offline(ws_root, path_env, false)
+}
+
+fn scan_workspace_with_offline(
+    ws_root: &Path,
+    path_env: Option<&str>,
+    offline: bool,
+) -> (serde_json::Value, String, bool) {
     let tempdir = tempfile::tempdir().unwrap();
     let out = tempdir.path().join("out.cdx.json");
     let mut cmd = Command::new(mikebom_bin());
     cmd.args([
         "sbom",
         "scan",
-        "--offline",
         "--path",
         ws_root.to_str().unwrap(),
         "--format",
@@ -74,6 +85,9 @@ fn scan_workspace_with_env(
         out.to_str().unwrap(),
         "--no-deep-hash",
     ]);
+    if offline {
+        cmd.arg("--offline");
+    }
     if let Some(p) = path_env {
         cmd.env("PATH", p);
     }
@@ -321,5 +335,77 @@ default = ["serde"]
         Some("cargo-optional-true"),
         "FR-004 fallback: serde MUST carry waybill:optional-derivation \
          (same as alpha.63 behavior). cdx: {cdx:#}"
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Feature #771 — --offline gates m205 cargo-metadata subprocess entirely
+// ─────────────────────────────────────────────────────────────────
+
+/// Under `waybill --offline`, the m205 cargo-metadata subprocess is
+/// skipped entirely (not "runs and fails" like the FR-004 BinaryNotFound
+/// path). Real-world impact: rust projects with `rust-toolchain.toml`
+/// were spending 3-36s in rustup channel-sync + cargo-metadata network
+/// dance even under `--offline`. Post-#771 the whole subprocess is
+/// bypassed and classification falls back to pre-m205 name-only.
+///
+/// This test asserts (a) the new INFO log fires, (b) the WARN log used
+/// by the FR-004 BinaryNotFound path does NOT fire, (c) classification
+/// still delivers the safe-over-inclusion semantic (serde → Optional
+/// with waybill:optional-derivation).
+#[test]
+fn issue_771_offline_skips_cargo_metadata_subprocess() {
+    let tempdir = tempfile::tempdir().unwrap();
+    let ws = tempdir.path();
+    // Reuse US1's default-feature-activated shape.
+    build_synthetic_workspace(
+        ws,
+        r#"[package]
+name = "issue-771"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1", optional = true }
+
+[features]
+default = ["serde"]
+"#,
+    );
+
+    let (cdx, stderr, ok) = scan_workspace_with_offline(ws, None, true);
+    assert!(ok, "offline scan MUST succeed. stderr:\n{stderr}");
+
+    // (a) New INFO log fires — the skip-under-offline signal.
+    assert!(
+        stderr.contains("cargo metadata skipped under --offline"),
+        "INFO log MUST mention 'cargo metadata skipped under --offline'. \
+         stderr:\n{stderr}"
+    );
+
+    // (b) FR-004 WARN path does NOT fire — we skipped the subprocess
+    // before it could reach BinaryNotFound / NonZeroExit / Timeout.
+    assert!(
+        !stderr.contains("cargo metadata failed"),
+        "issue #771: WARN log 'cargo metadata failed' MUST NOT fire \
+         under --offline (subprocess is skipped, not failed). stderr:\n{stderr}"
+    );
+
+    // (c) Safe over-inclusion semantic preserved: serde classified as
+    // Optional with the cargo-optional-true derivation annotation, same
+    // as the FR-004 fallback path (name-only classification).
+    let serde_comp = find_component_by_name(&cdx, "serde")
+        .unwrap_or_else(|| panic!("serde component present. cdx: {cdx:#}"));
+    assert_eq!(
+        component_scope(serde_comp),
+        Some("excluded"),
+        "issue #771: under --offline, serde MUST be scope=excluded \
+         (name-only classification). cdx: {cdx:#}"
+    );
+    assert_eq!(
+        component_property(serde_comp, "waybill:optional-derivation"),
+        Some("cargo-optional-true"),
+        "issue #771: serde MUST carry waybill:optional-derivation \
+         (pre-m205 name-only classification). cdx: {cdx:#}"
     );
 }

@@ -1580,12 +1580,34 @@ pub(crate) fn finalize(
         // cargo metadata can't run meaningfully. Skip silently
         // (no WARN — this is a legit lockfile-only test-fixture
         // scenario, not a failure). Same fallback semantic.
+        //
+        // Offline-gate (#771): even under `cargo metadata --offline`,
+        // rustup can intercept before cargo runs — a `rust-toolchain.toml`
+        // triggers channel-sync + component-download that rustup does not
+        // honor `--offline` for. Real-world impact: scanning a Rust project
+        // with `waybill --offline` blocks 3-36s per lockfile on rustup's
+        // network dance. When the operator has set `--offline` (bridged
+        // via `WAYBILL_OFFLINE` at main.rs:302 per m055 T010), skip the
+        // subprocess entirely and fall directly through to the pre-m205
+        // name-only classification (safe over-inclusion; matches the
+        // existing failure-path behavior on the online branch below).
+        // Log a single INFO — this is expected under `--offline`, not a
+        // fidelity regression the operator should investigate.
         let workspace_root = lock_path.parent().unwrap_or(&lock_path);
         let cargo_metadata_timeout = resolve_cargo_metadata_timeout();
+        let offline = std::env::var("WAYBILL_OFFLINE").is_ok();
         let activated_names: HashSet<String> = if !workspace_root
             .join("Cargo.toml")
             .exists()
         {
+            HashSet::new()
+        } else if offline {
+            tracing::info!(
+                workspace = %workspace_root.display(),
+                "cargo metadata skipped under --offline; using name-only optional \
+                 classification (feature-activated optional deps may be misclassified \
+                 as scope=excluded)"
+            );
             HashSet::new()
         } else {
             match resolve_activated_deps_via_cargo_metadata(
