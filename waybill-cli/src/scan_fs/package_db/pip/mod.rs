@@ -50,6 +50,7 @@ use std::path::{Path, PathBuf};
 
 use waybill_common::types::purl::encode_purl_segment;
 
+use super::name_validation::{validate_pep508_name, NameValidationError};
 use super::PackageDbEntry;
 
 // Milestone 664 US2 T036: shared-walker migration types.
@@ -338,6 +339,15 @@ pub(crate) fn finalize(
     // See the module-level docstring (updated by T002) and
     // specs/670-pip-under-detection-fix/plan.md for the m018 → m670
     // policy transition.
+    //
+    // Feature 677 (issue #768) — pre-filter project_roots by PEP 508
+    // validation of `[project].name` / `[tool.poetry].name`. Manifests
+    // whose effective name fails validation are dropped WHOLESALE:
+    // both this pyproject_declared_deps loop AND the subsequent
+    // build_pip_main_module_entry loop skip the rejected root. One
+    // WARN log per rejection is emitted by the filter itself.
+    let (project_roots, names_rejected) = filter_project_roots_by_name(&project_roots);
+
     let mut covered_names: std::collections::HashSet<String> =
         entries.iter().map(|e| e.name.clone()).collect();
     for project_root in &project_roots {
@@ -458,12 +468,13 @@ pub(crate) fn finalize(
             "pip: deduped same-PURL pyproject.toml files",
         );
     }
-    if main_modules_emitted > 0 || poetry_skips > 0 {
+    if main_modules_emitted > 0 || poetry_skips > 0 || names_rejected > 0 {
         tracing::info!(
             rootfs = %rootfs.display(),
             main_modules_emitted,
             poetry_only_skips = poetry_skips,
             same_purl_duplicates_dropped = dedup_drops.len(),
+            names_rejected,
             "pip: emitted main-module components",
         );
     }
@@ -619,6 +630,90 @@ pub(crate) struct DroppedDuplicate {
 /// [`pyproject_declared_deps`] as separate design-tier components.
 /// The flag is retained as an informational signal (unused by callers
 /// today; kept for future telemetry).
+///
+// Extract the effective main-module name from a parsed pyproject.toml.
+// Mirrors the extraction logic used by `build_pip_main_module_entry`
+// (line ~650): prefer `[project].name`, fall back to `[tool.poetry].name`
+// for Poetry-legacy manifests, otherwise return `None` (no name declared).
+//
+// Introduced by feature 677 (issue #768) — pulled out as a helper so
+// `filter_project_roots_by_name` and `build_pip_main_module_entry` share
+// one source of truth. Without shared extraction, the filter could
+// rescue different manifests than the emitter rejects, breaking whole-
+// manifest reject semantics.
+fn extract_pyproject_effective_name(
+    parsed: &toml::Value,
+) -> Option<String> {
+    let project_table = parsed.get("project");
+    let poetry_table = parsed.get("tool").and_then(|t| t.get("poetry"));
+    let source_table = match (project_table, poetry_table) {
+        (Some(project), _) => project,
+        (None, Some(poetry)) => poetry,
+        (None, None) => return None,
+    };
+    source_table
+        .get("name")
+        .and_then(|v| v.as_str())
+        .map(str::to_string)
+}
+
+/// Feature 677 (issue #768): pre-filter `project_roots` by PEP 508
+/// `[project].name` validation. Manifests whose effective name (via
+/// `extract_pyproject_effective_name`) fails PEP 508 are dropped
+/// wholesale — both the main-module component AND the declared-deps
+/// list from that manifest are suppressed. Manifests with no readable
+/// name / no readable pyproject.toml pass through unchanged (existing
+/// downstream logic handles absent-name cases).
+///
+/// Returns `(retained_roots, rejected_count)`. Emits one WARN log per
+/// rejected manifest with structured fields `manifest`, `name`, `reason`
+/// so operators can locate the offending template directory.
+///
+/// Ordering guarantee: the returned Vec preserves the input order of
+/// non-rejected roots (`retain`-style semantics), matching what the
+/// downstream loops in `read()` expect for deterministic emission.
+fn filter_project_roots_by_name(project_roots: &[PathBuf]) -> (Vec<PathBuf>, usize) {
+    let mut retained = Vec::with_capacity(project_roots.len());
+    let mut rejected = 0usize;
+    for project_root in project_roots {
+        let manifest_path = project_root.join("pyproject.toml");
+        let Ok(text) = std::fs::read_to_string(&manifest_path) else {
+            // No readable pyproject.toml — existing downstream logic
+            // silently skips the emission; nothing to validate here.
+            retained.push(project_root.clone());
+            continue;
+        };
+        let Ok(parsed) = toml::from_str::<toml::Value>(&text) else {
+            // Unparseable — existing behavior is silent skip. Preserve.
+            retained.push(project_root.clone());
+            continue;
+        };
+        let Some(name) = extract_pyproject_effective_name(&parsed) else {
+            // No `[project].name` or `[tool.poetry].name` — no emission
+            // possible anyway. Preserve the root (existing downstream
+            // logic handles the absent-name path).
+            retained.push(project_root.clone());
+            continue;
+        };
+        match validate_pep508_name(&name) {
+            Ok(()) => retained.push(project_root.clone()),
+            Err(err) => {
+                tracing::warn!(
+                    manifest = %manifest_path.display(),
+                    name = %name,
+                    reason = %match &err {
+                        NameValidationError::Empty => "empty or whitespace-only".to_string(),
+                        NameValidationError::Malformed { reason } => reason.clone(),
+                    },
+                    "pip: pyproject.toml [project].name failed PEP 508 validation; skipping whole manifest"
+                );
+                rejected += 1;
+            }
+        }
+    }
+    (retained, rejected)
+}
+
 pub(crate) fn build_pip_main_module_entry(
     project_root: &Path,
 ) -> (Option<PackageDbEntry>, bool) {

@@ -39,6 +39,7 @@ pub mod ipk_file;
 pub mod kotlin_dsl;
 pub mod maven;
 pub mod maven_sidecar;
+pub(crate) mod name_validation;
 pub mod npm;
 pub mod nuget;
 pub mod opkg;
