@@ -37,6 +37,34 @@ fn cdx_has_component_purl(cdx: &serde_json::Value, matches: impl Fn(&str) -> boo
         .unwrap_or(false)
 }
 
+/// True if any component carries a property `waybill:<name>` whose
+/// value matches the predicate.
+fn cdx_has_component_property(
+    cdx: &serde_json::Value,
+    name: &str,
+    matches: impl Fn(&str) -> bool,
+) -> bool {
+    cdx.get("components")
+        .and_then(|c| c.as_array())
+        .map(|arr| {
+            arr.iter().any(|c| {
+                c.get("properties")
+                    .and_then(|p| p.as_array())
+                    .map(|props| {
+                        props.iter().any(|p| {
+                            p.get("name").and_then(|n| n.as_str()) == Some(name)
+                                && p.get("value")
+                                    .and_then(|v| v.as_str())
+                                    .map(&matches)
+                                    .unwrap_or(false)
+                        })
+                    })
+                    .unwrap_or(false)
+            })
+        })
+        .unwrap_or(false)
+}
+
 /// True if any dependency edge from `from_pred(ref)` targets `to_pred`.
 fn cdx_has_edge(
     cdx: &serde_json::Value,
@@ -288,6 +316,153 @@ pub fn maven_guice_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> 
             observed: "no pkg:maven/* components at all".to_string(),
             expected: "at least one pkg:maven/* transitive (aopalliance, jsr305, dagger, etc.)".to_string(),
             suggested_action: "investigate m070 maven reader — pom.xml parsing is broken",
+        });
+    }
+    Ok(())
+}
+
+// -----------------------------------------------------------------------
+// pants-example-python — m673 US1 (repo-root `python-default.lock`)
+// -----------------------------------------------------------------------
+
+pub fn pants_example_python_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    // pantsbuild/example-python at pinned SHA has a `python-default.lock`
+    // at the repo root — this is Pants 2.31+ default layout. Pre-m673
+    // waybill emitted 0 components from this shape (the pants reader
+    // only walked `3rdparty/python/*.lock`); post-m673 it emits ≥ 8.
+    if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:pypi/")) {
+        return Err(AssertionFailure {
+            invariant_name: "pypi-transitives-present",
+            format: FailureFormat::Cdx,
+            observed: "no pkg:pypi/* components at all".to_string(),
+            expected: "at least one pkg:pypi/* transitive from the root python-default.lock".to_string(),
+            suggested_action: "investigate m673 (repo-root discovery gate) or m223 pex-lockfile reader — pants-example-python should emit ≥ 8 pypi components",
+        });
+    }
+    if !cdx_has_component_property(&sboms.cdx, "waybill:pants-resolve", |v| {
+        v == "python-default"
+    }) {
+        return Err(AssertionFailure {
+            invariant_name: "pants-resolve-annotation-present",
+            format: FailureFormat::Cdx,
+            observed: "no component carries waybill:pants-resolve=python-default".to_string(),
+            expected: "at least one component carries waybill:pants-resolve=python-default (m223 C143)".to_string(),
+            suggested_action: "investigate m223 resolve_classifier or m673 discovery-source tagging — pants-emitted components MUST carry the pants-resolve annotation",
+        });
+    }
+    Ok(())
+}
+
+// -----------------------------------------------------------------------
+// pants-example-django — m673 US2 (`lockfiles/python-default.lock`)
+// -----------------------------------------------------------------------
+
+pub fn pants_example_django_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    // pantsbuild/example-django at pinned SHA has its lockfile under
+    // `lockfiles/python-default.lock` — the Pants `lockfiles/` convention.
+    // Pre-m673 waybill emitted 0 components; post-m673 it emits Django's
+    // full transitive closure (typically 20-50 pypi components).
+    if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:pypi/")) {
+        return Err(AssertionFailure {
+            invariant_name: "pypi-transitives-present",
+            format: FailureFormat::Cdx,
+            observed: "no pkg:pypi/* components at all".to_string(),
+            expected: "at least one pkg:pypi/* transitive from lockfiles/python-default.lock".to_string(),
+            suggested_action: "investigate m673 US2 (lockfiles/ directory discovery) or m223 pex-lockfile reader",
+        });
+    }
+    // Django-specific tripwire: the primary dep in this fixture is Django
+    // itself. PyPI names normalize case-insensitively, but PURL segment
+    // encoding preserves the `Django` casing per m670; assert either.
+    let has_django = cdx_has_component_purl(&sboms.cdx, |p| {
+        let lower = p.to_ascii_lowercase();
+        lower.starts_with("pkg:pypi/django@") || lower.starts_with("pkg:pypi/django/")
+    });
+    if !has_django {
+        return Err(AssertionFailure {
+            invariant_name: "django-component-present",
+            format: FailureFormat::Cdx,
+            observed: "no pkg:pypi/django@* (or Django@*) component".to_string(),
+            expected: "at least one pkg:pypi/django@X.Y.Z component from the lockfile".to_string(),
+            suggested_action: "investigate m673 US2 lockfile discovery — the Django dep is the primary content of this fixture's lockfile",
+        });
+    }
+    if !cdx_has_component_property(&sboms.cdx, "waybill:pants-resolve", |v| {
+        v == "python-default"
+    }) {
+        return Err(AssertionFailure {
+            invariant_name: "pants-resolve-annotation-present",
+            format: FailureFormat::Cdx,
+            observed: "no component carries waybill:pants-resolve=python-default".to_string(),
+            expected: "at least one component carries waybill:pants-resolve=python-default (m223 C143)".to_string(),
+            suggested_action: "investigate m223 resolve_classifier or m673 US2 discovery-source tagging",
+        });
+    }
+    Ok(())
+}
+
+// -----------------------------------------------------------------------
+// pants-example-jvm — m224 (Pants coursier-JVM reader)
+// -----------------------------------------------------------------------
+
+pub fn pants_example_jvm_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    // pantsbuild/example-jvm at pinned SHA has `3rdparty/jvm/default.lock`
+    // — the Pants JVM coursier resolve format (distinct from standalone
+    // coursier via the FR-011 header discriminator). Post-m224 waybill
+    // emits every JVM dep tagged `waybill:pants-resolve=jvm-default`.
+    if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:maven/")) {
+        return Err(AssertionFailure {
+            invariant_name: "maven-transitives-present",
+            format: FailureFormat::Cdx,
+            observed: "no pkg:maven/* components at all".to_string(),
+            expected: "at least one pkg:maven/* transitive from 3rdparty/jvm/default.lock".to_string(),
+            suggested_action: "investigate m224 Pants coursier-JVM reader — pants-example-jvm should emit multiple pkg:maven/* components",
+        });
+    }
+    if !cdx_has_component_property(&sboms.cdx, "waybill:pants-resolve", |_| true) {
+        return Err(AssertionFailure {
+            invariant_name: "pants-resolve-annotation-present",
+            format: FailureFormat::Cdx,
+            observed: "no component carries waybill:pants-resolve=<any>".to_string(),
+            expected: "at least one component carries waybill:pants-resolve=<resolve-name> (m224 reuses m223 C143)".to_string(),
+            suggested_action: "investigate m224 pants_jvm reader — emitted maven components MUST carry pants-resolve tagging",
+        });
+    }
+    Ok(())
+}
+
+// -----------------------------------------------------------------------
+// pants-example-golang — m226 (Pants Go enricher) + m053/m055 (Go reader)
+// -----------------------------------------------------------------------
+
+pub fn pants_example_golang_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    // pantsbuild/example-golang at pinned SHA is a standard go.mod + go.sum
+    // layout with `pants.toml` declaring `[golang]`. The Go reader emits
+    // the components; the m226 pants_go enricher decorates them with
+    // `waybill:pants-target` annotations (per Principle IX — the pants
+    // enricher never fabricates pkg:golang/* PURLs, it decorates existing
+    // Go-reader-emitted ones).
+    if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:golang/")) {
+        return Err(AssertionFailure {
+            invariant_name: "golang-components-present",
+            format: FailureFormat::Cdx,
+            observed: "no pkg:golang/* components at all".to_string(),
+            expected: "at least one pkg:golang/* component from go.sum".to_string(),
+            suggested_action: "investigate the Go reader (m053/m055/m091) — pants-example-golang should emit Go transitives",
+        });
+    }
+    // m226 enricher tripwire: the enricher decorates Go components with
+    // `waybill:pants-target` (broadened C145 per m226). Absence of ANY
+    // such annotation across the entire component set indicates the
+    // enricher isn't running against this fixture's `pants.toml` +
+    // `BUILD` files.
+    if !cdx_has_component_property(&sboms.cdx, "waybill:pants-target", |_| true) {
+        return Err(AssertionFailure {
+            invariant_name: "pants-target-annotation-present",
+            format: FailureFormat::Cdx,
+            observed: "no component carries waybill:pants-target=<any>".to_string(),
+            expected: "at least one component carries waybill:pants-target=<pants-target-address> (m226 enrichment)".to_string(),
+            suggested_action: "investigate m226 pants_go enricher — Go components in a Pants monorepo MUST be decorated with pants-target",
         });
     }
     Ok(())

@@ -1,0 +1,440 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:golang/github.com/google/uuid@v1.6.0",
+      "cpe": "cpe:2.3:a:github.com\\/google\\/uuid:github.com\\/google\\/uuid:v1.6.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "go.sum"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/google/uuid"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "348bda24330eb231c0f27d630212d2833ac0cf2d4782bfa136b6f9edefbde05d"
+        }
+      ],
+      "name": "github.com/google/uuid",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:github.com\\/google\\/uuid:github.com\\/google\\/uuid:v1.6.0:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/google:github.com\\/google\\/uuid:v1.6.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"go.sum\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:go-transitive-source",
+          "value": "module-cache"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "unresolved-indirect-require"
+        },
+        {
+          "name": "waybill:pants-target",
+          "value": "mod"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:golang/github.com/google/uuid@v1.6.0",
+      "supplier": {
+        "name": "github.com/google"
+      },
+      "type": "library",
+      "version": "v1.6.0"
+    },
+    {
+      "bom-ref": "pkg:golang/github.com/spf13/pflag@v1.0.10",
+      "cpe": "cpe:2.3:a:github.com\\/spf13\\/pflag:github.com\\/spf13\\/pflag:v1.0.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "go.sum"
+          }
+        ]
+      },
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/spf13/pflag"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e04061d8a01807068e363e9bd987b51a21dfc23ab244ea05e11c183bebcfc059"
+        }
+      ],
+      "name": "github.com/spf13/pflag",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:github.com\\/spf13\\/pflag:github.com\\/spf13\\/pflag:v1.0.10:*:*:*:*:*:*:* | cpe:2.3:a:github.com\\/spf13:github.com\\/spf13\\/pflag:v1.0.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"go.sum\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:go-transitive-source",
+          "value": "module-cache"
+        },
+        {
+          "name": "waybill:orphan-reason",
+          "value": "unresolved-indirect-require"
+        },
+        {
+          "name": "waybill:pants-target",
+          "value": "mod"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:golang/github.com/spf13/pflag@v1.0.10",
+      "supplier": {
+        "name": "github.com/spf13"
+      },
+      "type": "library",
+      "version": "v1.0.10"
+    },
+    {
+      "bom-ref": "pkg:golang/stdlib@v1.24",
+      "cpe": "cpe:2.3:a:golang:go:1.24:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "go.sum"
+          }
+        ]
+      },
+      "name": "stdlib",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"go.sum\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-target",
+          "value": "mod"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:golang/stdlib@v1.24",
+      "type": "library",
+      "version": "v1.24"
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=2af0148f674aa936503e6f06fdd5a09d44f948a36524e135f66ebbddc66c1bbd",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "2af0148f674aa936503e6f06fdd5a09d44f948a36524e135f66ebbddc66c1bbd"
+        }
+      ],
+      "name": "pants_from_sources",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"pants_from_sources\"]"
+        },
+        {
+          "name": "waybill:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "waybill:file-paths",
+          "value": "[\"pants_from_sources\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=5ba4768ee4a229d8c3c1b57e4e713dc890876c28113f76abd88ad079dc25cf62",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "5ba4768ee4a229d8c3c1b57e4e713dc890876c28113f76abd88ad079dc25cf62"
+        }
+      ],
+      "name": "get-pants.sh",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"get-pants.sh\"]"
+        },
+        {
+          "name": "waybill:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "waybill:file-paths",
+          "value": "[\"get-pants.sh\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "complete",
+      "assemblies": [
+        "pkg:golang/github.com/google/uuid@v1.6.0",
+        "pkg:golang/github.com/spf13/pflag@v1.0.10",
+        "pkg:golang/stdlib@v1.24"
+      ],
+      "dependencies": [
+        "pkg:golang/github.com/google/uuid@v1.6.0",
+        "pkg:golang/github.com/spf13/pflag@v1.0.10",
+        "pkg:golang/stdlib@v1.24"
+      ]
+    },
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "pants-example-golang@048c22e"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "pants-example-golang@048c22e"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [
+        "pkg:golang/github.com/google/uuid@v1.6.0",
+        "pkg:golang/github.com/spf13/pflag@v1.0.10",
+        "pkg:golang/stdlib@v1.24"
+      ],
+      "ref": "pants-example-golang@048c22e"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=2af0148f674aa936503e6f06fdd5a09d44f948a36524e135f66ebbddc66c1bbd"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=5ba4768ee4a229d8c3c1b57e4e713dc890876c28113f76abd88ad079dc25cf62"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:golang/github.com/google/uuid@v1.6.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:golang/github.com/spf13/pflag@v1.0.10"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:golang/stdlib@v1.24"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "waybill"
+      }
+    ],
+    "component": {
+      "bom-ref": "pants-example-golang@048c22e",
+      "cpe": "cpe:2.3:a:waybill:pants-example-golang:048c22e:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "comment": "auto-detected from git remote `origin`",
+          "type": "vcs",
+          "url": "https://github.com/kusari-sandbox/example-golang"
+        }
+      ],
+      "name": "pants-example-golang",
+      "purl": "pkg:generic/pants-example-golang@048c22e",
+      "type": "application",
+      "version": "048c22e"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "properties": [
+      {
+        "name": "waybill:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
+        "name": "waybill:os-release-missing-fields",
+        "value": "ID,VERSION_ID"
+      },
+      {
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "waybill:graph-completeness",
+        "value": "complete"
+      },
+      {
+        "name": "waybill:workspaces-detected",
+        "value": "[\".\"]"
+      },
+      {
+        "name": "waybill:go-cache-warming-mode",
+        "value": "off"
+      },
+      {
+        "name": "waybill:go-transitive-coverage",
+        "value": "unknown"
+      },
+      {
+        "name": "waybill:go-transitive-coverage-reason",
+        "value": "offline-mode: transitive edges from proxy fetches unavailable"
+      },
+      {
+        "name": "waybill:go-transitive-fallback-count",
+        "value": "0"
+      }
+    ],
+    "supplier": {
+      "name": "waybill contributors"
+    },
+    "timestamp": "<masked>",
+    "tools": {
+      "components": [
+        {
+          "name": "waybill",
+          "publisher": "waybill contributors",
+          "type": "application",
+          "version": "0.5.1-alpha.1"
+        }
+      ]
+    }
+  },
+  "serialNumber": "<masked>",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

@@ -1,0 +1,4029 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "annotations": [
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:generation-context\",\"value\":\"filesystem-scan\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cisa-2026-lifecycle\",\"value\":\"after-build\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:os-release-missing-fields\",\"value\":[\"ID\",\"VERSION_ID\"]}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:graph-completeness\",\"value\":\"complete\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspaces-detected\",\"value\":\"[\\\".\\\",\\\"lockfiles\\\"]\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-ring-buffer-overflows\",\"value\":\"0\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-events-dropped\",\"value\":\"0\"}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-uprobe-attach-failures\",\"value\":[]}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:trace-integrity-kprobe-attach-failures\",\"value\":[]}"
+    },
+    {
+      "annotationDate": "<masked>",
+      "annotationType": "OTHER",
+      "annotator": "Tool: waybill-0.5.1-alpha.1",
+      "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"compositions\",\"value\":{\"complete_ecosystems\":[\"pypi\"]}}"
+    }
+  ],
+  "creationInfo": "<masked>",
+  "dataLicense": "CC0-1.0",
+  "documentDescribes": [
+    "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+  ],
+  "documentNamespace": "<masked>",
+  "name": "repo",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED",
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:generic/pants-example-django@7da716f",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:waybill:pants-example-django:7da716f:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "pants-example-django",
+      "supplier": "Organization: waybill contributors",
+      "versionInfo": "7da716f"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-AEOGXK7HXBGYVCHP",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"requirements.txt\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"ansicolors>=1.0.2\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"no version specifier in requirements.txt; no uv.lock / poetry.lock fallback\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/ansicolors",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "ansicolors",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-THZZ7BY5LVTRT5PE",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "00d2dde5a675579325902536738dd27e4fac1fd68f773fe36c21044eb559e187"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "99f94f5e3348a0bcd43c82e5fc4414013ccc19d70bd939ad71e0133ce9c372e0"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/ansicolors@1.1.8",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "ansicolors",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "1.1.8"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Y7HCCY2VQG7ASLHZ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:asgiref:asgiref:3.10.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-asgiref:asgiref:3.10.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.9\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "aef8a81283a34d0ab31630c9b7dfe70c812c95eba78171367ca8745e88124734"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d89f2d8cd8b56dada7d52fa7dc8075baa08fb836560710d38c292a7a3f78c04e"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/asgiref@3.10.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:asgiref:asgiref:3.10.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "asgiref",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "3.10.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-HCLZVSJO4E63I2VL",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:certifi:certifi:2025.10.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-certifi:certifi:2025.10.5:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.7\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0f212c2744a9bb6de0c56639a6f68afe01ecd92d91f14ae897c4fe7bbeeef0de"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "47c09d31ccf2acf0be3f701ea53595ee7e0b8fa08801c6624be771df09ae7b43"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/certifi@2025.10.5",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:certifi:certifi:2025.10.5:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "certifi",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "2025.10.5"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-RH6PH5HTHCMBZECS",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:charset-normalizer:charset-normalizer:3.4.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-charset-normalizer:charset-normalizer:3.4.3:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.7\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ce571ab16d890d23b5c278547ba694193a45011ff86a9162a71307ed9f86759a"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "42e5088973e56e31e4fa58eb6bd709e42fc03799c11c42929592889a2e54c491"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1606f4a55c0fd363d754049cdf400175ee96c992b1f8018b993941f221221c5f"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "cc34f233c9e71701040d772aa7490318673aa7164a0efe3172b2981218c26d93"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0cacf8f7297b0c4fcb74227692ca46b4a5852f8f4f24b3c766dd94a1075c4884"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3cfb2aad70f2c6debfbcb717f23b7eb55febc0bb23dcffc0f076009da10c6392"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6fce4b8500244f6fcb71465d4a4930d132ba9ab8e71a7859e6a5d59851068d14"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "027b776c26d38b7f15b26a5da1044f376455fb3766df8fc38563b4efbc515154"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "320e8e66157cc4e247d9ddca8e21f427efc7a04bbd0ac8a9faf56583fa543f9f"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e28e334d3ff134e88989d90ba04b47d84382a828c061d0d1027b1b12a62b39b1"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c6fd51128a41297f5409deab284fecbe5305ebd7e5a1f959bee1c054622b7018"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/charset-normalizer@3.4.3",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:charset-normalizer:charset-normalizer:3.4.3:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "charset-normalizer",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "3.4.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-6GUEN53ZVPP73TP4",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:click:click:8.3.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-click:click:8.3.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.10\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9b9f285302c6e3064f4330c05f05b81945b2a39544279343e6e7c5f27a9baddc"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e7b8232224eba16f4ebe410c25ced9f7875cb5f3263ffc93cc3e8da705e229c4"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/click@8.3.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:click:click:8.3.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "click",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "8.3.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-GRPUZFVRZKES7NZM",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"requirements.txt\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"django>=3.2.13,<4\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"no version specifier in requirements.txt; no uv.lock / poetry.lock fallback\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/django",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "django",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-JNFVHROXCRFXTCHP",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"requirements.txt\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"django-debug-toolbar>=3.8.0,<4\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"no version specifier in requirements.txt; no uv.lock / poetry.lock fallback\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/django-debug-toolbar",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "django-debug-toolbar",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-34REXVNK3MRJMZBG",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:django-debug-toolbar:django-debug-toolbar:3.8.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-django-debug-toolbar:django-debug-toolbar:3.8.1:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.7\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "879f8a4672d41621c06a4d322dcffa630fc4df056cada6e417ed01db0e5e0478"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "24ef1a7d44d25e60d7951e378454c6509bf536dce7e7d9d36e7c387db499bc27"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/django-debug-toolbar@3.8.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:django-debug-toolbar:django-debug-toolbar:3.8.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "django-debug-toolbar",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "3.8.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-R4X2UVERTU2BUL6G",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"requirements.txt\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"django-stubs~=4.2.7\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"no version specifier in requirements.txt; no uv.lock / poetry.lock fallback\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/django-stubs",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "django-stubs",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-ZJ4LXA7E6GRCCBF4",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:django-stubs-ext:django-stubs-ext:5.2.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-django-stubs-ext:django-stubs-ext:5.2.5:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.10\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9b4b8ac9d32f7e6c304fd05477f8688fae6ed57f6a0f9f4d074f9e55b5a3da14"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ecc628df29d36cede638567c4e33ff485dd7a99f1552ad0cece8c60e9c3a8872"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/django-stubs-ext@5.2.5",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:django-stubs-ext:django-stubs-ext:5.2.5:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "django-stubs-ext",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "5.2.5"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-C57ZUMENIT4CSHGY",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:django-stubs:django-stubs:4.2.7:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-django-stubs:django-stubs:4.2.7:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.8\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4cf4de258fa71adc6f2799e983091b9d46cfc67c6eebc68fe111218c9a62b3b8"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8ccd2ff4ee5adf22b9e3b7b1a516d2e1c2191e9d94e672c35cc2bc3dd61e0f6b"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/django-stubs@4.2.7",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:django-stubs:django-stubs:4.2.7:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "django-stubs",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "4.2.7"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-CSWB6UC23KUPCURQ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:django:django:3.2.25:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-django:django:3.2.25:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.6\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a52ea7fcf280b16f7b739cec38fa6d3f8953a5456986944c3ca97e79882b4e38"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7ca38a78654aee72378594d63e51636c04b8e28574f5505dff630895b5472777"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/django@3.2.25",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:django:django:3.2.25:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "django",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "3.2.25"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-3K35DO6UFTQHRNNL",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"requirements.txt\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"gunicorn>=20.1.0\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"no version specifier in requirements.txt; no uv.lock / poetry.lock fallback\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/gunicorn",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "gunicorn",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-KPBHRVCIV5SEQH3O",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:gunicorn:gunicorn:23.0.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-gunicorn:gunicorn:23.0.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.7\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/gunicorn@23.0.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:gunicorn:gunicorn:23.0.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "gunicorn",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "23.0.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-C3GW2XWP7Z4WYQHU",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:idna:idna:3.10:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-idna:idna:3.10:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.6\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "12f65c9b470abda6dc35cf8e63cc574b1c52b11df2c86030af0ac09b01b13ea9"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/idna@3.10",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:idna:idna:3.10:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "idna",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "3.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-7PGGREEYPN52BKXA",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.8\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9deba5723312380e77435581c6bf4935c94cbfab9b1ed33ef8d238ea168eb760"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3abbd2e30b36733fee78f9c7f7308f2d0050e88f0087fd25c2645f63c773e1c7"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/iniconfig@2.1.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "iniconfig",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "2.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-LEBFN55XRNW7NNPO",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:libretranslatepy:libretranslatepy:2.1.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-libretranslatepy:libretranslatepy:2.1.1:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "bf9f8b0003c94f34e141553b7ec0a02876297c06955f5efea49afbc9f85303a9"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3f28e1b990ba5f514ae215c08ace0c4e2327eeccaa356983aefbca3a25ecc568"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/libretranslatepy@2.1.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:libretranslatepy:libretranslatepy:2.1.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "libretranslatepy",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "2.1.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-HH5H3VPTJ5RJ5RO7",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:lxml:lxml:6.0.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-lxml:lxml:6.0.2:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.8\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6f91fd2b2ea15a6800c8e24418c0775a1694eefc011392da73bc6cef2623b322"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fbc74f42c3525ac4ffa4b89cbdd00057b6196bcefe8bce794abd42d33a018092"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "064fdadaf7a21af3ed1dcaa106b854077fbeada827c18f72aec9346847cd65d0"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e8113639f3296706fbac34a30813929e29247718e88173ad849f57ca59754924"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2047d8234fe735ab77802ce5f2297e410ff40f5238aec569ad7c8e163d7b19a6"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "700efd30c0fa1a3581d80a748157397559396090a51d306ea59a70020223d16f"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "cd79f3367bd74b317dda655dc8fcfa304d9eb6e4fb06b7168c5cf27f96e0cd62"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c33e66d44fe60e72397b487ee92e01da0d09ba2d66df8eae42d77b6d06e5eba0"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6da5185951d72e6f5352166e3da7b0dc27aa70bd1090b0eb3f7f7212b53f1bb8"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "90a345bbeaf9d0587a3aaffb7006aa39ccb6ff0e96a57286c0cb2fd1520ea192"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c371aa98126a0d4c739ca93ceffa0fd7a5d732e3ac66a46e74339acd4d334564"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "57a86e1ebb4020a38d295c04fc79603c7899e0df71588043eb218722dabc087f"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "65ea18d710fd14e0186c2f973dc60bb52039a275f82d3c44a0e42b43440ea534"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6ddff43f702905a4e32bc24f3f2e2edfe0f8fde3277d481bffb709a4cced7a1f"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a8bef9b9825fa8bc816a6e641bb67219489229ebc648be422af695f6e7a4fa7f"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a59f5448ba2ceccd06995c95ea59a7674a10de0810f2ce90c9006f3cbc044456"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/lxml@6.0.2",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:lxml:lxml:6.0.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "lxml",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "6.0.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-TIMXRDWKC3YJTFQH",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:mypy-extensions:mypy-extensions:1.1.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-mypy-extensions:mypy-extensions:1.1.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.8\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1be4cccdb0f2482337c4743e60421de3a356cd97508abadd57d47403e94f5505"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "52e68efc3284861e772bbcd66823fde5ae21fd2fdb51c62a211403730b916558"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/mypy-extensions@1.1.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:mypy-extensions:mypy-extensions:1.1.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "mypy-extensions",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "1.1.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-TOHIXWBCZAKDS7RY",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\",\"requirements.txt\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:mypy:mypy:1.18.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-mypy:mypy:1.18.1:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"mypy==1.18.1\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.9\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\",\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b76a4de66a0ac01da1be14ecc8ae88ddea33b8380284a9e3eae39d57ebcbe26e"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9e988c64ad3ac5987f43f5154f884747faf62141b7f842e87465b45299eea5a9"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "8750ceb014a96c9890421c83f0db53b0f3b8633e2864c6f9bc0a8e93951ed18d"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7509549b5e41be279afc1228242d0e397f1af2919a8f2877ad542b199dc4083e"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5956ecaabb3a245e3f34100172abca1507be687377fe20e24d6a7557e07080e2"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fb89ea08ff41adf59476b235293679a6eb53a7b9400f6256272fb6029bec3ce5"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "502cde8896be8e638588b90fdcb4c5d5b8c1b004dfc63fd5604a973547367bb9"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/mypy@1.18.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:mypy:mypy:1.18.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "mypy",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "1.18.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:packaging:packaging:25.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-packaging:packaging:25.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.8\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/packaging@25.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:packaging:packaging:25.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "packaging",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "25.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-DOM7F6NZSIXQTJP6",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:pathspec:pathspec:0.12.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pathspec:pathspec:0.12.1:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.8\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/pathspec@0.12.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:pathspec:pathspec:0.12.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "pathspec",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "0.12.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-YZ2MIPQWGEB5UZRZ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:pluggy:pluggy:1.6.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pluggy:pluggy:1.6.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.9\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/pluggy@1.6.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:pluggy:pluggy:1.6.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "pluggy",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "1.6.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-NT46QBRN4LGCBFOU",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"requirements.txt\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"protobuf>=3.11.3\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"no version specifier in requirements.txt; no uv.lock / poetry.lock fallback\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/protobuf",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "protobuf",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-YYHUEELU5YO6KKPI",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:protobuf:protobuf:6.32.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-protobuf:protobuf:6.32.1:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.9\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2601b779fc7d32a866c6b4404f9d42a3f67c5b9f3f15b4db3cccabe06b95c346"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "d8c7e6eb619ffdf105ee4ab76af5a68b60a9d0f66da3ea12d1640e6d8dab7281"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2f5b80a49e1eb7b86d85fcd23fe92df154b9730a725c3b38c4e43b9d77018bf4"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b1864818300c297265c83a4982fd3169f97122c299f56a56e2445c3698d34710"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ee2469e4a021474ab9baafea6cd070e5bf27c7d29433504ddea1a4ee5850f68d"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/protobuf@6.32.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:protobuf:protobuf:6.32.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "protobuf",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "6.32.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-INYEPPGPVSI54ME5",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:pygments:pygments:2.19.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pygments:pygments:2.19.2:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.8\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/pygments@2.19.2",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:pygments:pygments:2.19.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "pygments",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "2.19.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-UJEXQZQAEG5ES5IW",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"requirements.txt\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"pytest>=6.0.1\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"no version specifier in requirements.txt; no uv.lock / poetry.lock fallback\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/pytest",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "pytest",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-P4OUMSSD3H2I5VAK",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"requirements.txt\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"pytest-django>=4,<5\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"no version specifier in requirements.txt; no uv.lock / poetry.lock fallback\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/pytest-django",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "pytest-django",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-563FQECSQKCZJ7UG",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:pytest-django:pytest-django:4.11.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pytest-django:pytest-django:4.11.1:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.8\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1b63773f648aa3d8541000c26929c1ea63934be1cfa674c76436966d73fe6a10"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a949141a1ee103cb0e7a20f1451d355f83f5e4a5d07bdd4dcfdd1fd0ff227991"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/pytest-django@4.11.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:pytest-django:pytest-django:4.11.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "pytest-django",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "4.11.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-CBHMYQZVIKAPO245",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:pytest:pytest:8.4.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pytest:pytest:8.4.2:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.9\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "86c0d0b93306b961d58d62a4db4879f27fe25513d4b969df351abdddb3c30e01"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/pytest@8.4.2",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:pytest:pytest:8.4.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "pytest",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "8.4.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-IZIXTQHCSNLRVMJG",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:pytz:pytz:2025.2:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-pytz:pytz:2025.2:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5ddf76296dd8c44c26eb8f4b6f35488f3ccbf6fbbd7adee0b7262d43f0ec2f00"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "360b9e3dbb49a209c21ad61809c7fb453643e048b38924c765813546746e81c3"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/pytz@2025.2",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:pytz:pytz:2025.2:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "pytz",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "2025.2"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-B5TJRMTPQ5DOJ44C",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"requirements.txt\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"requests>=2.25.1\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"no version specifier in requirements.txt; no uv.lock / poetry.lock fallback\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/requests",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "requests",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-FPZWIH6CAOYU3T7P",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:requests:requests:2.32.5:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-requests:requests:2.32.5:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.9\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "dbba0bac56e100853db0ea71b82b4dfd5fe2bf6d3754a8893c3af500cec7d7cf"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/requests@2.32.5",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:requests:requests:2.32.5:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "requests",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "2.32.5"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-C5PMZOFYJYXSBR2L",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"requirements.txt\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"setuptools>=42.0.0\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"no version specifier in requirements.txt; no uv.lock / poetry.lock fallback\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/setuptools",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "setuptools",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-EYHFQQMNOGG2LFQU",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:setuptools:setuptools:80.9.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-setuptools:setuptools:80.9.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.9\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/setuptools@80.9.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:setuptools:setuptools:80.9.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "setuptools",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "80.9.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-CFDDCOFUI6ECWOBQ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:sqlparse:sqlparse:0.5.3:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-sqlparse:sqlparse:0.5.3:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.8\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "cf2196ed3418f3ba5de6af7e82c694a9fbdbfecccdfc72e281548517081f16ca"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "09f67787f56a0b16ecdbde1bfc7f5d9c3371ca683cfeaa8e6ff60b4807ec9272"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/sqlparse@0.5.3",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:sqlparse:sqlparse:0.5.3:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "sqlparse",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "0.5.3"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-KXH7YWPSKHW2JX2E",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"requirements.txt\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"translate>=3.2.1\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"no version specifier in requirements.txt; no uv.lock / poetry.lock fallback\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/translate",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "translate",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-IEU5J3H7V4XCJJTC",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:translate:translate:3.6.1:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-translate:translate:3.6.1:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "cebfb004989d9a2ab0d24c0c5805783c7f4e07243ea4ed2a8f1809d072bf712b"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7e70ffa46f193cc744be7c88b8e1323f10f6b2bb90d24bb5d29fdf1e56618783"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/translate@3.6.1",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:translate:translate:3.6.1:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "translate",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "3.6.1"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-7XF7ES27M7Z5IOMU",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:types-pytz:types-pytz:2025.2.0.20250809:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-types-pytz:types-pytz:2025.2.0.20250809:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.9\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4f55ed1b43e925cf851a756fe1707e0f5deeb1976e15bf844bcaa025e8fbd0db"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "222e32e6a29bb28871f8834e8785e3801f2dc4441c715cd2082b271eecbe21e5"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/types-pytz@2025.2.0.20250809",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:types-pytz:types-pytz:2025.2.0.20250809:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "types-pytz",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "2025.2.0.20250809"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-HJ3YR5O76WAGRB4N",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:types-pyyaml:types-pyyaml:6.0.12.20250915:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-types-pyyaml:types-pyyaml:6.0.12.20250915:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.9\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e7d4d9e064e89a3b3cae120b4990cd370874d2bf12fa5f46c97018dd5d3c9ab6"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0f8b54a528c303f0e6f7165687dd33fafa81c807fcac23f632b63aa624ced1d3"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/types-pyyaml@6.0.12.20250915",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:types-pyyaml:types-pyyaml:6.0.12.20250915:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "types-pyyaml",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "6.0.12.20250915"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-ZDHFQERLQ27MNLYJ",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"design\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"requirements.txt\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requirement-ranges\",\"value\":[\"types-requests>=2.25.1\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"requirements.txt\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:unresolved-reason\",\"value\":\"no version specifier in requirements.txt; no uv.lock / poetry.lock fallback\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\".\\\"]\"}"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/types-requests",
+          "referenceType": "purl"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "types-requests",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "NOASSERTION"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-F4IXESTNNXT5DFXV",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:types-requests:types-requests:2.32.4.20250913:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-types-requests:types-requests:2.32.4.20250913:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.9\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "78c9c1fffebbe0fa487a418e0fa5252017e9c60d1a2da394077f1780f655d7e1"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "abd6d4f9ce3a9383f269775a9835a4c24e5cd6b9f647d64f88aa4613c33def5d"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/types-requests@2.32.4.20250913",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:types-requests:types-requests:2.32.4.20250913:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "types-requests",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "2.32.4.20250913"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-YT4X5I2ZVNQ76YPG",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:typing-extensions:typing-extensions:4.15.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-typing-extensions:typing-extensions:4.15.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.9\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/typing-extensions@4.15.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:typing-extensions:typing-extensions:4.15.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "typing-extensions",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "4.15.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-RRIUYEPR6T43LWT4",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:sbom-tier\",\"value\":\"source\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"lockfiles/python-default.lock\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:cpe-candidates\",\"value\":[\"cpe:2.3:a:urllib3:urllib3:2.5.0:*:*:*:*:*:*:*\",\"cpe:2.3:a:python-urllib3:urllib3:2.5.0:*:*:*:*:*:*:*\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":0.85,\"technique\":\"package-database\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.occurrences\",\"value\":[{\"location\":\"lockfiles/python-default.lock\",\"sha256\":\"<masked-sha256>\"}]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:pants-resolve\",\"value\":\"python-default\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:requires-python\",\"value\":\">=3.9\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:workspace-member\",\"value\":\"[\\\"lockfiles\\\"]\"}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3fc47733c7e419d4bc3f6b3dc2b4f890bb743906a30d56ba4a5bfa4bbff92760"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:pypi/urllib3@2.5.0",
+          "referenceType": "purl"
+        },
+        {
+          "referenceCategory": "SECURITY",
+          "referenceLocator": "cpe:2.3:a:urllib3:urllib3:2.5.0:*:*:*:*:*:*:*",
+          "referenceType": "cpe23Type"
+        }
+      ],
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "urllib3",
+      "supplier": "Organization: PyPI",
+      "versionInfo": "2.5.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-URKZ6736HAMNOUG2",
+      "annotations": [
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:source-files\",\"value\":[\"build-support/generate_constraints.sh\"]}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"evidence.identity\",\"value\":{\"confidence\":1.0,\"technique\":\"hash-match\"}}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:component-tier\",\"value\":\"file\"}"
+        },
+        {
+          "annotationDate": "<masked>",
+          "annotationType": "OTHER",
+          "annotator": "Tool: waybill-0.5.1-alpha.1",
+          "comment": "{\"schema\":\"waybill-annotation/v1\",\"field\":\"waybill:file-paths\",\"value\":[\"build-support/generate_constraints.sh\"]}"
+        }
+      ],
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2ecc548aa7a68dc6e83f75003316648417520fb3a59f85dae7e24337414db378"
+        }
+      ],
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "name": "generate_constraints.sh",
+      "versionInfo": "NOASSERTION"
+    }
+  ],
+  "relationships": [
+    {
+      "relatedSpdxElement": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-TOHIXWBCZAKDS7RY",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-Y7HCCY2VQG7ASLHZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CBHMYQZVIKAPO245",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-Y7HCCY2VQG7ASLHZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-YT4X5I2ZVNQ76YPG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-Y7HCCY2VQG7ASLHZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-Y7HCCY2VQG7ASLHZ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-CSWB6UC23KUPCURQ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-IZIXTQHCSNLRVMJG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-CSWB6UC23KUPCURQ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CFDDCOFUI6ECWOBQ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-CSWB6UC23KUPCURQ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CSWB6UC23KUPCURQ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-34REXVNK3MRJMZBG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CFDDCOFUI6ECWOBQ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-34REXVNK3MRJMZBG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CSWB6UC23KUPCURQ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-C57ZUMENIT4CSHGY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZJ4LXA7E6GRCCBF4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-C57ZUMENIT4CSHGY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-TOHIXWBCZAKDS7RY",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-C57ZUMENIT4CSHGY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-HJ3YR5O76WAGRB4N",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-C57ZUMENIT4CSHGY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-7XF7ES27M7Z5IOMU",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-C57ZUMENIT4CSHGY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-YT4X5I2ZVNQ76YPG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-C57ZUMENIT4CSHGY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CSWB6UC23KUPCURQ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ZJ4LXA7E6GRCCBF4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-YT4X5I2ZVNQ76YPG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-ZJ4LXA7E6GRCCBF4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-KPBHRVCIV5SEQH3O"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CBHMYQZVIKAPO245",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-KPBHRVCIV5SEQH3O"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-TOHIXWBCZAKDS7RY",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-C3GW2XWP7Z4WYQHU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CBHMYQZVIKAPO245",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-C3GW2XWP7Z4WYQHU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-HH5H3VPTJ5RJ5RO7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-TOHIXWBCZAKDS7RY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-TIMXRDWKC3YJTFQH",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-TOHIXWBCZAKDS7RY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-DOM7F6NZSIXQTJP6",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-TOHIXWBCZAKDS7RY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-EYHFQQMNOGG2LFQU",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-TOHIXWBCZAKDS7RY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-YT4X5I2ZVNQ76YPG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-TOHIXWBCZAKDS7RY"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CBHMYQZVIKAPO245",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-YZ2MIPQWGEB5UZRZ"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-7PGGREEYPN52BKXA",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-CBHMYQZVIKAPO245"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-CBHMYQZVIKAPO245"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-YZ2MIPQWGEB5UZRZ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-CBHMYQZVIKAPO245"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-INYEPPGPVSI54ME5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-CBHMYQZVIKAPO245"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-FPZWIH6CAOYU3T7P",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-CBHMYQZVIKAPO245"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-EYHFQQMNOGG2LFQU",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-CBHMYQZVIKAPO245"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CSWB6UC23KUPCURQ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-563FQECSQKCZJ7UG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CBHMYQZVIKAPO245",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-563FQECSQKCZJ7UG"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-HCLZVSJO4E63I2VL",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-FPZWIH6CAOYU3T7P"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-RH6PH5HTHCMBZECS",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-FPZWIH6CAOYU3T7P"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-C3GW2XWP7Z4WYQHU",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-FPZWIH6CAOYU3T7P"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-RRIUYEPR6T43LWT4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-FPZWIH6CAOYU3T7P"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-TOHIXWBCZAKDS7RY",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-EYHFQQMNOGG2LFQU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-EYHFQQMNOGG2LFQU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZIBQF5WBZHCXASVC",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-EYHFQQMNOGG2LFQU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-CBHMYQZVIKAPO245",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-EYHFQQMNOGG2LFQU"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-6GUEN53ZVPP73TP4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-IEU5J3H7V4XCJJTC"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-LEBFN55XRNW7NNPO",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-IEU5J3H7V4XCJJTC"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-HH5H3VPTJ5RJ5RO7",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-IEU5J3H7V4XCJJTC"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-FPZWIH6CAOYU3T7P",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-IEU5J3H7V4XCJJTC"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-RRIUYEPR6T43LWT4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-F4IXESTNNXT5DFXV"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-URKZ6736HAMNOUG2",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-AEOGXK7HXBGYVCHP",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-THZZ7BY5LVTRT5PE",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-GRPUZFVRZKES7NZM",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-JNFVHROXCRFXTCHP",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-34REXVNK3MRJMZBG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-R4X2UVERTU2BUL6G",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-C57ZUMENIT4CSHGY",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-3K35DO6UFTQHRNNL",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-KPBHRVCIV5SEQH3O",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-NT46QBRN4LGCBFOU",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-YYHUEELU5YO6KKPI",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-UJEXQZQAEG5ES5IW",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-P4OUMSSD3H2I5VAK",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-563FQECSQKCZJ7UG",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-B5TJRMTPQ5DOJ44C",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-C5PMZOFYJYXSBR2L",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-KXH7YWPSKHW2JX2E",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-IEU5J3H7V4XCJJTC",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-ZDHFQERLQ27MNLYJ",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-F4IXESTNNXT5DFXV",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-DocumentRoot-YMIN7MSJAMJG5LED"
+    }
+  ],
+  "spdxVersion": "SPDX-2.3"
+}

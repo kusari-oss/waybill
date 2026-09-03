@@ -1,0 +1,946 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:pypi/ansicolors@1.1.8",
+      "cpe": "cpe:2.3:a:ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "00d2dde5a675579325902536738dd27e4fac1fd68f773fe36c21044eb559e187"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "99f94f5e3348a0bcd43c82e5fc4414013ccc19d70bd939ad71e0133ce9c372e0"
+        }
+      ],
+      "name": "ansicolors",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:* | cpe:2.3:a:python-ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"python-default.lock\",\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"ansicolors==1.1.8\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/ansicolors@1.1.8",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.1.8"
+    },
+    {
+      "bom-ref": "pkg:pypi/attrs@25.3.0",
+      "cpe": "cpe:2.3:a:attrs:attrs:25.3.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "427318ce031701fea540783410126f03899a97ffc6f61596ad581ac2e40e3bc3"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "75d7cefc7fb576747b2c81b4442d4d4a1ce0900973527c011d1030fd3bf4af1b"
+        }
+      ],
+      "name": "attrs",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:attrs:attrs:25.3.0:*:*:*:*:*:*:* | cpe:2.3:a:python-attrs:attrs:25.3.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/attrs@25.3.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "25.3.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/iniconfig@2.1.0",
+      "cpe": "cpe:2.3:a:iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9deba5723312380e77435581c6bf4935c94cbfab9b1ed33ef8d238ea168eb760"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "3abbd2e30b36733fee78f9c7f7308f2d0050e88f0087fd25c2645f63c773e1c7"
+        }
+      ],
+      "name": "iniconfig",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:* | cpe:2.3:a:python-iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/iniconfig@2.1.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.1.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/packaging@25.0",
+      "cpe": "cpe:2.3:a:packaging:packaging:25.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f"
+        }
+      ],
+      "name": "packaging",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:packaging:packaging:25.0:*:*:*:*:*:*:* | cpe:2.3:a:python-packaging:packaging:25.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/packaging@25.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "25.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/pluggy@1.6.0",
+      "cpe": "cpe:2.3:a:pluggy:pluggy:1.6.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3"
+        }
+      ],
+      "name": "pluggy",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:pluggy:pluggy:1.6.0:*:*:*:*:*:*:* | cpe:2.3:a:python-pluggy:pluggy:1.6.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pluggy@1.6.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.6.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/py@1.11.0",
+      "cpe": "cpe:2.3:a:py:py:1.11.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "51c75c4126074b472f746a24399ad32f6053d1b34b68d2fa41e558e6f4a98719"
+        }
+      ],
+      "name": "py",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:py:py:1.11.0:*:*:*:*:*:*:* | cpe:2.3:a:python-py:py:1.11.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/py@1.11.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.11.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/pytest@7.1.3",
+      "cpe": "cpe:2.3:a:pytest:pytest:7.1.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1377bda3466d70b55e3f5cecfa55bb7cfcf219c7964629b967c37cf0bda818b7"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "4f365fec2dff9c1162f834d9f18af1ba13062db0c708bf7b946f8a5c76180c39"
+        }
+      ],
+      "name": "pytest",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:pytest:pytest:7.1.3:*:*:*:*:*:*:* | cpe:2.3:a:python-pytest:pytest:7.1.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"python-default.lock\",\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"pytest==7.1.3\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.7"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pytest@7.1.3",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "7.1.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/setuptools@56.2.0",
+      "cpe": "cpe:2.3:a:setuptools:setuptools:56.2.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "bc30153eec47d82f20c6f5e1a13d4ee725c6deb7013a67557f89bfe5d25235c4"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "7bb5652625e94e73b9358b7ed8c6431b732e80cf31f4e0972294c64f0e5b849e"
+        }
+      ],
+      "name": "setuptools",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:setuptools:setuptools:56.2.0:*:*:*:*:*:*:* | cpe:2.3:a:python-setuptools:setuptools:56.2.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.6"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/setuptools@56.2.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "56.2.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/tomli@2.2.1",
+      "cpe": "cpe:2.3:a:tomli:tomli:2.2.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "cb55c73c5f4408779d0cf3eef9f762b9c9f147a77de7b258bef0a5628adc85cc"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "8d57ca8095a641b8237d5b079147646153d22552f1c637fd3ba7f4b0b29167a8"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "cd45e1dc79c835ce60f7404ec8119f2eb06d38b1deba146f07ced3bbc44505ff"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "4a8f6e44de52d5e6c657c9fe83b562f5f4256d8ebbfe4ff922c495620a7f6cea"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "db2b95f9de79181805df90bedc5a5ab4c165e6ec3fe99f970d0e302f384ad222"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "b82ebccc8c8a36f2094e969560a1b836758481f3dc360ce9a3277c65f374285e"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "400e720fe168c0f8521520190686ef8ef033fb19fc493da09779e592861b78c6"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "40741994320b232529c802f8bc86da4e1aa9f413db394617b9a256ae0f9a7f77"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "02abe224de6ae62c19f090f68da4e27b10af2b93213d36cf44e6e1c5abd19fdd"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "4e340144ad7ae1533cb897d406382b4b6fede8890a03738ff1683af800d54192"
+        }
+      ],
+      "name": "tomli",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:tomli:tomli:2.2.1:*:*:*:*:*:*:* | cpe:2.3:a:python-tomli:tomli:2.2.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/tomli@2.2.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.2.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/types-setuptools@57.4.18",
+      "cpe": "cpe:2.3:a:types-setuptools:types-setuptools:57.4.18:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9660b8774b12cd61b448e2fd87a667c02e7ec13ce9f15171f1d49a4654c4df6a"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "8ee03d823fe7fda0bd35faeae33d35cb5c25b497263e6a58b34c4cfd05f40bcf"
+        }
+      ],
+      "name": "types-setuptools",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:types-setuptools:types-setuptools:57.4.18:*:*:*:*:*:*:* | cpe:2.3:a:python-types-setuptools:types-setuptools:57.4.18:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/types-setuptools@57.4.18",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "57.4.18"
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=9357a2fd2981defaed29192bf839515586fbeafa0205e2e7818a8068f7f2e359",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9357a2fd2981defaed29192bf839515586fbeafa0205e2e7818a8068f7f2e359"
+        }
+      ],
+      "name": "get-pants.sh",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"get-pants.sh\"]"
+        },
+        {
+          "name": "waybill:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "waybill:file-paths",
+          "value": "[\"get-pants.sh\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "complete",
+      "assemblies": [
+        "pkg:pypi/ansicolors@1.1.8",
+        "pkg:pypi/attrs@25.3.0",
+        "pkg:pypi/iniconfig@2.1.0",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pluggy@1.6.0",
+        "pkg:pypi/py@1.11.0",
+        "pkg:pypi/pytest@7.1.3",
+        "pkg:pypi/setuptools@56.2.0",
+        "pkg:pypi/tomli@2.2.1",
+        "pkg:pypi/types-setuptools@57.4.18"
+      ],
+      "dependencies": [
+        "pkg:pypi/ansicolors@1.1.8",
+        "pkg:pypi/attrs@25.3.0",
+        "pkg:pypi/iniconfig@2.1.0",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pluggy@1.6.0",
+        "pkg:pypi/py@1.11.0",
+        "pkg:pypi/pytest@7.1.3",
+        "pkg:pypi/setuptools@56.2.0",
+        "pkg:pypi/tomli@2.2.1",
+        "pkg:pypi/types-setuptools@57.4.18"
+      ]
+    },
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "pants-example-python@e8cfd79"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "pants-example-python@e8cfd79"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [
+        "pkg:generic/file-tier?content-sha256=9357a2fd2981defaed29192bf839515586fbeafa0205e2e7818a8068f7f2e359",
+        "pkg:pypi/ansicolors@1.1.8",
+        "pkg:pypi/setuptools@56.2.0",
+        "pkg:pypi/types-setuptools@57.4.18"
+      ],
+      "ref": "pants-example-python@e8cfd79"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=9357a2fd2981defaed29192bf839515586fbeafa0205e2e7818a8068f7f2e359"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/ansicolors@1.1.8"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/pytest@7.1.3"
+      ],
+      "ref": "pkg:pypi/attrs@25.3.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/iniconfig@2.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/packaging@25.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/pytest@7.1.3"
+      ],
+      "ref": "pkg:pypi/pluggy@1.6.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/py@1.11.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/attrs@25.3.0",
+        "pkg:pypi/iniconfig@2.1.0",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pluggy@1.6.0",
+        "pkg:pypi/py@1.11.0",
+        "pkg:pypi/tomli@2.2.1"
+      ],
+      "ref": "pkg:pypi/pytest@7.1.3"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/pytest@7.1.3"
+      ],
+      "ref": "pkg:pypi/setuptools@56.2.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/tomli@2.2.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/types-setuptools@57.4.18"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "waybill"
+      }
+    ],
+    "component": {
+      "bom-ref": "pants-example-python@e8cfd79",
+      "cpe": "cpe:2.3:a:waybill:pants-example-python:e8cfd79:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "comment": "auto-detected from git remote `origin`",
+          "type": "vcs",
+          "url": "https://github.com/kusari-sandbox/example-python"
+        }
+      ],
+      "name": "pants-example-python",
+      "purl": "pkg:generic/pants-example-python@e8cfd79",
+      "type": "application",
+      "version": "e8cfd79"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "properties": [
+      {
+        "name": "waybill:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
+        "name": "waybill:os-release-missing-fields",
+        "value": "ID,VERSION_ID"
+      },
+      {
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "waybill:graph-completeness",
+        "value": "complete"
+      },
+      {
+        "name": "waybill:workspaces-detected",
+        "value": "[\".\"]"
+      }
+    ],
+    "supplier": {
+      "name": "waybill contributors"
+    },
+    "timestamp": "<masked>",
+    "tools": {
+      "components": [
+        {
+          "name": "waybill",
+          "publisher": "waybill contributors",
+          "type": "application",
+          "version": "0.5.1-alpha.1"
+        }
+      ]
+    }
+  },
+  "serialNumber": "<masked>",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}
