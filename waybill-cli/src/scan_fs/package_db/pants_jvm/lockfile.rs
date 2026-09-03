@@ -52,16 +52,29 @@ pub(crate) struct CoursierLockfile {
 
 /// One locked distribution. Maps 1:1 to an emitted `PackageDbEntry`
 /// in the happy path.
+///
+/// The `directDependencies` field is NOT modeled on this struct.
+/// Real-world coursier lockfiles emit it in multiple shapes (empty
+/// array, string array, coord-table array); serde's default field-
+/// tolerance silently ignores the field at whatever shape upstream
+/// chooses. See issue #756 for the historical context — the field
+/// was previously typed `Vec<String>` and rejected the coord-table
+/// shape, which is the shape recent `pants generate-lockfiles`
+/// versions produce by default. The parsed value was never consumed
+/// downstream, so the field was removed rather than complicated.
+///
+/// The `dependencies` field DOES need to be modeled because it feeds
+/// the dep-graph edges. Real-world lockfiles emit it in either the
+/// legacy string form (`"group:artifact:version"`) or the coord-table
+/// form (`[[entries.dependencies]] { group, artifact, version }`); the
+/// `DependencyRef` enum accepts both.
 #[derive(Debug, Deserialize)]
 pub(crate) struct Entry {
-    /// Coordinate strings for direct declared deps. Often empty in
-    /// coursier lockfiles (dep graph lives in `dependencies[]`).
-    #[serde(default, rename = "directDependencies")]
-    pub(crate) direct_dependencies: Vec<String>,
-    /// Coordinate strings for transitive resolved deps. This is the
-    /// ground truth for the dependency graph.
+    /// Transitive resolved deps. This is the ground truth for the
+    /// dependency graph. Each element is either a legacy
+    /// `"group:artifact:version"` string or a coord-table entry.
     #[serde(default)]
-    pub(crate) dependencies: Vec<String>,
+    pub(crate) dependencies: Vec<DependencyRef>,
     /// The artifact filename (e.g., `"guava-31.0.1-jre.jar"`). Recorded
     /// on the parsed struct for future diagnostic use; v1 does NOT
     /// emit this into the SBOM per data-model.md §"Decision on
@@ -74,6 +87,29 @@ pub(crate) struct Entry {
     /// but not downloaded (rare — some `url=not_provided` scenarios).
     #[serde(default)]
     pub(crate) file_digest: Option<EntryFileDigest>,
+}
+
+/// A single element inside `Entry.dependencies`. Real coursier lockfiles
+/// emit dep references in either of two shapes; this enum tolerates both.
+/// See issue #756 discovery: the coord-table shape was previously rejected
+/// with a whole-lockfile skip.
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub(crate) enum DependencyRef {
+    /// Legacy string form: `"group:artifact:version"`. Parsed further at
+    /// emission time via `parse_coord_string`.
+    String(String),
+    /// Coord-table form: `[[entries.dependencies]] { group, artifact, version }`.
+    /// Fields beyond group/artifact/version (packaging, classifier) may be
+    /// present in the TOML but are not needed for edge extraction; serde
+    /// silently accepts extra fields.
+    CoordTable {
+        group: String,
+        artifact: String,
+        #[serde(default)]
+        #[allow(dead_code)]
+        version: Option<String>,
+    },
 }
 
 /// Maven coordinate + optional qualifiers.
@@ -306,27 +342,41 @@ pub(crate) fn entry_to_package_db_entry(
         })
         .ok()?;
 
-    // Dep edges: parse dependencies[] coord strings; drop unparseables
-    // with a WARN (per fail-open matrix "Coordinate-string parse
-    // failure → Skip THIS edge; continue"). Emit downstream as
-    // `<group>:<artifact>` (no version) to match the Maven reader's
-    // `depends` convention at `maven.rs:4121` — the shared
-    // `name_to_purl` index at `scan_fs/mod.rs:578-585` inserts an
-    // extra `"groupId:artifactId"` key for every maven entry so edge
-    // resolution works without version-string coordination.
+    // Dep edges: parse dependencies[] into `<group>:<artifact>` strings
+    // (no version) matching the Maven reader's `depends` convention at
+    // `maven.rs:4121`. The shared `name_to_purl` index at
+    // `scan_fs/mod.rs:578-585` inserts an extra `"groupId:artifactId"` key
+    // for every maven entry so edge resolution works without version-string
+    // coordination. Handles both the legacy string shape and the coord-table
+    // shape (per issue #756); coord-table entries are already structured, so
+    // no parse_coord_string call is needed for that variant.
     let depends: Vec<String> = entry
         .dependencies
         .iter()
-        .filter_map(|s| match parse_coord_string(s) {
-            Some(c) => Some(format!("{}:{}", c.group, c.artifact)),
-            None => {
-                tracing::warn!(
-                    lockfile = %lockfile_path.display(),
-                    resolve = %resolve_name,
-                    coord_string = %s,
-                    "pants-coursier-jvm reader: dependency coord string unparseable; dropping edge"
-                );
-                None
+        .filter_map(|d| match d {
+            DependencyRef::String(s) => match parse_coord_string(s) {
+                Some(c) => Some(format!("{}:{}", c.group, c.artifact)),
+                None => {
+                    tracing::warn!(
+                        lockfile = %lockfile_path.display(),
+                        resolve = %resolve_name,
+                        coord_string = %s,
+                        "pants-coursier-jvm reader: dependency coord string unparseable; dropping edge"
+                    );
+                    None
+                }
+            },
+            DependencyRef::CoordTable { group, artifact, .. } => {
+                if group.trim().is_empty() || artifact.trim().is_empty() {
+                    tracing::warn!(
+                        lockfile = %lockfile_path.display(),
+                        resolve = %resolve_name,
+                        "pants-coursier-jvm reader: dependency coord-table entry has empty group/artifact; dropping edge"
+                    );
+                    None
+                } else {
+                    Some(format!("{}:{}", group.trim(), artifact.trim()))
+                }
             }
         })
         .collect();
@@ -352,10 +402,9 @@ pub(crate) fn entry_to_package_db_entry(
         );
     }
 
-    // Silence dead-code warnings for direct_dependencies + file_name +
-    // serialized_bytes_length; the fields are declared for schema
-    // documentation and future use per data-model.md.
-    let _ = &entry.direct_dependencies;
+    // Silence dead-code warnings for file_name + serialized_bytes_length;
+    // the fields are declared for schema documentation and future use per
+    // data-model.md.
     let _ = &entry.file_name;
     if let Some(fd) = entry.file_digest.as_ref() {
         let _ = fd.serialized_bytes_length;
@@ -482,6 +531,161 @@ this is = = not = valid toml
         );
     }
 
+    // ---- issue #756 shape-tolerance tests (feature 676 FR-007) ----
+
+    /// T-A (FR-007 clause a): one entry with a single coord-table
+    /// directDependencies member parses without error. Since the field
+    /// is now unmodeled on `Entry`, serde silently ignores it.
+    #[test]
+    fn parse_coord_table_single_direct_dep() {
+        let text = r#"# --- BEGIN PANTS LOCKFILE METADATA: DO NOT EDIT OR REMOVE ---
+# {"version": 1}
+# --- END PANTS LOCKFILE METADATA ---
+[[entries]]
+file_name = "guava-31.0.1-jre.jar"
+[[entries.directDependencies]]
+group = "com.google.guava"
+artifact = "listenablefuture"
+version = "9999.0-empty-to-avoid-conflict-with-guava"
+[entries.coord]
+group = "com.google.guava"
+artifact = "guava"
+version = "31.0.1-jre"
+"#;
+        let lock = parse(text.as_bytes()).expect("coord-table shape must parse");
+        assert_eq!(lock.entries.len(), 1);
+        assert_eq!(lock.entries[0].coord.artifact, "guava");
+    }
+
+    /// T-B (FR-007 clause b): one entry with three coord-table
+    /// directDependencies members parses without error.
+    #[test]
+    fn parse_coord_table_multi_direct_deps() {
+        let text = r#"# --- BEGIN PANTS LOCKFILE METADATA: DO NOT EDIT OR REMOVE ---
+# {"version": 1}
+# --- END PANTS LOCKFILE METADATA ---
+[[entries]]
+file_name = "root.jar"
+[[entries.directDependencies]]
+group = "com.example"
+artifact = "a"
+version = "1.0.0"
+[[entries.directDependencies]]
+group = "com.example"
+artifact = "b"
+version = "2.0.0"
+[[entries.directDependencies]]
+group = "com.example"
+artifact = "c"
+version = "3.0.0"
+[entries.coord]
+group = "com.example"
+artifact = "root"
+version = "1.0.0"
+"#;
+        let lock = parse(text.as_bytes()).expect("multi-coord-table shape must parse");
+        assert_eq!(lock.entries.len(), 1);
+    }
+
+    /// T-C (FR-007 clause c): a lockfile with two entries — one using
+    /// empty-array directDependencies, the other using coord-table
+    /// directDependencies plus coord-table dependencies. Both parse.
+    /// The coord-table `dependencies` on entry two produces two edges.
+    #[test]
+    fn parse_mixed_empty_and_coord_table_shapes() {
+        let text = r#"# --- BEGIN PANTS LOCKFILE METADATA: DO NOT EDIT OR REMOVE ---
+# {"version": 1}
+# --- END PANTS LOCKFILE METADATA ---
+[[entries]]
+directDependencies = []
+dependencies = []
+file_name = "leaf.jar"
+[entries.coord]
+group = "com.example"
+artifact = "leaf"
+version = "1.0.0"
+
+[[entries]]
+file_name = "root.jar"
+[[entries.directDependencies]]
+group = "com.example"
+artifact = "dep1"
+version = "1.0.0"
+[[entries.dependencies]]
+group = "com.example"
+artifact = "dep1"
+version = "1.0.0"
+[[entries.dependencies]]
+group = "com.example"
+artifact = "dep2"
+version = "2.0.0"
+[entries.coord]
+group = "com.example"
+artifact = "root"
+version = "1.0.0"
+"#;
+        let lock = parse(text.as_bytes()).expect("mixed shapes must parse");
+        assert_eq!(lock.entries.len(), 2);
+        assert_eq!(lock.entries[0].dependencies.len(), 0);
+        assert_eq!(lock.entries[1].dependencies.len(), 2);
+        // Verify the coord-table dependencies were parsed into the
+        // CoordTable variant, not the String variant.
+        assert!(matches!(
+            &lock.entries[1].dependencies[0],
+            DependencyRef::CoordTable { .. }
+        ));
+    }
+
+    /// T-D (FR-007 clause e): legacy string-form directDependencies +
+    /// legacy string-form dependencies both parse. The string form is
+    /// synthetic — not verified in the wild — but the delete-field fix
+    /// implies serde's default field-tolerance handles it identically
+    /// to any other shape.
+    #[test]
+    fn parse_legacy_string_form_deps() {
+        let text = r#"# --- BEGIN PANTS LOCKFILE METADATA: DO NOT EDIT OR REMOVE ---
+# {"version": 1}
+# --- END PANTS LOCKFILE METADATA ---
+[[entries]]
+directDependencies = ["com.example:leaf:1.0.0"]
+dependencies = ["com.example:leaf:1.0.0"]
+file_name = "root.jar"
+[entries.coord]
+group = "com.example"
+artifact = "root"
+version = "1.0.0"
+"#;
+        let lock = parse(text.as_bytes()).expect("legacy string form must parse");
+        assert_eq!(lock.entries.len(), 1);
+        assert_eq!(lock.entries[0].dependencies.len(), 1);
+        assert!(matches!(
+            &lock.entries[0].dependencies[0],
+            DependencyRef::String(_)
+        ));
+    }
+
+    /// T-E (FR-007 clause d): entry with empty coord.group is skipped
+    /// by `entry_to_package_db_entry` (existing FR-004 fail-open
+    /// behavior). Locks in the current-code contract post-fix.
+    #[test]
+    fn malformed_coord_group_returns_none() {
+        let entry = make_entry(
+            "", // empty group triggers the existing per-entry validation
+            "artifact",
+            "1.0.0",
+            None,
+            None,
+            None,
+            None,
+        );
+        let result = entry_to_package_db_entry(
+            &entry,
+            &PathBuf::from("/fake/lockfile.lock"),
+            "test-resolve",
+        );
+        assert!(result.is_none(), "empty-group entry must be skipped");
+    }
+
     // ---- entry_to_package_db_entry() tests ----
 
     fn make_entry(
@@ -494,7 +698,6 @@ this is = = not = valid toml
         digest: Option<&str>,
     ) -> Entry {
         Entry {
-            direct_dependencies: Vec::new(),
             dependencies: Vec::new(),
             file_name: None,
             coord: EntryCoord {

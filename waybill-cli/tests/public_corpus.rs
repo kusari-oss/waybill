@@ -114,6 +114,11 @@ fn corpus_pants_example_django() {
     run_target("pants-example-django");
 }
 
+#[test]
+fn corpus_pants_example_jvm() {
+    run_target("pants-example-jvm");
+}
+
 // pants-example-jvm intentionally omitted — see manifest.rs comment.
 
 #[test]

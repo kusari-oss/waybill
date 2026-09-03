@@ -1,0 +1,2051 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:maven/com.google.code.findbugs/jsr305@3.0.2",
+      "cpe": "cpe:2.3:a:com.google.code.findbugs:jsr305:3.0.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "766ad2a0783f2687962c8ad74ceecc38a28b9f72a2d085ee438b7813e928d0c7"
+        }
+      ],
+      "name": "jsr305",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.code.findbugs:jsr305:3.0.2:*:*:*:*:*:*:* | cpe:2.3:a:findbugs:jsr305:3.0.2:*:*:*:*:*:*:* | cpe:2.3:a:jsr305:jsr305:3.0.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.code.findbugs/jsr305@3.0.2",
+      "supplier": {
+        "name": "com.google.code.findbugs"
+      },
+      "type": "library",
+      "version": "3.0.2"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.errorprone/error_prone_annotations@2.7.1",
+      "cpe": "cpe:2.3:a:com.google.errorprone:error_prone_annotations:2.7.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "cd5257c08a246cf8628817ae71cb822be192ef91f6881ca4a3fcff4f1de1cff3"
+        }
+      ],
+      "name": "error_prone_annotations",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.errorprone:error_prone_annotations:2.7.1:*:*:*:*:*:*:* | cpe:2.3:a:errorprone:error_prone_annotations:2.7.1:*:*:*:*:*:*:* | cpe:2.3:a:error_prone_annotations:error_prone_annotations:2.7.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.errorprone/error_prone_annotations@2.7.1",
+      "supplier": {
+        "name": "com.google.errorprone"
+      },
+      "type": "library",
+      "version": "2.7.1"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.guava/failureaccess@1.0.1",
+      "cpe": "cpe:2.3:a:com.google.guava:failureaccess:1.0.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a171ee4c734dd2da837e4b16be9df4661afab72a41adaf31eb84dfdaf936ca26"
+        }
+      ],
+      "name": "failureaccess",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.guava:failureaccess:1.0.1:*:*:*:*:*:*:* | cpe:2.3:a:guava:failureaccess:1.0.1:*:*:*:*:*:*:* | cpe:2.3:a:failureaccess:failureaccess:1.0.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.guava/failureaccess@1.0.1",
+      "supplier": {
+        "name": "com.google.guava"
+      },
+      "type": "library",
+      "version": "1.0.1"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.guava/guava@31.0.1-jre",
+      "cpe": "cpe:2.3:a:com.google.guava:guava:31.0.1-jre:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "d5be94d65e87bd219fb3193ad1517baa55a3b88fc91d21cf735826ab5af087b9"
+        }
+      ],
+      "name": "guava",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.guava:guava:31.0.1-jre:*:*:*:*:*:*:* | cpe:2.3:a:guava:guava:31.0.1-jre:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.guava/guava@31.0.1-jre",
+      "supplier": {
+        "name": "com.google.guava"
+      },
+      "type": "library",
+      "version": "31.0.1-jre"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava",
+      "cpe": "cpe:2.3:a:com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b372a037d4230aa57fbeffdef30fd6123f9c0c2db85d0aced00c91b974f33f99"
+        }
+      ],
+      "name": "listenablefuture",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:*:*:*:*:*:*:* | cpe:2.3:a:guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:*:*:*:*:*:*:* | cpe:2.3:a:listenablefuture:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava",
+      "supplier": {
+        "name": "com.google.guava"
+      },
+      "type": "library",
+      "version": "9999.0-empty-to-avoid-conflict-with-guava"
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.j2objc/j2objc-annotations@1.3",
+      "cpe": "cpe:2.3:a:com.google.j2objc:j2objc-annotations:1.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "21af30c92267bd6122c0e0b4d20cccb6641a37eaf956c6540ec471d584e64a7b"
+        }
+      ],
+      "name": "j2objc-annotations",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.google.j2objc:j2objc-annotations:1.3:*:*:*:*:*:*:* | cpe:2.3:a:j2objc:j2objc-annotations:1.3:*:*:*:*:*:*:* | cpe:2.3:a:j2objc-annotations:j2objc-annotations:1.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.google.j2objc/j2objc-annotations@1.3",
+      "supplier": {
+        "name": "com.google.j2objc"
+      },
+      "type": "library",
+      "version": "1.3"
+    },
+    {
+      "bom-ref": "pkg:maven/com.lihaoyi/acyclic_2.13@0.2.1",
+      "cpe": "cpe:2.3:a:com.lihaoyi:acyclic_2.13:0.2.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "4bc4656140ad5e4802fedcdbe920ec7c92dbebf5e76d1c60d35676a314481944"
+        }
+      ],
+      "name": "acyclic_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:com.lihaoyi:acyclic_2.13:0.2.1:*:*:*:*:*:*:* | cpe:2.3:a:lihaoyi:acyclic_2.13:0.2.1:*:*:*:*:*:*:* | cpe:2.3:a:acyclic_2.13:acyclic_2.13:0.2.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/com.lihaoyi/acyclic_2.13@0.2.1",
+      "supplier": {
+        "name": "com.lihaoyi"
+      },
+      "type": "library",
+      "version": "0.2.1"
+    },
+    {
+      "bom-ref": "pkg:maven/org.checkerframework/checker-qual@3.12.0",
+      "cpe": "cpe:2.3:a:org.checkerframework:checker-qual:3.12.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ff10785ac2a357ec5de9c293cb982a2cbb605c0309ea4cc1cb9b9bc6dbe7f3cb"
+        }
+      ],
+      "name": "checker-qual",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.checkerframework:checker-qual:3.12.0:*:*:*:*:*:*:* | cpe:2.3:a:checkerframework:checker-qual:3.12.0:*:*:*:*:*:*:* | cpe:2.3:a:checker-qual:checker-qual:3.12.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.checkerframework/checker-qual@3.12.0",
+      "supplier": {
+        "name": "org.checkerframework"
+      },
+      "type": "library",
+      "version": "3.12.0"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+      "cpe": "cpe:2.3:a:org.scala-lang.modules:scala-xml_2.13:1.3.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "6d96d45a7fc6fc7ab69bdbac841b48cf67ab109f048c8db375ae4effae524f39"
+        }
+      ],
+      "name": "scala-xml_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scala-lang.modules:scala-xml_2.13:1.3.0:*:*:*:*:*:*:* | cpe:2.3:a:modules:scala-xml_2.13:1.3.0:*:*:*:*:*:*:* | cpe:2.3:a:scala-xml_2.13:scala-xml_2.13:1.3.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+      "supplier": {
+        "name": "org.scala-lang.modules"
+      },
+      "type": "library",
+      "version": "1.3.0"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scala-lang/scala-library@2.13.8",
+      "cpe": "cpe:2.3:a:org.scala-lang:scala-library:2.13.8:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a0882b82514190c2bac7d1a459872a75f005fc0f3e88b2bc0390367146e35db7"
+        }
+      ],
+      "name": "scala-library",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scala-lang:scala-library:2.13.8:*:*:*:*:*:*:* | cpe:2.3:a:scala-lang:scala-library:2.13.8:*:*:*:*:*:*:* | cpe:2.3:a:scala-library:scala-library:2.13.8:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scala-lang/scala-library@2.13.8",
+      "supplier": {
+        "name": "org.scala-lang"
+      },
+      "type": "library",
+      "version": "2.13.8"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+      "cpe": "cpe:2.3:a:org.scala-lang:scala-reflect:2.13.6:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f713593809b387c60935bb9a940dfcea53bd0dbf8fdc8d10739a2896f8ac56fa"
+        }
+      ],
+      "name": "scala-reflect",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scala-lang:scala-reflect:2.13.6:*:*:*:*:*:*:* | cpe:2.3:a:scala-lang:scala-reflect:2.13.6:*:*:*:*:*:*:* | cpe:2.3:a:scala-reflect:scala-reflect:2.13.6:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+      "supplier": {
+        "name": "org.scala-lang"
+      },
+      "type": "library",
+      "version": "2.13.6"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+      "cpe": "cpe:2.3:a:org.scalactic:scalactic_2.13:3.2.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "73a094a12ad95e2aff2b4861e1b8dcf78a724e3979ee3eb9bafdab878c79199e"
+        }
+      ],
+      "name": "scalactic_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scalactic:scalactic_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalactic:scalactic_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalactic_2.13:scalactic_2.13:3.2.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+      "supplier": {
+        "name": "org.scalactic"
+      },
+      "type": "library",
+      "version": "3.2.10"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+      "cpe": "cpe:2.3:a:org.scalatest:scalatest-compatible:3.2.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "fbc803990b400f41f48fb64d169a66eb5645a667e05a6d73d835a8cbe6c31c06"
+        }
+      ],
+      "name": "scalatest-compatible",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scalatest:scalatest-compatible:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest:scalatest-compatible:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest-compatible:scalatest-compatible:3.2.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+      "supplier": {
+        "name": "org.scalatest"
+      },
+      "type": "library",
+      "version": "3.2.10"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10",
+      "cpe": "cpe:2.3:a:org.scalatest:scalatest-core_2.13:3.2.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b760c723768346792d7a041b9bdf3f61b58bef34f996ebe1b7f1318d8da1ea96"
+        }
+      ],
+      "name": "scalatest-core_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scalatest:scalatest-core_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest:scalatest-core_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest-core_2.13:scalatest-core_2.13:3.2.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10",
+      "supplier": {
+        "name": "org.scalatest"
+      },
+      "type": "library",
+      "version": "3.2.10"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scalatest/scalatest-diagrams_2.13@3.2.10",
+      "cpe": "cpe:2.3:a:org.scalatest:scalatest-diagrams_2.13:3.2.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a31d872c4e18cd4c2a0e1af0318c8b2f5837e28553cca88e95260b1d8fabd77b"
+        }
+      ],
+      "name": "scalatest-diagrams_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scalatest:scalatest-diagrams_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest:scalatest-diagrams_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest-diagrams_2.13:scalatest-diagrams_2.13:3.2.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scalatest/scalatest-diagrams_2.13@3.2.10",
+      "supplier": {
+        "name": "org.scalatest"
+      },
+      "type": "library",
+      "version": "3.2.10"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scalatest/scalatest-featurespec_2.13@3.2.10",
+      "cpe": "cpe:2.3:a:org.scalatest:scalatest-featurespec_2.13:3.2.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "04927c2a5507c4d64944be91ac2376f51600a35f805d054c68b4b6c46ff86f01"
+        }
+      ],
+      "name": "scalatest-featurespec_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scalatest:scalatest-featurespec_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest:scalatest-featurespec_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest-featurespec_2.13:scalatest-featurespec_2.13:3.2.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scalatest/scalatest-featurespec_2.13@3.2.10",
+      "supplier": {
+        "name": "org.scalatest"
+      },
+      "type": "library",
+      "version": "3.2.10"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scalatest/scalatest-flatspec_2.13@3.2.10",
+      "cpe": "cpe:2.3:a:org.scalatest:scalatest-flatspec_2.13:3.2.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "7657ee10a6e8b03e96835988438f1c0901968b089657cf124f57abdb7bc7c20c"
+        }
+      ],
+      "name": "scalatest-flatspec_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scalatest:scalatest-flatspec_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest:scalatest-flatspec_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest-flatspec_2.13:scalatest-flatspec_2.13:3.2.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scalatest/scalatest-flatspec_2.13@3.2.10",
+      "supplier": {
+        "name": "org.scalatest"
+      },
+      "type": "library",
+      "version": "3.2.10"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scalatest/scalatest-freespec_2.13@3.2.10",
+      "cpe": "cpe:2.3:a:org.scalatest:scalatest-freespec_2.13:3.2.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "822b3a9a1e2189b6a3e4a43f87b9627d446f764d3b86d0e93f21e0bf7fb3c229"
+        }
+      ],
+      "name": "scalatest-freespec_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scalatest:scalatest-freespec_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest:scalatest-freespec_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest-freespec_2.13:scalatest-freespec_2.13:3.2.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scalatest/scalatest-freespec_2.13@3.2.10",
+      "supplier": {
+        "name": "org.scalatest"
+      },
+      "type": "library",
+      "version": "3.2.10"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scalatest/scalatest-funspec_2.13@3.2.10",
+      "cpe": "cpe:2.3:a:org.scalatest:scalatest-funspec_2.13:3.2.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b77764eb1149d76ad6ba671d2d27140a35d1c6f2055e8c946fcc02ad7490e08d"
+        }
+      ],
+      "name": "scalatest-funspec_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scalatest:scalatest-funspec_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest:scalatest-funspec_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest-funspec_2.13:scalatest-funspec_2.13:3.2.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scalatest/scalatest-funspec_2.13@3.2.10",
+      "supplier": {
+        "name": "org.scalatest"
+      },
+      "type": "library",
+      "version": "3.2.10"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scalatest/scalatest-funsuite_2.13@3.2.10",
+      "cpe": "cpe:2.3:a:org.scalatest:scalatest-funsuite_2.13:3.2.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e948d33c6526c0da3bf5cc9b0bb127dad76ce82d0edf1220b2c6b7cff23a5a69"
+        }
+      ],
+      "name": "scalatest-funsuite_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scalatest:scalatest-funsuite_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest:scalatest-funsuite_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest-funsuite_2.13:scalatest-funsuite_2.13:3.2.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scalatest/scalatest-funsuite_2.13@3.2.10",
+      "supplier": {
+        "name": "org.scalatest"
+      },
+      "type": "library",
+      "version": "3.2.10"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scalatest/scalatest-matchers-core_2.13@3.2.10",
+      "cpe": "cpe:2.3:a:org.scalatest:scalatest-matchers-core_2.13:3.2.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "6a23c628c711f257cc4f346429cacc463dd065f8b0039ad5f063cba0b6db8518"
+        }
+      ],
+      "name": "scalatest-matchers-core_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scalatest:scalatest-matchers-core_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest:scalatest-matchers-core_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest-matchers-core_2.13:scalatest-matchers-core_2.13:3.2.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scalatest/scalatest-matchers-core_2.13@3.2.10",
+      "supplier": {
+        "name": "org.scalatest"
+      },
+      "type": "library",
+      "version": "3.2.10"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scalatest/scalatest-mustmatchers_2.13@3.2.10",
+      "cpe": "cpe:2.3:a:org.scalatest:scalatest-mustmatchers_2.13:3.2.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f994a1b0e9cb77beb0174bf171083b502125507989c3efcfb2d29a8476041bbf"
+        }
+      ],
+      "name": "scalatest-mustmatchers_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scalatest:scalatest-mustmatchers_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest:scalatest-mustmatchers_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest-mustmatchers_2.13:scalatest-mustmatchers_2.13:3.2.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scalatest/scalatest-mustmatchers_2.13@3.2.10",
+      "supplier": {
+        "name": "org.scalatest"
+      },
+      "type": "library",
+      "version": "3.2.10"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scalatest/scalatest-propspec_2.13@3.2.10",
+      "cpe": "cpe:2.3:a:org.scalatest:scalatest-propspec_2.13:3.2.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "621fb80fb18b58e3fa44691f6d2e5606d5aea2d471433e94f5910dea200ae86f"
+        }
+      ],
+      "name": "scalatest-propspec_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scalatest:scalatest-propspec_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest:scalatest-propspec_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest-propspec_2.13:scalatest-propspec_2.13:3.2.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scalatest/scalatest-propspec_2.13@3.2.10",
+      "supplier": {
+        "name": "org.scalatest"
+      },
+      "type": "library",
+      "version": "3.2.10"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scalatest/scalatest-refspec_2.13@3.2.10",
+      "cpe": "cpe:2.3:a:org.scalatest:scalatest-refspec_2.13:3.2.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "c850db9983aed1c541d7489ec6a316e2abdaa88287cd85a747f92116ee3f8b7f"
+        }
+      ],
+      "name": "scalatest-refspec_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scalatest:scalatest-refspec_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest:scalatest-refspec_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest-refspec_2.13:scalatest-refspec_2.13:3.2.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scalatest/scalatest-refspec_2.13@3.2.10",
+      "supplier": {
+        "name": "org.scalatest"
+      },
+      "type": "library",
+      "version": "3.2.10"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scalatest/scalatest-shouldmatchers_2.13@3.2.10",
+      "cpe": "cpe:2.3:a:org.scalatest:scalatest-shouldmatchers_2.13:3.2.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "175266bf78309ac99d58f571d17b0505b30d0a638912248965e0699a1376405d"
+        }
+      ],
+      "name": "scalatest-shouldmatchers_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scalatest:scalatest-shouldmatchers_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest:scalatest-shouldmatchers_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest-shouldmatchers_2.13:scalatest-shouldmatchers_2.13:3.2.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scalatest/scalatest-shouldmatchers_2.13@3.2.10",
+      "supplier": {
+        "name": "org.scalatest"
+      },
+      "type": "library",
+      "version": "3.2.10"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scalatest/scalatest-wordspec_2.13@3.2.10",
+      "cpe": "cpe:2.3:a:org.scalatest:scalatest-wordspec_2.13:3.2.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "08f983b45ef2306eaca35e9280aae2b8691a063e1f2d04b0f5d38f910cda7c19"
+        }
+      ],
+      "name": "scalatest-wordspec_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scalatest:scalatest-wordspec_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest:scalatest-wordspec_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest-wordspec_2.13:scalatest-wordspec_2.13:3.2.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scalatest/scalatest-wordspec_2.13@3.2.10",
+      "supplier": {
+        "name": "org.scalatest"
+      },
+      "type": "library",
+      "version": "3.2.10"
+    },
+    {
+      "bom-ref": "pkg:maven/org.scalatest/scalatest_2.13@3.2.10",
+      "cpe": "cpe:2.3:a:org.scalatest:scalatest_2.13:3.2.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "3rdparty/jvm/default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "5cdde7f43bd4e287cd9302c2a80c5badc82cd442b392d6aaf28f16b4d6f1321c"
+        }
+      ],
+      "name": "scalatest_2.13",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:org.scalatest:scalatest_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest:scalatest_2.13:3.2.10:*:*:*:*:*:*:* | cpe:2.3:a:scalatest_2.13:scalatest_2.13:3.2.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"3rdparty/jvm/default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"3rdparty/jvm\"]"
+        }
+      ],
+      "purl": "pkg:maven/org.scalatest/scalatest_2.13@3.2.10",
+      "supplier": {
+        "name": "org.scalatest"
+      },
+      "type": "library",
+      "version": "3.2.10"
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=8b8ba722dd787ede20b01259a974a1f8f5798e9a4a8f94d72a2dfb2298a2a981",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "8b8ba722dd787ede20b01259a974a1f8f5798e9a4a8f94d72a2dfb2298a2a981"
+        }
+      ],
+      "name": "get-pants.sh",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"get-pants.sh\"]"
+        },
+        {
+          "name": "waybill:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "waybill:file-paths",
+          "value": "[\"get-pants.sh\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "complete",
+      "assemblies": [
+        "pkg:maven/com.google.code.findbugs/jsr305@3.0.2",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.7.1",
+        "pkg:maven/com.google.guava/failureaccess@1.0.1",
+        "pkg:maven/com.google.guava/guava@31.0.1-jre",
+        "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava",
+        "pkg:maven/com.google.j2objc/j2objc-annotations@1.3",
+        "pkg:maven/com.lihaoyi/acyclic_2.13@0.2.1",
+        "pkg:maven/org.checkerframework/checker-qual@3.12.0",
+        "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+        "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-diagrams_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-featurespec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-flatspec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-freespec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-funspec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-funsuite_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-matchers-core_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-mustmatchers_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-propspec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-refspec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-shouldmatchers_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-wordspec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest_2.13@3.2.10"
+      ],
+      "dependencies": [
+        "pkg:maven/com.google.code.findbugs/jsr305@3.0.2",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.7.1",
+        "pkg:maven/com.google.guava/failureaccess@1.0.1",
+        "pkg:maven/com.google.guava/guava@31.0.1-jre",
+        "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava",
+        "pkg:maven/com.google.j2objc/j2objc-annotations@1.3",
+        "pkg:maven/com.lihaoyi/acyclic_2.13@0.2.1",
+        "pkg:maven/org.checkerframework/checker-qual@3.12.0",
+        "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+        "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-diagrams_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-featurespec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-flatspec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-freespec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-funspec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-funsuite_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-matchers-core_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-mustmatchers_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-propspec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-refspec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-shouldmatchers_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-wordspec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest_2.13@3.2.10"
+      ]
+    },
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "pants-example-jvm@675ee75"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "pants-example-jvm@675ee75"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [
+        "pkg:generic/file-tier?content-sha256=8b8ba722dd787ede20b01259a974a1f8f5798e9a4a8f94d72a2dfb2298a2a981",
+        "pkg:maven/com.google.guava/guava@31.0.1-jre",
+        "pkg:maven/com.lihaoyi/acyclic_2.13@0.2.1",
+        "pkg:maven/org.scalatest/scalatest_2.13@3.2.10"
+      ],
+      "ref": "pants-example-jvm@675ee75"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=8b8ba722dd787ede20b01259a974a1f8f5798e9a4a8f94d72a2dfb2298a2a981"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.code.findbugs/jsr305@3.0.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.errorprone/error_prone_annotations@2.7.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.guava/failureaccess@1.0.1"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/com.google.code.findbugs/jsr305@3.0.2",
+        "pkg:maven/com.google.errorprone/error_prone_annotations@2.7.1",
+        "pkg:maven/com.google.guava/failureaccess@1.0.1",
+        "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava",
+        "pkg:maven/com.google.j2objc/j2objc-annotations@1.3",
+        "pkg:maven/org.checkerframework/checker-qual@3.12.0"
+      ],
+      "ref": "pkg:maven/com.google.guava/guava@31.0.1-jre"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.guava/listenablefuture@9999.0-empty-to-avoid-conflict-with-guava"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.google.j2objc/j2objc-annotations@1.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/com.lihaoyi/acyclic_2.13@0.2.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/org.checkerframework/checker-qual@3.12.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang/scala-library@2.13.8"
+      ],
+      "ref": "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/org.scala-lang/scala-library@2.13.8"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang/scala-library@2.13.8"
+      ],
+      "ref": "pkg:maven/org.scala-lang/scala-reflect@2.13.6"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6"
+      ],
+      "ref": "pkg:maven/org.scalactic/scalactic_2.13@3.2.10"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:maven/org.scalatest/scalatest-compatible@3.2.10"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+        "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-compatible@3.2.10"
+      ],
+      "ref": "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+        "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10"
+      ],
+      "ref": "pkg:maven/org.scalatest/scalatest-diagrams_2.13@3.2.10"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+        "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10"
+      ],
+      "ref": "pkg:maven/org.scalatest/scalatest-featurespec_2.13@3.2.10"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+        "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10"
+      ],
+      "ref": "pkg:maven/org.scalatest/scalatest-flatspec_2.13@3.2.10"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+        "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10"
+      ],
+      "ref": "pkg:maven/org.scalatest/scalatest-freespec_2.13@3.2.10"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+        "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10"
+      ],
+      "ref": "pkg:maven/org.scalatest/scalatest-funspec_2.13@3.2.10"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+        "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10"
+      ],
+      "ref": "pkg:maven/org.scalatest/scalatest-funsuite_2.13@3.2.10"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+        "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10"
+      ],
+      "ref": "pkg:maven/org.scalatest/scalatest-matchers-core_2.13@3.2.10"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+        "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-matchers-core_2.13@3.2.10"
+      ],
+      "ref": "pkg:maven/org.scalatest/scalatest-mustmatchers_2.13@3.2.10"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+        "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10"
+      ],
+      "ref": "pkg:maven/org.scalatest/scalatest-propspec_2.13@3.2.10"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+        "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10"
+      ],
+      "ref": "pkg:maven/org.scalatest/scalatest-refspec_2.13@3.2.10"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+        "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-matchers-core_2.13@3.2.10"
+      ],
+      "ref": "pkg:maven/org.scalatest/scalatest-shouldmatchers_2.13@3.2.10"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+        "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10"
+      ],
+      "ref": "pkg:maven/org.scalatest/scalatest-wordspec_2.13@3.2.10"
+    },
+    {
+      "dependsOn": [
+        "pkg:maven/org.scala-lang.modules/scala-xml_2.13@1.3.0",
+        "pkg:maven/org.scala-lang/scala-library@2.13.8",
+        "pkg:maven/org.scala-lang/scala-reflect@2.13.6",
+        "pkg:maven/org.scalactic/scalactic_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-compatible@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-core_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-diagrams_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-featurespec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-flatspec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-freespec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-funspec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-funsuite_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-matchers-core_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-mustmatchers_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-propspec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-refspec_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-shouldmatchers_2.13@3.2.10",
+        "pkg:maven/org.scalatest/scalatest-wordspec_2.13@3.2.10"
+      ],
+      "ref": "pkg:maven/org.scalatest/scalatest_2.13@3.2.10"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "waybill"
+      }
+    ],
+    "component": {
+      "bom-ref": "pants-example-jvm@675ee75",
+      "cpe": "cpe:2.3:a:waybill:pants-example-jvm:675ee75:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "comment": "auto-detected from git remote `origin`",
+          "type": "vcs",
+          "url": "https://github.com/kusari-sandbox/example-jvm"
+        }
+      ],
+      "name": "pants-example-jvm",
+      "purl": "pkg:generic/pants-example-jvm@675ee75",
+      "type": "application",
+      "version": "675ee75"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "properties": [
+      {
+        "name": "waybill:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
+        "name": "waybill:os-release-missing-fields",
+        "value": "ID,VERSION_ID"
+      },
+      {
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "waybill:graph-completeness",
+        "value": "complete"
+      },
+      {
+        "name": "waybill:workspaces-detected",
+        "value": "[\"3rdparty/jvm\"]"
+      }
+    ],
+    "supplier": {
+      "name": "waybill contributors"
+    },
+    "timestamp": "<masked>",
+    "tools": {
+      "components": [
+        {
+          "name": "waybill",
+          "publisher": "waybill contributors",
+          "type": "application",
+          "version": "0.5.1-alpha.1"
+        }
+      ]
+    }
+  },
+  "serialNumber": "<masked>",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

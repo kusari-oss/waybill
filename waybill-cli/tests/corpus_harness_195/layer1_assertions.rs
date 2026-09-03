@@ -402,36 +402,6 @@ pub fn pants_example_django_layer1(sboms: &EmittedSboms) -> Result<(), Assertion
 }
 
 // -----------------------------------------------------------------------
-// pants-example-jvm — m224 (Pants coursier-JVM reader)
-// -----------------------------------------------------------------------
-
-pub fn pants_example_jvm_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
-    // pantsbuild/example-jvm at pinned SHA has `3rdparty/jvm/default.lock`
-    // — the Pants JVM coursier resolve format (distinct from standalone
-    // coursier via the FR-011 header discriminator). Post-m224 waybill
-    // emits every JVM dep tagged `waybill:pants-resolve=jvm-default`.
-    if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:maven/")) {
-        return Err(AssertionFailure {
-            invariant_name: "maven-transitives-present",
-            format: FailureFormat::Cdx,
-            observed: "no pkg:maven/* components at all".to_string(),
-            expected: "at least one pkg:maven/* transitive from 3rdparty/jvm/default.lock".to_string(),
-            suggested_action: "investigate m224 Pants coursier-JVM reader — pants-example-jvm should emit multiple pkg:maven/* components",
-        });
-    }
-    if !cdx_has_component_property(&sboms.cdx, "waybill:pants-resolve", |_| true) {
-        return Err(AssertionFailure {
-            invariant_name: "pants-resolve-annotation-present",
-            format: FailureFormat::Cdx,
-            observed: "no component carries waybill:pants-resolve=<any>".to_string(),
-            expected: "at least one component carries waybill:pants-resolve=<resolve-name> (m224 reuses m223 C143)".to_string(),
-            suggested_action: "investigate m224 pants_jvm reader — emitted maven components MUST carry pants-resolve tagging",
-        });
-    }
-    Ok(())
-}
-
-// -----------------------------------------------------------------------
 // pants-example-golang — m226 (Pants Go enricher) + m053/m055 (Go reader)
 // -----------------------------------------------------------------------
 
@@ -465,6 +435,86 @@ pub fn pants_example_golang_layer1(sboms: &EmittedSboms) -> Result<(), Assertion
             suggested_action: "investigate m226 pants_go enricher — Go components in a Pants monorepo MUST be decorated with pants-target",
         });
     }
+    Ok(())
+}
+
+// -----------------------------------------------------------------------
+// pants-example-jvm — feature 676 (issue #756 fix regression gate)
+//
+// Locks in the coursier-JVM reader's ability to parse real-world Pants
+// lockfiles that use the coord-table shape for both `directDependencies`
+// and `dependencies` fields. Pre-fix (main + earlier), scanning the
+// pinned fixture emitted zero pkg:maven/* components because the reader
+// rejected the whole lockfile on parse error. Four invariants:
+//   1. `maven-transitives-present-at-scale` — count pkg:maven/* >= 20
+//      (baseline 27 at pinned SHA)
+//   2. `top-level-guava-present` — declared top-level dep in the resolve
+//   3. `top-level-scala-library-present` — dual-anchor
+//   4. `pants-resolve-annotation-present` — at least one component
+//      carries waybill:pants-resolve (m223 C143 catalog row)
+// -----------------------------------------------------------------------
+
+pub fn pants_example_jvm_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    // Invariant 1 — maven-transitives-present-at-scale.
+    let maven_count = sboms
+        .cdx
+        .get("components")
+        .and_then(|c| c.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter(|c| {
+                    c.get("purl")
+                        .and_then(|p| p.as_str())
+                        .is_some_and(|p| p.starts_with("pkg:maven/"))
+                })
+                .count()
+        })
+        .unwrap_or(0);
+    if maven_count < 20 {
+        return Err(AssertionFailure {
+            invariant_name: "maven-transitives-present-at-scale",
+            format: FailureFormat::Cdx,
+            observed: format!("{maven_count} pkg:maven/* components"),
+            expected: "at least 20 pkg:maven/* components (observed baseline 27 at pinned SHA)".to_string(),
+            suggested_action: "investigate the coursier-JVM reader (m224 / issue #756 / feature 676) — pants-example-jvm should emit >= 20 pkg:maven/* components",
+        });
+    }
+
+    // Invariant 2 — top-level-guava-present.
+    if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:maven/com.google.guava/guava@")) {
+        return Err(AssertionFailure {
+            invariant_name: "top-level-guava-present",
+            format: FailureFormat::Cdx,
+            observed: "no pkg:maven/com.google.guava/guava@* component".to_string(),
+            expected: "at least one pkg:maven/com.google.guava/guava@* component (top-level coord declared in fixture)".to_string(),
+            suggested_action: "investigate m224 reader top-level-coord resolution — the resolve declares com.google.guava:guava:31.0.1-jre",
+        });
+    }
+
+    // Invariant 3 — top-level-scala-library-present.
+    if !cdx_has_component_purl(&sboms.cdx, |p| {
+        p.starts_with("pkg:maven/org.scala-lang/scala-library@")
+    }) {
+        return Err(AssertionFailure {
+            invariant_name: "top-level-scala-library-present",
+            format: FailureFormat::Cdx,
+            observed: "no pkg:maven/org.scala-lang/scala-library@* component".to_string(),
+            expected: "at least one pkg:maven/org.scala-lang/scala-library@* component (top-level coord declared in fixture)".to_string(),
+            suggested_action: "investigate m224 reader top-level-coord resolution — the resolve declares org.scala-lang:scala-library:2.13.8",
+        });
+    }
+
+    // Invariant 4 — pants-resolve-annotation-present on maven surface.
+    if !cdx_has_component_property(&sboms.cdx, "waybill:pants-resolve", |_| true) {
+        return Err(AssertionFailure {
+            invariant_name: "pants-resolve-annotation-present",
+            format: FailureFormat::Cdx,
+            observed: "no component carries waybill:pants-resolve=<any>".to_string(),
+            expected: "at least one component carries waybill:pants-resolve=<resolve-name> (m224 reuses m223 C143)".to_string(),
+            suggested_action: "investigate m224 pants_jvm reader annotation emission — maven components MUST carry pants-resolve tagging",
+        });
+    }
+
     Ok(())
 }
 

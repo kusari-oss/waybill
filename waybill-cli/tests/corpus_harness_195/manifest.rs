@@ -154,11 +154,24 @@ pub const TARGETS: &[CorpusTarget] = &[
         exercises: "m673 US2 (`lockfiles/python-default.lock` discovery) + m223 Pants pex-lockfile reader",
         layer1: super::layer1_assertions::pants_example_django_layer1,
     },
-    // NOTE: pants-example-jvm intentionally omitted for now — the m224 reader
-    // rejects the coord-table form of `directDependencies` used by real Pants
-    // coursier lockfiles (issue #756). Fork is ready at
-    // kusari-sandbox/example-jvm at SHA 675ee75d36f2c1b096b0def51efcfffd02bd1251;
-    // add the entry back once #756 is resolved.
+    // Feature 676 (issue #756 fix) — re-enable pants-example-jvm now that
+    // the m224 reader accepts both string and coord-table shapes for the
+    // `dependencies` field. Fork was created during PR #757 preparation.
+    CorpusTarget {
+        name: "pants-example-jvm",
+        source: SourceKind::Git {
+            clone_url: "https://github.com/kusari-sandbox/example-jvm",
+        },
+        pinned: PinnedRef::Sha {
+            // Fork of pantsbuild/example-jvm HEAD as of 2026-09-02
+            hex: "675ee75d36f2c1b096b0def51efcfffd02bd1251",
+        },
+        ecosystem: Ecosystem::JavaMaven,
+        exercises: "m224 Pants coursier-JVM reader (3rdparty/jvm/default.lock) — \
+                    unblocked by #676 (coord-table directDependencies + \
+                    dependencies fix)",
+        layer1: super::layer1_assertions::pants_example_jvm_layer1,
+    },
     CorpusTarget {
         name: "pants-example-golang",
         source: SourceKind::Git {
