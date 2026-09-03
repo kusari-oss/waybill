@@ -1,0 +1,23 @@
+# Issue #758 fixture — Pants monorepo with N named resolves declared via
+# `[python.resolves]` map, all lockfiles placed in one central directory.
+# Mirrors the shape observed in real-world Pants monorepos where every
+# subproject / tool gets its own resolve and lockfiles are colocated for
+# operator convenience.
+#
+# The DEFAULT lockfile discovery paths (`3rdparty/python/*.lock`,
+# `<repo>/*.lock`, `<repo>/lockfiles/*.lock` from m673) MUST NOT match
+# any file in this fixture — all discovery must flow through the
+# `[python.resolves]` map (m672).
+
+[GLOBAL]
+pants_version = "2.31.0"
+
+[python]
+enable_resolves = true
+
+[python.resolves]
+service-a = "central-lockfiles/service-a.lock"
+service-b = "central-lockfiles/service-b.lock"
+tools-mypy = "central-lockfiles/tools-mypy.lock"
+tools-pytest = "central-lockfiles/tools-pytest.lock"
+shared-utils = "central-lockfiles/shared-utils.lock"

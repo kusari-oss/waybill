@@ -785,3 +785,114 @@ fn us1_fr010_info_log_emits_all_four_structured_fields() {
         "expected components_emitted=3, got:\n{stderr}"
     );
 }
+
+// ---------------------------------------------------------------------
+// Issue #758 — multi-resolve `[python.resolves]` map with all lockfiles
+// in one central non-default directory. Exercises the m672 US2 code
+// path at scale (5 resolves) and validates that discovery flows
+// exclusively through the `pants.toml` map — the default globs
+// (`3rdparty/python/*.lock`, `<repo>/*.lock`, `<repo>/lockfiles/*.lock`)
+// MUST NOT match any file in this fixture.
+//
+// Mirrors the shape observed in real-world Pants monorepos where each
+// subproject or tool gets its own resolve and lockfiles are colocated
+// under a central directory for operator convenience.
+// ---------------------------------------------------------------------
+
+#[test]
+fn multi_resolve_map_central_directory_emits_all_resolves() {
+    let fixture = pants_fixture("multi_resolve_map");
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let output = tmp.path().join("multi_resolve_map.cdx.json");
+    let out = run_scan(&fixture, &output, &[]);
+    assert!(
+        out.status.success(),
+        "scan failed: stderr={}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let cdx = read_cdx(&output);
+    let pants_components: Vec<&serde_json::Value> = cdx
+        .get("components")
+        .and_then(|c| c.as_array())
+        .expect("components array")
+        .iter()
+        .filter(|c| {
+            c.get("purl")
+                .and_then(|p| p.as_str())
+                .is_some_and(|p| p.starts_with("pkg:pypi/waybill-fixture-"))
+        })
+        .collect();
+
+    // Fixture declares 5 resolves totalling 7 packages (2+2+1+1+1).
+    assert_eq!(
+        pants_components.len(),
+        7,
+        "expected 7 pants-derived components across 5 resolves, got {}: {:?}",
+        pants_components.len(),
+        pants_components
+            .iter()
+            .map(|c| c.get("purl").and_then(|p| p.as_str()).unwrap_or(""))
+            .collect::<Vec<_>>()
+    );
+
+    // Group by resolve name via the waybill:pants-resolve annotation.
+    let mut by_resolve: std::collections::BTreeMap<String, Vec<String>> =
+        std::collections::BTreeMap::new();
+    for c in &pants_components {
+        let purl = c
+            .get("purl")
+            .and_then(|p| p.as_str())
+            .unwrap_or("<missing-purl>")
+            .to_string();
+        let resolve = get_property(c, "waybill:pants-resolve")
+            .unwrap_or("<missing-resolve>")
+            .to_string();
+        by_resolve.entry(resolve).or_default().push(purl);
+    }
+
+    let expected: &[(&str, usize)] = &[
+        ("service-a", 2),
+        ("service-b", 2),
+        ("shared-utils", 1),
+        ("tools-mypy", 1),
+        ("tools-pytest", 1),
+    ];
+    for (resolve, expected_count) in expected {
+        let got = by_resolve
+            .get(*resolve)
+            .map(|v| v.len())
+            .unwrap_or(0);
+        assert_eq!(
+            got, *expected_count,
+            "resolve `{resolve}` expected {expected_count} components, got {got}. \
+             full mapping: {by_resolve:#?}"
+        );
+    }
+
+    // Verify total resolves covered matches declared count (5) exactly —
+    // no extra resolve names from unexpected auto-discovery paths, no
+    // dropped resolves. Guards against both false-positive and false-
+    // negative discovery drift.
+    assert_eq!(
+        by_resolve.len(),
+        expected.len(),
+        "expected exactly {} distinct resolves, got {}: {:?}",
+        expected.len(),
+        by_resolve.len(),
+        by_resolve.keys().collect::<Vec<_>>()
+    );
+
+    // Reader-complete log line reports 5 discovered lockfiles.
+    let stderr_raw = String::from_utf8_lossy(&out.stderr);
+    let ansi_re = regex::Regex::new(r"\x1b\[[0-9;]*[a-zA-Z]").expect("valid regex");
+    let stderr = ansi_re.replace_all(&stderr_raw, "").to_string();
+    assert!(
+        stderr.contains("lockfiles_discovered=5"),
+        "expected lockfiles_discovered=5 (one per declared resolve), stderr:\n{stderr}"
+    );
+    assert!(
+        stderr.contains("components_emitted=7"),
+        "expected components_emitted=7, stderr:\n{stderr}"
+    );
+}
