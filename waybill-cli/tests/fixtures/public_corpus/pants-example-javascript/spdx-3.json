@@ -1,0 +1,102 @@
+{
+  "@context": "https://spdx.org/rdf/3.0.1/spdx-context.jsonld",
+  "@graph": [
+    {
+      "creationInfo": "<masked>",
+      "name": "waybill contributors",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/agent/waybill-contributors",
+      "type": "Organization"
+    },
+    {
+      "creationInfo": "<masked>",
+      "name": "waybill-0.5.1-alpha.1",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/tool/waybill",
+      "type": "Tool"
+    },
+    {
+      "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: pre-build. Per-component scope detail in waybill:sbom-tier annotations.",
+      "creationInfo": "<masked>",
+      "dataLicense": "https://spdx.org/licenses/CC0-1.0",
+      "externalIdentifier": [
+        {
+          "comment": "original-scheme: repo",
+          "externalIdentifierType": "other",
+          "identifier": "https://github.com/kusari-sandbox/example-javascript",
+          "type": "ExternalIdentifier"
+        }
+      ],
+      "name": "pants-example-javascript",
+      "rootElement": [
+        "https://waybill.kusari.dev/spdx3/doc-DNUV3MM4EEJ5US2XEXZOSJ5F/pkg-root-C7K4QR5ZKDQXKUM3"
+      ],
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>",
+      "type": "SpdxDocument"
+    },
+    {
+      "creationInfo": "<masked>",
+      "name": "@ampproject",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/agent-org-GRF3TXB23GHQ4YVB",
+      "type": "Organization"
+    },
+    {
+      "creationInfo": "<masked>",
+      "name": "@sinclair",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/agent-org-GWDWP6VMFMXTSP33",
+      "type": "Organization"
+    },
+    {
+      "creationInfo": "<masked>",
+      "name": "@jest",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/agent-org-JLUNDYHBD35WSMV5",
+      "type": "Organization"
+    },
+    {
+      "creationInfo": "<masked>",
+      "name": "npmjs.com",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/agent-org-JXCO5KNA4S5YOEFX",
+      "type": "Organization"
+    },
+    {
+      "creationInfo": "<masked>",
+      "name": "@bcoe",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/agent-org-N4OSUCW6CGOVTGPV",
+      "type": "Organization"
+    },
+    {
+      "creationInfo": "<masked>",
+      "name": "@babel",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/agent-org-OKKTOMV2C3424KRY",
+      "type": "Organization"
+    },
+    {
+      "creationInfo": "<masked>",
+      "name": "@sinonjs",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/agent-org-OOR4A5XISG57JBKV",
+      "type": "Organization"
+    },
+    {
+      "creationInfo": "<masked>",
+      "name": "@jridgewell",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/agent-org-TBDMW7ITH2ARFLM2",
+      "type": "Organization"
+    },
+    {
+      "creationInfo": "<masked>",
+      "name": "@types",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/agent-org-VGOGW4RDV2D7BLMX",
+      "type": "Organization"
+    },
+    {
+      "creationInfo": "<masked>",
+      "name": "@esbuild",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/agent-org-XO5677HOPUKO4YLH",
+      "type": "Organization"
+    },
+    {
+      "creationInfo": "<masked>",
+      "name": "@istanbuljs",
+      "spdxId": "https://waybill.kusari.dev/spdx3/doc-<masked>/agent-org-ZUZAH4WEMRLP2J2B",
+      "type": "Organization"
+    }
+  ]
+}

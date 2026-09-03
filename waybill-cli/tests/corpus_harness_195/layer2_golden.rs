@@ -10,6 +10,7 @@
 use std::path::PathBuf;
 
 use super::harness::{AssertionFailure, EmittedSboms, FailureFormat, update_goldens_gate};
+use super::js_filter;
 
 /// Fixture root under the workspace: `waybill-cli/tests/fixtures/public_corpus/`.
 fn fixtures_root() -> PathBuf {
@@ -47,7 +48,18 @@ pub fn compare_golden(
         FailureFormat::Spdx3 => (&sboms.paths.spdx_3, &sboms.spdx_3),
         FailureFormat::All => unreachable!(),
     };
-    let masked = mask_nondeterministic(actual_value);
+    let mut masked = mask_nondeterministic(actual_value);
+    // Feature 675 — per-target JS-only filter for pants-example-javascript
+    // per FR-008 clarification (Session 2026-09-02). Every other target
+    // stays byte-identical to pre-675 output.
+    if target == "pants-example-javascript" {
+        match format {
+            FailureFormat::Cdx => js_filter::filter_cdx_to_js(&mut masked),
+            FailureFormat::Spdx23 => js_filter::filter_spdx23_to_js(&mut masked),
+            FailureFormat::Spdx3 => js_filter::filter_spdx3_to_js(&mut masked),
+            FailureFormat::All => unreachable!("layer 2 is per-format"),
+        }
+    }
     let masked_bytes = serde_json::to_vec_pretty(&masked).expect("serialize masked");
     let golden = golden_path(target, match format {
         FailureFormat::Cdx => FailureFormat::Cdx,

@@ -172,6 +172,27 @@ pub const TARGETS: &[CorpusTarget] = &[
         exercises: "m226 Pants Go enricher + m053/m055 Go go.sum reader",
         layer1: super::layer1_assertions::pants_example_golang_layer1,
     },
+    // Feature 675 — Pants JavaScript / npm regression gate.
+    // Locks in current behavior of the standard npm reader stack
+    // (m066 + m147 + m180) against a Pants-managed JS monorepo.
+    // Issue #760 tracks the follow-up "option A" pants_js enricher;
+    // this entry is the "option B" corpus-only regression gate.
+    // Layer 2 goldens are JS-filtered per FR-008 clarification.
+    CorpusTarget {
+        name: "pants-example-javascript",
+        source: SourceKind::Git {
+            clone_url: "https://github.com/kusari-sandbox/example-javascript",
+        },
+        pinned: PinnedRef::Sha {
+            // Fork of pantsbuild/example-javascript HEAD as of 2026-09-03
+            hex: "da76d5dbb407d82c136cfe8f18dc06f3c8a440e5",
+        },
+        ecosystem: Ecosystem::Npm,
+        exercises: "npm reader stack (m066 + m147 + m180) against a \
+                    Pants-managed JavaScript monorepo — regression-locks \
+                    issue #760 option-B behavior",
+        layer1: super::layer1_assertions::pants_example_javascript_layer1,
+    },
 ];
 
 // -----------------------------------------------------------------------
