@@ -85,19 +85,37 @@ struct Cli {
     )]
     offline: bool,
 
-    /// Disable Go package-level build-graph classification. By default,
-    /// when a `go` toolchain is found on PATH during a Go source scan,
-    /// waybill runs `go mod why -m -vendor` (60-second total budget,
-    /// modules batched in chunks of 20) to classify modules outside the
-    /// build graph as `not-needed` (emitted with `scope: "excluded"`)
-    /// or test-only (emitted with test scope). With this flag set, that
-    /// subprocess never runs: affected modules keep the conservative
-    /// `waybill:build-inclusion: unknown` marker instead.
-    ///
-    /// Also settable via `WAYBILL_NO_GO_MOD_WHY` (any non-empty value
-    /// other than `0` disables classification). Flag or env var — either
-    /// one disables. Milestone 112.
-    #[arg(long = "no-go-mod-why", global = true)]
+    /// Skip Go build-inclusion classification (~30-50% scan-time savings on Go projects).
+    #[arg(
+        long = "no-go-mod-why",
+        global = true,
+        long_help = "\
+Skip Go package-level build-inclusion classification.
+
+By default, when a `go` toolchain is found on PATH during a Go source scan, \
+waybill runs `go mod why -m -vendor` against each main module (modules batched in chunks of 20, \
+60-second total budget shared across the scan) to classify `go.sum`-fallback modules that sit \
+outside the build graph:
+  - not needed        → CDX `scope: \"excluded\"` + `waybill:build-inclusion: not-needed`
+  - test-only         → test lifecycle scope + `waybill:lifecycle-scope-derivation: go-mod-why`
+  - needed by any main module → emitted unchanged
+
+WHEN TO USE:
+  * Scanning large Go monorepos (kubernetes, moby, podman) where scan wall-time matters.
+  * You don't need fine-grained dev/build/test edge typing.
+  * Empirical: podman 4.4s → 2.5s (~45% faster) with this flag set.
+
+WHEN NOT TO USE:
+  * You need CDX `scope: excluded` on test-only modules for downstream vulnerability filtering.
+  * You care about the m179 typed dev/build/test dep-edge classification.
+
+With this flag set, the subprocess never runs and affected modules keep the conservative \
+always-on `waybill:build-inclusion: unknown` marker instead. Output is otherwise byte-identical.
+
+Also settable via `WAYBILL_NO_GO_MOD_WHY` (any non-empty value other than `0` disables). \
+Flag or env var — either one disables. Milestone 112.\
+"
+    )]
     no_go_mod_why: bool,
 
     /// Drop components whose lifecycle scope matches any of the
