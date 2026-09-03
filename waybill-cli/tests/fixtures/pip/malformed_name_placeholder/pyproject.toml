@@ -1,0 +1,20 @@
+# Feature 677 fixture (issue #768):
+# Reproduces the Cookiecutter-style project skeleton bug — a
+# pyproject.toml whose [project].name is a literal Jinja placeholder
+# that gets substituted when the template is instantiated to create a
+# real project. Pre-fix, waybill's pip reader emitted a phantom
+# pkg:pypi/{{package-name}}@0.0.0 main-module component + the two
+# valid declared-deps below (waybill-fixture-real-dep-*).
+#
+# The dependencies list contains VALID PEP 508 names deliberately —
+# per Session 2026-09-03 Q1 whole-manifest-reject semantics, those
+# valid deps MUST ALSO be dropped because the containing manifest is
+# a template scaffolding (not an authoritative dep declaration).
+
+[project]
+name = "{{package-name}}"
+version = "0.0.0"
+dependencies = [
+    "waybill-fixture-real-dep-1",
+    "waybill-fixture-real-dep-2",
+]
