@@ -104,6 +104,23 @@ fn corpus_image_postgres16() {
     run_target("image-postgres16");
 }
 
+#[test]
+fn corpus_pants_example_python() {
+    run_target("pants-example-python");
+}
+
+#[test]
+fn corpus_pants_example_django() {
+    run_target("pants-example-django");
+}
+
+// pants-example-jvm intentionally omitted — see manifest.rs comment.
+
+#[test]
+fn corpus_pants_example_golang() {
+    run_target("pants-example-golang");
+}
+
 // -----------------------------------------------------------------------
 // US4 — byte-identity across two consecutive runs (opt-in-within-opt-in)
 // -----------------------------------------------------------------------

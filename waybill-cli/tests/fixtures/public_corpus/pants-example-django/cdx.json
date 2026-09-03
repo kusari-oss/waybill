@@ -1,0 +1,3457 @@
+{
+  "bomFormat": "CycloneDX",
+  "components": [
+    {
+      "bom-ref": "pkg:pypi/ansicolors",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "name": "ansicolors",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"ansicolors>=1.0.2\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/ansicolors",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:pypi/ansicolors@1.1.8",
+      "cpe": "cpe:2.3:a:ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "00d2dde5a675579325902536738dd27e4fac1fd68f773fe36c21044eb559e187"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "99f94f5e3348a0bcd43c82e5fc4414013ccc19d70bd939ad71e0133ce9c372e0"
+        }
+      ],
+      "name": "ansicolors",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:* | cpe:2.3:a:python-ansicolors:ansicolors:1.1.8:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/ansicolors@1.1.8",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.1.8"
+    },
+    {
+      "bom-ref": "pkg:pypi/asgiref@3.10.0",
+      "cpe": "cpe:2.3:a:asgiref:asgiref:3.10.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "aef8a81283a34d0ab31630c9b7dfe70c812c95eba78171367ca8745e88124734"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "d89f2d8cd8b56dada7d52fa7dc8075baa08fb836560710d38c292a7a3f78c04e"
+        }
+      ],
+      "name": "asgiref",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:asgiref:asgiref:3.10.0:*:*:*:*:*:*:* | cpe:2.3:a:python-asgiref:asgiref:3.10.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/asgiref@3.10.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.10.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/certifi@2025.10.5",
+      "cpe": "cpe:2.3:a:certifi:certifi:2025.10.5:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "0f212c2744a9bb6de0c56639a6f68afe01ecd92d91f14ae897c4fe7bbeeef0de"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "47c09d31ccf2acf0be3f701ea53595ee7e0b8fa08801c6624be771df09ae7b43"
+        }
+      ],
+      "name": "certifi",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:certifi:certifi:2025.10.5:*:*:*:*:*:*:* | cpe:2.3:a:python-certifi:certifi:2025.10.5:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.7"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/certifi@2025.10.5",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2025.10.5"
+    },
+    {
+      "bom-ref": "pkg:pypi/charset-normalizer@3.4.3",
+      "cpe": "cpe:2.3:a:charset-normalizer:charset-normalizer:3.4.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ce571ab16d890d23b5c278547ba694193a45011ff86a9162a71307ed9f86759a"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "42e5088973e56e31e4fa58eb6bd709e42fc03799c11c42929592889a2e54c491"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "1606f4a55c0fd363d754049cdf400175ee96c992b1f8018b993941f221221c5f"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "cc34f233c9e71701040d772aa7490318673aa7164a0efe3172b2981218c26d93"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "0cacf8f7297b0c4fcb74227692ca46b4a5852f8f4f24b3c766dd94a1075c4884"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "3cfb2aad70f2c6debfbcb717f23b7eb55febc0bb23dcffc0f076009da10c6392"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "6fce4b8500244f6fcb71465d4a4930d132ba9ab8e71a7859e6a5d59851068d14"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "027b776c26d38b7f15b26a5da1044f376455fb3766df8fc38563b4efbc515154"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "320e8e66157cc4e247d9ddca8e21f427efc7a04bbd0ac8a9faf56583fa543f9f"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "e28e334d3ff134e88989d90ba04b47d84382a828c061d0d1027b1b12a62b39b1"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "c6fd51128a41297f5409deab284fecbe5305ebd7e5a1f959bee1c054622b7018"
+        }
+      ],
+      "name": "charset-normalizer",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:charset-normalizer:charset-normalizer:3.4.3:*:*:*:*:*:*:* | cpe:2.3:a:python-charset-normalizer:charset-normalizer:3.4.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.7"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/charset-normalizer@3.4.3",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.4.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/click@8.3.0",
+      "cpe": "cpe:2.3:a:click:click:8.3.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9b9f285302c6e3064f4330c05f05b81945b2a39544279343e6e7c5f27a9baddc"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "e7b8232224eba16f4ebe410c25ced9f7875cb5f3263ffc93cc3e8da705e229c4"
+        }
+      ],
+      "name": "click",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:click:click:8.3.0:*:*:*:*:*:*:* | cpe:2.3:a:python-click:click:8.3.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.10"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/click@8.3.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "8.3.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/django",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "name": "django",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"django>=3.2.13,<4\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/django",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:pypi/django-debug-toolbar",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "name": "django-debug-toolbar",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"django-debug-toolbar>=3.8.0,<4\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/django-debug-toolbar",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:pypi/django-debug-toolbar@3.8.1",
+      "cpe": "cpe:2.3:a:django-debug-toolbar:django-debug-toolbar:3.8.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "879f8a4672d41621c06a4d322dcffa630fc4df056cada6e417ed01db0e5e0478"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "24ef1a7d44d25e60d7951e378454c6509bf536dce7e7d9d36e7c387db499bc27"
+        }
+      ],
+      "name": "django-debug-toolbar",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:django-debug-toolbar:django-debug-toolbar:3.8.1:*:*:*:*:*:*:* | cpe:2.3:a:python-django-debug-toolbar:django-debug-toolbar:3.8.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.7"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/django-debug-toolbar@3.8.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.8.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/django-stubs",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "name": "django-stubs",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"django-stubs~=4.2.7\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/django-stubs",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:pypi/django-stubs-ext@5.2.5",
+      "cpe": "cpe:2.3:a:django-stubs-ext:django-stubs-ext:5.2.5:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9b4b8ac9d32f7e6c304fd05477f8688fae6ed57f6a0f9f4d074f9e55b5a3da14"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "ecc628df29d36cede638567c4e33ff485dd7a99f1552ad0cece8c60e9c3a8872"
+        }
+      ],
+      "name": "django-stubs-ext",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:django-stubs-ext:django-stubs-ext:5.2.5:*:*:*:*:*:*:* | cpe:2.3:a:python-django-stubs-ext:django-stubs-ext:5.2.5:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.10"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/django-stubs-ext@5.2.5",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "5.2.5"
+    },
+    {
+      "bom-ref": "pkg:pypi/django-stubs@4.2.7",
+      "cpe": "cpe:2.3:a:django-stubs:django-stubs:4.2.7:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "4cf4de258fa71adc6f2799e983091b9d46cfc67c6eebc68fe111218c9a62b3b8"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "8ccd2ff4ee5adf22b9e3b7b1a516d2e1c2191e9d94e672c35cc2bc3dd61e0f6b"
+        }
+      ],
+      "name": "django-stubs",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:django-stubs:django-stubs:4.2.7:*:*:*:*:*:*:* | cpe:2.3:a:python-django-stubs:django-stubs:4.2.7:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/django-stubs@4.2.7",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "4.2.7"
+    },
+    {
+      "bom-ref": "pkg:pypi/django@3.2.25",
+      "cpe": "cpe:2.3:a:django:django:3.2.25:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a52ea7fcf280b16f7b739cec38fa6d3f8953a5456986944c3ca97e79882b4e38"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "7ca38a78654aee72378594d63e51636c04b8e28574f5505dff630895b5472777"
+        }
+      ],
+      "name": "django",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:django:django:3.2.25:*:*:*:*:*:*:* | cpe:2.3:a:python-django:django:3.2.25:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.6"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/django@3.2.25",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.2.25"
+    },
+    {
+      "bom-ref": "pkg:pypi/gunicorn",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "name": "gunicorn",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"gunicorn>=20.1.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/gunicorn",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:pypi/gunicorn@23.0.0",
+      "cpe": "cpe:2.3:a:gunicorn:gunicorn:23.0.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec"
+        }
+      ],
+      "name": "gunicorn",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:gunicorn:gunicorn:23.0.0:*:*:*:*:*:*:* | cpe:2.3:a:python-gunicorn:gunicorn:23.0.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.7"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/gunicorn@23.0.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "23.0.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/idna@3.10",
+      "cpe": "cpe:2.3:a:idna:idna:3.10:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "12f65c9b470abda6dc35cf8e63cc574b1c52b11df2c86030af0ac09b01b13ea9"
+        }
+      ],
+      "name": "idna",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:idna:idna:3.10:*:*:*:*:*:*:* | cpe:2.3:a:python-idna:idna:3.10:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.6"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/idna@3.10",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.10"
+    },
+    {
+      "bom-ref": "pkg:pypi/iniconfig@2.1.0",
+      "cpe": "cpe:2.3:a:iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "9deba5723312380e77435581c6bf4935c94cbfab9b1ed33ef8d238ea168eb760"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "3abbd2e30b36733fee78f9c7f7308f2d0050e88f0087fd25c2645f63c773e1c7"
+        }
+      ],
+      "name": "iniconfig",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:* | cpe:2.3:a:python-iniconfig:iniconfig:2.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/iniconfig@2.1.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.1.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/libretranslatepy@2.1.1",
+      "cpe": "cpe:2.3:a:libretranslatepy:libretranslatepy:2.1.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "bf9f8b0003c94f34e141553b7ec0a02876297c06955f5efea49afbc9f85303a9"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "3f28e1b990ba5f514ae215c08ace0c4e2327eeccaa356983aefbca3a25ecc568"
+        }
+      ],
+      "name": "libretranslatepy",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:libretranslatepy:libretranslatepy:2.1.1:*:*:*:*:*:*:* | cpe:2.3:a:python-libretranslatepy:libretranslatepy:2.1.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/libretranslatepy@2.1.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.1.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/lxml@6.0.2",
+      "cpe": "cpe:2.3:a:lxml:lxml:6.0.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "6f91fd2b2ea15a6800c8e24418c0775a1694eefc011392da73bc6cef2623b322"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "fbc74f42c3525ac4ffa4b89cbdd00057b6196bcefe8bce794abd42d33a018092"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "064fdadaf7a21af3ed1dcaa106b854077fbeada827c18f72aec9346847cd65d0"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "e8113639f3296706fbac34a30813929e29247718e88173ad849f57ca59754924"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "2047d8234fe735ab77802ce5f2297e410ff40f5238aec569ad7c8e163d7b19a6"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "700efd30c0fa1a3581d80a748157397559396090a51d306ea59a70020223d16f"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "cd79f3367bd74b317dda655dc8fcfa304d9eb6e4fb06b7168c5cf27f96e0cd62"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "c33e66d44fe60e72397b487ee92e01da0d09ba2d66df8eae42d77b6d06e5eba0"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "6da5185951d72e6f5352166e3da7b0dc27aa70bd1090b0eb3f7f7212b53f1bb8"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "90a345bbeaf9d0587a3aaffb7006aa39ccb6ff0e96a57286c0cb2fd1520ea192"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "c371aa98126a0d4c739ca93ceffa0fd7a5d732e3ac66a46e74339acd4d334564"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "57a86e1ebb4020a38d295c04fc79603c7899e0df71588043eb218722dabc087f"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "65ea18d710fd14e0186c2f973dc60bb52039a275f82d3c44a0e42b43440ea534"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "6ddff43f702905a4e32bc24f3f2e2edfe0f8fde3277d481bffb709a4cced7a1f"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "a8bef9b9825fa8bc816a6e641bb67219489229ebc648be422af695f6e7a4fa7f"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "a59f5448ba2ceccd06995c95ea59a7674a10de0810f2ce90c9006f3cbc044456"
+        }
+      ],
+      "name": "lxml",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:lxml:lxml:6.0.2:*:*:*:*:*:*:* | cpe:2.3:a:python-lxml:lxml:6.0.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/lxml@6.0.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "6.0.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/mypy-extensions@1.1.0",
+      "cpe": "cpe:2.3:a:mypy-extensions:mypy-extensions:1.1.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1be4cccdb0f2482337c4743e60421de3a356cd97508abadd57d47403e94f5505"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "52e68efc3284861e772bbcd66823fde5ae21fd2fdb51c62a211403730b916558"
+        }
+      ],
+      "name": "mypy-extensions",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:mypy-extensions:mypy-extensions:1.1.0:*:*:*:*:*:*:* | cpe:2.3:a:python-mypy-extensions:mypy-extensions:1.1.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/mypy-extensions@1.1.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.1.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/mypy@1.18.1",
+      "cpe": "cpe:2.3:a:mypy:mypy:1.18.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "b76a4de66a0ac01da1be14ecc8ae88ddea33b8380284a9e3eae39d57ebcbe26e"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "9e988c64ad3ac5987f43f5154f884747faf62141b7f842e87465b45299eea5a9"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "8750ceb014a96c9890421c83f0db53b0f3b8633e2864c6f9bc0a8e93951ed18d"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "7509549b5e41be279afc1228242d0e397f1af2919a8f2877ad542b199dc4083e"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "5956ecaabb3a245e3f34100172abca1507be687377fe20e24d6a7557e07080e2"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "fb89ea08ff41adf59476b235293679a6eb53a7b9400f6256272fb6029bec3ce5"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "502cde8896be8e638588b90fdcb4c5d5b8c1b004dfc63fd5604a973547367bb9"
+        }
+      ],
+      "name": "mypy",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:mypy:mypy:1.18.1:*:*:*:*:*:*:* | cpe:2.3:a:python-mypy:mypy:1.18.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\",\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"mypy==1.18.1\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\",\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/mypy@1.18.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.18.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/packaging@25.0",
+      "cpe": "cpe:2.3:a:packaging:packaging:25.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f"
+        }
+      ],
+      "name": "packaging",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:packaging:packaging:25.0:*:*:*:*:*:*:* | cpe:2.3:a:python-packaging:packaging:25.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/packaging@25.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "25.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/pathspec@0.12.1",
+      "cpe": "cpe:2.3:a:pathspec:pathspec:0.12.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712"
+        }
+      ],
+      "name": "pathspec",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:pathspec:pathspec:0.12.1:*:*:*:*:*:*:* | cpe:2.3:a:python-pathspec:pathspec:0.12.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pathspec@0.12.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.12.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/pluggy@1.6.0",
+      "cpe": "cpe:2.3:a:pluggy:pluggy:1.6.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3"
+        }
+      ],
+      "name": "pluggy",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:pluggy:pluggy:1.6.0:*:*:*:*:*:*:* | cpe:2.3:a:python-pluggy:pluggy:1.6.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pluggy@1.6.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "1.6.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/protobuf",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "name": "protobuf",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"protobuf>=3.11.3\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/protobuf",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:pypi/protobuf@6.32.1",
+      "cpe": "cpe:2.3:a:protobuf:protobuf:6.32.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "2601b779fc7d32a866c6b4404f9d42a3f67c5b9f3f15b4db3cccabe06b95c346"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "d8c7e6eb619ffdf105ee4ab76af5a68b60a9d0f66da3ea12d1640e6d8dab7281"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "2f5b80a49e1eb7b86d85fcd23fe92df154b9730a725c3b38c4e43b9d77018bf4"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "b1864818300c297265c83a4982fd3169f97122c299f56a56e2445c3698d34710"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "ee2469e4a021474ab9baafea6cd070e5bf27c7d29433504ddea1a4ee5850f68d"
+        }
+      ],
+      "name": "protobuf",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:protobuf:protobuf:6.32.1:*:*:*:*:*:*:* | cpe:2.3:a:python-protobuf:protobuf:6.32.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/protobuf@6.32.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "6.32.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/pygments@2.19.2",
+      "cpe": "cpe:2.3:a:pygments:pygments:2.19.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887"
+        }
+      ],
+      "name": "pygments",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:pygments:pygments:2.19.2:*:*:*:*:*:*:* | cpe:2.3:a:python-pygments:pygments:2.19.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pygments@2.19.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.19.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/pytest",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "name": "pytest",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"pytest>=6.0.1\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pytest",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:pypi/pytest-django",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "name": "pytest-django",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"pytest-django>=4,<5\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pytest-django",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:pypi/pytest-django@4.11.1",
+      "cpe": "cpe:2.3:a:pytest-django:pytest-django:4.11.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "1b63773f648aa3d8541000c26929c1ea63934be1cfa674c76436966d73fe6a10"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "a949141a1ee103cb0e7a20f1451d355f83f5e4a5d07bdd4dcfdd1fd0ff227991"
+        }
+      ],
+      "name": "pytest-django",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:pytest-django:pytest-django:4.11.1:*:*:*:*:*:*:* | cpe:2.3:a:python-pytest-django:pytest-django:4.11.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pytest-django@4.11.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "4.11.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/pytest@8.4.2",
+      "cpe": "cpe:2.3:a:pytest:pytest:8.4.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "86c0d0b93306b961d58d62a4db4879f27fe25513d4b969df351abdddb3c30e01"
+        }
+      ],
+      "name": "pytest",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:pytest:pytest:8.4.2:*:*:*:*:*:*:* | cpe:2.3:a:python-pytest:pytest:8.4.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pytest@8.4.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "8.4.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/pytz@2025.2",
+      "cpe": "cpe:2.3:a:pytz:pytz:2025.2:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "5ddf76296dd8c44c26eb8f4b6f35488f3ccbf6fbbd7adee0b7262d43f0ec2f00"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "360b9e3dbb49a209c21ad61809c7fb453643e048b38924c765813546746e81c3"
+        }
+      ],
+      "name": "pytz",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:pytz:pytz:2025.2:*:*:*:*:*:*:* | cpe:2.3:a:python-pytz:pytz:2025.2:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/pytz@2025.2",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2025.2"
+    },
+    {
+      "bom-ref": "pkg:pypi/requests",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "name": "requests",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"requests>=2.25.1\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/requests",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:pypi/requests@2.32.5",
+      "cpe": "cpe:2.3:a:requests:requests:2.32.5:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "dbba0bac56e100853db0ea71b82b4dfd5fe2bf6d3754a8893c3af500cec7d7cf"
+        }
+      ],
+      "name": "requests",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:requests:requests:2.32.5:*:*:*:*:*:*:* | cpe:2.3:a:python-requests:requests:2.32.5:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/requests@2.32.5",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.32.5"
+    },
+    {
+      "bom-ref": "pkg:pypi/setuptools",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "name": "setuptools",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"setuptools>=42.0.0\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/setuptools",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:pypi/setuptools@80.9.0",
+      "cpe": "cpe:2.3:a:setuptools:setuptools:80.9.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c"
+        }
+      ],
+      "name": "setuptools",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:setuptools:setuptools:80.9.0:*:*:*:*:*:*:* | cpe:2.3:a:python-setuptools:setuptools:80.9.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/setuptools@80.9.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "80.9.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/sqlparse@0.5.3",
+      "cpe": "cpe:2.3:a:sqlparse:sqlparse:0.5.3:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "cf2196ed3418f3ba5de6af7e82c694a9fbdbfecccdfc72e281548517081f16ca"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "09f67787f56a0b16ecdbde1bfc7f5d9c3371ca683cfeaa8e6ff60b4807ec9272"
+        }
+      ],
+      "name": "sqlparse",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:sqlparse:sqlparse:0.5.3:*:*:*:*:*:*:* | cpe:2.3:a:python-sqlparse:sqlparse:0.5.3:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.8"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/sqlparse@0.5.3",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "0.5.3"
+    },
+    {
+      "bom-ref": "pkg:pypi/translate",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "name": "translate",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"translate>=3.2.1\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/translate",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:pypi/translate@3.6.1",
+      "cpe": "cpe:2.3:a:translate:translate:3.6.1:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "cebfb004989d9a2ab0d24c0c5805783c7f4e07243ea4ed2a8f1809d072bf712b"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "7e70ffa46f193cc744be7c88b8e1323f10f6b2bb90d24bb5d29fdf1e56618783"
+        }
+      ],
+      "name": "translate",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:translate:translate:3.6.1:*:*:*:*:*:*:* | cpe:2.3:a:python-translate:translate:3.6.1:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/translate@3.6.1",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "3.6.1"
+    },
+    {
+      "bom-ref": "pkg:pypi/types-pytz@2025.2.0.20250809",
+      "cpe": "cpe:2.3:a:types-pytz:types-pytz:2025.2.0.20250809:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "4f55ed1b43e925cf851a756fe1707e0f5deeb1976e15bf844bcaa025e8fbd0db"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "222e32e6a29bb28871f8834e8785e3801f2dc4441c715cd2082b271eecbe21e5"
+        }
+      ],
+      "name": "types-pytz",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:types-pytz:types-pytz:2025.2.0.20250809:*:*:*:*:*:*:* | cpe:2.3:a:python-types-pytz:types-pytz:2025.2.0.20250809:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/types-pytz@2025.2.0.20250809",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2025.2.0.20250809"
+    },
+    {
+      "bom-ref": "pkg:pypi/types-pyyaml@6.0.12.20250915",
+      "cpe": "cpe:2.3:a:types-pyyaml:types-pyyaml:6.0.12.20250915:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e7d4d9e064e89a3b3cae120b4990cd370874d2bf12fa5f46c97018dd5d3c9ab6"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "0f8b54a528c303f0e6f7165687dd33fafa81c807fcac23f632b63aa624ced1d3"
+        }
+      ],
+      "name": "types-pyyaml",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:types-pyyaml:types-pyyaml:6.0.12.20250915:*:*:*:*:*:*:* | cpe:2.3:a:python-types-pyyaml:types-pyyaml:6.0.12.20250915:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/types-pyyaml@6.0.12.20250915",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "6.0.12.20250915"
+    },
+    {
+      "bom-ref": "pkg:pypi/types-requests",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "requirements.txt"
+          }
+        ]
+      },
+      "name": "types-requests",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"requirements.txt\"]"
+        },
+        {
+          "name": "waybill:requirement-ranges",
+          "value": "[\"types-requests>=2.25.1\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "design"
+        },
+        {
+          "name": "waybill:unresolved-reason",
+          "value": "no version specifier in requirements.txt; no uv.lock / poetry.lock fallback"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\".\"]"
+        }
+      ],
+      "purl": "pkg:pypi/types-requests",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library"
+    },
+    {
+      "bom-ref": "pkg:pypi/types-requests@2.32.4.20250913",
+      "cpe": "cpe:2.3:a:types-requests:types-requests:2.32.4.20250913:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "78c9c1fffebbe0fa487a418e0fa5252017e9c60d1a2da394077f1780f655d7e1"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "abd6d4f9ce3a9383f269775a9835a4c24e5cd6b9f647d64f88aa4613c33def5d"
+        }
+      ],
+      "name": "types-requests",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:types-requests:types-requests:2.32.4.20250913:*:*:*:*:*:*:* | cpe:2.3:a:python-types-requests:types-requests:2.32.4.20250913:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/types-requests@2.32.4.20250913",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.32.4.20250913"
+    },
+    {
+      "bom-ref": "pkg:pypi/typing-extensions@4.15.0",
+      "cpe": "cpe:2.3:a:typing-extensions:typing-extensions:4.15.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466"
+        }
+      ],
+      "name": "typing-extensions",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:typing-extensions:typing-extensions:4.15.0:*:*:*:*:*:*:* | cpe:2.3:a:python-typing-extensions:typing-extensions:4.15.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/typing-extensions@4.15.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "4.15.0"
+    },
+    {
+      "bom-ref": "pkg:pypi/urllib3@2.5.0",
+      "cpe": "cpe:2.3:a:urllib3:urllib3:2.5.0:*:*:*:*:*:*:*",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 0.85,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 0.85,
+                "technique": "manifest-analysis"
+              }
+            ]
+          }
+        ],
+        "occurrences": [
+          {
+            "additionalContext": "{\"sha256\":\"<masked-sha256>\"}",
+            "location": "lockfiles/python-default.lock"
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc"
+        },
+        {
+          "alg": "SHA-256",
+          "content": "3fc47733c7e419d4bc3f6b3dc2b4f890bb743906a30d56ba4a5bfa4bbff92760"
+        }
+      ],
+      "name": "urllib3",
+      "properties": [
+        {
+          "name": "waybill:cpe-candidates",
+          "value": "cpe:2.3:a:urllib3:urllib3:2.5.0:*:*:*:*:*:*:* | cpe:2.3:a:python-urllib3:urllib3:2.5.0:*:*:*:*:*:*:*"
+        },
+        {
+          "name": "waybill:source-files",
+          "value": "[\"lockfiles/python-default.lock\"]"
+        },
+        {
+          "name": "waybill:sbom-tier",
+          "value": "source"
+        },
+        {
+          "name": "waybill:pants-resolve",
+          "value": "python-default"
+        },
+        {
+          "name": "waybill:requires-python",
+          "value": ">=3.9"
+        },
+        {
+          "name": "waybill:workspace-member",
+          "value": "[\"lockfiles\"]"
+        }
+      ],
+      "purl": "pkg:pypi/urllib3@2.5.0",
+      "supplier": {
+        "name": "PyPI"
+      },
+      "type": "library",
+      "version": "2.5.0"
+    },
+    {
+      "bom-ref": "pkg:generic/file-tier?content-sha256=2ecc548aa7a68dc6e83f75003316648417520fb3a59f85dae7e24337414db378",
+      "evidence": {
+        "identity": [
+          {
+            "confidence": 1.0,
+            "field": "purl",
+            "methods": [
+              {
+                "confidence": 1.0,
+                "technique": "hash-comparison"
+              }
+            ]
+          }
+        ]
+      },
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "2ecc548aa7a68dc6e83f75003316648417520fb3a59f85dae7e24337414db378"
+        }
+      ],
+      "name": "generate_constraints.sh",
+      "properties": [
+        {
+          "name": "waybill:source-files",
+          "value": "[\"build-support/generate_constraints.sh\"]"
+        },
+        {
+          "name": "waybill:component-tier",
+          "value": "file"
+        },
+        {
+          "name": "waybill:file-paths",
+          "value": "[\"build-support/generate_constraints.sh\"]"
+        }
+      ],
+      "type": "file",
+      "version": ""
+    }
+  ],
+  "compositions": [
+    {
+      "aggregate": "complete",
+      "assemblies": [
+        "pkg:pypi/ansicolors",
+        "pkg:pypi/ansicolors@1.1.8",
+        "pkg:pypi/asgiref@3.10.0",
+        "pkg:pypi/certifi@2025.10.5",
+        "pkg:pypi/charset-normalizer@3.4.3",
+        "pkg:pypi/click@8.3.0",
+        "pkg:pypi/django",
+        "pkg:pypi/django-debug-toolbar",
+        "pkg:pypi/django-debug-toolbar@3.8.1",
+        "pkg:pypi/django-stubs",
+        "pkg:pypi/django-stubs-ext@5.2.5",
+        "pkg:pypi/django-stubs@4.2.7",
+        "pkg:pypi/django@3.2.25",
+        "pkg:pypi/gunicorn",
+        "pkg:pypi/gunicorn@23.0.0",
+        "pkg:pypi/idna@3.10",
+        "pkg:pypi/iniconfig@2.1.0",
+        "pkg:pypi/libretranslatepy@2.1.1",
+        "pkg:pypi/lxml@6.0.2",
+        "pkg:pypi/mypy-extensions@1.1.0",
+        "pkg:pypi/mypy@1.18.1",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pathspec@0.12.1",
+        "pkg:pypi/pluggy@1.6.0",
+        "pkg:pypi/protobuf",
+        "pkg:pypi/protobuf@6.32.1",
+        "pkg:pypi/pygments@2.19.2",
+        "pkg:pypi/pytest",
+        "pkg:pypi/pytest-django",
+        "pkg:pypi/pytest-django@4.11.1",
+        "pkg:pypi/pytest@8.4.2",
+        "pkg:pypi/pytz@2025.2",
+        "pkg:pypi/requests",
+        "pkg:pypi/requests@2.32.5",
+        "pkg:pypi/setuptools",
+        "pkg:pypi/setuptools@80.9.0",
+        "pkg:pypi/sqlparse@0.5.3",
+        "pkg:pypi/translate",
+        "pkg:pypi/translate@3.6.1",
+        "pkg:pypi/types-pytz@2025.2.0.20250809",
+        "pkg:pypi/types-pyyaml@6.0.12.20250915",
+        "pkg:pypi/types-requests",
+        "pkg:pypi/types-requests@2.32.4.20250913",
+        "pkg:pypi/typing-extensions@4.15.0",
+        "pkg:pypi/urllib3@2.5.0"
+      ],
+      "dependencies": [
+        "pkg:pypi/ansicolors",
+        "pkg:pypi/ansicolors@1.1.8",
+        "pkg:pypi/asgiref@3.10.0",
+        "pkg:pypi/certifi@2025.10.5",
+        "pkg:pypi/charset-normalizer@3.4.3",
+        "pkg:pypi/click@8.3.0",
+        "pkg:pypi/django",
+        "pkg:pypi/django-debug-toolbar",
+        "pkg:pypi/django-debug-toolbar@3.8.1",
+        "pkg:pypi/django-stubs",
+        "pkg:pypi/django-stubs-ext@5.2.5",
+        "pkg:pypi/django-stubs@4.2.7",
+        "pkg:pypi/django@3.2.25",
+        "pkg:pypi/gunicorn",
+        "pkg:pypi/gunicorn@23.0.0",
+        "pkg:pypi/idna@3.10",
+        "pkg:pypi/iniconfig@2.1.0",
+        "pkg:pypi/libretranslatepy@2.1.1",
+        "pkg:pypi/lxml@6.0.2",
+        "pkg:pypi/mypy-extensions@1.1.0",
+        "pkg:pypi/mypy@1.18.1",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pathspec@0.12.1",
+        "pkg:pypi/pluggy@1.6.0",
+        "pkg:pypi/protobuf",
+        "pkg:pypi/protobuf@6.32.1",
+        "pkg:pypi/pygments@2.19.2",
+        "pkg:pypi/pytest",
+        "pkg:pypi/pytest-django",
+        "pkg:pypi/pytest-django@4.11.1",
+        "pkg:pypi/pytest@8.4.2",
+        "pkg:pypi/pytz@2025.2",
+        "pkg:pypi/requests",
+        "pkg:pypi/requests@2.32.5",
+        "pkg:pypi/setuptools",
+        "pkg:pypi/setuptools@80.9.0",
+        "pkg:pypi/sqlparse@0.5.3",
+        "pkg:pypi/translate",
+        "pkg:pypi/translate@3.6.1",
+        "pkg:pypi/types-pytz@2025.2.0.20250809",
+        "pkg:pypi/types-pyyaml@6.0.12.20250915",
+        "pkg:pypi/types-requests",
+        "pkg:pypi/types-requests@2.32.4.20250913",
+        "pkg:pypi/typing-extensions@4.15.0",
+        "pkg:pypi/urllib3@2.5.0"
+      ]
+    },
+    {
+      "aggregate": "incomplete_first_party_only",
+      "assemblies": [
+        "pants-example-django@7da716f"
+      ]
+    },
+    {
+      "aggregate": "complete",
+      "dependencies": [
+        "pants-example-django@7da716f"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "dependsOn": [
+        "pkg:generic/file-tier?content-sha256=2ecc548aa7a68dc6e83f75003316648417520fb3a59f85dae7e24337414db378",
+        "pkg:pypi/ansicolors",
+        "pkg:pypi/ansicolors@1.1.8",
+        "pkg:pypi/django",
+        "pkg:pypi/django-debug-toolbar",
+        "pkg:pypi/django-debug-toolbar@3.8.1",
+        "pkg:pypi/django-stubs",
+        "pkg:pypi/django-stubs@4.2.7",
+        "pkg:pypi/gunicorn",
+        "pkg:pypi/gunicorn@23.0.0",
+        "pkg:pypi/protobuf",
+        "pkg:pypi/protobuf@6.32.1",
+        "pkg:pypi/pytest",
+        "pkg:pypi/pytest-django",
+        "pkg:pypi/pytest-django@4.11.1",
+        "pkg:pypi/requests",
+        "pkg:pypi/setuptools",
+        "pkg:pypi/translate",
+        "pkg:pypi/translate@3.6.1",
+        "pkg:pypi/types-requests",
+        "pkg:pypi/types-requests@2.32.4.20250913"
+      ],
+      "ref": "pants-example-django@7da716f"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:generic/file-tier?content-sha256=2ecc548aa7a68dc6e83f75003316648417520fb3a59f85dae7e24337414db378"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/ansicolors"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/ansicolors@1.1.8"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/mypy@1.18.1",
+        "pkg:pypi/pytest@8.4.2",
+        "pkg:pypi/typing-extensions@4.15.0"
+      ],
+      "ref": "pkg:pypi/asgiref@3.10.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/certifi@2025.10.5"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/charset-normalizer@3.4.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/click@8.3.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/django"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/django-debug-toolbar"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/django@3.2.25",
+        "pkg:pypi/sqlparse@0.5.3"
+      ],
+      "ref": "pkg:pypi/django-debug-toolbar@3.8.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/django-stubs"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/django@3.2.25",
+        "pkg:pypi/typing-extensions@4.15.0"
+      ],
+      "ref": "pkg:pypi/django-stubs-ext@5.2.5"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/django-stubs-ext@5.2.5",
+        "pkg:pypi/django@3.2.25",
+        "pkg:pypi/mypy@1.18.1",
+        "pkg:pypi/types-pytz@2025.2.0.20250809",
+        "pkg:pypi/types-pyyaml@6.0.12.20250915",
+        "pkg:pypi/typing-extensions@4.15.0"
+      ],
+      "ref": "pkg:pypi/django-stubs@4.2.7"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/asgiref@3.10.0",
+        "pkg:pypi/pytz@2025.2",
+        "pkg:pypi/sqlparse@0.5.3"
+      ],
+      "ref": "pkg:pypi/django@3.2.25"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/gunicorn"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pytest@8.4.2"
+      ],
+      "ref": "pkg:pypi/gunicorn@23.0.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/mypy@1.18.1",
+        "pkg:pypi/pytest@8.4.2"
+      ],
+      "ref": "pkg:pypi/idna@3.10"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/iniconfig@2.1.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/libretranslatepy@2.1.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/lxml@6.0.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/mypy-extensions@1.1.0"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/lxml@6.0.2",
+        "pkg:pypi/mypy-extensions@1.1.0",
+        "pkg:pypi/pathspec@0.12.1",
+        "pkg:pypi/setuptools@80.9.0",
+        "pkg:pypi/typing-extensions@4.15.0"
+      ],
+      "ref": "pkg:pypi/mypy@1.18.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/packaging@25.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/pathspec@0.12.1"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/pytest@8.4.2"
+      ],
+      "ref": "pkg:pypi/pluggy@1.6.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/protobuf"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/protobuf@6.32.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/pygments@2.19.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/pytest"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/pytest-django"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/django@3.2.25",
+        "pkg:pypi/pytest@8.4.2"
+      ],
+      "ref": "pkg:pypi/pytest-django@4.11.1"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/iniconfig@2.1.0",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pluggy@1.6.0",
+        "pkg:pypi/pygments@2.19.2",
+        "pkg:pypi/requests@2.32.5",
+        "pkg:pypi/setuptools@80.9.0"
+      ],
+      "ref": "pkg:pypi/pytest@8.4.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/pytz@2025.2"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/requests"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/certifi@2025.10.5",
+        "pkg:pypi/charset-normalizer@3.4.3",
+        "pkg:pypi/idna@3.10",
+        "pkg:pypi/urllib3@2.5.0"
+      ],
+      "ref": "pkg:pypi/requests@2.32.5"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/setuptools"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/mypy@1.18.1",
+        "pkg:pypi/packaging@25.0",
+        "pkg:pypi/pytest@8.4.2"
+      ],
+      "ref": "pkg:pypi/setuptools@80.9.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/sqlparse@0.5.3"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/translate"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/click@8.3.0",
+        "pkg:pypi/libretranslatepy@2.1.1",
+        "pkg:pypi/lxml@6.0.2",
+        "pkg:pypi/requests@2.32.5"
+      ],
+      "ref": "pkg:pypi/translate@3.6.1"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/types-pytz@2025.2.0.20250809"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/types-pyyaml@6.0.12.20250915"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/types-requests"
+    },
+    {
+      "dependsOn": [
+        "pkg:pypi/urllib3@2.5.0"
+      ],
+      "ref": "pkg:pypi/types-requests@2.32.4.20250913"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/typing-extensions@4.15.0"
+    },
+    {
+      "dependsOn": [],
+      "ref": "pkg:pypi/urllib3@2.5.0"
+    }
+  ],
+  "metadata": {
+    "authors": [
+      {
+        "name": "waybill"
+      }
+    ],
+    "component": {
+      "bom-ref": "pants-example-django@7da716f",
+      "cpe": "cpe:2.3:a:waybill:pants-example-django:7da716f:*:*:*:*:*:*:*",
+      "externalReferences": [
+        {
+          "comment": "auto-detected from git remote `origin`",
+          "type": "vcs",
+          "url": "https://github.com/kusari-sandbox/example-django"
+        }
+      ],
+      "name": "pants-example-django",
+      "purl": "pkg:generic/pants-example-django@7da716f",
+      "type": "application",
+      "version": "7da716f"
+    },
+    "licenses": [
+      {
+        "license": {
+          "id": "CC0-1.0"
+        }
+      }
+    ],
+    "lifecycles": [
+      {
+        "phase": "design"
+      },
+      {
+        "phase": "pre-build"
+      }
+    ],
+    "properties": [
+      {
+        "name": "waybill:generation-context",
+        "value": "filesystem-scan"
+      },
+      {
+        "name": "waybill:cisa-2026-lifecycle",
+        "value": "after-build"
+      },
+      {
+        "name": "waybill:os-release-missing-fields",
+        "value": "ID,VERSION_ID"
+      },
+      {
+        "name": "waybill:trace-integrity-ring-buffer-overflows",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-events-dropped",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-uprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "waybill:trace-integrity-kprobe-attach-failures",
+        "value": "0"
+      },
+      {
+        "name": "waybill:graph-completeness",
+        "value": "complete"
+      },
+      {
+        "name": "waybill:workspaces-detected",
+        "value": "[\".\",\"lockfiles\"]"
+      }
+    ],
+    "supplier": {
+      "name": "waybill contributors"
+    },
+    "timestamp": "<masked>",
+    "tools": {
+      "components": [
+        {
+          "name": "waybill",
+          "publisher": "waybill contributors",
+          "type": "application",
+          "version": "0.5.1-alpha.1"
+        }
+      ]
+    }
+  },
+  "serialNumber": "<masked>",
+  "specVersion": "1.6",
+  "version": 1,
+  "vulnerabilities": []
+}

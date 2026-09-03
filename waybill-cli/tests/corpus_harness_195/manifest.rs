@@ -121,6 +121,57 @@ pub const TARGETS: &[CorpusTarget] = &[
         exercises: "deb reader + Go BuildInfo (gosu bin) + m177 TransitiveEdgesUnresolvable classifier",
         layer1: super::layer1_assertions::image_postgres16_layer1,
     },
+    // Pants example repos — permanent regression gates for m223 (pex-lockfile
+    // reader), m224 (coursier-JVM), m226 (Pants Go enricher), m672 (front-
+    // matter tolerance + `[python.resolves]` map), m673 (repo-root +
+    // `lockfiles/` discovery), m674 (uv.lock reader + Pants FR-002 fallback).
+    // Forked into kusari-sandbox/* as insurance against upstream force-push
+    // or deletion; refresh via `git fetch upstream && git merge upstream/main`
+    // in each fork, then bump the SHA below.
+    CorpusTarget {
+        name: "pants-example-python",
+        source: SourceKind::Git {
+            clone_url: "https://github.com/kusari-sandbox/example-python",
+        },
+        pinned: PinnedRef::Sha {
+            // Fork of pantsbuild/example-python HEAD as of 2026-09-02
+            hex: "e8cfd79b5e2670b242d2e680515473fa48a2b6b2",
+        },
+        ecosystem: Ecosystem::Python,
+        exercises: "m673 US1 (repo-root `python-default.lock` discovery) + m223 Pants pex-lockfile reader",
+        layer1: super::layer1_assertions::pants_example_python_layer1,
+    },
+    CorpusTarget {
+        name: "pants-example-django",
+        source: SourceKind::Git {
+            clone_url: "https://github.com/kusari-sandbox/example-django",
+        },
+        pinned: PinnedRef::Sha {
+            // Fork of pantsbuild/example-django HEAD as of 2026-09-02
+            hex: "7da716ffb9af72c9ab5d10d43c221ae7d6469ad9",
+        },
+        ecosystem: Ecosystem::Python,
+        exercises: "m673 US2 (`lockfiles/python-default.lock` discovery) + m223 Pants pex-lockfile reader",
+        layer1: super::layer1_assertions::pants_example_django_layer1,
+    },
+    // NOTE: pants-example-jvm intentionally omitted for now — the m224 reader
+    // rejects the coord-table form of `directDependencies` used by real Pants
+    // coursier lockfiles (issue #756). Fork is ready at
+    // kusari-sandbox/example-jvm at SHA 675ee75d36f2c1b096b0def51efcfffd02bd1251;
+    // add the entry back once #756 is resolved.
+    CorpusTarget {
+        name: "pants-example-golang",
+        source: SourceKind::Git {
+            clone_url: "https://github.com/kusari-sandbox/example-golang",
+        },
+        pinned: PinnedRef::Sha {
+            // Fork of pantsbuild/example-golang HEAD as of 2026-09-02
+            hex: "048c22e53f0fac68a4b1d49e1c99b8ce6746cf0a",
+        },
+        ecosystem: Ecosystem::Go,
+        exercises: "m226 Pants Go enricher + m053/m055 Go go.sum reader",
+        layer1: super::layer1_assertions::pants_example_golang_layer1,
+    },
 ];
 
 // -----------------------------------------------------------------------
@@ -129,13 +180,20 @@ pub const TARGETS: &[CorpusTarget] = &[
 
 #[test]
 fn public_only_audit() {
+    // FR-003 intent: reject Kusari-internal (private) hostnames. The
+    // `kusari-sandbox` GitHub org is a PUBLIC fork host used for
+    // pantsbuild/example-* mirrors (insurance against upstream force-push
+    // or deletion) — those URLs are exempt.
     let mut offenders: Vec<&str> = Vec::new();
     for t in TARGETS {
         let ref_str = match &t.source {
             SourceKind::Git { clone_url } => *clone_url,
             SourceKind::OciImage { image_ref } => *image_ref,
         };
-        if ref_str.to_ascii_lowercase().contains("kusari") {
+        let lower = ref_str.to_ascii_lowercase();
+        if lower.contains("kusari")
+            && !lower.starts_with("https://github.com/kusari-sandbox/")
+        {
             offenders.push(t.name);
         }
     }
@@ -143,7 +201,8 @@ fn public_only_audit() {
         offenders.is_empty(),
         "m195 FR-003 violation — corpus targets reference Kusari-internal \
          hostnames: {offenders:?}. All corpus targets MUST be publicly-\
-         reachable per spec §User Story 3.",
+         reachable per spec §User Story 3. Public forks under \
+         `github.com/kusari-sandbox/*` are exempt.",
     );
 }
 
