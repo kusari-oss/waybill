@@ -469,6 +469,123 @@ pub fn pants_example_golang_layer1(sboms: &EmittedSboms) -> Result<(), Assertion
 }
 
 // -----------------------------------------------------------------------
+// pants-example-javascript — feature 675 (issue #760 option-B corpus gate)
+//
+// Locks in the current npm-reader-stack (m066 + m147 + m180) behavior on
+// a Pants-managed JavaScript monorepo. Four invariants encode what
+// operators see today when they scan a Pants-JS repo:
+//   1. `pkg:npm/*` count >= 250 (baseline 302 at pinned SHA)
+//   2. `pkg:npm/esbuild@*` present (top-level devDep anchor)
+//   3. `pkg:npm/jest@*` present (top-level devDep anchor — dual-anchor)
+//   4. No `waybill:pants-resolve` or `waybill:pants-target` on any
+//      `pkg:npm/*` component (spec 675 FR-006 regression-lock —
+//      Pants-side provenance annotations on npm surface are the
+//      tracked issue #760 option A follow-up)
+//
+// If issue #760 option A ships, invariant 4 fires. That failure IS
+// the signal — regenerate goldens, remove invariant 4, update spec
+// 675 FR-006.
+// -----------------------------------------------------------------------
+
+pub fn pants_example_javascript_layer1(sboms: &EmittedSboms) -> Result<(), AssertionFailure> {
+    // Invariant 1 — npm-transitives-present-at-scale.
+    let npm_count = sboms
+        .cdx
+        .get("components")
+        .and_then(|c| c.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter(|c| {
+                    c.get("purl")
+                        .and_then(|p| p.as_str())
+                        .is_some_and(|p| p.starts_with("pkg:npm/"))
+                })
+                .count()
+        })
+        .unwrap_or(0);
+    if npm_count < 250 {
+        return Err(AssertionFailure {
+            invariant_name: "npm-transitives-present-at-scale",
+            format: FailureFormat::Cdx,
+            observed: format!("{npm_count} pkg:npm/* components"),
+            expected: "at least 250 pkg:npm/* components (observed baseline 302 at pinned SHA)".to_string(),
+            suggested_action: "investigate npm reader (m066 / m147 / m180) or shared walker — pants-example-javascript at pinned SHA should emit >= 250 pkg:npm/* components",
+        });
+    }
+
+    // Invariant 2 — top-level-devdep-esbuild-present.
+    if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:npm/esbuild@")) {
+        return Err(AssertionFailure {
+            invariant_name: "top-level-devdep-esbuild-present",
+            format: FailureFormat::Cdx,
+            observed: "no pkg:npm/esbuild@* component".to_string(),
+            expected: "at least one pkg:npm/esbuild@X.Y.Z component (top-level devDep declared in package.json)".to_string(),
+            suggested_action: "investigate npm reader top-level-devDep resolution — package.json declares esbuild@^0.20.1",
+        });
+    }
+
+    // Invariant 3 — top-level-devdep-jest-present.
+    if !cdx_has_component_purl(&sboms.cdx, |p| p.starts_with("pkg:npm/jest@")) {
+        return Err(AssertionFailure {
+            invariant_name: "top-level-devdep-jest-present",
+            format: FailureFormat::Cdx,
+            observed: "no pkg:npm/jest@* component".to_string(),
+            expected: "at least one pkg:npm/jest@X.Y.Z component (top-level devDep declared in package.json)".to_string(),
+            suggested_action: "investigate npm reader top-level-devDep resolution — package.json declares jest@^29.7.0",
+        });
+    }
+
+    // Invariant 4 — no-accidental-pants-annotations-on-npm.
+    // Iterate components manually so we can build a diagnostic naming
+    // the offending PURLs on failure.
+    let offenders: Vec<String> = sboms
+        .cdx
+        .get("components")
+        .and_then(|c| c.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter(|c| {
+                    let is_npm = c
+                        .get("purl")
+                        .and_then(|p| p.as_str())
+                        .is_some_and(|p| p.starts_with("pkg:npm/"));
+                    if !is_npm {
+                        return false;
+                    }
+                    c.get("properties")
+                        .and_then(|p| p.as_array())
+                        .map(|props| {
+                            props.iter().any(|p| {
+                                p.get("name").and_then(|n| n.as_str()).is_some_and(|n| {
+                                    n == "waybill:pants-resolve" || n == "waybill:pants-target"
+                                })
+                            })
+                        })
+                        .unwrap_or(false)
+                })
+                .filter_map(|c| c.get("purl").and_then(|p| p.as_str()).map(str::to_string))
+                .take(5)
+                .collect()
+        })
+        .unwrap_or_default();
+    if !offenders.is_empty() {
+        return Err(AssertionFailure {
+            invariant_name: "no-accidental-pants-annotations-on-npm",
+            format: FailureFormat::Cdx,
+            observed: format!(
+                "{} pkg:npm/* components carry unexpected Pants annotations (sample: {:?})",
+                offenders.len(),
+                offenders
+            ),
+            expected: "no pkg:npm/* component carries waybill:pants-resolve or waybill:pants-target (spec 675 FR-006 regression-lock)".to_string(),
+            suggested_action: "unexpected Pants-side provenance annotation on npm surface. If intentional (issue #760 option A landed), regenerate goldens + remove this invariant + update spec 675 FR-006. If unintentional, investigate annotation leak.",
+        });
+    }
+
+    Ok(())
+}
+
+// -----------------------------------------------------------------------
 // image-postgres16 (US2)
 // -----------------------------------------------------------------------
 

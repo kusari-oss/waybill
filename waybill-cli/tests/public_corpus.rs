@@ -121,6 +121,11 @@ fn corpus_pants_example_golang() {
     run_target("pants-example-golang");
 }
 
+#[test]
+fn corpus_pants_example_javascript() {
+    run_target("pants-example-javascript");
+}
+
 // -----------------------------------------------------------------------
 // US4 — byte-identity across two consecutive runs (opt-in-within-opt-in)
 // -----------------------------------------------------------------------

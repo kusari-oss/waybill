@@ -6,6 +6,8 @@ pub mod cache;
 #[allow(unused)]
 pub mod harness;
 #[allow(unused)]
+pub mod js_filter;
+#[allow(unused)]
 pub mod layer1_assertions;
 #[allow(unused)]
 pub mod layer2_golden;
