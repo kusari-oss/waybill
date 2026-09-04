@@ -2,6 +2,7 @@ use std::process::Command;
 
 use clap::Parser;
 use xtask::bench;
+use xtask::quality;
 
 #[derive(Parser)]
 enum Cli {
@@ -11,6 +12,8 @@ enum Cli {
     Bench(bench::BenchArgs),
     /// Regenerate docs/perf/numbers.md from the committed baseline (milestone 669)
     BenchDocs(bench::docs::BenchDocsArgs),
+    /// Measure SBOM quality across the pinned public-repo corpus (milestone 770)
+    Quality(quality::QualityArgs),
 }
 
 fn main() {
@@ -22,6 +25,7 @@ fn main() {
         }
         Cli::Bench(args) => bench::run(args),
         Cli::BenchDocs(args) => bench::docs::run(args),
+        Cli::Quality(args) => quality::run(args),
     };
     if let Err(err) = result {
         eprintln!("xtask error: {err}");

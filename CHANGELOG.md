@@ -7,6 +7,41 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### `xtask quality` — nightly SBOM quality regression corpus (milestone 770)
+
+New `cargo run -p xtask --release -- quality` subcommand. Scans 18 pinned
+public repositories with `waybill --offline` and records four measurement
+families per target: scan wall time, `sbomqs` quality score, component counts
+split package-tier / file-tier, and a flatness triple (relationship count,
+components with outgoing relationships, greatest depth from root). Runs
+nightly via `.github/workflows/quality-corpus.yml` and on demand.
+
+**Flatness is measured independently, never self-reported.** waybill emits a
+`waybill:graph-completeness` property; three of the eighteen trial targets
+(`cmake-nlohmann-json`, `ruby-jekyll`, `uv-meilisearch-python`) reported
+`complete` while being structurally flat — every component hanging directly
+off the root. A self-report cannot catch a bug in the thing reporting, so the
+corpus derives flatness by walking the emitted `dependencies[]` graph and
+records waybill's own assessment beside it as a separate, never-gated field.
+
+**Component counts are split, not filtered.** m133 file-tier components
+dominate several targets (ansible: 11 package-tier vs 375 file-tier). They are
+counted separately rather than filtered out, so a package regression and a
+file regression each trip their own bound. `--tier source-only` was evaluated
+and rejected: it does not remove file-tier content, and it zeroes targets
+whose components are `design`-tier because they commit no lockfile.
+
+Ranges are hand-authored per target in `xtask/corpus/quality-corpus.toml`
+(TOML, so bounds can carry the comment explaining them). A measurement with no
+authored bound is observed but can never fail the run, so the corpus ships
+green and bounds are added deliberately. Exit codes: `0` clean, `1` violations
+or unmeasurable targets, `2` malformed corpus — `2` distinct from `1` so a
+config typo is never mistaken for a waybill regression.
+
+Adds `toml = "0.8"` to `xtask/Cargo.toml` (already in the workspace lockfile
+via `waybill-cli`; zero new transitive crates). No change to the shipped
+`waybill` binary. Spec: `specs/770-sbom-quality-corpus/` (issue #770).
+
 ### C45 `waybill:orphan-reason` vocabulary extended from 2 codes to 5 (milestone 167)
 
 Empirical follow-on from milestone 165's audit — the #2 top-3 recommendation.
