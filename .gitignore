@@ -69,3 +69,6 @@ specs/168-rust-python-audit/artifacts/**/trivy.*.json
 specs/168-rust-python-audit/artifacts/**/syft.*.json
 specs/168-rust-python-audit/artifacts/**/analysis.json
 specs/168-rust-python-audit/artifacts/**/*.log
+
+# Milestone 770 — quality-corpus run reports
+target/quality/

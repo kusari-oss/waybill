@@ -25,6 +25,27 @@ Per-skill references are under `.claude/skills/speckit-*/SKILL.md`.
 **Small drive-by fixes** (typo corrections, single-line bug fixes,
 doc tweaks) skip the lifecycle — just open a PR.
 
+## SBOM quality corpus (milestone 770)
+
+`xtask quality` scans a corpus of pinned public repositories with
+`waybill --offline` and gates on hand-authored per-repo ranges. It runs
+nightly via `.github/workflows/quality-corpus.yml` and on demand.
+
+```bash
+cargo build --release -p waybill --bin waybill
+go install github.com/interlynk-io/sbomqs/v2@v2.0.6   # the pinned scorer
+cargo run -p xtask --release -- quality               # full corpus
+cargo run -p xtask --release -- quality --filter 'gradle-*'
+```
+
+The corpus lives at `xtask/corpus/quality-corpus.toml`. Adding a repository
+is a configuration-only change; each target records its observed values as
+comments so bounds can be authored against real numbers. A target with no
+`[targets.expect]` bounds is observed but can never fail the run, so the
+corpus can grow before anyone commits to a range.
+
+Full walkthrough: [`specs/770-sbom-quality-corpus/quickstart.md`](specs/770-sbom-quality-corpus/quickstart.md).
+
 ## Local development setup
 
 ```bash

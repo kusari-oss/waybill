@@ -18,3 +18,7 @@ chrono = { workspace = true }
 # Milestone 669 T022/T025: per-invocation scratch dir (--output <path>
 # files) + atomic writes for run.json / baseline.json.
 tempfile = "3"
+# Milestone 770 T001: corpus configuration is hand-authored TOML because
+# ranges need explanatory comments (research R1). Already in the workspace
+# lockfile via waybill-cli, so this adds zero new transitive crates.
+toml = "0.8"

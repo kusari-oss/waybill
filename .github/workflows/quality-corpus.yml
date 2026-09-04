@@ -1,0 +1,116 @@
+name: SBOM quality corpus (m770)
+
+# Milestone 770 — nightly SBOM quality regression corpus (issue #770).
+# Spec: specs/770-sbom-quality-corpus/spec.md
+#
+# Scans 18 pinned public repositories with `waybill --offline` and gates on
+# hand-authored per-target ranges. Fails the job when any measurement leaves
+# its range, or when any target cannot be measured.
+#
+# NOT on the per-PR lane: the corpus fetches ~2.2 GB and the full run takes
+# minutes. The per-PR gate remains ci.yml.
+
+on:
+  schedule:
+    # 03:41 UTC nightly. Deliberately offset from public-corpus.yml's
+    # 06:17 slot: both build waybill and clone repositories, so overlapping
+    # them would contend for runner disk and network for no benefit.
+    # Off-the-hour minute per the project's CI-timing convention.
+    - cron: '41 3 * * *'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to measure (defaults to the triggering ref).'
+        type: string
+        default: ''
+      filter:
+        description: 'Optional --filter glob (e.g. "gradle-*"). Blank runs the full corpus.'
+        required: false
+        default: ''
+
+concurrency:
+  group: quality-corpus-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  # Reads sources, uploads an artifact. Nothing else.
+  contents: read
+
+jobs:
+  quality:
+    name: Measure SBOM quality corpus
+    runs-on: ubuntu-latest
+    # Measured cold cost is ~95 s fetching + ~140 s scanning; the rest is
+    # building waybill. 60 minutes is generous headroom, and the job must be
+    # able to fail — deliberately no continue-on-error anywhere below.
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
+          # Keep GITHUB_TOKEN out of git config: this job clones arbitrary
+          # third-party repositories, so a persisted credential is exactly
+          # the thing not to leave lying around.
+          persist-credentials: false
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable (2026-04-25)
+        with:
+          toolchain: stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2.9.1
+        with:
+          shared-key: quality-corpus
+
+      # The corpus measures the `waybill` binary, not xtask. This build step
+      # cannot be trimmed even when only xtask changed.
+      - name: Build waybill (release)
+        run: cargo build --release -p waybill --bin waybill
+
+      # Pinned to the same version ci.yml installs for sbomqs_parity, and to
+      # the version quality-corpus.toml declares. GOMODCACHE is redirected to
+      # a throwaway path so sbomqs's own transitive deps never land in
+      # $HOME/go/pkg/mod — the corpus scans Go repositories and a populated
+      # module cache would change their measured edge counts.
+      - name: Install sbomqs
+        run: |
+          GOMODCACHE="${RUNNER_TEMP}/go-mod-cache-sbomqs" \
+            go install github.com/interlynk-io/sbomqs/v2@v2.0.6
+
+      - name: Add Go bin to PATH
+        run: echo "${HOME}/go/bin" >> "$GITHUB_PATH"
+
+      # NOTE: there is deliberately NO actions/cache step for the repository
+      # checkouts. GitHub caps total cache at 10 GB per repository and evicts
+      # after 7 days unused; three multi-hundred-MB targets (kubernetes,
+      # pytorch, mongo) would crowd that ceiling and start evicting the Rust
+      # build caches other workflows depend on. A cold fetch of the whole
+      # corpus measured ~95 s — cheaper than that coordination, and it
+      # removes a class of stale-cache confusion. See research.md R6.
+
+      # The workflow_dispatch filter is untrusted input: it reaches the shell
+      # through a per-step env var, never via direct ${{ }} interpolation
+      # into `run:`. Same guard bench.yml documents.
+      - name: Run quality corpus
+        env:
+          FILTER_INPUT: ${{ github.event.inputs.filter }}
+        run: |
+          if [ -n "$FILTER_INPUT" ]; then
+            cargo run -p xtask --release -- quality --filter "$FILTER_INPUT"
+          else
+            cargo run -p xtask --release -- quality
+          fi
+
+      # Always upload, including on a failing gate — the report is how an
+      # operator finds out what regressed (FR-029).
+      - name: Upload quality report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: quality-corpus-${{ github.sha }}
+          path: target/quality/run-*.json
+          if-no-files-found: warn
+          retention-days: 90
