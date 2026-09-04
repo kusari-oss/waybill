@@ -778,7 +778,8 @@ mod tests {
             &Default::default(),
             #[cfg(unix)]
             &Default::default(),
-            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default()
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
+            None, // no_binary_scan_mode
         )
         .is_empty());
     }
@@ -793,7 +794,8 @@ mod tests {
             &Default::default(),
             #[cfg(unix)]
             &Default::default(),
-            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default()
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
+            None, // no_binary_scan_mode
         )
         .is_empty());
     }
@@ -826,7 +828,8 @@ mod tests {
             &Default::default(),
             #[cfg(unix)]
             &Default::default(),
-            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default()
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
+            None, // no_binary_scan_mode
         )
         .is_empty());
     }
@@ -846,7 +849,8 @@ mod tests {
             &Default::default(),
             #[cfg(unix)]
             &Default::default(),
-            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default()
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
+            None, // no_binary_scan_mode
         );
         assert_eq!(entries.len(), 1, "expected exactly the cpython umbrella");
         assert!(
@@ -870,7 +874,8 @@ mod tests {
             &Default::default(),
             #[cfg(unix)]
             &Default::default(),
-            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default()
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
+            None, // no_binary_scan_mode
         )
         .is_empty());
     }
