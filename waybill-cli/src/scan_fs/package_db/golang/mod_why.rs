@@ -56,6 +56,26 @@ const ARG_MAX_SAFE: usize = 96 * 1024;
 /// Default shared budget across all invocations in a scan.
 const DEFAULT_BUDGET: Duration = Duration::from_secs(60);
 
+/// Milestone 771 US2 — bounded worker-count computation.
+///
+/// Returns `min(workspace_count, available_parallelism())`, clamped
+/// to `[1, workspace_count]`. When `available_parallelism()` is
+/// unavailable (rare — should only happen on unusual embedded
+/// targets), falls back to 1 (serial path).
+///
+/// Extracted from the caller site (`apply_go_mod_why_pass`) so the
+/// clamping logic is unit-testable without spinning up subprocess
+/// pools. Per research R3.
+pub fn worker_count(workspace_count: usize) -> usize {
+    if workspace_count == 0 {
+        return 0;
+    }
+    let cap = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(1);
+    std::cmp::min(workspace_count, cap).max(1)
+}
+
 /// Split `all` into contiguous sub-slices that satisfy both the
 /// `max_per_batch` count cap AND the `max_argv_bytes` argv-length
 /// cap. Pure function; no I/O.
@@ -689,6 +709,87 @@ mod tests {
             246,
             "single chunk MUST contain all 246 paths",
         );
+    }
+
+    // -------------------------------------------------------------------
+    // Milestone 771 — US2 concurrent-orchestration helper tests.
+    // -------------------------------------------------------------------
+
+    #[test]
+    fn m771_worker_count_bounded_by_available_parallelism() {
+        let cap = std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(1);
+        // Many-workspace case: capped at available_parallelism().
+        assert_eq!(
+            worker_count(100),
+            std::cmp::min(100, cap),
+            "FR-003: 100 workspaces MUST cap at available_parallelism() = {}",
+            cap,
+        );
+        // Single workspace: 1 worker (parallelism has nothing to bite on).
+        assert_eq!(worker_count(1), 1, "single workspace should return 1");
+        // Zero workspaces: 0 workers (no work to do).
+        assert_eq!(worker_count(0), 0, "zero workspaces should return 0");
+        // Two workspaces on any reasonable machine: min(2, cap>=1).
+        assert!(
+            worker_count(2) <= 2 && worker_count(2) >= 1,
+            "2 workspaces should yield 1 or 2 workers, got {}",
+            worker_count(2),
+        );
+    }
+
+    #[test]
+    fn m771_budget_tracker_shared_across_arc_clones() {
+        // FR-004: `Arc<BudgetTracker>` clones share the same wall-clock
+        // origin. Two threads observing `.remaining()` MUST see
+        // monotonically-decreasing values and MUST both agree once the
+        // budget is exhausted.
+        let key = "WAYBILL_GO_MOD_WHY_BUDGET_MS";
+        // Use a small budget for test speed; guard the env var via
+        // set_var/remove_var (per project convention — no EnvGuard for
+        // this one-off since we don't intersect other tests via the
+        // same key at the same time).
+        let prior = std::env::var(key).ok();
+        std::env::set_var(key, "200");
+        let tracker = std::sync::Arc::new(BudgetTracker::from_env());
+        let t1 = tracker.clone();
+        let t2 = tracker.clone();
+        let h1 = std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(50));
+            let r1 = t1.remaining();
+            std::thread::sleep(Duration::from_millis(200));
+            let r2 = t1.remaining();
+            (r1, r2)
+        });
+        let h2 = std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(50));
+            let r1 = t2.remaining();
+            std::thread::sleep(Duration::from_millis(200));
+            let r2 = t2.remaining();
+            (r1, r2)
+        });
+        let (t1_r1, t1_r2) = h1.join().expect("thread 1");
+        let (t2_r1, t2_r2) = h2.join().expect("thread 2");
+        // Both threads observe non-None at 50ms (budget = 200ms).
+        assert!(
+            t1_r1.is_some() && t2_r1.is_some(),
+            "both threads should see remaining>0 at 50ms; t1={:?} t2={:?}",
+            t1_r1,
+            t2_r1,
+        );
+        // Both threads observe None at 250ms (budget exhausted).
+        assert!(
+            t1_r2.is_none() && t2_r2.is_none(),
+            "both threads should see remaining=None at 250ms; t1={:?} t2={:?}",
+            t1_r2,
+            t2_r2,
+        );
+        // Restore env.
+        match prior {
+            Some(v) => std::env::set_var(key, v),
+            None => std::env::remove_var(key),
+        }
     }
 
     /// FR-002 argv-guard bisection: 500 paths at 300 chars each project
