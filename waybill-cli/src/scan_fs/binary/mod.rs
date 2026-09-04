@@ -112,7 +112,30 @@ pub fn read(
     claimed_paths: &std::collections::HashSet<std::path::PathBuf>,
     #[cfg(unix)] claimed_inodes: &std::collections::HashSet<(u64, u64)>,
     exclude_set: &crate::scan_fs::package_db::exclude_path::ExclusionSet,
+    no_binary_scan_mode: Option<crate::cli::scan_cmd::BinaryScanMode>,
 ) -> Vec<PackageDbEntry> {
+    // Issue #775 — `--no-binary-scan=all` skips the entire binary-scanning
+    // tier. On a large source tree (mongo: 886 MB, 55k files), the
+    // per-file magic-byte probe + `object::read::File::parse` cost adds
+    // up to 5-10 seconds even when only a handful of files are actually
+    // binaries. Operators who don't need `pkg:golang/*` BuildInfo
+    // attribution, ELF/Mach-O/PE role tagging, or embedded-linkage
+    // provenance opt out via this mode. The document-scope
+    // `waybill:binary-scan-suppressed=all` annotation (emitted by the
+    // caller in scan_cmd) tells downstream consumers the tier was
+    // suppressed. `--no-binary-scan=go` continues to skip only the
+    // go_binary BuildInfo probing branch (unchanged m665 semantics).
+    if matches!(
+        no_binary_scan_mode,
+        Some(crate::cli::scan_cmd::BinaryScanMode::All)
+    ) {
+        tracing::info!(
+            rootfs = %rootfs.display(),
+            "binary-scan tier skipped via --no-binary-scan=all (issue #775)"
+        );
+        return Vec::new();
+    }
+
     let mut out = Vec::new();
     let mut linkage_agg = linkage::LinkageAggregator::new();
     let mut python_collapser = python_collapse::PythonStdlibCollapser::default();
@@ -755,7 +778,8 @@ mod tests {
             &Default::default(),
             #[cfg(unix)]
             &Default::default(),
-            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default()
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
+            None, // no_binary_scan_mode
         )
         .is_empty());
     }
@@ -770,7 +794,8 @@ mod tests {
             &Default::default(),
             #[cfg(unix)]
             &Default::default(),
-            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default()
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
+            None, // no_binary_scan_mode
         )
         .is_empty());
     }
@@ -803,7 +828,8 @@ mod tests {
             &Default::default(),
             #[cfg(unix)]
             &Default::default(),
-            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default()
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
+            None, // no_binary_scan_mode
         )
         .is_empty());
     }
@@ -823,7 +849,8 @@ mod tests {
             &Default::default(),
             #[cfg(unix)]
             &Default::default(),
-            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default()
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
+            None, // no_binary_scan_mode
         );
         assert_eq!(entries.len(), 1, "expected exactly the cpython umbrella");
         assert!(
@@ -847,7 +874,8 @@ mod tests {
             &Default::default(),
             #[cfg(unix)]
             &Default::default(),
-            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default()
+            &crate::scan_fs::package_db::exclude_path::ExclusionSet::default(),
+            None, // no_binary_scan_mode
         )
         .is_empty());
     }
