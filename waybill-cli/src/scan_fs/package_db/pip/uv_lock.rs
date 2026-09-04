@@ -152,7 +152,13 @@ fn extract_sha256_hashes(pkg_tbl: &toml::value::Table) -> Vec<ContentHash> {
 /// Read `<rootfs>/uv.lock` if present. Returns None when absent or
 /// unparseable. Mirrors `read_poetry_lock` and `read_pipfile_lock` in
 /// shape so the dispatcher can call all three uniformly.
-pub(super) fn read_uv_lock(rootfs: &Path, _include_dev: bool) -> Option<Vec<PackageDbEntry>> {
+///
+/// Issue #783: the `include_dev` parameter is now honored — when
+/// `false`, `[package.dev-dependencies]` group members are dropped
+/// entirely (no edges, no components). When `true` (default), dev-group
+/// members are treated as PEP 735 dependency-groups per the pyproject
+/// sibling handler at `pip/mod.rs:1189`.
+pub(super) fn read_uv_lock(rootfs: &Path, include_dev: bool) -> Option<Vec<PackageDbEntry>> {
     let path = rootfs.join("uv.lock");
     let text = std::fs::read_to_string(&path).ok()?;
     let parsed: toml::Value = match toml::from_str(&text) {
@@ -167,7 +173,12 @@ pub(super) fn read_uv_lock(rootfs: &Path, _include_dev: bool) -> Option<Vec<Pack
         }
     };
     let source_path = path.to_string_lossy().into_owned();
-    Some(parse_uv_lock(&parsed, &source_path, rootfs))
+    Some(parse_uv_lock_with_flags(
+        &parsed,
+        &source_path,
+        rootfs,
+        include_dev,
+    ))
 }
 
 /// Milestone 674 FR-002 Pants fallback entry-point: parse a
@@ -222,10 +233,28 @@ pub(crate) fn parse_uv_lock_bytes(
 
 /// Parse an already-deserialised `uv.lock` TOML document. Public-in-
 /// module so unit tests can drive parsing without disk I/O.
+///
+/// Kept for existing callers (Pants FR-002 fallback + unit tests) —
+/// defaults `include_dev = true` so pre-#783 behavior is byte-identical
+/// for consumers that don't yet thread the flag.
 pub(crate) fn parse_uv_lock(
     root: &toml::Value,
     source_path: &str,
     rootfs: &Path,
+) -> Vec<PackageDbEntry> {
+    parse_uv_lock_with_flags(root, source_path, rootfs, true)
+}
+
+/// Issue #783 — same as `parse_uv_lock` but with an explicit
+/// `include_dev` flag. `false` drops `[package.dev-dependencies]`
+/// entirely (no edges, no components); `true` treats them as PEP 735
+/// dependency-groups (edges from the parent + LifecycleScope::Optional
+/// + `waybill:optional-derivation = "pep-735-dependency-groups:<group>"`).
+pub(crate) fn parse_uv_lock_with_flags(
+    root: &toml::Value,
+    source_path: &str,
+    rootfs: &Path,
+    include_dev: bool,
 ) -> Vec<PackageDbEntry> {
     let mut out = Vec::new();
 
@@ -251,6 +280,18 @@ pub(crate) fn parse_uv_lock(
     // a matching top-level `[[package]]` block).
     let mut optional_child_names: std::collections::HashSet<String> =
         std::collections::HashSet::new();
+
+    // Issue #783 — accumulate the set of PEP 735 dev-group members
+    // declared under any `[package.dev-dependencies].<group>` sub-table
+    // AND remember the group each name came from so we can derive the
+    // `waybill:optional-derivation` string (`pep-735-dependency-groups:
+    // <group>`) at emission time. Diamond-shape: a name that ALSO
+    // appears in the same package's `dependencies = [...]` array is
+    // excluded (Runtime wins), matching the m183 US3 optional-deps
+    // handling one section above. Populated only when `include_dev`
+    // is true; empty otherwise (drops the deps entirely).
+    let mut dev_group_of: std::collections::HashMap<String, String> =
+        std::collections::HashMap::new();
     for pkg in packages {
         let Some(tbl) = pkg.as_table() else {
             continue;
@@ -275,6 +316,38 @@ pub(crate) fn parse_uv_lock(
                         {
                             if !primary_dep_names.contains(child_name) {
                                 optional_child_names.insert(child_name.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Issue #783 — mirror the optional-dependencies pre-pass for
+        // PEP 735 dev-groups. Only accumulate when include_dev is set.
+        if include_dev {
+            if let Some(dev_table) = tbl.get("dev-dependencies").and_then(|v| v.as_table()) {
+                for (group_name, arr) in dev_table {
+                    if let Some(deps_arr) = arr.as_array() {
+                        for dep in deps_arr {
+                            if let Some(child_name) = dep
+                                .as_table()
+                                .and_then(|t| t.get("name"))
+                                .and_then(|v| v.as_str())
+                            {
+                                // Diamond-shape: Runtime wins if this
+                                // name is also in the parent's primary
+                                // `dependencies` array.
+                                if primary_dep_names.contains(child_name) {
+                                    continue;
+                                }
+                                // First-write-wins if a name appears
+                                // under multiple groups (rare but
+                                // possible); the group label is
+                                // best-effort for the derivation
+                                // annotation.
+                                dev_group_of
+                                    .entry(child_name.to_string())
+                                    .or_insert_with(|| group_name.to_string());
                             }
                         }
                     }
@@ -313,7 +386,7 @@ pub(crate) fn parse_uv_lock(
         // `dependencies` is an array of inline tables in uv.lock:
         //   dependencies = [{ name = "anyio" }, { name = "certifi" }]
         // Distinct from poetry.lock which uses a nested table.
-        let depends: Vec<String> = tbl
+        let mut depends: Vec<String> = tbl
             .get("dependencies")
             .and_then(|v| v.as_array())
             .map(|arr| {
@@ -322,6 +395,37 @@ pub(crate) fn parse_uv_lock(
                     .collect()
             })
             .unwrap_or_default();
+
+        // Issue #783 — append PEP 735 dev-group children to `depends`
+        // so the parent → dev-group edges land in the graph. Dedup
+        // against the primary-deps set already collected above so
+        // Runtime-classified names don't double up in `depends`.
+        if include_dev {
+            if let Some(dev_table) = tbl.get("dev-dependencies").and_then(|v| v.as_table()) {
+                let primary_set: std::collections::HashSet<String> =
+                    depends.iter().cloned().collect();
+                let mut added: std::collections::HashSet<String> =
+                    std::collections::HashSet::new();
+                for (_group_name, arr) in dev_table {
+                    if let Some(deps_arr) = arr.as_array() {
+                        for dep in deps_arr {
+                            if let Some(child_name) = dep
+                                .as_table()
+                                .and_then(|t| t.get("name"))
+                                .and_then(|v| v.as_str())
+                            {
+                                if primary_set.contains(child_name) {
+                                    continue;
+                                }
+                                if added.insert(child_name.to_string()) {
+                                    depends.push(child_name.to_string());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
 
         // Milestone 674: parse the `source = { ... }` inline table
@@ -486,6 +590,37 @@ pub(crate) fn parse_uv_lock(
     // + the `waybill:optional-derivation = "pip-optional-dependencies"`
     // annotation.
     super::apply_optional_derivation_annotation(&mut out, &optional_child_names);
+
+    // Issue #783 — parallel post-pass for PEP 735 dev-groups. Marks
+    // each emitted entry whose name is in `dev_group_of` AND whose
+    // `lifecycle_scope.is_none()` with `LifecycleScope::Optional` +
+    // `waybill:optional-derivation = "pep-735-dependency-groups:<group>"`.
+    // Different derivation string from the optional-deps case above
+    // because PEP 735 dev-groups are a distinct concept from PEP 621
+    // extras — matches the sibling pyproject handler at pip/mod.rs:1189.
+    if !dev_group_of.is_empty() {
+        for entry in out.iter_mut() {
+            let Some(group_name) = dev_group_of.get(&entry.name) else {
+                continue;
+            };
+            if entry.lifecycle_scope.is_some() {
+                // Lockfile-precedence: don't override a
+                // pre-classified entry (Runtime / Development /
+                // Optional). Includes the m183 US3 post-pass above
+                // which classifies as Optional first — in that
+                // (very unlikely) case optional-deps derivation wins.
+                continue;
+            }
+            entry.lifecycle_scope =
+                Some(waybill_common::resolution::LifecycleScope::Optional);
+            entry.extra_annotations.insert(
+                "waybill:optional-derivation".to_string(),
+                serde_json::Value::String(format!(
+                    "pep-735-dependency-groups:{group_name}"
+                )),
+            );
+        }
+    }
 
     out
 }
@@ -901,6 +1036,222 @@ source = { registry = "https://pypi.org/simple" }
         assert!(!pytest
             .extra_annotations
             .contains_key("waybill:optional-derivation"));
+    }
+
+    // ── Issue #783 — [package.dev-dependencies] handling ──────────────
+
+    /// The reproducer from the issue: `demo-app` (root) has a PEP 735
+    /// `dev` group containing `datamodel-code-generator`. Pre-#783 the
+    /// edge `demo-app → datamodel-code-generator` was missing entirely.
+    /// Post-#783 the edge is present AND the child is classified as
+    /// Optional with the correct `pep-735-dependency-groups:dev`
+    /// derivation.
+    #[test]
+    fn dev_dependencies_produce_edges_and_scope_issue_783() {
+        let src = r#"
+version = 1
+requires-python = ">=3.9"
+
+[[package]]
+name = "demo-app"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [{ name = "certifi" }]
+
+[package.dev-dependencies]
+dev = [{ name = "datamodel-code-generator" }]
+
+[[package]]
+name = "certifi"
+version = "2025.1.31"
+source = { registry = "https://pypi.org/simple" }
+
+[[package]]
+name = "datamodel-code-generator"
+version = "0.31.2"
+source = { registry = "https://pypi.org/simple" }
+"#;
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        let entries =
+            parse_uv_lock(&parsed, "/tmp/uv.lock", Path::new("/tmp/nonexistent"));
+        let demo = entries
+            .iter()
+            .find(|e| e.name == "demo-app")
+            .expect("demo-app emitted");
+        assert!(
+            demo.depends.contains(&"certifi".to_string()),
+            "runtime edge missing: {:?}",
+            demo.depends,
+        );
+        assert!(
+            demo.depends.contains(&"datamodel-code-generator".to_string()),
+            "issue #783: dev-group edge missing on demo-app: {:?}",
+            demo.depends,
+        );
+        let dcg = entries
+            .iter()
+            .find(|e| e.name == "datamodel-code-generator")
+            .expect("datamodel-code-generator emitted");
+        assert_eq!(
+            dcg.lifecycle_scope,
+            Some(waybill_common::resolution::LifecycleScope::Optional),
+            "dev-group child must be classified as Optional",
+        );
+        assert_eq!(
+            dcg.extra_annotations.get("waybill:optional-derivation"),
+            Some(&serde_json::Value::String(
+                "pep-735-dependency-groups:dev".to_string()
+            )),
+            "dev-group child must carry the PEP 735 derivation string",
+        );
+    }
+
+    /// `include_dev = false` must drop dev-group edges AND leave the
+    /// child unclassified (i.e., byte-identical to pre-#783 output).
+    /// Regression guard for `WAYBILL_INCLUDE_DEV=0` operators.
+    #[test]
+    fn dev_dependencies_dropped_when_include_dev_false() {
+        let src = r#"
+version = 1
+
+[[package]]
+name = "demo-app"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [{ name = "certifi" }]
+
+[package.dev-dependencies]
+dev = [{ name = "datamodel-code-generator" }]
+
+[[package]]
+name = "certifi"
+version = "2025.1.31"
+source = { registry = "https://pypi.org/simple" }
+
+[[package]]
+name = "datamodel-code-generator"
+version = "0.31.2"
+source = { registry = "https://pypi.org/simple" }
+"#;
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        let entries = parse_uv_lock_with_flags(
+            &parsed,
+            "/tmp/uv.lock",
+            Path::new("/tmp/nonexistent"),
+            /* include_dev = */ false,
+        );
+        let demo = entries.iter().find(|e| e.name == "demo-app").unwrap();
+        assert!(
+            !demo.depends.contains(&"datamodel-code-generator".to_string()),
+            "include_dev=false must not add dev-group edges, got: {:?}",
+            demo.depends,
+        );
+        let dcg = entries
+            .iter()
+            .find(|e| e.name == "datamodel-code-generator")
+            .expect("component still emitted (lockfile-declared)");
+        assert!(
+            dcg.lifecycle_scope.is_none(),
+            "include_dev=false must leave scope unset, got: {:?}",
+            dcg.lifecycle_scope,
+        );
+        assert!(
+            !dcg.extra_annotations.contains_key("waybill:optional-derivation"),
+            "include_dev=false must not attach derivation annotation",
+        );
+    }
+
+    /// Diamond-shape (mirrors the m183 US3 optional-deps guard at
+    /// `uv_lock_diamond_shape_runtime_wins`): a name in BOTH the
+    /// primary `dependencies` array AND a `[package.dev-dependencies]`
+    /// group MUST keep Runtime scope — no derivation annotation, no
+    /// duplicate edge.
+    #[test]
+    fn dev_dependencies_diamond_shape_runtime_wins() {
+        let src = r#"
+version = 1
+
+[[package]]
+name = "demo-app"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [{ name = "pytest" }]
+
+[package.dev-dependencies]
+dev = [{ name = "pytest" }]
+
+[[package]]
+name = "pytest"
+version = "7.4.0"
+source = { registry = "https://pypi.org/simple" }
+"#;
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        let entries =
+            parse_uv_lock(&parsed, "/tmp/uv.lock", Path::new("/tmp/nonexistent"));
+        let demo = entries.iter().find(|e| e.name == "demo-app").unwrap();
+        assert_eq!(
+            demo.depends.iter().filter(|d| *d == "pytest").count(),
+            1,
+            "duplicate pytest edge on demo-app: {:?}",
+            demo.depends,
+        );
+        let pytest = entries.iter().find(|e| e.name == "pytest").unwrap();
+        assert!(
+            pytest.lifecycle_scope.is_none(),
+            "diamond-shape violated: pytest lost Runtime scope, got: {:?}",
+            pytest.lifecycle_scope,
+        );
+        assert!(
+            !pytest
+                .extra_annotations
+                .contains_key("waybill:optional-derivation"),
+            "diamond-shape violated: pytest picked up derivation annotation",
+        );
+    }
+
+    /// Multiple dev-groups (`dev`, `docs`) — each child carries its
+    /// own group name in the derivation annotation.
+    #[test]
+    fn dev_dependencies_multiple_groups_labelled_correctly() {
+        let src = r#"
+version = 1
+
+[[package]]
+name = "demo-app"
+version = "0.1.0"
+source = { editable = "." }
+
+[package.dev-dependencies]
+dev = [{ name = "pytest" }]
+docs = [{ name = "mkdocs" }]
+
+[[package]]
+name = "pytest"
+version = "7.4.0"
+source = { registry = "https://pypi.org/simple" }
+
+[[package]]
+name = "mkdocs"
+version = "1.6.0"
+source = { registry = "https://pypi.org/simple" }
+"#;
+        let parsed: toml::Value = toml::from_str(src).unwrap();
+        let entries =
+            parse_uv_lock(&parsed, "/tmp/uv.lock", Path::new("/tmp/nonexistent"));
+        let pytest = entries.iter().find(|e| e.name == "pytest").unwrap();
+        assert_eq!(
+            pytest.extra_annotations.get("waybill:optional-derivation"),
+            Some(&serde_json::Value::String(
+                "pep-735-dependency-groups:dev".to_string()
+            )),
+        );
+        let mkdocs = entries.iter().find(|e| e.name == "mkdocs").unwrap();
+        assert_eq!(
+            mkdocs.extra_annotations.get("waybill:optional-derivation"),
+            Some(&serde_json::Value::String(
+                "pep-735-dependency-groups:docs".to_string()
+            )),
+        );
     }
 
     #[test]
