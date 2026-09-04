@@ -649,6 +649,17 @@ waybill --offline sbom scan --path . --output source.cdx.json
 waybill --offline --no-go-mod-why sbom scan --path . --output go.cdx.json
 ```
 
+**Fast for large C/C++ trees (mongo, cassandra, tensorflow):**
+
+```bash
+waybill --offline sbom scan --path . \
+        --no-binary-scan=go \
+        --no-deep-hash \
+        --output cpp.cdx.json
+```
+
+`--no-binary-scan=go` alone saves ~35% on trees with many source files by skipping Go BuildInfo probing (which still incurs magic-byte checks on non-Go files today — see [#775](https://github.com/kusari-oss/waybill/issues/775) for a proposed `all` mode). Add `--no-deep-hash` to skip per-file SHA-256, cutting another 3-5 seconds on trees with tens of thousands of source files.
+
 ### Empirical impact per flag
 
 Measurements from real-world projects on a warm-cache macOS aarch64 dev box (debug build).
@@ -657,7 +668,9 @@ Measurements from real-world projects on a warm-cache macOS aarch64 dev box (deb
 |---|---|---|---|---|
 | `--offline` | zizmor (rust, 6.6 MB, cold cargo/rustup cache) | 36.9 s | 1.7 s | 22× ([#771](https://github.com/kusari-oss/waybill/issues/771)) |
 | `--no-go-mod-why` | podman (go, 135 MB, 7327 .go files) | 4.4 s | 2.5 s | 45% |
-| `--no-binary-scan=go` | mongo (c++, 55k files) | 3.0 s | 0.7 s | 77% |
+| `--no-binary-scan=go` | mongo (c++, 886 MB, 55k files) | 13.5 s | 8.6 s | 36% |
+| `--no-binary-scan=go --no-deep-hash` | mongo | 13.5 s | 5.3 s | 61% |
+| `+ --exclude-path <tree>` | mongo (exclude `jstests` + `docs`) | 13.5 s | 3.9 s | 71% |
 | `--no-deep-hash` | large image scans | up to 90% of `docker_image::extract` | — | ecosystem-dependent |
 
 Combinations compound. On a Go project with a heavy dependency tree, `--offline --no-go-mod-why` typically halves scan time vs baseline.
