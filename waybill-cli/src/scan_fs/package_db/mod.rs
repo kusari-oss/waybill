@@ -1190,29 +1190,104 @@ fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOu
         return outcome;
     }
 
-    let budget = BudgetTracker::from_env();
+    let budget = std::sync::Arc::new(BudgetTracker::from_env());
     let mut merged: HashMap<String, GoModWhyVerdict> = HashMap::new();
-    for workspace in &workspaces {
-        let analysis = mod_why::analyze_main_module(workspace, &query, offline, &budget);
-        // FR-013 `skipped=` field: report the first per-workspace
-        // skip/degrade reason (the per-workspace warn lines carry the
-        // full detail; the summary carries one representative reason).
-        if let Some(reason) = analysis.skip_reason {
-            outcome.skipped.get_or_insert(reason.as_str());
+
+    // Milestone 771 US2 — bounded thread-pool over independent
+    // workspaces. Each worker holds one synchronous `run_bounded`
+    // subprocess at a time; concurrency cap = logical-CPU count
+    // (research R3). Workers share the `Arc<BudgetTracker>` for
+    // FR-004 (single 60s wall-clock budget across all workers).
+    //
+    // Log-line correlation (FR-005): every `warn!`/`info!` inside
+    // `analyze_main_module` already carries `main_module = %..`
+    // per m112 shape, so interleaved output remains grep-attributable.
+    //
+    // When workspace count <= 1 or available_parallelism() unavailable
+    // we fall back to the serial path — matches pre-m771 behavior
+    // exactly on tiny fixtures + preserves single-thread determinism
+    // for any test relying on log ordering.
+    let worker_count = mod_why::worker_count(workspaces.len());
+    if worker_count == 1 || workspaces.len() <= 1 {
+        // Serial fallback — byte-identical to pre-m771 behavior.
+        for workspace in &workspaces {
+            let analysis = mod_why::analyze_main_module(workspace, &query, offline, &budget);
+            if let Some(reason) = analysis.skip_reason {
+                outcome.skipped.get_or_insert(reason.as_str());
+            }
+            if analysis.workspace_active {
+                outcome.workspace_modules += 1;
+            }
+            for (module, verdict) in analysis.verdicts {
+                merged
+                    .entry(module)
+                    .and_modify(|existing| {
+                        if verdict_rank(verdict) > verdict_rank(*existing) {
+                            *existing = verdict;
+                        }
+                    })
+                    .or_insert(verdict);
+            }
         }
-        // Milestone 231 (FR-006): tally workspace-active main-modules.
-        if analysis.workspace_active {
-            outcome.workspace_modules += 1;
+    } else {
+        // Parallel path — bounded thread-pool + mpsc reducer.
+        let job_queue = std::sync::Arc::new(std::sync::Mutex::new(workspaces.to_vec()));
+        let query_arc = std::sync::Arc::new(query.clone());
+        let (tx, rx) = std::sync::mpsc::channel();
+        let mut handles = Vec::with_capacity(worker_count);
+        for _ in 0..worker_count {
+            let job_queue = job_queue.clone();
+            let query_arc = query_arc.clone();
+            let budget = budget.clone();
+            let tx = tx.clone();
+            handles.push(std::thread::spawn(move || {
+                loop {
+                    let workspace = {
+                        let mut q = job_queue.lock().expect("job queue mutex");
+                        q.pop()
+                    };
+                    let Some(workspace) = workspace else {
+                        break;
+                    };
+                    let analysis = mod_why::analyze_main_module(
+                        &workspace,
+                        &query_arc,
+                        offline,
+                        &budget,
+                    );
+                    // Send may fail only if the receiver has been dropped,
+                    // which only happens after the main thread finishes the
+                    // reduce loop — worker exits cleanly in that case.
+                    let _ = tx.send(analysis);
+                }
+            }));
         }
-        for (module, verdict) in analysis.verdicts {
-            merged
-                .entry(module)
-                .and_modify(|existing| {
-                    if verdict_rank(verdict) > verdict_rank(*existing) {
-                        *existing = verdict;
-                    }
-                })
-                .or_insert(verdict);
+        // Drop the parent-side sender so `rx.recv()` returns Err(_)
+        // once every worker has exited.
+        drop(tx);
+        // Reduce: pull analyses off the channel as workers produce them.
+        while let Ok(analysis) = rx.recv() {
+            if let Some(reason) = analysis.skip_reason {
+                outcome.skipped.get_or_insert(reason.as_str());
+            }
+            if analysis.workspace_active {
+                outcome.workspace_modules += 1;
+            }
+            for (module, verdict) in analysis.verdicts {
+                merged
+                    .entry(module)
+                    .and_modify(|existing| {
+                        if verdict_rank(verdict) > verdict_rank(*existing) {
+                            *existing = verdict;
+                        }
+                    })
+                    .or_insert(verdict);
+            }
+        }
+        // Join every worker to surface panics as test failures rather
+        // than silent losses.
+        for h in handles {
+            let _ = h.join();
         }
     }
     outcome.elapsed_ms = budget.elapsed_ms();
