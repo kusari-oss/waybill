@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-09-03
+Auto-generated from all feature plans. Last updated: 2026-09-04
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -345,6 +345,8 @@ Auto-generated from all feature plans. Last updated: 2026-09-03
 - N/A. Reader is stateless. (676-fix-jvm-coord-table)
 - Rust stable (workspace toolchain, no nightly). + Existing only — `regex = "1"` (already a workspace direct dep; used pervasively), `tracing` (existing WARN log surface), `toml = "0.8"` (already used by the pip reader for pyproject.toml parsing). **Zero new Cargo dependencies at the workspace level** (SC-006). (677-pep508-name-validation)
 - N/A. Validation is stateless per invocation. (677-pep508-name-validation)
+- Rust stable (workspace toolchain inherited from milestones 001–770; no nightly required). + Existing only — `std::thread`, `std::sync::{mpsc, atomic, Arc}`, `std::process::Command`, `std::time::{Duration, Instant}`, `tracing`, `anyhow`, `thiserror`. Reuses the m055 / m173 spawn-thread + `mpsc::recv_timeout` subprocess pattern already at `waybill-cli/src/scan_fs/package_db/golang/mod_why.rs:240` and `graph_resolver.rs:1001`. **Zero new Cargo dependencies** (FR-013). (771-gomodwhy-subprocess-scale)
+- N/A — all state in-process per scan; matches every reader milestone since m002. The `BudgetTracker` (`Instant + Duration`, naturally `Send + Sync` via `Copy`) shared budget is passed as `Arc<BudgetTracker>` to concurrent workers per FR-004. (771-gomodwhy-subprocess-scale)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -438,9 +440,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 771-gomodwhy-subprocess-scale: Added Rust stable (workspace toolchain inherited from milestones 001–770; no nightly required). + Existing only — `std::thread`, `std::sync::{mpsc, atomic, Arc}`, `std::process::Command`, `std::time::{Duration, Instant}`, `tracing`, `anyhow`, `thiserror`. Reuses the m055 / m173 spawn-thread + `mpsc::recv_timeout` subprocess pattern already at `waybill-cli/src/scan_fs/package_db/golang/mod_why.rs:240` and `graph_resolver.rs:1001`. **Zero new Cargo dependencies** (FR-013).
 - 677-pep508-name-validation: Added Rust stable (workspace toolchain, no nightly). + Existing only — `regex = "1"` (already a workspace direct dep; used pervasively), `tracing` (existing WARN log surface), `toml = "0.8"` (already used by the pip reader for pyproject.toml parsing). **Zero new Cargo dependencies at the workspace level** (SC-006).
 - 676-fix-jvm-coord-table: Added Rust stable (workspace toolchain, no nightly). + Existing only — `serde` (already used by the struct), `toml = "0.8"` (workspace dep, already used by the parser), `tracing` (existing WARN log surface). **Zero new Cargo dependencies at the workspace level** (SC-006).
-- 675-pants-js-corpus: Added Rust stable (workspace toolchain inherited from milestones 001–674; no nightly required for user-space test infra). + Existing only — `serde_json` (existing corpus-harness JSON parsing), `tempfile` (per-test scratch dirs), `regex` (existing masking helpers). **Zero new Cargo dependencies at the workspace level** (SC-001). Runtime externals: `git` (already an implicit project assumption — used by the existing m090 fixture cache, m195 corpus cache, m053 golang reader).
 
 
 <!-- MANUAL ADDITIONS START -->

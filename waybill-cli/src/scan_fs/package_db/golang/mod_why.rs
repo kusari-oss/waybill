@@ -25,13 +25,166 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 /// Maximum module paths per `go mod why` invocation.
-const CHUNK_SIZE: usize = 20;
+///
+/// Milestone 771 (issue #745) bumped this from 20 → 500 per research
+/// R1: reducing per-workspace subprocess count from ~13 → 1 on
+/// Kubernetes-scale monorepos eliminates the dominant wall-time cost
+/// of the classifier pass (Go toolchain startup × subprocess count).
+/// Chunk size doesn't change `go mod why -m` output semantics —
+/// `parse_go_mod_why` already handles multi-section output regardless
+/// of section count (see `multi_section_output` test below).
+///
+/// A defensive argv-length guard (see [`ARG_MAX_SAFE`] +
+/// [`select_chunks`]) auto-bisects any batch whose projected argv
+/// byte-length approaches operating-system limits, so real workloads
+/// never hit E2BIG even if module paths are pathologically long.
+const CHUNK_SIZE: usize = 500;
+
+/// Defensive argv-byte-length cap per subprocess invocation.
+///
+/// POSIX ARG_MAX minimum is 128 KiB; macOS reports `sysctl kern.argmax
+/// = 1048576`, Linux typically ~2 MiB. This 96 KiB cap (75% of the
+/// POSIX floor) leaves headroom for env vars, the executable path,
+/// and the working-dir string, matching the safe envelope other Go
+/// tooling (goimports, gopls) uses internally. See research R2.
+const ARG_MAX_SAFE: usize = 96 * 1024;
 
 /// Default shared budget across all invocations in a scan.
 const DEFAULT_BUDGET: Duration = Duration::from_secs(60);
+
+/// Split `all` into contiguous sub-slices that satisfy both the
+/// `max_per_batch` count cap AND the `max_argv_bytes` argv-length
+/// cap. Pure function; no I/O.
+///
+/// Algorithm: greedy slicing by `max_per_batch`; if a slice's
+/// projected argv byte-length exceeds `max_argv_bytes`, recurse by
+/// bisection until every returned sub-slice fits. Worst-case
+/// termination: log₂(max_per_batch) recursion depth before individual
+/// paths are argument-list-single (POSIX PATH_MAX = 4 KiB per path
+/// bounds the single-path case).
+///
+/// Argv projection accounts for: subcommand tokens `go mod why -m
+/// -vendor` (fixed 24 bytes + 5 separator NULs = 29 bytes overhead)
+/// plus per-path `strlen + 1` for the separator NUL. Everything the
+/// kernel actually counts. FR-002 + research R2.
+pub(super) fn select_chunks(
+    all: &[String],
+    max_per_batch: usize,
+    max_argv_bytes: usize,
+) -> Vec<&[String]> {
+    fn projected_argv_len(paths: &[String]) -> usize {
+        // "go\0mod\0why\0-m\0-vendor\0" = 24 bytes for the fixed part.
+        let mut total = 24usize;
+        for p in paths {
+            total = total.saturating_add(p.len() + 1);
+        }
+        total
+    }
+    fn bisect<'a>(
+        out: &mut Vec<&'a [String]>,
+        slice: &'a [String],
+        max_argv_bytes: usize,
+    ) {
+        if projected_argv_len(slice) <= max_argv_bytes || slice.len() <= 1 {
+            out.push(slice);
+            return;
+        }
+        let mid = slice.len() / 2;
+        let (left, right) = slice.split_at(mid);
+        bisect(out, left, max_argv_bytes);
+        bisect(out, right, max_argv_bytes);
+    }
+    let mut out = Vec::new();
+    for chunk in all.chunks(max_per_batch) {
+        bisect(&mut out, chunk, max_argv_bytes);
+    }
+    out
+}
+
+// -------------------------------------------------------------------------
+// Milestone 771 (issue #745) — subprocess-scaling type declarations.
+//
+// These types are DECLARED in Foundational phase (T005 + T006) so US1 /
+// US2 / US3 can be developed against a stable data-model. They are NOT
+// yet wired into `analyze_main_module` — US3 (T031–T035) does that.
+// -------------------------------------------------------------------------
+
+/// A group of sibling main-modules that share a single `go.work` file.
+///
+/// The shared `go list all` reliability preflight is invoked from
+/// `root_dir` (per spec.md §Clarifications 2026-09-04 Q1 — the go.work
+/// file's parent directory returns the workspace-mode union graph
+/// deterministically) and the result cached in
+/// [`SharedPreflightCache`] for every member of this scope to reuse.
+///
+/// See specs/771-gomodwhy-subprocess-scale/data-model.md §Entities.
+#[allow(dead_code)] // Wired in by US3 (T031–T034); declared in T005.
+#[derive(Debug, Clone)]
+pub(super) struct GoWorkScope {
+    /// Absolute path to the `go.work` file's parent directory.
+    pub root_dir: PathBuf,
+    /// Absolute paths to each member main-module directory. Populated
+    /// by `parse_go_work` + canonicalized via `std::fs::canonicalize`.
+    pub members: Vec<PathBuf>,
+}
+
+/// Per-scan cache of shared `go list all` preflight outcomes, keyed by
+/// [`GoWorkScope::root_dir`]. Populated lazily on first access per
+/// scope; wrapped in `Arc<Mutex<>>` at the call site so concurrent US2
+/// workers can share reads.
+///
+/// The mutex is held only for the brief cache lookup + one-shot insert;
+/// worst-case contention is bounded by (concurrent workers) × (one
+/// scope). See specs/771-gomodwhy-subprocess-scale/data-model.md
+/// §SharedPreflightCache.
+#[allow(dead_code)] // Wired in by US3 (T033–T035); declared in T006.
+#[derive(Debug, Default)]
+pub(super) struct SharedPreflightCache {
+    entries: HashMap<PathBuf, PreflightOutcome>,
+}
+
+/// Outcome of a shared `go list all` preflight invocation.
+#[allow(dead_code)] // Companion to SharedPreflightCache; declared in T006.
+#[derive(Debug, Clone)]
+pub(super) enum PreflightOutcome {
+    /// Preflight succeeded — every member of this scope can proceed to
+    /// per-member `go mod why -m` chunks.
+    Ok,
+    /// Preflight failed — every member of this scope MUST be marked
+    /// with `SkipReason::UnresolvablePackages` per FR-007. No `go mod
+    /// why -m` chunks MUST be attempted for any of them.
+    Skipped(SkipReason),
+}
+
+/// Work-queue unit for the concurrent classifier orchestrator (US2 +
+/// US3). US2 ships this enum with only the `Loose` variant used;
+/// US3 (T033) extends the caller-site to also produce `Scope` jobs.
+///
+/// See specs/771-gomodwhy-subprocess-scale/data-model.md §AnalysisJob.
+#[allow(dead_code)] // Wired in by US2 (T021) with Loose only; extended by US3 (T033).
+#[derive(Debug)]
+pub(super) enum AnalysisJob {
+    /// Non-workspace main-module. Runs its own `go list all` preflight
+    /// (per FR-008).
+    Loose { main_module: PathBuf },
+    /// Member of a detected go.work scope. Shares the preflight with
+    /// other members of the same scope via [`SharedPreflightCache`]
+    /// (per FR-006).
+    Scope {
+        scope: Arc<GoWorkScope>,
+        member: PathBuf,
+    },
+}
+
+// Suppress unused-import warning for `Arc`/`Mutex` while US2/US3 are
+// unlanded; both types are needed by the AnalysisJob enum above but
+// the Mutex is only exercised at the caller-site in US2/US3.
+#[allow(dead_code)]
+type _MutexAliveMarker = Mutex<()>;
 
 /// Per-module classification verdict from `go mod why -m -vendor`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -340,8 +493,13 @@ pub fn analyze_main_module(
         }
     }
 
-    // Chunked `go mod why -m -vendor` queries.
-    for chunk in module_paths.chunks(CHUNK_SIZE) {
+    // Chunked `go mod why -m -vendor` queries. m771 (issue #745): uses
+    // `select_chunks` which bumps default batch size from 20 → 500
+    // AND enforces the ARG_MAX_SAFE defensive cap. Byte-identical
+    // output vs pre-m771 for workloads that previously fit in a
+    // single 20-item chunk; batch-count reduction is transparent to
+    // `parse_go_mod_why` (multi-section handling unchanged).
+    for chunk in select_chunks(module_paths, CHUNK_SIZE, ARG_MAX_SAFE) {
         let Some(remaining) = budget.remaining() else {
             tracing::warn!(
                 main_module = %main_module_dir.display(),
@@ -490,6 +648,93 @@ fn classify_section(body: &[String]) -> GoModWhyVerdict {
 mod tests {
     use super::*;
 
+    // -------------------------------------------------------------------
+    // Milestone 771 — US1 CHUNK_SIZE + argv-length guard tests.
+    // Ordered first so a `cargo test m771_` grep surfaces them together.
+    // -------------------------------------------------------------------
+
+    /// FR-001 regression pin: catches any accidental revert of the m771
+    /// CHUNK_SIZE bump. Constant intentionally checked as a literal 500
+    /// to make the pin's intent obvious.
+    #[test]
+    fn m771_chunk_size_default_is_500() {
+        assert_eq!(
+            CHUNK_SIZE, 500,
+            "FR-001: CHUNK_SIZE MUST be 500 by default post-m771; \
+             pre-m771 value was 20 (subprocess-spawn amplification)."
+        );
+    }
+
+    /// FR-001 + FR-002 happy path: 246 short paths (k8s-shape workload)
+    /// fits in a single 500-item batch. Verifies the argv-guard does
+    /// NOT bisect normal workloads unnecessarily.
+    #[test]
+    fn m771_argv_guard_passes_normal_workload_intact() {
+        // ~50-char path average, matches real Go module coordinate
+        // shape (github.com/owner/repo/v2).
+        let paths: Vec<String> = (0..246)
+            .map(|i| format!("example.com/waybill-fixture/repo-{:03}/pkg/v2", i))
+            .collect();
+        let chunks = select_chunks(&paths, CHUNK_SIZE, ARG_MAX_SAFE);
+        assert_eq!(
+            chunks.len(),
+            1,
+            "246 short paths MUST fit in a single 500-item batch; got \
+             {} chunks. First chunk length: {}",
+            chunks.len(),
+            chunks.first().map(|c| c.len()).unwrap_or(0),
+        );
+        assert_eq!(
+            chunks[0].len(),
+            246,
+            "single chunk MUST contain all 246 paths",
+        );
+    }
+
+    /// FR-002 argv-guard bisection: 500 paths at 300 chars each project
+    /// to ~150 KB argv (500 × 301 + 24 fixed = 150,524 bytes), well
+    /// above the 96 KiB (98,304 bytes) cap. Guard MUST bisect until
+    /// every sub-batch's projected argv fits.
+    #[test]
+    fn m771_argv_guard_bisects_when_projected_length_exceeds_limit() {
+        let long_path = "example.com/waybill-fixture/".to_string()
+            + &"x".repeat(272); // 28 + 272 = 300-char path
+        assert_eq!(long_path.len(), 300);
+        let paths: Vec<String> = (0..500).map(|_| long_path.clone()).collect();
+        let chunks = select_chunks(&paths, CHUNK_SIZE, ARG_MAX_SAFE);
+        assert!(
+            chunks.len() >= 2,
+            "FR-002: pathologically long paths MUST trigger bisection; \
+             got {} chunks",
+            chunks.len(),
+        );
+        // Every returned sub-batch's projected argv MUST fit under
+        // the cap (except single-path chunks where the guard is
+        // unreachable per algorithm — PATH_MAX bounds the single case).
+        for (i, chunk) in chunks.iter().enumerate() {
+            let projected = 24usize
+                + chunk.iter().map(|p| p.len() + 1).sum::<usize>();
+            if chunk.len() > 1 {
+                assert!(
+                    projected <= ARG_MAX_SAFE,
+                    "FR-002: chunk[{}] len={} projects to {} bytes, \
+                     exceeds ARG_MAX_SAFE={}",
+                    i,
+                    chunk.len(),
+                    projected,
+                    ARG_MAX_SAFE,
+                );
+            }
+        }
+        // Every input path MUST appear exactly once across the output.
+        let total_len: usize = chunks.iter().map(|c| c.len()).sum();
+        assert_eq!(
+            total_len,
+            paths.len(),
+            "FR-002: bisection MUST preserve total path count",
+        );
+    }
+
     #[test]
     fn parses_prod_needed_chain() {
         let out = "# github.com/google/uuid\n\
@@ -622,8 +867,14 @@ mod tests {
 
     #[test]
     fn chunk_and_rest_returns_suffix() {
+        // Uses a local chunk size (not the global CHUNK_SIZE) so
+        // future m771-scale bumps to CHUNK_SIZE don't break this
+        // pointer-arithmetic invariant test. `chunk_and_rest` only
+        // requires that `chunk` be a sub-slice of `all` — the chunk
+        // size is irrelevant to its correctness.
+        const LOCAL_CHUNK: usize = 20;
         let all: Vec<String> = (0..45).map(|i| format!("m{i}")).collect();
-        let chunks: Vec<&[String]> = all.chunks(CHUNK_SIZE).collect();
+        let chunks: Vec<&[String]> = all.chunks(LOCAL_CHUNK).collect();
         assert_eq!(chunk_and_rest(&all, chunks[1]).len(), 25);
         assert_eq!(chunk_and_rest(&all, chunks[2]).len(), 5);
         assert_eq!(chunk_and_rest(&all, chunks[0]).len(), 45);
