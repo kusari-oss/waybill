@@ -619,6 +619,78 @@ Requires `--gradle-resolve`.
 
 ---
 
+## Performance tuning
+
+waybill trades scan speed for accuracy by default — it reads deeply (BuildInfo probing, `go mod why` classification, per-file hashing) so downstream consumers get maximally-precise SBOMs. Operators who value speed over that precision have several opt-out knobs. Combine them freely; each is independent.
+
+### Quick recipes
+
+**Fastest possible scan (accepts reduced fidelity):**
+
+```bash
+waybill --offline --no-go-mod-why \
+        sbom scan --path . \
+        --no-binary-scan=go \
+        --no-deep-hash \
+        --output fast.cdx.json
+```
+
+**Fast + accurate for pure-source Rust/Python/Node projects (no binary provenance needed):**
+
+```bash
+waybill --offline sbom scan --path . --output source.cdx.json
+```
+
+`--offline` alone closes the network-subprocess gaps ([#771](https://github.com/kusari-oss/waybill/issues/771)) and is the single highest-ROI perf flag.
+
+**Fast for large Go monorepos (kubernetes, moby, podman):**
+
+```bash
+waybill --offline --no-go-mod-why sbom scan --path . --output go.cdx.json
+```
+
+### Empirical impact per flag
+
+Measurements from real-world projects on a warm-cache macOS aarch64 dev box (debug build).
+
+| Flag | Project | Baseline | With flag | Savings |
+|---|---|---|---|---|
+| `--offline` | zizmor (rust, 6.6 MB, cold cargo/rustup cache) | 36.9 s | 1.7 s | 22× ([#771](https://github.com/kusari-oss/waybill/issues/771)) |
+| `--no-go-mod-why` | podman (go, 135 MB, 7327 .go files) | 4.4 s | 2.5 s | 45% |
+| `--no-binary-scan=go` | mongo (c++, 55k files) | 3.0 s | 0.7 s | 77% |
+| `--no-deep-hash` | large image scans | up to 90% of `docker_image::extract` | — | ecosystem-dependent |
+
+Combinations compound. On a Go project with a heavy dependency tree, `--offline --no-go-mod-why` typically halves scan time vs baseline.
+
+### Flag-by-flag guidance
+
+Full detail is in each flag's own section:
+
+- **[`--offline`](#--offline)** — disables all outbound HTTP. Gates the m205 `cargo metadata` subprocess ([#771](https://github.com/kusari-oss/waybill/issues/771)), suppresses deps.dev + ClearlyDefined enrichment, and pins Go child subprocesses to `GOPROXY=off`. The single highest-ROI perf flag for Rust and Go projects.
+- **[`--no-go-mod-why`](#--no-go-mod-why)** — skips m112 build-inclusion classification. Trades the `waybill:build-inclusion: not-needed` + typed dev/build/test edge classification for scan speed on Go projects.
+- **[`--no-binary-scan <MODE>`](#--no-binary-scan-mode)** — skips binary-scanning readers. v1 mode `go` skips the go_binary reader (BuildInfo probing) for large trees without statically-linked Go binaries. Emits a document-scope `waybill:binary-scan-suppressed=<mode>` annotation so consumers can detect the suppression.
+- **[`--no-deep-hash`](#--no-deep-hash)** — skips per-file SHA-256 content hashing. Compatibility guard: requires no-deep-hash-dependent readers to have their own hash source. Big win on image scans with many small files.
+- **[`--exclude-path <PATH_OR_PATTERN>`](#--exclude-path-path_or_pattern)** — skip entire subtrees during walk. Useful for `target/`, `node_modules/`, `.venv/` when you know they're not scan-relevant.
+- **[`--timeout <SECONDS>`](#--timeout-seconds)** — wall-clock ceiling on the entire invocation. Not a perf improvement per se; a safety valve for CI pipelines. Exits with status 124 when exceeded.
+
+### What perf you get for free
+
+Waybill's own tuning ships enabled-by-default and doesn't need operator flags:
+
+- **Milestone 664 shared-walker registry**: single-pass filesystem walk with per-reader dispatch. Eliminates the pre-m664 O(readers × files) filesystem cost.
+- **Milestone 114 safe_walk**: symlink-loop and hard-mounted-remote protection. Prevents hangs on pathological trees.
+- **Rayon-parallelized deep-hash**: `sha2` computation across file lists uses all CPU cores. Deep-hash cost drops linearly with core count.
+- **Regex compile-once via `OnceLock`**: every reader's regexes compile at first-use, not per-file.
+- **Cached preflight failures**: readers that shell out to language toolchains cache the "toolchain unavailable / cache missing" result across main-modules within one scan.
+
+### When to invest in flag combinations
+
+- **Nightly / batch scans**: leave everything default. You want maximum precision, not minimum wall-clock.
+- **Per-commit CI**: consider `--offline --no-go-mod-why` for the 2× speedup on Go/Rust changes without loss on the security-critical component-count signal.
+- **Interactive dev-loop**: `--offline --no-go-mod-why --no-binary-scan=go --no-deep-hash` for sub-second scans while iterating on code that won't be shipped as-is.
+
+---
+
 ## `waybill sbom scan`
 
 Walk a directory or extracted container image and produce one or more SBOM
