@@ -165,7 +165,13 @@ fn scan_go_stripped_binary_emits_diagnostic_property() {
     // but the magic bytes happen to be elsewhere in the binary.
     let dir = tempfile::tempdir().expect("tempdir");
     let bin_path = dir.path().join("corrupted");
+    // Issue #781 — synthetic Go-binary fixtures must start with real
+    // binary magic (ELF/Mach-O/PE) since the go_binary reader now
+    // magic-byte-prefilters before the whole-file memmem for
+    // BuildInfo. Real stripped Go binaries carry ELF headers, so
+    // this matches production shape.
     let mut bytes = vec![0u8; 4096];
+    bytes[..4].copy_from_slice(b"\x7fELF");
     // Append the magic + a non-inline flags byte to trigger the
     // "unsupported" path.
     let magic = b"\xff Go buildinf:";

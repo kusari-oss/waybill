@@ -132,11 +132,14 @@ pub enum TierMode {
 /// - `Symbols` — skip m099 symbol fingerprinting only.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, clap::ValueEnum)]
 pub enum BinaryScanMode {
-    /// Skip the `go_binary` reader — no BuildInfo content probing.
-    /// Statically-linked Go binary attribution via BuildInfo is
-    /// suppressed; components claimed via OS-package readers
-    /// (dpkg / apk / rpm / pip RECORD) remain emitted from those
-    /// sources. See specs/665-no-binary-scan-flag/spec.md FR-002.
+    /// **Deprecated as a perf lever** (#781). The go_binary reader
+    /// now short-circuits on non-binary files via a magic-byte
+    /// prefilter, so the default scan is already fast. `--no-binary-scan=go`
+    /// still works as a component filter (suppresses `pkg:golang/*`
+    /// components from BuildInfo probing) but emits a WARN log
+    /// pointing at `--no-binary-scan=all` for operators who want to
+    /// drop the entire binary tier. See specs/665 FR-002 for the
+    /// original semantics.
     #[clap(name = "go")]
     Go,
     /// Skip the entire binary-scanning tier — no `go_binary` BuildInfo
@@ -1689,14 +1692,15 @@ pub struct ScanArgs {
     #[arg(long, value_enum, default_value_t = TierMode::All)]
     pub tier: TierMode,
 
-    /// Skip binary-scanning reader(s), trading Go-binary module
-    /// attribution for scan speed on large trees (mongo: ~3.04s →
-    /// ~0.7s). Accepted values: `go`.
+    /// Skip binary-scanning reader(s). Accepted values: `go`, `all`.
     ///
-    /// v1 mode `go` skips the `go_binary` reader — no BuildInfo
-    /// probing for statically linked Go binaries; components claimed
-    /// via OS-package readers (dpkg / apk / rpm / pip RECORD)
-    /// remain emitted from those sources.
+    /// `go` — skip the `go_binary` reader (no `pkg:golang/*` from
+    /// BuildInfo). **Deprecated as a perf lever** (#781): the default
+    /// path is now fast on non-Go trees. Keep for component filtering.
+    ///
+    /// `all` — skip the entire binary-scanning tier. Drops all
+    /// binary-tier provenance (Go BuildInfo, role classification,
+    /// linkage, fingerprints) for maximum scan speed.
     ///
     /// When set, waybill emits a document-scope
     /// `waybill:binary-scan-suppressed=<mode>` annotation in every
@@ -1712,35 +1716,32 @@ pub struct ScanArgs {
         value_name = "MODE",
         env = "WAYBILL_NO_BINARY_SCAN",
         long_help = "\
-Skip binary-scanning reader(s), trading binary provenance for scan speed on large trees.
+Skip binary-scanning reader(s). Two modes; each is a filter, not just a perf lever.
 
 MODES:
-  `go`  — Skip the go_binary reader only. No BuildInfo probing for statically linked Go binaries. \
-Components claimed via OS-package readers (dpkg / apk / rpm / pip RECORD) remain emitted from those sources. \
-Role classification (m104) + linkage extraction still run on any binaries encountered.
+  `go`  — DEPRECATED as a perf lever (#781): the default path is now fast on non-Go trees \
+via a magic-byte prefilter. Still works as a component filter — skips the go_binary reader, so no \
+`pkg:golang/*` components from statically-linked Go binaries. Components claimed via OS-package \
+readers (dpkg / apk / rpm / pip RECORD) keep their attribution. Emits a WARN log pointing at `all`.
 
-  `all` — Skip the ENTIRE binary-scanning tier. No go_binary BuildInfo probing, no m104 role classification, \
-no linkage extraction, no m099 symbol fingerprinting. Every file's magic-byte-probe cost is elided (5-10s on \
-large C++/source trees). Components emitted from other tiers (dpkg/apk/rpm/pip/npm/cargo/etc.) keep their \
-tier data unchanged. See issue #775.
+  `all` — Skip the ENTIRE binary-scanning tier. No go_binary BuildInfo probing, no m104 role \
+classification, no linkage extraction, no m099 symbol fingerprinting. Drops all binary-tier components. \
+Components emitted from other tiers (dpkg/apk/rpm/pip/npm/cargo/etc.) keep their tier data unchanged. \
+See issue #775.
 
 WHEN TO USE:
-  * Scanning a large repo (thousands of files) that doesn't contain binaries you need to identify by content.
-  * Your downstream SBOM consumer doesn't consume `pkg:golang/*` (from BuildInfo probing) or component-tier \
-    binary metadata.
-  * Scan wall-time is a bottleneck for your CI pipeline.
+  * `=all`: Scanning a large repo where you don't need any binary-tier provenance and want the max speed win.
+  * `=go`: You want to suppress `pkg:golang/*` components in your SBOM (e.g., a compliance regime that \
+    can't reason about statically-linked binaries) but keep other binary-tier data.
 
 WHEN NOT TO USE:
-  * You need statically-linked Go binary module attribution (e.g., auditing container images that ship \
-    Go binaries not owned by any OS-package manager).
-  * You're producing SBOMs for compliance regimes that require binary-content-based provenance \
-    (CISA 2026 § Explicitly Identifying Unknown Information — a suppressed reader still emits the \
-    completeness signal via `waybill:binary-scan-suppressed`, but consumers must be able to interpret it).
+  * `=go` for perf: unnecessary post-#781. Just run without the flag.
+  * `=all` if you need statically-linked Go module attribution or role/linkage metadata for binaries \
+    outside OS-package coverage.
 
-PERF (macOS APFS, warm cache):
-  * ansible (5.8k files):  0.777s → ~0.3s   (mode=go)
-  * pytorch (21k files):   1.117s → ~0.4s   (mode=go)
-  * mongo   (55k files):   13.5s  → ~1s     (mode=all; mode=go alone: 8.6s)
+PERF (macOS APFS, warm cache, post-#781):
+  * mongo (55k files, C++): default ~4s; `=all` ~2.5s
+  * Pre-#781 defaults were ~13.5s on the same tree.
 
 When set, waybill emits a document-scope `waybill:binary-scan-suppressed=<mode>` annotation in every \
 output format so downstream consumers can detect the suppression. Default (unset) is byte-identical \
@@ -3310,6 +3311,22 @@ pub async fn execute(
             mode_str,
             affected,
         );
+        // Issue #781 — `=go` is deprecated as a perf lever. The
+        // go_binary reader now short-circuits on non-binaries via
+        // a magic-byte prefilter, so the default path is already
+        // fast on source-heavy trees. The flag still works as a
+        // component filter for operators who don't want
+        // `pkg:golang/*` in their SBOM, but that's a component-scope
+        // concern; nudge them toward `=all` if they wanted the perf.
+        if matches!(mode, BinaryScanMode::Go) {
+            tracing::warn!(
+                "--no-binary-scan=go is deprecated as a perf lever \
+                 (#781 makes the default path fast on non-Go trees). \
+                 The flag still works as a Go-component filter; use \
+                 --no-binary-scan=all if your goal is to skip the \
+                 entire binary-scanning tier.",
+            );
+        }
     }
     let scan_fs::ScanResult {
         mut components,

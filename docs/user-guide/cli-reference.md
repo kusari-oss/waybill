@@ -630,7 +630,7 @@ waybill trades scan speed for accuracy by default — it reads deeply (BuildInfo
 ```bash
 waybill --offline --no-go-mod-why \
         sbom scan --path . \
-        --no-binary-scan=go \
+        --no-binary-scan=all \
         --no-deep-hash \
         --output fast.cdx.json
 ```
@@ -653,12 +653,13 @@ waybill --offline --no-go-mod-why sbom scan --path . --output go.cdx.json
 
 ```bash
 waybill --offline sbom scan --path . \
-        --no-binary-scan=go \
         --no-deep-hash \
         --output cpp.cdx.json
 ```
 
-`--no-binary-scan=go` alone saves ~35% on trees with many source files by skipping Go BuildInfo probing (which still incurs magic-byte checks on non-Go files today — see [#775](https://github.com/kusari-oss/waybill/issues/775) for a proposed `all` mode). Add `--no-deep-hash` to skip per-file SHA-256, cutting another 3-5 seconds on trees with tens of thousands of source files.
+Post-[#781](https://github.com/kusari-oss/waybill/issues/781), the default path is already fast on non-Go trees — the go_binary reader short-circuits on non-binary files via a magic-byte prefilter, no operator flag needed. If you want to drop *all* binary-tier components (role classification, fingerprints, etc.) for the additional ~1s win, add `--no-binary-scan=all`. Add `--no-deep-hash` on top to skip per-file SHA-256, cutting another 3-5 seconds on trees with tens of thousands of source files.
+
+> **Note**: `--no-binary-scan=go` is deprecated as a perf lever ([#781](https://github.com/kusari-oss/waybill/issues/781)). It still works as a component filter (suppresses `pkg:golang/*` from BuildInfo probing) but emits a WARN log pointing at `--no-binary-scan=all` for operators who wanted the speed win.
 
 ### Empirical impact per flag
 
@@ -668,9 +669,9 @@ Measurements from real-world projects on a warm-cache macOS aarch64 dev box (deb
 |---|---|---|---|---|
 | `--offline` | zizmor (rust, 6.6 MB, cold cargo/rustup cache) | 36.9 s | 1.7 s | 22× ([#771](https://github.com/kusari-oss/waybill/issues/771)) |
 | `--no-go-mod-why` | podman (go, 135 MB, 7327 .go files) | 4.4 s | 2.5 s | 45% |
-| `--no-binary-scan=go` | mongo (c++, 886 MB, 55k files) | 13.5 s | 8.6 s | 36% |
-| `--no-binary-scan=go --no-deep-hash` | mongo | 13.5 s | 5.3 s | 61% |
-| `+ --exclude-path <tree>` | mongo (exclude `jstests` + `docs`) | 13.5 s | 3.9 s | 71% |
+| [#781](https://github.com/kusari-oss/waybill/issues/781) prefilter (default) | mongo (c++, 886 MB, 55k files) | 13.5 s | 4.2 s | 69% |
+| `--no-binary-scan=all` | mongo (drops binary-tier components) | 4.2 s | 2.5 s | 40% additional |
+| `+ --exclude-path <tree>` | mongo (exclude `jstests` + `docs`) | 4.2 s | ~1.5 s | additional |
 | `--no-deep-hash` | large image scans | up to 90% of `docker_image::extract` | — | ecosystem-dependent |
 
 Combinations compound. On a Go project with a heavy dependency tree, `--offline --no-go-mod-why` typically halves scan time vs baseline.
@@ -681,7 +682,7 @@ Full detail is in each flag's own section:
 
 - **[`--offline`](#--offline)** — disables all outbound HTTP. Gates the m205 `cargo metadata` subprocess ([#771](https://github.com/kusari-oss/waybill/issues/771)), suppresses deps.dev + ClearlyDefined enrichment, and pins Go child subprocesses to `GOPROXY=off`. The single highest-ROI perf flag for Rust and Go projects.
 - **[`--no-go-mod-why`](#--no-go-mod-why)** — skips m112 build-inclusion classification. Trades the `waybill:build-inclusion: not-needed` + typed dev/build/test edge classification for scan speed on Go projects.
-- **[`--no-binary-scan <MODE>`](#--no-binary-scan-mode)** — skips binary-scanning readers. v1 mode `go` skips the go_binary reader (BuildInfo probing) for large trees without statically-linked Go binaries. Emits a document-scope `waybill:binary-scan-suppressed=<mode>` annotation so consumers can detect the suppression.
+- **[`--no-binary-scan <MODE>`](#--no-binary-scan-mode)** — skips binary-scanning readers. `all` drops the entire binary tier (role/fingerprint/BuildInfo) for maximum speed; `go` is a component filter (deprecated as a perf lever post-[#781](https://github.com/kusari-oss/waybill/issues/781)). Emits a document-scope `waybill:binary-scan-suppressed=<mode>` annotation so consumers can detect the suppression.
 - **[`--no-deep-hash`](#--no-deep-hash)** — skips per-file SHA-256 content hashing. Compatibility guard: requires no-deep-hash-dependent readers to have their own hash source. Big win on image scans with many small files.
 - **[`--exclude-path <PATH_OR_PATTERN>`](#--exclude-path-path_or_pattern)** — skip entire subtrees during walk. Useful for `target/`, `node_modules/`, `.venv/` when you know they're not scan-relevant.
 - **[`--timeout <SECONDS>`](#--timeout-seconds)** — wall-clock ceiling on the entire invocation. Not a perf improvement per se; a safety valve for CI pipelines. Exits with status 124 when exceeded.
@@ -700,7 +701,7 @@ Waybill's own tuning ships enabled-by-default and doesn't need operator flags:
 
 - **Nightly / batch scans**: leave everything default. You want maximum precision, not minimum wall-clock.
 - **Per-commit CI**: consider `--offline --no-go-mod-why` for the 2× speedup on Go/Rust changes without loss on the security-critical component-count signal.
-- **Interactive dev-loop**: `--offline --no-go-mod-why --no-binary-scan=go --no-deep-hash` for sub-second scans while iterating on code that won't be shipped as-is.
+- **Interactive dev-loop**: `--offline --no-go-mod-why --no-binary-scan=all --no-deep-hash` for sub-second scans while iterating on code that won't be shipped as-is.
 
 ---
 
@@ -729,7 +730,7 @@ Exactly one of `--path` or `--image` is required.
 | `--no-hashes` | bool | off | Omit per-component content hashes. |
 | `--deb-codename <VALUE>` | string | auto-detect | Override `distro=` qualifier on deb PURLs. |
 | `--no-package-db` | bool | off | Skip installed-package DB reads (dpkg/apk). |
-| `--no-binary-scan <MODE>` | enum (`go`) | (unset) | Skip specified binary-scanning reader(s) to trade Go-binary module attribution for scan speed on large trees. Also via `WAYBILL_NO_BINARY_SCAN=<MODE>`. See [`--no-binary-scan`](#--no-binary-scan-mode). |
+| `--no-binary-scan <MODE>` | enum (`go`, `all`) | (unset) | Skip binary-scanning reader(s). `all` drops the entire binary tier for max speed; `go` is a component filter (deprecated as perf lever post-[#781](https://github.com/kusari-oss/waybill/issues/781)). Also via `WAYBILL_NO_BINARY_SCAN=<MODE>`. See [`--no-binary-scan`](#--no-binary-scan-mode). |
 | `--include-vendored` | bool | off | Emit CMake `add_subdirectory(third_party/\|vendor/...)` entries. |
 | `--no-deep-hash` | bool | off | Skip per-file SHA-256 of installed-package contents. |
 | `--json` | bool | off | Print a JSON summary to stdout. |
@@ -1000,37 +1001,49 @@ complete source. Pass this flag to fall back to pure artefact-file scanning.
 
 ### `--no-binary-scan <MODE>`
 
-Skip specified binary-scanning reader(s) at scan time. Trades Go-binary
-module attribution for scan speed on large trees. v1 recognizes one
-mode: `go`.
+Skip binary-scanning reader(s) at scan time. Two modes; each is a
+filter, not just a perf lever.
 
-`--no-binary-scan=go` skips the `go_binary` reader — no
+**`all`** — Skip the ENTIRE binary-scanning tier. Drops all
+binary-tier components: no go_binary BuildInfo probing, no m104
+role classification, no linkage extraction, no m099 symbol
+fingerprinting. Components emitted from other tiers (dpkg/apk/rpm/
+pip/npm/cargo/etc.) keep their tier data unchanged.
+
+**`go`** — Skip the `go_binary` reader only. No
 `runtime/debug.BuildInfo` probing on statically linked Go binaries.
 Components claimed via OS-package readers (dpkg / apk / rpm / pip
 RECORD) remain emitted from those sources; only the BuildInfo-derived
-`pkg:golang/*` entries drop out.
+`pkg:golang/*` entries drop out. **Deprecated as a perf lever** post-[#781](https://github.com/kusari-oss/waybill/issues/781):
+the default path is now fast on non-Go trees via a magic-byte
+prefilter. Still valid as a component filter; emits a WARN log
+pointing at `--no-binary-scan=all` for operators who wanted speed.
 
-**Perf reference** (macOS APFS, warm cache):
+**Perf reference** (mongo, macOS APFS, warm cache):
 
-| Fixture   | Files | Baseline | With `--no-binary-scan=go` |
-|-----------|-------|----------|-----------------------------|
-| ansible   | 5.8k  | 0.777s   | ~0.3s                       |
-| pytorch   | 21k   | 1.117s   | ~0.4s                       |
-| mongo     | 55k   | 3.04s    | ~0.7s                       |
+| Mode | Wall time | Notes |
+|---|---|---|
+| Default (post-#781) | ~4.2s | prefilter short-circuits non-binary files |
+| `--no-binary-scan=all` | ~2.5s | drops 3-4 binary-tier components |
+| `--no-binary-scan=go` | ~3.4s | keeps binary components; drops BuildInfo-derived pkg:golang/* |
 
-**When to use**:
+**When to use `=all`**:
 
-- Scanning a large repo that DOESN'T contain statically linked Go
-  binaries you need to identify by module.
-- Downstream consumer doesn't care about `pkg:golang/*` components
-  derived from binary probing.
-- Scan wall-time is a CI-pipeline bottleneck.
+- Scan wall-time is a CI-pipeline bottleneck AND you don't need any
+  binary-tier provenance (role tagging, statically-linked libs, etc.).
+- Your downstream SBOM consumer doesn't consume binary-tier
+  component metadata.
 
-**When NOT to use**:
+**When to use `=go`** (component filter, not perf):
 
-- You need statically linked Go binary module attribution (e.g.,
-  auditing container images that ship Go binaries not owned by any
-  OS-package manager).
+- You want to explicitly suppress `pkg:golang/*` components from
+  binary probing but keep other binary-tier metadata.
+
+**When NOT to use `=all`**:
+
+- You need statically linked Go module attribution (e.g., auditing
+  container images that ship Go binaries not owned by any OS-package
+  manager) OR any role/linkage/fingerprint data.
 - You're producing SBOMs for compliance regimes that require
   binary-content-based provenance. A suppressed reader still emits
   the completeness signal via the `waybill:binary-scan-suppressed`
@@ -1050,15 +1063,15 @@ as absent.
 **Examples**:
 
 ```bash
-# Fast scan mode — no Go-binary content probing.
-waybill sbom scan --path /large/repo --no-binary-scan=go --output sbom.cdx.json
+# Max-speed scan — drops binary-tier components.
+waybill sbom scan --path /large/repo --no-binary-scan=all --output sbom.cdx.json
 
 # Detect the suppression in the emitted CDX.
 jq '.metadata.properties[] | select(.name == "waybill:binary-scan-suppressed")' sbom.cdx.json
-# → {"name": "waybill:binary-scan-suppressed", "value": "go"}
+# → {"name": "waybill:binary-scan-suppressed", "value": "all"}
 
 # CI-wide default via env-var.
-env WAYBILL_NO_BINARY_SCAN=go waybill sbom scan --path . --output sbom.cdx.json
+env WAYBILL_NO_BINARY_SCAN=all waybill sbom scan --path . --output sbom.cdx.json
 ```
 
 Full recipe: `specs/665-no-binary-scan-flag/quickstart.md`.

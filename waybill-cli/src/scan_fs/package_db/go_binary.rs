@@ -170,6 +170,25 @@ pub fn detect_is_go(path: &Path) -> DetectResult {
 /// hold the file contents (e.g. [`read_binary`]) avoid a second full
 /// read of the same file from disk.
 pub fn detect_is_go_bytes(bytes: &[u8]) -> DetectResult {
+    // Issue #781 — magic-byte prefilter. Tier 2 below is a whole-file
+    // memmem for the BuildInfo magic; on source-heavy trees (mongo:
+    // 55K files, 0 Go binaries) that scan is the dominant cost of
+    // the whole binary tier. Every real Go binary is ELF, Mach-O,
+    // or PE — so gating on \"first bytes are a known binary magic\"
+    // is safe. Fat Mach-O magic (`0xCAFEBABE` etc.) is not included:
+    // Go's toolchain doesn't emit fat binaries directly.
+    let is_binary_shape = matches!(
+        bytes.first_chunk::<4>(),
+        Some(b"\x7fELF")
+            | Some(&[0xCF, 0xFA, 0xED, 0xFE]) // Mach-O 64-le
+            | Some(&[0xCE, 0xFA, 0xED, 0xFE]) // Mach-O 32-le
+            | Some(&[0xFE, 0xED, 0xFA, 0xCF]) // Mach-O 64-be
+            | Some(&[0xFE, 0xED, 0xFA, 0xCE]) // Mach-O 32-be
+    ) || matches!(bytes.first_chunk::<2>(), Some(b"MZ"));
+    if !is_binary_shape {
+        return DetectResult::NotGoBinary;
+    }
+
     // Tier 1: named-section lookup via `object`.
     if let Some(offset) = find_buildinfo_section(bytes) {
         return DetectResult::Found {
@@ -987,6 +1006,15 @@ mod tests {
         out
     }
 
+    /// Padding buffer that satisfies the issue-#781 magic-byte
+    /// prefilter — synthetic Go-binary fixtures need to start with
+    /// ELF magic since real Go binaries always do.
+    fn synth_padding(size: usize) -> Vec<u8> {
+        let mut v = vec![0u8; size];
+        v[..4].copy_from_slice(b"\x7fELF");
+        v
+    }
+
     fn build_inline_buildinfo(mod_info: &str, build_info: &str) -> Vec<u8> {
         // Order matches Go's debug/buildinfo: first string is the
         // version / build-settings blob, second is the mod info block.
@@ -1172,7 +1200,7 @@ mod tests {
     fn detect_on_synthetic_go_binary_finds_offset() {
         let dir = tempfile::tempdir().unwrap();
         let p = dir.path().join("synth");
-        let mut bin = vec![0u8; 4096];
+        let mut bin = synth_padding(4096);
         let blob = build_inline_buildinfo("path\tx\nmod\tx\tv0.0.0\t\n", "");
         bin.extend_from_slice(&blob);
         std::fs::write(&p, &bin).unwrap();
@@ -1186,7 +1214,7 @@ mod tests {
     fn read_binary_on_synthetic_file_emits_main_and_deps() {
         let dir = tempfile::tempdir().unwrap();
         let p = dir.path().join("hello");
-        let mut bin = vec![0u8; 4096];
+        let mut bin = synth_padding(4096);
         let mod_info = "path\texample.com/hello\n\
                         mod\texample.com/hello\tv0.0.0\t\n\
                         dep\tgithub.com/a/b\tv1.2.3\th1:hash=\n";
@@ -1203,7 +1231,7 @@ mod tests {
     fn read_rootfs_with_one_go_binary_and_one_noise_file() {
         let dir = tempfile::tempdir().unwrap();
         let go_bin = dir.path().join("app");
-        let mut bin = vec![0u8; 4096];
+        let mut bin = synth_padding(4096);
         bin.extend_from_slice(&build_inline_buildinfo(
             "path\texample.com/app\nmod\texample.com/app\tv0.0.0\t\ndep\tgh/x/y\tv1\tok=\n",
             "",
@@ -1234,7 +1262,7 @@ mod tests {
         // .o/.a/.rlib/.rmeta, and probing them dominated scan time on
         // large build trees.
         let dir = tempfile::tempdir().unwrap();
-        let mut bin = vec![0u8; 4096];
+        let mut bin = synth_padding(4096);
         bin.extend_from_slice(&build_inline_buildinfo(
             "path\texample.com/fake\nmod\texample.com/fake\tv0.0.0\t\n",
             "",
@@ -1258,7 +1286,7 @@ mod tests {
     fn pre_1_18_binary_emits_diagnostic_entry() {
         let dir = tempfile::tempdir().unwrap();
         let p = dir.path().join("legacy");
-        let mut bin = vec![0u8; 4096];
+        let mut bin = synth_padding(4096);
         // Legacy pointer-format header.
         let mut blob: Vec<u8> = Vec::new();
         blob.extend_from_slice(BUILDINFO_MAGIC);
@@ -1292,7 +1320,7 @@ mod tests {
         let p = dir.path().join("link");
         // Build a synthetic Go binary with legacy pointer-format
         // BuildInfo — triggers BuildInfoStatus::Unsupported.
-        let mut bin = vec![0u8; 4096];
+        let mut bin = synth_padding(4096);
         let mut blob: Vec<u8> = Vec::new();
         blob.extend_from_slice(BUILDINFO_MAGIC);
         blob.push(8);
@@ -1367,5 +1395,88 @@ mod tests {
         // No binaries in the synthesized fixture; the test only
         // asserts the call returned (didn't hang).
         assert!(entries.is_empty());
+    }
+
+    // ----------------------------------------------------------------
+    // Issue #781 — magic-byte prefilter. `detect_is_go_bytes` used to
+    // memmem over the entire file on every non-binary; the prefilter
+    // short-circuits on files whose first bytes can't possibly be a
+    // Go binary (ELF/Mach-O/PE only).
+    // ----------------------------------------------------------------
+
+    #[test]
+    fn prefilter_rejects_shell_script() {
+        // A shell script padded above the 1KB size gate — pre-#781
+        // this triggered a whole-file memmem for the BuildInfo magic.
+        let mut bytes = b"#!/bin/sh\necho hello\n".to_vec();
+        bytes.resize(4096, b' ');
+        assert_eq!(detect_is_go_bytes(&bytes), DetectResult::NotGoBinary);
+    }
+
+    #[test]
+    fn prefilter_rejects_json() {
+        let mut bytes = br#"{"name": "waybill"}"#.to_vec();
+        bytes.resize(4096, b' ');
+        assert_eq!(detect_is_go_bytes(&bytes), DetectResult::NotGoBinary);
+    }
+
+    #[test]
+    fn prefilter_rejects_source_code_with_embedded_magic() {
+        // Regression guard — the whole point of the prefilter is that
+        // a source file that HAPPENS to contain `\xff Go buildinf:` as
+        // a literal (e.g., a Go source string constant or an SBOM
+        // referencing another Go binary) doesn't get misidentified as
+        // a Go binary itself. Pre-#781 this would return Found.
+        let mut bytes = b"# python\n".to_vec();
+        bytes.extend_from_slice(BUILDINFO_MAGIC);
+        bytes.resize(4096, b' ');
+        assert_eq!(detect_is_go_bytes(&bytes), DetectResult::NotGoBinary);
+    }
+
+    #[test]
+    fn prefilter_admits_elf_shape() {
+        // Synthetic ELF-shaped fixture with a valid BuildInfo blob.
+        // The prefilter must let ELF-magic buffers proceed to tier 2.
+        let mut bin = synth_padding(4096);
+        bin.extend_from_slice(&build_inline_buildinfo(
+            "path\tx\nmod\tx\tv0.0.0\t\n",
+            "",
+        ));
+        match detect_is_go_bytes(&bin) {
+            DetectResult::Found { .. } => (),
+            other => panic!("ELF-shaped fixture must reach tier 2, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn prefilter_admits_macho_shape() {
+        // Mach-O 64-le magic. Any of the four Mach-O magics is fine —
+        // this test only proves the prefilter admits the shape.
+        let mut bin = vec![0u8; 4096];
+        bin[..4].copy_from_slice(&[0xCF, 0xFA, 0xED, 0xFE]);
+        bin.extend_from_slice(&build_inline_buildinfo(
+            "path\tx\nmod\tx\tv0.0.0\t\n",
+            "",
+        ));
+        match detect_is_go_bytes(&bin) {
+            DetectResult::Found { .. } => (),
+            other => panic!("Mach-O-shaped fixture must reach tier 2, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn prefilter_admits_pe_shape() {
+        // `MZ` — DOS executable stub, PE's outer envelope. Real Go
+        // binaries on Windows carry it.
+        let mut bin = vec![0u8; 4096];
+        bin[..2].copy_from_slice(b"MZ");
+        bin.extend_from_slice(&build_inline_buildinfo(
+            "path\tx\nmod\tx\tv0.0.0\t\n",
+            "",
+        ));
+        match detect_is_go_bytes(&bin) {
+            DetectResult::Found { .. } => (),
+            other => panic!("PE-shaped fixture must reach tier 2, got {other:?}"),
+        }
     }
 }
