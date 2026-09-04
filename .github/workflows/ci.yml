@@ -36,6 +36,37 @@ jobs:
   # entirely. The ebpf lane runs in parallel and is the regression gate
   # for the user-space eBPF integration. See
   # specs/020-ebpf-feature-gate/ for the full rationale.
+
+  # Detect which subsystems the PR touches. Downstream jobs skip when
+  # their subsystem is not affected — the ebpf lane in particular pays
+  # a large fixed cost (nightly + bpf-linker + LLVM + libelf apt install
+  # + xtask build) that unrelated PRs shouldn't shoulder. Always runs
+  # on push events to main so nothing merged unchecked.
+  changes:
+    name: Detect changed subsystems
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      ebpf: ${{ steps.filter.outputs.ebpf }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          filters: |
+            ebpf:
+              - 'waybill-ebpf/**'
+              - 'waybill-cli/src/trace/**'
+              - 'xtask/**'
+              - 'Dockerfile.ebpf-test'
+              - '.github/env/bpf-linker.env'
+              - '.github/actions/install-bpf-linker/**'
+              - '.github/workflows/ci.yml'
+
   lint-and-test:
     name: Lint + test (linux-x86_64)
     runs-on: ubuntu-latest
@@ -580,8 +611,14 @@ jobs:
   # so the user-space eBPF integration (waybill-cli/src/trace/* +
   # `waybill trace` subcommand) keeps working. Default lanes above
   # do not invoke this path — see specs/020-ebpf-feature-gate/.
+  #
+  # Skip on pull_request events when no ebpf-related files changed
+  # (path-filter above). Always runs on `push` to main so unrelated
+  # PR-time skips can't sneak through.
   lint-and-test-ebpf:
     name: Lint + test (linux-x86_64, --features ebpf-tracing)
+    needs: changes
+    if: needs.changes.outputs.ebpf == 'true' || github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
