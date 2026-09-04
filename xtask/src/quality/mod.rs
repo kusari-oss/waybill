@@ -325,9 +325,17 @@ fn workspace_root() -> PathBuf {
         .unwrap_or_else(|_| PathBuf::from("."))
 }
 
+/// `~/.cache/waybill/quality-corpus`, mirroring the m090 fixture cache and
+/// m195 corpus cache. `USERPROFILE` is checked so Windows hosts get a real
+/// per-user cache rather than silently falling back to a relative directory
+/// beside wherever the command happened to be invoked.
 fn default_cache_root(_root: &Path) -> PathBuf {
-    if let Ok(h) = std::env::var("HOME") {
-        return PathBuf::from(h).join(".cache/waybill/quality-corpus");
+    for var in ["HOME", "USERPROFILE"] {
+        if let Ok(h) = std::env::var(var) {
+            if !h.is_empty() {
+                return PathBuf::from(h).join(".cache/waybill/quality-corpus");
+            }
+        }
     }
     PathBuf::from(".waybill-quality-cache")
 }
@@ -348,11 +356,13 @@ fn now_rfc3339() -> String {
     chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
 }
 
+/// Host descriptor for the report. `uname -a` where available; elsewhere
+/// (notably Windows) the compile-time OS/arch pair, which is coarser but
+/// still tells a reader which machine class produced the numbers.
 fn runner_string() -> String {
-    let out = Command::new("uname").arg("-a").output();
-    match out {
+    match Command::new("uname").arg("-a").output() {
         Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout).trim().to_string(),
-        _ => std::env::consts::OS.to_string(),
+        _ => format!("{} {}", std::env::consts::OS, std::env::consts::ARCH),
     }
 }
 

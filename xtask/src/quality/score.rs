@@ -56,16 +56,24 @@ pub fn score(bin: &Path, document: &Path) -> Result<f64, String> {
             stderr.trim().chars().take(160).collect::<String>()
         ));
     }
+    parse_score(&out.stdout)
+}
+
+/// Pull `files[0].sbom_quality_score` out of an `sbomqs score --json` body.
+///
+/// Split out from [`score`] so it is testable without spawning anything —
+/// the subprocess is thin, but this key-walk is where the real hazard lives.
+/// The trial run initially read a non-existent `avg_score` key and silently
+/// produced `None` for all 18 targets, so a missing key MUST be an error and
+/// never a default.
+pub fn parse_score(stdout: &[u8]) -> Result<f64, String> {
     let v: serde_json::Value =
-        serde_json::from_slice(&out.stdout).map_err(|e| format!("sbomqs JSON parse failed: {e}"))?;
+        serde_json::from_slice(stdout).map_err(|e| format!("sbomqs JSON parse failed: {e}"))?;
     v.get("files")
         .and_then(|f| f.as_array())
         .and_then(|a| a.first())
         .and_then(|f| f.get("sbom_quality_score"))
         .and_then(|s| s.as_f64())
-        // The trial run initially read a non-existent `avg_score` key and
-        // silently produced None for all 18 targets. Hence: a missing key
-        // is an error, never a default.
         .ok_or_else(|| "sbomqs output has no files[0].sbom_quality_score".to_string())
 }
 
@@ -80,45 +88,53 @@ pub fn score_map(bin: &Path, cdx: &Path) -> Result<BTreeMap<String, f64>, String
 #[cfg(test)]
 #[cfg_attr(test, allow(clippy::unwrap_used))]
 mod tests {
-    use super::*;
+    use super::parse_score;
 
+    /// The exact bug the trial run hit: a plausible-looking body with the
+    /// WRONG key name must fail loudly rather than silently yielding nothing.
     #[test]
-    fn score_errors_on_missing_key_rather_than_defaulting() {
-        // Simulates the exact bug the trial run hit: a plausible-looking
-        // JSON body with the wrong key name must fail loudly.
-        let tmp = tempfile::tempdir().unwrap();
-        let fake = tmp.path().join("fake-sbomqs");
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            std::fs::write(&fake, "#!/bin/sh\necho '{\"files\":[{\"avg_score\":7.5}]}'\n").unwrap();
-            std::fs::set_permissions(&fake, std::fs::Permissions::from_mode(0o755)).unwrap();
-            let doc = tmp.path().join("x.json");
-            std::fs::write(&doc, "{}").unwrap();
-            let e = score(&fake, &doc).unwrap_err();
-            assert!(e.contains("sbom_quality_score"), "{e}");
-        }
+    fn errors_on_missing_key_rather_than_defaulting() {
+        let e = parse_score(br#"{"files":[{"avg_score":7.5}]}"#).unwrap_err();
+        assert!(e.contains("sbom_quality_score"), "{e}");
     }
 
     #[test]
-    fn score_reads_the_documented_key() {
-        let tmp = tempfile::tempdir().unwrap();
-        let fake = tmp.path().join("fake-sbomqs");
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            std::fs::write(
-                &fake,
-                "#!/bin/sh\necho '{\"files\":[{\"sbom_quality_score\":6.39}]}'\n",
-            )
-            .unwrap();
-            std::fs::set_permissions(&fake, std::fs::Permissions::from_mode(0o755)).unwrap();
-            let doc = tmp.path().join("x.json");
-            std::fs::write(&doc, "{}").unwrap();
-            assert_eq!(score(&fake, &doc).unwrap(), 6.39);
-            let m = score_map(&fake, &doc).unwrap();
-            assert_eq!(m.get("cyclonedx").copied(), Some(6.39));
-            assert_eq!(m.len(), 1);
-        }
+    fn reads_the_documented_key() {
+        assert_eq!(
+            parse_score(br#"{"files":[{"sbom_quality_score":6.39}]}"#).unwrap(),
+            6.39
+        );
+    }
+
+    #[test]
+    fn errors_on_empty_files_array() {
+        assert!(parse_score(br#"{"files":[]}"#).is_err());
+    }
+
+    #[test]
+    fn errors_on_absent_files_key() {
+        assert!(parse_score(br#"{}"#).is_err());
+    }
+
+    #[test]
+    fn errors_on_malformed_json() {
+        let e = parse_score(b"not json at all").unwrap_err();
+        assert!(e.contains("JSON parse failed"), "{e}");
+    }
+
+    #[test]
+    fn errors_when_score_is_not_a_number() {
+        assert!(parse_score(br#"{"files":[{"sbom_quality_score":"7.5"}]}"#).is_err());
+    }
+
+    /// sbomqs reports every scanned file; we deliberately read only the
+    /// first, since the command scores exactly one document per invocation.
+    #[test]
+    fn reads_only_the_first_file_entry() {
+        let v = parse_score(
+            br#"{"files":[{"sbom_quality_score":1.5},{"sbom_quality_score":9.9}]}"#,
+        )
+        .unwrap();
+        assert_eq!(v, 1.5);
     }
 }
