@@ -176,13 +176,16 @@ url       = "https://github.com/pallets/flask"
 sha       = "80be49be88b534d2a72ef6bf5ea4aabf89f3305b"  # 3.1.2
 ecosystem = "pip"
 # Observed 2026-09-04 (offline, sbomqs v2.0.6):
-#   wall=133ms sbomqs=7.52 pkgs=104 files=1 edges=151 depth=2 flat=false
+#   wall=165ms sbomqs=7.52 pkgs=104 files=1 edges=168 depth=4 flat=false
 #   waybill self-report: partial
+# Re-measured against waybill 0.6.1 after rebasing onto main. edges 151->168 and
+# depth 2->4: the graph got RICHER, not poorer, so the old upper bound tripped on an
+# improvement rather than a regression. Bounds recentred on the new observation.
 [targets.expect]
 pkgs      = { min = 93, max = 115 }
 files     = { min = 0, max = 4 }
-edges     = { min = 135, max = 167 }
-max_depth = { min = 1, max = 6 }
+edges     = { min = 151, max = 185 }
+max_depth = { min = 3, max = 8 }
 sbomqs    = { min = 7.02, max = 8.02 }
 wall_ms   = { min = 5, max = 2000 }
 flat      = false
