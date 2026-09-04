@@ -219,3 +219,53 @@ fn binary_scan_suppressed_annotation_parity_across_formats() {
          disagree",
     );
 }
+
+/// Issue #775 — `--no-binary-scan=all` extends the m665 flag with a mode
+/// that suppresses the entire binary-scanning tier (not just the
+/// go_binary reader). The C153 annotation carries value `"all"` across
+/// all three formats, matching the m071 SymmetricEqual parity contract
+/// established for the `"go"` value.
+#[test]
+fn issue_775_all_mode_annotation_parity_across_formats() {
+    let path: PathBuf = common::fixture_path("go/binaries");
+
+    let suppressed = scan_all_formats(&path, &["--no-binary-scan=all"]);
+    let sup_cdx = cdx_property_value(&suppressed.cdx, "waybill:binary-scan-suppressed");
+    let sup_spdx23 =
+        spdx23_envelope_value(&suppressed.spdx23, "waybill:binary-scan-suppressed");
+    let sup_spdx3 = spdx3_envelope_value(&suppressed.spdx3, "waybill:binary-scan-suppressed");
+
+    assert_eq!(
+        sup_cdx.as_deref(),
+        Some("all"),
+        "issue #775: CDX must carry the suppression annotation with value \
+         \"all\" when --no-binary-scan=all is set, got: {:?}",
+        sup_cdx,
+    );
+    assert_eq!(
+        sup_spdx23.as_deref(),
+        Some("all"),
+        "issue #775: SPDX 2.3 must carry the suppression annotation with value \
+         \"all\" when --no-binary-scan=all is set, got: {:?}",
+        sup_spdx23,
+    );
+    assert_eq!(
+        sup_spdx3.as_deref(),
+        Some("all"),
+        "issue #775: SPDX 3 must carry the suppression annotation with value \
+         \"all\" when --no-binary-scan=all is set, got: {:?}",
+        sup_spdx3,
+    );
+
+    // m071 SymmetricEqual parity across the three formats.
+    assert_eq!(
+        sup_cdx, sup_spdx23,
+        "m071 C153 SymmetricEqual violation for --no-binary-scan=all: \
+         CDX vs SPDX 2.3 values disagree",
+    );
+    assert_eq!(
+        sup_spdx23, sup_spdx3,
+        "m071 C153 SymmetricEqual violation for --no-binary-scan=all: \
+         SPDX 2.3 vs SPDX 3 values disagree",
+    );
+}

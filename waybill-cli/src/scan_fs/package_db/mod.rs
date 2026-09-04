@@ -2342,10 +2342,14 @@ fn run_shared_walker_pilot(
     // `--no-binary-scan=<MODE>`. Per contract C1, the go_binary reader
     // is skipped when mode = Go; `finalize()` downstream is a no-op on
     // an empty candidate-path list, so the gate at the pilot's
-    // registration site suffices.
+    // registration site suffices. Issue #775: `mode = All` implies
+    // `mode = Go` (the go_binary reader is a proper subset of the
+    // binary-scan tier that `All` suppresses); gate skips go_binary
+    // for both Go AND All.
     let skip_go_binary = matches!(
         no_binary_scan,
-        Some(crate::cli::scan_cmd::BinaryScanMode::Go),
+        Some(crate::cli::scan_cmd::BinaryScanMode::Go)
+            | Some(crate::cli::scan_cmd::BinaryScanMode::All),
     );
     use crate::scan_fs::walk_registry::{
         ReaderId, ReaderRegistryBuilder, SharedWalker,

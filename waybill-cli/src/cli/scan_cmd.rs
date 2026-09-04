@@ -128,8 +128,6 @@ pub enum TierMode {
 /// scan-flag/data-model.md` for the entity contract.
 ///
 /// Future variants (reserved; NOT currently emitted):
-/// - `All`  — skip go_binary + m096 ELF section + m099 symbol
-///   fingerprint + m104 binary-role classification. Broadest.
 /// - `Elf`  — skip m096 ELF `.dep-v0` section reader only.
 /// - `Symbols` — skip m099 symbol fingerprinting only.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, clap::ValueEnum)]
@@ -141,6 +139,16 @@ pub enum BinaryScanMode {
     /// sources. See specs/665-no-binary-scan-flag/spec.md FR-002.
     #[clap(name = "go")]
     Go,
+    /// Skip the entire binary-scanning tier — no `go_binary` BuildInfo
+    /// probing AND no m104 role classification (which today opens every
+    /// file in the tree to check magic bytes even on non-Go projects).
+    /// Trades ALL binary-derived provenance (`pkg:golang/*` from
+    /// BuildInfo, ELF/Mach-O/PE role tagging, embedded linkage
+    /// attribution) for scan speed on large trees. Components emitted
+    /// from other tiers (dpkg/apk/rpm/pip/etc.) keep their tier data
+    /// unchanged. See issue #775.
+    #[clap(name = "all")]
+    All,
 }
 
 impl BinaryScanMode {
@@ -151,6 +159,7 @@ impl BinaryScanMode {
     pub fn as_annotation_value(&self) -> &'static str {
         match self {
             Self::Go => "go",
+            Self::All => "all",
         }
     }
 }
@@ -1703,15 +1712,22 @@ pub struct ScanArgs {
         value_name = "MODE",
         env = "WAYBILL_NO_BINARY_SCAN",
         long_help = "\
-Skip binary-scanning reader(s), trading Go-binary module attribution for scan speed on large trees.
+Skip binary-scanning reader(s), trading binary provenance for scan speed on large trees.
 
-v1 mode `go` skips the go_binary reader — no BuildInfo probing for statically linked Go binaries. \
-Components claimed via OS-package readers (dpkg / apk / rpm / pip RECORD) remain emitted from those sources.
+MODES:
+  `go`  — Skip the go_binary reader only. No BuildInfo probing for statically linked Go binaries. \
+Components claimed via OS-package readers (dpkg / apk / rpm / pip RECORD) remain emitted from those sources. \
+Role classification (m104) + linkage extraction still run on any binaries encountered.
+
+  `all` — Skip the ENTIRE binary-scanning tier. No go_binary BuildInfo probing, no m104 role classification, \
+no linkage extraction, no m099 symbol fingerprinting. Every file's magic-byte-probe cost is elided (5-10s on \
+large C++/source trees). Components emitted from other tiers (dpkg/apk/rpm/pip/npm/cargo/etc.) keep their \
+tier data unchanged. See issue #775.
 
 WHEN TO USE:
-  * Scanning a large repo (thousands of files) that doesn't contain statically-linked Go binaries \
-    you need to identify by module.
-  * Your downstream SBOM consumer doesn't consume `pkg:golang/*` components derived from binary probing.
+  * Scanning a large repo (thousands of files) that doesn't contain binaries you need to identify by content.
+  * Your downstream SBOM consumer doesn't consume `pkg:golang/*` (from BuildInfo probing) or component-tier \
+    binary metadata.
   * Scan wall-time is a bottleneck for your CI pipeline.
 
 WHEN NOT TO USE:
@@ -1722,9 +1738,9 @@ WHEN NOT TO USE:
     completeness signal via `waybill:binary-scan-suppressed`, but consumers must be able to interpret it).
 
 PERF (macOS APFS, warm cache):
-  * ansible (5.8k files):  0.777s → ~0.3s
-  * pytorch (21k files):   1.117s → ~0.4s
-  * mongo   (55k files):   3.04s  → ~0.7s
+  * ansible (5.8k files):  0.777s → ~0.3s   (mode=go)
+  * pytorch (21k files):   1.117s → ~0.4s   (mode=go)
+  * mongo   (55k files):   13.5s  → ~1s     (mode=all; mode=go alone: 8.6s)
 
 When set, waybill emits a document-scope `waybill:binary-scan-suppressed=<mode>` annotation in every \
 output format so downstream consumers can detect the suppression. Default (unset) is byte-identical \
@@ -3281,6 +3297,11 @@ pub async fn execute(
             BinaryScanMode::Go => (
                 mode.as_annotation_value(),
                 "go_binary reader (statically-linked Go BuildInfo probing)",
+            ),
+            BinaryScanMode::All => (
+                mode.as_annotation_value(),
+                "entire binary-scanning tier (go_binary reader + m104 role \
+                 classification + linkage extraction + m099 symbol fingerprinting)",
             ),
         };
         tracing::info!(
