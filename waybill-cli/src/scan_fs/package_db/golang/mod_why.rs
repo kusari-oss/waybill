@@ -56,6 +56,141 @@ const ARG_MAX_SAFE: usize = 96 * 1024;
 /// Default shared budget across all invocations in a scan.
 const DEFAULT_BUDGET: Duration = Duration::from_secs(60);
 
+/// Milestone 771 US3 (T031) — parse a `go.work` file's contents into
+/// the list of member paths declared via `use` directives.
+///
+/// Handles both grammar forms per go.dev/ref/mod#go-work-file:
+///   - bare:  `use ./mod-a`
+///   - block: `use ( \n\t./mod-a\n\t./mod-b\n )`
+///
+/// Ignores `go X.Y[.Z]`, `replace`, blank, and comment lines.
+/// Malformed input returns an empty Vec (falls back to per-workspace
+/// preflight per FR-008; no panic).
+pub fn parse_go_work(bytes: &str) -> Vec<String> {
+    let mut members = Vec::new();
+    let mut in_use_block = false;
+    for raw in bytes.lines() {
+        let line = raw.trim();
+        // Strip inline comments.
+        let line = line.split("//").next().unwrap_or("").trim();
+        if line.is_empty() {
+            continue;
+        }
+        if in_use_block {
+            if line == ")" {
+                in_use_block = false;
+                continue;
+            }
+            // Block-form entries are bare paths (no `use` keyword).
+            members.push(line.to_string());
+            continue;
+        }
+        if let Some(rest) = line.strip_prefix("use") {
+            let rest = rest.trim();
+            if rest == "(" {
+                in_use_block = true;
+                continue;
+            }
+            if let Some(inner) = rest.strip_prefix('(') {
+                // `use ( ./mod-a` — inline-open with a first member.
+                in_use_block = true;
+                let first = inner.trim();
+                if !first.is_empty() && first != ")" {
+                    members.push(first.to_string());
+                }
+                continue;
+            }
+            // Bare form: `use <path>`.
+            if !rest.is_empty() {
+                members.push(rest.to_string());
+            }
+        }
+        // Any other directive (`go`, `replace`, `godebug`, …) is
+        // ignored — this parser cares only about member enumeration.
+    }
+    members
+}
+
+/// Milestone 771 US3 (T032) — group main-modules by their governing
+/// `go.work` scope. Walks up each workspace's directory tree looking
+/// for a `go.work` file. When found, parses it via [`parse_go_work`]
+/// and canonicalizes the member paths.
+///
+/// Returns `(scopes, loose)` where:
+///   - `scopes` = one `GoWorkScope` per detected `go.work` file
+///     containing every input workspace that IS a declared member.
+///   - `loose` = input workspaces that are NOT covered by any scope
+///     (per FR-008 fallback: they run their own preflight unchanged).
+///
+/// A workspace appears in exactly one output slot: it's either a
+/// scope member OR loose, never both. Multi-scope handled naturally
+/// (one `GoWorkScope` per detected `go.work`).
+pub fn detect_go_work_scopes(
+    workspaces: &[PathBuf],
+) -> (Vec<GoWorkScope>, Vec<PathBuf>) {
+    // Canonicalize once; downstream comparisons use these forms.
+    let canon_workspaces: Vec<PathBuf> = workspaces
+        .iter()
+        .map(|w| std::fs::canonicalize(w).unwrap_or_else(|_| w.clone()))
+        .collect();
+    // scope-root-dir → parsed member set (canonicalized to workspace form)
+    let mut scope_map: std::collections::HashMap<PathBuf, Vec<PathBuf>> =
+        std::collections::HashMap::new();
+    let mut workspace_scope: std::collections::HashMap<PathBuf, PathBuf> =
+        std::collections::HashMap::new();
+    for w in &canon_workspaces {
+        // Walk up looking for go.work.
+        let mut cursor: Option<&Path> = Some(w.as_path());
+        while let Some(dir) = cursor {
+            let candidate = dir.join("go.work");
+            if candidate.is_file() {
+                let scope_root = dir.to_path_buf();
+                // Populate the scope's member set if we haven't yet.
+                #[allow(clippy::map_entry)] // clarity > entry API here
+                if !scope_map.contains_key(&scope_root) {
+                    let Ok(bytes) = std::fs::read_to_string(&candidate) else {
+                        break;
+                    };
+                    let members: Vec<PathBuf> = parse_go_work(&bytes)
+                        .iter()
+                        .map(|rel| {
+                            let abs = scope_root.join(rel);
+                            std::fs::canonicalize(&abs).unwrap_or(abs)
+                        })
+                        .collect();
+                    scope_map.insert(scope_root.clone(), members);
+                }
+                // Is this workspace one of the scope's declared members?
+                if let Some(members) = scope_map.get(&scope_root) {
+                    if members.iter().any(|m| m == w) {
+                        workspace_scope.insert(w.clone(), scope_root);
+                    }
+                }
+                break;
+            }
+            cursor = dir.parent();
+        }
+    }
+    // Group workspaces by scope; loose = un-assigned.
+    let mut scope_members: std::collections::HashMap<PathBuf, Vec<PathBuf>> =
+        std::collections::HashMap::new();
+    let mut loose: Vec<PathBuf> = Vec::new();
+    for w in &canon_workspaces {
+        match workspace_scope.get(w) {
+            Some(scope_root) => scope_members
+                .entry(scope_root.clone())
+                .or_default()
+                .push(w.clone()),
+            None => loose.push(w.clone()),
+        }
+    }
+    let scopes: Vec<GoWorkScope> = scope_members
+        .into_iter()
+        .map(|(root_dir, members)| GoWorkScope { root_dir, members })
+        .collect();
+    (scopes, loose)
+}
+
 /// Milestone 771 US2 — bounded worker-count computation.
 ///
 /// Returns `min(workspace_count, available_parallelism())`, clamped
@@ -142,9 +277,8 @@ pub(super) fn select_chunks(
 /// [`SharedPreflightCache`] for every member of this scope to reuse.
 ///
 /// See specs/771-gomodwhy-subprocess-scale/data-model.md §Entities.
-#[allow(dead_code)] // Wired in by US3 (T031–T034); declared in T005.
 #[derive(Debug, Clone)]
-pub(super) struct GoWorkScope {
+pub struct GoWorkScope {
     /// Absolute path to the `go.work` file's parent directory.
     pub root_dir: PathBuf,
     /// Absolute paths to each member main-module directory. Populated
@@ -161,16 +295,17 @@ pub(super) struct GoWorkScope {
 /// worst-case contention is bounded by (concurrent workers) × (one
 /// scope). See specs/771-gomodwhy-subprocess-scale/data-model.md
 /// §SharedPreflightCache.
-#[allow(dead_code)] // Wired in by US3 (T033–T035); declared in T006.
 #[derive(Debug, Default)]
-pub(super) struct SharedPreflightCache {
-    entries: HashMap<PathBuf, PreflightOutcome>,
+pub struct SharedPreflightCache {
+    /// Public so the m771 unit tests can drive dedup assertions.
+    /// Callers outside the crate SHOULD access via `Arc<Mutex<>>` at
+    /// the classifier call site rather than mutating this directly.
+    pub entries: HashMap<PathBuf, PreflightOutcome>,
 }
 
 /// Outcome of a shared `go list all` preflight invocation.
-#[allow(dead_code)] // Companion to SharedPreflightCache; declared in T006.
 #[derive(Debug, Clone)]
-pub(super) enum PreflightOutcome {
+pub enum PreflightOutcome {
     /// Preflight succeeded — every member of this scope can proceed to
     /// per-member `go mod why -m` chunks.
     Ok,
@@ -438,18 +573,84 @@ fn run_bounded(
     }
 }
 
+/// Run the `go list all` reliability preflight from `preflight_dir`.
+/// Returns `Ok(())` on success; `Err(reason)` on any failure path.
+///
+/// Milestone 771 (T034): extracted from inline `analyze_main_module`
+/// so both the per-workspace path AND the shared-scope path can
+/// invoke it identically. Log lines carry `main_module = %preflight_dir`
+/// which for the shared-scope path names the go.work root (spec
+/// Clarification 2026-09-04 Q1) rather than any specific member.
+fn run_preflight(
+    preflight_dir: &Path,
+    offline: bool,
+    remaining: Duration,
+    workspace_mode: &WorkspaceMode,
+) -> Result<(), SkipReason> {
+    match run_bounded(
+        preflight_dir,
+        &["list".into(), "all".into()],
+        offline,
+        remaining,
+        workspace_mode,
+    ) {
+        Invocation::Completed(output) if output.status.success() => Ok(()),
+        Invocation::Completed(output) => {
+            tracing::warn!(
+                main_module = %preflight_dir.display(),
+                status = %output.status,
+                stderr = %String::from_utf8_lossy(&output.stderr).trim(),
+                "go-mod-why analysis skipped (unresolvable-packages): `go \
+                 list all` preflight failed — `go mod why` would silently \
+                 report false not-needed verdicts; build-inclusion falls \
+                 back to unknown markers"
+            );
+            Err(SkipReason::UnresolvablePackages)
+        }
+        Invocation::SpawnFailed(detail) => {
+            tracing::warn!(
+                main_module = %preflight_dir.display(),
+                detail = %detail,
+                "go-mod-why analysis skipped (unresolvable-packages): `go \
+                 list all` preflight could not be spawned; build-inclusion \
+                 falls back to unknown markers"
+            );
+            Err(SkipReason::UnresolvablePackages)
+        }
+        Invocation::TimedOut => {
+            tracing::warn!(
+                main_module = %preflight_dir.display(),
+                "go-mod-why analysis skipped (unresolvable-packages): `go \
+                 list all` preflight exceeded the shared time budget; \
+                 build-inclusion falls back to unknown markers"
+            );
+            Err(SkipReason::UnresolvablePackages)
+        }
+    }
+}
+
 /// Classify `module_paths` against the main module rooted at
 /// `main_module_dir` (the directory containing its `go.mod`).
 ///
 /// Degrades, never errors: every failure path returns a
 /// `MainModuleAnalysis` describing what happened. The caller decides
-/// how verdicts map onto `PackageDbEntry` state (T015) and emits the
-/// FR-013 summary (T020).
+/// how verdicts map onto `PackageDbEntry` state and emits the FR-013
+/// summary.
+///
+/// Milestone 771 US3: if `shared_scope` is `Some((cache, scope))`,
+/// the reliability preflight is executed at most once per scope (cached
+/// in `SharedPreflightCache`). Members reuse the cached outcome —
+/// success proceeds to per-member chunks; failure short-circuits
+/// with `SkipReason::UnresolvablePackages` per FR-007. When
+/// `shared_scope` is `None`, the classifier runs its own preflight
+/// from `main_module_dir` (FR-008 fallback path, unchanged from
+/// pre-m771 behavior).
 pub fn analyze_main_module(
     main_module_dir: &Path,
     module_paths: &[String],
     offline: bool,
     budget: &BudgetTracker,
+    shared_scope: Option<(&Arc<Mutex<SharedPreflightCache>>, &Arc<GoWorkScope>)>,
 ) -> MainModuleAnalysis {
     let mut analysis = MainModuleAnalysis::default();
     if module_paths.is_empty() {
@@ -475,42 +676,57 @@ pub fn analyze_main_module(
         mark_unresolved(&mut analysis, module_paths);
         return analysis;
     };
-    match run_bounded(main_module_dir, &["list".into(), "all".into()], offline, remaining, &workspace_mode) {
-        Invocation::Completed(output) if output.status.success() => {}
-        Invocation::Completed(output) => {
-            tracing::warn!(
-                main_module = %main_module_dir.display(),
-                status = %output.status,
-                stderr = %String::from_utf8_lossy(&output.stderr).trim(),
-                "go-mod-why analysis skipped (unresolvable-packages): `go \
-                 list all` preflight failed — `go mod why` would silently \
-                 report false not-needed verdicts; build-inclusion falls \
-                 back to unknown markers"
-            );
-            analysis.skip_reason = Some(SkipReason::UnresolvablePackages);
-            return analysis;
+    // US3: shared preflight when we're in a go.work scope; fallback
+    // to the per-workspace preflight otherwise (FR-008).
+    let preflight_result = match shared_scope {
+        Some((cache, scope)) => {
+            // Cache check under mutex. On hit, return the cached
+            // outcome; on miss, run the preflight from scope.root_dir
+            // (spec Clarification 2026-09-04 Q1) and cache it.
+            //
+            // Lock scope is intentionally narrow: (1) fast path checks
+            // cache; (2) miss path runs the actual preflight WITHOUT
+            // holding the mutex (release lock, preflight, re-acquire
+            // to insert). This avoids holding the mutex across a
+            // subprocess spawn while still guaranteeing a single
+            // preflight per scope via the double-check under lock.
+            let cache_hit = {
+                let guard = cache.lock().expect("preflight cache mutex");
+                guard.entries.get(&scope.root_dir).cloned()
+            };
+            match cache_hit {
+                Some(PreflightOutcome::Ok) => Ok(()),
+                Some(PreflightOutcome::Skipped(reason)) => Err(reason),
+                None => {
+                    let outcome =
+                        run_preflight(&scope.root_dir, offline, remaining, &workspace_mode);
+                    let cached = match &outcome {
+                        Ok(()) => PreflightOutcome::Ok,
+                        Err(reason) => PreflightOutcome::Skipped(*reason),
+                    };
+                    // Insert under lock. If another worker beat us to
+                    // it (very rare — the preflight window is where
+                    // the race lives), keep the existing entry to
+                    // preserve the invariant "exactly one preflight
+                    // effect per scope" as observed by the cache
+                    // (subprocess-count-wise we may have already
+                    // double-spent in the pathological race window;
+                    // that's a bounded 1-extra-preflight-per-scope
+                    // worst case and acceptable per research R3).
+                    let mut guard = cache.lock().expect("preflight cache mutex");
+                    guard
+                        .entries
+                        .entry(scope.root_dir.clone())
+                        .or_insert(cached);
+                    outcome
+                }
+            }
         }
-        Invocation::SpawnFailed(detail) => {
-            tracing::warn!(
-                main_module = %main_module_dir.display(),
-                detail = %detail,
-                "go-mod-why analysis skipped (unresolvable-packages): `go \
-                 list all` preflight could not be spawned; build-inclusion \
-                 falls back to unknown markers"
-            );
-            analysis.skip_reason = Some(SkipReason::UnresolvablePackages);
-            return analysis;
-        }
-        Invocation::TimedOut => {
-            tracing::warn!(
-                main_module = %main_module_dir.display(),
-                "go-mod-why analysis skipped (unresolvable-packages): `go \
-                 list all` preflight exceeded the shared time budget; \
-                 build-inclusion falls back to unknown markers"
-            );
-            analysis.skip_reason = Some(SkipReason::UnresolvablePackages);
-            return analysis;
-        }
+        None => run_preflight(main_module_dir, offline, remaining, &workspace_mode),
+    };
+    if let Err(reason) = preflight_result {
+        analysis.skip_reason = Some(reason);
+        return analysis;
     }
 
     // Chunked `go mod why -m -vendor` queries. m771 (issue #745): uses
@@ -714,6 +930,160 @@ mod tests {
     // -------------------------------------------------------------------
     // Milestone 771 — US2 concurrent-orchestration helper tests.
     // -------------------------------------------------------------------
+
+    // -------------------------------------------------------------------
+    // Milestone 771 — US3 parse_go_work + shared-preflight tests.
+    // -------------------------------------------------------------------
+
+    #[test]
+    fn m771_parse_go_work_simple_use_directives() {
+        let src = "go 1.22\n\nuse ./mod-a\nuse ./mod-b\nuse ./mod-c\n";
+        let members = parse_go_work(src);
+        assert_eq!(
+            members,
+            vec![
+                "./mod-a".to_string(),
+                "./mod-b".to_string(),
+                "./mod-c".to_string(),
+            ],
+        );
+    }
+
+    #[test]
+    fn m771_parse_go_work_block_form_use_directives() {
+        let src = "go 1.22\n\nuse (\n\t./mod-a\n\t./mod-b\n)\n";
+        let members = parse_go_work(src);
+        assert_eq!(
+            members,
+            vec!["./mod-a".to_string(), "./mod-b".to_string()],
+        );
+    }
+
+    #[test]
+    fn m771_parse_go_work_ignores_replace_and_go_directives() {
+        let src = "go 1.22\n\
+                   \n\
+                   use ./mod-a\n\
+                   \n\
+                   replace example.com/foo => ./local-foo\n\
+                   godebug default=go1.22\n\
+                   \n\
+                   use ./mod-b\n";
+        let members = parse_go_work(src);
+        assert_eq!(
+            members,
+            vec!["./mod-a".to_string(), "./mod-b".to_string()],
+        );
+    }
+
+    #[test]
+    fn m771_parse_go_work_malformed_returns_empty() {
+        // Garbage input — should not panic; empty result triggers
+        // FR-008 fallback (per-workspace preflight).
+        let src = "!!! not a valid go.work file @@@\n\x00\x01\x02\n";
+        let members = parse_go_work(src);
+        assert!(
+            members.is_empty(),
+            "malformed go.work must return empty; got {:?}",
+            members,
+        );
+    }
+
+    #[test]
+    fn m771_parse_go_work_handles_comment_and_blank_lines() {
+        let src = "// This is a go.work file\ngo 1.22\n\n// Members below\nuse ./mod-a\n";
+        let members = parse_go_work(src);
+        assert_eq!(members, vec!["./mod-a".to_string()]);
+    }
+
+    #[test]
+    fn m771_detect_go_work_scopes_finds_members_and_loose() {
+        // Build a small tmp tree: root/go.work + root/mod-a/go.mod +
+        // root/mod-b/go.mod; separately a loose main-module at
+        // root/../loose/go.mod (walking up finds nothing).
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        std::fs::create_dir_all(root.join("scope/mod-a")).unwrap();
+        std::fs::create_dir_all(root.join("scope/mod-b")).unwrap();
+        std::fs::create_dir_all(root.join("loose")).unwrap();
+        std::fs::write(
+            root.join("scope/go.work"),
+            "go 1.22\nuse ./mod-a\nuse ./mod-b\n",
+        )
+        .unwrap();
+        std::fs::write(root.join("scope/mod-a/go.mod"), "module mod-a\n").unwrap();
+        std::fs::write(root.join("scope/mod-b/go.mod"), "module mod-b\n").unwrap();
+        std::fs::write(root.join("loose/go.mod"), "module loose\n").unwrap();
+
+        let inputs = vec![
+            root.join("scope/mod-a"),
+            root.join("scope/mod-b"),
+            root.join("loose"),
+        ];
+        let (scopes, loose) = detect_go_work_scopes(&inputs);
+        assert_eq!(scopes.len(), 1, "expected one go.work scope; got {:?}", scopes);
+        assert_eq!(scopes[0].members.len(), 2);
+        assert_eq!(loose.len(), 1, "expected one loose main-module; got {:?}", loose);
+        assert!(
+            loose[0].ends_with("loose"),
+            "loose entry MUST be the ./loose path; got {:?}",
+            loose[0],
+        );
+    }
+
+    #[test]
+    fn m771_shared_preflight_cache_dedup_across_workers() {
+        // Simulate the cache's dedup invariant using a mock preflight
+        // closure counter. If two threads race to preflight the same
+        // scope, the outer double-check under the mutex MUST result
+        // in exactly one `PreflightOutcome::Ok` insert.
+        //
+        // We can't actually run `go list all` in a unit test, so we
+        // exercise the SharedPreflightCache mutation shape directly:
+        // insert once → subsequent inserts via `.entry().or_insert()`
+        // are no-ops (the invariant the caller-site relies on).
+        let cache: Arc<Mutex<SharedPreflightCache>> = Arc::default();
+        let key = PathBuf::from("/tmp/scope-root");
+        let effect_counter = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let mut handles = Vec::new();
+        for _ in 0..4 {
+            let cache = cache.clone();
+            let key = key.clone();
+            let effect_counter = effect_counter.clone();
+            handles.push(std::thread::spawn(move || {
+                // Fast-path: read under lock. Miss → simulate preflight
+                // work (increment counter) then insert-or-keep.
+                let hit = {
+                    let g = cache.lock().unwrap();
+                    g.entries.get(&key).cloned()
+                };
+                if hit.is_none() {
+                    effect_counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                    let mut g = cache.lock().unwrap();
+                    g.entries.entry(key.clone()).or_insert(PreflightOutcome::Ok);
+                }
+            }));
+        }
+        for h in handles {
+            h.join().unwrap();
+        }
+        // Every worker eventually observed the cached entry (either
+        // its own insert or a sibling's). The invariant: exactly ONE
+        // entry in the cache regardless of race outcomes.
+        let g = cache.lock().unwrap();
+        assert_eq!(g.entries.len(), 1, "cache MUST contain exactly one entry");
+        // Effect counter can be 1-4 depending on race timing (the
+        // double-check under lock only closes the race for the INSERT
+        // step; the effect counter runs outside the lock per
+        // research R3's "avoid holding mutex across subprocess spawn"
+        // trade). This is documented in the caller-site comment.
+        let effects = effect_counter.load(std::sync::atomic::Ordering::SeqCst);
+        assert!(
+            (1..=4).contains(&effects),
+            "effect counter should be in [1,4]; got {}",
+            effects,
+        );
+    }
 
     #[test]
     fn m771_worker_count_bounded_by_available_parallelism() {

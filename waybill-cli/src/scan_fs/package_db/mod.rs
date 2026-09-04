@@ -64,7 +64,7 @@ pub mod vcpkg;
 mod workspace;
 pub mod yocto;
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use waybill_common::types::hash::ContentHash;
 use waybill_common::types::license::SpdxExpression;
@@ -1193,6 +1193,25 @@ fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOu
     let budget = std::sync::Arc::new(BudgetTracker::from_env());
     let mut merged: HashMap<String, GoModWhyVerdict> = HashMap::new();
 
+    // Milestone 771 US3 — partition workspaces by their governing
+    // go.work scope. Members share a single `go list all` preflight
+    // (FR-006); loose workspaces run their own (FR-008 fallback).
+    let (scopes, loose) = mod_why::detect_go_work_scopes(&workspaces);
+    let shared_cache = std::sync::Arc::new(std::sync::Mutex::new(
+        mod_why::SharedPreflightCache::default(),
+    ));
+    // Build workspace → Arc<GoWorkScope> lookup so the parallel-worker
+    // path can pass the right shared_scope per pop.
+    let mut workspace_scope: HashMap<PathBuf, std::sync::Arc<mod_why::GoWorkScope>> =
+        HashMap::new();
+    for scope in scopes {
+        let arc = std::sync::Arc::new(scope);
+        for member in arc.members.iter() {
+            workspace_scope.insert(member.clone(), arc.clone());
+        }
+    }
+    let _ = loose; // loose set is implicit: workspaces not in workspace_scope
+
     // Milestone 771 US2 — bounded thread-pool over independent
     // workspaces. Each worker holds one synchronous `run_bounded`
     // subprocess at a time; concurrency cap = logical-CPU count
@@ -1209,9 +1228,15 @@ fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOu
     // for any test relying on log ordering.
     let worker_count = mod_why::worker_count(workspaces.len());
     if worker_count == 1 || workspaces.len() <= 1 {
-        // Serial fallback — byte-identical to pre-m771 behavior.
+        // Serial fallback — byte-identical to pre-m771 behavior EXCEPT
+        // for m771 US3 shared-preflight when a go.work scope is present.
         for workspace in &workspaces {
-            let analysis = mod_why::analyze_main_module(workspace, &query, offline, &budget);
+            let canon = std::fs::canonicalize(workspace).unwrap_or_else(|_| workspace.clone());
+            let shared_scope = workspace_scope
+                .get(&canon)
+                .map(|arc| (&shared_cache, arc));
+            let analysis =
+                mod_why::analyze_main_module(workspace, &query, offline, &budget, shared_scope);
             if let Some(reason) = analysis.skip_reason {
                 outcome.skipped.get_or_insert(reason.as_str());
             }
@@ -1235,11 +1260,14 @@ fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOu
         let query_arc = std::sync::Arc::new(query.clone());
         let (tx, rx) = std::sync::mpsc::channel();
         let mut handles = Vec::with_capacity(worker_count);
+        let workspace_scope_arc = std::sync::Arc::new(workspace_scope);
         for _ in 0..worker_count {
             let job_queue = job_queue.clone();
             let query_arc = query_arc.clone();
             let budget = budget.clone();
             let tx = tx.clone();
+            let workspace_scope = workspace_scope_arc.clone();
+            let shared_cache = shared_cache.clone();
             handles.push(std::thread::spawn(move || {
                 loop {
                     let workspace = {
@@ -1249,11 +1277,17 @@ fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOu
                     let Some(workspace) = workspace else {
                         break;
                     };
+                    let canon = std::fs::canonicalize(&workspace)
+                        .unwrap_or_else(|_| workspace.clone());
+                    let shared_scope = workspace_scope
+                        .get(&canon)
+                        .map(|arc| (&shared_cache, arc));
                     let analysis = mod_why::analyze_main_module(
                         &workspace,
                         &query_arc,
                         offline,
                         &budget,
+                        shared_scope,
                     );
                     // Send may fail only if the receiver has been dropped,
                     // which only happens after the main thread finishes the
