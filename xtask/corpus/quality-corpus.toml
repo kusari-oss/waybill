@@ -4,25 +4,31 @@
 # Consumed by `cargo run -p xtask --release -- quality`.
 #
 # HOW TO READ THIS FILE
-#   Every target carries an `# Observed` comment recording what waybill
-#   actually produced at that pin, scanning offline, on 2026-09-03. Those
-#   are the numbers you author bounds around.
-#
-# HOW TO ADD A BOUND
-#   Uncomment (or add) keys under a target's [targets.expect] table.
-#   An ABSENT key means "observe, never fail" (FR-020) — which is why this
-#   file ships with no bounds at all and still runs green.
+#   Every target records what waybill actually produced at that pin, scanning
+#   offline, measured 2026-09-04 with sbomqs v2.0.6. Bounds are authored
+#   around those observations by hand.
+#   An ABSENT key means "observe, never fail" (FR-020).
 #   Ranges are INCLUSIVE at both ends.
 #
-# AUTHORING GUIDANCE
-#   sbomqs   — the whole corpus sits in a narrow 5.75..7.70 band. +/-0.5 is
-#              meaningful; a percentage band is not.
-#   wall_ms  — a single sample on shared hardware. Author order-of-magnitude
-#              guards that catch a collapse, not tight perf assertions.
-#   pkgs/files — they move for entirely different reasons. Bound separately.
-#   flat     — `flat = true` is a legitimate assertion. Several upstreams
-#              commit no lockfile and are permanently flat. Assert what is
-#              true, not what you wish were true.
+# HOW THE BOUNDS WERE SIZED
+#   pkgs / files / edges  +/-10% (minimum +/-3). These are fully deterministic:
+#       pinned SHA + --offline + no sampling means the only thing that moves
+#       them is a waybill change. Verified identical across two runs and
+#       across sbomqs v2.0.5 and v2.0.6.
+#   max_depth  -1 / +4. Asymmetric on purpose: a DEEPER graph is an
+#       improvement and should not fail the job, but a collapse should.
+#   sbomqs  +/-0.5. The whole corpus sits in a 5.81..7.70 band, so a
+#       percentage band would be meaningless here. Scores were byte-identical
+#       between sbomqs v2.0.5 and v2.0.6.
+#   wall_ms  UPPER-BOUND GUARD ONLY, set at ~10x the observed value. Two runs
+#       on identical hardware varied 0.78x-2.62x (ripgrep was the worst), and
+#       CI runners are slower and noisier than the machine these were measured
+#       on. These bounds catch a genuine collapse, not a slow morning. The
+#       lower bound is a nominal floor -- "did it run at all" is already
+#       covered far better by the pkgs bound.
+#   flat  asserts the OBSERVED truth. Three targets are permanently flat
+#       because their upstreams commit no lockfile; `flat = true` is the
+#       correct assertion for them, not a defect being papered over.
 #
 # WHAT THESE NUMBERS ARE NOT
 #   Scans run with --offline for reproducibility, so these measure waybill's
@@ -41,222 +47,332 @@ name      = "go-cobra"
 url       = "https://github.com/spf13/cobra"
 sha       = "a655097faf7d54f78933a815984b9919d51a05d2"  # v1.9.1
 ecosystem = "go"
-# Observed 2026-09-03 (offline):
-#   wall=136ms sbomqs=7.59 pkgs=7 files=0 edges=7 depth=2 flat=false
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=202ms sbomqs=7.59 pkgs=7 files=0 edges=7 depth=2 flat=false
 #   waybill self-report: complete
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 4, max = 10 }
+files     = { min = 0, max = 3 }
+edges     = { min = 4, max = 10 }
+max_depth = { min = 1, max = 6 }
+sbomqs    = { min = 7.09, max = 8.09 }
+wall_ms   = { min = 5, max = 3000 }
+flat      = false
 
 [[targets]]
 name      = "go-kubernetes"
 url       = "https://github.com/kubernetes/kubernetes"
 sha       = "157e582fcc3ebba3c22b16721f49d6890f784c1f"  # v1.37.0
 ecosystem = "go"
-timeout_secs = 900  # ~103s observed; generous headroom for a cold runner
-# Observed 2026-09-03 (offline):
-#   wall=103437ms sbomqs=7.04 pkgs=456 files=330 edges=1752 depth=3 flat=false
+timeout_secs = 900  # ~100s observed; headroom for a cold runner
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=100700ms sbomqs=7.04 pkgs=456 files=330 edges=1752 depth=3 flat=false
 #   waybill self-report: partial
-# Deliberate large-repository benchmark: ~103s, roughly 75% of total scan time.
-# Any wall_ms bound here must be order-of-magnitude wide (research R8).
+# Deliberate large-repository benchmark: ~100s, roughly 75% of total scan time.
+# wall_ms is an order-of-magnitude guard only -- see the header note.
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 410, max = 502 }
+files     = { min = 297, max = 363 }
+edges     = { min = 1576, max = 1928 }
+max_depth = { min = 2, max = 7 }
+sbomqs    = { min = 6.54, max = 7.54 }
+wall_ms   = { min = 5, max = 2000000 }
+flat      = false
 
 [[targets]]
 name      = "rust-ripgrep"
 url       = "https://github.com/BurntSushi/ripgrep"
 sha       = "0e8390a66fbcf6eeac1aeb0541b367663a597c79"  # 14.1.1
 ecosystem = "cargo"
-# Observed 2026-09-03 (offline):
-#   wall=185ms sbomqs=7.49 pkgs=51 files=7 edges=94 depth=4 flat=false
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=484ms sbomqs=7.49 pkgs=51 files=7 edges=94 depth=4 flat=false
 #   waybill self-report: partial
+# Widest wall-time spread observed (2.6x between two runs on identical hardware).
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 45, max = 57 }
+files     = { min = 4, max = 10 }
+edges     = { min = 84, max = 104 }
+max_depth = { min = 3, max = 8 }
+sbomqs    = { min = 6.99, max = 7.99 }
+wall_ms   = { min = 5, max = 5000 }
+flat      = false
 
 [[targets]]
 name      = "rust-zizmor"
 url       = "https://github.com/zizmorcore/zizmor"
 sha       = "fb814d6687450fc8e0b0fba8d958b1ac40c0647f"  # v1.30.0
 ecosystem = "cargo"
-# Observed 2026-09-03 (offline):
-#   wall=354ms sbomqs=7.7 pkgs=463 files=1 edges=1140 depth=11 flat=false
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=484ms sbomqs=7.7 pkgs=463 files=1 edges=1140 depth=11 flat=false
 #   waybill self-report: partial
 # Deepest graph in the corpus (depth 11) and the highest sbomqs score.
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 416, max = 510 }
+files     = { min = 0, max = 4 }
+edges     = { min = 1026, max = 1254 }
+max_depth = { min = 10, max = 15 }
+sbomqs    = { min = 7.2, max = 8.2 }
+wall_ms   = { min = 5, max = 5000 }
+flat      = false
 
 [[targets]]
 name      = "npm-express"
 url       = "https://github.com/expressjs/express"
 sha       = "e99649895f714c9dc9b3538e2cb0f58954f0ecfa"  # v5.1.0
 ecosystem = "npm"
-# Observed 2026-09-03 (offline):
-#   wall=103ms sbomqs=5.81 pkgs=43 files=1 edges=43 depth=1 flat=true
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=99ms sbomqs=5.81 pkgs=43 files=1 edges=43 depth=1 flat=true
 #   waybill self-report: partial
 # PERMANENTLY FLAT: express commits no package-lock.json, so under --offline
-# waybill has nothing to resolve transitively. Author `flat = true`; a change
-# to false would be news, not a failure.
+# waybill has nothing to resolve transitively. `flat = true` asserts what is
+# true, not what we wish were true. A change to false would be news.
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 38, max = 48 }
+files     = { min = 0, max = 4 }
+edges     = { min = 38, max = 48 }
+max_depth = { min = 0, max = 5 }
+sbomqs    = { min = 5.31, max = 6.31 }
+wall_ms   = { min = 5, max = 1000 }
+flat      = true
 
 [[targets]]
 name      = "pnpm-vue-core"
 url       = "https://github.com/vuejs/core"
 sha       = "d63616ca17de965ed32dcb449a4c5cd9982f15d2"  # v3.5.42
 ecosystem = "pnpm"
-# Observed 2026-09-03 (offline):
-#   wall=218ms sbomqs=7.66 pkgs=620 files=22 edges=890 depth=7 flat=false
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=232ms sbomqs=7.66 pkgs=620 files=22 edges=890 depth=7 flat=false
 #   waybill self-report: partial
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 558, max = 682 }
+files     = { min = 19, max = 25 }
+edges     = { min = 801, max = 979 }
+max_depth = { min = 6, max = 11 }
+sbomqs    = { min = 7.16, max = 8.16 }
+wall_ms   = { min = 5, max = 3000 }
+flat      = false
 
 [[targets]]
 name      = "yarn-guac-visualizer"
 url       = "https://github.com/guacsec/guac-visualizer"
 sha       = "cd322cd47518f37ff6ec8a24377143eeb911e2e7"  # v0.6.4
 ecosystem = "yarn"
-# Observed 2026-09-03 (offline):
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
 #   wall=88ms sbomqs=6.08 pkgs=900 files=0 edges=1925 depth=8 flat=false
 #   waybill self-report: partial
 # Richest package count for the lowest scan cost in the corpus.
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 810, max = 990 }
+files     = { min = 0, max = 3 }
+edges     = { min = 1732, max = 2118 }
+max_depth = { min = 7, max = 12 }
+sbomqs    = { min = 5.58, max = 6.58 }
+wall_ms   = { min = 5, max = 900 }
+flat      = false
 
 [[targets]]
 name      = "python-flask"
 url       = "https://github.com/pallets/flask"
 sha       = "80be49be88b534d2a72ef6bf5ea4aabf89f3305b"  # 3.1.2
 ecosystem = "pip"
-# Observed 2026-09-03 (offline):
-#   wall=99ms sbomqs=7.52 pkgs=104 files=1 edges=151 depth=2 flat=false
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=133ms sbomqs=7.52 pkgs=104 files=1 edges=151 depth=2 flat=false
 #   waybill self-report: partial
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 93, max = 115 }
+files     = { min = 0, max = 4 }
+edges     = { min = 135, max = 167 }
+max_depth = { min = 1, max = 6 }
+sbomqs    = { min = 7.02, max = 8.02 }
+wall_ms   = { min = 5, max = 2000 }
+flat      = false
 
 [[targets]]
 name      = "python-ansible"
 url       = "https://github.com/ansible/ansible"
 sha       = "6e7ec0333c89b258753534ec68caff167345079c"  # v2.21.3
 ecosystem = "pip"
-# Observed 2026-09-03 (offline):
-#   wall=2737ms sbomqs=5.87 pkgs=11 files=375 edges=386 depth=1 flat=true
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=2789ms sbomqs=5.87 pkgs=11 files=375 edges=386 depth=1 flat=true
 #   waybill self-report: partial
 # INVERTED RATIO: 11 package-tier vs 375 file-tier (97% files). ansible commits
-# no pip lockfile. Its `pkgs` bound must be small and its `files` bound large --
-# the opposite of most targets. PERMANENTLY FLAT for the same reason.
+# no pip lockfile, so `pkgs` is tiny and `files` is large -- the opposite of
+# most targets, and the reason the two are bounded separately.
+# PERMANENTLY FLAT for the same reason.
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 8, max = 14 }
+files     = { min = 337, max = 413 }
+edges     = { min = 347, max = 425 }
+max_depth = { min = 0, max = 5 }
+sbomqs    = { min = 5.37, max = 6.37 }
+wall_ms   = { min = 5, max = 30000 }
+flat      = true
 
 [[targets]]
 name      = "python-pytorch"
 url       = "https://github.com/pytorch/pytorch"
 sha       = "2b3ec34829036a65cd9d1398ea72a0167dc37470"  # v2.14.0
 ecosystem = "pip"
-# Observed 2026-09-03 (offline):
-#   wall=3932ms sbomqs=5.91 pkgs=112 files=181 edges=4 depth=1 flat=true
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=4429ms sbomqs=5.91 pkgs=112 files=181 edges=4 depth=1 flat=true
 #   waybill self-report: partial
 # third_party/ sub-repositories are EMPTY by design -- the corpus fetches
 # non-recursively (research R6). Counts are lower than a working copy's.
-# Do not "correct" them. Only 4 edges across 293 components.
+# Do not "correct" them. Only 4 edges across 293 components, hence a
+# deliberately loose `edges` floor.
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 100, max = 124 }
+files     = { min = 162, max = 200 }
+edges     = { min = 1, max = 7 }
+max_depth = { min = 0, max = 5 }
+sbomqs    = { min = 5.41, max = 6.41 }
+wall_ms   = { min = 5, max = 50000 }
+flat      = true
 
 [[targets]]
 name      = "uv-meilisearch-python"
 url       = "https://github.com/meilisearch/meilisearch-python"
 sha       = "8147a9dcff97da126663360588229079ab8400c8"  # v0.50
 ecosystem = "uv"
-# Observed 2026-09-03 (offline):
-#   wall=49ms sbomqs=6.79 pkgs=29 files=1 edges=30 depth=1 flat=true
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=50ms sbomqs=6.79 pkgs=29 files=1 edges=30 depth=1 flat=true
 #   waybill self-report: complete
 # DIVERGENCE: waybill self-reports `complete` while measuring structurally FLAT.
-# This is one of the three cases that justify measuring flatness independently
+# One of three such cases; the reason flatness is measured independently
 # (research R3). Fastest target in the corpus.
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 26, max = 32 }
+files     = { min = 0, max = 4 }
+edges     = { min = 27, max = 33 }
+max_depth = { min = 0, max = 5 }
+sbomqs    = { min = 6.29, max = 7.29 }
+wall_ms   = { min = 5, max = 500 }
+flat      = true
 
 [[targets]]
 name      = "pants-backend-ai"
 url       = "https://github.com/lablup/backend.ai"
 sha       = "809fcd394dd8e39456986dd742e7d51c6aedd647"  # 25.19.1
 ecosystem = "pants+uv"
-# Observed 2026-09-03 (offline):
-#   wall=1746ms sbomqs=7.27 pkgs=271 files=59 edges=918 depth=5 flat=false
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=2033ms sbomqs=7.27 pkgs=271 files=59 edges=918 depth=5 flat=false
 #   waybill self-report: partial
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 243, max = 299 }
+files     = { min = 53, max = 65 }
+edges     = { min = 826, max = 1010 }
+max_depth = { min = 4, max = 9 }
+sbomqs    = { min = 6.77, max = 7.77 }
+wall_ms   = { min = 5, max = 30000 }
+flat      = false
 
 [[targets]]
 name      = "maven-guice"
 url       = "https://github.com/google/guice"
 sha       = "b0e1d0fab0167cd555ab8d262333c1a32db7d492"  # 7.0.0
 ecosystem = "maven"
-# Observed 2026-09-03 (offline):
-#   wall=263ms sbomqs=6.56 pkgs=35 files=12 edges=32 depth=1 flat=true
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=273ms sbomqs=6.56 pkgs=35 files=12 edges=32 depth=1 flat=true
 #   waybill self-report: partial
 # FLAT despite Maven's pom hierarchy.
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 31, max = 39 }
+files     = { min = 9, max = 15 }
+edges     = { min = 28, max = 36 }
+max_depth = { min = 0, max = 5 }
+sbomqs    = { min = 6.06, max = 7.06 }
+wall_ms   = { min = 5, max = 3000 }
+flat      = true
 
 [[targets]]
 name      = "gradle-apache-solr"
 url       = "https://github.com/apache/solr"
 sha       = "28c1bc1f9394be8d6187a3550db964c49a9a8b0a"  # releases/solr/10.0.0
 ecosystem = "gradle"
-# Observed 2026-09-03 (offline):
-#   wall=1983ms sbomqs=6.74 pkgs=1108 files=80 edges=1371 depth=8 flat=false
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=2376ms sbomqs=6.74 pkgs=1108 files=80 edges=1371 depth=8 flat=false
 #   waybill self-report: partial
 # Richest source target in the corpus (1108 packages: 778 maven + 319 npm).
-# Gradle reading was a pre-measurement concern; it was disproved.
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 997, max = 1219 }
+files     = { min = 72, max = 88 }
+edges     = { min = 1233, max = 1509 }
+max_depth = { min = 7, max = 12 }
+sbomqs    = { min = 6.24, max = 7.24 }
+wall_ms   = { min = 5, max = 30000 }
+flat      = false
 
 [[targets]]
 name      = "gradle-bitwarden-android"
 url       = "https://github.com/bitwarden/android"
 sha       = "d817f6b4bf7c17172a74fabca1e09e738c7ec6c9"  # v2026.8.1-bwa
 ecosystem = "gradle"
-# Observed 2026-09-03 (offline):
-#   wall=1213ms sbomqs=6.79 pkgs=337 files=9 edges=385 depth=5 flat=false
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=1398ms sbomqs=6.79 pkgs=337 files=9 edges=385 depth=5 flat=false
 #   waybill self-report: partial
 # 233 maven + 103 gem -- the gems are fastlane, via Gemfile.lock. Not a bug.
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 303, max = 371 }
+files     = { min = 6, max = 12 }
+edges     = { min = 346, max = 424 }
+max_depth = { min = 4, max = 9 }
+sbomqs    = { min = 6.29, max = 7.29 }
+wall_ms   = { min = 5, max = 20000 }
+flat      = false
 
 [[targets]]
 name      = "ruby-rails"
 url       = "https://github.com/rails/rails"
 sha       = "90588c21894456d979d7195502e6f5918f8d59ea"  # v8.1.3
 ecosystem = "gem"
-# Observed 2026-09-03 (offline):
-#   wall=1907ms sbomqs=6.79 pkgs=726 files=20 edges=1291 depth=8 flat=false
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=1611ms sbomqs=6.79 pkgs=726 files=20 edges=1291 depth=8 flat=false
 #   waybill self-report: partial
 # Replaced jekyll/jekyll, which produced ZERO package components (no committed
 # Gemfile.lock). rails commits one and is among the strongest targets here.
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 653, max = 799 }
+files     = { min = 17, max = 23 }
+edges     = { min = 1161, max = 1421 }
+max_depth = { min = 7, max = 12 }
+sbomqs    = { min = 6.29, max = 7.29 }
+wall_ms   = { min = 5, max = 20000 }
+flat      = false
 
 [[targets]]
 name      = "cmake-nlohmann-json"
 url       = "https://github.com/nlohmann/json"
 sha       = "65ee68451d8eb2b5f3a30b410476ab83deb3289b"  # v3.12.0
 ecosystem = "cmake"
-# Observed 2026-09-03 (offline):
-#   wall=233ms sbomqs=6.57 pkgs=19 files=1 edges=20 depth=1 flat=true
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=277ms sbomqs=6.57 pkgs=19 files=1 edges=20 depth=1 flat=true
 #   waybill self-report: complete
 # DIVERGENCE: self-reports `complete` while measuring FLAT (research R3).
-# Also note the 19 packages are mostly pypi tooling, not C++ deps.
+# The 19 packages are mostly pypi tooling, not C++ deps.
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 16, max = 22 }
+files     = { min = 0, max = 4 }
+edges     = { min = 17, max = 23 }
+max_depth = { min = 0, max = 5 }
+sbomqs    = { min = 6.07, max = 7.07 }
+wall_ms   = { min = 5, max = 3000 }
+flat      = true
 
 [[targets]]
 name      = "cpp-mongo"
 url       = "https://github.com/mongodb/mongo"
 sha       = "41a5752480dd86b432e7d31e8150847002e16924"  # r8.3.8
 ecosystem = "bazel/polyglot"
-# Observed 2026-09-03 (offline):
-#   wall=22470ms sbomqs=6.39 pkgs=397 files=420 edges=424 depth=6 flat=false
+# Observed 2026-09-04 (offline, sbomqs v2.0.6):
+#   wall=17536ms sbomqs=6.39 pkgs=397 files=420 edges=424 depth=6 flat=false
 #   waybill self-report: partial
 # Largest checkout (839 MB). Its 397 packages are mostly Python/npm tooling
 # plus 19 bazel -- the Bazel migration is real. Second-slowest scan.
 [targets.expect]
-# (no bounds authored yet — observe-only)
+pkgs      = { min = 357, max = 437 }
+files     = { min = 378, max = 462 }
+edges     = { min = 381, max = 467 }
+max_depth = { min = 5, max = 10 }
+sbomqs    = { min = 5.89, max = 6.89 }
+wall_ms   = { min = 5, max = 200000 }
+flat      = false
