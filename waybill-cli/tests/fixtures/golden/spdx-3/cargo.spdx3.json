@@ -89,6 +89,7 @@
         }
       ],
       "name": "my-app",
+      "software_downloadLocation": "https://crates.io/api/v1/crates/my-app/0.1.0/download",
       "software_homePage": "https://crates.io/crates/my-app/0.1.0",
       "software_packageUrl": "pkg:cargo/my-app@0.1.0",
       "software_packageVersion": "0.1.0",
@@ -111,6 +112,7 @@
         }
       ],
       "name": "quote",
+      "software_downloadLocation": "https://crates.io/api/v1/crates/quote/1.0.35/download",
       "software_homePage": "https://crates.io/crates/quote/1.0.35",
       "software_packageUrl": "pkg:cargo/quote@1.0.35",
       "software_packageVersion": "1.0.35",
@@ -133,6 +135,7 @@
         }
       ],
       "name": "my-fork",
+      "software_downloadLocation": "https://crates.io/api/v1/crates/my-fork/0.1.0/download",
       "software_homePage": "https://crates.io/crates/my-fork/0.1.0",
       "software_packageUrl": "pkg:cargo/my-fork@0.1.0",
       "software_packageVersion": "0.1.0",
@@ -155,6 +158,7 @@
         }
       ],
       "name": "syn",
+      "software_downloadLocation": "https://crates.io/api/v1/crates/syn/2.0.48/download",
       "software_homePage": "https://crates.io/crates/syn/2.0.48",
       "software_packageUrl": "pkg:cargo/syn@2.0.48",
       "software_packageVersion": "2.0.48",
@@ -177,6 +181,7 @@
         }
       ],
       "name": "serde_derive",
+      "software_downloadLocation": "https://crates.io/api/v1/crates/serde_derive/1.0.197/download",
       "software_homePage": "https://crates.io/crates/serde_derive/1.0.197",
       "software_packageUrl": "pkg:cargo/serde_derive@1.0.197",
       "software_packageVersion": "1.0.197",
@@ -199,6 +204,7 @@
         }
       ],
       "name": "unicode-ident",
+      "software_downloadLocation": "https://crates.io/api/v1/crates/unicode-ident/1.0.12/download",
       "software_homePage": "https://crates.io/crates/unicode-ident/1.0.12",
       "software_packageUrl": "pkg:cargo/unicode-ident@1.0.12",
       "software_packageVersion": "1.0.12",
@@ -221,6 +227,7 @@
         }
       ],
       "name": "anyhow",
+      "software_downloadLocation": "https://crates.io/api/v1/crates/anyhow/1.0.80/download",
       "software_homePage": "https://crates.io/crates/anyhow/1.0.80",
       "software_packageUrl": "pkg:cargo/anyhow@1.0.80",
       "software_packageVersion": "1.0.80",
@@ -243,6 +250,7 @@
         }
       ],
       "name": "workspace-local",
+      "software_downloadLocation": "https://crates.io/api/v1/crates/workspace-local/0.1.0/download",
       "software_homePage": "https://crates.io/crates/workspace-local/0.1.0",
       "software_packageUrl": "pkg:cargo/workspace-local@0.1.0",
       "software_packageVersion": "0.1.0",
@@ -265,6 +273,7 @@
         }
       ],
       "name": "serde",
+      "software_downloadLocation": "https://crates.io/api/v1/crates/serde/1.0.197/download",
       "software_homePage": "https://crates.io/crates/serde/1.0.197",
       "software_packageUrl": "pkg:cargo/serde@1.0.197",
       "software_packageVersion": "1.0.197",
@@ -287,6 +296,7 @@
         }
       ],
       "name": "proc-macro2",
+      "software_downloadLocation": "https://crates.io/api/v1/crates/proc-macro2/1.0.76/download",
       "software_homePage": "https://crates.io/crates/proc-macro2/1.0.76",
       "software_packageUrl": "pkg:cargo/proc-macro2@1.0.76",
       "software_packageVersion": "1.0.76",

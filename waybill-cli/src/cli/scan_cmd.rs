@@ -3515,9 +3515,16 @@ pub async fn execute(
     // warnings, not errors — the scan still produces a valid SBOM if
     // deps.dev is unreachable.
     let deps_dev_client = DepsDevClient::new(std::time::Duration::from_secs(5));
+    // Milestone 776: `enrich_components` now also maps the deps.dev
+    // `links[]` array onto component externalReferences and reports the
+    // links it skipped. The skip counts are carried to the FR-014a
+    // summary emitted after the component set stops changing — they
+    // cannot be recovered later because skips never reach the document.
+    let mut m776_skips = crate::enrich::depsdev_source::LinkMappingSkips::default();
     if enrich_cfg.deps_dev {
         let deps_dev_source = DepsDevSource::new(deps_dev_client.clone(), offline);
-        let enriched = enrich_components(&deps_dev_source, &mut components).await;
+        let (enriched, skips) = enrich_components(&deps_dev_source, &mut components).await;
+        m776_skips = skips;
         if enriched > 0 {
             tracing::info!(enriched, "deps.dev added licenses to components");
         }
@@ -3960,6 +3967,47 @@ pub async fn execute(
             promoted_components = promoted,
             "operator-asserted license-concluded promotion (per --conclude-licenses): \
              you assert the declared licenses have been reviewed."
+        );
+    }
+
+    // Milestone 776 (FR-014a + FR-014b + SC-009a): source-provenance
+    // reference summary.
+    //
+    // Emitted HERE, after every pass that can add or drop components,
+    // rather than adjacent to the enrichment call. Between enrichment
+    // and this point the component set is still mutated by
+    // `deduplicate()`, `reconcile_design_source_tiers()`, a retain
+    // drop pass, the supplement install, the layer-digest and
+    // workspace-member tag passes, and the m220 scope filter — any of
+    // which can remove a component carrying references. Counting
+    // earlier would OVERCOUNT relative to the emitted document, which
+    // SC-009a forbids. See specs/776-component-source-refs/research.md R9.
+    //
+    // Per-kind counts are derived by counting the final component set
+    // directly, so the reported numbers cannot drift from the document
+    // they describe. The skip counts come from enrichment because
+    // skipped links never reach the document and cannot be recovered
+    // by counting components.
+    {
+        let mut by_kind: std::collections::BTreeMap<&str, usize> =
+            std::collections::BTreeMap::new();
+        for c in components.iter() {
+            for r in &c.external_references {
+                *by_kind.entry(r.ref_type.as_str()).or_insert(0) += 1;
+            }
+        }
+        let total: usize = by_kind.values().sum();
+        let by_kind_str = by_kind
+            .iter()
+            .map(|(k, v)| format!("{k}={v}"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        tracing::info!(
+            total_references = total,
+            by_kind = %by_kind_str,
+            skipped_unmapped_label = m776_skips.unmapped_label,
+            skipped_malformed_url = m776_skips.malformed_url,
+            "source-provenance references emitted"
         );
     }
 

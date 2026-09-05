@@ -147,6 +147,11 @@
         },
         {
           "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/anyhow/1.0.80/download",
+          "referenceType": "distribution"
+        },
+        {
+          "referenceCategory": "OTHER",
           "referenceLocator": "https://crates.io/crates/anyhow/1.0.80",
           "referenceType": "website"
         }
@@ -209,6 +214,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:my-app:my-app:0.1.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/my-app/0.1.0/download",
+          "referenceType": "distribution"
         },
         {
           "referenceCategory": "OTHER",
@@ -277,6 +287,11 @@
         },
         {
           "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/my-fork/0.1.0/download",
+          "referenceType": "distribution"
+        },
+        {
+          "referenceCategory": "OTHER",
           "referenceLocator": "https://crates.io/crates/my-fork/0.1.0",
           "referenceType": "website"
         }
@@ -333,6 +348,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:proc-macro2:proc-macro2:1.0.76:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/proc-macro2/1.0.76/download",
+          "referenceType": "distribution"
         },
         {
           "referenceCategory": "OTHER",
@@ -395,6 +415,11 @@
         },
         {
           "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/quote/1.0.35/download",
+          "referenceType": "distribution"
+        },
+        {
+          "referenceCategory": "OTHER",
           "referenceLocator": "https://crates.io/crates/quote/1.0.35",
           "referenceType": "website"
         }
@@ -451,6 +476,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:serde:serde:1.0.197:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/serde/1.0.197/download",
+          "referenceType": "distribution"
         },
         {
           "referenceCategory": "OTHER",
@@ -513,6 +543,11 @@
         },
         {
           "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/serde_derive/1.0.197/download",
+          "referenceType": "distribution"
+        },
+        {
+          "referenceCategory": "OTHER",
           "referenceLocator": "https://crates.io/crates/serde_derive/1.0.197",
           "referenceType": "website"
         }
@@ -572,6 +607,11 @@
         },
         {
           "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/syn/2.0.48/download",
+          "referenceType": "distribution"
+        },
+        {
+          "referenceCategory": "OTHER",
           "referenceLocator": "https://crates.io/crates/syn/2.0.48",
           "referenceType": "website"
         }
@@ -628,6 +668,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:unicode-ident:unicode-ident:1.0.12:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/unicode-ident/1.0.12/download",
+          "referenceType": "distribution"
         },
         {
           "referenceCategory": "OTHER",
@@ -693,6 +738,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:workspace-local:workspace-local:0.1.0:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://crates.io/api/v1/crates/workspace-local/0.1.0/download",
+          "referenceType": "distribution"
         },
         {
           "referenceCategory": "OTHER",
