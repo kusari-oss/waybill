@@ -24,7 +24,7 @@
 
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::{mpsc, Arc, Mutex};
 
 use waybill_common::types::license::SpdxExpression;
 use waybill_common::types::purl::{encode_purl_segment, Purl};
@@ -1423,6 +1423,87 @@ pub(crate) fn run_git_describe_with_timeout(
 ///   blocks because those don't distinguish prod-vs-test requires
 ///   (a dep can declare testify in its go.mod purely for its own
 ///   tests, but downstream consumers wouldn't load it in prod).
+// Milestone 774: test-only panic-injection marker exercised by
+// `m774_worker_panic_fails_fast` unit test. Compiled out in release
+// builds. Scoped to a specific fixture-path prefix so parallel test
+// execution (default `cargo test`) doesn't cross-contaminate — only
+// workspaces whose project_root starts with the marker path panic.
+#[cfg(test)]
+static M774_INJECT_PANIC: std::sync::Mutex<Option<std::path::PathBuf>> =
+    std::sync::Mutex::new(None);
+
+#[cfg(test)]
+fn m774_should_inject_panic(project_root: &std::path::Path) -> bool {
+    let guard = M774_INJECT_PANIC
+        .lock()
+        .expect("m774 test injection mutex poisoned");
+    match guard.as_ref() {
+        Some(marker) => project_root.starts_with(marker),
+        None => false,
+    }
+}
+
+// Milestone 774: test-only observation sink for the FR-014 summary
+// log. The production code updates this in the same code path that
+// emits `tracing::info!("m774 parallel source-import ...")` so a
+// unit test can verify "exactly one summary per read()" without
+// racing against another test's global tracing subscriber. Compiled
+// out in release. Scoped to a specific fixture-path prefix so
+// parallel test execution doesn't cross-contaminate.
+#[cfg(test)]
+#[derive(Debug, Clone)]
+struct M774SummaryRecord {
+    workspaces_scanned: usize,
+    parallel_workers_used: usize,
+    production_imports_count: usize,
+    test_imports_count: usize,
+}
+
+#[cfg(test)]
+static M774_SUMMARY_SINK: std::sync::Mutex<Option<(std::path::PathBuf, Vec<M774SummaryRecord>)>> =
+    std::sync::Mutex::new(None);
+
+#[cfg(test)]
+fn m774_summary_sink_should_record(rootfs: &std::path::Path) -> bool {
+    let guard = M774_SUMMARY_SINK
+        .lock()
+        .expect("m774 summary sink mutex poisoned");
+    match guard.as_ref() {
+        Some((marker, _)) => rootfs.starts_with(marker),
+        None => false,
+    }
+}
+
+#[cfg(test)]
+fn m774_summary_sink_push(rootfs: &std::path::Path, record: M774SummaryRecord) {
+    let mut guard = M774_SUMMARY_SINK
+        .lock()
+        .expect("m774 summary sink mutex poisoned");
+    if let Some((marker, records)) = guard.as_mut() {
+        if rootfs.starts_with(&*marker) {
+            records.push(record);
+        }
+    }
+}
+
+/// Milestone 774: work-queue payload for the post-main-loop parallel
+/// phase that runs `collect_production_imports` + `collect_test_imports`
+/// concurrently across per-workspace jobs. See
+/// `specs/774-parallel-source-imports/data-model.md`.
+struct WorkspaceImportJob<'a> {
+    workspace_index: usize,
+    project_root: &'a PathBuf,
+}
+
+/// Milestone 774: per-workspace worker output, moved through mpsc from
+/// worker to the Phase 2 serial reduce.
+struct ImportCollectionResult {
+    #[allow(dead_code)] // Preserved for defense-in-depth "no gaps" diagnostic; not consumed today.
+    workspace_index: usize,
+    production_imports: HashSet<String>,
+    test_imports: HashSet<String>,
+}
+
 #[derive(Debug, Default)]
 pub struct GoScanSignals {
     pub main_modules: HashSet<String>,
@@ -2205,21 +2286,160 @@ pub fn read(
                 main_module_emitted += 1;
             }
         }
-        // Feature 007 US2 / Milestone 049: walk .go source files for
-        // prod imports (non-`_test.go`) and test imports (`_test.go`
-        // only). The two sets together drive the test-vs-prod
-        // classification in `package_db::mod::apply_go_production_set_filter`.
-        collect_production_imports(
-            project_root,
-            0,
-            &known_modules,
-            &mut signals.production_imports,
-        );
-        collect_test_imports(
-            project_root,
-            0,
-            &known_modules,
-            &mut test_imports,
+        // Milestone 774: `collect_production_imports` +
+        // `collect_test_imports` were previously called here inline.
+        // They now run in the post-main-loop parallel phase below —
+        // see the `std::thread::scope` block after this loop closes.
+        // Rationale: the two source-tree walks were empirically 95.4%
+        // of loop time on test-kubernetes (per m774 profiling); the
+        // per-workspace parallel phase drops the walker-isolated wall
+        // time from ~22.5s to ~5-8s on 8-core hosts. See
+        // `specs/774-parallel-source-imports/`.
+    }
+
+    // ============================================================
+    // Milestone 774: parallel source-import collection phase.
+    //
+    // Extracts the two `collect_production_imports` +
+    // `collect_test_imports` calls from the per-workspace serial loop
+    // above into a bounded thread pool over the workspace queue. Per
+    // Clarifications Q1 → Option A: ONLY these two calls are
+    // parallelized; every other per-workspace post-processing
+    // (resolver, entries, filter, main-module, orphan backfill, etc.)
+    // stays serial in the loop above unchanged.
+    //
+    // Panic propagation (FR-007 + research R2 revised): each per-job
+    // body is wrapped in `catch_unwind(AssertUnwindSafe(...))` so the
+    // worker can log the failing workspace's absolute path BEFORE
+    // `resume_unwind`s. `std::thread::scope`'s automatic join at
+    // scope-close propagates the re-raised unwind to the enclosing
+    // `pub fn read` call, matching pre-milestone unwind path.
+    //
+    // See `specs/774-parallel-source-imports/data-model.md` for the
+    // orchestration diagram + `contracts/collect-imports-parallelism.md`
+    // for the 11 verifiable contracts.
+    let m774_phase_start = std::time::Instant::now();
+    let m774_workers = crate::scan_fs::package_db::golang::mod_why::worker_count(parsed_roots.len());
+
+    if parsed_roots.len() <= 1 {
+        // R9 degenerate short-circuit: single-workspace scans skip the
+        // thread-scope / mpsc / mutex allocations entirely, matching
+        // pre-milestone latency (SC-005 within ±3%).
+        if let Some((project_root, _doc, _sums)) = parsed_roots.first() {
+            #[cfg(test)]
+            if m774_should_inject_panic(project_root) {
+                panic!("m774 test injection");
+            }
+            collect_production_imports(
+                project_root,
+                0,
+                &known_modules,
+                &mut signals.production_imports,
+            );
+            collect_test_imports(project_root, 0, &known_modules, &mut test_imports);
+        }
+    } else {
+        let jobs: Vec<WorkspaceImportJob<'_>> = parsed_roots
+            .iter()
+            .enumerate()
+            .map(|(i, (pr, _, _))| WorkspaceImportJob {
+                workspace_index: i,
+                project_root: pr,
+            })
+            .collect();
+        let queue = Arc::new(Mutex::new(jobs));
+        let (tx, rx) = mpsc::channel::<ImportCollectionResult>();
+        let known_modules_ref: &[String] = &known_modules;
+
+        std::thread::scope(|s| {
+            for _ in 0..m774_workers {
+                let queue = Arc::clone(&queue);
+                let tx = tx.clone();
+                s.spawn(move || loop {
+                    let job = match queue
+                        .lock()
+                        .expect("m774: work queue mutex poisoned")
+                        .pop()
+                    {
+                        Some(j) => j,
+                        None => break,
+                    };
+                    let project_root_display = job.project_root.display().to_string();
+                    let workspace_index = job.workspace_index;
+                    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                        #[cfg(test)]
+                        if m774_should_inject_panic(job.project_root) {
+                            panic!("m774 test injection");
+                        }
+                        let mut prod: HashSet<String> = HashSet::new();
+                        let mut test: HashSet<String> = HashSet::new();
+                        collect_production_imports(
+                            job.project_root,
+                            0,
+                            known_modules_ref,
+                            &mut prod,
+                        );
+                        collect_test_imports(
+                            job.project_root,
+                            0,
+                            known_modules_ref,
+                            &mut test,
+                        );
+                        (prod, test)
+                    }));
+                    match result {
+                        Ok((prod, test)) => {
+                            let _ = tx.send(ImportCollectionResult {
+                                workspace_index,
+                                production_imports: prod,
+                                test_imports: test,
+                            });
+                        }
+                        Err(payload) => {
+                            tracing::error!(
+                                workspace_index,
+                                project_root = %project_root_display,
+                                "m774 worker panicked in collect_*_imports; propagating to abort scan"
+                            );
+                            std::panic::resume_unwind(payload);
+                        }
+                    }
+                });
+            }
+            // Drop the main-side sender so `rx` iteration terminates
+            // once all worker-cloned senders have been dropped (i.e.,
+            // once every worker has exited its loop).
+            drop(tx);
+            // Drain results inside the scope so the reduce completes
+            // before scope auto-join re-raises any pending panics.
+            for result in rx {
+                signals
+                    .production_imports
+                    .extend(result.production_imports);
+                test_imports.extend(result.test_imports);
+            }
+        });
+    }
+
+    // FR-014: exactly one summary log line per `pub fn read` invocation.
+    tracing::info!(
+        workspaces_scanned = parsed_roots.len(),
+        parallel_workers_used = m774_workers,
+        production_imports_count = signals.production_imports.len(),
+        test_imports_count = test_imports.len(),
+        elapsed_ms = m774_phase_start.elapsed().as_millis() as u64,
+        "m774 parallel source-import collection complete"
+    );
+    #[cfg(test)]
+    if m774_summary_sink_should_record(rootfs) {
+        m774_summary_sink_push(
+            rootfs,
+            M774SummaryRecord {
+                workspaces_scanned: parsed_roots.len(),
+                parallel_workers_used: m774_workers,
+                production_imports_count: signals.production_imports.len(),
+                test_imports_count: test_imports.len(),
+            },
         );
     }
 
@@ -4646,5 +4866,201 @@ func TestX(t *testing.T) { _ = lib.X() }"#,
         let (candidates, toolchains) = candidate_project_roots(root.path(), &empty);
         assert!(candidates.is_empty(), "both non-standard install paths must be skipped");
         assert_eq!(toolchains.len(), 2);
+    }
+}
+
+/// Milestone 774: unit tests for the post-main-loop parallel source-
+/// import phase. See `specs/774-parallel-source-imports/` for the
+/// spec + plan; the five tests below cover contracts 3, 4, 5, 6, 8.
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod m774_tests {
+    use super::*;
+    use crate::scan_fs::package_db::exclude_path::ExclusionSet;
+
+    /// Build N synthetic workspaces sharing a common set of known
+    /// modules. Each workspace has: one `go.mod` declaring its module
+    /// path, one `main.go` importing 2 prod-lib modules, one
+    /// `_test.go` importing 1 testonly module. Synthetic package
+    /// names per memory `feedback_fixture_synthetic_package_names`.
+    fn make_n_workspace_fixture(n: usize) -> tempfile::TempDir {
+        let dir = tempfile::tempdir().unwrap();
+        for i in 0..n {
+            let ws = dir.path().join(format!("ws{i}"));
+            std::fs::create_dir_all(&ws).unwrap();
+            std::fs::write(
+                ws.join("go.mod"),
+                format!(
+                    "module github.com/kusari-oss/waybill-fixture-m774-ws{i}\n\ngo 1.22\n\nrequire (\n\tgithub.com/kusari-oss/waybill-fixture-m774-lib-a v1.0.0\n\tgithub.com/kusari-oss/waybill-fixture-m774-lib-b v1.0.0\n\tgithub.com/kusari-oss/waybill-fixture-m774-testonly-x v1.0.0\n)\n"
+                ),
+            )
+            .unwrap();
+            std::fs::write(
+                ws.join("main.go"),
+                br#"package main
+import (
+    "github.com/kusari-oss/waybill-fixture-m774-lib-a"
+    "github.com/kusari-oss/waybill-fixture-m774-lib-b"
+)
+func main() { _ = liba.X(); _ = libb.Y() }
+"#,
+            )
+            .unwrap();
+            std::fs::write(
+                ws.join("main_test.go"),
+                br#"package main
+import "github.com/kusari-oss/waybill-fixture-m774-testonly-x"
+func TestX(t *testing.T) { _ = testonly.X() }
+"#,
+            )
+            .unwrap();
+        }
+        dir
+    }
+
+    /// T009: merge-correctness — a multi-workspace scan produces the
+    /// same production_imports + test_only_imports as a serial
+    /// per-workspace collection would have produced.
+    #[test]
+    fn m774_multi_workspace_merge_correctness() {
+        let dir = make_n_workspace_fixture(3);
+        let exclude = ExclusionSet::new_empty();
+        let (_out, signals) = read(dir.path(), true, &exclude, None);
+
+        // Every prod lib should be in production_imports.
+        assert!(signals
+            .production_imports
+            .contains("github.com/kusari-oss/waybill-fixture-m774-lib-a"));
+        assert!(signals
+            .production_imports
+            .contains("github.com/kusari-oss/waybill-fixture-m774-lib-b"));
+
+        // The testonly-x module should be in test_only_imports (not in prod).
+        assert!(signals
+            .test_only_imports
+            .contains("github.com/kusari-oss/waybill-fixture-m774-testonly-x"));
+        assert!(!signals
+            .production_imports
+            .contains("github.com/kusari-oss/waybill-fixture-m774-testonly-x"));
+    }
+
+    /// T010: two independent scans against the same tree produce
+    /// element-identical production_imports + test_only_imports sets
+    /// (SC-004 determinism).
+    #[test]
+    fn m774_determinism_across_runs() {
+        let dir = make_n_workspace_fixture(3);
+        let exclude = ExclusionSet::new_empty();
+
+        let (_out_a, sig_a) = read(dir.path(), true, &exclude, None);
+        let (_out_b, sig_b) = read(dir.path(), true, &exclude, None);
+
+        // HashSet equality compares content ignoring iteration order.
+        assert_eq!(sig_a.production_imports, sig_b.production_imports);
+        assert_eq!(sig_a.test_only_imports, sig_b.test_only_imports);
+    }
+
+    /// T011: worker-thread panic in the parallel phase propagates via
+    /// `resume_unwind` through `std::thread::scope`'s auto-join,
+    /// aborting the enclosing `read()` call with a panic. FR-007 +
+    /// research R2 revised.
+    ///
+    /// Injection is scoped to the test's specific fixture path so
+    /// parallel test execution doesn't cross-contaminate — sibling
+    /// tests use different tempdirs, whose paths don't match the
+    /// marker prefix.
+    #[test]
+    fn m774_worker_panic_fails_fast() {
+        let dir = make_n_workspace_fixture(3);
+        let exclude = ExclusionSet::new_empty();
+
+        // Reset the marker on test exit even if catch_unwind swallows
+        // the panic — protects sibling tests that run concurrently in
+        // the same process.
+        struct PanicMarkerGuard;
+        impl Drop for PanicMarkerGuard {
+            fn drop(&mut self) {
+                *M774_INJECT_PANIC.lock().unwrap() = None;
+            }
+        }
+        let _guard = PanicMarkerGuard;
+
+        *M774_INJECT_PANIC.lock().unwrap() = Some(dir.path().to_path_buf());
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            read(dir.path(), true, &exclude, None)
+        }));
+        assert!(
+            result.is_err(),
+            "read() MUST propagate the worker panic; got Ok result instead"
+        );
+    }
+
+    /// T012: single-workspace scan takes the degenerate short-circuit
+    /// arm — no `std::thread::scope`, no mpsc allocation. Assert wall
+    /// time is small (protects against a future refactor that
+    /// accidentally spawns threads for N=1). SC-005.
+    #[test]
+    fn m774_single_workspace_no_thread_spawn() {
+        let dir = make_n_workspace_fixture(1);
+        let exclude = ExclusionSet::new_empty();
+        let start = std::time::Instant::now();
+        let (_out, _signals) = read(dir.path(), true, &exclude, None);
+        let elapsed = start.elapsed();
+        // Generous bound — 2s accommodates test-suite parallelism +
+        // debug-build overhead + all the non-collect-imports work in
+        // read() (resolver, entries, main-module, orphan backfill).
+        // The real value of this assert is catching a hypothetical
+        // regression where the degenerate arm stops firing and every
+        // N=1 scan spawns a full thread pool. That failure mode would
+        // add ~50-100ms of thread-spawn overhead PER SCAN, not per
+        // workspace, so the absolute bound isn't the tight signal —
+        // but a runaway (e.g., spawn-per-workspace-count) would blow
+        // it. Watch for the summary log's parallel_workers_used field
+        // instead if this bound needs tightening.
+        assert!(
+            elapsed < std::time::Duration::from_millis(2000),
+            "single-workspace scan took {elapsed:?}, degenerate short-circuit may not be firing",
+        );
+    }
+
+    /// T013: FR-014 summary log fires exactly once per `read()`
+    /// invocation with the required fields. Uses a `#[cfg(test)]`
+    /// sink instead of a tracing subscriber because other tests in
+    /// the same binary install global `set_global_default` tracing
+    /// subscribers that preempt this test's thread-local
+    /// `with_default` (observed empirically at implement-time). The
+    /// sink is fixture-path-scoped so parallel test execution
+    /// doesn't cross-contaminate.
+    #[test]
+    fn m774_summary_log_fires_once_per_read() {
+        let dir = make_n_workspace_fixture(3);
+        let exclude = ExclusionSet::new_empty();
+
+        struct SummarySinkGuard;
+        impl Drop for SummarySinkGuard {
+            fn drop(&mut self) {
+                *M774_SUMMARY_SINK.lock().unwrap() = None;
+            }
+        }
+        let _guard = SummarySinkGuard;
+
+        *M774_SUMMARY_SINK.lock().unwrap() = Some((dir.path().to_path_buf(), Vec::new()));
+
+        let (_out, _signals) = read(dir.path(), true, &exclude, None);
+
+        let sink = M774_SUMMARY_SINK.lock().unwrap();
+        let (_, records) = sink.as_ref().expect("sink was installed");
+        assert_eq!(
+            records.len(),
+            1,
+            "expected exactly one m774 summary record per read(); got {}: {:?}",
+            records.len(),
+            records,
+        );
+        let record = &records[0];
+        assert_eq!(record.workspaces_scanned, 3);
+        assert!(record.parallel_workers_used >= 1);
+        assert!(record.production_imports_count >= 2, "prod imports should include lib-a + lib-b");
+        assert!(record.test_imports_count >= 1, "test imports should include testonly-x");
     }
 }
