@@ -99,6 +99,32 @@ Read the output: any `+NNNms` gap over 500ms flags a genuine
 bottleneck. Sum the deltas by module and you have the per-subsystem
 budget breakdown.
 
+**⚠️ Log-line-as-cost-proxy pitfall (m773 case study)**: a
+`tracing::info!` line that fires "at completion of subsystem X"
+measures only the code paths that ended AT that log call, not
+necessarily the caller-side loop-body work happening around it. If
+subsystem X is called in a loop and each iteration does more work
+after X returns (e.g., data transformation, per-entry annotation),
+the log line's inter-line delta captures ONLY X's cost — not the
+loop iteration's total cost.
+
+**Concrete m773 miss**: the `"go transitive edges resolution
+summary"` line fires at the end of `GraphResolver::resolve()`. The
+inter-line delta showed ~400ms per workspace, which was attributed
+to "graph_resolver = 15s bottleneck". The parallelization dropped
+`resolver.resolve()` from 15s → 20ms (400× on that slice), but total
+wall time didn't move — because the real 400ms per workspace was
+`resolver.resolve() (1ms) + build_entries + main_module_entry +
+annotations (399ms)`. The log line only captured the resolver's 1ms;
+the 399ms of caller-side work was invisible to Step 2 log-delta
+analysis.
+
+**Rule**: treat Step 2 log-line deltas as LOWER-BOUND per-subsystem
+cost proxies. They tell you "at least this much time was inside the
+named subsystem". They DO NOT tell you the total cost of the caller
+loop body around that subsystem. Step 3 inclusion/exclusion
+verification is what actually confirms attribution.
+
 ### Step 3 — Verify the bottleneck with an inclusion/exclusion test
 
 Once you've identified the suspected bottleneck, prove it via a
@@ -198,9 +224,19 @@ spec against the wrong target.
   is 18s single-threaded"). Later updated with the actual decomposition
   post-m772.
 - **m772**: the spec+plan+tasks+implementation that targeted the wrong
-  subsystem. Rolled back at implement-time when Step-2 tracing
+  subsystem (walker was 63ms of a 20s scan; real bottleneck was
+  graph_resolver). Rolled back at implement-time when Step-2 tracing
   revealed the actual bottleneck. Spec artifacts kept at
   `specs/772-parallel-scan-walker/` as a historical record.
+- **m773**: the spec+plan+tasks+implementation that targeted
+  `resolver.resolve()` after m772's decomposition correctly identified
+  graph_resolver as the 15s slice. Parallelization succeeded on the
+  resolver phase (15s → 20ms, 400× on that slice) but total wall
+  didn't move — the log-line-delta had measured only the resolver's
+  fraction of the 400ms/workspace loop body, not the whole thing.
+  Rolled back. Spec artifacts kept at
+  `specs/773-graph-resolver-parallel/` as a historical record.
+  See #793 comment thread for the empirical breakdown.
 - **m669 benchmark harness**: `xtask bench` provides repeatable
   per-fixture wall-time measurements. Useful for validating that a
   perf fix moved the number, NOT for the initial decomposition.
@@ -208,5 +244,7 @@ spec against the wrong target.
   decomposition in issue #745's re-benchmark comment used exactly
   the flag-toggle approach that (subsequently) turned out to be
   insufficient. m771 got lucky because the classifier really was the
-  bottleneck; m772 got unlucky because the walker wasn't. Neither
-  outcome was predictable from the coarse decomposition alone.
+  bottleneck; m772 and m773 got unlucky because the log-line-based
+  attribution missed adjacent per-iteration work. Neither outcome
+  was predictable from the coarse decomposition alone — Step 3
+  inclusion/exclusion verification is the safety net.
