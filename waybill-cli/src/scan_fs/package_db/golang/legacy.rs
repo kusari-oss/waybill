@@ -5017,8 +5017,16 @@ func TestX(t *testing.T) { _ = testonly.X() }
         // but a runaway (e.g., spawn-per-workspace-count) would blow
         // it. Watch for the summary log's parallel_workers_used field
         // instead if this bound needs tightening.
+        // Raised 2s -> 8s during m776: the 2s bound proved too tight
+        // under full-suite parallel load (it passed in isolation and
+        // failed in the gate). The assertion's value was never the
+        // absolute number — it is catching a runaway where the
+        // degenerate arm stops firing and a thread pool is spawned per
+        // scan. That failure mode is orders of magnitude, not
+        // milliseconds, so a looser bound loses nothing and stops the
+        // test from failing on machine load.
         assert!(
-            elapsed < std::time::Duration::from_millis(2000),
+            elapsed < std::time::Duration::from_millis(8000),
             "single-workspace scan took {elapsed:?}, degenerate short-circuit may not be firing",
         );
     }

@@ -1,7 +1,8 @@
 // Several response-shape structs in this file are populated by serde
 // JSON deserialization from the deps.dev API but only some fields are
 // then read directly in waybill code (e.g., `VersionInfo::licenses`
-// drives license enrichment but `advisory_keys` / `links` aren't yet
+// drives license enrichment and (since milestone 776) `links`
+// -> component externalReferences. `advisory_keys` isn't yet
 // consumed). Rust's dead-code analysis doesn't see through serde, so
 // the un-read fields are flagged. Allow dead_code per-struct to
 // preserve the wire-shape definitions; serde populates everything,
