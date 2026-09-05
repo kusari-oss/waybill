@@ -133,6 +133,45 @@ enum ParserState {
 /// The parsed document itself is returned via `parse_go_work_full`;
 /// this helper is a convenience for callers that only need the
 /// annotation-value classification.
+/// Milestone 775 — the directive keywords the `go.work` format
+/// defines, in ONE place.
+///
+/// Both `go.work` parsers consult this: the strict validator in this
+/// module (which reports malformed reasons and drives the operator-
+/// facing `waybill:go-workspace-mode` annotation) and the lenient
+/// member-extractor in `mod_why.rs` (which enumerates `use` paths for
+/// scope detection). Keeping one definition is what FR-014 requires —
+/// recognizing a directive added by a future Go release must be a
+/// ONE-PLACE edit, so the two parsers cannot drift apart.
+///
+/// They drifted before: pre-m775 the strict parser knew only `go`,
+/// `use`, and `replace`, so Kubernetes' `go.work` — which carries
+/// `godebug default=go1.26` (a Go 1.23+ directive) — was reported as
+/// `malformed: unknown-directive` while the lenient parser happily
+/// enumerated all 38 workspaces from the same file. One scan, two
+/// contradictory claims.
+///
+/// `toolchain` (Go 1.21+) and `godebug` (Go 1.23+) are accept-and-
+/// ignore: recognized as valid, contributing nothing to
+/// `GoWorkDocument`, because nothing downstream consumes them. Go
+/// permits repeated `godebug` lines, so no duplicate detection applies
+/// (unlike `use` paths, which keep `duplicate-use-path`).
+pub(super) const GO_WORK_DIRECTIVES: &[&str] =
+    &["go", "toolchain", "godebug", "use", "replace"];
+
+/// True when `line`'s leading token is a directive the `go.work`
+/// format defines. Used by both parsers via [`GO_WORK_DIRECTIVES`].
+pub(super) fn is_known_go_work_directive(line: &str) -> bool {
+    match line.split_whitespace().next() {
+        Some(first) => {
+            // Tolerate block-open forms like `use (` / `replace(`.
+            let kw = first.trim_end_matches('(');
+            GO_WORK_DIRECTIVES.contains(&kw)
+        }
+        None => false,
+    }
+}
+
 pub fn parse_go_work(body: &str) -> WorkspaceMode {
     match parse_go_work_full(body) {
         Ok(doc) => WorkspaceMode::Detected {
@@ -176,6 +215,12 @@ pub fn parse_go_work_full(body: &str) -> Result<GoWorkDocument, String> {
                 } else if let Some(rest) = line.strip_prefix("replace ") {
                     // Single-line replace: `old[@ver] => new[@ver]`
                     parse_replace_line(&mut doc, rest.trim())?;
+                } else if is_known_go_work_directive(&line) {
+                    // m775: `toolchain` / `godebug` are valid and
+                    // accept-and-ignore — recognized here so a modern
+                    // `go.work` is not reported malformed, but not
+                    // captured into `GoWorkDocument` because nothing
+                    // downstream reads them.
                 } else {
                     return Err("unknown-directive".to_string());
                 }
@@ -633,6 +678,153 @@ replace (
                 assert_eq!(reason, "invalid-replace-syntax");
             }
             other => panic!("expected Malformed, got {other:?}"),
+        }
+    }
+}
+
+/// Milestone 775 — `go.work` directive tolerance + parser agreement.
+///
+/// Pre-m775 the strict parser accepted only `go`, `use`, and `replace`,
+/// so any `go.work` carrying `toolchain` (Go 1.21+) or `godebug`
+/// (Go 1.23+) was reported `malformed: unknown-directive`. Kubernetes
+/// is the observed instance.
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod m775_directive_tests {
+    use super::*;
+
+    const K8S_SHAPE: &str = "\
+// This is a generated file. Do not edit directly.
+
+go 1.26.0
+
+godebug default=go1.26
+
+use (
+\t.
+\t./staging/src/k8s.io/api
+\t./staging/src/k8s.io/apimachinery
+)
+";
+
+    /// Contract 2 (FR-011): `godebug` is accepted — the exact shape
+    /// Kubernetes ships.
+    #[test]
+    fn m775_godebug_directive_is_valid() {
+        assert_eq!(
+            parse_go_work(K8S_SHAPE),
+            WorkspaceMode::Detected { use_count: 3 },
+            "a `go.work` with `godebug` must parse as detected, not malformed",
+        );
+    }
+
+    /// Contract 3 (FR-012): `toolchain` is accepted.
+    #[test]
+    fn m775_toolchain_directive_is_valid() {
+        let src = "go 1.21\ntoolchain go1.26.0\n\nuse (\n\t.\n\t./sub\n)\n";
+        assert_eq!(
+            parse_go_work(src),
+            WorkspaceMode::Detected { use_count: 2 },
+        );
+    }
+
+    /// Go permits repeated `godebug` lines — they must not trip the
+    /// duplicate detection that `use` paths carry.
+    #[test]
+    fn m775_repeated_godebug_lines_are_valid() {
+        let src = "go 1.26.0\ngodebug default=go1.26\ngodebug asynctimerchan=1\n\nuse .\n";
+        assert_eq!(
+            parse_go_work(src),
+            WorkspaceMode::Detected { use_count: 1 },
+        );
+    }
+
+    /// Contract 4 (FR-013): tolerance is SCOPED. Genuinely malformed
+    /// input must still report its existing reason — the fix must not
+    /// degrade into accepting anything.
+    #[test]
+    fn m775_genuinely_unknown_directive_still_rejected() {
+        let src = "go 1.26.0\nfrobnicate whatever\n\nuse .\n";
+        assert_eq!(
+            parse_go_work(src),
+            WorkspaceMode::Malformed {
+                reason: "unknown-directive".to_string()
+            },
+            "a token outside the shared vocabulary must still be rejected",
+        );
+    }
+
+    /// The other malformed reasons are untouched by the vocabulary work.
+    #[test]
+    fn m775_other_malformed_reasons_preserved() {
+        let dup = "go 1.26.0\ngodebug default=go1.26\n\nuse (\n\t./a\n\t./a\n)\n";
+        assert_eq!(
+            parse_go_work(dup),
+            WorkspaceMode::Malformed {
+                reason: "duplicate-use-path".to_string()
+            },
+            "duplicate-use-path must survive alongside godebug tolerance",
+        );
+    }
+
+    /// Contract 1 of the vocabulary contract (FR-014): both parsers
+    /// agree across a corpus covering every vocabulary directive.
+    ///
+    /// This is the anti-recurrence guard. It is written so that
+    /// teaching ONE parser about a new directive — without extending
+    /// the shared `GO_WORK_DIRECTIVES` — fails here.
+    #[test]
+    fn m775_both_parsers_agree_across_directive_corpus() {
+        let corpus = [
+            "go 1.26.0\n\nuse .\n",
+            "go 1.21\ntoolchain go1.26.0\n\nuse .\n",
+            "go 1.26.0\ngodebug default=go1.26\n\nuse .\n",
+            K8S_SHAPE,
+            "go 1.26.0\ntoolchain go1.26.0\ngodebug default=go1.26\n\nuse (\n\t.\n\t./x\n)\n",
+            "go 1.26.0\n\nuse (\n\t.\n)\n\nreplace example.com/a => ./a\n",
+        ];
+        for src in corpus {
+            // Strict parser: must consider it valid.
+            let strict = parse_go_work(src);
+            assert!(
+                matches!(strict, WorkspaceMode::Detected { .. }),
+                "strict parser rejected a valid go.work: {strict:?}\nsrc:\n{src}",
+            );
+            // Lenient parser: must extract the same member count.
+            let lenient =
+                crate::scan_fs::package_db::golang::mod_why::parse_go_work(src);
+            let strict_count = match strict {
+                WorkspaceMode::Detected { use_count } => use_count,
+                other => panic!("expected Detected, got {other:?}"),
+            };
+            assert_eq!(
+                lenient.len(),
+                strict_count,
+                "parsers disagree on member count.\nIf Go added a directive, extend \
+                 GO_WORK_DIRECTIVES (the single shared definition) rather than \
+                 teaching one parser about it.\nsrc:\n{src}",
+            );
+        }
+    }
+
+    /// Every directive in the shared vocabulary is one the strict
+    /// parser actually tolerates — guards against adding a keyword to
+    /// the list without wiring it through.
+    #[test]
+    fn m775_every_vocabulary_directive_parses() {
+        for kw in GO_WORK_DIRECTIVES {
+            let src = match *kw {
+                "go" => "go 1.26.0\nuse .\n".to_string(),
+                "toolchain" => "toolchain go1.26.0\nuse .\n".to_string(),
+                "godebug" => "godebug default=go1.26\nuse .\n".to_string(),
+                "use" => "use .\n".to_string(),
+                "replace" => "use .\nreplace example.com/a => ./a\n".to_string(),
+                other => panic!("vocabulary gained `{other}` with no test coverage"),
+            };
+            assert!(
+                matches!(parse_go_work(&src), WorkspaceMode::Detected { .. }),
+                "vocabulary directive `{kw}` is listed but not tolerated by the parser",
+            );
         }
     }
 }
