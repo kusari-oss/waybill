@@ -220,6 +220,15 @@ For the design rationale, see
 
 ### Performance benchmarks (opt-in)
 
+**Authoring a perf-focused waybill spec?** Read
+[`docs/development/perf-methodology.md`](docs/development/perf-methodology.md)
+first. It codifies the per-phase-tracing decomposition every perf
+spec's Motivation section MUST cite before invoking `/speckit.specify`
+— codified after milestone 772 hit the "wrong bottleneck" case
+(spec+plan+implementation targeted a subsystem that turned out to be
+0.3% of the observed cost). Skipping the decomposition step wastes
+hours of spec-authoring effort; running it takes 5 minutes.
+
 Wall-clock perf benchmarks (`triple_format_perf.rs`, `dual_format_perf.rs`)
 do NOT run in the default pre-PR gate or in the per-PR CI lanes — they
 inherit shared-CI-runner thermal/scheduler noise that false-fails
