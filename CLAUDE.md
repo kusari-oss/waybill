@@ -1,6 +1,6 @@
 # waybill Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-09-04
+Auto-generated from all feature plans. Last updated: 2026-09-05
 
 ## Active Technologies
 - Rust stable (user-space only; no eBPF touched in this milestone) (002-python-npm-ecosystem)
@@ -353,6 +353,8 @@ Auto-generated from all feature plans. Last updated: 2026-09-04
 - N/A — all state in-process per scan. The shared `Arc<GraphResolver>` and `Arc<GoModCache>` live for the duration of the loop; per-workspace `WorkspaceContext` and `ModuleGraphMap` are moved through the mpsc channel and dropped after Phase 2 reduce consumes them. (773-graph-resolver-parallel)
 - Rust stable (workspace toolchain inherited from milestones 001–773; no nightly required for this user-space-only work). + Existing only — `std::thread`, `std::sync::{Arc, Mutex, mpsc}`, `std::collections::HashSet`, `tracing`, `anyhow`, `thiserror`. Reuses `waybill-cli/src/scan_fs/package_db/golang/mod_why.rs::worker_count(workspace_count)` (m771 helper, extracted at `mod_why.rs:204`). **Zero new Cargo dependencies at any workspace level** (FR-010 + SC-003). (774-parallel-source-imports)
 - N/A — per-worker `HashSet<String>` locals live for the parallel phase; merged then dropped. No caches, no persistence. (774-parallel-source-imports)
+- Rust stable (workspace toolchain inherited from milestones 001–774; no nightly required for this user-space-only work). + Existing only — `std::sync::{Arc, Mutex}`, `std::collections::HashMap`, `std::process::Command` (unchanged invocation shape), `tracing`, `anyhow`, `thiserror`. **Zero new Cargo dependencies at any workspace level** (FR-009 + SC-006). (775-preflight-single-flight)
+- N/A — the single-flight cells and the preflight cache are per-scan in-process state, dropped when the classifier returns. No caches persist across scans (spec edge case: "repeated scans in one process"). (775-preflight-single-flight)
 
 - Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`) + aya, aya-ebpf, aya-build, tokio, clap, reqwest, serde/serde_json, cyclonedx-bom, packageurl, sha2, chrono, thiserror, anyhow, tracing (001-build-trace-pipeline)
 
@@ -446,9 +448,9 @@ of CI-readiness — they are not equivalent.
 Rust stable (user-space) + nightly (eBPF target via `aya-ebpf`): Follow standard conventions
 
 ## Recent Changes
+- 775-preflight-single-flight: Added Rust stable (workspace toolchain inherited from milestones 001–774; no nightly required for this user-space-only work). + Existing only — `std::sync::{Arc, Mutex}`, `std::collections::HashMap`, `std::process::Command` (unchanged invocation shape), `tracing`, `anyhow`, `thiserror`. **Zero new Cargo dependencies at any workspace level** (FR-009 + SC-006).
 - 774-parallel-source-imports: Added Rust stable (workspace toolchain inherited from milestones 001–773; no nightly required for this user-space-only work). + Existing only — `std::thread`, `std::sync::{Arc, Mutex, mpsc}`, `std::collections::HashSet`, `tracing`, `anyhow`, `thiserror`. Reuses `waybill-cli/src/scan_fs/package_db/golang/mod_why.rs::worker_count(workspace_count)` (m771 helper, extracted at `mod_why.rs:204`). **Zero new Cargo dependencies at any workspace level** (FR-010 + SC-003).
 - 773-graph-resolver-parallel: Added Rust stable (workspace toolchain inherited from milestones 001–772; no nightly required). + Existing only — `std::thread`, `std::sync::{Arc, mpsc}`, `std::path::{Path, PathBuf}`, `std::collections::{HashMap, HashSet}`, `tracing`, `anyhow`. Reuses the m771 US2 spawn-thread + `Arc<Mutex<work-queue>>` + `mpsc::channel` reducer pattern verbatim (see `waybill-cli/src/scan_fs/package_db/mod.rs::apply_go_mod_why_pass` lines ~1218-1280 for the reference shape). **Zero new Cargo dependencies** (FR-011 + SC-003).
-- 772-parallel-scan-walker: Added Rust stable (workspace toolchain inherited from milestones 001–771; no nightly required). + Existing only — `std::thread`, `std::sync::{Arc, Mutex, mpsc}`, `std::process::Command`, `std::fs::{canonicalize, read_dir}`, `std::path::{Path, PathBuf}`, `std::collections::{HashMap, HashSet}`, `tracing`, `anyhow`. Reuses the m771 US2 spawn-thread + `Arc<Mutex<work-queue>>` + mpsc-reducer pattern verbatim (see `waybill-cli/src/scan_fs/package_db/mod.rs::apply_go_mod_why_pass` for the reference shape). **Zero new Cargo dependencies** (FR-010 + SC-003).
 
 
 <!-- MANUAL ADDITIONS START -->

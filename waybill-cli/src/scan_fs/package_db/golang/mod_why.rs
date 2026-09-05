@@ -105,8 +105,20 @@ pub fn parse_go_work(bytes: &str) -> Vec<String> {
                 members.push(rest.to_string());
             }
         }
-        // Any other directive (`go`, `replace`, `godebug`, …) is
-        // ignored — this parser cares only about member enumeration.
+        // Any other directive is ignored — this parser cares only
+        // about member enumeration, and deliberately tolerates ANY
+        // input without panicking: a genuinely malformed `go.work`
+        // must yield an empty member set so the caller falls back to
+        // per-workspace preflights (m771 FR-008).
+        //
+        // m775 (FR-014): the directives that legitimately appear here
+        // are defined once, in `gowork::GO_WORK_DIRECTIVES`, shared
+        // with the strict validator so the two parsers cannot disagree
+        // about what a VALID `go.work` contains. That agreement is
+        // enforced by `m775_both_parsers_agree_across_directive_corpus`
+        // — deliberately as a test over valid inputs rather than an
+        // assertion here, because asserting would break this parser's
+        // tolerate-anything contract on malformed input.
     }
     members
 }
@@ -301,6 +313,27 @@ pub struct SharedPreflightCache {
     /// Callers outside the crate SHOULD access via `Arc<Mutex<>>` at
     /// the classifier call site rather than mutating this directly.
     pub entries: HashMap<PathBuf, PreflightOutcome>,
+    /// Milestone 775: per-scope single-flight cells.
+    ///
+    /// `entries` remains the fast-path authority — once a scope's
+    /// preflight has completed, every later caller reads it without
+    /// blocking. This map exists solely to serialize the SLOW path:
+    /// the first caller to claim a scope holds that scope's cell
+    /// across the `go list all` subprocess, and concurrent callers for
+    /// the SAME scope block on the cell and reuse the memoized
+    /// outcome rather than spawning their own.
+    ///
+    /// Distinct scopes hold distinct cells, so one scope's preflight
+    /// never blocks another's (FR-003). The cache mutex itself is
+    /// never held across a spawn (FR-004).
+    ///
+    /// Pre-m775 this map did not exist: the cache-miss path released
+    /// the cache mutex, ran the subprocess, then re-acquired to
+    /// insert. m771 US2's worker pool starts every worker at once, so
+    /// all of them reached that miss branch before any had finished —
+    /// 22 `go list all` invocations were observed on Kubernetes where
+    /// 6 was correct. See specs/775-preflight-single-flight/.
+    pub inflight: HashMap<PathBuf, std::sync::Arc<std::sync::Mutex<Option<PreflightOutcome>>>>,
 }
 
 /// Outcome of a shared `go list all` preflight invocation.
@@ -394,6 +427,20 @@ pub struct MainModuleAnalysis {
     /// the scan-level classifier into the `workspace_modules=` counter
     /// on the summary log line.
     pub workspace_active: bool,
+    /// Milestone 775 (FR-015): true iff THIS call performed an actual
+    /// `go list all` subprocess spawn.
+    ///
+    /// False when the outcome came from the cache fast path, from
+    /// waiting on another worker's in-flight cell, or from an early
+    /// return that skipped the preflight entirely (no `go` toolchain,
+    /// budget already exhausted).
+    ///
+    /// Counting SPAWNS rather than REQUESTS is what makes the
+    /// SC-003 assertion meaningful: a request counter would report 39
+    /// both before and after this milestone and would have caught
+    /// nothing. Aggregated scan-level into the `preflight_invocations`
+    /// field on the FR-013 summary line.
+    pub preflight_spawned: bool,
 }
 
 /// Milestone 231 — Go workspace-mode state for one main-module
@@ -573,6 +620,99 @@ fn run_bounded(
     }
 }
 
+/// Milestone 775 — single-flight coordination for the shared
+/// `go list all` preflight.
+///
+/// Returns `(outcome, spawned)` where `spawned` is true iff THIS call
+/// actually invoked `run` (as opposed to reading a completed outcome
+/// from the cache, or waiting on another caller's in-flight cell).
+///
+/// The preflight work is taken as a closure so the coordination logic
+/// is testable without a `go` toolchain (research R4, Constitution
+/// Principle VII). Production callers pass `run_preflight`.
+///
+/// Protocol:
+///   1. Acquire the CACHE mutex briefly. Either read a completed
+///      outcome, or fetch-or-insert this scope's cell and clone the
+///      handle out. Release the cache mutex. The cache mutex is NEVER
+///      held across `run` (FR-004).
+///   2. Acquire THIS SCOPE's cell. An empty cell means we are the
+///      claimant: run the work, memoize into both the cell and the
+///      cache, report `spawned = true`. A populated cell means we
+///      waited: reuse the memoized outcome, report `spawned = false`
+///      (FR-001, FR-002, FR-005).
+///
+/// Distinct scopes hold distinct cells and therefore proceed fully
+/// concurrently (FR-003).
+///
+/// LOCK ORDERING (load-bearing): a claimant takes cell → cache (to
+/// memoize), while an arriving caller takes cache → cell. That is an
+/// ABBA shape, and it is deadlock-free ONLY because the cache guard in
+/// step 1 is dropped at the end of its block, before the cell is
+/// acquired — nobody ever holds the cache while waiting on a cell. Do
+/// not "simplify" that block scope away.
+///
+/// Panic behavior (NFR-002): a panicking claimant poisons only its own
+/// scope's cell, so waiters for that scope fail fast rather than
+/// blocking forever. Propagating is what Principle III (Fail Closed)
+/// requires — a scope whose preflight panicked has produced no
+/// verdict, and treating it as "classification passed" would emit an
+/// SBOM whose build-inclusion data is quietly wrong.
+fn preflight_single_flight<F>(
+    cache: &Arc<Mutex<SharedPreflightCache>>,
+    scope_root: &Path,
+    run: F,
+) -> (Result<(), SkipReason>, bool)
+where
+    F: FnOnce() -> Result<(), SkipReason>,
+{
+    // Step 1 — short critical section on the cache.
+    let claimed = {
+        let mut guard = cache.lock().expect("m775: preflight cache mutex poisoned");
+        match guard.entries.get(scope_root) {
+            Some(done) => Err(done.clone()),
+            None => Ok(guard
+                .inflight
+                .entry(scope_root.to_path_buf())
+                .or_default()
+                .clone()),
+        }
+    };
+
+    let cell = match claimed {
+        // Fast path: this scope's preflight already completed.
+        Err(PreflightOutcome::Ok) => return (Ok(()), false),
+        Err(PreflightOutcome::Skipped(reason)) => return (Err(reason), false),
+        Ok(cell) => cell,
+    };
+
+    // Step 2 — serialize on THIS scope's cell, across the subprocess.
+    let mut slot = cell
+        .lock()
+        .expect("m775: preflight single-flight cell poisoned");
+    if slot.is_none() {
+        // Claimant: perform the work exactly once for this scope.
+        let outcome = run();
+        let memo = match &outcome {
+            Ok(()) => PreflightOutcome::Ok,
+            Err(reason) => PreflightOutcome::Skipped(*reason),
+        };
+        cache
+            .lock()
+            .expect("m775: preflight cache mutex poisoned")
+            .entries
+            .entry(scope_root.to_path_buf())
+            .or_insert_with(|| memo.clone());
+        *slot = Some(memo);
+        return (outcome, true);
+    }
+    // Waiter: reuse the claimant's outcome verbatim (FR-002, FR-005).
+    match slot.as_ref().expect("m775: cell populated above") {
+        PreflightOutcome::Ok => (Ok(()), false),
+        PreflightOutcome::Skipped(reason) => (Err(*reason), false),
+    }
+}
+
 /// Run the `go list all` reliability preflight from `preflight_dir`.
 /// Returns `Ok(())` on success; `Err(reason)` on any failure path.
 ///
@@ -678,52 +818,23 @@ pub fn analyze_main_module(
     };
     // US3: shared preflight when we're in a go.work scope; fallback
     // to the per-workspace preflight otherwise (FR-008).
-    let preflight_result = match shared_scope {
-        Some((cache, scope)) => {
-            // Cache check under mutex. On hit, return the cached
-            // outcome; on miss, run the preflight from scope.root_dir
-            // (spec Clarification 2026-09-04 Q1) and cache it.
-            //
-            // Lock scope is intentionally narrow: (1) fast path checks
-            // cache; (2) miss path runs the actual preflight WITHOUT
-            // holding the mutex (release lock, preflight, re-acquire
-            // to insert). This avoids holding the mutex across a
-            // subprocess spawn while still guaranteeing a single
-            // preflight per scope via the double-check under lock.
-            let cache_hit = {
-                let guard = cache.lock().expect("preflight cache mutex");
-                guard.entries.get(&scope.root_dir).cloned()
-            };
-            match cache_hit {
-                Some(PreflightOutcome::Ok) => Ok(()),
-                Some(PreflightOutcome::Skipped(reason)) => Err(reason),
-                None => {
-                    let outcome =
-                        run_preflight(&scope.root_dir, offline, remaining, &workspace_mode);
-                    let cached = match &outcome {
-                        Ok(()) => PreflightOutcome::Ok,
-                        Err(reason) => PreflightOutcome::Skipped(*reason),
-                    };
-                    // Insert under lock. If another worker beat us to
-                    // it (very rare — the preflight window is where
-                    // the race lives), keep the existing entry to
-                    // preserve the invariant "exactly one preflight
-                    // effect per scope" as observed by the cache
-                    // (subprocess-count-wise we may have already
-                    // double-spent in the pathological race window;
-                    // that's a bounded 1-extra-preflight-per-scope
-                    // worst case and acceptable per research R3).
-                    let mut guard = cache.lock().expect("preflight cache mutex");
-                    guard
-                        .entries
-                        .entry(scope.root_dir.clone())
-                        .or_insert(cached);
-                    outcome
-                }
-            }
-        }
-        None => run_preflight(main_module_dir, offline, remaining, &workspace_mode),
+    //
+    // Milestone 775: the shared-scope path is single-flighted via
+    // `preflight_single_flight` — exactly one `go list all` spawn per
+    // scope per scan, with concurrent callers for the same scope
+    // waiting on that scope's cell and reusing its outcome. The
+    // loose-workspace path is unchanged: no scope to share, so it runs
+    // its own preflight and reports the spawn.
+    let (preflight_result, preflight_spawned) = match shared_scope {
+        Some((cache, scope)) => preflight_single_flight(cache, &scope.root_dir, || {
+            run_preflight(&scope.root_dir, offline, remaining, &workspace_mode)
+        }),
+        None => (
+            run_preflight(main_module_dir, offline, remaining, &workspace_mode),
+            true,
+        ),
     };
+    analysis.preflight_spawned = preflight_spawned;
     if let Err(reason) = preflight_result {
         analysis.skip_reason = Some(reason);
         return analysis;
@@ -1494,5 +1605,263 @@ mod tests {
             .map(|(k, v)| (k.to_string_lossy().to_string(), v.map(|v| v.to_string_lossy().to_string())))
             .collect();
         assert_eq!(envs.get("GOFLAGS"), Some(&Some("-mod=mod".to_string())));
+    }
+}
+
+/// Milestone 775 — single-flight preflight coordination tests.
+///
+/// These exercise `preflight_single_flight` directly with an injected
+/// work function (research R4), so they assert FR-001/FR-002/FR-003 and
+/// NFR-002 deterministically without a `go` toolchain, a fixture, or an
+/// 11-second subprocess (Constitution Principle VII).
+///
+/// End-to-end spawn counts on a real fixture are covered separately by
+/// the FR-015 counter — but that counter alone cannot distinguish "one
+/// spawn because single-flight worked" from "one spawn because only one
+/// worker ran", and cannot test cross-scope concurrency at all. Both
+/// layers are needed.
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod m775_single_flight_tests {
+    use super::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Barrier;
+    use std::time::Duration;
+
+    fn cache() -> Arc<Mutex<SharedPreflightCache>> {
+        Arc::new(Mutex::new(SharedPreflightCache::default()))
+    }
+
+    /// Contract 1 (FR-001): N concurrent callers for ONE scope produce
+    /// exactly one invocation of the work function.
+    #[test]
+    fn m775_single_scope_spawns_exactly_once() {
+        const THREADS: usize = 8;
+        let cache = cache();
+        let scope = PathBuf::from("/scope/a");
+        let invocations = Arc::new(AtomicUsize::new(0));
+        let gate = Arc::new(Barrier::new(THREADS));
+        let spawned_count = Arc::new(AtomicUsize::new(0));
+
+        std::thread::scope(|s| {
+            for _ in 0..THREADS {
+                let (cache, scope) = (Arc::clone(&cache), scope.clone());
+                let (invocations, gate) = (Arc::clone(&invocations), Arc::clone(&gate));
+                let spawned_count = Arc::clone(&spawned_count);
+                s.spawn(move || {
+                    // Maximize the stampede window: every thread arrives
+                    // together, which is exactly what m771 US2's pool does
+                    // and what the pre-m775 code could not survive.
+                    gate.wait();
+                    let (outcome, spawned) = preflight_single_flight(&cache, &scope, || {
+                        invocations.fetch_add(1, Ordering::SeqCst);
+                        std::thread::sleep(Duration::from_millis(50));
+                        Ok(())
+                    });
+                    assert!(outcome.is_ok(), "every caller must see the success outcome");
+                    if spawned {
+                        spawned_count.fetch_add(1, Ordering::SeqCst);
+                    }
+                });
+            }
+        });
+
+        assert_eq!(
+            invocations.load(Ordering::SeqCst),
+            1,
+            "FR-001: exactly one preflight spawn per scope, got {}",
+            invocations.load(Ordering::SeqCst),
+        );
+        assert_eq!(
+            spawned_count.load(Ordering::SeqCst),
+            1,
+            "FR-015: exactly one caller may report preflight_spawned",
+        );
+    }
+
+    /// Contract 2 (FR-002 + FR-005): a failure outcome propagates
+    /// identically to every waiter, and is produced only once.
+    #[test]
+    fn m775_failure_outcome_propagates_to_all_waiters() {
+        const THREADS: usize = 6;
+        let cache = cache();
+        let scope = PathBuf::from("/scope/failing");
+        let invocations = Arc::new(AtomicUsize::new(0));
+        let gate = Arc::new(Barrier::new(THREADS));
+
+        std::thread::scope(|s| {
+            for _ in 0..THREADS {
+                let (cache, scope) = (Arc::clone(&cache), scope.clone());
+                let (invocations, gate) = (Arc::clone(&invocations), Arc::clone(&gate));
+                s.spawn(move || {
+                    gate.wait();
+                    let (outcome, _) = preflight_single_flight(&cache, &scope, || {
+                        invocations.fetch_add(1, Ordering::SeqCst);
+                        std::thread::sleep(Duration::from_millis(30));
+                        Err(SkipReason::UnresolvablePackages)
+                    });
+                    assert_eq!(
+                        outcome,
+                        Err(SkipReason::UnresolvablePackages),
+                        "every waiter must observe the claimant's failure verbatim",
+                    );
+                });
+            }
+        });
+
+        assert_eq!(
+            invocations.load(Ordering::SeqCst),
+            1,
+            "a failed preflight must not be retried by each waiter",
+        );
+    }
+
+    /// Contract 3 (FR-003 + FR-004): two DISTINCT scopes proceed
+    /// concurrently.
+    ///
+    /// Each scope's work function announces it is inside, then waits for
+    /// the other to do the same. Both can only proceed if the two
+    /// preflights genuinely overlap. An implementation that serializes
+    /// across scopes — e.g. by holding the cache mutex across the
+    /// subprocess, which is the simplest fix satisfying every OTHER
+    /// contract — cannot satisfy the rendezvous.
+    ///
+    /// The wait is DEADLINE-BOUNDED rather than a `Barrier`: a
+    /// serializing implementation must fail as an assertion, not hang
+    /// CI forever. `std::sync::Barrier::wait()` has no timeout, so it
+    /// would deadlock instead of reporting.
+    #[test]
+    fn m775_distinct_scopes_do_not_serialize() {
+        let cache = cache();
+        let inside = Arc::new(AtomicUsize::new(0));
+        let overlapped = Arc::new(AtomicUsize::new(0));
+
+        std::thread::scope(|s| {
+            for name in ["/scope/a", "/scope/b"] {
+                let cache = Arc::clone(&cache);
+                let inside = Arc::clone(&inside);
+                let overlapped = Arc::clone(&overlapped);
+                let scope = PathBuf::from(name);
+                s.spawn(move || {
+                    let (outcome, spawned) = preflight_single_flight(&cache, &scope, || {
+                        inside.fetch_add(1, Ordering::SeqCst);
+                        // Bounded rendezvous: wait for the other scope to
+                        // also be inside its preflight.
+                        let deadline =
+                            std::time::Instant::now() + Duration::from_secs(5);
+                        while inside.load(Ordering::SeqCst) < 2 {
+                            if std::time::Instant::now() >= deadline {
+                                // Serialized: the other scope never got
+                                // in. Return without incrementing
+                                // `overlapped` so the assertion reports.
+                                return Ok(());
+                            }
+                            std::thread::sleep(Duration::from_millis(5));
+                        }
+                        overlapped.fetch_add(1, Ordering::SeqCst);
+                        Ok(())
+                    });
+                    assert!(outcome.is_ok());
+                    assert!(spawned, "each distinct scope spawns its own preflight");
+                });
+            }
+        });
+
+        assert_eq!(
+            overlapped.load(Ordering::SeqCst),
+            2,
+            "FR-003/FR-004: both scopes must be inside their preflight at \
+             the same time. Reaching this assertion means the two \
+             serialized — most likely the cache mutex is being held \
+             across the preflight.",
+        );
+    }
+
+    /// Contract 5 (FR-015 + FR-006): the spawn count over a mix of
+    /// scopes equals the number of distinct scopes — and a completed
+    /// scope's later callers take the cache fast path without spawning.
+    #[test]
+    fn m775_spawn_count_matches_distinct_scopes() {
+        let cache = cache();
+        let invocations = Arc::new(AtomicUsize::new(0));
+        let spawned_reports = Arc::new(AtomicUsize::new(0));
+
+        // Three distinct scopes, each requested four times.
+        std::thread::scope(|s| {
+            for name in ["/s/one", "/s/two", "/s/three"] {
+                for _ in 0..4 {
+                    let cache = Arc::clone(&cache);
+                    let invocations = Arc::clone(&invocations);
+                    let spawned_reports = Arc::clone(&spawned_reports);
+                    let scope = PathBuf::from(name);
+                    s.spawn(move || {
+                        let (_, spawned) = preflight_single_flight(&cache, &scope, || {
+                            invocations.fetch_add(1, Ordering::SeqCst);
+                            Ok(())
+                        });
+                        if spawned {
+                            spawned_reports.fetch_add(1, Ordering::SeqCst);
+                        }
+                    });
+                }
+            }
+        });
+
+        assert_eq!(invocations.load(Ordering::SeqCst), 3, "one spawn per scope");
+        assert_eq!(
+            spawned_reports.load(Ordering::SeqCst),
+            3,
+            "reported spawn count must equal actual invocations, not requests",
+        );
+
+        // A fourth request to an already-completed scope takes the
+        // cache fast path: no spawn, no report.
+        let (outcome, spawned) =
+            preflight_single_flight(&cache, &PathBuf::from("/s/one"), || {
+                panic!("must not run — /s/one already completed");
+            });
+        assert!(outcome.is_ok());
+        assert!(!spawned, "cache fast path must not report a spawn");
+    }
+
+    /// NFR-002: a panicking claimant must not leave waiters blocked
+    /// forever. The cell is poisoned, so waiters fail fast — which
+    /// Principle III (Fail Closed) requires, since a scope whose
+    /// preflight panicked has produced no verdict and must not be
+    /// silently treated as "classification passed".
+    #[test]
+    fn m775_panicking_claimant_does_not_block_waiters_forever() {
+        let cache = cache();
+        let scope = PathBuf::from("/scope/panics");
+
+        // Claimant panics inside the work function.
+        let claim = std::panic::catch_unwind({
+            let (cache, scope) = (Arc::clone(&cache), scope.clone());
+            move || {
+                let _ = preflight_single_flight(&cache, &scope, || {
+                    panic!("m775 injected preflight panic");
+                });
+            }
+        });
+        assert!(claim.is_err(), "the panic must propagate to the claimant");
+
+        // A later caller for the SAME scope must terminate rather than
+        // hang. It observes the poisoned cell and fails fast.
+        let (done_tx, done_rx) = std::sync::mpsc::channel();
+        let (cache2, scope2) = (Arc::clone(&cache), scope.clone());
+        std::thread::spawn(move || {
+            let r = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                preflight_single_flight(&cache2, &scope2, || Ok(()))
+            }));
+            let _ = done_tx.send(r.is_err());
+        });
+
+        let failed_fast = done_rx
+            .recv_timeout(Duration::from_secs(5))
+            .expect("NFR-002: waiter MUST terminate, not block forever");
+        assert!(
+            failed_fast,
+            "a waiter on a poisoned scope must fail fast, not silently succeed",
+        );
     }
 }

@@ -1243,6 +1243,9 @@ fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOu
             if analysis.workspace_active {
                 outcome.workspace_modules += 1;
             }
+            if analysis.preflight_spawned {
+                outcome.preflight_invocations += 1;
+            }
             for (module, verdict) in analysis.verdicts {
                 merged
                     .entry(module)
@@ -1307,6 +1310,9 @@ fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOu
             if analysis.workspace_active {
                 outcome.workspace_modules += 1;
             }
+            if analysis.preflight_spawned {
+                outcome.preflight_invocations += 1;
+            }
             for (module, verdict) in analysis.verdicts {
                 merged
                     .entry(module)
@@ -1366,6 +1372,17 @@ struct GoModWhyOutcome {
     /// operators can correlate workspace scans with classification
     /// coverage.
     workspace_modules: usize,
+    /// Milestone 775 (FR-015): count of actual `go list all`
+    /// reliability-preflight subprocess spawns this scan. Reported as
+    /// `preflight_invocations=` on the summary log line so operators —
+    /// and an automated test — can observe the single-flight invariant
+    /// without externally instrumenting the `go` binary.
+    ///
+    /// Counts SPAWNS, not requests: a request counter would report one
+    /// per workspace both before and after m775 and would observe
+    /// nothing. Expected value is one per distinct `go.work` scope plus
+    /// one per loose workspace.
+    preflight_invocations: usize,
 }
 
 /// Needed-by-ANY merge precedence (spec edge case: a module needed by
@@ -2213,7 +2230,8 @@ pub fn read_all(
         tracing::info!(
             "go-mod-why classification: analyzed={} prod={} test={} \
              not_needed={} unresolved={} unknown_marked={} \
-             workspace_modules={} skipped={} elapsed_ms={}",
+             workspace_modules={} skipped={} elapsed_ms={} \
+             preflight_invocations={}",
             go_mod_why_outcome.analyzed,
             go_mod_why_outcome.prod,
             go_mod_why_outcome.test,
@@ -2223,6 +2241,7 @@ pub fn read_all(
             go_mod_why_outcome.workspace_modules,
             go_mod_why_outcome.skipped.unwrap_or("none"),
             go_mod_why_outcome.elapsed_ms,
+            go_mod_why_outcome.preflight_invocations,
         );
     }
 
