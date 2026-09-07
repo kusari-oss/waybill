@@ -210,9 +210,23 @@ fn assert_holistic_parity(label: &str, scan: &TripleScan) {
                 // (Principle V) — the SPDX sides intentionally do NOT
                 // mirror this property; they carry the same lifecycle
                 // signal natively via OTHER catalog rows (e.g., B2's
-                // typed dep-relationships / lifecycleScope). Only the
-                // CDX side is parity-checked under this row.
-                let _ = (&spdx23_set, &spdx3_set);
+                // typed dep-relationships / lifecycleScope), asserted
+                // independently by those rows' extractors.
+                //
+                // NOTHING is asserted here — not the SPDX sets, and not
+                // the CDX set either. This arm is intentionally inert.
+                // The previous comment read "Only the CDX side is
+                // parity-checked under this row," which invited the
+                // reading that the CDX side IS checked. It is not.
+                //
+                // Do not "fix" this by asserting the CDX set is
+                // non-empty. That was measured (issue #807) and fails on
+                // 8 of 9 ecosystem fixtures, correctly: C42's annotation
+                // requires a non-runtime lifecycle scope, and only the
+                // maven fixture has test-scoped dependencies. The
+                // failures would be false. This harness cannot tell
+                // legitimate absence from regression for such a signal.
+                let _ = (&cdx_set, &spdx23_set, &spdx3_set);
             }
         }
     }

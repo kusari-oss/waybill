@@ -74,9 +74,28 @@ pub enum Directionality {
     /// CDX `scope` cannot express dev/build/test; SPDX 2.3 + 3
     /// carry the lifecycle scope via B2's typed dep-relationship
     /// types / `lifecycleScope` parameter, asserted independently
-    /// by B2's extractor). The parity check asserts only that
-    /// the CDX side is non-empty; SPDX sides are intentionally
-    /// not parity-checked under this catalog row.
+    /// by B2's extractor).
+    ///
+    /// **Not gate-checked.** A `CdxOnly` row is catalogued but its
+    /// extractor's output is not asserted on: `assert_holistic_parity`
+    /// discards the SPDX sets deliberately and does not examine the CDX
+    /// set either. An earlier version of this comment claimed the check
+    /// "asserts only that the CDX side is non-empty." It never did, and
+    /// it should not — see issue #807.
+    ///
+    /// Non-emptiness is not a property these rows can be expected to
+    /// have. C42's annotation is emitted only when dev inclusion is on
+    /// AND a component's lifecycle scope is non-runtime, so a fixture
+    /// whose dependencies are all runtime legitimately produces none.
+    /// Measured: asserting non-emptiness fails on 8 of the 9 ecosystem
+    /// parity fixtures — every one except `maven`, the only fixture with
+    /// test-scoped dependencies. Those failures would be false.
+    ///
+    /// The consequence is that the harness cannot distinguish
+    /// "legitimately absent" from "regressed" for this class of signal;
+    /// both are an empty set. CDX-side coverage therefore belongs in a
+    /// per-feature test that controls the dev-inclusion flag and uses a
+    /// fixture with non-runtime dependencies — not here.
     CdxOnly,
 }
 
