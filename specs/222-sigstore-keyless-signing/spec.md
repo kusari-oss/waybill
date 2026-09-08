@@ -212,8 +212,10 @@ Mutation of any byte in the payload flips verify to non-zero.
   at helper actions (e.g., `sigstore/gh-action-sigstore-python`)
   that mint email-carrying tokens compatible with sigstore-rs 0.11.
   Interactive browser flow (`OidcProvider::Interactive`) is also
-  deferred — same diagnostic, pointing at `cosign login --identity-token`
-  as the local-laptop workaround.
+  deferred — same diagnostic, pointing at `sigstore get-identity-token`
+  (sigstore-python) as the local-laptop workaround. This originally read
+  `cosign login --identity-token`, which does not exist; corrected per
+  issue #810.
 - **FR-006**: Fulcio endpoint MUST default to
   `https://fulcio.sigstore.dev` and be overridable via
   `WAYBILL_FULCIO_URL`. Rekor endpoint MUST default to
