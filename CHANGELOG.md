@@ -7,6 +7,130 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### Keyless CycloneDX signing now produces a detached sidecar (milestone 778)
+
+`--sign` (Sigstore keyless) with CycloneDX output writes a detached Sigstore
+Bundle at `<output>.sig.bundle.json`, the same shape the SPDX formats already
+use. The document itself stays unsigned and schema-valid, and carries a
+document-level `externalReferences[]` entry of type `attestation` naming the
+sidecar by relative filename so consumers can find it.
+
+**Why not an in-document signature.** A Sigstore Bundle has no conformant JSON
+Signature Format representation: the signature value and certificate chain map
+onto `value` and `certificatePath`, but the transparency-log inclusion proof
+has no slot, and JSF's signer definition admits exactly six properties with no
+extension point. That proof is not optional — Fulcio certificates live about
+ten minutes, and the log entry's timestamp is what establishes the signature
+was made while its certificate was valid. Embedding would yield a signature
+with a ten-minute useful life.
+
+**Behaviour change.** Between 0.6.1 and this release, keyless CycloneDX went
+from emitting a schema-invalid document (fixed in m777, below) to being
+refused, to emitting a sidecar. A command that failed after m777 now succeeds,
+in a new artifact shape. The pre-m777 shape — a bundle embedded at
+`metadata.signature` — is not restored and will not be.
+
+**Verification status.** The routing, the reference, schema validity,
+byte-identity of unsigned output, and the static-key path being untouched are
+all covered by the test suite. End-to-end verification — that the emitted
+sidecar verifies with `cosign verify-blob`, and that tampering is detected —
+requires a live signing identity and has **not** been exercised. Tracked as
+issue #809. Spec: `specs/778-keyless-cdx-sidecar/`.
+
+### Fix: signed CycloneDX output was schema-invalid (milestone 777)
+
+Every CycloneDX document emitted with `--sign-key` since milestone 221 failed
+validation against the CycloneDX 1.6 schema. Two independent defects, both
+required to fix:
+
+1. **Wrong slot.** The signature was written to `metadata.signature`. CDX 1.6
+   defines `metadata` with `additionalProperties: false` and declares no
+   `signature` property; the document-level slot is the root.
+2. **`publicKey` was not a JWK.** It was emitted as `{ pem, algorithmHint }`.
+   JSON Signature Format requires a JWK, and its elliptic-curve branch is
+   `additionalProperties: false` requiring exactly `kty`, `crv`, `x`, `y` — so
+   both emitted fields were rejected.
+
+A third defect found during implementation: the signature value used the
+standard base64 alphabet while JSF/JWA specify base64url. Schema validation
+cannot catch it (`value` is an unconstrained string), but a conforming verifier
+decoding base64url rejects most signatures.
+
+The signing algorithm is now derived from the supplied key rather than
+hardcoded to `ES256`; non-P-256 keys are refused with the type named, instead
+of being signed as though they were P-256.
+
+**Consumer impact.** Signed documents now validate, and signature-aware
+scorers detect them — `sbomqs` `sbom_signature` moves 0.0 → 10.0. Anything
+reading `metadata.signature` finds nothing; that location was never valid, and
+a conforming consumer reads the document root.
+
+The conformance gate that should have caught this was blind: the CDX schema's
+JSON Signature Format `$ref` was stubbed with a permissive `{}` in two
+duplicated test copies, on the premise that "waybill never emits signed BOMs"
+— false since m221. Both are replaced by a shared harness serving the real
+vendored schema, and both defects were re-introduced deliberately to confirm
+the gate now fails on them. Spec: `specs/777-cdx-signature-conformance/`.
+
+### Fix: keyless signing diagnostics pointed at a command that does not exist
+
+waybill's error messages told operators to fetch a token with
+`cosign login --identity-token`. That command has never existed — `cosign
+login` is registry authentication, and no cosign subcommand emits an OIDC
+token. Four runtime diagnostics carried it, on the paths that fire when a token
+is missing, expired, or unavailable: an operator hit a signing failure and was
+handed a dead end at exactly the moment they needed help.
+
+Replaced with `sigstore get-identity-token` (sigstore-python), whose default
+issuer emits the `email` claim sigstore-rs 0.11 requires. Also corrected across
+four documentation sites and three "compatible providers" lists that described
+`cosign login` as an OIDC provider.
+
+It survived because four tests asserted on the broken string, so correcting it
+would have failed the suite — the wrong advice was not merely present, it was
+protected. Issue #810.
+
+### Component source-provenance external references (milestone 776)
+
+Components enriched from deps.dev now carry `externalReferences[]` derived from
+link metadata that was already being fetched and discarded: `vcs`,
+`issue-tracker`, `documentation`, `website`, and `attestation`. Distribution
+URLs are additionally synthesised for cargo, npm, NuGet, and nested Maven JARs.
+
+Coverage on trial corpora: py-uv 0/109 → 99/109 components with a source
+reference, npm 0/369 → 332/369. Offline npm distribution references 0 → 368/369.
+No new network calls — the data was already in responses being parsed. Wall
+time went down.
+
+Every synthesised URL form was probed live rather than sampled. A pypi arm was
+written and then removed: sdist filenames are not derivable from the PURL name
+(`typing-extensions` 404s where `typing_extensions` succeeds), so it would have
+emitted dead links for any project whose sdist name differs. Placeholder
+versions, `-SNAPSHOT` builds, and main-module components are excluded for the
+same reason. Spec: `specs/776-component-source-refs/`.
+
+### Go scan performance: cumulative ~2× on large workspaces (milestones 771, 774, 775)
+
+Three milestones against the Go resolution path. On a kubernetes checkout the
+default scan went from ~39.5s to ~19.5s.
+
+- **m771** — `go mod why` invocation scale: chunk size 20 → 500 with an
+  argv-length guard, parallel per-workspace analysis via a bounded thread
+  pool, and a shared `go list all` preflight per `go.work` scope.
+- **m774** — source-import collection parallelised across workspaces:
+  22.99s → 15.89s walker-isolated. The root workspace holds 12,959 `.go`
+  files and its serial cost is the Amdahl floor for this approach.
+- **m775** — single-flight preflight. m771 US2's thread pool had defeated
+  m771 US3's cache: 22 `go list all` invocations where 6 was correct, 198s of
+  subprocess time. 26.6s → 18.6s, byte-identical output.
+
+Two further parallelisation attempts were abandoned after per-phase tracing
+showed their targets were misattributed: the shared walker measured 63ms of a
+20-second scan, and parallelising the graph resolver improved its own slice
+400× while leaving total wall time unmoved. Both are written up in
+`docs/development/perf-methodology.md`; issues #791 and #793 are closed with
+the corrected measurements.
+
 ### `xtask quality` — nightly SBOM quality regression corpus (milestone 770)
 
 New `cargo run -p xtask --release -- quality` subcommand. Scans 18 pinned
