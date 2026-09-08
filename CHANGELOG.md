@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-09-08
+
 ### Keyless CycloneDX signing now produces a detached sidecar (milestone 778)
 
 `--sign` (Sigstore keyless) with CycloneDX output writes a detached Sigstore
