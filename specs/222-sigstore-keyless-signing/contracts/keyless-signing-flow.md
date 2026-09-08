@@ -1,5 +1,20 @@
 # Contract: Keyless signing end-to-end flow (feature 222 US2b)
 
+> **SUPERSEDED IN PART — MILESTONES 777 AND 778.** The CDX-embedded
+> Bundle canonical-bytes contract described below no longer applies.
+> Milestone 777 refused keyless signing of CycloneDX output, because a
+> Sigstore Bundle has no conformant JSON Signature Format
+> representation and the emitted document failed CycloneDX 1.6 schema
+> validation. Milestone 778 then gave the path back in a different
+> shape: keyless CycloneDX now signs to a **detached sidecar**, exactly
+> as SPDX does, with the document carrying an `attestation`-typed
+> external reference naming it. There is no in-document keyless
+> signature in any current version. The SPDX sidecar contract in this
+> document is unaffected and remains current.
+> See `specs/777-cdx-signature-conformance/` and
+> `specs/778-keyless-cdx-sidecar/`.
+
+
 **Consumer surface**: `waybill-cli/src/attestation/signer.rs::sign_keyless_sbom`
 **Called from**: `waybill-cli/src/sbom/signer.rs::sign_cdx_document_in_place`
 + `sign_spdx_bytes_to_dsse` (Keyless branch of the `SigningMode` match)

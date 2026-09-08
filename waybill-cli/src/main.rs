@@ -93,9 +93,9 @@ struct Cli {
 Skip Go package-level build-inclusion classification.
 
 By default, when a `go` toolchain is found on PATH during a Go source scan, \
-waybill runs `go mod why -m -vendor` against each main module (modules batched in chunks of 20, \
-60-second total budget shared across the scan) to classify `go.sum`-fallback modules that sit \
-outside the build graph:
+waybill runs `go mod why -m -vendor` against each main module (modules batched in chunks of \
+up to 500 per invocation with a defensive argv-length guard; 60-second total budget shared \
+across the scan) to classify `go.sum`-fallback modules that sit outside the build graph:
   - not needed        → CDX `scope: \"excluded\"` + `waybill:build-inclusion: not-needed`
   - test-only         → test lifecycle scope + `waybill:lifecycle-scope-derivation: go-mod-why`
   - needed by any main module → emitted unchanged

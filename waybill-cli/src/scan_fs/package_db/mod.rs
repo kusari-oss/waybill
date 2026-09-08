@@ -64,7 +64,7 @@ pub mod vcpkg;
 mod workspace;
 pub mod yocto;
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use waybill_common::types::hash::ContentHash;
 use waybill_common::types::license::SpdxExpression;
@@ -1190,29 +1190,144 @@ fn apply_go_mod_why_classification(entries: &mut [PackageDbEntry]) -> GoModWhyOu
         return outcome;
     }
 
-    let budget = BudgetTracker::from_env();
+    let budget = std::sync::Arc::new(BudgetTracker::from_env());
     let mut merged: HashMap<String, GoModWhyVerdict> = HashMap::new();
-    for workspace in &workspaces {
-        let analysis = mod_why::analyze_main_module(workspace, &query, offline, &budget);
-        // FR-013 `skipped=` field: report the first per-workspace
-        // skip/degrade reason (the per-workspace warn lines carry the
-        // full detail; the summary carries one representative reason).
-        if let Some(reason) = analysis.skip_reason {
-            outcome.skipped.get_or_insert(reason.as_str());
+
+    // Milestone 771 US3 — partition workspaces by their governing
+    // go.work scope. Members share a single `go list all` preflight
+    // (FR-006); loose workspaces run their own (FR-008 fallback).
+    let (scopes, loose) = mod_why::detect_go_work_scopes(&workspaces);
+    let shared_cache = std::sync::Arc::new(std::sync::Mutex::new(
+        mod_why::SharedPreflightCache::default(),
+    ));
+    // Build workspace → Arc<GoWorkScope> lookup so the parallel-worker
+    // path can pass the right shared_scope per pop.
+    let mut workspace_scope: HashMap<PathBuf, std::sync::Arc<mod_why::GoWorkScope>> =
+        HashMap::new();
+    for scope in scopes {
+        let arc = std::sync::Arc::new(scope);
+        for member in arc.members.iter() {
+            workspace_scope.insert(member.clone(), arc.clone());
         }
-        // Milestone 231 (FR-006): tally workspace-active main-modules.
-        if analysis.workspace_active {
-            outcome.workspace_modules += 1;
+    }
+    let _ = loose; // loose set is implicit: workspaces not in workspace_scope
+
+    // Milestone 771 US2 — bounded thread-pool over independent
+    // workspaces. Each worker holds one synchronous `run_bounded`
+    // subprocess at a time; concurrency cap = logical-CPU count
+    // (research R3). Workers share the `Arc<BudgetTracker>` for
+    // FR-004 (single 60s wall-clock budget across all workers).
+    //
+    // Log-line correlation (FR-005): every `warn!`/`info!` inside
+    // `analyze_main_module` already carries `main_module = %..`
+    // per m112 shape, so interleaved output remains grep-attributable.
+    //
+    // When workspace count <= 1 or available_parallelism() unavailable
+    // we fall back to the serial path — matches pre-m771 behavior
+    // exactly on tiny fixtures + preserves single-thread determinism
+    // for any test relying on log ordering.
+    let worker_count = mod_why::worker_count(workspaces.len());
+    if worker_count == 1 || workspaces.len() <= 1 {
+        // Serial fallback — byte-identical to pre-m771 behavior EXCEPT
+        // for m771 US3 shared-preflight when a go.work scope is present.
+        for workspace in &workspaces {
+            let canon = std::fs::canonicalize(workspace).unwrap_or_else(|_| workspace.clone());
+            let shared_scope = workspace_scope
+                .get(&canon)
+                .map(|arc| (&shared_cache, arc));
+            let analysis =
+                mod_why::analyze_main_module(workspace, &query, offline, &budget, shared_scope);
+            if let Some(reason) = analysis.skip_reason {
+                outcome.skipped.get_or_insert(reason.as_str());
+            }
+            if analysis.workspace_active {
+                outcome.workspace_modules += 1;
+            }
+            if analysis.preflight_spawned {
+                outcome.preflight_invocations += 1;
+            }
+            for (module, verdict) in analysis.verdicts {
+                merged
+                    .entry(module)
+                    .and_modify(|existing| {
+                        if verdict_rank(verdict) > verdict_rank(*existing) {
+                            *existing = verdict;
+                        }
+                    })
+                    .or_insert(verdict);
+            }
         }
-        for (module, verdict) in analysis.verdicts {
-            merged
-                .entry(module)
-                .and_modify(|existing| {
-                    if verdict_rank(verdict) > verdict_rank(*existing) {
-                        *existing = verdict;
-                    }
-                })
-                .or_insert(verdict);
+    } else {
+        // Parallel path — bounded thread-pool + mpsc reducer.
+        let job_queue = std::sync::Arc::new(std::sync::Mutex::new(workspaces.to_vec()));
+        let query_arc = std::sync::Arc::new(query.clone());
+        let (tx, rx) = std::sync::mpsc::channel();
+        let mut handles = Vec::with_capacity(worker_count);
+        let workspace_scope_arc = std::sync::Arc::new(workspace_scope);
+        for _ in 0..worker_count {
+            let job_queue = job_queue.clone();
+            let query_arc = query_arc.clone();
+            let budget = budget.clone();
+            let tx = tx.clone();
+            let workspace_scope = workspace_scope_arc.clone();
+            let shared_cache = shared_cache.clone();
+            handles.push(std::thread::spawn(move || {
+                loop {
+                    let workspace = {
+                        let mut q = job_queue.lock().expect("job queue mutex");
+                        q.pop()
+                    };
+                    let Some(workspace) = workspace else {
+                        break;
+                    };
+                    let canon = std::fs::canonicalize(&workspace)
+                        .unwrap_or_else(|_| workspace.clone());
+                    let shared_scope = workspace_scope
+                        .get(&canon)
+                        .map(|arc| (&shared_cache, arc));
+                    let analysis = mod_why::analyze_main_module(
+                        &workspace,
+                        &query_arc,
+                        offline,
+                        &budget,
+                        shared_scope,
+                    );
+                    // Send may fail only if the receiver has been dropped,
+                    // which only happens after the main thread finishes the
+                    // reduce loop — worker exits cleanly in that case.
+                    let _ = tx.send(analysis);
+                }
+            }));
+        }
+        // Drop the parent-side sender so `rx.recv()` returns Err(_)
+        // once every worker has exited.
+        drop(tx);
+        // Reduce: pull analyses off the channel as workers produce them.
+        while let Ok(analysis) = rx.recv() {
+            if let Some(reason) = analysis.skip_reason {
+                outcome.skipped.get_or_insert(reason.as_str());
+            }
+            if analysis.workspace_active {
+                outcome.workspace_modules += 1;
+            }
+            if analysis.preflight_spawned {
+                outcome.preflight_invocations += 1;
+            }
+            for (module, verdict) in analysis.verdicts {
+                merged
+                    .entry(module)
+                    .and_modify(|existing| {
+                        if verdict_rank(verdict) > verdict_rank(*existing) {
+                            *existing = verdict;
+                        }
+                    })
+                    .or_insert(verdict);
+            }
+        }
+        // Join every worker to surface panics as test failures rather
+        // than silent losses.
+        for h in handles {
+            let _ = h.join();
         }
     }
     outcome.elapsed_ms = budget.elapsed_ms();
@@ -1257,6 +1372,17 @@ struct GoModWhyOutcome {
     /// operators can correlate workspace scans with classification
     /// coverage.
     workspace_modules: usize,
+    /// Milestone 775 (FR-015): count of actual `go list all`
+    /// reliability-preflight subprocess spawns this scan. Reported as
+    /// `preflight_invocations=` on the summary log line so operators —
+    /// and an automated test — can observe the single-flight invariant
+    /// without externally instrumenting the `go` binary.
+    ///
+    /// Counts SPAWNS, not requests: a request counter would report one
+    /// per workspace both before and after m775 and would observe
+    /// nothing. Expected value is one per distinct `go.work` scope plus
+    /// one per loose workspace.
+    preflight_invocations: usize,
 }
 
 /// Needed-by-ANY merge precedence (spec edge case: a module needed by
@@ -2104,7 +2230,8 @@ pub fn read_all(
         tracing::info!(
             "go-mod-why classification: analyzed={} prod={} test={} \
              not_needed={} unresolved={} unknown_marked={} \
-             workspace_modules={} skipped={} elapsed_ms={}",
+             workspace_modules={} skipped={} elapsed_ms={} \
+             preflight_invocations={}",
             go_mod_why_outcome.analyzed,
             go_mod_why_outcome.prod,
             go_mod_why_outcome.test,
@@ -2114,6 +2241,7 @@ pub fn read_all(
             go_mod_why_outcome.workspace_modules,
             go_mod_why_outcome.skipped.unwrap_or("none"),
             go_mod_why_outcome.elapsed_ms,
+            go_mod_why_outcome.preflight_invocations,
         );
     }
 

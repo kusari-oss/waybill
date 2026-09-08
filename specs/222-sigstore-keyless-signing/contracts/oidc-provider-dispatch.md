@@ -1,4 +1,9 @@
 # Contract: OIDC provider dispatch (feature 222 US2b)
+> **Diagnostic text corrected — issue #810.** The error strings quoted
+> below point operators at `cosign login --identity-token`, which does
+> not exist (`cosign login` is registry auth; no cosign subcommand emits
+> a token). The shipped diagnostics now say `sigstore get-identity-token`.
+> The dispatch logic this contract describes is otherwise unchanged.
 
 **Consumer surface**: `waybill-cli/src/attestation/signer.rs`
 **Function**: `resolve_identity_token(&OidcProvider) -> Result<IdentityToken, SigningError>`

@@ -122,6 +122,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:express:express:4.18.2:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://registry.npmjs.org/express/-/express-4.18.2.tgz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,
@@ -231,6 +236,11 @@
           "referenceCategory": "SECURITY",
           "referenceLocator": "cpe:2.3:a:safe-buffer:safe-buffer:5.2.1:*:*:*:*:*:*:*",
           "referenceType": "cpe23Type"
+        },
+        {
+          "referenceCategory": "OTHER",
+          "referenceLocator": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.2.1.tgz",
+          "referenceType": "distribution"
         }
       ],
       "filesAnalyzed": false,

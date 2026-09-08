@@ -26,6 +26,10 @@
       },
       "externalReferences": [
         {
+          "type": "distribution",
+          "url": "https://crates.io/api/v1/crates/anyhow/1.0.80/download"
+        },
+        {
           "type": "website",
           "url": "https://crates.io/crates/anyhow/1.0.80"
         }
@@ -76,6 +80,10 @@
         ]
       },
       "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://crates.io/api/v1/crates/my-app/0.1.0/download"
+        },
         {
           "type": "website",
           "url": "https://crates.io/crates/my-app/0.1.0"
@@ -132,6 +140,10 @@
       },
       "externalReferences": [
         {
+          "type": "distribution",
+          "url": "https://crates.io/api/v1/crates/my-fork/0.1.0/download"
+        },
+        {
           "type": "website",
           "url": "https://crates.io/crates/my-fork/0.1.0"
         }
@@ -187,6 +199,10 @@
       },
       "externalReferences": [
         {
+          "type": "distribution",
+          "url": "https://crates.io/api/v1/crates/proc-macro2/1.0.76/download"
+        },
+        {
           "type": "website",
           "url": "https://crates.io/crates/proc-macro2/1.0.76"
         }
@@ -237,6 +253,10 @@
         ]
       },
       "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://crates.io/api/v1/crates/quote/1.0.35/download"
+        },
         {
           "type": "website",
           "url": "https://crates.io/crates/quote/1.0.35"
@@ -289,6 +309,10 @@
       },
       "externalReferences": [
         {
+          "type": "distribution",
+          "url": "https://crates.io/api/v1/crates/serde/1.0.197/download"
+        },
+        {
           "type": "website",
           "url": "https://crates.io/crates/serde/1.0.197"
         }
@@ -339,6 +363,10 @@
         ]
       },
       "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://crates.io/api/v1/crates/serde_derive/1.0.197/download"
+        },
         {
           "type": "website",
           "url": "https://crates.io/crates/serde_derive/1.0.197"
@@ -391,6 +419,10 @@
       },
       "externalReferences": [
         {
+          "type": "distribution",
+          "url": "https://crates.io/api/v1/crates/syn/2.0.48/download"
+        },
+        {
           "type": "website",
           "url": "https://crates.io/crates/syn/2.0.48"
         }
@@ -442,6 +474,10 @@
       },
       "externalReferences": [
         {
+          "type": "distribution",
+          "url": "https://crates.io/api/v1/crates/unicode-ident/1.0.12/download"
+        },
+        {
           "type": "website",
           "url": "https://crates.io/crates/unicode-ident/1.0.12"
         }
@@ -492,6 +528,10 @@
         ]
       },
       "externalReferences": [
+        {
+          "type": "distribution",
+          "url": "https://crates.io/api/v1/crates/workspace-local/0.1.0/download"
+        },
         {
           "type": "website",
           "url": "https://crates.io/crates/workspace-local/0.1.0"

@@ -1889,6 +1889,128 @@ fn external_refs_from_purl(
         }
         _ => {}
     }
+    // ── Milestone 776 (FR-009 / FR-010): distribution URLs ──────────
+    //
+    // Emitted ONLY where the registry download URL is fully determined
+    // by the PURL. Each scheme below was verified against a live
+    // request during implementation (T026), not inferred from a
+    // pattern that looked plausible.
+    //
+    // REJECTED — pypi. `https://pypi.org/packages/source/{f}/{name}/
+    // {name}-{version}.tar.gz` resolves for some packages and not
+    // others: the sdist filename uses the PROJECT's own spelling,
+    // which the PURL does not carry (PURL normalizes to hyphens, so
+    // `typing-extensions` 404s where `typing_extensions` succeeds),
+    // and wheel-only projects publish no sdist at all. Emitting it
+    // would fabricate dead URLs for a large share of Python packages
+    // (FR-010, Principle IX).
+    //
+    // DEFERRED — golang. `https://proxy.golang.org/{module}/@v/
+    // {version}.zip` is valid, but the proxy requires `!x`
+    // case-escaping for uppercase module paths, and Go modules
+    // already receive a `vcs` reference above. Marginal gain against a
+    // real transform risk; revisit if a consumer asks for it.
+    // A placeholder version is semantically "no version" (FR-010) —
+    // waybill stamps these when a reader could not resolve one. Left
+    // unguarded they produce confidently-wrong URLs: the maven arm was
+    // caught emitting `.../aopalliance/unknown/aopalliance-unknown.jar`,
+    // a live 404, during T032's spot-check. A dead link is worse than
+    // an absent one (Principle IX).
+    let version_is_placeholder = matches!(
+        version.to_ascii_lowercase().as_str(),
+        "" | "unknown" | "noassertion" | "v0.0.0-unknown" | "none" | "latest"
+    );
+    // A derived distribution URL asserts "this artifact is published at
+    // this public registry path". Two cases make that assertion false
+    // no matter how well-formed the URL is, and both were caught by
+    // T032's live spot-check rather than by reasoning:
+    //
+    //  1. SNAPSHOT versions are never published to Maven Central — they
+    //     live on separate snapshot repositories.
+    //  2. The main module is the project BEING SCANNED, not a
+    //     dependency fetched from a registry. `com.example/guice-demo`
+    //     is not on Central and never will be.
+    //
+    // Both produced live 404s. Emitting them would be fabrication
+    // (FR-010, Principle IX).
+    let is_snapshot = version.to_ascii_uppercase().ends_with("-SNAPSHOT");
+    // Same discriminator the website arm above uses; recomputed here
+    // because that one is scoped to its match arm.
+    let is_nested_jar = extra_annotations
+        .get("waybill:source-mechanism")
+        .and_then(|v| v.as_str())
+        == Some("maven-jar-nested");
+    let is_main_module = extra_annotations
+        .get("waybill:component-role")
+        .and_then(|v| v.as_str())
+        == Some("main-module");
+    if !version_is_placeholder && !is_snapshot && !is_main_module {
+        match ecosystem {
+            // Verified: crates.io download endpoint (requires a
+            // User-Agent when fetched, which is the consumer's
+            // concern, not ours).
+            "cargo" if !name.is_empty() => {
+                out.push(ExternalReference {
+                    ref_type: "distribution".to_string(),
+                    url: format!(
+                        "https://crates.io/api/v1/crates/{name}/{version}/download"
+                    ),
+                });
+            }
+            // Verified for both plain and scoped names. The tarball
+            // basename is the segment AFTER any `@scope/` prefix:
+            // `@babel/code-frame` -> `code-frame-<version>.tgz`.
+            "npm" if !name.is_empty() => {
+                let full = match purl.namespace() {
+                    Some(ns) if !ns.is_empty() => format!("{ns}/{name}"),
+                    _ => name.to_string(),
+                };
+                out.push(ExternalReference {
+                    ref_type: "distribution".to_string(),
+                    url: format!(
+                        "https://registry.npmjs.org/{full}/-/{name}-{version}.tgz"
+                    ),
+                });
+            }
+            // Verified: the v3 flat container. Both id and version
+            // MUST be lowercased — a mixed-case path 404s, and the
+            // deprecated v2 `nuget.org/api/v2/package/...` endpoint
+            // 404s outright.
+            "nuget" if !name.is_empty() => {
+                let n = name.to_ascii_lowercase();
+                let v = version.to_ascii_lowercase();
+                out.push(ExternalReference {
+                    ref_type: "distribution".to_string(),
+                    url: format!(
+                        "https://api.nuget.org/v3-flatcontainer/{n}/{v}/{n}.{v}.nupkg"
+                    ),
+                });
+            }
+            // Verified: Maven Central layout, groupId dots -> slashes.
+            //
+            // Gated on the same `maven-jar-nested` discriminator the
+            // website arm uses. A top-level JAR found on disk has
+            // unknown provenance — we cannot establish it came from
+            // Central, so claiming a Central URL for it is the same
+            // unsupportable assertion that produced live 404s for
+            // SNAPSHOT and main-module artifacts (FR-010).
+            "maven" if !name.is_empty() && is_nested_jar => {
+                if let Some(group) = purl.namespace() {
+                    if !group.is_empty() {
+                        let group_path = group.replace('.', "/");
+                        out.push(ExternalReference {
+                            ref_type: "distribution".to_string(),
+                            url: format!(
+                                "https://repo1.maven.org/maven2/{group_path}/{name}/{version}/{name}-{version}.jar"
+                            ),
+                        });
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
     // FR-020: emit a `vcs`-type ExternalReference when cargo-auditable
     // carried a parseable `git+https://...` source field. The URL
     // itself flows through the C98 `waybill:cargo-vcs-source-url`
@@ -1903,6 +2025,9 @@ fn external_refs_from_purl(
             url: vcs_url.to_string(),
         });
     }
+    // m776 FR-006 + FR-013: dedup + deterministic order over the
+    // derived set before it leaves this function.
+    waybill_common::resolution::normalize_external_references(&mut out);
     out
 }
 
@@ -2017,22 +2142,36 @@ mod external_refs_tests {
         BTreeMap::new()
     }
 
+    /// m776: references are now additive — a component can carry both
+    /// the registry landing page and a distribution URL. These helpers
+    /// assert PRESENCE of the reference each test is really about,
+    /// rather than an exact vector, so an additive change does not
+    /// look like a regression (FR-011).
+    fn find<'a>(
+        refs: &'a [waybill_common::resolution::ExternalReference],
+        ty: &str,
+    ) -> Option<&'a waybill_common::resolution::ExternalReference> {
+        refs.iter().find(|r| r.ref_type == ty)
+    }
+
     #[test]
     fn cargo_purl_emits_crates_io_website() {
         let p = Purl::new("pkg:cargo/serde@1.0.197").unwrap();
         let refs = external_refs_from_purl(&p, &no_annotations());
-        assert_eq!(refs.len(), 1);
-        assert_eq!(refs[0].ref_type, "website");
-        assert_eq!(refs[0].url, "https://crates.io/crates/serde/1.0.197");
+        let website = find(&refs, "website").expect("crates.io landing page must remain");
+        assert_eq!(website.url, "https://crates.io/crates/serde/1.0.197");
+        // m776 (FR-011): the distribution URL is ADDED alongside, not
+        // swapped in. This test is about the landing page surviving.
+        assert!(find(&refs, "distribution").is_some(), "m776 adds a distribution URL");
     }
 
     #[test]
     fn nuget_purl_emits_nuget_org_website() {
         let p = Purl::new("pkg:nuget/Microsoft.AspNetCore@8.0.27").unwrap();
         let refs = external_refs_from_purl(&p, &no_annotations());
-        assert_eq!(refs.len(), 1);
-        assert_eq!(refs[0].ref_type, "website");
-        assert_eq!(refs[0].url, "https://www.nuget.org/packages/Microsoft.AspNetCore/8.0.27");
+        let website = find(&refs, "website").expect("nuget.org landing page must remain");
+        assert_eq!(website.url, "https://www.nuget.org/packages/Microsoft.AspNetCore/8.0.27");
+        assert!(find(&refs, "distribution").is_some(), "m776 adds a distribution URL");
     }
 
     #[test]
@@ -2044,12 +2183,12 @@ mod external_refs_tests {
             serde_json::Value::String("maven-jar-nested".to_string()),
         );
         let refs = external_refs_from_purl(&p, &annotations);
-        assert_eq!(refs.len(), 1);
-        assert_eq!(refs[0].ref_type, "website");
+        let website = find(&refs, "website").expect("search.maven.org URL must remain");
         assert_eq!(
-            refs[0].url,
+            website.url,
             "https://search.maven.org/artifact/com.example/foo/1.0.0/jar"
         );
+        assert!(find(&refs, "distribution").is_some(), "m776 adds a distribution URL");
     }
 
     #[test]
@@ -2071,11 +2210,13 @@ mod external_refs_tests {
             serde_json::Value::String("https://github.com/serde-rs/serde".to_string()),
         );
         let refs = external_refs_from_purl(&p, &annotations);
-        assert_eq!(refs.len(), 2);
-        // Order: website first (ecosystem branch), then vcs (cross-cutting).
-        assert_eq!(refs[0].ref_type, "website");
-        assert_eq!(refs[1].ref_type, "vcs");
-        assert_eq!(refs[1].url, "https://github.com/serde-rs/serde");
+        // m776: output is now sorted on (kind, url) for determinism
+        // (FR-013), so positional assertions no longer hold. Assert on
+        // content, which is what this test is actually about.
+        assert!(find(&refs, "website").is_some());
+        let vcs = find(&refs, "vcs").expect("cargo-auditable vcs URL must be emitted");
+        assert_eq!(vcs.url, "https://github.com/serde-rs/serde");
+        assert!(find(&refs, "distribution").is_some(), "m776 adds a distribution URL");
     }
 
     #[test]
@@ -2751,5 +2892,193 @@ Architecture: amd64
             "non-cargo main-module at rootfs MUST still get is_workspace_root=true via filesystem fallback (FR-003)"
         );
         let _ = EnrichmentProvenance { source: String::new(), data_type: String::new() };
+    }
+}
+
+/// Milestone 776 — PURL-derived distribution reference tests.
+///
+/// Every URL asserted here was verified against a live request during
+/// implementation (T026). These tests pin the shape so a future edit
+/// cannot silently drift from a verified scheme.
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod m776_distribution_tests {
+    use super::external_refs_from_purl;
+    use waybill_common::types::purl::Purl;
+
+    fn dist_urls(purl: &str) -> Vec<String> {
+        let p = Purl::new(purl).unwrap();
+        external_refs_from_purl(&p, &Default::default())
+            .into_iter()
+            .filter(|r| r.ref_type == "distribution")
+            .map(|r| r.url)
+            .collect()
+    }
+
+    fn all_types(purl: &str) -> Vec<String> {
+        let p = Purl::new(purl).unwrap();
+        external_refs_from_purl(&p, &Default::default())
+            .into_iter()
+            .map(|r| r.ref_type)
+            .collect()
+    }
+
+    #[test]
+    fn m776_cargo_distribution_url() {
+        assert_eq!(
+            dist_urls("pkg:cargo/serde@1.0.197"),
+            vec!["https://crates.io/api/v1/crates/serde/1.0.197/download"],
+        );
+    }
+
+    #[test]
+    fn m776_npm_plain_distribution_url() {
+        assert_eq!(
+            dist_urls("pkg:npm/lodash@4.17.21"),
+            vec!["https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"],
+        );
+    }
+
+    /// Scoped npm: the tarball basename is the segment AFTER the
+    /// scope, while the path keeps the full `@scope/name`.
+    #[test]
+    fn m776_npm_scoped_distribution_url() {
+        assert_eq!(
+            dist_urls("pkg:npm/%40babel/code-frame@7.29.7"),
+            vec!["https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.29.7.tgz"],
+        );
+    }
+
+    /// NuGet's flat container is case-sensitive: a mixed-case path
+    /// 404s, so both id and version must be lowercased.
+    #[test]
+    fn m776_nuget_distribution_url_is_lowercased() {
+        assert_eq!(
+            dist_urls("pkg:nuget/Newtonsoft.Json@13.0.3"),
+            vec!["https://api.nuget.org/v3-flatcontainer/newtonsoft.json/13.0.3/newtonsoft.json.13.0.3.nupkg"],
+        );
+    }
+
+    /// Maven groupId dots become path separators.
+    ///
+    /// Gated on `maven-jar-nested`, matching the website arm: a
+    /// top-level JAR found on disk has unknown provenance, so we
+    /// cannot claim it is on Central (see the guard's comment).
+    #[test]
+    fn m776_maven_distribution_url_group_path() {
+        let p = Purl::new("pkg:maven/org.slf4j/slf4j-api@2.0.13").unwrap();
+        let mut ann = std::collections::BTreeMap::new();
+        ann.insert(
+            "waybill:source-mechanism".to_string(),
+            serde_json::Value::String("maven-jar-nested".to_string()),
+        );
+        let urls: Vec<String> = external_refs_from_purl(&p, &ann)
+            .into_iter()
+            .filter(|r| r.ref_type == "distribution")
+            .map(|r| r.url)
+            .collect();
+        assert_eq!(
+            urls,
+            vec!["https://repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.13/slf4j-api-2.0.13.jar"],
+        );
+    }
+
+    /// FR-010: a top-level maven JAR (no nested discriminator) has
+    /// unknown provenance — no Central URL is claimed for it. This
+    /// preserves the m009-era decision the website arm already
+    /// encodes.
+    #[test]
+    fn m776_maven_top_level_emits_no_distribution_url() {
+        assert!(
+            dist_urls("pkg:maven/org.slf4j/slf4j-api@2.0.13").is_empty(),
+            "a top-level JAR is not known to come from Maven Central",
+        );
+    }
+
+    /// FR-010: pypi is deliberately NOT derived. The sdist filename
+    /// uses the project's own spelling, which the PURL does not carry
+    /// (`typing-extensions` 404s where `typing_extensions` succeeds),
+    /// and wheel-only projects publish no sdist at all.
+    #[test]
+    fn m776_pypi_emits_no_distribution_url() {
+        assert!(
+            dist_urls("pkg:pypi/typing-extensions@4.12.2").is_empty(),
+            "pypi sdist URLs are not PURL-derivable — emitting one would fabricate a dead link",
+        );
+    }
+
+    /// FR-010: no version means the URL cannot be formed correctly.
+    #[test]
+    fn m776_versionless_purl_emits_no_distribution_url() {
+        assert!(dist_urls("pkg:cargo/serde").is_empty());
+        assert!(dist_urls("pkg:npm/lodash").is_empty());
+        assert!(dist_urls("pkg:maven/org.slf4j/slf4j-api").is_empty());
+    }
+
+    /// FR-010 regression: a PLACEHOLDER version is semantically "no
+    /// version". Caught live during T032 — the maven arm emitted
+    /// `.../aopalliance/unknown/aopalliance-unknown.jar`, an HTTP 404.
+    /// A confidently-wrong URL is worse than an absent one.
+    #[test]
+    fn m776_placeholder_version_emits_no_distribution_url() {
+        for purl in [
+            "pkg:maven/aopalliance/aopalliance@unknown",
+            "pkg:cargo/serde@unknown",
+            "pkg:npm/lodash@NOASSERTION",
+            "pkg:nuget/Newtonsoft.Json@latest",
+        ] {
+            assert!(
+                dist_urls(purl).is_empty(),
+                "placeholder version in {purl} must not yield a distribution URL",
+            );
+        }
+    }
+
+    /// FR-010 regression: SNAPSHOT versions are never published to
+    /// Maven Central. Caught live during T032 —
+    /// `com/example/guice-demo/1.0-SNAPSHOT/...` returned HTTP 404.
+    #[test]
+    fn m776_snapshot_version_emits_no_distribution_url() {
+        assert!(
+            dist_urls("pkg:maven/com.example/guice-demo@1.0-SNAPSHOT").is_empty(),
+            "SNAPSHOT artifacts do not exist on Maven Central",
+        );
+    }
+
+    /// FR-010 regression: the main module is the project being
+    /// scanned, not a registry-fetched dependency. Deriving a public
+    /// registry URL for it asserts a publication that did not happen.
+    #[test]
+    fn m776_main_module_emits_no_distribution_url() {
+        let p = Purl::new("pkg:maven/com.example/my-app@1.0.0").unwrap();
+        let mut ann = std::collections::BTreeMap::new();
+        ann.insert(
+            "waybill:component-role".to_string(),
+            serde_json::Value::String("main-module".to_string()),
+        );
+        let urls: Vec<_> = external_refs_from_purl(&p, &ann)
+            .into_iter()
+            .filter(|r| r.ref_type == "distribution")
+            .collect();
+        assert!(urls.is_empty(), "the scanned project is not a registry artifact");
+    }
+
+    /// FR-011: the pre-existing registry landing pages survive; the
+    /// distribution reference is ADDED alongside, not swapped in.
+    #[test]
+    fn m776_existing_website_reference_is_preserved() {
+        let types = all_types("pkg:cargo/serde@1.0.197");
+        assert!(types.contains(&"website".to_string()), "the crates.io landing page must remain");
+        assert!(types.contains(&"distribution".to_string()), "the distribution URL is additive");
+    }
+
+    /// FR-006 + FR-013: output is deduped and deterministically
+    /// ordered before it leaves the function.
+    #[test]
+    fn m776_output_is_ordered_and_deduped() {
+        let a = all_types("pkg:cargo/serde@1.0.197");
+        let mut sorted = a.clone();
+        sorted.sort();
+        assert_eq!(a, sorted, "references must leave the function in sorted order");
     }
 }

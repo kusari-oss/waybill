@@ -244,6 +244,53 @@ pub struct ExternalReference {
     pub url: String,
 }
 
+/// Milestone 776 — the CycloneDX 1.6 `externalReference.type` values
+/// waybill derives for source provenance.
+///
+/// Every value here is a member of the CDX 1.6 enum, so no
+/// `waybill:*` property is needed to carry source-provenance
+/// information (Constitution Principle V — standards-native fields
+/// take precedence). `ExternalReference.ref_type` stays a `String`
+/// so values from other sources still flow through; this constant
+/// bounds only what *this* project derives.
+pub const M776_DERIVED_REF_TYPES: &[&str] = &[
+    "vcs",
+    "issue-tracker",
+    "documentation",
+    "website",
+    "attestation",
+    "distribution",
+];
+
+/// Milestone 776 — normalize a component's derived external
+/// references: deduplicate, then order deterministically.
+///
+/// Deduplication is on the `(ref_type, url)` PAIR, not on the URL
+/// alone. The same URL legitimately appears under two kinds — a
+/// repository that is also the documentation site — and those are two
+/// distinct claims a consumer filters on independently. Collapsing
+/// them would lose information (FR-006).
+///
+/// Ordering is a stable sort on the same pair. Upstream link arrays
+/// have no contractual order, and derived references are appended to
+/// whatever a component already carries, so relying on insertion
+/// order would produce cross-run diffs that look like nondeterminism
+/// bugs (FR-013).
+///
+/// Scope note: this operates only on references waybill derives.
+/// Operator-supplied references arrive through the supplement
+/// mechanism, which stores them as a `waybill:supplement-*`
+/// annotation rather than in this field, and are structurally out of
+/// reach here — see `specs/776-component-source-refs/research.md` R9.
+pub fn normalize_external_references(refs: &mut Vec<ExternalReference>) {
+    refs.sort_by(|a, b| {
+        a.ref_type
+            .cmp(&b.ref_type)
+            .then_with(|| a.url.cmp(&b.url))
+    });
+    refs.dedup_by(|a, b| a.ref_type == b.ref_type && a.url == b.url);
+}
+
 /// One installed file owned by a `ResolvedComponent`. The presence of
 /// per-file occurrences is what distinguishes a deep-hashed db-sourced
 /// component from a fast db-sourced one.
@@ -719,5 +766,88 @@ mod tests {
         assert_eq!(component.evidence.confidence, back.evidence.confidence);
         assert_eq!(component.supplier, back.supplier);
         assert_eq!(component.advisories.len(), back.advisories.len());
+    }
+}
+
+/// Milestone 776 — normalization helper tests.
+#[cfg(test)]
+#[cfg_attr(test, allow(clippy::unwrap_used))]
+mod m776_normalize_tests {
+    use super::*;
+
+    fn r(t: &str, u: &str) -> ExternalReference {
+        ExternalReference { ref_type: t.to_string(), url: u.to_string() }
+    }
+
+    /// FR-006: an exact (kind, url) duplicate collapses to one.
+    #[test]
+    fn m776_duplicate_pair_collapses() {
+        let mut v = vec![
+            r("vcs", "https://github.com/a/b"),
+            r("vcs", "https://github.com/a/b"),
+        ];
+        normalize_external_references(&mut v);
+        assert_eq!(v.len(), 1);
+    }
+
+    /// FR-006: the SAME url under DIFFERENT kinds is retained twice.
+    /// These are two distinct claims a consumer filters on
+    /// independently — collapsing them would lose information.
+    #[test]
+    fn m776_same_url_different_kinds_both_retained() {
+        let mut v = vec![
+            r("vcs", "https://github.com/a/b"),
+            r("documentation", "https://github.com/a/b"),
+        ];
+        normalize_external_references(&mut v);
+        assert_eq!(v.len(), 2, "same URL under two kinds is two claims, not one");
+    }
+
+    /// FR-013: input order must not affect output order.
+    #[test]
+    fn m776_ordering_is_input_order_independent() {
+        let a = vec![
+            r("website", "https://z.example"),
+            r("vcs", "https://a.example"),
+            r("issue-tracker", "https://m.example"),
+        ];
+        let mut forward = a.clone();
+        let mut reversed: Vec<_> = a.into_iter().rev().collect();
+        normalize_external_references(&mut forward);
+        normalize_external_references(&mut reversed);
+        assert_eq!(forward, reversed, "shuffled input must yield identical ordering");
+    }
+
+    /// FR-013: ordering is stable across repeated application.
+    #[test]
+    fn m776_normalization_is_idempotent() {
+        let mut v = vec![
+            r("vcs", "https://b.example"),
+            r("vcs", "https://a.example"),
+            r("website", "https://a.example"),
+        ];
+        normalize_external_references(&mut v);
+        let once = v.clone();
+        normalize_external_references(&mut v);
+        assert_eq!(once, v);
+    }
+
+    /// FR-005 / SC-009: every kind this milestone derives is a
+    /// CycloneDX 1.6 native type — no `waybill:*` property is used
+    /// for source provenance.
+    #[test]
+    fn m776_derived_kinds_are_cdx_native() {
+        // The CDX 1.6 externalReference.type members this milestone uses.
+        for t in M776_DERIVED_REF_TYPES {
+            assert!(
+                matches!(
+                    *t,
+                    "vcs" | "issue-tracker" | "documentation"
+                        | "website" | "attestation" | "distribution"
+                ),
+                "derived kind `{t}` is not in the verified CDX 1.6 subset",
+            );
+            assert!(!t.starts_with("waybill:"), "source provenance must not use a vendor property");
+        }
     }
 }
