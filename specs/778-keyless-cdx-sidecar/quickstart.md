@@ -111,6 +111,15 @@ analogy is the single most likely way to get this wrong. The companion
 artifact signs the bytes as written — that is what lets `cosign
 verify-blob` work against the file with no preprocessing.
 
+**The certificate issuer is not the token issuer.** `--cert-oidc-issuer`
+must be the issuer Fulcio wrote into the certificate — the upstream
+provider — not the endpoint that minted the token. Sigstore staging's dex
+federates to Google, so the token's `iss` is
+`https://oauth2.sigstage.dev/auth` while the certificate's is
+`https://accounts.google.com`. Passing the token's value yields
+`Certificate's OIDCIssuer does not match`, which looks like a signature
+failure and is not one. This cost a token round-trip during m809.
+
 **Do not add a checksum to the reference.** The external reference
 accepts hashes, and adding one looks like free tamper-detection. It is
 circular: the artifact signs the document, so the document cannot
