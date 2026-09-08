@@ -15,7 +15,7 @@ sigstore-rs 0.11 requires OIDC tokens to emit a non-optional
 That means:
 
 - **Compatible providers** (v1): any OIDC provider that emits
-  `email` — `cosign login` (backed by Sigstore-dex), Google, GitLab,
+  `email` — Sigstore-dex (the default issuer), Google, GitLab,
   most SSO/dex configurations.
 - **NOT supported in v1**: GitHub Actions ambient tokens
   (`ACTIONS_ID_TOKEN_REQUEST_URL` + `ACTIONS_ID_TOKEN_REQUEST_TOKEN`).
@@ -31,9 +31,14 @@ should use a helper action that fetches a compatible token (see §1B).
 ## 1A. Local laptop / non-GHA CI (dominant path)
 
 ```bash
-# 1. Fetch an OIDC token via cosign — opens a browser once, then
-#    exports a token good for ~15 minutes. Sigstore-dex emits `email`.
-export SIGSTORE_ID_TOKEN=$(cosign login --identity-token)
+# 1. Fetch an OIDC token — opens a browser once, then exports a token
+#    good for a few minutes. The default issuer is Sigstore's dex
+#    instance, which emits the `email` claim sigstore-rs 0.11 needs.
+#
+#    NOTE: this originally read `cosign login --identity-token`, which
+#    does not exist — `cosign login` is registry auth and no cosign
+#    subcommand emits a token. Corrected per issue #810.
+export SIGSTORE_ID_TOKEN=$(sigstore get-identity-token)   # pip install sigstore
 
 # 2. Sign the SBOM
 waybill sbom scan \

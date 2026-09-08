@@ -77,7 +77,9 @@ that passes while proving nothing.
 ### B1. End-to-end verification
 
 ```sh
-export SIGSTORE_ID_TOKEN=$(cosign login --identity-token)
+# `cosign login --identity-token` does NOT exist — cosign login is
+# registry auth. Use sigstore-python (pip install sigstore). See #810.
+export SIGSTORE_ID_TOKEN=$(sigstore get-identity-token)
 waybill sbom scan --path mini --format cyclonedx-json \
         --sign --output signed.cdx.json
 

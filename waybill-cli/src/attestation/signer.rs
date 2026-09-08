@@ -239,7 +239,9 @@ pub fn sign_keyless(
 // the CSR builder + issuer-aware claim dispatch. Deferred to a
 // follow-up milestone. v1 keyless signing supports only the
 // `SIGSTORE_ID_TOKEN` explicit-env path with email-emitting OIDC
-// providers (cosign login, Sigstore-dex, Google, GitLab, etc.).
+// providers (Sigstore-dex, Google, GitLab, etc.). Tokens are
+// fetched with `sigstore get-identity-token`; `cosign` has no
+// token-emitting command (issue #810).
 // GitHub Actions users must fetch a compatible token via a helper
 // action (e.g., sigstore/gh-action-sigstore-python) that populates
 // SIGSTORE_ID_TOKEN.
@@ -269,9 +271,11 @@ pub struct KeylessSignSuccess {
 /// `SigningError::OidcTokenError` detail strings.
 fn identity_token_from_env_var() -> Result<sigstore::oauth::IdentityToken, SigningError> {
     let raw = std::env::var("SIGSTORE_ID_TOKEN").map_err(|_| SigningError::OidcTokenError {
-        detail: "SIGSTORE_ID_TOKEN env var is not set. Fetch a token via \
-                 `cosign login --identity-token` and export it, or run inside \
-                 GitHub Actions with `permissions: id-token: write`."
+        detail: "SIGSTORE_ID_TOKEN env var is not set. Fetch a token with \
+                 `sigstore get-identity-token` (pip install sigstore) and export \
+                 it. Note that GitHub Actions ambient OIDC does not work here: \
+                 sigstore-rs 0.11 requires an `email` claim, which GHA tokens do \
+                 not emit."
             .to_string(),
     })?;
     let token = sigstore::oauth::IdentityToken::try_from(raw.as_str()).map_err(|e| {
@@ -282,7 +286,8 @@ fn identity_token_from_env_var() -> Result<sigstore::oauth::IdentityToken, Signi
     if !token.in_validity_period() {
         return Err(SigningError::OidcTokenError {
             detail: "SIGSTORE_ID_TOKEN is outside its validity period (exp/nbf claims). \
-                     Fetch a fresh token via `cosign login --identity-token` and re-export."
+                     These tokens are short-lived — fetch a fresh one with \
+                     `sigstore get-identity-token` and re-export immediately before signing."
                 .to_string(),
         });
     }
@@ -312,16 +317,16 @@ pub fn resolve_identity_token(
             detail: "GitHub Actions ambient OIDC is not supported in this version of \
                      waybill because sigstore-rs 0.11 requires an `email` claim, which \
                      GHA tokens do not emit. Workaround: fetch a token via a helper \
-                     (e.g., `cosign login --identity-token`, or the \
-                     `sigstore/gh-action-sigstore-python` action) and export it as \
-                     SIGSTORE_ID_TOKEN before running `waybill sbom scan --sign`."
+                     (`sigstore get-identity-token` locally, or the \
+                     `sigstore/gh-action-sigstore-python` action in CI) and export it \
+                     as SIGSTORE_ID_TOKEN before running `waybill sbom scan --sign`."
                 .to_string(),
         }),
         OidcProvider::Interactive => Err(SigningError::OidcTokenError {
-            detail: "no OIDC token available; set SIGSTORE_ID_TOKEN (e.g. via \
-                     `cosign login --identity-token`). Interactive browser flow and \
-                     GitHub Actions ambient OIDC are both deferred to a follow-up \
-                     milestone."
+            detail: "no OIDC token available; set SIGSTORE_ID_TOKEN, e.g. \
+                     `export SIGSTORE_ID_TOKEN=$(sigstore get-identity-token)` \
+                     (pip install sigstore). Interactive browser flow and GitHub \
+                     Actions ambient OIDC are both deferred to a follow-up milestone."
                 .to_string(),
         }),
     }
@@ -958,7 +963,7 @@ mod tests {
         match identity_token_from_env_var() {
             Err(SigningError::OidcTokenError { detail }) => {
                 assert!(detail.contains("SIGSTORE_ID_TOKEN"), "detail: {detail}");
-                assert!(detail.contains("cosign login"), "detail: {detail}");
+                assert!(detail.contains("sigstore get-identity-token"), "detail: {detail}");
             }
             Err(other) => panic!("expected OidcTokenError variant, got {other:?}"),
             Ok(_) => panic!("expected fail-close error, got Ok(IdentityToken)"),
@@ -985,13 +990,13 @@ mod tests {
     fn resolve_identity_token_interactive_returns_fail_close_diagnostic_m222() {
         // No env-var mutation needed — Interactive variant is pure fail-close.
         // Post-scope-down (2026-07-31): both Interactive AND GHA-ambient
-        // deferred; diagnostic points at cosign login as the local
+        // deferred; diagnostic points at sigstore-python as the local
         // workaround.
         match resolve_identity_token(&OidcProvider::Interactive) {
             Err(SigningError::OidcTokenError { detail }) => {
                 assert!(detail.contains("no OIDC token available"), "detail: {detail}");
                 assert!(detail.contains("SIGSTORE_ID_TOKEN"), "detail: {detail}");
-                assert!(detail.contains("cosign login"), "detail: {detail}");
+                assert!(detail.contains("sigstore get-identity-token"), "detail: {detail}");
                 assert!(
                     detail.contains("deferred to a follow-up milestone"),
                     "detail: {detail}"
@@ -1025,7 +1030,7 @@ mod tests {
                 assert!(detail.contains("SIGSTORE_ID_TOKEN"), "detail: {detail}");
                 assert!(
                     detail.contains("sigstore/gh-action-sigstore-python")
-                        || detail.contains("cosign login"),
+                        || detail.contains("sigstore get-identity-token"),
                     "detail: {detail}"
                 );
             }
