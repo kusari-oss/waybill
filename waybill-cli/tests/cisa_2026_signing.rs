@@ -175,6 +175,318 @@ fn m777_non_p256_key_is_refused_with_named_type() {
     );
 }
 
+/// Milestone 809 — shared scaffolding for the identity-gated keyless
+/// CycloneDX tests.
+///
+/// These run only with `WAYBILL_TEST_KEYLESS=1` AND a `SIGSTORE_ID_TOKEN`
+/// in the environment. They target Sigstore **staging** (sigstage), not
+/// production: signing throwaway test artifacts into the production
+/// transparency log would be permanent and public. The token must
+/// therefore come from the staging issuer —
+/// `sigstore --staging get-identity-token`.
+fn keyless_gate(test_name: &str) -> bool {
+    if std::env::var("WAYBILL_TEST_KEYLESS").is_err() {
+        eprintln!("INFO: {test_name} skipped (WAYBILL_TEST_KEYLESS unset)");
+        return false;
+    }
+    if std::env::var("SIGSTORE_ID_TOKEN").is_err() {
+        eprintln!("INFO: {test_name} skipped (SIGSTORE_ID_TOKEN unset)");
+        return false;
+    }
+    true
+}
+
+/// Run a keyless scan against sigstage, returning the process output.
+fn run_keyless_scan(output: &std::path::Path, extra: &[&str]) -> std::process::Output {
+    let mut cmd = Command::new(bin());
+    cmd.arg("--offline")
+        .arg("sbom")
+        .arg("scan")
+        .arg("--path")
+        .arg(scan_target())
+        .arg("--output")
+        .arg(output)
+        .arg("--no-deep-hash")
+        .arg("--sign");
+    for a in extra {
+        cmd.arg(a);
+    }
+    cmd.env(
+        "WAYBILL_FULCIO_URL",
+        std::env::var("WAYBILL_FULCIO_URL")
+            .unwrap_or_else(|_| "https://fulcio.sigstage.dev".to_string()),
+    )
+    .env(
+        "WAYBILL_REKOR_URL",
+        std::env::var("WAYBILL_REKOR_URL")
+            .unwrap_or_else(|_| "https://rekor.sigstage.dev".to_string()),
+    );
+    cmd.output().expect("waybill invocation")
+}
+
+/// Remove ANSI escape sequences so field assertions match the text a
+/// human reads rather than the bytes `tracing` emits.
+fn strip_ansi(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut chars = s.chars();
+    while let Some(c) = chars.next() {
+        if c == '\u{1b}' {
+            for e in chars.by_ref() {
+                if e.is_ascii_alphabetic() {
+                    break;
+                }
+            }
+        } else {
+            out.push(c);
+        }
+    }
+    out
+}
+
+/// Path to the sidecar waybill writes beside `output`.
+fn sidecar_path_for(output: &std::path::Path) -> std::path::PathBuf {
+    let mut name = output.file_name().unwrap().to_os_string();
+    name.push(".sig.bundle.json");
+    output.with_file_name(name)
+}
+
+/// Cryptographically verify a bundle against the document it covers,
+/// using sigstore-python rather than anything waybill ships — FR-004
+/// requires the artifact be verifiable with standard tooling, so the
+/// test must not reach for waybill's own primitives.
+///
+/// Returns `None` when the verifier is unavailable, so the crypto
+/// assertions can be skipped explicitly rather than silently passing.
+///
+/// # The certificate issuer is NOT the token issuer
+///
+/// `--cert-oidc-issuer` must be the issuer recorded in the Fulcio
+/// certificate, which is the **upstream** identity provider — not the
+/// endpoint that minted the token. Sigstore staging's dex federates to
+/// Google, so a token whose `iss` claim reads
+/// `https://oauth2.sigstage.dev/auth` yields a certificate whose issuer
+/// is `https://accounts.google.com`.
+///
+/// Deriving the expected value from the token claim produces:
+///
+/// ```text
+/// Certificate's OIDCIssuer does not match
+///   (got 'https://accounts.google.com',
+///    expected 'https://oauth2.sigstage.dev/auth')
+/// ```
+///
+/// which looks like a broken signature and is not one. `WAYBILL_TEST_CERT_OIDC_ISSUER`
+/// must therefore carry the upstream issuer. Whoever runs these tests
+/// with a different provider must supply the matching value.
+fn sigstore_verify(doc: &std::path::Path, bundle: &std::path::Path) -> Option<bool> {
+    let verifier = std::env::var("WAYBILL_SIGSTORE_BIN").ok()?;
+    let identity = std::env::var("WAYBILL_TEST_CERT_IDENTITY").ok()?;
+    let issuer = std::env::var("WAYBILL_TEST_CERT_OIDC_ISSUER").ok()?;
+    let out = Command::new(&verifier)
+        .arg("--staging")
+        .arg("verify")
+        .arg("identity")
+        .arg("--bundle")
+        .arg(bundle)
+        .arg("--cert-identity")
+        .arg(&identity)
+        .arg("--cert-oidc-issuer")
+        .arg(&issuer)
+        .arg(doc)
+        .output()
+        .expect("sigstore verify invocation");
+    if !out.status.success() {
+        // Surface the verifier's own diagnostic. Without this a failure
+        // is indistinguishable between "waybill produced a bad
+        // signature" and "the harness invoked the verifier wrongly" —
+        // and those call for opposite responses.
+        eprintln!(
+            "sigstore verify FAILED\n  doc:    {}\n  bundle: {}\n  \
+             identity: {identity}\n  issuer: {issuer}\n  stdout: {}\n  stderr: {}",
+            doc.display(),
+            bundle.display(),
+            String::from_utf8_lossy(&out.stdout).trim(),
+            String::from_utf8_lossy(&out.stderr).trim(),
+        );
+    }
+    Some(out.status.success())
+}
+
+#[test]
+#[ignore = "identity-gated (m809): needs WAYBILL_TEST_KEYLESS=1 + a staging SIGSTORE_ID_TOKEN. Run with `-- --ignored`. Reported as `ignored` rather than `ok` on purpose — a skipped keyless test must not read as coverage."]
+fn m809_t015_keyless_writes_document_and_sidecar_and_validates() {
+    // FR-002, FR-003, SC-001.
+    if !keyless_gate("m809_t015") { return; }
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let output = tmp.path().join("signed.cdx.json");
+    let out = run_keyless_scan(&output, &["--format", "cyclonedx-json"]);
+    assert!(
+        out.status.success(),
+        "keyless CycloneDX sign failed. stderr:\n{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let sidecar = sidecar_path_for(&output);
+    assert!(output.exists(), "document missing at {}", output.display());
+    assert!(sidecar.exists(), "companion artifact missing at {}", sidecar.display());
+
+    let doc: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&output).unwrap()).expect("parse cdx");
+    assert!(
+        doc.pointer("/signature").is_none() && doc.pointer("/metadata/signature").is_none(),
+        "keyless output must carry NO in-document signature (FR-003)"
+    );
+    let errors = common::cdx_schema::cdx_validation_errors(&doc);
+    assert!(
+        errors.is_empty(),
+        "keyless-signed document must validate against CycloneDX 1.6; {} error(s):\n  {}",
+        errors.len(),
+        errors.join("\n  ")
+    );
+
+    // The bundle must carry the transparency-log material that motivated
+    // the sidecar shape in the first place — without it the whole
+    // rationale for not embedding collapses.
+    let bundle = std::fs::read_to_string(&sidecar).expect("read bundle");
+    assert!(
+        bundle.contains("tlogEntries") || bundle.contains("verificationMaterial"),
+        "bundle missing Rekor / verification material"
+    );
+}
+
+#[test]
+#[ignore = "identity-gated (m809): needs WAYBILL_TEST_KEYLESS=1 + a staging SIGSTORE_ID_TOKEN. Run with `-- --ignored`. Reported as `ignored` rather than `ok` on purpose — a skipped keyless test must not read as coverage."]
+fn m809_t024_signature_reference_is_inside_the_signed_document() {
+    // FR-012/FR-013, SC-009. The reference must be present AND covered by
+    // the signature — injected before signing, not after.
+    if !keyless_gate("m809_t024") { return; }
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let output = tmp.path().join("signed.cdx.json");
+    let out = run_keyless_scan(&output, &["--format", "cyclonedx-json"]);
+    assert!(out.status.success(), "keyless sign failed");
+
+    let doc: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&output).unwrap()).expect("parse cdx");
+    let refs = doc["externalReferences"].as_array().expect("externalReferences present");
+    let att: Vec<_> = refs.iter().filter(|r| r["type"] == "attestation").collect();
+    assert_eq!(att.len(), 1, "expected exactly one attestation reference, got {}", att.len());
+
+    let url = att[0]["url"].as_str().expect("reference url");
+    assert!(
+        !url.contains('/') && !url.contains('\\'),
+        "reference must be a bare filename with no directory component; got {url}"
+    );
+    assert_eq!(
+        url,
+        sidecar_path_for(&output).file_name().unwrap().to_string_lossy(),
+        "reference must name the artifact actually written"
+    );
+
+    // Resolve it the way a consumer would: relative to the document.
+    assert!(
+        output.parent().unwrap().join(url).exists(),
+        "reference does not resolve to an existing file (SC-009)"
+    );
+
+    match sigstore_verify(&output, &sidecar_path_for(&output)) {
+        Some(true) => {}
+        Some(false) => panic!(
+            "signature did not verify on a document carrying the reference — \
+             injection is happening AFTER signing (FR-013)"
+        ),
+        None => eprintln!(
+            "INFO: m809_t024 crypto check skipped (set WAYBILL_SIGSTORE_BIN, \
+             WAYBILL_TEST_CERT_IDENTITY, WAYBILL_TEST_CERT_OIDC_ISSUER)"
+        ),
+    }
+}
+
+#[test]
+#[ignore = "identity-gated (m809): needs WAYBILL_TEST_KEYLESS=1 + a staging SIGSTORE_ID_TOKEN. Run with `-- --ignored`. Reported as `ignored` rather than `ok` on purpose — a skipped keyless test must not read as coverage."]
+fn m809_t016_signature_verifies_and_tamper_is_detected() {
+    // FR-004, FR-005, SC-002, SC-003. The two claims m778 shipped unproven.
+    if !keyless_gate("m809_t016") { return; }
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let output = tmp.path().join("signed.cdx.json");
+    let out = run_keyless_scan(&output, &["--format", "cyclonedx-json"]);
+    assert!(out.status.success(), "keyless sign failed");
+    let sidecar = sidecar_path_for(&output);
+
+    match sigstore_verify(&output, &sidecar) {
+        None => {
+            eprintln!(
+                "INFO: m809_t016 skipped — no verifier configured. FR-004/FR-005 \
+                 remain UNPROVEN; this test passing means nothing without \
+                 WAYBILL_SIGSTORE_BIN + WAYBILL_TEST_CERT_IDENTITY + \
+                 WAYBILL_TEST_CERT_OIDC_ISSUER."
+            );
+            return;
+        }
+        Some(false) => panic!("signature failed to verify against the unmodified document (FR-004)"),
+        Some(true) => {}
+    }
+
+    // Tamper: append a component. Any content change must break it.
+    let mut doc: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&output).unwrap()).expect("parse cdx");
+    doc["components"]
+        .as_array_mut()
+        .expect("components array")
+        .push(serde_json::json!({"name": "post-sign-tampered", "type": "library"}));
+    std::fs::write(&output, serde_json::to_vec_pretty(&doc).unwrap()).expect("write tampered");
+
+    assert_eq!(
+        sigstore_verify(&output, &sidecar),
+        Some(false),
+        "verification MUST fail after the document is altered (FR-005, SC-003)"
+    );
+}
+
+#[test]
+#[ignore = "identity-gated (m809): needs WAYBILL_TEST_KEYLESS=1 + a staging SIGSTORE_ID_TOKEN. Run with `-- --ignored`. Reported as `ignored` rather than `ok` on purpose — a skipped keyless test must not read as coverage."]
+fn m809_t017_two_formats_produce_two_correctly_associated_artifacts() {
+    // FR-007, SC-008 — the gap /speckit.analyze caught: no task covered
+    // the multi-format case, and T013 only looked like it did.
+    if !keyless_gate("m809_t017") { return; }
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let cdx = tmp.path().join("out.cdx.json");
+    let spdx = tmp.path().join("out.spdx.json");
+    let out = run_keyless_scan(
+        &cdx,
+        &[
+            "--format", "cyclonedx-json,spdx-2.3-json",
+            "--output", &format!("spdx-2.3-json={}", spdx.display()),
+        ],
+    );
+    assert!(
+        out.status.success(),
+        "two-format keyless sign failed. stderr:\n{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let cdx_sig = sidecar_path_for(&cdx);
+    let spdx_sig = sidecar_path_for(&spdx);
+    assert!(cdx_sig.exists(), "CycloneDX artifact missing");
+    assert!(spdx_sig.exists(), "SPDX artifact missing");
+    assert_ne!(
+        std::fs::read(&cdx_sig).unwrap(),
+        std::fs::read(&spdx_sig).unwrap(),
+        "the two artifacts are byte-identical — they cannot both be correct"
+    );
+
+    if let (Some(a), Some(b)) = (sigstore_verify(&cdx, &cdx_sig), sigstore_verify(&spdx, &spdx_sig)) {
+        assert!(a && b, "each artifact must verify against its own document");
+        // Cross-check: an artifact must NOT verify the other's document.
+        assert_eq!(
+            sigstore_verify(&cdx, &spdx_sig),
+            Some(false),
+            "the SPDX artifact verified the CycloneDX document — mis-association (FR-007)"
+        );
+    } else {
+        eprintln!("INFO: m809_t017 cross-association check skipped (no verifier configured)");
+    }
+}
+
 #[test]
 fn m778_keyless_with_cyclonedx_reaches_signing_not_refusal() {
     // Milestone 778 (FR-001) replaced m777's argument-time refusal of
@@ -746,249 +1058,53 @@ fn us2b_keyless_stdout_output_is_rejected_at_parse_m222() {
 }
 
 // ---------------------------------------------------------------------------
-// STILL AWAITING RETARGET — updated by milestone 778.
+// Milestone 809 — the three m777-superseded keyless tests, resolved.
 //
-// These three tests assert that `--sign` embeds a Sigstore bundle at
-// `metadata.signature`. Milestone 777 refused keyless CycloneDX outright, so
-// they were disabled. Milestone 778 gives keyless CycloneDX a working path
-// again — but as a DETACHED SIDECAR, not an embedded signature. So the
-// behaviour these tests assert still does not happen, and they still fail if
-// executed. Only the reason changed: from "refused" to "emitted elsewhere".
+// They asserted that `--sign` embeds a Sigstore bundle at
+// `metadata.signature`. That behaviour is gone: m777 refused keyless
+// CycloneDX, m778 replaced it with a detached sidecar. Rather than
+// mechanically retarget all three into near-duplicates, their coverage was
+// consolidated:
 //
-// They remain un-retargeted because each requires a live OIDC identity to run,
-// which was not available during either milestone, and rewriting them blind
-// would be guesswork. What they cover — Fulcio/Rekor round-trip, bundle shape,
-// log fields, mutation detection — is still worth having against the sidecar
-// path.
+//   us2b_keyless_bundle_sign_and_verify
+//       -> m809_t015_keyless_writes_document_and_sidecar_and_validates
+//          (both files written, schema-valid, bundle carries tlog material)
 //
-// Everything about the sidecar path that CAN be checked without an identity is
-// already covered and runs in the normal gate:
-//   m778_keyless_with_cyclonedx_reaches_signing_not_refusal
-//   m778_signature_reference_shape_is_schema_valid
-//   m778_static_key_cyclonedx_is_untouched
+//   us2b_keyless_signature_covers_document_mutation_m222
+//       -> m809_t016_signature_verifies_and_tamper_is_detected
+//          (real cryptographic verify, not the shape check the original did)
+//
+//   us2b_keyless_fr016_info_log_fields_m222
+//       -> retained below, retargeted. Its subject — the FR-016 diagnostic
+//          fields — is not covered by anything else.
 // ---------------------------------------------------------------------------
 
-/// T010 + T024 (feature 222 US2b) — happy-path sign-and-verify
-/// against Sigstore staging. Requires WAYBILL_TEST_KEYLESS=1 AND a
-/// GitHub-Actions-ambient OIDC endpoint (or an equivalent explicit
-/// SIGSTORE_ID_TOKEN). Gated behind the env var so the general
-/// `cargo test --workspace` suite stays hermetic; the CI job
-/// `lint-and-test-keyless-sbom` sets the env var + provides the
-/// ambient OIDC path.
+/// FR-016 (m222): the keyless path emits `rekor_log_index`,
+/// `fulcio_cert_subject`, and `oidc_provider` at INFO. Retargeted by m809
+/// from the in-document path to the sidecar path; the fields are emitted by
+/// the signing flow itself, so they are independent of where the signature
+/// lands.
 #[test]
-#[ignore = "AWAITING RETARGET (m778): asserts CDX keyless EMBEDDING; keyless CDX now signs to a detached sidecar, so this still does not hold. Needs retargeting to the sidecar path + WAYBILL_TEST_KEYLESS=1 + OIDC"]
-fn us2b_keyless_bundle_sign_and_verify() {
-    if std::env::var("WAYBILL_TEST_KEYLESS").is_err() {
-        eprintln!(
-            "INFO: us2b_keyless_bundle_sign_and_verify skipped (WAYBILL_TEST_KEYLESS unset)"
-        );
-        return;
-    }
+#[ignore = "identity-gated (m809): needs WAYBILL_TEST_KEYLESS=1 + a staging SIGSTORE_ID_TOKEN. Run with `-- --ignored`. Reported as `ignored` rather than `ok` on purpose — a skipped keyless test must not read as coverage."]
+fn us2b_keyless_fr016_info_log_fields_m222() {
+    if !keyless_gate("us2b_keyless_fr016_info_log_fields_m222") { return; }
     let tmp = tempfile::tempdir().expect("tempdir");
     let output = tmp.path().join("signed.cdx.json");
-    let out = Command::new(bin())
-        .arg("--offline")
-        .arg("sbom")
-        .arg("scan")
-        .arg("--path")
-        .arg(scan_target())
-        .arg("--format")
-        .arg("cyclonedx-json")
-        .arg("--output")
-        .arg(&output)
-        .arg("--no-deep-hash")
-        .arg("--sign")
-        .env(
-            "WAYBILL_FULCIO_URL",
-            std::env::var("WAYBILL_FULCIO_URL")
-                .unwrap_or_else(|_| "https://fulcio.sigstage.dev".to_string()),
-        )
-        .env(
-            "WAYBILL_REKOR_URL",
-            std::env::var("WAYBILL_REKOR_URL")
-                .unwrap_or_else(|_| "https://rekor.sigstage.dev".to_string()),
-        )
-        .output()
-        .expect("waybill invocation");
-
+    let out = run_keyless_scan(&output, &["--format", "cyclonedx-json"]);
     assert!(
         out.status.success(),
-        "keyless sign against staging failed. stderr:\n{}",
+        "keyless sign failed. stderr:\n{}",
         String::from_utf8_lossy(&out.stderr)
     );
-    assert!(output.exists(), "signed CDX file missing at {}", output.display());
-
-    // Parse the emitted CDX + assert a metadata.signature slot exists +
-    // its shape is the Sigstore Bundle wire format.
-    let raw = std::fs::read(&output).expect("read signed cdx");
-    let doc: serde_json::Value = serde_json::from_slice(&raw).expect("parse cdx");
-    let sig = doc
-        .pointer("/metadata/signature")
-        .expect("metadata.signature slot missing");
-    let sig_obj = sig.as_object().expect("signature must be a JSON object");
-    assert!(
-        sig_obj.contains_key("mediaType") || sig_obj.contains_key("verificationMaterial"),
-        "metadata.signature is not a Sigstore Bundle shape: {sig}"
-    );
-    let sig_str = serde_json::to_string(sig).unwrap_or_default();
-    assert!(
-        sig_str.contains("tlogEntries") || sig_str.contains("verificationMaterial"),
-        "Bundle missing expected Rekor + verification-material fields"
-    );
-}
-
-/// T028 (feature 222 US2b, FR-016 + SC-008) — successful sign emits
-/// three structured INFO fields at tracing::info!. Runs sign against
-/// staging and greps stderr for `rekor_log_index=`, `fulcio_cert_subject=`,
-/// `oidc_provider=`. Gated on `WAYBILL_TEST_KEYLESS=1`.
-#[test]
-#[ignore = "AWAITING RETARGET (m778): asserts CDX keyless EMBEDDING; keyless CDX now signs to a detached sidecar, so this still does not hold. Needs retargeting to the sidecar path + WAYBILL_TEST_KEYLESS=1 + OIDC"]
-fn us2b_keyless_fr016_info_log_fields_m222() {
-    if std::env::var("WAYBILL_TEST_KEYLESS").is_err() {
-        eprintln!(
-            "INFO: us2b_keyless_fr016_info_log_fields_m222 skipped (WAYBILL_TEST_KEYLESS unset)"
+    // `tracing` writes ANSI escapes between the field name and its `=`,
+    // so a literal "name=" match never hits. The m222 original asserted
+    // exactly that and was #[ignore]d, so it never ran to reveal it.
+    let raw = String::from_utf8_lossy(&out.stderr);
+    let stderr = strip_ansi(&raw);
+    for field in ["rekor_log_index=", "fulcio_cert_subject=", "oidc_provider="] {
+        assert!(
+            stderr.contains(field),
+            "FR-016: stderr missing {field} INFO field:\n{stderr}"
         );
-        return;
     }
-    let tmp = tempfile::tempdir().expect("tempdir");
-    let output = tmp.path().join("info-log.cdx.json");
-    let out = Command::new(bin())
-        .arg("--offline")
-        .arg("sbom")
-        .arg("scan")
-        .arg("--path")
-        .arg(scan_target())
-        .arg("--format")
-        .arg("cyclonedx-json")
-        .arg("--output")
-        .arg(&output)
-        .arg("--no-deep-hash")
-        .arg("--sign")
-        .env("RUST_LOG", "info")
-        .env("WAYBILL_LOG", "info")
-        .env(
-            "WAYBILL_FULCIO_URL",
-            std::env::var("WAYBILL_FULCIO_URL")
-                .unwrap_or_else(|_| "https://fulcio.sigstage.dev".to_string()),
-        )
-        .env(
-            "WAYBILL_REKOR_URL",
-            std::env::var("WAYBILL_REKOR_URL")
-                .unwrap_or_else(|_| "https://rekor.sigstage.dev".to_string()),
-        )
-        .output()
-        .expect("waybill invocation");
-    assert!(
-        out.status.success(),
-        "keyless sign against staging failed. stderr:\n{}",
-        String::from_utf8_lossy(&out.stderr)
-    );
-    let stderr = String::from_utf8_lossy(&out.stderr);
-    assert!(
-        stderr.contains("rekor_log_index="),
-        "FR-016: stderr missing rekor_log_index INFO field:\n{stderr}"
-    );
-    assert!(
-        stderr.contains("fulcio_cert_subject="),
-        "FR-016: stderr missing fulcio_cert_subject INFO field:\n{stderr}"
-    );
-    assert!(
-        stderr.contains("oidc_provider="),
-        "FR-016: stderr missing oidc_provider INFO field:\n{stderr}"
-    );
-}
-
-/// T027 (feature 222 US2b) — signature covers the entire SBOM
-/// document. Mirrors m221 US2a's mutation-flips-verify pattern. Sign
-/// against staging, mutate one byte of the CDX payload, extract the
-/// Bundle, verify it against the mutated payload — expect Err.
-/// Gated on `WAYBILL_TEST_KEYLESS=1`.
-#[test]
-#[ignore = "AWAITING RETARGET (m778): asserts CDX keyless EMBEDDING; keyless CDX now signs to a detached sidecar, so this still does not hold. Needs retargeting to the sidecar path + WAYBILL_TEST_KEYLESS=1 + OIDC"]
-fn us2b_keyless_signature_covers_document_mutation_m222() {
-    if std::env::var("WAYBILL_TEST_KEYLESS").is_err() {
-        eprintln!(
-            "INFO: us2b_keyless_signature_covers_document_mutation_m222 skipped (WAYBILL_TEST_KEYLESS unset)"
-        );
-        return;
-    }
-    let tmp = tempfile::tempdir().expect("tempdir");
-    let output = tmp.path().join("mutation.cdx.json");
-    let out = Command::new(bin())
-        .arg("--offline")
-        .arg("sbom")
-        .arg("scan")
-        .arg("--path")
-        .arg(scan_target())
-        .arg("--format")
-        .arg("cyclonedx-json")
-        .arg("--output")
-        .arg(&output)
-        .arg("--no-deep-hash")
-        .arg("--sign")
-        .env(
-            "WAYBILL_FULCIO_URL",
-            std::env::var("WAYBILL_FULCIO_URL")
-                .unwrap_or_else(|_| "https://fulcio.sigstage.dev".to_string()),
-        )
-        .env(
-            "WAYBILL_REKOR_URL",
-            std::env::var("WAYBILL_REKOR_URL")
-                .unwrap_or_else(|_| "https://rekor.sigstage.dev".to_string()),
-        )
-        .output()
-        .expect("waybill invocation");
-    assert!(
-        out.status.success(),
-        "keyless sign against staging failed. stderr:\n{}",
-        String::from_utf8_lossy(&out.stderr)
-    );
-
-    // Parse the signed CDX, mutate one byte in a non-signature field,
-    // re-serialize, and confirm the round-trip verify fails. Full
-    // Sigstore Bundle verification via sigstore::bundle::verify is out
-    // of scope for this quick sanity check — we validate the coverage
-    // property at the shape level: any mutation to the payload MUST
-    // invalidate the bundle's canonical-bytes contract.
-    let raw = std::fs::read(&output).expect("read signed cdx");
-    let mut doc: serde_json::Value = serde_json::from_slice(&raw).expect("parse cdx");
-
-    // Extract the Bundle before mutation.
-    let bundle = doc
-        .get("metadata")
-        .and_then(|m| m.get("signature"))
-        .cloned()
-        .expect("metadata.signature slot missing");
-
-    // Mutate specVersion (a benign field the signature covers).
-    doc["specVersion"] = serde_json::Value::String("MUTATED-1.6".to_string());
-
-    // Strip metadata.signature (per contracts/keyless-signing-flow.md
-    // §CDX-embedded Bundle canonical-bytes contract, verifiers
-    // reproduce the signed bytes by removing this field entirely).
-    if let Some(meta) = doc.get_mut("metadata").and_then(|m| m.as_object_mut()) {
-        meta.remove("signature");
-    }
-    let mutated_canonical =
-        serde_json::to_vec(&doc).expect("re-serialize mutated CDX to canonical bytes");
-
-    // The mutated bytes MUST differ from what the Bundle signed.
-    // Compare via sha256 to keep this test dep-free.
-    use sha2::{Digest, Sha256};
-    let mutated_hash = {
-        let mut h = Sha256::new();
-        h.update(&mutated_canonical);
-        h.finalize().to_vec()
-    };
-    let bundle_digest_b64 = bundle
-        .pointer("/messageSignature/messageDigest/digest")
-        .and_then(|v| v.as_str())
-        .expect("Bundle messageSignature.messageDigest.digest missing");
-    use base64::engine::general_purpose::STANDARD as B64;
-    use base64::Engine;
-    let bundle_digest = B64.decode(bundle_digest_b64).expect("bundle digest is valid base64");
-    assert_ne!(
-        mutated_hash, bundle_digest,
-        "mutation MUST invalidate the Bundle's signed-bytes digest (payload-coverage guarantee)"
-    );
 }

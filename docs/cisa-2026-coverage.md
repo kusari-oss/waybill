@@ -399,8 +399,20 @@ waybill sbom scan --path <target> \
 cosign verify-blob \
     --bundle /tmp/signed.cdx.json.sig.bundle.json \
     --certificate-identity '<your OIDC subject>' \
-    --certificate-oidc-issuer '<your OIDC issuer>' \
+    --certificate-oidc-issuer '<the issuer in the CERTIFICATE>' \
     /tmp/signed.cdx.json
+
+# NOTE: `--certificate-oidc-issuer` is the issuer Fulcio recorded in the
+# certificate — the UPSTREAM identity provider — not the endpoint that
+# minted your token. Where the OIDC flow federates, these differ. Signing
+# through Sigstore's dex with a Google account yields a token whose `iss`
+# is the dex endpoint but a certificate whose issuer is
+# `https://accounts.google.com`; passing the token's `iss` produces
+#
+#   Certificate's OIDCIssuer does not match (got ..., expected ...)
+#
+# which reads like a broken signature and is not one. Read the issuer off
+# the certificate if unsure.
 ```
 
 **Inside GitHub Actions** (helper action fetches a compatible token):
