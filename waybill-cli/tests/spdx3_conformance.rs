@@ -48,16 +48,43 @@ fn validator_path() -> PathBuf {
     workspace_root().join(".venv/spdx3-validate/bin/spdx3-validate")
 }
 
+/// Does this validator output look like "could not reach spdx.org"
+/// rather than "the SBOM is wrong"?
+///
+/// Single source of truth for both the retry decision and the final
+/// classification, so the two cannot drift apart and start disagreeing
+/// about what a given failure was.
+fn looks_like_validator_unreachable(output: &str) -> bool {
+    const NETWORK_MARKERS: &[&str] = &[
+        "ConnectionResetError",
+        "Connection reset by peer",
+        "URLError",
+        "urlopen error",
+        "TimeoutError",
+        "temporary failure in name resolution",
+    ];
+    NETWORK_MARKERS.iter().any(|m| output.contains(m))
+}
+
 /// Result of running the JPEWdev validator against an SPDX 3 file.
 #[derive(Debug)]
 enum ValidationResult {
     /// Validator binary is installed AND validation succeeded with
     /// zero `"Violation of type"` markers AND exit code 0.
     Pass,
-    /// Validator binary is installed but reported violations or
-    /// non-zero exit. The combined stdout+stderr text is captured
-    /// verbatim for failure diagnostics.
+    /// Validator ran and reported conformance violations. This is a
+    /// waybill defect: the emitted SPDX 3 is wrong.
     Fail { combined_output: String },
+    /// Validator could not complete because it could not reach
+    /// spdx.org, after exhausting retries. This is NOT a conformance
+    /// result — the SBOM was never actually checked.
+    ///
+    /// Kept distinct from `Fail` because the two call for opposite
+    /// responses, and because the previous behaviour reported this as
+    /// "spdx3-validate reported violations", sending whoever triaged it
+    /// looking for a conformance regression that does not exist. That
+    /// happened on the 0.7.0 release commit.
+    Unreachable { combined_output: String },
     /// Validator binary is NOT installed AND
     /// `WAYBILL_REQUIRE_SPDX3_VALIDATOR` is unset. Caller should
     /// treat this as test-passes-with-skip-message per research §5.
@@ -131,12 +158,7 @@ fn run_validator(fixture_path: &Path) -> ValidationResult {
         last_combined_text = combined_text;
         // Retry only on transient network signatures. Real
         // violations don't match — return immediately.
-        let is_transient_network = last_combined_text.contains("ConnectionResetError")
-            || last_combined_text.contains("Connection reset by peer")
-            || last_combined_text.contains("URLError")
-            || last_combined_text.contains("urlopen error")
-            || last_combined_text.contains("TimeoutError")
-            || last_combined_text.contains("temporary failure in name resolution");
+        let is_transient_network = looks_like_validator_unreachable(&last_combined_text);
         if !is_transient_network || attempt == MAX_ATTEMPTS {
             break;
         }
@@ -148,8 +170,18 @@ fn run_validator(fixture_path: &Path) -> ValidationResult {
             500 * (1 << (attempt - 1)) as u64,
         ));
     }
-    ValidationResult::Fail {
-        combined_output: last_combined_text,
+    // Distinguish "the validator says the SBOM is wrong" from "the
+    // validator never got to look at it". `is_transient_network` is
+    // recomputed here rather than carried out of the loop so the
+    // classification always reflects the final attempt's output.
+    if looks_like_validator_unreachable(&last_combined_text) {
+        ValidationResult::Unreachable {
+            combined_output: last_combined_text,
+        }
+    } else {
+        ValidationResult::Fail {
+            combined_output: last_combined_text,
+        }
     }
 }
 
@@ -166,7 +198,24 @@ fn assert_validation_or_skip(fixture_path: &Path, label: &str) {
         }
         ValidationResult::Fail { combined_output } => {
             panic!(
-                "spdx3-validate reported violations for {label} ({}):\n{}",
+                "CONFORMANCE VIOLATION — spdx3-validate rejected {label} ({}).\n\
+                 This is a waybill defect: the emitted SPDX 3 is wrong.\n{}",
+                fixture_path.display(),
+                combined_output
+            );
+        }
+        ValidationResult::Unreachable { combined_output } => {
+            // Still a failure: an unrunnable gate is not evidence of
+            // conformance, and silently skipping is how a gate quietly
+            // stops gating. But say what actually happened.
+            panic!(
+                "VALIDATOR UNREACHABLE — spdx3-validate could not reach spdx.org \
+                 after retries while checking {label} ({}).\n\
+                 This is NOT a conformance failure: the SBOM was never checked. \
+                 waybill is very likely fine. Re-run before investigating.\n\
+                 spdx3-validate fetches spdx-model.ttl, spdx-json-schema.json and \
+                 spdx-context.jsonld from spdx.org on every invocation, so it fails \
+                 whenever that host is unreachable from the runner.\n{}",
                 fixture_path.display(),
                 combined_output
             );
@@ -1261,4 +1310,36 @@ fn original_scheme_recoverable_from_comment() {
         "expected user-defined cve scheme passed through verbatim with NO \
          comment (FR-003 vocab short-circuit); got eids_a: {eids_a:#?}"
     );
+}
+
+/// The classifier must not call a network failure a conformance
+/// violation. Regression test for the 0.7.0 release-commit CI failure,
+/// where an unreachable spdx.org was reported as "spdx3-validate
+/// reported violations for golden:pip" and read as a waybill defect.
+#[test]
+fn unreachable_validator_is_not_reported_as_a_conformance_violation() {
+    // Verbatim from the failing run.
+    let network = "Traceback (most recent call last):\n  \
+                   File \"/usr/lib/python3.12/ssl.py\", line 1320, in do_handshake\n    \
+                   self._sslobj.do_handshake()\n\
+                   ConnectionResetError: [Errno 104] Connection reset by peer";
+    assert!(
+        looks_like_validator_unreachable(network),
+        "network reset must classify as unreachable"
+    );
+
+    // A real conformance violation must NOT be excused as a network
+    // problem — that would turn the gate off silently.
+    let violation = "Violation of type 'MissingRequiredProperty': \
+                     /spdxDocument missing required property 'specVersion'";
+    assert!(
+        !looks_like_validator_unreachable(violation),
+        "a real violation must not be misclassified as a network failure"
+    );
+
+    // Neither marker present: default to treating it as a violation,
+    // because failing loudly about waybill is safer than blaming the
+    // network for something that may be ours.
+    let ambiguous = "spdx3-validate: unexpected internal error";
+    assert!(!looks_like_validator_unreachable(ambiguous));
 }
