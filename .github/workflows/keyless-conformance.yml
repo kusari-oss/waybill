@@ -1,0 +1,244 @@
+name: Keyless Conformance
+
+# m779 US2 — runs the identity-gated keyless signing suite unattended
+# against Sigstore STAGING, using the runner's own ambient OIDC
+# credential. Before this workflow the five keyless tests were
+# `#[ignore]`d behind a human-fetched token and had never been observed
+# passing as a suite.
+#
+# Deliberately NOT triggered on pull_request (spec FR-015, SC-008): the
+# suite depends on an external service with no availability guarantee,
+# and the `--sign` surface changes rarely. A staging outage must never
+# block a PR.
+#
+# Spec:      specs/779-signing-identity-shapes/spec.md
+# Contract:  specs/779-signing-identity-shapes/contracts/identity-resolution.md
+# Cadence:   daily 07:00 UTC (an hour after nightly.yml + ebpf-canary.yml
+#            so the three do not contend for runners)
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+    inputs:
+      fulcio_url:
+        description: 'Fulcio endpoint (default: Sigstore staging). Point at an unreachable host to rehearse the failure path.'
+        required: false
+        default: 'https://fulcio.sigstage.dev'
+        type: string
+      rekor_url:
+        description: 'Rekor endpoint (default: Sigstore staging).'
+        required: false
+        default: 'https://rekor.sigstage.dev'
+        type: string
+      dry_run:
+        description: 'If true, skip issue create/update on failure'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keyless-conformance
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  keyless:
+    name: Keyless suite (Sigstore staging)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # The whole point: waybill exchanges this for an OIDC token itself.
+      # Without it there is no ambient credential and the suite skips.
+      id-token: write
+    outputs:
+      failure_class: ${{ steps.classify.outputs.failure_class }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+
+      - uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
+
+      # Staging verification needs the sigstore CLI: cosign has no
+      # built-in staging mode and would need a trusted-root file.
+      - name: Install sigstore CLI
+        run: pipx install sigstore==4.2.0
+
+      - name: Run keyless suite
+        id: run
+        env:
+          WAYBILL_TEST_KEYLESS: '1'
+          WAYBILL_FULCIO_URL: ${{ inputs.fulcio_url || 'https://fulcio.sigstage.dev' }}
+          WAYBILL_REKOR_URL: ${{ inputs.rekor_url || 'https://rekor.sigstage.dev' }}
+          WAYBILL_SIGSTORE_BIN: sigstore
+        run: |
+          set -o pipefail
+          cargo +stable test --workspace --test cisa_2026_signing -- --ignored \
+            --nocapture 2>&1 | tee /tmp/keyless.log
+
+      # FR-014 / SC-007: an outage and a defect call for opposite
+      # responses, so the run output must say which it was without a
+      # human reading the log.
+      - name: Classify failure
+        id: classify
+        if: always()
+        run: |
+          if [ "${{ steps.run.outcome }}" = "success" ]; then
+            echo "failure_class=none" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if grep -qiE 'connection refused|dns error|timed out|timeout|503|502|504|could not resolve|network is unreachable' /tmp/keyless.log; then
+            echo "failure_class=external-outage" >> "$GITHUB_OUTPUT"
+          else
+            echo "failure_class=waybill-defect" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload log
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: keyless-log
+          path: /tmp/keyless.log
+          retention-days: 14
+
+  report-failure:
+    name: Open or update conformance issue
+    needs: keyless
+    if: failure() && !inputs.dry_run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          FAILURE_CLASS: ${{ needs.keyless.outputs.failure_class }}
+        with:
+          script: |
+            const title = '[keyless] Sigstore keyless conformance failing';
+            const cls = process.env.FAILURE_CLASS || 'unknown';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const timestamp = new Date().toISOString();
+
+            const verdict = cls === 'external-outage'
+              ? 'EXTERNAL OUTAGE — Sigstore staging looks unreachable. Likely no action needed beyond watching for recovery.'
+              : cls === 'waybill-defect'
+              ? 'WAYBILL DEFECT — the failure does not look like an outage. This needs investigation.'
+              : 'UNCLASSIFIED — check the log.';
+
+            const commentBody = [
+              `## Run ${context.runId} — ${timestamp}`,
+              ``,
+              `- Classification: **${cls}**`,
+              `- ${verdict}`,
+              `- Run URL: ${runUrl}`,
+            ].join('\n');
+
+            const issueBody = [
+              `The scheduled keyless conformance suite`,
+              `(\`.github/workflows/keyless-conformance.yml\`) is failing.`,
+              ``,
+              `## What this covers`,
+              ``,
+              `The five identity-gated keyless signing tests, run against Sigstore`,
+              `staging using the runner's ambient OIDC credential. They are the only`,
+              `routine evidence that keyless signing works end to end.`,
+              ``,
+              `## Triage`,
+              ``,
+              `The classification above distinguishes an external outage from a`,
+              `waybill defect, so you should not need to open the log to know which`,
+              `this is. If it says outage, watch for recovery — the issue closes`,
+              `itself when a later run passes.`,
+              ``,
+              `Reproduce locally:`,
+              ``,
+              '```',
+              `export WAYBILL_TEST_KEYLESS=1`,
+              `export SIGSTORE_ID_TOKEN=$(sigstore --staging get-identity-token)`,
+              `cargo +stable test --workspace --test cisa_2026_signing -- --ignored`,
+              '```',
+              ``,
+              `---`,
+              `_Auto-opened by the keyless conformance workflow. Later runs append`,
+              `comments rather than opening duplicates; a green run closes this._`,
+              ``,
+              commentBody,
+            ].join('\n');
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'keyless,conformance',
+              per_page: 100,
+            });
+            const match = existing.data.find(i => i.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: commentBody,
+              });
+              core.info(`Appended comment to existing issue #${match.number}`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body: issueBody,
+                labels: ['keyless', 'conformance'],
+              });
+              core.info(`Created new issue #${created.data.number}`);
+            }
+
+  report-success:
+    name: Close conformance issue on recovery
+    needs: keyless
+    if: success()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const title = '[keyless] Sigstore keyless conformance failing';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const timestamp = new Date().toISOString();
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'keyless,conformance',
+              per_page: 100,
+            });
+            const match = existing.data.find(i => i.title === title);
+            if (!match) {
+              core.info('No open conformance issue to close — nothing to do.');
+              return;
+            }
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: match.number,
+              body: `Keyless conformance green as of ${timestamp} (run ${runUrl}). Closing.`,
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: match.number,
+              state: 'closed',
+              state_reason: 'completed',
+            });
+            core.info(`Closed issue #${match.number}`);

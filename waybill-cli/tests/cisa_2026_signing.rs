@@ -189,11 +189,86 @@ fn keyless_gate(test_name: &str) -> bool {
         eprintln!("INFO: {test_name} skipped (WAYBILL_TEST_KEYLESS unset)");
         return false;
     }
-    if std::env::var("SIGSTORE_ID_TOKEN").is_err() {
-        eprintln!("INFO: {test_name} skipped (SIGSTORE_ID_TOKEN unset)");
+    // m779 T030 — either credential satisfies the gate. On a runner with
+    // `id-token: write` there is an ambient one and no token needs
+    // fetching; elsewhere SIGSTORE_ID_TOKEN still works.
+    let explicit = std::env::var("SIGSTORE_ID_TOKEN").is_ok();
+    let ambient = std::env::var("ACTIONS_ID_TOKEN_REQUEST_URL").is_ok()
+        && std::env::var("ACTIONS_ID_TOKEN_REQUEST_TOKEN").is_ok();
+    if !explicit && !ambient {
+        eprintln!(
+            "INFO: {test_name} skipped (no credential: neither SIGSTORE_ID_TOKEN \
+             nor an ambient runner token). This reports as `ignored`, never `ok` \
+             — a skipped keyless test must not read as coverage."
+        );
         return false;
     }
     true
+}
+
+/// m779 T029 (FR-012) — the identity and issuer to verify against,
+/// derived from the environment rather than written into the source.
+///
+/// The explicit env vars win when set. Otherwise, on a GitHub Actions
+/// runner, both are derivable: the certificate subject is the workflow
+/// reference the runner already publishes, and the issuer is GitHub's.
+/// Off a runner with no override there is nothing to derive, and the
+/// caller skips rather than asserting against a guess.
+///
+/// The previous version required `WAYBILL_TEST_CERT_IDENTITY` to be set
+/// by hand, which in practice meant a personal address baked into a
+/// developer's shell.
+fn expected_cert_identity() -> Option<(String, String)> {
+    if let (Ok(id), Ok(iss)) = (
+        std::env::var("WAYBILL_TEST_CERT_IDENTITY"),
+        std::env::var("WAYBILL_TEST_CERT_OIDC_ISSUER"),
+    ) {
+        return Some((id, iss));
+    }
+    // GitHub Actions: reconstruct the workflow identity from the
+    // runner's own environment.
+    let repo = std::env::var("GITHUB_REPOSITORY").ok()?;
+    let git_ref = std::env::var("GITHUB_REF").ok()?;
+    std::env::var("ACTIONS_ID_TOKEN_REQUEST_URL").ok()?;
+    Some((
+        format!("repo:{repo}:ref:{git_ref}"),
+        "https://token.actions.githubusercontent.com".to_string(),
+    ))
+}
+
+/// m779 T031 (FR-014 / SC-007) — say whether a failure looks like the
+/// external service being down or like waybill being wrong.
+///
+/// These call for opposite responses: an outage means wait, a defect
+/// means investigate. Without a verdict in the output someone has to
+/// read the log to tell them apart, and in a scheduled run that someone
+/// usually does not exist.
+fn classify_failure(stderr: &str) -> String {
+    const OUTAGE_MARKERS: &[&str] = &[
+        "connection refused",
+        "dns error",
+        "timed out",
+        "timeout",
+        "could not resolve",
+        "network is unreachable",
+        "503",
+        "502",
+        "504",
+        "connection reset",
+        "tls handshake",
+    ];
+    let lower = stderr.to_lowercase();
+    if let Some(marker) = OUTAGE_MARKERS.iter().find(|m| lower.contains(**m)) {
+        format!(
+            "FAILURE CLASS: external-outage (matched {marker:?}). Sigstore \
+             staging looks unreachable — this is very likely not a waybill \
+             defect. Re-run before investigating."
+        )
+    } else {
+        "FAILURE CLASS: waybill-defect. Nothing in the output looks like a \
+         network or service failure, so treat this as a real regression."
+            .to_string()
+    }
 }
 
 /// Run a keyless scan against sigstage, returning the process output.
@@ -280,8 +355,7 @@ fn sidecar_path_for(output: &std::path::Path) -> std::path::PathBuf {
 /// with a different provider must supply the matching value.
 fn sigstore_verify(doc: &std::path::Path, bundle: &std::path::Path) -> Option<bool> {
     let verifier = std::env::var("WAYBILL_SIGSTORE_BIN").ok()?;
-    let identity = std::env::var("WAYBILL_TEST_CERT_IDENTITY").ok()?;
-    let issuer = std::env::var("WAYBILL_TEST_CERT_OIDC_ISSUER").ok()?;
+    let (identity, issuer) = expected_cert_identity()?;
     let out = Command::new(&verifier)
         .arg("--staging")
         .arg("verify")
@@ -300,6 +374,7 @@ fn sigstore_verify(doc: &std::path::Path, bundle: &std::path::Path) -> Option<bo
         // is indistinguishable between "waybill produced a bad
         // signature" and "the harness invoked the verifier wrongly" —
         // and those call for opposite responses.
+        eprintln!("{}", classify_failure(&String::from_utf8_lossy(&out.stderr)));
         eprintln!(
             "sigstore verify FAILED\n  doc:    {}\n  bundle: {}\n  \
              identity: {identity}\n  issuer: {issuer}\n  stdout: {}\n  stderr: {}",
@@ -310,6 +385,49 @@ fn sigstore_verify(doc: &std::path::Path, bundle: &std::path::Path) -> Option<bo
         );
     }
     Some(out.status.success())
+}
+
+/// m779 T014 (FR-001) — a workload identity, one with no `email` claim,
+/// signs and produces both artifacts.
+///
+/// Runs against whatever credential the environment supplies: a runner's
+/// ambient token where one exists, otherwise `SIGSTORE_ID_TOKEN`. The
+/// assertion that matters is the identity *shape* in the log, not the
+/// subject value — hardcoding a subject would re-create the very problem
+/// m779 FR-012 removes.
+#[test]
+#[ignore = "identity-gated (m779): needs WAYBILL_TEST_KEYLESS=1 plus either an ambient runner credential or a staging SIGSTORE_ID_TOKEN. Run with `-- --ignored`. Reported as `ignored` rather than `ok` on purpose — a skipped keyless test must not read as coverage."]
+fn m779_us1_workload_identity_signs() {
+    if !keyless_gate("m779_us1") {
+        return;
+    }
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let output = tmp.path().join("signed.cdx.json");
+    let out = run_keyless_scan(&output, &["--format", "cyclonedx-json"]);
+    assert!(
+        out.status.success(),
+        "keyless sign failed. stderr:\n{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(output.exists(), "signed document was not written");
+    let sidecar = sidecar_path_for(&output);
+    assert!(sidecar.exists(), "sidecar was not written: {sidecar:?}");
+
+    let stderr = strip_ansi(&String::from_utf8_lossy(&out.stderr));
+    // Whichever shape the environment produced, it must be classified —
+    // an unclassified identity means the record cannot tell an operator
+    // what kind of thing signed.
+    assert!(
+        ["email", "workload", "unrecognized"]
+            .iter()
+            .any(|k| stderr.contains(&format!("fulcio_cert_identity_shape={k}"))),
+        "no identity shape recorded:\n{stderr}"
+    );
+    // FR-009a: the operator must be handed a runnable command.
+    assert!(
+        stderr.contains("To verify:") || stderr.contains("To verify (template"),
+        "no verification command emitted:\n{stderr}"
+    );
 }
 
 #[test]
@@ -1101,10 +1219,26 @@ fn us2b_keyless_fr016_info_log_fields_m222() {
     // exactly that and was #[ignore]d, so it never ran to reveal it.
     let raw = String::from_utf8_lossy(&out.stderr);
     let stderr = strip_ansi(&raw);
-    for field in ["rekor_log_index=", "fulcio_cert_subject=", "oidc_provider="] {
+    // The three m222 field names keep their spelling; m779 adds two.
+    for field in [
+        "rekor_log_index=",
+        "fulcio_cert_subject=",
+        "oidc_provider=",
+        "fulcio_cert_identity_shape=",
+        "fulcio_cert_oidc_issuer=",
+    ] {
         assert!(
             stderr.contains(field),
-            "FR-016: stderr missing {field} INFO field:\n{stderr}"
+            "m222-FR-016 / m779-FR-005: stderr missing {field} INFO field:\n{stderr}"
         );
     }
+    // The shape must be one of the closed set, not an empty or debug
+    // rendering — an unconstrained value here would let a formatting
+    // regression pass unnoticed.
+    assert!(
+        ["email", "workload", "unrecognized"]
+            .iter()
+            .any(|s| stderr.contains(&format!("fulcio_cert_identity_shape={s}"))),
+        "m779: identity shape is not one of the closed set:\n{stderr}"
+    );
 }

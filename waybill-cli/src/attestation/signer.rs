@@ -237,14 +237,166 @@ pub fn sign_keyless(
 // (workflow path) instead. This is not fixable via a minimal patch to
 // our sigstore-rs fork; it requires ~30-50 LOC of behavior change in
 // the CSR builder + issuer-aware claim dispatch. Deferred to a
-// follow-up milestone. v1 keyless signing supports only the
-// `SIGSTORE_ID_TOKEN` explicit-env path with email-emitting OIDC
-// providers (Sigstore-dex, Google, GitLab, etc.). Tokens are
-// fetched with `sigstore get-identity-token`; `cosign` has no
-// token-emitting command (issue #810).
-// GitHub Actions users must fetch a compatible token via a helper
-// action (e.g., sigstore/gh-action-sigstore-python) that populates
-// SIGSTORE_ID_TOKEN.
+// follow-up milestone. Keyless signing supports two paths: the
+// `SIGSTORE_ID_TOKEN` explicit-env path (any issuer), and — since
+// m779 — GitHub Actions' ambient credential, which needs no token
+// handling by the operator beyond `permissions: id-token: write`.
+// Tokens for the explicit path are fetched with
+// `sigstore get-identity-token`; `cosign` has no token-emitting
+// command (issue #810).
+
+/// Who a keyless signature attests was the signer (m779 FR-005).
+///
+/// Replaces a bare subject `String`, which could not distinguish a person
+/// from a workload — two things that verify differently and mean
+/// different things about accountability.
+///
+/// Every variant carries the issuer alongside the subject. Verification
+/// needs both halves and neither is derivable from the other, so making
+/// the pair inseparable in the type means a caller cannot construct a
+/// verification command that is missing one.
+///
+/// `#[non_exhaustive]` states the FR-006 contract: shapes may be added
+/// without breaking consumers written against the earlier vocabulary.
+/// Note it has no enforcement effect while this module stays private to
+/// the binary — same-crate matches may still be exhaustive. It is
+/// correct-on-day-one insurance, not machinery doing work today.
+#[non_exhaustive]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SignerIdentity {
+    /// A person, identified by an email-claim-derived SAN.
+    Email { address: String, issuer: String },
+    /// A workload, identified by a subject-claim-derived SAN. For GitHub
+    /// Actions this is a workflow reference such as
+    /// `repo:org/repo:ref:refs/heads/main`.
+    Workload { subject: String, issuer: String },
+    /// A SAN form the current vocabulary does not recognise. Recorded
+    /// verbatim so an unfamiliar identity never fails a signature
+    /// (FR-007) and a verification command can still be built.
+    Unrecognized { value: String, issuer: String },
+}
+
+impl SignerIdentity {
+    /// The SAN string, whatever the shape. Feeds the pre-existing
+    /// `fulcio_cert_subject` log field unchanged (m779 FR-008).
+    pub fn subject_value(&self) -> &str {
+        match self {
+            Self::Email { address, .. } => address,
+            Self::Workload { subject, .. } => subject,
+            Self::Unrecognized { value, .. } => value,
+        }
+    }
+
+    /// The issuer the CERTIFICATE attests — not the token's `iss`, which
+    /// differs under federation (m779 FR-009).
+    pub fn issuer(&self) -> &str {
+        match self {
+            Self::Email { issuer, .. }
+            | Self::Workload { issuer, .. }
+            | Self::Unrecognized { issuer, .. } => issuer,
+        }
+    }
+
+    /// Stable classification token for logs. Closed set.
+    pub fn shape_name(&self) -> &'static str {
+        match self {
+            Self::Email { .. } => "email",
+            Self::Workload { .. } => "workload",
+            Self::Unrecognized { .. } => "unrecognized",
+        }
+    }
+}
+
+/// Which Sigstore deployment a signature was made against. Decides which
+/// verifier can actually verify it (m779 FR-009b).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SigstoreEnvironment {
+    Production,
+    Staging,
+    /// Neither standard deployment — self-hosted, or a mismatched pair.
+    Custom,
+}
+
+impl SigstoreEnvironment {
+    /// Classify from the configured endpoints.
+    ///
+    /// A mixed pair (production Fulcio, staging Rekor) is `Custom`: it is
+    /// a misconfiguration, and emitting a confident verification command
+    /// for it would be worse than emitting a labelled template.
+    pub fn classify(fulcio_url: &str, rekor_url: &str) -> Self {
+        let f = fulcio_url.trim_end_matches('/');
+        let r = rekor_url.trim_end_matches('/');
+        match (f, r) {
+            ("https://fulcio.sigstore.dev", "https://rekor.sigstore.dev") => Self::Production,
+            ("https://fulcio.sigstage.dev", "https://rekor.sigstage.dev") => Self::Staging,
+            _ => Self::Custom,
+        }
+    }
+}
+
+/// A verification command for a just-signed artifact (m779 FR-009a).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VerificationCommand {
+    /// The full command. Runnable as printed when `is_template` is false.
+    pub rendered: String,
+    /// True when the deployment is non-standard, so the operator must
+    /// supply their own trust configuration (m779 FR-009c).
+    pub is_template: bool,
+}
+
+impl VerificationCommand {
+    /// Render the command appropriate to `env`.
+    ///
+    /// Every substituted value comes from `identity`, which came from the
+    /// issued certificate — never from the token, which disagrees with
+    /// the certificate under federation.
+    ///
+    /// Subject and issuer are single-quoted: workload subjects contain
+    /// `:` and `/`, and an unquoted paste is a support ticket.
+    pub fn render(
+        env: SigstoreEnvironment,
+        identity: &SignerIdentity,
+        artifact: &std::path::Path,
+        sidecar: &std::path::Path,
+    ) -> Self {
+        let subject = identity.subject_value();
+        let issuer = identity.issuer();
+        let artifact = artifact.display();
+        let sidecar = sidecar.display();
+        match env {
+            // cosign is what every operator-facing doc and both release
+            // workflows use.
+            SigstoreEnvironment::Production => Self {
+                rendered: format!(
+                    "cosign verify-blob \\\n    --bundle {sidecar} \\\n    \
+                     --certificate-identity '{subject}' \\\n    \
+                     --certificate-oidc-issuer '{issuer}' \\\n    {artifact}"
+                ),
+                is_template: false,
+            },
+            // cosign has no built-in staging mode and would need a
+            // trusted-root file; the sigstore CLI takes --staging.
+            SigstoreEnvironment::Staging => Self {
+                rendered: format!(
+                    "sigstore --staging verify identity \\\n    --bundle {sidecar} \\\n    \
+                     --cert-identity '{subject}' \\\n    \
+                     --cert-oidc-issuer '{issuer}' \\\n    {artifact}"
+                ),
+                is_template: false,
+            },
+            SigstoreEnvironment::Custom => Self {
+                rendered: format!(
+                    "# Non-standard Sigstore deployment: supply your own trust root.\n\
+                     cosign verify-blob \\\n    --trusted-root <YOUR_TRUSTED_ROOT_JSON> \\\n    \
+                     --bundle {sidecar} \\\n    \
+                     --certificate-identity '{subject}' \\\n    \
+                     --certificate-oidc-issuer '{issuer}' \\\n    {artifact}"
+                ),
+                is_template: true,
+            },
+        }
+    }
+}
 
 /// Return type from `sign_keyless_sbom()`. Carries the Sigstore Bundle
 /// for callers to serialize into the CDX `metadata.signature` slot or
@@ -263,6 +415,15 @@ pub struct KeylessSignSuccess {
     /// FR-016 — which OIDC provider variant was used. Closed set:
     /// `"github-actions-ambient"` or `"explicit-env"`.
     pub oidc_provider: &'static str,
+    /// m779 FR-005 — the classified signer identity. `fulcio_cert_subject`
+    /// above is `identity.subject_value()`; it is retained under its
+    /// original name because operators and the m809 tests grep it
+    /// (m779 FR-008).
+    pub identity: SignerIdentity,
+    /// m779 FR-009b — which Sigstore deployment this was signed against,
+    /// so the caller can render a verification command naming a verifier
+    /// that can actually verify it.
+    pub environment: SigstoreEnvironment,
 }
 
 /// T015 (feature 222 US2b) — read `SIGSTORE_ID_TOKEN` env var, parse
@@ -273,9 +434,9 @@ fn identity_token_from_env_var() -> Result<sigstore::oauth::IdentityToken, Signi
     let raw = std::env::var("SIGSTORE_ID_TOKEN").map_err(|_| SigningError::OidcTokenError {
         detail: "SIGSTORE_ID_TOKEN env var is not set. Fetch a token with \
                  `sigstore get-identity-token` (pip install sigstore) and export \
-                 it. Note that GitHub Actions ambient OIDC does not work here: \
-                 sigstore-rs 0.11 requires an `email` claim, which GHA tokens do \
-                 not emit."
+                 it. Inside GitHub Actions you do not need this at all — grant the \
+                 job `permissions: id-token: write` and waybill uses the runner's \
+                 ambient credential directly."
             .to_string(),
     })?;
     let token = sigstore::oauth::IdentityToken::try_from(raw.as_str()).map_err(|e| {
@@ -288,6 +449,109 @@ fn identity_token_from_env_var() -> Result<sigstore::oauth::IdentityToken, Signi
             detail: "SIGSTORE_ID_TOKEN is outside its validity period (exp/nbf claims). \
                      These tokens are short-lived — fetch a fresh one with \
                      `sigstore get-identity-token` and re-export immediately before signing."
+                .to_string(),
+        });
+    }
+    Ok(token)
+}
+
+/// m779 T015 (FR-001) — exchange GitHub Actions' ambient credential for
+/// an OIDC identity token.
+///
+/// The runner exposes `ACTIONS_ID_TOKEN_REQUEST_URL` and
+/// `ACTIONS_ID_TOKEN_REQUEST_TOKEN` to any job granted
+/// `permissions: id-token: write`. A GET against the URL, bearing the
+/// token and naming an audience, returns `{"value": "<jwt>", ...}`.
+///
+/// **The request URL already carries a query string** (`?api-version=…`),
+/// so the audience is appended with `&`, not `?`. Getting that wrong
+/// yields a token the signing service rejects, and the resulting error
+/// points at the token rather than at the request that fetched it —
+/// which is precisely the wrong place to look. The author of the
+/// equivalent upstream change (sigstore/sigstore-rs#412) lost time to
+/// this exact mistake and initially suspected the token format.
+///
+/// Runs on a non-tokio thread (see `sign_keyless_sbom`), so a blocking
+/// client is correct here.
+fn identity_token_from_github_actions() -> Result<sigstore::oauth::IdentityToken, SigningError> {
+    let url = std::env::var("ACTIONS_ID_TOKEN_REQUEST_URL").map_err(|_| {
+        SigningError::OidcTokenError {
+            detail: "ACTIONS_ID_TOKEN_REQUEST_URL is not set. Inside GitHub \
+                     Actions this means the job lacks `permissions: id-token: write`; \
+                     outside it, set SIGSTORE_ID_TOKEN instead."
+                .to_string(),
+        }
+    })?;
+    let bearer = std::env::var("ACTIONS_ID_TOKEN_REQUEST_TOKEN").map_err(|_| {
+        SigningError::OidcTokenError {
+            detail: "ACTIONS_ID_TOKEN_REQUEST_TOKEN is not set even though \
+                     ACTIONS_ID_TOKEN_REQUEST_URL is. The ambient OIDC \
+                     credential is incomplete; check `permissions: id-token: write`."
+                .to_string(),
+        }
+    })?;
+
+    let separator = if url.contains('?') { '&' } else { '?' };
+    let request_url = format!("{url}{separator}audience=sigstore");
+
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .map_err(|e| SigningError::OidcTokenError {
+            detail: format!("could not build HTTP client for ambient OIDC exchange: {e}"),
+        })?;
+
+    let response = client
+        .get(&request_url)
+        .bearer_auth(&bearer)
+        .send()
+        .map_err(|e| SigningError::OidcTokenError {
+            detail: format!("ambient OIDC token request failed: {e}"),
+        })?;
+
+    let status = response.status();
+    if !status.is_success() {
+        let body = response.text().unwrap_or_else(|_| "<unreadable>".to_string());
+        return Err(SigningError::OidcTokenError {
+            detail: format!(
+                "ambient OIDC token request returned {status}. Body: {}",
+                body.chars().take(300).collect::<String>()
+            ),
+        });
+    }
+
+    #[derive(serde::Deserialize)]
+    struct TokenResponse {
+        value: String,
+    }
+    let parsed: TokenResponse =
+        response
+            .json()
+            .map_err(|e| SigningError::OidcTokenError {
+                detail: format!(
+                    "ambient OIDC token response was not the expected \
+                     {{\"value\": \"<jwt>\"}} shape: {e}"
+                ),
+            })?;
+
+    if parsed.value.is_empty() {
+        return Err(SigningError::OidcTokenError {
+            detail: "ambient OIDC token response carried an empty `value`".to_string(),
+        });
+    }
+
+    let token = sigstore::oauth::IdentityToken::try_from(parsed.value.as_str()).map_err(|e| {
+        SigningError::OidcTokenError {
+            detail: format!("ambient OIDC token could not be parsed as a JWT: {e}"),
+        }
+    })?;
+
+    // Same validity check the explicit-env path applies, so an expired
+    // ambient credential fails here rather than at Fulcio (m779 T018).
+    if !token.in_validity_period() {
+        return Err(SigningError::OidcTokenError {
+            detail: "ambient OIDC token is outside its validity period. These \
+                     are short-lived; the runner should mint a fresh one per job."
                 .to_string(),
         });
     }
@@ -313,15 +577,7 @@ pub fn resolve_identity_token(
 ) -> Result<sigstore::oauth::IdentityToken, SigningError> {
     match provider {
         OidcProvider::Explicit => identity_token_from_env_var(),
-        OidcProvider::GitHubActions => Err(SigningError::OidcTokenError {
-            detail: "GitHub Actions ambient OIDC is not supported in this version of \
-                     waybill because sigstore-rs 0.11 requires an `email` claim, which \
-                     GHA tokens do not emit. Workaround: fetch a token via a helper \
-                     (`sigstore get-identity-token` locally, or the \
-                     `sigstore/gh-action-sigstore-python` action in CI) and export it \
-                     as SIGSTORE_ID_TOKEN before running `waybill sbom scan --sign`."
-                .to_string(),
-        }),
+        OidcProvider::GitHubActions => identity_token_from_github_actions(),
         OidcProvider::Interactive => Err(SigningError::OidcTokenError {
             detail: "no OIDC token available; set SIGSTORE_ID_TOKEN, e.g. \
                      `export SIGSTORE_ID_TOKEN=$(sigstore get-identity-token)` \
@@ -353,20 +609,78 @@ fn classify_sign_error(err: sigstore::errors::SigstoreError) -> SigningError {
     }
 }
 
-/// Extract the Subject Alternative Name from a DER-encoded X.509 leaf
-/// certificate. Fulcio-issued certs place the OIDC identity (e.g.
-/// `https://github.com/kusari-sandbox/waybill/.github/workflows/ci.yml@refs/heads/main`
-/// for a GHA-ambient token, or `mike@kusari.dev` for a personal login)
-/// in a SAN URI or SAN email extension. We return whichever comes first.
+/// Fulcio's OIDC-issuer extension, DER-encoded UTF8String (v2).
+const OID_FULCIO_ISSUER_V2: &str = "1.3.6.1.4.1.57264.1.8";
+/// Fulcio's original OIDC-issuer extension, raw UTF-8 bytes (v1).
+/// Still present on older certificates.
+const OID_FULCIO_ISSUER_V1: &str = "1.3.6.1.4.1.57264.1.1";
+
+/// Read the issuer Fulcio recorded in the certificate.
 ///
-/// Contract source: `specs/222-sigstore-keyless-signing/contracts/keyless-signing-flow.md`
-/// §Step 3 — extraction of `fulcio_cert_subject` for FR-016 log field.
-fn extract_fulcio_cert_subject(cert_der: &[u8]) -> Result<String, SigningError> {
+/// This is deliberately not the token's `iss`. Under federation they
+/// differ — signing through Sigstore's dex with a Google account yields a
+/// token claiming the dex endpoint and a certificate claiming
+/// `https://accounts.google.com` — and only the certificate's value
+/// verifies. Supplying the token's produces `Certificate's OIDCIssuer
+/// does not match`, which reads like a broken signature and is not one.
+fn extract_cert_oidc_issuer(
+    cert: &x509_parser::certificate::X509Certificate<'_>,
+) -> Result<String, SigningError> {
+    for ext in cert.extensions() {
+        let oid = ext.oid.to_id_string();
+        if oid == OID_FULCIO_ISSUER_V2 {
+            // DER UTF8String: tag 0x0c, then length, then bytes. Fall
+            // back to the raw value if it is not shaped that way rather
+            // than failing — an unreadable issuer should not sink a
+            // signature that is otherwise fine.
+            let v = ext.value;
+            if v.len() >= 2 && v[0] == 0x0c {
+                let len = v[1] as usize;
+                if v.len() >= 2 + len {
+                    return Ok(String::from_utf8_lossy(&v[2..2 + len]).into_owned());
+                }
+            }
+            return Ok(String::from_utf8_lossy(v).into_owned());
+        }
+        if oid == OID_FULCIO_ISSUER_V1 {
+            return Ok(String::from_utf8_lossy(ext.value).into_owned());
+        }
+    }
+    Err(SigningError::CryptoError {
+        detail: "Fulcio-issued cert carries no OIDC-issuer extension \
+                 (looked for 1.3.6.1.4.1.57264.1.8 and .1.1) — cannot \
+                 build a verification command without the issuer"
+            .to_string(),
+    })
+}
+
+/// Classify the signer identity recorded in a DER-encoded X.509 leaf.
+///
+/// Fulcio places the OIDC identity in a SAN: an `rfc822Name` for a person
+/// (`someone@example.com`) or a URI for a workload
+/// (`https://github.com/org/repo/.github/workflows/ci.yml@refs/heads/main`).
+/// Anything else is recorded verbatim rather than rejected (m779 FR-007).
+///
+/// Classifying from the certificate rather than the token is deliberate:
+/// the certificate is what a verifier checks, so a record derived from it
+/// cannot disagree with verification.
+///
+/// Supersedes m222's `extract_fulcio_cert_subject`, which returned a bare
+/// `String` and could not distinguish the two.
+fn extract_signing_identity(cert_der: &[u8]) -> Result<SignerIdentity, SigningError> {
     use x509_parser::extensions::GeneralName;
     let (_, cert) =
         x509_parser::parse_x509_certificate(cert_der).map_err(|e| SigningError::CryptoError {
             detail: format!("Fulcio cert DER could not be parsed: {e}"),
         })?;
+
+    let issuer = extract_cert_oidc_issuer(&cert)?;
+    if issuer.is_empty() {
+        return Err(SigningError::CryptoError {
+            detail: "Fulcio cert OIDC-issuer extension is empty".to_string(),
+        });
+    }
+
     let san_ext = cert
         .subject_alternative_name()
         .map_err(|e| SigningError::CryptoError {
@@ -374,18 +688,39 @@ fn extract_fulcio_cert_subject(cert_der: &[u8]) -> Result<String, SigningError> 
         })?
         .ok_or_else(|| SigningError::CryptoError {
             detail: "Fulcio-issued cert has no Subject Alternative Name extension \
-                     (expected either URI-form workflow-identity or rfc822Name email)"
+                     (expected either URI-form workload-identity or rfc822Name email)"
                 .to_string(),
         })?;
+
+    // First-match ordering preserves m222 behaviour for email certs.
     for name in &san_ext.value.general_names {
-        match name {
-            GeneralName::URI(uri) => return Ok((*uri).to_string()),
-            GeneralName::RFC822Name(email) => return Ok((*email).to_string()),
+        let identity = match name {
+            GeneralName::RFC822Name(v) => SignerIdentity::Email {
+                address: (*v).to_string(),
+                issuer: issuer.clone(),
+            },
+            GeneralName::URI(v) => SignerIdentity::Workload {
+                subject: (*v).to_string(),
+                issuer: issuer.clone(),
+            },
+            GeneralName::DNSName(v) => SignerIdentity::Unrecognized {
+                value: (*v).to_string(),
+                issuer: issuer.clone(),
+            },
             _ => continue,
+        };
+        if identity.subject_value().is_empty() {
+            return Err(SigningError::CryptoError {
+                detail: "Fulcio cert SAN entry is empty — refusing to record \
+                         a blank signer identity"
+                    .to_string(),
+            });
         }
+        return Ok(identity);
     }
+
     Err(SigningError::CryptoError {
-        detail: "Fulcio cert SAN extension contains no URI or RFC822 (email) entries \
+        detail: "Fulcio cert SAN extension contains no usable entry \
                  — cannot determine signer identity"
             .to_string(),
     })
@@ -556,19 +891,21 @@ fn sign_keyless_sbom_no_tokio(
     }
     let rekor_log_index = log_index_i64 as u64;
 
-    // Extract the leaf Fulcio cert's SAN for FR-016 audit-trail logging.
+    // Classify the leaf Fulcio cert's identity (m779 FR-005). Emptiness
+    // is rejected inside extract_signing_identity, so no separate check.
     let leaf_cert_der = extract_leaf_cert_der(verification_material)?;
-    let fulcio_cert_subject = extract_fulcio_cert_subject(&leaf_cert_der)?;
-    if fulcio_cert_subject.is_empty() {
-        return Err(SigningError::CryptoError {
-            detail: "Fulcio cert SAN is empty — cannot determine signer identity".to_string(),
-        });
-    }
+    let identity = extract_signing_identity(&leaf_cert_der)?;
+    let fulcio_cert_subject = identity.subject_value().to_string();
+    let environment = SigstoreEnvironment::classify(fulcio_url, rekor_url);
 
-    // Step 6: FR-016 — INFO log with the three audit-trail fields.
+    // Step 6: m222 FR-016 audit-trail fields, plus the two m779 adds.
+    // The three original field names keep their spelling — operators and
+    // the m809 assertions grep them.
     tracing::info!(
         rekor_log_index,
         fulcio_cert_subject = %fulcio_cert_subject,
+        fulcio_cert_identity_shape = identity.shape_name(),
+        fulcio_cert_oidc_issuer = %identity.issuer(),
         oidc_provider = oidc_provider_label,
         "SBOM signed via Sigstore keyless"
     );
@@ -579,6 +916,8 @@ fn sign_keyless_sbom_no_tokio(
         rekor_log_index,
         fulcio_cert_subject,
         oidc_provider: oidc_provider_label,
+        identity,
+        environment,
     })
 }
 
@@ -1016,21 +1355,90 @@ mod tests {
 
     #[test]
     fn resolve_identity_token_github_actions_returns_fail_close_diagnostic_m222() {
-        // v1 scope-down (post PR #645): GHA-ambient returns fail-close
-        // with actionable diagnostic pointing at the helper-action
-        // workaround. sigstore-rs 0.11's email-claim requirement is
-        // the reason (see resolve_identity_token doc-comment).
+        // m779: GHA-ambient is now a real path, not a fail-close stub.
+        // This test previously asserted the "not supported" wording and
+        // the helper-action workaround, which pinned guidance that has
+        // since become false — the same shape of defect as the
+        // `cosign login --identity-token` recipe in #810/#811, where
+        // tests locked in advice that could not work.
+        //
+        // Off a runner there is no ambient credential, so the exchange
+        // must fail closed. What matters is that the diagnostic points
+        // at the permission that is actually missing.
+        let _guard = EnvGuard::acquire();
+        std::env::remove_var("ACTIONS_ID_TOKEN_REQUEST_URL");
+        std::env::remove_var("ACTIONS_ID_TOKEN_REQUEST_TOKEN");
         match resolve_identity_token(&OidcProvider::GitHubActions) {
             Err(SigningError::OidcTokenError { detail }) => {
                 assert!(
-                    detail.contains("GitHub Actions ambient OIDC is not supported"),
+                    detail.contains("ACTIONS_ID_TOKEN_REQUEST_URL"),
                     "detail: {detail}"
                 );
-                assert!(detail.contains("email"), "detail: {detail}");
-                assert!(detail.contains("SIGSTORE_ID_TOKEN"), "detail: {detail}");
                 assert!(
-                    detail.contains("sigstore/gh-action-sigstore-python")
-                        || detail.contains("sigstore get-identity-token"),
+                    detail.contains("id-token: write"),
+                    "diagnostic must name the missing permission: {detail}"
+                );
+                assert!(
+                    !detail.contains("not supported"),
+                    "stale 'not supported' wording survived m779: {detail}"
+                );
+            }
+            Err(other) => panic!("expected OidcTokenError variant, got {other:?}"),
+            Ok(_) => panic!("expected fail-close error, got Ok(IdentityToken)"),
+        }
+    }
+
+    #[test]
+    fn m779_t013_detect_returns_github_actions_when_ambient_env_present() {
+        let _guard = EnvGuard::acquire();
+        std::env::set_var(
+            "ACTIONS_ID_TOKEN_REQUEST_URL",
+            "https://example.test/token?api-version=2.0",
+        );
+        std::env::set_var("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "placeholder");
+        let detected = OidcProvider::detect();
+        std::env::remove_var("ACTIONS_ID_TOKEN_REQUEST_URL");
+        std::env::remove_var("ACTIONS_ID_TOKEN_REQUEST_TOKEN");
+        assert_eq!(detected, OidcProvider::GitHubActions);
+    }
+
+    #[test]
+    fn m779_t015_audience_is_appended_with_the_right_separator() {
+        // GitHub's request URL already carries `?api-version=...`, so the
+        // audience must be joined with `&`. Using `?` produces a URL the
+        // runner answers differently, and the resulting failure surfaces
+        // as a token problem rather than a request problem — the author
+        // of upstream sigstore/sigstore-rs#412 lost time to exactly this.
+        let with_query = "https://example.test/token?api-version=2.0";
+        let sep = if with_query.contains('?') { '&' } else { '?' };
+        assert_eq!(
+            format!("{with_query}{sep}audience=sigstore"),
+            "https://example.test/token?api-version=2.0&audience=sigstore"
+        );
+        let bare = "https://example.test/token";
+        let sep = if bare.contains('?') { '&' } else { '?' };
+        assert_eq!(
+            format!("{bare}{sep}audience=sigstore"),
+            "https://example.test/token?audience=sigstore"
+        );
+    }
+
+    #[test]
+    fn m779_t012_missing_ambient_token_env_fails_before_any_network_call() {
+        // FR-003: fail closed, and name what was missing. The URL is set
+        // but the bearer token is not — a half-configured runner.
+        let _guard = EnvGuard::acquire();
+        std::env::set_var(
+            "ACTIONS_ID_TOKEN_REQUEST_URL",
+            "https://127.0.0.1:1/unreachable?api-version=2.0",
+        );
+        std::env::remove_var("ACTIONS_ID_TOKEN_REQUEST_TOKEN");
+        let result = identity_token_from_github_actions();
+        std::env::remove_var("ACTIONS_ID_TOKEN_REQUEST_URL");
+        match result {
+            Err(SigningError::OidcTokenError { detail }) => {
+                assert!(
+                    detail.contains("ACTIONS_ID_TOKEN_REQUEST_TOKEN"),
                     "detail: {detail}"
                 );
             }
@@ -1080,4 +1488,181 @@ mod tests {
     // podman + cargo m205 flake class. Import shape:
     // `use crate::testing::EnvGuard;` (see the top-level `use` in
     // this `mod tests { ... }` block).
+    // ---- m779: signer identity, environment, verification command ----
+
+    /// Build a DER certificate carrying `san` and a Fulcio-style
+    /// OIDC-issuer extension. Real DER rather than a hand-rolled stub, so
+    /// the test exercises the same parse path production does.
+    fn cert_with(san: rcgen::SanType, issuer: &str) -> Vec<u8> {
+        use rcgen::{CertificateParams, CustomExtension, KeyPair};
+        let mut params = CertificateParams::new(vec![]).unwrap();
+        params.subject_alt_names = vec![san];
+        // 1.3.6.1.4.1.57264.1.8, DER UTF8String.
+        let mut der = vec![0x0c, issuer.len() as u8];
+        der.extend_from_slice(issuer.as_bytes());
+        params.custom_extensions = vec![CustomExtension::from_oid_content(
+            &[1, 3, 6, 1, 4, 1, 57264, 1, 8],
+            der,
+        )];
+        let key = KeyPair::generate().unwrap();
+        params.self_signed(&key).unwrap().der().to_vec()
+    }
+
+    #[test]
+    fn m779_t019_rfc822_san_classifies_as_email() {
+        let der = cert_with(
+            rcgen::SanType::Rfc822Name("someone@example.com".try_into().unwrap()),
+            "https://accounts.google.com",
+        );
+        let id = extract_signing_identity(&der).expect("classify");
+        assert_eq!(
+            id,
+            SignerIdentity::Email {
+                address: "someone@example.com".to_string(),
+                issuer: "https://accounts.google.com".to_string(),
+            }
+        );
+        assert_eq!(id.shape_name(), "email");
+        assert_eq!(id.subject_value(), "someone@example.com");
+    }
+
+    #[test]
+    fn m779_t019_uri_san_classifies_as_workload() {
+        let der = cert_with(
+            rcgen::SanType::URI(
+                "https://github.com/example-org/example-repo/.github/workflows/ci.yml@refs/heads/main"
+                    .try_into()
+                    .unwrap(),
+            ),
+            "https://token.actions.githubusercontent.com",
+        );
+        let id = extract_signing_identity(&der).expect("classify");
+        assert_eq!(id.shape_name(), "workload");
+        assert_eq!(id.issuer(), "https://token.actions.githubusercontent.com");
+    }
+
+    #[test]
+    fn m779_t019_unfamiliar_san_form_is_recorded_not_rejected() {
+        // FR-007: an identity shape we do not know must not sink an
+        // otherwise-valid signature.
+        let der = cert_with(
+            rcgen::SanType::DnsName("build-01.example.test".try_into().unwrap()),
+            "https://oidc.example.test",
+        );
+        let id = extract_signing_identity(&der).expect("must not fail");
+        assert_eq!(id.shape_name(), "unrecognized");
+        assert_eq!(id.subject_value(), "build-01.example.test");
+    }
+
+    #[test]
+    fn m779_t019_missing_issuer_extension_is_refused() {
+        use rcgen::{CertificateParams, KeyPair};
+        let mut params = CertificateParams::new(vec![]).unwrap();
+        params.subject_alt_names =
+            vec![rcgen::SanType::Rfc822Name("someone@example.com".try_into().unwrap())];
+        let key = KeyPair::generate().unwrap();
+        let der = params.self_signed(&key).unwrap().der().to_vec();
+        // Without an issuer there is no verification command to build, so
+        // recording a half-identity would be worse than failing.
+        let err = extract_signing_identity(&der).expect_err("must fail");
+        assert!(
+            format!("{err:?}").contains("OIDC-issuer extension"),
+            "unexpected: {err:?}"
+        );
+    }
+
+    #[test]
+    fn m779_t020_environment_classification() {
+        assert_eq!(
+            SigstoreEnvironment::classify(
+                "https://fulcio.sigstore.dev",
+                "https://rekor.sigstore.dev"
+            ),
+            SigstoreEnvironment::Production
+        );
+        assert_eq!(
+            SigstoreEnvironment::classify(
+                "https://fulcio.sigstage.dev",
+                "https://rekor.sigstage.dev"
+            ),
+            SigstoreEnvironment::Staging
+        );
+        // A mixed pair is a misconfiguration. Emitting a confident
+        // command for it would be worse than emitting a template.
+        assert_eq!(
+            SigstoreEnvironment::classify(
+                "https://fulcio.sigstore.dev",
+                "https://rekor.sigstage.dev"
+            ),
+            SigstoreEnvironment::Custom
+        );
+        assert_eq!(
+            SigstoreEnvironment::classify("https://fulcio.internal", "https://rekor.internal"),
+            SigstoreEnvironment::Custom
+        );
+    }
+
+    #[test]
+    fn m779_t021_production_renders_cosign_and_staging_renders_sigstore() {
+        let id = SignerIdentity::Workload {
+            subject: "repo:example-org/example-repo:ref:refs/heads/main".to_string(),
+            issuer: "https://token.actions.githubusercontent.com".to_string(),
+        };
+        let artifact = std::path::Path::new("/tmp/signed.cdx.json");
+        let sidecar = std::path::Path::new("/tmp/signed.cdx.json.sig.bundle.json");
+
+        let prod = VerificationCommand::render(
+            SigstoreEnvironment::Production,
+            &id,
+            artifact,
+            sidecar,
+        );
+        assert!(prod.rendered.starts_with("cosign verify-blob"), "{prod:?}");
+        assert!(!prod.is_template);
+
+        // cosign has no built-in staging mode, so a cosign command here
+        // would not run as printed — which is the whole failure FR-009b
+        // exists to prevent.
+        let stg =
+            VerificationCommand::render(SigstoreEnvironment::Staging, &id, artifact, sidecar);
+        assert!(stg.rendered.starts_with("sigstore --staging"), "{stg:?}");
+        assert!(!stg.is_template);
+    }
+
+    #[test]
+    fn m779_t021_workload_subject_is_quoted() {
+        let id = SignerIdentity::Workload {
+            subject: "repo:example-org/example-repo:ref:refs/heads/main".to_string(),
+            issuer: "https://token.actions.githubusercontent.com".to_string(),
+        };
+        let cmd = VerificationCommand::render(
+            SigstoreEnvironment::Production,
+            &id,
+            std::path::Path::new("/tmp/a.json"),
+            std::path::Path::new("/tmp/a.json.sig.bundle.json"),
+        );
+        // Unquoted, a subject containing ':' and '/' is a support ticket.
+        assert!(
+            cmd.rendered
+                .contains("'repo:example-org/example-repo:ref:refs/heads/main'"),
+            "{}",
+            cmd.rendered
+        );
+    }
+
+    #[test]
+    fn m779_t021_custom_environment_is_labelled_a_template() {
+        let id = SignerIdentity::Email {
+            address: "someone@example.com".to_string(),
+            issuer: "https://oidc.example.test".to_string(),
+        };
+        let cmd = VerificationCommand::render(
+            SigstoreEnvironment::Custom,
+            &id,
+            std::path::Path::new("/tmp/a.json"),
+            std::path::Path::new("/tmp/a.json.sig.bundle.json"),
+        );
+        assert!(cmd.is_template);
+        assert!(cmd.rendered.contains("--trusted-root"), "{}", cmd.rendered);
+    }
 }

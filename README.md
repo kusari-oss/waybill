@@ -223,19 +223,31 @@ practices/processes has a per-emitter verdict at
 evidence-cited, backed by a machine-verifying integration test that
 runs against every CI build, so regressions surface immediately.
 
-**Row 2 (SBOM Author Signature)** ships as opt-in: `--sign-key <PATH>`
+**Row 2 (SBOM Author Signature)** ships as opt-in. `--sign-key <PATH>`
 produces JSF static-key signatures on CDX (in-slot) and DSSE sidecars
-on SPDX; `--sign` produces Sigstore keyless signatures via OIDC →
-Fulcio → Rekor with the resulting Sigstore Bundle embedded in CDX
-`metadata.signature` or written to `.sig.bundle.json` sidecar for
-SPDX. **v1 scope**: `--sign` requires a token from an email-emitting
-OIDC provider (e.g., `cosign login`, Sigstore-dex, Google, GitLab)
-exported as `SIGSTORE_ID_TOKEN`. GitHub Actions ambient tokens are
-not directly supported in v1; GHA users fetch a compatible token via
-a helper action. Full GHA-ambient support deferred to a follow-up
-milestone. Details at
-[`docs/sigstore-trust-keys.md`](docs/sigstore-trust-keys.md) +
-[`specs/222-sigstore-keyless-signing/quickstart.md`](specs/222-sigstore-keyless-signing/quickstart.md).
+on SPDX. `--sign` produces Sigstore keyless signatures via OIDC →
+Fulcio → Rekor, written to a detached `.sig.bundle.json` sidecar for
+every format — CycloneDX included, since a Sigstore Bundle has no
+conformant in-document representation (see m778).
+
+Two ways to supply an identity:
+
+- **In GitHub Actions**, grant the job `permissions: id-token: write`
+  and run `--sign`. waybill exchanges the runner's ambient credential
+  itself; no token handling, no helper action, no secret. The signer
+  identity recorded is the *workflow*, e.g.
+  `repo:org/repo:ref:refs/heads/main`, not a person.
+- **Anywhere else**, export `SIGSTORE_ID_TOKEN` — fetch one with
+  `sigstore get-identity-token` (`pip install sigstore`). The identity
+  recorded is the account's email address.
+
+waybill prints a ready-to-run verification command on every successful
+sign. Prefer it over composing one by hand: under federation the
+certificate's issuer differs from the token's, and only the
+certificate's verifies.
+
+Details at [`docs/sigstore-trust-keys.md`](docs/sigstore-trust-keys.md)
++ [`docs/verifying-releases.md`](docs/verifying-releases.md).
 
 Referenced downstream by EU CRA (Regulation (EU) 2024/2847) Article
 3, BSI TR-03183-2, CERT-In's Technical Guidelines on Bill of

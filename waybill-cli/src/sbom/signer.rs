@@ -118,7 +118,17 @@ pub enum Sidecar {
     Dsse(SignedEnvelope),
     /// Sigstore Bundle — m222 US2b keyless flow. Sidecar filename
     /// `.sig.bundle.json` per FR-004.
-    SigstoreBundle(Box<sigstore::bundle::Bundle>),
+    ///
+    /// m779 threads the signer identity and Sigstore environment out
+    /// alongside the bundle. Both are read off the issued certificate,
+    /// and the CLI needs them to render a verification command (FR-009a)
+    /// — the signer cannot render it itself because that needs the
+    /// output paths, which are a CLI-layer concern.
+    SigstoreBundle {
+        bundle: Box<sigstore::bundle::Bundle>,
+        identity: crate::attestation::signer::SignerIdentity,
+        environment: crate::attestation::signer::SigstoreEnvironment,
+    },
 }
 
 impl Sidecar {
@@ -127,7 +137,7 @@ impl Sidecar {
     pub fn to_json_bytes(&self) -> Result<Vec<u8>, serde_json::Error> {
         match self {
             Sidecar::Dsse(envelope) => serde_json::to_vec_pretty(envelope),
-            Sidecar::SigstoreBundle(bundle) => serde_json::to_vec_pretty(bundle.as_ref()),
+            Sidecar::SigstoreBundle { bundle, .. } => serde_json::to_vec_pretty(bundle.as_ref()),
         }
     }
 
@@ -137,7 +147,7 @@ impl Sidecar {
     pub fn sidecar_suffix(&self) -> &'static str {
         match self {
             Sidecar::Dsse(_) => ".sig.json",
-            Sidecar::SigstoreBundle(_) => ".sig.bundle.json",
+            Sidecar::SigstoreBundle { .. } => ".sig.bundle.json",
         }
     }
 
@@ -145,7 +155,7 @@ impl Sidecar {
     pub fn kind_label(&self) -> &'static str {
         match self {
             Sidecar::Dsse(_) => "DSSE",
-            Sidecar::SigstoreBundle(_) => "Sigstore Bundle",
+            Sidecar::SigstoreBundle { .. } => "Sigstore Bundle",
         }
     }
 }
@@ -430,7 +440,11 @@ pub fn sign_sbom_bytes_to_sidecar(
         .map_err(|e| SbomSigningError::SignFailed {
             detail: format!("Sigstore keyless sign failed: {e}"),
         })?;
-        return Ok(Some(Sidecar::SigstoreBundle(Box::new(success.bundle))));
+        return Ok(Some(Sidecar::SigstoreBundle {
+            bundle: Box::new(success.bundle),
+            identity: success.identity,
+            environment: success.environment,
+        }));
     }
 
     let keypair = load_key(mode)?;
@@ -481,7 +495,7 @@ pub fn sign_spdx_bytes_to_dsse(
     match sign_sbom_bytes_to_sidecar(spdx_bytes, mode)? {
         None => Ok(None),
         Some(Sidecar::Dsse(env)) => Ok(Some(env)),
-        Some(Sidecar::SigstoreBundle(_)) => Err(SbomSigningError::NotImplemented {
+        Some(Sidecar::SigstoreBundle { .. }) => Err(SbomSigningError::NotImplemented {
             operation: "sign_spdx_bytes_to_dsse called with SigningMode::Keyless — \
                         Sigstore keyless signing produces a Bundle sidecar, not DSSE. \
                         Callers must migrate to sign_sbom_bytes_to_sidecar."

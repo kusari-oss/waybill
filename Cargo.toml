@@ -46,12 +46,21 @@ url = "2"
 # Principle I (Pure Rust, Zero C). See specs/222-sigstore-keyless-signing/
 # research.md §R1 + docs/sigstore-trust-keys.md.
 #
-# Un-patch when the upstream PR at sigstore/sigstore-rs lands + a
-# release ships. Fork lives at kusari-sandbox/sigstore-rs, tag
-# `v0.11.0-waybill-1` (rebase-on-release policy documented in
-# docs/sigstore-trust-keys.md).
+# Milestone 779 adds a second patch on the same fork: accept OIDC
+# tokens whose signer identity lives in `sub` rather than `email`, so a
+# CI runner's ambient credential can sign. Upstream requires `email`,
+# rejecting workload tokens during deserialization with the unhelpful
+# "Malformed JWT: claims JSON malformed". This is upstream issue
+# sigstore/sigstore-rs#413 (plus #409 for the federated issuer); a fix
+# exists at PR #412, approved by a maintainer in Oct 2024 and never
+# merged — it has since gone conflicting. The defect is unchanged as of
+# upstream v0.14.0, so the patch survives any rebase to at least that.
+#
+# Un-patch when the upstream PRs land + a release ships. Fork lives at
+# kusari-sandbox/sigstore-rs, tag `v0.11.0-waybill-3` (rebase-on-release
+# policy documented in docs/sigstore-trust-keys.md).
 [patch.crates-io]
-sigstore = { git = "https://github.com/kusari-sandbox/sigstore-rs.git", tag = "v0.11.0-waybill-1" }
+sigstore = { git = "https://github.com/kusari-sandbox/sigstore-rs.git", tag = "v0.11.0-waybill-3" }
 
 # waybill-ebpf is built separately via xtask (different target triple)
 # and is NOT a workspace member — it uses #![no_std] + nightly + bpf target

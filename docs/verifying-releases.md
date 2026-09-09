@@ -75,6 +75,54 @@ gh attestation verify waybill-source.cdx.json --repo kusari-oss/waybill
 
 **Expected output**: same shape as Step 2.
 
+### Verifying a waybill-produced keyless signature
+
+An SBOM signed with `waybill sbom scan --sign` carries a detached
+Sigstore Bundle sidecar at `<output>.sig.bundle.json`. Two things about
+the verification command differ from the recipes above, and both have
+caused real confusion:
+
+**1. The identity depends on who signed.** waybill records an *identity
+shape* alongside the subject:
+
+| Shape | `--certificate-identity` looks like | Produced by |
+|---|---|---|
+| `email` | `someone@example.com` | a person, via `SIGSTORE_ID_TOKEN` |
+| `workload` | `repo:org/repo:ref:refs/heads/main` | a CI job's ambient credential |
+
+A recipe written for one will not match the other.
+
+**2. The issuer is the certificate's, not the token's.** Under
+federation these differ — signing through Sigstore's dex with a Google
+account yields a token claiming the dex endpoint and a certificate
+claiming `https://accounts.google.com`. Passing the token's value fails
+with:
+
+```text
+Certificate's OIDCIssuer does not match (got ..., expected ...)
+```
+
+which reads like a broken signature and is not one.
+
+**So do not compose the command by hand.** waybill prints one on every
+successful sign, built entirely from the issued certificate, so it
+cannot disagree with what actually verifies:
+
+```text
+To verify:
+  cosign verify-blob \
+      --bundle signed.cdx.json.sig.bundle.json \
+      --certificate-identity 'repo:kusari-oss/waybill:ref:refs/heads/main' \
+      --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
+      signed.cdx.json
+```
+
+Signatures made against **Sigstore staging** get a different verifier:
+cosign has no built-in staging mode and would need a `--trusted-root`
+file, so waybill emits a `sigstore --staging verify identity` command
+instead. For a non-standard Sigstore deployment it emits a command
+explicitly labelled as a template requiring your own trust root.
+
 ## Step 5 — Verify a mirrored artifact (offline / third-party registry)
 
 If the tarball has been re-published into your own artifact registry (Artifactory, Nexus, Harbor, S3 bucket, ...), the `gh attestation verify` API-based path won't reach GitHub's attestation store from the consumer side. Use the transferable Sigstore bundle path instead:
