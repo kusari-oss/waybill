@@ -69,7 +69,7 @@
     "SPDXRef-DocumentRoot-GR24VY6F3DZLTX3L"
   ],
   "documentNamespace": "https://waybill.kusari.dev/spdx/XMX6JDUMKZQLIEVL6IJY2BKVGCK6UX2Z",
-  "name": "bazel",
+  "name": "Waybill source scan (identity unavailable)",
   "packages": [
     {
       "SPDXID": "SPDXRef-DocumentRoot-GR24VY6F3DZLTX3L",

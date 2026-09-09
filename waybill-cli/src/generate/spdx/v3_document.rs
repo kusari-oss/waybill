@@ -354,24 +354,14 @@ pub fn build_document(
     // The shared `spdx-context.jsonld` already maps the
     // unprefixed `comment` key, so no @context change needed.
     let scope_comment = super::document::build_scope_comment(scan);
-    // Milestone 080 — `--scan-target-name` overrides `software_Sbom.name`
-    // independently of milestone 077's `--root-name` (per research §5
-    // SPDX 3 honors both flags independently). Precedence:
-    //   1. `--scan-target-name` (milestone 080) — highest precedence
-    //      for SPDX 3 document-level name.
-    //   2. milestone 077 `--root-name` (when active).
-    //   3. auto-derived `target_name`.
-    let document_name_owned: String = if let Some(s) = scan.user_metadata.scan_target_name.as_deref() {
-        s.to_string()
-    } else if scan.root_override.is_active() {
-        scan.root_override
-            .name
-            .as_deref()
-            .unwrap_or(scan.target_name)
-            .to_string()
-    } else {
-        scan.target_name.to_string()
-    };
+    let placeholder_root = synthetic_root_added
+        && (scan.root_override.name.is_none() || scan.root_override.version.is_none());
+    let document_name_owned = super::document_name::derive_v3(
+        &root_iris,
+        &packages,
+        scan,
+        placeholder_root,
+    );
     let document_name: &str = document_name_owned.as_str();
     let mut spdx_document = json!({
         "type": "SpdxDocument",

@@ -63,7 +63,7 @@
     "SPDXRef-DocumentRoot-UDHNZC4TAV25XXX6"
   ],
   "documentNamespace": "https://waybill.kusari.dev/spdx/6FM7AWWBJGSL4OC3XP2AESJGANCGYLG6",
-  "name": "bdb-only",
+  "name": "Waybill source scan (identity unavailable)",
   "packages": [
     {
       "SPDXID": "SPDXRef-DocumentRoot-UDHNZC4TAV25XXX6",

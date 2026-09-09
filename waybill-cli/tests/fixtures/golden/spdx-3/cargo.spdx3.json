@@ -35,7 +35,7 @@
       "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: pre-build. Per-component scope detail in waybill:sbom-tier annotations.",
       "creationInfo": "_:creation-info",
       "dataLicense": "https://spdx.org/licenses/CC0-1.0",
-      "name": "lockfile-v3",
+      "name": "Waybill source scan (identity unavailable)",
       "rootElement": [
         "https://waybill.kusari.dev/spdx3/doc-YHOEFWUKBPXRPI2ENZFKE47T/pkg-root-H5VPHAIRCLACRQYQ"
       ],
@@ -44,7 +44,7 @@
     },
     {
       "creationInfo": "_:creation-info",
-      "name": "lockfile-v3",
+      "name": "Waybill source scan (identity unavailable)",
       "rootElement": [
         "https://waybill.kusari.dev/spdx3/doc-YHOEFWUKBPXRPI2ENZFKE47T/pkg-root-H5VPHAIRCLACRQYQ"
       ],

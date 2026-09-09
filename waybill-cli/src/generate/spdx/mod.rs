@@ -26,6 +26,7 @@
 
 pub mod annotations;
 pub mod document;
+mod document_name;
 pub mod ids;
 pub mod packages;
 pub mod relationships;

@@ -1531,6 +1531,41 @@ When both `--scan-target-name` and `--root-name` are set on a CDX emission,
 warning is emitted). On SPDX 2.3 / SPDX 3 the two flags target different
 fields and both are honored independently.
 
+For filesystem/source scans, SPDX 2.3's top-level document `name` and
+SPDX 3's `SpdxDocument.name` / `software_Sbom.name` use the same priority:
+
+1. Explicit `--scan-target-name` or `scan_target_name` from `--metadata-file`.
+   As with other single-valued metadata fields, supplying both is an error.
+2. The final described root package's `<name> <version>`, including
+   `--root-name` / `--root-version`. Roots are resolved by `documentDescribes`
+   and document-originating `DESCRIBES` relationships in SPDX 2.3, and by
+   the emitted `rootElement` IRIs in SPDX 3, not array position.
+   Multiple roots use sorted, deduplicated labels joined with `, `.
+3. Repository path identity from `--repo`, without the host or trailing
+   `.git`, plus the scanned `--git-ref`, e.g. `aeraki-mesh/aeraki 1.0.5`.
+   Existing auto-detected repository identifiers are also eligible; explicit
+   identifiers win. Without a ref, only the repository identity is used
+   and a warning requests `--git-ref`.
+4. If no reliable identity exists, emit a warning explaining the missing
+   metadata and use `Waybill source scan (identity unavailable)`.
+
+Missing/blank, `NOASSERTION`, `NONE`, `unknown`, the reader placeholders
+`v0.0.0-unknown` / `0.0.0-unknown`, and temporary root metadata
+(`tmp.*`, `.tmp*`, `tmp-*`, `temp.*`, `temp-*`, or `tmp`/`temp` path
+segments) are not usable. Automatically synthesized directory names and
+default versions are not reliable root metadata either. If any described
+root lacks usable metadata, the repository fallback applies to the document
+as a whole. Checkout directory names are never used as a naming fallback.
+The temporary-path heuristic applies only to root metadata, not repository
+paths or Git refs: provenance such as `example-org/tmp-promise` or a
+`temp/release` branch remains valid. Blank and sentinel-only identifiers
+are still rejected.
+Only the document label changes: package metadata, PURLs, licenses,
+relationships, namespaces, and output filenames are unaffected. Container
+and build-trace naming retain their existing behavior. CycloneDX has no
+separate document-name field: `metadata.component.name` and `.version`
+remain package identity fields and are not combined into a document label.
+
 ### `--metadata-file <PATH>`
 
 Path to a JSON sidecar file containing user-supplied metadata. Schema:
