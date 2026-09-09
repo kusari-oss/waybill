@@ -160,10 +160,16 @@ pub fn generate_markdown(baseline: &BenchRun) -> String {
     s.push_str(&format!(
         "---\n\
          \n\
-         _Baseline captured at {} ({}s). Regenerate this page after\n\
-         each `docs/perf/baseline.json` refresh via\n\
-         `cargo run -p xtask -- bench-docs`._\n",
-        baseline.metadata.started_at, baseline.metadata.total_duration_sec,
+         _Baseline captured at {} ({}s) on `{}` ({:?}). Regenerate this\n\
+         page after each `docs/perf/baseline.json` refresh via\n\
+         `cargo run -p xtask -- bench-docs`. To refresh the baseline\n\
+         itself see [refreshing-the-baseline.md](refreshing-the-baseline.md)\n\
+         — it must come from a reference-class CI runner, not a local\n\
+         machine._\n",
+        baseline.metadata.started_at,
+        baseline.metadata.total_duration_sec,
+        baseline.metadata.runner_uname,
+        baseline.metadata.noise_class,
     ));
 
     s
