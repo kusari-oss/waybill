@@ -190,6 +190,18 @@ pub fn run(args: CompareArgs) -> Result<(), Box<dyn Error>> {
     print!("\n{}", report::render_timing_ratios(&measurements));
 
     let path = report::write_run(&workspace_root, &measurements, &verdict)?;
+    let ctx = format!(
+        "Host: `{}` ({:?}). Tools: {}.",
+        host.uname,
+        host.class,
+        tool_versions
+            .iter()
+            .map(|(k, v)| format!("{k} {v}"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+    let summary = report::write_summary(&workspace_root, &measurements, &verdict, &ctx)?;
+    println!("wrote {}", summary.display());
     println!("\nwrote {}", path.display());
     println!(
         "This file is under target/ and is gitignored. It records measured \n\
@@ -453,10 +465,30 @@ fn capture_version(tool: &config::ToolSpec) -> String {
             } else {
                 text.into_owned()
             };
-            text.lines().next().unwrap_or("<empty>").trim().to_string()
+            // Some tools colourise their version output. Strip escapes so
+            // the recorded provenance is the text a human reads, not the
+            // bytes a terminal renders.
+            strip_ansi(text.lines().next().unwrap_or("<empty>")).trim().to_string()
         }
         Err(e) => format!("<unavailable: {e}>"),
     }
+}
+
+fn strip_ansi(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut chars = s.chars();
+    while let Some(c) = chars.next() {
+        if c == '\u{1b}' {
+            for e in chars.by_ref() {
+                if e.is_ascii_alphabetic() {
+                    break;
+                }
+            }
+        } else {
+            out.push(c);
+        }
+    }
+    out
 }
 
 #[derive(Debug, Clone)]
@@ -610,6 +642,12 @@ mod tests {
         assert!(!h.uname.is_empty());
         let expected = crate::bench::run::classify_noise(&h.uname);
         assert_eq!(format!("{:?}", h.class), format!("{expected:?}"));
+    }
+
+    #[test]
+    fn ansi_escapes_are_stripped_from_recorded_versions() {
+        assert_eq!(strip_ansi("\u{1b}[1mTool 1.2.3\u{1b}[0m"), "Tool 1.2.3");
+        assert_eq!(strip_ansi("plain 4.5.6"), "plain 4.5.6");
     }
 
     #[test]
