@@ -149,6 +149,7 @@ pub fn run(args: BenchArgs) -> Result<(), Box<dyn Error>> {
     if let Some(baseline_path) = &args.baseline {
         let threshold = args.threshold.unwrap_or(0.25);
         let baseline = load_baseline(baseline_path)?;
+        assert_baseline_is_comparable(&run_result, &baseline)?;
         let diff = compare(&run_result, &baseline, threshold);
 
         let diff_path = workspace_root
@@ -362,6 +363,52 @@ fn write_run_atomically(run: &BenchRun, path: &std::path::Path) -> Result<(), Bo
     Ok(())
 }
 
+/// Refuse to compare a run against a baseline recorded on a different
+/// class of machine.
+///
+/// Timing and peak-RSS are not portable across host classes, so such a
+/// comparison produces noise that looks exactly like a regression. It
+/// has happened: the baseline committed in #741 was recorded on an
+/// arm64 macOS laptop while CI compares from a Linux x86_64 runner, and
+/// every bench run for the following nine days — including five release
+/// tags — failed with dozens of phantom regressions. The `MaxRssKb`
+/// rows read as +300% to +2800%, which is not what a real regression
+/// looks like, but nothing in the output said so.
+///
+/// The metadata to catch this was already being recorded; it just was
+/// not being checked. Failing here, before the comparison, costs one
+/// clear sentence instead of a table of fiction.
+fn assert_baseline_is_comparable(
+    subject: &BenchRun,
+    baseline: &BenchRun,
+) -> Result<(), Box<dyn Error>> {
+    if subject.metadata.noise_class == baseline.metadata.noise_class {
+        return Ok(());
+    }
+    Err(format!(
+        "baseline is not comparable to this run — refusing to report \
+         regressions that would be measurement artefacts.\n\
+         \n\
+         \tbaseline: {:?}\t({})\n\
+         \tthis run: {:?}\t({})\n\
+         \n\
+         Wall-clock and peak-RSS do not transfer across host classes. A \
+         cross-class comparison reports differences in the machine as \
+         differences in the code.\n\
+         \n\
+         To refresh the baseline, take it from a reference-class CI run \
+         rather than recording it locally: dispatch the `bench` workflow \
+         on `main`, download its `bench-run-<sha>` artifact, and commit \
+         the `run-*.json` inside as `docs/perf/baseline.json`. The \
+         artifact uploads even when the comparison step fails.",
+        baseline.metadata.noise_class,
+        baseline.metadata.runner_uname,
+        subject.metadata.noise_class,
+        subject.metadata.runner_uname,
+    )
+    .into())
+}
+
 /// Render a compact Markdown table of the run's Results. One row per
 /// (fixture, mode). Docs-page rendering (US3) is a richer surface;
 /// this is just the stdout summary US1 asks for.
@@ -541,5 +588,38 @@ mod tests {
         let f = filter_arg(&args);
         assert!(f.is_some());
         assert_eq!(f.unwrap().len(), 1);
+    }
+
+    /// A baseline from a different host class must be refused, not
+    /// compared. Regression test for the nine-day bench outage caused
+    /// by #741 committing a macOS-laptop baseline against which CI
+    /// compared from a Linux runner.
+    #[test]
+    fn cross_class_baseline_is_refused_with_an_actionable_message() {
+        let subject = stub_run(); // Linux / Reference
+        let mut baseline = stub_run();
+        baseline.metadata.noise_class = NoiseClass::Noisy;
+        baseline.metadata.runner_uname = "Darwin some-laptop 25.5.0 arm64".into();
+
+        let err = assert_baseline_is_comparable(&subject, &baseline)
+            .expect_err("cross-class comparison must be refused");
+        let msg = err.to_string();
+
+        // Both sides named, so the reader can see which is wrong.
+        assert!(msg.contains("Darwin"), "baseline host missing: {msg}");
+        assert!(msg.contains("Linux"), "subject host missing: {msg}");
+        // And the way out, because a refusal without a remedy just
+        // relocates the confusion.
+        assert!(
+            msg.contains("bench-run-") && msg.contains("baseline.json"),
+            "message must carry the refresh recipe: {msg}"
+        );
+    }
+
+    #[test]
+    fn same_class_baseline_is_accepted() {
+        let subject = stub_run();
+        let baseline = stub_run();
+        assert!(assert_baseline_is_comparable(&subject, &baseline).is_ok());
     }
 }
