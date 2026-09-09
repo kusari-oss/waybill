@@ -890,21 +890,11 @@ pub fn build_document(
         });
     }
 
-    // Milestone 080 — `--scan-target-name` overrides the SPDX 2.3
-    // top-level document `name` field (independent of milestone 077's
-    // `--root-name` which targets the root Package's name; per
-    // research §5 both flags are honored independently in SPDX 2.3).
-    let document_name = artifacts
-        .user_metadata
-        .scan_target_name
-        .clone()
-        .unwrap_or_else(|| artifacts.target_name.to_string());
-
-    SpdxDocument {
+    let mut document = SpdxDocument {
         spdx_version: "SPDX-2.3",
         data_license: "CC0-1.0",
         spdx_id: SpdxId::document(),
-        name: document_name,
+        name: String::new(),
         namespace,
         creation_info,
         packages,
@@ -913,7 +903,13 @@ pub fn build_document(
         external_document_refs: Vec::new(),
         has_extracted_licensing_infos,
         document_describes: root_ids,
-    }
+    };
+    // Basename/0.0.0 synthesis is not evidence of a source identity.
+    let placeholder_root = synthetic_root_added
+        && (artifacts.root_override.name.is_none()
+            || artifacts.root_override.version.is_none());
+    document.name = super::document_name::derive(&document, artifacts, placeholder_root);
+    document
 }
 
 /// Build the document-level scope-hint string for SPDX 2.3
@@ -1410,6 +1406,129 @@ mod tests {
         };
         let doc = build_document(arts, &cfg);
         serde_json::to_value(&doc).expect("SpdxDocument serializes to JSON")
+    }
+
+    #[test]
+    fn document_name_follows_described_roots_without_mutating_model() {
+        use super::super::document_name::derive;
+        use super::super::relationships::SpdxRelationshipType;
+        let integrity = empty_integrity();
+        let components = vec![
+            mk_component("pkg:npm/dependency@9", "dependency", "9"),
+            mk_component("pkg:npm/z-root@2", "z-root", "2"),
+            mk_component("pkg:npm/a-root@1", "a-root", "1"),
+        ];
+        let arts = mk_artifacts("tmp.checkout", &components, &[], &integrity);
+        let cfg = crate::generate::OutputConfig {
+            mikebom_version: "test",
+            created: chrono::Utc::now(),
+            overrides: Default::default(),
+        };
+        let mut doc = build_document(&arts, &cfg);
+        doc.packages.retain(|p| {
+            !p.spdx_id.as_str().starts_with("SPDXRef-DocumentRoot-")
+        });
+        let z_root = SpdxId::for_purl(&components[1].purl);
+        let a_root = SpdxId::for_purl(&components[2].purl);
+        doc.document_describes = vec![z_root.clone()];
+        doc.relationships = vec![
+            SpdxRelationship {
+                source: doc.spdx_id.clone(),
+                target: a_root.clone(),
+                kind: SpdxRelationshipType::Describes,
+                comment: None,
+            },
+            SpdxRelationship {
+                source: a_root,
+                target: SpdxId::for_purl(&components[0].purl),
+                kind: SpdxRelationshipType::Describes,
+                comment: None,
+            },
+        ];
+        let before = serde_json::to_value(&doc).unwrap();
+        assert_eq!(derive(&doc, &arts, false), "a-root 1, z-root 2");
+        assert_eq!(serde_json::to_value(&doc).unwrap(), before);
+        doc.packages.reverse();
+        doc.relationships.reverse();
+        doc.document_describes.push(z_root);
+        assert_eq!(derive(&doc, &arts, false), "a-root 1, z-root 2");
+        doc.document_describes.clear();
+        assert_eq!(derive(&doc, &arts, false), "a-root 1");
+    }
+
+    #[test]
+    fn document_name_falls_back_for_incomplete_root_metadata_and_dangling_ids() {
+        use super::super::document_name::derive;
+        use waybill::binding::identifiers::Identifier;
+        let integrity = empty_integrity();
+        let components = vec![mk_component("pkg:npm/root@1", "root", "1")];
+        let ids = vec![
+            Identifier::parse("git:https://github.com/acme/project.git#refs/tags/v1").unwrap(),
+        ];
+        let mut arts = mk_artifacts("tmp.checkout", &components, &[], &integrity);
+        arts.identifiers = &ids;
+        let cfg = crate::generate::OutputConfig {
+            mikebom_version: "test",
+            created: chrono::Utc::now(),
+            overrides: Default::default(),
+        };
+        let mut doc = build_document(&arts, &cfg);
+        for (name, version) in [
+            ("", "1"),
+            ("  ", "1"),
+            ("NOASSERTION", "1"),
+            ("root", ""),
+            ("root", "  "),
+            ("root", "NOASSERTION"),
+            ("tmp.checkout", "1"),
+            ("root", "tmp.version"),
+        ] {
+            doc.packages[0].name = name.into();
+            doc.packages[0].version_info = version.into();
+            assert_eq!(derive(&doc, &arts, false), "acme/project refs/tags/v1");
+        }
+        doc.packages.clear();
+        assert_eq!(derive(&doc, &arts, false), "acme/project refs/tags/v1");
+        doc.document_describes.clear();
+        doc.relationships.clear();
+        assert_eq!(derive(&doc, &arts, false), "acme/project refs/tags/v1");
+    }
+
+    #[test]
+    fn spdx3_document_name_uses_root_iris_with_shared_fallback_and_ordering() {
+        use super::super::document_name::derive_v3;
+        use waybill::binding::identifiers::Identifier;
+        use serde_json::json;
+        let integrity = empty_integrity();
+        let ids = vec![Identifier::parse("git:https://github.com/acme/project.git#v1").unwrap()];
+        let mut arts = mk_artifacts("tmp.checkout", &[], &[], &integrity);
+        arts.identifiers = &ids;
+        let mut packages = vec![
+            json!({"type": "software_Package", "spdxId": "dep", "name": "dependency",
+                   "software_packageVersion": "9"}),
+            json!({"type": "software_Package", "spdxId": "z", "name": "z-root",
+                   "software_packageVersion": "2"}),
+            json!({"type": "software_Package", "spdxId": "a", "name": "a-root",
+                   "software_packageVersion": "1"}),
+        ];
+        let mut roots = vec!["z".into(), "a".into(), "z".into()];
+        let before = packages.clone();
+        assert_eq!(derive_v3(&roots, &packages, &arts, false), "a-root 1, z-root 2");
+        assert_eq!(packages, before);
+        packages.reverse();
+        roots.reverse();
+        assert_eq!(derive_v3(&roots, &packages, &arts, false), "a-root 1, z-root 2");
+        for invalid in [json!(null), json!(""), json!(" "), json!("NOASSERTION")] {
+            packages[0]["software_packageVersion"] = invalid;
+            assert_eq!(derive_v3(&roots, &packages, &arts, false), "acme/project v1");
+        }
+        assert_eq!(derive_v3(&[], &packages, &arts, false), "acme/project v1");
+        assert_eq!(derive_v3(&["missing".into()], &packages, &arts, false), "acme/project v1");
+        arts.generation_context = GenerationContext::ContainerImageScan;
+        arts.root_override.name = Some("image-root".into());
+        assert_eq!(derive_v3(&roots, &packages, &arts, false), "image-root");
+        arts.user_metadata.scan_target_name = Some("Explicit document".into());
+        assert_eq!(derive_v3(&roots, &packages, &arts, false), "Explicit document");
     }
 
     #[test]

@@ -75,7 +75,7 @@
     "SPDXRef-Package-IZGDOM2QHWPWWLEX"
   ],
   "documentNamespace": "https://waybill.kusari.dev/spdx/P7SI6Y5TPPAMGVKLKGLAA6PPK73KHWKM",
-  "name": "node-modules-walk",
+  "name": "node-modules-walk-fixture 0.1.0",
   "packages": [
     {
       "SPDXID": "SPDXRef-Package-TXLIZUEJRNELTNPP",

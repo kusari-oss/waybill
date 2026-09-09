@@ -75,7 +75,7 @@
     "SPDXRef-DocumentRoot-LHTCHX5CMHP7YRAM"
   ],
   "documentNamespace": "https://waybill.kusari.dev/spdx/QG6HHCG237ZUCVPNHGXYQ2UZA3SHRGU7",
-  "name": "simple-bundle",
+  "name": "Waybill source scan (identity unavailable)",
   "packages": [
     {
       "SPDXID": "SPDXRef-DocumentRoot-LHTCHX5CMHP7YRAM",

@@ -75,7 +75,7 @@
     "SPDXRef-DocumentRoot-WCNKVCHTUS5Z5QJR"
   ],
   "documentNamespace": "https://waybill.kusari.dev/spdx/FHJ4LV6D7GTB7NQ3VH2S55WBOUWOU4XT",
-  "name": "simple-venv",
+  "name": "Waybill source scan (identity unavailable)",
   "packages": [
     {
       "SPDXID": "SPDXRef-DocumentRoot-WCNKVCHTUS5Z5QJR",

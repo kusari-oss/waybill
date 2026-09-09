@@ -75,7 +75,7 @@
     "SPDXRef-Package-Q7X32JLRPGCHW46Q"
   ],
   "documentNamespace": "https://waybill.kusari.dev/spdx/TATNWA25PLZMEYC27EITP7X3WEJUB7A4",
-  "name": "pom-three-deps",
+  "name": "demo-app 1.0.0",
   "packages": [
     {
       "SPDXID": "SPDXRef-Package-Q7X32JLRPGCHW46Q",

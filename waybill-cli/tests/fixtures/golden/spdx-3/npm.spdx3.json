@@ -35,7 +35,7 @@
       "comment": "Scope: manifest (declared transitives included). Observed lifecycle phases: operations, pre-build. Per-component scope detail in waybill:sbom-tier annotations.",
       "creationInfo": "_:creation-info",
       "dataLicense": "https://spdx.org/licenses/CC0-1.0",
-      "name": "node-modules-walk",
+      "name": "node-modules-walk-fixture 0.1.0",
       "rootElement": [
         "https://waybill.kusari.dev/spdx3/doc-FSBDLFKJ6BUCF5OLLCQBHYZW/pkg-IZGDOM2QHWPWWLEX"
       ],
@@ -44,7 +44,7 @@
     },
     {
       "creationInfo": "_:creation-info",
-      "name": "node-modules-walk",
+      "name": "node-modules-walk-fixture 0.1.0",
       "rootElement": [
         "https://waybill.kusari.dev/spdx3/doc-FSBDLFKJ6BUCF5OLLCQBHYZW/pkg-IZGDOM2QHWPWWLEX"
       ],
