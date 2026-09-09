@@ -904,7 +904,7 @@ fn sign_keyless_sbom_no_tokio(
     tracing::info!(
         rekor_log_index,
         fulcio_cert_subject = %fulcio_cert_subject,
-        fulcio_cert_identity_shape = identity.shape_name(),
+        fulcio_cert_identity_shape = %identity.shape_name(),
         fulcio_cert_oidc_issuer = %identity.issuer(),
         oidc_provider = oidc_provider_label,
         "SBOM signed via Sigstore keyless"
