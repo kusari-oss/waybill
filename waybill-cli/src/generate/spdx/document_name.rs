@@ -118,7 +118,7 @@ fn format_root_names<'a>(
 }
 
 fn usable_metadata(value: &str) -> Option<&str> {
-    let value = value.trim();
+    let value = usable_identifier(value)?;
     let lower = value.to_ascii_lowercase();
     let temporary = lower.split(['/', '\\']).any(|part| {
         matches!(part, "tmp" | "temp")
@@ -128,6 +128,14 @@ fn usable_metadata(value: &str) -> Option<&str> {
             || part.starts_with("temp.")
             || part.starts_with("temp-")
     });
+    (!temporary).then_some(value)
+}
+
+// Repository paths and refs are provenance, not checkout paths: names
+// such as tmp-promise or branches such as temp/release are legitimate.
+fn usable_identifier(value: &str) -> Option<&str> {
+    let value = value.trim();
+    let lower = value.to_ascii_lowercase();
     (!value.is_empty()
         && !matches!(
             lower.as_str(),
@@ -137,9 +145,8 @@ fn usable_metadata(value: &str) -> Option<&str> {
                 | "filesystem-scan"
                 | "v0.0.0-unknown"
                 | "0.0.0-unknown"
-        )
-        && !temporary)
-        .then_some(value)
+        ))
+    .then_some(value)
 }
 
 fn repository_name(scan: &ScanArtifacts<'_>) -> Option<String> {
@@ -155,7 +162,7 @@ fn repository_name(scan: &ScanArtifacts<'_>) -> Option<String> {
                     .as_str()
                     .split_once('#')
                     .map_or((id.value.as_str(), None), |(repo, rev)| {
-                        (repo, usable_metadata(rev))
+                        (repo, usable_identifier(rev))
                     });
                 (repo, revision)
             }
@@ -194,5 +201,5 @@ fn repository_identity(repo: &str) -> Option<String> {
     }
     let path = url.path().trim_matches('/');
     let path = path.strip_suffix(".git").unwrap_or(path);
-    usable_metadata(path).map(str::to_string)
+    usable_identifier(path).map(str::to_string)
 }

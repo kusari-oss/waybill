@@ -243,6 +243,63 @@ fn repository_fallback_handles_ssh_and_missing_ref() {
 }
 
 #[test]
+fn repository_fallback_preserves_temp_named_repositories_and_refs() {
+    let checkout = tempfile::tempdir().unwrap();
+    for (repo, revision, expected) in [
+        (
+            "https://github.com/example-org/tmp-promise",
+            "v1.2.3",
+            "example-org/tmp-promise v1.2.3",
+        ),
+        (
+            "https://github.com/example-org/temp-write.git",
+            "v1.2.3",
+            "example-org/temp-write v1.2.3",
+        ),
+        (
+            "git@github.com:example-org/temp-dir.git",
+            "v1.2.3",
+            "example-org/temp-dir v1.2.3",
+        ),
+        (
+            "ssh://git@github.com/tmp/project.git",
+            "v1.2.3",
+            "tmp/project v1.2.3",
+        ),
+        (
+            "https://github.com/example-org/normal-name",
+            "tmp-fix",
+            "example-org/normal-name tmp-fix",
+        ),
+        (
+            "https://github.com/example-org/normal-name",
+            "temp/release",
+            "example-org/normal-name temp/release",
+        ),
+    ] {
+        let (document, stderr) = scan(
+            checkout.path(),
+            &[
+                "--root-name",
+                "tmp.ABC123",
+                "--root-version",
+                "1.0.5",
+                "--repo",
+                repo,
+                "--git-ref",
+                revision,
+            ],
+        );
+        assert_eq!(document["name"], expected);
+        assert!(
+            !stderr.contains("Cannot derive SPDX document name"),
+            "{stderr}"
+        );
+        assert!(!stderr.contains("without a revision"), "{stderr}");
+    }
+}
+
+#[test]
 fn unversioned_go_root_uses_scanned_repository_ref() {
     let checkout = tempfile::tempdir().unwrap();
     std::fs::write(

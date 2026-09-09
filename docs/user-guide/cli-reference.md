@@ -1556,6 +1556,10 @@ segments) are not usable. Automatically synthesized directory names and
 default versions are not reliable root metadata either. If any described
 root lacks usable metadata, the repository fallback applies to the document
 as a whole. Checkout directory names are never used as a naming fallback.
+The temporary-path heuristic applies only to root metadata, not repository
+paths or Git refs: provenance such as `example-org/tmp-promise` or a
+`temp/release` branch remains valid. Blank and sentinel-only identifiers
+are still rejected.
 Only the document label changes: package metadata, PURLs, licenses,
 relationships, namespaces, and output filenames are unaffected. Container
 and build-trace naming retain their existing behavior. CycloneDX has no
