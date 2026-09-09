@@ -7,6 +7,62 @@ adheres to [Semantic Versioning](https://semver.org/) once it exits
 
 ## [Unreleased]
 
+### GitHub Actions can sign without a token dance (milestone 779)
+
+`waybill sbom scan --sign` now uses the runner's own ambient OIDC
+credential. Grant the job `permissions: id-token: write` and that is the
+entire configuration — no secret, no helper action, no `SIGSTORE_ID_TOKEN`.
+
+This was previously impossible, and the reason was buried two layers
+down: sigstore-rs requires the OIDC token to carry an `email` claim,
+while GitHub Actions tokens carry `sub`. The token was rejected during
+deserialization, so the operator saw `Malformed JWT: claims JSON
+malformed` — a message describing neither the cause nor the fix. Fixed
+in the kusari-sandbox fork (tag `v0.11.0-waybill-3`) by making the claim
+optional and selecting the identity claim by issuer, the way the
+Sigstore ecosystem does. Upstream tracks this as
+[sigstore-rs#413](https://github.com/sigstore/sigstore-rs/issues/413) and
+[#409](https://github.com/sigstore/sigstore-rs/issues/409); an approved
+fix has sat unmerged at
+[PR #412](https://github.com/sigstore/sigstore-rs/pull/412) since October
+2024, and the defect is unchanged as of upstream v0.14.0.
+
+**The advice this replaces was wrong.** Documentation told GHA users to
+fetch a token via a helper action, and told everyone that `cosign login`
+could mint one. `cosign login` logs in to a container registry and emits
+no OIDC token — a surviving instance of the defect corrected in #810/#811,
+which swept four documents and four diagnostics but missed README.
+
+### Signatures now record what kind of identity signed
+
+A signature made by a person and one made by a CI job verify
+differently, and waybill previously recorded both as an undistinguished
+string. Every successful keyless sign now records a shape — `email`,
+`workload`, or `unrecognized` — alongside the subject and the issuer,
+and surfaces two new INFO fields, `fulcio_cert_identity_shape` and
+`fulcio_cert_oidc_issuer`. The three pre-existing fields keep their
+names.
+
+**waybill also prints a verification command that runs as printed.**
+Every value in it is read off the issued certificate. That matters more
+than convenience: under federation the certificate's issuer differs from
+the token's, and passing the token's produces `Certificate's OIDCIssuer
+does not match` — an error that reads like a broken signature and is
+not one. Staging signatures get a `sigstore --staging verify identity`
+command instead of cosign, because cosign has no built-in staging mode.
+
+### Keyless conformance runs on a schedule
+
+Five keyless tests had been `#[ignore]`d behind a human-fetched
+credential since milestone 222 and had never been observed passing as a
+suite. A new scheduled workflow runs them nightly against Sigstore
+staging using the runner's ambient credential, classifies a failure as
+an external outage or a waybill defect, and opens a single deduped issue
+that closes itself on recovery. Pull requests are deliberately not
+gated on it: the suite depends on an external service with no
+availability guarantee.
+
+
 ## [0.7.0] — 2026-09-08
 
 ### Keyless CycloneDX signing now produces a detached sidecar (milestone 778)

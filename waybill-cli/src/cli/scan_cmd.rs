@@ -4623,6 +4623,35 @@ pub async fn execute(
                             kind = %kind,
                             "wrote SBOM signature sidecar"
                         );
+                        // m779 FR-009a/FR-009b — hand the operator a
+                        // command that runs as printed. Every value comes
+                        // off the issued certificate, so it cannot
+                        // disagree with what actually verifies; deriving
+                        // the issuer from the token instead is what makes
+                        // federated signatures look broken when they are
+                        // not.
+                        if let crate::sbom::signer::Sidecar::SigstoreBundle {
+                            identity,
+                            environment,
+                            ..
+                        } = &sidecar_payload
+                        {
+                            let cmd =
+                                crate::attestation::signer::VerificationCommand::render(
+                                    *environment,
+                                    identity,
+                                    &target,
+                                    &sidecar,
+                                );
+                            if cmd.is_template {
+                                eprintln!(
+                                    "\nTo verify (template — supply your deployment's trust root):\n{}\n",
+                                    cmd.rendered
+                                );
+                            } else {
+                                eprintln!("\nTo verify:\n{}\n", cmd.rendered);
+                            }
+                        }
                         signed_artifacts
                             .push((fmt.clone(), sidecar.display().to_string()));
                     }
