@@ -2,6 +2,7 @@ use std::process::Command;
 
 use clap::Parser;
 use xtask::bench;
+use xtask::compare;
 use xtask::quality;
 
 #[derive(Parser)]
@@ -10,6 +11,9 @@ enum Cli {
     Ebpf,
     /// Run the perf benchmark suite (milestone 669)
     Bench(bench::BenchArgs),
+    /// Milestone 780 — private comparative benchmark against other SBOM
+    /// tools. Results never leave `target/`.
+    Compare(compare::CompareArgs),
     /// Regenerate docs/perf/numbers.md from the committed baseline (milestone 669)
     BenchDocs(bench::docs::BenchDocsArgs),
     /// Measure SBOM quality across the pinned public-repo corpus (milestone 770)
@@ -24,6 +28,7 @@ fn main() {
             Ok(())
         }
         Cli::Bench(args) => bench::run(args),
+        Cli::Compare(args) => compare::run(args),
         Cli::BenchDocs(args) => bench::docs::run(args),
         Cli::Quality(args) => quality::run(args),
     };

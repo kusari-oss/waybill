@@ -1,0 +1,34 @@
+# Milestone 780 — comparative benchmark corpus.
+#
+# Targets are pinned to exact revisions. An unpinned target makes every
+# figure derived from it uncomparable with any other run, which defeats the
+# purpose of the harness.
+#
+# `truth.method` declares how the true package set is derived, and is
+# recorded with every score computed from it. Methods are never mixed in a
+# comparison (FR-008a).
+#
+#   go-sum-union    union of every go.sum in the tree. Always available
+#                   offline, but a SUPERSET of what is built: go.sum carries
+#                   hashes for modules merely considered during resolution.
+#                   Scoring against it rewards over-reporting and penalises
+#                   a tool that correctly omits unused modules.
+#   go-mod-requires union of every go.mod require. Closer, still not the
+#                   built set.
+#   declared-exact  a committed expected list. Exact by construction; used
+#                   by the self-check fixture.
+
+[[targets]]
+name      = "cobra"
+repo      = "https://github.com/spf13/cobra"
+sha       = "a655097faf7d54f78933a815984b9919d51a05d2"
+ecosystem = "golang"
+truth     = { method = "go-sum-union" }
+
+[[targets]]
+name      = "ripgrep"
+repo      = "https://github.com/BurntSushi/ripgrep"
+sha       = "0e8390a66fbcf6eeac1aeb0541b367663a597c79"
+ecosystem = "cargo"
+# No truth method: cargo truth derivation is not implemented yet, so this
+# target is counted but not scored for accuracy (FR-009).

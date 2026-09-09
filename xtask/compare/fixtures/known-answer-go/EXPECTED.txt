@@ -1,0 +1,12 @@
+# Hand-authored. Do NOT generate this file — a generated expectation moves
+# with the bug it exists to catch.
+#
+# Five identities from five distinct module-version pairs. Note that
+# waybill-fixture-multi appears TWICE, at v1.0.0 and v2.0.0: under the
+# version-stripped rule this file would need four lines, so a regression to
+# that rule fails here.
+pkg:golang/example.test/waybill-fixture-alpha@v1.0.0
+pkg:golang/example.test/waybill-fixture-beta@v2.3.4
+pkg:golang/example.test/waybill-fixture-indirect@v0.9.0
+pkg:golang/example.test/waybill-fixture-multi@v1.0.0
+pkg:golang/example.test/waybill-fixture-multi@v2.0.0

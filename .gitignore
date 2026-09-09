@@ -72,3 +72,13 @@ specs/168-rust-python-audit/artifacts/**/*.log
 
 # Milestone 770 — quality-corpus run reports
 target/quality/
+
+# Milestone 780 — comparative benchmark harness.
+# The repository is public, so anything committed here is world-readable.
+# Results and the operator's tool set are deliberately unpublishable:
+#   - run reports land only under target/ (already ignored above, listed
+#     explicitly so the intent survives a future .gitignore edit)
+#   - the tool set names specific competing tools and never enters git;
+#     the committed example uses placeholders only.
+target/compare/
+xtask/compare/*.local.toml
