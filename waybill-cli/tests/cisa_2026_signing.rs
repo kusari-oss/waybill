@@ -225,13 +225,21 @@ fn expected_cert_identity() -> Option<(String, String)> {
     ) {
         return Some((id, iss));
     }
-    // GitHub Actions: reconstruct the workflow identity from the
-    // runner's own environment.
-    let repo = std::env::var("GITHUB_REPOSITORY").ok()?;
-    let git_ref = std::env::var("GITHUB_REF").ok()?;
+    // GitHub Actions. Fulcio does NOT put the raw `sub` claim
+    // (`repo:owner/repo:ref:...`) in the SAN — it records the workflow
+    // as a URI:
+    //
+    //   https://github.com/<owner>/<repo>/.github/workflows/<file>@<ref>
+    //
+    // Observed from the first real conformance run: reconstructing the
+    // `sub` shape here produced a verification failure that looked like
+    // a bad signature and was not one. `GITHUB_WORKFLOW_REF` already
+    // carries exactly the path-and-ref portion, so prefix it rather
+    // than assembling the pieces by hand.
     std::env::var("ACTIONS_ID_TOKEN_REQUEST_URL").ok()?;
+    let workflow_ref = std::env::var("GITHUB_WORKFLOW_REF").ok()?;
     Some((
-        format!("repo:{repo}:ref:{git_ref}"),
+        format!("https://github.com/{workflow_ref}"),
         "https://token.actions.githubusercontent.com".to_string(),
     ))
 }
@@ -273,17 +281,27 @@ fn classify_failure(stderr: &str) -> String {
 
 /// Run a keyless scan against sigstage, returning the process output.
 fn run_keyless_scan(output: &std::path::Path, extra: &[&str]) -> std::process::Output {
+    let mut args: Vec<String> = vec![
+        "--output".to_string(),
+        output.display().to_string(),
+    ];
+    args.extend(extra.iter().map(|a| (*a).to_string()));
+    run_keyless_scan_multi(&args.iter().map(String::as_str).collect::<Vec<_>>())
+}
+
+/// Same scan, but the caller supplies every argument including
+/// `--output`. Needed for multi-format runs, where the CLI rejects a
+/// bare `--output` and each format must be given as `fmt=path`.
+fn run_keyless_scan_multi(args: &[&str]) -> std::process::Output {
     let mut cmd = Command::new(bin());
     cmd.arg("--offline")
         .arg("sbom")
         .arg("scan")
         .arg("--path")
         .arg(scan_target())
-        .arg("--output")
-        .arg(output)
         .arg("--no-deep-hash")
         .arg("--sign");
-    for a in extra {
+    for a in args {
         cmd.arg(a);
     }
     cmd.env(
@@ -569,13 +587,19 @@ fn m809_t017_two_formats_produce_two_correctly_associated_artifacts() {
     let tmp = tempfile::tempdir().expect("tempdir");
     let cdx = tmp.path().join("out.cdx.json");
     let spdx = tmp.path().join("out.spdx.json");
-    let out = run_keyless_scan(
-        &cdx,
-        &[
-            "--format", "cyclonedx-json,spdx-2.3-json",
-            "--output", &format!("spdx-2.3-json={}", spdx.display()),
-        ],
-    );
+    // `run_keyless_scan` appends a bare `--output <path>`, which the CLI
+    // rejects alongside multiple `--format` values. Both outputs must be
+    // given in `fmt=path` form. The test has carried this defect since
+    // m809 and never surfaced it, because it was `#[ignore]`d and had
+    // never actually run.
+    let out = run_keyless_scan_multi(&[
+        "--format",
+        "cyclonedx-json,spdx-2.3-json",
+        "--output",
+        &format!("cyclonedx-json={}", cdx.display()),
+        "--output",
+        &format!("spdx-2.3-json={}", spdx.display()),
+    ]);
     assert!(
         out.status.success(),
         "two-format keyless sign failed. stderr:\n{}",
